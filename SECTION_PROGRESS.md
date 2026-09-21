@@ -161,3 +161,10 @@ Root/build agents temporarily hit service rate limits; all research/domain files
 - Spec bổ sung use case, FR/NFR, Given/When/Then acceptance, ngoại lệ và synthetic-data constraints; Module Map đặt shared state, consent, audit/read-model conventions trước màn hình; Architecture tách demo localStorage khỏi pilot API/RBAC/database/media.
 - README đã liên kết luồng 0 → 1 → 2 → 3 và quy tắc cập nhật downstream.
 - Next exact action: chạy toàn bộ suite kiểm thử, kiểm tra diff, commit và push tài liệu cùng các thay đổi prototype đang có.
+
+## 2026-09-21 — Final validation and publish checkpoint
+
+- PB01 docs, AGENT.md, README links and existing linked service/prescription prototype changes committed as `03ea2fa` with message `docs: define Pema PB01 scope spec modules and architecture`.
+- Validation: `git diff --check` PASS; `check-linked.cjs` PASS; responsive rerun 80/80 screens with zero overflow/page errors; `operations-test.cjs` 20/20; `smoke-final.cjs` 12/12; `data-audit.cjs` 20/20.
+- Pushed and verified `origin/master` at `03ea2fa83004c117b94fceca131d6de3aa49e378`.
+- Workspace still contains pre-existing/untracked `data/` and `%SystemDrive%/` artifacts; they were intentionally excluded from the commit.
