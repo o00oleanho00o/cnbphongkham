@@ -1,0 +1,26 @@
+const {chromium}=require('C:/Users/email/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const fs=require('fs');
+const path=require('path');
+const output=path.resolve(__dirname,'../demo-assets/screenshots/round-1');
+fs.mkdirSync(output,{recursive:true});
+(async()=>{
+ const browser=await chromium.launch({headless:true});
+ const context=await browser.newContext({viewport:{width:1440,height:1000}});
+ const clinic=await context.newPage();const errors=[];
+ clinic.on('pageerror',e=>errors.push(e.message));
+ await clinic.goto('http://127.0.0.1:4173/clinic-web/');
+ await clinic.getByRole('heading',{name:'Chào buổi sáng, BS. Tâm'}).waitFor();
+ await clinic.screenshot({path:path.join(output,'clinic-dashboard.png'),fullPage:true});
+ await clinic.locator('[data-nav="patients"]').first().click();
+ await clinic.locator('[data-patient="P001"]').first().click();
+ await clinic.getByRole('heading',{name:'Nguyễn Minh Linh'}).waitFor();
+ await clinic.screenshot({path:path.join(output,'clinic-patient-360.png'),fullPage:true});
+ const mobile=await context.newPage();await mobile.setViewportSize({width:390,height:844});
+ mobile.on('pageerror',e=>errors.push(e.message));
+ await mobile.goto('http://127.0.0.1:4173/patient-mobile/');
+ await mobile.getByRole('heading',{name:/Làn da của bạn/}).waitFor();
+ await mobile.screenshot({path:path.join(output,'patient-home.png'),fullPage:true});
+ fs.writeFileSync(path.join(output,'capture.json'),JSON.stringify({capturedAt:new Date().toISOString(),errors},null,2));
+ console.log(JSON.stringify({output,errors}));
+ await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});

@@ -1,0 +1,14 @@
+{
+  "at": "2026-09-21T07:16:18.803Z",
+  "topics": 9,
+  "checks": [
+    "direct route",
+    "accent-insensitive search",
+    "no-results state",
+    "all topics",
+    "cross-topic links",
+    "cashier navigation",
+    "390/768/1440 no overflow"
+  ],
+  "errors": []
+}

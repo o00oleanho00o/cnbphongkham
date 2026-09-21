@@ -1,0 +1,5551 @@
+{
+  "version": 2,
+  "selected": "P001",
+  "audit": [],
+  "patients": [
+    {
+      "id": "P001",
+      "name": "Nguyễn Minh Linh",
+      "age": 32,
+      "gender": "Nữ",
+      "phone": "09•• ••• 100",
+      "concern": "Nám · tăng sắc tố",
+      "plan": "Liệu trình kiểm soát sắc tố",
+      "procedure": "Chăm sóc & laser theo chỉ định",
+      "total": 5,
+      "completed": 2,
+      "doctor": "BS. Tâm",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "08:00",
+      "status": "Đang chờ",
+      "alerts": [
+        "Da nhạy cảm",
+        "Theo dõi đỏ da sau điều trị"
+      ],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e0-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Đỏ nhẹ khoảng 2 ngày, hiện đã ổn. Không ghi nhận dấu hiệu cảnh báo trong báo cáo.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e0-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/5",
+          "detail": "Chăm sóc & laser theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e0-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e0-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu liệu trình kiểm soát sắc tố",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s0-0",
+          "date": "2026-08-23",
+          "type": "Chăm sóc & laser theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn"
+        },
+        {
+          "id": "s0-1",
+          "date": "2026-09-06",
+          "type": "Chăm sóc & laser theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0001",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1200000,
+          "paid": true
+        },
+        {
+          "id": "HD-DEMO-001",
+          "date": "2026-09-20",
+          "label": "Tái khám & đánh giá",
+          "amount": 300000,
+          "received": 150000,
+          "paid": false
+        }
+      ]
+    },
+    {
+      "id": "P002",
+      "name": "Trần Ngọc Anh",
+      "age": 26,
+      "gender": "Nữ",
+      "phone": "09•• ••• 101",
+      "concern": "Mụn viêm",
+      "plan": "Theo dõi mụn & chăm sóc tại nhà",
+      "procedure": "Tái khám và đánh giá đáp ứng",
+      "total": 4,
+      "completed": 2,
+      "doctor": "BS. Mai",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "08:00",
+      "status": "Đã đến",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e1-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e1-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/4",
+          "detail": "Tái khám và đánh giá đáp ứng. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e1-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e1-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu theo dõi mụn & chăm sóc tại nhà",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s1-0",
+          "date": "2026-08-23",
+          "type": "Tái khám và đánh giá đáp ứng",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn"
+        },
+        {
+          "id": "s1-1",
+          "date": "2026-09-06",
+          "type": "Tái khám và đánh giá đáp ứng",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0002",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1500000,
+          "paid": true
+        },
+        {
+          "id": "HD-DEMO-002",
+          "date": "2026-09-20",
+          "label": "Tư vấn da liễu",
+          "amount": 500000,
+          "received": 0,
+          "paid": false
+        }
+      ]
+    },
+    {
+      "id": "P003",
+      "name": "Lê Hoàng Nam",
+      "age": 33,
+      "gender": "Nam",
+      "phone": "09•• ••• 102",
+      "concern": "Thâm sau viêm",
+      "plan": "Phục hồi sau mụn",
+      "procedure": "Chăm sóc da & peel theo chỉ định",
+      "total": 4,
+      "completed": 3,
+      "doctor": "BS. An",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "08:00",
+      "status": "Đặt hẹn",
+      "alerts": [],
+      "consent": false,
+      "photoConsent": true,
+      "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e2-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e2-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 3/4",
+          "detail": "Chăm sóc da & peel theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e2-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e2-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu phục hồi sau mụn",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s2-0",
+          "date": "2026-08-09",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        },
+        {
+          "id": "s2-1",
+          "date": "2026-08-23",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        },
+        {
+          "id": "s2-2",
+          "date": "2026-09-06",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0003",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1800000,
+          "paid": true
+        },
+        {
+          "id": "HD-DEMO-003",
+          "date": "2026-09-20",
+          "label": "Laser theo chỉ định",
+          "amount": 2500000,
+          "received": 0,
+          "paid": false
+        }
+      ]
+    },
+    {
+      "id": "P004",
+      "name": "Phạm Thảo Vy",
+      "age": 40,
+      "gender": "Nữ",
+      "phone": "09•• ••• 103",
+      "concern": "Đỏ da / nhạy cảm",
+      "plan": "Phục hồi hàng rào da",
+      "procedure": "Đánh giá đỏ da định kỳ",
+      "total": 3,
+      "completed": 2,
+      "doctor": "BS. Lan",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "08:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e3-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e3-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/3",
+          "detail": "Đánh giá đỏ da định kỳ. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e3-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e3-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu phục hồi hàng rào da",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s3-0",
+          "date": "2026-08-23",
+          "type": "Đánh giá đỏ da định kỳ",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ"
+        },
+        {
+          "id": "s3-1",
+          "date": "2026-09-06",
+          "type": "Đánh giá đỏ da định kỳ",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0004",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 2100000,
+          "paid": true
+        },
+        {
+          "id": "HD-DEMO-004",
+          "date": "2026-09-20",
+          "label": "Chăm sóc theo chỉ định",
+          "amount": 1200000,
+          "received": 600000,
+          "paid": false
+        }
+      ]
+    },
+    {
+      "id": "P005",
+      "name": "Vũ Quỳnh Trang",
+      "age": 47,
+      "gender": "Nữ",
+      "phone": "09•• ••• 104",
+      "concern": "Sẹo sau mụn",
+      "plan": "Theo dõi cải thiện sẹo",
+      "procedure": "Laser phân đoạn theo chỉ định",
+      "total": 5,
+      "completed": 1,
+      "doctor": "BS. Tâm",
+      "lastVisit": "2026-08-16",
+      "next": "2026-09-20",
+      "time": "09:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e4-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e4-2",
+          "kind": "session",
+          "date": "2026-08-16",
+          "title": "Hoàn tất buổi 1/5",
+          "detail": "Laser phân đoạn theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e4-3",
+          "kind": "photo",
+          "date": "2026-08-16",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e4-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu theo dõi cải thiện sẹo",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s4-0",
+          "date": "2026-08-16",
+          "type": "Laser phân đoạn theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0005",
+          "date": "2026-08-16",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1200000,
+          "paid": true
+        },
+        {
+          "id": "HD-DEMO-005",
+          "date": "2026-09-20",
+          "label": "Tái khám & đánh giá",
+          "amount": 300000,
+          "received": 0,
+          "paid": false
+        }
+      ]
+    },
+    {
+      "id": "P006",
+      "name": "Đặng Gia Hân",
+      "age": 54,
+      "gender": "Nữ",
+      "phone": "09•• ••• 105",
+      "concern": "Trẻ hóa da",
+      "plan": "Kế hoạch thẩm mỹ cá nhân",
+      "procedure": "Đánh giá trước thủ thuật",
+      "total": 3,
+      "completed": 2,
+      "doctor": "BS. Mai",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "09:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Theo dõi vùng điều trị theo hướng dẫn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e5-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e5-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/3",
+          "detail": "Đánh giá trước thủ thuật. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e5-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e5-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu kế hoạch thẩm mỹ cá nhân",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s5-0",
+          "date": "2026-08-23",
+          "type": "Đánh giá trước thủ thuật",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Theo dõi vùng điều trị theo hướng dẫn"
+        },
+        {
+          "id": "s5-1",
+          "date": "2026-09-06",
+          "type": "Đánh giá trước thủ thuật",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Theo dõi vùng điều trị theo hướng dẫn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0006",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1500000,
+          "paid": true
+        },
+        {
+          "id": "HD-DEMO-006",
+          "date": "2026-09-20",
+          "label": "Tư vấn da liễu",
+          "amount": 500000,
+          "received": 0,
+          "paid": false
+        }
+      ]
+    },
+    {
+      "id": "P007",
+      "name": "Bùi Khánh An",
+      "age": 61,
+      "gender": "Nữ",
+      "phone": "09•• ••• 106",
+      "concern": "Nám · tăng sắc tố",
+      "plan": "Liệu trình kiểm soát sắc tố",
+      "procedure": "Chăm sóc & laser theo chỉ định",
+      "total": 5,
+      "completed": 3,
+      "doctor": "BS. An",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "09:00",
+      "status": "Đã đến",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e6-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e6-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 3/5",
+          "detail": "Chăm sóc & laser theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e6-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e6-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu liệu trình kiểm soát sắc tố",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s6-0",
+          "date": "2026-08-09",
+          "type": "Chăm sóc & laser theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn"
+        },
+        {
+          "id": "s6-1",
+          "date": "2026-08-23",
+          "type": "Chăm sóc & laser theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn"
+        },
+        {
+          "id": "s6-2",
+          "date": "2026-09-06",
+          "type": "Chăm sóc & laser theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0007",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1800000,
+          "paid": true
+        },
+        {
+          "id": "HD-DEMO-007",
+          "date": "2026-09-20",
+          "label": "Laser theo chỉ định",
+          "amount": 2500000,
+          "received": 1250000,
+          "paid": false
+        }
+      ]
+    },
+    {
+      "id": "P008",
+      "name": "Ngô Đức Minh",
+      "age": 25,
+      "gender": "Nữ",
+      "phone": "09•• ••• 107",
+      "concern": "Mụn viêm",
+      "plan": "Theo dõi mụn & chăm sóc tại nhà",
+      "procedure": "Tái khám và đánh giá đáp ứng",
+      "total": 4,
+      "completed": 2,
+      "doctor": "BS. Lan",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "09:00",
+      "status": "Đặt hẹn",
+      "alerts": [
+        "Cần cập nhật tiền sử dị ứng"
+      ],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e7-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e7-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/4",
+          "detail": "Tái khám và đánh giá đáp ứng. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e7-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e7-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu theo dõi mụn & chăm sóc tại nhà",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s7-0",
+          "date": "2026-08-23",
+          "type": "Tái khám và đánh giá đáp ứng",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn"
+        },
+        {
+          "id": "s7-1",
+          "date": "2026-09-06",
+          "type": "Tái khám và đánh giá đáp ứng",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0008",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 2100000,
+          "paid": true
+        },
+        {
+          "id": "HD-DEMO-008",
+          "date": "2026-09-20",
+          "label": "Chăm sóc theo chỉ định",
+          "amount": 1200000,
+          "received": 0,
+          "paid": false
+        }
+      ]
+    },
+    {
+      "id": "P009",
+      "name": "Đỗ Phương Nhi",
+      "age": 32,
+      "gender": "Nữ",
+      "phone": "09•• ••• 108",
+      "concern": "Thâm sau viêm",
+      "plan": "Phục hồi sau mụn",
+      "procedure": "Chăm sóc da & peel theo chỉ định",
+      "total": 4,
+      "completed": 3,
+      "doctor": "BS. Tâm",
+      "lastVisit": "2026-08-16",
+      "next": "2026-09-20",
+      "time": "10:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e8-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e8-2",
+          "kind": "session",
+          "date": "2026-08-16",
+          "title": "Hoàn tất buổi 3/4",
+          "detail": "Chăm sóc da & peel theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e8-3",
+          "kind": "photo",
+          "date": "2026-08-16",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e8-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu phục hồi sau mụn",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s8-0",
+          "date": "2026-07-19",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        },
+        {
+          "id": "s8-1",
+          "date": "2026-08-02",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        },
+        {
+          "id": "s8-2",
+          "date": "2026-08-16",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0009",
+          "date": "2026-08-16",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1200000,
+          "paid": true
+        },
+        {
+          "id": "HD-DEMO-009",
+          "date": "2026-09-20",
+          "label": "Tái khám & đánh giá",
+          "amount": 300000,
+          "received": 0,
+          "paid": false
+        }
+      ]
+    },
+    {
+      "id": "P010",
+      "name": "Hồ Bảo Ngọc",
+      "age": 39,
+      "gender": "Nam",
+      "phone": "09•• ••• 109",
+      "concern": "Đỏ da / nhạy cảm",
+      "plan": "Phục hồi hàng rào da",
+      "procedure": "Đánh giá đỏ da định kỳ",
+      "total": 3,
+      "completed": 2,
+      "doctor": "BS. Mai",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "10:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e9-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e9-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/3",
+          "detail": "Đánh giá đỏ da định kỳ. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e9-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e9-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu phục hồi hàng rào da",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s9-0",
+          "date": "2026-08-23",
+          "type": "Đánh giá đỏ da định kỳ",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ"
+        },
+        {
+          "id": "s9-1",
+          "date": "2026-09-06",
+          "type": "Đánh giá đỏ da định kỳ",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0010",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1500000,
+          "paid": true
+        },
+        {
+          "id": "HD-DEMO-010",
+          "date": "2026-09-20",
+          "label": "Tư vấn da liễu",
+          "amount": 500000,
+          "received": 250000,
+          "paid": false
+        }
+      ]
+    },
+    {
+      "id": "P011",
+      "name": "Dương Tuấn Kiệt",
+      "age": 46,
+      "gender": "Nữ",
+      "phone": "09•• ••• 110",
+      "concern": "Sẹo sau mụn",
+      "plan": "Theo dõi cải thiện sẹo",
+      "procedure": "Laser phân đoạn theo chỉ định",
+      "total": 5,
+      "completed": 3,
+      "doctor": "BS. An",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "10:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e10-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e10-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 3/5",
+          "detail": "Laser phân đoạn theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e10-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e10-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu theo dõi cải thiện sẹo",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s10-0",
+          "date": "2026-08-09",
+          "type": "Laser phân đoạn theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật"
+        },
+        {
+          "id": "s10-1",
+          "date": "2026-08-23",
+          "type": "Laser phân đoạn theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật"
+        },
+        {
+          "id": "s10-2",
+          "date": "2026-09-06",
+          "type": "Laser phân đoạn theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0011",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1800000,
+          "paid": true
+        },
+        {
+          "id": "HD-DEMO-011",
+          "date": "2026-09-20",
+          "label": "Laser theo chỉ định",
+          "amount": 2500000,
+          "received": 0,
+          "paid": false
+        }
+      ]
+    },
+    {
+      "id": "P012",
+      "name": "Võ Thanh Trúc",
+      "age": 53,
+      "gender": "Nữ",
+      "phone": "09•• ••• 111",
+      "concern": "Trẻ hóa da",
+      "plan": "Kế hoạch thẩm mỹ cá nhân",
+      "procedure": "Đánh giá trước thủ thuật",
+      "total": 3,
+      "completed": 2,
+      "doctor": "BS. Lan",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "10:00",
+      "status": "Đã đến",
+      "alerts": [],
+      "consent": false,
+      "photoConsent": true,
+      "aftercare": "Theo dõi vùng điều trị theo hướng dẫn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e11-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e11-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/3",
+          "detail": "Đánh giá trước thủ thuật. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e11-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e11-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu kế hoạch thẩm mỹ cá nhân",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s11-0",
+          "date": "2026-08-23",
+          "type": "Đánh giá trước thủ thuật",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Theo dõi vùng điều trị theo hướng dẫn"
+        },
+        {
+          "id": "s11-1",
+          "date": "2026-09-06",
+          "type": "Đánh giá trước thủ thuật",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Theo dõi vùng điều trị theo hướng dẫn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0012",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 2100000,
+          "paid": true
+        },
+        {
+          "id": "HD-DEMO-012",
+          "date": "2026-09-20",
+          "label": "Chăm sóc theo chỉ định",
+          "amount": 1200000,
+          "received": 0,
+          "paid": false
+        }
+      ]
+    },
+    {
+      "id": "P013",
+      "name": "Nguyễn Mai Chi",
+      "age": 60,
+      "gender": "Nữ",
+      "phone": "09•• ••• 112",
+      "concern": "Nám · tăng sắc tố",
+      "plan": "Liệu trình kiểm soát sắc tố",
+      "procedure": "Chăm sóc & laser theo chỉ định",
+      "total": 5,
+      "completed": 1,
+      "doctor": "BS. Tâm",
+      "lastVisit": "2026-08-16",
+      "next": "2026-09-20",
+      "time": "11:00",
+      "status": "Đặt hẹn",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e12-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e12-2",
+          "kind": "session",
+          "date": "2026-08-16",
+          "title": "Hoàn tất buổi 1/5",
+          "detail": "Chăm sóc & laser theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e12-3",
+          "kind": "photo",
+          "date": "2026-08-16",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e12-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu liệu trình kiểm soát sắc tố",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s12-0",
+          "date": "2026-08-16",
+          "type": "Chăm sóc & laser theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0013",
+          "date": "2026-08-16",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1200000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P014",
+      "name": "Trần Quốc Bảo",
+      "age": 24,
+      "gender": "Nữ",
+      "phone": "09•• ••• 113",
+      "concern": "Mụn viêm",
+      "plan": "Theo dõi mụn & chăm sóc tại nhà",
+      "procedure": "Tái khám và đánh giá đáp ứng",
+      "total": 4,
+      "completed": 2,
+      "doctor": "BS. Mai",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "11:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e13-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e13-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/4",
+          "detail": "Tái khám và đánh giá đáp ứng. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e13-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e13-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu theo dõi mụn & chăm sóc tại nhà",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s13-0",
+          "date": "2026-08-23",
+          "type": "Tái khám và đánh giá đáp ứng",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn"
+        },
+        {
+          "id": "s13-1",
+          "date": "2026-09-06",
+          "type": "Tái khám và đánh giá đáp ứng",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0014",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1500000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P015",
+      "name": "Lê Ngọc Diệp",
+      "age": 31,
+      "gender": "Nữ",
+      "phone": "09•• ••• 114",
+      "concern": "Thâm sau viêm",
+      "plan": "Phục hồi sau mụn",
+      "procedure": "Chăm sóc da & peel theo chỉ định",
+      "total": 4,
+      "completed": 3,
+      "doctor": "BS. An",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "11:00",
+      "status": "Vắng hẹn",
+      "alerts": [
+        "Cần cập nhật tiền sử dị ứng"
+      ],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e14-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e14-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 3/4",
+          "detail": "Chăm sóc da & peel theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e14-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e14-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu phục hồi sau mụn",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s14-0",
+          "date": "2026-08-09",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        },
+        {
+          "id": "s14-1",
+          "date": "2026-08-23",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        },
+        {
+          "id": "s14-2",
+          "date": "2026-09-06",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0015",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1800000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P016",
+      "name": "Phạm Minh Khang",
+      "age": 38,
+      "gender": "Nữ",
+      "phone": "09•• ••• 115",
+      "concern": "Đỏ da / nhạy cảm",
+      "plan": "Phục hồi hàng rào da",
+      "procedure": "Đánh giá đỏ da định kỳ",
+      "total": 3,
+      "completed": 2,
+      "doctor": "BS. Lan",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "11:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e15-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e15-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/3",
+          "detail": "Đánh giá đỏ da định kỳ. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e15-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e15-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu phục hồi hàng rào da",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s15-0",
+          "date": "2026-08-23",
+          "type": "Đánh giá đỏ da định kỳ",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ"
+        },
+        {
+          "id": "s15-1",
+          "date": "2026-09-06",
+          "type": "Đánh giá đỏ da định kỳ",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0016",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 2100000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P017",
+      "name": "Vũ Hà My",
+      "age": 45,
+      "gender": "Nam",
+      "phone": "09•• ••• 116",
+      "concern": "Sẹo sau mụn",
+      "plan": "Theo dõi cải thiện sẹo",
+      "procedure": "Laser phân đoạn theo chỉ định",
+      "total": 5,
+      "completed": 1,
+      "doctor": "BS. Tâm",
+      "lastVisit": "2026-08-16",
+      "next": "2026-09-20",
+      "time": "13:00",
+      "status": "Đã đến",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e16-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e16-2",
+          "kind": "session",
+          "date": "2026-08-16",
+          "title": "Hoàn tất buổi 1/5",
+          "detail": "Laser phân đoạn theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e16-3",
+          "kind": "photo",
+          "date": "2026-08-16",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e16-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu theo dõi cải thiện sẹo",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s16-0",
+          "date": "2026-08-16",
+          "type": "Laser phân đoạn theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0017",
+          "date": "2026-08-16",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1200000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P018",
+      "name": "Đặng Phương Linh",
+      "age": 52,
+      "gender": "Nữ",
+      "phone": "09•• ••• 117",
+      "concern": "Trẻ hóa da",
+      "plan": "Kế hoạch thẩm mỹ cá nhân",
+      "procedure": "Đánh giá trước thủ thuật",
+      "total": 3,
+      "completed": 2,
+      "doctor": "BS. Mai",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "13:00",
+      "status": "Đặt hẹn",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Theo dõi vùng điều trị theo hướng dẫn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e17-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e17-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/3",
+          "detail": "Đánh giá trước thủ thuật. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e17-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e17-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu kế hoạch thẩm mỹ cá nhân",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s17-0",
+          "date": "2026-08-23",
+          "type": "Đánh giá trước thủ thuật",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Theo dõi vùng điều trị theo hướng dẫn"
+        },
+        {
+          "id": "s17-1",
+          "date": "2026-09-06",
+          "type": "Đánh giá trước thủ thuật",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Theo dõi vùng điều trị theo hướng dẫn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0018",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1500000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P019",
+      "name": "Bùi Anh Thư",
+      "age": 59,
+      "gender": "Nữ",
+      "phone": "09•• ••• 118",
+      "concern": "Nám · tăng sắc tố",
+      "plan": "Liệu trình kiểm soát sắc tố",
+      "procedure": "Chăm sóc & laser theo chỉ định",
+      "total": 5,
+      "completed": 3,
+      "doctor": "BS. An",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "13:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e18-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e18-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 3/5",
+          "detail": "Chăm sóc & laser theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e18-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e18-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu liệu trình kiểm soát sắc tố",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s18-0",
+          "date": "2026-08-09",
+          "type": "Chăm sóc & laser theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn"
+        },
+        {
+          "id": "s18-1",
+          "date": "2026-08-23",
+          "type": "Chăm sóc & laser theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn"
+        },
+        {
+          "id": "s18-2",
+          "date": "2026-09-06",
+          "type": "Chăm sóc & laser theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0019",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1800000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P020",
+      "name": "Ngô Nhật Hạ",
+      "age": 23,
+      "gender": "Nữ",
+      "phone": "09•• ••• 119",
+      "concern": "Mụn viêm",
+      "plan": "Theo dõi mụn & chăm sóc tại nhà",
+      "procedure": "Tái khám và đánh giá đáp ứng",
+      "total": 4,
+      "completed": 2,
+      "doctor": "BS. Lan",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "13:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e19-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e19-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/4",
+          "detail": "Tái khám và đánh giá đáp ứng. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e19-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e19-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu theo dõi mụn & chăm sóc tại nhà",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s19-0",
+          "date": "2026-08-23",
+          "type": "Tái khám và đánh giá đáp ứng",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn"
+        },
+        {
+          "id": "s19-1",
+          "date": "2026-09-06",
+          "type": "Tái khám và đánh giá đáp ứng",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0020",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 2100000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P021",
+      "name": "Đỗ Đức Huy",
+      "age": 30,
+      "gender": "Nữ",
+      "phone": "09•• ••• 120",
+      "concern": "Thâm sau viêm",
+      "plan": "Phục hồi sau mụn",
+      "procedure": "Chăm sóc da & peel theo chỉ định",
+      "total": 4,
+      "completed": 3,
+      "doctor": "BS. Tâm",
+      "lastVisit": "2026-08-16",
+      "next": "2026-09-20",
+      "time": "14:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": false,
+      "photoConsent": true,
+      "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e20-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e20-2",
+          "kind": "session",
+          "date": "2026-08-16",
+          "title": "Hoàn tất buổi 3/4",
+          "detail": "Chăm sóc da & peel theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e20-3",
+          "kind": "photo",
+          "date": "2026-08-16",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e20-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu phục hồi sau mụn",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s20-0",
+          "date": "2026-07-19",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        },
+        {
+          "id": "s20-1",
+          "date": "2026-08-02",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        },
+        {
+          "id": "s20-2",
+          "date": "2026-08-16",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0021",
+          "date": "2026-08-16",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1200000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P022",
+      "name": "Hồ Mỹ Duyên",
+      "age": 37,
+      "gender": "Nữ",
+      "phone": "09•• ••• 121",
+      "concern": "Đỏ da / nhạy cảm",
+      "plan": "Phục hồi hàng rào da",
+      "procedure": "Đánh giá đỏ da định kỳ",
+      "total": 3,
+      "completed": 2,
+      "doctor": "BS. Mai",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "14:00",
+      "status": "Đã đến",
+      "alerts": [
+        "Cần cập nhật tiền sử dị ứng"
+      ],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e21-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e21-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/3",
+          "detail": "Đánh giá đỏ da định kỳ. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e21-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e21-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu phục hồi hàng rào da",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s21-0",
+          "date": "2026-08-23",
+          "type": "Đánh giá đỏ da định kỳ",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ"
+        },
+        {
+          "id": "s21-1",
+          "date": "2026-09-06",
+          "type": "Đánh giá đỏ da định kỳ",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0022",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1500000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P023",
+      "name": "Dương Thanh Hà",
+      "age": 44,
+      "gender": "Nữ",
+      "phone": "09•• ••• 122",
+      "concern": "Sẹo sau mụn",
+      "plan": "Theo dõi cải thiện sẹo",
+      "procedure": "Laser phân đoạn theo chỉ định",
+      "total": 5,
+      "completed": 3,
+      "doctor": "BS. An",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "14:00",
+      "status": "Đặt hẹn",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e22-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e22-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 3/5",
+          "detail": "Laser phân đoạn theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e22-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e22-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu theo dõi cải thiện sẹo",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s22-0",
+          "date": "2026-08-09",
+          "type": "Laser phân đoạn theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật"
+        },
+        {
+          "id": "s22-1",
+          "date": "2026-08-23",
+          "type": "Laser phân đoạn theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật"
+        },
+        {
+          "id": "s22-2",
+          "date": "2026-09-06",
+          "type": "Laser phân đoạn theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0023",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1800000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P024",
+      "name": "Võ Tường Vy",
+      "age": 51,
+      "gender": "Nam",
+      "phone": "09•• ••• 123",
+      "concern": "Trẻ hóa da",
+      "plan": "Kế hoạch thẩm mỹ cá nhân",
+      "procedure": "Đánh giá trước thủ thuật",
+      "total": 3,
+      "completed": 2,
+      "doctor": "BS. Lan",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "14:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Theo dõi vùng điều trị theo hướng dẫn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e23-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e23-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/3",
+          "detail": "Đánh giá trước thủ thuật. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e23-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e23-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu kế hoạch thẩm mỹ cá nhân",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s23-0",
+          "date": "2026-08-23",
+          "type": "Đánh giá trước thủ thuật",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Theo dõi vùng điều trị theo hướng dẫn"
+        },
+        {
+          "id": "s23-1",
+          "date": "2026-09-06",
+          "type": "Đánh giá trước thủ thuật",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Theo dõi vùng điều trị theo hướng dẫn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0024",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 2100000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P025",
+      "name": "Nguyễn Bảo Châu",
+      "age": 58,
+      "gender": "Nữ",
+      "phone": "09•• ••• 124",
+      "concern": "Nám · tăng sắc tố",
+      "plan": "Liệu trình kiểm soát sắc tố",
+      "procedure": "Chăm sóc & laser theo chỉ định",
+      "total": 5,
+      "completed": 1,
+      "doctor": "BS. Tâm",
+      "lastVisit": "2026-08-16",
+      "next": "2026-09-20",
+      "time": "15:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e24-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e24-2",
+          "kind": "session",
+          "date": "2026-08-16",
+          "title": "Hoàn tất buổi 1/5",
+          "detail": "Chăm sóc & laser theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e24-3",
+          "kind": "photo",
+          "date": "2026-08-16",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e24-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu liệu trình kiểm soát sắc tố",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s24-0",
+          "date": "2026-08-16",
+          "type": "Chăm sóc & laser theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0025",
+          "date": "2026-08-16",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1200000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P026",
+      "name": "Trần Minh Đức",
+      "age": 22,
+      "gender": "Nữ",
+      "phone": "09•• ••• 125",
+      "concern": "Mụn viêm",
+      "plan": "Theo dõi mụn & chăm sóc tại nhà",
+      "procedure": "Tái khám và đánh giá đáp ứng",
+      "total": 4,
+      "completed": 2,
+      "doctor": "BS. Mai",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "15:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e25-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e25-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/4",
+          "detail": "Tái khám và đánh giá đáp ứng. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e25-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e25-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu theo dõi mụn & chăm sóc tại nhà",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s25-0",
+          "date": "2026-08-23",
+          "type": "Tái khám và đánh giá đáp ứng",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn"
+        },
+        {
+          "id": "s25-1",
+          "date": "2026-09-06",
+          "type": "Tái khám và đánh giá đáp ứng",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0026",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1500000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P027",
+      "name": "Lê Hồng Nhung",
+      "age": 29,
+      "gender": "Nữ",
+      "phone": "09•• ••• 126",
+      "concern": "Thâm sau viêm",
+      "plan": "Phục hồi sau mụn",
+      "procedure": "Chăm sóc da & peel theo chỉ định",
+      "total": 4,
+      "completed": 3,
+      "doctor": "BS. An",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "15:00",
+      "status": "Đã đến",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e26-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e26-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 3/4",
+          "detail": "Chăm sóc da & peel theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e26-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e26-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu phục hồi sau mụn",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s26-0",
+          "date": "2026-08-09",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        },
+        {
+          "id": "s26-1",
+          "date": "2026-08-23",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        },
+        {
+          "id": "s26-2",
+          "date": "2026-09-06",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0027",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1800000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P028",
+      "name": "Phạm Hải Yến",
+      "age": 36,
+      "gender": "Nữ",
+      "phone": "09•• ••• 127",
+      "concern": "Đỏ da / nhạy cảm",
+      "plan": "Phục hồi hàng rào da",
+      "procedure": "Đánh giá đỏ da định kỳ",
+      "total": 3,
+      "completed": 2,
+      "doctor": "BS. Lan",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "15:00",
+      "status": "Đặt hẹn",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e27-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e27-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/3",
+          "detail": "Đánh giá đỏ da định kỳ. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e27-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e27-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu phục hồi hàng rào da",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s27-0",
+          "date": "2026-08-23",
+          "type": "Đánh giá đỏ da định kỳ",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ"
+        },
+        {
+          "id": "s27-1",
+          "date": "2026-09-06",
+          "type": "Đánh giá đỏ da định kỳ",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0028",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 2100000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P029",
+      "name": "Vũ Gia Bảo",
+      "age": 43,
+      "gender": "Nữ",
+      "phone": "09•• ••• 128",
+      "concern": "Sẹo sau mụn",
+      "plan": "Theo dõi cải thiện sẹo",
+      "procedure": "Laser phân đoạn theo chỉ định",
+      "total": 5,
+      "completed": 1,
+      "doctor": "BS. Tâm",
+      "lastVisit": "2026-08-16",
+      "next": "2026-09-20",
+      "time": "16:00",
+      "status": "Vắng hẹn",
+      "alerts": [
+        "Cần cập nhật tiền sử dị ứng"
+      ],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e28-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e28-2",
+          "kind": "session",
+          "date": "2026-08-16",
+          "title": "Hoàn tất buổi 1/5",
+          "detail": "Laser phân đoạn theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e28-3",
+          "kind": "photo",
+          "date": "2026-08-16",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e28-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu theo dõi cải thiện sẹo",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s28-0",
+          "date": "2026-08-16",
+          "type": "Laser phân đoạn theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0029",
+          "date": "2026-08-16",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1200000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P030",
+      "name": "Đặng Ngọc Hân",
+      "age": 50,
+      "gender": "Nữ",
+      "phone": "09•• ••• 129",
+      "concern": "Trẻ hóa da",
+      "plan": "Kế hoạch thẩm mỹ cá nhân",
+      "procedure": "Đánh giá trước thủ thuật",
+      "total": 3,
+      "completed": 2,
+      "doctor": "BS. Mai",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "16:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": false,
+      "photoConsent": true,
+      "aftercare": "Theo dõi vùng điều trị theo hướng dẫn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e29-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e29-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/3",
+          "detail": "Đánh giá trước thủ thuật. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e29-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e29-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu kế hoạch thẩm mỹ cá nhân",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s29-0",
+          "date": "2026-08-23",
+          "type": "Đánh giá trước thủ thuật",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Theo dõi vùng điều trị theo hướng dẫn"
+        },
+        {
+          "id": "s29-1",
+          "date": "2026-09-06",
+          "type": "Đánh giá trước thủ thuật",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Theo dõi vùng điều trị theo hướng dẫn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0030",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1500000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P031",
+      "name": "Bùi Thùy Dương",
+      "age": 57,
+      "gender": "Nam",
+      "phone": "09•• ••• 130",
+      "concern": "Nám · tăng sắc tố",
+      "plan": "Liệu trình kiểm soát sắc tố",
+      "procedure": "Chăm sóc & laser theo chỉ định",
+      "total": 5,
+      "completed": 3,
+      "doctor": "BS. An",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "16:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e30-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e30-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 3/5",
+          "detail": "Chăm sóc & laser theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e30-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e30-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu liệu trình kiểm soát sắc tố",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s30-0",
+          "date": "2026-08-09",
+          "type": "Chăm sóc & laser theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn"
+        },
+        {
+          "id": "s30-1",
+          "date": "2026-08-23",
+          "type": "Chăm sóc & laser theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn"
+        },
+        {
+          "id": "s30-2",
+          "date": "2026-09-06",
+          "type": "Chăm sóc & laser theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "SPF 50+ mỗi sáng; thoa lại theo hướng dẫn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0031",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1800000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P032",
+      "name": "Ngô Khánh Vy",
+      "age": 21,
+      "gender": "Nữ",
+      "phone": "09•• ••• 131",
+      "concern": "Mụn viêm",
+      "plan": "Theo dõi mụn & chăm sóc tại nhà",
+      "procedure": "Tái khám và đánh giá đáp ứng",
+      "total": 4,
+      "completed": 2,
+      "doctor": "BS. Lan",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "16:00",
+      "status": "Đã đến",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e31-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e31-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/4",
+          "detail": "Tái khám và đánh giá đáp ứng. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e31-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e31-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu theo dõi mụn & chăm sóc tại nhà",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s31-0",
+          "date": "2026-08-23",
+          "type": "Tái khám và đánh giá đáp ứng",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn"
+        },
+        {
+          "id": "s31-1",
+          "date": "2026-09-06",
+          "type": "Tái khám và đánh giá đáp ứng",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Sữa rửa mặt dịu nhẹ; tránh tự nặn mụn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0032",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 2100000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P033",
+      "name": "Đỗ Thanh Tùng",
+      "age": 28,
+      "gender": "Nữ",
+      "phone": "09•• ••• 132",
+      "concern": "Thâm sau viêm",
+      "plan": "Phục hồi sau mụn",
+      "procedure": "Chăm sóc da & peel theo chỉ định",
+      "total": 4,
+      "completed": 3,
+      "doctor": "BS. Tâm",
+      "lastVisit": "2026-08-16",
+      "next": "2026-09-20",
+      "time": "17:00",
+      "status": "Đặt hẹn",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e32-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e32-2",
+          "kind": "session",
+          "date": "2026-08-16",
+          "title": "Hoàn tất buổi 3/4",
+          "detail": "Chăm sóc da & peel theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e32-3",
+          "kind": "photo",
+          "date": "2026-08-16",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e32-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu phục hồi sau mụn",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s32-0",
+          "date": "2026-07-19",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        },
+        {
+          "id": "s32-1",
+          "date": "2026-08-02",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        },
+        {
+          "id": "s32-2",
+          "date": "2026-08-16",
+          "type": "Chăm sóc da & peel theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Dưỡng ẩm dịu nhẹ; bảo vệ da khỏi nắng"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0033",
+          "date": "2026-08-16",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1200000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P034",
+      "name": "Hồ Lan Anh",
+      "age": 35,
+      "gender": "Nữ",
+      "phone": "09•• ••• 133",
+      "concern": "Đỏ da / nhạy cảm",
+      "plan": "Phục hồi hàng rào da",
+      "procedure": "Đánh giá đỏ da định kỳ",
+      "total": 3,
+      "completed": 2,
+      "doctor": "BS. Mai",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "17:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e33-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e33-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/3",
+          "detail": "Đánh giá đỏ da định kỳ. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e33-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e33-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu phục hồi hàng rào da",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s33-0",
+          "date": "2026-08-23",
+          "type": "Đánh giá đỏ da định kỳ",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ"
+        },
+        {
+          "id": "s33-1",
+          "date": "2026-09-06",
+          "type": "Đánh giá đỏ da định kỳ",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tránh sản phẩm mới khi chưa hỏi bác sĩ"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0034",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1500000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P035",
+      "name": "Dương Phúc An",
+      "age": 42,
+      "gender": "Nữ",
+      "phone": "09•• ••• 134",
+      "concern": "Sẹo sau mụn",
+      "plan": "Theo dõi cải thiện sẹo",
+      "procedure": "Laser phân đoạn theo chỉ định",
+      "total": 5,
+      "completed": 3,
+      "doctor": "BS. An",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "17:00",
+      "status": "Đang điều trị",
+      "alerts": [],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e34-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e34-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 3/5",
+          "detail": "Laser phân đoạn theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e34-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e34-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu theo dõi cải thiện sẹo",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s34-0",
+          "date": "2026-08-09",
+          "type": "Laser phân đoạn theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật"
+        },
+        {
+          "id": "s34-1",
+          "date": "2026-08-23",
+          "type": "Laser phân đoạn theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật"
+        },
+        {
+          "id": "s34-2",
+          "date": "2026-09-06",
+          "type": "Laser phân đoạn theo chỉ định",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Tuân thủ hướng dẫn chăm sóc sau thủ thuật"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0035",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 1800000,
+          "paid": true
+        }
+      ]
+    },
+    {
+      "id": "P036",
+      "name": "Võ Minh Châu",
+      "age": 49,
+      "gender": "Nữ",
+      "phone": "09•• ••• 135",
+      "concern": "Trẻ hóa da",
+      "plan": "Kế hoạch thẩm mỹ cá nhân",
+      "procedure": "Đánh giá trước thủ thuật",
+      "total": 3,
+      "completed": 2,
+      "doctor": "BS. Lan",
+      "lastVisit": "2026-09-06",
+      "next": "2026-09-20",
+      "time": "17:00",
+      "status": "Vắng hẹn",
+      "alerts": [
+        "Cần cập nhật tiền sử dị ứng"
+      ],
+      "consent": true,
+      "photoConsent": true,
+      "aftercare": "Theo dõi vùng điều trị theo hướng dẫn",
+      "meds": [
+        {
+          "name": "Sữa rửa mặt dịu nhẹ",
+          "use": "Sáng & tối · theo hướng dẫn đã duyệt"
+        },
+        {
+          "name": "Dưỡng ẩm phục hồi",
+          "use": "Sau làm sạch · dùng lượng phù hợp"
+        },
+        {
+          "name": "Chống nắng SPF 50+",
+          "use": "Buổi sáng · thoa lại theo hướng dẫn"
+        }
+      ],
+      "notes": "",
+      "events": [
+        {
+          "id": "e35-1",
+          "kind": "followup",
+          "date": "2026-09-13",
+          "title": "Cập nhật tại nhà đã được xem",
+          "detail": "Người bệnh báo đã làm theo hướng dẫn chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e35-2",
+          "kind": "session",
+          "date": "2026-09-06",
+          "title": "Hoàn tất buổi 2/3",
+          "detail": "Đánh giá trước thủ thuật. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.",
+          "by": "BS. Tâm"
+        },
+        {
+          "id": "e35-3",
+          "kind": "photo",
+          "date": "2026-09-06",
+          "title": "Bộ ảnh theo dõi · chính diện",
+          "detail": "Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.",
+          "by": "Điều dưỡng Hương"
+        },
+        {
+          "id": "e35-4",
+          "kind": "plan",
+          "date": "2026-06-26",
+          "title": "Bắt đầu kế hoạch thẩm mỹ cá nhân",
+          "detail": "Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.",
+          "by": "BS. Tâm"
+        }
+      ],
+      "messages": [
+        {
+          "from": "clinic",
+          "text": "Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.",
+          "date": "13/09 · 09:15"
+        }
+      ],
+      "sessions": [
+        {
+          "id": "s35-0",
+          "date": "2026-08-23",
+          "type": "Đánh giá trước thủ thuật",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Theo dõi vùng điều trị theo hướng dẫn"
+        },
+        {
+          "id": "s35-1",
+          "date": "2026-09-06",
+          "type": "Đánh giá trước thủ thuật",
+          "note": "Đã ghi nhận đáp ứng và gửi hướng dẫn chăm sóc.",
+          "reviewed": true,
+          "view": "Chính diện",
+          "region": "Mặt",
+          "image": "placeholder",
+          "aftercare": "Theo dõi vùng điều trị theo hướng dẫn"
+        }
+      ],
+      "invoices": [
+        {
+          "id": "HD-0036",
+          "date": "2026-09-06",
+          "label": "Buổi chăm sóc / điều trị",
+          "amount": 2100000,
+          "paid": true
+        }
+      ]
+    }
+  ],
+  "followups": [
+    {
+      "id": "F001",
+      "patient": "P001",
+      "type": "Ảnh cần bác sĩ xem",
+      "priority": "review",
+      "symptom": "Đỏ nhẹ đã giảm, không đau. Em gửi ảnh trước buổi hẹn.",
+      "date": "2026-09-20T08:42:00",
+      "image": "placeholder",
+      "status": "open",
+      "owner": "BS. Tâm"
+    },
+    {
+      "id": "F002",
+      "patient": "P004",
+      "type": "Phản hồi triệu chứng",
+      "priority": "urgent",
+      "symptom": "Rát tăng lên sau chăm sóc, muốn được phòng khám gọi lại.",
+      "date": "2026-09-20T08:30:00",
+      "image": null,
+      "status": "open",
+      "owner": "BS. Tâm"
+    },
+    {
+      "id": "F003",
+      "patient": "P005",
+      "type": "Quá hạn phản hồi 3 ngày",
+      "priority": "overdue",
+      "symptom": "Chưa có phản hồi kiểm tra sau buổi điều trị.",
+      "date": "2026-09-17T09:00:00",
+      "image": null,
+      "status": "open",
+      "owner": "CSKH Thu"
+    },
+    {
+      "id": "F004",
+      "patient": "P010",
+      "type": "Thiếu ảnh mốc đánh giá",
+      "priority": "missing",
+      "symptom": "Chưa lưu bộ ảnh chính diện của buổi 2.",
+      "date": "2026-09-20T08:00:00",
+      "image": null,
+      "status": "open",
+      "owner": "Điều dưỡng Hương"
+    },
+    {
+      "id": "F005",
+      "patient": "P007",
+      "type": "Kiểm tra chăm sóc ngày 2",
+      "priority": "review",
+      "symptom": "Da ổn, hơi khô. Đã dùng dưỡng ẩm như hướng dẫn.",
+      "date": "2026-09-20T07:35:00",
+      "image": "placeholder",
+      "status": "open",
+      "owner": "CSKH Thu"
+    }
+  ],
+  "operations": {
+    "version": 1,
+    "doctors": [
+      {
+        "id": "D0",
+        "name": "BS. Tâm",
+        "start": "08:00",
+        "end": "18:00",
+        "breakStart": "12:00",
+        "breakEnd": "13:00"
+      },
+      {
+        "id": "D1",
+        "name": "BS. Mai",
+        "start": "08:00",
+        "end": "18:00",
+        "breakStart": "12:00",
+        "breakEnd": "13:00"
+      },
+      {
+        "id": "D2",
+        "name": "BS. An",
+        "start": "08:00",
+        "end": "18:00",
+        "breakStart": "12:00",
+        "breakEnd": "13:00"
+      },
+      {
+        "id": "D3",
+        "name": "BS. Lan",
+        "start": "08:00",
+        "end": "18:00",
+        "breakStart": "12:00",
+        "breakEnd": "13:00"
+      }
+    ],
+    "rooms": [
+      {
+        "id": "R0",
+        "name": "Khám da liễu",
+        "active": true
+      },
+      {
+        "id": "R1",
+        "name": "Tư vấn chuyên sâu",
+        "active": true
+      },
+      {
+        "id": "R2",
+        "name": "Laser & thủ thuật",
+        "active": true
+      },
+      {
+        "id": "R3",
+        "name": "Chăm sóc da",
+        "active": true
+      }
+    ],
+    "services": [
+      {
+        "id": "S0",
+        "name": "Tái khám & đánh giá",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "active": true,
+        "rooms": [
+          "R0",
+          "R1"
+        ]
+      },
+      {
+        "id": "S1",
+        "name": "Tư vấn da liễu",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "active": true,
+        "rooms": [
+          "R0",
+          "R1"
+        ]
+      },
+      {
+        "id": "S2",
+        "name": "Laser theo chỉ định",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "active": true,
+        "rooms": [
+          "R2"
+        ]
+      },
+      {
+        "id": "S3",
+        "name": "Chăm sóc theo chỉ định",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "active": true,
+        "rooms": [
+          "R3"
+        ]
+      }
+    ],
+    "appointments": [
+      {
+        "id": "A0-0",
+        "patient": "P001",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-20",
+        "time": "08:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-1",
+        "patient": "P002",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-20",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-2",
+        "patient": "P003",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-20",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-3",
+        "patient": "P004",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-20",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-4",
+        "patient": "P005",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-20",
+        "time": "09:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-5",
+        "patient": "P006",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-20",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-6",
+        "patient": "P007",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-20",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-7",
+        "patient": "P008",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-20",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-8",
+        "patient": "P009",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-20",
+        "time": "10:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-9",
+        "patient": "P010",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-20",
+        "time": "10:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-10",
+        "patient": "P011",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-20",
+        "time": "10:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-11",
+        "patient": "P012",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-20",
+        "time": "10:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-12",
+        "patient": "P013",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-20",
+        "time": "11:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-13",
+        "patient": "P014",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-20",
+        "time": "11:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-14",
+        "patient": "P015",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-20",
+        "time": "11:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-15",
+        "patient": "P016",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-20",
+        "time": "11:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-16",
+        "patient": "P017",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-20",
+        "time": "13:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-17",
+        "patient": "P018",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-20",
+        "time": "13:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-18",
+        "patient": "P019",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-20",
+        "time": "13:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-19",
+        "patient": "P020",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-20",
+        "time": "13:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-20",
+        "patient": "P021",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-20",
+        "time": "14:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-21",
+        "patient": "P022",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-20",
+        "time": "14:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-22",
+        "patient": "P023",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-20",
+        "time": "14:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-23",
+        "patient": "P024",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-20",
+        "time": "14:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-24",
+        "patient": "P025",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-20",
+        "time": "15:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-25",
+        "patient": "P026",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-20",
+        "time": "15:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-26",
+        "patient": "P027",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-20",
+        "time": "15:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-27",
+        "patient": "P028",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-20",
+        "time": "15:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-28",
+        "patient": "P029",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-20",
+        "time": "16:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-29",
+        "patient": "P030",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-20",
+        "time": "16:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-30",
+        "patient": "P031",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-20",
+        "time": "16:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-31",
+        "patient": "P032",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-20",
+        "time": "16:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-32",
+        "patient": "P033",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-20",
+        "time": "17:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-33",
+        "patient": "P034",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-20",
+        "time": "17:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-34",
+        "patient": "P035",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-20",
+        "time": "17:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A0-35",
+        "patient": "P036",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-20",
+        "time": "17:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A1-0",
+        "patient": "P006",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-21",
+        "time": "08:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A1-1",
+        "patient": "P007",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-21",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A1-2",
+        "patient": "P008",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-21",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A1-3",
+        "patient": "P009",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-21",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A1-4",
+        "patient": "P010",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-21",
+        "time": "09:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A1-5",
+        "patient": "P011",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-21",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A1-6",
+        "patient": "P012",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-21",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A1-7",
+        "patient": "P013",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-21",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A2-0",
+        "patient": "P011",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-22",
+        "time": "08:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A2-1",
+        "patient": "P012",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-22",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A2-2",
+        "patient": "P013",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-22",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A2-3",
+        "patient": "P014",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-22",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A2-4",
+        "patient": "P015",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-22",
+        "time": "09:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A2-5",
+        "patient": "P016",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-22",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A2-6",
+        "patient": "P017",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-22",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A2-7",
+        "patient": "P018",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-22",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A3-0",
+        "patient": "P016",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-23",
+        "time": "08:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A3-1",
+        "patient": "P017",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-23",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A3-2",
+        "patient": "P018",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-23",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A3-3",
+        "patient": "P019",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-23",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A3-4",
+        "patient": "P020",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-23",
+        "time": "09:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A3-5",
+        "patient": "P021",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-23",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A3-6",
+        "patient": "P022",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-23",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A3-7",
+        "patient": "P023",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-23",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A4-0",
+        "patient": "P021",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-24",
+        "time": "08:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A4-1",
+        "patient": "P022",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-24",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A4-2",
+        "patient": "P023",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-24",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A4-3",
+        "patient": "P024",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-24",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A4-4",
+        "patient": "P025",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-24",
+        "time": "09:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A4-5",
+        "patient": "P026",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-24",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A4-6",
+        "patient": "P027",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-24",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A4-7",
+        "patient": "P028",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-24",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A5-0",
+        "patient": "P026",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-25",
+        "time": "08:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A5-1",
+        "patient": "P027",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-25",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A5-2",
+        "patient": "P028",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-25",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A5-3",
+        "patient": "P029",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-25",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A5-4",
+        "patient": "P030",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-25",
+        "time": "09:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A5-5",
+        "patient": "P031",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-25",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A5-6",
+        "patient": "P032",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-25",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A5-7",
+        "patient": "P033",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-25",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A6-0",
+        "patient": "P031",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-26",
+        "time": "08:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A6-1",
+        "patient": "P032",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-26",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A6-2",
+        "patient": "P033",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-26",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A6-3",
+        "patient": "P034",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-26",
+        "time": "08:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A6-4",
+        "patient": "P035",
+        "doctor": "D0",
+        "room": "R0",
+        "service": "S0",
+        "date": "2026-09-26",
+        "time": "09:00",
+        "duration": 30,
+        "buffer": 0,
+        "price": 300000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A6-5",
+        "patient": "P036",
+        "doctor": "D1",
+        "room": "R1",
+        "service": "S1",
+        "date": "2026-09-26",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A6-6",
+        "patient": "P001",
+        "doctor": "D2",
+        "room": "R2",
+        "service": "S2",
+        "date": "2026-09-26",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 2500000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      },
+      {
+        "id": "A6-7",
+        "patient": "P002",
+        "doctor": "D3",
+        "room": "R3",
+        "service": "S3",
+        "date": "2026-09-26",
+        "time": "09:00",
+        "duration": 45,
+        "buffer": 15,
+        "price": 1200000,
+        "status": "booked",
+        "note": "Lịch giả lập để thử điều phối"
+      }
+    ],
+    "waitlist": [
+      {
+        "id": "W0",
+        "patient": "P001",
+        "service": "S0",
+        "note": "Có thể đến trong ngày",
+        "status": "waiting"
+      },
+      {
+        "id": "W1",
+        "patient": "P002",
+        "service": "S1",
+        "note": "Ưu tiên buổi chiều",
+        "status": "waiting"
+      },
+      {
+        "id": "W2",
+        "patient": "P003",
+        "service": "S2",
+        "note": "Có thể đến trong ngày",
+        "status": "waiting"
+      },
+      {
+        "id": "W3",
+        "patient": "P004",
+        "service": "S3",
+        "note": "Ưu tiên buổi chiều",
+        "status": "waiting"
+      },
+      {
+        "id": "W4",
+        "patient": "P005",
+        "service": "S0",
+        "note": "Có thể đến trong ngày",
+        "status": "waiting"
+      },
+      {
+        "id": "W5",
+        "patient": "P006",
+        "service": "S1",
+        "note": "Ưu tiên buổi chiều",
+        "status": "waiting"
+      }
+    ],
+    "payments": [],
+    "blocks": [
+      {
+        "id": "B1",
+        "room": "R2",
+        "doctor": "",
+        "date": "2026-09-21",
+        "start": "14:00",
+        "end": "15:00",
+        "reason": "Bảo trì thiết bị laser"
+      }
+    ]
+  }
+}

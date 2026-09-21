@@ -1,0 +1,80 @@
+{
+  "startedAt": "2026-09-21T07:24:17.014Z",
+  "checks": [
+    {
+      "name": "36 synthetic patients rendered",
+      "pass": true,
+      "detail": "dashboard sample rows visible"
+    },
+    {
+      "name": "dynamic dashboard KPI",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "reception check-in action visible",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "reception check-in updates state",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "treatment session save",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "session creates aftercare event",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "follow-up review sends response",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Ask Pema dynamic result",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "AI note requires review and persists approval",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "patient sends text + image follow-up",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "clinic receives cross-app follow-up",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "mobile no horizontal overflow",
+      "pass": true,
+      "detail": "{\"width\":390,\"client\":390}"
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "screenshots": [
+    "F:\\BUL_Research\\DalieuOs\\demo-assets\\screenshots\\final\\clinic-dashboard.png",
+    "F:\\BUL_Research\\DalieuOs\\demo-assets\\screenshots\\final\\clinic-today.png",
+    "F:\\BUL_Research\\DalieuOs\\demo-assets\\screenshots\\final\\clinic-patient-360.png",
+    "F:\\BUL_Research\\DalieuOs\\demo-assets\\screenshots\\final\\clinic-followup-inbox.png",
+    "F:\\BUL_Research\\DalieuOs\\demo-assets\\screenshots\\final\\clinic-ask-pema.png",
+    "F:\\BUL_Research\\DalieuOs\\demo-assets\\screenshots\\final\\patient-home.png",
+    "F:\\BUL_Research\\DalieuOs\\demo-assets\\screenshots\\final\\patient-treatment-journey.png",
+    "F:\\BUL_Research\\DalieuOs\\demo-assets\\screenshots\\final\\patient-aftercare.png",
+    "F:\\BUL_Research\\DalieuOs\\demo-assets\\screenshots\\final\\patient-send-update.png",
+    "F:\\BUL_Research\\DalieuOs\\demo-assets\\screenshots\\final\\patient-send-update.png"
+  ],
+  "finishedAt": "2026-09-21T07:24:20.866Z"
+}

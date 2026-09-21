@@ -1,0 +1,27 @@
+{
+  "capturedAt": "2026-09-21T06:46:09.179Z",
+  "errors": [],
+  "sizes": [
+    {
+      "screen": "patient",
+      "width": 360,
+      "scroll": 360
+    },
+    {
+      "screen": "patient",
+      "width": 390,
+      "scroll": 390
+    },
+    {
+      "screen": "patient",
+      "width": 768,
+      "scroll": 768
+    },
+    {
+      "screen": "clinic",
+      "width": 390,
+      "scroll": 390
+    }
+  ],
+  "seedPatients": 36
+}

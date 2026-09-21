@@ -1,0 +1,22 @@
+Read `ULTRA_MASTER_PROMPT.md` in full and execute it as ONE continuous Ultra section.
+
+Do not split this into separate research/build sections unless technically required by the runtime.
+
+Work end-to-end:
+research → domain understanding → product design → prototype → simulation → critique → redesign → screenshots → final docs.
+
+Important:
+- Vietnamese UI.
+- Use realistic fake Vietnamese patient data only.
+- Research current competitors and real user complaints.
+- Do not build a generic ERP.
+- Patient 360 and Patient Mobile are the two highest-priority product experiences.
+- The final result must be demoable to the owner of a real dermatology clinic.
+- Continue until all deliverables in the master prompt are completed or clearly documented as incomplete.
+
+At the end:
+1. run both prototypes,
+2. verify the key cross-app demo flow,
+3. capture screenshots,
+4. update README with exact run commands,
+5. write a concise final report listing completed deliverables, major discoveries, remaining gaps, and the recommended next step before meeting Pema.

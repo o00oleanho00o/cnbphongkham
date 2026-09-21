@@ -1,0 +1,337 @@
+{
+  "at": "2026-09-21T07:24:17.045Z",
+  "errors": [],
+  "requests": [],
+  "screens": [
+    {
+      "width": 360,
+      "height": 800,
+      "screen": "home",
+      "pageWidth": 360,
+      "pageHeight": 800,
+      "contentHeight": 655,
+      "scrollHeight": 655,
+      "navTop": 728,
+      "contentBottom": 728,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "screen": "journey",
+      "pageWidth": 360,
+      "pageHeight": 800,
+      "contentHeight": 655,
+      "scrollHeight": 708,
+      "navTop": 728,
+      "contentBottom": 728,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "screen": "appointments",
+      "pageWidth": 360,
+      "pageHeight": 800,
+      "contentHeight": 655,
+      "scrollHeight": 962,
+      "navTop": 728,
+      "contentBottom": 728,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "screen": "messages",
+      "pageWidth": 360,
+      "pageHeight": 800,
+      "contentHeight": 655,
+      "scrollHeight": 655,
+      "navTop": 728,
+      "contentBottom": 728,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "screen": "profile",
+      "pageWidth": 360,
+      "pageHeight": 800,
+      "contentHeight": 655,
+      "scrollHeight": 767,
+      "navTop": 728,
+      "contentBottom": 728,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "screen": "care",
+      "pageWidth": 360,
+      "pageHeight": 800,
+      "contentHeight": 655,
+      "scrollHeight": 792,
+      "navTop": 728,
+      "contentBottom": 728,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "screen": "send",
+      "pageWidth": 360,
+      "pageHeight": 800,
+      "contentHeight": 655,
+      "scrollHeight": 725,
+      "navTop": 728,
+      "contentBottom": 728,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "screen": "progress",
+      "pageWidth": 360,
+      "pageHeight": 800,
+      "contentHeight": 655,
+      "scrollHeight": 655,
+      "navTop": 728,
+      "contentBottom": 728,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "screen": "home",
+      "pageWidth": 390,
+      "pageHeight": 844,
+      "contentHeight": 699,
+      "scrollHeight": 699,
+      "navTop": 772,
+      "contentBottom": 772,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "screen": "journey",
+      "pageWidth": 390,
+      "pageHeight": 844,
+      "contentHeight": 699,
+      "scrollHeight": 708,
+      "navTop": 772,
+      "contentBottom": 772,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "screen": "appointments",
+      "pageWidth": 390,
+      "pageHeight": 844,
+      "contentHeight": 699,
+      "scrollHeight": 920,
+      "navTop": 772,
+      "contentBottom": 772,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "screen": "messages",
+      "pageWidth": 390,
+      "pageHeight": 844,
+      "contentHeight": 699,
+      "scrollHeight": 699,
+      "navTop": 772,
+      "contentBottom": 772,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "screen": "profile",
+      "pageWidth": 390,
+      "pageHeight": 844,
+      "contentHeight": 699,
+      "scrollHeight": 767,
+      "navTop": 772,
+      "contentBottom": 772,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "screen": "care",
+      "pageWidth": 390,
+      "pageHeight": 844,
+      "contentHeight": 699,
+      "scrollHeight": 709,
+      "navTop": 772,
+      "contentBottom": 772,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "screen": "send",
+      "pageWidth": 390,
+      "pageHeight": 844,
+      "contentHeight": 699,
+      "scrollHeight": 725,
+      "navTop": 772,
+      "contentBottom": 772,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "screen": "progress",
+      "pageWidth": 390,
+      "pageHeight": 844,
+      "contentHeight": 699,
+      "scrollHeight": 699,
+      "navTop": 772,
+      "contentBottom": 772,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 375,
+      "height": 667,
+      "screen": "home",
+      "pageWidth": 375,
+      "pageHeight": 667,
+      "contentHeight": 534,
+      "scrollHeight": 534,
+      "navTop": 601,
+      "contentBottom": 601,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 375,
+      "height": 667,
+      "screen": "journey",
+      "pageWidth": 375,
+      "pageHeight": 667,
+      "contentHeight": 534,
+      "scrollHeight": 708,
+      "navTop": 601,
+      "contentBottom": 601,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 375,
+      "height": 667,
+      "screen": "appointments",
+      "pageWidth": 375,
+      "pageHeight": 667,
+      "contentHeight": 534,
+      "scrollHeight": 941,
+      "navTop": 601,
+      "contentBottom": 601,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 375,
+      "height": 667,
+      "screen": "messages",
+      "pageWidth": 375,
+      "pageHeight": 667,
+      "contentHeight": 534,
+      "scrollHeight": 534,
+      "navTop": 601,
+      "contentBottom": 601,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 375,
+      "height": 667,
+      "screen": "profile",
+      "pageWidth": 375,
+      "pageHeight": 667,
+      "contentHeight": 534,
+      "scrollHeight": 767,
+      "navTop": 601,
+      "contentBottom": 601,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 375,
+      "height": 667,
+      "screen": "care",
+      "pageWidth": 375,
+      "pageHeight": 667,
+      "contentHeight": 534,
+      "scrollHeight": 709,
+      "navTop": 601,
+      "contentBottom": 601,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 375,
+      "height": 667,
+      "screen": "send",
+      "pageWidth": 375,
+      "pageHeight": 667,
+      "contentHeight": 534,
+      "scrollHeight": 725,
+      "navTop": 601,
+      "contentBottom": 601,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    },
+    {
+      "width": 375,
+      "height": 667,
+      "screen": "progress",
+      "pageWidth": 375,
+      "pageHeight": 667,
+      "contentHeight": 534,
+      "scrollHeight": 644,
+      "navTop": 601,
+      "contentBottom": 601,
+      "font": "\"Be Vietnam Pro\", Manrope, \"Segoe UI\", sans-serif"
+    }
+  ],
+  "checks": [
+    {
+      "name": "timeline details open",
+      "pass": true
+    },
+    {
+      "name": "history pagination",
+      "pass": true
+    },
+    {
+      "name": "dialog focused inside",
+      "pass": true
+    },
+    {
+      "name": "dialog closes with Escape",
+      "pass": true
+    },
+    {
+      "name": "clinic 1024 no horizontal overflow",
+      "pass": true
+    },
+    {
+      "name": "clinic 768 no horizontal overflow",
+      "pass": true
+    },
+    {
+      "name": "clinic 390 no horizontal overflow",
+      "pass": true
+    },
+    {
+      "name": "local font loaded",
+      "pass": true
+    },
+    {
+      "name": "phone content and navigation do not overlap",
+      "pass": true
+    },
+    {
+      "name": "phone has no document overflow",
+      "pass": true
+    }
+  ]
+}

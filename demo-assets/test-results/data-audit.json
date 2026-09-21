@@ -1,0 +1,191 @@
+{
+  "generatedAt": "2026-09-21T06:42:23.546Z",
+  "scope": "Node VM data.js only; no browser UI, file uploads, or real localStorage mutation",
+  "source": "prototype/shared/data.js",
+  "sourceSha256": "109782db76cf64240b3b8cd0e25e68036d3b96c5d0bff017a0eb8b010760eab8",
+  "node": "v24.19.0",
+  "summary": {
+    "total": 20,
+    "passed": 20,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "malformed_json",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "followupCount": 5,
+        "persisted": true
+      }
+    },
+    {
+      "name": "empty_storage",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "followupCount": 5,
+        "persisted": true
+      }
+    },
+    {
+      "name": "json_null",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "followupCount": 5,
+        "persisted": true
+      }
+    },
+    {
+      "name": "json_empty_object",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "followupCount": 5,
+        "persisted": true
+      }
+    },
+    {
+      "name": "json_empty_array",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "followupCount": 5,
+        "persisted": true
+      }
+    },
+    {
+      "name": "json_string",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "followupCount": 5,
+        "persisted": true
+      }
+    },
+    {
+      "name": "version_2_empty_patients",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "followupCount": 5,
+        "persisted": true
+      }
+    },
+    {
+      "name": "wrong_version",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "followupCount": 5,
+        "persisted": true
+      }
+    },
+    {
+      "name": "patients_wrong_type",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "followupCount": 5,
+        "persisted": true
+      }
+    },
+    {
+      "name": "missing_patient_sessions",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "followupCount": 5,
+        "persisted": true
+      }
+    },
+    {
+      "name": "orphan_followup",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "followupCount": 5,
+        "persisted": true
+      }
+    },
+    {
+      "name": "valid_state_is_preserved",
+      "status": "PASS",
+      "details": {
+        "modifiedNamePreserved": true,
+        "auditPreserved": true
+      }
+    },
+    {
+      "name": "storage_read_throws",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "saveReturn": true,
+        "errorEvents": 0
+      }
+    },
+    {
+      "name": "storage_write_throws",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "saveReturn": false,
+        "errorEvents": 2
+      }
+    },
+    {
+      "name": "storage_read_and_write_throw",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "saveReturn": false,
+        "errorEvents": 2
+      }
+    },
+    {
+      "name": "invalid_external_storage_retains_last_good_state",
+      "status": "PASS",
+      "details": {
+        "patientCount": 36,
+        "lastGoodStateRetained": true
+      }
+    },
+    {
+      "name": "seeded_sessions_chronological_and_match_completed",
+      "status": "PASS",
+      "details": {
+        "patientsChecked": 36,
+        "sessionsChecked": 79,
+        "allAscending": true,
+        "allAtOrBeforeLastVisit": true,
+        "latestMatchesLastVisit": true,
+        "completedMatchesCount": true
+      }
+    },
+    {
+      "name": "seeded_ids_and_followup_references_valid",
+      "status": "PASS",
+      "details": {
+        "patientIds": 36,
+        "sessionIds": 79,
+        "followups": 5
+      }
+    },
+    {
+      "name": "malformed_nested_patient_missing_concern",
+      "status": "PASS",
+      "details": {
+        "restored": true
+      }
+    },
+    {
+      "name": "malformed_nested_session_null_entry",
+      "status": "PASS",
+      "details": {
+        "restored": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "at": "2026-09-21T07:24:16.925Z",
+  "checks": [
+    {
+      "name": "84 appointments seeded and resource calendar rendered",
+      "pass": true
+    },
+    {
+      "name": "all seeded appointments meet shift, room and conflict rules",
+      "pass": true
+    },
+    {
+      "name": "confirmation and check-in persist with Patient 360 event",
+      "pass": true
+    },
+    {
+      "name": "week view and doctor filter",
+      "pass": true
+    },
+    {
+      "name": "doctor overlap rejected without saving",
+      "pass": true
+    },
+    {
+      "name": "room preparation buffer blocks overlap",
+      "pass": true
+    },
+    {
+      "name": "patient double-booking rejected across different doctors",
+      "pass": true
+    },
+    {
+      "name": "incompatible room rejected",
+      "pass": true
+    },
+    {
+      "name": "lunch, invalid date and room block rejected",
+      "pass": true
+    },
+    {
+      "name": "waitlist scheduling saves to patient and persists reload",
+      "pass": true
+    },
+    {
+      "name": "patient app shows newly booked appointment",
+      "pass": true
+    },
+    {
+      "name": "drag/drop opens move editor and saves new slot",
+      "pass": true
+    },
+    {
+      "name": "cancel requires reason then removes from patient future list",
+      "pass": true
+    },
+    {
+      "name": "block busy room rejected; free block saved and removable",
+      "pass": true
+    },
+    {
+      "name": "service duration and price edited; existing booking unchanged",
+      "pass": true
+    },
+    {
+      "name": "invoice pagination and due filter",
+      "pass": true
+    },
+    {
+      "name": "partial payment and overpayment prevention",
+      "pass": true
+    },
+    {
+      "name": "settlement prevents duplicate payment and syncs patient invoice",
+      "pass": true
+    },
+    {
+      "name": "storage failure rolls back payment",
+      "pass": true
+    },
+    {
+      "name": "new screens have no document overflow at 390 / 1024",
+      "pass": true
+    }
+  ],
+  "errors": []
+}
