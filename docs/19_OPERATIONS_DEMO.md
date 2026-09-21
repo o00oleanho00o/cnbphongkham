@@ -23,6 +23,16 @@ Patient 360 là nơi nối các sự kiện của một người bệnh. Lịch 
 
 Mỗi lần bàn giao cần rõ: ai phụ trách, việc nào đã hoàn tất và bước tiếp theo là gì. Có lịch hẹn không có nghĩa đã điều trị; đã thu tiền không có nghĩa đã hoàn tất chăm sóc.
 
+### Dịch vụ, liệu trình và thanh toán
+
+Trong Patient 360, **danh mục dịch vụ** chỉ là giá tham khảo cho lịch mới. Khi người bệnh đăng ký, Pema tạo một **dịch vụ gắn hồ sơ** với số buổi, giá chốt, giảm giá, bác sĩ phụ trách và tiến độ đã dùng. Giá chốt không đổi khi danh mục được chỉnh sửa sau đó. Thêm dịch vụ mới đồng thời tạo hóa đơn chờ thu để Thu ngân theo dõi; đặt lịch không tự tăng số buổi, chỉ buổi điều trị được lưu mới cập nhật tiến độ.
+
+Tiền cọc là khoản đã nhận và được phân bổ vào liệu trình. Khi thu phần còn lại, hệ thống không tính tiền cọc như một giao dịch mới. Số đã thu, số cọc đã phân bổ và số còn phải thu được hiển thị riêng để tránh thu trùng.
+
+### Đơn thuốc
+
+Đơn thuốc đi theo luồng **bản nháp → bác sĩ kiểm tra và duyệt → người bệnh xem trên Patient Mobile**. Bản nháp vẫn nằm trong Patient 360 để chỉnh sửa nhưng không xuất hiện trên app. Mỗi dòng thuốc lưu tên, cách dùng, tần suất và thời gian; lịch sử duyệt giữ người duyệt và thời điểm. Đơn thuốc đã duyệt, cấp phát và hóa đơn là các trạng thái riêng, không tự suy ra trạng thái này từ trạng thái kia.
+
 **Đọc tiếp:** Lịch hẹn & tiếp đón · Từ tư vấn đến buổi điều trị · Chăm sóc & phản hồi tại nhà · Hóa đơn & thu tiền
 
 ## Bắt đầu theo vai trò

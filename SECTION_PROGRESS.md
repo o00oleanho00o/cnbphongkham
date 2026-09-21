@@ -146,3 +146,18 @@ Root/build agents temporarily hit service rate limits; all research/domain files
 - Added Hướng dẫn navigation and direct route /clinic-web/?screen=guide, with nine searchable topics, role-based guidance, care journey map, related reading and links to operational screens.
 - Rewrote docs/19_OPERATIONS_DEMO.md to match system usage guidance rather than demo walkthrough. Explains data handoffs and distinguishes current functionality from planned automation.
 - Checked all nine topics, Vietnamese accent-insensitive search, empty search state, cashier link, direct load, and 390/768/1440 viewport widths: PASS, no page errors. Evidence guide-results.json / guide-desktop.png under demo-assets/screenshots/operations.
+
+## 2026-09-21 — Patient-linked services and prescriptions
+- Added shared `prototype/shared/care-finance.js` to migrate the existing mock dataset with service plans, agreed price/discount, session progress, deposit ledger and prescription status.
+- Patient 360 now shows Dịch vụ & liệu trình and Đơn thuốc. Adding a service creates a linked pending invoice; draft prescriptions stay clinic-only until a doctor approves them.
+- Patient Mobile shows approved prescriptions only, alongside the existing invoices and aftercare. Deposit allocation remains separate from later payment collection.
+- Verified add-draft/approve/mobile visibility and 390px no-overflow in `prototype/check-linked.cjs`; existing UI, operations and smoke suites remain passing.
+
+## 2026-09-21 — Documentation workflow PB01
+
+- Đọc PM AI Bootcamp chỉ để rút ra phương pháp làm rõ scope, acceptance, foundation-first module map, architecture, human approval và validation; không đưa nội dung bài tập/đào tạo vào sản phẩm.
+- Tạo bộ tài liệu áp dụng cho Pema hiện tại: docs/SCOPE-PB01.md, docs/SPEC-PB01.md, docs/MODULEMAP-PB01.md, docs/ARCH-PB01.md và root AGENT.md.
+- Scope ghi rõ Clinic Web, Patient Mobile, Patient 360, dịch vụ/liệu trình, session, prescription approval, follow-up, consent, cashier/deposit và ranh giới prototype/pilot.
+- Spec bổ sung use case, FR/NFR, Given/When/Then acceptance, ngoại lệ và synthetic-data constraints; Module Map đặt shared state, consent, audit/read-model conventions trước màn hình; Architecture tách demo localStorage khỏi pilot API/RBAC/database/media.
+- README đã liên kết luồng 0 → 1 → 2 → 3 và quy tắc cập nhật downstream.
+- Next exact action: chạy toàn bộ suite kiểm thử, kiểm tra diff, commit và push tài liệu cùng các thay đổi prototype đang có.

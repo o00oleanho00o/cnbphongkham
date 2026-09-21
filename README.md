@@ -42,3 +42,16 @@ AI brief, clinical note draft và Ask Pema là output mô phỏng/deterministic 
 ## Quản lý vận hành mở rộng
 
 Mở [Điều phối lịch](http://127.0.0.1:4173/clinic-web/?screen=schedule), [Bác sĩ & phòng](http://127.0.0.1:4173/clinic-web/?screen=resources), [Dịch vụ](http://127.0.0.1:4173/clinic-web/?screen=services), [Thu ngân](http://127.0.0.1:4173/clinic-web/?screen=cashier). Dữ liệu mock và thao tác chi tiết trong [hướng dẫn demo](docs/19_OPERATIONS_DEMO.md). Chạy `node prototype/operations-test.cjs` để kiểm tra 20 tình huống vận hành.
+
+Patient 360 hiện liên kết dịch vụ đã đăng ký với số buổi, giá chốt, giảm giá và hóa đơn chờ thu. Đơn thuốc đi qua trạng thái nháp và bác sĩ duyệt; Patient Mobile chỉ hiển thị đơn đã duyệt. Tiền cọc được ghi trong sổ phân bổ riêng để không tính trùng khi thu phần còn lại. Chạy `node prototype/check-linked.cjs` để kiểm tra luồng dịch vụ, đơn thuốc, hóa đơn và mobile.
+
+## Luồng tài liệu dự án
+
+Bộ tài liệu PB01 mô tả cùng một boundary sản phẩm theo thứ tự từ quyết định đến triển khai. Khi thay đổi phạm vi hoặc hành vi, đọc và cập nhật theo luồng **0 → 1 → 2 → 3**, rồi cập nhật tài liệu vận hành và bằng chứng:
+
+0. [Scope PB01](docs/SCOPE-PB01.md) — vấn đề, boundary, actor, giả định, câu hỏi mở và Definition of Done.
+1. [Spec PB01](docs/SPEC-PB01.md) — yêu cầu chức năng, NFR, use case, acceptance và ngoại lệ.
+2. [Module Map PB01](docs/MODULEMAP-PB01.md) — móng ẩn, domain, experience, validation và cut line MVP.
+3. [Architecture PB01](docs/ARCH-PB01.md) — container demo/pilot, data model, API, phân quyền, NFR và đường di chuyển.
+
+[AGENT.md](AGENT.md) ghi quy tắc làm việc, dữ liệu giả lập, kiểm thử và cách giữ ranh giới prototype/pilot. Bộ tài liệu này áp dụng cho Pema Digital Clinic hiện tại; không phải giáo trình hay checklist đào tạo.
