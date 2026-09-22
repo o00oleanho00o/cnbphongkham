@@ -228,3 +228,10 @@ Root/build agents temporarily hit service rate limits; all research/domain files
 Validation: crm-domain 22 PASS; CRM browser 7 nhóm kiểm tra gồm Flow A/B/C, ảnh D3, tách tài khoản và tải 200 dòng, 35 layout PASS; linked PASS; desktop 80 layout PASS; operations 20 PASS; smoke 12 PASS; data audit 20 PASS; order 13 PASS; finance 11 PASS; 132 link docs không lỗi. Evidence mới trong demo-assets/screenshots/crm01, giữ ảnh cũ của các vòng trước. Lỗi khóa/ghi đè ảnh cũ đã xử lý bằng output folder riêng và rerun thành công; không tính các lượt lỗi là PASS.
 
 Đây là demo local, chưa production replacement/auth/provider/native CRM. Ngày demo cố định 20/09/2026; task tương lai chỉ vào queue khi đến hạn; không job khi browser đóng. Booking chưa tính quay lại thực tế. Mục tiêu Git master theo prompt; giữ toàn bộ commit mới hơn master, không reset về baseline cũ. Đã hoàn tất kỹ thuật để commit và publish trong lượt bàn giao này; SHA/remote xác minh sau push.
+
+
+### CRM01 — bàn giao đã xuất bản
+
+Commit triển khai `5f8cde62a80abc413599cf3ef8b385a576a5c0aa` đã push lên `origin/master`; đã dùng `git ls-remote` xác minh SHA remote khớp HEAD. Master được fast-forward từ baseline, giữ nguyên catalog/Flutter/PB02 và lịch sử, không force-push. Đánh giá DoD CRM01 hoàn tất ở mức prototype đã nêu: flow A/B/C, rules/expected visit/idempotency, timeline/booking/metrics, phân vai nhân viên, regression/responsive/evidence và docs. Kiểm thêm liên kết doanh số bác sĩ trả đúng projection `doctor:D1`; CSKH truy cập tài chính được chuyển về workspace.
+
+File log runtime và các thư mục/ZIP tạm có từ trước vẫn để ngoài commit. Không thay dữ liệu thật, không bật gửi tin/provider, không nghiệm thu auth production hay native CRM. Phần CRM01 này hoàn tất; không suy toàn bộ mục tiêu ULTRA/pilot đã hoàn tất từ checkpoint này.
