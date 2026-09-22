@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'widgets/pema_bottom_nav.dart';
 
 const financeApi = String.fromEnvironment(
   'PEMA_FINANCE_API',
@@ -339,7 +340,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: PemaModernBottomNav(
         selectedIndex: tab,
         onDestinationSelected: (v) => setState(() => tab = v),
         destinations: [

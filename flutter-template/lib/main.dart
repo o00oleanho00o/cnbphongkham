@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'store.dart';
 import 'finance.dart';
 import 'care_workspace.dart';
+import 'widgets/pema_bottom_nav.dart';
 
 const blue = Color(0xFF0B4F94),
     navy = Color(0xFF083A6E),
@@ -322,11 +323,9 @@ class _WorkspaceState extends State<Workspace> {
           ),
         ),
       ),
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: PemaModernBottomNav(
         selectedIndex: index,
         onDestinationSelected: (i) => setState(() => index = i),
-        backgroundColor: Colors.white,
-        indicatorColor: const Color(0xFFE8F4FB),
         destinations: List.generate(
           labels.length,
           (i) => NavigationDestination(icon: Icon(icons[i]), label: labels[i]),
