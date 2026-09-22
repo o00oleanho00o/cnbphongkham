@@ -38,6 +38,27 @@ Fresh clone không có compiled preview. Cài Flutter vào PATH rồi chạy `fl
 
 ## Khởi động
 
+### Chạy nhanh bằng Docker Compose
+
+Tại thư mục gốc của workspace, chạy 1 lệnh:
+
+```powershell
+docker compose up -d --build
+```
+
+Sau khi container lên, mở:
+
+- Clinic Web: [http://127.0.0.1:4173/clinic-web/](http://127.0.0.1:4173/clinic-web/)
+- Patient Mobile: [http://127.0.0.1:4173/patient-mobile/](http://127.0.0.1:4173/patient-mobile/)
+
+Lệnh dừng:
+
+```powershell
+docker compose down
+```
+
+### Chạy local bằng Python
+
 Mở PowerShell tại `F:\BUL_Research\DalieuOs\prototype` và chạy:
 
 ```powershell

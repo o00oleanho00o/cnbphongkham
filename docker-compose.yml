@@ -1,0 +1,9 @@
+services:
+  pema-prototype:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pema-prototype
+    ports:
+      - "4173:4173"
+    restart: unless-stopped
