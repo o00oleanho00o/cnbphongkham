@@ -1,6 +1,6 @@
 const {chromium} = require('C:/Users/email/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const assert = require('node:assert/strict'), fs = require('fs'), path = require('path');
-const out = path.resolve(__dirname, '../demo-assets/screenshots/orders');
+const out = process.env.PEMA_EVIDENCE_DIR || path.resolve(__dirname, '../demo-assets/screenshots/orders');
 fs.mkdirSync(out, {recursive:true});
 const report = {checks:[], errors:[]};
 const base = 'http://127.0.0.1:4173';

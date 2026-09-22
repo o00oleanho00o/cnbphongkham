@@ -1,0 +1,35 @@
+{
+  "date": "2026-09-22",
+  "scope": "Mobile CRM02, unified finance shell, native CSKH redesign",
+  "checks": {
+    "crmDomain": 23,
+    "crmBrowserFlows": 7,
+    "crmBrowserLayouts": 35,
+    "operations": 20,
+    "desktopLayouts": 80,
+    "linked": "PASS",
+    "smoke": 12,
+    "orders": 13,
+    "financeApi": 12,
+    "mobileFinanceFlows": 5,
+    "mobileFinanceLayouts": 20,
+    "flutterAnalyze": "No issues found",
+    "flutterTests": 17,
+    "nativeBuild": "PASS",
+    "nativeBrowserLayouts": [
+      "360x800",
+      "390x844",
+      "430x932",
+      "768x1024"
+    ],
+    "nativeFirstPatientY": 334,
+    "nativeContactFlow": "PASS",
+    "docsLinks": 142
+  },
+  "limits": [
+    "Flutter CRM snapshot/memory-only, independent of web clinical state",
+    "Finance foreground polling, no OS push",
+    "No Android/iOS device testing",
+    "Existing CupertinoIcons font build warning; shown Material icons visually checked"
+  ]
+}

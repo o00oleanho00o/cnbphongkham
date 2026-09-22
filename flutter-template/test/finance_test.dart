@@ -142,9 +142,21 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: label);
       }
-      await tester.pumpWidget(MaterialApp(home: ProcedureForm(controller: c)));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ProcedureForm(
+            controller: c,
+            initialPatient: 'P046',
+            patientIds: List.generate(
+              46,
+              (i) => 'P${(i + 1).toString().padLeft(3, '0')}',
+            ),
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
+      expect(find.text('P046'), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
       c.dispose();
     });

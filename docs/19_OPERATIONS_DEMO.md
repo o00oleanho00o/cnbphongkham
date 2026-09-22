@@ -242,7 +242,7 @@ Bản hiện tại phục vụ thử nghiệm nội bộ với dữ liệu giả
 
 ## Bổ sung Flutter template — 22/09/2026
 
-Hướng dẫn nghiệp vụ web ở trên không tự áp dụng cho Flutter. Để duyệt native, đi từ hồ sơ → tác vụ → Care trong cùng instance, ưu tiên P001; lịch/buổi/follow-up còn chung phiên, thu tiền chỉ tổng phần còn lại, phiếu chưa in. Đọc [mạch sử dụng theo màn](NATIVE-TEMPLATE.md), [runbook vận hành](21_NATIVE_RUNBOOK.md) và [parity](22_NATIVE_PARITY_AND_VALIDATION.md). Mục tiêu hướng dẫn là hiểu liên kết và bàn giao, không coi các nút mẫu là nghiệp vụ production.
+Hướng dẫn nghiệp vụ web ở trên không tự áp dụng cho Flutter. Để duyệt native, đi từ hồ sơ → tác vụ → Care trong cùng instance, chọn đúng người bệnh ở từng không gian. Lịch/buổi/follow-up/cart đã tách theo patient ID; thu tiền PB01 chỉ tổng phần còn lại, phiếu chưa in. CSKH native dùng ba trạng thái, tìm kiếm và sheet lọc nhóm; tài chính PB02 dùng API chung với web. Đọc [mạch sử dụng theo màn](NATIVE-TEMPLATE.md), [runbook vận hành](21_NATIVE_RUNBOOK.md) và [parity](22_NATIVE_PARITY_AND_VALIDATION.md). Mục tiêu hướng dẫn là hiểu liên kết và bàn giao, không coi các nút mẫu là nghiệp vụ production.
 
 
 ## Bổ sung tài chính PB02

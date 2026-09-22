@@ -42,7 +42,7 @@ Màn điện thoại dùng danh sách, màn con và bottom sheet. Patient 360 c�
 
 ## Giới hạn vòng duyệt
 
-State trong bộ nhớ của phiên template, chưa sync với localStorage web/backend. 36 hồ sơ tổng hợp minh họa; luồng lâm sàng/lịch/follow-up mặc định tập trung P001. Catalog sản phẩm là dữ liệu Excel được người dùng cung cấp, không phải dữ liệu sản phẩm giả lập.
+State trong bộ nhớ của phiên template, chưa sync với localStorage web/backend. 46 hồ sơ snapshot tổng hợp, state lâm sàng/lịch/follow-up/cart tách theo patient, selection Care/Clinic riêng. Catalog sản phẩm là dữ liệu Excel được người dùng cung cấp, không phải dữ liệu sản phẩm giả lập.
 
 Ảnh tiến triển/camera, AI, quyền riêng tư, cảnh báo nguồn lực và phiếu A5 là template. Chưa xuất PDF/in native, chưa gửi notification/payment thật, chưa RBAC, chưa lưu bền vững. Bố cục phiếu A5 để duyệt hai nhóm; không phải đầu ra in đã nghiệm thu.
 
@@ -51,7 +51,10 @@ Thiết kế chi tiết và mapping: [NATIVE-TEMPLATE.md](../docs/NATIVE-TEMPLAT
 ## Tài liệu triển khai và kiểm tra
 
 - [Runbook](../docs/21_NATIVE_RUNBOOK.md): SDK/PATH, fresh clone, `build-preview.ps1`, static server, đồng bộ catalog và xử lý lỗi preview.
-- [Ma trận web/native](../docs/22_NATIVE_PARITY_AND_VALIDATION.md): hành vi thực tế, state chung/tách theo patient, giới hạn thu ngân/A5/media, kiểm thử đã chạy và checklist còn mở.
+- [Ma trận web/native](../docs/22_NATIVE_PARITY_AND_VALIDATION.md): hành vi thực tế, state theo patient và selection riêng, giới hạn thu ngân/A5/media, kiểm thử đã chạy và checklist còn mở.
 - [Bản đồ tài liệu](../docs/README.md): Scope → Spec → Module Map → Architecture; [quy tắc đóng góp](../AGENT.md).
 
-Build dành cho URL review dùng `./build-preview.ps1` (Flutter phải ở PATH), thay cho việc chỉ build mà chưa copy output. `prototype/native-preview/` không được commit. Validation hiện có gồm 6 test; cả bốn widget viewport đều height 844, chưa thay thế kiểm tra device hoặc toàn bộ flow Care.
+Build dành cho URL review dùng `./build-preview.ps1` (Flutter phải ở PATH), thay cho việc chỉ build mà chưa copy output. `prototype/native-preview/` không được commit. Validation hiện có gồm 17 test; cả bốn widget viewport đều height 844, chưa thay thế kiểm tra device hoặc toàn bộ flow Care.
+
+
+Header nay chọn Chủ / Bác sĩ / CSKH / Kế toán / Care, mỗi vai trò có màn bắt đầu riêng. Care → Hồ sơ chọn nhóm tài khoản. CRM native là template độc lập web, chưa rule engine động. [Hướng dẫn mới](../docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).

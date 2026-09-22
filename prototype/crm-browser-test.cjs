@@ -1,6 +1,6 @@
 const {chromium}=require('C:/Users/email/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
-const out=path.resolve(__dirname,'../demo-assets/screenshots/crm01');fs.mkdirSync(out,{recursive:true});
+const out=process.env.PEMA_EVIDENCE_DIR||path.resolve(__dirname,'../demo-assets/screenshots/crm01');fs.mkdirSync(out,{recursive:true});
 const report={demoClock:'2026-09-20',checks:[],layouts:[],errors:[],screenshots:[]};
 (async()=>{
  const browser=await chromium.launch();try{
@@ -13,7 +13,7 @@ const report={demoClock:'2026-09-20',checks:[],layouts:[],errors:[],screenshots:
  const reset=async()=>{await p.evaluate(()=>Pema.reset());await p.reload();};
  await p.goto('http://127.0.0.1:4173/clinic-web/');
  await shot('01-manager-dashboard');await nav('today');await shot('02-reception');await nav('crm');await shot('03-care-queue');
- await check('CRM queue has ten groups and deterministic 36-patient scenarios',async()=>{assert.equal(await p.locator('.crm-groups [data-crm="filter"]').count(),11);assert.equal(await p.evaluate(()=>Pema.state.patients.filter(p=>p.crm.demoCase).length),8);});
+ await check('CRM queue has ten groups and deterministic 46-patient scenarios',async()=>{assert.equal(await p.locator('.crm-groups [data-crm="filter"]').count(),11);assert.equal(await p.evaluate(()=>Pema.state.patients.filter(p=>p.crm.demoCase).length),18);});
  await profile('P027');await p.locator('.tabbar [data-tab="crm"]').click();await shot('04-patient-crm');
  // Flow B: completed session protocol tasks, log/reschedule and timeline.
  await check('Flow B: D+1 task → callback tomorrow → queue decreases and timeline persists',async()=>{

@@ -76,11 +76,13 @@ MVP PB01 gồm patient identity, shared state, consent/audit shape, Patient 360,
 | Thành phần | Nguồn | Trách nhiệm / phụ thuộc |
 |---|---|---|
 | App shell, theme, navigation, các màn | `flutter-template/lib/main.dart` | Material 3; đọc/ghi DemoStore; chưa tách feature package |
+| CSKH mobile | `flutter-template/lib/care_workspace.dart` | Ba trạng thái, tìm kiếm, lọc nhóm trong sheet và mở tác vụ đúng patient |
+| Tài khoản mẫu | `flutter-template/assets/patients.json`, `prototype/export-native-patients.cjs` | Snapshot 46 hồ sơ/10 nhóm từ fresh fixture; kiểm đồng nhất bằng `--check` |
 | State và đơn hàng | `flutter-template/lib/store.dart` | ChangeNotifier; catalog, cart, order snapshot, patient selection, receipt totals; memory only |
 | Catalog | `flutter-template/assets/products.json` | Bản sao `prototype/shared/product-catalog.json`; import Excel ở web trước rồi đồng bộ bundle |
 | Nhận diện | `flutter-template/assets/` | Logo, Be Vietnam Pro và giấy phép OFL; dùng chung ngôn ngữ thiết kế web |
 | Review shell | `prototype/native-review/index.html` | Chọn khung iframe; không sở hữu nghiệp vụ Flutter |
-| Build và kiểm tra | `flutter-template/build-preview.ps1`, `test/template_test.dart` | Build/copy preview và 6 test; generated output không sửa trực tiếp |
+| Build và kiểm tra | `flutter-template/build-preview.ps1`, `test/` | Build/copy preview và 17 test (template, finance, mobile roles); generated output không sửa trực tiếp |
 
 Thứ tự phát triển sau duyệt: chốt identity + per-patient model → repository/API + persistence → phân quyền/audit → nghiệp vụ lịch/đơn/ledger/follow-up → plugin media/PDF/notification → device acceptance. Không thêm màn để che thiếu nền. Phân định web/native theo [ma trận parity](22_NATIVE_PARITY_AND_VALIDATION.md).
 
@@ -106,3 +108,10 @@ Không xây thêm màn hình chỉ để đủ menu khi module nền chưa có t
 ## Module hỗ trợ thiết kế
 
 `.agents/skills/pema-design/` chứa SKILL.md, agents/openai.yaml và bốn references visual-system, screens-and-flows, platform-layout, delivery-and-review. `docs/23_PEMA_DESIGN_SKILL.md` hướng dẫn dùng/chia sẻ. Skill đọc source/assets/docs hiện có, không tạo bản sao runtime hoặc catalog.
+
+
+## Mobile và Clinic shell — 22/09/2026
+
+Tái dùng finance.js dưới dạng mount/dispose, CSS giới hạn trong finance-workspace; Clinic làm shell duy nhất. crm-data bổ sung fixtures và projection patientNext; patient.js chọn nhóm/tài khoản. Flutter DemoStore chứa hồ sơ và state theo patient, Workspace chọn vai trò trước khi chọn tác vụ.
+
+UI review CSKH mobile: trạng thái Cần làm / Đã liên hệ / Chờ bác sĩ ở đầu màn; tìm kiếm và nút Lọc mở sheet 10 nhóm, không trải 10 chip lên home. Card đầu nằm trong 440px đầu ở viewport 360; lọc/trạng thái phải thực sự đổi danh sách. Widget `care_workspace.dart` dùng cùng PatientState, ghi chú nội bộ giữ tách Care.

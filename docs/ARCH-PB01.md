@@ -27,7 +27,7 @@ Tài liệu tách kiến trúc demo đang chạy và đích pilot. LocalStorage 
             └── synthetic patients, events, plans, sessions, followups, invoices
 
 - Vanilla HTML/JS, không build và không backend.
-- data.js tạo/migrate 36 patient giả lập; state đọc/ghi trong browser.
+- data.js tạo 36 patient nền, crm-data.js bổ sung 10 hồ sơ nhóm CSKH; state đọc/ghi trong browser.
 - Event-shaped arrays và read models nằm trong patient state; không có event bus hay transaction server.
 - Ảnh là SVG/placeholder hoặc data URL resize trong localStorage.
 - Hai app chỉ chia sẻ state khi cùng origin và browser profile.
@@ -114,17 +114,17 @@ Prototype chưa enforce matrix bằng login; đây là contract pilot cần deny
 
 Luồng build: `Dart + bundled assets → flutter build web → prototype/native-preview → iframe native-review`. HTTP server chỉ phục vụ file tĩnh, không phải API. Android/iOS có target scaffold nhưng chưa có nghiệm thu build/thiết bị.
 
-`main.dart → DemoStore (ChangeNotifier) → rootBundle products.json`. Store không đọc localStorage `pema-demo-v2`; mở cùng origin vẫn không đồng bộ với Clinic Web/Patient Mobile. Reload/new session khôi phục fixture. Trong cùng instance, Clinic và Care đọc chung store.
+`main.dart → DemoStore (ChangeNotifier) → rootBundle products.json + patients.json`. Store không đọc localStorage `pema-demo-v2`; mở cùng origin vẫn không đồng bộ với Clinic Web/Patient Mobile. Reload/new session khôi phục fixture. Trong cùng instance, Clinic và Care đọc chung store.
 
 | Dữ liệu | Shape / phạm vi thực tế |
 |---|---|
-| Bệnh nhân | 36 tên sinh từ 6 tên gốc; selected index ánh xạ P001…P036; không phải clinical aggregate của web |
+| Bệnh nhân | 46 hồ sơ từ assets/patients.json, export fresh fixture web; không phải clinical aggregate đầy đủ |
 | Order | id DN-n, patient, name, approved, total, items snapshot; sửa thay record cùng id |
 | Receipt | Map patientId → tổng số đã thu; không có payment entity, ledger hay đối soát |
-| Cart/editingOrder | Chung phiên; chưa có draft workspace riêng theo patient |
-| Lịch, sessions, note, updates, response, consent UI | Lịch/buổi/note/messages chung phiên; privacy checkbox chỉ ở widget; không durable consent |
+| Cart/editingOrder | Lưu trong PatientState theo patient ID, đổi người không mang giỏ/đơn đang sửa sang hồ sơ khác |
+| Lịch, sessions, note, updates, response, consent UI | Lịch/buổi/note/messages/cart theo patient ID trong memory; privacy checkbox chỉ ở widget; không durable consent |
 
-Không suy ra cách ly bệnh nhân cho toàn store từ test đơn/receipt. Trước mở rộng nhiều bệnh nhân cần model typed với patientId trên từng record, repository theo domain, authorization server-side và test chống lẫn dữ liệu. Approval hiện là bool, chưa immutable/versioned và chưa có reviewer timestamp. Phiếu chỉ là projection trên approved orders, không document service.
+Mobile CRM02 đã kiểm cách ly lịch/note/buổi/cập nhật/phản hồi/cart/đơn đang sửa/ghi chú CSKH; Care và Clinic giữ selection riêng. Đây là cách ly state trong memory, không phải authorization. Pilot vẫn cần patientId trên từng record bền vững, repository theo domain, quyền server và test chống lẫn dữ liệu. Approval hiện là bool, chưa immutable/versioned và chưa có reviewer timestamp. Phiếu chỉ là projection trên approved orders, không document service.
 
 Đích kiến trúc bên dưới là yêu cầu pilot, chưa phải implementation Flutter. Runbook: [21_NATIVE_RUNBOOK](21_NATIVE_RUNBOOK.md).
 
@@ -150,3 +150,10 @@ Không suy ra cách ly bệnh nhân cho toàn store từ test đơn/receipt. Tr�
 ## Phân phối design skill
 
 Pema Design là gói Markdown/YAML version cùng repository trong `.agents/skills/pema-design/`. Không được load vào app runtime và không thêm dependency backend. Có thể copy nguyên thư mục để dùng với agent khác; source path tính từ repo root. Không yêu cầu SDK/cache/compiled output trong package. Chi tiết [chia sẻ skill](23_PEMA_DESIGN_SKILL.md).
+
+
+## Mobile và Clinic shell — 22/09/2026
+
+Finance mount(root) đóng polling và bỏ response cũ khi unmount, selector giới hạn root, role lấy từ PemaStaff duy nhất. /finance chuyển query sang /clinic-web/?screen=finance. Seed bổ sung có marker phiên bản, ID tránh va chạm; dữ liệu hiện có giữ nguyên. Mobile ensure CRM trước render với guard event. Flutter state theo patient trong memory, riêng selection Care/Clinic; phân vai UI là mô phỏng, chưa auth server.
+
+UI review CSKH mobile: trạng thái Cần làm / Đã liên hệ / Chờ bác sĩ ở đầu màn; tìm kiếm và nút Lọc mở sheet 10 nhóm, không trải 10 chip lên home. Card đầu nằm trong 440px đầu ở viewport 360; lọc/trạng thái phải thực sự đổi danh sách. Widget `care_workspace.dart` dùng cùng PatientState, ghi chú nội bộ giữ tách Care.

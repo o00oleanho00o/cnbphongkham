@@ -1,5 +1,8 @@
 # Vận hành template Flutter
 
+> **Hiện trạng Mobile CRM02 (22/09/2026):** tài chính trong Clinic shell, 46 hồ sơ mẫu/10 nhóm chăm sóc; Flutter phân workspace và tách state theo patient. Các mô tả state chung hoặc chưa có native CRM phía dưới là baseline trước bản mở rộng này. Xem [hướng dẫn cập nhật](25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).
+
+
 Cập nhật 22/09/2026. Áp dụng cho bản duyệt thiết kế; không triển khai hệ thống lâm sàng thật.
 
 ## Chọn đúng ứng dụng
@@ -59,7 +62,7 @@ Hai hash phải bằng nhau. Snapshot hiện tại: 115 dòng, 30 PRESCRIPTION, 
 | Cổng 4173 đã dùng | Mở URL kiểm tra server hiện có; không khởi động trùng hoặc dừng tiến trình không rõ chủ sở hữu |
 | Dữ liệu mất khi tải lại | Đúng giới hạn memory store; không dùng browser refresh để kiểm tra persistence |
 | Web và Flutter khác trạng thái | Hai runtime độc lập; không có bridge/API sync |
-| Đổi bệnh nhân thấy cùng lịch/tin nhắn | Giới hạn global state; duyệt các flow này ở P001 |
+| Đổi bệnh nhân thấy cùng lịch/tin nhắn | Build lại preview; state đã tách theo patient, chạy mobile_roles_test để kiểm regression |
 | Thiếu Flutter trong PATH | Thêm SDK hợp lệ vào PATH; kiểm tra `flutter --version` trước build |
 
 ## Bàn giao
@@ -70,3 +73,6 @@ Ghi version SDK, commit, lệnh/kết quả kiểm tra, viewport và route thự
 ## Bổ sung tài chính PB02
 
 [Module tài chính và tiền thủ thuật](24_FINANCE_AND_PROCEDURE_FEES.md) dùng API :4174/SQLite chung cho web và Flutter. Role là mô phỏng, thông báo foreground; không áp mô tả memory-only của PB01 cho PB02. Chạy API riêng, không coi HTTP local là triển khai production.
+
+
+Bundle tài khoản mẫu: chạy `node prototype/export-native-patients.cjs` trước build khi fixture CRM thay đổi; `--check` kiểm snapshot. Không xuất từ localStorage có dữ liệu thử.

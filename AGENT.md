@@ -43,7 +43,7 @@ Sau đó cập nhật README, docs vận hành/domain liên quan và append chec
 2. Source là `flutter-template/lib/` và assets; `prototype/native-review/index.html` chỉ là khung duyệt. Không sửa `build/` hoặc `prototype/native-preview/` đã compile; build lại sau sửa source.
 3. Giữ logo Pema, Be Vietnam Pro local/OFL, primary #0B4F94, navy #083A6E, sky #3CAAE5. Dùng màn con và bottom sheet ngắn; không bê bảng desktop hoặc ép nhiều module lên home mobile. Token thay đổi phải cập nhật mapping và kiểm tra web liên quan.
 4. Catalog đi từ `data/danhsach.xlsx` → importer web → `prototype/shared/product-catalog.json` → `flutter-template/assets/products.json`. Kiểm hash/count/type, không sửa độc lập hai bản hoặc suy loại từ tên. Xem lệnh ở runbook.
-5. DemoStore là memory-only, độc lập localStorage web. Chỉ order/receipt hiện tách patient; lịch/note/buổi/follow-up/cart còn dùng chung phiên. Khi sửa data model phải kiểm isolation và cập nhật ARCH/parity; không thêm flow nhiều bệnh nhân dựa trên giả định store đã cách ly đầy đủ.
+5. DemoStore là memory-only, độc lập localStorage web. State hiện tách theo patient: order/receipt, lịch/note/buổi/follow-up/cart, ghi chú CSKH và bàn giao; Care/Clinic giữ selection riêng. Khi sửa data model phải kiểm isolation và cập nhật ARCH/parity; giữ test cách ly mọi field mới và không suy ra persistence/auth từ cách ly memory.
 6. Header Clinic/Care không phải RBAC. Phiếu A5 không phải PDF/in native. Checkbox ảnh không tạo file hoặc consent bền vững. Không ghi đã tích hợp các capability này chỉ vì có UI.
 7. Khi Dart/assets thay đổi: `flutter analyze`, `flutter test --reporter expanded`, build preview; xem trực tiếp các màn bị ảnh hưởng. Review ở 360×800, 390×844, 430×932, 768×1024; suite hiện tại dùng height 844 ở cả bốn width. Không suy test tự động bằng test thiết bị.
 8. Ghi riêng test đã chạy, kiểm tra thủ công, acceptance còn mở; không dùng kết quả web để xác nhận native. Android/iOS device, keyboard, accessibility, camera, PDF cần bằng chứng riêng.
@@ -68,5 +68,10 @@ Khi thiết kế, sửa hoặc review UI/UX Pema, đọc [pema-design](.agents/s
 - Đọc bộ PB01 theo 0→1→2→3 và `docs/20_CRM01_PATIENT_LIFECYCLE.md` trước khi sửa. Nghiệp vụ CRM nằm ở crm-data/automation, UI không nhân bản rules.
 - Không gộp màn owner/bác sĩ/CSKH/kế toán. `staff-context.js` phân workspace và command demo, không phải authentication. Bác sĩ chỉ vào hồ sơ phụ trách/được phân lịch; CSKH không duyệt y khoa, kế toán không làm clinical.
 - Ngày demo 2026-09-20, idempotency rule+patient+source. Booking từ CRM phải cùng transaction với task/activity và đi qua validator lịch. Không tính reactivated từ booking; giữ task đã đóng khi rerun.
-- Migration không viết lại lâm sàng/hóa đơn hiện có. Fixture kể chuyện chỉ dùng seed mới/reset. Opt-out marketing không xóa việc theo dõi an toàn. CRM log nội bộ không tự công bố lên patient app; projection mobile lấy đúng identity người bệnh, không dùng selected của nhân viên.
+- Migration không viết lại lâm sàng/hóa đơn hiện có. Tám case CRM01 cũ chỉ dùng seed mới/reset; 10 tài khoản Mobile CRM02 được bổ sung một lần khi nâng dữ liệu, không ghi đè hồ sơ hiện có. Opt-out marketing không xóa việc theo dõi an toàn. CRM log nội bộ không tự công bố lên patient app; projection mobile lấy đúng identity người bệnh, không dùng selected của nhân viên.
 - Chạy crm-test.cjs, crm-browser-test.cjs và suite regression liên quan; giữ kiểm lỗi save rollback, wrong patient, stale/duplicate task, quyền demo, prescription gating, 200-row pagination, 5 viewport. Khi kiểm output bị khóa file, dùng PEMA_EVIDENCE_DIR riêng; không đánh dấu PASS khi test chưa kết thúc.
+
+
+## Mobile CRM02 và tài chính chung shell
+
+Đọc [hướng dẫn hiện trạng](docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md). Finance phải mount/dispose trong Clinic, selector/CSS giới hạn workspace, không thêm role picker thứ hai. Seed thêm 10 hồ sơ một lần, giữ hồ sơ đã có và xử lý va chạm ID. Cập nhật bundle bằng `node prototype/export-native-patients.cjs`; chạy `--check`, mobile-crm-test.cjs và Flutter mobile_roles_test. Ghi chú nội bộ/bàn giao CSKH không được đưa vào updates dành cho Care.

@@ -16,6 +16,7 @@ flutter:
   assets:
     - assets/pema-logo.png
     - assets/products.json
+    - assets/patients.json
   fonts:
     - family: BeVietnam
       fonts:

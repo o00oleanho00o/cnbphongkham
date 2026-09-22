@@ -16,3 +16,8 @@ Limits: browser preview and widget tests only. No Android/iOS physical device, n
 ## PB02 — 22/09/2026
 
 Flutter analyze PASS; 12 tests PASS (6 baseline + 2 finance controller + 4 viewport finance screens/forms); web build PASS, copied to preview. Browser verified finance overview and notifications for 100.000 from finance web and 50.000 from legacy cashier via shared API. Evidence: [finance validation](../demo-assets/screenshots/finance/validation.json). Physical devices/background push not tested or configured.
+
+
+## Mobile CRM02 và CSKH redesign — 22/09/2026
+
+Flutter analyze: No issues found; 17 tests PASS, build preview PASS. Browser kiểm 360×800, 390×844, 430×932, 768×1024: khách đầu y=334; filter D3 → hồ sơ P038 → lưu liên hệ → Đã liên hệ chạy được, không pageerror. [Tổng hợp bằng chứng](../demo-assets/screenshots/mobile-crm02/validation-summary.json), [native browser](../demo-assets/screenshots/mobile-crm02/native-review-results.json). Chưa kiểm thiết bị thật.

@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "legacy URL preserves account/patient and opens one Clinic shell",
+    "role switching and finance projection/navigation",
+    "20 finance layouts without document overflow",
+    "10 mobile accounts backed by real CSKH rules, staff selection isolated",
+    "patient reply links to correct file, internal notes hidden, migration idempotent"
+  ],
+  "errors": []
+}

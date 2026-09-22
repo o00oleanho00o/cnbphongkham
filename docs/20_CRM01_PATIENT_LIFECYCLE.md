@@ -1,5 +1,8 @@
 # CRM01 — Clinic Replacement + Patient Lifecycle
 
+> **Hiện trạng Mobile CRM02 (22/09/2026):** tài chính trong Clinic shell, 46 hồ sơ mẫu/10 nhóm chăm sóc; Flutter phân workspace và tách state theo patient. Các mô tả state chung hoặc chưa có native CRM phía dưới là baseline trước bản mở rộng này. Xem [hướng dẫn cập nhật](25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).
+
+
 Ngày triển khai: 22/09/2026. Mốc nghiệp vụ demo: **20/09/2026**, độc lập ngày máy.
 
 ## Mục tiêu và phạm vi
@@ -102,7 +105,7 @@ Dịch vụ/đơn/in vẫn dùng panel và command PB01. `servicePlan.economics`
 | P031 | Reconnect → đồng ý → tạo lịch |
 | P032 | Sinh nhật trong tuần, đồng thời có D+7 review |
 
-Giữ tổng 36 bệnh nhân, 84 appointment. Những case chưa đặt lại có lịch chuyển vào lịch sử hủy/vắng; ngày demo còn 31 lịch active. Tests cũ đổi số kỳ vọng 36→31 ở lịch hôm nay và 21→18 ở week doctor D1; các kiểm tra xung đột/thanh toán vẫn giữ. Không đổi hồ sơ người dùng khi migration: chỉ bổ sung CRM fields. Muốn tám case, dùng reset có chủ ý; reset xóa dữ liệu thử ở browser này, không reset SQLite PB02.
+Mốc CRM01 ban đầu giữ 36 bệnh nhân, 84 appointment. Mobile CRM02 bổ sung 10 hồ sơ và một lịch vắng hẹn, thành 46 bệnh nhân/85 appointment khi seed mới. Những case chưa đặt lại có lịch chuyển vào lịch sử hủy/vắng; ngày demo còn 31 lịch active. Tests cũ đổi số kỳ vọng 36→31 ở lịch hôm nay và 21→18 ở week doctor D1; các kiểm tra xung đột/thanh toán vẫn giữ. Migration giữ nguyên hồ sơ người dùng: bổ sung CRM fields và 10 tài khoản tổng hợp một lần, tránh va chạm ID. Muốn tám case, dùng reset có chủ ý; reset xóa dữ liệu thử ở browser này, không reset SQLite PB02.
 
 ## Demo 5 phút cho chủ phòng khám
 

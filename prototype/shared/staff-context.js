@@ -11,7 +11,7 @@
   {id:'accountant',name:'Kế toán',role:'accountant',label:'Đối soát & thu ngân'}
  ];
  let account=accounts[0];try{account=accounts.find(x=>x.id===sessionStorage.getItem('pema-staff'))||account;}catch(_){}
- const pages={owner:['dashboard','today','schedule','patients','patient','crm','followups','studio','resources','services','cashier','ask','guide'],doctor:['dashboard','today','schedule','patients','patient','followups','studio','guide'],care:['crm','schedule','patients','patient','guide'],accountant:['cashier','patients','patient','guide']};
+ const pages={owner:['dashboard','today','schedule','patients','patient','crm','followups','studio','resources','services','cashier','finance','ask','guide'],doctor:['dashboard','today','schedule','patients','patient','followups','studio','finance','guide'],care:['crm','schedule','patients','patient','guide'],accountant:['finance','cashier','patients','patient','guide']};
  const capabilities={clinical:['owner','doctor'],crm:['owner','care','doctor'],booking:['owner','care','doctor'],billing:['owner','accountant'],config:['owner'],readFinance:['owner','accountant','doctor']};
  function current(){return account;}
  function can(action){return capabilities[action]?.includes(account.role)||false;}
@@ -21,7 +21,7 @@
  function home(){return account.role==='care'?'crm':account.role==='accountant'?'cashier':'dashboard';}
  function switchTo(id){const a=accounts.find(x=>x.id===id);if(!a)throw Error('Tài khoản demo không hợp lệ.');account=a;try{sessionStorage.setItem('pema-staff',id)}catch(_){}window.dispatchEvent(new Event('pema-staff-change'));}
  function picker(){return `<label class="staff-picker">Tài khoản demo<select id="staff-account" aria-label="Tài khoản nhân viên demo">${accounts.map(a=>`<option value="${a.id}" ${a.id===account.id?'selected':''}>${a.name} · ${a.label}</option>`).join('')}</select></label>`;}
- function financeUrl(){return '../finance/?staff='+account.id;}
+ function financeUrl(){return '../clinic-web/?screen=finance&staff='+account.id;}
  function apply(){
   if(account.role==='doctor'){const d=document.getElementById('ops-doctor');if(d){d.value=account.doctor;d.disabled=true;}}
   const picker=document.getElementById('staff-account');if(picker)picker.onchange=()=>switchTo(picker.value);

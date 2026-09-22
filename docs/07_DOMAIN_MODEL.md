@@ -48,7 +48,7 @@ Reusable: patient/episode/timeline, appointments, plans/sessions, images, follow
 
 ## Bổ sung Flutter template — 22/09/2026
 
-Model nghiệp vụ trong tài liệu này là định hướng hệ thống/web, không phải toàn bộ shape của Flutter. Native hiện có order snapshot và receipt total theo patient; lịch/buổi/note/follow-up còn chung phiên, chưa có invoice/payment ledger, session record hoặc durable consent. Xem bảng runtime trong [ARCH-PB01](ARCH-PB01.md) và [parity](22_NATIVE_PARITY_AND_VALIDATION.md) trước khi mở rộng model.
+Model nghiệp vụ trong tài liệu này là định hướng hệ thống/web, không phải toàn bộ shape của Flutter. Native hiện có order snapshot và receipt total theo patient; lịch/buổi/note/follow-up/cart và ghi chú CSKH đã tách theo patient ID trong memory. PB01 chưa có invoice/payment ledger, session record hoặc durable consent; PB02 có ledger API riêng. Xem bảng runtime trong [ARCH-PB01](ARCH-PB01.md) và [parity](22_NATIVE_PARITY_AND_VALIDATION.md) trước khi mở rộng model.
 
 
 ## Bổ sung tài chính PB02

@@ -41,7 +41,7 @@ Các màn con hiện có: Patient 360; Đặt lịch/Chi tiết lịch/Lịch c�
 
 ## Ranh giới hiện tại phải kiểm trước khi sửa
 
-Web Clinic/Patient Mobile dùng localStorage cùng origin/profile. Flutter độc lập, chỉ memory; order và receipt total theo patient, nhưng lịch/note/buổi/follow-up/cart còn dùng chung phiên. Flutter lịch 09:00 khóa cứng; A5 chỉ card nhóm approved orders; ảnh/AI/privacy mô phỏng; thu ngân còn tính cả nháp, không invoice entity/ledger. Không che các thiếu hụt bằng UI giống production.
+Web Clinic/Patient Mobile dùng localStorage cùng origin/profile. Flutter độc lập, chỉ memory; order/receipt, lịch/note/buổi/follow-up/cart đã theo patient; Care/Clinic có selection riêng. Flutter lịch 09:00 khóa cứng; A5 chỉ card nhóm approved orders; ảnh/AI/privacy mô phỏng; thu ngân còn tính cả nháp, không invoice entity/ledger. Không che các thiếu hụt bằng UI giống production.
 
 Đọc `docs/22_NATIVE_PARITY_AND_VALIDATION.md` cho hiện trạng, `docs/20_CATALOG_ORDERS.md` cho web order/in, `docs/06_CLINIC_WORKFLOW.md` và PB01 cho contract hệ thống. Nếu được giao hoàn thiện nghiệp vụ, sửa nền dữ liệu và test cùng UI, rồi cập nhật ma trận; không cố giữ giới hạn template như yêu cầu vĩnh viễn.
 
@@ -56,3 +56,6 @@ Tổng quan chủ phòng khám, thu/đối soát và tiền thủ thuật mới 
 Chủ phòng khám xem dashboard toàn cảnh; bác sĩ có home/lịch/hồ sơ riêng; CSKH có work queue và workspace; kế toán có thu ngân/đối soát. BS. Tâm có góc nhìn chủ và bác sĩ riêng, không làm mẫu một dashboard chung cho mọi người. Patient 360 nối ngữ cảnh, task được mở theo quyền/tác vụ. Tài khoản hiện dùng sessionStorage demo, không phải auth server.
 
 CSKH hôm nay là chăm sóc chủ động; Theo dõi là review lâm sàng. Outcome đặt lịch phải chuyển tới form hiện có, validate rồi mới resolve. Không báo “đã quay lại” ngay khi booking. Quy ước/source: `docs/20_CRM01_PATIENT_LIFECYCLE.md`, `staff-context.js`, `crm-automation.js`, `crm-ui.js`.
+
+
+Mobile CRM02: dùng `docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md` làm nguồn hiện trạng. Tài chính nằm trong Clinic shell; native chọn role trước tác vụ, không nhét CSKH/thu ngân/clinical chung home. Care ưu tiên một bước tiếp theo; nội bộ và bàn giao không thành tin nhắn người bệnh.

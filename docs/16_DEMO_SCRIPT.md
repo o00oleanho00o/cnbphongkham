@@ -16,7 +16,7 @@ Câu chuyện dùng hồ sơ tổng hợp **Nguyễn Minh Linh (P001)**. Dataset
 
 | Phút | Mở/click | Câu nói và giá trị |
 |---:|---|---|
-| 0:00–0:40 | Clinic Web → **Tổng quan** → `Xem lịch hôm nay` | “Tôi bắt đầu từ việc cần xử lý hôm nay.” KPI là số suy ra từ 36 hồ sơ giả lập và hàng đợi, không phải dashboard trang trí. |
+| 0:00–0:40 | Clinic Web → **Tổng quan** → `Xem lịch hôm nay` | “Tôi bắt đầu từ việc cần xử lý hôm nay.” KPI là số suy ra từ 46 hồ sơ giả lập khi seed mới và hàng đợi, không phải dashboard trang trí. |
 | 0:40–1:30 | **Hôm nay** → bấm `Check-in` ở một dòng `Đặt hẹn` → chọn dòng đang chờ, chẳng hạn P001, rồi bấm `Mời vào phòng` | “Lễ tân chuyển trạng thái ngay trong hàng đợi; bác sĩ biết ai đã đến và ai đang được mời.” Các trạng thái tạo event reception trong timeline. |
 | 1:30–2:20 | **Tìm bệnh nhân** → tìm `P001`/`Nguyễn Minh Linh` → `Mở →` | “Patient 360 trả lời ba câu hỏi: đã làm gì, phản hồi ra sao, bước tiếp theo là gì.” Cho thấy lúc đầu hồ sơ ở mốc **2/5**, cảnh báo, ảnh minh họa và chăm sóc tại nhà. |
 | 2:20–3:20 | Tab **Tư vấn** → nhập vài ý vào `Ghi chú ngắn / transcript mô phỏng` → `Tạo bản nháp ghi chú` → sửa textarea `Bản nháp` → `Duyệt & lưu vào Patient 360` | “AI chỉ dựng bản nháp; bác sĩ sửa và duyệt trước khi ghi vào hồ sơ.” Đây là template deterministic từ event giả lập, không phải chẩn đoán. |

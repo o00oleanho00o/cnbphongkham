@@ -22,7 +22,7 @@ Các đường dẫn source trong references tính từ gốc repository, không
 2. **Patient 360 là điểm nối bối cảnh.** Tác vụ liên quan phải giữ đúng patient/plan/order, thể hiện trạng thái và kết quả; menu hoặc card đẹp chưa chứng minh nghiệp vụ hoạt động.
 3. **Desktop dùng được chiều ngang; mobile gọn theo công việc.** Chuẩn Clinic Web 1920×1020 CSS pixels ở zoom 100%; không khóa workspace trong cột hẹp. Mobile home chỉ tóm tắt việc tiếp theo; chi tiết mở màn con, không kéo dài vô tận.
 4. **Giữ ý nghĩa, không sao chép bố cục.** Web dùng bảng/lịch tài nguyên; native dùng danh sách theo ngày, màn con và sheet ngắn. Flutter dùng widget Material 3, SafeArea và Navigator, không WebView bọc website.
-5. **Tách dữ liệu, thiết kế và khả năng thực tế.** Nháp khác đã duyệt; thanh toán không phải hoàn tất điều trị. Web dùng localStorage; Flutter hiện memory-only và còn state chung theo phiên. Đọc ma trận parity trước khi mô tả tính năng native.
+5. **Tách dữ liệu, thiết kế và khả năng thực tế.** Nháp khác đã duyệt; thanh toán không phải hoàn tất điều trị. Web dùng localStorage; Flutter PB01 memory-only, state theo patient; PB02 dùng API. Đọc ma trận parity trước khi mô tả tính năng native.
 6. **Tham khảo có chọn lọc.** Pema.vn là tham chiếu nhận diện; ảnh Annam, Fastboy/Go Check In và repo thiết kế là gợi ý để đánh giá, không phải yêu cầu sao chép hoặc thêm feature. Vòng đời chăm sóc dẫn thiết kế; CRM/loyalty/marketing chỉ thêm khi nằm trong scope được giao.
 
 ## Cách thực hiện
@@ -34,3 +34,6 @@ Khi người dùng yêu cầu phân tích/plan, trình bày phát hiện và ph�
 Với mỗi màn mới, xác định: điểm vào → ngữ cảnh → hành động chính → validation → trạng thái sau lưu → bên nhận bàn giao → đường quay lại. Chọn độ nổi bật bằng hierarchy và khoảng cách trước khi thêm màu/card/ảnh. Tận dụng component và asset hiện có.
 
 Kiểm tra bằng dữ liệu có ý nghĩa và viewport phù hợp; xem screenshot lẫn tương tác. Báo rõ đã chạy gì, chưa chạy gì và giới hạn. Cập nhật Scope → Spec → Module Map → Architecture khi scope/hành vi đổi, rồi README, hướng dẫn và SECTION_PROGRESS. Skill hỗ trợ thực hiện công việc, không tự cấp quyền publish, gửi thông báo hay push Git ngoài yêu cầu người dùng.
+
+
+Mobile CRM02: dùng `docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md` làm nguồn hiện trạng. Tài chính nằm trong Clinic shell; native chọn role trước tác vụ, không nhét CSKH/thu ngân/clinical chung home. Care ưu tiên một bước tiếp theo; nội bộ và bàn giao không thành tin nhắn người bệnh.

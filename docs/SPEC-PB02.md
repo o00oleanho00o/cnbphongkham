@@ -9,3 +9,8 @@
 - Acceptance: kiểm tính tiền/giảm giá/chia người, tỷ lệ mới không đổi record cũ, duplicate payment, overpayment, quyền đọc/ghi, đóng kỳ và CSV, đồng bộ web → app, responsive và UI lỗi API.
 
 Chốt theo thực thu yêu cầu thu đủ hóa đơn liên quan; chưa hỗ trợ chuyển phần tiền sang kỳ sau. Có thể gắn lượt vào invoice đã có, kiểm đúng patient và không phân bổ quá giá trị hóa đơn để tránh công nợ kép. UI tối đa 2 bác sĩ, API 4; chưa danh mục nhân sự kỹ thuật viên.
+
+
+## Mobile và Clinic shell — 22/09/2026
+
+AC-MOB01: URL finance cũ giữ staff/patient, chỉ một sidebar và một bộ chọn nhân viên; CSKH không vào tài chính, bác sĩ xem cá nhân. AC-MOB02: đủ 10 tài khoản nhóm chăm sóc, rule thực tế sinh task tương ứng; reload không trùng/ghi đè. AC-MOB03: mobile đổi người không đổi selected nhân viên, không lộ activity nội bộ; CTA mở đúng lịch/hướng dẫn/gửi cập nhật. AC-MOB04: Flutter owner/doctor/care/accountant có điểm vào riêng; Care chọn tài khoản, note/lịch/follow-up/cart không lẫn bệnh nhân. Kiểm regression API, CRM, web và Flutter.

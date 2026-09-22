@@ -4,7 +4,7 @@
 
 - AC-CRM09: chuyển tài khoản CSKH → không có tổng quan toàn phòng khám/thu ngân/duyệt lâm sàng; bác sĩ → lịch/hồ sơ phụ trách và doanh số cá nhân; kế toán → thu ngân; chủ → toàn cảnh. Chặn lệnh clinical/thu tiền/cấu hình/duyệt đơn trái vai trong lớp command demo. Dữ liệu vẫn trong browser, không tuyên bố bảo mật hoặc cách ly tenant.
 
-- AC-CRM01: reset → hàng đợi theo 10 nhóm rule, 36 hồ sơ, cùng clock/cùng kết quả; rerun không trùng task.
+- AC-CRM01: reset → hàng đợi theo 10 nhóm rule, 46 hồ sơ, cùng clock/cùng kết quả; rerun không trùng task.
 - AC-CRM02: outcome + ghi chú + owner + bước tiếp → activity/timeline, task resolved hoặc rescheduled; lỗi lưu rollback.
 - AC-CRM03: đồng ý đặt lịch → form prefill đúng người → validator bác sĩ/phòng/patient → một transaction lưu lịch và đóng task; lỗi/hủy form giữ task mở.
 - AC-CRM04: expected visit có ngày/lý do/nguồn; ngày quá hạn tính theo demo clock, cập nhật khi đặt/dời/hủy lịch và hoàn tất session.
@@ -18,7 +18,7 @@ Phạm vi là vertical slice Clinic Web ↔ Patient Mobile cho prototype và k�
 ## Acceptance cho native template (22/09/2026)
 
 - Flutter widget tree chạy trên browser để duyệt, cùng asset/font/token nhận diện web.
-- Clinic có 5 mục điều hướng; Care có 4 mục; Patient 360 mở màn con, back navigation và safe-area.
+- Chủ Clinic có 5 mục; bác sĩ/CSKH/kế toán có 2 mục công việc/hồ sơ; Care có 4 mục; Patient 360 mở màn con, back navigation và safe-area.
 - Catalog 115 dòng, thiếu loại chặn duyệt; đơn nháp ẩn ở Care; chỉnh nháp thay thế cùng đơn, không cộng thành đơn mới. Flutter chưa có entity hóa đơn/ledger riêng.
 - Luồng gửi cập nhật → phản hồi và thu tiền mẫu có thay đổi trạng thái. Camera/PDF/AI/backend ghi rõ chưa tích hợp.
 - Kiểm tra layout 360/390/430/768 logical pixels và widget exceptions; đây chưa phải nghiệm thu thiết bị thật.
@@ -182,3 +182,10 @@ Mọi test dùng 36 patient giả lập P001… và dữ liệu tiếng Việt t
 ## Acceptance cho gói design skill
 
 Skill cần có entrypoint tên pema-design, reference cho visual/flow/layout/delivery, đường dẫn tương đối không phụ thuộc máy, prompt mẫu và hướng dẫn chia sẻ. Nội dung phân biệt thiết kế mục tiêu với capability thực tế, giữ baseline Pema và cập nhật 0→1→2→3. Kiểm cấu trúc/frontmatter, link và đối chiếu source; không yêu cầu thay hành vi app.
+
+
+## Mobile và Clinic shell — 22/09/2026
+
+AC-MOB01: URL finance cũ giữ staff/patient, chỉ một sidebar và một bộ chọn nhân viên; CSKH không vào tài chính, bác sĩ xem cá nhân. AC-MOB02: đủ 10 tài khoản nhóm chăm sóc, rule thực tế sinh task tương ứng; reload không trùng/ghi đè. AC-MOB03: mobile đổi người không đổi selected nhân viên, không lộ activity nội bộ; CTA mở đúng lịch/hướng dẫn/gửi cập nhật. AC-MOB04: Flutter owner/doctor/care/accountant có điểm vào riêng; Care chọn tài khoản, note/lịch/follow-up/cart không lẫn bệnh nhân. Kiểm regression API, CRM, web và Flutter.
+
+UI review CSKH mobile: trạng thái Cần làm / Đã liên hệ / Chờ bác sĩ ở đầu màn; tìm kiếm và nút Lọc mở sheet 10 nhóm, không trải 10 chip lên home. Card đầu nằm trong 440px đầu ở viewport 360; lọc/trạng thái phải thực sự đổi danh sách. Widget `care_workspace.dart` dùng cùng PatientState, ghi chú nội bộ giữ tách Care.

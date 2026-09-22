@@ -128,9 +128,13 @@ class FinanceScreen extends StatefulWidget {
     super.key,
     required this.controller,
     this.initialTab = 0,
+    this.lockRole = false,
+    this.patientIds,
   });
   final FinanceController controller;
   final int initialTab;
+  final bool lockRole;
+  final List<String>? patientIds;
   @override
   State<FinanceScreen> createState() => _FinanceScreenState();
 }
@@ -264,42 +268,43 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 style: TextStyle(fontSize: 12, color: Color(0xFF5D7184)),
               ),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                initialValue: '${c.role}:${c.doctor}',
-                isExpanded: true,
-                items: const [
-                  DropdownMenuItem(
-                    value: 'owner:D0',
-                    child: Text('BS. Tâm · Chủ phòng khám'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'accountant:D0',
-                    child: Text('Kế toán'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'doctor:D0',
-                    child: Text('BS. Tâm · Cá nhân'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'doctor:D1',
-                    child: Text('BS. Mai · Cá nhân'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'doctor:D2',
-                    child: Text('BS. An · Cá nhân'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'doctor:D3',
-                    child: Text('BS. Lan · Cá nhân'),
-                  ),
-                ],
-                onChanged: c.sending
-                    ? null
-                    : (v) {
-                        tab = 0;
-                        c.select(v!);
-                      },
-              ),
+              if (!widget.lockRole)
+                DropdownButtonFormField<String>(
+                  initialValue: '${c.role}:${c.doctor}',
+                  isExpanded: true,
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'owner:D0',
+                      child: Text('BS. Tâm · Chủ phòng khám'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'accountant:D0',
+                      child: Text('Kế toán'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'doctor:D0',
+                      child: Text('BS. Tâm · Cá nhân'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'doctor:D1',
+                      child: Text('BS. Mai · Cá nhân'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'doctor:D2',
+                      child: Text('BS. An · Cá nhân'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'doctor:D3',
+                      child: Text('BS. Lan · Cá nhân'),
+                    ),
+                  ],
+                  onChanged: c.sending
+                      ? null
+                      : (v) {
+                          tab = 0;
+                          c.select(v!);
+                        },
+                ),
               Wrap(
                 crossAxisAlignment: WrapCrossAlignment.center,
                 spacing: 12,
@@ -366,7 +371,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute<void>(
-                  builder: (_) => ProcedureForm(controller: c),
+                  builder: (_) => ProcedureForm(
+                    controller: c,
+                    patientIds: widget.patientIds,
+                  ),
                 ),
               ),
               label: const Text('Ghi lượt'),
@@ -737,8 +745,10 @@ class ProcedureForm extends StatefulWidget {
     super.key,
     required this.controller,
     this.initialPatient = 'P001',
+    this.patientIds,
   });
   final String initialPatient;
+  final List<String>? patientIds;
   final FinanceController controller;
   @override
   State<ProcedureForm> createState() => _ProcedureFormState();
@@ -827,10 +837,16 @@ class _ProcedureFormState extends State<ProcedureForm> {
               select(
                 'Hồ sơ',
                 patient,
-                List.generate(36, (i) {
-                  final id = 'P${(i + 1).toString().padLeft(3, '0')}';
-                  return DropdownMenuItem(value: id, child: Text(id));
-                }),
+                {
+                      ...(widget.patientIds ??
+                          List.generate(
+                            36,
+                            (i) => 'P${(i + 1).toString().padLeft(3, '0')}',
+                          )),
+                      widget.initialPatient,
+                    }
+                    .map((id) => DropdownMenuItem(value: id, child: Text(id)))
+                    .toList(),
                 (v) => patient = v,
               ),
               select(

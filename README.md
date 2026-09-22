@@ -2,7 +2,7 @@
 
 ## Tài chính & tiền thủ thuật (PB02)
 
-Đã có workspace chung cho chủ phòng khám, kế toán và bác sĩ: doanh số thực hiện, thực thu, công nợ, tỷ lệ thủ thuật/người thực hiện, duyệt/chốt tháng và inbox thanh toán. Chạy thêm `python prototype/finance_server.py`; mở [Tài chính web](http://127.0.0.1:4173/finance/) hoặc Flutter Clinic → Tài chính phòng khám. [Nghiệp vụ, công thức, hướng dẫn và giới hạn](docs/24_FINANCE_AND_PROCEDURE_FEES.md).
+Đã có phân hệ tài chính trong Clinic, dùng chung khung điều hướng và tách góc nhìn chủ phòng khám, kế toán, bác sĩ: doanh số thực hiện, thực thu, công nợ, tỷ lệ thủ thuật/người thực hiện, duyệt/chốt tháng và inbox thanh toán. Chạy thêm `python prototype/finance_server.py`; mở [Tài chính web](http://127.0.0.1:4173/clinic-web/?screen=finance) hoặc Flutter Clinic → Tài chính phòng khám. [Nghiệp vụ, công thức, hướng dẫn và giới hạn](docs/24_FINANCE_AND_PROCEDURE_FEES.md).
 
 Riêng PB02 dùng API/SQLite chung và lưu bền vững cục bộ; mô tả memory-only/localStorage bên dưới vẫn áp dụng các module PB01. Thông báo hiện đồng bộ khi app mở, chưa có push OS khi đóng app.
 
@@ -27,7 +27,7 @@ Workspace này chứa prototype và tài liệu nghiên cứu của Pema Digital
 
 Fresh clone không có compiled preview. Cài Flutter vào PATH rồi chạy `flutter-template/build-preview.ps1` từ PowerShell; script build và copy sang `prototype/native-preview/`. Chạy static server từ `prototype` như bên dưới. SDK đã kiểm tra: Flutter 3.47.5 / Dart 3.13.4; Android/iOS chưa nghiệm thu trên thiết bị. Cách cấu hình PATH và xử lý màn trắng/404 ở runbook.
 
-**Giới hạn cần biết khi duyệt:** Clinic/Care là bộ đổi không gian mẫu. Đơn và tiền đã thu tách theo bệnh nhân, nhưng lịch/note/buổi/follow-up/cart còn chung phiên, nên ưu tiên P001. Phiếu A5 chỉ chia nhóm trên màn hình, chưa PDF/in; thu ngân chưa có invoice/ledger và còn tính cả đơn nháp. 6 test hiện có gồm store, 4 viewport widget và một tương tác thêm hàng; không phải toàn bộ flow native end-to-end. Các phần hướng dẫn nghiệp vụ web bên dưới không tự áp dụng cho Flutter.
+**Giới hạn cần biết khi duyệt:** Flutter đã tách state theo bệnh nhân và phân workspace chủ/bác sĩ/CSKH/kế toán/Care. CRM native vẫn là snapshot trong phiên, chưa đồng bộ web hoặc có rule engine đầy đủ. A5 chưa PDF/in; thu ngân PB01 chưa ledger và còn tính đơn nháp. PB02 tài chính dùng API/SQLite riêng. Suite hiện tại 17 test; không thay kiểm thiết bị thật. [Hiện trạng mobile và tài khoản mẫu](docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).
 
 ## Tiêu chuẩn hiển thị UI
 
@@ -105,6 +105,11 @@ Mở [Clinic Web](http://127.0.0.1:4173/clinic-web/) và chọn **Tài khoản d
 
 CRM01 nối expected visit, protocol D+1/D+3/D+7/D+30, vắng hẹn, bỏ dở, dormant và sinh nhật vào work queue. Xử lý → kết quả → timeline → đặt lịch qua validation hiện có → Patient Mobile. Booking và khách đã quay lại là hai chỉ số riêng. Hướng dẫn đầy đủ: [CRM01](docs/20_CRM01_PATIENT_LIFECYCLE.md). Tab Hướng dẫn trong app cũng có bài CSKH/tài khoản.
 
-Ngày demo cố định 20/09/2026, 36 bệnh nhân, 8 case P025–P032. Migration giữ dữ liệu đã nhập; dùng nút reset nếu muốn khôi phục fixture kể chuyện (xóa thay đổi thử ở browser, không reset DB tài chính). Chuẩn desktop 1920×1020; bảng phân trang/cuộn riêng, kiểm thêm 1440/1280/1024/390. Kiểm tải 200 dòng là UI fixture, không chứng minh năng lực xếp 200 lịch với nguồn lực hiện có.
+Ngày demo cố định 20/09/2026, 46 bệnh nhân khi seed mới: 36 hồ sơ nền + 10 tài khoản nhóm CSKH; giữ 8 case P025–P032. Migration giữ dữ liệu đã nhập; dùng nút reset nếu muốn khôi phục fixture kể chuyện (xóa thay đổi thử ở browser, không reset DB tài chính). Chuẩn desktop 1920×1020; bảng phân trang/cuộn riêng, kiểm thêm 1440/1280/1024/390. Kiểm tải 200 dòng là UI fixture, không chứng minh năng lực xếp 200 lịch với nguồn lực hiện có.
 
 Chạy `node prototype/crm-test.cjs` và `node prototype/crm-browser-test.cjs`; bằng chứng ở `demo-assets/screenshots/crm01/`. Suite desktop/operations nhận `PEMA_EVIDENCE_DIR` để lưu evidence riêng, tránh ghi đè ảnh các vòng trước. Flutter/PB02 tiếp tục giữ phạm vi riêng; chưa native CRM hoặc gửi tin thật.
+
+
+## Mobile và tài chính cùng Clinic
+
+[Tài chính](http://127.0.0.1:4173/clinic-web/?screen=finance&staff=accountant) nay dùng chung sidebar và bộ chọn nhân viên; URL `/finance/` cũ tự chuyển hướng. [Patient Mobile](http://127.0.0.1:4173/patient-mobile/) → Hồ sơ → Nhóm tài khoản mẫu để thử đủ 10 nhóm. [Flutter review](http://127.0.0.1:4173/native-review/) → bộ chọn không gian ở header; Care → Hồ sơ để đổi bệnh nhân. Không cần reset dữ liệu web. [Hướng dẫn và phạm vi](docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).

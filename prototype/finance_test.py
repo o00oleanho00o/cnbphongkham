@@ -15,6 +15,13 @@ class FinanceTest(unittest.TestCase):
         self.assertEqual([r['fee'] for r in rows],[360000,120000]);self.assertEqual(sum(r['revenue'] for r in rows),2400000)
         self.cmd('rate',dict(service='S2',rate=3000,basis='list'))
         self.assertEqual([r['fee'] for r in self.f.rows(self.f.load(),self.month) if r['id']==e['id']],[360000,120000])
+    def test_new_mobile_patient_keeps_procedure_invoice_and_receipt_context(self):
+        e=self.entry(patient='P046')
+        self.cmd('payment',dict(id='mobile-receipt',invoice=e['invoice'],amount=100000,method='Tiền mặt'))
+        state=self.f.load()
+        self.assertEqual(next(i['patient'] for i in state['invoices'] if i['id']==e['invoice']),'P046')
+        self.assertEqual(next(p['patient'] for p in state['payments'] if p['id']=='mobile-receipt'),'P046')
+        self.assertTrue(all(r['patient']=='P046' for r in self.f.view('doctor','D1',self.month)['rows'] if r['id']==e['id']))
     def test_validation_rollback(self):
         before=self.f.load()
         for override in [dict(people=[]),dict(discount=3000000),dict(people=[dict(doctor='D0',share=7000,rate=2000)]),dict(people=[dict(doctor='D0',share=10000,rate=11000)]),dict(note='')]:

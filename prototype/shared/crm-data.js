@@ -24,7 +24,7 @@
   ];
   function seed() {
     const s = P.state;
-    if (s.crmVersion === 1 && s.patients.every(p => p.crm)) return false;
+    if (s.crmVersion === 1 && s.patients.every(p => p.crm) && s.mobileCasesVersion===1) return false;
     s.crmTasks ||= []; s.crmActivities ||= []; s.crmAutomationRules ||= structuredClone(rules);
     s.crmSegments ||= ['new','returning','treating','dormant','reactivated'];
     s.crmSequence ||= 0;
@@ -57,6 +57,24 @@
         if(id==='P028') {const a=s.operations.appointments.find(a=>a.patient===id);a.status='missed';}
       }
       delete s.crmFixturePending;
+    }
+    if(s.mobileCasesVersion!==1) {
+      const names=['Nguyễn Ánh Dương','Trần Minh Châu','Lê Bảo Ngọc','Phạm Gia Linh','Vũ Thanh Mai','Đặng Hoàng Yến','Bùi Ngọc Hà','Ngô Hải Anh','Đỗ Thu Hương','Hồ Khánh Chi'];
+      const ages=[1,3,7,30,44,35,60,95,185,10];
+      rules.forEach((rule,i)=>{
+        // Preserve any patient created by the user with this ID; allocate a free one.
+        let n=37+i;while(s.patients.some(p=>p.id==='P'+String(n).padStart(3,'0')))n++;
+        const id='P'+String(n).padStart(3,'0'),last=addDays(DAY,-ages[i]);
+        const p={gender:'Nữ',concern:'Theo dõi da sau điều trị',plan:'Kế hoạch chăm sóc da cá nhân',procedure:i<3?'Laser CO2 theo chỉ định':'Chăm sóc theo chỉ định',consent:true,photoConsent:true,aftercare:'Tuân thủ hướng dẫn đã được bác sĩ trao đổi; liên hệ phòng khám khi cần hỗ trợ.'};
+        Object.assign(p,{id,name:names[i],phone:'09•• ••• '+(237+i),age:25+i,doctor:i%2?'BS. Mai':'BS. Tâm',status:'Chưa có lịch hôm nay',lastVisit:last,next:null,time:'',completed:3,total:6,notes:'',alerts:[],events:[],invoices:[],meds:[],messages:[],servicePlans:[],prescriptions:[]});
+        p.sessions=Array.from({length:3},(_,j)=>({id:'MOBILE-'+id+'-'+j,date:addDays(last,-(2-j)*14),type:p.procedure,reviewed:true,aftercare:p.aftercare,...(i<3&&j===2?{protocolId:'laser-co2'}:{})}));
+        p.crm={source:'Tài khoản mẫu mobile',owner:i%2?'CSKH Mai Anh':'CSKH Thu',firstContactAt:addDays(last,-30),recommendationAt:i===3?DAY:i===4?addDays(DAY,-14):addDays(last,30),expectedVisitReason:'Bác sĩ hẹn đánh giá',expectedVisitSource:'doctor_recommendation',marketingOptOut:false,demoCase:rule.name,demoGroup:rule.id,...(i===9?{birthday:'1996-09-23'}:{})};
+        p.events=[{id:'MOBILE-E-'+id,kind:'session',date:last,title:'Buổi điều trị gần nhất',detail:'Hồ sơ tổng hợp để kiểm thử chăm sóc.',by:p.doctor}];
+        p.messages=[{from:'clinic',text:'Chào bạn, đội ngũ Pema sẵn sàng hỗ trợ hành trình chăm sóc của bạn.',date:'20/09 · 09:00'}];
+        s.patients.push(p);
+        if(rule.id==='no_show')s.operations.appointments.push({id:'MOBILE-A-'+id,patient:id,doctor:i%2?'D1':'D0',room:'R1',service:s.operations.services[0].id,date:addDays(DAY,-2),time:'10:00',duration:30,buffer:10,status:'missed',missedAt:addDays(DAY,-2)+'T10:00:00+07:00'});
+      });
+      s.mobileCasesVersion=1;
     }
     s.crmVersion=1;
     return true;

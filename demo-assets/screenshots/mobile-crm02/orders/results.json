@@ -1,0 +1,18 @@
+{
+  "checks": [
+    "Catalog parity, missing types and accent-insensitive search",
+    "Empty order rejected, no partial invoice",
+    "Editor responsive at five target viewports and no field loss",
+    "Mixed order persists every line, price snapshot and draft review",
+    "Draft absent from mobile and direct print blocked",
+    "Reopen draft, require route reason, retain all other fields",
+    "Validation rejects wrong patient, invalid quantities, roles, stale edit and storage failure",
+    "Doctor approval, persistent mobile groups and immutable issued order",
+    "Approval guards, idempotence, paid-draft guard and HTML escaping",
+    "Selective A5 PDF output and consultation terminology",
+    "Five items fit one A5; long content flows and keeps footer, NONE excluded only from print",
+    "Browser print actions call print only after approval",
+    "Invalid review URLs handled with disabled printing"
+  ],
+  "errors": []
+}

@@ -1,5 +1,8 @@
 # Tài chính chủ phòng khám và tiền thủ thuật — PB02
 
+> **Hiện trạng Mobile CRM02 (22/09/2026):** tài chính trong Clinic shell, 46 hồ sơ mẫu/10 nhóm chăm sóc; Flutter phân workspace và tách state theo patient. Các mô tả state chung hoặc chưa có native CRM phía dưới là baseline trước bản mở rộng này. Xem [hướng dẫn cập nhật](25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).
+
+
 Cập nhật 22/09/2026. Phần này đã có API/SQLite cục bộ dùng chung cho web và Flutter; các module lâm sàng PB01 vẫn giữ runtime cũ. Đây là dữ liệu thử, chưa dùng để tính lương hoặc xử lý tiền thật.
 
 ## Nghiệp vụ đã phân tích
@@ -68,7 +71,9 @@ Tổng quan hiện phản ánh các lượt thủ thuật đã ghi trong PB02 v�
 
 Production cần auth/RBAC/tenant, database schema/version, API sở hữu toàn bộ ledger, audit bất biến/backup, đối soát hóa đơn và session IDs chống nhập trùng, permission FCM/APNs, job outbox/retry và chính sách điều chỉnh kỳ đã chốt. Không suy đã đạt các điều kiện này từ bản thử.
 
-## Kiểm thử và bằng chứng
+## Bằng chứng PB02 ban đầu
+
+Đây là kết quả trước Mobile CRM02. Đợt mới đã kiểm 12 test API (thêm luồng P046 → thủ thuật → hóa đơn → thu tiền), 17 test Flutter và 20 layout tài chính trong Clinic shell. [Kết quả mới](../demo-assets/screenshots/mobile-crm02/validation-summary.json).
 
 - `python prototype/finance_test.py`: 11 test, database tạm; tiền giảm/chia/snapshot, role read/write, idempotency và 5 request đồng thời, chống overpayment, khóa kỳ, invoice có sẵn, rounding và HTTP/CSV theo role.
 - Flutter: 12 test tổng, gồm 6 test trước + 2 controller/API + 4 layout của các tab tài chính/form ở 360/390/430/768 × 844. Analyze sạch và build web thành công; không test thiết bị thật.

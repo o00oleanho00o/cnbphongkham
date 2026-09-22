@@ -41,3 +41,5 @@ Quy tắc đóng góp: [AGENT](../AGENT.md). Khởi động chung: [README](../R
 ## CRM01 — replacement + proactive care
 
 [20_CRM01_PATIENT_LIFECYCLE](20_CRM01_PATIENT_LIFECYCLE.md): tách tài khoản chủ/bác sĩ/CSKH/kế toán, mapping VTTECH, expected next visit, protocol tasks, work queue, timeline, metrics, tám case và demo 5 phút. CRM là web/localStorage; Flutter và tài chính PB02 đọc theo tài liệu riêng. Phạm vi/acceptance/module/architecture được cập nhật trong PB01.
+
+- [Mobile CRM02 và tài chính cùng Clinic](25_MOBILE_CRM_AND_UNIFIED_FINANCE.md): 10 nhóm tài khoản, phân vai native, state isolation và giới hạn.

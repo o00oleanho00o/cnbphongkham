@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'store.dart';
 import 'finance.dart';
+import 'care_workspace.dart';
 
 const blue = Color(0xFF0B4F94),
     navy = Color(0xFF083A6E),
@@ -32,6 +33,10 @@ class PemaApp extends StatelessWidget {
         primary: blue,
         surface: Colors.white,
       ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: paper,
         foregroundColor: ink,
@@ -40,6 +45,14 @@ class PemaApp extends StatelessWidget {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFCADBE8)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: blue, width: 1.5),
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: Color(0xFFD9E5EE)),
@@ -75,6 +88,7 @@ class _WorkspaceState extends State<Workspace> {
   bool financeLoaded = false;
   bool care = false;
   int index = 0;
+  String caseGroup = "all";
   DemoStore get s => widget.store;
   @override
   void initState() {
@@ -90,7 +104,10 @@ class _WorkspaceState extends State<Workspace> {
   void financeChanged() {
     if (!mounted) return;
     final count = finance!.unread;
-    if (financeLoaded && !care && count > seenFinanceUnread) {
+    if (financeLoaded &&
+        !care &&
+        s.staffRole == 'owner' &&
+        count > seenFinanceUnread) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text("Có thanh toán mới tại phòng khám"),
@@ -106,7 +123,12 @@ class _WorkspaceState extends State<Workspace> {
   void openFinance([int tab = 0]) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => FinanceScreen(controller: finance!, initialTab: tab),
+        builder: (_) => FinanceScreen(
+          controller: finance!,
+          initialTab: tab,
+          lockRole: true,
+          patientIds: s.profiles.map((p) => p['id'] as String).toList(),
+        ),
       ),
     );
   }
@@ -124,6 +146,7 @@ class _WorkspaceState extends State<Workspace> {
   }
 
   void open(String route) {
+    if (!s.allows(route)) return;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) =>
@@ -164,8 +187,11 @@ class _WorkspaceState extends State<Workspace> {
   );
   @override
   Widget build(BuildContext context) {
+    final compact = !care && s.staffRole != 'owner';
     final labels = care
         ? ['Trang chủ', 'Hành trình', 'Tin nhắn', 'Hồ sơ']
+        : compact
+        ? ['Công việc', 'Hồ sơ mẫu']
         : ['Hôm nay', 'Lịch hẹn', 'Hồ sơ', 'Theo dõi', 'Thêm'];
     final icons = care
         ? [
@@ -174,6 +200,8 @@ class _WorkspaceState extends State<Workspace> {
             Icons.chat_bubble_outline,
             Icons.person_outline,
           ]
+        : compact
+        ? [Icons.work_outline, Icons.people_outline]
         : [
             Icons.space_dashboard_outlined,
             Icons.calendar_month_outlined,
@@ -185,7 +213,7 @@ class _WorkspaceState extends State<Workspace> {
       appBar: AppBar(
         title: Image.asset('assets/pema-logo.png', width: 94),
         actions: [
-          if (!care && finance != null)
+          if (!care && s.staffRole == 'owner' && finance != null)
             IconButton(
               onPressed: () => openFinance(3),
               tooltip: 'Thông báo thanh toán',
@@ -199,53 +227,86 @@ class _WorkspaceState extends State<Workspace> {
             onPressed: () => showModalBottomSheet(
               context: context,
               showDragHandle: true,
+              isScrollControlled: true,
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * .85,
+              ),
               builder: (ctx) => SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Duyệt không gian làm việc',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Text(
-                        'Dữ liệu mẫu • chưa phải đăng nhập/phân quyền',
-                      ),
-                      for (final mode in [false, true])
-                        ListTile(
-                          leading: Icon(
-                            mode
-                                ? Icons.favorite_outline
-                                : Icons.medical_services_outlined,
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Duyệt không gian làm việc',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
                           ),
-                          title: Text(
-                            mode
-                                ? 'Pema Care · Người bệnh'
-                                : 'Pema Clinic · Phòng khám',
-                          ),
-                          trailing: care == mode
-                              ? const Icon(Icons.check, color: blue)
-                              : null,
-                          onTap: () {
-                            setState(() {
-                              care = mode;
-                              index = 0;
-                            });
-                            Navigator.pop(ctx);
-                          },
                         ),
-                    ],
+                        const Text(
+                          'Dữ liệu mẫu • chưa phải đăng nhập/phân quyền',
+                        ),
+                        for (final account in [
+                          ['owner', 'BS. Tâm', 'Chủ phòng khám'],
+                          ['doctor', 'BS. Tâm', 'Bác sĩ điều trị'],
+                          ['doctor', 'BS. Mai', 'Bác sĩ điều trị'],
+                          ['care', 'Mai Anh', 'CSKH'],
+                          ['accountant', 'Kế toán', 'Đối soát & thu ngân'],
+                          ['patient', 'Người bệnh', 'Pema Care'],
+                        ])
+                          ListTile(
+                            title: Text('${account[1]} · ${account[2]}'),
+                            leading: Icon(
+                              account[0] == 'patient'
+                                  ? Icons.favorite_outline
+                                  : Icons.badge_outlined,
+                            ),
+                            onTap: () {
+                              setState(() {
+                                care = account[0] == 'patient';
+                                s.careMode = care;
+                                index = 0;
+                                caseGroup = 'all';
+                                if (!care) {
+                                  s.staffRole = account[0];
+                                  s.staffName = account[1];
+                                  s.staffDoctor = account[1];
+                                  if (!s.owns(s.selected))
+                                    s.selected = s.profiles.indexWhere(
+                                      (p) => p['doctor'] == s.staffDoctor,
+                                    );
+                                }
+                              });
+                              financeLoaded = false;
+                              seenFinanceUnread = 0;
+                              if (!care && s.staffRole != 'care')
+                                finance?.select(
+                                  '${s.staffRole}:${s.staffDoctor == 'BS. Mai' ? 'D1' : 'D0'}',
+                                );
+                              Navigator.pop(ctx);
+                            },
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
             icon: const Icon(Icons.swap_horiz, size: 18),
-            label: Text(care ? 'Care' : 'Clinic'),
+            label: Text(
+              care
+                  ? 'Care'
+                  : s.staffRole == 'owner'
+                  ? 'Clinic'
+                  : s.staffRole == 'care'
+                  ? 'CSKH'
+                  : s.staffRole == 'doctor'
+                  ? 'Bác sĩ'
+                  : 'Kế toán',
+            ),
           ),
         ],
       ),
@@ -274,6 +335,151 @@ class _WorkspaceState extends State<Workspace> {
     );
   }
 
+  List<Widget> accountPicker() => [
+    section('Tài khoản mẫu · 10 nhóm CSKH'),
+    DropdownButtonFormField<String>(
+      key: ValueKey('group-$caseGroup'),
+      initialValue: caseGroup,
+      isExpanded: true,
+      items: [
+        const DropdownMenuItem(value: 'all', child: Text('Tất cả hồ sơ')),
+        ...s.profiles
+            .where((p) => p['group'] != '')
+            .map(
+              (p) => DropdownMenuItem(
+                value: p['group'] as String,
+                child: Text(p['case'] as String),
+              ),
+            ),
+      ],
+      onChanged: (v) => setState(() {
+        caseGroup = v!;
+        if (v != 'all')
+          s.selected = s.profiles.indexWhere((p) => p['group'] == v);
+      }),
+    ),
+    const SizedBox(height: 12),
+    DropdownButtonFormField<int>(
+      key: ValueKey('patient-${s.selected}-$caseGroup'),
+      isExpanded: true,
+      initialValue: caseGroup == 'all' || s.profile['group'] == caseGroup
+          ? s.selected
+          : null,
+      decoration: const InputDecoration(labelText: 'Người bệnh đang xem'),
+      items: [
+        for (int i = 0; i < s.profiles.length; i++)
+          if (caseGroup == 'all' || s.profiles[i]['group'] == caseGroup)
+            DropdownMenuItem(
+              value: i,
+              child: Text(
+                '${s.profiles[i]['id']} · ${s.patients[i]}',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+      ],
+      onChanged: (i) => s.change(() => s.selected = i!),
+    ),
+  ];
+  List<Widget> patientNext() {
+    final group = s.profile['group'] as String;
+    final title = {
+      'd1': 'Hôm nay bạn cảm thấy thế nào?',
+      'd3': 'Cập nhật ảnh tiến triển',
+      'd7': 'Cùng bác sĩ xem lại tiến triển',
+      'due': 'Đến mốc tái khám',
+      'overdue': 'Sắp xếp lần tái khám tiếp theo',
+      'no_show': 'Chọn lại một lịch hẹn phù hợp',
+      'abandoned': 'Tiếp tục kế hoạch chăm sóc',
+      'dormant90': 'Pema sẵn sàng đồng hành',
+      'dormant180': 'Kết nối lại với Pema',
+      'birthday': 'Pema chúc bạn sinh nhật nhiều sức khỏe',
+    }[group];
+    if (title == null) return [];
+    return [
+      tile(
+        title,
+        'Xem lịch hoặc gửi nhu cầu để đội ngũ hỗ trợ',
+        Icons.favorite_outline,
+        () => open(group == 'due' ? 'Lịch của tôi' : 'Gửi cập nhật'),
+      ),
+    ];
+  }
+
+  List<Widget> staffBody() {
+    if (index == 1)
+      return [
+        heading('Hồ sơ phụ trách', s.staffName),
+        PatientSearch(
+          store: s,
+          onOpen: () => open(
+            s.staffRole == 'care'
+                ? 'Chăm sóc khách hàng'
+                : s.staffRole == 'accountant'
+                ? 'Hóa đơn'
+                : 'Patient 360',
+          ),
+        ),
+      ];
+    if (s.staffRole == 'accountant')
+      return [
+        heading('Đối soát & thu ngân', 'Kế toán · không gian riêng'),
+        if (finance != null)
+          tile(
+            'Tài chính & tiền thủ thuật',
+            'Đối soát, phiếu thu, chính sách và chốt kỳ',
+            Icons.account_balance_wallet_outlined,
+            () => openFinance(),
+          ),
+        tile(
+          'Thu ngân theo hồ sơ',
+          s.name,
+          Icons.receipt_long_outlined,
+          () => open('Thu ngân'),
+        ),
+      ];
+    if (s.staffRole == 'doctor')
+      return [
+        heading('Lịch & hồ sơ của tôi', s.staffName),
+        tile(
+          'Hồ sơ đang phụ trách',
+          s.name,
+          Icons.person_outline,
+          () => open('Patient 360'),
+        ),
+        tile(
+          'Lịch của tôi',
+          s.day.isEmpty ? 'Chưa có lịch' : s.day,
+          Icons.calendar_month_outlined,
+          () => open('Chi tiết lịch'),
+        ),
+        if (finance != null)
+          tile(
+            'Doanh số của tôi',
+            'Chỉ số cá nhân và tiền thủ thuật',
+            Icons.account_balance_wallet_outlined,
+            () => openFinance(),
+          ),
+        section('Cập nhật cần bác sĩ xem'),
+        for (int i = 0; i < s.profiles.length; i++)
+          if (s.owns(i) &&
+              ((s.profiles[i]['tasks'] as List).any((t) => t['type'] == 'd7') ||
+                  (s.states[s.profiles[i]['id']]?.updates.isNotEmpty ??
+                      false) ||
+                  (s.states[s.profiles[i]['id']]?.escalations.isNotEmpty ??
+                      false)))
+            tile(
+              s.patients[i],
+              'Review chăm sóc · hồ sơ phụ trách',
+              Icons.inbox_outlined,
+              () {
+                s.change(() => s.selected = i);
+                open('Phản hồi');
+              },
+            ),
+      ];
+    return [CareQueue(store: s, onOpen: () => open('Chăm sóc khách hàng'))];
+  }
+
   List<Widget> body() {
     if (care) {
       if (index == 1)
@@ -281,7 +487,7 @@ class _WorkspaceState extends State<Workspace> {
           heading('Hành trình của bạn', 'Mỗi bước chăm sóc đều được ghi nhận'),
           hero(
             'Phục hồi & chăm sóc da',
-            '${s.sessions}/5 buổi đã hoàn tất',
+            '${s.sessions}/${s.totalSessions} buổi đã hoàn tất',
             Icons.spa_outlined,
           ),
           ...[
@@ -314,6 +520,7 @@ class _WorkspaceState extends State<Workspace> {
       if (index == 3)
         return [
           heading(s.name, '${s.patientId} · Hồ sơ minh họa'),
+          ...accountPicker(),
           ...[
             'Đơn thuốc & tư vấn',
             'Hóa đơn',
@@ -329,10 +536,14 @@ class _WorkspaceState extends State<Workspace> {
           ),
         ];
       return [
-        heading('Chào Linh,', 'Hôm nay, dành chút thời gian cho làn da'),
+        heading(
+          'Chào ${s.name.split(' ').last},',
+          'Hôm nay, dành chút thời gian cho làn da',
+        ),
+        ...patientNext(),
         hero(
           'Chăm sóc nhẹ nhàng.\nĐồng hành mỗi ngày.',
-          'Liệu trình phục hồi · Buổi ${s.sessions}/5',
+          'Liệu trình phục hồi · Buổi ${s.sessions}/${s.totalSessions}',
           Icons.spa_outlined,
         ),
         const SizedBox(height: 16),
@@ -349,7 +560,7 @@ class _WorkspaceState extends State<Workspace> {
         ),
         section('Lịch hẹn tiếp theo'),
         tile(
-          '${s.appointment} · ${s.day}',
+          s.day.isEmpty ? 'Chưa có lịch hẹn' : '${s.appointment} · ${s.day}',
           'BS. Tâm · Khám da liễu',
           Icons.calendar_today_outlined,
           () => open('Lịch của tôi'),
@@ -363,6 +574,7 @@ class _WorkspaceState extends State<Workspace> {
         ),
       ];
     }
+    if (s.staffRole != 'owner') return staffBody();
     if (index == 1)
       return [
         heading('Điều phối lịch', 'Thứ Ba, 22 tháng 9'),
@@ -384,7 +596,10 @@ class _WorkspaceState extends State<Workspace> {
       ];
     if (index == 2)
       return [
-        heading('Hồ sơ người bệnh', '36 hồ sơ tổng hợp · Patient 360'),
+        heading(
+          'Hồ sơ người bệnh',
+          '${s.patients.length} hồ sơ tổng hợp · Patient 360',
+        ),
         PatientSearch(store: s, onOpen: () => open('Patient 360')),
       ];
     if (index == 3)
@@ -697,8 +912,9 @@ class _PatientSearchState extends State<PatientSearch> {
       ),
       const SizedBox(height: 16),
       for (int i = 0; i < widget.store.patients.length; i++)
-        if (widget.store.patients[i].toLowerCase().contains(query) ||
-            'p${(i + 1).toString().padLeft(3, '0')}'.contains(query))
+        if (widget.store.owns(i) &&
+            (widget.store.patients[i].toLowerCase().contains(query) ||
+                'p${(i + 1).toString().padLeft(3, '0')}'.contains(query)))
           tile(
             widget.store.patients[i],
             'P${(i + 1).toString().padLeft(3, '0')} · Đang điều trị',
@@ -785,19 +1001,80 @@ class _DetailState extends State<Detail> {
     ),
   );
   List<Widget> content() {
+    if (!s.allows(widget.route))
+      return [
+        notice(
+          'Tác vụ không thuộc không gian hiện tại. Quay lại để chọn đúng công việc.',
+        ),
+      ];
     switch (widget.route) {
+      case 'Chăm sóc khách hàng':
+        return [
+          heading(s.name, '${s.patientId} · ${s.profile['case']}'),
+          notice('Nội dung liên hệ nội bộ không hiển thị cho người bệnh.'),
+          if (s.current.careNote.isNotEmpty) notice(s.current.careNote),
+          TextField(
+            controller: text,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: 'Kết quả liên hệ / việc cần bàn giao',
+            ),
+          ),
+          primary('Lưu kết quả liên hệ', () {
+            if (text.text.trim().isEmpty) {
+              toast('Nhập kết quả liên hệ');
+              return;
+            }
+            s.change(() {
+              s.current.careNote = text.text.trim();
+              s.current.careStatus = 'Đã liên hệ';
+            });
+            toast('Đã lưu ghi chú nội bộ');
+          }),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: Color(0xFFCADBE8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onPressed: () => open('Đặt lịch'),
+            icon: const Icon(Icons.calendar_month_outlined),
+            label: const Text('Hỗ trợ đặt lại lịch'),
+          ),
+          TextButton.icon(
+            icon: const Icon(Icons.forward_to_inbox_outlined),
+            label: const Text('Chuyển bác sĩ xem'),
+            onPressed: () {
+              if (text.text.trim().isEmpty) {
+                toast('Nhập nội dung cần bác sĩ xem');
+                return;
+              }
+              s.change(() {
+                s.current.careNote = text.text.trim();
+                s.current.careStatus = 'Chờ bác sĩ';
+                s.current.escalations.add(text.text.trim());
+              });
+              toast('Đã chuyển vào hàng chờ bác sĩ');
+            },
+          ),
+        ];
       case 'Patient 360':
         return [
-          heading(s.name, '${s.patientId} · 32 tuổi · BS. Tâm'),
+          heading(s.name, '${s.patientId} · ${s.profile['doctor']}'),
           notice('Da nhạy cảm • Cần đọc tiền sử trước khi kê đơn'),
           Row(
             children: [
-              metric('${s.sessions}/5', 'Buổi điều trị'),
+              metric('${s.sessions}/${s.totalSessions}', 'Buổi điều trị'),
               const SizedBox(width: 12),
               metric(s.appointment, 'Lịch tiếp theo'),
             ],
           ),
           if (!widget.care &&
+              s.billing &&
               widget.finance?.data != null &&
               widget.finance!.role != 'doctor')
             tile(
@@ -810,6 +1087,9 @@ class _DetailState extends State<Detail> {
                   builder: (_) => ProcedureForm(
                     controller: widget.finance!,
                     initialPatient: s.patientId,
+                    patientIds: s.profiles
+                        .map((p) => p['id'] as String)
+                        .toList(),
                   ),
                 ),
               ),
@@ -1100,7 +1380,7 @@ class _DetailState extends State<Detail> {
       case 'Lịch của tôi':
         return [
           hero(
-            '${s.appointment} · ${s.day}',
+            s.day.isEmpty ? 'Chưa có lịch hẹn' : '${s.appointment} · ${s.day}',
             'BS. Tâm · Khám da liễu',
             Icons.calendar_month_outlined,
           ),
@@ -1108,7 +1388,9 @@ class _DetailState extends State<Detail> {
           notice('Tái khám & đánh giá · 30 phút'),
           primary(
             s.confirmed ? 'Đã xác nhận' : 'Xác nhận tham dự',
-            s.confirmed ? null : () => s.change(() => s.confirmed = true),
+            s.confirmed || s.day.isEmpty
+                ? null
+                : () => s.change(() => s.confirmed = true),
           ),
           if (!widget.care) primary('Dời lịch', () => open('Đặt lịch')),
           if (!widget.care)
@@ -1135,7 +1417,7 @@ class _DetailState extends State<Detail> {
         return [
           hero(
             'Phục hồi & chăm sóc da',
-            '${s.sessions}/5 buổi · BS. Tâm',
+            '${s.sessions}/${s.totalSessions} buổi · BS. Tâm',
             Icons.route_outlined,
           ),
           section('Các mốc chăm sóc'),
@@ -1152,7 +1434,9 @@ class _DetailState extends State<Detail> {
         ];
       case 'Buổi điều trị':
         return [
-          notice('Buổi ${s.sessions + 1}/5 · BS. Tâm'),
+          notice(
+            'Buổi ${s.sessions + 1}/${s.totalSessions} · ${s.profile['doctor']}',
+          ),
           TextField(
             controller: text,
             maxLines: 4,
@@ -1168,7 +1452,9 @@ class _DetailState extends State<Detail> {
           ),
           primary(
             'Hoàn tất buổi',
-            consent && text.text.trim().isNotEmpty && s.sessions < 5
+            consent &&
+                    text.text.trim().isNotEmpty &&
+                    s.sessions < s.totalSessions
                 ? () {
                     s.change(() => s.sessions++);
                     toast('Đã lưu buổi và cập nhật hành trình');
@@ -1237,6 +1523,9 @@ class _DetailState extends State<Detail> {
         ];
       case 'Phản hồi':
         return [
+          ...s.current.escalations.map(
+            (x) => notice('CSKH bàn giao nội bộ: $x'),
+          ),
           heading(s.name, 'Cập nhật từ Patient Mobile'),
           ...s.updates.map((x) => notice(x)),
           TextField(
@@ -1279,7 +1568,7 @@ class _DetailState extends State<Detail> {
               null,
             ),
           ),
-          if (!widget.care)
+          if (!widget.care && s.billing)
             primary(
               'Thu đủ phần còn lại',
               amount > s.paid
@@ -1308,7 +1597,8 @@ class _DetailState extends State<Detail> {
                     )
                   : null,
             ),
-          if (!widget.care) primary('Lên đơn mới', () => open('Lên đơn nhanh')),
+          if (!widget.care && s.clinical)
+            primary('Lên đơn mới', () => open('Lên đơn nhanh')),
         ];
       case 'Dịch vụ':
         return [
@@ -1385,7 +1675,7 @@ class _DetailState extends State<Detail> {
           ),
           section('Tóm tắt ${s.name}'),
           notice(
-            'Đã hoàn tất ${s.sessions}/5 buổi. Có ${s.updates.length} phản hồi tại nhà.\nNguồn: hành trình và cập nhật trong phiên mẫu.',
+            'Đã hoàn tất ${s.sessions}/${s.totalSessions} buổi. Có ${s.updates.length} phản hồi tại nhà.\nNguồn: hành trình và cập nhật trong phiên mẫu.',
           ),
           tile(
             'Việc còn mở',

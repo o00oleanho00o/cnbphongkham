@@ -235,3 +235,21 @@ Validation: crm-domain 22 PASS; CRM browser 7 nhóm kiểm tra gồm Flow A/B/C,
 Commit triển khai `5f8cde62a80abc413599cf3ef8b385a576a5c0aa` đã push lên `origin/master`; đã dùng `git ls-remote` xác minh SHA remote khớp HEAD. Master được fast-forward từ baseline, giữ nguyên catalog/Flutter/PB02 và lịch sử, không force-push. Đánh giá DoD CRM01 hoàn tất ở mức prototype đã nêu: flow A/B/C, rules/expected visit/idempotency, timeline/booking/metrics, phân vai nhân viên, regression/responsive/evidence và docs. Kiểm thêm liên kết doanh số bác sĩ trả đúng projection `doctor:D1`; CSKH truy cập tài chính được chuyển về workspace.
 
 File log runtime và các thư mục/ZIP tạm có từ trước vẫn để ngoài commit. Không thay dữ liệu thật, không bật gửi tin/provider, không nghiệm thu auth production hay native CRM. Phần CRM01 này hoàn tất; không suy toàn bộ mục tiêu ULTRA/pilot đã hoàn tất từ checkpoint này.
+
+
+## 22/09/2026 — Mobile CRM02, tài chính cùng Clinic và redesign CSKH native
+
+- Hoàn tất yêu cầu mobile/finance/mock accounts: tài chính mount trong Clinic, URL cũ giữ staff/patient, một bộ chọn vai trò; web và native tách vai trò demo. Bổ sung 10 hồ sơ cho đủ 10 nhóm, fresh seed 46 hồ sơ/85 lịch; không ghi đè dữ liệu cũ, kiểm va chạm ID và idempotency.
+- Patient Mobile chọn nhóm trong Hồ sơ, home ưu tiên một bước tiếp theo, không lộ note nội bộ; phản hồi gắn đúng patient và bác sĩ. Flutter dùng snapshot cùng fixture, state theo patient và selection Clinic/Care riêng; CRM native vẫn độc lập web, memory-only.
+- Theo ảnh phản hồi người dùng: bỏ 10 chip wrap ở CSKH, thay bằng 3 trạng thái đếm/lọc thực, tìm kiếm, filter sheet, card khách ngắn. Bốn viewport native có card khách đầu tại y=334. Đã xem screenshot home, sheet và form; chỉnh sheet trắng, viền input và hierarchy nút.
+- PASS: CRM domain 23; browser 7 flows/35 layouts; operations 20; desktop 80; linked; smoke 12; order 13; finance API 12; mobile/finance 5 nhóm kiểm + 20 layout. Flutter analyze sạch, 17 test; build preview thành công; browser native 4 viewport và D3 → P038 → lưu kết quả → Đã liên hệ, không pageerror. Guide mới mở được; 142 link nội bộ hợp lệ, git diff --check sạch.
+- Bằng chứng: demo-assets/screenshots/mobile-crm02/validation-summary.json, results.json, native-review-results.json; flutter-analyze/tests/build.txt; screenshots native-care-* và các thư mục regression. Build còn warning CupertinoIcons adaptive path cũ; Material icons trên các màn đã xem hiển thị đúng.
+- Đã cập nhật 0→1→2→3 PB01/PB02, README/AGENT, docs mobile/native/finance, tab Hướng dẫn và skill thiết kế. Chưa thử thiết bị Android/iOS, auth/push nền hoặc CRM sync native; không tuyên bố production.
+- Server :4173/:4174 đang chạy, native-review đã build lại. Công việc lưu tại working tree; các artifact ngoài phạm vi được giữ nguyên.
+
+
+### Rà tài liệu và chuẩn bị bàn giao Git — 22/09/2026
+
+Đã đối chiếu README/AGENT, bộ 0→1→2→3, domain/patient/operations/native docs với source và evidence Mobile CRM02. Sửa mô tả state chung đã lỗi thời, module map và số test hiện hành; giữ kết quả kiểm thử lịch sử với nhãn mốc rõ ràng. Commit gồm source, mock data, tests, docs/skill và evidence của đợt mobile/tài chính/CSKH. Log runtime, thư mục giải nén và ZIP có từ trước không thuộc đợt bàn giao này.
+
+Kiểm trước commit: 158 link nội bộ trong 47 tài liệu hợp lệ; bundle 46 hồ sơ/10 nhóm khớp fresh fixture; `git diff --check` sạch. Dùng bằng chứng kiểm thử chức năng của lượt triển khai vừa hoàn tất, không ghi thành một lần chạy test mới khi chỉ sửa tài liệu.

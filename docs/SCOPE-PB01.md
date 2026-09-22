@@ -4,7 +4,7 @@
 
 Theo góp ý bổ sung: phân không gian theo tài khoản demo Chủ phòng khám / Bác sĩ / CSKH / Kế toán. BS. Tâm có góc nhìn chủ và góc nhìn bác sĩ riêng. CSKH vào hàng đợi, bác sĩ vào lịch/hồ sơ phụ trách, kế toán vào thu ngân; không ghép các dashboard vào cùng trang cho mọi người. Đây là phân vai thao tác bằng sessionStorage, không đăng nhập hoặc bảo mật production.
 
-Mở rộng web trên nền PB01/PB02 hiện tại: tiếp đón theo appointment, Patient 360 có CRM/timeline, expected next visit, CSKH chủ động và dashboard dẫn tới hành động. Giữ 36 hồ sơ, thêm 8 câu chuyện mẫu khi reset; không thay lịch sử người dùng lúc nâng phiên bản. Ngày demo cố định 20/09/2026. Clinic/Patient Mobile web dùng cùng localStorage. Flutter và tài chính PB02 giữ nguyên phạm vi; CRM01 không triển khai native hoặc provider gửi tin thật.
+Mở rộng web trên nền PB01/PB02 hiện tại: tiếp đón theo appointment, Patient 360 có CRM/timeline, expected next visit, CSKH chủ động và dashboard dẫn tới hành động. Giữ 36 hồ sơ nền và 8 câu chuyện mẫu khi reset, bổ sung 10 tài khoản chăm sóc qua Mobile CRM02; không thay lịch sử người dùng lúc nâng phiên bản. Ngày demo cố định 20/09/2026. Clinic/Patient Mobile web dùng cùng localStorage. CRM01 ban đầu chỉ triển khai web; bản Mobile CRM02 bổ sung workspace/queue mẫu Flutter và đưa tài chính PB02 vào Clinic shell. Chưa có provider gửi tin thật.
 
 Giả định: protocol laser mẫu D+1/D+3/D+7/D+30 chỉ tạo việc cho nhân viên, không tự gửi lời khuyên y khoa. Booking sau CSKH là kết quả đặt lại lịch; chỉ check-in/thực hiện sau đó mới tính đã quay lại. Opt-out chặn tái kích hoạt/sinh nhật, không xóa việc theo dõi an toàn lâm sàng. Ngưỡng bỏ dở 45 ngày, dormant 90/180 ngày cần chủ phòng khám duyệt trước pilot. Chi tiết và mapping parity: [CRM01](20_CRM01_PATIENT_LIFECYCLE.md).
 
@@ -54,7 +54,7 @@ Thêm template Flutter Clinic/Care, giữ nhận diện và luồng web, catalog
 
 - Mục tiêu là duyệt thiết kế, điều hướng và thao tác mẫu trên điện thoại trước khi triển khai nghiệp vụ native đầy đủ. Các acceptance web ở dưới không mặc nhiên là kết quả đạt của Flutter.
 - Trong scope: hai không gian Clinic/Care, Patient 360, form lịch/tư vấn/buổi, catalog 115 sản phẩm, nháp → duyệt → Care, thu tiền và follow-up minh họa; nhận diện Pema và preview nhiều kích thước.
-- Catalog lấy từ Excel người dùng cung cấp; 36 tên bệnh nhân tổng hợp không phải bản sao toàn bộ hồ sơ web. Luồng lịch/lâm sàng/follow-up dùng state chung của phiên, ưu tiên duyệt P001; chỉ đơn và tổng tiền đã thu có phân tách theo patient ID.
+- Catalog lấy từ Excel người dùng cung cấp; 46 hồ sơ snapshot tổng hợp, không phải bản sao clinical aggregate đầy đủ. Lịch/lâm sàng/follow-up/cart/đơn/tiền và CSKH note/escalation tách theo patient ID trong phiên; selection Care/Clinic riêng.
 - Ngoài scope vòng này: sync với web, database/API, auth/RBAC, lịch chống trùng thật, ledger thanh toán, camera/upload, PDF/in/share, push và AI thật.
 - DoD vòng template: mã Flutter build được; ghi rõ màn/tác vụ/giới hạn; phân biệt test đã chạy và checklist chờ duyệt. Hoàn tất kỹ thuật không đồng nghĩa chủ sản phẩm đã duyệt thiết kế hoặc native production đã sẵn sàng.
 - Cần chốt tiếp: Clinic/Care là hai app hay một app theo role; nghiệp vụ nào phải chạy offline; ưu tiên backend, lịch, media hay in native sau duyệt.
@@ -127,3 +127,10 @@ Prototype dùng vanilla HTML/JS, localStorage, synthetic data và AI mô phỏng
 ## Skill thiết kế dùng chung — 22/09/2026
 
 Bổ sung gói hướng dẫn Pema Design trong repository để đồng nghiệp tái sử dụng nhận diện, luồng web/mobile/Flutter, responsive và phương pháp kiểm tra. Đây là tài sản hỗ trợ thiết kế, không mở rộng scope chức năng app. Hướng dẫn chia sẻ: [23_PEMA_DESIGN_SKILL](23_PEMA_DESIGN_SKILL.md).
+
+
+## Mobile và Clinic shell — 22/09/2026
+
+Đồng bộ mobile và điều hướng: tài chính mở trong Clinic shell; URL cũ chuyển tới cùng workspace. Thêm 10 hồ sơ tổng hợp P037–P046 theo 10 nhóm CSKH, bổ sung một lần và không sửa 36 hồ sơ hiện có. Patient Mobile dùng bước tiếp theo theo rule, không lộ ghi chú nội bộ. Flutter bổ sung phân vai demo, chọn bệnh nhân theo tình huống và tách state theo patient; CRM native vẫn là template độc lập, không sync localStorage.
+
+UI review CSKH mobile: trạng thái Cần làm / Đã liên hệ / Chờ bác sĩ ở đầu màn; tìm kiếm và nút Lọc mở sheet 10 nhóm, không trải 10 chip lên home. Card đầu nằm trong 440px đầu ở viewport 360; lọc/trạng thái phải thực sự đổi danh sách. Widget `care_workspace.dart` dùng cùng PatientState, ghi chú nội bộ giữ tách Care.

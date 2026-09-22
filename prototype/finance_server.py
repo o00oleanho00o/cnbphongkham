@@ -98,7 +98,7 @@ class Finance:
             day=d.get('date'); check(valid_day(day) and day<=today(),'Ngày thực hiện không hợp lệ')
             check(day[:7] not in s['periods'],'Kỳ đã chốt')
             service=next((x for x in s['services'] if x['id']==d.get('service')),None); check(service,'Không có thủ thuật')
-            patient=d.get('patient',''); check(len(patient)==4 and patient[0]=='P' and patient[1:].isdigit() and 1<=int(patient[1:])<=36,'Chọn hồ sơ mẫu P001–P036')
+            patient=d.get('patient',''); check(len(patient)==4 and patient[0]=='P' and patient[1:].isdigit() and 1<=int(patient[1:])<=999,'Chọn mã hồ sơ P001–P999')
             gross=integer(d.get('list'),1); discount=integer(d.get('discount'),0,gross); people=d.get('people',[])
             check(isinstance(people,list) and 0<len(people)<=4,'Cần người thực hiện')
             check(len({p.get('doctor') for p in people})==len(people),'Trùng người thực hiện')

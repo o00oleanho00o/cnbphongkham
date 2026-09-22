@@ -25,3 +25,6 @@ Tablet có thể tăng cột/độ rộng hợp lý nhưng không biến thành 
 ## Review screenshot có mục tiêu
 
 Kiểm lần lượt: định vị người bệnh/tác vụ → thứ bậc nội dung → khoảng cách/alignment → chữ/icon/contrast → chiều dài/scroll → trạng thái/navigation/CTA. Chụp trước/sau cùng viewport và state khi so sánh. Mỗi nhận xét cần chỉ ra vấn đề, ảnh hưởng thao tác và cách sửa; tránh nhận xét chung “chưa hiện đại”. Sau sửa test cả click/validation, không chỉ chụp màn rỗng đẹp.
+
+
+CSKH native: chỉ hiển thị trạng thái, tìm kiếm, nút Lọc và danh sách khách ở màn chính. Các nhóm D1/D3/D7/tái khám/90/180 ngày/sinh nhật đặt trong sheet cuộn; chỉ hiện chip nhóm đang chọn. Tránh 10 chip wrap đẩy khách đầu khỏi viewport. Test thao tác lọc và đổi trạng thái, ngoài ảnh tĩnh.
