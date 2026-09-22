@@ -63,3 +63,13 @@ Bỏ giới hạn chiều rộng ở workspace và bảng bệnh nhân, bổ sun
 Clinic Web lấy viewport 1920×1020 CSS pixels ở zoom 100% làm chuẩn. Hướng dẫn tận dụng chiều ngang bằng cột thao tác và cột bàn giao; ảnh trước/sau mở rộng vùng làm việc; bác sĩ và dịch vụ dùng bốn cột trên màn rộng. Patient 360 cân đối cột hành trình và ngữ cảnh.
 
 Đã chụp 80 trạng thái: 11 màn chính và 5 tab hồ sơ tại 1920, 1440, 1280, 1024, 390px; không tràn ngang toàn trang. Ảnh và kết quả: `demo-assets/screenshots/desktop-1920/`. Kiểm thử UI, vận hành và smoke đều đạt. Quy trình kiểm tra được ghi trong README và `prototype/review-desktop.cjs`.
+
+
+## Bổ sung Flutter template — 22/09/2026
+
+Baseline native hiện tại: Be Vietnam Pro local, logo Pema, primary #0B4F94, navy #083A6E, sky #3CAAE5, ink #17324D, muted #5D7184, paper #F4F8FB; card 18, hero 24, spacing 4/8/12/16/20/24. Các mô tả Manrope/teal cũ trong lịch sử không phải token native hiện hành. Clinic 5 tab, Care 4 tab; tác vụ dài ở màn con, sheet cho quyết định ngắn. [Mapping và checklist duyệt](NATIVE-TEMPLATE.md), [coverage viewport thực tế](22_NATIVE_PARITY_AND_VALIDATION.md).
+
+
+## Đóng gói phương pháp thiết kế — 22/09/2026
+
+Baseline và các bài học bố cục đã được tổng hợp thành [Pema Design skill](../.agents/skills/pema-design/SKILL.md). Dùng reference visual/layout để phát triển tiếp; không áp lại Manrope/teal từ phần lịch sử. [Hướng dẫn chia sẻ](23_PEMA_DESIGN_SKILL.md).

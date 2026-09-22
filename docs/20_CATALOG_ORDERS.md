@@ -38,3 +38,8 @@ Evidence: `demo-assets/screenshots/orders/`. Workflow kiểm thử nhập/sửa/
 Đơn mới nằm ở `quickOrders[]`; `prescriptions[]` cũ vẫn giữ nguyên để tương thích và không được fuzzy match/phân loại lại tự động. Những đơn nhanh tạo bởi bản thử nghiệm cũ phải mở Sửa nháp, đối chiếu catalog rồi mới duyệt.
 
 Tài khoản bác sĩ, dữ liệu người bệnh và đồng bộ localStorage vẫn là mô phỏng. Bản in mang nhãn demo; chưa có đăng nhập/RBAC server, backend, ký số hoặc QR phòng khám được cấu hình. Không sao chép QR hay địa chỉ chưa xác minh từ project khác.
+
+
+## Bổ sung Flutter template — 22/09/2026
+
+Flutter bundle dùng cùng catalog 115 dòng (30 thuốc, 78 tư vấn, 7 chưa loại), nhưng chức năng đơn chưa ngang web: tìm kiếm chưa bỏ dấu, chỉ 20 kết quả đầu; không NONE/lý do override/version/reviewer; lưu trong memory. Nháp ẩn Care và sửa thay cùng order ID. Phiếu A5 chỉ là card gom approved orders theo patient, không PDF/in hoặc pagination. Thu ngân chưa có invoice/ledger, tổng còn tính cả nháp. Không dùng test PDF web làm bằng chứng native. [Quy trình đồng bộ catalog](21_NATIVE_RUNBOOK.md), [ma trận chi tiết](22_NATIVE_PARITY_AND_VALIDATION.md).

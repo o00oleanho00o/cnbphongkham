@@ -14,7 +14,7 @@ Home/next action, appointments, treatment journey, progress/photos with consent,
 5. Every screenshot/demo path uses synthetic data and labels demo mode.
 
 ## Exclusions
-Accounting/warehouse/HR, autonomous diagnosis, production integrations, native app and real patient import.
+Accounting/warehouse/HR, autonomous diagnosis, production integrations, native production app and real patient import. Ngoại lệ được bổ sung ngày 22/09/2026: template Flutter Clinic/Care để duyệt thiết kế đã có trong scope; không đồng nghĩa native production. Xem [SCOPE-PB01](SCOPE-PB01.md) và [ma trận hiện trạng](22_NATIVE_PARITY_AND_VALIDATION.md).
 
 ## Pilot vs prototype boundary
 

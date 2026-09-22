@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pema Design"
+  short_description: "Thiết kế Pema đồng bộ web, mobile và Flutter"
+  default_prompt: "Dùng $pema-design để thiết kế và kiểm tra màn hình Pema theo nhận diện, luồng nghiệp vụ và nền tảng hiện tại của dự án."

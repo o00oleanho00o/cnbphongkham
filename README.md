@@ -4,7 +4,23 @@
 
 Mở [Native review](http://127.0.0.1:4173/native-review/) để xem Flutter trong khung điện thoại 360/390/430px và tablet. Chuyển Clinic/Care ở header để duyệt hai không gian; mã nguồn và cách build ở [flutter-template](flutter-template/README.md), mapping màn hình ở [Native template](docs/NATIVE-TEMPLATE.md). Đây là template tương tác dùng state trong phiên, chưa kết nối backend/camera/in native. Chạy server prototype như bên dưới; nếu chưa có preview, build theo hướng dẫn Flutter rồi copy `flutter-template/build/web/` sang `prototype/native-preview/`.
 
-Workspace này chứa prototype tổng hợp và tài liệu nghiên cứu của Pema Digital Clinic. Dữ liệu trong demo hoàn toàn giả lập.
+Workspace này chứa prototype và tài liệu nghiên cứu của Pema Digital Clinic. Hồ sơ bệnh nhân là giả lập; catalog 115 sản phẩm lấy từ Excel người dùng cung cấp.
+
+### Tài liệu chi tiết cho phần Flutter
+
+- [Bản đồ tài liệu](docs/README.md) và luồng [Scope](docs/SCOPE-PB01.md) → [Spec](docs/SPEC-PB01.md) → [Module Map](docs/MODULEMAP-PB01.md) → [Architecture](docs/ARCH-PB01.md).
+- [Màn hình và mạch sử dụng](docs/NATIVE-TEMPLATE.md), [runbook chạy/build/catalog](docs/21_NATIVE_RUNBOOK.md), [tính năng thực tế và kiểm thử](docs/22_NATIVE_PARITY_AND_VALIDATION.md).
+- [Quy tắc cập nhật cho agent](AGENT.md), [source Flutter](flutter-template/README.md), [validation đã ghi](flutter-template/VALIDATION.md).
+
+| Bản | Mục đích | Lưu dữ liệu |
+|---|---|---|
+| Clinic Web + Patient Mobile | Prototype nghiệp vụ liên thông | localStorage cùng origin/profile |
+| Native review + Flutter preview | Duyệt thiết kế/app flow từ mã Flutter Material 3 | Bộ nhớ một instance, reload mất mutation; không sync web |
+| Native pilot/production | Giai đoạn triển khai tiếp sau duyệt | Backend/auth/storage/plugin chưa được triển khai |
+
+Fresh clone không có compiled preview. Cài Flutter vào PATH rồi chạy `flutter-template/build-preview.ps1` từ PowerShell; script build và copy sang `prototype/native-preview/`. Chạy static server từ `prototype` như bên dưới. SDK đã kiểm tra: Flutter 3.47.5 / Dart 3.13.4; Android/iOS chưa nghiệm thu trên thiết bị. Cách cấu hình PATH và xử lý màn trắng/404 ở runbook.
+
+**Giới hạn cần biết khi duyệt:** Clinic/Care là bộ đổi không gian mẫu. Đơn và tiền đã thu tách theo bệnh nhân, nhưng lịch/note/buổi/follow-up/cart còn chung phiên, nên ưu tiên P001. Phiếu A5 chỉ chia nhóm trên màn hình, chưa PDF/in; thu ngân chưa có invoice/ledger và còn tính cả đơn nháp. 6 test hiện có gồm store, 4 viewport widget và một tương tác thêm hàng; không phải toàn bộ flow native end-to-end. Các phần hướng dẫn nghiệp vụ web bên dưới không tự áp dụng cho Flutter.
 
 ## Tiêu chuẩn hiển thị UI
 
@@ -69,3 +85,8 @@ Bộ tài liệu PB01 mô tả cùng một boundary sản phẩm theo thứ tự
 3. [Architecture PB01](docs/ARCH-PB01.md) — container demo/pilot, data model, API, phân quyền, NFR và đường di chuyển.
 
 [AGENT.md](AGENT.md) ghi quy tắc làm việc, dữ liệu giả lập, kiểm thử và cách giữ ranh giới prototype/pilot. Bộ tài liệu này áp dụng cho Pema Digital Clinic hiện tại; không phải giáo trình hay checklist đào tạo.
+
+
+## Design skill dùng chung cho đồng nghiệp
+
+Dùng **$pema-design** để thiết kế/review Clinic Web, Patient Mobile và Flutter theo nhận diện, luồng và responsive của dự án. [Skill trong repository](.agents/skills/pema-design/SKILL.md) có bốn reference về visual, màn hình/flow, layout và kiểm thử. [Hướng dẫn chia sẻ + prompt mẫu](docs/23_PEMA_DESIGN_SKILL.md). Có thể clone repo hoặc copy nguyên thư mục skill; không cần đường dẫn máy tác giả.

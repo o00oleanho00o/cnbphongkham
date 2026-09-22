@@ -42,3 +42,11 @@ State trong bộ nhớ của phiên template, chưa sync với localStorage web/
 Ảnh tiến triển/camera, AI, quyền riêng tư, cảnh báo nguồn lực và phiếu A5 là template. Chưa xuất PDF/in native, chưa gửi notification/payment thật, chưa RBAC, chưa lưu bền vững. Bố cục phiếu A5 để duyệt hai nhóm; không phải đầu ra in đã nghiệm thu.
 
 Thiết kế chi tiết và mapping: [NATIVE-TEMPLATE.md](../docs/NATIVE-TEMPLATE.md).
+
+## Tài liệu triển khai và kiểm tra
+
+- [Runbook](../docs/21_NATIVE_RUNBOOK.md): SDK/PATH, fresh clone, `build-preview.ps1`, static server, đồng bộ catalog và xử lý lỗi preview.
+- [Ma trận web/native](../docs/22_NATIVE_PARITY_AND_VALIDATION.md): hành vi thực tế, state chung/tách theo patient, giới hạn thu ngân/A5/media, kiểm thử đã chạy và checklist còn mở.
+- [Bản đồ tài liệu](../docs/README.md): Scope → Spec → Module Map → Architecture; [quy tắc đóng góp](../AGENT.md).
+
+Build dành cho URL review dùng `./build-preview.ps1` (Flutter phải ở PATH), thay cho việc chỉ build mà chưa copy output. `prototype/native-preview/` không được commit. Validation hiện có gồm 6 test; cả bốn widget viewport đều height 844, chưa thay thế kiểm tra device hoặc toàn bộ flow Care.

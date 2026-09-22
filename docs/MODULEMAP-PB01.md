@@ -63,7 +63,20 @@ Module map đi từ nền ẩn đến trải nghiệm nhìn thấy. Module phả
 
 MVP PB01 gồm patient identity, shared state, consent/audit shape, Patient 360, schedule/reception, service plan, session, prescription approval, follow-up, cashier/deposit, Patient Mobile và evidence.
 
-Để sau MVP: real auth/RBAC, API/database, object storage, notification thật, payment gateway, warehouse/accounting, multi-branch, native app, model-backed AI, import/migration patient.
+Để sau MVP: real auth/RBAC, API/database, object storage, notification thật, payment gateway, warehouse/accounting, multi-branch, native production, model-backed AI, import/migration patient. Template Flutter để duyệt đã nằm trong scope riêng, không thay thế các module nền này.
+
+## Module Flutter hiện tại — 22/09/2026
+
+| Thành phần | Nguồn | Trách nhiệm / phụ thuộc |
+|---|---|---|
+| App shell, theme, navigation, các màn | `flutter-template/lib/main.dart` | Material 3; đọc/ghi DemoStore; chưa tách feature package |
+| State và đơn hàng | `flutter-template/lib/store.dart` | ChangeNotifier; catalog, cart, order snapshot, patient selection, receipt totals; memory only |
+| Catalog | `flutter-template/assets/products.json` | Bản sao `prototype/shared/product-catalog.json`; import Excel ở web trước rồi đồng bộ bundle |
+| Nhận diện | `flutter-template/assets/` | Logo, Be Vietnam Pro và giấy phép OFL; dùng chung ngôn ngữ thiết kế web |
+| Review shell | `prototype/native-review/index.html` | Chọn khung iframe; không sở hữu nghiệp vụ Flutter |
+| Build và kiểm tra | `flutter-template/build-preview.ps1`, `test/template_test.dart` | Build/copy preview và 6 test; generated output không sửa trực tiếp |
+
+Thứ tự phát triển sau duyệt: chốt identity + per-patient model → repository/API + persistence → phân quyền/audit → nghiệp vụ lịch/đơn/ledger/follow-up → plugin media/PDF/notification → device acceptance. Không thêm màn để che thiếu nền. Phân định web/native theo [ma trận parity](22_NATIVE_PARITY_AND_VALIDATION.md).
 
 ## Dependency order
 
@@ -82,3 +95,8 @@ Không xây thêm màn hình chỉ để đủ menu khi module nền chưa có t
 - Ai chịu SLA Follow-up Inbox và escalation ngoài giờ?
 - Ai duyệt template prescription/aftercare và AI draft?
 - Khi có backend, module nào sở hữu event và module nào chỉ đọc projection?
+
+
+## Module hỗ trợ thiết kế
+
+`.agents/skills/pema-design/` chứa SKILL.md, agents/openai.yaml và bốn references visual-system, screens-and-flows, platform-layout, delivery-and-review. `docs/23_PEMA_DESIGN_SKILL.md` hướng dẫn dùng/chia sẻ. Skill đọc source/assets/docs hiện có, không tạo bản sao runtime hoặc catalog.

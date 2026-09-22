@@ -44,3 +44,8 @@ Read models produce Patient 360, Follow-up Inbox and patient app. This allows AI
 
 ## Reusable/configurable/Pema-specific
 Reusable: patient/episode/timeline, appointments, plans/sessions, images, follow-up, portal, RBAC/audit. Configurable: protocol templates, forms, consent, image views, SLA, notifications, branding, service catalog. Pema-specific: pilot naming, staff roles, local Zalo/call scripts, exact laser protocols and package rules.
+
+
+## Bổ sung Flutter template — 22/09/2026
+
+Model nghiệp vụ trong tài liệu này là định hướng hệ thống/web, không phải toàn bộ shape của Flutter. Native hiện có order snapshot và receipt total theo patient; lịch/buổi/note/follow-up còn chung phiên, chưa có invoice/payment ledger, session record hoặc durable consent. Xem bảng runtime trong [ARCH-PB01](ARCH-PB01.md) và [parity](22_NATIVE_PARITY_AND_VALIDATION.md) trước khi mở rộng model.

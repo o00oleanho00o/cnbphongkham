@@ -18,3 +18,8 @@ Zalo/SMS notifications should contain minimum necessary text and avoid clinical/
 
 ## Demo boundary
 localStorage and synthetic SVG images are deliberately convenient for local demo; they provide neither encryption nor RBAC. Do not load real patient data. Production requires authenticated API, tenant/role checks, server audit, signed image URLs, retention and tested backup restore.
+
+
+## Bổ sung Flutter template — 22/09/2026
+
+Clinic/Care switch của Flutter không xác thực hoặc enforce RBAC. Privacy checkbox chỉ là widget state; consent ảnh mẫu không tạo bản ghi consent hay lưu file. Store chưa cách ly toàn bộ dữ liệu theo patient; không dùng hồ sơ thật. Các yêu cầu bảo mật trong tài liệu này là điều kiện pilot, không phải capability đã triển khai. Xem [ma trận native](22_NATIVE_PARITY_AND_VALIDATION.md).

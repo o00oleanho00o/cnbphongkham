@@ -31,3 +31,8 @@ Relationships: Patient 1→N Episode; Episode 1→N PlanItems and Sessions; Sess
 ## Production non-negotiables
 TenantId on every record; no PII in logs; encrypted transport/storage; signed media URLs; explicit consent/retention; event/audit IDs; export/restore drill; feature flags for AI. Use synthetic data in demo.
 
+
+
+## Bổ sung Flutter template — 22/09/2026
+
+Bổ sung Flutter Material 3 trong `flutter-template/`; `main.dart` dùng DemoStore/ChangeNotifier, catalog bundle, memory-only. Browser preview là Flutter build, review shell chỉ chứa iframe. Target Android/iOS có scaffold nhưng chưa nghiệm thu build/device. Không nối API hoặc localStorage của web. [ARCH-PB01](ARCH-PB01.md) mô tả state boundary hiện tại; [runbook](21_NATIVE_RUNBOOK.md) hướng dẫn build và đồng bộ catalog.

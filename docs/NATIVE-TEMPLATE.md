@@ -17,7 +17,7 @@ Chuyển các luồng web sang app Flutter với hai không gian Clinic/Care. Đ
 | Follow-up Inbox | Theo dõi → Phản hồi | Một việc mỗi màn, feedback sau gửi |
 | Resources/services | Thêm → danh sách chi tiết | Giữ dữ liệu ca, giá và duration; quản trị phức tạp vẫn ở web |
 | Before/After | Ảnh tiến triển | Hai ô minh họa cùng ngữ cảnh, không efficacy score |
-| Ask Pema | Ask Pema → Tư vấn | Tóm tắt mô phỏng và nguồn, bác sĩ sửa nội dung |
+| Ask Pema | Ask Pema → Tư vấn | Tóm tắt mô phỏng từ số đếm; chưa có trích dẫn event, bác sĩ có màn sửa nội dung |
 | Guide | Thêm → Hướng dẫn | Mạch bàn giao, không giáo trình demo |
 | Patient home | Care Trang chủ | Chỉ bước tiếp theo, lịch và việc cần làm |
 | Patient journey | Hành trình → kế hoạch/ảnh/aftercare | Nội dung chi tiết ở màn con |
@@ -46,3 +46,34 @@ Chuyển các luồng web sang app Flutter với hai không gian Clinic/Care. Đ
 ## Giới hạn
 
 Các luồng tương tác chính dùng state phiên trong DemoStore; không sync web/backend. Scheduler chỉ minh họa slot và date picker, không copy engine xung đột web. Camera, media, AI, PDF/in, auth, privacy persistence chưa nối native plugin. Chỉ sau duyệt mới triển khai repository/API, permission, storage và thiết bị thật. Không gọi template này là ứng dụng production.
+
+## Sơ đồ điều hướng và màn con
+
+Clinic có Hôm nay / Lịch hẹn / Hồ sơ / Theo dõi / Thêm. Care có Trang chủ / Hành trình / Tin nhắn / Hồ sơ. Header mở sheet chọn Clinic hoặc Care; cùng instance dùng chung store. Màn con dùng Navigator stack; nút Back trở lại ngữ cảnh trước, không phải route HTML độc lập. Reload không giữ stack hay dữ liệu.
+
+| Nhóm | Màn chi tiết | Nhiệm vụ / đích tiếp theo |
+|---|---|---|
+| Hồ sơ | Patient 360 | Chọn tác vụ tư vấn, kế hoạch, đơn, thu ngân từ cùng hồ sơ |
+| Lịch | Đặt lịch, Chi tiết lịch, Lịch của tôi | Chọn/dời ngày giờ, xem hoặc xác nhận lịch mẫu |
+| Điều trị | Tư vấn, Kế hoạch điều trị, Buổi điều trị | Nhập ghi chú, xem tiến độ, hoàn tất buổi có điều kiện |
+| Chăm sóc | Chăm sóc tại nhà, Gửi cập nhật, Phản hồi | Xác nhận đã đọc, gửi text/consent ảnh mẫu, phản hồi |
+| Đơn | Lên đơn nhanh, Kiểm tra đơn, Đơn thuốc & tư vấn, Phiếu A5 | Tìm catalog → chỉnh nháp → duyệt → xem nhóm approved |
+| Tài chính | Hóa đơn, Thu ngân | Xem tổng mẫu từ đơn, xác nhận thu phần còn lại |
+| Tra cứu | Dịch vụ, Bác sĩ & phòng | Xem thông tin minh họa phù hợp điện thoại |
+| Bổ trợ | Ảnh tiến triển, Ask Pema, Quyền riêng tư, Hướng dẫn | Placeholder ảnh/AI/privacy và hướng dẫn bàn giao |
+
+## Mạch sử dụng để duyệt
+
+1. **Bắt đầu từ hồ sơ:** Clinic → Hồ sơ → chọn P001 → Patient 360. Mở tư vấn, lưu note; xem kế hoạch; nhập ghi chú và checkbox trước hoàn tất buổi. Kiểm đếm tăng nhưng không coi đây là session/event bền vững.
+2. **Sắp lịch:** mở Lịch hẹn/Đặt lịch, chọn ngày/slot, xác nhận. 09:00 bị khóa để minh họa; chưa kiểm trùng bác sĩ/phòng. Lịch thay đổi trong store chung, không tạo booking backend.
+3. **Lên đơn:** tìm mã hoặc tên đúng dấu, thêm sản phẩm; vào Kiểm tra đơn để chỉnh lượng/cách dùng/phân loại. Lưu nháp, chuyển Care kiểm tra nháp bị ẩn. Quay Clinic sửa và duyệt; Care → Hồ sơ → Đơn thuốc & tư vấn chỉ hiển thị approved. Phiếu A5 gom các đơn duyệt theo bệnh nhân thành hai nhóm, chưa in.
+4. **Theo dõi:** Care → Gửi cập nhật, nhập text; nếu chọn ảnh mẫu phải đồng ý consent. Clinic → Theo dõi → Phản hồi; quay Care xem phản hồi chung. Ảnh không được lưu, task chưa có resolve/unread/SLA.
+5. **Thu tiền:** mở Thu ngân, xem tổng và đã thu, xác nhận thu số còn lại. Không hoàn tất chăm sóc tự động. Đây là phép tính theo đơn kể cả nháp, chưa là hóa đơn/kế toán.
+
+Đây là hướng dẫn đi qua hành vi hiện có, không phải biên bản đã kiểm thử đủ năm mạch. Xem [parity và validation](22_NATIVE_PARITY_AND_VALIDATION.md) để phân biệt bằng chứng và việc chờ duyệt.
+
+## Tiêu chí thiết kế khi sửa tiếp
+
+Giữ home ngắn và ưu tiên việc tiếp theo; nội dung dài đi vào màn con, không giới hạn chiều cao cứng để giấu overflow. Duyệt tên/ghi chú dài, nhiều dòng đơn, empty/error states, bàn phím và text scaling. Token nêu trên là baseline hiện tại; các mô tả teal/Manrope trong ghi chép UI cũ chỉ là lịch sử. Có SafeArea/Material widget không thay thế test OS/thiết bị.
+
+Build/khôi phục preview: [21_NATIVE_RUNBOOK](21_NATIVE_RUNBOOK.md). Source và giới hạn state: [ARCH-PB01](ARCH-PB01.md). Checklist duyệt vẫn mở đến khi có kết quả cụ thể từ chủ sản phẩm.

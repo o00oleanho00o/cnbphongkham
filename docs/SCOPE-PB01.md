@@ -42,6 +42,17 @@ PB01 tạo vertical slice để lễ tân tìm đúng người bệnh, đội ng
 
 Thêm template Flutter Clinic/Care, giữ nhận diện và luồng web, catalog 115 sản phẩm. Có mã Dart và browser preview từ Flutter để duyệt trước. State mẫu trong phiên; không phải triển khai native production. Chi tiết: [NATIVE-TEMPLATE](NATIVE-TEMPLATE.md).
 
+### Boundary native tại ngày 22/09/2026
+
+- Mục tiêu là duyệt thiết kế, điều hướng và thao tác mẫu trên điện thoại trước khi triển khai nghiệp vụ native đầy đủ. Các acceptance web ở dưới không mặc nhiên là kết quả đạt của Flutter.
+- Trong scope: hai không gian Clinic/Care, Patient 360, form lịch/tư vấn/buổi, catalog 115 sản phẩm, nháp → duyệt → Care, thu tiền và follow-up minh họa; nhận diện Pema và preview nhiều kích thước.
+- Catalog lấy từ Excel người dùng cung cấp; 36 tên bệnh nhân tổng hợp không phải bản sao toàn bộ hồ sơ web. Luồng lịch/lâm sàng/follow-up dùng state chung của phiên, ưu tiên duyệt P001; chỉ đơn và tổng tiền đã thu có phân tách theo patient ID.
+- Ngoài scope vòng này: sync với web, database/API, auth/RBAC, lịch chống trùng thật, ledger thanh toán, camera/upload, PDF/in/share, push và AI thật.
+- DoD vòng template: mã Flutter build được; ghi rõ màn/tác vụ/giới hạn; phân biệt test đã chạy và checklist chờ duyệt. Hoàn tất kỹ thuật không đồng nghĩa chủ sản phẩm đã duyệt thiết kế hoặc native production đã sẵn sàng.
+- Cần chốt tiếp: Clinic/Care là hai app hay một app theo role; nghiệp vụ nào phải chạy offline; ưu tiên backend, lịch, media hay in native sau duyệt.
+
+Xem [ma trận parity và bằng chứng](22_NATIVE_PARITY_AND_VALIDATION.md) trước khi lập scope triển khai tiếp.
+
 ## Ngoài phạm vi hoặc để pilot sau
 
 - Đăng nhập thật, RBAC thật, tenant isolation và đồng bộ nhiều thiết bị.
@@ -103,3 +114,8 @@ Thêm template Flutter Clinic/Care, giữ nhận diện và luồng web, catalog
 ## Ranh giới prototype và pilot
 
 Prototype dùng vanilla HTML/JS, localStorage, synthetic data và AI mô phỏng để trả lời câu hỏi luồng có dễ hiểu và vận hành thử không. Pilot cần identity/RBAC, API/backend, database, object storage, audit/backup, consent/retention, notification adapter, template được duyệt và SOP ngoại lệ. PASS prototype không phải chứng nhận sẵn sàng lâm sàng hay pháp lý.
+
+
+## Skill thiết kế dùng chung — 22/09/2026
+
+Bổ sung gói hướng dẫn Pema Design trong repository để đồng nghiệp tái sử dụng nhận diện, luồng web/mobile/Flutter, responsive và phương pháp kiểm tra. Đây là tài sản hỗ trợ thiết kế, không mở rộng scope chức năng app. Hướng dẫn chia sẻ: [23_PEMA_DESIGN_SKILL](23_PEMA_DESIGN_SKILL.md).

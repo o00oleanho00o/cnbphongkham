@@ -6,7 +6,7 @@ Phạm vi là vertical slice Clinic Web ↔ Patient Mobile cho prototype và k�
 
 - Flutter widget tree chạy trên browser để duyệt, cùng asset/font/token nhận diện web.
 - Clinic có 5 mục điều hướng; Care có 4 mục; Patient 360 mở màn con, back navigation và safe-area.
-- Catalog 115 dòng, thiếu loại chặn duyệt; đơn nháp ẩn ở Care; chỉnh nháp không tạo thêm hóa đơn mẫu.
+- Catalog 115 dòng, thiếu loại chặn duyệt; đơn nháp ẩn ở Care; chỉnh nháp thay thế cùng đơn, không cộng thành đơn mới. Flutter chưa có entity hóa đơn/ledger riêng.
 - Luồng gửi cập nhật → phản hồi và thu tiền mẫu có thay đổi trạng thái. Camera/PDF/AI/backend ghi rõ chưa tích hợp.
 - Kiểm tra layout 360/390/430/768 logical pixels và widget exceptions; đây chưa phải nghiệm thu thiết bị thật.
 
@@ -133,7 +133,26 @@ Phạm vi là vertical slice Clinic Web ↔ Patient Mobile cho prototype và k�
 
 - Given server local đang chạy, when chạy linked, desktop, operations, smoke và data audit, then exit code 0, không page error và artifacts được ghi.
 
-## Ngoại lệ
+## Contract riêng cho Flutter template — 22/09/2026
+
+Các AC-01…06 của prototype web không phải tuyên bố Flutter đã đạt. Contract hiện tại:
+
+| ID | Hành vi hiện có và acceptance để duyệt | Giới hạn |
+|---|---|---|
+| NT-01 | Header đổi Clinic/Care; Clinic có 5 tab, Care có 4 tab; màn con có Back | Bộ chuyển không gian, không xác thực vai trò |
+| NT-02 | Chọn hồ sơ → Patient 360 → mở tác vụ riêng; đơn/tiền thu lọc theo P001…P036 | Các state lâm sàng/lịch/follow-up chưa tách từng bệnh nhân |
+| NT-03 | Tìm mã/tên → thêm hàng → chỉnh số lượng/cách dùng → lưu nháp → mở sửa → duyệt cùng ID | Search chữ thường, không bỏ dấu, chỉ hiện 20 kết quả; không có route NONE/lý do override |
+| NT-04 | Đơn rỗng, thiếu cách dùng hoặc UNRESOLVED không được duyệt; Care chỉ hiển thị approved | Không reviewer/time/audit hay server authorization |
+| NT-05 | Phiếu chia thuốc/tư vấn từ các đơn duyệt của bệnh nhân đang chọn | Card tổng hợp, không xuất A5/PDF theo từng đơn |
+| NT-06 | Đặt/dời ngày giờ, slot 09:00 bị khóa; hoàn tất buổi cần ghi chú và checkbox | Slot khóa cứng; đếm buổi tối đa 5, không session record/follow-up tự sinh |
+| NT-07 | Gửi text; chọn ảnh mẫu thì bắt buộc consent; Clinic ghi phản hồi | Chỉ lưu text và một phản hồi chung, không ảnh/file/task lifecycle |
+| NT-08 | Thu ngân xác nhận thu toàn bộ phần còn lại bằng tiền mặt trong phiên | Tổng lấy cả đơn nháp; không ledger, cọc, thu từng phần, hoàn tiền |
+
+NFR vòng duyệt: dùng font/logo local, SafeArea và scroll; kiểm tra 360/390/430/768 logical pixels. Test hiện tại đều cao 844; các khung review 360×800 và 768×1024 là lựa chọn duyệt thủ công, chưa có bằng chứng test tương ứng. Reload xóa state là hành vi hiện tại, không phải cam kết lưu dữ liệu. Bàn phím, text scaling, screen reader, gesture và thiết bị thật là acceptance còn mở.
+
+Ma trận trạng thái và checklist kiểm tra: [22_NATIVE_PARITY_AND_VALIDATION](22_NATIVE_PARITY_AND_VALIDATION.md).
+
+## Ngoại lệ của prototype web
 
 - Xung đột lịch: hiển thị resource/time conflict, giữ form để sửa, không tạo appointment.
 - Thiếu dữ liệu khi complete session: chỉ rõ trường, giữ draft và không tăng tiến độ.
@@ -145,3 +164,8 @@ Phạm vi là vertical slice Clinic Web ↔ Patient Mobile cho prototype và k�
 ## Dữ liệu tổng hợp và kiểm thử
 
 Mọi test dùng 36 patient giả lập P001… và dữ liệu tiếng Việt tạo deterministically. Không đưa tên, số điện thoại hoặc ảnh người thật vào fixture/screenshot.
+
+
+## Acceptance cho gói design skill
+
+Skill cần có entrypoint tên pema-design, reference cho visual/flow/layout/delivery, đường dẫn tương đối không phụ thuộc máy, prompt mẫu và hướng dẫn chia sẻ. Nội dung phân biệt thiết kế mục tiêu với capability thực tế, giữ baseline Pema và cập nhật 0→1→2→3. Kiểm cấu trúc/frontmatter, link và đối chiếu source; không yêu cầu thay hành vi app.

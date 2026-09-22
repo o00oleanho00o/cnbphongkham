@@ -188,3 +188,21 @@ Root/build agents temporarily hit service rate limits; all research/domain files
 - Multi-tab payment/order stress exposed an unnecessary persisted payment-total cache in care hydration. Removed that write; totals already project from invoice ledger, preventing a reading mobile tab from overwriting newly created orders. Reran the order workflow twice after the fix and reran operations/smoke.
 - Validation: catalog 9 checks + importer --check; order workflow 13 groups; actual PDF audit 7 files (5 items + footer on one A5, 24 long items on 6 pages, one oversized instruction on 5 pages, no missing text/blank pages); linked workflow PASS; operations 20/20; data audit 20/20; smoke 12/12; responsive 80/80, no page errors/overflow. New editor/review also checked at 1920, 1440, 1280, 1024 and 390 widths.
 - Evidence under `demo-assets/screenshots/orders/` including results.json, pdf-results.json, screenshots and PDFs. Updated Scope → Spec → Module Map → Architecture, README and domain/operations docs. Still a localStorage prototype with simulated doctor identity; no production backend/RBAC claim.
+
+
+## 2026-09-22 — Tài liệu chi tiết Flutter native template
+
+- Đối chiếu main.dart, DemoStore, widget tests, build script và validation hiện có; cập nhật Scope → Spec → Module Map → Architecture theo boundary template hiện tại.
+- Mở rộng AGENT.md, README gốc/Flutter, mapping màn và mạch sử dụng; thêm docs/README.md, 21_NATIVE_RUNBOOK.md và 22_NATIVE_PARITY_AND_VALIDATION.md. Đồng bộ ghi chú domain, scope, patient app, architecture, privacy, testing, UI/UX, vận hành và catalog.
+- Ghi rõ memory-only/không sync web; order/receipt theo patient nhưng lịch/lâm sàng/follow-up/cart chung phiên; thu ngân chưa ledger, phiếu chưa PDF/in, ảnh và privacy là placeholder. Không gán bằng chứng web cho Flutter hoặc ghi template đã được chủ sản phẩm duyệt.
+- Kiểm tra tài liệu: 93 liên kết nội bộ tồn tại; catalog web/Flutter bằng nhau theo SHA-256, 115 dòng (30 PRESCRIPTION, 78 CONSULTATION, 7 UNRESOLVED); git diff --check không lỗi whitespace. Đối chiếu test source: 6 test đã ghi trước đó, bốn widths đều height 844. Không chạy lại Flutter suite vì chỉ sửa tài liệu.
+- Giữ nguyên các artifact/log không liên quan. Lần cập nhật này chưa commit/push.
+
+
+## 2026-09-22 — Pema Design skill để chia sẻ
+
+- Đóng gói `.agents/skills/pema-design/`: entrypoint, UI metadata và bốn reference visual-system, screens-and-flows, platform-layout, delivery-and-review. Giữ nhận diện Pema/Be Vietnam Pro, responsive 1920×1020, mobile theo tác vụ, Flutter Clinic/Care và workflow có bàn giao.
+- Thêm docs/23_PEMA_DESIGN_SKILL.md với cách dùng trong repo/copy độc lập, prompt mẫu và bảo trì; cập nhật Scope → Spec → Module Map → Architecture, AGENT, README, docs index và UI/UX.
+- Phân biệt quy ước thiết kế, khả năng template và mục tiêu production; không nhân bản assets/catalog hoặc đóng gói dữ liệu bệnh nhân. Đường dẫn không phụ thuộc máy tác giả.
+- Validation: quick_validate.py PASS (chạy Python -X utf8 do default Windows cp1252 không đọc được tiếng Việt); 113 liên kết nội bộ hợp lệ; YAML UI metadata và default prompt hợp lệ; git diff --check PASS. Không đổi runtime, không chạy lại app tests. Chưa có đánh giá hành vi bởi agent độc lập.
+- Người dùng yêu cầu commit/push; gom cả bộ tài liệu Flutter của lượt trước. Loại log/cache và các artifact không liên quan khỏi staging.

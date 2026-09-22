@@ -238,3 +238,8 @@ Khi hệ thống từ chối một thao tác, hãy đọc lý do và điều ch�
 Bản hiện tại phục vụ thử nghiệm nội bộ với dữ liệu giả lập, lưu trong trình duyệt. Chưa có đăng nhập/phân quyền thực, đồng bộ nhiều thiết bị, AI thật, SMS/Zalo, thanh toán hoặc vận hành sản xuất. Không nhập hồ sơ người bệnh thật.
 
 **Đọc tiếp:** Lịch hẹn & tiếp đón · Hóa đơn & thu tiền · Chăm sóc & phản hồi tại nhà
+
+
+## Bổ sung Flutter template — 22/09/2026
+
+Hướng dẫn nghiệp vụ web ở trên không tự áp dụng cho Flutter. Để duyệt native, đi từ hồ sơ → tác vụ → Care trong cùng instance, ưu tiên P001; lịch/buổi/follow-up còn chung phiên, thu tiền chỉ tổng phần còn lại, phiếu chưa in. Đọc [mạch sử dụng theo màn](NATIVE-TEMPLATE.md), [runbook vận hành](21_NATIVE_RUNBOOK.md) và [parity](22_NATIVE_PARITY_AND_VALIDATION.md). Mục tiêu hướng dẫn là hiểu liên kết và bàn giao, không coi các nút mẫu là nghiệp vụ production.

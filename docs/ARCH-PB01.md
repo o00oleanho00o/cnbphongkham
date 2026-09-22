@@ -102,6 +102,24 @@ Prototype chưa enforce matrix bằng login; đây là contract pilot cần deny
 - AI feature flag, prompt/model version, source event IDs và human approval; không autonomous diagnosis.
 - Monitoring: error rate, queue lag, failed notification, stale projection, duplicate payment, consent violation.
 
+## Runtime Flutter đang có — 22/09/2026
+
+Luồng build: `Dart + bundled assets → flutter build web → prototype/native-preview → iframe native-review`. HTTP server chỉ phục vụ file tĩnh, không phải API. Android/iOS có target scaffold nhưng chưa có nghiệm thu build/thiết bị.
+
+`main.dart → DemoStore (ChangeNotifier) → rootBundle products.json`. Store không đọc localStorage `pema-demo-v2`; mở cùng origin vẫn không đồng bộ với Clinic Web/Patient Mobile. Reload/new session khôi phục fixture. Trong cùng instance, Clinic và Care đọc chung store.
+
+| Dữ liệu | Shape / phạm vi thực tế |
+|---|---|
+| Bệnh nhân | 36 tên sinh từ 6 tên gốc; selected index ánh xạ P001…P036; không phải clinical aggregate của web |
+| Order | id DN-n, patient, name, approved, total, items snapshot; sửa thay record cùng id |
+| Receipt | Map patientId → tổng số đã thu; không có payment entity, ledger hay đối soát |
+| Cart/editingOrder | Chung phiên; chưa có draft workspace riêng theo patient |
+| Lịch, sessions, note, updates, response, consent UI | Lịch/buổi/note/messages chung phiên; privacy checkbox chỉ ở widget; không durable consent |
+
+Không suy ra cách ly bệnh nhân cho toàn store từ test đơn/receipt. Trước mở rộng nhiều bệnh nhân cần model typed với patientId trên từng record, repository theo domain, authorization server-side và test chống lẫn dữ liệu. Approval hiện là bool, chưa immutable/versioned và chưa có reviewer timestamp. Phiếu chỉ là projection trên approved orders, không document service.
+
+Đích kiến trúc bên dưới là yêu cầu pilot, chưa phải implementation Flutter. Runbook: [21_NATIVE_RUNBOOK](21_NATIVE_RUNBOOK.md).
+
 ## Open architecture decisions
 
 - Modular monolith hay service split tại pilot đầu tiên.
@@ -119,3 +137,8 @@ Prototype chưa enforce matrix bằng login; đây là contract pilot cần deny
 4. Chuyển invoice/payment sang ledger server-side và reconciliation.
 5. Bổ sung identity, audit, backup, notification sandbox và migration có kiểm tra.
 6. Chỉ bật AI/notification production sau clinical owner sign-off và observability.
+
+
+## Phân phối design skill
+
+Pema Design là gói Markdown/YAML version cùng repository trong `.agents/skills/pema-design/`. Không được load vào app runtime và không thêm dependency backend. Có thể copy nguyên thư mục để dùng với agent khác; source path tính từ repo root. Không yêu cầu SDK/cache/compiled output trong package. Chi tiết [chia sẻ skill](23_PEMA_DESIGN_SKILL.md).
