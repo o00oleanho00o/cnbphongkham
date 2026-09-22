@@ -1,5 +1,10 @@
 # AGENT.md — Quy tắc làm việc cho Pema Digital Clinic
 
+## Quy tắc tài chính PB02
+
+Khi sửa tài chính, đọc SCOPE/SPEC/MODULEMAP/ARCH-PB02 theo 0→1→2→3 và [hướng dẫn nghiệp vụ](docs/24_FINANCE_AND_PROCEDURE_FEES.md). Không trộn doanh số thực hiện với thực thu/tiền thủ thuật. Giữ snapshot tỷ lệ, chặn thu trùng/vượt nợ, không sửa kỳ chốt, không tự gán bác sĩ thực hiện từ owner hồ sơ. API phải trả projection theo role; role header vẫn chỉ là mô phỏng. Chạy `python prototype/finance_test.py` và Flutter test khi đổi logic; không đưa DB `.local/` hoặc dữ liệu thật vào Git. Giới hạn memory-only Flutter ở mục dưới chỉ áp dụng PB01; PB02 dùng HTTP/SQLite.
+
+
 Áp dụng cho mọi thay đổi trong workspace Pema.
 
 ## Trước khi sửa

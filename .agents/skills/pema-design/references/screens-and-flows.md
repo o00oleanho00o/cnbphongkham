@@ -44,3 +44,8 @@ Các màn con hiện có: Patient 360; Đặt lịch/Chi tiết lịch/Lịch c�
 Web Clinic/Patient Mobile dùng localStorage cùng origin/profile. Flutter độc lập, chỉ memory; order và receipt total theo patient, nhưng lịch/note/buổi/follow-up/cart còn dùng chung phiên. Flutter lịch 09:00 khóa cứng; A5 chỉ card nhóm approved orders; ảnh/AI/privacy mô phỏng; thu ngân còn tính cả nháp, không invoice entity/ledger. Không che các thiếu hụt bằng UI giống production.
 
 Đọc `docs/22_NATIVE_PARITY_AND_VALIDATION.md` cho hiện trạng, `docs/20_CATALOG_ORDERS.md` cho web order/in, `docs/06_CLINIC_WORKFLOW.md` và PB01 cho contract hệ thống. Nếu được giao hoàn thiện nghiệp vụ, sửa nền dữ liệu và test cùng UI, rồi cập nhật ma trận; không cố giữ giới hạn template như yêu cầu vĩnh viễn.
+
+
+## Ngoại lệ tài chính PB02
+
+Tổng quan chủ phòng khám, thu/đối soát và tiền thủ thuật mới dùng API/SQLite chung web/Flutter. Giữ phân biệt doanh số, thực thu, công nợ và tiền bác sĩ; snapshot tỷ lệ, kỳ chốt, projection theo role và thông báo foreground. Đọc `docs/24_FINANCE_AND_PROCEDURE_FEES.md` và bộ PB02 trước khi sửa; giới hạn finance memory-only ở PB01 không áp cho module mới. Chạy `python prototype/finance_test.py` khi thay công thức/ledger.

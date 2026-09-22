@@ -1,5 +1,10 @@
 # Flutter: mức tương đương web và bằng chứng
 
+## Cập nhật PB02 — 22/09/2026
+
+Các hàng memory-only/thu ngân chung phiên bên dưới mô tả PB01. Module tài chính PB02 mới dùng API/SQLite, có invoice/payment, tỷ lệ/lượt/người thực hiện, role projection, chốt kỳ và thông báo foreground. Chưa thay thu ngân PB01 hoặc sync lâm sàng; chưa có OS push. [Ma trận nghiệp vụ và bằng chứng mới](24_FINANCE_AND_PROCEDURE_FEES.md). Flutter suite hiện có 12 test; không thay đổi bằng chứng 6 test lịch sử ở dưới.
+
+
 Đối chiếu source tại 22/09/2026: `flutter-template/lib/main.dart`, `lib/store.dart`, `test/template_test.dart`. “Có” dưới đây chỉ nói template trong phiên, không có nghĩa production.
 
 ## Ma trận nghiệp vụ

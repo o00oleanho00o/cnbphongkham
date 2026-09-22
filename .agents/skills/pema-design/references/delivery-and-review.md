@@ -44,3 +44,8 @@ Báo ngắn: thay đổi gì và lý do, màn/luồng bị ảnh hưởng, kiể
 Theo quy tắc dự án, khi thay đổi scope/hành vi cập nhật 0→1→2→3, sau đó README/tài liệu nghiệp vụ/UI/runbook/parity và append SECTION_PROGRESS. Khi chính quy ước thiết kế đổi, cập nhật skill tương ứng. Giữ lịch sử test đúng ngày và kênh.
 
 Nếu người dùng yêu cầu commit/push: xem diff, stage rõ file thuộc nhiệm vụ (kể cả docs liên quan), bỏ log/cache/artifact không liên quan, kiểm staged diff và push nhánh được chọn; xác minh remote SHA. Không tạo commit/push chỉ vì skill có hướng dẫn này.
+
+
+## Ngoại lệ tài chính PB02
+
+Tổng quan chủ phòng khám, thu/đối soát và tiền thủ thuật mới dùng API/SQLite chung web/Flutter. Giữ phân biệt doanh số, thực thu, công nợ và tiền bác sĩ; snapshot tỷ lệ, kỳ chốt, projection theo role và thông báo foreground. Đọc `docs/24_FINANCE_AND_PROCEDURE_FEES.md` và bộ PB02 trước khi sửa; giới hạn finance memory-only ở PB01 không áp cho module mới. Chạy `python prototype/finance_test.py` khi thay công thức/ledger.

@@ -65,3 +65,8 @@ Hai hash phải bằng nhau. Snapshot hiện tại: 115 dòng, 30 PRESCRIPTION, 
 ## Bàn giao
 
 Ghi version SDK, commit, lệnh/kết quả kiểm tra, viewport và route thực sự đã xem. Lưu chứng cứ mới riêng, không ghi đè lịch sử web để gọi là bằng chứng native. [Ma trận kiểm thử](22_NATIVE_PARITY_AND_VALIDATION.md) và [mapping màn](NATIVE-TEMPLATE.md) là checklist bàn giao.
+
+
+## Bổ sung tài chính PB02
+
+[Module tài chính và tiền thủ thuật](24_FINANCE_AND_PROCEDURE_FEES.md) dùng API :4174/SQLite chung cho web và Flutter. Role là mô phỏng, thông báo foreground; không áp mô tả memory-only của PB01 cho PB02. Chạy API riêng, không coi HTTP local là triển khai production.

@@ -1,5 +1,10 @@
 # Bản đồ tài liệu Pema
 
+## PB02 — Tài chính và tiền thủ thuật
+
+Đọc [Scope](SCOPE-PB02.md) → [Spec](SPEC-PB02.md) → [Module Map](MODULEMAP-PB02.md) → [Architecture](ARCH-PB02.md), rồi [24 — Nghiệp vụ/cách chạy/validation](24_FINANCE_AND_PROCEDURE_FEES.md). API chung web/Flutter chỉ cho PB02; chưa chuyển toàn bộ lâm sàng PB01.
+
+
 Cập nhật 22/09/2026. Đọc theo quyết định → yêu cầu → module → kiến trúc; tránh lấy một screenshot hoặc tên menu làm bằng chứng chức năng.
 
 | Thứ tự | Nguồn chính | Nội dung |

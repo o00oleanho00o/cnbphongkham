@@ -11,3 +11,8 @@
 - `git diff --check`: no whitespace errors.
 
 Limits: browser preview and widget tests only. No Android/iOS physical device, native camera, print/PDF or production integration verification. Build emits a CupertinoIcons font warning from adaptive framework paths; this template uses Material outlined icons, visually checked in the reviewed screens.
+
+
+## PB02 — 22/09/2026
+
+Flutter analyze PASS; 12 tests PASS (6 baseline + 2 finance controller + 4 viewport finance screens/forms); web build PASS, copied to preview. Browser verified finance overview and notifications for 100.000 from finance web and 50.000 from legacy cashier via shared API. Evidence: [finance validation](../demo-assets/screenshots/finance/validation.json). Physical devices/background push not tested or configured.

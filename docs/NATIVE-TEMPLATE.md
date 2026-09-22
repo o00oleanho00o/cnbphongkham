@@ -1,5 +1,10 @@
 # Pema • Native Flutter review 01
 
+## Bổ sung PB02 — tài chính dùng chung
+
+Flutter Clinic đã có tổng quan chủ phòng khám, góc nhìn bác sĩ, kế toán ghi/duyệt/chốt lượt, cấu hình tỷ lệ, thu tiền và inbox qua API/SQLite cùng web. Mở từ Home/Thêm; Patient 360 có lối ghi lượt theo patient. Care không thấy tài chính phòng khám. [Chi tiết](24_FINANCE_AND_PROCEDURE_FEES.md). Những giới hạn memory-only/thu ngân/A5 phía dưới mô tả PB01; module PB02 là ngoại lệ mới, không phải thay thế toàn bộ PB01.
+
+
 ## Phạm vi duyệt
 
 Chuyển các luồng web sang app Flutter với hai không gian Clinic/Care. Đây là template tương tác cần chủ sản phẩm duyệt trước phát triển native production. Bản preview chạy trên browser là Flutter thật, không phải trang HTML giả lập Flutter.

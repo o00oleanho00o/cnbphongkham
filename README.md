@@ -1,5 +1,12 @@
 # Pema Digital Clinic — Ultra Section
 
+## Tài chính & tiền thủ thuật (PB02)
+
+Đã có workspace chung cho chủ phòng khám, kế toán và bác sĩ: doanh số thực hiện, thực thu, công nợ, tỷ lệ thủ thuật/người thực hiện, duyệt/chốt tháng và inbox thanh toán. Chạy thêm `python prototype/finance_server.py`; mở [Tài chính web](http://127.0.0.1:4173/finance/) hoặc Flutter Clinic → Tài chính phòng khám. [Nghiệp vụ, công thức, hướng dẫn và giới hạn](docs/24_FINANCE_AND_PROCEDURE_FEES.md).
+
+Riêng PB02 dùng API/SQLite chung và lưu bền vững cục bộ; mô tả memory-only/localStorage bên dưới vẫn áp dụng các module PB01. Thông báo hiện đồng bộ khi app mở, chưa có push OS khi đóng app.
+
+
 ## Template Flutter để duyệt
 
 Mở [Native review](http://127.0.0.1:4173/native-review/) để xem Flutter trong khung điện thoại 360/390/430px và tablet. Chuyển Clinic/Care ở header để duyệt hai không gian; mã nguồn và cách build ở [flutter-template](flutter-template/README.md), mapping màn hình ở [Native template](docs/NATIVE-TEMPLATE.md). Đây là template tương tác dùng state trong phiên, chưa kết nối backend/camera/in native. Chạy server prototype như bên dưới; nếu chưa có preview, build theo hướng dẫn Flutter rồi copy `flutter-template/build/web/` sang `prototype/native-preview/`.

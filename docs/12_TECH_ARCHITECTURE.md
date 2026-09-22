@@ -36,3 +36,8 @@ TenantId on every record; no PII in logs; encrypted transport/storage; signed me
 ## Bổ sung Flutter template — 22/09/2026
 
 Bổ sung Flutter Material 3 trong `flutter-template/`; `main.dart` dùng DemoStore/ChangeNotifier, catalog bundle, memory-only. Browser preview là Flutter build, review shell chỉ chứa iframe. Target Android/iOS có scaffold nhưng chưa nghiệm thu build/device. Không nối API hoặc localStorage của web. [ARCH-PB01](ARCH-PB01.md) mô tả state boundary hiện tại; [runbook](21_NATIVE_RUNBOOK.md) hướng dẫn build và đồng bộ catalog.
+
+
+## Bổ sung tài chính PB02
+
+[Module tài chính và tiền thủ thuật](24_FINANCE_AND_PROCEDURE_FEES.md) dùng API :4174/SQLite chung cho web và Flutter. Role là mô phỏng, thông báo foreground; không áp mô tả memory-only của PB01 cho PB02. Chạy API riêng, không coi HTTP local là triển khai production.

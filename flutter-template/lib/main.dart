@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'store.dart';
+import 'finance.dart';
 
 const blue = Color(0xFF0B4F94),
     navy = Color(0xFF083A6E),
@@ -11,12 +12,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final store = DemoStore();
   await store.load();
-  runApp(PemaApp(store: store));
+  runApp(PemaApp(store: store, enableFinance: true));
 }
 
 class PemaApp extends StatelessWidget {
   final DemoStore store;
-  const PemaApp({super.key, required this.store});
+  final bool enableFinance;
+  const PemaApp({super.key, required this.store, this.enableFinance = false});
   @override
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
@@ -55,18 +57,22 @@ class PemaApp extends StatelessWidget {
         bodyMedium: TextStyle(color: ink, fontSize: 14, height: 1.5),
       ),
     ),
-    home: Workspace(store: store),
+    home: Workspace(store: store, enableFinance: enableFinance),
   );
 }
 
 class Workspace extends StatefulWidget {
   final DemoStore store;
-  const Workspace({super.key, required this.store});
+  final bool enableFinance;
+  const Workspace({super.key, required this.store, this.enableFinance = false});
   @override
   State<Workspace> createState() => _WorkspaceState();
 }
 
 class _WorkspaceState extends State<Workspace> {
+  FinanceController? finance;
+  int seenFinanceUnread = 0;
+  bool financeLoaded = false;
   bool care = false;
   int index = 0;
   DemoStore get s => widget.store;
@@ -74,6 +80,35 @@ class _WorkspaceState extends State<Workspace> {
   void initState() {
     super.initState();
     s.addListener(refresh);
+    if (widget.enableFinance) {
+      finance = FinanceController();
+      finance!.addListener(financeChanged);
+      finance!.start();
+    }
+  }
+
+  void financeChanged() {
+    if (!mounted) return;
+    final count = finance!.unread;
+    if (financeLoaded && !care && count > seenFinanceUnread) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Có thanh toán mới tại phòng khám"),
+          action: SnackBarAction(label: "Xem", onPressed: () => openFinance(3)),
+        ),
+      );
+    }
+    if (finance!.data != null) financeLoaded = true;
+    seenFinanceUnread = count;
+    setState(() {});
+  }
+
+  void openFinance([int tab = 0]) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => FinanceScreen(controller: finance!, initialTab: tab),
+      ),
+    );
   }
 
   void refresh() {
@@ -83,13 +118,16 @@ class _WorkspaceState extends State<Workspace> {
   @override
   void dispose() {
     s.removeListener(refresh);
+    finance?.removeListener(financeChanged);
+    finance?.dispose();
     super.dispose();
   }
 
   void open(String route) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => Detail(store: s, route: route, care: care),
+        builder: (_) =>
+            Detail(store: s, route: route, care: care, finance: finance),
       ),
     );
   }
@@ -147,6 +185,16 @@ class _WorkspaceState extends State<Workspace> {
       appBar: AppBar(
         title: Image.asset('assets/pema-logo.png', width: 94),
         actions: [
+          if (!care && finance != null)
+            IconButton(
+              onPressed: () => openFinance(3),
+              tooltip: 'Thông báo thanh toán',
+              icon: Badge(
+                isLabelVisible: finance!.unread > 0,
+                label: Text('${finance!.unread}'),
+                child: const Icon(Icons.notifications_outlined),
+              ),
+            ),
           TextButton.icon(
             onPressed: () => showModalBottomSheet(
               context: context,
@@ -363,6 +411,13 @@ class _WorkspaceState extends State<Workspace> {
     if (index == 4)
       return [
         heading('Không gian làm việc', 'Nghiệp vụ theo đúng hành trình Pema'),
+        if (finance != null)
+          tile(
+            'Tài chính & tiền thủ thuật',
+            'Chủ phòng khám · Kế toán · Bác sĩ',
+            Icons.account_balance_wallet_outlined,
+            () => openFinance(),
+          ),
         ...[
           'Lên đơn nhanh',
           'Thu ngân',
@@ -398,6 +453,15 @@ class _WorkspaceState extends State<Workspace> {
           metric(s.checkedIn ? '04' : '03', 'Đang chờ'),
         ],
       ),
+      if (finance != null)
+        tile(
+          'Tài chính phòng khám',
+          finance!.data == null
+              ? 'Doanh số · thực thu · tiền thủ thuật'
+              : 'Tháng ${finance!.month} · ${cash(finance!.data!["summary"]["revenue"])}',
+          Icons.account_balance_wallet_outlined,
+          () => openFinance(),
+        ),
       section('Bắt đầu nhanh'),
       Row(
         children: [
@@ -652,11 +716,13 @@ class Detail extends StatefulWidget {
   final DemoStore store;
   final String route;
   final bool care;
+  final FinanceController? finance;
   const Detail({
     super.key,
     required this.store,
     required this.route,
     this.care = false,
+    this.finance,
   });
   @override
   State<Detail> createState() => _DetailState();
@@ -687,7 +753,12 @@ class _DetailState extends State<Detail> {
   void open(String route) => Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (_) => Detail(store: s, route: route, care: widget.care),
+      builder: (_) => Detail(
+        store: s,
+        route: route,
+        care: widget.care,
+        finance: widget.finance,
+      ),
     ),
   );
   void toast(String message) => ScaffoldMessenger.of(
@@ -726,6 +797,23 @@ class _DetailState extends State<Detail> {
               metric(s.appointment, 'Lịch tiếp theo'),
             ],
           ),
+          if (!widget.care &&
+              widget.finance?.data != null &&
+              widget.finance!.role != 'doctor')
+            tile(
+              'Ghi nhận tiền thủ thuật',
+              'Đúng người thực hiện · gắn hóa đơn đã có',
+              Icons.receipt_long_outlined,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => ProcedureForm(
+                    controller: widget.finance!,
+                    initialPatient: s.patientId,
+                  ),
+                ),
+              ),
+            ),
           section('Hồ sơ xuyên suốt'),
           ...[
             'Tư vấn',

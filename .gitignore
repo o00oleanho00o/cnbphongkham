@@ -1,1 +1,6 @@
 prototype/native-preview/
+
+.local/
+
+.local-finance-*.log
+prototype/__pycache__/

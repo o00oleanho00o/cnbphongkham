@@ -1,5 +1,10 @@
 # Pema Native • template duyệt thiết kế
 
+## Tài chính dùng API chung (PB02)
+
+Chạy `python prototype/finance_server.py` từ gốc repo; trong Clinic mở Tài chính phòng khám hoặc chuông thông báo. Owner/kế toán/bác sĩ có projection riêng, dữ liệu SQLite chung với web. Đây là ngoại lệ đối với state phiên của PB01 bên dưới. [Nghiệp vụ/cách chạy](../docs/24_FINANCE_AND_PROCEDURE_FEES.md). Chưa có auth thật hoặc push nền.
+
+
 Flutter Material 3 cho Android/iOS. Bản trình duyệt được build từ cùng Dart/widget tree để duyệt giao diện trước. Không dùng WebView bọc website.
 
 ## Chạy

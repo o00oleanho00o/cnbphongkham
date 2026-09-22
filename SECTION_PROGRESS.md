@@ -206,3 +206,14 @@ Root/build agents temporarily hit service rate limits; all research/domain files
 - Phân biệt quy ước thiết kế, khả năng template và mục tiêu production; không nhân bản assets/catalog hoặc đóng gói dữ liệu bệnh nhân. Đường dẫn không phụ thuộc máy tác giả.
 - Validation: quick_validate.py PASS (chạy Python -X utf8 do default Windows cp1252 không đọc được tiếng Việt); 113 liên kết nội bộ hợp lệ; YAML UI metadata và default prompt hợp lệ; git diff --check PASS. Không đổi runtime, không chạy lại app tests. Chưa có đánh giá hành vi bởi agent độc lập.
 - Người dùng yêu cầu commit/push; gom cả bộ tài liệu Flutter của lượt trước. Loại log/cache và các artifact không liên quan khỏi staging.
+
+
+## 2026-09-22 — PB02 tài chính và tiền thủ thuật web/Flutter
+
+- Phân tích và bổ sung Scope → Spec → Module Map → Architecture PB02: tách doanh số thực hiện, thực thu, công nợ, doanh số phân bổ và tiền thủ thuật; mặc định net sau giảm, cơ sở cấu hình, snapshot từng người và khóa kỳ.
+- Thêm API Python/SQLite local :4174, dữ liệu mẫu 24 lượt/tháng hiện tại và trước; transaction, kiểm role projection, idempotent receipt/notification, duyệt/hủy, chốt tháng/đã chi, CSV, mirror cashier legacy. Không auth production hoặc push OS/background.
+- Web workspace tài chính, config tỷ lệ, ghi 2 người (API 4), bảng đối soát, thu tiền/inbox; gắn invoice có sẵn để tránh nợ kép. Flutter module riêng dùng HTTP chung với web, home/chuông/Thêm/Patient 360 liên kết, màn chủ/kế toán/bác sĩ và polling foreground. PB01 lâm sàng giữ runtime cũ.
+- Kiểm thử: 11 Python domain/HTTP tests PASS; Flutter analyze sạch, 12 tests PASS, build web PASS (warning CupertinoIcons framework như trước); cú pháp JS và git diff --check PASS. Đã copy build mới sang native-preview.
+- Browser trực tiếp xác nhận split 70/30 và phí 15/5 trên net 2.400.000, duyệt; thanh toán 100.000 tạo thông báo trên Flutter; cashier cũ thu 50.000 mirror sang API/inbox; bác sĩ chỉ thấy phần cá nhân, không có form/duyệt. Đo 20 trạng thái web theo 5 viewport không document overflow. Ảnh và kết quả ở demo-assets/screenshots/finance. Dùng browser tool sau khi lệnh automation browser qua shell bị policy từ chối; không chạy lại đường bị chặn.
+- Cập nhật AGENT/README, native docs/parity, hướng dẫn 24 và skill design; 102 liên kết tài liệu đã kiểm hợp lệ. UI Android/iOS thật, FCM/APNs, lương/thuế/hoàn tiền, điều chỉnh kỳ và migration buổi cũ chưa triển khai. Chính sách cơ sở/tỷ lệ cần xác nhận với phòng khám, hiện dùng giả định có cấu hình.
+- Server :4173/:4174 đang chạy. Thay đổi lượt này chưa commit/push; giữ nguyên artifact/log không liên quan.
