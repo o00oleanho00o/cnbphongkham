@@ -1,0 +1,13 @@
+prototype/native-preview/
+
+.local/
+
+.local-finance-*.log
+prototype/__pycache__/
+.idea/
+.serena
+.dart_tool/
+android/
+ios/
+build/
+
