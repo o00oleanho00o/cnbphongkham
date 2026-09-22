@@ -36,3 +36,8 @@ Quy tắc đóng góp: [AGENT](../AGENT.md). Khởi động chung: [README](../R
 ## Skill thiết kế Pema
 
 [23 — Chia sẻ và sử dụng Pema Design](23_PEMA_DESIGN_SKILL.md): cách dùng $pema-design, cài/copy cho đồng nghiệp và prompt mẫu. [Entrypoint skill](../.agents/skills/pema-design/SKILL.md) dẫn tới hệ màu/chữ/ảnh, luồng nghiệp vụ, bố cục đa nền tảng và quy trình kiểm tra.
+
+
+## CRM01 — replacement + proactive care
+
+[20_CRM01_PATIENT_LIFECYCLE](20_CRM01_PATIENT_LIFECYCLE.md): tách tài khoản chủ/bác sĩ/CSKH/kế toán, mapping VTTECH, expected next visit, protocol tasks, work queue, timeline, metrics, tám case và demo 5 phút. CRM là web/localStorage; Flutter và tài chính PB02 đọc theo tài liệu riêng. Phạm vi/acceptance/module/architecture được cập nhật trong PB01.

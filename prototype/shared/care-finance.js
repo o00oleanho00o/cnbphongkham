@@ -87,8 +87,8 @@
     return changed;
   }
 
-  function patient() { return P.patient(); }
-  function activePage() { return document.body.dataset.page === 'patient'; }
+  function patient() { return P.patient(document.querySelector('.mobile-app')?.dataset.patientId); }
+  function activePage() { return document.body.dataset.page === 'patient' && !['crm','history'].includes(document.body.dataset.patientTab); }
   function emitRender() { window.dispatchEvent(new Event('pema-external')); }
   function totalReceived(p) { return p.invoices.reduce((sum, i) => sum + (i.paid ? i.amount : Number(i.received) || 0), 0); }
   function planPanel(p) {
@@ -120,6 +120,7 @@
     wrap.innerHTML = planPanel(p) + prescriptionPanel(p) + window.PemaOrderUI.history(p);
     if (anchor && anchor.parentElement === content) content.insertBefore(wrap, anchor.nextSibling);
     else content.appendChild(wrap);
+    window.PemaStaff?.apply();
   }
 
   function injectMobile() {
@@ -148,12 +149,13 @@
   }
   function closeModal() { document.querySelectorAll('.linked-modal').forEach(x => x.remove()); }
   function addService() {
+    if(window.PemaStaff&&!PemaStaff.can('billing'))return;
     const options = serviceCatalog().map(s => `<option value="${esc(s.id)}" data-price="${s.price}">${esc(s.name)} · ${money(s.price)}/buổi</option>`).join('');
     modal(`<div class="modal-head"><div><div class="eyebrow">Patient 360 · dịch vụ</div><h2>Thêm dịch vụ vào liệu trình</h2></div><button class="modal-close">×</button></div><form id="linked-service-form"><div class="field"><label>Dịch vụ</label><select id="linked-service">${options}</select></div><div class="two-col-form"><div class="field"><label>Số buổi</label><input id="linked-sessions" type="number" min="1" max="20" value="3"></div><div class="field"><label>Giảm giá (₫)</label><input id="linked-discount" type="number" min="0" step="10000" value="0"></div></div><p class="notice">Giá đã chốt được lưu trên hồ sơ; thay đổi danh mục sau này không làm đổi liệu trình đã đăng ký.</p><button class="btn btn-primary" type="submit">Lưu dịch vụ</button></form>`);
     document.querySelector('#linked-service-form').onsubmit = e => { e.preventDefault(); const p = patient(), sel = document.querySelector('#linked-service'), s = serviceCatalog().find(x => x.id === sel.value); const total = Number(document.querySelector('#linked-sessions').value), discount = Number(document.querySelector('#linked-discount').value) || 0; if (!s || !Number.isInteger(total) || total < 1 || total > 20 || discount < 0 || discount > s.price * total) return; p.servicePlans = p.servicePlans || []; const planId = uid('LP-'), invoiceId = uid('HD-'); const agreedPrice = s.price * total - discount; p.invoices = p.invoices || []; p.invoices.unshift({id:invoiceId, date:DAY, label:`${s.name} · ${total} buổi`, amount:agreedPrice, received:0, paid:false, planId}); p.servicePlans.push({id:planId, serviceId:s.id, serviceName:s.name, sessionsTotal:total, sessionsUsed:0, listPrice:s.price*total, discount, agreedPrice, depositApplied:0, status:'active', startedAt:DAY, doctor:p.doctor, invoiceIds:[invoiceId]}); P.addEvent(p,'plan','Đã thêm dịch vụ vào liệu trình',`${s.name} · ${total} buổi · hóa đơn ${invoiceId}`,'Lễ tân'); P.log('Thêm dịch vụ vào liệu trình',p.id); P.save(); closeModal(); emitRender(); };
   }
   function addPrescription() { window.PemaOpsUI.openQuickOrder(patient().id); }
-  function approvePrescription(id) { const p = patient(), rx = (p.prescriptions || []).find(x => x.id === id); if (!rx) return; rx.status = 'approved'; rx.reviewedBy = p.doctor; rx.reviewedAt = DAY; rx.indication = rx.indication === 'Cần bác sĩ kiểm tra trước khi gửi' ? 'Đã được bác sĩ kiểm tra và duyệt' : rx.indication; P.addEvent(p,'prescription','Bác sĩ đã duyệt đơn thuốc',rx.items.map(x=>x.name).join(', '),p.doctor); P.log('Duyệt đơn thuốc',p.id); P.save(); emitRender(); }
+  function approvePrescription(id) { if(window.PemaStaff&&!PemaStaff.can('clinical'))return; const p = patient(), rx = (p.prescriptions || []).find(x => x.id === id); if (!rx) return; rx.status = 'approved'; rx.reviewedBy = p.doctor; rx.reviewedAt = DAY; rx.indication = rx.indication === 'Cần bác sĩ kiểm tra trước khi gửi' ? 'Đã được bác sĩ kiểm tra và duyệt' : rx.indication; P.addEvent(p,'prescription','Bác sĩ đã duyệt đơn thuốc',rx.items.map(x=>x.name).join(', '),p.doctor); P.log('Duyệt đơn thuốc',p.id); P.save(); emitRender(); }
   function handle(e) {
     const btn = e.target.closest('[data-care-action],[data-care-nav]');
     if (!btn) return;

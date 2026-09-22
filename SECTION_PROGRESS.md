@@ -217,3 +217,14 @@ Root/build agents temporarily hit service rate limits; all research/domain files
 - Browser trực tiếp xác nhận split 70/30 và phí 15/5 trên net 2.400.000, duyệt; thanh toán 100.000 tạo thông báo trên Flutter; cashier cũ thu 50.000 mirror sang API/inbox; bác sĩ chỉ thấy phần cá nhân, không có form/duyệt. Đo 20 trạng thái web theo 5 viewport không document overflow. Ảnh và kết quả ở demo-assets/screenshots/finance. Dùng browser tool sau khi lệnh automation browser qua shell bị policy từ chối; không chạy lại đường bị chặn.
 - Cập nhật AGENT/README, native docs/parity, hướng dẫn 24 và skill design; 102 liên kết tài liệu đã kiểm hợp lệ. UI Android/iOS thật, FCM/APNs, lương/thuế/hoàn tiền, điều chỉnh kỳ và migration buổi cũ chưa triển khai. Chính sách cơ sở/tỷ lệ cần xác nhận với phòng khám, hiện dùng giả định có cấu hình.
 - Server :4173/:4174 đang chạy. Thay đổi lượt này chưa commit/push; giữ nguyên artifact/log không liên quan.
+
+
+## CRM01 checkpoint — 22/09/2026
+
+Đã triển khai Clinic Replacement + Patient Lifecycle trên nền 25f14fc; giữ catalog/in A5, Flutter và PB02. Có 36 hồ sơ/8 case, appointment-based reception, expected next visit, protocol D1/D3/D7/D30, queue 10 nhóm, workspace/outcome/reschedule/booking nguyên tử, timeline, dashboard drilldown, clinical history/diagnosis và Patient Mobile đúng identity. Phân tài khoản owner/bác sĩ/CSKH/kế toán theo góp ý; BS. Tâm có góc chủ và bác sĩ riêng, không trộn dashboard của các bộ phận.
+
+Đã cập nhật Scope → Spec → Module Map → Architecture, README, AGENT, docs vận hành, guide trong app và design skill. Nghiệp vụ/giới hạn/demo 5 phút: docs/20_CRM01_PATIENT_LIFECYCLE.md. Đã xem ảnh và sửa scroll khi đổi tài khoản, menu rỗng, count bác sĩ, Patient 360 status và projection đơn mobile.
+
+Validation: crm-domain 22 PASS; CRM browser 7 nhóm kiểm tra gồm Flow A/B/C, ảnh D3, tách tài khoản và tải 200 dòng, 35 layout PASS; linked PASS; desktop 80 layout PASS; operations 20 PASS; smoke 12 PASS; data audit 20 PASS; order 13 PASS; finance 11 PASS; 132 link docs không lỗi. Evidence mới trong demo-assets/screenshots/crm01, giữ ảnh cũ của các vòng trước. Lỗi khóa/ghi đè ảnh cũ đã xử lý bằng output folder riêng và rerun thành công; không tính các lượt lỗi là PASS.
+
+Đây là demo local, chưa production replacement/auth/provider/native CRM. Ngày demo cố định 20/09/2026; task tương lai chỉ vào queue khi đến hạn; không job khi browser đóng. Booking chưa tính quay lại thực tế. Mục tiêu Git master theo prompt; giữ toàn bộ commit mới hơn master, không reset về baseline cũ. Đã hoàn tất kỹ thuật để commit và publish trong lượt bàn giao này; SHA/remote xác minh sau push.

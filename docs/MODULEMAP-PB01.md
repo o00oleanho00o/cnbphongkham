@@ -1,5 +1,11 @@
 # Pema Digital Clinic — Module Map PB01
 
+## CRM01: foundation → experience
+
+`staff-context.js` chứa danh sách tài khoản giả lập, workspace routes, capability guards và liên kết role sang PB02. SessionStorage theo tab giúp hai nhân viên demo mở hai cửa sổ riêng; không phải identity provider. Patient Mobile giữ identity riêng và projection đơn thuốc đọc đúng identity, không dựa vào patient đang chọn của nhân viên.
+
+`crm-data.js` (migration không phá state, clock, 8 case khi reset) → `crm-automation.js` (rules, read models, task/activity commands, metrics) → operations transaction (booking/check-in) → `crm-ui.js` + `crm.css` (queue/workspace, Patient 360, dashboard, tiếp đón). Clinic shell chỉ nối navigation/render; Patient Mobile chỉ đọc projection chăm sóc. Clinical Follow-up Inbox độc lập với proactive CSKH; PB02 vẫn sở hữu tài chính mới. `crm-test.cjs` kiểm rules/commands; browser evidence kiểm flow A/B/C và responsive.
+
 Module map đi từ nền ẩn đến trải nghiệm nhìn thấy. Module phải có owner, contract trạng thái và bằng chứng trước khi mở rộng màn hình.
 
 ## Native template (22/09/2026)

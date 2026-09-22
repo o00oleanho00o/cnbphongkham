@@ -1,5 +1,13 @@
 # Pema Digital Clinic — Architecture PB01
 
+## CRM01 runtime
+
+Identity demo `pema-staff` ở sessionStorage: owner-tam, doctor-tam/mai/an/lan, care-maianh/thu, accountant. Route/control lọc theo capability; guard command cho clinical, billing, config, CRM và approval. Bác sĩ đọc hồ sơ phụ trách hoặc có lịch được phân công. PB02 nhận account qua liên kết để chọn đúng projection API sẵn có. Client vẫn giữ toàn state và cho chuyển demo role: hoàn toàn không thay thế auth/RBAC server.
+
+CRM dùng cùng `pema-demo-v2`, không thêm backend: `crmTasks`, `crmActivities`, `crmAutomationRules`, `crmSegments`, `patient.crm`. Clock 2026-09-20; timestamp mutation CRM tăng deterministic trong ngày. Task key = rule + patient + source event; trạng thái resolved vẫn giữ để chống tái sinh. Read model tính overdue/risk/lifecycle từ visits, plans, appointments; booking khác actual reactivation. Ngày hẹn từ appointment ưu tiên khuyến nghị, hủy quay về khuyến nghị; hoàn tất session mới áp protocol.
+
+Mutations đi qua snapshot/rollback của PemaOps; booking nhận crmTaskId và payload, validate trước rồi lưu appointment/activity/task trong một lần save. Không bọc transaction lồng. Migration chỉ bổ sung field; fixture kể chuyện chỉ áp dụng seed mới/reset. Opt-out chặn rule marketing và giữ audit. Demo chưa có authorization, concurrency đa thiết bị hay scheduler chạy khi browser đóng. Không đồng bộ CRM sang Flutter/PB02 ngoài boundary hiện có.
+
 Tài liệu tách kiến trúc demo đang chạy và đích pilot. LocalStorage prototype không phải production architecture.
 
 ## Native review container (22/09/2026)

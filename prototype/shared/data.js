@@ -12,7 +12,7 @@
   ];
   function initial() {
     return {
-      version: 2, selected: 'P001', audit: [],
+      version: 2, selected: 'P001', audit: [], crmFixturePending: true,
       patients: names.map((name,i)=>{
         const g=groups[i%groups.length], total=g[3], completed=i===0?2:1+(i%Math.max(1,total-1));
         const visitDate = i===0 ? '2026-09-06' : i%4===0 ? '2026-08-16' : '2026-09-06';

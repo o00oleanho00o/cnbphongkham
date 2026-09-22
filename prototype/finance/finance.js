@@ -1,5 +1,7 @@
 const API='http://127.0.0.1:4174';
 const $=q=>document.querySelector(q), money=n=>new Intl.NumberFormat('vi-VN').format(n)+' ₫',esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const staff=new URLSearchParams(location.search).get('staff');if(staff&&PemaStaff.accounts.some(a=>a.id===staff))PemaStaff.switchTo(staff);
+const account=PemaStaff.current();if(staff||sessionStorage.getItem('pema-staff')){if(!PemaStaff.can('readFinance'))location.replace('../clinic-web/?screen=crm');else $('#role').value=(account.role==='doctor'?'doctor:':account.role==='accountant'?'accountant:':'owner:')+(account.doctor||'D0');}
 const initialPatient=new URLSearchParams(location.search).get('patient');
 let tab=initialPatient?'work':'overview',state,sequence=0,busy=false,dirty=false,paymentKey=crypto.randomUUID();
 // en-CA differs across engines; derive ISO calendar components explicitly.

@@ -61,3 +61,12 @@ Sau đó cập nhật README, docs vận hành/domain liên quan và append chec
 ## Skill thiết kế của dự án
 
 Khi thiết kế, sửa hoặc review UI/UX Pema, đọc [pema-design](.agents/skills/pema-design/SKILL.md) và reference phù hợp. Hướng dẫn dùng/chia sẻ ở [docs/23_PEMA_DESIGN_SKILL.md](docs/23_PEMA_DESIGN_SKILL.md). Khi token, navigation hoặc capability đổi, cập nhật skill cùng docs, tránh để bản hướng dẫn lệch code. Skill không thay yêu cầu cụ thể của người dùng.
+
+
+## CRM01 và tài khoản demo
+
+- Đọc bộ PB01 theo 0→1→2→3 và `docs/20_CRM01_PATIENT_LIFECYCLE.md` trước khi sửa. Nghiệp vụ CRM nằm ở crm-data/automation, UI không nhân bản rules.
+- Không gộp màn owner/bác sĩ/CSKH/kế toán. `staff-context.js` phân workspace và command demo, không phải authentication. Bác sĩ chỉ vào hồ sơ phụ trách/được phân lịch; CSKH không duyệt y khoa, kế toán không làm clinical.
+- Ngày demo 2026-09-20, idempotency rule+patient+source. Booking từ CRM phải cùng transaction với task/activity và đi qua validator lịch. Không tính reactivated từ booking; giữ task đã đóng khi rerun.
+- Migration không viết lại lâm sàng/hóa đơn hiện có. Fixture kể chuyện chỉ dùng seed mới/reset. Opt-out marketing không xóa việc theo dõi an toàn. CRM log nội bộ không tự công bố lên patient app; projection mobile lấy đúng identity người bệnh, không dùng selected của nhân viên.
+- Chạy crm-test.cjs, crm-browser-test.cjs và suite regression liên quan; giữ kiểm lỗi save rollback, wrong patient, stale/duplicate task, quyền demo, prescription gating, 200-row pagination, 5 viewport. Khi kiểm output bị khóa file, dùng PEMA_EVIDENCE_DIR riêng; không đánh dấu PASS khi test chưa kết thúc.

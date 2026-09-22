@@ -49,3 +49,10 @@ Web Clinic/Patient Mobile dùng localStorage cùng origin/profile. Flutter độ
 ## Ngoại lệ tài chính PB02
 
 Tổng quan chủ phòng khám, thu/đối soát và tiền thủ thuật mới dùng API/SQLite chung web/Flutter. Giữ phân biệt doanh số, thực thu, công nợ và tiền bác sĩ; snapshot tỷ lệ, kỳ chốt, projection theo role và thông báo foreground. Đọc `docs/24_FINANCE_AND_PROCEDURE_FEES.md` và bộ PB02 trước khi sửa; giới hạn finance memory-only ở PB01 không áp cho module mới. Chạy `python prototype/finance_test.py` khi thay công thức/ledger.
+
+
+## CRM01 — phân không gian theo nhân viên
+
+Chủ phòng khám xem dashboard toàn cảnh; bác sĩ có home/lịch/hồ sơ riêng; CSKH có work queue và workspace; kế toán có thu ngân/đối soát. BS. Tâm có góc nhìn chủ và bác sĩ riêng, không làm mẫu một dashboard chung cho mọi người. Patient 360 nối ngữ cảnh, task được mở theo quyền/tác vụ. Tài khoản hiện dùng sessionStorage demo, không phải auth server.
+
+CSKH hôm nay là chăm sóc chủ động; Theo dõi là review lâm sàng. Outcome đặt lịch phải chuyển tới form hiện có, validate rồi mới resolve. Không báo “đã quay lại” ngay khi booking. Quy ước/source: `docs/20_CRM01_PATIENT_LIFECYCLE.md`, `staff-context.js`, `crm-automation.js`, `crm-ui.js`.

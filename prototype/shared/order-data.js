@@ -67,6 +67,7 @@
     });
   }
   function approveOrder(patientId, id, actor) {
+    window.PemaStaff?.assert('clinical');
     return O.transact(() => {
       const p = patient(patientId), o = order(patientId, id);
       if (!actor || actor.role !== 'doctor' || !O.seed().doctors.some(d => d.name === actor.name)) throw Error('Cần bác sĩ duyệt đơn.');

@@ -1,5 +1,18 @@
 # Pema Digital Clinic — Software Specification PB01
 
+## Acceptance CRM01
+
+- AC-CRM09: chuyển tài khoản CSKH → không có tổng quan toàn phòng khám/thu ngân/duyệt lâm sàng; bác sĩ → lịch/hồ sơ phụ trách và doanh số cá nhân; kế toán → thu ngân; chủ → toàn cảnh. Chặn lệnh clinical/thu tiền/cấu hình/duyệt đơn trái vai trong lớp command demo. Dữ liệu vẫn trong browser, không tuyên bố bảo mật hoặc cách ly tenant.
+
+- AC-CRM01: reset → hàng đợi theo 10 nhóm rule, 36 hồ sơ, cùng clock/cùng kết quả; rerun không trùng task.
+- AC-CRM02: outcome + ghi chú + owner + bước tiếp → activity/timeline, task resolved hoặc rescheduled; lỗi lưu rollback.
+- AC-CRM03: đồng ý đặt lịch → form prefill đúng người → validator bác sĩ/phòng/patient → một transaction lưu lịch và đóng task; lỗi/hủy form giữ task mở.
+- AC-CRM04: expected visit có ngày/lý do/nguồn; ngày quá hạn tính theo demo clock, cập nhật khi đặt/dời/hủy lịch và hoàn tất session.
+- AC-CRM05/06: còn buổi và >45 ngày chưa điều trị; no-show/hủy >24h chưa hẹn lại → task duy nhất theo source event.
+- AC-CRM07: dashboard tính từ state, drilldown work queue; contact rate có mẫu số, booking và quay lại thực tế tách biệt.
+- AC-CRM08: check-in → tư vấn/chẩn đoán có bác sĩ ghi → dịch vụ/session → đơn nháp/duyệt → thanh toán → expected visit → Patient Mobile liên thông.
+- NFR: bảng phân trang/cuộn riêng, sticky header, tìm kiếm/bộ lọc; kiểm 200 dòng và 5 viewport chuẩn; không gửi Zalo/SMS/cuộc gọi thật. CRM ghi actor/id/source/date và giữ consent/approval/payment semantics.
+
 Phạm vi là vertical slice Clinic Web ↔ Patient Mobile cho prototype và kế hoạch pilot.
 
 ## Acceptance cho native template (22/09/2026)

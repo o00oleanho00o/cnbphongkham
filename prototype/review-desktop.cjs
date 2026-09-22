@@ -1,6 +1,6 @@
 const {chromium}=require('C:/Users/email/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const fs=require('fs'),path=require('path');
-const out=path.resolve(__dirname,'../demo-assets/screenshots/desktop-1920');
+const out=path.resolve(process.env.PEMA_EVIDENCE_DIR||path.join(__dirname,'../demo-assets/screenshots/desktop-1920'));
 fs.mkdirSync(out,{recursive:true});
 (async()=>{
  const browser=await chromium.launch({headless:true});

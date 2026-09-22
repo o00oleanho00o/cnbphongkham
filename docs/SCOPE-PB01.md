@@ -1,5 +1,13 @@
 # Pema Digital Clinic — Scope PB01
 
+## CRM01 — Clinic Replacement + Patient Lifecycle (22/09/2026)
+
+Theo góp ý bổ sung: phân không gian theo tài khoản demo Chủ phòng khám / Bác sĩ / CSKH / Kế toán. BS. Tâm có góc nhìn chủ và góc nhìn bác sĩ riêng. CSKH vào hàng đợi, bác sĩ vào lịch/hồ sơ phụ trách, kế toán vào thu ngân; không ghép các dashboard vào cùng trang cho mọi người. Đây là phân vai thao tác bằng sessionStorage, không đăng nhập hoặc bảo mật production.
+
+Mở rộng web trên nền PB01/PB02 hiện tại: tiếp đón theo appointment, Patient 360 có CRM/timeline, expected next visit, CSKH chủ động và dashboard dẫn tới hành động. Giữ 36 hồ sơ, thêm 8 câu chuyện mẫu khi reset; không thay lịch sử người dùng lúc nâng phiên bản. Ngày demo cố định 20/09/2026. Clinic/Patient Mobile web dùng cùng localStorage. Flutter và tài chính PB02 giữ nguyên phạm vi; CRM01 không triển khai native hoặc provider gửi tin thật.
+
+Giả định: protocol laser mẫu D+1/D+3/D+7/D+30 chỉ tạo việc cho nhân viên, không tự gửi lời khuyên y khoa. Booking sau CSKH là kết quả đặt lại lịch; chỉ check-in/thực hiện sau đó mới tính đã quay lại. Opt-out chặn tái kích hoạt/sinh nhật, không xóa việc theo dõi an toàn lâm sàng. Ngưỡng bỏ dở 45 ngày, dormant 90/180 ngày cần chủ phòng khám duyệt trước pilot. Chi tiết và mapping parity: [CRM01](20_CRM01_PATIENT_LIFECYCLE.md).
+
 Trạng thái: chốt cho prototype/pilot slice. Ngày: 2026-09-21.
 
 Phương pháp: làm rõ boundary, giả định, quyết định và bằng chứng theo tài liệu PM AI Bootcamp; nội dung này chỉ mô tả sản phẩm Pema hiện tại.

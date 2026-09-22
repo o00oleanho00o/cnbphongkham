@@ -248,3 +248,12 @@ Hướng dẫn nghiệp vụ web ở trên không tự áp dụng cho Flutter. �
 ## Bổ sung tài chính PB02
 
 [Module tài chính và tiền thủ thuật](24_FINANCE_AND_PROCEDURE_FEES.md) dùng API :4174/SQLite chung cho web và Flutter. Role là mô phỏng, thông báo foreground; không áp mô tả memory-only của PB01 cho PB02. Chạy API riêng, không coi HTTP local là triển khai production.
+
+
+## CRM01 — từ hồ sơ tới việc chủ động
+
+Chọn tài khoản demo trước khi làm việc: chủ phòng khám vào Tổng quan, bác sĩ vào lịch/hồ sơ riêng, CSKH vào CSKH hôm nay, kế toán vào Thu ngân. Không dùng vai chủ làm giao diện mặc định cho mọi nhân viên.
+
+CSKH đọc liệu trình và expected visit, xử lý task, ghi outcome, owner và bước tiếp. Đồng ý quay lại mở form đặt lịch prefill; chỉ khi validator và lưu thành công mới đóng task. Phản hồi chuyên môn/khiếu nại chuyển Follow-up Inbox; bác sĩ phải review. Sau khi lưu, kiểm CRM timeline và Patient Mobile. CRM không gửi Zalo/SMS thật. D1/D3/D7 hiện tự tạo **task nhân viên** từ protocol, thay giới hạn “chưa tự lập” ở phần lịch sử phía trên; vẫn không tự gửi chuỗi nhắc.
+
+Đọc [hướng dẫn CRM01](20_CRM01_PATIENT_LIFECYCLE.md) để hiểu định nghĩa chỉ số, case, phân vai và ranh giới pilot.

@@ -1,0 +1,32 @@
+{
+  "date": "2026-09-22",
+  "domain": {
+    "command": "node prototype/crm-test.cjs",
+    "passed": 22
+  },
+  "browser": {
+    "command": "node prototype/crm-browser-test.cjs",
+    "checks": 7,
+    "layouts": 35,
+    "pageErrors": 0
+  },
+  "regression": {
+    "check-linked.cjs": "PASS: five legacy tabs, service/invoice, draft/approval and mobile identity projection",
+    "review-desktop.cjs": "PASS: 80 layouts, zero overflow/page errors",
+    "operations-test.cjs": "PASS: 20 checks",
+    "smoke-final.cjs": "PASS: 12 checks",
+    "data-audit.cjs": "PASS: 20 checks",
+    "order-test.cjs": "PASS: 13 checks, print/approval and no patient crossover",
+    "finance_test.py": "PASS: 11 checks"
+  },
+  "documentationLinks": {
+    "checked": 132,
+    "broken": 0
+  },
+  "notes": [
+    "Some existing evidence files intermittently rejected overwrite (Windows UNKNOWN open). Desktop, operations and smoke rerun successfully into separate PEMA_EVIDENCE_DIR folders.",
+    "200 rows are an isolated UI load fixture; not a capacity claim for clinical scheduling.",
+    "Demo identities/client guards are not real authentication.",
+    "No real outbound messages or calls; no native CRM/device acceptance."
+  ]
+}

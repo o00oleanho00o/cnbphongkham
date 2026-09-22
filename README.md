@@ -97,3 +97,14 @@ Bộ tài liệu PB01 mô tả cùng một boundary sản phẩm theo thứ tự
 ## Design skill dùng chung cho đồng nghiệp
 
 Dùng **$pema-design** để thiết kế/review Clinic Web, Patient Mobile và Flutter theo nhận diện, luồng và responsive của dự án. [Skill trong repository](.agents/skills/pema-design/SKILL.md) có bốn reference về visual, màn hình/flow, layout và kiểm thử. [Hướng dẫn chia sẻ + prompt mẫu](docs/23_PEMA_DESIGN_SKILL.md). Có thể clone repo hoặc copy nguyên thư mục skill; không cần đường dẫn máy tác giả.
+
+
+## CRM01 — replacement và vòng đời khách hàng (22/09/2026)
+
+Mở [Clinic Web](http://127.0.0.1:4173/clinic-web/) và chọn **Tài khoản demo**: BS. Tâm — Chủ phòng khám, bác sĩ điều trị, CSKH Mai Anh/Thu hoặc Kế toán. Mỗi vai có trang bắt đầu, menu và tác vụ riêng. Chủ xem tổng quan; bác sĩ xem lịch/hồ sơ phụ trách và doanh số cá nhân; CSKH xử lý hàng đợi; kế toán làm thu ngân/đối soát. Đây là mô phỏng tài khoản, chưa auth/RBAC thật.
+
+CRM01 nối expected visit, protocol D+1/D+3/D+7/D+30, vắng hẹn, bỏ dở, dormant và sinh nhật vào work queue. Xử lý → kết quả → timeline → đặt lịch qua validation hiện có → Patient Mobile. Booking và khách đã quay lại là hai chỉ số riêng. Hướng dẫn đầy đủ: [CRM01](docs/20_CRM01_PATIENT_LIFECYCLE.md). Tab Hướng dẫn trong app cũng có bài CSKH/tài khoản.
+
+Ngày demo cố định 20/09/2026, 36 bệnh nhân, 8 case P025–P032. Migration giữ dữ liệu đã nhập; dùng nút reset nếu muốn khôi phục fixture kể chuyện (xóa thay đổi thử ở browser, không reset DB tài chính). Chuẩn desktop 1920×1020; bảng phân trang/cuộn riêng, kiểm thêm 1440/1280/1024/390. Kiểm tải 200 dòng là UI fixture, không chứng minh năng lực xếp 200 lịch với nguồn lực hiện có.
+
+Chạy `node prototype/crm-test.cjs` và `node prototype/crm-browser-test.cjs`; bằng chứng ở `demo-assets/screenshots/crm01/`. Suite desktop/operations nhận `PEMA_EVIDENCE_DIR` để lưu evidence riêng, tránh ghi đè ảnh các vòng trước. Flutter/PB02 tiếp tục giữ phạm vi riêng; chưa native CRM hoặc gửi tin thật.

@@ -30,7 +30,7 @@
         b.disabled = !ready || !count;
       });
       const approve = document.getElementById('approve');
-      approve.hidden = o.status !== 'draft'; approve.disabled = !!current.unresolved.length;
+      approve.hidden = o.status !== 'draft' || (window.PemaStaff&&!PemaStaff.can('clinical')); approve.disabled = !!current.unresolved.length;
       document.getElementById('review-error').textContent = '';
     } catch (err) {
       current = null; document.body.dataset.approved = 'false';
@@ -43,7 +43,7 @@
   }
   document.getElementById('approve').onclick = () => {
     try {
-      O.approveOrder(patientId, orderId, {role:'doctor', name:current.order.doctor});
+      window.PemaStaff?.assert('clinical'); O.approveOrder(patientId, orderId, {role:'doctor', name:current.order.doctor});
       refresh();
     } catch(err) { document.getElementById('review-error').textContent = err.message; }
   };
