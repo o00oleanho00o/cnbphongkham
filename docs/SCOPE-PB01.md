@@ -20,6 +20,7 @@ PB01 tạo vertical slice để lễ tân tìm đúng người bệnh, đội ng
 - Danh mục dịch vụ và dịch vụ đã đăng ký: giá chốt, giảm giá, số buổi, tiến độ, bác sĩ phụ trách.
 - Kế hoạch điều trị và ghi nhận buổi: trạng thái, ghi chú, aftercare, bước tiếp theo và ảnh có consent.
 - Đơn thuốc nháp → bác sĩ duyệt → hiển thị có điều kiện trên Patient Mobile.
+- Lên đơn nhiều sản phẩm từ `data/danhsach.xlsx` tại Thu ngân hoặc Patient 360; tách Đơn thuốc / Phiếu tư vấn, lưu nháp, sửa, duyệt và in A5 từng loại hoặc tất cả. Loại trống cần review, không tự suy đoán.
 - Follow-up Inbox cho phản hồi/ảnh người bệnh, owner, severity và trạng thái.
 - Thu ngân với hóa đơn chờ thu, tiền cọc, phân bổ cọc, thu một phần/toàn phần và chống thu trùng.
 - Hướng dẫn trong hệ thống, liên kết theo hành trình và vai trò.

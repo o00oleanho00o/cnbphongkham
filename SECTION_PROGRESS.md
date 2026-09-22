@@ -168,3 +168,14 @@ Root/build agents temporarily hit service rate limits; all research/domain files
 - Validation: `git diff --check` PASS; `check-linked.cjs` PASS; responsive rerun 80/80 screens with zero overflow/page errors; `operations-test.cjs` 20/20; `smoke-final.cjs` 12/12; `data-audit.cjs` 20/20.
 - Pushed and verified `origin/master` at `03ea2fa83004c117b94fceca131d6de3aa49e378`.
 - Workspace still contains pre-existing/untracked `data/` and `%SystemDrive%/` artifacts; they were intentionally excluded from the commit.
+
+## 2026-09-22 — Excel catalog orders, consultation split and A5 printing
+
+- Read `E:\codex\indon\overview\.md`, print-template.js and preview.css. Used workbook at `F:\BUL_Research\DalieuOs\data\danhsach.xlsx`; requested `F:\BUL\_Research\...` path does not exist. No reference-project patient records imported.
+- Rebuilt catalog reproducibly with a standard-library Python importer and source SHA-256. 115 products: 30 prescription, 78 consultation, 7 missing type kept UNRESOLVED (previous experimental catalog incorrectly routed missing types to consultation). JS/JSON parity verified.
+- Added multi-item order entry to cashier and Patient 360, quantity/instructions/notes, explicit route override reasons, draft editing/version guards, snapshot prices, linked invoices, approval, persisted history and approved-only mobile groups.
+- Added named review page, separate prescription/consultation previews, selective/all A5 monochrome printing, draft print guard, natural long-content pagination and consultation terminology. Kept legacy prescriptions without guessing matches; legacy quick-order drafts require catalog review before approval.
+- Fixed malformed cashier table markup that interrupted modal interaction. Retained existing workspace changes and did not modify the reference project.
+- Multi-tab payment/order stress exposed an unnecessary persisted payment-total cache in care hydration. Removed that write; totals already project from invoice ledger, preventing a reading mobile tab from overwriting newly created orders. Reran the order workflow twice after the fix and reran operations/smoke.
+- Validation: catalog 9 checks + importer --check; order workflow 13 groups; actual PDF audit 7 files (5 items + footer on one A5, 24 long items on 6 pages, one oversized instruction on 5 pages, no missing text/blank pages); linked workflow PASS; operations 20/20; data audit 20/20; smoke 12/12; responsive 80/80, no page errors/overflow. New editor/review also checked at 1920, 1440, 1280, 1024 and 390 widths.
+- Evidence under `demo-assets/screenshots/orders/` including results.json, pdf-results.json, screenshots and PDFs. Updated Scope → Spec → Module Map → Architecture, README and domain/operations docs. Still a localStorage prototype with simulated doctor identity; no production backend/RBAC claim.

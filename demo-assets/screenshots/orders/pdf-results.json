@@ -1,0 +1,44 @@
+[
+  {
+    "file": "draft.pdf",
+    "pages": 1,
+    "items": 0,
+    "status": "PASS"
+  },
+  {
+    "file": "prescription.pdf",
+    "pages": 1,
+    "items": 1,
+    "status": "PASS"
+  },
+  {
+    "file": "consultation.pdf",
+    "pages": 1,
+    "items": 3,
+    "status": "PASS"
+  },
+  {
+    "file": "mixed.pdf",
+    "pages": 2,
+    "items": 4,
+    "status": "PASS"
+  },
+  {
+    "file": "five.pdf",
+    "pages": 1,
+    "items": 5,
+    "status": "PASS"
+  },
+  {
+    "file": "long.pdf",
+    "pages": 6,
+    "items": 24,
+    "status": "PASS"
+  },
+  {
+    "file": "oversize.pdf",
+    "pages": 5,
+    "items": 1,
+    "status": "PASS"
+  }
+]

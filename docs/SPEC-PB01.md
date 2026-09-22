@@ -46,6 +46,10 @@ Phạm vi là vertical slice Clinic Web ↔ Patient Mobile cho prototype và k�
 - FR-14: Chỉ bác sĩ duyệt; approved lưu reviewer/time/version và hiển thị trên mobile.
 - FR-15: Draft, rejected hoặc revoked không hiển thị như hướng dẫn đang dùng trên mobile.
 - FR-16: AI brief/clinical note có source event/record, nhãn mô phỏng và trạng thái cần bác sĩ review; không chẩn đoán.
+- FR-27: Catalog Excel giữ mã, tên, đơn vị, loại, giá sau thuế và số dòng nguồn. Thuốc → PRESCRIPTION; loại khác có giá trị → CONSULTATION; loại trống → UNRESOLVED.
+- FR-28: Đơn nhiều dòng lưu snapshot, số lượng nguyên 1–9999, cách dùng, ghi chú, bác sĩ và chẩn đoán/nội dung tư vấn. Đổi loại hoặc Không in cần lý do; Không in vẫn tính hóa đơn.
+- FR-29: Nháp có thể sửa trước khi thu tiền; version cũ bị từ chối. Duyệt cần bác sĩ phụ trách, cách dùng cho từng dòng được in, nội dung tư vấn và không còn UNRESOLVED. Đơn duyệt không sửa tại chỗ; không tự coi là đã cấp thuốc.
+- FR-30: Preview nhận diện tên người bệnh, in riêng/tất cả A5 dọc đen trắng, không bỏ dòng hoặc cắt hướng dẫn dài. Phiếu tư vấn dùng “sản phẩm”, “phiếu này”, “Bác sĩ tư vấn”. Mobile chỉ chiếu đơn approved, tách hai nhóm, ẩn NONE.
 
 ### Follow-up, media và consent
 
@@ -97,6 +101,14 @@ Phạm vi là vertical slice Clinic Web ↔ Patient Mobile cho prototype và k�
 - Given bác sĩ tạo draft, when mở Patient Mobile, then draft không xuất hiện.
 - Given bác sĩ approve, when người bệnh tải lại mobile cùng origin, then approved hiển thị tên thuốc, cách dùng, tần suất, thời gian và reviewer/time.
 - Given user không phải bác sĩ, when cố approve, then bị từ chối và status giữ nguyên.
+
+### AC-03b Excel → đơn hỗn hợp → tách phiếu
+
+- Given workbook hiện tại có 115 sản phẩm, when tái tạo catalog, then có 30 thuốc, 78 sản phẩm tư vấn và 7 dòng cần phân loại; JS và JSON khớp workbook.
+- Given một đơn gồm thuốc, mỹ phẩm, TPCN và dòng thiếu loại, when lưu nháp, then đủ mọi dòng, có hóa đơn liên kết nhưng chưa in/phát hành mobile. Dòng thiếu loại chặn duyệt.
+- Given bác sĩ nhập hướng dẫn và phân loại có lý do, when duyệt, then hai nhóm xuất hiện trên app và nút in được mở. Reload không mất quantity, note hoặc giá snapshot.
+- Given 5 sản phẩm tư vấn với hướng dẫn ngắn, when xuất PDF, then cả 5 và footer nằm trên một A5. Hướng dẫn dài/nhiều sản phẩm tự chảy qua trang, giữ đủ chữ và footer.
+- Given lỗi ghi localStorage, số lượng sai, patient không tồn tại hoặc bản sửa stale, when lưu, then từ chối và không tạo đơn/hóa đơn dở dang.
 
 ### AC-04 Deposit → invoice → later payment
 

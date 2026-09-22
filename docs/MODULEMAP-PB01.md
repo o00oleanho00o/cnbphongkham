@@ -22,6 +22,9 @@ Module map đi từ nền ẩn đến trải nghiệm nhìn thấy. Module phả
 4. Scheduling / Reception — appointment, waitlist, check-in, conflict, room block.
 5. Treatment Session — planned → arrived → in_progress → completed/cancelled; note, operator, aftercare.
 6. Prescription / Homecare — draft, reviewed/approved/rejected/revoked; medication lines, visibility.
+   - Product Catalog: importer XLSX tái lập + snapshot JS/JSON, rowNumber/source hash, phân loại thiếu cần review.
+   - Catalog Order: nhiều dòng, route có lý do, version/snapshot, hóa đơn liên kết, duyệt và mobile projection.
+   - Order Review/Print: preview theo nhóm, in A5 từng nhóm/tất cả, giữ đủ nội dung nhiều trang.
 7. Follow-up / Communication — update, message, task, severity, dueAt, assignee, resolution.
 8. Clinical Media — image set, body area, capture context, consent, review state.
 9. Invoice / Payment / Deposit — invoice snapshot, payment, allocation, balance và guards.
@@ -48,6 +51,7 @@ Module map đi từ nền ẩn đến trải nghiệm nhìn thấy. Module phả
 - operations-test.cjs: conflict, waitlist, resource, service, payment, rollback.
 - smoke-final.cjs: route và interaction smoke.
 - data-audit.cjs: fixture relationships, status và cross-app state.
+- product-catalog-test.cjs + import-product-catalog.py --check: catalog khớp Excel; order-test.cjs: workflow UI và guards; order-pdf-test.py: kích thước, số trang, đủ dòng/chữ và footer PDF thực tế.
 - Screenshot evidence ở final, operations, ui-refresh và desktop-1920.
 - SECTION_PROGRESS.md là checkpoint append-only.
 

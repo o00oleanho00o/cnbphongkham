@@ -22,6 +22,7 @@ API boundaries: Identity/RBAC, Patient/Clinical, Scheduling, Media/Consent, Foll
 | FollowUp/Communication | `followups[]`, `messages[]`, event kind followup/message |
 | Appointment/Visit | patient `next`, `time`, `status`, appointment event |
 | Medication/HomeCare | `meds[]`, `aftercare` |
+| Catalog Order / Print | `quickOrders[]` via `order-data.js`, `order-ui.js`, `order-review/`; catalog generated from XLSX, two document projections and approved-only mobile |
 | Audit | `audit[]` action/actor/time; not tamper-resistant |
 | Invoice/Payment | synthetic `invoices[]` only |
 

@@ -21,6 +21,15 @@ Tài liệu tách kiến trúc demo đang chạy và đích pilot. LocalStorage 
 - Hai app chỉ chia sẻ state khi cùng origin và browser profile.
 - AI brief/Ask Pema/clinical draft là deterministic simulation; không gọi model và không chẩn đoán.
 
+### Catalog order / print (2026-09-22)
+
+- `import-product-catalog.py` đọc XLSX bằng thư viện chuẩn Python, kiểm tra cột/mã trùng/giá; sinh `product-catalog.json` và `product-catalog.js` từ cùng dữ liệu và runtime. Product ID dựa trên mã Excel, không dựa trên thứ tự dòng. SHA-256 nguồn đi theo đơn.
+- `order-data.js` mở rộng PemaOps: saveOrder, approveOrder, orderPrintData. Dùng transact để reload, snapshot, save và rollback khi lỗi. Lưu `patient.quickOrders[]`, một invoice/orderId; sự kiện ghi bác sĩ/thời gian. Bản sửa cần đúng version và chưa nhận tiền.
+- Order item giữ code/productId, name/unit/sourceType, rowNumber, catalogRoute/route/routeReason, quantity/unitPrice, usage/note. Đơn duyệt giữ reviewedBy/reviewedAt và không chỉnh sửa trực tiếp.
+- `order-ui.js` phục vụ Thu ngân/Patient 360; `order-review/` đọc theo patient/order ID, render bằng HTML escaped, không tự in khi vừa lưu. `order-review.css` dùng @page A5, natural flow, không giới hạn chiều cao khi in. Direct print nháp chỉ có nhãn chưa được duyệt.
+- Mobile đọc cùng quickOrders, chỉ approved, nhóm PRESCRIPTION/CONSULTATION; NONE không hiển thị. `prescriptions[]` cũ vẫn được giữ, không fuzzy migrate nội dung lịch sử. Đơn nhanh cũ phải mở sửa để đối chiếu catalog trước khi duyệt.
+- Đây vẫn là prototype: actor bác sĩ do UI mô phỏng, chưa có identity/RBAC server. Catalog sản phẩm từ Excel là dữ liệu người dùng cung cấp; hồ sơ dùng để kiểm thử vẫn tổng hợp. Không lấy hồ sơ người thật hoặc QR/địa chỉ từ project tham khảo.
+
 ## Pilot target container view
 
     Clinic Web / Patient Mobile

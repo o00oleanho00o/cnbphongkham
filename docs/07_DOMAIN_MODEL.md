@@ -24,6 +24,7 @@ erDiagram
 - **TreatmentSession / Procedure / DeviceSettings**: performed date, operator, actual parameters, tolerance, outcome, note.
 - **ClinicalImage / ImageSet / BodyArea**: object storage key, capture protocol, view, region, lighting/device, consent, linked event.
 - **Medication / Prescription / HomeCareInstruction**: instruction, start/end, acknowledgement, safety text.
+- **CatalogOrder / CatalogOrderLine**: product code + source row/hash, frozen name/unit/price, quantity, usage/note, catalogRoute/route/override reason. Draft → approved với reviewer/time/version, liên kết invoice. PRESCRIPTION và CONSULTATION là hai projection của cùng order; NONE vẫn được tính tiền, UNRESOLVED chặn phát hành.
 - **FollowUp / PatientReportedOutcome / Communication / Task**: due date, channel, severity, owner, state, response.
 - **Appointment / Visit / Consent / Document**: operational and legal records; appointment != visit.
 - **Invoice / Payment / Package**: light billing context linked to service/session, not an accounting ledger.

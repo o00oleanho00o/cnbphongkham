@@ -1,5 +1,5 @@
 {
-  "startedAt": "2026-09-21T14:53:25.561Z",
+  "startedAt": "2026-09-21T17:23:55.755Z",
   "checks": [
     {
       "name": "36 synthetic patients rendered",
@@ -76,5 +76,5 @@
     "F:\\BUL_Research\\DalieuOs\\demo-assets\\screenshots\\final\\patient-send-update.png",
     "F:\\BUL_Research\\DalieuOs\\demo-assets\\screenshots\\final\\patient-send-update.png"
   ],
-  "finishedAt": "2026-09-21T14:53:37.409Z"
+  "finishedAt": "2026-09-21T17:24:00.495Z"
 }

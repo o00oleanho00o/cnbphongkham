@@ -1,5 +1,7 @@
 # Hướng dẫn sử dụng hệ thống Pema
 
+**Lên đơn sản phẩm:** vào Thu ngân → Lên đơn nhanh hoặc Patient 360 → Tạo đơn nháp. Chọn sản phẩm từ Excel, nhập hướng dẫn, kiểm tra phân loại, lưu nháp và bác sĩ duyệt để in Đơn thuốc / Phiếu tư vấn. Xem [hướng dẫn chi tiết](20_CATALOG_ORDERS.md).
+
 Mở trong Clinic Web: [Hướng dẫn](http://127.0.0.1:4173/clinic-web/?screen=guide).
 
 Tài liệu tổ chức theo hành trình và bàn giao giữa các bộ phận. Nội dung tương ứng với tab Hướng dẫn; nguồn nội dung ở `prototype/shared/guide.js`.

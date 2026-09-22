@@ -45,7 +45,17 @@ Mở [Điều phối lịch](http://127.0.0.1:4173/clinic-web/?screen=schedule),
 
 Patient 360 hiện liên kết dịch vụ đã đăng ký với số buổi, giá chốt, giảm giá và hóa đơn chờ thu. Đơn thuốc đi qua trạng thái nháp và bác sĩ duyệt; Patient Mobile chỉ hiển thị đơn đã duyệt. Tiền cọc được ghi trong sổ phân bổ riêng để không tính trùng khi thu phần còn lại. Chạy `node prototype/check-linked.cjs` để kiểm tra luồng dịch vụ, đơn thuốc, hóa đơn và mobile.
 
-## Luồng tài liệu dự án
+## Lên đơn từ Excel và in tách phiếu
+
+Vào **Thu ngân → Lên đơn nhanh** hoặc **Patient 360 → Tạo đơn nháp**. Tìm sản phẩm bằng mã/tên không dấu, nhập số lượng và cách dùng, lưu nháp rồi kiểm tra hai phiếu. Bác sĩ duyệt để mở các nút **In đơn thuốc / In phiếu tư vấn / In tất cả** và hiển thị hai nhóm trên Patient Mobile. Mở lại hoặc sửa nháp từ danh sách đơn ở Thu ngân/Patient 360.
+
+Nguồn thực tế: `F:\BUL_Research\DalieuOs\data\danhsach.xlsx` (đường dẫn `F:\BUL\_Research\...` trong yêu cầu không tồn tại). 115 sản phẩm gồm **30 thuốc, 78 sản phẩm tư vấn, 7 thiếu loại**. Dòng thiếu loại cần chọn thủ công và ghi lý do trước khi duyệt. Chọn “Không in” vẫn tính sản phẩm trong hóa đơn.
+
+Tái tạo dữ liệu sau khi cập nhật Excel: `python prototype/import-product-catalog.py`; kiểm tra đồng nhất: `python prototype/import-product-catalog.py --check`. Có thể truyền đường dẫn XLSX khác làm đối số. Không cần cài thêm thư viện để import.
+
+Kiểm thử mới: `node prototype/product-catalog-test.cjs`, `node prototype/order-test.cjs`, `python prototype/order-pdf-test.py` (bước kiểm PDF cần `pymupdf`). [Hướng dẫn và giới hạn](docs/20_CATALOG_ORDERS.md). [Bằng chứng workflow](demo-assets/screenshots/orders/results.json), [bằng chứng PDF](demo-assets/screenshots/orders/pdf-results.json).
+
+## Luồng tài liệu dự án (PB01)
 
 Bộ tài liệu PB01 mô tả cùng một boundary sản phẩm theo thứ tự từ quyết định đến triển khai. Khi thay đổi phạm vi hoặc hành vi, đọc và cập nhật theo luồng **0 → 1 → 2 → 3**, rồi cập nhật tài liệu vận hành và bằng chứng:
 

@@ -1,0 +1,17 @@
+const fs = require('fs');
+const vm = require('vm');
+const source = fs.readFileSync(__dirname + '/shared/product-catalog.js', 'utf8');
+const context = { window: {} };
+vm.runInNewContext(source, context);
+const catalog = context.window.PemaProducts;
+if (!catalog || catalog.records.length !== 115) throw new Error('Expected 115 catalog rows');
+if (catalog.counts.prescription !== 30 || catalog.counts.consultation !== 78 || catalog.counts.unresolved !== 7) throw new Error('Unexpected route counts');
+if (catalog.get('H002').outputType !== 'PRESCRIPTION') throw new Error('H002 should be prescription');
+if (catalog.get('H005').outputType !== 'CONSULTATION') throw new Error('H005 should be consultation');
+if (catalog.find('H002')[0]?.code !== 'H002') throw new Error('Code search failed');
+if (catalog.find('Triluma')[0]?.code !== 'H095') throw new Error('Name search failed');
+if (catalog.get('H095').outputType !== 'UNRESOLVED') throw new Error('Missing Excel type must require review');
+if (!catalog.find('thuoc').length) throw new Error('Accent-insensitive search failed');
+const json = JSON.parse(fs.readFileSync(__dirname + '/shared/product-catalog.json', 'utf8'));
+if (JSON.stringify(json) !== JSON.stringify(catalog.records)) throw new Error('Catalog JS/JSON mismatch');
+console.log('product catalog: 9 checks passed');
