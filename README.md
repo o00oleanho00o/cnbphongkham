@@ -1,5 +1,9 @@
 # Pema Digital Clinic — Ultra Section
 
+## Template Flutter để duyệt
+
+Mở [Native review](http://127.0.0.1:4173/native-review/) để xem Flutter trong khung điện thoại 360/390/430px và tablet. Chuyển Clinic/Care ở header để duyệt hai không gian; mã nguồn và cách build ở [flutter-template](flutter-template/README.md), mapping màn hình ở [Native template](docs/NATIVE-TEMPLATE.md). Đây là template tương tác dùng state trong phiên, chưa kết nối backend/camera/in native. Chạy server prototype như bên dưới; nếu chưa có preview, build theo hướng dẫn Flutter rồi copy `flutter-template/build/web/` sang `prototype/native-preview/`.
+
 Workspace này chứa prototype tổng hợp và tài liệu nghiên cứu của Pema Digital Clinic. Dữ liệu trong demo hoàn toàn giả lập.
 
 ## Tiêu chuẩn hiển thị UI

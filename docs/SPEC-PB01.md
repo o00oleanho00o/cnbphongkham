@@ -2,6 +2,14 @@
 
 Phạm vi là vertical slice Clinic Web ↔ Patient Mobile cho prototype và kế hoạch pilot.
 
+## Acceptance cho native template (22/09/2026)
+
+- Flutter widget tree chạy trên browser để duyệt, cùng asset/font/token nhận diện web.
+- Clinic có 5 mục điều hướng; Care có 4 mục; Patient 360 mở màn con, back navigation và safe-area.
+- Catalog 115 dòng, thiếu loại chặn duyệt; đơn nháp ẩn ở Care; chỉnh nháp không tạo thêm hóa đơn mẫu.
+- Luồng gửi cập nhật → phản hồi và thu tiền mẫu có thay đổi trạng thái. Camera/PDF/AI/backend ghi rõ chưa tích hợp.
+- Kiểm tra layout 360/390/430/768 logical pixels và widget exceptions; đây chưa phải nghiệm thu thiết bị thật.
+
 ## Vai trò và use case
 
 | ID | Use case | Actor | Kết quả |

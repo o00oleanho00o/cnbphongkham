@@ -1,0 +1,48 @@
+# Pema • Native Flutter review 01
+
+## Phạm vi duyệt
+
+Chuyển các luồng web sang app Flutter với hai không gian Clinic/Care. Đây là template tương tác cần chủ sản phẩm duyệt trước phát triển native production. Bản preview chạy trên browser là Flutter thật, không phải trang HTML giả lập Flutter.
+
+## Mapping màn hình
+
+| Web | Native | Điều chỉnh cho điện thoại |
+|---|---|---|
+| Dashboard + Today | Hôm nay | Hero ngắn, hai số liệu chính, ba shortcut, lượt khám tiếp theo |
+| Lịch ngày/tuần | Lịch hẹn → Chi tiết → Đặt/dời | Date strip, danh sách thời gian, date picker; không ép lịch nhiều cột |
+| Patients + Patient 360 | Hồ sơ → Patient 360 → màn nghiệp vụ | Search, card nhận diện, điều hướng theo công việc |
+| Consult / plan / session | Tư vấn / Kế hoạch / Buổi điều trị | Form riêng, validation trước hoàn tất |
+| Catalog order | Lên đơn → Kiểm tra → Nháp/duyệt → Phiếu | Tìm sản phẩm, số lượng, hướng dẫn; loại thiếu chặn duyệt |
+| Cashier | Thu ngân → sheet xác nhận | Khoản còn lại nổi bật; giao dịch mẫu có xác nhận |
+| Follow-up Inbox | Theo dõi → Phản hồi | Một việc mỗi màn, feedback sau gửi |
+| Resources/services | Thêm → danh sách chi tiết | Giữ dữ liệu ca, giá và duration; quản trị phức tạp vẫn ở web |
+| Before/After | Ảnh tiến triển | Hai ô minh họa cùng ngữ cảnh, không efficacy score |
+| Ask Pema | Ask Pema → Tư vấn | Tóm tắt mô phỏng và nguồn, bác sĩ sửa nội dung |
+| Guide | Thêm → Hướng dẫn | Mạch bàn giao, không giáo trình demo |
+| Patient home | Care Trang chủ | Chỉ bước tiếp theo, lịch và việc cần làm |
+| Patient journey | Hành trình → kế hoạch/ảnh/aftercare | Nội dung chi tiết ở màn con |
+| Patient messages | Tin nhắn → Gửi cập nhật | Consent khi đính ảnh mẫu; trạng thái chờ xem |
+| Patient documents | Hồ sơ → Đơn/Hóa đơn | Chỉ chiếu đơn approved, không thấy draft |
+
+## Token và hành vi native
+
+- Font Be Vietnam Pro local: body 14–16, heading 25, label 12; tránh ép chữ vào chiều cao cố định.
+- Primary #0B4F94, navy #083A6E, accent #3CAAE5, ink #17324D, muted #5D7184, paper #F4F8FB.
+- Card 18px, hero 24px; spacing 4/8/12/16/20/24; icon Material outlined cùng trọng lượng cảm nhận.
+- Bottom navigation 4 mục Care, 5 mục Clinic; màn con dùng nút Back và giữ navigation stack.
+- Thông tin quan trọng lên trước, một tác vụ chính trên mỗi màn; modal/bottom sheet chỉ chứa quyết định ngắn.
+- Keyboard dùng Scaffold resize + scroll; SafeArea chống đè hệ thống; tap target tối thiểu Material 48 logical pixels.
+
+## Checklist duyệt của chủ sản phẩm
+
+- [ ] Nhận diện Pema và mật độ chữ đúng mong muốn.
+- [ ] Hôm nay/Care home gọn, không trộn mọi module vào trang chủ.
+- [ ] Patient 360 chia màn nghiệp vụ thuận tiện trên điện thoại.
+- [ ] Lên đơn đủ mã/tên/giá/số lượng/cách dùng, nhóm thiếu loại dễ nhận ra.
+- [ ] Bác sĩ hiểu rõ nháp khác duyệt; người bệnh chỉ nhận nội dung duyệt.
+- [ ] Mạch gửi cập nhật → phản hồi có thể duyệt xuyên hai không gian.
+- [ ] Sheet thu tiền rõ ràng, không nhầm trạng thái chăm sóc.
+
+## Giới hạn
+
+Các luồng tương tác chính dùng state phiên trong DemoStore; không sync web/backend. Scheduler chỉ minh họa slot và date picker, không copy engine xung đột web. Camera, media, AI, PDF/in, auth, privacy persistence chưa nối native plugin. Chỉ sau duyệt mới triển khai repository/API, permission, storage và thiết bị thật. Không gọi template này là ứng dụng production.

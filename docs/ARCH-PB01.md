@@ -2,6 +2,10 @@
 
 Tài liệu tách kiến trúc demo đang chạy và đích pilot. LocalStorage prototype không phải production architecture.
 
+## Native review container (22/09/2026)
+
+`flutter-template/` là project Flutter Material 3, targets Android/iOS/Web. Browser preview build từ Dart lên `/native-preview/`, không WebView và không chia sẻ localStorage web. DemoStore/ChangeNotifier lưu state phiên, assets bundle chứa catalog 115 dòng. Production cần thay store bằng repository/API và bổ sung identity, lưu bền vững, permission/media, PDF/share và test thiết bị. Chưa có APK/iOS build nghiệm thu.
+
 ## Current demo container view
 
     Browser profile / same origin http://127.0.0.1:4173

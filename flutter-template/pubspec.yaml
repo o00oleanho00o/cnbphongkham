@@ -1,0 +1,27 @@
+name: pema_native_template
+description: Pema Clinic and Care interactive native design template.
+publish_to: none
+version: 0.1.0+1
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/pema-logo.png
+    - assets/products.json
+  fonts:
+    - family: BeVietnam
+      fonts:
+        - asset: assets/be-vietnam-pro-regular.ttf
+        - asset: assets/be-vietnam-pro-medium.ttf
+          weight: 500
+        - asset: assets/be-vietnam-pro-semibold.ttf
+          weight: 600
+        - asset: assets/be-vietnam-pro-bold.ttf
+          weight: 700

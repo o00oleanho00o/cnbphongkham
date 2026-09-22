@@ -38,6 +38,10 @@ PB01 tạo vertical slice để lễ tân tìm đúng người bệnh, đội ng
 - Cùng dataset qua localStorage để chứng minh liên thông hai app trên cùng origin.
 - Kiểm thử flow, overflow desktop/mobile và screenshot evidence trong demo-assets.
 
+## Native template duyệt thiết kế (22/09/2026)
+
+Thêm template Flutter Clinic/Care, giữ nhận diện và luồng web, catalog 115 sản phẩm. Có mã Dart và browser preview từ Flutter để duyệt trước. State mẫu trong phiên; không phải triển khai native production. Chi tiết: [NATIVE-TEMPLATE](NATIVE-TEMPLATE.md).
+
 ## Ngoài phạm vi hoặc để pilot sau
 
 - Đăng nhập thật, RBAC thật, tenant isolation và đồng bộ nhiều thiết bị.
@@ -47,7 +51,7 @@ PB01 tạo vertical slice để lễ tân tìm đúng người bệnh, đội ng
 - SMS/Zalo/push thật và đặt lịch tự phục vụ từ Patient Mobile.
 - Media production, signed URL, retention và import hồ sơ thật.
 - AI model thật, chẩn đoán tự động, chấm điểm hiệu quả hoặc đổi phác đồ không có bác sĩ duyệt.
-- Native iOS/Android và triển khai sản xuất.
+- Native iOS/Android production, tích hợp thiết bị và triển khai sản xuất; template thiết kế thuộc phạm vi duyệt.
 
 ## Actor và trách nhiệm
 

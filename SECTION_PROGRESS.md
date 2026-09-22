@@ -1,5 +1,14 @@
 # SECTION_PROGRESS.md
 
+## 2026-09-22 — Flutter native template review 01
+
+- Added flutter-template: real Flutter Material 3 widget app with Android/iOS/Web scaffolds, Clinic/Care modes, Pema logo and Be Vietnam Pro, blue branding aligned to current web.
+- Added native navigation, Patient 360 task screens, schedule/date selection, catalog quick order, draft/approve states, order projection, follow-up response, aftercare and payment demo. Bundled all 115 products; 7 unresolved types block approval.
+- Added interactive browser review shell at /native-review/ and Flutter compiled preview /native-preview/. Generated preview is git-ignored; build-preview.ps1 recreates it from source.
+- Updated docs in Scope → Spec → Module Map → Architecture order; README and docs/NATIVE-TEMPLATE.md explain mapping and review scope.
+- Validation: flutter analyze clean; six tests pass including four viewport suites (360/390/430/768), populated order screens and catalog-to-review interaction; web build succeeds. Visually inspected Clinic/Care homes and role-switch sheet in browser.
+- Native hardware, camera, PDF/printing, authentication, backend sync remain outside this template review. Source and limitations: flutter-template/README.md and VALIDATION.md. Next: user review of screen hierarchy, colors, density and task flows.
+
 ## 2026-09-20 — Research/domain checkpoint
 
 ### Completed by `/root/research_docs`

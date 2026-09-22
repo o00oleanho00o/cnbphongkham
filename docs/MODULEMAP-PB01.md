@@ -2,6 +2,10 @@
 
 Module map đi từ nền ẩn đến trải nghiệm nhìn thấy. Module phải có owner, contract trạng thái và bằng chứng trước khi mở rộng màn hình.
 
+## Native template (22/09/2026)
+
+`flutter-template/lib/store.dart` giữ catalog và state trong phiên; `main.dart` gồm Theme/Workspace/Detail, Clinic/Care navigation, form và sheet. `assets/` dùng logo/font/catalog hiện tại. Test domain và layout đặt trong `test/`. API, auth, camera/PDF plugins để sau duyệt.
+
 ## Foundation layer — móng ẩn
 
 | Module | Trách nhiệm | Contract |
