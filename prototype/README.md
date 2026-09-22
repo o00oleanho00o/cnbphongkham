@@ -1,5 +1,7 @@
 # Pema Digital Clinic prototype
 
+Lên đơn từ Excel: **Thu ngân → Lên đơn nhanh** hoặc **Patient 360 → Tạo đơn nháp**. Sau khi lưu, kiểm tra hai phiếu và bác sĩ duyệt trước khi in/gửi app. [Hướng dẫn và lệnh import/test](../docs/20_CATALOG_ORDERS.md).
+
 Hai trải nghiệm browser dùng chung dataset giả lập qua `localStorage` key `pema-demo-v2` khi chạy trên cùng origin và cùng browser profile:
 
 - Clinic Web: http://127.0.0.1:4173/clinic-web/

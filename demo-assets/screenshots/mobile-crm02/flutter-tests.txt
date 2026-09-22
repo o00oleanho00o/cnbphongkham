@@ -1,0 +1,28 @@
+Resolving dependencies...
+Downloading packages...
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.3 (1.19.0 available)
+  test_api 0.7.12 (0.7.14 available)
+  vector_math 2.4.0 (2.4.3 available)
+Got dependencies!
+4 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading F:/BUL_Research/DalieuOs/flutter-template/test/finance_test.dart
+00:00 +0: F:/BUL_Research/DalieuOs/flutter-template/test/finance_test.dart: API role selection clears old private data and receives notification
+00:00 +1: F:/BUL_Research/DalieuOs/flutter-template/test/finance_test.dart: API failed payment retains error and does not fabricate success
+00:00 +2: F:/BUL_Research/DalieuOs/flutter-template/test/finance_test.dart: finance tabs and procedure form at 360.0
+00:00 +3: F:/BUL_Research/DalieuOs/flutter-template/test/finance_test.dart: finance tabs and procedure form at 360.0
+00:00 +4: F:/BUL_Research/DalieuOs/flutter-template/test/finance_test.dart: finance tabs and procedure form at 360.0
+00:03 +5: F:/BUL_Research/DalieuOs/flutter-template/test/mobile_roles_test.dart: separate role workspaces and patient accounts at 360.0
+00:04 +6: F:/BUL_Research/DalieuOs/flutter-template/test/mobile_roles_test.dart: separate role workspaces and patient accounts at 360.0
+00:04 +7: F:/BUL_Research/DalieuOs/flutter-template/test/mobile_roles_test.dart: separate role workspaces and patient accounts at 360.0
+00:05 +8: F:/BUL_Research/DalieuOs/flutter-template/test/mobile_roles_test.dart: separate role workspaces and patient accounts at 360.0
+00:06 +9: F:/BUL_Research/DalieuOs/flutter-template/test/mobile_roles_test.dart: separate role workspaces and patient accounts at 360.0
+00:06 +10: F:/BUL_Research/DalieuOs/flutter-template/test/finance_test.dart: finance tabs and procedure form at 768.0
+00:06 +11: F:/BUL_Research/DalieuOs/flutter-template/test/template_test.dart: home and detail layouts at 430.0
+00:07 +12: F:/BUL_Research/DalieuOs/flutter-template/test/mobile_roles_test.dart: separate role workspaces and patient accounts at 390.0
+00:08 +13: F:/BUL_Research/DalieuOs/flutter-template/test/mobile_roles_test.dart: separate role workspaces and patient accounts at 390.0
+00:08 +14: F:/BUL_Research/DalieuOs/flutter-template/test/mobile_roles_test.dart: separate role workspaces and patient accounts at 390.0
+00:09 +15: F:/BUL_Research/DalieuOs/flutter-template/test/mobile_roles_test.dart: separate role workspaces and patient accounts at 430.0
+00:11 +16: F:/BUL_Research/DalieuOs/flutter-template/test/mobile_roles_test.dart: separate role workspaces and patient accounts at 768.0
+00:13 +17: All tests passed!

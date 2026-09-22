@@ -1,0 +1,97 @@
+{
+  "clock": "2026-09-20",
+  "checks": [
+    {
+      "name": "all ten rules, 18 cases, 46 synthetic patients",
+      "pass": true
+    },
+    {
+      "name": "automation rerun and reload never duplicate tasks",
+      "pass": true
+    },
+    {
+      "name": "D+1/D+3/D+7 from completed protocol sessions only",
+      "pass": true
+    },
+    {
+      "name": "expected visit overdue is 14 days with doctor source",
+      "pass": true
+    },
+    {
+      "name": "unfinished six-session plan and sixty-day gap",
+      "pass": true
+    },
+    {
+      "name": "no-show and cancellation older than 24h without future booking",
+      "pass": true
+    },
+    {
+      "name": "dormant90/180 are exclusive per customer",
+      "pass": true
+    },
+    {
+      "name": "birthday window handles year boundary and excludes past birthdays",
+      "pass": true
+    },
+    {
+      "name": "resolve persists one activity, timeline and metrics",
+      "pass": true
+    },
+    {
+      "name": "callback requires next action and reschedules without duplicate",
+      "pass": true
+    },
+    {
+      "name": "booking validates conflicts before atomic CRM resolution",
+      "pass": true
+    },
+    {
+      "name": "booking links appointment and expected visit without fake reactivation",
+      "pass": true
+    },
+    {
+      "name": "booking mismatch, missing note and duplicate task are rejected",
+      "pass": true
+    },
+    {
+      "name": "opt-out suppresses marketing, retains clinical tasks and trace",
+      "pass": true
+    },
+    {
+      "name": "reaction / complaint escalates to clinical inbox, never auto-reviewed",
+      "pass": true
+    },
+    {
+      "name": "failed storage rolls back appointment, task, activity and expected date",
+      "pass": true
+    },
+    {
+      "name": "reset produces identical tasks/metrics regardless of activities",
+      "pass": true
+    },
+    {
+      "name": "legacy migration preserves clinical and payment history",
+      "pass": true
+    },
+    {
+      "name": "payment and CRM do not approve draft prescriptions or complete sessions",
+      "pass": true
+    },
+    {
+      "name": "new protocol completion schedules future D+1/3/7 without adding them to due queue",
+      "pass": true
+    },
+    {
+      "name": "recall respects actual 24-hour boundary, not calendar day alone",
+      "pass": true
+    },
+    {
+      "name": "cancel booked appointment returns expected visit to saved recommendation",
+      "pass": true
+    },
+    {
+      "name": "mobile cases added once without overwriting existing fields or colliding IDs",
+      "pass": true
+    }
+  ]
+}

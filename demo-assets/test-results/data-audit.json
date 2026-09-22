@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-21T14:53:38.656Z",
+  "generatedAt": "2026-09-22T06:50:58.699Z",
   "scope": "Node VM data.js only; no browser UI, file uploads, or real localStorage mutation",
   "source": "prototype/shared/data.js",
-  "sourceSha256": "109782db76cf64240b3b8cd0e25e68036d3b96c5d0bff017a0eb8b010760eab8",
+  "sourceSha256": "d8e0b45ea58636f58a004f559dbb85cc9d287282b31bd3cbb1988063f5f5cc7d",
   "node": "v24.19.0",
   "summary": {
     "total": 20,

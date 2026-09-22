@@ -24,6 +24,7 @@ erDiagram
 - **TreatmentSession / Procedure / DeviceSettings**: performed date, operator, actual parameters, tolerance, outcome, note.
 - **ClinicalImage / ImageSet / BodyArea**: object storage key, capture protocol, view, region, lighting/device, consent, linked event.
 - **Medication / Prescription / HomeCareInstruction**: instruction, start/end, acknowledgement, safety text.
+- **CatalogOrder / CatalogOrderLine**: product code + source row/hash, frozen name/unit/price, quantity, usage/note, catalogRoute/route/override reason. Draft → approved với reviewer/time/version, liên kết invoice. PRESCRIPTION và CONSULTATION là hai projection của cùng order; NONE vẫn được tính tiền, UNRESOLVED chặn phát hành.
 - **FollowUp / PatientReportedOutcome / Communication / Task**: due date, channel, severity, owner, state, response.
 - **Appointment / Visit / Consent / Document**: operational and legal records; appointment != visit.
 - **Invoice / Payment / Package**: light billing context linked to service/session, not an accounting ledger.
@@ -43,3 +44,13 @@ Read models produce Patient 360, Follow-up Inbox and patient app. This allows AI
 
 ## Reusable/configurable/Pema-specific
 Reusable: patient/episode/timeline, appointments, plans/sessions, images, follow-up, portal, RBAC/audit. Configurable: protocol templates, forms, consent, image views, SLA, notifications, branding, service catalog. Pema-specific: pilot naming, staff roles, local Zalo/call scripts, exact laser protocols and package rules.
+
+
+## Bổ sung Flutter template — 22/09/2026
+
+Model nghiệp vụ trong tài liệu này là định hướng hệ thống/web, không phải toàn bộ shape của Flutter. Native hiện có order snapshot và receipt total theo patient; lịch/buổi/note/follow-up/cart và ghi chú CSKH đã tách theo patient ID trong memory. PB01 chưa có invoice/payment ledger, session record hoặc durable consent; PB02 có ledger API riêng. Xem bảng runtime trong [ARCH-PB01](ARCH-PB01.md) và [parity](22_NATIVE_PARITY_AND_VALIDATION.md) trước khi mở rộng model.
+
+
+## Bổ sung tài chính PB02
+
+[Module tài chính và tiền thủ thuật](24_FINANCE_AND_PROCEDURE_FEES.md) dùng API :4174/SQLite chung cho web và Flutter. Role là mô phỏng, thông báo foreground; không áp mô tả memory-only của PB01 cho PB02. Chạy API riêng, không coi HTTP local là triển khai production.

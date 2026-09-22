@@ -48,3 +48,13 @@ Mỗi vai trò cần tìm thấy việc tiếp theo, biết bệnh nhân nào đ
 ## Kết quả runtime
 
 Chromium smoke đã thực thi các thao tác chính trên dữ liệu giả lập. `prototype/smoke-final.cjs` ghi 12/12 PASS, không có console/page error: reception check-in, treatment + aftercare, follow-up review/reply, AI note review, Ask Pema, patient gửi text + ảnh, clinic nhận follow-up và mobile không tràn ngang. Các persona còn lại là kịch bản cần chạy với nhân viên/bệnh nhân Pema trong discovery workshop; không suy diễn đây là bằng chứng usability ngoài nhóm mô phỏng.
+
+
+## Bổ sung Flutter template — 22/09/2026
+
+Các kết quả web phía trên giữ nguyên phạm vi và ngày kiểm tra. Bằng chứng Flutter trước lần cập nhật tài liệu: analyze sạch, 6 test (1 store, 4 layout widths 360/390/430/768 đều height 844, 1 tương tác catalog → review), build web thành công. Visual review chỉ Clinic home, role sheet, Care home 390×844. Chưa có test đầy đủ Care/end-to-end/device. Chi tiết [VALIDATION](../flutter-template/VALIDATION.md) và [coverage/checklist](22_NATIVE_PARITY_AND_VALIDATION.md). Lần sửa tài liệu này không chạy lại suite Flutter.
+
+
+## Mobile CRM02 — bằng chứng mới 22/09/2026
+
+Đã chạy analyze, 17 test Flutter và build preview; browser native kiểm bốn khung 360×800, 390×844, 430×932, 768×1024 và luồng lọc D3 → P038 → lưu liên hệ → Đã liên hệ. Đây là kiểm thử kỹ thuật, chưa thử với nhân viên thật hoặc thiết bị Android/iOS. [Báo cáo mới](../demo-assets/screenshots/mobile-crm02/validation-summary.json); các kết quả cũ ở trên giữ nguyên theo phạm vi lúc chạy.

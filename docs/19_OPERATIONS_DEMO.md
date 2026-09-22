@@ -1,5 +1,7 @@
 # Hướng dẫn sử dụng hệ thống Pema
 
+**Lên đơn sản phẩm:** vào Thu ngân → Lên đơn nhanh hoặc Patient 360 → Tạo đơn nháp. Chọn sản phẩm từ Excel, nhập hướng dẫn, kiểm tra phân loại, lưu nháp và bác sĩ duyệt để in Đơn thuốc / Phiếu tư vấn. Xem [hướng dẫn chi tiết](20_CATALOG_ORDERS.md).
+
 Mở trong Clinic Web: [Hướng dẫn](http://127.0.0.1:4173/clinic-web/?screen=guide).
 
 Tài liệu tổ chức theo hành trình và bàn giao giữa các bộ phận. Nội dung tương ứng với tab Hướng dẫn; nguồn nội dung ở `prototype/shared/guide.js`.
@@ -236,3 +238,22 @@ Khi hệ thống từ chối một thao tác, hãy đọc lý do và điều ch�
 Bản hiện tại phục vụ thử nghiệm nội bộ với dữ liệu giả lập, lưu trong trình duyệt. Chưa có đăng nhập/phân quyền thực, đồng bộ nhiều thiết bị, AI thật, SMS/Zalo, thanh toán hoặc vận hành sản xuất. Không nhập hồ sơ người bệnh thật.
 
 **Đọc tiếp:** Lịch hẹn & tiếp đón · Hóa đơn & thu tiền · Chăm sóc & phản hồi tại nhà
+
+
+## Bổ sung Flutter template — 22/09/2026
+
+Hướng dẫn nghiệp vụ web ở trên không tự áp dụng cho Flutter. Để duyệt native, đi từ hồ sơ → tác vụ → Care trong cùng instance, chọn đúng người bệnh ở từng không gian. Lịch/buổi/follow-up/cart đã tách theo patient ID; thu tiền PB01 chỉ tổng phần còn lại, phiếu chưa in. CSKH native dùng ba trạng thái, tìm kiếm và sheet lọc nhóm; tài chính PB02 dùng API chung với web. Đọc [mạch sử dụng theo màn](NATIVE-TEMPLATE.md), [runbook vận hành](21_NATIVE_RUNBOOK.md) và [parity](22_NATIVE_PARITY_AND_VALIDATION.md). Mục tiêu hướng dẫn là hiểu liên kết và bàn giao, không coi các nút mẫu là nghiệp vụ production.
+
+
+## Bổ sung tài chính PB02
+
+[Module tài chính và tiền thủ thuật](24_FINANCE_AND_PROCEDURE_FEES.md) dùng API :4174/SQLite chung cho web và Flutter. Role là mô phỏng, thông báo foreground; không áp mô tả memory-only của PB01 cho PB02. Chạy API riêng, không coi HTTP local là triển khai production.
+
+
+## CRM01 — từ hồ sơ tới việc chủ động
+
+Chọn tài khoản demo trước khi làm việc: chủ phòng khám vào Tổng quan, bác sĩ vào lịch/hồ sơ riêng, CSKH vào CSKH hôm nay, kế toán vào Thu ngân. Không dùng vai chủ làm giao diện mặc định cho mọi nhân viên.
+
+CSKH đọc liệu trình và expected visit, xử lý task, ghi outcome, owner và bước tiếp. Đồng ý quay lại mở form đặt lịch prefill; chỉ khi validator và lưu thành công mới đóng task. Phản hồi chuyên môn/khiếu nại chuyển Follow-up Inbox; bác sĩ phải review. Sau khi lưu, kiểm CRM timeline và Patient Mobile. CRM không gửi Zalo/SMS thật. D1/D3/D7 hiện tự tạo **task nhân viên** từ protocol, thay giới hạn “chưa tự lập” ở phần lịch sử phía trên; vẫn không tự gửi chuỗi nhắc.
+
+Đọc [hướng dẫn CRM01](20_CRM01_PATIENT_LIFECYCLE.md) để hiểu định nghĩa chỉ số, case, phân vai và ranh giới pilot.

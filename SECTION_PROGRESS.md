@@ -1,5 +1,14 @@
 # SECTION_PROGRESS.md
 
+## 2026-09-22 — Flutter native template review 01
+
+- Added flutter-template: real Flutter Material 3 widget app with Android/iOS/Web scaffolds, Clinic/Care modes, Pema logo and Be Vietnam Pro, blue branding aligned to current web.
+- Added native navigation, Patient 360 task screens, schedule/date selection, catalog quick order, draft/approve states, order projection, follow-up response, aftercare and payment demo. Bundled all 115 products; 7 unresolved types block approval.
+- Added interactive browser review shell at /native-review/ and Flutter compiled preview /native-preview/. Generated preview is git-ignored; build-preview.ps1 recreates it from source.
+- Updated docs in Scope → Spec → Module Map → Architecture order; README and docs/NATIVE-TEMPLATE.md explain mapping and review scope.
+- Validation: flutter analyze clean; six tests pass including four viewport suites (360/390/430/768), populated order screens and catalog-to-review interaction; web build succeeds. Visually inspected Clinic/Care homes and role-switch sheet in browser.
+- Native hardware, camera, PDF/printing, authentication, backend sync remain outside this template review. Source and limitations: flutter-template/README.md and VALIDATION.md. Next: user review of screen hierarchy, colors, density and task flows.
+
 ## 2026-09-20 — Research/domain checkpoint
 
 ### Completed by `/root/research_docs`
@@ -168,3 +177,79 @@ Root/build agents temporarily hit service rate limits; all research/domain files
 - Validation: `git diff --check` PASS; `check-linked.cjs` PASS; responsive rerun 80/80 screens with zero overflow/page errors; `operations-test.cjs` 20/20; `smoke-final.cjs` 12/12; `data-audit.cjs` 20/20.
 - Pushed and verified `origin/master` at `03ea2fa83004c117b94fceca131d6de3aa49e378`.
 - Workspace still contains pre-existing/untracked `data/` and `%SystemDrive%/` artifacts; they were intentionally excluded from the commit.
+
+## 2026-09-22 — Excel catalog orders, consultation split and A5 printing
+
+- Read `E:\codex\indon\overview\.md`, print-template.js and preview.css. Used workbook at `F:\BUL_Research\DalieuOs\data\danhsach.xlsx`; requested `F:\BUL\_Research\...` path does not exist. No reference-project patient records imported.
+- Rebuilt catalog reproducibly with a standard-library Python importer and source SHA-256. 115 products: 30 prescription, 78 consultation, 7 missing type kept UNRESOLVED (previous experimental catalog incorrectly routed missing types to consultation). JS/JSON parity verified.
+- Added multi-item order entry to cashier and Patient 360, quantity/instructions/notes, explicit route override reasons, draft editing/version guards, snapshot prices, linked invoices, approval, persisted history and approved-only mobile groups.
+- Added named review page, separate prescription/consultation previews, selective/all A5 monochrome printing, draft print guard, natural long-content pagination and consultation terminology. Kept legacy prescriptions without guessing matches; legacy quick-order drafts require catalog review before approval.
+- Fixed malformed cashier table markup that interrupted modal interaction. Retained existing workspace changes and did not modify the reference project.
+- Multi-tab payment/order stress exposed an unnecessary persisted payment-total cache in care hydration. Removed that write; totals already project from invoice ledger, preventing a reading mobile tab from overwriting newly created orders. Reran the order workflow twice after the fix and reran operations/smoke.
+- Validation: catalog 9 checks + importer --check; order workflow 13 groups; actual PDF audit 7 files (5 items + footer on one A5, 24 long items on 6 pages, one oversized instruction on 5 pages, no missing text/blank pages); linked workflow PASS; operations 20/20; data audit 20/20; smoke 12/12; responsive 80/80, no page errors/overflow. New editor/review also checked at 1920, 1440, 1280, 1024 and 390 widths.
+- Evidence under `demo-assets/screenshots/orders/` including results.json, pdf-results.json, screenshots and PDFs. Updated Scope → Spec → Module Map → Architecture, README and domain/operations docs. Still a localStorage prototype with simulated doctor identity; no production backend/RBAC claim.
+
+
+## 2026-09-22 — Tài liệu chi tiết Flutter native template
+
+- Đối chiếu main.dart, DemoStore, widget tests, build script và validation hiện có; cập nhật Scope → Spec → Module Map → Architecture theo boundary template hiện tại.
+- Mở rộng AGENT.md, README gốc/Flutter, mapping màn và mạch sử dụng; thêm docs/README.md, 21_NATIVE_RUNBOOK.md và 22_NATIVE_PARITY_AND_VALIDATION.md. Đồng bộ ghi chú domain, scope, patient app, architecture, privacy, testing, UI/UX, vận hành và catalog.
+- Ghi rõ memory-only/không sync web; order/receipt theo patient nhưng lịch/lâm sàng/follow-up/cart chung phiên; thu ngân chưa ledger, phiếu chưa PDF/in, ảnh và privacy là placeholder. Không gán bằng chứng web cho Flutter hoặc ghi template đã được chủ sản phẩm duyệt.
+- Kiểm tra tài liệu: 93 liên kết nội bộ tồn tại; catalog web/Flutter bằng nhau theo SHA-256, 115 dòng (30 PRESCRIPTION, 78 CONSULTATION, 7 UNRESOLVED); git diff --check không lỗi whitespace. Đối chiếu test source: 6 test đã ghi trước đó, bốn widths đều height 844. Không chạy lại Flutter suite vì chỉ sửa tài liệu.
+- Giữ nguyên các artifact/log không liên quan. Lần cập nhật này chưa commit/push.
+
+
+## 2026-09-22 — Pema Design skill để chia sẻ
+
+- Đóng gói `.agents/skills/pema-design/`: entrypoint, UI metadata và bốn reference visual-system, screens-and-flows, platform-layout, delivery-and-review. Giữ nhận diện Pema/Be Vietnam Pro, responsive 1920×1020, mobile theo tác vụ, Flutter Clinic/Care và workflow có bàn giao.
+- Thêm docs/23_PEMA_DESIGN_SKILL.md với cách dùng trong repo/copy độc lập, prompt mẫu và bảo trì; cập nhật Scope → Spec → Module Map → Architecture, AGENT, README, docs index và UI/UX.
+- Phân biệt quy ước thiết kế, khả năng template và mục tiêu production; không nhân bản assets/catalog hoặc đóng gói dữ liệu bệnh nhân. Đường dẫn không phụ thuộc máy tác giả.
+- Validation: quick_validate.py PASS (chạy Python -X utf8 do default Windows cp1252 không đọc được tiếng Việt); 113 liên kết nội bộ hợp lệ; YAML UI metadata và default prompt hợp lệ; git diff --check PASS. Không đổi runtime, không chạy lại app tests. Chưa có đánh giá hành vi bởi agent độc lập.
+- Người dùng yêu cầu commit/push; gom cả bộ tài liệu Flutter của lượt trước. Loại log/cache và các artifact không liên quan khỏi staging.
+
+
+## 2026-09-22 — PB02 tài chính và tiền thủ thuật web/Flutter
+
+- Phân tích và bổ sung Scope → Spec → Module Map → Architecture PB02: tách doanh số thực hiện, thực thu, công nợ, doanh số phân bổ và tiền thủ thuật; mặc định net sau giảm, cơ sở cấu hình, snapshot từng người và khóa kỳ.
+- Thêm API Python/SQLite local :4174, dữ liệu mẫu 24 lượt/tháng hiện tại và trước; transaction, kiểm role projection, idempotent receipt/notification, duyệt/hủy, chốt tháng/đã chi, CSV, mirror cashier legacy. Không auth production hoặc push OS/background.
+- Web workspace tài chính, config tỷ lệ, ghi 2 người (API 4), bảng đối soát, thu tiền/inbox; gắn invoice có sẵn để tránh nợ kép. Flutter module riêng dùng HTTP chung với web, home/chuông/Thêm/Patient 360 liên kết, màn chủ/kế toán/bác sĩ và polling foreground. PB01 lâm sàng giữ runtime cũ.
+- Kiểm thử: 11 Python domain/HTTP tests PASS; Flutter analyze sạch, 12 tests PASS, build web PASS (warning CupertinoIcons framework như trước); cú pháp JS và git diff --check PASS. Đã copy build mới sang native-preview.
+- Browser trực tiếp xác nhận split 70/30 và phí 15/5 trên net 2.400.000, duyệt; thanh toán 100.000 tạo thông báo trên Flutter; cashier cũ thu 50.000 mirror sang API/inbox; bác sĩ chỉ thấy phần cá nhân, không có form/duyệt. Đo 20 trạng thái web theo 5 viewport không document overflow. Ảnh và kết quả ở demo-assets/screenshots/finance. Dùng browser tool sau khi lệnh automation browser qua shell bị policy từ chối; không chạy lại đường bị chặn.
+- Cập nhật AGENT/README, native docs/parity, hướng dẫn 24 và skill design; 102 liên kết tài liệu đã kiểm hợp lệ. UI Android/iOS thật, FCM/APNs, lương/thuế/hoàn tiền, điều chỉnh kỳ và migration buổi cũ chưa triển khai. Chính sách cơ sở/tỷ lệ cần xác nhận với phòng khám, hiện dùng giả định có cấu hình.
+- Server :4173/:4174 đang chạy. Thay đổi lượt này chưa commit/push; giữ nguyên artifact/log không liên quan.
+
+
+## CRM01 checkpoint — 22/09/2026
+
+Đã triển khai Clinic Replacement + Patient Lifecycle trên nền 25f14fc; giữ catalog/in A5, Flutter và PB02. Có 36 hồ sơ/8 case, appointment-based reception, expected next visit, protocol D1/D3/D7/D30, queue 10 nhóm, workspace/outcome/reschedule/booking nguyên tử, timeline, dashboard drilldown, clinical history/diagnosis và Patient Mobile đúng identity. Phân tài khoản owner/bác sĩ/CSKH/kế toán theo góp ý; BS. Tâm có góc chủ và bác sĩ riêng, không trộn dashboard của các bộ phận.
+
+Đã cập nhật Scope → Spec → Module Map → Architecture, README, AGENT, docs vận hành, guide trong app và design skill. Nghiệp vụ/giới hạn/demo 5 phút: docs/20_CRM01_PATIENT_LIFECYCLE.md. Đã xem ảnh và sửa scroll khi đổi tài khoản, menu rỗng, count bác sĩ, Patient 360 status và projection đơn mobile.
+
+Validation: crm-domain 22 PASS; CRM browser 7 nhóm kiểm tra gồm Flow A/B/C, ảnh D3, tách tài khoản và tải 200 dòng, 35 layout PASS; linked PASS; desktop 80 layout PASS; operations 20 PASS; smoke 12 PASS; data audit 20 PASS; order 13 PASS; finance 11 PASS; 132 link docs không lỗi. Evidence mới trong demo-assets/screenshots/crm01, giữ ảnh cũ của các vòng trước. Lỗi khóa/ghi đè ảnh cũ đã xử lý bằng output folder riêng và rerun thành công; không tính các lượt lỗi là PASS.
+
+Đây là demo local, chưa production replacement/auth/provider/native CRM. Ngày demo cố định 20/09/2026; task tương lai chỉ vào queue khi đến hạn; không job khi browser đóng. Booking chưa tính quay lại thực tế. Mục tiêu Git master theo prompt; giữ toàn bộ commit mới hơn master, không reset về baseline cũ. Đã hoàn tất kỹ thuật để commit và publish trong lượt bàn giao này; SHA/remote xác minh sau push.
+
+
+### CRM01 — bàn giao đã xuất bản
+
+Commit triển khai `5f8cde62a80abc413599cf3ef8b385a576a5c0aa` đã push lên `origin/master`; đã dùng `git ls-remote` xác minh SHA remote khớp HEAD. Master được fast-forward từ baseline, giữ nguyên catalog/Flutter/PB02 và lịch sử, không force-push. Đánh giá DoD CRM01 hoàn tất ở mức prototype đã nêu: flow A/B/C, rules/expected visit/idempotency, timeline/booking/metrics, phân vai nhân viên, regression/responsive/evidence và docs. Kiểm thêm liên kết doanh số bác sĩ trả đúng projection `doctor:D1`; CSKH truy cập tài chính được chuyển về workspace.
+
+File log runtime và các thư mục/ZIP tạm có từ trước vẫn để ngoài commit. Không thay dữ liệu thật, không bật gửi tin/provider, không nghiệm thu auth production hay native CRM. Phần CRM01 này hoàn tất; không suy toàn bộ mục tiêu ULTRA/pilot đã hoàn tất từ checkpoint này.
+
+
+## 22/09/2026 — Mobile CRM02, tài chính cùng Clinic và redesign CSKH native
+
+- Hoàn tất yêu cầu mobile/finance/mock accounts: tài chính mount trong Clinic, URL cũ giữ staff/patient, một bộ chọn vai trò; web và native tách vai trò demo. Bổ sung 10 hồ sơ cho đủ 10 nhóm, fresh seed 46 hồ sơ/85 lịch; không ghi đè dữ liệu cũ, kiểm va chạm ID và idempotency.
+- Patient Mobile chọn nhóm trong Hồ sơ, home ưu tiên một bước tiếp theo, không lộ note nội bộ; phản hồi gắn đúng patient và bác sĩ. Flutter dùng snapshot cùng fixture, state theo patient và selection Clinic/Care riêng; CRM native vẫn độc lập web, memory-only.
+- Theo ảnh phản hồi người dùng: bỏ 10 chip wrap ở CSKH, thay bằng 3 trạng thái đếm/lọc thực, tìm kiếm, filter sheet, card khách ngắn. Bốn viewport native có card khách đầu tại y=334. Đã xem screenshot home, sheet và form; chỉnh sheet trắng, viền input và hierarchy nút.
+- PASS: CRM domain 23; browser 7 flows/35 layouts; operations 20; desktop 80; linked; smoke 12; order 13; finance API 12; mobile/finance 5 nhóm kiểm + 20 layout. Flutter analyze sạch, 17 test; build preview thành công; browser native 4 viewport và D3 → P038 → lưu kết quả → Đã liên hệ, không pageerror. Guide mới mở được; 142 link nội bộ hợp lệ, git diff --check sạch.
+- Bằng chứng: demo-assets/screenshots/mobile-crm02/validation-summary.json, results.json, native-review-results.json; flutter-analyze/tests/build.txt; screenshots native-care-* và các thư mục regression. Build còn warning CupertinoIcons adaptive path cũ; Material icons trên các màn đã xem hiển thị đúng.
+- Đã cập nhật 0→1→2→3 PB01/PB02, README/AGENT, docs mobile/native/finance, tab Hướng dẫn và skill thiết kế. Chưa thử thiết bị Android/iOS, auth/push nền hoặc CRM sync native; không tuyên bố production.
+- Server :4173/:4174 đang chạy, native-review đã build lại. Công việc lưu tại working tree; các artifact ngoài phạm vi được giữ nguyên.
+
+
+### Rà tài liệu và chuẩn bị bàn giao Git — 22/09/2026
+
+Đã đối chiếu README/AGENT, bộ 0→1→2→3, domain/patient/operations/native docs với source và evidence Mobile CRM02. Sửa mô tả state chung đã lỗi thời, module map và số test hiện hành; giữ kết quả kiểm thử lịch sử với nhãn mốc rõ ràng. Commit gồm source, mock data, tests, docs/skill và evidence của đợt mobile/tài chính/CSKH. Log runtime, thư mục giải nén và ZIP có từ trước không thuộc đợt bàn giao này.
+
+Kiểm trước commit: 158 link nội bộ trong 47 tài liệu hợp lệ; bundle 46 hồ sơ/10 nhóm khớp fresh fixture; `git diff --check` sạch. Dùng bằng chứng kiểm thử chức năng của lượt triển khai vừa hoàn tất, không ghi thành một lần chạy test mới khi chỉ sửa tài liệu.

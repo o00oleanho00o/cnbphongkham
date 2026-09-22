@@ -1,0 +1,21 @@
+{
+  "api_tests": 11,
+  "flutter_tests": 12,
+  "flutter_analyze": "PASS",
+  "flutter_web_build": "PASS",
+  "web_viewport_screens": 20,
+  "browser_checks": [
+    "record split 70/30 revenue and 15/5 fee on net 2400000",
+    "approve pending procedure",
+    "finance payment 100000 visible in Flutter inbox",
+    "legacy cashier payment 50000 mirrored and visible in Flutter inbox",
+    "doctor personal projection and no accountant controls",
+    "final Flutter totals match web API"
+  ],
+  "limits": [
+    "demo actor headers, no production login",
+    "foreground polling only, no OS push",
+    "no physical Android/iOS validation",
+    "legacy clinical data remains separate"
+  ]
+}

@@ -20,3 +20,8 @@ Activation after session; aftercare acknowledgement; update completion; median c
 ## Current prototype boundary
 
 Patient Mobile displays and confirms a clinic-created appointment. It does not provide patient self-service slot search, booking or rescheduling; the patient can send a message to request help. Clinic staff create/edit appointments from Clinic Web. This is a deliberate demo limitation, not a claim that a production patient app should omit booking.
+
+
+## Bổ sung Flutter template — 22/09/2026
+
+Patient Mobile web và Flutter Care là hai runtime khác nhau. Care có Trang chủ / Hành trình / Tin nhắn / Hồ sơ, đọc chung DemoStore với Clinic trong một instance; không sync localStorage web. Đơn approved theo patient đã hiển thị; lịch, xác nhận aftercare và phản hồi đã tách theo patient ID; selection Care/Clinic riêng. Care → Hồ sơ chọn 46 người bệnh và 10 nhóm chăm sóc mẫu. Trang chủ ưu tiên bước tiếp theo, không hiển thị ghi chú CSKH nội bộ. Ảnh là placeholder, không upload file. North-star loop ở trên là mục tiêu sản phẩm, chưa được native thực hiện đầy đủ. [Màn và hướng dẫn](NATIVE-TEMPLATE.md), [giới hạn từng chức năng](22_NATIVE_PARITY_AND_VALIDATION.md).

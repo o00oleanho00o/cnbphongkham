@@ -1,6 +1,33 @@
 # Pema Digital Clinic — Ultra Section
 
-Workspace này chứa prototype tổng hợp và tài liệu nghiên cứu của Pema Digital Clinic. Dữ liệu trong demo hoàn toàn giả lập.
+## Tài chính & tiền thủ thuật (PB02)
+
+Đã có phân hệ tài chính trong Clinic, dùng chung khung điều hướng và tách góc nhìn chủ phòng khám, kế toán, bác sĩ: doanh số thực hiện, thực thu, công nợ, tỷ lệ thủ thuật/người thực hiện, duyệt/chốt tháng và inbox thanh toán. Chạy thêm `python prototype/finance_server.py`; mở [Tài chính web](http://127.0.0.1:4173/clinic-web/?screen=finance) hoặc Flutter Clinic → Tài chính phòng khám. [Nghiệp vụ, công thức, hướng dẫn và giới hạn](docs/24_FINANCE_AND_PROCEDURE_FEES.md).
+
+Riêng PB02 dùng API/SQLite chung và lưu bền vững cục bộ; mô tả memory-only/localStorage bên dưới vẫn áp dụng các module PB01. Thông báo hiện đồng bộ khi app mở, chưa có push OS khi đóng app.
+
+
+## Template Flutter để duyệt
+
+Mở [Native review](http://127.0.0.1:4173/native-review/) để xem Flutter trong khung điện thoại 360/390/430px và tablet. Chuyển Clinic/Care ở header để duyệt hai không gian; mã nguồn và cách build ở [flutter-template](flutter-template/README.md), mapping màn hình ở [Native template](docs/NATIVE-TEMPLATE.md). Đây là template tương tác dùng state trong phiên, chưa kết nối backend/camera/in native. Chạy server prototype như bên dưới; nếu chưa có preview, build theo hướng dẫn Flutter rồi copy `flutter-template/build/web/` sang `prototype/native-preview/`.
+
+Workspace này chứa prototype và tài liệu nghiên cứu của Pema Digital Clinic. Hồ sơ bệnh nhân là giả lập; catalog 115 sản phẩm lấy từ Excel người dùng cung cấp.
+
+### Tài liệu chi tiết cho phần Flutter
+
+- [Bản đồ tài liệu](docs/README.md) và luồng [Scope](docs/SCOPE-PB01.md) → [Spec](docs/SPEC-PB01.md) → [Module Map](docs/MODULEMAP-PB01.md) → [Architecture](docs/ARCH-PB01.md).
+- [Màn hình và mạch sử dụng](docs/NATIVE-TEMPLATE.md), [runbook chạy/build/catalog](docs/21_NATIVE_RUNBOOK.md), [tính năng thực tế và kiểm thử](docs/22_NATIVE_PARITY_AND_VALIDATION.md).
+- [Quy tắc cập nhật cho agent](AGENT.md), [source Flutter](flutter-template/README.md), [validation đã ghi](flutter-template/VALIDATION.md).
+
+| Bản | Mục đích | Lưu dữ liệu |
+|---|---|---|
+| Clinic Web + Patient Mobile | Prototype nghiệp vụ liên thông | localStorage cùng origin/profile |
+| Native review + Flutter preview | Duyệt thiết kế/app flow từ mã Flutter Material 3 | Bộ nhớ một instance, reload mất mutation; không sync web |
+| Native pilot/production | Giai đoạn triển khai tiếp sau duyệt | Backend/auth/storage/plugin chưa được triển khai |
+
+Fresh clone không có compiled preview. Cài Flutter vào PATH rồi chạy `flutter-template/build-preview.ps1` từ PowerShell; script build và copy sang `prototype/native-preview/`. Chạy static server từ `prototype` như bên dưới. SDK đã kiểm tra: Flutter 3.47.5 / Dart 3.13.4; Android/iOS chưa nghiệm thu trên thiết bị. Cách cấu hình PATH và xử lý màn trắng/404 ở runbook.
+
+**Giới hạn cần biết khi duyệt:** Flutter đã tách state theo bệnh nhân và phân workspace chủ/bác sĩ/CSKH/kế toán/Care. CRM native vẫn là snapshot trong phiên, chưa đồng bộ web hoặc có rule engine đầy đủ. A5 chưa PDF/in; thu ngân PB01 chưa ledger và còn tính đơn nháp. PB02 tài chính dùng API/SQLite riêng. Suite hiện tại 17 test; không thay kiểm thiết bị thật. [Hiện trạng mobile và tài khoản mẫu](docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).
 
 ## Tiêu chuẩn hiển thị UI
 
@@ -45,7 +72,17 @@ Mở [Điều phối lịch](http://127.0.0.1:4173/clinic-web/?screen=schedule),
 
 Patient 360 hiện liên kết dịch vụ đã đăng ký với số buổi, giá chốt, giảm giá và hóa đơn chờ thu. Đơn thuốc đi qua trạng thái nháp và bác sĩ duyệt; Patient Mobile chỉ hiển thị đơn đã duyệt. Tiền cọc được ghi trong sổ phân bổ riêng để không tính trùng khi thu phần còn lại. Chạy `node prototype/check-linked.cjs` để kiểm tra luồng dịch vụ, đơn thuốc, hóa đơn và mobile.
 
-## Luồng tài liệu dự án
+## Lên đơn từ Excel và in tách phiếu
+
+Vào **Thu ngân → Lên đơn nhanh** hoặc **Patient 360 → Tạo đơn nháp**. Tìm sản phẩm bằng mã/tên không dấu, nhập số lượng và cách dùng, lưu nháp rồi kiểm tra hai phiếu. Bác sĩ duyệt để mở các nút **In đơn thuốc / In phiếu tư vấn / In tất cả** và hiển thị hai nhóm trên Patient Mobile. Mở lại hoặc sửa nháp từ danh sách đơn ở Thu ngân/Patient 360.
+
+Nguồn thực tế: `F:\BUL_Research\DalieuOs\data\danhsach.xlsx` (đường dẫn `F:\BUL\_Research\...` trong yêu cầu không tồn tại). 115 sản phẩm gồm **30 thuốc, 78 sản phẩm tư vấn, 7 thiếu loại**. Dòng thiếu loại cần chọn thủ công và ghi lý do trước khi duyệt. Chọn “Không in” vẫn tính sản phẩm trong hóa đơn.
+
+Tái tạo dữ liệu sau khi cập nhật Excel: `python prototype/import-product-catalog.py`; kiểm tra đồng nhất: `python prototype/import-product-catalog.py --check`. Có thể truyền đường dẫn XLSX khác làm đối số. Không cần cài thêm thư viện để import.
+
+Kiểm thử mới: `node prototype/product-catalog-test.cjs`, `node prototype/order-test.cjs`, `python prototype/order-pdf-test.py` (bước kiểm PDF cần `pymupdf`). [Hướng dẫn và giới hạn](docs/20_CATALOG_ORDERS.md). [Bằng chứng workflow](demo-assets/screenshots/orders/results.json), [bằng chứng PDF](demo-assets/screenshots/orders/pdf-results.json).
+
+## Luồng tài liệu dự án (PB01)
 
 Bộ tài liệu PB01 mô tả cùng một boundary sản phẩm theo thứ tự từ quyết định đến triển khai. Khi thay đổi phạm vi hoặc hành vi, đọc và cập nhật theo luồng **0 → 1 → 2 → 3**, rồi cập nhật tài liệu vận hành và bằng chứng:
 
@@ -55,3 +92,24 @@ Bộ tài liệu PB01 mô tả cùng một boundary sản phẩm theo thứ tự
 3. [Architecture PB01](docs/ARCH-PB01.md) — container demo/pilot, data model, API, phân quyền, NFR và đường di chuyển.
 
 [AGENT.md](AGENT.md) ghi quy tắc làm việc, dữ liệu giả lập, kiểm thử và cách giữ ranh giới prototype/pilot. Bộ tài liệu này áp dụng cho Pema Digital Clinic hiện tại; không phải giáo trình hay checklist đào tạo.
+
+
+## Design skill dùng chung cho đồng nghiệp
+
+Dùng **$pema-design** để thiết kế/review Clinic Web, Patient Mobile và Flutter theo nhận diện, luồng và responsive của dự án. [Skill trong repository](.agents/skills/pema-design/SKILL.md) có bốn reference về visual, màn hình/flow, layout và kiểm thử. [Hướng dẫn chia sẻ + prompt mẫu](docs/23_PEMA_DESIGN_SKILL.md). Có thể clone repo hoặc copy nguyên thư mục skill; không cần đường dẫn máy tác giả.
+
+
+## CRM01 — replacement và vòng đời khách hàng (22/09/2026)
+
+Mở [Clinic Web](http://127.0.0.1:4173/clinic-web/) và chọn **Tài khoản demo**: BS. Tâm — Chủ phòng khám, bác sĩ điều trị, CSKH Mai Anh/Thu hoặc Kế toán. Mỗi vai có trang bắt đầu, menu và tác vụ riêng. Chủ xem tổng quan; bác sĩ xem lịch/hồ sơ phụ trách và doanh số cá nhân; CSKH xử lý hàng đợi; kế toán làm thu ngân/đối soát. Đây là mô phỏng tài khoản, chưa auth/RBAC thật.
+
+CRM01 nối expected visit, protocol D+1/D+3/D+7/D+30, vắng hẹn, bỏ dở, dormant và sinh nhật vào work queue. Xử lý → kết quả → timeline → đặt lịch qua validation hiện có → Patient Mobile. Booking và khách đã quay lại là hai chỉ số riêng. Hướng dẫn đầy đủ: [CRM01](docs/20_CRM01_PATIENT_LIFECYCLE.md). Tab Hướng dẫn trong app cũng có bài CSKH/tài khoản.
+
+Ngày demo cố định 20/09/2026, 46 bệnh nhân khi seed mới: 36 hồ sơ nền + 10 tài khoản nhóm CSKH; giữ 8 case P025–P032. Migration giữ dữ liệu đã nhập; dùng nút reset nếu muốn khôi phục fixture kể chuyện (xóa thay đổi thử ở browser, không reset DB tài chính). Chuẩn desktop 1920×1020; bảng phân trang/cuộn riêng, kiểm thêm 1440/1280/1024/390. Kiểm tải 200 dòng là UI fixture, không chứng minh năng lực xếp 200 lịch với nguồn lực hiện có.
+
+Chạy `node prototype/crm-test.cjs` và `node prototype/crm-browser-test.cjs`; bằng chứng ở `demo-assets/screenshots/crm01/`. Suite desktop/operations nhận `PEMA_EVIDENCE_DIR` để lưu evidence riêng, tránh ghi đè ảnh các vòng trước. Flutter/PB02 tiếp tục giữ phạm vi riêng; chưa native CRM hoặc gửi tin thật.
+
+
+## Mobile và tài chính cùng Clinic
+
+[Tài chính](http://127.0.0.1:4173/clinic-web/?screen=finance&staff=accountant) nay dùng chung sidebar và bộ chọn nhân viên; URL `/finance/` cũ tự chuyển hướng. [Patient Mobile](http://127.0.0.1:4173/patient-mobile/) → Hồ sơ → Nhóm tài khoản mẫu để thử đủ 10 nhóm. [Flutter review](http://127.0.0.1:4173/native-review/) → bộ chọn không gian ở header; Care → Hồ sơ để đổi bệnh nhân. Không cần reset dữ liệu web. [Hướng dẫn và phạm vi](docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).

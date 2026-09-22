@@ -1,0 +1,304 @@
+{
+  "demoClock": "2026-09-20",
+  "checks": [
+    {
+      "name": "CRM queue has ten groups and deterministic 46-patient scenarios",
+      "pass": true
+    },
+    {
+      "name": "Flow B: D+1 task → callback tomorrow → queue decreases and timeline persists",
+      "pass": true
+    },
+    {
+      "name": "Flow C: dormant customer → booking conflict → corrected booking → task/metrics/mobile",
+      "pass": true
+    },
+    {
+      "name": "Flow A: check-in → diagnosis → service/session → draft/approve → payment → mobile",
+      "pass": true
+    },
+    {
+      "name": "D+3 patient sends update/photo with consent → clinical inbox",
+      "pass": true
+    },
+    {
+      "name": "200-appointment rendering: bounded table, search, pagination and no overflow",
+      "pass": true
+    },
+    {
+      "name": "separate staff accounts: care, doctor, accountant and owner workspaces",
+      "pass": true
+    }
+  ],
+  "layouts": [
+    {
+      "screen": "dashboard",
+      "width": 1920,
+      "height": 1020,
+      "scrollWidth": 1920,
+      "pass": true
+    },
+    {
+      "screen": "today",
+      "width": 1920,
+      "height": 1020,
+      "scrollWidth": 1920,
+      "pass": true
+    },
+    {
+      "screen": "crm",
+      "width": 1920,
+      "height": 1020,
+      "scrollWidth": 1920,
+      "pass": true
+    },
+    {
+      "screen": "patient-crm",
+      "width": 1920,
+      "height": 1020,
+      "scrollWidth": 1920,
+      "pass": true
+    },
+    {
+      "screen": "patient-history",
+      "width": 1920,
+      "height": 1020,
+      "scrollWidth": 1920,
+      "pass": true
+    },
+    {
+      "screen": "patient-finance",
+      "width": 1920,
+      "height": 1020,
+      "scrollWidth": 1920,
+      "pass": true
+    },
+    {
+      "screen": "workspace",
+      "width": 1920,
+      "height": 1020,
+      "scrollWidth": 1920,
+      "pass": true
+    },
+    {
+      "screen": "dashboard",
+      "width": 1440,
+      "height": 900,
+      "scrollWidth": 1440,
+      "pass": true
+    },
+    {
+      "screen": "today",
+      "width": 1440,
+      "height": 900,
+      "scrollWidth": 1440,
+      "pass": true
+    },
+    {
+      "screen": "crm",
+      "width": 1440,
+      "height": 900,
+      "scrollWidth": 1440,
+      "pass": true
+    },
+    {
+      "screen": "patient-crm",
+      "width": 1440,
+      "height": 900,
+      "scrollWidth": 1440,
+      "pass": true
+    },
+    {
+      "screen": "patient-history",
+      "width": 1440,
+      "height": 900,
+      "scrollWidth": 1440,
+      "pass": true
+    },
+    {
+      "screen": "patient-finance",
+      "width": 1440,
+      "height": 900,
+      "scrollWidth": 1440,
+      "pass": true
+    },
+    {
+      "screen": "workspace",
+      "width": 1440,
+      "height": 900,
+      "scrollWidth": 1440,
+      "pass": true
+    },
+    {
+      "screen": "dashboard",
+      "width": 1280,
+      "height": 720,
+      "scrollWidth": 1280,
+      "pass": true
+    },
+    {
+      "screen": "today",
+      "width": 1280,
+      "height": 720,
+      "scrollWidth": 1280,
+      "pass": true
+    },
+    {
+      "screen": "crm",
+      "width": 1280,
+      "height": 720,
+      "scrollWidth": 1280,
+      "pass": true
+    },
+    {
+      "screen": "patient-crm",
+      "width": 1280,
+      "height": 720,
+      "scrollWidth": 1280,
+      "pass": true
+    },
+    {
+      "screen": "patient-history",
+      "width": 1280,
+      "height": 720,
+      "scrollWidth": 1280,
+      "pass": true
+    },
+    {
+      "screen": "patient-finance",
+      "width": 1280,
+      "height": 720,
+      "scrollWidth": 1280,
+      "pass": true
+    },
+    {
+      "screen": "workspace",
+      "width": 1280,
+      "height": 720,
+      "scrollWidth": 1280,
+      "pass": true
+    },
+    {
+      "screen": "dashboard",
+      "width": 1024,
+      "height": 768,
+      "scrollWidth": 1024,
+      "pass": true
+    },
+    {
+      "screen": "today",
+      "width": 1024,
+      "height": 768,
+      "scrollWidth": 1024,
+      "pass": true
+    },
+    {
+      "screen": "crm",
+      "width": 1024,
+      "height": 768,
+      "scrollWidth": 1024,
+      "pass": true
+    },
+    {
+      "screen": "patient-crm",
+      "width": 1024,
+      "height": 768,
+      "scrollWidth": 1024,
+      "pass": true
+    },
+    {
+      "screen": "patient-history",
+      "width": 1024,
+      "height": 768,
+      "scrollWidth": 1024,
+      "pass": true
+    },
+    {
+      "screen": "patient-finance",
+      "width": 1024,
+      "height": 768,
+      "scrollWidth": 1024,
+      "pass": true
+    },
+    {
+      "screen": "workspace",
+      "width": 1024,
+      "height": 768,
+      "scrollWidth": 1024,
+      "pass": true
+    },
+    {
+      "screen": "dashboard",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "pass": true
+    },
+    {
+      "screen": "today",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "pass": true
+    },
+    {
+      "screen": "crm",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "pass": true
+    },
+    {
+      "screen": "patient-crm",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "pass": true
+    },
+    {
+      "screen": "patient-history",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "pass": true
+    },
+    {
+      "screen": "patient-finance",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "pass": true
+    },
+    {
+      "screen": "workspace",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "screenshots": [
+    "01-manager-dashboard.png",
+    "02-reception.png",
+    "03-care-queue.png",
+    "04-patient-crm.png",
+    "05-care-workspace.png",
+    "06-crm-timeline.png",
+    "07-crm-booking-prefill.png",
+    "08-manager-after-booking.png",
+    "09-mobile-after-booking.png",
+    "10-mobile-approved-order.png",
+    "11-d3-clinical-inbox.png",
+    "queue-1920.png",
+    "queue-1440.png",
+    "queue-1280.png",
+    "queue-1024.png",
+    "queue-390.png",
+    "workspace-390.png",
+    "12-reception-200-row-load.png",
+    "13-cskh-account.png",
+    "14-doctor-account.png",
+    "15-accountant-account.png"
+  ]
+}

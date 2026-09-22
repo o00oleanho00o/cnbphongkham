@@ -1,0 +1,726 @@
+{
+  "at": "2026-09-22T07:06:39.173Z",
+  "errors": [],
+  "screens": [
+    {
+      "name": "dashboard",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "today",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "schedule",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "patients",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "followups",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "studio",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "resources",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "services",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "cashier",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "ask",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "guide",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "patient-overview",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "patient-consult",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "patient-plan",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "patient-session",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "patient-photos",
+      "width": 1920,
+      "height": 1020,
+      "pageWidth": 1920,
+      "contentWidth": 1688,
+      "contentRight": 1920,
+      "pass": true
+    },
+    {
+      "name": "dashboard",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "today",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "schedule",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "patients",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "followups",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "studio",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "resources",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "services",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "cashier",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "ask",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "guide",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "patient-overview",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "patient-consult",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "patient-plan",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "patient-session",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "patient-photos",
+      "width": 1440,
+      "height": 900,
+      "pageWidth": 1440,
+      "contentWidth": 1208,
+      "contentRight": 1440,
+      "pass": true
+    },
+    {
+      "name": "dashboard",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "today",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "schedule",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "patients",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "followups",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "studio",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "resources",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "services",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "cashier",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "ask",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "guide",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "patient-overview",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "patient-consult",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "patient-plan",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "patient-session",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "patient-photos",
+      "width": 1280,
+      "height": 720,
+      "pageWidth": 1280,
+      "contentWidth": 1048,
+      "contentRight": 1280,
+      "pass": true
+    },
+    {
+      "name": "dashboard",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "today",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "schedule",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "patients",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "followups",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "studio",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "resources",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "services",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "cashier",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "ask",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "guide",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "patient-overview",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "patient-consult",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "patient-plan",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "patient-session",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "patient-photos",
+      "width": 1024,
+      "height": 768,
+      "pageWidth": 1024,
+      "contentWidth": 820,
+      "contentRight": 1024,
+      "pass": true
+    },
+    {
+      "name": "dashboard",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "today",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "schedule",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "patients",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "followups",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "studio",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "resources",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "services",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "cashier",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "ask",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "guide",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "patient-overview",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "patient-consult",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "patient-plan",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "patient-session",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    },
+    {
+      "name": "patient-photos",
+      "width": 390,
+      "height": 844,
+      "pageWidth": 390,
+      "contentWidth": 390,
+      "contentRight": 390,
+      "pass": true
+    }
+  ]
+}

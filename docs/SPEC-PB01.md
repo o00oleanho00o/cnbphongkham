@@ -1,6 +1,27 @@
 # Pema Digital Clinic — Software Specification PB01
 
+## Acceptance CRM01
+
+- AC-CRM09: chuyển tài khoản CSKH → không có tổng quan toàn phòng khám/thu ngân/duyệt lâm sàng; bác sĩ → lịch/hồ sơ phụ trách và doanh số cá nhân; kế toán → thu ngân; chủ → toàn cảnh. Chặn lệnh clinical/thu tiền/cấu hình/duyệt đơn trái vai trong lớp command demo. Dữ liệu vẫn trong browser, không tuyên bố bảo mật hoặc cách ly tenant.
+
+- AC-CRM01: reset → hàng đợi theo 10 nhóm rule, 46 hồ sơ, cùng clock/cùng kết quả; rerun không trùng task.
+- AC-CRM02: outcome + ghi chú + owner + bước tiếp → activity/timeline, task resolved hoặc rescheduled; lỗi lưu rollback.
+- AC-CRM03: đồng ý đặt lịch → form prefill đúng người → validator bác sĩ/phòng/patient → một transaction lưu lịch và đóng task; lỗi/hủy form giữ task mở.
+- AC-CRM04: expected visit có ngày/lý do/nguồn; ngày quá hạn tính theo demo clock, cập nhật khi đặt/dời/hủy lịch và hoàn tất session.
+- AC-CRM05/06: còn buổi và >45 ngày chưa điều trị; no-show/hủy >24h chưa hẹn lại → task duy nhất theo source event.
+- AC-CRM07: dashboard tính từ state, drilldown work queue; contact rate có mẫu số, booking và quay lại thực tế tách biệt.
+- AC-CRM08: check-in → tư vấn/chẩn đoán có bác sĩ ghi → dịch vụ/session → đơn nháp/duyệt → thanh toán → expected visit → Patient Mobile liên thông.
+- NFR: bảng phân trang/cuộn riêng, sticky header, tìm kiếm/bộ lọc; kiểm 200 dòng và 5 viewport chuẩn; không gửi Zalo/SMS/cuộc gọi thật. CRM ghi actor/id/source/date và giữ consent/approval/payment semantics.
+
 Phạm vi là vertical slice Clinic Web ↔ Patient Mobile cho prototype và kế hoạch pilot.
+
+## Acceptance cho native template (22/09/2026)
+
+- Flutter widget tree chạy trên browser để duyệt, cùng asset/font/token nhận diện web.
+- Chủ Clinic có 5 mục; bác sĩ/CSKH/kế toán có 2 mục công việc/hồ sơ; Care có 4 mục; Patient 360 mở màn con, back navigation và safe-area.
+- Catalog 115 dòng, thiếu loại chặn duyệt; đơn nháp ẩn ở Care; chỉnh nháp thay thế cùng đơn, không cộng thành đơn mới. Flutter chưa có entity hóa đơn/ledger riêng.
+- Luồng gửi cập nhật → phản hồi và thu tiền mẫu có thay đổi trạng thái. Camera/PDF/AI/backend ghi rõ chưa tích hợp.
+- Kiểm tra layout 360/390/430/768 logical pixels và widget exceptions; đây chưa phải nghiệm thu thiết bị thật.
 
 ## Vai trò và use case
 
@@ -46,6 +67,10 @@ Phạm vi là vertical slice Clinic Web ↔ Patient Mobile cho prototype và k�
 - FR-14: Chỉ bác sĩ duyệt; approved lưu reviewer/time/version và hiển thị trên mobile.
 - FR-15: Draft, rejected hoặc revoked không hiển thị như hướng dẫn đang dùng trên mobile.
 - FR-16: AI brief/clinical note có source event/record, nhãn mô phỏng và trạng thái cần bác sĩ review; không chẩn đoán.
+- FR-27: Catalog Excel giữ mã, tên, đơn vị, loại, giá sau thuế và số dòng nguồn. Thuốc → PRESCRIPTION; loại khác có giá trị → CONSULTATION; loại trống → UNRESOLVED.
+- FR-28: Đơn nhiều dòng lưu snapshot, số lượng nguyên 1–9999, cách dùng, ghi chú, bác sĩ và chẩn đoán/nội dung tư vấn. Đổi loại hoặc Không in cần lý do; Không in vẫn tính hóa đơn.
+- FR-29: Nháp có thể sửa trước khi thu tiền; version cũ bị từ chối. Duyệt cần bác sĩ phụ trách, cách dùng cho từng dòng được in, nội dung tư vấn và không còn UNRESOLVED. Đơn duyệt không sửa tại chỗ; không tự coi là đã cấp thuốc.
+- FR-30: Preview nhận diện tên người bệnh, in riêng/tất cả A5 dọc đen trắng, không bỏ dòng hoặc cắt hướng dẫn dài. Phiếu tư vấn dùng “sản phẩm”, “phiếu này”, “Bác sĩ tư vấn”. Mobile chỉ chiếu đơn approved, tách hai nhóm, ẩn NONE.
 
 ### Follow-up, media và consent
 
@@ -98,6 +123,14 @@ Phạm vi là vertical slice Clinic Web ↔ Patient Mobile cho prototype và k�
 - Given bác sĩ approve, when người bệnh tải lại mobile cùng origin, then approved hiển thị tên thuốc, cách dùng, tần suất, thời gian và reviewer/time.
 - Given user không phải bác sĩ, when cố approve, then bị từ chối và status giữ nguyên.
 
+### AC-03b Excel → đơn hỗn hợp → tách phiếu
+
+- Given workbook hiện tại có 115 sản phẩm, when tái tạo catalog, then có 30 thuốc, 78 sản phẩm tư vấn và 7 dòng cần phân loại; JS và JSON khớp workbook.
+- Given một đơn gồm thuốc, mỹ phẩm, TPCN và dòng thiếu loại, when lưu nháp, then đủ mọi dòng, có hóa đơn liên kết nhưng chưa in/phát hành mobile. Dòng thiếu loại chặn duyệt.
+- Given bác sĩ nhập hướng dẫn và phân loại có lý do, when duyệt, then hai nhóm xuất hiện trên app và nút in được mở. Reload không mất quantity, note hoặc giá snapshot.
+- Given 5 sản phẩm tư vấn với hướng dẫn ngắn, when xuất PDF, then cả 5 và footer nằm trên một A5. Hướng dẫn dài/nhiều sản phẩm tự chảy qua trang, giữ đủ chữ và footer.
+- Given lỗi ghi localStorage, số lượng sai, patient không tồn tại hoặc bản sửa stale, when lưu, then từ chối và không tạo đơn/hóa đơn dở dang.
+
 ### AC-04 Deposit → invoice → later payment
 
 - Given invoice 10.000.000 và deposit 3.000.000, when thu thêm 7.000.000, then invoice paid, ledger giữ hai entry riêng, paid không vượt total.
@@ -113,7 +146,26 @@ Phạm vi là vertical slice Clinic Web ↔ Patient Mobile cho prototype và k�
 
 - Given server local đang chạy, when chạy linked, desktop, operations, smoke và data audit, then exit code 0, không page error và artifacts được ghi.
 
-## Ngoại lệ
+## Contract riêng cho Flutter template — 22/09/2026
+
+Các AC-01…06 của prototype web không phải tuyên bố Flutter đã đạt. Contract hiện tại:
+
+| ID | Hành vi hiện có và acceptance để duyệt | Giới hạn |
+|---|---|---|
+| NT-01 | Header đổi Clinic/Care; Clinic có 5 tab, Care có 4 tab; màn con có Back | Bộ chuyển không gian, không xác thực vai trò |
+| NT-02 | Chọn hồ sơ → Patient 360 → mở tác vụ riêng; đơn/tiền thu lọc theo P001…P036 | Các state lâm sàng/lịch/follow-up chưa tách từng bệnh nhân |
+| NT-03 | Tìm mã/tên → thêm hàng → chỉnh số lượng/cách dùng → lưu nháp → mở sửa → duyệt cùng ID | Search chữ thường, không bỏ dấu, chỉ hiện 20 kết quả; không có route NONE/lý do override |
+| NT-04 | Đơn rỗng, thiếu cách dùng hoặc UNRESOLVED không được duyệt; Care chỉ hiển thị approved | Không reviewer/time/audit hay server authorization |
+| NT-05 | Phiếu chia thuốc/tư vấn từ các đơn duyệt của bệnh nhân đang chọn | Card tổng hợp, không xuất A5/PDF theo từng đơn |
+| NT-06 | Đặt/dời ngày giờ, slot 09:00 bị khóa; hoàn tất buổi cần ghi chú và checkbox | Slot khóa cứng; đếm buổi tối đa 5, không session record/follow-up tự sinh |
+| NT-07 | Gửi text; chọn ảnh mẫu thì bắt buộc consent; Clinic ghi phản hồi | Chỉ lưu text và một phản hồi chung, không ảnh/file/task lifecycle |
+| NT-08 | Thu ngân xác nhận thu toàn bộ phần còn lại bằng tiền mặt trong phiên | Tổng lấy cả đơn nháp; không ledger, cọc, thu từng phần, hoàn tiền |
+
+NFR vòng duyệt: dùng font/logo local, SafeArea và scroll; kiểm tra 360/390/430/768 logical pixels. Test hiện tại đều cao 844; các khung review 360×800 và 768×1024 là lựa chọn duyệt thủ công, chưa có bằng chứng test tương ứng. Reload xóa state là hành vi hiện tại, không phải cam kết lưu dữ liệu. Bàn phím, text scaling, screen reader, gesture và thiết bị thật là acceptance còn mở.
+
+Ma trận trạng thái và checklist kiểm tra: [22_NATIVE_PARITY_AND_VALIDATION](22_NATIVE_PARITY_AND_VALIDATION.md).
+
+## Ngoại lệ của prototype web
 
 - Xung đột lịch: hiển thị resource/time conflict, giữ form để sửa, không tạo appointment.
 - Thiếu dữ liệu khi complete session: chỉ rõ trường, giữ draft và không tăng tiến độ.
@@ -125,3 +177,15 @@ Phạm vi là vertical slice Clinic Web ↔ Patient Mobile cho prototype và k�
 ## Dữ liệu tổng hợp và kiểm thử
 
 Mọi test dùng 36 patient giả lập P001… và dữ liệu tiếng Việt tạo deterministically. Không đưa tên, số điện thoại hoặc ảnh người thật vào fixture/screenshot.
+
+
+## Acceptance cho gói design skill
+
+Skill cần có entrypoint tên pema-design, reference cho visual/flow/layout/delivery, đường dẫn tương đối không phụ thuộc máy, prompt mẫu và hướng dẫn chia sẻ. Nội dung phân biệt thiết kế mục tiêu với capability thực tế, giữ baseline Pema và cập nhật 0→1→2→3. Kiểm cấu trúc/frontmatter, link và đối chiếu source; không yêu cầu thay hành vi app.
+
+
+## Mobile và Clinic shell — 22/09/2026
+
+AC-MOB01: URL finance cũ giữ staff/patient, chỉ một sidebar và một bộ chọn nhân viên; CSKH không vào tài chính, bác sĩ xem cá nhân. AC-MOB02: đủ 10 tài khoản nhóm chăm sóc, rule thực tế sinh task tương ứng; reload không trùng/ghi đè. AC-MOB03: mobile đổi người không đổi selected nhân viên, không lộ activity nội bộ; CTA mở đúng lịch/hướng dẫn/gửi cập nhật. AC-MOB04: Flutter owner/doctor/care/accountant có điểm vào riêng; Care chọn tài khoản, note/lịch/follow-up/cart không lẫn bệnh nhân. Kiểm regression API, CRM, web và Flutter.
+
+UI review CSKH mobile: trạng thái Cần làm / Đã liên hệ / Chờ bác sĩ ở đầu màn; tìm kiếm và nút Lọc mở sheet 10 nhóm, không trải 10 chip lên home. Card đầu nằm trong 440px đầu ở viewport 360; lọc/trạng thái phải thực sự đổi danh sách. Widget `care_workspace.dart` dùng cùng PatientState, ghi chú nội bộ giữ tách Care.

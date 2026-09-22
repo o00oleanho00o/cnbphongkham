@@ -1,0 +1,29 @@
+{
+  "checks": [
+    {
+      "width": 360,
+      "height": 800,
+      "firstPatientY": 334
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "firstPatientY": 334
+    },
+    {
+      "width": 430,
+      "height": 932,
+      "firstPatientY": 334
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "firstPatientY": 334
+    },
+    {
+      "flow": "Lọc D3 → mở đúng P038 → ghi kết quả → Đã liên hệ",
+      "pass": true
+    }
+  ],
+  "errors": []
+}

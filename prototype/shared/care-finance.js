@@ -77,8 +77,8 @@
         const next = p.completed;
         if (primary.sessionsUsed !== next) { primary.sessionsUsed = next; changed = true; }
         if (!Array.isArray(primary.invoiceIds)) { primary.invoiceIds = p.invoices.map(i => i.id); changed = true; }
-        const received = p.invoices.reduce((sum, i) => sum + (i.paid ? i.amount : Number(i.received) || 0), 0);
-        if (primary.received !== received) { primary.received = received; changed = true; }
+        // Payments are projected from the invoice ledger in planPanel. Writing a
+        // cached total here lets a reading mobile tab overwrite newer orders.
       }
       if (!Array.isArray(p.prescriptions)) { p.prescriptions = []; const rx = makePrescription(p, index); if (rx) p.prescriptions.push(rx); changed = true; }
       if (!Array.isArray(p.depositLedger)) { p.depositLedger = index === 0 ? [{id:'DEP-P001', received:4000000, applied:4000000, date:'2026-08-22', method:'Chuyển khoản'}] : []; changed = true; }
@@ -87,8 +87,8 @@
     return changed;
   }
 
-  function patient() { return P.patient(); }
-  function activePage() { return document.body.dataset.page === 'patient'; }
+  function patient() { return P.patient(document.querySelector('.mobile-app')?.dataset.patientId); }
+  function activePage() { return document.body.dataset.page === 'patient' && !['crm','history'].includes(document.body.dataset.patientTab); }
   function emitRender() { window.dispatchEvent(new Event('pema-external')); }
   function totalReceived(p) { return p.invoices.reduce((sum, i) => sum + (i.paid ? i.amount : Number(i.received) || 0), 0); }
   function planPanel(p) {
@@ -117,9 +117,10 @@
     const wrap = document.createElement('div');
     wrap.dataset.linkedWorkspace = 'true';
     wrap.className = 'linked-workspace';
-    wrap.innerHTML = planPanel(p) + prescriptionPanel(p);
+    wrap.innerHTML = planPanel(p) + prescriptionPanel(p) + window.PemaOrderUI.history(p);
     if (anchor && anchor.parentElement === content) content.insertBefore(wrap, anchor.nextSibling);
     else content.appendChild(wrap);
+    window.PemaStaff?.apply();
   }
 
   function injectMobile() {
@@ -131,10 +132,13 @@
     if (!['docs', 'profile', 'home'].includes(app.dataset.currentScreen)) return;
     const p = patient();
     const approved = (p.prescriptions || []).filter(rx => rx.status === 'approved');
+    const orders = (p.quickOrders || []).filter(o => o.status === 'approved');
+    const approvedCount = approved.length + orders.length;
     const section = document.createElement('section');
     section.className = 'mobile-card mobile-linked-prescriptions';
     section.dataset.mobileLinked = 'true';
-    section.innerHTML = `<div class="mobile-card-head"><h3>Đơn thuốc đã duyệt</h3><span class="chip chip-soft">${approved.length ? approved.length + ' đơn' : 'Chưa có'}</span></div>${approved.map(rx => `<div class="mobile-rx"><strong>${esc(rx.id)} · ${P.date(rx.prescribedAt)}</strong><small>Bác sĩ ${esc(rx.reviewedBy || rx.doctor)}</small>${(rx.items || []).map(i => `<p><b>${esc(i.name)}</b><br>${esc(i.dose)} · ${esc(i.frequency)} · ${esc(i.duration)}</p>`).join('')}</div>`).join('') || '<p class="subtitle">Đơn thuốc sẽ xuất hiện sau khi bác sĩ duyệt.</p>'}`;
+    section.innerHTML = `<div class="mobile-card-head"><h3>Đơn & phiếu đã duyệt</h3><span class="chip chip-soft">${approvedCount ? approvedCount + ' đơn' : 'Chưa có'}</span></div>${approved.map(rx => `<div class="mobile-rx"><strong>${esc(rx.id)} · ${P.date(rx.prescribedAt)}</strong><small>Bác sĩ ${esc(rx.reviewedBy || rx.doctor)}</small>${(rx.items || []).map(i => `<p><b>${esc(i.name)}</b><br>${esc(i.dose)} · ${esc(i.frequency)} · ${esc(i.duration)}</p>`).join('')}</div>`).join('') || (orders.length ? '' : '<p class="subtitle">Đơn và phiếu sẽ xuất hiện sau khi bác sĩ duyệt.</p>')}`;
+    section.innerHTML += orders.map(o => `<div class="mobile-rx" data-mobile-order="${esc(o.id)}"><strong>${P.date(o.createdAt)}</strong><small>Đã duyệt bởi ${esc(o.reviewedBy)} · ${P.date(o.reviewedAt)}</small>${['PRESCRIPTION','CONSULTATION'].map(route => { const items=o.items.filter(x=>x.route===route); return items.length ? `<div class="order-mobile-group"><h4>${route==='PRESCRIPTION'?'Đơn thuốc':'Phiếu tư vấn'}</h4>${items.map(x=>`<p><b>${esc(x.name)}</b> · ${x.quantity} ${esc(x.unit)}<br>${esc(x.usage)}${x.note?'<br>'+esc(x.note):''}</p>`).join('')}</div>` : ''; }).join('')}${o.note?`<p>${esc(o.note)}</p>`:''}</div>`).join('');
     content.appendChild(section);
   }
 
@@ -145,15 +149,13 @@
   }
   function closeModal() { document.querySelectorAll('.linked-modal').forEach(x => x.remove()); }
   function addService() {
+    if(window.PemaStaff&&!PemaStaff.can('billing'))return;
     const options = serviceCatalog().map(s => `<option value="${esc(s.id)}" data-price="${s.price}">${esc(s.name)} · ${money(s.price)}/buổi</option>`).join('');
     modal(`<div class="modal-head"><div><div class="eyebrow">Patient 360 · dịch vụ</div><h2>Thêm dịch vụ vào liệu trình</h2></div><button class="modal-close">×</button></div><form id="linked-service-form"><div class="field"><label>Dịch vụ</label><select id="linked-service">${options}</select></div><div class="two-col-form"><div class="field"><label>Số buổi</label><input id="linked-sessions" type="number" min="1" max="20" value="3"></div><div class="field"><label>Giảm giá (₫)</label><input id="linked-discount" type="number" min="0" step="10000" value="0"></div></div><p class="notice">Giá đã chốt được lưu trên hồ sơ; thay đổi danh mục sau này không làm đổi liệu trình đã đăng ký.</p><button class="btn btn-primary" type="submit">Lưu dịch vụ</button></form>`);
     document.querySelector('#linked-service-form').onsubmit = e => { e.preventDefault(); const p = patient(), sel = document.querySelector('#linked-service'), s = serviceCatalog().find(x => x.id === sel.value); const total = Number(document.querySelector('#linked-sessions').value), discount = Number(document.querySelector('#linked-discount').value) || 0; if (!s || !Number.isInteger(total) || total < 1 || total > 20 || discount < 0 || discount > s.price * total) return; p.servicePlans = p.servicePlans || []; const planId = uid('LP-'), invoiceId = uid('HD-'); const agreedPrice = s.price * total - discount; p.invoices = p.invoices || []; p.invoices.unshift({id:invoiceId, date:DAY, label:`${s.name} · ${total} buổi`, amount:agreedPrice, received:0, paid:false, planId}); p.servicePlans.push({id:planId, serviceId:s.id, serviceName:s.name, sessionsTotal:total, sessionsUsed:0, listPrice:s.price*total, discount, agreedPrice, depositApplied:0, status:'active', startedAt:DAY, doctor:p.doctor, invoiceIds:[invoiceId]}); P.addEvent(p,'plan','Đã thêm dịch vụ vào liệu trình',`${s.name} · ${total} buổi · hóa đơn ${invoiceId}`,'Lễ tân'); P.log('Thêm dịch vụ vào liệu trình',p.id); P.save(); closeModal(); emitRender(); };
   }
-  function addPrescription() {
-    modal(`<div class="modal-head"><div><div class="eyebrow">Patient 360 · đơn thuốc</div><h2>Tạo đơn thuốc nháp</h2></div><button class="modal-close">×</button></div><form id="linked-rx-form"><div class="field"><label>Tên thuốc / sản phẩm</label><input id="linked-rx-name" value="Cicaderm Cream 40ml"></div><div class="two-col-form"><div class="field"><label>Cách dùng</label><input id="linked-rx-dose" value="Bôi lớp mỏng vùng cần chăm sóc"></div><div class="field"><label>Tần suất</label><input id="linked-rx-frequency" value="Sáng và tối"></div></div><div class="field"><label>Thời gian</label><input id="linked-rx-duration" value="14 ngày"></div><p class="notice">Đơn mới luôn ở trạng thái nháp. Người bệnh chưa nhìn thấy cho đến khi bác sĩ duyệt.</p><button class="btn btn-primary" type="submit">Lưu bản nháp</button></form>`);
-    document.querySelector('#linked-rx-form').onsubmit = e => { e.preventDefault(); const p = patient(); p.prescriptions = p.prescriptions || []; p.prescriptions.unshift({id:uid('DT-'), status:'draft', prescribedAt:DAY, doctor:p.doctor, indication:'Cần bác sĩ kiểm tra trước khi gửi', items:[{name:document.querySelector('#linked-rx-name').value.trim(), dose:document.querySelector('#linked-rx-dose').value.trim(), frequency:document.querySelector('#linked-rx-frequency').value.trim(), duration:document.querySelector('#linked-rx-duration').value.trim(), quantity:1, unit:''}]}); P.log('Tạo đơn thuốc nháp',p.id); P.save(); closeModal(); emitRender(); };
-  }
-  function approvePrescription(id) { const p = patient(), rx = (p.prescriptions || []).find(x => x.id === id); if (!rx) return; rx.status = 'approved'; rx.reviewedBy = p.doctor; rx.reviewedAt = DAY; rx.indication = rx.indication === 'Cần bác sĩ kiểm tra trước khi gửi' ? 'Đã được bác sĩ kiểm tra và duyệt' : rx.indication; P.addEvent(p,'prescription','Bác sĩ đã duyệt đơn thuốc',rx.items.map(x=>x.name).join(', '),p.doctor); P.log('Duyệt đơn thuốc',p.id); P.save(); emitRender(); }
+  function addPrescription() { window.PemaOpsUI.openQuickOrder(patient().id); }
+  function approvePrescription(id) { if(window.PemaStaff&&!PemaStaff.can('clinical'))return; const p = patient(), rx = (p.prescriptions || []).find(x => x.id === id); if (!rx) return; rx.status = 'approved'; rx.reviewedBy = p.doctor; rx.reviewedAt = DAY; rx.indication = rx.indication === 'Cần bác sĩ kiểm tra trước khi gửi' ? 'Đã được bác sĩ kiểm tra và duyệt' : rx.indication; P.addEvent(p,'prescription','Bác sĩ đã duyệt đơn thuốc',rx.items.map(x=>x.name).join(', '),p.doctor); P.log('Duyệt đơn thuốc',p.id); P.save(); emitRender(); }
   function handle(e) {
     const btn = e.target.closest('[data-care-action],[data-care-nav]');
     if (!btn) return;

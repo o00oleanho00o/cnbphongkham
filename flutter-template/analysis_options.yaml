@@ -1,0 +1,8 @@
+analyzer:
+  errors:
+    unused_import: warning
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**

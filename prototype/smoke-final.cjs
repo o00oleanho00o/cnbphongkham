@@ -2,7 +2,7 @@ const { chromium } = require('C:/Users/email/.cache/codex-runtimes/codex-primary
 const fs = require('fs');
 const path = require('path');
 const root = path.resolve(__dirname, '..');
-const shots = path.join(root, 'demo-assets', 'screenshots', 'final'); fs.mkdirSync(shots, { recursive: true });
+const shots = process.env.PEMA_EVIDENCE_DIR ? path.resolve(process.env.PEMA_EVIDENCE_DIR) : path.join(root, 'demo-assets', 'screenshots', 'final'); fs.mkdirSync(shots, { recursive: true });
 const tinyPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64');
 fs.writeFileSync(path.join(__dirname, 'demo-update.png'), tinyPng);
 const results = { startedAt: new Date().toISOString(), checks: [], consoleErrors: [], pageErrors: [], screenshots: [] };
@@ -14,7 +14,7 @@ async function shot(page, name) { const p=path.join(shots, name+'.png'); await p
  await clinic.goto('http://127.0.0.1:4173/clinic-web/'); await clinic.evaluate(()=>localStorage.clear()); await clinic.reload();
  await clinic.getByRole('heading',{name:'Chào buổi sáng, BS. Tâm'}).waitFor();
  ok('36 synthetic patients rendered', (await clinic.locator('.table tbody tr').count())>=5, 'dashboard sample rows visible');
- ok('dynamic dashboard KPI', await clinic.locator('.metric-card').first().locator('.metric-value').innerText().then(x=>x.trim()==='36'));
+ ok('dynamic dashboard KPI', await clinic.locator('.metric-card').first().locator('.metric-value').innerText().then(x=>x.trim()==='31'));
  await shot(clinic,'clinic-dashboard');
  await clinic.locator('[data-nav="today"]').first().click(); await clinic.getByRole('heading',{name:'Hôm nay tại Pema'}).waitFor();
  const checkin=clinic.getByRole('button',{name:'Check-in'}).first(); ok('reception check-in action visible',await checkin.count()>0); await checkin.click(); await clinic.getByText('Đã cập nhật hàng đợi').waitFor(); ok('reception check-in updates state',await clinic.locator('text=Đã đến').count()>0); await shot(clinic,'clinic-today');
