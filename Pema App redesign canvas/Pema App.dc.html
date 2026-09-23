@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0&display=block">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#E6EDF3;-webkit-font-smoothing:antialiased}
+a{color:#0B4F94;text-decoration:none}
+a:hover{color:#083A6E}
+</style>
+</helmet>
+<div style="padding:64px 72px 120px;font-family:'Be Vietnam Pro',system-ui,sans-serif;color:#17324D;display:flex;flex-direction:column;gap:72px;min-width:max-content">
+
+  <header style="display:flex;flex-direction:column;gap:12px;max-width:1100px">
+    <div style="font-size:13px;font-weight:600;letter-spacing:.12em;color:#0B4F94">PEMA · NATIVE REVIEW</div>
+    <h1 style="margin:0;font-size:44px;line-height:1.15;font-weight:700;color:#083A6E;letter-spacing:-0.02em">Base design dựng lại từ Flutter template</h1>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#5D7184;max-width:860px;text-wrap:pretty">Mỗi màn hình bám theo lib/main.dart, care_workspace.dart, finance.dart và widgets/pema_bottom_nav.dart. Dữ liệu người bệnh, sản phẩm và tài chính là dữ liệu mẫu vì assets/patients.json, products.json và pema-logo.png chưa có trong thư mục tải lên.</p>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:28px;max-width:2860px">
+    <div style="display:flex;align-items:baseline;gap:14px">
+      <span style="font-size:13px;font-weight:700;color:#fff;background:#083A6E;border-radius:6px;padding:3px 9px">00</span>
+      <h2 style="margin:0;font-size:28px;font-weight:700;color:#083A6E">Nền tảng</h2>
+      <span style="font-size:14px;color:#5D7184">Hằng số màu, kiểu chữ và bo góc lấy trực tiếp từ code</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:8px;width:136px"><div style="height:64px;border-radius:14px;background:#0B4F94"></div><div style="font-size:13px;font-weight:600">blue</div><div style="font-size:12px;color:#5D7184;line-height:1.4">#0B4F94 · primary, icon, nút</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;width:136px"><div style="height:64px;border-radius:14px;background:#083A6E"></div><div style="font-size:13px;font-weight:600">navy</div><div style="font-size:12px;color:#5D7184;line-height:1.4">#083A6E · heading, notice, hero</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;width:136px"><div style="height:64px;border-radius:14px;background:#3CAAE5"></div><div style="font-size:13px;font-weight:600">sky</div><div style="font-size:12px;color:#5D7184;line-height:1.4">#3CAAE5 · khai báo, chưa dùng</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;width:136px"><div style="height:64px;border-radius:14px;background:#17324D"></div><div style="font-size:13px;font-weight:600">ink</div><div style="font-size:12px;color:#5D7184;line-height:1.4">#17324D · chữ chính</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;width:136px"><div style="height:64px;border-radius:14px;background:#5D7184"></div><div style="font-size:13px;font-weight:600">muted</div><div style="font-size:12px;color:#5D7184;line-height:1.4">#5D7184 · chữ phụ</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;width:136px"><div style="height:64px;border-radius:14px;background:#F4F8FB;border:1px solid #D9E5EE"></div><div style="font-size:13px;font-weight:600">paper</div><div style="font-size:12px;color:#5D7184;line-height:1.4">#F4F8FB · nền scaffold</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;width:136px"><div style="height:64px;border-radius:14px;background:#E8F4FB"></div><div style="font-size:13px;font-weight:600">tint</div><div style="font-size:12px;color:#5D7184;line-height:1.4">#E8F4FB · avatar, notice</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;width:136px"><div style="height:64px;border-radius:14px;background:#fff;border:1px solid #E3ECF3"></div><div style="font-size:13px;font-weight:600">line</div><div style="font-size:12px;color:#5D7184;line-height:1.4">#E3ECF3 · viền tile</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;width:136px"><div style="height:64px;border-radius:14px;background:#fff;border:1px solid #CADBE8"></div><div style="font-size:13px;font-weight:600">field</div><div style="font-size:12px;color:#5D7184;line-height:1.4">#CADBE8 · viền input</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;width:136px"><div style="height:64px;border-radius:14px;background:#EAF4FC;border:1px solid #D0E6F9"></div><div style="font-size:13px;font-weight:600">nav capsule</div><div style="font-size:12px;color:#5D7184;line-height:1.4">#EAF4FC / #D0E6F9</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px;width:136px"><div style="height:64px;border-radius:14px;background:linear-gradient(135deg,#083A6E,#0B4F94)"></div><div style="font-size:13px;font-weight:600">hero</div><div style="font-size:12px;color:#5D7184;line-height:1.4">navy → blue, chữ #B8DEF5 / #D7E9F5</div></div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:20px">
+      <div style="background:#fff;border-radius:18px;border:1px solid #E3ECF3;padding:24px;display:flex;flex-direction:column;gap:14px;width:520px">
+        <div style="font-size:12px;font-weight:600;letter-spacing:.08em;color:#5D7184">KIỂU CHỮ · BE VIETNAM PRO</div>
+        <div style="display:flex;align-items:baseline;gap:16px"><span style="width:120px;font-size:12px;color:#5D7184">heading 25/700</span><span style="font-size:25px;font-weight:700;color:#083A6E">Chào buổi sáng</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px"><span style="width:120px;font-size:12px;color:#5D7184">hero 24/600</span><span style="font-size:24px;font-weight:600;color:#0B4F94">Một ngày chăm sóc</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px"><span style="width:120px;font-size:12px;color:#5D7184">section 17/700</span><span style="font-size:17px;font-weight:700">Bắt đầu nhanh</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px"><span style="width:120px;font-size:12px;color:#5D7184">tile 14/600</span><span style="font-size:14px;font-weight:600">Theo dõi sau điều trị</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px"><span style="width:120px;font-size:12px;color:#5D7184">body 14/400 · 1.5</span><span style="font-size:14px">Nội dung mặc định</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px"><span style="width:120px;font-size:12px;color:#5D7184">sub 12–13</span><span style="font-size:12px;color:#5D7184">Xem ảnh và phản hồi từ người bệnh</span></div>
+        <div style="display:flex;align-items:baseline;gap:16px"><span style="width:120px;font-size:12px;color:#5D7184">overline 10 · +1.4</span><span style="font-size:10px;letter-spacing:1.4px;color:#0B4F94">PEMA • CHĂM SÓC LIÊN TỤC</span></div>
+      </div>
+      <div style="background:#fff;border-radius:18px;border:1px solid #E3ECF3;padding:24px;display:flex;flex-direction:column;gap:14px;width:520px">
+        <div style="font-size:12px;font-weight:600;letter-spacing:.08em;color:#5D7184">BO GÓC</div>
+        <div style="display:flex;flex-wrap:wrap;gap:14px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div style="width:64px;height:48px;border:1.5px solid #0B4F94;border-radius:12px"></div><span style="font-size:12px;color:#5D7184">12 · week, card</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div style="width:64px;height:48px;border:1.5px solid #0B4F94;border-radius:14px"></div><span style="font-size:12px;color:#5D7184">14 · input, nút</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div style="width:64px;height:48px;border:1.5px solid #0B4F94;border-radius:16px"></div><span style="font-size:12px;color:#5D7184">16 · bucket</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div style="width:64px;height:48px;border:1.5px solid #0B4F94;border-radius:18px"></div><span style="font-size:12px;color:#5D7184">18 · tile</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div style="width:64px;height:48px;border:1.5px solid #0B4F94;border-radius:20px 20px 0 0"></div><span style="font-size:12px;color:#5D7184">20 · nav</span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div style="width:64px;height:48px;border:1.5px solid #0B4F94;border-radius:24px"></div><span style="font-size:12px;color:#5D7184">24 · hero</span></div>
+        </div>
+        <div style="font-size:12px;color:#5D7184;line-height:1.5;text-wrap:pretty">Icon: Material Icons (outlined) theo Flutter, hiển thị bằng Material Symbols. Nút chính cao 52, input 56, tile 72–76.</div>
+      </div>
+    </div>
+  </section>
+
+  <sc-for list="{{ groups }}" as="g" hint-placeholder-count="2">
+    <section id="{{ g.code }}" style="display:flex;flex-direction:column;gap:28px">
+      <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+        <span style="font-size:13px;font-weight:700;color:#fff;background:#083A6E;border-radius:6px;padding:3px 9px">{{ g.code }}</span>
+        <h2 style="margin:0;font-size:28px;font-weight:700;color:#083A6E">{{ g.title }}</h2>
+        <span style="font-size:14px;color:#5D7184">{{ g.sub }}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:56px 40px;max-width:2860px">
+        <sc-for list="{{ g.screens }}" as="sc" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;gap:14px;width:{{ frameW }}px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:12px;font-weight:600;color:#fff;background:#0B4F94;border-radius:6px;padding:2px 8px">{{ sc.id }}</span>
+                <span style="font-size:16px;font-weight:600;color:#17324D">{{ sc.name }}</span>
+              </div>
+              <sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+                <div style="min-height:36px;font-size:12px;color:#5D7184;line-height:1.5;text-wrap:pretty">{{ sc.note }}</div>
+              </sc-if>
+            </div>
+            <div style="padding:{{ bezelPad }}px;background:{{ bezelBg }};border-radius:{{ bezelR }}px">
+              <div id="{{ sc.id }}" data-screen-label="{{ sc.id }} · {{ sc.name }}" style="width:390px;height:844px;position:relative;overflow:hidden;border-radius:{{ screenR }}px;background:#F4F8FB;display:flex;flex-direction:column;box-shadow:{{ screenShadow }};color:#17324D;font-size:14px;line-height:1.5">
+
+                <div style="height:47px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 26px 0 34px;font-size:15px;font-weight:600;color:#17324D">
+                  <span>9:41</span>
+                  <div style="display:flex;align-items:center;gap:5px">
+                    <span style="font-family:'Material Symbols Outlined';font-size:17px;line-height:1;width:17px;height:17px;overflow:hidden;display:inline-block;white-space:nowrap;font-variation-settings:'FILL' 1">signal_cellular_alt</span>
+                    <span style="font-family:'Material Symbols Outlined';font-size:17px;line-height:1;width:17px;height:17px;overflow:hidden;display:inline-block;white-space:nowrap;font-variation-settings:'FILL' 1">wifi</span>
+                    <span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:1;width:20px;height:20px;overflow:hidden;display:inline-block;white-space:nowrap;transform:rotate(90deg);font-variation-settings:'FILL' 1">battery_full</span>
+                  </div>
+                </div>
+
+                <sc-if value="{{ sc.appMain }}">
+                  <div style="height:64px;flex-shrink:0;display:flex;align-items:center;padding:0 4px 0 16px">
+                    <div style="flex:1;display:flex;align-items:center">
+                      <div style="width:94px;font-size:26px;font-weight:700;line-height:1;letter-spacing:-0.04em;color:#0B4F94">pema</div>
+                    </div>
+                    <sc-if value="{{ sc.bell }}">
+                      <div style="width:48px;height:48px;position:relative;display:flex;align-items:center;justify-content:center">
+                        <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#17324D">notifications</span>
+                        <span style="position:absolute;top:6px;left:26px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#BA1A1A;color:#fff;font-size:11px;font-weight:500;line-height:16px;text-align:center">{{ sc.bellCount }}</span>
+                      </div>
+                    </sc-if>
+                    <div style="height:40px;display:flex;align-items:center;gap:8px;padding:0 16px 0 12px;border-radius:9999px;color:#0B4F94;font-size:14px;font-weight:500">
+                      <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap">swap_horiz</span>
+                      <span>{{ sc.role }}</span>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ sc.appDetail }}">
+                  <div style="height:64px;flex-shrink:0;display:flex;align-items:center;padding:0 4px">
+                    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                      <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#17324D">arrow_back</span>
+                    </div>
+                    <div style="flex:1;min-width:0;padding-left:20px;font-size:{{ sc.ts }}px;font-weight:{{ sc.tw }};line-height:1.3;color:#17324D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ sc.title }}</div>
+                    <sc-if value="{{ sc.refresh }}">
+                      <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#17324D">refresh</span>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-if>
+
+                <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:{{ sc.pad }};display:flex;flex-direction:column">
+                  <sc-for list="{{ sc.blocks }}" as="b" hint-placeholder-count="5">
+
+                    <sc-if value="{{ b.heading }}">
+                      <div style="flex-shrink:0;padding-bottom:20px;display:flex;flex-direction:column;gap:6px">
+                        <div style="font-size:25px;font-weight:700;line-height:1.3;color:#083A6E">{{ b.title }}</div>
+                        <div style="font-size:13px;line-height:1.5;color:#5D7184">{{ b.sub }}</div>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.h2 }}">
+                      <div style="flex-shrink:0;padding-bottom:20px;display:flex;flex-direction:column;gap:6px">
+                        <div style="font-size:26px;font-weight:700;line-height:1.25;color:#17324D">{{ b.title }}</div>
+                        <div style="font-size:13px;line-height:1.5;color:#5D7184">{{ b.sub }}</div>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.section }}">
+                      <div style="flex-shrink:0;padding:24px 0 12px;font-size:17px;font-weight:700;line-height:1.3;color:#17324D">{{ b.title }}</div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.hero }}">
+                      <div style="flex-shrink:0;position:relative;overflow:hidden;border-radius:24px;background:linear-gradient(135deg,#083A6E,#0B4F94)">
+                        <span style="position:absolute;right:-20px;top:-22px;font-family:'Material Symbols Outlined';font-size:170px;line-height:1;width:170px;height:170px;overflow:hidden;display:inline-block;white-space:nowrap;color:rgba(255,255,255,.09)">{{ b.icon }}</span>
+                        <div style="position:relative;padding:24px;display:flex;flex-direction:column;gap:16px">
+                          <div style="font-size:10px;line-height:1.5;letter-spacing:1.4px;color:#B8DEF5">{{ b.over }}</div>
+                          <div style="font-size:24px;line-height:1.3;font-weight:600;color:#fff;white-space:pre-line">{{ b.title }}</div>
+                          <div style="font-size:12px;line-height:1.5;color:#D7E9F5">{{ b.sub }}</div>
+                        </div>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.metrics }}">
+                      <div style="flex-shrink:0;display:flex;gap:12px">
+                        <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="2">
+                          <div style="flex:1;min-width:0;padding:18px;background:#fff;border-radius:18px;display:flex;flex-direction:column">
+                            <div style="font-size:28px;font-weight:700;line-height:1.3;color:#0B4F94">{{ it.value }}</div>
+                            <div style="font-size:12px;line-height:1.5;color:#5D7184">{{ it.label }}</div>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.actions }}">
+                      <div style="flex-shrink:0;display:flex">
+                        <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="3">
+                          <div style="flex:1;min-width:0;padding:4px">
+                            <div style="padding:16px 4px;background:#fff;border-radius:18px;display:flex;flex-direction:column;align-items:center;gap:9px">
+                              <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#0B4F94">{{ it.icon }}</span>
+                              <div style="font-size:12px;font-weight:600;line-height:1.5;text-align:center">{{ it.label }}</div>
+                            </div>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.tile }}">
+                      <div style="flex-shrink:0;margin-bottom:10px;background:#fff;border:1px solid #E3ECF3;border-radius:18px;padding:9px 16px;min-height:74px;display:flex;align-items:center;gap:16px">
+                        <div style="width:40px;height:40px;border-radius:20px;background:#E8F4FB;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                          <span style="font-family:'Material Symbols Outlined';font-size:21px;line-height:1;width:21px;height:21px;overflow:hidden;display:inline-block;white-space:nowrap;color:#0B4F94">{{ b.icon }}</span>
+                        </div>
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+                          <div style="font-size:14px;font-weight:600;line-height:1.5;color:#1A1C20">{{ b.title }}</div>
+                          <div style="font-size:12px;line-height:1.43;color:#5D7184;white-space:pre-line">{{ b.sub }}</div>
+                        </div>
+                        <sc-if value="{{ b.chevron }}">
+                          <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap;flex-shrink:0;color:#5D7184">chevron_right</span>
+                        </sc-if>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.notice }}">
+                      <div style="flex-shrink:0;margin-bottom:16px;padding:16px;background:#E8F4FB;border-radius:14px;font-size:12px;line-height:1.5;color:#083A6E;white-space:pre-line">{{ b.text }}</div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.primary }}">
+                      <div style="flex-shrink:0;padding:8px 0">
+                        <sc-if value="{{ b.on }}">
+                          <div style="height:52px;border-radius:14px;background:#0B4F94;color:#fff;font-size:14px;font-weight:500;letter-spacing:.1px;display:flex;align-items:center;justify-content:center;padding:0 24px;text-align:center">{{ b.text }}</div>
+                        </sc-if>
+                        <sc-if value="{{ b.off }}">
+                          <div style="height:52px;border-radius:14px;background:rgba(26,28,32,.12);color:rgba(26,28,32,.38);font-size:14px;font-weight:500;letter-spacing:.1px;display:flex;align-items:center;justify-content:center;padding:0 24px;text-align:center">{{ b.text }}</div>
+                        </sc-if>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.outlined }}">
+                      <div style="flex-shrink:0;height:48px;background:#fff;border:1px solid #CADBE8;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;color:#0B4F94;font-size:14px;font-weight:500">
+                        <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap">{{ b.icon }}</span>
+                        <span>{{ b.text }}</span>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.textBtn }}">
+                      <div style="flex-shrink:0;height:40px;border-radius:9999px;display:flex;align-items:center;justify-content:center;gap:8px;color:#0B4F94;font-size:14px;font-weight:500">
+                        <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap">{{ b.icon }}</span>
+                        <span>{{ b.text }}</span>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.input }}">
+                      <div style="flex-shrink:0;position:relative;background:#fff;border:1px solid #CADBE8;border-radius:14px;padding:15px 16px 15px {{ b.pl }}px;display:flex;align-items:flex-start;gap:12px">
+                        <sc-if value="{{ b.hasPrefix }}">
+                          <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;flex-shrink:0;color:#43474E">{{ b.prefix }}</span>
+                        </sc-if>
+                        <div style="flex:1;min-width:0;min-height:{{ b.lh }}px;font-size:16px;line-height:24px">
+                          <sc-if value="{{ b.showValue }}"><span style="color:#1A1C20;white-space:pre-line">{{ b.value }}</span></sc-if>
+                          <sc-if value="{{ b.showInside }}"><span style="color:#43474E;white-space:pre-line">{{ b.inside }}</span></sc-if>
+                        </div>
+                        <sc-if value="{{ b.float }}">
+                          <div style="position:absolute;left:12px;top:-9px;padding:0 4px;background:#fff;font-size:12px;line-height:16px;color:#43474E">{{ b.label }}</div>
+                        </sc-if>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.dd }}">
+                      <div style="flex-shrink:0;position:relative;height:56px;background:#fff;border:1px solid #CADBE8;border-radius:14px;display:flex;align-items:center;gap:12px;padding:0 12px 0 16px">
+                        <div style="flex:1;min-width:0;font-size:16px;color:#1A1C20;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.value }}</div>
+                        <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;flex-shrink:0;color:#43474E;font-variation-settings:'FILL' 1">arrow_drop_down</span>
+                        <sc-if value="{{ b.float }}">
+                          <div style="position:absolute;left:12px;top:-9px;padding:0 4px;background:#fff;font-size:12px;line-height:16px;color:#43474E">{{ b.label }}</div>
+                        </sc-if>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.week }}">
+                      <div style="flex-shrink:0;padding-bottom:20px;display:flex">
+                        <sc-for list="{{ b.days }}" as="it" hint-placeholder-count="7">
+                          <div style="flex:1;min-width:0;margin:0 2px">
+                            <sc-if value="{{ it.on }}">
+                              <div style="padding:12px 0;border-radius:12px;background:#0B4F94;display:flex;flex-direction:column;align-items:center;gap:8px">
+                                <div style="font-size:10px;line-height:1.5;color:#fff">{{ it.d }}</div>
+                                <div style="font-weight:700;color:#fff">{{ it.n }}</div>
+                              </div>
+                            </sc-if>
+                            <sc-if value="{{ it.off }}">
+                              <div style="padding:12px 0;border-radius:12px;background:#fff;display:flex;flex-direction:column;align-items:center;gap:8px">
+                                <div style="font-size:10px;line-height:1.5;color:#5D7184">{{ it.d }}</div>
+                                <div style="font-weight:700;color:#17324D">{{ it.n }}</div>
+                              </div>
+                            </sc-if>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.chips }}">
+                      <div style="flex-shrink:0;display:flex;flex-wrap:wrap;column-gap:8px">
+                        <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="5">
+                          <div style="height:48px;display:flex;align-items:center">
+                            <sc-if value="{{ it.sel }}">
+                              <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 16px 0 8px;border-radius:8px;background:#D5E3F8;color:#0E1D2F;font-size:14px;font-weight:500">
+                                <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap">check</span>
+                                <span>{{ it.label }}</span>
+                              </div>
+                            </sc-if>
+                            <sc-if value="{{ it.norm }}">
+                              <div style="height:32px;display:flex;align-items:center;padding:0 16px;border-radius:8px;border:1px solid #C3C6CF;color:#43474E;font-size:14px;font-weight:500">{{ it.label }}</div>
+                            </sc-if>
+                            <sc-if value="{{ it.dis }}">
+                              <div style="height:32px;display:flex;align-items:center;padding:0 16px;border-radius:8px;border:1px solid rgba(26,28,32,.12);color:rgba(26,28,32,.38);font-size:14px;font-weight:500">{{ it.label }}</div>
+                            </sc-if>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.check }}">
+                      <div style="flex-shrink:0;min-height:56px;display:flex;align-items:center;gap:16px;padding:0 24px 0 16px">
+                        <div style="flex:1;min-width:0;font-size:16px;line-height:24px;color:#1A1C20">{{ b.label }}</div>
+                        <sc-if value="{{ b.on }}">
+                          <div style="width:18px;height:18px;border-radius:2px;background:#0B4F94;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;width:16px;height:16px;overflow:hidden;display:inline-block;white-space:nowrap;color:#fff;font-variation-settings:'wght' 700">check</span>
+                          </div>
+                        </sc-if>
+                        <sc-if value="{{ b.off }}">
+                          <div style="width:18px;height:18px;border-radius:2px;border:2px solid #43474E;flex-shrink:0"></div>
+                        </sc-if>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.photos }}">
+                      <div style="flex-shrink:0;display:flex">
+                        <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="2">
+                          <div style="flex:1;min-width:0;margin:4px;height:220px;border-radius:18px;background:#E8F4FB;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                            <span style="font-family:'Material Symbols Outlined';font-size:76px;line-height:1;width:76px;height:76px;overflow:hidden;display:inline-block;white-space:nowrap;color:#80B3D0">face</span>
+                            <div>{{ it.label }}</div>
+                            <div style="font-size:11px">Minh họa</div>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.order }}">
+                      <div style="flex-shrink:0;margin:4px;background:#fff;border-radius:12px;padding:16px;display:flex;flex-direction:column">
+                        <div style="font-weight:600">{{ b.name }}</div>
+                        <div style="height:48px;display:flex;align-items:center">
+                          <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#43474E">do_not_disturb_on</span></div>
+                          <span>{{ b.qty }}</span>
+                          <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#43474E">add_circle</span></div>
+                          <div style="flex:1"></div>
+                          <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#43474E">delete</span></div>
+                        </div>
+                        <div style="height:56px;background:#fff;border:1px solid #CADBE8;border-radius:14px;display:flex;align-items:center;gap:12px;padding:0 12px 0 16px">
+                          <div style="flex:1;min-width:0;font-size:16px;color:#1A1C20">{{ b.route }}</div>
+                          <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#43474E;font-variation-settings:'FILL' 1">arrow_drop_down</span>
+                        </div>
+                        <div style="height:12px"></div>
+                        <div style="position:relative;min-height:56px;background:#fff;border:1px solid #CADBE8;border-radius:14px;padding:15px 16px;font-size:16px;line-height:24px">
+                          <sc-if value="{{ b.hasUsage }}">
+                            <span style="color:#1A1C20">{{ b.usage }}</span>
+                            <div style="position:absolute;left:12px;top:-9px;padding:0 4px;background:#fff;font-size:12px;line-height:16px;color:#43474E">Cách dùng / hướng dẫn</div>
+                          </sc-if>
+                          <sc-if value="{{ b.noUsage }}"><span style="color:#43474E">Cách dùng / hướng dẫn</span></sc-if>
+                        </div>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.a5 }}">
+                      <div style="flex-shrink:0;margin:4px;background:#fff;border-radius:12px;padding:24px;display:flex;flex-direction:column">
+                        <div style="width:90px;font-size:24px;font-weight:700;line-height:1;letter-spacing:-0.04em;color:#0B4F94">pema</div>
+                        <div style="padding:24px 0 12px;font-size:17px;font-weight:700;line-height:1.3">{{ b.kind }}</div>
+                        <div>{{ b.name }}</div>
+                        <div style="height:16px;display:flex;align-items:center"><div style="flex:1;height:1px;background:#C3C6CF"></div></div>
+                        <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="1">
+                          <div style="padding:8px 0;white-space:pre-line">{{ it.text }}</div>
+                        </sc-for>
+                        <div style="height:16px;display:flex;align-items:center"><div style="flex:1;height:1px;background:#C3C6CF"></div></div>
+                        <div style="white-space:pre-line">{{ b.footer }}</div>
+                        <div style="height:32px"></div>
+                        <div>BS. Tâm</div>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.txt }}">
+                      <div style="flex-shrink:0;font-size:{{ b.s }}px;color:{{ b.c }};font-weight:{{ b.w }};line-height:1.5;white-space:{{ b.ws }};overflow:hidden;text-overflow:ellipsis">{{ b.text }}</div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.sp }}">
+                      <div style="flex-shrink:0;height:{{ b.h }}px"></div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.buckets }}">
+                      <div style="flex-shrink:0;display:flex;gap:8px">
+                        <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="3">
+                          <sc-if value="{{ it.on }}">
+                            <div style="flex:1;min-width:0;padding:12px;border-radius:16px;background:#0B4F94;display:flex;flex-direction:column;gap:7px">
+                              <div style="font-size:25px;line-height:1.1;font-weight:700;color:#fff">{{ it.count }}</div>
+                              <div style="font-size:11px;font-weight:500;line-height:1.4;color:#fff">{{ it.label }}</div>
+                            </div>
+                          </sc-if>
+                          <sc-if value="{{ it.off }}">
+                            <div style="flex:1;min-width:0;padding:12px;border-radius:16px;background:#fff;display:flex;flex-direction:column;gap:7px">
+                              <div style="font-size:25px;line-height:1.1;font-weight:700;color:#17324D">{{ it.count }}</div>
+                              <div style="font-size:11px;font-weight:500;line-height:1.4;color:#5D7184">{{ it.label }}</div>
+                            </div>
+                          </sc-if>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.careSearch }}">
+                      <div style="flex-shrink:0;display:flex;gap:10px">
+                        <div style="flex:1;min-width:0;height:48px;background:#fff;border:1px solid #CADBE8;border-radius:14px;display:flex;align-items:center;gap:14px;padding:0 12px">
+                          <span style="font-family:'Material Symbols Outlined';font-size:21px;line-height:1;width:21px;height:21px;overflow:hidden;display:inline-block;white-space:nowrap;color:#43474E">search</span>
+                          <span style="font-size:13px;color:#43474E">Tìm tên hoặc mã hồ sơ</span>
+                        </div>
+                        <div style="width:48px;height:48px;flex-shrink:0;position:relative;border-radius:14px;border:1px solid #E0EAF2;background:{{ b.bg }};display:flex;align-items:center;justify-content:center">
+                          <span style="font-family:'Material Symbols Outlined';font-size:22px;line-height:1;width:22px;height:22px;overflow:hidden;display:inline-block;white-space:nowrap;color:#0B4F94">tune</span>
+                          <sc-if value="{{ b.active }}">
+                            <span style="position:absolute;top:11px;right:11px;width:6px;height:6px;border-radius:3px;background:#BA1A1A"></span>
+                          </sc-if>
+                        </div>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.inputChip }}">
+                      <div style="flex-shrink:0;padding-top:10px;display:flex">
+                        <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 8px 0 12px;border:1px solid #C3C6CF;border-radius:8px;font-size:12px;font-weight:500;color:#43474E">
+                          <span>{{ b.label }}</span>
+                          <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap">close</span>
+                        </div>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.listHead }}">
+                      <div style="flex-shrink:0;padding:20px 0 12px;display:flex;align-items:center;gap:12px">
+                        <div style="flex:1;font-size:14px;font-weight:600;color:#17324D">{{ b.title }}</div>
+                        <div style="font-size:12px;color:#5D7184">{{ b.count }}</div>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.careRow }}">
+                      <div style="flex-shrink:0;margin-bottom:10px;background:#fff;border:1px solid #E0EAF2;border-radius:18px;padding:14px;display:flex;align-items:flex-start;gap:12px">
+                        <div style="width:40px;height:40px;border-radius:20px;background:#EAF3FA;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:600;color:#0B4F94">{{ b.initials }}</div>
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+                          <div style="font-size:14px;font-weight:600;line-height:1.4;color:#17324D">{{ b.name }}</div>
+                          <div style="margin-top:5px;font-size:12px;line-height:1.4;color:#0B4F94">{{ b.group }}</div>
+                          <div style="margin-top:7px;font-size:11px;line-height:1.4;color:#5D7184">{{ b.meta }}</div>
+                        </div>
+                        <span style="margin-top:4px;font-family:'Material Symbols Outlined';font-size:20px;line-height:1;width:20px;height:20px;overflow:hidden;display:inline-block;white-space:nowrap;flex-shrink:0;color:#5D7184">chevron_right</span>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.empty }}">
+                      <div style="flex-shrink:0;padding:28px;background:#fff;border-radius:18px;display:flex;flex-direction:column;align-items:center;gap:12px">
+                        <span style="font-family:'Material Symbols Outlined';font-size:28px;line-height:1;width:28px;height:28px;overflow:hidden;display:inline-block;white-space:nowrap;color:#0B4F94">task_alt</span>
+                        <div style="text-align:center;color:#5D7184">{{ b.text }}</div>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.period }}">
+                      <div style="flex-shrink:0;display:flex;flex-wrap:wrap;align-items:center;column-gap:12px">
+                        <div style="height:40px;display:flex;align-items:center;gap:8px;padding:0 16px 0 12px;border-radius:9999px;color:#0B4F94;font-size:14px;font-weight:500">
+                          <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap">calendar_month</span>
+                          <span>{{ b.month }}</span>
+                        </div>
+                        <sc-if value="{{ b.hasStatus }}"><span style="font-size:12px">{{ b.status }}</span></sc-if>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.finHero }}">
+                      <div style="flex-shrink:0;margin-bottom:18px;padding:22px;border-radius:24px;background:linear-gradient(90deg,#083A6E,#0B4F94);display:flex;flex-direction:column">
+                        <div style="font-size:11px;line-height:1.5;color:#B8DEF5">{{ b.over }}</div>
+                        <div style="height:12px"></div>
+                        <div style="font-size:28px;font-weight:700;line-height:1.3;color:#fff">{{ b.value }}</div>
+                        <div style="height:8px"></div>
+                        <div style="color:rgba(255,255,255,.7)">{{ b.sub }}</div>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.ftitle }}">
+                      <div style="flex-shrink:0;padding-bottom:12px;font-size:18px;font-weight:700;line-height:1.5">{{ b.text }}</div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.fcard }}">
+                      <div style="flex-shrink:0;margin-bottom:16px;padding:18px;background:#fff;border-radius:18px;border:1px solid #D9E5EE;display:flex;flex-direction:column;align-items:flex-start">
+                        <sc-for list="{{ b.items }}" as="ch" hint-placeholder-count="3">
+                          <sc-if value="{{ ch.ftitle }}"><div style="padding-bottom:12px;font-size:18px;font-weight:700;line-height:1.5">{{ ch.text }}</div></sc-if>
+                          <sc-if value="{{ ch.fline }}">
+                            <div style="align-self:stretch;padding:8px 0;display:flex;gap:12px">
+                              <div style="flex:1;min-width:0">{{ ch.label }}</div>
+                              <div style="font-weight:600">{{ ch.value }}</div>
+                            </div>
+                          </sc-if>
+                          <sc-if value="{{ ch.txt }}"><div style="max-width:100%;font-size:{{ ch.s }}px;color:{{ ch.c }};font-weight:{{ ch.w }};line-height:1.5;white-space:{{ ch.ws }};overflow:hidden;text-overflow:ellipsis">{{ ch.text }}</div></sc-if>
+                          <sc-if value="{{ ch.btns }}">
+                            <div style="display:flex;flex-wrap:wrap;gap:8px">
+                              <sc-for list="{{ ch.items }}" as="bt" hint-placeholder-count="2">
+                                <div style="height:40px;padding:0 12px;border-radius:9999px;display:flex;align-items:center;color:#0B4F94;font-size:14px;font-weight:500">{{ bt.text }}</div>
+                              </sc-for>
+                            </div>
+                          </sc-if>
+                          <sc-if value="{{ ch.filled }}"><div style="height:52px;padding:0 24px;border-radius:14px;background:#0B4F94;display:flex;align-items:center;color:#fff;font-size:14px;font-weight:500">{{ ch.text }}</div></sc-if>
+                          <sc-if value="{{ ch.iconTitle }}">
+                            <div style="align-self:stretch;display:flex;align-items:center;gap:12px">
+                              <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#0B4F94">payments</span>
+                              <div style="flex:1;min-width:0;font-weight:700">{{ ch.text }}</div>
+                            </div>
+                          </sc-if>
+                          <sc-if value="{{ ch.sp }}"><div style="height:{{ ch.h }}px"></div></sc-if>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.pill }}">
+                      <div style="flex-shrink:0;height:40px;border:1px solid #74777F;border-radius:9999px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 24px;color:#0B4F94;font-size:14px;font-weight:500">
+                        <sc-if value="{{ b.hasIcon }}"><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap">{{ b.icon }}</span></sc-if>
+                        <span>{{ b.text }}</span>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.mcard }}">
+                      <div style="flex-shrink:0;margin:4px;border-radius:12px;background:#F2F3FA;box-shadow:0 1px 2px rgba(0,0,0,.3),0 1px 3px 1px rgba(0,0,0,.15);min-height:72px;display:flex;align-items:center;gap:16px;padding:8px 24px 8px 16px">
+                        <div style="flex:1;min-width:0">
+                          <div style="font-size:16px;line-height:24px;color:#1A1C20">{{ b.title }}</div>
+                          <div style="font-size:14px;line-height:20px;color:#43474E">{{ b.sub }}</div>
+                        </div>
+                        <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;flex-shrink:0;color:#43474E">edit</span>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ b.dateBtn }}">
+                      <div style="flex-shrink:0;height:40px;border-radius:9999px;display:flex;align-items:center;justify-content:center;gap:8px;color:#0B4F94;font-size:14px;font-weight:500">
+                        <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap;font-variation-settings:'FILL' 1">calendar_month</span>
+                        <span>{{ b.text }}</span>
+                      </div>
+                    </sc-if>
+
+                  </sc-for>
+                </div>
+
+                <sc-if value="{{ sc.hasNav }}">
+                  <div style="flex-shrink:0;position:relative;z-index:1;background:#fff;border-radius:20px 20px 0 0;border-top:1px solid #E2E8F0;box-shadow:0 -6px 20px rgba(11,79,148,.055),0 -1px 6px rgba(0,0,0,.02)">
+                    <div style="display:flex;height:66px">
+                      <sc-for list="{{ sc.nav }}" as="nv" hint-placeholder-count="4">
+                        <div style="flex:1;min-width:0;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+                          <sc-if value="{{ nv.active }}">
+                            <div style="position:absolute;top:0;left:50%;margin-left:-18px;width:36px;height:3px;border-radius:2px;background:#0B4F94;box-shadow:0 1px 4px rgba(11,79,148,.33)"></div>
+                            <div style="position:relative;width:64px;height:32px;border-radius:16px;background:#EAF4FC;border:1px solid #D0E6F9;display:flex;align-items:center;justify-content:center">
+                              <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#0B4F94;transform:scale(1.12);font-variation-settings:'FILL' 1">{{ nv.activeIcon }}</span>
+                              <sc-if value="{{ nv.hasBadge }}"><span style="position:absolute;top:0;left:34px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#BA1A1A;color:#fff;font-size:11px;font-weight:500;line-height:16px;text-align:center">{{ nv.badge }}</span></sc-if>
+                            </div>
+                            <div style="font-size:11.5px;font-weight:600;letter-spacing:-0.1px;line-height:16px;white-space:nowrap;color:#0B4F94">{{ nv.label }}</div>
+                          </sc-if>
+                          <sc-if value="{{ nv.idle }}">
+                            <div style="position:relative;width:64px;height:32px;display:flex;align-items:center;justify-content:center">
+                              <span style="font-family:'Material Symbols Outlined';font-size:23px;line-height:1;width:23px;height:23px;overflow:hidden;display:inline-block;white-space:nowrap;color:#64748B">{{ nv.icon }}</span>
+                              <sc-if value="{{ nv.hasBadge }}"><span style="position:absolute;top:0;left:34px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#BA1A1A;color:#fff;font-size:11px;font-weight:500;line-height:16px;text-align:center">{{ nv.badge }}</span></sc-if>
+                            </div>
+                            <div style="font-size:11.5px;font-weight:500;letter-spacing:-0.1px;line-height:16px;white-space:nowrap;color:#64748B">{{ nv.label }}</div>
+                          </sc-if>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div style="height:34px"></div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ sc.hasFab }}">
+                  <div style="position:absolute;right:16px;bottom:117px;z-index:3;height:56px;padding:0 20px 0 16px;border-radius:16px;background:#D4E3FF;color:#001C3A;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.3),0 4px 8px 3px rgba(0,0,0,.15)">
+                    <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap">add</span>
+                    <span>{{ sc.fab.label }}</span>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ sc.hasSnack }}">
+                  <div style="position:absolute;left:0;right:0;bottom:101px;z-index:4;min-height:48px;padding:0 8px 0 16px;background:#2F3036;color:#F0F0F7;display:flex;align-items:center;gap:8px;font-size:14px;box-shadow:0 3px 5px rgba(0,0,0,.2)">
+                    <div style="flex:1;min-width:0">{{ sc.snack.text }}</div>
+                    <div style="height:40px;padding:0 12px;display:flex;align-items:center;color:#A6C8FF;font-weight:500">{{ sc.snack.action }}</div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ sc.hasSheet }}">
+                  <div style="position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.54)"></div>
+                  <div style="position:absolute;left:0;right:0;bottom:0;z-index:6;max-height:85%;background:#fff;border-radius:28px 28px 0 0;display:flex;flex-direction:column;overflow:hidden">
+                    <div style="height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><div style="width:32px;height:4px;border-radius:2px;background:rgba(67,71,78,.4)"></div></div>
+                    <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:{{ sc.sheet.pad }};display:flex;flex-direction:column;align-items:{{ sc.sheet.align }}">
+                      <div style="display:flex;flex-direction:column;gap:{{ sc.sheet.g1 }}px">
+                        <div style="font-size:{{ sc.sheet.ts }}px;font-weight:700;line-height:1.3;color:{{ sc.sheet.tc }}">{{ sc.sheet.title }}</div>
+                        <div style="font-size:{{ sc.sheet.ss }}px;line-height:1.5;color:{{ sc.sheet.sc }}">{{ sc.sheet.sub }}</div>
+                      </div>
+                      <div style="height:{{ sc.sheet.g2 }}px;flex-shrink:0"></div>
+                      <sc-for list="{{ sc.sheet.rows }}" as="r" hint-placeholder-count="3">
+                        <div style="align-self:stretch;min-height:56px;display:flex;align-items:center;gap:16px;padding:{{ sc.sheet.rowPad }}">
+                          <span style="font-family:'Material Symbols Outlined';font-size:{{ r.is }}px;line-height:1;width:{{ r.is }}px;height:{{ r.is }}px;overflow:hidden;display:inline-block;white-space:nowrap;flex-shrink:0;color:{{ r.ic }}">{{ r.icon }}</span>
+                          <div style="flex:1;min-width:0;font-size:{{ sc.sheet.rs }}px;line-height:1.5;color:{{ r.tc }}">{{ r.text }}</div>
+                          <sc-if value="{{ r.hasTrail }}"><span style="font-size:14px;color:#5D7184">{{ r.trail }}</span></sc-if>
+                        </div>
+                      </sc-for>
+                      <sc-if value="{{ sc.sheet.hasNotice }}">
+                        <div style="margin-bottom:16px;padding:16px;background:#E8F4FB;border-radius:14px;font-size:12px;line-height:1.5;color:#083A6E">{{ sc.sheet.notice }}</div>
+                      </sc-if>
+                      <sc-if value="{{ sc.sheet.hasPrimary }}">
+                        <div style="padding:8px 0">
+                          <div style="height:52px;border-radius:14px;background:#0B4F94;color:#fff;font-size:14px;font-weight:500;display:flex;align-items:center;justify-content:center;padding:0 24px">{{ sc.sheet.primary }}</div>
+                        </div>
+                      </sc-if>
+                    </div>
+                    <div style="height:34px;flex-shrink:0"></div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ sc.hasDialog }}">
+                  <div style="position:absolute;inset:0;z-index:7;background:rgba(0,0,0,.54);display:flex;align-items:center;justify-content:center;padding:0 40px">
+                    <div style="width:100%;background:#E8EAF1;border-radius:28px;padding:24px;display:flex;flex-direction:column;gap:16px">
+                      <div style="font-size:24px;line-height:32px;color:#1A1C20">{{ sc.dialog.title }}</div>
+                      <div style="height:56px;background:#fff;border:1.5px solid #0B4F94;border-radius:14px;display:flex;align-items:center;padding:0 16px;font-size:16px;color:#1A1C20">
+                        <span>{{ sc.dialog.value }}</span>
+                        <span style="width:2px;height:20px;margin-left:1px;background:#0B4F94"></span>
+                      </div>
+                      <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;padding-top:8px">
+                        <div style="height:40px;padding:0 12px;border-radius:9999px;display:flex;align-items:center;color:#0B4F94;font-size:14px;font-weight:500">Quay lại</div>
+                        <div style="height:52px;padding:0 24px;border-radius:14px;background:#0B4F94;display:flex;align-items:center;color:#fff;font-size:14px;font-weight:500">Xác nhận</div>
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <div style="position:absolute;left:50%;bottom:8px;margin-left:-67px;width:134px;height:5px;border-radius:3px;background:#17324D;z-index:9"></div>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Canvas&quot;},&quot;bezel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Canvas&quot;},&quot;group&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Tất cả&quot;,&quot;options&quot;:[&quot;Tất cả&quot;,&quot;A · Clinic&quot;,&quot;B · Bác sĩ&quot;,&quot;C · CSKH&quot;,&quot;D · Kế toán&quot;,&quot;E · Pema Care&quot;,&quot;F · Nghiệp vụ Clinic&quot;,&quot;G · Nghiệp vụ Care&quot;,&quot;H · Tài chính&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Canvas&quot;}}">
+class Component extends DCLogic {
+  build() {
+    const money = v => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ₫';
+    const GROUPS = { d1: 'Sau thủ thuật · D+1', d3: 'Ảnh tiến triển · D+3', d7: 'Bác sĩ review · D+7', due: 'Đến hạn tái khám', overdue: 'Quá hạn tái khám', no_show: 'Vắng hẹn', abandoned: 'Tiếp tục liệu trình', dormant90: 'Kết nối lại · 90 ngày', dormant180: 'Kết nối lại · 180 ngày', birthday: 'Sinh nhật trong tuần' };
+    const people = [
+      ['P001', 'Nguyễn Thu Hà', 'BS. Tâm', 'd1'], ['P002', 'Trần Minh Anh', 'BS. Mai', 'd3'],
+      ['P003', 'Lê Hoàng Yến', 'BS. Tâm', 'd7'], ['P004', 'Phạm Quốc Bảo', 'BS. An', 'due'],
+      ['P005', 'Võ Ngọc Trâm', 'BS. Tâm', 'overdue'], ['P006', 'Đặng Gia Linh', 'BS. Mai', 'no_show'],
+      ['P007', 'Bùi Khánh Vy', 'BS. Lan', 'abandoned'], ['P008', 'Hồ Thanh Tùng', 'BS. Tâm', 'dormant90'],
+      ['P009', 'Ngô Mỹ Duyên', 'BS. An', 'dormant180'], ['P010', 'Đỗ Phương Thảo', 'BS. Mai', 'birthday'],
+      ['P011', 'Lý Tuấn Kiệt', 'BS. Tâm', ''], ['P012', 'Mai Hải Yến', 'BS. Lan', '']
+    ].map(([id, name, doctor, group]) => ({ id, name, doctor, group }));
+    const pt = people[0];
+    const UPDATE = 'Da hơi đỏ nhẹ vùng má sau một ngày, không ngứa.';
+    const RESPONSE = 'Đỏ nhẹ sau thủ thuật là bình thường. Tiếp tục dưỡng ẩm, tránh nắng và báo lại nếu rát tăng.';
+    const MUTED = '#5D7184';
+
+    const h = (title, sub) => ({ heading: true, title, sub });
+    const h2 = (title, sub) => ({ h2: true, title, sub });
+    const s = title => ({ section: true, title });
+    const hero = (title, sub, icon) => ({ hero: true, over: 'PEMA • CHĂM SÓC LIÊN TỤC', title, sub, icon });
+    const t = (title, sub, icon, tap = true) => ({ tile: true, title, sub, icon, chevron: tap });
+    const n = text => ({ notice: true, text });
+    const p = (text, on = true) => ({ primary: true, text, on, off: !on });
+    const m = (...xs) => ({ metrics: true, items: xs.map(([value, label]) => ({ value, label })) });
+    const a = (...xs) => ({ actions: true, items: xs.map(([label, icon]) => ({ label, icon })) });
+    const sp = hh => ({ sp: true, h: hh });
+    const txt = (text, o = {}) => ({ txt: true, text, s: o.s ?? 14, c: o.c ?? '#17324D', w: o.w ?? 400, ws: o.ws ?? 'pre-line' });
+    const input = o => { const v = o.value || ''; return { input: true, hasPrefix: !!o.prefix, prefix: o.prefix || '', pl: o.prefix ? 12 : 16, showValue: !!v, value: v, showInside: !v, inside: o.label || o.hint || '', float: !!v && !!o.label, label: o.label || '', lh: (o.lines || 1) * 24 }; };
+    const search = (hint = 'Tìm tên hoặc mã hồ sơ') => input({ prefix: 'search', hint });
+    const dd = (value, label = '') => ({ dd: true, value, label, float: !!label });
+    const week = () => ({ week: true, days: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((d, i) => ({ d, n: String(21 + i), on: i === 1, off: i !== 1 })) });
+    const chips = xs => ({ chips: true, items: xs.map(([label, st]) => ({ label, sel: st === 'sel', norm: st === '', dis: st === 'dis' })) });
+    const check = (label, on) => ({ check: true, label, on, off: !on });
+    const outlined = (text, icon) => ({ outlined: true, text, icon });
+    const textBtn = (text, icon) => ({ textBtn: true, text, icon });
+    const photos = () => ({ photos: true, items: [{ label: 'Trước' }, { label: 'Gần nhất' }] });
+    const order = (name, qty, route, usage) => ({ order: true, name, qty, route, usage, hasUsage: !!usage, noUsage: !usage });
+    const a5 = (kind, items, footer) => ({ a5: true, kind, name: pt.name, items: items.map(text => ({ text })), footer });
+    const initials = nm => nm.split(' ').slice(1).slice(-2).map(v => v[0]).join('');
+    const buckets = on => ({ buckets: true, items: [['Chưa liên hệ', 'Cần làm', '8'], ['Đã liên hệ', 'Đã liên hệ', '1'], ['Chờ bác sĩ', 'Chờ bác sĩ', '1']].map(([k, label, count]) => ({ label, count, on: k === on, off: k !== on })) });
+    const careSearch = active => ({ careSearch: true, active, bg: active ? '#E2F1FB' : '#fff' });
+    const chip = label => ({ inputChip: true, label });
+    const listHead = (title, count) => ({ listHead: true, title, count });
+    const careRow = x => ({ careRow: true, initials: initials(x.name), name: x.name, group: GROUPS[x.group], meta: `${x.id} · ${x.doctor}` });
+    const empty = text => ({ empty: true, text });
+    const finHero = (over, value, sub = 'Ghi nhận theo lượt hoàn tất') => ({ finHero: true, over, value, sub });
+    const ftitle = text => ({ ftitle: true, text });
+    const pill = (text, icon = '') => ({ pill: true, text, icon, hasIcon: !!icon });
+    const mcard = (title, sub) => ({ mcard: true, title, sub });
+    const dateBtn = text => ({ dateBtn: true, text });
+    const fc = (...items) => ({ fcard: true, items });
+    const fl = (label, value) => ({ fline: true, label, value });
+    const fb = (...xs) => ({ btns: true, items: xs.map(text => ({ text })) });
+    const ff = text => ({ filled: true, text });
+    const fi = text => ({ iconTitle: true, text });
+
+    const NAV = {
+      owner: [['Hôm nay', 'space_dashboard'], ['Lịch hẹn', 'calendar_month'], ['Hồ sơ', 'group'], ['Theo dõi', 'inbox'], ['Thêm', 'grid_view']],
+      staff: [['Công việc', 'work'], ['Hồ sơ mẫu', 'group']],
+      care: [['Trang chủ', 'home'], ['Hành trình', 'route', 'alt_route'], ['Tin nhắn', 'chat_bubble'], ['Hồ sơ', 'person']],
+      fin: [['Tổng quan', 'dashboard'], ['Thủ thuật', 'receipt_long'], ['Thu tiền', 'payments'], ['Thông báo', 'notifications', null, '1']]
+    };
+    const nav = (k, i, badges = true) => NAV[k].map(([label, icon, act, badge], j) => ({ label, icon, activeIcon: act || icon, active: j === i, idle: j !== i, hasBadge: badges && !!badge, badge: badge || '' }));
+
+    const base = { appMain: false, appDetail: false, hasNav: false, nav: [], bell: false, bellCount: '1', role: '', title: '', ts: 18, tw: 600, refresh: false, pad: '8px 20px 24px', hasFab: false, fab: { label: '' }, hasSnack: false, snack: { text: '', action: '' }, hasSheet: false, sheet: { rows: [] }, hasDialog: false, dialog: { title: '', value: '' } };
+    const home = (id, name, note, role, nk, i, blocks, o = {}) => ({ ...base, id, name, note, appMain: true, role, bell: role === 'Clinic', hasNav: true, nav: nav(nk, i), blocks, ...o });
+    const det = (id, title, note, blocks, o = {}) => ({ ...base, id, name: title, note, appDetail: true, title, pad: '20px 20px 54px', blocks, ...o });
+
+    const accounts = [['owner', 'BS. Tâm', 'Chủ phòng khám'], ['doctor', 'BS. Tâm', 'Bác sĩ điều trị'], ['doctor', 'BS. Mai', 'Bác sĩ điều trị'], ['care', 'Mai Anh', 'CSKH'], ['accountant', 'Kế toán', 'Đối soát & thu ngân'], ['patient', 'Người bệnh', 'Pema Care']];
+    const accountSheet = { pad: '20px', align: 'stretch', title: 'Duyệt không gian làm việc', ts: 20, tc: '#17324D', g1: 0, sub: 'Dữ liệu mẫu • chưa phải đăng nhập/phân quyền', ss: 14, sc: '#17324D', g2: 0, rowPad: '0 24px 0 16px', rs: 16, hasNotice: false, notice: '', hasPrimary: false, primary: '',
+      rows: accounts.map(([k, nm, r]) => ({ icon: k === 'patient' ? 'favorite' : 'badge', is: 24, ic: '#43474E', text: `${nm} · ${r}`, tc: '#1A1C20', hasTrail: false, trail: '' })) };
+    const groupSheet = { pad: '0 20px 16px', align: 'stretch', title: 'Nhóm chăm sóc', ts: 22, tc: '#17324D', g1: 4, sub: 'Chọn nhóm để tập trung xử lý', ss: 14, sc: MUTED, g2: 16, rowPad: '0 8px', rs: 14, hasNotice: false, notice: '', hasPrimary: false, primary: '',
+      rows: [['all', 'Tất cả nhóm', '10'], ...Object.entries(GROUPS).map(([k, v]) => [k, v, '1'])].map(([k, v, c]) => ({ icon: k === 'all' ? 'radio_button_checked' : 'radio_button_unchecked', is: 21, ic: k === 'all' ? '#0B4F94' : MUTED, text: v, tc: k === 'all' ? '#0B4F94' : '#17324D', hasTrail: true, trail: c })) };
+    const paySheet = { pad: '24px', align: 'center', title: 'Xác nhận thu tiền', ts: 25, tc: '#083A6E', g1: 6, sub: money(580000), ss: 13, sc: MUTED, g2: 20, rowPad: '0', rs: 14, rows: [], hasNotice: true, notice: 'Giao dịch mẫu · Không kết nối ngân hàng', hasPrimary: true, primary: 'Xác nhận tiền mặt' };
+
+    // A · Clinic owner
+    const ownerHome = [
+      h('Chào buổi sáng, BS. Tâm', 'Thứ Ba · 22 tháng 09, 2026'),
+      hero('Một ngày chăm sóc\ntrọn vẹn hơn.', '1 phản hồi cần theo dõi', 'wb_sunny'), sp(16),
+      m(['12', 'Lịch hôm nay'], ['03', 'Đang chờ']),
+      t('Tài chính phòng khám', 'Tháng 2026-09 · ' + money(186400000), 'account_balance_wallet'),
+      s('Bắt đầu nhanh'), a(['Lên đơn', 'note_add'], ['Đặt lịch', 'calendar_month'], ['Thu ngân', 'payments']),
+      s('Lượt khám tiếp theo'), t(pt.name, '10:30 · Chờ tiếp nhận · Tái khám', 'person'),
+      t('Theo dõi sau điều trị', 'Xem ảnh và phản hồi từ người bệnh', 'inbox')
+    ];
+    const patientTiles = list => list.map(x => t(x.name, `${x.id} · Đang điều trị`, 'person'));
+    const A = [
+      home('A1', 'Hôm nay', 'Tab 0 · heading, hero, metric, thẻ tài chính, bắt đầu nhanh, lượt khám tiếp theo', 'Clinic', 'owner', 0, ownerHome),
+      home('A2', 'Lịch hẹn', 'Tab 1 · WeekStrip + khung giờ, nút đặt/dời lịch', 'Clinic', 'owner', 1, [
+        h('Điều phối lịch', 'Thứ Ba, 22 tháng 9'), week(),
+        t('BS. Tâm · Phòng khám 01', 'Ca sáng 08:00–12:00', 'tune'),
+        t('09:00', 'Khung giờ trống', 'schedule'), t('10:30', `${pt.name} · Tái khám`, 'schedule'), t('14:00', 'Khung giờ trống', 'schedule'),
+        p('Đặt / dời lịch')]),
+      home('A3', 'Hồ sơ', 'Tab 2 · PatientSearch, mở Patient 360', 'Clinic', 'owner', 2, [
+        h('Hồ sơ người bệnh', `${people.length} hồ sơ tổng hợp · Patient 360`), search(), sp(16), ...patientTiles(people)]),
+      home('A4', 'Theo dõi', 'Tab 3 · cập nhật từ người bệnh trước khi phản hồi', 'Clinic', 'owner', 3, [
+        h('Theo dõi', 'Ưu tiên phản hồi và bàn giao'), n('1 cập nhật · 1 cần phản hồi'),
+        t(pt.name, UPDATE, 'chat_bubble'), t('Cần gọi lại', 'Hồ sơ mẫu · triệu chứng tăng', 'priority_high')]),
+      home('A5', 'Thêm', 'Tab 4 · danh sách nghiệp vụ, icon dẫn đầu là chevron như code', 'Clinic', 'owner', 4, [
+        h('Không gian làm việc', 'Nghiệp vụ theo đúng hành trình Pema'),
+        t('Tài chính & tiền thủ thuật', 'Chủ phòng khám · Kế toán · Bác sĩ', 'account_balance_wallet'),
+        ...['Lên đơn nhanh', 'Thu ngân', 'Dịch vụ', 'Bác sĩ & phòng', 'Ảnh tiến triển', 'Ask Pema', 'Hướng dẫn'].map(x => t(x, `Mở ${x.toLowerCase()}`, 'chevron_right')),
+        n('Template tương tác • dữ liệu mẫu trong phiên. Chuyển Clinic/Care ở góc trên để duyệt bàn giao.')]),
+      home('A6', 'Đổi không gian làm việc', 'Bottom sheet từ nút "Clinic" trên AppBar · 6 tài khoản mẫu', 'Clinic', 'owner', 0, ownerHome, { hasSheet: true, sheet: accountSheet }),
+      home('A7', 'Có thanh toán mới', 'SnackBar khi unread tăng · action "Xem" mở Tài chính tab Thông báo', 'Clinic', 'owner', 0, ownerHome, { hasSnack: true, snack: { text: 'Có thanh toán mới tại phòng khám', action: 'Xem' } })
+    ];
+
+    // B · Doctor
+    const mine = people.filter(x => x.doctor === 'BS. Tâm');
+    const B = [
+      home('B1', 'Công việc', 'staffBody() · bác sĩ chỉ thấy hồ sơ mình phụ trách', 'Bác sĩ', 'staff', 0, [
+        h('Lịch & hồ sơ của tôi', 'BS. Tâm'),
+        t('Hồ sơ đang phụ trách', pt.name, 'person'), t('Lịch của tôi', '22/9/2026', 'calendar_month'),
+        t('Doanh số của tôi', 'Chỉ số cá nhân và tiền thủ thuật', 'account_balance_wallet'),
+        s('Cập nhật cần bác sĩ xem'),
+        t(pt.name, 'Review chăm sóc · hồ sơ phụ trách', 'inbox'), t(people[2].name, 'Review chăm sóc · hồ sơ phụ trách', 'inbox')]),
+      home('B2', 'Hồ sơ mẫu', 'Tab 1 · PatientSearch lọc theo owns()', 'Bác sĩ', 'staff', 1, [
+        h('Hồ sơ phụ trách', 'BS. Tâm'), search(), sp(16), ...patientTiles(mine)])
+    ];
+
+    // C · CSKH
+    const queued = people.filter(x => x.group && !['P001', 'P002'].includes(x.id));
+    const careTop = (bucket, active) => [h2('CSKH hôm nay', 'Mai Anh · Chủ nhật, 20/09'), buckets(bucket), sp(16), careSearch(active)];
+    const careQueue = [...careTop('Chưa liên hệ', false), listHead('Danh sách cần chăm sóc', `${queued.length} khách`), ...queued.map(careRow)];
+    const C = [
+      home('C1', 'Hàng chờ CSKH', 'CareQueue · 3 trạng thái, tìm kiếm, lọc nhóm trong sheet', 'CSKH', 'staff', 0, careQueue),
+      home('C2', 'Lọc nhóm chăm sóc', 'Bottom sheet 10 nhóm CSKH kèm số lượng', 'CSKH', 'staff', 0, careQueue, { hasSheet: true, sheet: groupSheet }),
+      home('C3', 'Đang lọc nhóm', 'Nút lọc chuyển tonal + chấm badge, InputChip để bỏ lọc', 'CSKH', 'staff', 0, [
+        ...careTop('Chưa liên hệ', true), chip(GROUPS.overdue), listHead('Danh sách cần chăm sóc', '1 khách'), careRow(people[4])]),
+      home('C4', 'Bộ lọc trống', 'Trạng thái rỗng của danh sách', 'CSKH', 'staff', 0, [
+        ...careTop('Đã liên hệ', true), chip(GROUPS.d7), listHead('Đã liên hệ', '0 khách'), empty('Không có khách trong bộ lọc này')]),
+      home('C5', 'Hồ sơ mẫu', 'Tab 1 · PatientSearch, mở Chăm sóc khách hàng', 'CSKH', 'staff', 1, [
+        h('Hồ sơ phụ trách', 'Mai Anh'), search(), sp(16), ...patientTiles(people)]),
+      det('C6', 'Chăm sóc khách hàng', 'Ghi chú nội bộ, đặt lại lịch, chuyển bác sĩ xem', [
+        h(people[1].name, `${people[1].id} · ${GROUPS.d3}`),
+        n('Nội dung liên hệ nội bộ không hiển thị cho người bệnh.'),
+        n('Đã gọi, khách hẹn gửi ảnh tiến triển tối nay.'),
+        input({ label: 'Kết quả liên hệ / việc cần bàn giao', lines: 3 }),
+        p('Lưu kết quả liên hệ'), sp(12),
+        outlined('Hỗ trợ đặt lại lịch', 'calendar_month'), textBtn('Chuyển bác sĩ xem', 'forward_to_inbox')])
+    ];
+
+    // D · Accountant
+    const D = [
+      home('D1', 'Đối soát & thu ngân', 'staffBody() · kế toán', 'Kế toán', 'staff', 0, [
+        h('Đối soát & thu ngân', 'Kế toán · không gian riêng'),
+        t('Tài chính & tiền thủ thuật', 'Đối soát, phiếu thu, chính sách và chốt kỳ', 'account_balance_wallet'),
+        t('Thu ngân theo hồ sơ', pt.name, 'receipt_long')]),
+      home('D2', 'Hồ sơ mẫu', 'Tab 1 · PatientSearch, mở Hóa đơn', 'Kế toán', 'staff', 1, [
+        h('Hồ sơ phụ trách', 'Kế toán'), search(), sp(16), ...patientTiles(people)])
+    ];
+
+    // E · Pema Care
+    const E = [
+      home('E1', 'Trang chủ', 'patientNext() theo nhóm D+1, hero liệu trình, lối tắt, lịch và việc cần làm', 'Care', 'care', 0, [
+        h('Chào Hà,', 'Hôm nay, dành chút thời gian cho làn da'),
+        t('Hôm nay bạn cảm thấy thế nào?', 'Xem lịch hoặc gửi nhu cầu để đội ngũ hỗ trợ', 'favorite'),
+        hero('Chăm sóc nhẹ nhàng.\nĐồng hành mỗi ngày.', 'Liệu trình phục hồi · Buổi 2/5', 'spa'), sp(16),
+        a(['Chăm sóc', 'favorite'], ['Gửi cập nhật', 'add_a_photo'], ['Đơn đã duyệt', 'receipt_long']),
+        s('Lịch hẹn tiếp theo'), t('10:30 · 22/9/2026', 'BS. Tâm · Khám da liễu', 'calendar_today'),
+        s('Việc cần làm'), t('Đọc hướng dẫn sau điều trị', 'Bác sĩ đã gửi hướng dẫn cho bạn', 'favorite')]),
+      home('E2', 'Hành trình', 'Tab 1 · tiến độ liệu trình và 4 mục chi tiết', 'Care', 'care', 1, [
+        h('Hành trình của bạn', 'Mỗi bước chăm sóc đều được ghi nhận'),
+        hero('Phục hồi & chăm sóc da', '2/5 buổi đã hoàn tất', 'spa'),
+        ...['Kế hoạch điều trị', 'Ảnh tiến triển', 'Chăm sóc tại nhà', 'Đơn thuốc & tư vấn'].map(x => t(x, 'Xem chi tiết và hướng dẫn', 'chevron_right'))]),
+      home('E3', 'Tin nhắn', 'Tab 2 · trạng thái sau khi đội ngũ đã phản hồi', 'Care', 'care', 2, [
+        h('Tin nhắn', 'Đội ngũ Pema luôn đồng hành'),
+        n('Nếu có dấu hiệu bất thường nặng, hãy liên hệ trực tiếp. Tin nhắn không phải kênh cấp cứu.'),
+        t('Bạn', UPDATE, 'chat_bubble', false), t('Đội ngũ Pema', RESPONSE, 'verified', false),
+        p('Gửi cập nhật')]),
+      home('E4', 'Hồ sơ', 'Tab 3 · chọn hồ sơ mẫu theo nhóm CSKH', 'Care', 'care', 3, [
+        h(pt.name, `${pt.id} · Hồ sơ minh họa`),
+        s('Tài khoản mẫu · 10 nhóm CSKH'), dd('Tất cả hồ sơ'), sp(12), dd(`${pt.id} · ${pt.name}`, 'Người bệnh đang xem'),
+        ...['Đơn thuốc & tư vấn', 'Hóa đơn', 'Quyền riêng tư', 'Hướng dẫn'].map(x => t(x, 'Thông tin của bạn', 'chevron_right'))])
+    ];
+
+    // F · Clinic details
+    const products = [
+      ['TH021', 'Doxycycline 100mg', 'Viên', 4500, 'Thuốc'], ['SP014', 'Kem dưỡng phục hồi B5 40ml', 'Tuýp', 320000, 'Dược mỹ phẩm'],
+      ['SP032', 'Sữa rửa mặt dịu nhẹ 200ml', 'Chai', 285000, 'Dược mỹ phẩm'], ['SP047', 'Kem chống nắng SPF50+ 50ml', 'Tuýp', 435000, 'Dược mỹ phẩm'],
+      ['TH008', 'Tretinoin 0.025% 20g', 'Tuýp', 145000, 'Thuốc'], ['SP060', 'Serum phục hồi HA 30ml', 'Chai', 400000, null]
+    ];
+    const rx = [['Tretinoin 0.025% 20g', '1 Tuýp · Thoa mỏng buổi tối, tránh vùng mắt']];
+    const cs = [['Kem chống nắng SPF50+ 50ml', '1 Tuýp · Thoa mỗi sáng, thoa lại sau 2–3 giờ']];
+    const orderList = care => [
+      s('DN-1 · Đã duyệt'),
+      txt('Đơn thuốc', { w: 700 }), ...rx.map(([a1, b1]) => t(a1, b1, 'medication', false)),
+      txt('Phiếu tư vấn', { w: 700 }), ...cs.map(([a1, b1]) => t(a1, b1, 'medication', false)),
+      ...(care ? [] : [p('Xem bố cục hai phiếu A5')])
+    ];
+    const invoice = [h('Khoản cần thanh toán', pt.name), hero(money(580000), 'Đã thu ' + money(0), 'payments'), t('DN-1', money(580000), 'receipt_long', false)];
+    const F = [
+      det('F1', 'Patient 360', 'Hồ sơ xuyên suốt · metric, thẻ ghi nhận thủ thuật (owner/kế toán), check-in', [
+        h(pt.name, `${pt.id} · ${pt.doctor}`), n('Da nhạy cảm • Cần đọc tiền sử trước khi kê đơn'),
+        m(['2/5', 'Buổi điều trị'], ['10:30', 'Lịch tiếp theo']),
+        t('Ghi nhận tiền thủ thuật', 'Đúng người thực hiện · gắn hóa đơn đã có', 'receipt_long'),
+        s('Hồ sơ xuyên suốt'),
+        ...['Tư vấn', 'Kế hoạch điều trị', 'Buổi điều trị', 'Ảnh tiến triển', 'Lên đơn nhanh', 'Đơn thuốc & tư vấn', 'Hóa đơn'].map(x => t(x, 'Xem và cập nhật', 'chevron_right')),
+        p('Check-in người bệnh')]),
+      det('F2', 'Tư vấn', 'Ghi chú chuyên môn dạng nháp', [
+        n('Ghi chú chuyên môn là bản nháp, cần bác sĩ xem lại.'), input({ label: 'Ghi chú tư vấn', lines: 6 }),
+        p('Lưu ghi chú nháp'), p('Xem tóm tắt AI')]),
+      det('F3', 'Buổi điều trị', 'Nút hoàn tất khóa đến khi có ghi nhận và đã tick bàn giao', [
+        n('Buổi 3/5 · BS. Tâm'), input({ label: 'Ghi nhận buổi điều trị *', lines: 4 }),
+        check('Đã kiểm tra và bàn giao aftercare', false), p('Hoàn tất buổi', false)]),
+      det('F4', 'Lên đơn nhanh', 'Tìm trong catalog, chạm để thêm vào đơn nháp', [
+        n(`${pt.name} · ${pt.id}\n115 sản phẩm từ catalog web. Đơn nháp chưa gửi cho người bệnh.`),
+        search('Tìm mã hoặc tên sản phẩm'), sp(12),
+        p('Xem đơn · 2 sản phẩm · ' + money(720000)),
+        ...products.map(([code, name, unit, price, src]) => t(name, `${code} · ${unit} · ${money(price)}\n${src || 'Cần phân loại'}`, 'add'))]),
+      det('F5', 'Kiểm tra đơn', 'Mỗi dòng: số lượng, phân loại, cách dùng · duyệt khóa khi còn dòng chưa phân loại', [
+        h('Kiểm tra trước khi duyệt', '2 dòng · ' + money(720000)),
+        order('Kem dưỡng phục hồi B5 40ml', '1 Tuýp', 'Phiếu tư vấn', 'Thoa mỏng 2 lần/ngày sau làm sạch'),
+        order('Serum phục hồi HA 30ml', '1 Chai', 'Cần phân loại', ''),
+        n('Tài khoản bác sĩ mô phỏng. Chỉ duyệt khi đã phân loại và nhập hướng dẫn cho mọi dòng.'),
+        p('Lưu nháp'), p('Bác sĩ duyệt đơn', false)]),
+      det('F6', 'Đơn thuốc & tư vấn', 'Nháp → bác sĩ duyệt → người bệnh xem', [
+        n('Nháp → bác sĩ duyệt → người bệnh xem. In không đồng nghĩa đã cấp thuốc.'), ...orderList(false)]),
+      det('F7', 'Phiếu A5', 'Bản xem bố cục hai phiếu in', [
+        n('Bản duyệt bố cục trên điện thoại. In / chia sẻ PDF native sẽ nối sau khi duyệt template.'),
+        a5('ĐƠN THUỐC', rx.map(x => x.join('\n')), 'Mang theo đơn này · Kiểm tra thuốc\nBác sĩ khám'),
+        a5('PHIẾU TƯ VẤN', cs.map(x => x.join('\n')), 'Mang theo phiếu này · Kiểm tra sản phẩm\nBác sĩ tư vấn')]),
+      det('F8', 'Đặt lịch', 'Chọn ngày (date picker) và khung giờ · 09:00 đã kín', [
+        h(pt.name, 'Chọn ngày và giờ trước khi xác nhận'), week(),
+        t('22/9/2026', 'Chạm để đổi ngày', 'calendar_today'),
+        n('BS. Tâm · Khám da liễu · 30 phút\n09:00 đã có lịch, không thể chọn.'),
+        chips([['09:00', 'dis'], ['10:30', 'sel'], ['11:00', ''], ['14:00', ''], ['15:30', '']]),
+        p('Xác nhận lịch')]),
+      det('F9', 'Chi tiết lịch', 'Góc nhìn phòng khám có thêm Dời lịch và Patient 360', [
+        hero('10:30 · 22/9/2026', 'BS. Tâm · Khám da liễu', 'calendar_month'), s(pt.name),
+        n('Tái khám & đánh giá · 30 phút'), p('Xác nhận tham dự'), p('Dời lịch'), p('Mở Patient 360')]),
+      det('F10', 'Phản hồi', 'Bàn giao nội bộ từ CSKH hiển thị trên cùng', [
+        n('CSKH bàn giao nội bộ: Khách báo da đỏ nhẹ, cần bác sĩ xem ảnh.'),
+        h(pt.name, 'Cập nhật từ Patient Mobile'), n(UPDATE),
+        input({ label: 'Phản hồi đã kiểm tra', lines: 5 }), p('Duyệt và phản hồi', false)]),
+      det('F11', 'Thu ngân', 'Hero là số còn phải thu', [...invoice, p('Thu đủ phần còn lại'), p('Lên đơn mới')]),
+      det('F12', 'Xác nhận thu tiền', 'Bottom sheet · nội dung căn giữa như Column mặc định', [...invoice, p('Thu đủ phần còn lại'), p('Lên đơn mới')], { hasSheet: true, sheet: paySheet, title: 'Thu ngân' }),
+      det('F13', 'Dịch vụ', 'Danh mục tham khảo, chạm để đặt lịch', [
+        h('Danh mục dịch vụ', 'Giá và thời lượng tham khảo như web'),
+        ...[['Tái khám & đánh giá', '300.000 ₫ · 30 phút'], ['Tư vấn da liễu', '500.000 ₫ · 45 phút'], ['Laser theo chỉ định', '2.500.000 ₫ · 45 + 15 phút'], ['Chăm sóc theo chỉ định', '1.200.000 ₫ · 45 + 15 phút']].map(([x, y]) => t(x, y, 'spa'))]),
+      det('F14', 'Bác sĩ & phòng', 'Nguồn lực theo ca', [
+        h('Nguồn lực phòng khám', 'Chạm lịch để điều phối theo ca'),
+        ...['BS. Tâm', 'BS. Mai', 'BS. An', 'BS. Lan'].map(x => t(x, '08:00–18:00 · Nghỉ 12:00–13:00', 'medical_services')),
+        n('Laser & thủ thuật · Bảo trì 14:00–15:00 ngày 23/09. Khóa phòng phức tạp duyệt ở web.')]),
+      det('F15', 'Ask Pema', 'Tóm tắt AI mô phỏng, luôn cần bác sĩ kiểm tra', [
+        hero('Bối cảnh trước\nmỗi quyết định.', 'AI mô phỏng • cần bác sĩ kiểm tra', 'auto_awesome'),
+        s('Tóm tắt ' + pt.name),
+        n('Đã hoàn tất 2/5 buổi. Có 1 phản hồi tại nhà.\nNguồn: hành trình và cập nhật trong phiên mẫu.'),
+        t('Việc còn mở', 'Xem phản hồi trước khi khám lại.', 'inbox'), p('Mở ghi chú để bác sĩ sửa')]),
+      det('F16', 'Hướng dẫn', 'Route mặc định · dùng chung mọi vai trò', [
+        h('Một hành trình, nhiều điểm nối', 'Hướng dẫn sử dụng Pema'),
+        ...['Tiếp nhận → lịch → Patient 360', 'Dịch vụ → kế hoạch → buổi điều trị', 'Đơn nháp → bác sĩ duyệt → người bệnh xem', 'Cập nhật tại nhà → theo dõi → phản hồi', 'Hóa đơn → thu tiền → đối soát'].map(x => t(x, 'Mỗi bàn giao cần người phụ trách và bước tiếp theo.', 'route', false)),
+        n('Duyệt Clinic/Care qua nút góc trên. Thao tác mẫu lưu trong bộ nhớ, tải lại sẽ bắt đầu phiên mới.')]),
+      det('F17', 'Thu ngân', 'allows() = false · ví dụ bác sĩ mở Thu ngân', [
+        n('Tác vụ không thuộc không gian hiện tại. Quay lại để chọn đúng công việc.')], { name: 'Ngoài quyền truy cập' })
+    ];
+
+    // G · Care details
+    const G = [
+      det('G1', 'Chăm sóc tại nhà', 'Hướng dẫn đã duyệt, xác nhận đã đọc', [
+        h('Nhẹ nhàng với làn da', 'Hướng dẫn mẫu đã được bác sĩ kiểm tra'),
+        ...['Làm sạch dịu nhẹ', 'Dưỡng ẩm theo hướng dẫn', 'Bảo vệ da khỏi ánh nắng'].map(x => t(x, 'Thực hiện theo hướng dẫn cá nhân đã duyệt.', 'favorite', false)),
+        p('Tôi đã đọc hướng dẫn'), p('Gửi cập nhật cho Pema')]),
+      det('G2', 'Gửi cập nhật', 'Đã chọn ảnh · cần đồng ý chia sẻ trước khi gửi', [
+        n('Cập nhật sẽ vào hàng chờ để đội ngũ Pema xem.'),
+        input({ label: 'Hôm nay da bạn thế nào?', lines: 5, value: 'Da còn hơi đỏ ở má trái, không rát.' }),
+        p('Đã chọn ảnh mẫu'), n('Ảnh mẫu dùng duyệt UI • camera native chưa kết nối'),
+        check('Tôi đồng ý chia sẻ ảnh để chăm sóc', false), p('Gửi cập nhật', false)]),
+      det('G3', 'Lịch của tôi', 'Góc nhìn người bệnh chỉ có xác nhận tham dự', [
+        hero('10:30 · 22/9/2026', 'BS. Tâm · Khám da liễu', 'calendar_month'), s(pt.name),
+        n('Tái khám & đánh giá · 30 phút'), p('Xác nhận tham dự')]),
+      det('G4', 'Kế hoạch điều trị', 'Các mốc chăm sóc theo số buổi đã hoàn tất', [
+        hero('Phục hồi & chăm sóc da', '2/5 buổi · BS. Tâm', 'route'), s('Các mốc chăm sóc'),
+        ...[1, 2, 3, 4, 5].map(i => t('Buổi ' + i, i <= 2 ? 'Đã hoàn tất' : 'Chờ đánh giá / thực hiện', i <= 2 ? 'check_circle' : 'circle', false)),
+        p('Xem chăm sóc tại nhà')]),
+      det('G5', 'Ảnh tiến triển', 'Hai ô minh họa trước / gần nhất', [
+        h('Theo dõi bằng hình ảnh', 'Ảnh minh họa • không đánh giá hiệu quả tự động'), photos(),
+        n('Chính diện · Vùng mặt · Cần cùng điều kiện ánh sáng'), p('Gửi ảnh cập nhật')]),
+      det('G6', 'Đơn thuốc & tư vấn', 'Chỉ hiện đơn đã duyệt', [
+        n('Chỉ hiển thị nội dung đã được bác sĩ duyệt.'), ...orderList(true)]),
+      det('G7', 'Hóa đơn', 'Người bệnh chỉ xem, không có thao tác thu', invoice),
+      det('G8', 'Quyền riêng tư', 'Đồng ý dùng ảnh trong chăm sóc', [
+        n('Template không sử dụng dữ liệu bệnh nhân thật.'),
+        check('Đồng ý dùng ảnh trong chăm sóc', true), txt('Cài đặt đang được minh họa trong phiên duyệt.')])
+    ];
+
+    // H · Finance
+    const finTop = (status = 'Đang đối soát') => [txt('Vai trò mẫu • dữ liệu dùng chung với web', { s: 12, c: MUTED }), sp(8), { period: true, month: 'Kỳ 2026-09', hasStatus: !!status, status: status || '' }];
+    const fin = (id, name, note, i, blocks, o = {}) => ({ ...det(id, 'Tài chính Pema', note, [...finTop(o.status), ...blocks]), name, ts: 22, tw: 400, refresh: true, hasNav: true, nav: nav('fin', i, o.badges ?? true), pad: '20px', ...o });
+    const rows = [
+      ['Laser theo chỉ định', '2026-09-21 · P001 · BS. Tâm', 2500000, '10.0', 250000, 'Chờ duyệt', ['Duyệt', 'Hủy lượt']],
+      ['Chăm sóc theo chỉ định', '2026-09-18 · P003 · BS. Tâm', 1200000, '8.0', 96000, 'Đã duyệt', ['Hủy lượt']],
+      ['Tư vấn da liễu', '2026-09-15 · P002 · BS. Mai', 500000, '5.0', 25000, 'Đã duyệt', ['Hủy lượt']],
+      ['Laser theo chỉ định', '2026-09-12 · P004 · BS. An', 2250000, '10.0', 225000, 'Đã hủy', null]
+    ].map(([svc, meta, rev, rate, fee, st, btns]) => fc(ftitle(svc), txt(meta), fl('Doanh số phân bổ', money(rev)), fl(`${money(rev)} × ${rate}%`, money(fee)), txt(st), ...(btns ? [fb(...btns)] : [])));
+    const procedures = [ftitle('Từng lượt, từng người thực hiện'), txt('Tỷ lệ lưu theo lượt; kế toán đối soát trước khi chốt.', { s: 12 }), sp(12), ...rows, pill('Chốt tháng đã kết thúc'), sp(70)];
+    const services = [['Laser theo chỉ định', '10.0', 'net', 3], ['Chăm sóc theo chỉ định', '8.0', 'net', 1], ['Tư vấn da liễu', '5.0', 'list', 2], ['Tái khám & đánh giá', '5.0', 'collected', 1]];
+    const H = [
+      fin('H1', 'Tổng quan', 'FinanceScreen tab 0 · chủ phòng khám', 0, [
+        finHero('DOANH SỐ THỰC HIỆN', money(186400000)),
+        fc(ftitle('Dòng tiền & đối soát'), fl('Thực thu trong tháng', money(152000000)), fl('Công nợ hiện tại', money(34400000)), fl('Tiền thủ thuật đã duyệt', money(18640000)), fl('Tiền chờ duyệt', money(3200000)),
+          txt('Tiền thủ thuật không phải lợi nhuận. Công nợ là toàn bộ số còn phải thu.', { s: 12, c: MUTED })),
+        fc(ftitle('Đội ngũ'), fl('BS. Tâm', money(84200000)), fl('BS. Mai', money(51600000)), fl('BS. An', money(32100000)), fl('BS. Lan', money(18500000))),
+        pill('Chính sách tỷ lệ thủ thuật', 'tune')]),
+      fin('H2', 'Tổng quan · bác sĩ', 'role = doctor · chỉ số cá nhân, ẩn thực thu, công nợ và đội ngũ', 0, [
+        finHero('DOANH SỐ CỦA TÔI', money(84200000)),
+        fc(ftitle('Dòng tiền & đối soát'), fl('Tiền thủ thuật đã duyệt', money(8170000)), fl('Tiền chờ duyệt', money(250000)),
+          txt('Tiền thủ thuật không phải lợi nhuận. Công nợ là toàn bộ số còn phải thu.', { s: 12, c: MUTED }))], { badges: false }),
+      fin('H3', 'Thủ thuật', 'Tab 1 · từng lượt, duyệt/hủy, FAB "Ghi lượt" khi kỳ đang mở', 1, procedures, { hasFab: true, fab: { label: 'Ghi lượt' } }),
+      fin('H4', 'Chốt kỳ', 'AlertDialog · gõ CHOT để khóa kỳ', 1, procedures, { hasFab: true, fab: { label: 'Ghi lượt' }, hasDialog: true, dialog: { title: 'Gõ CHOT để khóa kỳ 2026-09', value: 'CHOT' } }),
+      fin('H5', 'Thu tiền', 'Tab 2 · hóa đơn tài chính còn phải thu', 2, [
+        ftitle('Khoản còn phải thu'), txt('Thu ngân web cũ đồng bộ riêng. Chỉ thu hóa đơn tài chính tại đây.', { s: 12 }), sp(12),
+        fc(ftitle('P001'), txt('HD-2609-014', { ws: 'nowrap' }), fl('Còn lại', money(2500000)), ff('Thu tiền mặt')),
+        fc(ftitle('P005'), txt('HD-2609-011', { ws: 'nowrap' }), fl('Còn lại', money(1200000)), ff('Thu tiền mặt'))]),
+      fin('H6', 'Thông báo', 'Tab 3 · inbox thanh toán của chủ phòng khám', 3, [
+        ftitle('Thanh toán mới'),
+        fc(fi('Đã thu ' + money(1200000)), sp(10), txt('Kế toán thu tiền mặt · P005 · HD-2609-011'), txt('2026-09-22 09:41', { s: 11 }), fb('Đánh dấu đã đọc')),
+        fc(fi('Đã thu ' + money(300000)), sp(10), txt('Kế toán thu tiền mặt · P011 · HD-2609-009'), txt('2026-09-21 16:05', { s: 11 })),
+        txt('Đồng bộ khi ứng dụng đang mở; push nền chưa được cấu hình.', { s: 11, c: MUTED })]),
+      fin('H7', 'Mất kết nối', 'c.error · chưa có dữ liệu kỳ', 0, [
+        fc(txt('Chưa kết nối dữ liệu tài chính. Kiểm tra dịch vụ và thử lại.', { c: '#FF5722' }), fb('Thử lại'))], { status: '', badges: false }),
+      det('H8', 'Chính sách thủ thuật', 'RateScreen · Card mặc định Material 3', [
+        txt('Thay đổi áp dụng cho lượt mới. Tỷ lệ lịch sử được giữ nguyên.'),
+        ...services.map(([nm, r, bs, v]) => mcard(nm, `${r}% · ${bs} · phiên bản ${v}`))], { ts: 22, tw: 400 }),
+      det('H9', 'Ghi lượt đã thực hiện', 'ProcedureForm · chia tỷ trọng bác sĩ chính / người phối hợp', [
+        dd('P001', 'Hồ sơ'), sp(14), dd('Laser theo chỉ định', 'Thủ thuật'), sp(14),
+        dateBtn('Ngày thực hiện 2026-09-22'),
+        input({ label: 'Giá niêm yết (VND)', value: '2500000' }), sp(14), input({ label: 'Giảm giá (VND)', value: '0' }), sp(14),
+        dd('Tạo hóa đơn mới cho lượt này', 'Gắn hóa đơn đã có'), sp(14), dd('BS. Tâm', 'Bác sĩ chính'), sp(14),
+        input({ label: 'Tỷ trọng doanh số bác sĩ chính %', value: '100' }), sp(14), input({ label: 'Tỷ lệ tiền bác sĩ chính %', value: '10.0' }), sp(14),
+        dd('Không có', 'Người phối hợp'), sp(14),
+        txt('Người phối hợp nhận phần tỷ trọng doanh số còn lại. Tổng tỷ lệ tiền không quá 100%.', { s: 12 }), sp(12),
+        input({ label: 'Ghi chú xác nhận hoàn tất' }), sp(14), p('Ghi nhận • Chờ kế toán duyệt')], { ts: 22, tw: 400 })
+    ];
+
+    const groups = [
+      { code: 'A', title: 'Clinic · Chủ phòng khám', sub: 'staffRole = owner · 5 tab · main.dart › Workspace', screens: A },
+      { code: 'B', title: 'Bác sĩ điều trị', sub: 'staffRole = doctor · BS. Tâm · staffBody()', screens: B },
+      { code: 'C', title: 'CSKH', sub: 'staffRole = care · Mai Anh · care_workspace.dart › CareQueue', screens: C },
+      { code: 'D', title: 'Kế toán', sub: 'staffRole = accountant · staffBody()', screens: D },
+      { code: 'E', title: 'Pema Care · Người bệnh', sub: 'careMode = true · 4 tab', screens: E },
+      { code: 'F', title: 'Nghiệp vụ Clinic', sub: 'main.dart › Detail(route) · góc nhìn chủ phòng khám', screens: F },
+      { code: 'G', title: 'Nghiệp vụ Pema Care', sub: 'Detail(route, care: true) · route được phép trong careMode', screens: G },
+      { code: 'H', title: 'Tài chính', sub: 'finance.dart › FinanceScreen, RateScreen, ProcedureForm', screens: H }
+    ];
+
+    const KEYS = ['heading', 'h2', 'section', 'hero', 'metrics', 'actions', 'tile', 'notice', 'primary', 'outlined', 'textBtn', 'input', 'dd', 'week', 'chips', 'check', 'photos', 'order', 'a5', 'txt', 'sp', 'buckets', 'careSearch', 'inputChip', 'listHead', 'careRow', 'empty', 'period', 'finHero', 'ftitle', 'fcard', 'pill', 'mcard', 'dateBtn'];
+    const CH = ['ftitle', 'fline', 'txt', 'btns', 'filled', 'iconTitle', 'sp'];
+    const fill = (o, keys) => { const r = {}; keys.forEach(k => { r[k] = false; }); return Object.assign(r, o); };
+    groups.forEach(g => g.screens.forEach(sc => {
+      sc.blocks = sc.blocks.map(b => { const nb = fill(b, KEYS); if (nb.fcard) nb.items = nb.items.map(c => fill(c, CH)); return nb; });
+    }));
+    return groups;
+  }
+
+  renderVals() {
+    const showNotes = this.props.showNotes ?? true;
+    const bezel = this.props.bezel ?? false;
+    const only = this.props.group ?? 'Tất cả';
+    const groups = this.build().filter(g => only === 'Tất cả' || only.startsWith(g.code + ' '));
+    return {
+      groups, showNotes,
+      frameW: bezel ? 414 : 390,
+      bezelPad: bezel ? 12 : 0,
+      bezelBg: bezel ? '#10243A' : 'transparent',
+      bezelR: bezel ? 52 : 0,
+      screenR: bezel ? 40 : 36,
+      screenShadow: bezel ? 'none' : '0 1px 2px rgba(8,58,110,.06), 0 12px 32px rgba(8,58,110,.10)'
+    };
+  }
+}
+</script>
+</body>
+</html>
