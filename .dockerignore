@@ -9,3 +9,5 @@ yarn-error.log*
 pnpm-debug.log*
 demo-assets/screenshots
 demo-assets/test-results
+**/node_modules
+design-viewer/dist

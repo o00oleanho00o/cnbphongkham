@@ -74,6 +74,26 @@ Hai app là vanilla HTML/JavaScript, không cần `npm install` hoặc bước b
 
 Ảnh và sự kiện upload trong prototype chỉ phục vụ demo; ảnh được thu nhỏ và lưu trong localStorage. Không nạp dữ liệu bệnh nhân thật.
 
+### Design Viewer — xem design canvas
+
+Xem design từ [claude.ai/design](https://claude.ai/design) trên máy local hoặc docker. Viewer hỗ trợ zoom/pan, danh sách màn hình, properties, và tự cập nhật khi sửa file `.dc.html`.
+
+**Dev mode (với hot reload):**
+```powershell
+cd design-viewer
+npm install
+npm run dev
+```
+→ Mở **http://localhost:4180**
+
+**Docker:**
+```powershell
+docker compose up -d pema-design-viewer
+```
+→ Mở **http://localhost:4190**
+
+Phím tắt: `Ctrl+cuộn` phóng/thu, `Space+kéo` hoặc `H` để di chuyển, `V` để tương tác prototype, `Shift+1` vừa khung. Ghi nhớ vị trí zoom, props và trạng thái panel trong `localStorage`. Chi tiết: [design-viewer/README.md](design-viewer/README.md).
+
 ## Giới hạn demo cần nói rõ
 
 AI brief, clinical note draft và Ask Pema là output mô phỏng/deterministic trên dataset giả lập; không gọi model AI thật và không chẩn đoán. Ảnh Before/After là SVG/placeholder tổng hợp hoặc ảnh upload của demo, không phải bằng chứng hiệu quả điều trị. Patient Mobile có thể xác nhận một lịch đã được clinic tạo và gửi yêu cầu qua tin nhắn; chưa có đặt slot tự phục vụ từ phía bệnh nhân. Không có authentication, server persistence, tenant isolation, push/SMS/Zalo thật hoặc audit production.
