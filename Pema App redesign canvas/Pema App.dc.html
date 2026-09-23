@@ -24,7 +24,7 @@ a:hover{color:#083A6E}
   <header style="display:flex;flex-direction:column;gap:12px;max-width:1100px">
     <div style="font-size:13px;font-weight:600;letter-spacing:.12em;color:#0B4F94">PEMA · NATIVE REVIEW</div>
     <h1 style="margin:0;font-size:44px;line-height:1.15;font-weight:700;color:#083A6E;letter-spacing:-0.02em">Base design dựng lại từ Flutter template</h1>
-    <p style="margin:0;font-size:16px;line-height:1.6;color:#5D7184;max-width:860px;text-wrap:pretty">Mỗi màn hình bám theo lib/main.dart, care_workspace.dart, finance.dart và widgets/pema_bottom_nav.dart. Dữ liệu người bệnh, sản phẩm và tài chính là dữ liệu mẫu vì assets/patients.json, products.json và pema-logo.png chưa có trong thư mục tải lên.</p>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#5D7184;max-width:860px;text-wrap:pretty">Mỗi màn hình bám theo lib/main.dart, care_workspace.dart, finance.dart và widgets/pema_bottom_nav.dart; state nằm ở lib/state/ (Riverpod: session, catalog, patients, orders, finance). Dữ liệu người bệnh, sản phẩm và tài chính là dữ liệu mẫu vì assets/patients.json, products.json và pema-logo.png chưa có trong thư mục tải lên.</p>
   </header>
 
   <section style="display:flex;flex-direction:column;gap:28px;max-width:2860px">
@@ -730,7 +730,7 @@ class Component extends DCLogic {
         ...['Lên đơn nhanh', 'Thu ngân', 'Dịch vụ', 'Bác sĩ & phòng', 'Ảnh tiến triển', 'Ask Pema', 'Hướng dẫn'].map(x => t(x, `Mở ${x.toLowerCase()}`, 'chevron_right')),
         n('Template tương tác • dữ liệu mẫu trong phiên. Chuyển Clinic/Care ở góc trên để duyệt bàn giao.')]),
       home('A6', 'Đổi không gian làm việc', 'Bottom sheet từ nút "Clinic" trên AppBar · 6 tài khoản mẫu', 'Clinic', 'owner', 0, ownerHome, { hasSheet: true, sheet: accountSheet }),
-      home('A7', 'Có thanh toán mới', 'SnackBar khi unread tăng · action "Xem" mở Tài chính tab Thông báo', 'Clinic', 'owner', 0, ownerHome, { hasSnack: true, snack: { text: 'Có thanh toán mới tại phòng khám', action: 'Xem' } })
+      home('A7', 'Có thanh toán mới', 'PaymentAlerts trên Navigator · SnackBar khi unread tăng, hiện cả khi đang mở màn con · "Xem" mở Tài chính tab Thông báo', 'Clinic', 'owner', 0, ownerHome, { hasSnack: true, snack: { text: 'Có thanh toán mới tại phòng khám', action: 'Xem' } })
     ];
 
     // B · Doctor
@@ -945,7 +945,7 @@ class Component extends DCLogic {
         fc(fi('Đã thu ' + money(1200000)), sp(10), txt('Kế toán thu tiền mặt · P005 · HD-2609-011'), txt('2026-09-22 09:41', { s: 11 }), fb('Đánh dấu đã đọc')),
         fc(fi('Đã thu ' + money(300000)), sp(10), txt('Kế toán thu tiền mặt · P011 · HD-2609-009'), txt('2026-09-21 16:05', { s: 11 })),
         txt('Đồng bộ khi ứng dụng đang mở; push nền chưa được cấu hình.', { s: 11, c: MUTED })]),
-      fin('H7', 'Mất kết nối', 'c.error · chưa có dữ liệu kỳ', 0, [
+      fin('H7', 'Mất kết nối', 'FinanceState.error · chưa có dữ liệu kỳ', 0, [
         fc(txt('Chưa kết nối dữ liệu tài chính. Kiểm tra dịch vụ và thử lại.', { c: '#FF5722' }), fb('Thử lại'))], { status: '', badges: false }),
       det('H8', 'Chính sách thủ thuật', 'RateScreen · Card mặc định Material 3', [
         txt('Thay đổi áp dụng cho lượt mới. Tỷ lệ lịch sử được giữ nguyên.'),
