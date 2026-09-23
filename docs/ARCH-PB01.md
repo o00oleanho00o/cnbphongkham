@@ -12,7 +12,7 @@ Tài liệu tách kiến trúc demo đang chạy và đích pilot. LocalStorage 
 
 ## Native review container (22/09/2026)
 
-`flutter-template/` là project Flutter Material 3, targets Android/iOS/Web. Browser preview build từ Dart lên `/native-preview/`, không WebView và không chia sẻ localStorage web. DemoStore/ChangeNotifier lưu state phiên, assets bundle chứa catalog 115 dòng. Production cần thay store bằng repository/API và bổ sung identity, lưu bền vững, permission/media, PDF/share và test thiết bị. Chưa có APK/iOS build nghiệm thu.
+`flutter-template/` là project Flutter Material 3, targets Android/iOS/Web. Browser preview build từ Dart lên `/native-preview/`, không WebView và không chia sẻ localStorage web. State phiên nằm trong provider Riverpod (`riverpod_generator`) tại `lib/state/`, assets bundle chứa catalog 115 dòng. Production cần thay notifier memory bằng repository/API và bổ sung identity, lưu bền vững, permission/media, PDF/share và test thiết bị. Chưa có APK/iOS build nghiệm thu.
 
 ## Current demo container view
 
@@ -114,7 +114,7 @@ Prototype chưa enforce matrix bằng login; đây là contract pilot cần deny
 
 Luồng build: `Dart + bundled assets → flutter build web → prototype/native-preview → iframe native-review`. HTTP server chỉ phục vụ file tĩnh, không phải API. Android/iOS có target scaffold nhưng chưa có nghiệm thu build/thiết bị.
 
-`main.dart → DemoStore (ChangeNotifier) → rootBundle products.json + patients.json`. Store không đọc localStorage `pema-demo-v2`; mở cùng origin vẫn không đồng bộ với Clinic Web/Patient Mobile. Reload/new session khôi phục fixture. Trong cùng instance, Clinic và Care đọc chung store.
+`main.dart → Catalog.load() (rootBundle products.json + patients.json) → ProviderScope(catalogProvider override)`. Notifier theo domain: `sessionProvider` (vai trò mẫu, selection Clinic/Care riêng), `patientsProvider` (state theo patientId), `ordersProvider`/`receiptsProvider`, `financeProvider` (HTTP PB02). Provider dẫn xuất (`currentPatientProvider`, `currentOrdersProvider`…) tính theo selection hiện tại. Không đọc localStorage `pema-demo-v2`; mở cùng origin vẫn không đồng bộ với Clinic Web/Patient Mobile. Reload/new session khôi phục fixture. Trong cùng instance, Clinic và Care đọc chung ProviderContainer.
 
 | Dữ liệu | Shape / phạm vi thực tế |
 |---|---|

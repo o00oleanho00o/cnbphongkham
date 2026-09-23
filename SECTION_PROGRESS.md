@@ -253,3 +253,10 @@ File log runtime và các thư mục/ZIP tạm có từ trước vẫn để ngo
 Đã đối chiếu README/AGENT, bộ 0→1→2→3, domain/patient/operations/native docs với source và evidence Mobile CRM02. Sửa mô tả state chung đã lỗi thời, module map và số test hiện hành; giữ kết quả kiểm thử lịch sử với nhãn mốc rõ ràng. Commit gồm source, mock data, tests, docs/skill và evidence của đợt mobile/tài chính/CSKH. Log runtime, thư mục giải nén và ZIP có từ trước không thuộc đợt bàn giao này.
 
 Kiểm trước commit: 158 link nội bộ trong 47 tài liệu hợp lệ; bundle 46 hồ sơ/10 nhóm khớp fresh fixture; `git diff --check` sạch. Dùng bằng chứng kiểm thử chức năng của lượt triển khai vừa hoàn tất, không ghi thành một lần chạy test mới khi chỉ sửa tài liệu.
+
+
+## 23/09/2026 — Flutter state chuyển sang Riverpod
+
+- Thay `lib/store.dart` (DemoStore/ChangeNotifier) và `FinanceController` bằng provider `riverpod_generator` trong `flutter-template/lib/state/`: catalog, session, patients (+cart), orders/receipts, finance. Model immutable, provider dẫn xuất theo selection; màn hình dùng `ref.watch`, không truyền store qua constructor.
+- Thông báo thanh toán owner chuyển lên trên Navigator (`PaymentAlerts`) để vẫn hiện khi màn con đang mở.
+- PASS: flutter analyze, 18 test, build preview; browser 8 luồng ở 390×844 như trong flutter-template/VALIDATION.md. Chỉ đổi kiến trúc state, không đổi scope/hành vi nên không sửa SCOPE/SPEC; đã cập nhật MODULEMAP/ARCH, runbook, parity, README, AGENT, skill reference.

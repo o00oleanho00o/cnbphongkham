@@ -8,7 +8,7 @@
 | Web style/asset | `prototype/shared/design.css`, `workspace-layout.css`, `styles.css`, CSS theo module và `assets/` |
 | Web behavior | `prototype/shared/clinic.js`, `patient.js`, `operations-*`, `order-*`, `data.js` |
 | Flutter theme/navigation/screens | `flutter-template/lib/main.dart` |
-| Flutter state | `flutter-template/lib/store.dart` |
+| Flutter state | `flutter-template/lib/state/` (Riverpod) |
 | Native build + giới hạn | `docs/21_NATIVE_RUNBOOK.md`, `22_NATIVE_PARITY_AND_VALIDATION.md` |
 | Review frame | `prototype/native-review/index.html` |
 

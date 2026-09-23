@@ -3,7 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pema_native_template/finance.dart';
+import 'package:pema_native_template/main.dart';
+import 'package:pema_native_template/state/catalog.dart';
+import 'package:pema_native_template/state/finance.dart';
+
+import 'support.dart';
 
 Map<String, dynamic> fixture({String role = 'owner'}) => {
   'today': '2026-09-22',
@@ -71,13 +77,24 @@ Map<String, dynamic> fixture({String role = 'owner'}) => {
         ]
       : [],
 };
+ProviderContainer financeContainer(http.Client client) =>
+    ProviderContainer.test(
+      overrides: [financeClientProvider.overrideWithValue(client)],
+    );
+
+http.Response json(Object body, [int status = 200]) => http.Response(
+  jsonEncode(body),
+  status,
+  headers: {'content-type': 'application/json; charset=utf-8'},
+);
+
 void main() {
   test(
     'API role selection clears old private data and receives notification',
     () async {
-      final client = MockClient(
-        (r) async => http.Response(
-          jsonEncode(
+      final c = financeContainer(
+        MockClient(
+          (r) async => json(
             fixture(
               role:
                   r.headers['X-Pema-Role'] ??
@@ -85,56 +102,89 @@ void main() {
                   'owner',
             ),
           ),
-          200,
-          headers: {'content-type': 'application/json; charset=utf-8'},
         ),
       );
-      final c = FinanceController(client: client);
-      await c.refresh();
-      expect(c.unread, 1);
-      c.select('doctor:D1');
-      expect(c.data, isNull);
-      await c.refresh();
-      expect(c.unread, 0);
-      expect(c.data!['invoices'], isEmpty);
-      c.dispose();
+      final finance = c.read(financeProvider.notifier);
+      await finance.refresh();
+      expect(c.read(financeProvider).unread, 1);
+      finance.select('doctor:D1');
+      expect(c.read(financeProvider).data, isNull);
+      await finance.refresh();
+      expect(c.read(financeProvider).unread, 0);
+      expect(c.read(financeProvider).data!['invoices'], isEmpty);
     },
   );
   test(
     'API failed payment retains error and does not fabricate success',
     () async {
-      final c = FinanceController(
-        client: MockClient(
-          (r) async => http.Response(
-            jsonEncode({'error': 'Số thu vượt công nợ'}),
-            400,
-            headers: {'content-type': 'application/json; charset=utf-8'},
-          ),
-        ),
+      final c = financeContainer(
+        MockClient((r) async => json({'error': 'Số thu vượt công nợ'}, 400)),
       );
-      expect(await c.command('payment', {'amount': 9999999}), false);
-      expect(c.error, contains('vượt công nợ'));
-      expect(c.data, isNull);
-      c.dispose();
+      final finance = c.read(financeProvider.notifier);
+      expect(await finance.command('payment', {'amount': 9999999}), false);
+      expect(c.read(financeProvider).error, contains('vượt công nợ'));
+      expect(c.read(financeProvider).data, isNull);
+      expect(c.read(financeProvider).sending, false);
     },
   );
+  testWidgets('owner sees new payment alert while a detail route is open', (
+    tester,
+  ) async {
+    var payments = 1;
+    Map<String, dynamic> state() {
+      final value = fixture();
+      value['notifications'] = [
+        for (var i = 0; i < payments; i++)
+          {
+            'id': 'PT-$i',
+            'title': 'Đã nhận thanh toán',
+            'body': 'P001',
+            'read': false,
+            'at': '2026-09-22T10:00:00+07:00',
+          },
+      ];
+      return value;
+    }
+
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final catalog = (await tester.runAsync(Catalog.load))!;
+    final c = ProviderContainer(
+      overrides: [
+        catalogProvider.overrideWithValue(catalog),
+        financeEnabledProvider.overrideWithValue(true),
+        financeClientProvider.overrideWithValue(
+          MockClient((r) async => json(state())),
+        ),
+      ],
+    );
+    await tester.pumpWidget(scoped(c, const PemaApp()));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Thu ngân').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Thu ngân').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Khoản cần thanh toán'), findsOneWidget);
+    payments = 2;
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pump();
+    expect(find.text('Có thanh toán mới tại phòng khám'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    c.dispose();
+  });
   for (final width in [360.0, 390.0, 430.0, 768.0]) {
     testWidgets('finance tabs and procedure form at $width', (tester) async {
       tester.view.physicalSize = Size(width, 844);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      final c = FinanceController(
-        client: MockClient(
-          (r) async => http.Response(
-            jsonEncode(fixture()),
-            200,
-            headers: {'content-type': 'application/json; charset=utf-8'},
-          ),
-        ),
+      final c = financeContainer(MockClient((r) async => json(fixture())));
+      await c.read(financeProvider.notifier).refresh();
+      await tester.pumpWidget(
+        scoped(c, const MaterialApp(home: FinanceScreen())),
       );
-      await c.refresh();
-      await tester.pumpWidget(MaterialApp(home: FinanceScreen(controller: c)));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       for (final label in ['Thủ thuật', 'Thu tiền', 'Thông báo', 'Tổng quan']) {
@@ -143,13 +193,15 @@ void main() {
         expect(tester.takeException(), isNull, reason: label);
       }
       await tester.pumpWidget(
-        MaterialApp(
-          home: ProcedureForm(
-            controller: c,
-            initialPatient: 'P046',
-            patientIds: List.generate(
-              46,
-              (i) => 'P${(i + 1).toString().padLeft(3, '0')}',
+        scoped(
+          c,
+          MaterialApp(
+            home: ProcedureForm(
+              initialPatient: 'P046',
+              patientIds: List.generate(
+                46,
+                (i) => 'P${(i + 1).toString().padLeft(3, '0')}',
+              ),
             ),
           ),
         ),
@@ -158,7 +210,6 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('P046'), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
-      c.dispose();
     });
   }
 }

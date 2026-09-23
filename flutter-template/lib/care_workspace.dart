@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'store.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'state/catalog.dart';
+import 'state/patients.dart';
+import 'state/session.dart';
 
 const _blue = Color(0xFF0B4F94),
     _ink = Color(0xFF17324D),
@@ -19,21 +22,19 @@ const _groups = {
 };
 
 /// A compact work queue: statuses are immediately available, care groups in a sheet.
-class CareQueue extends StatefulWidget {
-  const CareQueue({super.key, required this.store, required this.onOpen});
-  final DemoStore store;
+class CareQueue extends ConsumerStatefulWidget {
+  const CareQueue({super.key, required this.onOpen});
   final VoidCallback onOpen;
   @override
-  State<CareQueue> createState() => _CareQueueState();
+  ConsumerState<CareQueue> createState() => _CareQueueState();
 }
 
-class _CareQueueState extends State<CareQueue> {
+class _CareQueueState extends ConsumerState<CareQueue> {
   String group = 'all', query = '', bucket = 'Chưa liên hệ';
-  DemoStore get s => widget.store;
+  List<Map<String, dynamic>> cases = const [];
+  Map<String, PatientState> states = const {};
   String status(Map<String, dynamic> p) =>
-      s.states[p['id']]?.careStatus ?? 'Chưa liên hệ';
-  List<Map<String, dynamic>> get cases =>
-      s.profiles.where((p) => p['group'] != '').toList();
+      states[p['id']]?.careStatus ?? 'Chưa liên hệ';
   Future<void> filter() async {
     final selected = await showModalBottomSheet<String>(
       context: context,
@@ -93,6 +94,10 @@ class _CareQueueState extends State<CareQueue> {
 
   @override
   Widget build(BuildContext context) {
+    final profiles = ref.watch(catalogProvider).profiles;
+    final staffName = ref.watch(sessionProvider.select((s) => s.staffName));
+    states = ref.watch(patientsProvider);
+    cases = profiles.where((p) => p['group'] != '').toList();
     final rows = cases
         .where(
           (p) =>
@@ -115,7 +120,7 @@ class _CareQueueState extends State<CareQueue> {
         ),
         const SizedBox(height: 6),
         Text(
-          '${s.staffName} · Chủ nhật, 20/09',
+          '$staffName · Chủ nhật, 20/09',
           style: const TextStyle(fontSize: 13, color: _muted),
         ),
         const SizedBox(height: 20),
@@ -283,7 +288,9 @@ class _CareQueueState extends State<CareQueue> {
               child: InkWell(
                 borderRadius: BorderRadius.circular(18),
                 onTap: () {
-                  s.change(() => s.selected = s.profiles.indexOf(p));
+                  ref
+                      .read(sessionProvider.notifier)
+                      .select(profiles.indexOf(p));
                   widget.onOpen();
                 },
                 child: Padding(

@@ -8,7 +8,7 @@
 Các hàng memory-only/thu ngân PB01 bên dưới mô tả state trong phiên, đã tách theo patient ID. Module tài chính PB02 mới dùng API/SQLite, có invoice/payment, tỷ lệ/lượt/người thực hiện, role projection, chốt kỳ và thông báo foreground. Chưa thay thu ngân PB01 hoặc sync lâm sàng; chưa có OS push. [Ma trận nghiệp vụ và bằng chứng mới](24_FINANCE_AND_PROCEDURE_FEES.md). Mốc PB02 có 12 test; Mobile CRM02 hiện có 17 test. Bằng chứng 6 test lịch sử ở dưới được giữ nguyên; xem VALIDATION và báo cáo Mobile CRM02 cho lượt chạy mới.
 
 
-Đối chiếu source tại 22/09/2026: `flutter-template/lib/main.dart`, `lib/store.dart`, `test/template_test.dart`. “Có” dưới đây chỉ nói template trong phiên, không có nghĩa production.
+Đối chiếu source tại 22/09/2026: `flutter-template/lib/main.dart`, `lib/store.dart`, `test/template_test.dart` (từ 23/09/2026 state chuyển sang `lib/state/` Riverpod, hành vi giữ nguyên). “Có” dưới đây chỉ nói template trong phiên, không có nghĩa production.
 
 ## Ma trận nghiệp vụ
 

@@ -1,43 +1,115 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pema_native_template/main.dart';
-import 'package:pema_native_template/store.dart';
+import 'package:pema_native_template/state/catalog.dart';
+import 'package:pema_native_template/state/orders.dart';
+import 'package:pema_native_template/state/patients.dart';
+import 'package:pema_native_template/state/session.dart';
+
+import 'support.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test('catalog, draft approval and patient isolation', () async {
-    final s=DemoStore(); await s.load();
-    expect(s.products.length,115);
-    expect(s.products.where((p)=>p['outputType']=='UNRESOLVED').length,7);
-    s.add(s.products.first); expect(s.ready,false);
-    s.cart.first['usage']='Hướng dẫn được bác sĩ kiểm tra';
-    expect(s.ready,true);s.saveOrder(false);expect(s.myOrders.single['approved'],false);
-    s.edit(s.myOrders.single);s.saveOrder(true);expect(s.myOrders.length,1);expect(s.myOrders.single['approved'],true);
-    s.paid=100;s.selected=1;expect(s.myOrders,isEmpty);expect(s.paid,0);
+    final c = clinicContainer(await Catalog.load());
+    final catalog = c.read(catalogProvider);
+    expect(catalog.products.length, 115);
+    expect(
+      catalog.products.where((p) => p['outputType'] == 'UNRESOLVED').length,
+      7,
+    );
+    final id = c.read(selectedPatientIdProvider);
+    final patients = c.read(patientsProvider.notifier);
+    final orders = c.read(ordersProvider.notifier);
+    patients.addToCart(id, catalog.products.first);
+    expect(c.read(currentPatientProvider).cartReady, false);
+    expect(() => orders.save(id, approve: true), throwsStateError);
+    patients.updateLine(
+      id,
+      0,
+      (l) => l.copyWith(usage: 'Hướng dẫn được bác sĩ kiểm tra'),
+    );
+    expect(c.read(currentPatientProvider).cartReady, true);
+    orders.save(id, approve: false);
+    expect(c.read(currentOrdersProvider).single.approved, false);
+    expect(c.read(currentPatientProvider).cart, isEmpty);
+    orders.edit(id, c.read(currentOrdersProvider).single);
+    orders.save(id, approve: true);
+    expect(c.read(currentOrdersProvider).length, 1);
+    expect(c.read(currentOrdersProvider).single.approved, true);
+    c.read(receiptsProvider.notifier).settle(id, 100);
+    c.read(sessionProvider.notifier).select(1);
+    expect(c.read(currentOrdersProvider), isEmpty);
+    expect(c.read(currentPaidProvider), 0);
   });
-  for(final width in [360.0,390.0,430.0,768.0]) {
+  for (final width in [360.0, 390.0, 430.0, 768.0]) {
     testWidgets('home and detail layouts at $width', (tester) async {
-      tester.view.physicalSize=Size(width,844);tester.view.devicePixelRatio=1;
-      addTearDown(tester.view.resetPhysicalSize);addTearDown(tester.view.resetDevicePixelRatio);
-      final s=DemoStore();await tester.runAsync(s.load);
-      s.add(s.products.first);s.cart.first['usage']='Hướng dẫn mẫu bác sĩ đã xem';
-      s.saveOrder(true);s.add(s.products[1]);
-      await tester.pumpWidget(PemaApp(store:s));await tester.pumpAndSettle();
-      expect(find.text('Chào buổi sáng, BS. Tâm'),findsOneWidget);expect(tester.takeException(),isNull);
-      for(final route in ['Patient 360','Đặt lịch','Lên đơn nhanh','Kiểm tra đơn','Thu ngân','Gửi cập nhật','Ảnh tiến triển','Ask Pema','Bác sĩ & phòng','Kế hoạch điều trị','Phiếu A5','Đơn thuốc & tư vấn']) {
-        await tester.pumpWidget(MaterialApp(theme:ThemeData(fontFamily:'BeVietnam'),home:Detail(store:s,route:route)));
-        await tester.pumpAndSettle();expect(tester.takeException(),isNull,reason:route);
+      tester.view.physicalSize = Size(width, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final catalog = (await tester.runAsync(Catalog.load))!;
+      final c = clinicContainer(catalog);
+      final id = c.read(selectedPatientIdProvider);
+      final patients = c.read(patientsProvider.notifier);
+      patients.addToCart(id, catalog.products.first);
+      patients.updateLine(
+        id,
+        0,
+        (l) => l.copyWith(usage: 'Hướng dẫn mẫu bác sĩ đã xem'),
+      );
+      c.read(ordersProvider.notifier).save(id, approve: true);
+      patients.addToCart(id, catalog.products[1]);
+      await tester.pumpWidget(scoped(c, const PemaApp()));
+      await tester.pumpAndSettle();
+      expect(find.text('Chào buổi sáng, BS. Tâm'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      for (final route in [
+        'Patient 360',
+        'Đặt lịch',
+        'Lên đơn nhanh',
+        'Kiểm tra đơn',
+        'Thu ngân',
+        'Gửi cập nhật',
+        'Ảnh tiến triển',
+        'Ask Pema',
+        'Bác sĩ & phòng',
+        'Kế hoạch điều trị',
+        'Phiếu A5',
+        'Đơn thuốc & tư vấn',
+      ]) {
+        await tester.pumpWidget(
+          scoped(
+            c,
+            MaterialApp(
+              theme: ThemeData(fontFamily: 'BeVietnam'),
+              home: Detail(route: route),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: route);
       }
+      await tester.pumpWidget(const SizedBox());
     });
   }
-  testWidgets('native order form adds catalog item and opens review', (tester) async {
-    final s=DemoStore();await tester.runAsync(s.load);
-    await tester.pumpWidget(MaterialApp(home:Detail(store:s,route:'Lên đơn nhanh')));
+  testWidgets('native order form adds catalog item and opens review', (
+    tester,
+  ) async {
+    final catalog = (await tester.runAsync(Catalog.load))!;
+    final c = clinicContainer(catalog);
+    await tester.pumpWidget(
+      scoped(c, const MaterialApp(home: Detail(route: 'Lên đơn nhanh'))),
+    );
     await tester.pumpAndSettle();
-    await tester.tap(find.text(s.products.first['name']));await tester.pumpAndSettle();
-    expect(s.cart.length,1);
-    await tester.tap(find.textContaining('Xem đơn ·'));await tester.pumpAndSettle();
-    expect(find.text('Kiểm tra trước khi duyệt'),findsOneWidget);
-    expect(s.ready,false);expect(tester.takeException(),isNull);
+    await tester.tap(find.text(catalog.products.first['name']));
+    await tester.pumpAndSettle();
+    expect(c.read(currentPatientProvider).cart.length, 1);
+    await tester.tap(find.textContaining('Xem đơn ·'));
+    await tester.pumpAndSettle();
+    expect(find.text('Kiểm tra trước khi duyệt'), findsOneWidget);
+    expect(c.read(currentPatientProvider).cartReady, false);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
   });
 }

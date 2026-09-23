@@ -27,7 +27,7 @@ Workspace này chứa prototype và tài liệu nghiên cứu của Pema Digital
 
 Fresh clone không có compiled preview. Cài Flutter vào PATH rồi chạy `flutter-template/build-preview.ps1` từ PowerShell; script build và copy sang `prototype/native-preview/`. Chạy static server từ `prototype` như bên dưới. SDK đã kiểm tra: Flutter 3.47.5 / Dart 3.13.4; Android/iOS chưa nghiệm thu trên thiết bị. Cách cấu hình PATH và xử lý màn trắng/404 ở runbook.
 
-**Giới hạn cần biết khi duyệt:** Flutter đã tách state theo bệnh nhân và phân workspace chủ/bác sĩ/CSKH/kế toán/Care. CRM native vẫn là snapshot trong phiên, chưa đồng bộ web hoặc có rule engine đầy đủ. A5 chưa PDF/in; thu ngân PB01 chưa ledger và còn tính đơn nháp. PB02 tài chính dùng API/SQLite riêng. Suite hiện tại 17 test; không thay kiểm thiết bị thật. [Hiện trạng mobile và tài khoản mẫu](docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).
+**Giới hạn cần biết khi duyệt:** Flutter đã tách state theo bệnh nhân và phân workspace chủ/bác sĩ/CSKH/kế toán/Care. CRM native vẫn là snapshot trong phiên, chưa đồng bộ web hoặc có rule engine đầy đủ. A5 chưa PDF/in; thu ngân PB01 chưa ledger và còn tính đơn nháp. PB02 tài chính dùng API/SQLite riêng. Suite hiện tại 18 test, state dùng Riverpod; không thay kiểm thiết bị thật. [Hiện trạng mobile và tài khoản mẫu](docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).
 
 ## Tiêu chuẩn hiển thị UI
 

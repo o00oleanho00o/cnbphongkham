@@ -1,20 +1,10 @@
-import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'state/finance.dart';
 import 'widgets/pema_bottom_nav.dart';
 
-const financeApi = String.fromEnvironment(
-  'PEMA_FINANCE_API',
-  defaultValue: 'http://127.0.0.1:4174',
-);
 String cash(num n) =>
     '${n.round().toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')} ₫';
-String financeMonth() => DateTime.now()
-    .toUtc()
-    .add(const Duration(hours: 7))
-    .toIso8601String()
-    .substring(0, 7);
 const labels = {
   'open': 'Đang đối soát',
   'closed': 'Đã chốt',
@@ -24,142 +14,30 @@ const labels = {
   'void': 'Đã hủy',
 };
 
-class FinanceController extends ChangeNotifier with WidgetsBindingObserver {
-  FinanceController({http.Client? client}) : client = client ?? http.Client();
-  final http.Client client;
-  String role = 'owner', doctor = 'D0', month = financeMonth(), error = '';
-  Map<String, dynamic>? data;
-  Timer? timer;
-  int generation = 0;
-  bool loading = false, sending = false, foreground = true;
-  Map<String, String> get headers => {
-    'Content-Type': 'application/json',
-    'X-Pema-Role': role,
-    'X-Pema-Doctor': doctor,
-  };
-  int get unread => (data?['notifications'] as List? ?? [])
-      .where((n) => n['read'] == false)
-      .length;
-  void start() {
-    WidgetsBinding.instance.addObserver(this);
-    refresh();
-    timer ??= Timer.periodic(const Duration(seconds: 4), (_) {
-      if (foreground && !loading && !sending) refresh();
-    });
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    foreground = state == AppLifecycleState.resumed;
-    if (foreground) refresh();
-  }
-
-  Future<void> refresh() async {
-    final token = ++generation;
-    loading = true;
-    try {
-      final response = await client
-          .get(Uri.parse('$financeApi/state?month=$month'), headers: headers)
-          .timeout(const Duration(seconds: 7));
-      if (token != generation) return;
-      final value = jsonDecode(response.body) as Map<String, dynamic>;
-      if (response.statusCode != 200) throw Exception(value['error']);
-      data = value;
-      error = '';
-    } catch (e) {
-      if (token == generation)
-        error = 'Chưa kết nối dữ liệu tài chính. Kiểm tra dịch vụ và thử lại.';
-    } finally {
-      if (token == generation) {
-        loading = false;
-        notifyListeners();
-      }
-    }
-  }
-
-  void select(String value) {
-    final bits = value.split(':');
-    role = bits[0];
-    doctor = bits[1];
-    data = null;
-    generation++;
-    notifyListeners();
-    refresh();
-  }
-
-  Future<bool> command(String action, Map<String, dynamic> value) async {
-    if (sending) return false;
-    sending = true;
-    notifyListeners();
-    try {
-      final response = await client
-          .post(
-            Uri.parse('$financeApi/command/$action'),
-            headers: headers,
-            body: jsonEncode(value),
-          )
-          .timeout(const Duration(seconds: 8));
-      if (response.statusCode != 200)
-        throw Exception((jsonDecode(response.body) as Map)['error']);
-      error = '';
-      await refresh();
-      return true;
-    } catch (e) {
-      error = e.toString().replaceFirst('Exception: ', '');
-      notifyListeners();
-      return false;
-    } finally {
-      sending = false;
-      notifyListeners();
-    }
-  }
-
-  @override
-  void dispose() {
-    generation++;
-    timer?.cancel();
-    WidgetsBinding.instance.removeObserver(this);
-    client.close();
-    super.dispose();
-  }
-}
-
-class FinanceScreen extends StatefulWidget {
+class FinanceScreen extends ConsumerStatefulWidget {
   const FinanceScreen({
     super.key,
-    required this.controller,
     this.initialTab = 0,
     this.lockRole = false,
     this.patientIds,
   });
-  final FinanceController controller;
   final int initialTab;
   final bool lockRole;
   final List<String>? patientIds;
   @override
-  State<FinanceScreen> createState() => _FinanceScreenState();
+  ConsumerState<FinanceScreen> createState() => _FinanceScreenState();
 }
 
-class _FinanceScreenState extends State<FinanceScreen> {
-  FinanceController get c => widget.controller;
+class _FinanceScreenState extends ConsumerState<FinanceScreen> {
+  FinanceNotifier get finance => ref.read(financeProvider.notifier);
+  late FinanceState c;
   late int tab;
   String paymentKey = DateTime.now().microsecondsSinceEpoch.toString();
   @override
   void initState() {
     super.initState();
     tab = widget.initialTab;
-    c.addListener(changed);
-    c.refresh();
-  }
-
-  void changed() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    c.removeListener(changed);
-    super.dispose();
+    finance.refresh();
   }
 
   Widget card(List<Widget> children) => Container(
@@ -198,7 +76,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     ),
   );
   Future<void> run(String action, Map<String, dynamic> d) async {
-    final ok = await c.command(action, d);
+    final ok = await finance.command(action, d);
     if (mounted && ok)
       ScaffoldMessenger.of(
         context,
@@ -239,20 +117,20 @@ class _FinanceScreenState extends State<FinanceScreen> {
       lastDate: DateTime(2035),
     );
     if (picked != null) {
-      c.month = picked.toIso8601String().substring(0, 7);
-      await c.refresh();
+      await finance.setMonth(picked.toIso8601String().substring(0, 7));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    c = ref.watch(financeProvider);
     final data = c.data;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tài chính Pema'),
         actions: [
           IconButton(
-            onPressed: () => c.refresh(),
+            onPressed: () => finance.refresh(),
             icon: const Icon(Icons.refresh),
             tooltip: 'Làm mới',
           ),
@@ -260,7 +138,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: c.refresh,
+          onRefresh: finance.refresh,
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
@@ -303,7 +181,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                       ? null
                       : (v) {
                           tab = 0;
-                          c.select(v!);
+                          finance.select(v!);
                         },
                 ),
               Wrap(
@@ -329,7 +207,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     style: const TextStyle(color: Colors.deepOrange),
                   ),
                   TextButton(
-                    onPressed: () => c.refresh(),
+                    onPressed: () => finance.refresh(),
                     child: const Text('Thử lại'),
                   ),
                 ]),
@@ -372,10 +250,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute<void>(
-                  builder: (_) => ProcedureForm(
-                    controller: c,
-                    patientIds: widget.patientIds,
-                  ),
+                  builder: (_) => ProcedureForm(patientIds: widget.patientIds),
                 ),
               ),
               label: const Text('Ghi lượt'),
@@ -458,9 +333,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
           OutlinedButton.icon(
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute<void>(
-                builder: (_) => RateScreen(controller: c),
-              ),
+              MaterialPageRoute<void>(builder: (_) => const RateScreen()),
             ),
             icon: const Icon(Icons.tune),
             label: const Text('Chính sách tỷ lệ thủ thuật'),
@@ -566,7 +439,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                       final text = await ask('Số tiền mặt thu (VND)');
                       final amount = int.tryParse(text ?? '');
                       if (amount == null) return;
-                      final ok = await c.command('payment', {
+                      final ok = await finance.command('payment', {
                         'id': 'APP-$paymentKey',
                         'invoice': i['id'],
                         'amount': amount,
@@ -637,17 +510,17 @@ class _FinanceScreenState extends State<FinanceScreen> {
   }
 }
 
-class RateScreen extends StatefulWidget {
-  const RateScreen({super.key, required this.controller});
-  final FinanceController controller;
+class RateScreen extends ConsumerStatefulWidget {
+  const RateScreen({super.key});
   @override
-  State<RateScreen> createState() => _RateScreenState();
+  ConsumerState<RateScreen> createState() => _RateScreenState();
 }
 
-class _RateScreenState extends State<RateScreen> {
+class _RateScreenState extends ConsumerState<RateScreen> {
   @override
   Widget build(BuildContext context) {
-    final c = widget.controller;
+    final c = ref.watch(financeProvider);
+    final finance = ref.read(financeProvider.notifier);
     return Scaffold(
       appBar: AppBar(title: const Text('Chính sách thủ thuật')),
       body: ListView(
@@ -727,10 +600,7 @@ class _RateScreenState extends State<RateScreen> {
                     ),
                   );
                   rate.dispose();
-                  if (value != null) {
-                    await c.command('rate', value);
-                    if (mounted) setState(() {});
-                  }
+                  if (value != null) await finance.command('rate', value);
                 },
               ),
             ),
@@ -741,21 +611,19 @@ class _RateScreenState extends State<RateScreen> {
   }
 }
 
-class ProcedureForm extends StatefulWidget {
+class ProcedureForm extends ConsumerStatefulWidget {
   const ProcedureForm({
     super.key,
-    required this.controller,
     this.initialPatient = 'P001',
     this.patientIds,
   });
   final String initialPatient;
   final List<String>? patientIds;
-  final FinanceController controller;
   @override
-  State<ProcedureForm> createState() => _ProcedureFormState();
+  ConsumerState<ProcedureForm> createState() => _ProcedureFormState();
 }
 
-class _ProcedureFormState extends State<ProcedureForm> {
+class _ProcedureFormState extends ConsumerState<ProcedureForm> {
   final form = GlobalKey<FormState>();
   final gross = TextEditingController(),
       discount = TextEditingController(text: '0'),
@@ -773,7 +641,7 @@ class _ProcedureFormState extends State<ProcedureForm> {
   @override
   void initState() {
     super.initState();
-    final d = widget.controller.data!;
+    final d = ref.read(financeProvider).data!;
     day = d['today'];
     patient = widget.initialPatient;
     gross.text = '${d['services'][0]['price']}';
@@ -820,7 +688,8 @@ class _ProcedureFormState extends State<ProcedureForm> {
   );
   @override
   Widget build(BuildContext context) {
-    final c = widget.controller, d = c.data!;
+    final c = ref.watch(financeProvider), d = c.data!;
+    final finance = ref.read(financeProvider.notifier);
     final doctors = (d['doctors'] as List)
         .map(
           (x) =>
@@ -927,7 +796,7 @@ class _ProcedureFormState extends State<ProcedureForm> {
                         if (!form.currentState!.validate()) return;
                         setState(() => saving = true);
                         final sh = (double.parse(share.text) * 100).round();
-                        final ok = await c.command('entry', {
+                        final ok = await finance.command('entry', {
                           'patient': patient,
                           'invoice': invoice,
                           'service': service,
