@@ -62,6 +62,12 @@ Sau đó cập nhật README, docs vận hành/domain liên quan và append chec
 
 Khi thiết kế, sửa hoặc review UI/UX Pema, đọc [pema-design](.agents/skills/pema-design/SKILL.md) và reference phù hợp. Hướng dẫn dùng/chia sẻ ở [docs/23_PEMA_DESIGN_SKILL.md](docs/23_PEMA_DESIGN_SKILL.md). Khi token, navigation hoặc capability đổi, cập nhật skill cùng docs, tránh để bản hướng dẫn lệch code. Skill không thay yêu cầu cụ thể của người dùng.
 
+Khi đối chiếu web với design canvas claude.ai/design và bổ sung màn còn thiếu (chỉ thiết kế, không code .dart), làm theo [pema-web-to-canvas](.claude/skills/pema-web-to-canvas/SKILL.md); cập nhật `references/coverage.md` của skill sau mỗi lần chạy.
+
+## Ghi nhận thay đổi web cho design canvas
+
+Mỗi thay đổi **hiển thị** trên web Pema (`prototype/clinic-web`, `prototype/patient-mobile`, `prototype/finance`, `prototype/shared/*.js|*.css`) phải thêm một mục vào "Chờ chuyển" của [web-changes.md](.claude/skills/pema-web-to-canvas/web-changes.md) trong **cùng commit**: màn/tab/modal/dialog thêm hoặc xóa, trường/nút/bộ lọc/trạng thái đổi, luồng đổi, câu ràng buộc nghiệp vụ đổi, token CSS đổi. Ghi nơi sửa (file + selector/nút), thay đổi, mã màn canvas dự kiến (tra `references/coverage.md`, không chắc ghi "chưa rõ"). Refactor không đổi giao diện, test, seed dữ liệu và sửa lỗi không đổi hiển thị thì không cần ghi. Không tự sửa canvas trong lúc sửa web, trừ khi được yêu cầu; skill chuyển đổi đọc nhật ký này thay vì rà lại toàn bộ màn. Kiểm tra trước commit: `node .claude/skills/pema-web-to-canvas/scripts/pending.cjs` không còn file `✗ CHƯA GHI`.
+
 
 ## CRM01 và tài khoản demo
 

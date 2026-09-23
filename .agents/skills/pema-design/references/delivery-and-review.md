@@ -51,4 +51,7 @@ Nếu người dùng yêu cầu commit/push: xem diff, stage rõ file thuộc nh
 Tổng quan chủ phòng khám, thu/đối soát và tiền thủ thuật mới dùng API/SQLite chung web/Flutter. Giữ phân biệt doanh số, thực thu, công nợ và tiền bác sĩ; snapshot tỷ lệ, kỳ chốt, projection theo role và thông báo foreground. Đọc `docs/24_FINANCE_AND_PROCEDURE_FEES.md` và bộ PB02 trước khi sửa; giới hạn finance memory-only ở PB01 không áp cho module mới. Chạy `python prototype/finance_test.py` khi thay công thức/ledger.
 
 
+Thay đổi hiển thị trên web (màn, tab, modal, dialog, trường, nút, trạng thái, luồng, câu ràng buộc, token CSS) phải kèm một mục trong "Chờ chuyển" của `.claude/skills/pema-web-to-canvas/web-changes.md` cùng commit, để design canvas claude.ai/design được cập nhật đúng chỗ mà không phải rà lại toàn bộ màn. Chi tiết và mẫu ghi ở `AGENT.md` › "Ghi nhận thay đổi web cho design canvas".
+
+
 Mobile CRM02: dùng `docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md` làm nguồn hiện trạng. Tài chính nằm trong Clinic shell; native chọn role trước tác vụ, không nhét CSKH/thu ngân/clinical chung home. Care ưu tiên một bước tiếp theo; nội bộ và bàn giao không thành tin nhắn người bệnh.
