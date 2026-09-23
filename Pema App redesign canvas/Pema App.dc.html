@@ -24,7 +24,7 @@ a:hover{color:#083A6E}
   <header style="display:flex;flex-direction:column;gap:12px;max-width:1100px">
     <div style="font-size:13px;font-weight:600;letter-spacing:.12em;color:#0B4F94">PEMA · NATIVE REVIEW</div>
     <h1 style="margin:0;font-size:44px;line-height:1.15;font-weight:700;color:#083A6E;letter-spacing:-0.02em">Base design dựng lại từ Flutter template</h1>
-    <p style="margin:0;font-size:16px;line-height:1.6;color:#5D7184;max-width:860px;text-wrap:pretty">Mỗi màn hình bám theo lib/main.dart, care_workspace.dart, finance.dart và widgets/pema_bottom_nav.dart; state nằm ở lib/state/ (Riverpod: session, catalog, patients, orders, finance). Dữ liệu người bệnh, sản phẩm và tài chính là dữ liệu mẫu vì assets/patients.json, products.json và pema-logo.png chưa có trong thư mục tải lên.</p>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#5D7184;max-width:860px;text-wrap:pretty">Mỗi màn hình bám theo lib/main.dart, care_workspace.dart, finance.dart và widgets/pema_bottom_nav.dart; state nằm ở lib/state/ (Riverpod: session, catalog, patients, orders, finance). Dữ liệu người bệnh, sản phẩm và tài chính là dữ liệu mẫu vì assets/patients.json, products.json và pema-logo.png chưa có trong thư mục tải lên. Nhóm I–K bổ sung các màn có trên Clinic Web / Patient Mobile web nhưng chưa có trong Flutter, dựng lại theo mẫu mobile bằng cùng bộ block.</p>
   </header>
 
   <section style="display:flex;flex-direction:column;gap:28px;max-width:2860px">
@@ -624,7 +624,7 @@ a:hover{color:#083A6E}
   </sc-for>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Canvas&quot;},&quot;bezel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Canvas&quot;},&quot;group&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Tất cả&quot;,&quot;options&quot;:[&quot;Tất cả&quot;,&quot;A · Clinic&quot;,&quot;B · Bác sĩ&quot;,&quot;C · CSKH&quot;,&quot;D · Kế toán&quot;,&quot;E · Pema Care&quot;,&quot;F · Nghiệp vụ Clinic&quot;,&quot;G · Nghiệp vụ Care&quot;,&quot;H · Tài chính&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Canvas&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Canvas&quot;},&quot;bezel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Canvas&quot;},&quot;group&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Tất cả&quot;,&quot;options&quot;:[&quot;Tất cả&quot;,&quot;A · Clinic&quot;,&quot;B · Bác sĩ&quot;,&quot;C · CSKH&quot;,&quot;D · Kế toán&quot;,&quot;E · Pema Care&quot;,&quot;F · Nghiệp vụ Clinic&quot;,&quot;G · Nghiệp vụ Care&quot;,&quot;H · Tài chính&quot;,&quot;I · Vận hành web&quot;,&quot;J · Patient 360 web&quot;,&quot;K · Pema Care web&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Canvas&quot;}}">
 class Component extends DCLogic {
   build() {
     const money = v => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ₫';
@@ -961,6 +961,184 @@ class Component extends DCLogic {
         input({ label: 'Ghi chú xác nhận hoàn tất' }), sp(14), p('Ghi nhận • Chờ kế toán duyệt')], { ts: 22, tw: 400 })
     ];
 
+    // I–K · Bổ sung từ web (prototype/clinic-web, patient-mobile): chưa có trong Flutter, dựng bằng block sẵn có.
+    const WEB = 'Web › ';
+    const invoiceCard = (name, code, svc, total, paid) => fc(ftitle(name), txt(`${code} · ${svc}`, { s: 12, c: MUTED }), sp(4),
+      fl('Tổng tiền', money(total)), fl('Đã thu', money(paid)), fl('Còn lại', money(total - paid)),
+      ...(total > paid ? [sp(8), ff('Thu tiền')] : [txt('Đã thanh toán', { s: 12, c: '#28745D', w: 600 })]));
+    const methodSheet = { pad: '0 20px 16px', align: 'stretch', title: 'Thu tiền · ' + pt.name, ts: 22, tc: '#17324D', g1: 4, sub: 'HD-DEMO-001 · Còn lại ' + money(150000), ss: 14, sc: MUTED, g2: 12, rowPad: '0 8px', rs: 16,
+      rows: [['radio_button_checked', 'Tiền mặt', '#0B4F94'], ['radio_button_unchecked', 'Chuyển khoản', MUTED]].map(([icon, text, ic]) => ({ icon, is: 21, ic, text, tc: '#17324D', hasTrail: false, trail: '' })),
+      hasNotice: true, notice: 'Số tiền mặc định bằng phần còn lại · không thu vượt dư nợ · không kết nối ngân hàng', hasPrimary: true, primary: 'Xác nhận thu tiền' };
+    const cashier = [
+      h('Thu ngân', 'Hóa đơn & thanh toán · dữ liệu mẫu'),
+      m(['48', 'Tổng hóa đơn'], ['11,3tr', 'Còn phải thu']),
+      t('Đã thu lũy kế', money(61650000) + ' · không thu trùng', 'account_balance_wallet', false),
+      chips([['Tất cả', 'sel'], ['Còn phải thu', ''], ['Đã thanh toán', '']]),
+      invoiceCard(pt.name, 'HD-DEMO-001 · 2026-09-20', 'Tái khám & đánh giá', 300000, 150000),
+      invoiceCard(pt.name, 'HD-0001 · 2026-09-06', 'Buổi chăm sóc / điều trị', 1200000, 1200000)
+    ];
+    const I = [
+      det('I1', 'Tổng quan', WEB + 'dashboard · KPI vận hành, CSKH và vòng đời khách hàng', [
+        h('Chào buổi sáng, BS. Tâm', 'Vận hành hôm nay và CSKH · 22/09/2026'),
+        m(['31', 'Lịch hôm nay'], ['1/1', 'Đến / chờ'], ['0', 'Vắng hẹn']),
+        t('Phát sinh hôm nay', money(13500000) + ' · hóa đơn, không phải thực thu', 'receipt_long'),
+        s('CSKH'), m(['46', 'Cần CSKH'], ['10', 'Quá hạn'], ['8', 'Nguy cơ mất']),
+        s('Ưu tiên chăm sóc'), ...people.slice(0, 3).map(careRow),
+        n('Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH.')]),
+      det('I2', 'Tiếp đón hôm nay', WEB + 'today · bảng tiếp đón chuyển thành thẻ theo giờ, Check-in / Vắng / Mời vào phòng', [
+        h('Hôm nay tại Pema', 'Tiếp đón theo từng lịch hẹn · 22/09/2026'),
+        m(['31', 'Tổng lịch'], ['1', 'Đang chờ'], ['0', 'Hoàn tất']),
+        chips([['Tất cả', 'sel'], ['Chưa đến', ''], ['Đang chờ', ''], ['Vắng hẹn', '']]),
+        fc(ftitle('10:30 · ' + pt.name), txt(`${pt.id} · Tái khám & đánh giá · BS. Tâm`, { s: 12, c: MUTED }), fl('Trạng thái', 'Đang chờ'), fl('Giá dự kiến', money(300000)), sp(8), ff('Mời vào phòng')),
+        fc(ftitle('11:00 · ' + people[1].name), txt(`${people[1].id} · Tư vấn da liễu · BS. Mai`, { s: 12, c: MUTED }), fl('Trạng thái', 'Chưa đến'), fl('Giá dự kiến', money(500000)), fb('Check-in', 'Vắng'))
+      ], { hasFab: true, fab: { label: 'Đặt lịch mới' } }),
+      det('I3', 'Điều phối theo phòng', WEB + 'schedule · lưới phòng × giờ thành danh sách theo phòng; kéo-thả chỉ có trên web', [
+        week(), dd('Tất cả phòng', 'Phòng'), sp(4),
+        s('Khám da liễu · 8 lịch'),
+        t('10:30–11:00', `${pt.name} · Tái khám & đánh giá · BS. Tâm`, 'schedule'),
+        t('14:00–14:30', `${people[10].name} · Tái khám & đánh giá · BS. Tâm`, 'schedule'),
+        s('Laser & thủ thuật · 7 lịch'),
+        t('09:00–09:45 · +15′ đệm', `${people[3].name} · Laser theo chỉ định · BS. An`, 'schedule'),
+        n('15′ chuẩn bị phòng sau thủ thuật · 6 lịch chờ xếp · khoảng khóa phòng được kiểm tra khi dời lịch.')]),
+      det('I4', 'Đặt lịch hẹn', WEB + 'dialog đặt lịch · chọn dịch vụ, bác sĩ, phòng trước khi chọn giờ', [
+        dd(`${pt.id} · ${pt.name}`, 'Bệnh nhân'), sp(14), dd('Tái khám & đánh giá', 'Dịch vụ'), sp(14),
+        dd('BS. Tâm', 'Bác sĩ'), sp(14), dd('Khám da liễu', 'Phòng'), sp(6),
+        dateBtn('Ngày 22/9/2026'), chips([['09:00', 'dis'], ['10:30', 'sel'], ['11:00', ''], ['14:00', '']]),
+        n('30 phút điều trị + 0 phút chuẩn bị · ' + money(300000)),
+        p('Xác nhận đặt lịch'), textBtn('Tìm giờ trống', 'search')]),
+      det('I5', 'Hồ sơ mới', WEB + 'patients › Hồ sơ mới · tìm trước khi tạo để tránh chia lịch sử', [
+        n('Hồ sơ demo · tìm theo tên, mã hoặc số điện thoại trước khi tạo mới.'),
+        input({ label: 'Họ và tên' }), sp(14), input({ label: 'Tuổi' }), sp(14), input({ label: 'Mối quan tâm' }), sp(8),
+        p('Tạo hồ sơ')]),
+      det('I6', 'Follow-up Inbox', WEB + 'followups · lọc Ảnh / Triệu chứng / Quá hạn, mỗi mục có người được giao', [
+        h('Theo dõi', 'Ảnh, triệu chứng và mốc bị bỏ sót'),
+        m(['5', 'Đang mở'], ['3', 'Cần bác sĩ'], ['2', 'Bỏ sót']),
+        chips([['Tất cả 5', 'sel'], ['Ảnh 2', ''], ['Triệu chứng 1', ''], ['Quá hạn 1', '']]),
+        t('Ảnh cần bác sĩ xem · ' + pt.name, 'Đỏ nhẹ đã giảm, không đau.\n22/9 · Giao: BS. Tâm · có ảnh', 'photo_camera'),
+        t('Phản hồi triệu chứng · ' + people[3].name, 'Rát tăng sau chăm sóc, muốn được gọi lại.\n22/9 · Giao: BS. Tâm', 'sick'),
+        t('Quá hạn phản hồi 3 ngày · ' + people[4].name, 'Chưa có phản hồi sau buổi điều trị.\n19/9 · Giao: CSKH Thu', 'schedule'),
+        t('Thiếu ảnh mốc · ' + people[9].name, 'Chưa lưu bộ ảnh chính diện buổi 2.\n22/9 · Giao: Điều dưỡng Hương', 'no_photography')]),
+      det('I7', 'Ảnh trước / sau', WEB + 'studio · chọn góc chụp, so sánh cùng view; không tự căn chỉnh hay chấm hiệu quả', [
+        h('Before / After Studio', `${pt.name} · Nám · tăng sắc tố`),
+        chips([['Chính diện', 'sel'], ['Má trái', ''], ['Má phải', '']]),
+        { photos: true, items: [{ label: 'Trước' }, { label: 'Sau' }] }, sp(12),
+        n('Chưa kiểm định căn chỉnh ảnh; bác sĩ kiểm tra điều kiện chụp trước khi so sánh. Không suy ra hiệu quả y khoa từ ảnh minh họa.'),
+        txt('Metadata: vùng Mặt · góc Chính diện · đồng ý chăm sóc: có ghi nhận', { s: 12, c: MUTED }), sp(12),
+        outlined('So sánh trượt', 'compare'), p('Thêm ảnh')]),
+      det('I8', 'Khóa thời gian phòng', WEB + 'resources › Khóa phòng · chỉ lưu khi không vướng lịch', [
+        dd('Laser & thủ thuật', 'Phòng'), sp(6), dateBtn('Ngày 23/9/2026'), sp(6),
+        input({ label: 'Từ', value: '14:00' }), sp(14), input({ label: 'Đến', value: '15:00' }), sp(14),
+        input({ label: 'Lý do', value: 'Bảo trì thiết bị laser' }), sp(8), p('Lưu khoảng khóa'),
+        s('Khoảng khóa hiện có'), t('Laser & thủ thuật · 23/9/2026', '14:00–15:00 · Bảo trì thiết bị laser', 'block', false)]),
+      det('I9', 'Chỉnh dịch vụ', WEB + 'services › Chỉnh dịch vụ · áp dụng cho lịch mới', [
+        input({ label: 'Tên dịch vụ', value: 'Laser theo chỉ định' }), sp(14),
+        input({ label: 'Điều trị (phút)', value: '45' }), sp(14), input({ label: 'Chuẩn bị (phút)', value: '15' }), sp(14),
+        input({ label: 'Giá (VND)', value: '2500000' }), sp(14), dd('Đang dùng', 'Trạng thái'), sp(16),
+        n('Lịch đã đặt giữ giá và thời lượng tại lúc đặt.'), p('Lưu dịch vụ')]),
+      det('I10', 'Thu ngân · hóa đơn', WEB + 'cashier · danh sách hóa đơn toàn phòng khám, lọc còn phải thu', cashier),
+      det('I11', 'Thu tiền · phương thức', WEB + 'dialog thu tiền · tiền mặt hoặc chuyển khoản, mặc định phần còn lại', cashier, { hasSheet: true, sheet: methodSheet, title: 'Thu ngân · hóa đơn' }),
+      det('I12', 'Ask Pema · hỏi đáp', WEB + 'ask · câu hỏi gợi ý, câu trả lời kèm cách tính và hồ sơ nguồn', [
+        h('Ask Pema', 'Truy vấn mô phỏng · chưa tích hợp mô hình AI'),
+        search('Bạn muốn biết điều gì?'), chips([['Ảnh chờ xem', 'sel'], ['Kế hoạch đang chạy', ''], ['Quá hạn tái khám', '']]),
+        n('2 ảnh chờ bác sĩ xem\nCách tính: mục Theo dõi loại Ảnh, trạng thái đang mở.'),
+        t(pt.name, 'Ảnh cần bác sĩ xem · 22/9/2026', 'photo_camera'), t(people[6].name, 'Kiểm tra chăm sóc ngày 2 · có ảnh', 'photo_camera'),
+        txt('Nguồn: Follow-up Inbox · kiểm tra lại trước khi dùng.', { s: 12, c: MUTED })]),
+      det('I13', 'Ghi nhận CSKH', WEB + 'crm › Xử lý · kênh, kết quả, bước tiếp theo, phụ trách; không gửi tin/gọi thật', [
+        h(people[0].name, `${GROUPS.d1} · Còn 2 buổi`),
+        n('Ghi nhận cuộc gọi/tin nhắn mô phỏng. Không gửi Zalo/SMS hoặc thực hiện cuộc gọi thật.'),
+        chips([['Gọi điện', 'sel'], ['Zalo', ''], ['SMS', '']]), sp(8),
+        dd('Đồng ý đặt lịch', 'Kết quả'), sp(14), input({ label: 'Nội dung / kết quả trao đổi', lines: 2 }), sp(14),
+        dd('Đặt lịch', 'Hành động tiếp theo'), sp(14), dd('CSKH Mai Anh', 'Phụ trách'), sp(8),
+        p('Lưu kết quả chăm sóc'), txt('Đồng ý đặt lịch sẽ mở form lịch trước khi hoàn tất.', { s: 12, c: MUTED })])
+    ];
+
+    const J = [
+      det('J1', 'Tiền sử & chẩn đoán', WEB + 'Patient 360 › Tư vấn · bác sĩ ghi nhận, AI chỉ tạo nháp', [
+        h(pt.name, 'Bác sĩ ghi nhận · không dùng AI tự chẩn đoán'),
+        input({ label: 'Tiền sử đã khai thác', lines: 2, value: 'Da nhạy cảm, từng đỏ da sau laser.' }), sp(14),
+        input({ label: 'Khám / chẩn đoán do bác sĩ xác nhận', lines: 2 }), sp(8), outlined('Bác sĩ lưu nhận định', 'save'),
+        s('Tư vấn lâm sàng'), n('AI chỉ tạo bản nháp. Bác sĩ cần xem, sửa và xác nhận trước khi lưu vào hồ sơ.'),
+        input({ label: 'Ghi chú ngắn / transcript mô phỏng', lines: 2 }), sp(8), p('Tạo bản nháp ghi chú')]),
+      det('J2', 'AI brief trước buổi hẹn', WEB + 'Patient 360 › AI brief · bản nháp có nguồn, bác sĩ duyệt', [
+        hero('Brief trước\nbuổi hẹn.', `${pt.name} · Phục hồi & chăm sóc da`, 'auto_awesome'), sp(16),
+        fc(ftitle('Bản nháp · sửa trước khi duyệt'), txt('Đã hoàn tất 2/5 buổi. Đỏ nhẹ khoảng 2 ngày sau buổi 2, hiện đã ổn. Còn 1 ảnh chờ bác sĩ xem.', { ws: 'normal' }), sp(8),
+          txt('Nguồn: Patient 360, sự kiện đã ghi nhận, mục theo dõi đang mở.', { s: 12, c: MUTED, ws: 'normal' })),
+        outlined('Sao chép', 'content_copy'), p('Duyệt & lưu brief')]),
+      det('J3', 'Kế hoạch điều trị', WEB + 'Patient 360 › Kế hoạch · mục tiêu, mốc buổi, tiêu chí theo dõi (góc nhìn Clinic)', [
+        hero('Phục hồi & chăm sóc da', 'Kế hoạch đang hoạt động · 2/5 buổi · BS. Tâm', 'route'), sp(16),
+        txt('Giảm đỏ và phục hồi hàng rào da, theo dõi đáp ứng qua từng mốc ảnh.', { s: 13, c: MUTED, ws: 'normal' }),
+        s('Các mốc'),
+        t('Buổi 2 · Đã hoàn tất', 'Đã ghi nhận ảnh và hướng dẫn chăm sóc', 'check_circle', false),
+        t('Buổi 3 · Tiếp theo', 'Cần đánh giá da trước khi thực hiện', 'radio_button_checked', false),
+        fc(ftitle('Tiêu chí theo dõi'), fl('Ảnh mốc', 'Chính diện · 2/5'), fl('Người bệnh tự đánh giá', 'Chưa gửi'), fl('Người duyệt', 'BS. Tâm'), fl('Nhắc hẹn', 'Đang bật')),
+        n('Câu hỏi buổi tới: “Đỏ kéo dài bao lâu sau lần trước? Có thay đổi gì trong chăm sóc tại nhà không?”'),
+        outlined('Điều chỉnh kế hoạch', 'edit')]),
+      det('J4', 'Điều chỉnh kế hoạch', WEB + 'modal plan-edit · buổi đã hoàn tất giữ nguyên', [
+        input({ label: 'Tên kế hoạch', value: 'Phục hồi & chăm sóc da' }), sp(14),
+        input({ label: 'Tổng số buổi dự kiến', value: '5' }), sp(16),
+        n('Chỉ đổi tên và số buổi dự kiến. Buổi đã ghi nhận không bị sửa.'), p('Lưu kế hoạch')]),
+      det('J5', 'Ghi buổi điều trị', WEB + 'Patient 360 › Buổi điều trị · protocol chăm sóc, vùng/góc chụp và đồng ý ảnh', [
+        n(`Buổi 3/5 · BS. Tâm\nHồ sơ có cảnh báo: Da nhạy cảm. Xác nhận trước khi thực hiện.`),
+        dd('Chăm sóc & laser theo chỉ định', 'Loại buổi'), sp(14), dd('Laser CO2 · D+1 / D+3 / D+7 / D+30', 'Protocol chăm sóc'), sp(6),
+        dateBtn('Tái khám dự kiến 06/10/2026'),
+        chips([['Mặt', 'sel'], ['Cổ', ''], ['Vùng khác', '']]), chips([['Chính diện', 'sel'], ['Má trái', ''], ['Má phải', '']]),
+        outlined('Thêm ảnh mốc', 'add_a_photo'), check('Người bệnh đã đồng ý dùng ảnh chăm sóc', true), p('Lưu buổi điều trị')]),
+      det('J6', 'Dịch vụ & tài chính', WEB + 'Patient 360 › Dịch vụ & tài chính · phát sinh, đã thu, dư nợ, tiền cọc', [
+        h('Hóa đơn của ' + pt.name, 'Không suy ra hoàn tất điều trị từ thanh toán'),
+        fc(ftitle('LP-P001 · Laser theo chỉ định'), txt('2/5 buổi · Đang thực hiện', { s: 12, c: MUTED }), sp(4),
+          fl('Giá chốt sau giảm', money(12000000)), fl('Đã thu', money(5350000)), fl('Còn lại', money(6650000)), fl('Tiền cọc đã phân bổ', money(4000000))),
+        t('HD-0001 · 6/9/2026', 'Buổi chăm sóc / điều trị · ' + money(1200000) + ' · Đã thanh toán', 'receipt_long', false),
+        t('HD-DEMO-001 · 22/9/2026', 'Tái khám & đánh giá · còn ' + money(150000), 'receipt_long'),
+        p('Mở thu ngân')]),
+      det('J7', 'CRM & CSKH hồ sơ', WEB + 'Patient 360 › CRM & CSKH · bối cảnh, việc còn mở, lịch sử liên hệ', [
+        n('BƯỚC TIẾP THEO · Dự kiến quay lại 22/9/2026\nLịch đã đặt · Phụ trách: CSKH Thu'),
+        fc(ftitle('Bối cảnh chăm sóc'), fl('Nguồn khách', 'Giới thiệu'), fl('Tiếp xúc đầu tiên', '26/6/2026'), fl('Khám gần nhất', '6/9/2026'), fl('CSKH gần nhất', 'Chưa liên hệ')),
+        s('Việc còn mở'), t('Đến hạn tái khám', '22/9/2026 · CSKH Thu', 'task_alt'),
+        s('Lịch sử CSKH'), empty('Chưa có hoạt động CSKH được ghi nhận'), sp(12),
+        outlined('Sửa ngày dự kiến', 'edit_calendar')]),
+      det('J8', 'Lịch sử hợp nhất', WEB + 'Patient 360 › Lịch sử · sự kiện gốc, người ghi nhận và nguồn', [
+        h('Lịch sử hợp nhất', 'Sự kiện gốc, người ghi nhận và liên kết công việc'),
+        t('22/9/2026 10:30 · Lịch hẹn', 'Tái khám & đánh giá · Lễ tân', 'event', false),
+        t('13/9/2026 · Cập nhật tại nhà đã xem', 'Đỏ nhẹ khoảng 2 ngày, hiện đã ổn · Điều dưỡng Hương', 'chat_bubble', false),
+        t('6/9/2026 · Hoàn tất buổi 2/5', 'Đã gửi hướng dẫn chăm sóc sau buổi · BS. Tâm', 'medical_services', false),
+        t('6/9/2026 · Bộ ảnh theo dõi', 'Chính diện · đồng ý dùng trong chăm sóc · Điều dưỡng Hương', 'photo_camera', false),
+        t('26/6/2026 · Bắt đầu kế hoạch', 'Mục tiêu và lịch đánh giá đã trao đổi · BS. Tâm', 'route', false)]),
+      det('J9', 'Nhắn tin người bệnh', WEB + 'modal message · tin hiển thị trên Pema Care; ghi chú nội bộ không gửi ở đây', [
+        n(`Tin nhắn sẽ hiển thị trên Pema Care của ${pt.name}. Không phải kênh cấp cứu.`),
+        input({ label: 'Nội dung', lines: 5 }), sp(8), p('Gửi tin nhắn', false)]),
+      det('J10', 'Thông tin cần nhớ', WEB + 'modal edit · cảnh báo hồ sơ và đồng ý ảnh', [
+        input({ label: 'Cảnh báo · mỗi dòng một mục', lines: 2, value: 'Da nhạy cảm\nTheo dõi đỏ da sau điều trị' }), sp(8),
+        check('Có đồng ý sử dụng ảnh chăm sóc', true), p('Lưu thông tin')]),
+      det('J11', 'Gửi chăm sóc tại nhà', WEB + 'modal care · bác sĩ duyệt hướng dẫn trước khi người bệnh thấy', [
+        n('Hướng dẫn đã duyệt mới xuất hiện ở Chăm sóc tại nhà của người bệnh.'),
+        input({ label: 'Hướng dẫn cho người bệnh', lines: 4, value: 'Làm sạch dịu nhẹ sáng & tối\nDưỡng ẩm phục hồi sau làm sạch\nChống nắng SPF 50+ mỗi sáng' }), sp(8),
+        p('Duyệt & gửi Pema Care')])
+    ];
+
+    const K = [
+      det('K1', 'Lịch hẹn', WEB + 'patient-mobile › appointments · Flutter chưa có tab này; mở từ Trang chủ', [
+        s('Sắp tới'), hero('10:30 · 22/9/2026', 'Tái khám & đánh giá · BS. Tâm', 'calendar_month'), sp(8), p('Xác nhận tôi sẽ đến'),
+        s('Các lịch đã đặt'),
+        t('22/9/2026 · 10:30', 'Tái khám & đánh giá · 30 phút · BS. Tâm', 'calendar_today', false),
+        t('06/10/2026 · 09:00', 'Laser theo chỉ định · 45 phút · BS. An', 'calendar_today', false),
+        s('Lịch đã qua'), t('Buổi 2 · Chăm sóc & laser', '6/9/2026 · Đã hoàn tất', 'check_circle'),
+        n('Cần đổi lịch, hãy nhắn cho đội ngũ Pema trước ít nhất 4 giờ.')]),
+      det('K2', 'Tài liệu & hóa đơn', WEB + 'patient-mobile › docs · hóa đơn, hướng dẫn đã gửi, đơn đã duyệt; chỉ xem', [
+        s('Hóa đơn của bạn'),
+        t('Buổi chăm sóc / điều trị', 'HD-0001 · 6/9/2026 · Đã thanh toán\n' + money(1200000), 'receipt_long', false),
+        t('Tái khám & đánh giá', 'HD-DEMO-001 · Đã thu một phần · còn ' + money(150000), 'receipt_long', false),
+        s('Hướng dẫn đã gửi'), t('Hướng dẫn chăm sóc sau buổi', 'Đã duyệt · 6/9/2026', 'description'),
+        s('Đơn & phiếu đã duyệt'), t('DN-1 · BS. Tâm', 'Tretinoin 0.025% 20g · Kem chống nắng SPF50+', 'medication')]),
+      home('K3', 'Hành trình · cập nhật', WEB + 'patient-mobile › journey · thêm dòng thời gian cập nhật gần đây', 'Care', 'care', 1, [
+        h('Hành trình của bạn', 'Mỗi bước chăm sóc đều được ghi nhận'),
+        hero('Phục hồi & chăm sóc da', '2/5 buổi · tiến độ số buổi, không phải mức cải thiện da', 'spa'), sp(16),
+        t('Ảnh trước & sau', 'Xem các mốc ảnh trong hành trình', 'photo_library'),
+        s('Cập nhật gần đây · 3 mốc'),
+        t('13/9/2026', 'Cập nhật tại nhà đã được xem', 'chat_bubble', false),
+        t('6/9/2026', 'Hoàn tất buổi 2/5', 'check_circle', false),
+        t('6/9/2026', 'Bộ ảnh theo dõi · chính diện', 'photo_camera', false)])
+    ];
+
     const groups = [
       { code: 'A', title: 'Clinic · Chủ phòng khám', sub: 'staffRole = owner · 5 tab · main.dart › Workspace', screens: A },
       { code: 'B', title: 'Bác sĩ điều trị', sub: 'staffRole = doctor · BS. Tâm · staffBody()', screens: B },
@@ -969,7 +1147,10 @@ class Component extends DCLogic {
       { code: 'E', title: 'Pema Care · Người bệnh', sub: 'careMode = true · 4 tab', screens: E },
       { code: 'F', title: 'Nghiệp vụ Clinic', sub: 'main.dart › Detail(route) · góc nhìn chủ phòng khám', screens: F },
       { code: 'G', title: 'Nghiệp vụ Pema Care', sub: 'Detail(route, care: true) · route được phép trong careMode', screens: G },
-      { code: 'H', title: 'Tài chính', sub: 'finance.dart › FinanceScreen, RateScreen, ProcedureForm', screens: H }
+      { code: 'H', title: 'Tài chính', sub: 'finance.dart › FinanceScreen, RateScreen, ProcedureForm', screens: H },
+      { code: 'I', title: 'Vận hành Clinic · bổ sung từ web', sub: 'prototype/clinic-web · chưa có trong Flutter · dựng lại theo mẫu mobile', screens: I },
+      { code: 'J', title: 'Patient 360 đầy đủ · bổ sung từ web', sub: 'clinic.js › patient360 tab & modal · chưa có trong Flutter', screens: J },
+      { code: 'K', title: 'Pema Care · bổ sung từ web', sub: 'prototype/patient-mobile · màn web chưa có trong Flutter', screens: K }
     ];
 
     const KEYS = ['heading', 'h2', 'section', 'hero', 'metrics', 'actions', 'tile', 'notice', 'primary', 'outlined', 'textBtn', 'input', 'dd', 'week', 'chips', 'check', 'photos', 'order', 'a5', 'txt', 'sp', 'buckets', 'careSearch', 'inputChip', 'listHead', 'careRow', 'empty', 'period', 'finHero', 'ftitle', 'fcard', 'pill', 'mcard', 'dateBtn'];
