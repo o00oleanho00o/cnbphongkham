@@ -11,7 +11,7 @@ Cập nhật 22/09/2026. Áp dụng cho bản duyệt thiết kế; không tri�
 |---|---|
 | `/clinic-web/`, `/patient-mobile/` | HTML/JS, chia sẻ localStorage cùng origin/profile |
 | `/native-review/` | Trang HTML chứa khung duyệt Flutter, không tự build app |
-| `/native-preview/` | Flutter Web build từ Dart; DemoStore trong bộ nhớ, độc lập web |
+| `/native-preview/` | Flutter Web build từ Dart; state Riverpod trong bộ nhớ, độc lập web |
 
 Khung review có 390×844, 360×800, 430×932 và 768×1024. Đây là logical viewport để duyệt, không mô phỏng đầy đủ OS/bàn phím/gesture thiết bị.
 
@@ -26,16 +26,17 @@ Từ thư mục gốc repository, trong PowerShell:
 $env:Path = "C:\Users\email\.cache\pema-flutter-sdk\bin;$env:Path"
 Set-Location flutter-template
 flutter pub get
-flutter analyze
+dart run build_runner build
+dart analyze   # gồm riverpod_lint; flutter analyze không chạy plugin
 flutter test --reporter expanded
 ./build-preview.ps1
 Set-Location ../prototype
 python -m http.server 4173 --bind 127.0.0.1
 ```
 
-Script chạy pub get, `flutter build web --base-href /native-preview/ --no-web-resources-cdn`, rồi copy `build/web/*` sang `prototype/native-preview/`. Build output bị git-ignore; fresh clone phải build trước khi mở [Native review](http://127.0.0.1:4173/native-review/). Không mở bằng file://, không sửa JS đã compile để thay hành vi app.
+Script chạy pub get, `dart run build_runner build`, `flutter build web --base-href /native-preview/ --no-web-resources-cdn`, rồi copy `build/web/*` sang `prototype/native-preview/`. Build output bị git-ignore; fresh clone phải build trước khi mở [Native review](http://127.0.0.1:4173/native-review/). Không mở bằng file://, không sửa JS đã compile để thay hành vi app.
 
-Khi phát triển có thể dùng `flutter run -d chrome` trong `flutter-template`; đây là dev server riêng, không tự cập nhật preview ở cổng 4173. Sau sửa Dart/assets phải build lại để duyệt URL 4173.
+Khi sửa provider trong `lib/state/`, chạy `dart run build_runner watch` song song để cập nhật `*.g.dart`; file sinh ra được commit để fresh clone chạy test ngay. Khi phát triển có thể dùng `flutter run -d chrome` trong `flutter-template`; đây là dev server riêng, không tự cập nhật preview ở cổng 4173. Sau sửa Dart/assets phải build lại để duyệt URL 4173.
 
 Android cần Android SDK và device/emulator: `flutter devices`, `flutter run -d <device-id>`. iOS cần macOS/Xcode. Các lệnh này là hướng dẫn tiếp theo, chưa phải bằng chứng đã chạy trên thiết bị.
 

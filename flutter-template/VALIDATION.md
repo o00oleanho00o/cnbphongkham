@@ -21,3 +21,10 @@ Flutter analyze PASS; 12 tests PASS (6 baseline + 2 finance controller + 4 viewp
 ## Mobile CRM02 và CSKH redesign — 22/09/2026
 
 Flutter analyze: No issues found; 17 tests PASS, build preview PASS. Browser kiểm 360×800, 390×844, 430×932, 768×1024: khách đầu y=334; filter D3 → hồ sơ P038 → lưu liên hệ → Đã liên hệ chạy được, không pageerror. [Tổng hợp bằng chứng](../demo-assets/screenshots/mobile-crm02/validation-summary.json), [native browser](../demo-assets/screenshots/mobile-crm02/native-review-results.json). Chưa kiểm thiết bị thật.
+
+
+## Riverpod state layer — 23/09/2026
+
+`DemoStore`/`FinanceController` thay bằng provider `riverpod_generator` 4.0.9 (`flutter_riverpod` 3.4.3) trong `lib/state/`; hành vi giữ nguyên. `flutter analyze`: No issues found. `flutter test`: 18 PASS (17 cũ viết lại theo ProviderContainer + 1 mới: thông báo thanh toán owner vẫn hiện khi đang mở màn con, vì Riverpod 3 tạm dừng listener của route bị che). `build-preview.ps1` (có build_runner) PASS. Browser 390×844 trên preview + finance API: owner home có doanh số API; thêm H002 hai lần gộp 1 dòng/SL 2; giảm/tăng SL; bác sĩ duyệt DN-1 đúng hướng dẫn; thu ngân thu đủ 11.000 ₫; Care P001 chỉ thấy đơn đã duyệt; đổi sang BS. Mai chọn hồ sơ của BS. Mai; CSKH D3 → P038 → Đã liên hệ. Không pageerror. Chưa kiểm thiết bị thật.
+
+`riverpod_lint` 3.1.9 bật qua `plugins:` trong `analysis_options.yaml`. `dart analyze`: No issues found; file thử vi phạm (runApp thiếu ProviderScope, BuildContext trong provider) được báo `missing_provider_scope` và `avoid_build_context_in_providers`, sau đó đã xóa. `flutter analyze` không chạy plugin nên dùng `dart analyze` cho kiểm tra này.

@@ -7,4 +7,4 @@ Source: `prototype/finance_server.py` (API/store); `prototype/finance/` (workspa
 
 ## Mobile và Clinic shell — 22/09/2026
 
-Tái dùng finance.js dưới dạng mount/dispose, CSS giới hạn trong finance-workspace; Clinic làm shell duy nhất. crm-data bổ sung fixtures và projection patientNext; patient.js chọn nhóm/tài khoản. Flutter DemoStore chứa hồ sơ và state theo patient, Workspace chọn vai trò trước khi chọn tác vụ.
+Tái dùng finance.js dưới dạng mount/dispose, CSS giới hạn trong finance-workspace; Clinic làm shell duy nhất. crm-data bổ sung fixtures và projection patientNext; patient.js chọn nhóm/tài khoản. Flutter provider chứa hồ sơ và state theo patient, Workspace chọn vai trò trước khi chọn tác vụ.

@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
-import 'store.dart';
-import 'finance.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'care_workspace.dart';
+import 'finance.dart';
+import 'format.dart';
+import 'state/catalog.dart';
+import 'state/finance.dart';
+import 'state/orders.dart';
+import 'state/patients.dart';
+import 'state/session.dart';
+import 'widgets/pema_bottom_nav.dart';
 
 const blue = Color(0xFF0B4F94),
     navy = Color(0xFF083A6E),
@@ -11,17 +18,37 @@ const blue = Color(0xFF0B4F94),
     paper = Color(0xFFF4F8FB);
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final store = DemoStore();
-  await store.load();
-  runApp(PemaApp(store: store, enableFinance: true));
+  final catalog = await Catalog.load();
+  runApp(
+    ProviderScope(
+      overrides: [
+        catalogProvider.overrideWithValue(catalog),
+        financeEnabledProvider.overrideWithValue(true),
+      ],
+      child: const PemaApp(),
+    ),
+  );
 }
 
+final _navigator = GlobalKey<NavigatorState>();
+
+void pushFinance(NavigatorState navigator, WidgetRef ref, [int tab = 0]) =>
+    navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => FinanceScreen(
+          initialTab: tab,
+          lockRole: true,
+          patientIds: ref.read(catalogProvider).patientIds,
+        ),
+      ),
+    );
+
 class PemaApp extends StatelessWidget {
-  final DemoStore store;
-  final bool enableFinance;
-  const PemaApp({super.key, required this.store, this.enableFinance = false});
+  const PemaApp({super.key});
   @override
   Widget build(BuildContext context) => MaterialApp(
+    navigatorKey: _navigator,
+    builder: (context, child) => PaymentAlerts(child: child!),
     debugShowCheckedModeBanner: false,
     title: 'Pema • Native review',
     theme: ThemeData(
@@ -70,89 +97,73 @@ class PemaApp extends StatelessWidget {
         bodyMedium: TextStyle(color: ink, fontSize: 14, height: 1.5),
       ),
     ),
-    home: Workspace(store: store, enableFinance: enableFinance),
+    home: const Workspace(),
   );
 }
 
-class Workspace extends StatefulWidget {
-  final DemoStore store;
-  final bool enableFinance;
-  const Workspace({super.key, required this.store, this.enableFinance = false});
+/// Lives above the Navigator: Riverpod pauses listeners on covered routes.
+class PaymentAlerts extends ConsumerWidget {
+  const PaymentAlerts({super.key, required this.child});
+  final Widget child;
   @override
-  State<Workspace> createState() => _WorkspaceState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (ref.watch(financeEnabledProvider)) {
+      ref.listen(financeProvider, (prev, next) {
+        final session = ref.read(sessionProvider);
+        if (session.careMode || session.staffRole != 'owner') return;
+        if (prev?.data == null || next.data == null) return;
+        if (next.unread <= prev!.unread) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Có thanh toán mới tại phòng khám'),
+            action: SnackBarAction(
+              label: 'Xem',
+              onPressed: () => pushFinance(_navigator.currentState!, ref, 3),
+            ),
+          ),
+        );
+      });
+    }
+    return child;
+  }
 }
 
-class _WorkspaceState extends State<Workspace> {
-  FinanceController? finance;
-  int seenFinanceUnread = 0;
-  bool financeLoaded = false;
-  bool care = false;
+class Workspace extends ConsumerStatefulWidget {
+  const Workspace({super.key});
+  @override
+  ConsumerState<Workspace> createState() => _WorkspaceState();
+}
+
+class _WorkspaceState extends ConsumerState<Workspace> {
   int index = 0;
-  String caseGroup = "all";
-  DemoStore get s => widget.store;
+  String caseGroup = 'all';
+  late Session s;
+  late Catalog catalog;
+  late Map<String, dynamic> profile;
+  late PatientState patient;
+  late Map<String, PatientState> states;
+  FinanceState? finance;
+  bool get care => s.careMode;
+  String get name => profile['name'] as String;
+
   @override
   void initState() {
     super.initState();
-    s.addListener(refresh);
-    if (widget.enableFinance) {
-      finance = FinanceController();
-      finance!.addListener(financeChanged);
-      finance!.start();
+    if (ref.read(financeEnabledProvider)) {
+      ref.read(financeProvider.notifier).start();
     }
   }
 
-  void financeChanged() {
-    if (!mounted) return;
-    final count = finance!.unread;
-    if (financeLoaded &&
-        !care &&
-        s.staffRole == 'owner' &&
-        count > seenFinanceUnread) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text("Có thanh toán mới tại phòng khám"),
-          action: SnackBarAction(label: "Xem", onPressed: () => openFinance(3)),
-        ),
-      );
-    }
-    if (finance!.data != null) financeLoaded = true;
-    seenFinanceUnread = count;
-    setState(() {});
-  }
+  void openFinance([int tab = 0]) =>
+      pushFinance(Navigator.of(context), ref, tab);
 
-  void openFinance([int tab = 0]) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => FinanceScreen(
-          controller: finance!,
-          initialTab: tab,
-          lockRole: true,
-          patientIds: s.profiles.map((p) => p['id'] as String).toList(),
-        ),
-      ),
-    );
-  }
-
-  void refresh() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    s.removeListener(refresh);
-    finance?.removeListener(financeChanged);
-    finance?.dispose();
-    super.dispose();
-  }
+  void select(int i) => ref.read(sessionProvider.notifier).select(i);
 
   void open(String route) {
-    if (!s.allows(route)) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            Detail(store: s, route: route, care: care, finance: finance),
-      ),
-    );
+    if (!ref.read(sessionProvider).allows(route)) return;
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => Detail(route: route)));
   }
 
   Widget action(String name, IconData icon, String route) => Expanded(
@@ -187,6 +198,14 @@ class _WorkspaceState extends State<Workspace> {
   );
   @override
   Widget build(BuildContext context) {
+    s = ref.watch(sessionProvider);
+    catalog = ref.watch(catalogProvider);
+    profile = ref.watch(selectedProfileProvider);
+    patient = ref.watch(currentPatientProvider);
+    states = ref.watch(patientsProvider);
+    finance = ref.watch(financeEnabledProvider)
+        ? ref.watch(financeProvider)
+        : null;
     final compact = !care && s.staffRole != 'owner';
     final labels = care
         ? ['Trang chủ', 'Hành trình', 'Tin nhắn', 'Hồ sơ']
@@ -266,26 +285,26 @@ class _WorkspaceState extends State<Workspace> {
                             ),
                             onTap: () {
                               setState(() {
-                                care = account[0] == 'patient';
-                                s.careMode = care;
                                 index = 0;
                                 caseGroup = 'all';
-                                if (!care) {
-                                  s.staffRole = account[0];
-                                  s.staffName = account[1];
-                                  s.staffDoctor = account[1];
-                                  if (!s.owns(s.selected))
-                                    s.selected = s.profiles.indexWhere(
-                                      (p) => p['doctor'] == s.staffDoctor,
-                                    );
-                                }
                               });
-                              financeLoaded = false;
-                              seenFinanceUnread = 0;
-                              if (!care && s.staffRole != 'care')
-                                finance?.select(
-                                  '${s.staffRole}:${s.staffDoctor == 'BS. Mai' ? 'D1' : 'D0'}',
-                                );
+                              final session = ref.read(
+                                sessionProvider.notifier,
+                              );
+                              if (account[0] == 'patient') {
+                                session.enterCare();
+                              } else {
+                                session.enterStaff(account[0], account[1]);
+                              }
+                              final next = ref.read(sessionProvider);
+                              if (ref.read(financeEnabledProvider) &&
+                                  !next.careMode &&
+                                  next.staffRole != 'care')
+                                ref
+                                    .read(financeProvider.notifier)
+                                    .select(
+                                      '${next.staffRole}:${next.staffDoctor == 'BS. Mai' ? 'D1' : 'D0'}',
+                                    );
                               Navigator.pop(ctx);
                             },
                           ),
@@ -322,11 +341,9 @@ class _WorkspaceState extends State<Workspace> {
           ),
         ),
       ),
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: PemaModernBottomNav(
         selectedIndex: index,
         onDestinationSelected: (i) => setState(() => index = i),
-        backgroundColor: Colors.white,
-        indicatorColor: const Color(0xFFE8F4FB),
         destinations: List.generate(
           labels.length,
           (i) => NavigationDestination(icon: Icon(icons[i]), label: labels[i]),
@@ -343,7 +360,7 @@ class _WorkspaceState extends State<Workspace> {
       isExpanded: true,
       items: [
         const DropdownMenuItem(value: 'all', child: Text('Tất cả hồ sơ')),
-        ...s.profiles
+        ...catalog.profiles
             .where((p) => p['group'] != '')
             .map(
               (p) => DropdownMenuItem(
@@ -352,36 +369,37 @@ class _WorkspaceState extends State<Workspace> {
               ),
             ),
       ],
-      onChanged: (v) => setState(() {
-        caseGroup = v!;
-        if (v != 'all')
-          s.selected = s.profiles.indexWhere((p) => p['group'] == v);
-      }),
+      onChanged: (v) {
+        setState(() => caseGroup = v!);
+        if (v != 'all') {
+          select(catalog.profiles.indexWhere((p) => p['group'] == v));
+        }
+      },
     ),
     const SizedBox(height: 12),
     DropdownButtonFormField<int>(
       key: ValueKey('patient-${s.selected}-$caseGroup'),
       isExpanded: true,
-      initialValue: caseGroup == 'all' || s.profile['group'] == caseGroup
+      initialValue: caseGroup == 'all' || profile['group'] == caseGroup
           ? s.selected
           : null,
       decoration: const InputDecoration(labelText: 'Người bệnh đang xem'),
       items: [
-        for (int i = 0; i < s.profiles.length; i++)
-          if (caseGroup == 'all' || s.profiles[i]['group'] == caseGroup)
+        for (int i = 0; i < catalog.profiles.length; i++)
+          if (caseGroup == 'all' || catalog.profiles[i]['group'] == caseGroup)
             DropdownMenuItem(
               value: i,
               child: Text(
-                '${s.profiles[i]['id']} · ${s.patients[i]}',
+                '${catalog.profiles[i]['id']} · ${catalog.profiles[i]['name']}',
                 overflow: TextOverflow.ellipsis,
               ),
             ),
       ],
-      onChanged: (i) => s.change(() => s.selected = i!),
+      onChanged: (i) => select(i!),
     ),
   ];
   List<Widget> patientNext() {
-    final group = s.profile['group'] as String;
+    final group = profile['group'] as String;
     final title = {
       'd1': 'Hôm nay bạn cảm thấy thế nào?',
       'd3': 'Cập nhật ảnh tiến triển',
@@ -410,7 +428,6 @@ class _WorkspaceState extends State<Workspace> {
       return [
         heading('Hồ sơ phụ trách', s.staffName),
         PatientSearch(
-          store: s,
           onOpen: () => open(
             s.staffRole == 'care'
                 ? 'Chăm sóc khách hàng'
@@ -432,7 +449,7 @@ class _WorkspaceState extends State<Workspace> {
           ),
         tile(
           'Thu ngân theo hồ sơ',
-          s.name,
+          name,
           Icons.receipt_long_outlined,
           () => open('Thu ngân'),
         ),
@@ -442,13 +459,13 @@ class _WorkspaceState extends State<Workspace> {
         heading('Lịch & hồ sơ của tôi', s.staffName),
         tile(
           'Hồ sơ đang phụ trách',
-          s.name,
+          name,
           Icons.person_outline,
           () => open('Patient 360'),
         ),
         tile(
           'Lịch của tôi',
-          s.day.isEmpty ? 'Chưa có lịch' : s.day,
+          patient.day.isEmpty ? 'Chưa có lịch' : patient.day,
           Icons.calendar_month_outlined,
           () => open('Chi tiết lịch'),
         ),
@@ -460,24 +477,26 @@ class _WorkspaceState extends State<Workspace> {
             () => openFinance(),
           ),
         section('Cập nhật cần bác sĩ xem'),
-        for (int i = 0; i < s.profiles.length; i++)
-          if (s.owns(i) &&
-              ((s.profiles[i]['tasks'] as List).any((t) => t['type'] == 'd7') ||
-                  (s.states[s.profiles[i]['id']]?.updates.isNotEmpty ??
+        for (int i = 0; i < catalog.profiles.length; i++)
+          if (s.owns(catalog.profiles[i]) &&
+              ((catalog.profiles[i]['tasks'] as List).any(
+                    (t) => t['type'] == 'd7',
+                  ) ||
+                  (states[catalog.profiles[i]['id']]?.updates.isNotEmpty ??
                       false) ||
-                  (s.states[s.profiles[i]['id']]?.escalations.isNotEmpty ??
+                  (states[catalog.profiles[i]['id']]?.escalations.isNotEmpty ??
                       false)))
             tile(
-              s.patients[i],
+              catalog.profiles[i]['name'],
               'Review chăm sóc · hồ sơ phụ trách',
               Icons.inbox_outlined,
               () {
-                s.change(() => s.selected = i);
+                select(i);
                 open('Phản hồi');
               },
             ),
       ];
-    return [CareQueue(store: s, onOpen: () => open('Chăm sóc khách hàng'))];
+    return [CareQueue(onOpen: () => open('Chăm sóc khách hàng'))];
   }
 
   List<Widget> body() {
@@ -487,7 +506,7 @@ class _WorkspaceState extends State<Workspace> {
           heading('Hành trình của bạn', 'Mỗi bước chăm sóc đều được ghi nhận'),
           hero(
             'Phục hồi & chăm sóc da',
-            '${s.sessions}/${s.totalSessions} buổi đã hoàn tất',
+            '${patient.sessions}/${profile['total']} buổi đã hoàn tất',
             Icons.spa_outlined,
           ),
           ...[
@@ -510,16 +529,21 @@ class _WorkspaceState extends State<Workspace> {
           notice(
             'Nếu có dấu hiệu bất thường nặng, hãy liên hệ trực tiếp. Tin nhắn không phải kênh cấp cứu.',
           ),
-          ...s.updates.map(
+          ...patient.updates.map(
             (x) => tile('Bạn', x, Icons.chat_bubble_outline, null),
           ),
-          if (s.response.isNotEmpty)
-            tile('Đội ngũ Pema', s.response, Icons.verified_outlined, null),
+          if (patient.response.isNotEmpty)
+            tile(
+              'Đội ngũ Pema',
+              patient.response,
+              Icons.verified_outlined,
+              null,
+            ),
           primary('Gửi cập nhật', () => open('Gửi cập nhật')),
         ];
       if (index == 3)
         return [
-          heading(s.name, '${s.patientId} · Hồ sơ minh họa'),
+          heading(name, '${profile['id']} · Hồ sơ minh họa'),
           ...accountPicker(),
           ...[
             'Đơn thuốc & tư vấn',
@@ -537,13 +561,13 @@ class _WorkspaceState extends State<Workspace> {
         ];
       return [
         heading(
-          'Chào ${s.name.split(' ').last},',
+          'Chào ${name.split(' ').last},',
           'Hôm nay, dành chút thời gian cho làn da',
         ),
         ...patientNext(),
         hero(
           'Chăm sóc nhẹ nhàng.\nĐồng hành mỗi ngày.',
-          'Liệu trình phục hồi · Buổi ${s.sessions}/${s.totalSessions}',
+          'Liệu trình phục hồi · Buổi ${patient.sessions}/${profile['total']}',
           Icons.spa_outlined,
         ),
         const SizedBox(height: 16),
@@ -560,16 +584,22 @@ class _WorkspaceState extends State<Workspace> {
         ),
         section('Lịch hẹn tiếp theo'),
         tile(
-          s.day.isEmpty ? 'Chưa có lịch hẹn' : '${s.appointment} · ${s.day}',
+          patient.day.isEmpty
+              ? 'Chưa có lịch hẹn'
+              : '${patient.appointment} · ${patient.day}',
           'BS. Tâm · Khám da liễu',
           Icons.calendar_today_outlined,
           () => open('Lịch của tôi'),
         ),
         section('Việc cần làm'),
         tile(
-          s.acknowledged ? 'Đã đọc hướng dẫn' : 'Đọc hướng dẫn sau điều trị',
+          patient.acknowledged
+              ? 'Đã đọc hướng dẫn'
+              : 'Đọc hướng dẫn sau điều trị',
           'Bác sĩ đã gửi hướng dẫn cho bạn',
-          s.acknowledged ? Icons.check_circle_outline : Icons.favorite_outline,
+          patient.acknowledged
+              ? Icons.check_circle_outline
+              : Icons.favorite_outline,
           () => open('Chăm sóc tại nhà'),
         ),
       ];
@@ -585,10 +615,12 @@ class _WorkspaceState extends State<Workspace> {
           Icons.tune,
           () => open('Bác sĩ & phòng'),
         ),
-        for (final time in ['09:00', s.appointment, '14:00'])
+        for (final time in ['09:00', patient.appointment, '14:00'])
           tile(
             time,
-            time == s.appointment ? '${s.name} · Tái khám' : 'Khung giờ trống',
+            time == patient.appointment
+                ? '${name} · Tái khám'
+                : 'Khung giờ trống',
             Icons.schedule,
             () => open('Chi tiết lịch'),
           ),
@@ -598,23 +630,19 @@ class _WorkspaceState extends State<Workspace> {
       return [
         heading(
           'Hồ sơ người bệnh',
-          '${s.patients.length} hồ sơ tổng hợp · Patient 360',
+          '${catalog.profiles.length} hồ sơ tổng hợp · Patient 360',
         ),
-        PatientSearch(store: s, onOpen: () => open('Patient 360')),
+        PatientSearch(onOpen: () => open('Patient 360')),
       ];
     if (index == 3)
       return [
         heading('Theo dõi', 'Ưu tiên phản hồi và bàn giao'),
         notice(
-          '${s.updates.length} cập nhật · ${s.response.isEmpty ? '1 cần phản hồi' : 'Đã phản hồi'}',
+          '${patient.updates.length} cập nhật · ${patient.response.isEmpty ? '1 cần phản hồi' : 'Đã phản hồi'}',
         ),
-        ...s.updates.map(
-          (x) => tile(
-            s.name,
-            x,
-            Icons.chat_bubble_outline,
-            () => open('Phản hồi'),
-          ),
+        ...patient.updates.map(
+          (x) =>
+              tile(name, x, Icons.chat_bubble_outline, () => open('Phản hồi')),
         ),
         tile(
           'Cần gọi lại',
@@ -657,7 +685,7 @@ class _WorkspaceState extends State<Workspace> {
       heading('Chào buổi sáng, BS. Tâm', 'Thứ Ba · 22 tháng 09, 2026'),
       hero(
         'Một ngày chăm sóc\ntrọn vẹn hơn.',
-        '${s.updates.length} phản hồi cần theo dõi',
+        '${patient.updates.length} phản hồi cần theo dõi',
         Icons.wb_sunny_outlined,
       ),
       const SizedBox(height: 16),
@@ -665,7 +693,7 @@ class _WorkspaceState extends State<Workspace> {
         children: [
           metric('12', 'Lịch hôm nay'),
           const SizedBox(width: 12),
-          metric(s.checkedIn ? '04' : '03', 'Đang chờ'),
+          metric(patient.checkedIn ? '04' : '03', 'Đang chờ'),
         ],
       ),
       if (finance != null)
@@ -687,8 +715,8 @@ class _WorkspaceState extends State<Workspace> {
       ),
       section('Lượt khám tiếp theo'),
       tile(
-        s.name,
-        '${s.appointment} · ${s.checkedIn ? 'Đã check-in' : 'Chờ tiếp nhận'} · Tái khám',
+        name,
+        '${patient.appointment} · ${patient.checkedIn ? 'Đã check-in' : 'Chờ tiếp nhận'} · Tái khám',
         Icons.person_outline,
         () => open('Patient 360'),
       ),
@@ -890,116 +918,118 @@ class WeekStrip extends StatelessWidget {
   );
 }
 
-class PatientSearch extends StatefulWidget {
-  final DemoStore store;
+class PatientSearch extends ConsumerStatefulWidget {
   final VoidCallback onOpen;
-  const PatientSearch({super.key, required this.store, required this.onOpen});
+  const PatientSearch({super.key, required this.onOpen});
   @override
-  State<PatientSearch> createState() => _PatientSearchState();
+  ConsumerState<PatientSearch> createState() => _PatientSearchState();
 }
 
-class _PatientSearchState extends State<PatientSearch> {
+class _PatientSearchState extends ConsumerState<PatientSearch> {
   String query = '';
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      TextField(
-        decoration: const InputDecoration(
-          prefixIcon: Icon(Icons.search),
-          hintText: 'Tìm tên hoặc mã hồ sơ',
-        ),
-        onChanged: (v) => setState(() => query = v.toLowerCase()),
-      ),
-      const SizedBox(height: 16),
-      for (int i = 0; i < widget.store.patients.length; i++)
-        if (widget.store.owns(i) &&
-            (widget.store.patients[i].toLowerCase().contains(query) ||
-                'p${(i + 1).toString().padLeft(3, '0')}'.contains(query)))
-          tile(
-            widget.store.patients[i],
-            'P${(i + 1).toString().padLeft(3, '0')} · Đang điều trị',
-            Icons.person_outline,
-            () {
-              widget.store.change(() => widget.store.selected = i);
-              widget.onOpen();
-            },
+  Widget build(BuildContext context) {
+    final profiles = ref.watch(catalogProvider).profiles;
+    final session = ref.watch(sessionProvider);
+    return Column(
+      children: [
+        TextField(
+          decoration: const InputDecoration(
+            prefixIcon: Icon(Icons.search),
+            hintText: 'Tìm tên hoặc mã hồ sơ',
           ),
-    ],
-  );
+          onChanged: (v) => setState(() => query = v.toLowerCase()),
+        ),
+        const SizedBox(height: 16),
+        for (int i = 0; i < profiles.length; i++)
+          if (session.owns(profiles[i]) &&
+              ((profiles[i]['name'] as String).toLowerCase().contains(query) ||
+                  'p${(i + 1).toString().padLeft(3, '0')}'.contains(query)))
+            tile(
+              profiles[i]['name'] as String,
+              'P${(i + 1).toString().padLeft(3, '0')} · Đang điều trị',
+              Icons.person_outline,
+              () {
+                ref.read(sessionProvider.notifier).select(i);
+                widget.onOpen();
+              },
+            ),
+      ],
+    );
+  }
 }
 
-class Detail extends StatefulWidget {
-  final DemoStore store;
+class Detail extends ConsumerStatefulWidget {
   final String route;
-  final bool care;
-  final FinanceController? finance;
-  const Detail({
-    super.key,
-    required this.store,
-    required this.route,
-    this.care = false,
-    this.finance,
-  });
+  const Detail({super.key, required this.route});
   @override
-  State<Detail> createState() => _DetailState();
+  ConsumerState<Detail> createState() => _DetailState();
 }
 
-class _DetailState extends State<Detail> {
-  DemoStore get s => widget.store;
+class _DetailState extends ConsumerState<Detail> {
   final text = TextEditingController();
   bool consent = false, photo = false;
   String filter = '';
-  @override
-  void initState() {
-    super.initState();
-    s.addListener(refresh);
-  }
-
-  void refresh() {
-    if (mounted) setState(() {});
-  }
+  late Session s;
+  late Catalog catalog;
+  late Map<String, dynamic> profile;
+  late PatientState patient;
+  late List<Order> orders;
+  late int paid;
+  FinanceState? finance;
+  bool get care => s.careMode;
+  String get id => profile['id'] as String;
+  String get name => profile['name'] as String;
+  int get totalSessions => profile['total'] as int;
+  PatientsNotifier get patients => ref.read(patientsProvider.notifier);
+  void patch(PatientState Function(PatientState) change) =>
+      patients.update(id, change);
 
   @override
   void dispose() {
-    s.removeListener(refresh);
     text.dispose();
     super.dispose();
   }
 
   void open(String route) => Navigator.push(
     context,
-    MaterialPageRoute(
-      builder: (_) => Detail(
-        store: s,
-        route: route,
-        care: widget.care,
-        finance: widget.finance,
-      ),
-    ),
+    MaterialPageRoute(builder: (_) => Detail(route: route)),
   );
   void toast(String message) => ScaffoldMessenger.of(
     context,
   ).showSnackBar(SnackBar(content: Text(message)));
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(
-        widget.route,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+  Widget build(BuildContext context) {
+    s = ref.watch(sessionProvider);
+    catalog = ref.watch(catalogProvider);
+    profile = ref.watch(selectedProfileProvider);
+    patient = ref.watch(currentPatientProvider);
+    orders = ref.watch(currentOrdersProvider);
+    paid = ref.watch(currentPaidProvider);
+    finance = ref.watch(financeEnabledProvider)
+        ? ref.watch(financeProvider)
+        : null;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          widget.route,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        ),
       ),
-    ),
-    body: SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: ListView(
-            padding: const EdgeInsets.all(20),
-            children: content(),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: ListView(
+              padding: const EdgeInsets.all(20),
+              children: content(),
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
+
   List<Widget> content() {
     if (!s.allows(widget.route))
       return [
@@ -1010,9 +1040,9 @@ class _DetailState extends State<Detail> {
     switch (widget.route) {
       case 'Chăm sóc khách hàng':
         return [
-          heading(s.name, '${s.patientId} · ${s.profile['case']}'),
+          heading(name, '${id} · ${profile['case']}'),
           notice('Nội dung liên hệ nội bộ không hiển thị cho người bệnh.'),
-          if (s.current.careNote.isNotEmpty) notice(s.current.careNote),
+          if (patient.careNote.isNotEmpty) notice(patient.careNote),
           TextField(
             controller: text,
             maxLines: 3,
@@ -1025,10 +1055,12 @@ class _DetailState extends State<Detail> {
               toast('Nhập kết quả liên hệ');
               return;
             }
-            s.change(() {
-              s.current.careNote = text.text.trim();
-              s.current.careStatus = 'Đã liên hệ';
-            });
+            patch(
+              (p) => p.copyWith(
+                careNote: text.text.trim(),
+                careStatus: 'Đã liên hệ',
+              ),
+            );
             toast('Đã lưu ghi chú nội bộ');
           }),
           const SizedBox(height: 12),
@@ -1053,30 +1085,32 @@ class _DetailState extends State<Detail> {
                 toast('Nhập nội dung cần bác sĩ xem');
                 return;
               }
-              s.change(() {
-                s.current.careNote = text.text.trim();
-                s.current.careStatus = 'Chờ bác sĩ';
-                s.current.escalations.add(text.text.trim());
-              });
+              patch(
+                (p) => p.copyWith(
+                  careNote: text.text.trim(),
+                  careStatus: 'Chờ bác sĩ',
+                  escalations: [...p.escalations, text.text.trim()],
+                ),
+              );
               toast('Đã chuyển vào hàng chờ bác sĩ');
             },
           ),
         ];
       case 'Patient 360':
         return [
-          heading(s.name, '${s.patientId} · ${s.profile['doctor']}'),
+          heading(name, '${id} · ${profile['doctor']}'),
           notice('Da nhạy cảm • Cần đọc tiền sử trước khi kê đơn'),
           Row(
             children: [
-              metric('${s.sessions}/${s.totalSessions}', 'Buổi điều trị'),
+              metric('${patient.sessions}/${totalSessions}', 'Buổi điều trị'),
               const SizedBox(width: 12),
-              metric(s.appointment, 'Lịch tiếp theo'),
+              metric(patient.appointment, 'Lịch tiếp theo'),
             ],
           ),
-          if (!widget.care &&
+          if (!care &&
               s.billing &&
-              widget.finance?.data != null &&
-              widget.finance!.role != 'doctor')
+              finance?.data != null &&
+              finance!.role != 'doctor')
             tile(
               'Ghi nhận tiền thủ thuật',
               'Đúng người thực hiện · gắn hóa đơn đã có',
@@ -1085,11 +1119,8 @@ class _DetailState extends State<Detail> {
                 context,
                 MaterialPageRoute<void>(
                   builder: (_) => ProcedureForm(
-                    controller: widget.finance!,
-                    initialPatient: s.patientId,
-                    patientIds: s.profiles
-                        .map((p) => p['id'] as String)
-                        .toList(),
+                    initialPatient: id,
+                    patientIds: catalog.patientIds,
                   ),
                 ),
               ),
@@ -1108,14 +1139,16 @@ class _DetailState extends State<Detail> {
                 tile(x, 'Xem và cập nhật', Icons.chevron_right, () => open(x)),
           ),
           primary(
-            s.checkedIn ? 'Đã check-in' : 'Check-in người bệnh',
-            s.checkedIn ? null : () => s.change(() => s.checkedIn = true),
+            patient.checkedIn ? 'Đã check-in' : 'Check-in người bệnh',
+            patient.checkedIn
+                ? null
+                : () => patch((p) => p.copyWith(checkedIn: true)),
           ),
         ];
       case 'Lên đơn nhanh':
         return [
           notice(
-            '${s.name} · ${s.patientId}\n115 sản phẩm từ catalog web. Đơn nháp chưa gửi cho người bệnh.',
+            '${name} · ${id}\n115 sản phẩm từ catalog web. Đơn nháp chưa gửi cho người bệnh.',
           ),
           TextField(
             decoration: const InputDecoration(
@@ -1126,11 +1159,11 @@ class _DetailState extends State<Detail> {
           ),
           const SizedBox(height: 12),
           primary(
-            'Xem đơn · ${s.cart.length} sản phẩm · ${money(s.total)}',
-            s.cart.isEmpty ? null : () => open('Kiểm tra đơn'),
+            'Xem đơn · ${patient.cart.length} sản phẩm · ${money(patient.cartTotal)}',
+            patient.cart.isEmpty ? null : () => open('Kiểm tra đơn'),
           ),
           for (final p
-              in s.products
+              in catalog.products
                   .where(
                     (p) => '${p['code']} ${p['name']}'.toLowerCase().contains(
                       filter,
@@ -1142,7 +1175,7 @@ class _DetailState extends State<Detail> {
               '${p['code']} · ${p['unit']} · ${money(p['price'])}\n${p['outputType'] == 'UNRESOLVED' ? 'Cần phân loại' : p['sourceType']}',
               Icons.add,
               () {
-                s.add(p);
+                patients.addToCart(id, p);
                 toast('Đã thêm ${p['code']}');
               },
             ),
@@ -1151,10 +1184,11 @@ class _DetailState extends State<Detail> {
         return [
           heading(
             'Kiểm tra trước khi duyệt',
-            '${s.cart.length} dòng · ${money(s.total)}',
+            '${patient.cart.length} dòng · ${money(patient.cartTotal)}',
           ),
-          ...s.cart.map(
-            (p) => Card(
+          for (final (i, line) in patient.cart.indexed)
+            Card(
+              key: ValueKey(line.code),
               elevation: 0,
               color: Colors.white,
               child: Padding(
@@ -1163,34 +1197,42 @@ class _DetailState extends State<Detail> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      p['name'],
+                      line.name,
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     Row(
                       children: [
                         IconButton(
                           tooltip: 'Giảm số lượng',
-                          onPressed: () => s.change(() {
-                            if (p['quantity'] > 1) p['quantity']--;
-                          }),
+                          onPressed: () => patients.updateLine(
+                            id,
+                            i,
+                            (l) => l.copyWith(
+                              quantity: l.quantity > 1 ? l.quantity - 1 : 1,
+                            ),
+                          ),
                           icon: const Icon(Icons.remove_circle_outline),
                         ),
-                        Text('${p['quantity']} ${p['unit']}'),
+                        Text('${line.quantity} ${line.unit}'),
                         IconButton(
                           tooltip: 'Tăng số lượng',
-                          onPressed: () => s.change(() => p['quantity']++),
+                          onPressed: () => patients.updateLine(
+                            id,
+                            i,
+                            (l) => l.copyWith(quantity: l.quantity + 1),
+                          ),
                           icon: const Icon(Icons.add_circle_outline),
                         ),
                         const Spacer(),
                         IconButton(
                           tooltip: 'Xóa dòng',
-                          onPressed: () => s.change(() => s.cart.remove(p)),
+                          onPressed: () => patients.removeLine(id, i),
                           icon: const Icon(Icons.delete_outline),
                         ),
                       ],
                     ),
                     DropdownButtonFormField<String>(
-                      initialValue: p['route'],
+                      initialValue: line.route,
                       isExpanded: true,
                       items: const [
                         DropdownMenuItem(
@@ -1206,38 +1248,45 @@ class _DetailState extends State<Detail> {
                           child: Text('Phiếu tư vấn'),
                         ),
                       ],
-                      onChanged: (v) => s.change(() => p['route'] = v),
+                      onChanged: (v) => patients.updateLine(
+                        id,
+                        i,
+                        (l) => l.copyWith(route: v),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
-                      initialValue: p['usage'],
+                      initialValue: line.usage,
                       decoration: const InputDecoration(
                         labelText: 'Cách dùng / hướng dẫn',
                       ),
-                      onChanged: (v) => s.change(() => p['usage'] = v),
+                      onChanged: (v) => patients.updateLine(
+                        id,
+                        i,
+                        (l) => l.copyWith(usage: v),
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-          ),
           notice(
             'Tài khoản bác sĩ mô phỏng. Chỉ duyệt khi đã phân loại và nhập hướng dẫn cho mọi dòng.',
           ),
           primary(
             'Lưu nháp',
-            s.cart.isEmpty
+            patient.cart.isEmpty
                 ? null
                 : () {
-                    s.saveOrder(false);
+                    ref.read(ordersProvider.notifier).save(id, approve: false);
                     open('Đơn thuốc & tư vấn');
                   },
           ),
           primary(
             'Bác sĩ duyệt đơn',
-            s.ready
+            patient.cartReady
                 ? () {
-                    s.saveOrder(true);
+                    ref.read(ordersProvider.notifier).save(id, approve: true);
                     open('Đơn thuốc & tư vấn');
                   }
                 : null,
@@ -1246,44 +1295,38 @@ class _DetailState extends State<Detail> {
       case 'Đơn thuốc & tư vấn':
         return [
           notice(
-            widget.care
+            care
                 ? 'Chỉ hiển thị nội dung đã được bác sĩ duyệt.'
                 : 'Nháp → bác sĩ duyệt → người bệnh xem. In không đồng nghĩa đã cấp thuốc.',
           ),
-          if (s.myOrders
-              .where((o) => !widget.care || o['approved'] == true)
-              .isEmpty)
+          if (orders.where((o) => !care || o.approved).isEmpty)
             tile(
-              'Chưa có đơn${widget.care ? ' đã duyệt' : ''}',
+              'Chưa có đơn${care ? ' đã duyệt' : ''}',
               'Đơn mới sẽ xuất hiện tại đây',
               Icons.receipt_long_outlined,
               null,
             ),
-          for (final o in s.myOrders.where(
-            (o) => !widget.care || o['approved'] == true,
-          )) ...[
-            section('${o['id']} · ${o['approved'] ? 'Đã duyệt' : 'Nháp'}'),
+          for (final o in orders.where((o) => !care || o.approved)) ...[
+            section('${o.id} · ${o.approved ? 'Đã duyệt' : 'Nháp'}'),
             for (final route in ['PRESCRIPTION', 'CONSULTATION']) ...[
               Text(
                 route == 'PRESCRIPTION' ? 'Đơn thuốc' : 'Phiếu tư vấn',
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
-              for (final p in (o['items'] as List).where(
-                (p) => p['route'] == route,
-              ))
+              for (final line in o.items.where((l) => l.route == route))
                 tile(
-                  p['name'],
-                  '${p['quantity']} ${p['unit']} · ${p['usage']}',
+                  line.name,
+                  '${line.quantity} ${line.unit} · ${line.usage}',
                   Icons.medication_outlined,
                   null,
                 ),
             ],
-            if (!widget.care && o['approved'] == false)
+            if (!care && !o.approved)
               primary('Sửa và duyệt bản nháp', () {
-                s.edit(o);
+                ref.read(ordersProvider.notifier).edit(id, o);
                 open('Kiểm tra đơn');
               }),
-            if (!widget.care)
+            if (!care)
               primary('Xem bố cục hai phiếu A5', () => open('Phiếu A5')),
           ],
         ];
@@ -1303,14 +1346,12 @@ class _DetailState extends State<Detail> {
                   children: [
                     Image.asset('assets/pema-logo.png', width: 90),
                     section(kind),
-                    Text(s.name),
+                    Text(name),
                     const Divider(),
-                    for (final o in s.myOrders.where(
-                      (o) => o['approved'] == true,
-                    ))
-                      for (final p in (o['items'] as List).where(
-                        (p) =>
-                            p['route'] ==
+                    for (final o in orders.where((o) => o.approved))
+                      for (final line in o.items.where(
+                        (l) =>
+                            l.route ==
                             (kind == 'ĐƠN THUỐC'
                                 ? 'PRESCRIPTION'
                                 : 'CONSULTATION'),
@@ -1318,7 +1359,7 @@ class _DetailState extends State<Detail> {
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
-                            '${p['name']}\n${p['quantity']} ${p['unit']} · ${p['usage']}',
+                            '${line.name}\n${line.quantity} ${line.unit} · ${line.usage}',
                           ),
                         ),
                     const Divider(),
@@ -1336,10 +1377,10 @@ class _DetailState extends State<Detail> {
         ];
       case 'Đặt lịch':
         return [
-          heading(s.name, 'Chọn ngày và giờ trước khi xác nhận'),
+          heading(name, 'Chọn ngày và giờ trước khi xác nhận'),
           const WeekStrip(),
           tile(
-            s.day,
+            patient.day,
             'Chạm để đổi ngày',
             Icons.calendar_today_outlined,
             () async {
@@ -1350,7 +1391,7 @@ class _DetailState extends State<Detail> {
                 lastDate: DateTime(2027),
               );
               if (d != null)
-                s.change(() => s.day = '${d.day}/${d.month}/${d.year}');
+                patch((p) => p.copyWith(day: '${d.day}/${d.month}/${d.year}'));
             },
           ),
           notice(
@@ -1362,17 +1403,17 @@ class _DetailState extends State<Detail> {
                 .map(
                   (t) => ChoiceChip(
                     label: Text(t),
-                    selected: s.appointment == t,
+                    selected: patient.appointment == t,
                     onSelected: t == '09:00'
                         ? null
-                        : (_) => s.change(() => s.appointment = t),
+                        : (_) => patch((p) => p.copyWith(appointment: t)),
                   ),
                 )
                 .toList(),
           ),
           primary('Xác nhận lịch', () {
-            s.change(() => s.confirmed = true);
-            toast('Đã lưu lịch ${s.appointment} · ${s.day}');
+            patch((p) => p.copyWith(confirmed: true));
+            toast('Đã lưu lịch ${patient.appointment} · ${patient.day}');
             Navigator.pop(context);
           }),
         ];
@@ -1380,21 +1421,22 @@ class _DetailState extends State<Detail> {
       case 'Lịch của tôi':
         return [
           hero(
-            s.day.isEmpty ? 'Chưa có lịch hẹn' : '${s.appointment} · ${s.day}',
+            patient.day.isEmpty
+                ? 'Chưa có lịch hẹn'
+                : '${patient.appointment} · ${patient.day}',
             'BS. Tâm · Khám da liễu',
             Icons.calendar_month_outlined,
           ),
-          section(s.name),
+          section(name),
           notice('Tái khám & đánh giá · 30 phút'),
           primary(
-            s.confirmed ? 'Đã xác nhận' : 'Xác nhận tham dự',
-            s.confirmed || s.day.isEmpty
+            patient.confirmed ? 'Đã xác nhận' : 'Xác nhận tham dự',
+            patient.confirmed || patient.day.isEmpty
                 ? null
-                : () => s.change(() => s.confirmed = true),
+                : () => patch((p) => p.copyWith(confirmed: true)),
           ),
-          if (!widget.care) primary('Dời lịch', () => open('Đặt lịch')),
-          if (!widget.care)
-            primary('Mở Patient 360', () => open('Patient 360')),
+          if (!care) primary('Dời lịch', () => open('Đặt lịch')),
+          if (!care) primary('Mở Patient 360', () => open('Patient 360')),
         ];
       case 'Tư vấn':
         return [
@@ -1404,11 +1446,11 @@ class _DetailState extends State<Detail> {
             maxLines: 6,
             decoration: InputDecoration(
               labelText: 'Ghi chú tư vấn',
-              hintText: s.note,
+              hintText: patient.note,
             ),
           ),
           primary('Lưu ghi chú nháp', () {
-            s.change(() => s.note = text.text);
+            patch((p) => p.copyWith(note: text.text));
             toast('Đã lưu ghi chú');
           }),
           primary('Xem tóm tắt AI', () => open('Ask Pema')),
@@ -1417,15 +1459,17 @@ class _DetailState extends State<Detail> {
         return [
           hero(
             'Phục hồi & chăm sóc da',
-            '${s.sessions}/${s.totalSessions} buổi · BS. Tâm',
+            '${patient.sessions}/${totalSessions} buổi · BS. Tâm',
             Icons.route_outlined,
           ),
           section('Các mốc chăm sóc'),
           for (int i = 1; i <= 5; i++)
             tile(
               'Buổi $i',
-              i <= s.sessions ? 'Đã hoàn tất' : 'Chờ đánh giá / thực hiện',
-              i <= s.sessions
+              i <= patient.sessions
+                  ? 'Đã hoàn tất'
+                  : 'Chờ đánh giá / thực hiện',
+              i <= patient.sessions
                   ? Icons.check_circle_outline
                   : Icons.circle_outlined,
               null,
@@ -1435,7 +1479,7 @@ class _DetailState extends State<Detail> {
       case 'Buổi điều trị':
         return [
           notice(
-            'Buổi ${s.sessions + 1}/${s.totalSessions} · ${s.profile['doctor']}',
+            'Buổi ${patient.sessions + 1}/${totalSessions} · ${profile['doctor']}',
           ),
           TextField(
             controller: text,
@@ -1454,9 +1498,9 @@ class _DetailState extends State<Detail> {
             'Hoàn tất buổi',
             consent &&
                     text.text.trim().isNotEmpty &&
-                    s.sessions < s.totalSessions
+                    patient.sessions < totalSessions
                 ? () {
-                    s.change(() => s.sessions++);
+                    patch((p) => p.copyWith(sessions: p.sessions + 1));
                     toast('Đã lưu buổi và cập nhật hành trình');
                     Navigator.pop(context);
                   }
@@ -1482,8 +1526,12 @@ class _DetailState extends State<Detail> {
             ),
           ),
           primary(
-            s.acknowledged ? 'Đã xác nhận đã đọc' : 'Tôi đã đọc hướng dẫn',
-            s.acknowledged ? null : () => s.change(() => s.acknowledged = true),
+            patient.acknowledged
+                ? 'Đã xác nhận đã đọc'
+                : 'Tôi đã đọc hướng dẫn',
+            patient.acknowledged
+                ? null
+                : () => patch((p) => p.copyWith(acknowledged: true)),
           ),
           primary('Gửi cập nhật cho Pema', () => open('Gửi cập nhật')),
         ];
@@ -1514,7 +1562,9 @@ class _DetailState extends State<Detail> {
             'Gửi cập nhật',
             text.text.trim().isNotEmpty && (!photo || consent)
                 ? () {
-                    s.change(() => s.updates.add(text.text));
+                    patch(
+                      (p) => p.copyWith(updates: [...p.updates, text.text]),
+                    );
                     toast('Đã gửi • Chờ đội ngũ xem');
                     Navigator.pop(context);
                   }
@@ -1523,11 +1573,9 @@ class _DetailState extends State<Detail> {
         ];
       case 'Phản hồi':
         return [
-          ...s.current.escalations.map(
-            (x) => notice('CSKH bàn giao nội bộ: $x'),
-          ),
-          heading(s.name, 'Cập nhật từ Patient Mobile'),
-          ...s.updates.map((x) => notice(x)),
+          ...patient.escalations.map((x) => notice('CSKH bàn giao nội bộ: $x')),
+          heading(name, 'Cập nhật từ Patient Mobile'),
+          ...patient.updates.map((x) => notice(x)),
           TextField(
             controller: text,
             maxLines: 5,
@@ -1540,7 +1588,7 @@ class _DetailState extends State<Detail> {
             'Duyệt và phản hồi',
             text.text.trim().isNotEmpty
                 ? () {
-                    s.change(() => s.response = text.text);
+                    patch((p) => p.copyWith(response: text.text));
                     toast('Đã gửi phản hồi sang Pema Care');
                     Navigator.pop(context);
                   }
@@ -1549,29 +1597,22 @@ class _DetailState extends State<Detail> {
         ];
       case 'Hóa đơn':
       case 'Thu ngân':
-        final amount = s.myOrders.fold<int>(
-          0,
-          (n, o) => n + (o['total'] as int),
-        );
+        final amount = orders.fold<int>(0, (n, o) => n + o.total);
         return [
-          heading('Khoản cần thanh toán', s.name),
+          heading('Khoản cần thanh toán', name),
           hero(
-            money(amount - s.paid),
-            'Đã thu ${money(s.paid)}',
+            money(amount - paid),
+            'Đã thu ${money(paid)}',
             Icons.payments_outlined,
           ),
-          ...s.myOrders.map(
-            (o) => tile(
-              o['id'],
-              money(o['total']),
-              Icons.receipt_long_outlined,
-              null,
-            ),
+          ...orders.map(
+            (o) =>
+                tile(o.id, money(o.total), Icons.receipt_long_outlined, null),
           ),
-          if (!widget.care && s.billing)
+          if (!care && s.billing)
             primary(
               'Thu đủ phần còn lại',
-              amount > s.paid
+              amount > paid
                   ? () => showModalBottomSheet(
                       context: context,
                       showDragHandle: true,
@@ -1583,11 +1624,13 @@ class _DetailState extends State<Detail> {
                             children: [
                               heading(
                                 'Xác nhận thu tiền',
-                                money(amount - s.paid),
+                                money(amount - paid),
                               ),
                               notice('Giao dịch mẫu · Không kết nối ngân hàng'),
                               primary('Xác nhận tiền mặt', () {
-                                s.change(() => s.paid = amount);
+                                ref
+                                    .read(receiptsProvider.notifier)
+                                    .settle(id, amount);
                                 Navigator.pop(ctx);
                               }),
                             ],
@@ -1597,7 +1640,7 @@ class _DetailState extends State<Detail> {
                     )
                   : null,
             ),
-          if (!widget.care && s.clinical)
+          if (!care && s.clinical)
             primary('Lên đơn mới', () => open('Lên đơn nhanh')),
         ];
       case 'Dịch vụ':
@@ -1673,9 +1716,9 @@ class _DetailState extends State<Detail> {
             'AI mô phỏng • cần bác sĩ kiểm tra',
             Icons.auto_awesome_outlined,
           ),
-          section('Tóm tắt ${s.name}'),
+          section('Tóm tắt ${name}'),
           notice(
-            'Đã hoàn tất ${s.sessions}/${s.totalSessions} buổi. Có ${s.updates.length} phản hồi tại nhà.\nNguồn: hành trình và cập nhật trong phiên mẫu.',
+            'Đã hoàn tất ${patient.sessions}/${totalSessions} buổi. Có ${patient.updates.length} phản hồi tại nhà.\nNguồn: hành trình và cập nhật trong phiên mẫu.',
           ),
           tile(
             'Việc còn mở',

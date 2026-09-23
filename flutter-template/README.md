@@ -11,9 +11,10 @@ Flutter Material 3 cho Android/iOS. Bản trình duyệt được build từ cù
 
 ```sh
 flutter pub get
+dart run build_runner build   # sinh lib/state/*.g.dart
 flutter run -d chrome
 flutter test
-flutter analyze
+dart analyze   # gồm riverpod_lint (khai báo trong analysis_options.yaml)
 flutter build web --base-href /native-preview/
 ```
 
@@ -54,7 +55,7 @@ Thiết kế chi tiết và mapping: [NATIVE-TEMPLATE.md](../docs/NATIVE-TEMPLAT
 - [Ma trận web/native](../docs/22_NATIVE_PARITY_AND_VALIDATION.md): hành vi thực tế, state theo patient và selection riêng, giới hạn thu ngân/A5/media, kiểm thử đã chạy và checklist còn mở.
 - [Bản đồ tài liệu](../docs/README.md): Scope → Spec → Module Map → Architecture; [quy tắc đóng góp](../AGENT.md).
 
-Build dành cho URL review dùng `./build-preview.ps1` (Flutter phải ở PATH), thay cho việc chỉ build mà chưa copy output. `prototype/native-preview/` không được commit. Validation hiện có gồm 17 test; cả bốn widget viewport đều height 844, chưa thay thế kiểm tra device hoặc toàn bộ flow Care.
+Build dành cho URL review dùng `./build-preview.ps1` (Flutter phải ở PATH), thay cho việc chỉ build mà chưa copy output. `prototype/native-preview/` không được commit. Validation hiện có gồm 18 test; cả bốn widget viewport đều height 844, chưa thay thế kiểm tra device hoặc toàn bộ flow Care.
 
 
 Header nay chọn Chủ / Bác sĩ / CSKH / Kế toán / Care, mỗi vai trò có màn bắt đầu riêng. Care → Hồ sơ chọn nhóm tài khoản. CRM native là template độc lập web, chưa rule engine động. [Hướng dẫn mới](../docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).

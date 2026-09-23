@@ -6,7 +6,6 @@
 
 Riêng PB02 dùng API/SQLite chung và lưu bền vững cục bộ; mô tả memory-only/localStorage bên dưới vẫn áp dụng các module PB01. Thông báo hiện đồng bộ khi app mở, chưa có push OS khi đóng app.
 
-
 ## Template Flutter để duyệt
 
 Mở [Native review](http://127.0.0.1:4173/native-review/) để xem Flutter trong khung điện thoại 360/390/430px và tablet. Chuyển Clinic/Care ở header để duyệt hai không gian; mã nguồn và cách build ở [flutter-template](flutter-template/README.md), mapping màn hình ở [Native template](docs/NATIVE-TEMPLATE.md). Đây là template tương tác dùng state trong phiên, chưa kết nối backend/camera/in native. Chạy server prototype như bên dưới; nếu chưa có preview, build theo hướng dẫn Flutter rồi copy `flutter-template/build/web/` sang `prototype/native-preview/`.
@@ -19,15 +18,15 @@ Workspace này chứa prototype và tài liệu nghiên cứu của Pema Digital
 - [Màn hình và mạch sử dụng](docs/NATIVE-TEMPLATE.md), [runbook chạy/build/catalog](docs/21_NATIVE_RUNBOOK.md), [tính năng thực tế và kiểm thử](docs/22_NATIVE_PARITY_AND_VALIDATION.md).
 - [Quy tắc cập nhật cho agent](AGENT.md), [source Flutter](flutter-template/README.md), [validation đã ghi](flutter-template/VALIDATION.md).
 
-| Bản | Mục đích | Lưu dữ liệu |
-|---|---|---|
-| Clinic Web + Patient Mobile | Prototype nghiệp vụ liên thông | localStorage cùng origin/profile |
+| Bản                            | Mục đích                                           | Lưu dữ liệu                                                |
+| ------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------- |
+| Clinic Web + Patient Mobile     | Prototype nghiệp vụ liên thông                    | localStorage cùng origin/profile                             |
 | Native review + Flutter preview | Duyệt thiết kế/app flow từ mã Flutter Material 3 | Bộ nhớ một instance, reload mất mutation; không sync web |
-| Native pilot/production | Giai đoạn triển khai tiếp sau duyệt | Backend/auth/storage/plugin chưa được triển khai |
+| Native pilot/production         | Giai đoạn triển khai tiếp sau duyệt              | Backend/auth/storage/plugin chưa được triển khai         |
 
 Fresh clone không có compiled preview. Cài Flutter vào PATH rồi chạy `flutter-template/build-preview.ps1` từ PowerShell; script build và copy sang `prototype/native-preview/`. Chạy static server từ `prototype` như bên dưới. SDK đã kiểm tra: Flutter 3.47.5 / Dart 3.13.4; Android/iOS chưa nghiệm thu trên thiết bị. Cách cấu hình PATH và xử lý màn trắng/404 ở runbook.
 
-**Giới hạn cần biết khi duyệt:** Flutter đã tách state theo bệnh nhân và phân workspace chủ/bác sĩ/CSKH/kế toán/Care. CRM native vẫn là snapshot trong phiên, chưa đồng bộ web hoặc có rule engine đầy đủ. A5 chưa PDF/in; thu ngân PB01 chưa ledger và còn tính đơn nháp. PB02 tài chính dùng API/SQLite riêng. Suite hiện tại 17 test; không thay kiểm thiết bị thật. [Hiện trạng mobile và tài khoản mẫu](docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).
+**Giới hạn cần biết khi duyệt:** Flutter đã tách state theo bệnh nhân và phân workspace chủ/bác sĩ/CSKH/kế toán/Care. CRM native vẫn là snapshot trong phiên, chưa đồng bộ web hoặc có rule engine đầy đủ. A5 chưa PDF/in; thu ngân PB01 chưa ledger và còn tính đơn nháp. PB02 tài chính dùng API/SQLite riêng. Suite hiện tại 18 test, state dùng Riverpod; không thay kiểm thiết bị thật. [Hiện trạng mobile và tài khoản mẫu](docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).
 
 ## Tiêu chuẩn hiển thị UI
 
@@ -37,6 +36,27 @@ Fresh clone không có compiled preview. Cài Flutter vào PATH rồi chạy `fl
 - Mỗi lần sửa bố cục, chạy `node prototype/review-desktop.cjs` khi server đang hoạt động. Script chụp 11 màn chính và 5 tab Patient 360 tại cả 5 kích thước; kết quả và ảnh ở `demo-assets/screenshots/desktop-1920/`. Xem ảnh để đánh giá bố cục bên cạnh kết quả tự động.
 
 ## Khởi động
+
+### Chạy nhanh bằng Docker Compose
+
+Tại thư mục gốc của workspace, chạy 1 lệnh:
+
+```powershell
+docker compose up -d --build
+```
+
+Sau khi container lên, mở:
+
+- Clinic Web: [http://127.0.0.1:4173/clinic-web/](http://127.0.0.1:4173/clinic-web/)
+- Patient Mobile: [http://127.0.0.1:4173/patient-mobile/](http://127.0.0.1:4173/patient-mobile/)
+
+Lệnh dừng:
+
+```powershell
+docker compose down
+```
+
+### Chạy local bằng Python
 
 Mở PowerShell tại `F:\BUL_Research\DalieuOs\prototype` và chạy:
 
@@ -53,6 +73,12 @@ Hai app là vanilla HTML/JavaScript, không cần `npm install` hoặc bước b
 
 Ảnh và sự kiện upload trong prototype chỉ phục vụ demo; ảnh được thu nhỏ và lưu trong localStorage. Không nạp dữ liệu bệnh nhân thật.
 
+### Design Viewer — xem design canvas
+
+→ Mở **http://localhost:4190**
+
+Phím tắt: `Ctrl+cuộn` phóng/thu, `Space+kéo` hoặc `H` để di chuyển, `V` để tương tác prototype, `Shift+1` vừa khung. Ghi nhớ vị trí zoom, props và trạng thái panel trong `localStorage`.
+
 ## Giới hạn demo cần nói rõ
 
 AI brief, clinical note draft và Ask Pema là output mô phỏng/deterministic trên dataset giả lập; không gọi model AI thật và không chẩn đoán. Ảnh Before/After là SVG/placeholder tổng hợp hoặc ảnh upload của demo, không phải bằng chứng hiệu quả điều trị. Patient Mobile có thể xác nhận một lịch đã được clinic tạo và gửi yêu cầu qua tin nhắn; chưa có đặt slot tự phục vụ từ phía bệnh nhân. Không có authentication, server persistence, tenant isolation, push/SMS/Zalo thật hoặc audit production.
@@ -68,7 +94,7 @@ AI brief, clinical note draft và Ask Pema là output mô phỏng/deterministic 
 
 ## Quản lý vận hành mở rộng
 
-Mở [Điều phối lịch](http://127.0.0.1:4173/clinic-web/?screen=schedule), [Bác sĩ & phòng](http://127.0.0.1:4173/clinic-web/?screen=resources), [Dịch vụ](http://127.0.0.1:4173/clinic-web/?screen=services), [Thu ngân](http://127.0.0.1:4173/clinic-web/?screen=cashier). Dữ liệu mock và thao tác chi tiết trong [hướng dẫn demo](docs/19_OPERATIONS_DEMO.md). Chạy `node prototype/operations-test.cjs` để kiểm tra 20 tình huống vận hành.
+Mở [Điều phối lịch](http://127.0.0.1:4173/clinic-web/?screen=schedule), [Bác sĩ &amp; phòng](http://127.0.0.1:4173/clinic-web/?screen=resources), [Dịch vụ](http://127.0.0.1:4173/clinic-web/?screen=services), [Thu ngân](http://127.0.0.1:4173/clinic-web/?screen=cashier). Dữ liệu mock và thao tác chi tiết trong [hướng dẫn demo](docs/19_OPERATIONS_DEMO.md). Chạy `node prototype/operations-test.cjs` để kiểm tra 20 tình huống vận hành.
 
 Patient 360 hiện liên kết dịch vụ đã đăng ký với số buổi, giá chốt, giảm giá và hóa đơn chờ thu. Đơn thuốc đi qua trạng thái nháp và bác sĩ duyệt; Patient Mobile chỉ hiển thị đơn đã duyệt. Tiền cọc được ghi trong sổ phân bổ riêng để không tính trùng khi thu phần còn lại. Chạy `node prototype/check-linked.cjs` để kiểm tra luồng dịch vụ, đơn thuốc, hóa đơn và mobile.
 
@@ -93,11 +119,9 @@ Bộ tài liệu PB01 mô tả cùng một boundary sản phẩm theo thứ tự
 
 [AGENT.md](AGENT.md) ghi quy tắc làm việc, dữ liệu giả lập, kiểm thử và cách giữ ranh giới prototype/pilot. Bộ tài liệu này áp dụng cho Pema Digital Clinic hiện tại; không phải giáo trình hay checklist đào tạo.
 
-
 ## Design skill dùng chung cho đồng nghiệp
 
 Dùng **$pema-design** để thiết kế/review Clinic Web, Patient Mobile và Flutter theo nhận diện, luồng và responsive của dự án. [Skill trong repository](.agents/skills/pema-design/SKILL.md) có bốn reference về visual, màn hình/flow, layout và kiểm thử. [Hướng dẫn chia sẻ + prompt mẫu](docs/23_PEMA_DESIGN_SKILL.md). Có thể clone repo hoặc copy nguyên thư mục skill; không cần đường dẫn máy tác giả.
-
 
 ## CRM01 — replacement và vòng đời khách hàng (22/09/2026)
 
@@ -108,7 +132,6 @@ CRM01 nối expected visit, protocol D+1/D+3/D+7/D+30, vắng hẹn, bỏ dở, 
 Ngày demo cố định 20/09/2026, 46 bệnh nhân khi seed mới: 36 hồ sơ nền + 10 tài khoản nhóm CSKH; giữ 8 case P025–P032. Migration giữ dữ liệu đã nhập; dùng nút reset nếu muốn khôi phục fixture kể chuyện (xóa thay đổi thử ở browser, không reset DB tài chính). Chuẩn desktop 1920×1020; bảng phân trang/cuộn riêng, kiểm thêm 1440/1280/1024/390. Kiểm tải 200 dòng là UI fixture, không chứng minh năng lực xếp 200 lịch với nguồn lực hiện có.
 
 Chạy `node prototype/crm-test.cjs` và `node prototype/crm-browser-test.cjs`; bằng chứng ở `demo-assets/screenshots/crm01/`. Suite desktop/operations nhận `PEMA_EVIDENCE_DIR` để lưu evidence riêng, tránh ghi đè ảnh các vòng trước. Flutter/PB02 tiếp tục giữ phạm vi riêng; chưa native CRM hoặc gửi tin thật.
-
 
 ## Mobile và tài chính cùng Clinic
 

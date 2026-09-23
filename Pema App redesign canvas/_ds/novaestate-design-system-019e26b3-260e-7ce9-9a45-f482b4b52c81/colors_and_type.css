@@ -1,0 +1,316 @@
+/* NovaEstate Design System — Foundations
+ * ---------------------------------------------------------------
+ * Tokens for color, typography, spacing, radius, shadow, motion.
+ * Import this file at the top of any artifact built against the
+ * NovaEstate brand.
+ * --------------------------------------------------------------- */
+
+:root {
+  /* ===== Color: brand ===== */
+  --ne-primary:        #14B8A6;   /* teal — emphasis, action */
+  --ne-primary-600:    #0D9488;
+  --ne-primary-700:    #0F766E;
+  --ne-secondary:      #DBEAFE;   /* pale blue — supporting */
+  --ne-tertiary:       #F4FCE3;   /* pale lime — reserved accent */
+  --ne-accent:         #14B8A6;
+
+  /* Pink accent (used only for the spec'd primary button surface) */
+  --ne-pink-bg:        #FDF2F8;
+  --ne-pink-fg:        #DB2777;
+
+  /* ===== Color: surface & chrome ===== */
+  --ne-background:     #FFFFFF;
+  --ne-surface:        #F8FAFC;
+  --ne-surface-2:      rgba(255, 255, 255, 0.80);  /* glass body */
+  --ne-surface-3:      rgba(255, 255, 255, 0.40);  /* glass faint */
+
+  /* ===== Color: ink ===== */
+  --ne-text-primary:   #0F172A;
+  --ne-text-secondary: #94A3B8;
+  --ne-text-muted:     #64748B;
+
+  /* ===== Color: line ===== */
+  --ne-border:         #F1F5F9;
+  --ne-border-2:       #E2E8F0;
+  --ne-border-3:       #CBD5E1;
+  --ne-border-soft:    #F8FAFC;
+
+  /* ===== Semantic state ===== */
+  --ne-success:        #14B8A6;
+  --ne-warning:        #F59E0B;
+  --ne-danger:         #EF4444;
+  --ne-info:           #3B82F6;
+
+  /* ===== Typography ===== */
+  --ne-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+                  "Inter", "Helvetica Neue", Arial, sans-serif;
+  --ne-font-mono: ui-monospace, "SF Mono", "JetBrains Mono",
+                  "Roboto Mono", Menlo, monospace;
+
+  /* Type ramp (spec extended with intermediate steps) */
+  --ne-fs-display-lg: 48px;   --ne-lh-display-lg: 48px;
+  --ne-fs-display-md: 36px;   --ne-lh-display-md: 40px;
+  --ne-fs-display-sm: 28px;   --ne-lh-display-sm: 32px;
+  --ne-fs-title:      20px;   --ne-lh-title:      28px;
+  --ne-fs-label-md:   16px;   --ne-lh-label-md:   24px;
+  --ne-fs-label-sm:   14px;   --ne-lh-label-sm:   20px;
+  --ne-fs-body-md:    12px;   --ne-lh-body-md:    16px;
+  --ne-fs-caption:    11px;   --ne-lh-caption:    14px;
+
+  --ne-tracking-tight: -0.025em;
+  --ne-tracking-base:   0em;
+  --ne-tracking-wide:   0.04em;
+
+  /* ===== Spacing (4px base rhythm) ===== */
+  --ne-space-px:   1px;
+  --ne-space-0_5:  2px;
+  --ne-space-1:    4px;
+  --ne-space-1_5:  6px;
+  --ne-space-2:    8px;
+  --ne-space-3:    12px;
+  --ne-space-4:    16px;
+  --ne-space-5:    20px;
+  --ne-space-6:    24px;
+  --ne-space-8:    32px;
+  --ne-space-10:   40px;
+
+  /* Card padding scale */
+  --ne-card-pad-sm: 9px;
+  --ne-card-pad-md: 16px;
+  --ne-card-pad-lg: 20px;
+  --ne-card-pad-xl: 24px;
+
+  /* Section padding */
+  --ne-section-pad-sm: 24px;
+  --ne-section-pad-md: 32px;
+  --ne-section-pad-lg: 40px;
+
+  /* ===== Radius ===== */
+  --ne-r-sm:   6px;
+  --ne-r-md:   16px;
+  --ne-r-lg:   24px;
+  --ne-r-xl:   32px;
+  --ne-r-full: 9999px;
+
+  /* ===== Shadow ===== */
+  --ne-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --ne-shadow-md: 0 20px 25px -5px rgba(0, 0, 0, 0.10),
+                  0 8px 10px -6px rgba(0, 0, 0, 0.10);
+  --ne-shadow-lg: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+  --ne-shadow-inner: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  /* ===== Blur ===== */
+  --ne-blur-sm:  4px;
+  --ne-blur-md:  12px;
+
+  /* ===== Motion ===== */
+  --ne-dur-fast:   150ms;
+  --ne-dur-base:   300ms;
+  --ne-dur-slow:   700ms;
+  --ne-dur-xslow:  1000ms;
+  --ne-ease:        ease;
+  --ne-ease-std:    cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ===== Gradients ===== */
+  --ne-gradient-glass:
+    linear-gradient(to right bottom,
+      rgba(255,255,255,0.40),
+      rgba(255,255,255,0.10),
+      rgba(0,0,0,0));
+  --ne-gradient-teal:
+    linear-gradient(to right,
+      rgba(19, 78, 74, 0.80),
+      rgba(17, 94, 89, 0.40),
+      transparent);
+}
+
+/* ============================================================
+ *  Semantic element styles — opt-in via .ne or set on <body>.
+ * ============================================================ */
+
+.ne, .ne * {
+  box-sizing: border-box;
+}
+
+.ne {
+  font-family: var(--ne-font-sans);
+  color: var(--ne-text-primary);
+  background: var(--ne-background);
+  font-size: var(--ne-fs-label-md);
+  line-height: var(--ne-lh-label-md);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.ne h1, .ne .h1 {
+  font-size: var(--ne-fs-display-lg);
+  line-height: var(--ne-lh-display-lg);
+  letter-spacing: var(--ne-tracking-tight);
+  font-weight: 600;
+  margin: 0;
+}
+.ne h2, .ne .h2 {
+  font-size: var(--ne-fs-display-md);
+  line-height: var(--ne-lh-display-md);
+  letter-spacing: var(--ne-tracking-tight);
+  font-weight: 600;
+  margin: 0;
+}
+.ne h3, .ne .h3 {
+  font-size: var(--ne-fs-display-sm);
+  line-height: var(--ne-lh-display-sm);
+  letter-spacing: var(--ne-tracking-tight);
+  font-weight: 600;
+  margin: 0;
+}
+.ne h4, .ne .h4 {
+  font-size: var(--ne-fs-title);
+  line-height: var(--ne-lh-title);
+  font-weight: 600;
+  margin: 0;
+}
+.ne p, .ne .body {
+  font-size: var(--ne-fs-label-md);
+  line-height: var(--ne-lh-label-md);
+  margin: 0;
+}
+.ne .label,
+.ne label {
+  font-size: var(--ne-fs-label-sm);
+  line-height: var(--ne-lh-label-sm);
+  font-weight: 500;
+  color: var(--ne-text-primary);
+}
+.ne .caption,
+.ne small {
+  font-size: var(--ne-fs-body-md);
+  line-height: var(--ne-lh-body-md);
+  color: var(--ne-text-secondary);
+}
+.ne code, .ne .mono {
+  font-family: var(--ne-font-mono);
+  font-size: 12px;
+  letter-spacing: var(--ne-tracking-wide);
+}
+
+/* ============================================================
+ *  Surface recipes — the three card flavors detected in the spec.
+ * ============================================================ */
+
+.ne-card {
+  background: var(--ne-background);
+  border: 1px solid var(--ne-border);
+  border-radius: var(--ne-r-lg);
+  padding: var(--ne-card-pad-xl);
+  box-shadow: var(--ne-shadow-sm);
+}
+.ne-card--glass {
+  background: var(--ne-surface-2);
+  border: 0;
+  border-radius: 23px;
+  padding: var(--ne-card-pad-lg);
+  backdrop-filter: blur(var(--ne-blur-md));
+  -webkit-backdrop-filter: blur(var(--ne-blur-md));
+}
+.ne-card--compact {
+  padding: var(--ne-card-pad-md);
+}
+
+/* Gradient border shell — wrap a card to get the hero edge */
+.ne-shell {
+  position: relative;
+  padding: 1px;
+  border-radius: var(--ne-r-lg);
+  background: var(--ne-gradient-glass);
+}
+.ne-shell > * { border-radius: calc(var(--ne-r-lg) - 1px); }
+
+/* ============================================================
+ *  Controls
+ * ============================================================ */
+
+.ne-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ne-space-2);
+  font-family: var(--ne-font-sans);
+  font-size: var(--ne-fs-label-md);
+  line-height: var(--ne-lh-label-md);
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--ne-r-full);
+  border: 0;
+  cursor: pointer;
+  transition: background var(--ne-dur-fast) var(--ne-ease-std),
+              color var(--ne-dur-fast) var(--ne-ease-std),
+              box-shadow var(--ne-dur-fast) var(--ne-ease-std);
+}
+.ne-btn--primary {
+  background: var(--ne-pink-bg);
+  color: var(--ne-pink-fg);
+}
+.ne-btn--primary:hover {
+  background: #FCE7F3;
+}
+.ne-btn--accent {
+  background: var(--ne-primary);
+  color: #FFFFFF;
+}
+.ne-btn--accent:hover { background: var(--ne-primary-600); }
+.ne-btn--link {
+  background: transparent;
+  color: var(--ne-text-muted);
+  padding: 8px;
+}
+.ne-btn--link:hover { color: var(--ne-text-primary); }
+.ne-btn--ghost {
+  background: var(--ne-surface);
+  color: var(--ne-text-primary);
+}
+.ne-btn--ghost:hover { background: var(--ne-border); }
+
+/* ============================================================
+ *  Misc primitives
+ * ============================================================ */
+
+.ne-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ne-space-1);
+  padding: 2px 8px;
+  border-radius: var(--ne-r-full);
+  background: var(--ne-surface);
+  color: var(--ne-text-muted);
+  font-size: var(--ne-fs-body-md);
+  line-height: var(--ne-lh-body-md);
+  font-weight: 500;
+}
+.ne-chip--success { background: #ECFDF5; color: #047857; }
+.ne-chip--warn    { background: #FFFBEB; color: #B45309; }
+.ne-chip--danger  { background: #FEF2F2; color: #B91C1C; }
+.ne-chip--info    { background: var(--ne-secondary); color: #1D4ED8; }
+
+.ne-divider {
+  height: 1px;
+  background: var(--ne-border);
+  border: 0;
+}
+
+.ne-input {
+  font-family: var(--ne-font-sans);
+  font-size: var(--ne-fs-label-md);
+  line-height: var(--ne-lh-label-md);
+  padding: 8px 12px;
+  border: 1px solid var(--ne-border-2);
+  border-radius: var(--ne-r-md);
+  background: var(--ne-background);
+  color: var(--ne-text-primary);
+  outline: none;
+  transition: border-color var(--ne-dur-fast) var(--ne-ease-std),
+              box-shadow var(--ne-dur-fast) var(--ne-ease-std);
+}
+.ne-input:focus {
+  border-color: var(--ne-primary);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+}

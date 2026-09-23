@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0&display=block">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#E6EDF3;-webkit-font-smoothing:antialiased}
+a{color:#0B4F94;text-decoration:none}
+a:hover{color:#083A6E}
+input::placeholder,textarea::placeholder{color:#43474E;opacity:1}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;gap:40px 56px;padding:40px 24px 64px;font-family:'Be Vietnam Pro',system-ui,sans-serif;color:#17324D">
+
+  <aside style="flex:0 1 300px;min-width:260px;display:flex;flex-direction:column;gap:20px;padding-top:12px">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:13px;font-weight:600;letter-spacing:.12em;color:#0B4F94">PEMA · PROTOTYPE</div>
+      <h1 style="margin:0;font-size:32px;line-height:1.2;font-weight:700;color:#083A6E">Bấm để duyệt luồng</h1>
+      <p style="margin:0;font-size:14px;line-height:1.6;color:#5D7184;text-wrap:pretty">Mọi nút, tile, tab và form trong điện thoại đều chuyển màn hoặc cập nhật dữ liệu mẫu như Flutter template. Thao tác lưu trong phiên, bấm Bắt đầu lại để về trạng thái đầu.</p>
+    </div>
+    <div style="background:#fff;border:1px solid #E3ECF3;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:4px">
+      <div style="font-size:12px;color:#5D7184">Đang xem</div>
+      <div style="font-size:15px;font-weight:600;color:#17324D">{{ where }}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:.08em;color:#5D7184">VÀO NHANH</div>
+      <sc-for list="{{ quick }}" as="q" hint-placeholder-count="6">
+        <sc-if value="{{ q.on }}">
+          <div onClick="{{ q.tap }}" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;background:#0B4F94;color:#fff">
+            <span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:1;width:20px;height:20px;overflow:hidden;display:inline-block;white-space:nowrap">{{ q.icon }}</span>
+            <span style="font-size:14px;font-weight:500">{{ q.label }}</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{ q.off }}">
+          <div onClick="{{ q.tap }}" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;background:#fff;border:1px solid #E3ECF3;color:#17324D" style-hover="border-color:#CADBE8">
+            <span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:1;width:20px;height:20px;overflow:hidden;display:inline-block;white-space:nowrap;color:#0B4F94">{{ q.icon }}</span>
+            <span style="font-size:14px;font-weight:500">{{ q.label }}</span>
+          </div>
+        </sc-if>
+      </sc-for>
+    </div>
+    <div onClick="{{ reset }}" style="cursor:pointer;align-self:flex-start;height:40px;display:flex;align-items:center;gap:8px;padding:0 16px 0 12px;border-radius:9999px;border:1px solid #CADBE8;background:#fff;color:#0B4F94;font-size:14px;font-weight:500">
+      <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap">restart_alt</span>
+      <span>Bắt đầu lại</span>
+    </div>
+  </aside>
+
+  <div data-screen-label="Prototype" style="flex-shrink:0;width:390px;height:844px;position:relative;overflow:hidden;border-radius:36px;background:#F4F8FB;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(8,58,110,.06),0 12px 32px rgba(8,58,110,.10);color:#17324D;font-size:14px;line-height:1.5">
+
+    <div style="height:47px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 26px 0 34px;font-size:15px;font-weight:600;color:#17324D">
+      <span>9:41</span>
+      <div style="display:flex;align-items:center;gap:5px">
+        <span style="font-family:'Material Symbols Outlined';font-size:17px;line-height:1;width:17px;height:17px;overflow:hidden;display:inline-block;white-space:nowrap;font-variation-settings:'FILL' 1">signal_cellular_alt</span>
+        <span style="font-family:'Material Symbols Outlined';font-size:17px;line-height:1;width:17px;height:17px;overflow:hidden;display:inline-block;white-space:nowrap;font-variation-settings:'FILL' 1">wifi</span>
+        <span style="font-family:'Material Symbols Outlined';font-size:20px;line-height:1;width:20px;height:20px;overflow:hidden;display:inline-block;white-space:nowrap;transform:rotate(90deg);font-variation-settings:'FILL' 1">battery_full</span>
+      </div>
+    </div>
+
+    <sc-if value="{{ sc.appMain }}">
+      <div style="height:64px;flex-shrink:0;display:flex;align-items:center;padding:0 4px 0 16px">
+        <div style="flex:1;display:flex;align-items:center">
+          <div style="width:94px;font-size:26px;font-weight:700;line-height:1;letter-spacing:-0.04em;color:#0B4F94">pema</div>
+        </div>
+        <sc-if value="{{ sc.bell }}">
+          <div onClick="{{ openBell }}" style="cursor:pointer;width:48px;height:48px;border-radius:24px;position:relative;display:flex;align-items:center;justify-content:center" style-active="background:rgba(23,50,77,.08)">
+            <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#17324D">notifications</span>
+            <sc-if value="{{ sc.bellBadge }}">
+              <span style="position:absolute;top:6px;left:26px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#BA1A1A;color:#fff;font-size:11px;font-weight:500;line-height:16px;text-align:center">{{ sc.bellCount }}</span>
+            </sc-if>
+          </div>
+        </sc-if>
+        <div onClick="{{ openAccounts }}" style="cursor:pointer;height:40px;display:flex;align-items:center;gap:8px;padding:0 16px 0 12px;border-radius:9999px;color:#0B4F94;font-size:14px;font-weight:500" style-active="background:rgba(11,79,148,.1)">
+          <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap">swap_horiz</span>
+          <span>{{ sc.role }}</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ sc.appDetail }}">
+      <div style="height:64px;flex-shrink:0;display:flex;align-items:center;padding:0 4px">
+        <div onClick="{{ back }}" style="cursor:pointer;width:48px;height:48px;border-radius:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0" style-active="background:rgba(23,50,77,.08)">
+          <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#17324D">arrow_back</span>
+        </div>
+        <div style="flex:1;min-width:0;padding-left:20px;font-size:{{ sc.ts }}px;font-weight:{{ sc.tw }};line-height:1.3;color:#17324D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ sc.title }}</div>
+        <sc-if value="{{ sc.refresh }}">
+          <div onClick="{{ refreshFin }}" style="cursor:pointer;width:48px;height:48px;border-radius:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0" style-active="background:rgba(23,50,77,.08)">
+            <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#17324D">refresh</span>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <div ref="{{ contentRef }}" style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:{{ sc.pad }};display:flex;flex-direction:column">
+      <sc-for list="{{ sc.blocks }}" as="b" hint-placeholder-count="5">
+
+        <sc-if value="{{ b.heading }}">
+          <div style="flex-shrink:0;padding-bottom:20px;display:flex;flex-direction:column;gap:6px">
+            <div style="font-size:25px;font-weight:700;line-height:1.3;color:#083A6E">{{ b.title }}</div>
+            <div style="font-size:13px;line-height:1.5;color:#5D7184">{{ b.sub }}</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.h2 }}">
+          <div style="flex-shrink:0;padding-bottom:20px;display:flex;flex-direction:column;gap:6px">
+            <div style="font-size:26px;font-weight:700;line-height:1.25;color:#17324D">{{ b.title }}</div>
+            <div style="font-size:13px;line-height:1.5;color:#5D7184">{{ b.sub }}</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.section }}">
+          <div style="flex-shrink:0;padding:24px 0 12px;font-size:17px;font-weight:700;line-height:1.3;color:#17324D">{{ b.title }}</div>
+        </sc-if>
+
+        <sc-if value="{{ b.hero }}">
+          <div style="flex-shrink:0;position:relative;overflow:hidden;border-radius:24px;background:linear-gradient(135deg,#083A6E,#0B4F94)">
+            <span style="position:absolute;right:-20px;top:-22px;font-family:'Material Symbols Outlined';font-size:170px;line-height:1;width:170px;height:170px;overflow:hidden;display:inline-block;white-space:nowrap;color:rgba(255,255,255,.09)">{{ b.icon }}</span>
+            <div style="position:relative;padding:24px;display:flex;flex-direction:column;gap:16px">
+              <div style="font-size:10px;line-height:1.5;letter-spacing:1.4px;color:#B8DEF5">{{ b.over }}</div>
+              <div style="font-size:24px;line-height:1.3;font-weight:600;color:#fff;white-space:pre-line">{{ b.title }}</div>
+              <div style="font-size:12px;line-height:1.5;color:#D7E9F5">{{ b.sub }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.metrics }}">
+          <div style="flex-shrink:0;display:flex;gap:12px">
+            <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="2">
+              <div style="flex:1;min-width:0;padding:18px;background:#fff;border-radius:18px;display:flex;flex-direction:column">
+                <div style="font-size:28px;font-weight:700;line-height:1.3;color:#0B4F94">{{ it.value }}</div>
+                <div style="font-size:12px;line-height:1.5;color:#5D7184">{{ it.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.actions }}">
+          <div style="flex-shrink:0;display:flex">
+            <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="3">
+              <div style="flex:1;min-width:0;padding:4px">
+                <div onClick="{{ it.tap }}" style="cursor:pointer;padding:16px 4px;background:#fff;border-radius:18px;display:flex;flex-direction:column;align-items:center;gap:9px" style-active="background:#EDF3F8">
+                  <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#0B4F94">{{ it.icon }}</span>
+                  <div style="font-size:12px;font-weight:600;line-height:1.5;text-align:center">{{ it.label }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.tile }}">
+          <div onClick="{{ b.tap }}" style="flex-shrink:0;position:relative;cursor:{{ b.cursor }};margin-bottom:10px;background:#fff;border:1px solid #E3ECF3;border-radius:18px;padding:9px 16px;min-height:74px;display:flex;align-items:center;gap:16px" style-active="background:#F1F6FA">
+            <div style="width:40px;height:40px;border-radius:20px;background:#E8F4FB;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <span style="font-family:'Material Symbols Outlined';font-size:21px;line-height:1;width:21px;height:21px;overflow:hidden;display:inline-block;white-space:nowrap;color:#0B4F94">{{ b.icon }}</span>
+            </div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+              <div style="font-size:14px;font-weight:600;line-height:1.5;color:#1A1C20">{{ b.title }}</div>
+              <div style="font-size:12px;line-height:1.43;color:#5D7184;white-space:pre-line">{{ b.sub }}</div>
+            </div>
+            <sc-if value="{{ b.chevron }}">
+              <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap;flex-shrink:0;color:#5D7184">chevron_right</span>
+            </sc-if>
+            <sc-if value="{{ b.isDate }}">
+              <input type="date" value="{{ b.dateVal }}" onChange="{{ b.onDate }}" onClick="{{ b.onDateClick }}" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0">
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.notice }}">
+          <div style="flex-shrink:0;margin-bottom:16px;padding:16px;background:#E8F4FB;border-radius:14px;font-size:12px;line-height:1.5;color:#083A6E;white-space:pre-line">{{ b.text }}</div>
+        </sc-if>
+
+        <sc-if value="{{ b.primary }}">
+          <div style="flex-shrink:0;padding:8px 0">
+            <sc-if value="{{ b.on }}">
+              <div onClick="{{ b.tap }}" style="cursor:pointer;height:52px;border-radius:14px;background:#0B4F94;color:#fff;font-size:14px;font-weight:500;letter-spacing:.1px;display:flex;align-items:center;justify-content:center;padding:0 24px;text-align:center" style-active="background:#083A6E">{{ b.text }}</div>
+            </sc-if>
+            <sc-if value="{{ b.off }}">
+              <div style="cursor:not-allowed;height:52px;border-radius:14px;background:rgba(26,28,32,.12);color:rgba(26,28,32,.38);font-size:14px;font-weight:500;letter-spacing:.1px;display:flex;align-items:center;justify-content:center;padding:0 24px;text-align:center">{{ b.text }}</div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.outlined }}">
+          <div onClick="{{ b.tap }}" style="cursor:pointer;flex-shrink:0;height:48px;background:#fff;border:1px solid #CADBE8;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;color:#0B4F94;font-size:14px;font-weight:500" style-active="background:#EDF3F8">
+            <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap">{{ b.icon }}</span>
+            <span>{{ b.text }}</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.textBtn }}">
+          <div onClick="{{ b.tap }}" style="cursor:pointer;flex-shrink:0;height:40px;border-radius:9999px;display:flex;align-items:center;justify-content:center;gap:8px;color:#0B4F94;font-size:14px;font-weight:500" style-active="background:rgba(11,79,148,.1)">
+            <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap">{{ b.icon }}</span>
+            <span>{{ b.text }}</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.input }}">
+          <div style="flex-shrink:0;position:relative;background:#fff;border:1px solid #CADBE8;border-radius:14px;padding:15px 16px 15px {{ b.pl }}px;display:flex;align-items:flex-start;gap:12px">
+            <sc-if value="{{ b.hasPrefix }}">
+              <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;flex-shrink:0;color:#43474E">{{ b.prefix }}</span>
+            </sc-if>
+            <sc-if value="{{ b.single }}">
+              <input type="{{ b.type }}" value="{{ b.value }}" onChange="{{ b.onChange }}" placeholder="{{ b.inside }}" style="flex:1;min-width:0;height:24px;border:0;outline:0;background:transparent;padding:0;font-family:inherit;font-size:16px;line-height:24px;color:#1A1C20">
+            </sc-if>
+            <sc-if value="{{ b.multi }}">
+              <textarea rows="{{ b.rows }}" value="{{ b.value }}" onChange="{{ b.onChange }}" placeholder="{{ b.inside }}" style="flex:1;min-width:0;border:0;outline:0;background:transparent;padding:0;resize:none;font-family:inherit;font-size:16px;line-height:24px;color:#1A1C20"></textarea>
+            </sc-if>
+            <sc-if value="{{ b.float }}">
+              <div style="position:absolute;left:12px;top:-9px;padding:0 4px;background:#fff;font-size:12px;line-height:16px;color:#43474E">{{ b.label }}</div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.dd }}">
+          <div style="flex-shrink:0;position:relative;height:56px;background:#fff;border:1px solid #CADBE8;border-radius:14px;display:flex;align-items:center;gap:12px;padding:0 12px 0 16px">
+            <div style="flex:1;min-width:0;font-size:16px;color:#1A1C20;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.display }}</div>
+            <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;flex-shrink:0;color:#43474E;font-variation-settings:'FILL' 1">arrow_drop_down</span>
+            <sc-if value="{{ b.float }}">
+              <div style="position:absolute;left:12px;top:-9px;padding:0 4px;background:#fff;font-size:12px;line-height:16px;color:#43474E">{{ b.label }}</div>
+            </sc-if>
+            <select value="{{ b.value }}" onChange="{{ b.onChange }}" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px">
+              <sc-for list="{{ b.options }}" as="o" hint-placeholder-count="2">
+                <option value="{{ o.v }}">{{ o.l }}</option>
+              </sc-for>
+            </select>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.week }}">
+          <div style="flex-shrink:0;padding-bottom:20px;display:flex">
+            <sc-for list="{{ b.days }}" as="it" hint-placeholder-count="7">
+              <div style="flex:1;min-width:0;margin:0 2px">
+                <sc-if value="{{ it.on }}">
+                  <div style="padding:12px 0;border-radius:12px;background:#0B4F94;display:flex;flex-direction:column;align-items:center;gap:8px">
+                    <div style="font-size:10px;line-height:1.5;color:#fff">{{ it.d }}</div>
+                    <div style="font-weight:700;color:#fff">{{ it.n }}</div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ it.off }}">
+                  <div style="padding:12px 0;border-radius:12px;background:#fff;display:flex;flex-direction:column;align-items:center;gap:8px">
+                    <div style="font-size:10px;line-height:1.5;color:#5D7184">{{ it.d }}</div>
+                    <div style="font-weight:700;color:#17324D">{{ it.n }}</div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.chips }}">
+          <div style="flex-shrink:0;display:flex;flex-wrap:wrap;column-gap:8px">
+            <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="5">
+              <div style="height:48px;display:flex;align-items:center">
+                <sc-if value="{{ it.sel }}">
+                  <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 16px 0 8px;border-radius:8px;background:#D5E3F8;color:#0E1D2F;font-size:14px;font-weight:500">
+                    <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap">check</span>
+                    <span>{{ it.label }}</span>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ it.norm }}">
+                  <div onClick="{{ it.tap }}" style="cursor:pointer;height:32px;display:flex;align-items:center;padding:0 16px;border-radius:8px;border:1px solid #C3C6CF;color:#43474E;font-size:14px;font-weight:500" style-active="background:rgba(67,71,78,.08)">{{ it.label }}</div>
+                </sc-if>
+                <sc-if value="{{ it.dis }}">
+                  <div style="cursor:not-allowed;height:32px;display:flex;align-items:center;padding:0 16px;border-radius:8px;border:1px solid rgba(26,28,32,.12);color:rgba(26,28,32,.38);font-size:14px;font-weight:500">{{ it.label }}</div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.check }}">
+          <div onClick="{{ b.tap }}" style="cursor:pointer;flex-shrink:0;min-height:56px;display:flex;align-items:center;gap:16px;padding:0 24px 0 16px">
+            <div style="flex:1;min-width:0;font-size:16px;line-height:24px;color:#1A1C20">{{ b.label }}</div>
+            <sc-if value="{{ b.on }}">
+              <div style="width:18px;height:18px;border-radius:2px;background:#0B4F94;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <span style="font-family:'Material Symbols Outlined';font-size:16px;line-height:1;width:16px;height:16px;overflow:hidden;display:inline-block;white-space:nowrap;color:#fff;font-variation-settings:'wght' 700">check</span>
+              </div>
+            </sc-if>
+            <sc-if value="{{ b.off }}">
+              <div style="width:18px;height:18px;border-radius:2px;border:2px solid #43474E;flex-shrink:0"></div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.photos }}">
+          <div style="flex-shrink:0;display:flex">
+            <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="2">
+              <div style="flex:1;min-width:0;margin:4px;height:220px;border-radius:18px;background:#E8F4FB;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                <span style="font-family:'Material Symbols Outlined';font-size:76px;line-height:1;width:76px;height:76px;overflow:hidden;display:inline-block;white-space:nowrap;color:#80B3D0">face</span>
+                <div>{{ it.label }}</div>
+                <div style="font-size:11px">Minh họa</div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.order }}">
+          <div style="flex-shrink:0;margin:4px;background:#fff;border-radius:12px;padding:16px;display:flex;flex-direction:column">
+            <div style="font-weight:600">{{ b.name }}</div>
+            <div style="height:48px;display:flex;align-items:center">
+              <div onClick="{{ b.dec }}" style="cursor:pointer;width:48px;height:48px;border-radius:24px;display:flex;align-items:center;justify-content:center" style-active="background:rgba(67,71,78,.08)"><span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#43474E">do_not_disturb_on</span></div>
+              <span>{{ b.qty }}</span>
+              <div onClick="{{ b.inc }}" style="cursor:pointer;width:48px;height:48px;border-radius:24px;display:flex;align-items:center;justify-content:center" style-active="background:rgba(67,71,78,.08)"><span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#43474E">add_circle</span></div>
+              <div style="flex:1"></div>
+              <div onClick="{{ b.del }}" style="cursor:pointer;width:48px;height:48px;border-radius:24px;display:flex;align-items:center;justify-content:center" style-active="background:rgba(67,71,78,.08)"><span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#43474E">delete</span></div>
+            </div>
+            <div style="position:relative;height:56px;background:#fff;border:1px solid #CADBE8;border-radius:14px;display:flex;align-items:center;gap:12px;padding:0 12px 0 16px">
+              <div style="flex:1;min-width:0;font-size:16px;color:#1A1C20">{{ b.routeLabel }}</div>
+              <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#43474E;font-variation-settings:'FILL' 1">arrow_drop_down</span>
+              <select value="{{ b.route }}" onChange="{{ b.onRoute }}" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px">
+                <option value="UNRESOLVED">Cần phân loại</option>
+                <option value="PRESCRIPTION">Đơn thuốc</option>
+                <option value="CONSULTATION">Phiếu tư vấn</option>
+              </select>
+            </div>
+            <div style="height:12px"></div>
+            <div style="position:relative;background:#fff;border:1px solid #CADBE8;border-radius:14px;padding:15px 16px;display:flex">
+              <input value="{{ b.usage }}" onChange="{{ b.onUsage }}" placeholder="Cách dùng / hướng dẫn" style="flex:1;min-width:0;height:24px;border:0;outline:0;background:transparent;padding:0;font-family:inherit;font-size:16px;line-height:24px;color:#1A1C20">
+              <sc-if value="{{ b.hasUsage }}">
+                <div style="position:absolute;left:12px;top:-9px;padding:0 4px;background:#fff;font-size:12px;line-height:16px;color:#43474E">Cách dùng / hướng dẫn</div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.a5 }}">
+          <div style="flex-shrink:0;margin:4px;background:#fff;border-radius:12px;padding:24px;display:flex;flex-direction:column">
+            <div style="width:90px;font-size:24px;font-weight:700;line-height:1;letter-spacing:-0.04em;color:#0B4F94">pema</div>
+            <div style="padding:24px 0 12px;font-size:17px;font-weight:700;line-height:1.3">{{ b.kind }}</div>
+            <div>{{ b.name }}</div>
+            <div style="height:16px;display:flex;align-items:center"><div style="flex:1;height:1px;background:#C3C6CF"></div></div>
+            <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="1">
+              <div style="padding:8px 0;white-space:pre-line">{{ it.text }}</div>
+            </sc-for>
+            <div style="height:16px;display:flex;align-items:center"><div style="flex:1;height:1px;background:#C3C6CF"></div></div>
+            <div style="white-space:pre-line">{{ b.footer }}</div>
+            <div style="height:32px"></div>
+            <div>BS. Tâm</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.txt }}">
+          <div style="flex-shrink:0;font-size:{{ b.s }}px;color:{{ b.c }};font-weight:{{ b.w }};line-height:1.5;white-space:{{ b.ws }};overflow:hidden;text-overflow:ellipsis">{{ b.text }}</div>
+        </sc-if>
+
+        <sc-if value="{{ b.sp }}">
+          <div style="flex-shrink:0;height:{{ b.h }}px"></div>
+        </sc-if>
+
+        <sc-if value="{{ b.buckets }}">
+          <div style="flex-shrink:0;display:flex;gap:8px">
+            <sc-for list="{{ b.items }}" as="it" hint-placeholder-count="3">
+              <sc-if value="{{ it.on }}">
+                <div style="flex:1;min-width:0;padding:12px;border-radius:16px;background:#0B4F94;display:flex;flex-direction:column;gap:7px">
+                  <div style="font-size:25px;line-height:1.1;font-weight:700;color:#fff">{{ it.count }}</div>
+                  <div style="font-size:11px;font-weight:500;line-height:1.4;color:#fff">{{ it.label }}</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ it.off }}">
+                <div onClick="{{ it.tap }}" style="cursor:pointer;flex:1;min-width:0;padding:12px;border-radius:16px;background:#fff;display:flex;flex-direction:column;gap:7px" style-active="background:#EDF3F8">
+                  <div style="font-size:25px;line-height:1.1;font-weight:700;color:#17324D">{{ it.count }}</div>
+                  <div style="font-size:11px;font-weight:500;line-height:1.4;color:#5D7184">{{ it.label }}</div>
+                </div>
+              </sc-if>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.careSearch }}">
+          <div style="flex-shrink:0;display:flex;gap:10px">
+            <div style="flex:1;min-width:0;height:48px;background:#fff;border:1px solid #CADBE8;border-radius:14px;display:flex;align-items:center;gap:14px;padding:0 12px">
+              <span style="font-family:'Material Symbols Outlined';font-size:21px;line-height:1;width:21px;height:21px;overflow:hidden;display:inline-block;white-space:nowrap;flex-shrink:0;color:#43474E">search</span>
+              <input value="{{ b.value }}" onChange="{{ b.onChange }}" placeholder="Tìm tên hoặc mã hồ sơ" style="flex:1;min-width:0;border:0;outline:0;background:transparent;padding:0;font-family:inherit;font-size:13px;color:#1A1C20">
+            </div>
+            <div onClick="{{ b.onFilter }}" style="cursor:pointer;width:48px;height:48px;flex-shrink:0;position:relative;border-radius:14px;border:1px solid #E0EAF2;background:{{ b.bg }};display:flex;align-items:center;justify-content:center">
+              <span style="font-family:'Material Symbols Outlined';font-size:22px;line-height:1;width:22px;height:22px;overflow:hidden;display:inline-block;white-space:nowrap;color:#0B4F94">tune</span>
+              <sc-if value="{{ b.active }}">
+                <span style="position:absolute;top:11px;right:11px;width:6px;height:6px;border-radius:3px;background:#BA1A1A"></span>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.inputChip }}">
+          <div style="flex-shrink:0;padding-top:10px;display:flex">
+            <div style="height:32px;display:flex;align-items:center;gap:8px;padding:0 4px 0 12px;border:1px solid #C3C6CF;border-radius:8px;font-size:12px;font-weight:500;color:#43474E">
+              <span>{{ b.label }}</span>
+              <span onClick="{{ b.onClose }}" style="cursor:pointer;font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:24px;height:24px;padding:3px;overflow:hidden;display:inline-block;white-space:nowrap">close</span>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.listHead }}">
+          <div style="flex-shrink:0;padding:20px 0 12px;display:flex;align-items:center;gap:12px">
+            <div style="flex:1;font-size:14px;font-weight:600;color:#17324D">{{ b.title }}</div>
+            <div style="font-size:12px;color:#5D7184">{{ b.count }}</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.careRow }}">
+          <div onClick="{{ b.tap }}" style="cursor:pointer;flex-shrink:0;margin-bottom:10px;background:#fff;border:1px solid #E0EAF2;border-radius:18px;padding:14px;display:flex;align-items:flex-start;gap:12px" style-active="background:#F1F6FA">
+            <div style="width:40px;height:40px;border-radius:20px;background:#EAF3FA;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:600;color:#0B4F94">{{ b.initials }}</div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+              <div style="font-size:14px;font-weight:600;line-height:1.4;color:#17324D">{{ b.name }}</div>
+              <div style="margin-top:5px;font-size:12px;line-height:1.4;color:#0B4F94">{{ b.group }}</div>
+              <div style="margin-top:7px;font-size:11px;line-height:1.4;color:#5D7184">{{ b.meta }}</div>
+            </div>
+            <span style="margin-top:4px;font-family:'Material Symbols Outlined';font-size:20px;line-height:1;width:20px;height:20px;overflow:hidden;display:inline-block;white-space:nowrap;flex-shrink:0;color:#5D7184">chevron_right</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.empty }}">
+          <div style="flex-shrink:0;padding:28px;background:#fff;border-radius:18px;display:flex;flex-direction:column;align-items:center;gap:12px">
+            <span style="font-family:'Material Symbols Outlined';font-size:28px;line-height:1;width:28px;height:28px;overflow:hidden;display:inline-block;white-space:nowrap;color:#0B4F94">task_alt</span>
+            <div style="text-align:center;color:#5D7184">{{ b.text }}</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.period }}">
+          <div style="flex-shrink:0;display:flex;flex-wrap:wrap;align-items:center;column-gap:12px">
+            <div style="position:relative;height:40px;display:flex;align-items:center;gap:8px;padding:0 16px 0 12px;border-radius:9999px;color:#0B4F94;font-size:14px;font-weight:500">
+              <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap">calendar_month</span>
+              <span>{{ b.month }}</span>
+              <input type="month" value="{{ b.monthVal }}" onChange="{{ b.onMonth }}" onClick="{{ b.onPick }}" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0">
+            </div>
+            <sc-if value="{{ b.hasStatus }}"><span style="font-size:12px">{{ b.status }}</span></sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.finHero }}">
+          <div style="flex-shrink:0;margin-bottom:18px;padding:22px;border-radius:24px;background:linear-gradient(90deg,#083A6E,#0B4F94);display:flex;flex-direction:column">
+            <div style="font-size:11px;line-height:1.5;color:#B8DEF5">{{ b.over }}</div>
+            <div style="height:12px"></div>
+            <div style="font-size:28px;font-weight:700;line-height:1.3;color:#fff">{{ b.value }}</div>
+            <div style="height:8px"></div>
+            <div style="color:rgba(255,255,255,.7)">{{ b.sub }}</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.ftitle }}">
+          <div style="flex-shrink:0;padding-bottom:12px;font-size:18px;font-weight:700;line-height:1.5">{{ b.text }}</div>
+        </sc-if>
+
+        <sc-if value="{{ b.fcard }}">
+          <div style="flex-shrink:0;margin-bottom:16px;padding:18px;background:#fff;border-radius:18px;border:1px solid #D9E5EE;display:flex;flex-direction:column;align-items:flex-start">
+            <sc-for list="{{ b.items }}" as="ch" hint-placeholder-count="3">
+              <sc-if value="{{ ch.ftitle }}"><div style="padding-bottom:12px;font-size:18px;font-weight:700;line-height:1.5">{{ ch.text }}</div></sc-if>
+              <sc-if value="{{ ch.fline }}">
+                <div style="align-self:stretch;padding:8px 0;display:flex;gap:12px">
+                  <div style="flex:1;min-width:0">{{ ch.label }}</div>
+                  <div style="font-weight:600">{{ ch.value }}</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ ch.txt }}"><div style="max-width:100%;font-size:{{ ch.s }}px;color:{{ ch.c }};font-weight:{{ ch.w }};line-height:1.5;white-space:{{ ch.ws }};overflow:hidden;text-overflow:ellipsis">{{ ch.text }}</div></sc-if>
+              <sc-if value="{{ ch.btns }}">
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  <sc-for list="{{ ch.items }}" as="bt" hint-placeholder-count="2">
+                    <div onClick="{{ bt.tap }}" style="cursor:pointer;height:40px;padding:0 12px;border-radius:9999px;display:flex;align-items:center;color:#0B4F94;font-size:14px;font-weight:500" style-active="background:rgba(11,79,148,.1)">{{ bt.text }}</div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ ch.filled }}"><div onClick="{{ ch.tap }}" style="cursor:pointer;height:52px;padding:0 24px;border-radius:14px;background:#0B4F94;display:flex;align-items:center;color:#fff;font-size:14px;font-weight:500" style-active="background:#083A6E">{{ ch.text }}</div></sc-if>
+              <sc-if value="{{ ch.iconTitle }}">
+                <div style="align-self:stretch;display:flex;align-items:center;gap:12px">
+                  <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#0B4F94">payments</span>
+                  <div style="flex:1;min-width:0;font-weight:700">{{ ch.text }}</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ ch.sp }}"><div style="height:{{ ch.h }}px"></div></sc-if>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.pill }}">
+          <div onClick="{{ b.tap }}" style="cursor:pointer;flex-shrink:0;height:40px;border:1px solid #74777F;border-radius:9999px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 24px;color:#0B4F94;font-size:14px;font-weight:500" style-active="background:rgba(11,79,148,.08)">
+            <sc-if value="{{ b.hasIcon }}"><span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap">{{ b.icon }}</span></sc-if>
+            <span>{{ b.text }}</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.mcard }}">
+          <div onClick="{{ b.tap }}" style="cursor:pointer;flex-shrink:0;margin:4px;border-radius:12px;background:#F2F3FA;box-shadow:0 1px 2px rgba(0,0,0,.3),0 1px 3px 1px rgba(0,0,0,.15);min-height:72px;display:flex;align-items:center;gap:16px;padding:8px 24px 8px 16px" style-active="background:#E8EAF3">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:16px;line-height:24px;color:#1A1C20">{{ b.title }}</div>
+              <div style="font-size:14px;line-height:20px;color:#43474E">{{ b.sub }}</div>
+            </div>
+            <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;flex-shrink:0;color:#43474E">edit</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ b.dateBtn }}">
+          <div style="flex-shrink:0;position:relative;height:40px;border-radius:9999px;display:flex;align-items:center;justify-content:center;gap:8px;color:#0B4F94;font-size:14px;font-weight:500">
+            <span style="font-family:'Material Symbols Outlined';font-size:18px;line-height:1;width:18px;height:18px;overflow:hidden;display:inline-block;white-space:nowrap;font-variation-settings:'FILL' 1">calendar_month</span>
+            <span>{{ b.text }}</span>
+            <input type="date" value="{{ b.dateVal }}" onChange="{{ b.onDate }}" onClick="{{ b.onPick }}" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0">
+          </div>
+        </sc-if>
+
+      </sc-for>
+    </div>
+
+    <sc-if value="{{ sc.hasNav }}">
+      <div style="flex-shrink:0;position:relative;z-index:1;background:#fff;border-radius:20px 20px 0 0;border-top:1px solid #E2E8F0;box-shadow:0 -6px 20px rgba(11,79,148,.055),0 -1px 6px rgba(0,0,0,.02)">
+        <div style="display:flex;height:66px">
+          <sc-for list="{{ sc.nav }}" as="nv" hint-placeholder-count="4">
+            <div onClick="{{ nv.tap }}" style="cursor:pointer;flex:1;min-width:0;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+              <sc-if value="{{ nv.active }}">
+                <div style="position:absolute;top:0;left:50%;margin-left:-18px;width:36px;height:3px;border-radius:2px;background:#0B4F94;box-shadow:0 1px 4px rgba(11,79,148,.33)"></div>
+                <div style="position:relative;width:64px;height:32px;border-radius:16px;background:#EAF4FC;border:1px solid #D0E6F9;display:flex;align-items:center;justify-content:center">
+                  <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#0B4F94;transform:scale(1.12);font-variation-settings:'FILL' 1">{{ nv.activeIcon }}</span>
+                  <sc-if value="{{ nv.hasBadge }}"><span style="position:absolute;top:0;left:34px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#BA1A1A;color:#fff;font-size:11px;font-weight:500;line-height:16px;text-align:center">{{ nv.badge }}</span></sc-if>
+                </div>
+                <div style="font-size:11.5px;font-weight:600;letter-spacing:-0.1px;line-height:16px;white-space:nowrap;color:#0B4F94">{{ nv.label }}</div>
+              </sc-if>
+              <sc-if value="{{ nv.idle }}">
+                <div style="position:relative;width:64px;height:32px;display:flex;align-items:center;justify-content:center">
+                  <span style="font-family:'Material Symbols Outlined';font-size:23px;line-height:1;width:23px;height:23px;overflow:hidden;display:inline-block;white-space:nowrap;color:#64748B">{{ nv.icon }}</span>
+                  <sc-if value="{{ nv.hasBadge }}"><span style="position:absolute;top:0;left:34px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#BA1A1A;color:#fff;font-size:11px;font-weight:500;line-height:16px;text-align:center">{{ nv.badge }}</span></sc-if>
+                </div>
+                <div style="font-size:11.5px;font-weight:500;letter-spacing:-0.1px;line-height:16px;white-space:nowrap;color:#64748B">{{ nv.label }}</div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="height:34px"></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ sc.hasFab }}">
+      <div onClick="{{ sc.fabTap }}" style="cursor:pointer;position:absolute;right:16px;bottom:117px;z-index:3;height:56px;padding:0 20px 0 16px;border-radius:16px;background:#D4E3FF;color:#001C3A;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.3),0 4px 8px 3px rgba(0,0,0,.15)" style-active="background:#C4D7F7">
+        <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap">add</span>
+        <span>Ghi lượt</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasSnack }}">
+      <div style="position:absolute;left:0;right:0;bottom:{{ snackBottom }}px;z-index:4;min-height:48px;padding:0 8px 0 16px;background:#2F3036;color:#F0F0F7;display:flex;align-items:center;gap:8px;font-size:14px;box-shadow:0 3px 5px rgba(0,0,0,.2)">
+        <div style="flex:1;min-width:0;padding:14px 0">{{ snack.text }}</div>
+        <sc-if value="{{ snack.hasAction }}">
+          <div onClick="{{ snack.onAction }}" style="cursor:pointer;height:40px;padding:0 12px;border-radius:9999px;display:flex;align-items:center;color:#A6C8FF;font-weight:500">{{ snack.action }}</div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasSheet }}">
+      <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.54)"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;z-index:6;max-height:85%;background:#fff;border-radius:28px 28px 0 0;display:flex;flex-direction:column;overflow:hidden">
+        <div onClick="{{ closeSheet }}" style="cursor:pointer;height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><div style="width:32px;height:4px;border-radius:2px;background:rgba(67,71,78,.4)"></div></div>
+        <div style="flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:{{ sheet.pad }};display:flex;flex-direction:column;align-items:{{ sheet.align }}">
+          <div style="display:flex;flex-direction:column;gap:{{ sheet.g1 }}px">
+            <div style="font-size:{{ sheet.ts }}px;font-weight:700;line-height:1.3;color:{{ sheet.tc }}">{{ sheet.title }}</div>
+            <div style="font-size:{{ sheet.ss }}px;line-height:1.5;color:{{ sheet.sc }}">{{ sheet.sub }}</div>
+          </div>
+          <div style="height:{{ sheet.g2 }}px;flex-shrink:0"></div>
+          <sc-for list="{{ sheet.rows }}" as="r" hint-placeholder-count="3">
+            <div onClick="{{ r.tap }}" style="cursor:pointer;align-self:stretch;min-height:56px;display:flex;align-items:center;gap:16px;padding:{{ sheet.rowPad }}" style-active="background:rgba(23,50,77,.06)">
+              <span style="font-family:'Material Symbols Outlined';font-size:{{ r.is }}px;line-height:1;width:{{ r.is }}px;height:{{ r.is }}px;overflow:hidden;display:inline-block;white-space:nowrap;flex-shrink:0;color:{{ r.ic }}">{{ r.icon }}</span>
+              <div style="flex:1;min-width:0;font-size:{{ sheet.rs }}px;line-height:1.5;color:{{ r.tc }}">{{ r.text }}</div>
+              <sc-if value="{{ r.hasTrail }}"><span style="font-size:14px;color:#5D7184">{{ r.trail }}</span></sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ sheet.hasNotice }}">
+            <div style="margin-bottom:16px;padding:16px;background:#E8F4FB;border-radius:14px;font-size:12px;line-height:1.5;color:#083A6E">{{ sheet.notice }}</div>
+          </sc-if>
+          <sc-if value="{{ sheet.hasPrimary }}">
+            <div style="padding:8px 0">
+              <div onClick="{{ sheet.onPrimary }}" style="cursor:pointer;height:52px;border-radius:14px;background:#0B4F94;color:#fff;font-size:14px;font-weight:500;display:flex;align-items:center;justify-content:center;padding:0 24px" style-active="background:#083A6E">{{ sheet.primary }}</div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="height:34px;flex-shrink:0"></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasDialog }}">
+      <div style="position:absolute;inset:0;z-index:7;background:rgba(0,0,0,.54);display:flex;align-items:center;justify-content:center;padding:0 40px">
+        <div style="width:100%;background:#E8EAF1;border-radius:28px;padding:24px;display:flex;flex-direction:column;gap:16px">
+          <div style="font-size:24px;line-height:32px;color:#1A1C20">{{ dialog.title }}</div>
+          <div style="position:relative;height:56px;background:#fff;border:1.5px solid #0B4F94;border-radius:14px;display:flex;align-items:center;padding:0 16px">
+            <input autoFocus="{{ true }}" type="{{ dialog.type }}" value="{{ dialog.value }}" onChange="{{ dialog.onChange }}" style="flex:1;min-width:0;border:0;outline:0;background:transparent;padding:0;font-family:inherit;font-size:16px;color:#1A1C20">
+            <sc-if value="{{ dialog.hasLabel }}">
+              <div style="position:absolute;left:12px;top:-9px;padding:0 4px;background:#fff;font-size:12px;line-height:16px;color:#0B4F94">{{ dialog.label }}</div>
+            </sc-if>
+          </div>
+          <sc-if value="{{ dialog.hasSelect }}">
+            <div style="position:relative;height:48px;border-bottom:1px solid #43474E;display:flex;align-items:center;gap:12px">
+              <div style="flex:1;font-size:16px;color:#1A1C20">{{ dialog.selLabel }}</div>
+              <span style="font-family:'Material Symbols Outlined';font-size:24px;line-height:1;width:24px;height:24px;overflow:hidden;display:inline-block;white-space:nowrap;color:#43474E;font-variation-settings:'FILL' 1">arrow_drop_down</span>
+              <select value="{{ dialog.selValue }}" onChange="{{ dialog.onSel }}" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
+                <sc-for list="{{ dialog.options }}" as="o" hint-placeholder-count="3">
+                  <option value="{{ o.v }}">{{ o.l }}</option>
+                </sc-for>
+              </select>
+            </div>
+          </sc-if>
+          <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;padding-top:8px">
+            <div onClick="{{ dialog.onCancel }}" style="cursor:pointer;height:40px;padding:0 12px;border-radius:9999px;display:flex;align-items:center;color:#0B4F94;font-size:14px;font-weight:500" style-active="background:rgba(11,79,148,.1)">{{ dialog.cancelText }}</div>
+            <div onClick="{{ dialog.onOk }}" style="cursor:pointer;height:52px;padding:0 24px;border-radius:14px;background:#0B4F94;display:flex;align-items:center;color:#fff;font-size:14px;font-weight:500" style-active="background:#083A6E">{{ dialog.okText }}</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <div style="position:absolute;left:50%;bottom:8px;margin-left:-67px;width:134px;height:5px;border-radius:3px;background:#17324D;z-index:9;pointer-events:none"></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  contentRef = React.createRef();
+  GROUPS = { d1: 'Sau thủ thuật · D+1', d3: 'Ảnh tiến triển · D+3', d7: 'Bác sĩ review · D+7', due: 'Đến hạn tái khám', overdue: 'Quá hạn tái khám', no_show: 'Vắng hẹn', abandoned: 'Tiếp tục liệu trình', dormant90: 'Kết nối lại · 90 ngày', dormant180: 'Kết nối lại · 180 ngày', birthday: 'Sinh nhật trong tuần' };
+
+  S() { if (!this.s) this.s = this.fresh(); return this.s; }
+
+  newPS(p) {
+    return { sessions: p.sessions, appointment: p.appointment, day: p.day, checkedIn: false, confirmed: false, acknowledged: false, note: '', response: '', careNote: '', careStatus: 'Chưa liên hệ', editingOrder: null, cart: [], updates: [], escalations: [] };
+  }
+  ps(p) { const s = this.S(); if (!s.ps[p.id]) s.ps[p.id] = this.newPS(p); return s.ps[p.id]; }
+
+  fresh() {
+    const people = [
+      ['P001', 'Nguyễn Thu Hà', 'BS. Tâm', 'd1', 2, 5, '10:30', '22/9/2026'],
+      ['P002', 'Trần Minh Anh', 'BS. Mai', 'd3', 1, 3, '14:00', '23/9/2026'],
+      ['P003', 'Lê Hoàng Yến', 'BS. Tâm', 'd7', 3, 5, '09:30', '24/9/2026'],
+      ['P004', 'Phạm Quốc Bảo', 'BS. An', 'due', 4, 4, '11:00', '22/9/2026'],
+      ['P005', 'Võ Ngọc Trâm', 'BS. Tâm', 'overdue', 2, 6, '15:30', ''],
+      ['P006', 'Đặng Gia Linh', 'BS. Mai', 'no_show', 1, 5, '10:30', ''],
+      ['P007', 'Bùi Khánh Vy', 'BS. Lan', 'abandoned', 2, 8, '10:30', ''],
+      ['P008', 'Hồ Thanh Tùng', 'BS. Tâm', 'dormant90', 5, 5, '10:30', ''],
+      ['P009', 'Ngô Mỹ Duyên', 'BS. An', 'dormant180', 3, 3, '10:30', ''],
+      ['P010', 'Đỗ Phương Thảo', 'BS. Mai', 'birthday', 1, 4, '14:00', '25/9/2026'],
+      ['P011', 'Lý Tuấn Kiệt', 'BS. Tâm', '', 2, 5, '11:00', '26/9/2026'],
+      ['P012', 'Mai Hải Yến', 'BS. Lan', '', 0, 3, '10:30', '']
+    ].map(([id, name, doctor, group, sessions, total, appointment, day]) => ({ id, name, doctor, group, sessions, total, appointment, day, tasks: group === 'd7' ? [{ type: 'd7' }] : [] }));
+    const products = [
+      ['TH021', 'Doxycycline 100mg', 'Viên', 4500, 'PRESCRIPTION', 'Thuốc'],
+      ['TH008', 'Tretinoin 0.025% 20g', 'Tuýp', 145000, 'PRESCRIPTION', 'Thuốc'],
+      ['TH015', 'Isotretinoin 10mg', 'Viên', 18000, 'PRESCRIPTION', 'Thuốc'],
+      ['SP014', 'Kem dưỡng phục hồi B5 40ml', 'Tuýp', 320000, 'CONSULTATION', 'Dược mỹ phẩm'],
+      ['SP032', 'Sữa rửa mặt dịu nhẹ 200ml', 'Chai', 285000, 'CONSULTATION', 'Dược mỹ phẩm'],
+      ['SP047', 'Kem chống nắng SPF50+ 50ml', 'Tuýp', 435000, 'CONSULTATION', 'Dược mỹ phẩm'],
+      ['SP060', 'Serum phục hồi HA 30ml', 'Chai', 400000, 'UNRESOLVED', 'Dược mỹ phẩm'],
+      ['SP071', 'Mặt nạ làm dịu 5 miếng', 'Hộp', 260000, 'UNRESOLVED', 'Dược mỹ phẩm']
+    ].map(([code, name, unit, price, outputType, sourceType]) => ({ code, name, unit, price, outputType, sourceType }));
+    const byCode = c => products.find(x => x.code === c);
+    const s = {
+      people, products, care: false, role: 'owner', staffName: 'BS. Tâm', staffDoctor: 'BS. Tâm', tab: 0, stack: [], sel: 0, careSel: 0, ps: {},
+      orders: [{ id: 'DN-1', patient: 'P001', name: 'Nguyễn Thu Hà', approved: true, total: 580000, items: [
+        { ...byCode('TH008'), quantity: 1, usage: 'Thoa mỏng buổi tối, tránh vùng mắt', route: 'PRESCRIPTION' },
+        { ...byCode('SP047'), quantity: 1, usage: 'Thoa mỗi sáng, thoa lại sau 2–3 giờ', route: 'CONSULTATION' }] }],
+      receipts: {}, bucket: 'Chưa liên hệ', cgroup: 'all', cquery: '', pquery: '', caseGroup: 'all', sheet: null, snack: null, dialog: null,
+      fin: {
+        month: '2026-09', status: 'open', today: '2026-09-22',
+        doctors: [{ id: 'D0', name: 'BS. Tâm' }, { id: 'D1', name: 'BS. Mai' }, { id: 'D2', name: 'BS. An' }, { id: 'D3', name: 'BS. Lan' }],
+        services: [
+          { id: 'S0', name: 'Laser theo chỉ định', price: 2500000, rate: 1000, basis: 'net', version: 3 },
+          { id: 'S1', name: 'Chăm sóc theo chỉ định', price: 1200000, rate: 800, basis: 'net', version: 1 },
+          { id: 'S2', name: 'Tư vấn da liễu', price: 500000, rate: 500, basis: 'list', version: 2 },
+          { id: 'S3', name: 'Tái khám & đánh giá', price: 300000, rate: 500, basis: 'collected', version: 1 }],
+        rows: [
+          { id: 'R1', date: '2026-09-21', patient: 'P001', doctor: 'D0', service: 'Laser theo chỉ định', revenue: 2500000, base: 2500000, rate: 1000, fee: 250000, status: 'pending' },
+          { id: 'R2', date: '2026-09-18', patient: 'P003', doctor: 'D0', service: 'Chăm sóc theo chỉ định', revenue: 1200000, base: 1200000, rate: 800, fee: 96000, status: 'approved' },
+          { id: 'R3', date: '2026-09-15', patient: 'P002', doctor: 'D1', service: 'Tư vấn da liễu', revenue: 500000, base: 500000, rate: 500, fee: 25000, status: 'approved' },
+          { id: 'R4', date: '2026-09-12', patient: 'P004', doctor: 'D2', service: 'Laser theo chỉ định', revenue: 2250000, base: 2250000, rate: 1000, fee: 225000, status: 'void' }],
+        invoices: [
+          { id: 'HD-2609-014', patient: 'P001', amount: 2500000, received: 0 },
+          { id: 'HD-2609-011', patient: 'P005', amount: 1200000, received: 0 },
+          { id: 'HD-2609-009', patient: 'P011', amount: 300000, received: 300000 }],
+        notifications: [{ id: 'N1', title: 'Đã thu 300.000 ₫', body: 'Kế toán thu tiền mặt · P011 · HD-2609-009', at: '2026-09-21T16:05', read: false }]
+      }
+    };
+    this.s = s;
+    const a = this.ps(people[0]);
+    a.updates.push('Da hơi đỏ nhẹ vùng má sau một ngày, không ngứa.');
+    a.careNote = 'Khách báo da đỏ nhẹ, cần bác sĩ xem ảnh.'; a.careStatus = 'Chờ bác sĩ'; a.escalations.push(a.careNote);
+    const b = this.ps(people[1]);
+    b.careNote = 'Đã gọi, khách hẹn gửi ảnh tiến triển tối nay.'; b.careStatus = 'Đã liên hệ';
+    return s;
+  }
+
+  screenKey() { const s = this.S(); return [s.care, s.role, s.staffName, s.tab, ...s.stack.map(x => x.route + (x.tab ?? ''))].join('|'); }
+  componentDidUpdate() { const k = this.screenKey(); if (k !== this._key) { this._key = k; if (this.contentRef.current) this.contentRef.current.scrollTop = 0; } }
+  componentWillUnmount() { clearTimeout(this._timer); }
+
+  renderVals() {
+    const s = this.S(), GR = this.GROUPS, P = s.people, F = s.fin;
+    const up = () => this.forceUpdate();
+    const noop = () => {};
+    const MUTED = '#5D7184';
+    const money = v => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ₫';
+    const pct = r => { const v = r / 100; return Number.isInteger(v) ? v.toFixed(1) : String(v); };
+    const LABELS = { open: 'Đang đối soát', closed: 'Đã chốt', paid: 'Đã chi', pending: 'Chờ duyệt', approved: 'Đã duyệt', void: 'Đã hủy' };
+
+    const selIdx = Math.max(0, s.care ? s.careSel : s.sel);
+    const setSel = i => { if (s.care) s.careSel = i; else s.sel = i; };
+    const profile = P[selIdx];
+    const cur = this.ps(profile);
+    const name = profile.name, pid = profile.id;
+    const owns = i => s.role !== 'doctor' || P[i].doctor === s.staffDoctor;
+    const billing = !s.care && ['owner', 'accountant'].includes(s.role);
+    const clinical = !s.care && ['owner', 'doctor'].includes(s.role);
+    const allows = route => {
+      if (s.care) return ['Lịch của tôi', 'Chăm sóc tại nhà', 'Gửi cập nhật', 'Kế hoạch điều trị', 'Ảnh tiến triển', 'Đơn thuốc & tư vấn', 'Hóa đơn', 'Quyền riêng tư', 'Hướng dẫn'].includes(route);
+      if (s.role === 'owner') return true;
+      if (s.role === 'care') return ['Chăm sóc khách hàng', 'Đặt lịch', 'Chi tiết lịch', 'Hướng dẫn'].includes(route);
+      if (s.role === 'accountant') return ['Thu ngân', 'Hóa đơn', 'Hướng dẫn'].includes(route);
+      return !['Thu ngân', 'Bác sĩ & phòng', 'Dịch vụ', 'Chăm sóc khách hàng'].includes(route);
+    };
+    const myOrders = s.orders.filter(o => o.patient === pid);
+    const top = s.stack[s.stack.length - 1];
+    const push = e => { s.stack.push({ text: '', consent: false, photo: false, filter: '', ...e }); s.sheet = null; up(); };
+    const open = route => { if (allows(route)) push({ route }); };
+    const go = route => push({ route });
+    const back = () => { s.stack.pop(); s.dialog = null; s.sheet = null; up(); };
+    const toast = (text, action, onAction) => {
+      clearTimeout(this._timer);
+      s.snack = { text, action: action || '', hasAction: !!action, onAction: () => { s.snack = null; (onAction || noop)(); up(); } };
+      this._timer = setTimeout(() => { s.snack = null; this.forceUpdate(); }, 3500);
+    };
+    const ask = (title, onOk, o = {}) => { s.dialog = { title, value: o.value || '', type: o.type || 'text', label: o.label || '', options: o.options || null, selValue: o.sel || '', okText: o.ok || 'Xác nhận', cancelText: o.cancel || 'Quay lại', onOk }; up(); };
+
+    // finance
+    const finRole = s.role;
+    const finDoctor = s.staffDoctor === 'BS. Mai' ? 'D1' : 'D0';
+    const priv = finRole === 'doctor';
+    const unread = F.notifications.filter(x => !x.read).length;
+    const docName = id => F.doctors.find(d => d.id === id).name;
+    const docBase = { D0: [82000000, 8000000], D1: [51100000, 5100000], D2: [29850000, 2985000], D3: [18500000, 1850000] };
+    const sum = (xs, f) => xs.reduce((acc, x) => acc + f(x), 0);
+    const docRev = id => docBase[id][0] + sum(F.rows.filter(r => r.doctor === id && r.status !== 'void'), r => r.revenue);
+    const ownerRevenue = sum(F.doctors, d => docRev(d.id));
+    const summary = priv
+      ? { revenue: docRev(finDoctor), fee: docBase[finDoctor][1] + sum(F.rows.filter(r => r.doctor === finDoctor && r.status === 'approved'), r => r.fee), pending: sum(F.rows.filter(r => r.doctor === finDoctor && r.status === 'pending'), r => r.fee) }
+      : { revenue: ownerRevenue, collected: 148000000 + sum(F.invoices, i => i.received), debt: 30700000 + sum(F.invoices, i => i.amount - i.received), fee: 17935000 + sum(F.rows.filter(r => r.status === 'approved'), r => r.fee), pending: sum(F.rows.filter(r => r.status === 'pending'), r => r.fee) };
+    const openFinance = (tab = 0) => push({ route: '__fin', tab });
+
+    // blocks
+    const h = (title, sub) => ({ heading: true, title, sub });
+    const h2 = (title, sub) => ({ h2: true, title, sub });
+    const sec = title => ({ section: true, title });
+    const hero = (title, sub, icon) => ({ hero: true, over: 'PEMA • CHĂM SÓC LIÊN TỤC', title, sub, icon });
+    const t = (title, sub, icon, tap) => ({ tile: true, title, sub, icon, chevron: !!tap, tap: tap || noop, cursor: tap ? 'pointer' : 'default', isDate: false, dateVal: '', onDate: noop, onDateClick: noop });
+    const n = text => ({ notice: true, text });
+    const p = (text, tap) => ({ primary: true, text, on: !!tap, off: !tap, tap: tap || noop });
+    const m = (...xs) => ({ metrics: true, items: xs.map(([value, label]) => ({ value, label })) });
+    const a = (...xs) => ({ actions: true, items: xs.map(([label, icon, tap]) => ({ label, icon, tap })) });
+    const sp = hh => ({ sp: true, h: hh });
+    const txt = (text, o = {}) => ({ txt: true, text, s: o.s ?? 14, c: o.c ?? '#17324D', w: o.w ?? 400, ws: o.ws ?? 'pre-line' });
+    const input = o => { const v = o.value ?? ''; const lines = o.lines || 1; return { input: true, hasPrefix: !!o.prefix, prefix: o.prefix || '', pl: o.prefix ? 12 : 16, single: lines === 1, multi: lines > 1, rows: lines, type: o.type || 'text', value: v, onChange: e => { o.set(e.target.value); up(); }, inside: o.label || o.hint || '', float: !!v && !!o.label, label: o.label || '' }; };
+    const dd = (value, options, set, label = '') => { const opt = options.find(x => String(x.v) === String(value)); return { dd: true, value: value ?? '', display: opt ? opt.l : '', options: options.map(x => ({ v: String(x.v), l: x.l })), onChange: e => { set(e.target.value); up(); }, label, float: !!label }; };
+    const week = () => ({ week: true, days: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((d, i) => ({ d, n: String(21 + i), on: i === 1, off: i !== 1 })) });
+    const check = (label, on, toggle) => ({ check: true, label, on, off: !on, tap: () => { toggle(); up(); } });
+    const outlined = (text, icon, tap) => ({ outlined: true, text, icon, tap });
+    const textBtn = (text, icon, tap) => ({ textBtn: true, text, icon, tap });
+    const finHero = (over, value) => ({ finHero: true, over, value, sub: 'Ghi nhận theo lượt hoàn tất' });
+    const ftitle = text => ({ ftitle: true, text });
+    const pill = (text, icon, tap) => ({ pill: true, text, icon: icon || '', hasIcon: !!icon, tap });
+    const fc = (...items) => ({ fcard: true, items });
+    const fl = (label, value) => ({ fline: true, label, value });
+    const fb = (...xs) => ({ btns: true, items: xs.map(([text, tap]) => ({ text, tap })) });
+    const ff = (text, tap) => ({ filled: true, text, tap });
+    const fi = text => ({ iconTitle: true, text });
+    const pick = e => { try { e.target.showPicker(); } catch (_) {} };
+    const toIso = d => { const [dd1, mm, yy] = d.split('/'); return `${yy}-${String(mm).padStart(2, '0')}-${String(dd1).padStart(2, '0')}`; };
+
+    const patientSearch = onOpen => {
+      const q = s.pquery.toLowerCase();
+      return [input({ prefix: 'search', hint: 'Tìm tên hoặc mã hồ sơ', value: s.pquery, set: v => { s.pquery = v; } }), sp(16),
+        ...P.map((x, i) => [x, i]).filter(([x, i]) => owns(i) && (x.name.toLowerCase().includes(q) || x.id.toLowerCase().includes(q)))
+          .map(([x, i]) => t(x.name, `${x.id} · Đang điều trị`, 'person', () => { setSel(i); onOpen(); }))];
+    };
+
+    const careQueue = () => {
+      const status = x => s.ps[x.id]?.careStatus || 'Chưa liên hệ';
+      const cases = P.filter(x => x.group);
+      const q = s.cquery.trim().toLowerCase();
+      const rows = cases.filter(x => status(x) === s.bucket && (s.cgroup === 'all' || s.cgroup === x.group) && `${x.id} ${x.name}`.toLowerCase().includes(q));
+      const initials = nm => nm.split(' ').slice(1).slice(-2).map(v => v[0]).join('');
+      return [
+        h2('CSKH hôm nay', `${s.staffName} · Chủ nhật, 20/09`),
+        { buckets: true, items: [['Chưa liên hệ', 'Cần làm'], ['Đã liên hệ', 'Đã liên hệ'], ['Chờ bác sĩ', 'Chờ bác sĩ']].map(([k, label]) => ({ label, count: String(cases.filter(x => status(x) === k).length), on: s.bucket === k, off: s.bucket !== k, tap: () => { s.bucket = k; up(); } })) },
+        sp(16),
+        { careSearch: true, value: s.cquery, onChange: e => { s.cquery = e.target.value; up(); }, active: s.cgroup !== 'all', bg: s.cgroup === 'all' ? '#fff' : '#E2F1FB', onFilter: () => { s.sheet = 'group'; up(); } },
+        ...(s.cgroup !== 'all' ? [{ inputChip: true, label: GR[s.cgroup], onClose: () => { s.cgroup = 'all'; up(); } }] : []),
+        { listHead: true, title: s.bucket === 'Chưa liên hệ' ? 'Danh sách cần chăm sóc' : s.bucket, count: `${rows.length} khách` },
+        ...(rows.length ? rows.map(x => ({ careRow: true, initials: initials(x.name), name: x.name, group: GR[x.group], meta: `${x.id} · ${x.doctor}`, tap: () => { setSel(P.indexOf(x)); open('Chăm sóc khách hàng'); } }))
+          : [{ empty: true, text: 'Không có khách trong bộ lọc này' }])
+      ];
+    };
+
+    const wsBody = () => {
+      if (s.care) {
+        if (s.tab === 1) return [
+          h('Hành trình của bạn', 'Mỗi bước chăm sóc đều được ghi nhận'),
+          hero('Phục hồi & chăm sóc da', `${cur.sessions}/${profile.total} buổi đã hoàn tất`, 'spa'),
+          ...['Kế hoạch điều trị', 'Ảnh tiến triển', 'Chăm sóc tại nhà', 'Đơn thuốc & tư vấn'].map(x => t(x, 'Xem chi tiết và hướng dẫn', 'chevron_right', () => open(x)))];
+        if (s.tab === 2) return [
+          h('Tin nhắn', 'Đội ngũ Pema luôn đồng hành'),
+          n('Nếu có dấu hiệu bất thường nặng, hãy liên hệ trực tiếp. Tin nhắn không phải kênh cấp cứu.'),
+          ...cur.updates.map(x => t('Bạn', x, 'chat_bubble')),
+          ...(cur.response ? [t('Đội ngũ Pema', cur.response, 'verified')] : []),
+          p('Gửi cập nhật', () => open('Gửi cập nhật'))];
+        if (s.tab === 3) {
+          const groupOpts = [{ v: 'all', l: 'Tất cả hồ sơ' }, ...P.filter(x => x.group).map(x => ({ v: x.group, l: GR[x.group] }))];
+          const patOpts = P.map((x, i) => ({ v: i, l: `${x.id} · ${x.name}`, g: x.group })).filter(x => s.caseGroup === 'all' || x.g === s.caseGroup);
+          const pv = s.caseGroup === 'all' || profile.group === s.caseGroup ? selIdx : '';
+          return [
+            h(name, `${pid} · Hồ sơ minh họa`),
+            sec('Tài khoản mẫu · 10 nhóm CSKH'),
+            dd(s.caseGroup, groupOpts, v => { s.caseGroup = v; if (v !== 'all') setSel(P.findIndex(x => x.group === v)); }),
+            sp(12),
+            dd(pv, patOpts, v => setSel(Number(v)), 'Người bệnh đang xem'),
+            ...['Đơn thuốc & tư vấn', 'Hóa đơn', 'Quyền riêng tư', 'Hướng dẫn'].map(x => t(x, 'Thông tin của bạn', 'chevron_right', () => open(x)))];
+        }
+        const nextTitle = { d1: 'Hôm nay bạn cảm thấy thế nào?', d3: 'Cập nhật ảnh tiến triển', d7: 'Cùng bác sĩ xem lại tiến triển', due: 'Đến mốc tái khám', overdue: 'Sắp xếp lần tái khám tiếp theo', no_show: 'Chọn lại một lịch hẹn phù hợp', abandoned: 'Tiếp tục kế hoạch chăm sóc', dormant90: 'Pema sẵn sàng đồng hành', dormant180: 'Kết nối lại với Pema', birthday: 'Pema chúc bạn sinh nhật nhiều sức khỏe' }[profile.group];
+        return [
+          h(`Chào ${name.split(' ').pop()},`, 'Hôm nay, dành chút thời gian cho làn da'),
+          ...(nextTitle ? [t(nextTitle, 'Xem lịch hoặc gửi nhu cầu để đội ngũ hỗ trợ', 'favorite', () => open(profile.group === 'due' ? 'Lịch của tôi' : 'Gửi cập nhật'))] : []),
+          hero('Chăm sóc nhẹ nhàng.\nĐồng hành mỗi ngày.', `Liệu trình phục hồi · Buổi ${cur.sessions}/${profile.total}`, 'spa'), sp(16),
+          a(['Chăm sóc', 'favorite', () => open('Chăm sóc tại nhà')], ['Gửi cập nhật', 'add_a_photo', () => open('Gửi cập nhật')], ['Đơn đã duyệt', 'receipt_long', () => open('Đơn thuốc & tư vấn')]),
+          sec('Lịch hẹn tiếp theo'),
+          t(cur.day ? `${cur.appointment} · ${cur.day}` : 'Chưa có lịch hẹn', 'BS. Tâm · Khám da liễu', 'calendar_today', () => open('Lịch của tôi')),
+          sec('Việc cần làm'),
+          t(cur.acknowledged ? 'Đã đọc hướng dẫn' : 'Đọc hướng dẫn sau điều trị', 'Bác sĩ đã gửi hướng dẫn cho bạn', cur.acknowledged ? 'check_circle' : 'favorite', () => open('Chăm sóc tại nhà'))];
+      }
+      if (s.role !== 'owner') {
+        if (s.tab === 1) return [h('Hồ sơ phụ trách', s.staffName), ...patientSearch(() => open(s.role === 'care' ? 'Chăm sóc khách hàng' : s.role === 'accountant' ? 'Hóa đơn' : 'Patient 360'))];
+        if (s.role === 'accountant') return [
+          h('Đối soát & thu ngân', 'Kế toán · không gian riêng'),
+          t('Tài chính & tiền thủ thuật', 'Đối soát, phiếu thu, chính sách và chốt kỳ', 'account_balance_wallet', () => openFinance()),
+          t('Thu ngân theo hồ sơ', name, 'receipt_long', () => open('Thu ngân'))];
+        if (s.role === 'doctor') return [
+          h('Lịch & hồ sơ của tôi', s.staffName),
+          t('Hồ sơ đang phụ trách', name, 'person', () => open('Patient 360')),
+          t('Lịch của tôi', cur.day || 'Chưa có lịch', 'calendar_month', () => open('Chi tiết lịch')),
+          t('Doanh số của tôi', 'Chỉ số cá nhân và tiền thủ thuật', 'account_balance_wallet', () => openFinance()),
+          sec('Cập nhật cần bác sĩ xem'),
+          ...P.map((x, i) => [x, i]).filter(([x, i]) => owns(i) && (x.tasks.some(k => k.type === 'd7') || (s.ps[x.id]?.updates.length) || (s.ps[x.id]?.escalations.length)))
+            .map(([x, i]) => t(x.name, 'Review chăm sóc · hồ sơ phụ trách', 'inbox', () => { setSel(i); open('Phản hồi'); }))];
+        return careQueue();
+      }
+      if (s.tab === 1) return [
+        h('Điều phối lịch', 'Thứ Ba, 22 tháng 9'), week(),
+        t('BS. Tâm · Phòng khám 01', 'Ca sáng 08:00–12:00', 'tune', () => open('Bác sĩ & phòng')),
+        ...['09:00', cur.appointment, '14:00'].map(x => t(x, x === cur.appointment ? `${name} · Tái khám` : 'Khung giờ trống', 'schedule', () => open('Chi tiết lịch'))),
+        p('Đặt / dời lịch', () => open('Đặt lịch'))];
+      if (s.tab === 2) return [h('Hồ sơ người bệnh', `${P.length} hồ sơ tổng hợp · Patient 360`), ...patientSearch(() => open('Patient 360'))];
+      if (s.tab === 3) return [
+        h('Theo dõi', 'Ưu tiên phản hồi và bàn giao'),
+        n(`${cur.updates.length} cập nhật · ${cur.response ? 'Đã phản hồi' : '1 cần phản hồi'}`),
+        ...cur.updates.map(x => t(name, x, 'chat_bubble', () => open('Phản hồi'))),
+        t('Cần gọi lại', 'Hồ sơ mẫu · triệu chứng tăng', 'priority_high', () => open('Phản hồi'))];
+      if (s.tab === 4) return [
+        h('Không gian làm việc', 'Nghiệp vụ theo đúng hành trình Pema'),
+        t('Tài chính & tiền thủ thuật', 'Chủ phòng khám · Kế toán · Bác sĩ', 'account_balance_wallet', () => openFinance()),
+        ...['Lên đơn nhanh', 'Thu ngân', 'Dịch vụ', 'Bác sĩ & phòng', 'Ảnh tiến triển', 'Ask Pema', 'Hướng dẫn'].map(x => t(x, `Mở ${x.toLowerCase()}`, 'chevron_right', () => open(x))),
+        n('Template tương tác • dữ liệu mẫu trong phiên. Chuyển Clinic/Care ở góc trên để duyệt bàn giao.')];
+      return [
+        h('Chào buổi sáng, BS. Tâm', 'Thứ Ba · 22 tháng 09, 2026'),
+        hero('Một ngày chăm sóc\ntrọn vẹn hơn.', `${cur.updates.length} phản hồi cần theo dõi`, 'wb_sunny'), sp(16),
+        m(['12', 'Lịch hôm nay'], [cur.checkedIn ? '04' : '03', 'Đang chờ']),
+        t('Tài chính phòng khám', `Tháng ${F.month} · ${money(ownerRevenue)}`, 'account_balance_wallet', () => openFinance()),
+        sec('Bắt đầu nhanh'),
+        a(['Lên đơn', 'note_add', () => open('Lên đơn nhanh')], ['Đặt lịch', 'calendar_month', () => open('Đặt lịch')], ['Thu ngân', 'payments', () => open('Thu ngân')]),
+        sec('Lượt khám tiếp theo'),
+        t(name, `${cur.appointment} · ${cur.checkedIn ? 'Đã check-in' : 'Chờ tiếp nhận'} · Tái khám`, 'person', () => open('Patient 360')),
+        t('Theo dõi sau điều trị', 'Xem ảnh và phản hồi từ người bệnh', 'inbox', () => { s.tab = 3; up(); })];
+    };
+
+    const cart = cur.cart;
+    const total = sum(cart, r => r.price * r.quantity);
+    const ready = cart.length > 0 && cart.every(x => x.route !== 'UNRESOLVED' && x.usage.trim());
+    const saveOrder = approve => {
+      const old = s.orders.findIndex(x => x.id === cur.editingOrder);
+      const rec = { id: cur.editingOrder || `DN-${s.orders.length + 1}`, patient: pid, name, approved: approve, total, items: cart.map(x => ({ ...x })) };
+      if (old >= 0) s.orders[old] = rec; else s.orders.push(rec);
+      cur.cart = []; cur.editingOrder = null;
+    };
+    const routeName = { UNRESOLVED: 'Cần phân loại', PRESCRIPTION: 'Đơn thuốc', CONSULTATION: 'Phiếu tư vấn' };
+
+    const detail = route => {
+      const T = top;
+      const txtIn = (label, lines, o = {}) => input({ label, lines, value: T.text, set: v => { T.text = v; }, ...o });
+      if (!allows(route)) return [n('Tác vụ không thuộc không gian hiện tại. Quay lại để chọn đúng công việc.')];
+      switch (route) {
+        case 'Chăm sóc khách hàng': return [
+          h(name, `${pid} · ${GR[profile.group] || 'Hồ sơ mẫu'}`),
+          n('Nội dung liên hệ nội bộ không hiển thị cho người bệnh.'),
+          ...(cur.careNote ? [n(cur.careNote)] : []),
+          txtIn('Kết quả liên hệ / việc cần bàn giao', 3),
+          p('Lưu kết quả liên hệ', () => { if (!T.text.trim()) { toast('Nhập kết quả liên hệ'); up(); return; } cur.careNote = T.text.trim(); cur.careStatus = 'Đã liên hệ'; toast('Đã lưu ghi chú nội bộ'); up(); }),
+          sp(12),
+          outlined('Hỗ trợ đặt lại lịch', 'calendar_month', () => go('Đặt lịch')),
+          textBtn('Chuyển bác sĩ xem', 'forward_to_inbox', () => { if (!T.text.trim()) { toast('Nhập nội dung cần bác sĩ xem'); up(); return; } cur.careNote = T.text.trim(); cur.careStatus = 'Chờ bác sĩ'; cur.escalations.push(T.text.trim()); toast('Đã chuyển vào hàng chờ bác sĩ'); up(); })];
+        case 'Patient 360': return [
+          h(name, `${pid} · ${profile.doctor}`),
+          n('Da nhạy cảm • Cần đọc tiền sử trước khi kê đơn'),
+          m([`${cur.sessions}/${profile.total}`, 'Buổi điều trị'], [cur.appointment, 'Lịch tiếp theo']),
+          ...(!s.care && billing && finRole !== 'doctor' ? [t('Ghi nhận tiền thủ thuật', 'Đúng người thực hiện · gắn hóa đơn đã có', 'receipt_long', () => openProc(pid))] : []),
+          sec('Hồ sơ xuyên suốt'),
+          ...['Tư vấn', 'Kế hoạch điều trị', 'Buổi điều trị', 'Ảnh tiến triển', 'Lên đơn nhanh', 'Đơn thuốc & tư vấn', 'Hóa đơn'].map(x => t(x, 'Xem và cập nhật', 'chevron_right', () => go(x))),
+          p(cur.checkedIn ? 'Đã check-in' : 'Check-in người bệnh', cur.checkedIn ? null : () => { cur.checkedIn = true; up(); })];
+        case 'Lên đơn nhanh': {
+          const f = T.filter.toLowerCase();
+          return [
+            n(`${name} · ${pid}\n115 sản phẩm từ catalog web. Đơn nháp chưa gửi cho người bệnh.`),
+            input({ prefix: 'search', hint: 'Tìm mã hoặc tên sản phẩm', value: T.filter, set: v => { T.filter = v; } }), sp(12),
+            p(`Xem đơn · ${cart.length} sản phẩm · ${money(total)}`, cart.length ? () => go('Kiểm tra đơn') : null),
+            ...s.products.filter(x => `${x.code} ${x.name}`.toLowerCase().includes(f)).slice(0, 20).map(x => t(x.name, `${x.code} · ${x.unit} · ${money(x.price)}\n${x.outputType === 'UNRESOLVED' ? 'Cần phân loại' : x.sourceType}`, 'add', () => {
+              const i = cart.findIndex(r => r.code === x.code);
+              if (i < 0) cart.push({ ...x, quantity: 1, usage: '', route: x.outputType }); else cart[i].quantity++;
+              toast(`Đã thêm ${x.code}`); up();
+            }))];
+        }
+        case 'Kiểm tra đơn': return [
+          h('Kiểm tra trước khi duyệt', `${cart.length} dòng · ${money(total)}`),
+          ...cart.map(r => ({ order: true, name: r.name, qty: `${r.quantity} ${r.unit}`, route: r.route, routeLabel: routeName[r.route], usage: r.usage, hasUsage: !!r.usage,
+            dec: () => { if (r.quantity > 1) r.quantity--; up(); }, inc: () => { r.quantity++; up(); }, del: () => { cur.cart = cart.filter(x => x !== r); up(); },
+            onRoute: e => { r.route = e.target.value; up(); }, onUsage: e => { r.usage = e.target.value; up(); } })),
+          n('Tài khoản bác sĩ mô phỏng. Chỉ duyệt khi đã phân loại và nhập hướng dẫn cho mọi dòng.'),
+          p('Lưu nháp', cart.length ? () => { saveOrder(false); go('Đơn thuốc & tư vấn'); } : null),
+          p('Bác sĩ duyệt đơn', ready ? () => { saveOrder(true); go('Đơn thuốc & tư vấn'); } : null)];
+        case 'Đơn thuốc & tư vấn': {
+          const list = myOrders.filter(o => !s.care || o.approved);
+          return [
+            n(s.care ? 'Chỉ hiển thị nội dung đã được bác sĩ duyệt.' : 'Nháp → bác sĩ duyệt → người bệnh xem. In không đồng nghĩa đã cấp thuốc.'),
+            ...(list.length ? [] : [t(`Chưa có đơn${s.care ? ' đã duyệt' : ''}`, 'Đơn mới sẽ xuất hiện tại đây', 'receipt_long')]),
+            ...list.flatMap(o => [
+              sec(`${o.id} · ${o.approved ? 'Đã duyệt' : 'Nháp'}`),
+              ...['PRESCRIPTION', 'CONSULTATION'].flatMap(rt => [txt(rt === 'PRESCRIPTION' ? 'Đơn thuốc' : 'Phiếu tư vấn', { w: 700 }),
+                ...o.items.filter(x => x.route === rt).map(x => t(x.name, `${x.quantity} ${x.unit} · ${x.usage}`, 'medication'))]),
+              ...(!s.care && !o.approved ? [p('Sửa và duyệt bản nháp', () => { cur.editingOrder = o.id; cur.cart = o.items.map(x => ({ ...x })); go('Kiểm tra đơn'); })] : []),
+              ...(!s.care ? [p('Xem bố cục hai phiếu A5', () => go('Phiếu A5'))] : [])])];
+        }
+        case 'Phiếu A5': return [
+          n('Bản duyệt bố cục trên điện thoại. In / chia sẻ PDF native sẽ nối sau khi duyệt template.'),
+          ...['ĐƠN THUỐC', 'PHIẾU TƯ VẤN'].map(kind => ({ a5: true, kind, name,
+            items: myOrders.filter(o => o.approved).flatMap(o => o.items.filter(x => x.route === (kind === 'ĐƠN THUỐC' ? 'PRESCRIPTION' : 'CONSULTATION'))).map(x => ({ text: `${x.name}\n${x.quantity} ${x.unit} · ${x.usage}` })),
+            footer: kind === 'ĐƠN THUỐC' ? 'Mang theo đơn này · Kiểm tra thuốc\nBác sĩ khám' : 'Mang theo phiếu này · Kiểm tra sản phẩm\nBác sĩ tư vấn' }))];
+        case 'Đặt lịch': return [
+          h(name, 'Chọn ngày và giờ trước khi xác nhận'), week(),
+          { ...t(cur.day || 'Chọn ngày', 'Chạm để đổi ngày', 'calendar_today', noop), isDate: true, dateVal: cur.day ? toIso(cur.day) : '2026-09-22',
+            onDate: e => { const v = e.target.value; if (v) { const [y, mo, d] = v.split('-'); cur.day = `${+d}/${+mo}/${y}`; up(); } }, onDateClick: pick },
+          n('BS. Tâm · Khám da liễu · 30 phút\n09:00 đã có lịch, không thể chọn.'),
+          { chips: true, items: ['09:00', '10:30', '11:00', '14:00', '15:30'].map(x => ({ label: x, sel: cur.appointment === x, norm: cur.appointment !== x && x !== '09:00', dis: x === '09:00' && cur.appointment !== x, tap: () => { cur.appointment = x; up(); } })) },
+          p('Xác nhận lịch', () => { cur.confirmed = true; if (!cur.day) cur.day = '22/9/2026'; toast(`Đã lưu lịch ${cur.appointment} · ${cur.day}`); back(); })];
+        case 'Chi tiết lịch':
+        case 'Lịch của tôi': return [
+          hero(cur.day ? `${cur.appointment} · ${cur.day}` : 'Chưa có lịch hẹn', 'BS. Tâm · Khám da liễu', 'calendar_month'),
+          sec(name), n('Tái khám & đánh giá · 30 phút'),
+          p(cur.confirmed ? 'Đã xác nhận' : 'Xác nhận tham dự', cur.confirmed || !cur.day ? null : () => { cur.confirmed = true; up(); }),
+          ...(!s.care ? [p('Dời lịch', () => go('Đặt lịch')), p('Mở Patient 360', () => go('Patient 360'))] : [])];
+        case 'Tư vấn': return [
+          n('Ghi chú chuyên môn là bản nháp, cần bác sĩ xem lại.'),
+          input({ label: 'Ghi chú tư vấn', lines: 6, value: T.text || (T.init ? '' : cur.note), set: v => { T.text = v; T.init = true; } }),
+          p('Lưu ghi chú nháp', () => { cur.note = T.text; toast('Đã lưu ghi chú'); up(); }),
+          p('Xem tóm tắt AI', () => go('Ask Pema'))];
+        case 'Kế hoạch điều trị': return [
+          hero('Phục hồi & chăm sóc da', `${cur.sessions}/${profile.total} buổi · BS. Tâm`, 'route'),
+          sec('Các mốc chăm sóc'),
+          ...[1, 2, 3, 4, 5].map(i => t(`Buổi ${i}`, i <= cur.sessions ? 'Đã hoàn tất' : 'Chờ đánh giá / thực hiện', i <= cur.sessions ? 'check_circle' : 'circle')),
+          p('Xem chăm sóc tại nhà', () => go('Chăm sóc tại nhà'))];
+        case 'Buổi điều trị': return [
+          n(`Buổi ${cur.sessions + 1}/${profile.total} · ${profile.doctor}`),
+          txtIn('Ghi nhận buổi điều trị *', 4),
+          check('Đã kiểm tra và bàn giao aftercare', T.consent, () => { T.consent = !T.consent; }),
+          p('Hoàn tất buổi', T.consent && T.text.trim() && cur.sessions < profile.total ? () => { cur.sessions++; toast('Đã lưu buổi và cập nhật hành trình'); back(); } : null)];
+        case 'Chăm sóc tại nhà': return [
+          h('Nhẹ nhàng với làn da', 'Hướng dẫn mẫu đã được bác sĩ kiểm tra'),
+          ...['Làm sạch dịu nhẹ', 'Dưỡng ẩm theo hướng dẫn', 'Bảo vệ da khỏi ánh nắng'].map(x => t(x, 'Thực hiện theo hướng dẫn cá nhân đã duyệt.', 'favorite')),
+          p(cur.acknowledged ? 'Đã xác nhận đã đọc' : 'Tôi đã đọc hướng dẫn', cur.acknowledged ? null : () => { cur.acknowledged = true; up(); }),
+          p('Gửi cập nhật cho Pema', () => go('Gửi cập nhật'))];
+        case 'Gửi cập nhật': return [
+          n('Cập nhật sẽ vào hàng chờ để đội ngũ Pema xem.'),
+          txtIn('Hôm nay da bạn thế nào?', 5),
+          p(T.photo ? 'Đã chọn ảnh mẫu' : 'Đính kèm ảnh minh họa', () => { T.photo = !T.photo; up(); }),
+          ...(T.photo ? [n('Ảnh mẫu dùng duyệt UI • camera native chưa kết nối'), check('Tôi đồng ý chia sẻ ảnh để chăm sóc', T.consent, () => { T.consent = !T.consent; })] : []),
+          p('Gửi cập nhật', T.text.trim() && (!T.photo || T.consent) ? () => { cur.updates.push(T.text); toast('Đã gửi • Chờ đội ngũ xem'); back(); } : null)];
+        case 'Phản hồi': return [
+          ...cur.escalations.map(x => n(`CSKH bàn giao nội bộ: ${x}`)),
+          h(name, 'Cập nhật từ Patient Mobile'),
+          ...cur.updates.map(x => n(x)),
+          txtIn('Phản hồi đã kiểm tra', 5),
+          p('Duyệt và phản hồi', T.text.trim() ? () => { cur.response = T.text; toast('Đã gửi phản hồi sang Pema Care'); back(); } : null)];
+        case 'Hóa đơn':
+        case 'Thu ngân': {
+          const amount = sum(myOrders, o => o.total);
+          const paid = s.receipts[pid] || 0;
+          return [
+            h('Khoản cần thanh toán', name),
+            hero(money(amount - paid), `Đã thu ${money(paid)}`, 'payments'),
+            ...myOrders.map(o => t(o.id, money(o.total), 'receipt_long')),
+            ...(!s.care && billing ? [p('Thu đủ phần còn lại', amount > paid ? () => { s.sheet = { kind: 'pay', amount: amount - paid, total: amount }; up(); } : null)] : []),
+            ...(!s.care && clinical ? [p('Lên đơn mới', () => go('Lên đơn nhanh'))] : [])];
+        }
+        case 'Dịch vụ': return [
+          h('Danh mục dịch vụ', 'Giá và thời lượng tham khảo như web'),
+          ...['Tái khám & đánh giá|300.000 ₫ · 30 phút', 'Tư vấn da liễu|500.000 ₫ · 45 phút', 'Laser theo chỉ định|2.500.000 ₫ · 45 + 15 phút', 'Chăm sóc theo chỉ định|1.200.000 ₫ · 45 + 15 phút']
+            .map(x => t(x.split('|')[0], x.split('|')[1], 'spa', () => go('Đặt lịch')))];
+        case 'Bác sĩ & phòng': return [
+          h('Nguồn lực phòng khám', 'Chạm lịch để điều phối theo ca'),
+          ...['BS. Tâm', 'BS. Mai', 'BS. An', 'BS. Lan'].map(x => t(x, '08:00–18:00 · Nghỉ 12:00–13:00', 'medical_services', () => go('Đặt lịch'))),
+          n('Laser & thủ thuật · Bảo trì 14:00–15:00 ngày 23/09. Khóa phòng phức tạp duyệt ở web.')];
+        case 'Ảnh tiến triển': return [
+          h('Theo dõi bằng hình ảnh', 'Ảnh minh họa • không đánh giá hiệu quả tự động'),
+          { photos: true, items: [{ label: 'Trước' }, { label: 'Gần nhất' }] },
+          n('Chính diện · Vùng mặt · Cần cùng điều kiện ánh sáng'),
+          p('Gửi ảnh cập nhật', () => go('Gửi cập nhật'))];
+        case 'Ask Pema': return [
+          hero('Bối cảnh trước\nmỗi quyết định.', 'AI mô phỏng • cần bác sĩ kiểm tra', 'auto_awesome'),
+          sec(`Tóm tắt ${name}`),
+          n(`Đã hoàn tất ${cur.sessions}/${profile.total} buổi. Có ${cur.updates.length} phản hồi tại nhà.\nNguồn: hành trình và cập nhật trong phiên mẫu.`),
+          t('Việc còn mở', 'Xem phản hồi trước khi khám lại.', 'inbox', () => go('Phản hồi')),
+          p('Mở ghi chú để bác sĩ sửa', () => go('Tư vấn'))];
+        case 'Quyền riêng tư': return [
+          n('Template không sử dụng dữ liệu bệnh nhân thật.'),
+          check('Đồng ý dùng ảnh trong chăm sóc', T.consent, () => { T.consent = !T.consent; }),
+          txt('Cài đặt đang được minh họa trong phiên duyệt.')];
+        default: return [
+          h('Một hành trình, nhiều điểm nối', 'Hướng dẫn sử dụng Pema'),
+          ...['Tiếp nhận → lịch → Patient 360', 'Dịch vụ → kế hoạch → buổi điều trị', 'Đơn nháp → bác sĩ duyệt → người bệnh xem', 'Cập nhật tại nhà → theo dõi → phản hồi', 'Hóa đơn → thu tiền → đối soát']
+            .map(x => t(x, 'Mỗi bàn giao cần người phụ trách và bước tiếp theo.', 'route')),
+          n('Duyệt Clinic/Care qua nút góc trên. Thao tác mẫu lưu trong bộ nhớ, tải lại sẽ bắt đầu phiên mới.')];
+      }
+    };
+
+    const openProc = (patient = 'P001') => {
+      const sv = F.services[0];
+      push({ route: '__proc', patient, service: sv.id, day: F.today, gross: String(sv.price), discount: '0', invoice: '', doctor: 'D0', share: '100', rate: pct(sv.rate), assistant: '', rate2: '0', note: '', error: '' });
+    };
+
+    const finBody = () => {
+      const T = top;
+      const out = [txt('Vai trò mẫu • dữ liệu dùng chung với web', { s: 12, c: MUTED }), sp(8),
+        { period: true, month: `Kỳ ${F.month}`, monthVal: F.month, onMonth: e => { if (e.target.value) { F.month = e.target.value; up(); } }, onPick: pick, hasStatus: true, status: LABELS[F.status] }];
+      const open_ = F.status === 'open';
+      if (T.tab === 0) return [...out,
+        finHero(priv ? 'DOANH SỐ CỦA TÔI' : 'DOANH SỐ THỰC HIỆN', money(summary.revenue)),
+        fc(ftitle('Dòng tiền & đối soát'),
+          ...(!priv ? [fl('Thực thu trong tháng', money(summary.collected)), fl('Công nợ hiện tại', money(summary.debt))] : []),
+          fl('Tiền thủ thuật đã duyệt', money(summary.fee)), fl('Tiền chờ duyệt', money(summary.pending)),
+          txt('Tiền thủ thuật không phải lợi nhuận. Công nợ là toàn bộ số còn phải thu.', { s: 12, c: MUTED })),
+        ...(!priv ? [fc(ftitle('Đội ngũ'), ...F.doctors.map(d => fl(d.name, money(docRev(d.id))))), pill('Chính sách tỷ lệ thủ thuật', 'tune', () => push({ route: '__rate' }))] : [])];
+      if (T.tab === 1) {
+        const rows = priv ? F.rows.filter(r => r.doctor === finDoctor) : F.rows;
+        return [...out,
+          ftitle('Từng lượt, từng người thực hiện'),
+          txt('Tỷ lệ lưu theo lượt; kế toán đối soát trước khi chốt.', { s: 12 }), sp(12),
+          ...(rows.length ? [] : [fc(txt('Chưa có lượt trong kỳ này.'))]),
+          ...rows.map(r => fc(ftitle(r.service), txt(`${r.date} · ${r.patient} · ${docName(r.doctor)}`),
+            fl('Doanh số phân bổ', money(r.revenue)), fl(`${money(r.base)} × ${pct(r.rate)}%`, money(r.fee)), txt(LABELS[r.status]),
+            ...(!priv && open_ && r.status !== 'void' ? [fb(...(r.status === 'pending' ? [['Duyệt', () => { r.status = 'approved'; toast('Đã ghi nhận thành công'); up(); }]] : []),
+              ['Hủy lượt', () => ask('Lý do hủy', () => { r.status = 'void'; toast('Đã ghi nhận thành công'); })])] : []))),
+          ...(!priv && open_ ? [pill('Chốt tháng đã kết thúc', '', () => ask(`Gõ CHOT để khóa kỳ ${F.month}`, v => { if (v === 'CHOT') { F.status = 'closed'; toast('Đã ghi nhận thành công'); } }))] : []),
+          ...(!priv && F.status === 'closed' ? [pill('Xác nhận đã chi', '', () => ask('Mã chứng từ chi', () => { F.status = 'paid'; toast('Đã ghi nhận thành công'); }))] : []),
+          sp(70)];
+      }
+      if (T.tab === 2) {
+        if (priv) return [...out, fc(txt('Bác sĩ chỉ xem doanh số và tiền thủ thuật của mình.'))];
+        const inv = F.invoices.filter(i => i.received < i.amount);
+        return [...out,
+          ftitle('Khoản còn phải thu'),
+          txt('Thu ngân web cũ đồng bộ riêng. Chỉ thu hóa đơn tài chính tại đây.', { s: 12 }), sp(12),
+          ...inv.map(i => fc(ftitle(i.patient), txt(i.id, { ws: 'nowrap' }), fl('Còn lại', money(i.amount - i.received)),
+            ff('Thu tiền mặt', () => ask('Số tiền mặt thu (VND)', v => {
+              const amt = parseInt(v, 10); if (!amt || amt <= 0) return;
+              i.received = Math.min(i.amount, i.received + amt);
+              F.notifications.unshift({ id: 'N' + Date.now(), title: `Đã thu ${money(amt)}`, body: `Kế toán thu tiền mặt · ${i.patient} · ${i.id}`, at: '2026-09-22T09:41', read: false });
+              toast('Đã thu và thông báo chủ phòng khám');
+            }, { type: 'number' })))),
+          ...(inv.length ? [] : [fc(txt('Không còn hóa đơn chờ thu.'))])];
+      }
+      return [...out,
+        ftitle('Thanh toán mới'),
+        ...(finRole !== 'owner' ? [fc(txt('Inbox này dành cho chủ phòng khám.'))] : [
+          ...(F.notifications.length ? [] : [fc(txt('Thanh toán thành công sẽ xuất hiện ở đây khi app đang mở.'))]),
+          ...F.notifications.map(x => fc(fi(x.title), { sp: true, h: 10 }, txt(x.body), txt(x.at.slice(0, 16).replace('T', ' '), { s: 11 }),
+            ...(!x.read ? [fb(['Đánh dấu đã đọc', () => { x.read = true; toast('Đã ghi nhận thành công'); up(); }])] : [])))]),
+        txt('Đồng bộ khi ứng dụng đang mở; push nền chưa được cấu hình.', { s: 11, c: MUTED })];
+    };
+
+    const rateBody = () => [
+      txt('Thay đổi áp dụng cho lượt mới. Tỷ lệ lịch sử được giữ nguyên.'),
+      ...F.services.map(sv => ({ mcard: true, title: sv.name, sub: `${pct(sv.rate)}% · ${sv.basis} · phiên bản ${sv.version}`,
+        tap: () => ask(sv.name, (v, basis) => {
+          const x = parseFloat(v); if (isNaN(x) || x < 0 || x > 100) return false;
+          sv.rate = Math.round(x * 100); sv.basis = basis; sv.version++;
+        }, { value: pct(sv.rate), type: 'number', label: 'Tỷ lệ %', options: [{ v: 'net', l: 'Giá sau giảm' }, { v: 'list', l: 'Giá niêm yết' }, { v: 'collected', l: 'Theo thực thu' }], sel: sv.basis, ok: 'Lưu', cancel: 'Hủy' }) }))];
+
+    const procBody = () => {
+      const T = top;
+      const docOpts = F.doctors.map(d => ({ v: d.id, l: d.name }));
+      const field = (label, key) => [input({ label, value: T[key], set: v => { T[key] = v; } }), sp(14)];
+      return [
+        dd(T.patient, P.map(x => ({ v: x.id, l: x.id })), v => { T.patient = v; }, 'Hồ sơ'), sp(14),
+        dd(T.service, F.services.map(x => ({ v: x.id, l: x.name })), v => { T.service = v; const sv = F.services.find(x => x.id === v); T.gross = String(sv.price); T.rate = pct(sv.rate); }, 'Thủ thuật'), sp(14),
+        { dateBtn: true, text: `Ngày thực hiện ${T.day}`, dateVal: T.day, onDate: e => { if (e.target.value) { T.day = e.target.value; up(); } }, onPick: pick },
+        ...field('Giá niêm yết (VND)', 'gross'), ...field('Giảm giá (VND)', 'discount'),
+        dd(T.invoice, [{ v: '', l: 'Tạo hóa đơn mới cho lượt này' }, ...F.invoices.map(i => ({ v: i.id, l: `${i.patient} · ${i.id}` }))], v => { T.invoice = v; }, 'Gắn hóa đơn đã có'), sp(14),
+        dd(T.doctor, docOpts, v => { T.doctor = v; }, 'Bác sĩ chính'), sp(14),
+        ...field('Tỷ trọng doanh số bác sĩ chính %', 'share'), ...field('Tỷ lệ tiền bác sĩ chính %', 'rate'),
+        dd(T.assistant, [{ v: '', l: 'Không có' }, ...docOpts], v => { T.assistant = v; }, 'Người phối hợp'), sp(14),
+        ...(T.assistant ? field('Tỷ lệ tiền người phối hợp %', 'rate2') : []),
+        txt('Người phối hợp nhận phần tỷ trọng doanh số còn lại. Tổng tỷ lệ tiền không quá 100%.', { s: 12 }), sp(12),
+        input({ label: 'Ghi chú xác nhận hoàn tất', value: T.note, set: v => { T.note = v; } }), sp(14),
+        ...(T.error ? [txt(T.error, { c: '#FF5722' }), sp(8)] : []),
+        p('Ghi nhận • Chờ kế toán duyệt', () => {
+          const nums = ['gross', 'discount', 'share', 'rate', ...(T.assistant ? ['rate2'] : [])];
+          if (!T.note.trim() || nums.some(k => T[k].trim() === '' || !isFinite(parseFloat(T[k])))) { T.error = 'Cần nhập đủ các trường bằng số hợp lệ và ghi chú hoàn tất.'; up(); return; }
+          const net = parseInt(T.gross, 10) - parseInt(T.discount, 10), sh = parseFloat(T.share), sv = F.services.find(x => x.id === T.service);
+          const add = (doctor, share, rate) => { const rev = Math.round(net * share / 100); F.rows.unshift({ id: 'R' + Date.now() + doctor, date: T.day, patient: T.patient, doctor, service: sv.name, revenue: rev, base: rev, rate: Math.round(rate * 100), fee: Math.round(rev * rate / 100), status: 'pending' }); };
+          add(T.doctor, sh, parseFloat(T.rate));
+          if (T.assistant) add(T.assistant, 100 - sh, parseFloat(T.rate2));
+          if (!T.invoice) F.invoices.push({ id: `HD-2609-0${20 + F.invoices.length}`, patient: T.patient, amount: net, received: 0 });
+          back();
+        })];
+    };
+
+    // screen
+    const NAV = {
+      owner: [['Hôm nay', 'space_dashboard'], ['Lịch hẹn', 'calendar_month'], ['Hồ sơ', 'group'], ['Theo dõi', 'inbox'], ['Thêm', 'grid_view']],
+      staff: [['Công việc', 'work'], ['Hồ sơ mẫu', 'group']],
+      care: [['Trang chủ', 'home'], ['Hành trình', 'route', 'alt_route'], ['Tin nhắn', 'chat_bubble'], ['Hồ sơ', 'person']],
+      fin: [['Tổng quan', 'dashboard'], ['Thủ thuật', 'receipt_long'], ['Thu tiền', 'payments'], ['Thông báo', 'notifications', null, true]]
+    };
+    const nav = (k, i, onTap) => NAV[k].map(([label, icon, act, badge], j) => ({ label, icon, activeIcon: act || icon, active: j === i, idle: j !== i, hasBadge: !!badge && unread > 0 && finRole === 'owner', badge: String(unread), tap: () => { onTap(j); up(); } }));
+    const roleLabel = s.care ? 'Care' : s.role === 'owner' ? 'Clinic' : s.role === 'care' ? 'CSKH' : s.role === 'doctor' ? 'Bác sĩ' : 'Kế toán';
+    const base = { appMain: false, appDetail: false, hasNav: false, nav: [], bell: false, bellBadge: false, bellCount: '', role: roleLabel, title: '', ts: 18, tw: 600, refresh: false, pad: '20px 20px 54px', hasFab: false, fabTap: noop };
+    let sc, where;
+    if (!top) {
+      const key = s.care ? 'care' : s.role !== 'owner' ? 'staff' : 'owner';
+      sc = { ...base, appMain: true, bell: !s.care && s.role === 'owner', bellBadge: unread > 0, bellCount: String(unread), hasNav: true, nav: nav(key, s.tab, j => { s.tab = j; }), pad: '8px 20px 24px', blocks: wsBody() };
+      where = `${roleLabel} · ${NAV[key][s.tab][0]}`;
+    } else if (top.route === '__fin') {
+      sc = { ...base, appDetail: true, title: 'Tài chính Pema', ts: 22, tw: 400, refresh: true, hasNav: true, nav: nav('fin', top.tab, j => { top.tab = j; }), pad: '20px', blocks: finBody(),
+        hasFab: top.tab === 1 && finRole !== 'doctor' && F.status === 'open', fabTap: () => openProc() };
+      where = `Tài chính · ${NAV.fin[top.tab][0]}`;
+    } else if (top.route === '__rate') {
+      sc = { ...base, appDetail: true, title: 'Chính sách thủ thuật', ts: 22, tw: 400, blocks: rateBody() }; where = 'Chính sách thủ thuật';
+    } else if (top.route === '__proc') {
+      sc = { ...base, appDetail: true, title: 'Ghi lượt đã thực hiện', ts: 22, tw: 400, blocks: procBody() }; where = 'Ghi lượt đã thực hiện';
+    } else {
+      sc = { ...base, appDetail: true, title: top.route, blocks: detail(top.route) }; where = top.route;
+    }
+
+    const KEYS = ['heading', 'h2', 'section', 'hero', 'metrics', 'actions', 'tile', 'notice', 'primary', 'outlined', 'textBtn', 'input', 'dd', 'week', 'chips', 'check', 'photos', 'order', 'a5', 'txt', 'sp', 'buckets', 'careSearch', 'inputChip', 'listHead', 'careRow', 'empty', 'period', 'finHero', 'ftitle', 'fcard', 'pill', 'mcard', 'dateBtn'];
+    const CH = ['ftitle', 'fline', 'txt', 'btns', 'filled', 'iconTitle', 'sp'];
+    const fill = (o, keys) => { const r = {}; keys.forEach(k => { r[k] = false; }); return Object.assign(r, o); };
+    sc.blocks = sc.blocks.map(b => { const nb = fill(b, KEYS); if (nb.fcard) nb.items = nb.items.map(c => fill(c, CH)); return nb; });
+
+    // overlays
+    const accounts = [['owner', 'BS. Tâm', 'Chủ phòng khám'], ['doctor', 'BS. Tâm', 'Bác sĩ điều trị'], ['doctor', 'BS. Mai', 'Bác sĩ điều trị'], ['care', 'Mai Anh', 'CSKH'], ['accountant', 'Kế toán', 'Đối soát & thu ngân'], ['patient', 'Người bệnh', 'Pema Care']];
+    const switchTo = ([k, nm]) => {
+      s.care = k === 'patient'; s.tab = 0; s.caseGroup = 'all'; s.stack = []; s.sheet = null; s.dialog = null;
+      if (!s.care) { s.role = k; s.staffName = nm; s.staffDoctor = nm; if (!owns(s.sel)) s.sel = Math.max(0, P.findIndex(x => x.doctor === s.staffDoctor)); }
+      up();
+    };
+    const isActive = ([k, nm]) => (k === 'patient' ? s.care : !s.care && s.role === k && (k !== 'doctor' || s.staffName === nm));
+    let sheet = { pad: '0', align: 'stretch', title: '', ts: 20, tc: '#17324D', g1: 0, sub: '', ss: 14, sc: '#17324D', g2: 0, rowPad: '0', rs: 14, rows: [], hasNotice: false, notice: '', hasPrimary: false, primary: '', onPrimary: noop };
+    if (s.sheet === 'account') sheet = { ...sheet, pad: '20px', title: 'Duyệt không gian làm việc', sub: 'Dữ liệu mẫu • chưa phải đăng nhập/phân quyền', rowPad: '0 24px 0 16px', rs: 16,
+      rows: accounts.map(ac => ({ icon: ac[0] === 'patient' ? 'favorite' : 'badge', is: 24, ic: '#43474E', text: `${ac[1]} · ${ac[2]}`, tc: '#1A1C20', hasTrail: false, trail: '', tap: () => switchTo(ac) })) };
+    if (s.sheet === 'group') {
+      const cases = P.filter(x => x.group);
+      sheet = { ...sheet, pad: '0 20px 16px', title: 'Nhóm chăm sóc', ts: 22, g1: 4, sub: 'Chọn nhóm để tập trung xử lý', sc: MUTED, g2: 16, rowPad: '0 8px',
+        rows: [['all', 'Tất cả nhóm'], ...Object.entries(GR)].map(([k, v]) => ({ icon: s.cgroup === k ? 'radio_button_checked' : 'radio_button_unchecked', is: 21, ic: s.cgroup === k ? '#0B4F94' : MUTED, text: v, tc: s.cgroup === k ? '#0B4F94' : '#17324D', hasTrail: true, trail: String(cases.filter(x => k === 'all' || x.group === k).length), tap: () => { s.cgroup = k; s.sheet = null; up(); } })) };
+    }
+    if (s.sheet && s.sheet.kind === 'pay') {
+      const pay = s.sheet;
+      sheet = { ...sheet, pad: '24px', align: 'center', title: 'Xác nhận thu tiền', ts: 25, tc: '#083A6E', g1: 6, sub: money(pay.amount), ss: 13, sc: MUTED, g2: 20, hasNotice: true, notice: 'Giao dịch mẫu · Không kết nối ngân hàng', hasPrimary: true, primary: 'Xác nhận tiền mặt',
+        onPrimary: () => { s.receipts[pid] = pay.total; s.sheet = null; up(); } };
+    }
+    const d = s.dialog;
+    const dialog = d ? {
+      title: d.title, type: d.type, value: d.value, hasLabel: !!d.label, label: d.label,
+      hasSelect: !!d.options, options: d.options || [], selValue: d.selValue, selLabel: (d.options || []).find(o => o.v === d.selValue)?.l || '',
+      onChange: e => { d.value = e.target.value; up(); }, onSel: e => { d.selValue = e.target.value; up(); },
+      okText: d.okText, cancelText: d.cancelText,
+      onCancel: () => { s.dialog = null; up(); },
+      onOk: () => { if (!String(d.value).trim()) return; s.dialog = null; if (d.onOk(String(d.value).trim(), d.selValue) === false) s.dialog = d; up(); }
+    } : { title: '', type: 'text', value: '', hasLabel: false, label: '', hasSelect: false, options: [], selValue: '', selLabel: '', onChange: noop, onSel: noop, okText: '', cancelText: '', onCancel: noop, onOk: noop };
+    const snack = s.snack || { text: '', action: '', hasAction: false, onAction: noop };
+
+    return {
+      sc, where,
+      back, reset: () => { clearTimeout(this._timer); this.s = null; this.forceUpdate(); },
+      openAccounts: () => { s.sheet = 'account'; up(); },
+      openBell: () => openFinance(3),
+      refreshFin: () => { toast('Đã làm mới'); up(); },
+      closeSheet: () => { s.sheet = null; up(); },
+      hasSheet: !!s.sheet, sheet,
+      hasDialog: !!d, dialog,
+      hasSnack: !!s.snack, snack, snackBottom: sc.hasNav ? 101 : 34,
+      contentRef: this.contentRef,
+      quick: accounts.map(ac => ({ label: `${ac[1]} · ${ac[2]}`, icon: ac[0] === 'patient' ? 'favorite' : 'badge', on: isActive(ac), off: !isActive(ac), tap: () => switchTo(ac) }))
+    };
+  }
+}
+</script>
+</body>
+</html>
