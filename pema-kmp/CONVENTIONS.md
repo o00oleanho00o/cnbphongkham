@@ -41,6 +41,13 @@ Quy tắc:
 - Không block main thread; IO qua `suspend` + `Dispatchers.Default`/Ktor.
 - Chữ tiếng Việt giữ nguyên như Flutter. **File phải lưu UTF-8** (không dùng PowerShell `Set-Content`/`Out-File` mặc định — dùng tool create/edit hoặc `[IO.File]::WriteAllText(p, t, (New-Object Text.UTF8Encoding($false)))`).
 
+## Bẫy Compose đã gặp trên thiết bị (JVM shot không bắt được)
+- Snackbar hiện trước/sau `back()` (lưu → quay lại): dùng `rememberPemaMessenger().show(msg)` (scope gốc trong `App.kt`, như Flutter `ScaffoldMessenger`). `rememberCoroutineScope()` của màn bị hủy khi pop → mất thông báo.
+- State tab/bộ lọc/ô tìm kiếm của màn có thể bị route khác che: `rememberSaveable` (NavHost bỏ `remember` của màn bị che). Kiểu không vào được Bundle (data class, enum lồng) phải có `listSaver`/`mapSaver`, nếu không Android crash khi chuyển màn.
+- Không lồng `verticalScroll` trong `PemaBottomSheet`/`ModalBottomSheet` (crash); chỉ một lớp cuộn.
+- Bàn phím: `PemaScaffold` đã tự đệm theo IME (giống `resizeToAvoidBottomInset`) và manifest dùng `adjustResize`; không tự thêm `imePadding()` lần nữa.
+- Tài nguyên `composeResources` trong module thư viện cần `androidResources.enable = true` (đã bật trong convention plugin).
+
 ## Lệnh Gradle (PowerShell, Windows)
 ```powershell
 $env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'; cd E:\Desktop\cnbphongkham\pema-kmp

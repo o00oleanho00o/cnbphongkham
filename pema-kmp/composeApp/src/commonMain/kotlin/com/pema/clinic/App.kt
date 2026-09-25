@@ -101,7 +101,7 @@ fun App(financeApi: String = ApiConfig.DEFAULT_FINANCE_API) {
 
 /** Flutter `_RouteGuard` body when `session.allows(route)` is false. */
 @Composable
-private fun DeniedScreen(title: String) {
+internal fun DeniedScreen(title: String) {
     DetailScaffold(title = title) {
         PemaNotice("Tác vụ không thuộc không gian hiện tại. Quay lại để chọn đúng công việc.")
     }

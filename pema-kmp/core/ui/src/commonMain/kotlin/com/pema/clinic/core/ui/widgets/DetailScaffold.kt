@@ -7,9 +7,13 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -36,6 +40,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.pema.clinic.core.ui.theme.PemaColors
@@ -184,7 +189,9 @@ fun LazyDetailScaffold(
 
 /**
  * M3 Scaffold on paper with the shared snackbar host (Flutter `Scaffold`).
- * Insets are handled by the bars/content, not by the Scaffold.
+ * Insets are handled by the bars/content, not by the Scaffold – except the
+ * keyboard: like Flutter `resizeToAvoidBottomInset`, the body's bottom padding
+ * becomes max(bottom bar, IME) and the snackbar sits above the keyboard.
  */
 @Composable
 fun PemaScaffold(
@@ -200,12 +207,28 @@ fun PemaScaffold(
         topBar = topBar,
         bottomBar = bottomBar,
         floatingActionButton = floatingActionButton,
-        snackbarHost = { SnackbarHost(snackbar) { PemaSnackbar(it) } },
+        snackbarHost = {
+            SnackbarHost(snackbar, Modifier.windowInsetsPadding(WindowInsets.ime)) { PemaSnackbar(it) }
+        },
         containerColor = PemaColors.Paper,
         contentColor = PemaColors.Ink,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        content = content,
-    )
+    ) { inner ->
+        val ime = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
+        val direction = LocalLayoutDirection.current
+        content(
+            if (ime <= inner.calculateBottomPadding()) {
+                inner
+            } else {
+                PaddingValues(
+                    start = inner.calculateStartPadding(direction),
+                    top = inner.calculateTopPadding(),
+                    end = inner.calculateEndPadding(direction),
+                    bottom = ime,
+                )
+            },
+        )
+    }
 }
 
 /** Vertical spacer helper (canvas `sp`). */

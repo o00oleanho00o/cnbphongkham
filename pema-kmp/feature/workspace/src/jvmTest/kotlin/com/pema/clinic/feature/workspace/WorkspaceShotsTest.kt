@@ -1,30 +1,35 @@
 package com.pema.clinic.feature.workspace
 
+import com.pema.clinic.core.common.AppNavigator
+import com.pema.clinic.core.hardware.FakePlatformServices
 import com.pema.clinic.core.ui.shots.shotVsCanvas
+import com.pema.clinic.shared.FeatureDeps
+import com.pema.clinic.shared.billing.ReceiptsStore
+import com.pema.clinic.shared.care.CareQueue
+import com.pema.clinic.shared.care.ReviewQueue
 import com.pema.clinic.shared.catalog.Catalog
+import com.pema.clinic.shared.catalog.MutableCatalogRepository
 import com.pema.clinic.shared.catalog.sampleCatalog
+import com.pema.clinic.shared.finance.FinanceActor
+import com.pema.clinic.shared.finance.FinanceRepository
 import com.pema.clinic.shared.finance.FinanceSnapshot
 import com.pema.clinic.shared.finance.FinanceState
+import com.pema.clinic.shared.finance.FinanceStore
 import com.pema.clinic.shared.finance.FinanceSummary
 import com.pema.clinic.shared.finance.PaymentNotification
+import com.pema.clinic.shared.finance.ProcedureEntry
+import com.pema.clinic.shared.orders.OrdersStore
 import com.pema.clinic.shared.patients.PatientState
+import com.pema.clinic.shared.patients.PatientsStore
 import com.pema.clinic.shared.session.Session
+import com.pema.clinic.shared.session.SessionStore
 import kotlin.test.Test
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 
 class WorkspaceShotsTest {
     private val catalog: Catalog = sampleCatalog()
-    private val finance = FinanceState(
-        month = "2026-09",
-        data = FinanceSnapshot(
-            month = "2026-09",
-            today = "2026-09-22",
-            periodStatus = "open",
-            summary = FinanceSummary(revenue = 186_400_000, fee = 0, pending = 0, collected = 120_000_000, debt = 0),
-            notifications = listOf(
-                PaymentNotification("N1", "Có thanh toán mới", "Thanh toán mới tại phòng khám", read = false, at = "2026-09-22T10:00:00+07:00"),
-            ),
-        ),
-    )
+    private val finance = shotFinance()
 
     private fun state(
         session: Session = Session(),
@@ -64,7 +69,7 @@ class WorkspaceShotsTest {
     }
 
     @Test fun a3OwnerPatientsFrame() {
-        shotVsCanvas("A3") { WorkspaceScreen(state = state(tab = 2)) }
+        shotVsCanvas("A3") { WorkspaceScreen(state = state(tab = 2), deps = shotDeps()) }
     }
 
     @Test fun a4OwnerReviewQueue() {
@@ -149,4 +154,53 @@ class WorkspaceShotsTest {
     @Test fun f16Guide() {
         shotVsCanvas("F16") { GuideScreen() }
     }
+
+    /** Real stores (in-memory, fake finance API) so embedded PatientSearch/CareQueue render. */
+    private fun shotDeps(): FeatureDeps {
+        val scope = CoroutineScope(SupervisorJob())
+        val catalogRepository = MutableCatalogRepository(catalog)
+        val session = SessionStore(catalogRepository)
+        val patients = PatientsStore(catalogRepository)
+        val orders = OrdersStore(patients, catalogRepository)
+        return FeatureDeps(
+            navigator = object : AppNavigator {
+                override fun go(route: String) = Unit
+                override fun back() = Unit
+            },
+            platform = FakePlatformServices(),
+            catalogRepository = catalogRepository,
+            sessionStore = session,
+            patientsStore = patients,
+            ordersStore = orders,
+            receiptsStore = ReceiptsStore(session, orders),
+            careQueue = CareQueue(catalogRepository, patients, scope),
+            reviewQueue = ReviewQueue(catalogRepository, patients, session, scope),
+            financeStore = FinanceStore(repository = OfflineFinanceRepository, scope = scope, initialState = finance),
+        )
+    }
+
+    private object OfflineFinanceRepository : FinanceRepository {
+        override suspend fun getState(month: String, actor: FinanceActor): FinanceSnapshot = shotFinance().data!!
+        override suspend fun approveEntry(id: String, actor: FinanceActor) = Unit
+        override suspend fun voidEntry(id: String, reason: String, actor: FinanceActor) = Unit
+        override suspend fun recordEntry(entry: ProcedureEntry, actor: FinanceActor) = Unit
+        override suspend fun recordPayment(key: String, invoice: String, amount: Int, method: String, actor: FinanceActor) = Unit
+        override suspend fun closePeriod(month: String, actor: FinanceActor) = Unit
+        override suspend fun markPeriodPaid(month: String, reference: String, actor: FinanceActor) = Unit
+        override suspend fun updateRate(service: String, rate: Int, basis: String, actor: FinanceActor) = Unit
+        override suspend fun markNotificationRead(id: String, actor: FinanceActor) = Unit
+    }
 }
+
+private fun shotFinance(): FinanceState = FinanceState(
+    month = "2026-09",
+    data = FinanceSnapshot(
+        month = "2026-09",
+        today = "2026-09-22",
+        periodStatus = "open",
+        summary = FinanceSummary(revenue = 186_400_000, fee = 0, pending = 0, collected = 120_000_000, debt = 0),
+        notifications = listOf(
+            PaymentNotification("N1", "Có thanh toán mới", "Thanh toán mới tại phòng khám", read = false, at = "2026-09-22T10:00:00+07:00"),
+        ),
+    ),
+)
