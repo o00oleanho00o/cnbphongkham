@@ -18,6 +18,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/app_icon.png
     - assets/pema-logo.png
     - assets/products.json
     - assets/patients.json
