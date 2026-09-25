@@ -20,6 +20,61 @@ flutter build web --base-href /native-preview/
 
 Android: `flutter run -d <device-id>` sau khi có Android SDK/emulator. iOS cần macOS/Xcode. Bản duyệt browser chưa thay thế kiểm thử bàn phím, camera, safe-area và gesture trên điện thoại thật.
 
+## Build APK Android để cài thử
+
+Kiểm tra điện thoại đã bật **USB debugging** và được Flutter nhận diện:
+
+```powershell
+flutter devices
+```
+
+Trong lúc phát triển, chạy trực tiếp để có hot reload:
+
+```powershell
+flutter run -d <device-id>
+```
+
+Để thử nghiệm gần với bản phát hành, ưu tiên APK `release`: chạy nhanh và nhỏ hơn
+APK `debug`. Build riêng theo kiến trúc giúp giảm thêm dung lượng:
+
+```powershell
+cd E:\Desktop\cnbphongkham\flutter-template
+flutter pub get
+flutter build apk --release --split-per-abi
+```
+
+Các APK được tạo trong `build\app\outputs\flutter-apk\`:
+
+| Kiến trúc thiết bị | File APK |
+|---|---|
+| ARM64, đa số điện thoại Android hiện nay | `app-arm64-v8a-release.apk` |
+| ARM 32-bit, điện thoại cũ | `app-armeabi-v7a-release.apk` |
+| x86-64, chủ yếu máy giả lập | `app-x86_64-release.apk` |
+
+Xem kiến trúc của thiết bị trong kết quả `flutter devices`, sau đó cài APK phù
+hợp. Ví dụ cho thiết bị `android-arm64`:
+
+```powershell
+& "E:\apdata\platform-tools\adb.exe" -s <device-id> install -r `
+  "build\app\outputs\flutter-apk\app-arm64-v8a-release.apk"
+```
+
+Đường dẫn Android SDK trên máy khác có thể không phải `E:\apdata`. Tìm đường
+dẫn ở dòng **Android SDK at** bằng `flutter doctor -v`, rồi dùng
+`<android-sdk>\platform-tools\adb.exe`.
+
+Nếu Android báo xung đột chữ ký (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`), gỡ bản
+cũ trước khi cài lại. Lệnh này xóa cả dữ liệu ứng dụng:
+
+```powershell
+& "<android-sdk>\platform-tools\adb.exe" -s <device-id> uninstall com.example.pema_native_template
+```
+
+Không cần chạy `flutter clean` cho mỗi lần build; chỉ dùng khi Gradle/build cache
+gặp lỗi. Cấu hình hiện tại ký bản `release` bằng debug key, chỉ phù hợp cài thử
+nội bộ. Trước khi phát hành lên Google Play phải tạo release keystore riêng và
+đổi `applicationId` khỏi `com.example.pema_native_template`.
+
 ## Hai không gian
 
 - Clinic: Hôm nay / Lịch hẹn / Hồ sơ / Theo dõi / Thêm.
