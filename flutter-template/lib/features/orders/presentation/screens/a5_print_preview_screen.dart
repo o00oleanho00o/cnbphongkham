@@ -13,7 +13,7 @@ class A5PrintPreviewScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(selectedProfileProvider);
-    final name = profile['name'] as String;
+    final name = profile.name;
     final orders = ref.watch(currentOrdersProvider);
     return DetailScaffold(
       title: AppRoutes.a5Print,

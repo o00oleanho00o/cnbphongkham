@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../catalog/presentation/providers/catalog_provider.dart';
 import '../../../session/presentation/providers/session_provider.dart';
-import '../../../patients/domain/models/patient_state.dart';
-import '../../../patients/presentation/providers/patients_provider.dart';
+import '../../domain/models/care_case.dart';
+import '../providers/care_queue_provider.dart';
 
 const _groups = {
   'd1': 'Sau thủ thuật · D+1',
@@ -29,11 +29,8 @@ class CareQueue extends ConsumerStatefulWidget {
 }
 
 class _CareQueueState extends ConsumerState<CareQueue> {
-  String group = 'all', query = '', bucket = 'Chưa liên hệ';
-  List<Map<String, dynamic>> cases = const [];
-  Map<String, PatientState> states = const {};
-  String status(Map<String, dynamic> p) =>
-      states[p['id']]?.careStatus ?? 'Chưa liên hệ';
+  String group = 'all', query = '', bucket = careNotContacted;
+  List<CareCase> cases = const [];
   Future<void> filter() async {
     final selected = await showModalBottomSheet<String>(
       context: context,
@@ -79,7 +76,7 @@ class _CareQueueState extends ConsumerState<CareQueue> {
                   size: 21,
                 ),
                 trailing: Text(
-                  '${cases.where((p) => entry.key == 'all' || p['group'] == entry.key).length}',
+                  '${cases.where((c) => c.inGroup(entry.key)).length}',
                   style: const TextStyle(color: AppColors.muted),
                 ),
                 onTap: () => Navigator.pop(ctx, entry.key),
@@ -93,18 +90,13 @@ class _CareQueueState extends ConsumerState<CareQueue> {
 
   @override
   Widget build(BuildContext context) {
-    final profiles = ref.watch(catalogProvider).profiles;
     final staffName = ref.watch(sessionProvider.select((s) => s.staffName));
-    states = ref.watch(patientsProvider);
-    cases = profiles.where((p) => p['group'] != '').toList();
-    final rows = cases
-        .where(
-          (p) =>
-              status(p) == bucket &&
-              (group == 'all' || group == p['group']) &&
-              '${p['id']} ${p['name']}'.toLowerCase().contains(query),
-        )
-        .toList();
+    cases = ref.watch(careCasesProvider);
+    final rows = [
+      for (final c in cases)
+        if (c.status == bucket && c.inGroup(group) && c.matches(query))
+          c.profile,
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -150,7 +142,7 @@ class _CareQueueState extends ConsumerState<CareQueue> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${cases.where((p) => status(p) == entry.key).length}',
+                              '${cases.where((c) => c.status == entry.key).length}',
                               style: TextStyle(
                                 fontSize: 25,
                                 height: 1.1,
@@ -289,7 +281,7 @@ class _CareQueueState extends ConsumerState<CareQueue> {
                 onTap: () {
                   ref
                       .read(sessionProvider.notifier)
-                      .select(profiles.indexOf(p));
+                      .select(ref.read(catalogProvider).indexOf(p.id));
                   widget.onOpen();
                 },
                 child: Padding(
@@ -301,16 +293,7 @@ class _CareQueueState extends ConsumerState<CareQueue> {
                         radius: 20,
                         backgroundColor: const Color(0xFFEAF3FA),
                         child: Text(
-                          (p['name'] as String)
-                              .split(' ')
-                              .skip(1)
-                              .toList()
-                              .reversed
-                              .take(2)
-                              .toList()
-                              .reversed
-                              .map((v) => v[0])
-                              .join(),
+                          p.initials,
                           style: const TextStyle(
                             color: AppColors.blue,
                             fontSize: 13,
@@ -324,7 +307,7 @@ class _CareQueueState extends ConsumerState<CareQueue> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              p['name'] as String,
+                              p.name,
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -333,7 +316,7 @@ class _CareQueueState extends ConsumerState<CareQueue> {
                             ),
                             const SizedBox(height: 5),
                             Text(
-                              _groups[p['group']]!,
+                              _groups[p.careGroup]!,
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppColors.blue,
@@ -341,7 +324,7 @@ class _CareQueueState extends ConsumerState<CareQueue> {
                             ),
                             const SizedBox(height: 7),
                             Text(
-                              '${p['id']} · ${p['doctor']}',
+                              '${p.id} · ${p.doctor}',
                               style: const TextStyle(
                                 fontSize: 11,
                                 color: AppColors.muted,

@@ -1,13 +1,21 @@
-/// Bundled product catalog and synthetic patient profiles (JSON maps, as in web).
+import 'patient_profile.dart';
+import 'product.dart';
+
+/// Bundled product catalog and synthetic patient profiles. Loaded once.
 class Catalog {
   Catalog({required this.products, required this.profiles})
-    : patientIds = [for (final p in profiles) p['id'] as String],
-      _byId = {for (final p in profiles) p['id'] as String: p};
+    : patientIds = [for (final p in profiles) p.id],
+      _indexById = {
+        for (var i = 0; i < profiles.length; i++) profiles[i].id: i,
+      };
 
-  final List<Map<String, dynamic>> products;
-  final List<Map<String, dynamic>> profiles;
+  final List<Product> products;
+  final List<PatientProfile> profiles;
   final List<String> patientIds;
-  final Map<String, Map<String, dynamic>> _byId;
+  final Map<String, int> _indexById;
 
-  Map<String, dynamic> profile(String id) => _byId[id]!;
+  PatientProfile profile(String id) => profiles[_indexById[id]!];
+
+  /// Position used by the session's patient selection.
+  int indexOf(String id) => _indexById[id]!;
 }

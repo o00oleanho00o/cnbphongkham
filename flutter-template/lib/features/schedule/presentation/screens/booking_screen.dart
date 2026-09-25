@@ -16,8 +16,8 @@ class BookingScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(selectedProfileProvider);
-    final name = profile['name'] as String;
-    final id = profile['id'] as String;
+    final name = profile.name;
+    final id = profile.id;
     final patient = ref.watch(currentPatientProvider);
     void patch(PatientState Function(PatientState) change) =>
         ref.read(patientsProvider.notifier).update(id, change);

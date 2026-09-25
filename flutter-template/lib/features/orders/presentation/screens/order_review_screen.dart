@@ -16,7 +16,7 @@ class OrderReviewScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(selectedProfileProvider);
-    final id = profile['id'] as String;
+    final id = profile.id;
     final patient = ref.watch(currentPatientProvider);
     final patients = ref.read(patientsProvider.notifier);
     void open(String route) => context.openRoute(route);
@@ -89,8 +89,11 @@ class OrderReviewScreen extends ConsumerWidget {
                         child: Text('Phiếu tư vấn'),
                       ),
                     ],
-                    onChanged: (v) =>
-                        patients.updateLine(id, i, (l) => l.copyWith(route: v)),
+                    onChanged: (v) => patients.updateLine(
+                      id,
+                      i,
+                      (l) => l.copyWith(route: v ?? l.route),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(

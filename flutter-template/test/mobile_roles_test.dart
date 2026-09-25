@@ -15,10 +15,10 @@ void main() {
     final c = clinicContainer(await loadCatalog());
     final profiles = c.read(catalogProvider).profiles;
     expect(profiles.length, 46);
-    final cases = profiles.where((p) => p['group'] != '').toList();
-    expect(cases.map((p) => p['group']).toSet().length, 10);
+    final cases = profiles.where((p) => p.inCareQueue).toList();
+    expect(cases.map((p) => p.careGroup).toSet().length, 10);
     for (final p in cases) {
-      expect((p['tasks'] as List).any((t) => t['type'] == p['group']), true);
+      expect(p.hasTask(p.careGroup), true);
     }
     final session = c.read(sessionProvider.notifier);
     final patients = c.read(patientsProvider.notifier);
@@ -125,7 +125,7 @@ void main() {
       expect(find.text('Thu ngân'), findsNothing);
       await choose('BS. Mai · Bác sĩ điều trị');
       expect(find.text('Lịch & hồ sơ của tôi'), findsOneWidget);
-      expect(c.read(selectedProfileProvider)['doctor'], 'BS. Mai');
+      expect(c.read(selectedProfileProvider).doctor, 'BS. Mai');
       await choose('Kế toán · Đối soát & thu ngân');
       expect(find.text('Đối soát & thu ngân'), findsOneWidget);
       expect(find.text('CSKH hôm nay'), findsNothing);

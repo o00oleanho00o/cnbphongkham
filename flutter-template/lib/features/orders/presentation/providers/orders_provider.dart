@@ -24,8 +24,7 @@ class OrdersNotifier extends _$OrdersNotifier {
     final order = Order(
       id: patient.editingOrder ?? 'DN-${state.length + 1}',
       patientId: patientId,
-      patientName:
-          ref.read(catalogProvider).profile(patientId)['name'] as String,
+      patientName: ref.read(catalogProvider).profile(patientId).name,
       approved: approve,
       items: patient.cart,
     );

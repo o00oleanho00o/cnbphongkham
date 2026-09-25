@@ -20,9 +20,9 @@ class Patient360Screen extends ConsumerWidget {
     final s = ref.watch(sessionProvider);
     final care = s.careMode;
     final profile = ref.watch(selectedProfileProvider);
-    final name = profile['name'] as String;
-    final id = profile['id'] as String;
-    final totalSessions = profile['total'] as int;
+    final name = profile.name;
+    final id = profile.id;
+    final totalSessions = profile.totalSessions;
     final patient = ref.watch(currentPatientProvider);
     final canRecordProcedure =
         ref.watch(financeEnabledProvider) &&
@@ -36,7 +36,7 @@ class Patient360Screen extends ConsumerWidget {
     return DetailScaffold(
       title: AppRoutes.patient360,
       children: [
-        heading(name, '${id} · ${profile['doctor']}'),
+        heading(name, '${id} · ${profile.doctor}'),
         notice('Da nhạy cảm • Cần đọc tiền sử trước khi kê đơn'),
         Row(
           children: [

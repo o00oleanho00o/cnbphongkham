@@ -14,8 +14,8 @@ class AskPemaScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(selectedProfileProvider);
-    final name = profile['name'] as String;
-    final totalSessions = profile['total'] as int;
+    final name = profile.name;
+    final totalSessions = profile.totalSessions;
     final patient = ref.watch(currentPatientProvider);
     void open(String route) => context.openRoute(route);
     return DetailScaffold(

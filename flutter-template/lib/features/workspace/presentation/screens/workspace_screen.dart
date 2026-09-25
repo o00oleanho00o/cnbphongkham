@@ -7,7 +7,9 @@ import '../../../../core/utils/money_format.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/pema_blocks.dart';
 import '../../../../core/widgets/pema_bottom_nav.dart';
+import '../../../aftercare/presentation/providers/review_queue_provider.dart';
 import '../../../catalog/domain/models/catalog.dart';
+import '../../../catalog/domain/models/patient_profile.dart';
 import '../../../catalog/presentation/providers/catalog_provider.dart';
 import '../../../session/domain/models/session.dart';
 import '../../../session/presentation/providers/session_provider.dart';
@@ -29,12 +31,11 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
   String caseGroup = 'all';
   late Session s;
   late Catalog catalog;
-  late Map<String, dynamic> profile;
+  late PatientProfile profile;
   late PatientState patient;
-  late Map<String, PatientState> states;
   bool financeOn = false;
   bool get care => s.careMode;
-  String get name => profile['name'] as String;
+  String get name => profile.name;
 
   @override
   void initState() {
@@ -89,7 +90,6 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
     catalog = ref.watch(catalogProvider);
     profile = ref.watch(selectedProfileProvider);
     patient = ref.watch(currentPatientProvider);
-    states = ref.watch(patientsProvider);
     financeOn = ref.watch(financeEnabledProvider);
     final compact = !care && s.staffRole != 'owner';
     final labels = care
@@ -242,18 +242,18 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
       items: [
         const DropdownMenuItem(value: 'all', child: Text('Tất cả hồ sơ')),
         ...catalog.profiles
-            .where((p) => p['group'] != '')
+            .where((p) => p.inCareQueue)
             .map(
               (p) => DropdownMenuItem(
-                value: p['group'] as String,
-                child: Text(p['case'] as String),
+                value: p.careGroup,
+                child: Text(p.caseLabel),
               ),
             ),
       ],
       onChanged: (v) {
         setState(() => caseGroup = v!);
         if (v != 'all') {
-          select(catalog.profiles.indexWhere((p) => p['group'] == v));
+          select(catalog.profiles.indexWhere((p) => p.careGroup == v));
         }
       },
     ),
@@ -261,17 +261,17 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
     DropdownButtonFormField<int>(
       key: ValueKey('patient-${s.selected}-$caseGroup'),
       isExpanded: true,
-      initialValue: caseGroup == 'all' || profile['group'] == caseGroup
+      initialValue: caseGroup == 'all' || profile.careGroup == caseGroup
           ? s.selected
           : null,
       decoration: const InputDecoration(labelText: 'Người bệnh đang xem'),
       items: [
         for (int i = 0; i < catalog.profiles.length; i++)
-          if (caseGroup == 'all' || catalog.profiles[i]['group'] == caseGroup)
+          if (caseGroup == 'all' || catalog.profiles[i].careGroup == caseGroup)
             DropdownMenuItem(
               value: i,
               child: Text(
-                '${catalog.profiles[i]['id']} · ${catalog.profiles[i]['name']}',
+                '${catalog.profiles[i].id} · ${catalog.profiles[i].name}',
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -280,7 +280,7 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
     ),
   ];
   List<Widget> patientNext() {
-    final group = profile['group'] as String;
+    final group = profile.careGroup;
     final title = {
       'd1': 'Hôm nay bạn cảm thấy thế nào?',
       'd3': 'Cập nhật ảnh tiến triển',
@@ -358,24 +358,16 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
             () => openFinance(),
           ),
         section('Cập nhật cần bác sĩ xem'),
-        for (int i = 0; i < catalog.profiles.length; i++)
-          if (s.owns(catalog.profiles[i]) &&
-              ((catalog.profiles[i]['tasks'] as List).any(
-                    (t) => t['type'] == 'd7',
-                  ) ||
-                  (states[catalog.profiles[i]['id']]?.updates.isNotEmpty ??
-                      false) ||
-                  (states[catalog.profiles[i]['id']]?.escalations.isNotEmpty ??
-                      false)))
-            tile(
-              catalog.profiles[i]['name'],
-              'Review chăm sóc · hồ sơ phụ trách',
-              Icons.inbox_outlined,
-              () {
-                select(i);
-                open(AppRoutes.followUpReply);
-              },
-            ),
+        for (final p in ref.watch(reviewQueueProvider))
+          tile(
+            p.name,
+            'Review chăm sóc · hồ sơ phụ trách',
+            Icons.inbox_outlined,
+            () {
+              select(catalog.indexOf(p.id));
+              open(AppRoutes.followUpReply);
+            },
+          ),
       ];
     return [CareQueue(onOpen: () => open(AppRoutes.customerCare))];
   }
@@ -387,7 +379,7 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
           heading('Hành trình của bạn', 'Mỗi bước chăm sóc đều được ghi nhận'),
           hero(
             'Phục hồi & chăm sóc da',
-            '${patient.sessions}/${profile['total']} buổi đã hoàn tất',
+            '${patient.sessions}/${profile.totalSessions} buổi đã hoàn tất',
             Icons.spa_outlined,
           ),
           ...[
@@ -424,7 +416,7 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
         ];
       if (index == 3)
         return [
-          heading(name, '${profile['id']} · Hồ sơ minh họa'),
+          heading(name, '${profile.id} · Hồ sơ minh họa'),
           ...accountPicker(),
           ...[
             'Đơn thuốc & tư vấn',
@@ -448,7 +440,7 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
         ...patientNext(),
         hero(
           'Chăm sóc nhẹ nhàng.\nĐồng hành mỗi ngày.',
-          'Liệu trình phục hồi · Buổi ${patient.sessions}/${profile['total']}',
+          'Liệu trình phục hồi · Buổi ${patient.sessions}/${profile.totalSessions}',
           Icons.spa_outlined,
         ),
         const SizedBox(height: 16),
@@ -633,7 +625,7 @@ class _FinanceSummaryTile extends ConsumerWidget {
       financeProvider.select(
         (f) => f.data == null
             ? 'Doanh số · thực thu · tiền thủ thuật'
-            : 'Tháng ${f.month} · ${money(f.data!["summary"]["revenue"])}',
+            : 'Tháng ${f.month} · ${money(f.data!.summary.revenue)}',
       ),
     );
     return tile(

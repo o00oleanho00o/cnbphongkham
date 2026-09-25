@@ -14,7 +14,7 @@ class TreatmentPlanScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(selectedProfileProvider);
-    final totalSessions = profile['total'] as int;
+    final totalSessions = profile.totalSessions;
     final patient = ref.watch(currentPatientProvider);
     void open(String route) => context.openRoute(route);
     return DetailScaffold(

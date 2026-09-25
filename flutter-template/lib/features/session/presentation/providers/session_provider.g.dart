@@ -41,7 +41,7 @@ final class SessionNotifierProvider
   }
 }
 
-String _$sessionNotifierHash() => r'2eb992e734e1150395d7156e6f102f99df284e62';
+String _$sessionNotifierHash() => r'5cda87c001c77441a7a1fe7d519464b5882ead5c';
 
 abstract class _$SessionNotifier extends $Notifier<Session> {
   Session build();
@@ -65,13 +65,8 @@ abstract class _$SessionNotifier extends $Notifier<Session> {
 final selectedProfileProvider = SelectedProfileProvider._();
 
 final class SelectedProfileProvider
-    extends
-        $FunctionalProvider<
-          Map<String, dynamic>,
-          Map<String, dynamic>,
-          Map<String, dynamic>
-        >
-    with $Provider<Map<String, dynamic>> {
+    extends $FunctionalProvider<PatientProfile, PatientProfile, PatientProfile>
+    with $Provider<PatientProfile> {
   SelectedProfileProvider._()
     : super(
         from: null,
@@ -88,25 +83,24 @@ final class SelectedProfileProvider
 
   @$internal
   @override
-  $ProviderElement<Map<String, dynamic>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  $ProviderElement<PatientProfile> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
-  Map<String, dynamic> create(Ref ref) {
+  PatientProfile create(Ref ref) {
     return selectedProfile(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(Map<String, dynamic> value) {
+  Override overrideWithValue(PatientProfile value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<Map<String, dynamic>>(value),
+      providerOverride: $SyncValueProvider<PatientProfile>(value),
     );
   }
 }
 
-String _$selectedProfileHash() => r'b2c8eda1ce5894b30007e1bc0eebc40c448a654b';
+String _$selectedProfileHash() => r'dae3bc0a82020b462399880d6304093b8e3d15e9';
 
 @ProviderFor(selectedPatientId)
 final selectedPatientIdProvider = SelectedPatientIdProvider._();
@@ -147,4 +141,4 @@ final class SelectedPatientIdProvider
   }
 }
 
-String _$selectedPatientIdHash() => r'82138e13ce931858580588317356eb2ebdf8a085';
+String _$selectedPatientIdHash() => r'bef9d8e49cb8140e44dbaf6d322ea61fe89d38e3';

@@ -1,27 +1,27 @@
-class CartLine {
-  const CartLine({
-    required this.product,
-    required this.route,
-    this.quantity = 1,
-    this.usage = '',
-  });
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  CartLine.of(Map<String, dynamic> product)
-    : this(product: product, route: product['outputType'] as String);
+import '../../../catalog/domain/models/product.dart';
 
-  final Map<String, dynamic> product;
-  final int quantity;
-  final String usage, route;
+part 'cart_line.freezed.dart';
 
-  String get code => product['code'] as String;
-  String get name => product['name'] as String;
-  String get unit => product['unit'] as String;
-  int get total => ((product['price'] as num) * quantity).round();
+@freezed
+abstract class CartLine with _$CartLine {
+  const CartLine._();
 
-  CartLine copyWith({int? quantity, String? usage, String? route}) => CartLine(
-    product: product,
-    quantity: quantity ?? this.quantity,
-    usage: usage ?? this.usage,
-    route: route ?? this.route,
-  );
+  const factory CartLine({
+    required Product product,
+
+    /// Output route chosen by the doctor; starts as the catalog's `outputType`.
+    required String route,
+    @Default(1) int quantity,
+    @Default('') String usage,
+  }) = _CartLine;
+
+  factory CartLine.of(Product product) =>
+      CartLine(product: product, route: product.outputType);
+
+  String get code => product.code;
+  String get name => product.name;
+  String get unit => product.unit;
+  int get total => product.price * quantity;
 }

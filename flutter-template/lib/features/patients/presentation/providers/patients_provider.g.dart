@@ -41,7 +41,7 @@ final class PatientsNotifierProvider
   }
 }
 
-String _$patientsNotifierHash() => r'9f82c01a5e6a629cea6cc234e754b10f038fa160';
+String _$patientsNotifierHash() => r'eaa595c654c0058d0ca9342750507677cca82bee';
 
 abstract class _$PatientsNotifier extends $Notifier<Map<String, PatientState>> {
   Map<String, PatientState> build();

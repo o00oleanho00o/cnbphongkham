@@ -113,7 +113,8 @@ void main() {
       expect(c.read(financeProvider).data, isNull);
       await finance.refresh();
       expect(c.read(financeProvider).unread, 0);
-      expect(c.read(financeProvider).data!['invoices'], isEmpty);
+      expect(c.read(financeProvider).data!.invoices, isEmpty);
+      expect(c.read(financeProvider).data!.summary.collected, isNull);
     },
   );
   test('identical poll response does not notify finance watchers', () async {
@@ -134,7 +135,14 @@ void main() {
         MockClient((r) async => json({'error': 'Số thu vượt công nợ'}, 400)),
       );
       final finance = c.read(financeProvider.notifier);
-      expect(await finance.command('payment', {'amount': 9999999}), false);
+      expect(
+        await finance.recordPayment(
+          key: 'k',
+          invoice: 'FIN-1',
+          amount: 9999999,
+        ),
+        false,
+      );
       expect(c.read(financeProvider).error, contains('vượt công nợ'));
       expect(c.read(financeProvider).data, isNull);
       expect(c.read(financeProvider).sending, false);

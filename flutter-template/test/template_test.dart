@@ -16,10 +16,7 @@ void main() {
     final c = clinicContainer(await loadCatalog());
     final catalog = c.read(catalogProvider);
     expect(catalog.products.length, 115);
-    expect(
-      catalog.products.where((p) => p['outputType'] == 'UNRESOLVED').length,
-      7,
-    );
+    expect(catalog.products.where((p) => p.needsClassification).length, 7);
     final id = c.read(selectedPatientIdProvider);
     final patients = c.read(patientsProvider.notifier);
     final orders = c.read(ordersProvider.notifier);
@@ -39,7 +36,12 @@ void main() {
     orders.save(id, approve: true);
     expect(c.read(currentOrdersProvider).length, 1);
     expect(c.read(currentOrdersProvider).single.approved, true);
+    expect(
+      c.read(currentBillProvider).total,
+      c.read(currentOrdersProvider).single.total,
+    );
     c.read(receiptsProvider.notifier).settle(id, 100);
+    expect(c.read(currentBillProvider).paid, 100);
     c.read(sessionProvider.notifier).select(1);
     expect(c.read(currentOrdersProvider), isEmpty);
     expect(c.read(currentPaidProvider), 0);
@@ -126,7 +128,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text(catalog.products.first['name']));
+    await tester.tap(find.text(catalog.products.first.name));
     await tester.pumpAndSettle();
     expect(c.read(currentPatientProvider).cart.length, 1);
     await tester.tap(find.textContaining('Xem đơn ·'));

@@ -1,80 +1,42 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+import '../../../catalog/domain/models/patient_profile.dart';
 import 'cart_line.dart';
 
-const _keep = Object();
+part 'patient_state.freezed.dart';
 
 /// Session-only clinical, schedule, care and cart state for one patient.
-class PatientState {
-  const PatientState({
-    required this.sessions,
-    required this.appointment,
-    required this.day,
-    this.checkedIn = false,
-    this.confirmed = false,
-    this.acknowledged = false,
-    this.note = '',
-    this.response = '',
-    this.careNote = '',
-    this.careStatus = 'Chưa liên hệ',
-    this.editingOrder,
-    this.cart = const [],
-    this.updates = const [],
-    this.escalations = const [],
-  });
+@freezed
+abstract class PatientState with _$PatientState {
+  const PatientState._();
 
-  PatientState.fromProfile(Map<String, dynamic> profile)
-    : this(
-        sessions: profile['sessions'] as int,
-        appointment: profile['appointment'] as String,
-        day: profile['day'] as String,
-      );
+  const factory PatientState({
+    required int sessions,
+    required String appointment,
+    required String day,
+    @Default(false) bool checkedIn,
+    @Default(false) bool confirmed,
+    @Default(false) bool acknowledged,
+    @Default('') String note,
+    @Default('') String response,
+    @Default('') String careNote,
+    @Default('Chưa liên hệ') String careStatus,
+    String? editingOrder,
+    @Default([]) List<CartLine> cart,
+    @Default([]) List<String> updates,
 
-  final int sessions;
-  final String appointment, day;
-  final bool checkedIn, confirmed, acknowledged;
-  final String note, response, careNote, careStatus;
-  final String? editingOrder;
-  final List<CartLine> cart;
-  final List<String> updates;
+    /// Internal CSKH hand-offs; never shown in Care.
+    @Default([]) List<String> escalations,
+  }) = _PatientState;
 
-  /// Internal CSKH hand-offs; never shown in Care.
-  final List<String> escalations;
+  factory PatientState.fromProfile(PatientProfile profile) => PatientState(
+    sessions: profile.sessions,
+    appointment: profile.appointment,
+    day: profile.day,
+  );
 
   int get cartTotal => cart.fold(0, (sum, line) => sum + line.total);
   bool get cartReady =>
       cart.isNotEmpty &&
       cart.every((l) => l.route != 'UNRESOLVED' && l.usage.trim().isNotEmpty);
-
-  PatientState copyWith({
-    int? sessions,
-    String? appointment,
-    String? day,
-    bool? checkedIn,
-    bool? confirmed,
-    bool? acknowledged,
-    String? note,
-    String? response,
-    String? careNote,
-    String? careStatus,
-    Object? editingOrder = _keep,
-    List<CartLine>? cart,
-    List<String>? updates,
-    List<String>? escalations,
-  }) => PatientState(
-    sessions: sessions ?? this.sessions,
-    appointment: appointment ?? this.appointment,
-    day: day ?? this.day,
-    checkedIn: checkedIn ?? this.checkedIn,
-    confirmed: confirmed ?? this.confirmed,
-    acknowledged: acknowledged ?? this.acknowledged,
-    note: note ?? this.note,
-    response: response ?? this.response,
-    careNote: careNote ?? this.careNote,
-    careStatus: careStatus ?? this.careStatus,
-    editingOrder: identical(editingOrder, _keep)
-        ? this.editingOrder
-        : editingOrder as String?,
-    cart: cart ?? this.cart,
-    updates: updates ?? this.updates,
-    escalations: escalations ?? this.escalations,
-  );
 }

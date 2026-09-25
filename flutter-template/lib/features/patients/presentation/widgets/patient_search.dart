@@ -30,10 +30,10 @@ class _PatientSearchState extends ConsumerState<PatientSearch> {
         const SizedBox(height: 16),
         for (int i = 0; i < profiles.length; i++)
           if (session.owns(profiles[i]) &&
-              ((profiles[i]['name'] as String).toLowerCase().contains(query) ||
+              (profiles[i].matches(query) ||
                   'p${(i + 1).toString().padLeft(3, '0')}'.contains(query)))
             tile(
-              profiles[i]['name'] as String,
+              profiles[i].name,
               'P${(i + 1).toString().padLeft(3, '0')} · Đang điều trị',
               Icons.person_outline,
               () {

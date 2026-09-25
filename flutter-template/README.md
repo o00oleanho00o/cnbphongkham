@@ -46,10 +46,11 @@ lib/
     ├── finance/              # tài chính dùng API chung (PB02)
     └── workspace/            # màn chính theo vai trò, hướng dẫn
         ├── data/
-        │   ├── datasources/  # nói chuyện với nguồn dữ liệu: HTTP, asset, local storage
+        │   ├── datasources/  # nói chuyện với nguồn dữ liệu: HTTP, asset, local storage (JSON thô)
+        │   ├── mappers/      # JSON ⇄ domain model; key JSON chỉ xuất hiện ở đây
         │   └── repositories/ # *_repository_impl.dart: cài đặt interface của domain
         ├── domain/
-        │   ├── models/       # model immutable + copyWith
+        │   ├── models/       # model immutable viết bằng freezed (==, copyWith) + *.freezed.dart
         │   └── repositories/ # interface trừu tượng (abstract class)
         └── presentation/
             ├── providers/    # Riverpod @riverpod / @Riverpod(keepAlive: true) + *.g.dart
@@ -60,7 +61,20 @@ lib/
 Quy ước:
 
 - Luồng phụ thuộc: `screen → provider/notifier → repository (interface) → repository impl → datasource`. `domain/` không import Flutter UI hoặc `data/`. Tầng `data/` chỉ có ở feature thực sự có I/O (catalog, finance); feature chỉ có state trong phiên thì chỉ cần `domain/models` và `presentation/`.
-- Provider viết bằng `riverpod_generator`. State cần sống suốt phiên dùng `@Riverpod(keepAlive: true)`; provider suy diễn (derived) dùng `@riverpod`. Sau khi sửa phải chạy `dart run build_runner build --delete-conflicting-outputs` và commit `*.g.dart`.
+- Provider viết bằng `riverpod_generator`. State cần sống suốt phiên dùng `@Riverpod(keepAlive: true)`; provider suy diễn (derived) dùng `@riverpod`. Sau khi sửa provider hoặc model phải chạy `dart run build_runner build` và commit cả `*.g.dart` lẫn `*.freezed.dart`.
+- Áp dụng skill `flutter-apply-architecture-best-practices` (MVVM) theo cách feature-first:
+
+  | Skill | Trong repo này |
+  |---|---|
+  | View | `presentation/screens`, `presentation/widgets`: chỉ hiển thị và gọi lệnh, không lọc/tính toán nghiệp vụ |
+  | ViewModel | Riverpod `Notifier` hoặc provider dẫn xuất trong `presentation/providers` (ví dụ `FinanceNotifier`, `CareCases`, `ReviewQueue`, `currentBill`) |
+  | Repository | `domain/repositories` (interface) + `data/repositories` (impl) + `data/mappers` |
+  | Service | `data/datasources`: HTTP/asset, trả về JSON thô |
+  | Domain model | `domain/models`: freezed, có getter nghiệp vụ (`Product.needsClassification`, `FinanceSnapshot.receivable`, `PatientProfile.initials`...) |
+
+  Không tạo tầng UseCase vì logic hiện đủ gọn trong ViewModel; skill coi tầng này là tùy chọn.
+- **Không để `Map<String, dynamic>` tới presentation**. Datasource trả JSON, mapper đổi sang model, và screen chỉ dùng field có kiểu (`profile.totalSessions`, `data.summary.revenue`). Tên key web như `total`, `group`, `case`, `list` chỉ nằm trong mapper.
+- **Lệnh có kiểu**: ViewModel mở method riêng cho từng lệnh (`approveEntry(id)`, `recordPayment(key:, invoice:, amount:)`, `updateRate(...)`...), không dùng `command('action', map)`. Tên action và body API chỉ nằm trong repository impl.
 - Feature chỉ import `core/`, hoặc `domain`/`providers` của feature khác. Nối route với màn làm trong `core/router/app_router.dart`. Có hai ngoại lệ đã biết. `workspace` là shell ghép màn chính nên dùng widget của feature khác. Patient 360 mở trực tiếp `ProcedureForm` của finance, vì form cần tham số.
 - Điều hướng: `context.openRoute(AppRoutes.x)` và `context.openFinance(tab)`. Guard `session.allows(route)` nằm trong `AppRouter.page`, screen không tự kiểm tra lại.
 - Thêm tác vụ mới:
@@ -69,6 +83,15 @@ Quy ước:
   3. Thêm một nhánh vào `AppRouter._screen`.
   4. Nếu role nào được mở route này, cập nhật `Session.allows`.
   5. Thêm test trong `test/`.
+- Thêm feature có dữ liệu:
+  1. Model freezed trong `domain/models`, kèm getter nghiệp vụ.
+  2. Interface trong `domain/repositories`, nhận và trả model (không nhận Map).
+  3. Datasource trong `data/datasources`, trả JSON thô.
+  4. Mapper trong `data/mappers`, đổi JSON ⇄ model.
+  5. Repository impl trong `data/repositories`, cộng provider `@Riverpod(keepAlive: true)`.
+  6. ViewModel (`Notifier`) trong `presentation/providers`, mỗi lệnh một method có kiểu.
+  7. Screen/widget chỉ `watch` ViewModel và gọi method.
+  8. Test mapper và repository (xem `test/architecture_test.dart`, dùng `MockClient`), cộng test ViewModel bằng `ProviderContainer.test`.
 
 ### Quy tắc performance (Riverpod)
 
@@ -77,8 +100,8 @@ Quy ước:
   - Ví dụ: `_RouteGuard` chỉ nghe `session.allows(route)`; Patient 360 chỉ nghe điều kiện ghi nhận thủ thuật.
 - **Rebuild nhỏ nhất có thể**: phần UI đổi thường xuyên tách thành `ConsumerWidget` riêng. Ví dụ: badge thông báo `_UnreadBadge` và tile doanh số `_FinanceSummaryTile` trong `workspace_screen.dart`, để polling tài chính không rebuild cả màn chính.
 - **Không phát state trùng**:
-  - `FinanceNotifier.refresh` bỏ qua response giống hệt lần trước (`DeepCollectionEquality`), nên poll 4 giây một lần không gây rebuild.
-  - Provider dẫn xuất trả về List thì viết dạng class và override `updateShouldNotify` (xem `PatientOrders`).
+  - Model freezed so sánh theo giá trị, và Riverpod 3 chỉ phát khi `previous != next`. Vì vậy poll tài chính 4 giây một lần, nếu response giống hệt, sẽ không gây rebuild.
+  - Provider dẫn xuất trả về List thì viết dạng class và override `updateShouldNotify` bằng `listEquals` (xem `PatientOrders`, `CareCases`, `ReviewQueue`).
 - **`const`**: `analysis_options.yaml` bật nhóm lint `prefer_const_*`. `dart analyze` phải sạch.
 - **autoDispose mặc định**: provider dẫn xuất dùng `@riverpod`. Chỉ state phiên, HTTP client và finance polling mới dùng `keepAlive: true`.
 - **Tham số family ổn định**: tham số là `String`/`int` (ví dụ `patientStateProvider(id)`, `patientOrdersProvider(id)`). Không truyền List/Map tạo mới trong `build`.
@@ -177,7 +200,7 @@ Thiết kế chi tiết và mapping: [NATIVE-TEMPLATE.md](../docs/NATIVE-TEMPLAT
 - [Ma trận web/native](../docs/22_NATIVE_PARITY_AND_VALIDATION.md): hành vi thực tế, state theo patient và selection riêng, giới hạn thu ngân/A5/media, kiểm thử đã chạy và checklist còn mở.
 - [Bản đồ tài liệu](../docs/README.md): Scope → Spec → Module Map → Architecture; [quy tắc đóng góp](../AGENT.md).
 
-Build dành cho URL review dùng `./build-preview.ps1` (Flutter phải ở PATH), thay cho việc chỉ build mà chưa copy output. `prototype/native-preview/` không được commit. Validation hiện có gồm 20 test; cả bốn widget viewport đều height 844, chưa thay thế kiểm tra device hoặc toàn bộ flow Care.
+Build dành cho URL review dùng `./build-preview.ps1` (Flutter phải ở PATH), thay cho việc chỉ build mà chưa copy output. `prototype/native-preview/` không được commit. Validation hiện có gồm 32 test; cả bốn widget viewport đều height 844, chưa thay thế kiểm tra device hoặc toàn bộ flow Care.
 
 
 Header nay chọn Chủ / Bác sĩ / CSKH / Kế toán / Care, mỗi vai trò có màn bắt đầu riêng. Care → Hồ sơ chọn nhóm tài khoản. CRM native là template độc lập web, chưa rule engine động. [Hướng dẫn mới](../docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).

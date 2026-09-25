@@ -1,16 +1,14 @@
 import 'dart:async';
 
-import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/repositories/finance_repository_impl.dart';
 import '../../domain/models/finance_state.dart';
+import '../../domain/models/procedure_entry.dart';
 import '../../domain/repositories/finance_repository.dart';
 
 part 'finance_provider.g.dart';
-
-const _json = DeepCollectionEquality();
 
 /// Off by default so layout tests never reach the finance API.
 @Riverpod(keepAlive: true)
@@ -53,15 +51,9 @@ class FinanceNotifier extends _$FinanceNotifier {
     final token = ++_generation;
     _loading = true;
     try {
-      final value = await _repository.getState(
-        month: state.month,
-        role: state.role,
-        doctor: state.doctor,
-      );
+      final value = await _repository.getState(state.month, state.actor);
       if (token != _generation) return;
-      // Polling usually returns the same projection; skip the emit so
-      // watchers don't rebuild every 4 seconds.
-      if (state.error.isEmpty && _json.equals(state.data, value)) return;
+      // An unchanged poll yields an equal state, which Riverpod does not emit.
       state = state.copyWith(data: value, error: '');
     } catch (_) {
       if (token == _generation) {
@@ -87,16 +79,59 @@ class FinanceNotifier extends _$FinanceNotifier {
     return refresh();
   }
 
-  Future<bool> command(String action, Map<String, dynamic> value) async {
+  Future<bool> approveEntry(String id) =>
+      _command((a) => _repository.approveEntry(id, a));
+
+  Future<bool> voidEntry(String id, String reason) =>
+      _command((a) => _repository.voidEntry(id, reason, a));
+
+  Future<bool> recordEntry(ProcedureEntry entry) =>
+      _command((a) => _repository.recordEntry(entry, a));
+
+  Future<bool> recordPayment({
+    required String key,
+    required String invoice,
+    required int amount,
+    String method = 'Tiền mặt',
+  }) => _command(
+    (a) => _repository.recordPayment(
+      key: key,
+      invoice: invoice,
+      amount: amount,
+      method: method,
+      actor: a,
+    ),
+  );
+
+  Future<bool> closePeriod() =>
+      _command((a) => _repository.closePeriod(state.month, a));
+
+  Future<bool> markPeriodPaid(String reference) =>
+      _command((a) => _repository.markPeriodPaid(state.month, reference, a));
+
+  Future<bool> updateRate({
+    required String service,
+    required int rate,
+    required String basis,
+  }) => _command(
+    (a) => _repository.updateRate(
+      service: service,
+      rate: rate,
+      basis: basis,
+      actor: a,
+    ),
+  );
+
+  Future<bool> markNotificationRead(String id) =>
+      _command((a) => _repository.markNotificationRead(id, a));
+
+  /// Runs one command at a time; on success reloads, on failure keeps the
+  /// server's message in `state.error`.
+  Future<bool> _command(Future<void> Function(FinanceActor actor) send) async {
     if (state.sending) return false;
     state = state.copyWith(sending: true);
     try {
-      await _repository.sendCommand(
-        action,
-        value,
-        role: state.role,
-        doctor: state.doctor,
-      );
+      await send(state.actor);
       state = state.copyWith(error: '');
       await refresh();
       return true;

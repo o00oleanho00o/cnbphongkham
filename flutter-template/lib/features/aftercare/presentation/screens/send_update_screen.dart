@@ -29,7 +29,7 @@ class _SendUpdateScreenState extends ConsumerState<SendUpdateScreen> {
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(selectedProfileProvider);
-    final id = profile['id'] as String;
+    final id = profile.id;
     void patch(PatientState Function(PatientState) change) =>
         ref.read(patientsProvider.notifier).update(id, change);
     void toast(String message) => context.toast(message);

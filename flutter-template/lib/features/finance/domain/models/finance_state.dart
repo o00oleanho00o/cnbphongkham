@@ -1,4 +1,9 @@
-const _keep = Object();
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+import '../repositories/finance_repository.dart';
+import 'finance_snapshot.dart';
+
+part 'finance_state.freezed.dart';
 
 /// Current month in Vietnam time (UTC+7), e.g. `2026-09`.
 String financeMonth() => DateTime.now()
@@ -7,39 +12,23 @@ String financeMonth() => DateTime.now()
     .toIso8601String()
     .substring(0, 7);
 
-class FinanceState {
-  const FinanceState({
-    required this.month,
-    this.role = 'owner',
-    this.doctor = 'D0',
-    this.error = '',
-    this.data,
-    this.sending = false,
-  });
+/// Value equality lets Riverpod skip polls that return the same projection.
+@freezed
+abstract class FinanceState with _$FinanceState {
+  const FinanceState._();
 
-  final String role, doctor, month, error;
+  const factory FinanceState({
+    required String month,
+    @Default('owner') String role,
+    @Default('D0') String doctor,
+    @Default('') String error,
 
-  /// Role-scoped projection returned by the finance API.
-  final Map<String, dynamic>? data;
-  final bool sending;
+    /// Null until the first load and right after a role switch.
+    FinanceSnapshot? data,
+    @Default(false) bool sending,
+  }) = _FinanceState;
 
-  int get unread => (data?['notifications'] as List? ?? [])
-      .where((n) => n['read'] == false)
-      .length;
-
-  FinanceState copyWith({
-    String? role,
-    String? doctor,
-    String? month,
-    String? error,
-    Object? data = _keep,
-    bool? sending,
-  }) => FinanceState(
-    role: role ?? this.role,
-    doctor: doctor ?? this.doctor,
-    month: month ?? this.month,
-    error: error ?? this.error,
-    data: identical(data, _keep) ? this.data : data as Map<String, dynamic>?,
-    sending: sending ?? this.sending,
-  );
+  FinanceActor get actor => (role: role, doctor: doctor);
+  bool get private => role == 'doctor';
+  int get unread => data?.unread ?? 0;
 }

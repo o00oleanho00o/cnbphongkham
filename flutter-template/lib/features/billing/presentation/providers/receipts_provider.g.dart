@@ -105,3 +105,43 @@ final class CurrentPaidProvider extends $FunctionalProvider<int, int, int>
 }
 
 String _$currentPaidHash() => r'3e9f5bb81fbfbf2fcceb3b4cf238c3ef4e408869';
+
+@ProviderFor(currentBill)
+final currentBillProvider = CurrentBillProvider._();
+
+final class CurrentBillProvider extends $FunctionalProvider<Bill, Bill, Bill>
+    with $Provider<Bill> {
+  CurrentBillProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentBillProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentBillHash();
+
+  @$internal
+  @override
+  $ProviderElement<Bill> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  Bill create(Ref ref) {
+    return currentBill(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Bill value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Bill>(value),
+    );
+  }
+}
+
+String _$currentBillHash() => r'c0c7c8ea4fd60bad8fabfd0efe317b3917a0b13a';

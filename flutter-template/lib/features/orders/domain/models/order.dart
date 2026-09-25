@@ -1,17 +1,20 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../../../patients/domain/models/cart_line.dart';
 
-class Order {
-  const Order({
-    required this.id,
-    required this.patientId,
-    required this.patientName,
-    required this.approved,
-    required this.items,
-  });
+part 'order.freezed.dart';
 
-  final String id, patientId, patientName;
-  final bool approved;
-  final List<CartLine> items;
+@freezed
+abstract class Order with _$Order {
+  const Order._();
+
+  const factory Order({
+    required String id,
+    required String patientId,
+    required String patientName,
+    required bool approved,
+    required List<CartLine> items,
+  }) = _Order;
 
   int get total => items.fold(0, (sum, line) => sum + line.total);
 }

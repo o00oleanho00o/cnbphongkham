@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/money_format.dart';
 import '../../../../core/widgets/pema_bottom_nav.dart';
+import '../../domain/models/finance_snapshot.dart';
 import '../../domain/models/finance_state.dart';
 import '../providers/finance_provider.dart';
 import 'procedure_form_screen.dart';
@@ -78,8 +79,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       ],
     ),
   );
-  Future<void> run(String action, Map<String, dynamic> d) async {
-    final ok = await finance.command(action, d);
+  Future<void> run(Future<bool> Function() command) async {
+    final ok = await command();
     if (mounted && ok)
       ScaffoldMessenger.of(
         context,
@@ -198,7 +199,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                   ),
                   if (data != null)
                     Text(
-                      _statusLabels[data['period']['status']]!,
+                      _statusLabels[data.periodStatus]!,
                       style: const TextStyle(fontSize: 12),
                     ),
                 ],
@@ -248,7 +249,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         ],
       ),
       floatingActionButton:
-          tab == 1 && c.role != 'doctor' && data?['period']['status'] == 'open'
+          tab == 1 && !c.private && (data?.periodOpen ?? false)
           ? FloatingActionButton.extended(
               onPressed: () => Navigator.push(
                 context,
@@ -263,10 +264,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  List<Widget> content(Map<String, dynamic> d) {
-    final summary = d['summary'] as Map;
-    final rows = d['rows'] as List;
-    final private = c.role == 'doctor';
+  List<Widget> content(FinanceSnapshot d) {
+    final summary = d.summary;
+    final rows = d.rows;
+    final private = c.private;
     if (tab == 0)
       return [
         Container(
@@ -287,7 +288,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                money(summary['revenue']),
+                money(summary.revenue),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 28,
@@ -305,11 +306,11 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         card([
           title('Dòng tiền & đối soát'),
           if (!private) ...[
-            line('Thực thu trong tháng', money(summary['collected'])),
-            line('Công nợ hiện tại', money(summary['debt'])),
+            line('Thực thu trong tháng', money(summary.collected ?? 0)),
+            line('Công nợ hiện tại', money(summary.debt ?? 0)),
           ],
-          line('Tiền thủ thuật đã duyệt', money(summary['fee'])),
-          line('Tiền chờ duyệt', money(summary['pending'])),
+          line('Tiền thủ thuật đã duyệt', money(summary.fee)),
+          line('Tiền chờ duyệt', money(summary.pending)),
           const Text(
             'Tiền thủ thuật không phải lợi nhuận. Công nợ là toàn bộ số còn phải thu.',
             style: TextStyle(fontSize: 12, color: Color(0xFF5D7184)),
@@ -318,19 +319,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         if (!private)
           card([
             title('Đội ngũ'),
-            for (final doctor in d['doctors'])
-              line(
-                doctor['name'],
-                money(
-                  rows
-                      .where(
-                        (r) =>
-                            r['doctor'] == doctor['id'] &&
-                            r['status'] != 'void',
-                      )
-                      .fold<num>(0, (a, r) => a + r['revenue']),
-                ),
-              ),
+            for (final doctor in d.doctors)
+              line(doctor.name, money(d.revenueOf(doctor.id))),
           ]),
         if (!private)
           OutlinedButton.icon(
@@ -353,24 +343,20 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         if (rows.isEmpty) card([const Text('Chưa có lượt trong kỳ này.')]),
         for (final r in rows)
           card([
-            title(r['service']),
-            Text(
-              '${r['date']} · ${r['patient']} · ${d['doctors'].firstWhere((x) => x['id'] == r['doctor'])['name']}',
-            ),
-            line('Doanh số phân bổ', money(r['revenue'])),
-            line('${money(r['base'])} × ${r['rate'] / 100}%', money(r['fee'])),
-            Text(_statusLabels[r['status']]!),
-            if (!private &&
-                d['period']['status'] == 'open' &&
-                r['status'] != 'void')
+            title(r.service),
+            Text('${r.date} · ${r.patient} · ${d.doctorName(r.doctor)}'),
+            line('Doanh số phân bổ', money(r.revenue)),
+            line('${money(r.base)} × ${r.ratePercent}%', money(r.fee)),
+            Text(_statusLabels[r.status]!),
+            if (!private && d.periodOpen && !r.isVoid)
               Wrap(
                 spacing: 8,
                 children: [
-                  if (r['status'] == 'pending')
+                  if (r.isPending)
                     TextButton(
                       onPressed: c.sending
                           ? null
-                          : () => run('approve', {'id': r['id']}),
+                          : () => run(() => finance.approveEntry(r.id)),
                       child: const Text('Duyệt'),
                     ),
                   TextButton(
@@ -379,35 +365,31 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                         : () async {
                             final reason = await ask('Lý do hủy');
                             if (reason != null)
-                              await run('void', {
-                                'id': r['id'],
-                                'reason': reason,
-                              });
+                              await run(() => finance.voidEntry(r.id, reason));
                           },
                     child: const Text('Hủy lượt'),
                   ),
                 ],
               ),
           ]),
-        if (!private && d['period']['status'] == 'open')
+        if (!private && d.periodOpen)
           OutlinedButton(
             onPressed: c.sending
                 ? null
                 : () async {
                     final result = await ask('Gõ CHOT để khóa kỳ ${c.month}');
-                    if (result == 'CHOT')
-                      await run('close', {'month': c.month});
+                    if (result == 'CHOT') await run(finance.closePeriod);
                   },
             child: const Text('Chốt tháng đã kết thúc'),
           ),
-        if (!private && d['period']['status'] == 'closed')
+        if (!private && d.periodClosed)
           OutlinedButton(
             onPressed: c.sending
                 ? null
                 : () async {
-                    final ref = await ask('Mã chứng từ chi');
-                    if (ref != null)
-                      await run('paid', {'month': c.month, 'reference': ref});
+                    final reference = await ask('Mã chứng từ chi');
+                    if (reference != null)
+                      await run(() => finance.markPeriodPaid(reference));
                   },
             child: const Text('Xác nhận đã chi'),
           ),
@@ -420,9 +402,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             const Text('Bác sĩ chỉ xem doanh số và tiền thủ thuật của mình.'),
           ]),
         ];
-      final invoices = (d['invoices'] as List).where(
-        (i) => i['received'] < i['amount'] && i['source'] == 'finance',
-      );
+      final invoices = d.receivable;
       return [
         title('Khoản còn phải thu'),
         const Text(
@@ -432,9 +412,9 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         const SizedBox(height: 12),
         for (final i in invoices)
           card([
-            title(i['patient']),
-            Text(i['id'], maxLines: 1, overflow: TextOverflow.ellipsis),
-            line('Còn lại', money(i['amount'] - i['received'])),
+            title(i.patient),
+            Text(i.id, maxLines: 1, overflow: TextOverflow.ellipsis),
+            line('Còn lại', money(i.due)),
             FilledButton(
               onPressed: c.sending
                   ? null
@@ -442,12 +422,11 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                       final text = await ask('Số tiền mặt thu (VND)');
                       final amount = int.tryParse(text ?? '');
                       if (amount == null) return;
-                      final ok = await finance.command('payment', {
-                        'id': 'APP-$paymentKey',
-                        'invoice': i['id'],
-                        'amount': amount,
-                        'method': 'Tiền mặt',
-                      });
+                      final ok = await finance.recordPayment(
+                        key: 'APP-$paymentKey',
+                        invoice: i.id,
+                        amount: amount,
+                      );
                       if (ok) {
                         paymentKey = DateTime.now().microsecondsSinceEpoch
                             .toString();
@@ -472,13 +451,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       if (c.role != 'owner')
         card([const Text('Inbox này dành cho chủ phòng khám.')])
       else ...[
-        if ((d['notifications'] as List).isEmpty)
+        if (d.notifications.isEmpty)
           card([
             const Text(
               'Thanh toán thành công sẽ xuất hiện ở đây khi app đang mở.',
             ),
           ]),
-        for (final n in d['notifications'])
+        for (final n in d.notifications)
           card([
             Row(
               children: [
@@ -486,21 +465,18 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    n['title'],
+                    n.title,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 10),
-            Text(n['body']),
-            Text(
-              n['at'].substring(0, 16).replaceAll('T', ' '),
-              style: const TextStyle(fontSize: 11),
-            ),
-            if (n['read'] == false)
+            Text(n.body),
+            Text(n.shortTime, style: const TextStyle(fontSize: 11)),
+            if (!n.read)
               TextButton(
-                onPressed: () => run('read', {'id': n['id']}),
+                onPressed: () => run(() => finance.markNotificationRead(n.id)),
                 child: const Text('Đánh dấu đã đọc'),
               ),
           ]),

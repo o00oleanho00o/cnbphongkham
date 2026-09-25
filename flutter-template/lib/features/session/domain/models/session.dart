@@ -1,4 +1,9 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../../../../core/router/app_routes.dart';
+import '../../../catalog/domain/models/patient_profile.dart';
+
+part 'session.freezed.dart';
 
 const _careRoutes = {
   AppRoutes.myAppointments,
@@ -30,19 +35,18 @@ const _doctorBlockedRoutes = {
 };
 
 /// Demo workspace switch; not authentication or RBAC.
-class Session {
-  const Session({
-    this.careMode = false,
-    this.staffRole = 'owner',
-    this.staffDoctor = 'BS. Tâm',
-    this.staffName = 'BS. Tâm',
-    this.staffSelected = 0,
-    this.careSelected = 0,
-  });
+@freezed
+abstract class Session with _$Session {
+  const Session._();
 
-  final bool careMode;
-  final String staffRole, staffDoctor, staffName;
-  final int staffSelected, careSelected;
+  const factory Session({
+    @Default(false) bool careMode,
+    @Default('owner') String staffRole,
+    @Default('BS. Tâm') String staffDoctor,
+    @Default('BS. Tâm') String staffName,
+    @Default(0) int staffSelected,
+    @Default(0) int careSelected,
+  }) = _Session;
 
   int get selected => careMode ? careSelected : staffSelected;
   bool get billing =>
@@ -50,8 +54,8 @@ class Session {
   bool get clinical =>
       !careMode && (staffRole == 'owner' || staffRole == 'doctor');
 
-  bool owns(Map<String, dynamic> profile) =>
-      staffRole != 'doctor' || profile['doctor'] == staffDoctor;
+  bool owns(PatientProfile profile) =>
+      staffRole != 'doctor' || profile.doctor == staffDoctor;
 
   bool allows(String route) {
     if (careMode) return _careRoutes.contains(route);
@@ -62,20 +66,4 @@ class Session {
       _ => !_doctorBlockedRoutes.contains(route),
     };
   }
-
-  Session copyWith({
-    bool? careMode,
-    String? staffRole,
-    String? staffDoctor,
-    String? staffName,
-    int? staffSelected,
-    int? careSelected,
-  }) => Session(
-    careMode: careMode ?? this.careMode,
-    staffRole: staffRole ?? this.staffRole,
-    staffDoctor: staffDoctor ?? this.staffDoctor,
-    staffName: staffName ?? this.staffName,
-    staffSelected: staffSelected ?? this.staffSelected,
-    careSelected: careSelected ?? this.careSelected,
-  );
 }

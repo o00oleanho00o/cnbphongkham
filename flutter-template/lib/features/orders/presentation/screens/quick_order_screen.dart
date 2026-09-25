@@ -24,8 +24,8 @@ class _QuickOrderScreenState extends ConsumerState<QuickOrderScreen> {
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(selectedProfileProvider);
-    final name = profile['name'] as String;
-    final id = profile['id'] as String;
+    final name = profile.name;
+    final id = profile.id;
     final patient = ref.watch(currentPatientProvider);
     final catalog = ref.watch(catalogProvider);
     final patients = ref.read(patientsProvider.notifier);
@@ -50,20 +50,14 @@ class _QuickOrderScreenState extends ConsumerState<QuickOrderScreen> {
           patient.cart.isEmpty ? null : () => open(AppRoutes.orderReview),
         ),
         for (final p
-            in catalog.products
-                .where(
-                  (p) => '${p['code']} ${p['name']}'.toLowerCase().contains(
-                    filter,
-                  ),
-                )
-                .take(20))
+            in catalog.products.where((p) => p.matches(filter)).take(20))
           tile(
-            p['name'],
-            '${p['code']} · ${p['unit']} · ${money(p['price'])}\n${p['outputType'] == 'UNRESOLVED' ? 'Cần phân loại' : p['sourceType']}',
+            p.name,
+            '${p.code} · ${p.unit} · ${money(p.price)}\n${p.needsClassification ? 'Cần phân loại' : p.sourceType}',
             Icons.add,
             () {
               patients.addToCart(id, p);
-              toast('Đã thêm ${p['code']}');
+              toast('Đã thêm ${p.code}');
             },
           ),
       ],

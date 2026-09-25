@@ -15,7 +15,7 @@ class PrescriptionsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final care = ref.watch(sessionProvider.select((s) => s.careMode));
     final profile = ref.watch(selectedProfileProvider);
-    final id = profile['id'] as String;
+    final id = profile.id;
     final orders = ref.watch(currentOrdersProvider);
     void open(String route) => context.openRoute(route);
     return DetailScaffold(

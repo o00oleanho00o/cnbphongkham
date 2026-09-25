@@ -19,19 +19,18 @@ class CashierScreen extends ConsumerWidget {
     final s = ref.watch(sessionProvider);
     final care = s.careMode;
     final profile = ref.watch(selectedProfileProvider);
-    final name = profile['name'] as String;
-    final id = profile['id'] as String;
+    final name = profile.name;
+    final id = profile.id;
     final orders = ref.watch(currentOrdersProvider);
-    final paid = ref.watch(currentPaidProvider);
     void open(String route) => context.openRoute(route);
-    final amount = orders.fold<int>(0, (n, o) => n + o.total);
+    final bill = ref.watch(currentBillProvider);
     return DetailScaffold(
       title: route,
       children: [
         heading('Khoản cần thanh toán', name),
         hero(
-          money(amount - paid),
-          'Đã thu ${money(paid)}',
+          money(bill.due),
+          'Đã thu ${money(bill.paid)}',
           Icons.payments_outlined,
         ),
         ...orders.map(
@@ -40,7 +39,7 @@ class CashierScreen extends ConsumerWidget {
         if (!care && s.billing)
           primary(
             'Thu đủ phần còn lại',
-            amount > paid
+            !bill.settled
                 ? () => showModalBottomSheet(
                     context: context,
                     showDragHandle: true,
@@ -50,12 +49,12 @@ class CashierScreen extends ConsumerWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            heading('Xác nhận thu tiền', money(amount - paid)),
+                            heading('Xác nhận thu tiền', money(bill.due)),
                             notice('Giao dịch mẫu · Không kết nối ngân hàng'),
                             primary('Xác nhận tiền mặt', () {
                               ref
                                   .read(receiptsProvider.notifier)
-                                  .settle(id, amount);
+                                  .settle(id, bill.total);
                               Navigator.pop(ctx);
                             }),
                           ],

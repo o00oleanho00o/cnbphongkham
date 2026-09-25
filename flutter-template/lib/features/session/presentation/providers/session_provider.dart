@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../catalog/domain/models/patient_profile.dart';
 import '../../../catalog/presentation/providers/catalog_provider.dart';
 import '../../domain/models/session.dart';
 
@@ -27,9 +28,7 @@ class SessionNotifier extends _$SessionNotifier {
     final profiles = ref.read(catalogProvider).profiles;
     if (!next.owns(profiles[next.staffSelected])) {
       next = next.copyWith(
-        staffSelected: profiles.indexWhere(
-          (p) => p['doctor'] == next.staffDoctor,
-        ),
+        staffSelected: profiles.indexWhere((p) => p.doctor == next.staffDoctor),
       );
     }
     state = next;
@@ -37,11 +36,11 @@ class SessionNotifier extends _$SessionNotifier {
 }
 
 @riverpod
-Map<String, dynamic> selectedProfile(Ref ref) {
+PatientProfile selectedProfile(Ref ref) {
   final index = ref.watch(sessionProvider.select((s) => s.selected));
   return ref.watch(catalogProvider).profiles[index];
 }
 
 @riverpod
 String selectedPatientId(Ref ref) =>
-    ref.watch(selectedProfileProvider)['id'] as String;
+    ref.watch(selectedProfileProvider.select((p) => p.id));

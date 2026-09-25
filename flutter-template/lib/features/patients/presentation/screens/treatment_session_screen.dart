@@ -31,8 +31,8 @@ class _TreatmentSessionScreenState
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(selectedProfileProvider);
-    final id = profile['id'] as String;
-    final totalSessions = profile['total'] as int;
+    final id = profile.id;
+    final totalSessions = profile.totalSessions;
     final patient = ref.watch(currentPatientProvider);
     void patch(PatientState Function(PatientState) change) =>
         ref.read(patientsProvider.notifier).update(id, change);
@@ -41,7 +41,7 @@ class _TreatmentSessionScreenState
       title: AppRoutes.treatmentSession,
       children: [
         notice(
-          'Buổi ${patient.sessions + 1}/${totalSessions} · ${profile['doctor']}',
+          'Buổi ${patient.sessions + 1}/${totalSessions} · ${profile.doctor}',
         ),
         TextField(
           controller: text,

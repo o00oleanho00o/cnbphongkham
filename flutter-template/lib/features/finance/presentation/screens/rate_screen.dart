@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/models/finance_snapshot.dart';
 import '../providers/finance_provider.dart';
 
 class RateScreen extends ConsumerStatefulWidget {
@@ -22,24 +23,22 @@ class _RateScreenState extends ConsumerState<RateScreen> {
           const Text(
             'Thay đổi áp dụng cho lượt mới. Tỷ lệ lịch sử được giữ nguyên.',
           ),
-          for (final s in c.data?['services'] ?? [])
+          for (final s in c.data?.services ?? const <ProcedureService>[])
             Card(
               child: ListTile(
-                title: Text(s['name']),
+                title: Text(s.name),
                 subtitle: Text(
-                  '${s['rate'] / 100}% · ${s['basis']} · phiên bản ${s['version']}',
+                  '${s.ratePercent}% · ${s.basis} · phiên bản ${s.version}',
                 ),
                 trailing: const Icon(Icons.edit_outlined),
                 onTap: () async {
-                  final rate = TextEditingController(
-                    text: '${s['rate'] / 100}',
-                  );
-                  String basis = s['basis'];
-                  final value = await showDialog<Map<String, dynamic>>(
+                  final rate = TextEditingController(text: '${s.ratePercent}');
+                  var basis = s.basis;
+                  final value = await showDialog<({int rate, String basis})>(
                     context: context,
                     builder: (ctx) => StatefulBuilder(
                       builder: (ctx, set) => AlertDialog(
-                        title: Text(s['name']),
+                        title: Text(s.name),
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -80,11 +79,10 @@ class _RateScreenState extends ConsumerState<RateScreen> {
                             onPressed: () {
                               final n = double.tryParse(rate.text);
                               if (n != null && n >= 0 && n <= 100)
-                                Navigator.pop(ctx, {
-                                  'service': s['id'],
-                                  'rate': (n * 100).round(),
-                                  'basis': basis,
-                                });
+                                Navigator.pop(ctx, (
+                                  rate: (n * 100).round(),
+                                  basis: basis,
+                                ));
                             },
                             child: const Text('Lưu'),
                           ),
@@ -93,7 +91,13 @@ class _RateScreenState extends ConsumerState<RateScreen> {
                     ),
                   );
                   rate.dispose();
-                  if (value != null) await finance.command('rate', value);
+                  if (value != null) {
+                    await finance.updateRate(
+                      service: s.id,
+                      rate: value.rate,
+                      basis: value.basis,
+                    );
+                  }
                 },
               ),
             ),

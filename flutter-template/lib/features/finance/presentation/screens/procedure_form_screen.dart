@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/models/procedure_entry.dart';
 import '../providers/finance_provider.dart';
 
 class ProcedureForm extends ConsumerStatefulWidget {
@@ -34,10 +35,10 @@ class _ProcedureFormState extends ConsumerState<ProcedureForm> {
   void initState() {
     super.initState();
     final d = ref.read(financeProvider).data!;
-    day = d['today'];
+    day = d.today;
     patient = widget.initialPatient;
-    gross.text = '${d['services'][0]['price']}';
-    rate.text = '${d['services'][0]['rate'] / 100}';
+    gross.text = '${d.services[0].price}';
+    rate.text = '${d.services[0].ratePercent}';
   }
 
   @override
@@ -82,12 +83,10 @@ class _ProcedureFormState extends ConsumerState<ProcedureForm> {
   Widget build(BuildContext context) {
     final c = ref.watch(financeProvider), d = c.data!;
     final finance = ref.read(financeProvider.notifier);
-    final doctors = (d['doctors'] as List)
-        .map(
-          (x) =>
-              DropdownMenuItem<String>(value: x['id'], child: Text(x['name'])),
-        )
-        .toList();
+    final doctors = [
+      for (final x in d.doctors)
+        DropdownMenuItem(value: x.id, child: Text(x.name)),
+    ];
     return Scaffold(
       appBar: AppBar(title: const Text('Ghi lượt đã thực hiện')),
       body: SafeArea(
@@ -114,21 +113,15 @@ class _ProcedureFormState extends ConsumerState<ProcedureForm> {
               select(
                 'Thủ thuật',
                 service,
-                (d['services'] as List)
-                    .map(
-                      (s) => DropdownMenuItem<String>(
-                        value: s['id'],
-                        child: Text(s['name']),
-                      ),
-                    )
-                    .toList(),
+                [
+                  for (final s in d.services)
+                    DropdownMenuItem(value: s.id, child: Text(s.name)),
+                ],
                 (v) {
                   service = v;
-                  final s = (d['services'] as List).firstWhere(
-                    (s) => s['id'] == v,
-                  );
-                  gross.text = '${s['price']}';
-                  rate.text = '${s['rate'] / 100}';
+                  final s = d.services.firstWhere((s) => s.id == v);
+                  gross.text = '${s.price}';
+                  rate.text = '${s.ratePercent}';
                 },
               ),
               TextButton.icon(
@@ -137,7 +130,7 @@ class _ProcedureFormState extends ConsumerState<ProcedureForm> {
                     context: context,
                     initialDate: DateTime.parse(day),
                     firstDate: DateTime(2020),
-                    lastDate: DateTime.parse(d['today']),
+                    lastDate: DateTime.parse(d.today),
                   );
                   if (date != null)
                     setState(
@@ -154,15 +147,14 @@ class _ProcedureFormState extends ConsumerState<ProcedureForm> {
                   value: '',
                   child: Text('Tạo hóa đơn mới cho lượt này'),
                 ),
-                ...(d['invoices'] as List).map(
-                  (i) => DropdownMenuItem<String>(
-                    value: i['id'],
+                for (final i in d.invoices)
+                  DropdownMenuItem(
+                    value: i.id,
                     child: Text(
-                      '${i['patient']} · ${i['id']}',
+                      '${i.patient} · ${i.id}',
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
               ], (v) => invoice = v),
               select('Bác sĩ chính', doctor, doctors, (v) => doctor = v),
               field('Tỷ trọng doanh số bác sĩ chính %', share),
@@ -188,29 +180,31 @@ class _ProcedureFormState extends ConsumerState<ProcedureForm> {
                         if (!form.currentState!.validate()) return;
                         setState(() => saving = true);
                         final sh = (double.parse(share.text) * 100).round();
-                        final ok = await finance.command('entry', {
-                          'patient': patient,
-                          'invoice': invoice,
-                          'service': service,
-                          'date': day,
-                          'list': int.tryParse(gross.text) ?? -1,
-                          'discount': int.tryParse(discount.text) ?? -1,
-                          'note': note.text,
-                          'people': [
-                            {
-                              'doctor': doctor,
-                              'share': sh,
-                              'rate': (double.parse(rate.text) * 100).round(),
-                            },
-                            if (assistant.isNotEmpty)
-                              {
-                                'doctor': assistant,
-                                'share': 10000 - sh,
-                                'rate': (double.parse(rate2.text) * 100)
-                                    .round(),
-                              },
-                          ],
-                        });
+                        final ok = await finance.recordEntry(
+                          ProcedureEntry(
+                            patient: patient,
+                            invoice: invoice,
+                            service: service,
+                            date: day,
+                            listPrice: int.tryParse(gross.text) ?? -1,
+                            discount: int.tryParse(discount.text) ?? -1,
+                            note: note.text,
+                            people: [
+                              ProcedureShare(
+                                doctor: doctor,
+                                share: sh,
+                                rate: (double.parse(rate.text) * 100).round(),
+                              ),
+                              if (assistant.isNotEmpty)
+                                ProcedureShare(
+                                  doctor: assistant,
+                                  share: 10000 - sh,
+                                  rate: (double.parse(rate2.text) * 100)
+                                      .round(),
+                                ),
+                            ],
+                          ),
+                        );
                         if (mounted) {
                           setState(() => saving = false);
                           if (ok) Navigator.pop(context);

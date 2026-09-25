@@ -1,6 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../orders/presentation/providers/orders_provider.dart';
 import '../../../session/presentation/providers/session_provider.dart';
+import '../../domain/models/bill.dart';
 
 part 'receipts_provider.g.dart';
 
@@ -17,3 +19,9 @@ class ReceiptsNotifier extends _$ReceiptsNotifier {
 @riverpod
 int currentPaid(Ref ref) =>
     ref.watch(receiptsProvider)[ref.watch(selectedPatientIdProvider)] ?? 0;
+
+@riverpod
+Bill currentBill(Ref ref) => Bill(
+  total: ref.watch(currentOrdersProvider).fold(0, (n, o) => n + o.total),
+  paid: ref.watch(currentPaidProvider),
+);

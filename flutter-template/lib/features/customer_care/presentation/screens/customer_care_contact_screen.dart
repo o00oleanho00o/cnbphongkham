@@ -31,8 +31,8 @@ class _CustomerCareContactScreenState
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(selectedProfileProvider);
-    final name = profile['name'] as String;
-    final id = profile['id'] as String;
+    final name = profile.name;
+    final id = profile.id;
     final patient = ref.watch(currentPatientProvider);
     void patch(PatientState Function(PatientState) change) =>
         ref.read(patientsProvider.notifier).update(id, change);
@@ -41,7 +41,7 @@ class _CustomerCareContactScreenState
     return DetailScaffold(
       title: AppRoutes.customerCare,
       children: [
-        heading(name, '${id} · ${profile['case']}'),
+        heading(name, '${id} · ${profile.caseLabel}'),
         notice('Nội dung liên hệ nội bộ không hiển thị cho người bệnh.'),
         if (patient.careNote.isNotEmpty) notice(patient.careNote),
         TextField(
