@@ -110,6 +110,41 @@ Quy ước:
   - Chạy `flutter run --profile -d <device-id>` và mở DevTools. Tab Performance xem frame; bật "Track widget rebuilds" để đếm rebuild.
   - Không đo performance trên bản debug.
 
+## Chụp ảnh (native)
+
+Chụp ảnh đi qua MethodChannel riêng `pema/camera`, không dùng package bên ngoài.
+Android và iOS cùng một hợp đồng:
+
+| Method | Tham số | Kết quả |
+|---|---|---|
+| `isAvailable` | — | `bool` |
+| `capture` | — | `{path, width, height, bytes}` hoặc `null` nếu người dùng hủy |
+| `delete` | `path` | xóa file (chỉ trong thư mục ảnh của app) |
+
+Lỗi trả về `PlatformException` (`busy`, `no_camera`, `process_failed`), Dart đổi
+thành `CameraFailure` với thông báo tiếng Việt.
+
+- **Dart**: `lib/core/camera/camera_service.dart` (`CameraService`,
+  `NativeCameraService`, `cameraServiceProvider`), model `captured_photo.dart`,
+  widget hiển thị `lib/core/widgets/local_photo.dart` (decode theo kích thước
+  hiển thị để tiết kiệm RAM).
+- **Android**: `android/app/src/main/kotlin/.../PemaCamera.kt`, đăng ký trong
+  `MainActivity.kt`. Mở app camera hệ thống bằng `ACTION_IMAGE_CAPTURE` qua
+  FileProvider (`res/xml/pema_file_paths.xml`). **Không khai báo quyền `CAMERA`**:
+  nếu khai báo, Android bắt xin quyền runtime cho intent này.
+- **iOS**: `PemaCameraPlugin` trong `ios/Runner/AppDelegate.swift`
+  (`UIImagePickerController`), chuỗi quyền `NSCameraUsageDescription` trong
+  `Info.plist`. Phần này **chưa được chạy thử**; cần kiểm tra trên Mac bằng
+  `flutter run -d <iphone-id>`.
+- **Xử lý ảnh** (cả hai nền tảng): xoay đúng chiều, thu về cạnh dài tối đa 1600px,
+  JPEG chất lượng 85, **bỏ toàn bộ EXIF/GPS** (ảnh y tế). File nằm trong thư mục
+  cache (`cache/photos` / `tmp/photos`), file gốc bị xóa sau khi xử lý.
+- **Luồng UI**: Ảnh tiến triển → Gửi ảnh cập nhật → Chụp ảnh tiến triển → xem trước,
+  Chụp lại / Bỏ ảnh → tick đồng ý → Gửi cập nhật. Ảnh chưa gửi bị xóa khi rời màn.
+  Ảnh đã gửi lưu vào `PatientState.photos` (chỉ trong phiên, chưa upload server).
+- **Test**: `test/camera_test.dart` mock channel và dùng `FakeCamera` qua
+  override `cameraServiceProvider`.
+
 ## Build APK Android để cài thử
 
 Kiểm tra điện thoại đã bật **USB debugging** và được Flutter nhận diện:
@@ -200,7 +235,7 @@ Thiết kế chi tiết và mapping: [NATIVE-TEMPLATE.md](../docs/NATIVE-TEMPLAT
 - [Ma trận web/native](../docs/22_NATIVE_PARITY_AND_VALIDATION.md): hành vi thực tế, state theo patient và selection riêng, giới hạn thu ngân/A5/media, kiểm thử đã chạy và checklist còn mở.
 - [Bản đồ tài liệu](../docs/README.md): Scope → Spec → Module Map → Architecture; [quy tắc đóng góp](../AGENT.md).
 
-Build dành cho URL review dùng `./build-preview.ps1` (Flutter phải ở PATH), thay cho việc chỉ build mà chưa copy output. `prototype/native-preview/` không được commit. Validation hiện có gồm 32 test; cả bốn widget viewport đều height 844, chưa thay thế kiểm tra device hoặc toàn bộ flow Care.
+Build dành cho URL review dùng `./build-preview.ps1` (Flutter phải ở PATH), thay cho việc chỉ build mà chưa copy output. `prototype/native-preview/` không được commit. Validation hiện có gồm 39 test; cả bốn widget viewport đều height 844, chưa thay thế kiểm tra device hoặc toàn bộ flow Care.
 
 
 Header nay chọn Chủ / Bác sĩ / CSKH / Kế toán / Care, mỗi vai trò có màn bắt đầu riêng. Care → Hồ sơ chọn nhóm tài khoản. CRM native là template độc lập web, chưa rule engine động. [Hướng dẫn mới](../docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).

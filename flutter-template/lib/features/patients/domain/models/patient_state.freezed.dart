@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PatientState {
 
- int get sessions; String get appointment; String get day; bool get checkedIn; bool get confirmed; bool get acknowledged; String get note; String get response; String get careNote; String get careStatus; String? get editingOrder; List<CartLine> get cart; List<String> get updates;/// Internal CSKH hand-offs; never shown in Care.
+ int get sessions; String get appointment; String get day; bool get checkedIn; bool get confirmed; bool get acknowledged; String get note; String get response; String get careNote; String get careStatus; String? get editingOrder; List<CartLine> get cart; List<String> get updates;/// Local paths of progress photos the patient sent, oldest first.
+ List<String> get photos;/// Internal CSKH hand-offs; never shown in Care.
  List<String> get escalations;
 /// Create a copy of PatientState
 /// with the given fields replaced by the non-null parameter values.
@@ -28,20 +29,20 @@ $PatientStateCopyWith<PatientState> get copyWith => _$PatientStateCopyWithImpl<P
 @override
 bool operator ==(Object other) {
   final _this = this as PatientState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PatientState&&(identical(other.sessions, _this.sessions) || other.sessions == _this.sessions)&&(identical(other.appointment, _this.appointment) || other.appointment == _this.appointment)&&(identical(other.day, _this.day) || other.day == _this.day)&&(identical(other.checkedIn, _this.checkedIn) || other.checkedIn == _this.checkedIn)&&(identical(other.confirmed, _this.confirmed) || other.confirmed == _this.confirmed)&&(identical(other.acknowledged, _this.acknowledged) || other.acknowledged == _this.acknowledged)&&(identical(other.note, _this.note) || other.note == _this.note)&&(identical(other.response, _this.response) || other.response == _this.response)&&(identical(other.careNote, _this.careNote) || other.careNote == _this.careNote)&&(identical(other.careStatus, _this.careStatus) || other.careStatus == _this.careStatus)&&(identical(other.editingOrder, _this.editingOrder) || other.editingOrder == _this.editingOrder)&&const DeepCollectionEquality().equals(other.cart, _this.cart)&&const DeepCollectionEquality().equals(other.updates, _this.updates)&&const DeepCollectionEquality().equals(other.escalations, _this.escalations));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PatientState&&(identical(other.sessions, _this.sessions) || other.sessions == _this.sessions)&&(identical(other.appointment, _this.appointment) || other.appointment == _this.appointment)&&(identical(other.day, _this.day) || other.day == _this.day)&&(identical(other.checkedIn, _this.checkedIn) || other.checkedIn == _this.checkedIn)&&(identical(other.confirmed, _this.confirmed) || other.confirmed == _this.confirmed)&&(identical(other.acknowledged, _this.acknowledged) || other.acknowledged == _this.acknowledged)&&(identical(other.note, _this.note) || other.note == _this.note)&&(identical(other.response, _this.response) || other.response == _this.response)&&(identical(other.careNote, _this.careNote) || other.careNote == _this.careNote)&&(identical(other.careStatus, _this.careStatus) || other.careStatus == _this.careStatus)&&(identical(other.editingOrder, _this.editingOrder) || other.editingOrder == _this.editingOrder)&&const DeepCollectionEquality().equals(other.cart, _this.cart)&&const DeepCollectionEquality().equals(other.updates, _this.updates)&&const DeepCollectionEquality().equals(other.photos, _this.photos)&&const DeepCollectionEquality().equals(other.escalations, _this.escalations));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PatientState;
-  return Object.hash(runtimeType,_this.sessions,_this.appointment,_this.day,_this.checkedIn,_this.confirmed,_this.acknowledged,_this.note,_this.response,_this.careNote,_this.careStatus,_this.editingOrder,const DeepCollectionEquality().hash(_this.cart),const DeepCollectionEquality().hash(_this.updates),const DeepCollectionEquality().hash(_this.escalations));
+  return Object.hash(runtimeType,_this.sessions,_this.appointment,_this.day,_this.checkedIn,_this.confirmed,_this.acknowledged,_this.note,_this.response,_this.careNote,_this.careStatus,_this.editingOrder,const DeepCollectionEquality().hash(_this.cart),const DeepCollectionEquality().hash(_this.updates),const DeepCollectionEquality().hash(_this.photos),const DeepCollectionEquality().hash(_this.escalations));
 }
 
 @override
 String toString() {
   final _this = this as PatientState;
-  return 'PatientState(sessions: ${_this.sessions}, appointment: ${_this.appointment}, day: ${_this.day}, checkedIn: ${_this.checkedIn}, confirmed: ${_this.confirmed}, acknowledged: ${_this.acknowledged}, note: ${_this.note}, response: ${_this.response}, careNote: ${_this.careNote}, careStatus: ${_this.careStatus}, editingOrder: ${_this.editingOrder}, cart: ${_this.cart}, updates: ${_this.updates}, escalations: ${_this.escalations})';
+  return 'PatientState(sessions: ${_this.sessions}, appointment: ${_this.appointment}, day: ${_this.day}, checkedIn: ${_this.checkedIn}, confirmed: ${_this.confirmed}, acknowledged: ${_this.acknowledged}, note: ${_this.note}, response: ${_this.response}, careNote: ${_this.careNote}, careStatus: ${_this.careStatus}, editingOrder: ${_this.editingOrder}, cart: ${_this.cart}, updates: ${_this.updates}, photos: ${_this.photos}, escalations: ${_this.escalations})';
 }
 
 
@@ -52,7 +53,7 @@ abstract mixin class $PatientStateCopyWith<$Res>  {
   factory $PatientStateCopyWith(PatientState value, $Res Function(PatientState) _then) = _$PatientStateCopyWithImpl;
 @useResult
 $Res call({
- int sessions, String appointment, String day, bool checkedIn, bool confirmed, bool acknowledged, String note, String response, String careNote, String careStatus, String? editingOrder, List<CartLine> cart, List<String> updates, List<String> escalations
+ int sessions, String appointment, String day, bool checkedIn, bool confirmed, bool acknowledged, String note, String response, String careNote, String careStatus, String? editingOrder, List<CartLine> cart, List<String> updates, List<String> photos, List<String> escalations
 });
 
 
@@ -69,7 +70,7 @@ class _$PatientStateCopyWithImpl<$Res>
 
 /// Create a copy of PatientState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? sessions = null,Object? appointment = null,Object? day = null,Object? checkedIn = null,Object? confirmed = null,Object? acknowledged = null,Object? note = null,Object? response = null,Object? careNote = null,Object? careStatus = null,Object? editingOrder = freezed,Object? cart = null,Object? updates = null,Object? escalations = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? sessions = null,Object? appointment = null,Object? day = null,Object? checkedIn = null,Object? confirmed = null,Object? acknowledged = null,Object? note = null,Object? response = null,Object? careNote = null,Object? careStatus = null,Object? editingOrder = freezed,Object? cart = null,Object? updates = null,Object? photos = null,Object? escalations = null,}) {
   return _then(PatientState(
 sessions: null == sessions ? _self.sessions : sessions // ignore: cast_nullable_to_non_nullable
 as int,appointment: null == appointment ? _self.appointment : appointment // ignore: cast_nullable_to_non_nullable
@@ -84,6 +85,7 @@ as String,careStatus: null == careStatus ? _self.careStatus : careStatus // igno
 as String,editingOrder: freezed == editingOrder ? _self.editingOrder : editingOrder // ignore: cast_nullable_to_non_nullable
 as String?,cart: null == cart ? _self.cart : cart // ignore: cast_nullable_to_non_nullable
 as List<CartLine>,updates: null == updates ? _self.updates : updates // ignore: cast_nullable_to_non_nullable
+as List<String>,photos: null == photos ? _self.photos : photos // ignore: cast_nullable_to_non_nullable
 as List<String>,escalations: null == escalations ? _self.escalations : escalations // ignore: cast_nullable_to_non_nullable
 as List<String>,
   ));
@@ -170,10 +172,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int sessions,  String appointment,  String day,  bool checkedIn,  bool confirmed,  bool acknowledged,  String note,  String response,  String careNote,  String careStatus,  String? editingOrder,  List<CartLine> cart,  List<String> updates,  List<String> escalations)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int sessions,  String appointment,  String day,  bool checkedIn,  bool confirmed,  bool acknowledged,  String note,  String response,  String careNote,  String careStatus,  String? editingOrder,  List<CartLine> cart,  List<String> updates,  List<String> photos,  List<String> escalations)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PatientState() when $default != null:
-return $default(_that.sessions,_that.appointment,_that.day,_that.checkedIn,_that.confirmed,_that.acknowledged,_that.note,_that.response,_that.careNote,_that.careStatus,_that.editingOrder,_that.cart,_that.updates,_that.escalations);case _:
+return $default(_that.sessions,_that.appointment,_that.day,_that.checkedIn,_that.confirmed,_that.acknowledged,_that.note,_that.response,_that.careNote,_that.careStatus,_that.editingOrder,_that.cart,_that.updates,_that.photos,_that.escalations);case _:
   return orElse();
 
 }
@@ -191,10 +193,10 @@ return $default(_that.sessions,_that.appointment,_that.day,_that.checkedIn,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int sessions,  String appointment,  String day,  bool checkedIn,  bool confirmed,  bool acknowledged,  String note,  String response,  String careNote,  String careStatus,  String? editingOrder,  List<CartLine> cart,  List<String> updates,  List<String> escalations)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int sessions,  String appointment,  String day,  bool checkedIn,  bool confirmed,  bool acknowledged,  String note,  String response,  String careNote,  String careStatus,  String? editingOrder,  List<CartLine> cart,  List<String> updates,  List<String> photos,  List<String> escalations)  $default,) {final _that = this;
 switch (_that) {
 case _PatientState():
-return $default(_that.sessions,_that.appointment,_that.day,_that.checkedIn,_that.confirmed,_that.acknowledged,_that.note,_that.response,_that.careNote,_that.careStatus,_that.editingOrder,_that.cart,_that.updates,_that.escalations);case _:
+return $default(_that.sessions,_that.appointment,_that.day,_that.checkedIn,_that.confirmed,_that.acknowledged,_that.note,_that.response,_that.careNote,_that.careStatus,_that.editingOrder,_that.cart,_that.updates,_that.photos,_that.escalations);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -211,10 +213,10 @@ return $default(_that.sessions,_that.appointment,_that.day,_that.checkedIn,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int sessions,  String appointment,  String day,  bool checkedIn,  bool confirmed,  bool acknowledged,  String note,  String response,  String careNote,  String careStatus,  String? editingOrder,  List<CartLine> cart,  List<String> updates,  List<String> escalations)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int sessions,  String appointment,  String day,  bool checkedIn,  bool confirmed,  bool acknowledged,  String note,  String response,  String careNote,  String careStatus,  String? editingOrder,  List<CartLine> cart,  List<String> updates,  List<String> photos,  List<String> escalations)?  $default,) {final _that = this;
 switch (_that) {
 case _PatientState() when $default != null:
-return $default(_that.sessions,_that.appointment,_that.day,_that.checkedIn,_that.confirmed,_that.acknowledged,_that.note,_that.response,_that.careNote,_that.careStatus,_that.editingOrder,_that.cart,_that.updates,_that.escalations);case _:
+return $default(_that.sessions,_that.appointment,_that.day,_that.checkedIn,_that.confirmed,_that.acknowledged,_that.note,_that.response,_that.careNote,_that.careStatus,_that.editingOrder,_that.cart,_that.updates,_that.photos,_that.escalations);case _:
   return null;
 
 }
@@ -226,7 +228,7 @@ return $default(_that.sessions,_that.appointment,_that.day,_that.checkedIn,_that
 
 
 class _PatientState extends PatientState {
-  const _PatientState({required this.sessions, required this.appointment, required this.day, this.checkedIn = false, this.confirmed = false, this.acknowledged = false, this.note = '', this.response = '', this.careNote = '', this.careStatus = 'Chưa liên hệ', this.editingOrder,  List<CartLine> cart = const [],  List<String> updates = const [],  List<String> escalations = const []}): _cart = cart,_updates = updates,_escalations = escalations,super._();
+  const _PatientState({required this.sessions, required this.appointment, required this.day, this.checkedIn = false, this.confirmed = false, this.acknowledged = false, this.note = '', this.response = '', this.careNote = '', this.careStatus = 'Chưa liên hệ', this.editingOrder,  List<CartLine> cart = const [],  List<String> updates = const [],  List<String> photos = const [],  List<String> escalations = const []}): _cart = cart,_updates = updates,_photos = photos,_escalations = escalations,super._();
   
 
 @override final  int sessions;
@@ -254,6 +256,15 @@ class _PatientState extends PatientState {
   return EqualUnmodifiableListView(_updates);
 }
 
+/// Local paths of progress photos the patient sent, oldest first.
+ final  List<String> _photos;
+/// Local paths of progress photos the patient sent, oldest first.
+@override@JsonKey() List<String> get photos {
+  if (_photos is EqualUnmodifiableListView) return _photos;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_photos);
+}
+
 /// Internal CSKH hand-offs; never shown in Care.
  final  List<String> _escalations;
 /// Internal CSKH hand-offs; never shown in Care.
@@ -274,18 +285,18 @@ _$PatientStateCopyWith<_PatientState> get copyWith => __$PatientStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PatientState&&(identical(other.sessions, sessions) || other.sessions == sessions)&&(identical(other.appointment, appointment) || other.appointment == appointment)&&(identical(other.day, day) || other.day == day)&&(identical(other.checkedIn, checkedIn) || other.checkedIn == checkedIn)&&(identical(other.confirmed, confirmed) || other.confirmed == confirmed)&&(identical(other.acknowledged, acknowledged) || other.acknowledged == acknowledged)&&(identical(other.note, note) || other.note == note)&&(identical(other.response, response) || other.response == response)&&(identical(other.careNote, careNote) || other.careNote == careNote)&&(identical(other.careStatus, careStatus) || other.careStatus == careStatus)&&(identical(other.editingOrder, editingOrder) || other.editingOrder == editingOrder)&&const DeepCollectionEquality().equals(other.cart, _cart)&&const DeepCollectionEquality().equals(other.updates, _updates)&&const DeepCollectionEquality().equals(other.escalations, _escalations));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PatientState&&(identical(other.sessions, sessions) || other.sessions == sessions)&&(identical(other.appointment, appointment) || other.appointment == appointment)&&(identical(other.day, day) || other.day == day)&&(identical(other.checkedIn, checkedIn) || other.checkedIn == checkedIn)&&(identical(other.confirmed, confirmed) || other.confirmed == confirmed)&&(identical(other.acknowledged, acknowledged) || other.acknowledged == acknowledged)&&(identical(other.note, note) || other.note == note)&&(identical(other.response, response) || other.response == response)&&(identical(other.careNote, careNote) || other.careNote == careNote)&&(identical(other.careStatus, careStatus) || other.careStatus == careStatus)&&(identical(other.editingOrder, editingOrder) || other.editingOrder == editingOrder)&&const DeepCollectionEquality().equals(other.cart, _cart)&&const DeepCollectionEquality().equals(other.updates, _updates)&&const DeepCollectionEquality().equals(other.photos, _photos)&&const DeepCollectionEquality().equals(other.escalations, _escalations));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,sessions,appointment,day,checkedIn,confirmed,acknowledged,note,response,careNote,careStatus,editingOrder,const DeepCollectionEquality().hash(_cart),const DeepCollectionEquality().hash(_updates),const DeepCollectionEquality().hash(_escalations));
+    return Object.hash(runtimeType,sessions,appointment,day,checkedIn,confirmed,acknowledged,note,response,careNote,careStatus,editingOrder,const DeepCollectionEquality().hash(_cart),const DeepCollectionEquality().hash(_updates),const DeepCollectionEquality().hash(_photos),const DeepCollectionEquality().hash(_escalations));
 }
 
 @override
 String toString() {
-    return 'PatientState(sessions: $sessions, appointment: $appointment, day: $day, checkedIn: $checkedIn, confirmed: $confirmed, acknowledged: $acknowledged, note: $note, response: $response, careNote: $careNote, careStatus: $careStatus, editingOrder: $editingOrder, cart: $cart, updates: $updates, escalations: $escalations)';
+    return 'PatientState(sessions: $sessions, appointment: $appointment, day: $day, checkedIn: $checkedIn, confirmed: $confirmed, acknowledged: $acknowledged, note: $note, response: $response, careNote: $careNote, careStatus: $careStatus, editingOrder: $editingOrder, cart: $cart, updates: $updates, photos: $photos, escalations: $escalations)';
 }
 
 
@@ -296,7 +307,7 @@ abstract mixin class _$PatientStateCopyWith<$Res> implements $PatientStateCopyWi
   factory _$PatientStateCopyWith(_PatientState value, $Res Function(_PatientState) _then) = __$PatientStateCopyWithImpl;
 @override @useResult
 $Res call({
- int sessions, String appointment, String day, bool checkedIn, bool confirmed, bool acknowledged, String note, String response, String careNote, String careStatus, String? editingOrder, List<CartLine> cart, List<String> updates, List<String> escalations
+ int sessions, String appointment, String day, bool checkedIn, bool confirmed, bool acknowledged, String note, String response, String careNote, String careStatus, String? editingOrder, List<CartLine> cart, List<String> updates, List<String> photos, List<String> escalations
 });
 
 
@@ -313,7 +324,7 @@ class __$PatientStateCopyWithImpl<$Res>
 
 /// Create a copy of PatientState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? sessions = null,Object? appointment = null,Object? day = null,Object? checkedIn = null,Object? confirmed = null,Object? acknowledged = null,Object? note = null,Object? response = null,Object? careNote = null,Object? careStatus = null,Object? editingOrder = freezed,Object? cart = null,Object? updates = null,Object? escalations = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? sessions = null,Object? appointment = null,Object? day = null,Object? checkedIn = null,Object? confirmed = null,Object? acknowledged = null,Object? note = null,Object? response = null,Object? careNote = null,Object? careStatus = null,Object? editingOrder = freezed,Object? cart = null,Object? updates = null,Object? photos = null,Object? escalations = null,}) {
   return _then(_PatientState(
 sessions: null == sessions ? _self.sessions : sessions // ignore: cast_nullable_to_non_nullable
 as int,appointment: null == appointment ? _self.appointment : appointment // ignore: cast_nullable_to_non_nullable
@@ -328,6 +339,7 @@ as String,careStatus: null == careStatus ? _self.careStatus : careStatus // igno
 as String,editingOrder: freezed == editingOrder ? _self.editingOrder : editingOrder // ignore: cast_nullable_to_non_nullable
 as String?,cart: null == cart ? _self._cart : cart // ignore: cast_nullable_to_non_nullable
 as List<CartLine>,updates: null == updates ? _self._updates : updates // ignore: cast_nullable_to_non_nullable
+as List<String>,photos: null == photos ? _self._photos : photos // ignore: cast_nullable_to_non_nullable
 as List<String>,escalations: null == escalations ? _self._escalations : escalations // ignore: cast_nullable_to_non_nullable
 as List<String>,
   ));

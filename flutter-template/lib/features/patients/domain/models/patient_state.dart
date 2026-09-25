@@ -25,6 +25,9 @@ abstract class PatientState with _$PatientState {
     @Default([]) List<CartLine> cart,
     @Default([]) List<String> updates,
 
+    /// Local paths of progress photos the patient sent, oldest first.
+    @Default([]) List<String> photos,
+
     /// Internal CSKH hand-offs; never shown in Care.
     @Default([]) List<String> escalations,
   }) = _PatientState;

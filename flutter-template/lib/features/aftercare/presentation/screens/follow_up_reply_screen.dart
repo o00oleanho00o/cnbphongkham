@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/utils/context_extensions.dart';
 import '../../../../core/widgets/detail_scaffold.dart';
+import '../../../../core/widgets/local_photo.dart';
 import '../../../../core/widgets/pema_blocks.dart';
 import '../../../session/presentation/providers/session_provider.dart';
 import '../../../patients/domain/models/patient_state.dart';
@@ -41,6 +42,25 @@ class _FollowUpReplyScreenState extends ConsumerState<FollowUpReplyScreen> {
         ...patient.escalations.map((x) => notice('CSKH bàn giao nội bộ: $x')),
         heading(name, 'Cập nhật từ Patient Mobile'),
         ...patient.updates.map((x) => notice(x)),
+        if (patient.photos.isNotEmpty) ...[
+          SizedBox(
+            height: 160,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: patient.photos.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (_, i) => SizedBox(
+                width: 120,
+                child: LocalPhoto(
+                  path: patient.photos[i],
+                  height: 160,
+                  label: 'Ảnh ${i + 1}',
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         TextField(
           controller: text,
           maxLines: 5,
