@@ -14,7 +14,6 @@ import '../../../session/presentation/providers/session_provider.dart';
 import '../../../patients/domain/models/patient_state.dart';
 import '../../../patients/presentation/providers/patients_provider.dart';
 import '../../../patients/presentation/widgets/patient_search.dart';
-import '../../../finance/domain/models/finance_state.dart';
 import '../../../finance/presentation/providers/finance_provider.dart';
 import '../../../schedule/presentation/widgets/week_strip.dart';
 import '../../../customer_care/presentation/widgets/care_queue.dart';
@@ -33,7 +32,7 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
   late Map<String, dynamic> profile;
   late PatientState patient;
   late Map<String, PatientState> states;
-  FinanceState? finance;
+  bool financeOn = false;
   bool get care => s.careMode;
   String get name => profile['name'] as String;
 
@@ -91,9 +90,7 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
     profile = ref.watch(selectedProfileProvider);
     patient = ref.watch(currentPatientProvider);
     states = ref.watch(patientsProvider);
-    finance = ref.watch(financeEnabledProvider)
-        ? ref.watch(financeProvider)
-        : null;
+    financeOn = ref.watch(financeEnabledProvider);
     final compact = !care && s.staffRole != 'owner';
     final labels = care
         ? ['Trang chủ', 'Hành trình', 'Tin nhắn', 'Hồ sơ']
@@ -120,15 +117,11 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
       appBar: AppBar(
         title: Image.asset('assets/pema-logo.png', width: 94),
         actions: [
-          if (!care && s.staffRole == 'owner' && finance != null)
+          if (!care && s.staffRole == 'owner' && financeOn)
             IconButton(
               onPressed: () => openFinance(3),
               tooltip: 'Thông báo thanh toán',
-              icon: Badge(
-                isLabelVisible: finance!.unread > 0,
-                label: Text('${finance!.unread}'),
-                child: const Icon(Icons.notifications_outlined),
-              ),
+              icon: const _UnreadBadge(),
             ),
           TextButton.icon(
             onPressed: () => showModalBottomSheet(
@@ -328,7 +321,7 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
     if (s.staffRole == 'accountant')
       return [
         heading('Đối soát & thu ngân', 'Kế toán · không gian riêng'),
-        if (finance != null)
+        if (financeOn)
           tile(
             'Tài chính & tiền thủ thuật',
             'Đối soát, phiếu thu, chính sách và chốt kỳ',
@@ -357,7 +350,7 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
           Icons.calendar_month_outlined,
           () => open(AppRoutes.appointmentDetail),
         ),
-        if (finance != null)
+        if (financeOn)
           tile(
             'Doanh số của tôi',
             'Chỉ số cá nhân và tiền thủ thuật',
@@ -546,7 +539,7 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
     if (index == 4)
       return [
         heading('Không gian làm việc', 'Nghiệp vụ theo đúng hành trình Pema'),
-        if (finance != null)
+        if (financeOn)
           tile(
             'Tài chính & tiền thủ thuật',
             'Chủ phòng khám · Kế toán · Bác sĩ',
@@ -588,15 +581,7 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
           metric(patient.checkedIn ? '04' : '03', 'Đang chờ'),
         ],
       ),
-      if (finance != null)
-        tile(
-          'Tài chính phòng khám',
-          finance!.data == null
-              ? 'Doanh số · thực thu · tiền thủ thuật'
-              : 'Tháng ${finance!.month} · ${money(finance!.data!["summary"]["revenue"])}',
-          Icons.account_balance_wallet_outlined,
-          () => openFinance(),
-        ),
+      if (financeOn) _FinanceSummaryTile(onTap: openFinance),
       section('Bắt đầu nhanh'),
       Row(
         children: [
@@ -619,5 +604,43 @@ class _WorkspaceScreenState extends ConsumerState<WorkspaceScreen> {
         () => setState(() => index = 3),
       ),
     ];
+  }
+}
+
+/// Only this badge rebuilds when the unread count changes.
+class _UnreadBadge extends ConsumerWidget {
+  const _UnreadBadge();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unread = ref.watch(financeProvider.select((f) => f.unread));
+    return Badge(
+      isLabelVisible: unread > 0,
+      label: Text('$unread'),
+      child: const Icon(Icons.notifications_outlined),
+    );
+  }
+}
+
+/// Only this tile rebuilds when the monthly revenue changes.
+class _FinanceSummaryTile extends ConsumerWidget {
+  const _FinanceSummaryTile({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final subtitle = ref.watch(
+      financeProvider.select(
+        (f) => f.data == null
+            ? 'Doanh số · thực thu · tiền thủ thuật'
+            : 'Tháng ${f.month} · ${money(f.data!["summary"]["revenue"])}',
+      ),
+    );
+    return tile(
+      'Tài chính phòng khám',
+      subtitle,
+      Icons.account_balance_wallet_outlined,
+      onTap,
+    );
   }
 }

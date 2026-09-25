@@ -70,6 +70,23 @@ Quy ước:
   4. Nếu role nào được mở route này, cập nhật `Session.allows`.
   5. Thêm test trong `test/`.
 
+### Quy tắc performance (Riverpod)
+
+- **Chỉ watch đúng thứ cần**:
+  - Dùng `ref.watch(p.select((s) => s.field))` khi chỉ cần một field. Nên trả về `bool`, `int` hoặc `String`, vì `select` so sánh bằng `==`, còn List/Map mới tạo luôn bị coi là khác.
+  - Ví dụ: `_RouteGuard` chỉ nghe `session.allows(route)`; Patient 360 chỉ nghe điều kiện ghi nhận thủ thuật.
+- **Rebuild nhỏ nhất có thể**: phần UI đổi thường xuyên tách thành `ConsumerWidget` riêng. Ví dụ: badge thông báo `_UnreadBadge` và tile doanh số `_FinanceSummaryTile` trong `workspace_screen.dart`, để polling tài chính không rebuild cả màn chính.
+- **Không phát state trùng**:
+  - `FinanceNotifier.refresh` bỏ qua response giống hệt lần trước (`DeepCollectionEquality`), nên poll 4 giây một lần không gây rebuild.
+  - Provider dẫn xuất trả về List thì viết dạng class và override `updateShouldNotify` (xem `PatientOrders`).
+- **`const`**: `analysis_options.yaml` bật nhóm lint `prefer_const_*`. `dart analyze` phải sạch.
+- **autoDispose mặc định**: provider dẫn xuất dùng `@riverpod`. Chỉ state phiên, HTTP client và finance polling mới dùng `keepAlive: true`.
+- **Tham số family ổn định**: tham số là `String`/`int` (ví dụ `patientStateProvider(id)`, `patientOrdersProvider(id)`). Không truyền List/Map tạo mới trong `build`.
+- **Giữ dữ liệu cũ khi tải lại**: refresh không xóa `data` cũ, chỉ cập nhật khi có kết quả mới. Riêng khi đổi vai trò tài chính thì xóa có chủ đích, để không lộ projection của vai trò trước.
+- **Đo, đừng đoán**:
+  - Chạy `flutter run --profile -d <device-id>` và mở DevTools. Tab Performance xem frame; bật "Track widget rebuilds" để đếm rebuild.
+  - Không đo performance trên bản debug.
+
 ## Build APK Android để cài thử
 
 Kiểm tra điện thoại đã bật **USB debugging** và được Flutter nhận diện:
@@ -160,7 +177,7 @@ Thiết kế chi tiết và mapping: [NATIVE-TEMPLATE.md](../docs/NATIVE-TEMPLAT
 - [Ma trận web/native](../docs/22_NATIVE_PARITY_AND_VALIDATION.md): hành vi thực tế, state theo patient và selection riêng, giới hạn thu ngân/A5/media, kiểm thử đã chạy và checklist còn mở.
 - [Bản đồ tài liệu](../docs/README.md): Scope → Spec → Module Map → Architecture; [quy tắc đóng góp](../AGENT.md).
 
-Build dành cho URL review dùng `./build-preview.ps1` (Flutter phải ở PATH), thay cho việc chỉ build mà chưa copy output. `prototype/native-preview/` không được commit. Validation hiện có gồm 18 test; cả bốn widget viewport đều height 844, chưa thay thế kiểm tra device hoặc toàn bộ flow Care.
+Build dành cho URL review dùng `./build-preview.ps1` (Flutter phải ở PATH), thay cho việc chỉ build mà chưa copy output. `prototype/native-preview/` không được commit. Validation hiện có gồm 20 test; cả bốn widget viewport đều height 844, chưa thay thế kiểm tra device hoặc toàn bộ flow Care.
 
 
 Header nay chọn Chủ / Bác sĩ / CSKH / Kế toán / Care, mỗi vai trò có màn bắt đầu riêng. Care → Hồ sơ chọn nhóm tài khoản. CRM native là template độc lập web, chưa rule engine động. [Hướng dẫn mới](../docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).

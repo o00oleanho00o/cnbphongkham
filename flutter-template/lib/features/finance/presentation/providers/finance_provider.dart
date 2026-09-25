@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -8,6 +9,8 @@ import '../../domain/models/finance_state.dart';
 import '../../domain/repositories/finance_repository.dart';
 
 part 'finance_provider.g.dart';
+
+const _json = DeepCollectionEquality();
 
 /// Off by default so layout tests never reach the finance API.
 @Riverpod(keepAlive: true)
@@ -56,6 +59,9 @@ class FinanceNotifier extends _$FinanceNotifier {
         doctor: state.doctor,
       );
       if (token != _generation) return;
+      // Polling usually returns the same projection; skip the emit so
+      // watchers don't rebuild every 4 seconds.
+      if (state.error.isEmpty && _json.equals(state.data, value)) return;
       state = state.copyWith(data: value, error: '');
     } catch (_) {
       if (token == _generation) {

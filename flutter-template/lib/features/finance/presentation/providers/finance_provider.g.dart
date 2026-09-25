@@ -85,7 +85,7 @@ final class FinanceNotifierProvider
   }
 }
 
-String _$financeNotifierHash() => r'9f5a785a5590c63519eb082623be54c0c4a85888';
+String _$financeNotifierHash() => r'b6d2812f16c06de2e3759350184c94638f7403f4';
 
 abstract class _$FinanceNotifier extends $Notifier<FinanceState> {
   FinanceState build();

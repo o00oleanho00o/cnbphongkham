@@ -89,7 +89,8 @@ class _RouteGuard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (ref.watch(sessionProvider).allows(route)) return child;
+    final allowed = ref.watch(sessionProvider.select((s) => s.allows(route)));
+    if (allowed) return child;
     return DetailScaffold(
       title: route,
       children: [

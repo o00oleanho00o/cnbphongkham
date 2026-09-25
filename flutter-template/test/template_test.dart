@@ -44,6 +44,21 @@ void main() {
     expect(c.read(currentOrdersProvider), isEmpty);
     expect(c.read(currentPaidProvider), 0);
   });
+  test('saving another patient order keeps this patient list stable', () async {
+    final c = clinicContainer(await loadCatalog());
+    final catalog = c.read(catalogProvider);
+    final a = catalog.patientIds[0], b = catalog.patientIds[1];
+    var notified = 0;
+    c.listen(patientOrdersProvider(a), (_, _) => notified++);
+    c.read(patientsProvider.notifier).addToCart(b, catalog.products.first);
+    c.read(ordersProvider.notifier).save(b, approve: false);
+    c.read(patientOrdersProvider(a)); // flush the lazy recompute
+    expect(notified, 0);
+    c.read(patientsProvider.notifier).addToCart(a, catalog.products.first);
+    c.read(ordersProvider.notifier).save(a, approve: false);
+    expect(c.read(patientOrdersProvider(a)).length, 1);
+    expect(notified, 1);
+  });
   for (final width in [360.0, 390.0, 430.0, 768.0]) {
     testWidgets('home and detail layouts at $width', (tester) async {
       tester.view.physicalSize = Size(width, 844);

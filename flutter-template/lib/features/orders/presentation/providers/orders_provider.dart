@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../catalog/presentation/providers/catalog_provider.dart';
@@ -48,9 +49,18 @@ class OrdersNotifier extends _$OrdersNotifier {
       );
 }
 
+/// Orders of one patient. Saving another patient's order produces an equal
+/// list here, so `updateShouldNotify` keeps this patient's screens still.
 @riverpod
-List<Order> patientOrders(Ref ref, String id) =>
-    ref.watch(ordersProvider).where((o) => o.patientId == id).toList();
+class PatientOrders extends _$PatientOrders {
+  @override
+  List<Order> build(String id) =>
+      ref.watch(ordersProvider).where((o) => o.patientId == id).toList();
+
+  @override
+  bool updateShouldNotify(List<Order> previous, List<Order> next) =>
+      !listEquals(previous, next);
+}
 
 @riverpod
 List<Order> currentOrders(Ref ref) =>

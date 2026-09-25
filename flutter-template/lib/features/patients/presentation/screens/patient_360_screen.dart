@@ -24,9 +24,11 @@ class Patient360Screen extends ConsumerWidget {
     final id = profile['id'] as String;
     final totalSessions = profile['total'] as int;
     final patient = ref.watch(currentPatientProvider);
-    final finance = ref.watch(financeEnabledProvider)
-        ? ref.watch(financeProvider)
-        : null;
+    final canRecordProcedure =
+        ref.watch(financeEnabledProvider) &&
+        ref.watch(
+          financeProvider.select((f) => f.data != null && f.role != 'doctor'),
+        );
     final catalog = ref.watch(catalogProvider);
     void patch(PatientState Function(PatientState) change) =>
         ref.read(patientsProvider.notifier).update(id, change);
@@ -43,10 +45,7 @@ class Patient360Screen extends ConsumerWidget {
             metric(patient.appointment, 'Lịch tiếp theo'),
           ],
         ),
-        if (!care &&
-            s.billing &&
-            finance?.data != null &&
-            finance!.role != 'doctor')
+        if (!care && s.billing && canRecordProcedure)
           tile(
             'Ghi nhận tiền thủ thuật',
             'Đúng người thực hiện · gắn hóa đơn đã có',

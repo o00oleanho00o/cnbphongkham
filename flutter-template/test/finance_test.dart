@@ -116,6 +116,17 @@ void main() {
       expect(c.read(financeProvider).data!['invoices'], isEmpty);
     },
   );
+  test('identical poll response does not notify finance watchers', () async {
+    final c = financeContainer(MockClient((r) async => json(fixture())));
+    var notified = 0;
+    c.listen(financeProvider, (_, _) => notified++);
+    final finance = c.read(financeProvider.notifier);
+    await finance.refresh();
+    expect(notified, 1);
+    await finance.refresh();
+    await finance.refresh();
+    expect(notified, 1);
+  });
   test(
     'API failed payment retains error and does not fabricate success',
     () async {

@@ -82,7 +82,7 @@ MVP PB01 gồm patient identity, shared state, consent/audit shape, Patient 360,
 | Catalog | `flutter-template/assets/products.json` | Bản sao `prototype/shared/product-catalog.json`; import Excel ở web trước rồi đồng bộ bundle |
 | Nhận diện | `flutter-template/assets/` | Logo, Be Vietnam Pro và giấy phép OFL; dùng chung ngôn ngữ thiết kế web |
 | Review shell | `prototype/native-review/index.html` | Chọn khung iframe; không sở hữu nghiệp vụ Flutter |
-| Build và kiểm tra | `flutter-template/build-preview.ps1`, `test/` | build_runner, build/copy preview và 18 test (template, finance, mobile roles); generated output không sửa trực tiếp |
+| Build và kiểm tra | `flutter-template/build-preview.ps1`, `test/` | build_runner, build/copy preview và 20 test (template, finance, mobile roles); generated output không sửa trực tiếp |
 
 Thứ tự phát triển sau duyệt: chốt identity + per-patient model → repository/API + persistence → phân quyền/audit → nghiệp vụ lịch/đơn/ledger/follow-up → plugin media/PDF/notification → device acceptance. Không thêm màn để che thiếu nền. Phân định web/native theo [ma trận parity](22_NATIVE_PARITY_AND_VALIDATION.md).
 

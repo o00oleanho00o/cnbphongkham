@@ -61,12 +61,18 @@ abstract class _$OrdersNotifier extends $Notifier<List<Order>> {
   }
 }
 
-@ProviderFor(patientOrders)
+/// Orders of one patient. Saving another patient's order produces an equal
+/// list here, so `updateShouldNotify` keeps this patient's screens still.
+
+@ProviderFor(PatientOrders)
 final patientOrdersProvider = PatientOrdersFamily._();
 
+/// Orders of one patient. Saving another patient's order produces an equal
+/// list here, so `updateShouldNotify` keeps this patient's screens still.
 final class PatientOrdersProvider
-    extends $FunctionalProvider<List<Order>, List<Order>, List<Order>>
-    with $Provider<List<Order>> {
+    extends $NotifierProvider<PatientOrders, List<Order>> {
+  /// Orders of one patient. Saving another patient's order produces an equal
+  /// list here, so `updateShouldNotify` keeps this patient's screens still.
   PatientOrdersProvider._({
     required PatientOrdersFamily super.from,
     required String super.argument,
@@ -90,14 +96,7 @@ final class PatientOrdersProvider
 
   @$internal
   @override
-  $ProviderElement<List<Order>> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  List<Order> create(Ref ref) {
-    final argument = this.argument as String;
-    return patientOrders(ref, argument);
-  }
+  PatientOrders create() => PatientOrders();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(List<Order> value) {
@@ -118,10 +117,20 @@ final class PatientOrdersProvider
   }
 }
 
-String _$patientOrdersHash() => r'81e4d4972de5fbaa4d039d63202c73ac111ad40a';
+String _$patientOrdersHash() => r'3c02969cac8d4cb0ba96b931116a12391e79fcb0';
+
+/// Orders of one patient. Saving another patient's order produces an equal
+/// list here, so `updateShouldNotify` keeps this patient's screens still.
 
 final class PatientOrdersFamily extends $Family
-    with $FunctionalFamilyOverride<List<Order>, String> {
+    with
+        $ClassFamilyOverride<
+          PatientOrders,
+          List<Order>,
+          List<Order>,
+          List<Order>,
+          String
+        > {
   PatientOrdersFamily._()
     : super(
         retry: null,
@@ -131,11 +140,38 @@ final class PatientOrdersFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// Orders of one patient. Saving another patient's order produces an equal
+  /// list here, so `updateShouldNotify` keeps this patient's screens still.
+
   PatientOrdersProvider call(String id) =>
       PatientOrdersProvider._(argument: id, from: this);
 
   @override
   String toString() => r'patientOrdersProvider';
+}
+
+/// Orders of one patient. Saving another patient's order produces an equal
+/// list here, so `updateShouldNotify` keeps this patient's screens still.
+
+abstract class _$PatientOrders extends $Notifier<List<Order>> {
+  late final _$args = ref.$arg as String;
+  String get id => _$args;
+
+  List<Order> build(String id);
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<List<Order>, List<Order>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<List<Order>, List<Order>>,
+              List<Order>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, () => build(_$args));
+  }
 }
 
 @ProviderFor(currentOrders)
