@@ -41,7 +41,7 @@ Mọi màn được khai báo bằng dữ liệu trong `class Component … buil
 | `a5(kind, items, footer)` | Bản xem phiếu A5 | A5 preview |
 | `txt(text, { s, c, w, ws })` | Đoạn chữ tự do (cỡ, màu, độ đậm, white-space) | `Text` |
 | `sp(h)` | Khoảng trống cao `h` px | `SizedBox` |
-| `buckets(active)` / `careSearch(active)` / `chip(label)` / `listHead(title, count)` / `careRow(person)` / `empty(text)` | Bộ block hàng chờ CSKH | `care_workspace.dart` |
+| `buckets(active)` / `careSearch(active)` / `chip(label)` / `listHead(title, count)` / `careRow(person)` / `empty(text)` | Bộ block hàng chờ CSKH | `features/customer_care/presentation/widgets/care_queue.dart` |
 | `finHero(over, value, sub?)` / `pill(text, icon?)` / `mcard(title, sub)` | Block tài chính | `finance.dart` |
 | `fc(...items)` | Thẻ viền; bên trong dùng `ftitle(text)`, `fl(label, value)`, `txt(...)`, `fb(...labels)` (nút chữ), `ff(label)` (nút đặc), `fi(text)` (dòng icon tiền), `sp(h)` | `Card` + `Row` |
 

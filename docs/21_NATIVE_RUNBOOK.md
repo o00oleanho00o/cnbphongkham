@@ -36,7 +36,7 @@ python -m http.server 4173 --bind 127.0.0.1
 
 Script chạy pub get, `dart run build_runner build`, `flutter build web --base-href /native-preview/ --no-web-resources-cdn`, rồi copy `build/web/*` sang `prototype/native-preview/`. Build output bị git-ignore; fresh clone phải build trước khi mở [Native review](http://127.0.0.1:4173/native-review/). Không mở bằng file://, không sửa JS đã compile để thay hành vi app.
 
-Khi sửa provider trong `lib/state/`, chạy `dart run build_runner watch` song song để cập nhật `*.g.dart`; file sinh ra được commit để fresh clone chạy test ngay. Khi phát triển có thể dùng `flutter run -d chrome` trong `flutter-template`; đây là dev server riêng, không tự cập nhật preview ở cổng 4173. Sau sửa Dart/assets phải build lại để duyệt URL 4173.
+Khi sửa provider trong `lib/features/*/presentation/providers/`, chạy `dart run build_runner watch` song song để cập nhật `*.g.dart`; file sinh ra được commit để fresh clone chạy test ngay. Khi phát triển có thể dùng `flutter run -d chrome` trong `flutter-template`; đây là dev server riêng, không tự cập nhật preview ở cổng 4173. Sau sửa Dart/assets phải build lại để duyệt URL 4173.
 
 Android cần Android SDK và device/emulator: `flutter devices`, `flutter run -d <device-id>`. iOS cần macOS/Xcode. Các lệnh này là hướng dẫn tiếp theo, chưa phải bằng chứng đã chạy trên thiết bị.
 

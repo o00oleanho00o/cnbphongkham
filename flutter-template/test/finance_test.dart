@@ -4,10 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pema_native_template/finance.dart';
-import 'package:pema_native_template/main.dart';
-import 'package:pema_native_template/state/catalog.dart';
-import 'package:pema_native_template/state/finance.dart';
+import 'package:pema_native_template/features/finance/presentation/screens/finance_screen.dart';
+import 'package:pema_native_template/features/finance/presentation/screens/procedure_form_screen.dart';
+import 'package:pema_native_template/app.dart';
+import 'package:pema_native_template/features/catalog/presentation/providers/catalog_provider.dart';
+import 'package:pema_native_template/core/network/http_client_provider.dart';
+import 'package:pema_native_template/features/finance/presentation/providers/finance_provider.dart';
 
 import 'support.dart';
 
@@ -79,7 +81,7 @@ Map<String, dynamic> fixture({String role = 'owner'}) => {
 };
 ProviderContainer financeContainer(http.Client client) =>
     ProviderContainer.test(
-      overrides: [financeClientProvider.overrideWithValue(client)],
+      overrides: [httpClientProvider.overrideWithValue(client)],
     );
 
 http.Response json(Object body, [int status = 200]) => http.Response(
@@ -150,12 +152,12 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final catalog = (await tester.runAsync(Catalog.load))!;
+    final catalog = (await tester.runAsync(loadCatalog))!;
     final c = ProviderContainer(
       overrides: [
         catalogProvider.overrideWithValue(catalog),
         financeEnabledProvider.overrideWithValue(true),
-        financeClientProvider.overrideWithValue(
+        httpClientProvider.overrideWithValue(
           MockClient((r) async => json(state())),
         ),
       ],

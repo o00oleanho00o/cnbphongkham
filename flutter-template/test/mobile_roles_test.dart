@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pema_native_template/main.dart';
-import 'package:pema_native_template/state/catalog.dart';
-import 'package:pema_native_template/state/patients.dart';
-import 'package:pema_native_template/state/session.dart';
+import 'package:pema_native_template/app.dart';
+import 'package:pema_native_template/features/catalog/presentation/providers/catalog_provider.dart';
+import 'package:pema_native_template/features/patients/domain/models/patient_state.dart';
+import 'package:pema_native_template/features/patients/presentation/providers/patients_provider.dart';
+import 'package:pema_native_template/features/session/domain/models/session.dart';
+import 'package:pema_native_template/features/session/presentation/providers/session_provider.dart';
 
 import 'support.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test('ten CSKH accounts and complete patient state isolation', () async {
-    final c = clinicContainer(await Catalog.load());
+    final c = clinicContainer(await loadCatalog());
     final profiles = c.read(catalogProvider).profiles;
     expect(profiles.length, 46);
     final cases = profiles.where((p) => p['group'] != '').toList();
@@ -74,7 +76,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      final c = clinicContainer((await tester.runAsync(Catalog.load))!);
+      final c = clinicContainer((await tester.runAsync(loadCatalog))!);
       PatientState current() => c.read(currentPatientProvider);
       await tester.pumpWidget(scoped(c, const PemaApp()));
       await tester.pumpAndSettle();

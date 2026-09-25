@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pema_native_template/main.dart';
-import 'package:pema_native_template/state/catalog.dart';
-import 'package:pema_native_template/state/orders.dart';
-import 'package:pema_native_template/state/patients.dart';
-import 'package:pema_native_template/state/session.dart';
+import 'package:pema_native_template/app.dart';
+import 'package:pema_native_template/core/router/app_router.dart';
+import 'package:pema_native_template/features/catalog/presentation/providers/catalog_provider.dart';
+import 'package:pema_native_template/features/orders/presentation/providers/orders_provider.dart';
+import 'package:pema_native_template/features/billing/presentation/providers/receipts_provider.dart';
+import 'package:pema_native_template/features/patients/presentation/providers/patients_provider.dart';
+import 'package:pema_native_template/features/session/presentation/providers/session_provider.dart';
 
 import 'support.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test('catalog, draft approval and patient isolation', () async {
-    final c = clinicContainer(await Catalog.load());
+    final c = clinicContainer(await loadCatalog());
     final catalog = c.read(catalogProvider);
     expect(catalog.products.length, 115);
     expect(
@@ -48,7 +50,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      final catalog = (await tester.runAsync(Catalog.load))!;
+      final catalog = (await tester.runAsync(loadCatalog))!;
       final c = clinicContainer(catalog);
       final id = c.read(selectedPatientIdProvider);
       final patients = c.read(patientsProvider.notifier);
@@ -83,7 +85,8 @@ void main() {
             c,
             MaterialApp(
               theme: ThemeData(fontFamily: 'BeVietnam'),
-              home: Detail(route: route),
+              onGenerateRoute: AppRouter.onGenerateRoute,
+              home: AppRouter.page(route),
             ),
           ),
         );
@@ -96,10 +99,16 @@ void main() {
   testWidgets('native order form adds catalog item and opens review', (
     tester,
   ) async {
-    final catalog = (await tester.runAsync(Catalog.load))!;
+    final catalog = (await tester.runAsync(loadCatalog))!;
     final c = clinicContainer(catalog);
     await tester.pumpWidget(
-      scoped(c, const MaterialApp(home: Detail(route: 'Lên đơn nhanh'))),
+      scoped(
+        c,
+        MaterialApp(
+          onGenerateRoute: AppRouter.onGenerateRoute,
+          home: AppRouter.page('Lên đơn nhanh'),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text(catalog.products.first['name']));

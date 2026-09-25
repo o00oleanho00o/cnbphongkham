@@ -10,7 +10,7 @@ Module map đi từ nền ẩn đến trải nghiệm nhìn thấy. Module phả
 
 ## Native template (22/09/2026)
 
-`flutter-template/lib/state/` giữ catalog và state trong phiên bằng Riverpod; `main.dart` gồm Theme/Workspace/Detail, Clinic/Care navigation, form và sheet. `assets/` dùng logo/font/catalog hiện tại. Test domain và layout đặt trong `test/`. API, auth, camera/PDF plugins để sau duyệt.
+`flutter-template/lib/` theo feature-first: `core/` (theme, router, network, utils, widgets dùng chung) và `features/<feature>/{data,domain,presentation}`; provider Riverpod nằm trong `presentation/providers/`, mỗi tác vụ là một screen riêng, `main.dart` chỉ bootstrap. `assets/` dùng logo/font/catalog hiện tại. Test domain và layout đặt trong `test/`. API, auth, camera/PDF plugins để sau duyệt.
 
 ## Foundation layer — móng ẩn
 
@@ -75,10 +75,10 @@ MVP PB01 gồm patient identity, shared state, consent/audit shape, Patient 360,
 
 | Thành phần | Nguồn | Trách nhiệm / phụ thuộc |
 |---|---|---|
-| App shell, theme, navigation, các màn | `flutter-template/lib/main.dart` | Material 3; `ref.watch` provider, ghi qua notifier; chưa tách feature package |
-| CSKH mobile | `flutter-template/lib/care_workspace.dart` | Ba trạng thái, tìm kiếm, lọc nhóm trong sheet và mở tác vụ đúng patient |
+| App shell, theme, navigation, các màn | `flutter-template/lib/app.dart`, `lib/core/`, `lib/features/*/presentation/screens/` | Material 3; named route qua `AppRouter`; `ref.watch` provider, ghi qua notifier |
+| CSKH mobile | `flutter-template/lib/features/customer_care/presentation/widgets/care_queue.dart` | Ba trạng thái, tìm kiếm, lọc nhóm trong sheet và mở tác vụ đúng patient |
 | Tài khoản mẫu | `flutter-template/assets/patients.json`, `prototype/export-native-patients.cjs` | Snapshot 46 hồ sơ/10 nhóm từ fresh fixture; kiểm đồng nhất bằng `--check` |
-| State và đơn hàng | `flutter-template/lib/state/*.dart` (+ `*.g.dart` sinh tự động) | Riverpod `@riverpod`; catalog, session/selection, state theo patient + cart, order snapshot, receipt totals, finance; memory only trừ finance HTTP |
+| State và đơn hàng | `flutter-template/lib/features/*/presentation/providers/*.dart` (+ `*.g.dart` sinh tự động), model trong `domain/models/` | Riverpod `@riverpod`; catalog, session/selection, state theo patient + cart, order snapshot, receipt totals, finance; memory only trừ finance HTTP |
 | Catalog | `flutter-template/assets/products.json` | Bản sao `prototype/shared/product-catalog.json`; import Excel ở web trước rồi đồng bộ bundle |
 | Nhận diện | `flutter-template/assets/` | Logo, Be Vietnam Pro và giấy phép OFL; dùng chung ngôn ngữ thiết kế web |
 | Review shell | `prototype/native-review/index.html` | Chọn khung iframe; không sở hữu nghiệp vụ Flutter |
@@ -114,4 +114,4 @@ Không xây thêm màn hình chỉ để đủ menu khi module nền chưa có t
 
 Tái dùng finance.js dưới dạng mount/dispose, CSS giới hạn trong finance-workspace; Clinic làm shell duy nhất. crm-data bổ sung fixtures và projection patientNext; patient.js chọn nhóm/tài khoản. Flutter provider chứa hồ sơ và state theo patient, Workspace chọn vai trò trước khi chọn tác vụ.
 
-UI review CSKH mobile: trạng thái Cần làm / Đã liên hệ / Chờ bác sĩ ở đầu màn; tìm kiếm và nút Lọc mở sheet 10 nhóm, không trải 10 chip lên home. Card đầu nằm trong 440px đầu ở viewport 360; lọc/trạng thái phải thực sự đổi danh sách. Widget `care_workspace.dart` dùng cùng PatientState, ghi chú nội bộ giữ tách Care.
+UI review CSKH mobile: trạng thái Cần làm / Đã liên hệ / Chờ bác sĩ ở đầu màn; tìm kiếm và nút Lọc mở sheet 10 nhóm, không trải 10 chip lên home. Card đầu nằm trong 440px đầu ở viewport 360; lọc/trạng thái phải thực sự đổi danh sách. Widget `care_queue.dart` dùng cùng PatientState, ghi chú nội bộ giữ tách Care.

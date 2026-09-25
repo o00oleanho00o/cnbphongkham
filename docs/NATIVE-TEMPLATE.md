@@ -53,7 +53,7 @@ Chuyển các luồng web sang app Flutter với hai không gian Clinic/Care. Đ
 
 ## Giới hạn
 
-Các luồng tương tác chính dùng state phiên trong provider Riverpod (`lib/state/`); không sync web/backend. Scheduler chỉ minh họa slot và date picker, không copy engine xung đột web. Camera, media, AI, PDF/in, auth, privacy persistence chưa nối native plugin. Chỉ sau duyệt mới triển khai repository/API, permission, storage và thiết bị thật. Không gọi template này là ứng dụng production.
+Các luồng tương tác chính dùng state phiên trong provider Riverpod (`lib/features/*/presentation/providers/`); không sync web/backend. Scheduler chỉ minh họa slot và date picker, không copy engine xung đột web. Camera, media, AI, PDF/in, auth, privacy persistence chưa nối native plugin. Chỉ sau duyệt mới triển khai repository/API, permission, storage và thiết bị thật. Không gọi template này là ứng dụng production.
 
 ## Sơ đồ điều hướng và màn con
 

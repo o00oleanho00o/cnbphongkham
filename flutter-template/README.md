@@ -11,7 +11,7 @@ Flutter Material 3 cho Android/iOS. Bản trình duyệt được build từ cù
 
 ```sh
 flutter pub get
-dart run build_runner build   # sinh lib/state/*.g.dart
+dart run build_runner build --delete-conflicting-outputs   # sinh các file *.g.dart của provider
 flutter run -d chrome
 flutter test
 dart analyze   # gồm riverpod_lint (khai báo trong analysis_options.yaml)
@@ -19,6 +19,56 @@ flutter build web --base-href /native-preview/
 ```
 
 Android: `flutter run -d <device-id>` sau khi có Android SDK/emulator. iOS cần macOS/Xcode. Bản duyệt browser chưa thay thế kiểm thử bàn phím, camera, safe-area và gesture trên điện thoại thật.
+
+## Kiến trúc thư mục (feature-first)
+
+Chia theo tính năng trước, chia tầng sau. Mỗi feature tự đóng gói data, domain và presentation của nó.
+
+```text
+lib/
+├── main.dart                 # bootstrap: nạp catalog, ProviderScope + overrides
+├── app.dart                  # PemaApp: MaterialApp, theme, router, PaymentAlerts
+├── core/                     # dùng chung toàn app, không phụ thuộc feature
+│   ├── network/              # ApiConfig (PEMA_FINANCE_API), httpClientProvider
+│   ├── router/               # AppRoutes (tên route), AppRouter (route → screen + guard), context.openRoute
+│   ├── theme/                # AppColors, AppTheme.light
+│   ├── utils/                # money(), context.toast()
+│   └── widgets/              # DetailScaffold, PemaBottomNav, block heading/tile/notice/primary...
+└── features/
+    ├── catalog/              # catalog bundle trong assets
+    ├── session/              # vai trò, Clinic/Care, hồ sơ đang chọn
+    ├── patients/             # PatientState theo hồ sơ, Patient 360, tư vấn, kế hoạch, buổi điều trị
+    ├── orders/               # lên đơn, kiểm tra đơn, đơn thuốc, phiếu A5
+    ├── billing/              # thu ngân, receipts
+    ├── schedule/             # đặt lịch, chi tiết lịch, dịch vụ, bác sĩ & phòng
+    ├── aftercare/            # chăm sóc tại nhà, gửi cập nhật, phản hồi, quyền riêng tư
+    ├── customer_care/        # hàng chờ CSKH, liên hệ khách hàng
+    ├── finance/              # tài chính dùng API chung (PB02)
+    └── workspace/            # màn chính theo vai trò, hướng dẫn
+        ├── data/
+        │   ├── datasources/  # nói chuyện với nguồn dữ liệu: HTTP, asset, local storage
+        │   └── repositories/ # *_repository_impl.dart: cài đặt interface của domain
+        ├── domain/
+        │   ├── models/       # model immutable + copyWith
+        │   └── repositories/ # interface trừu tượng (abstract class)
+        └── presentation/
+            ├── providers/    # Riverpod @riverpod / @Riverpod(keepAlive: true) + *.g.dart
+            ├── screens/      # mỗi route một màn
+            └── widgets/      # widget riêng của feature
+```
+
+Quy ước:
+
+- Luồng phụ thuộc: `screen → provider/notifier → repository (interface) → repository impl → datasource`. `domain/` không import Flutter UI hoặc `data/`. Tầng `data/` chỉ có ở feature thực sự có I/O (catalog, finance); feature chỉ có state trong phiên thì chỉ cần `domain/models` và `presentation/`.
+- Provider viết bằng `riverpod_generator`. State cần sống suốt phiên dùng `@Riverpod(keepAlive: true)`; provider suy diễn (derived) dùng `@riverpod`. Sau khi sửa phải chạy `dart run build_runner build --delete-conflicting-outputs` và commit `*.g.dart`.
+- Feature chỉ import `core/`, hoặc `domain`/`providers` của feature khác. Nối route với màn làm trong `core/router/app_router.dart`. Có hai ngoại lệ đã biết. `workspace` là shell ghép màn chính nên dùng widget của feature khác. Patient 360 mở trực tiếp `ProcedureForm` của finance, vì form cần tham số.
+- Điều hướng: `context.openRoute(AppRoutes.x)` và `context.openFinance(tab)`. Guard `session.allows(route)` nằm trong `AppRouter.page`, screen không tự kiểm tra lại.
+- Thêm tác vụ mới:
+  1. Khai báo tên route trong `AppRoutes`.
+  2. Tạo `features/<feature>/presentation/screens/<ten>_screen.dart`, dùng `DetailScaffold`.
+  3. Thêm một nhánh vào `AppRouter._screen`.
+  4. Nếu role nào được mở route này, cập nhật `Session.allows`.
+  5. Thêm test trong `test/`.
 
 ## Build APK Android để cài thử
 
