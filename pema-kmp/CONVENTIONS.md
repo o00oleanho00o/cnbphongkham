@@ -33,7 +33,7 @@ Quy tắc:
 - Chỉ dùng token trong `PemaColors` và kiểu chữ `PemaType.*` (đã gồm font Be Vietnam Pro). Không tự đặt màu/cỡ chữ khác canvas.
 - Icon: `PemaIcon("tên_material")` — Flutter `Icons.x_outlined` → `PemaIcon("x")`, `Icons.x` → `PemaIcon("x", filled = true)`.
 - Block riêng của feature (thẻ đơn, phiếu A5, hàng CSKH, thẻ tài chính…) dựng trong module feature theo CSS của block đó trong canvas.
-- **Vòng so ảnh bắt buộc**: trong `jvmTest` của module gọi `shotVsCanvas("F4") { QuickOrderScreen(state, …) }` → `build/shots/F4-vs.png` = ảnh canvas (trái) | bản Compose (phải). Xem ảnh, sửa đến khi khớp. Ảnh tham chiếu lấy từ thư mục `-Dpema.refDir=` / biến môi trường `PEMA_REF_DIR` (mặc định: thư mục `ref` trong session).
+- **Vòng so ảnh bắt buộc**: trong `jvmTest` của module gọi `shotVsCanvas("F4") { QuickOrderScreen(state, …) }` → `build/shots/F4-vs.png` = ảnh canvas (trái) | bản Compose (phải). Xem ảnh, sửa đến khi khớp. Ảnh tham chiếu do task Gradle `canvasRefs` tự render từ canvas vào `pema-kmp/design-ref/` trước mỗi `jvmTest` (bỏ qua nếu canvas không đổi); chụp lại tay: `.\gradlew.bat canvasRefs` hoặc `node .claude\skills\pema-canvas-to-kmp-compose\scripts\canvas-shots.cjs --force`. `PEMA_REF_DIR` ghi đè thư mục.
 
 ## Màn web-only (canvas I/J/K)
 - Logic theo `prototype/` (web), không phải Flutter; dữ liệu lấy từ `deps.clinicStore` (`shared/clinic`). Lệnh mới viết thành extension `ClinicStore.xxx()` trong `shared/clinic/<Feature>Commands.kt` dùng `transact` (lỗi = `ClinicError` với câu tiếng Việt của web).

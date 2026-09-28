@@ -2,6 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } fro
 import { fitRect, zoomAt, type Camera } from './camera';
 import { findScreens, hotSwap, type PropValues } from './dc';
 import { displayName, docUrl, fileFromHash, files } from './docs';
+import { ExportMenu, type ExportScope } from './ExportMenu';
+import {
+  DEFAULT_EXPORT,
+  EXPORTING_ATTR,
+  exportScreens,
+  titleOf,
+  type ExportProgress,
+  type ExportSettings,
+} from './exportImage';
 import { PropsPanel } from './PropsPanel';
 import { ScreensPanel } from './ScreensPanel';
 import { StatusOverlay } from './StatusOverlay';
@@ -24,6 +33,10 @@ const NARROW_QUERY = '(max-width: 720px)';
 const camKey = (file: string) => `dcv:cam:${file}`;
 const propsKey = (file: string) => `dcv:props:${file}`;
 const PANELS_KEY = 'dcv:panels';
+const EXPORT_KEY = 'dcv:export';
+const SELECTION_STYLE_ID = 'dcv-selection';
+
+const isExportShortcut = (e: KeyboardEvent) => (e.ctrlKey || e.metaKey) && e.shiftKey && e.code === 'KeyE';
 
 function viewportOf(ref: RefObject<HTMLElement | null>) {
   const r = ref.current?.getBoundingClientRect();
@@ -50,6 +63,11 @@ export function App() {
     const wide = window.innerWidth >= WIDE_LAYOUT_PX;
     return load<Panels>(PANELS_KEY, { left: wide, right: wide });
   });
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportSettings, setExportSettings] = useState<ExportSettings>(() => load(EXPORT_KEY, DEFAULT_EXPORT));
+  const [exportProgress, setExportProgress] = useState<ExportProgress | null>(null);
+  const [exportMessage, setExportMessage] = useState('');
+  const exportingRef = useRef(false);
 
   const viewportRef = useRef<HTMLElement>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
@@ -161,6 +179,117 @@ export function App() {
     [win],
   );
 
+  // ---------- Figma-like export ----------
+  const selected = useMemo(() => screens.find((s) => s.label === activeScreen), [screens, activeScreen]);
+  const selectedSize = useMemo(() => {
+    const el = selected && win ? findScreens(win).find((s) => s.label === selected.label)?.el : undefined;
+    const frame = (el?.parentElement ?? el) as HTMLElement | undefined;
+    return frame ? { w: Math.round(frame.offsetWidth), h: Math.round(frame.offsetHeight) } : null;
+  }, [selected, win, exportOpen]);
+  const groupLabels = useMemo(
+    () => (selected?.group ? screens.filter((s) => s.group === selected.group).map((s) => s.label) : []),
+    [screens, selected],
+  );
+
+  const changeExportSettings = useCallback((next: ExportSettings) => {
+    setExportSettings(next);
+    save(EXPORT_KEY, next);
+  }, []);
+
+  const runExport = useCallback(
+    async (labels: string[], zipName: string) => {
+      if (!win || exportingRef.current || !labels.length) return;
+      exportingRef.current = true;
+      setExportMessage('');
+      try {
+        const n = await exportScreens(win, labels, exportSettings, zipName, setExportProgress);
+        setExportMessage(n ? `Đã xuất ${n} ảnh ${exportSettings.format.toUpperCase()} @${exportSettings.scale}x.` : 'Không tìm thấy màn để xuất.');
+      } catch (e) {
+        setExportMessage(`Xuất ảnh lỗi: ${e instanceof Error ? e.message : String(e)}`);
+        setExportOpen(true);
+      } finally {
+        exportingRef.current = false;
+        setExportProgress(null);
+      }
+    },
+    [win, exportSettings],
+  );
+
+  const exportScope = useCallback(
+    (scope: ExportScope) => {
+      const base = displayName(file);
+      if (scope === 'screen' && selected) runExport([selected.label], selected.label);
+      if (scope === 'group' && selected?.group) runExport(groupLabels, `${base} · ${selected.group}`);
+      if (scope === 'all') runExport(screens.map((s) => s.label), base);
+    },
+    [file, selected, groupLabels, screens, runExport],
+  );
+
+  const exportOne = useCallback(
+    (label: string) => {
+      setActiveScreen(label);
+      runExport([label], label);
+    },
+    [runExport],
+  );
+
+  // Click a frame's title on the canvas to select it (double click also zooms to it), like Figma.
+  useEffect(() => {
+    if (!win) return;
+    const doc = win.document;
+    const hit = (target: EventTarget | null) => {
+      const node = target as Node | null;
+      if (!node) return undefined;
+      return findScreens(win).find((s) => titleOf(s.el)?.contains(node))?.label;
+    };
+    const onClick = (e: MouseEvent) => {
+      const label = hit(e.target);
+      if (label) setActiveScreen(label);
+    };
+    const onDblClick = (e: MouseEvent) => {
+      const label = hit(e.target);
+      if (label) focusScreen(label);
+    };
+    doc.addEventListener('click', onClick);
+    doc.addEventListener('dblclick', onDblClick);
+    return () => {
+      doc.removeEventListener('click', onClick);
+      doc.removeEventListener('dblclick', onDblClick);
+    };
+  }, [win, focusScreen]);
+
+  // Selection outline on the page, keyed by the frame id so it survives re-renders and hot swaps.
+  useEffect(() => {
+    const doc = win?.document;
+    if (!doc?.head) return;
+    let style = doc.getElementById(SELECTION_STYLE_ID) as HTMLStyleElement | null;
+    if (!style) {
+      style = doc.createElement('style');
+      style.id = SELECTION_STYLE_ID;
+      doc.head.appendChild(style);
+    }
+    const id = selected?.id;
+    style.textContent = id
+      ? `html:not([${EXPORTING_ATTR}]) [id="${id}"]{outline:2px solid #0B4F94;outline-offset:6px}`
+      : '';
+  }, [win, selected]);
+
+  // Ctrl/⌘ + Shift + E: export the selected frame (or open the export panel when nothing is selected).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!isExportShortcut(e)) return;
+      e.preventDefault();
+      if (selected) runExport([selected.label], selected.label);
+      else setExportOpen(true);
+    };
+    window.addEventListener('keydown', onKey);
+    win?.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      win?.removeEventListener('keydown', onKey);
+    };
+  }, [win, selected, runExport]);
+
   // Dev server only: swap the edited document into the running page so camera and prototype state survive.
   useEffect(() => {
     const hot = import.meta.hot;
@@ -211,9 +340,24 @@ export function App() {
         panels={panels}
         onPanels={setPanels}
         hasProps={hasProps}
+        exportSlot={
+          <ExportMenu
+            open={exportOpen}
+            onOpenChange={setExportOpen}
+            settings={exportSettings}
+            onSettings={changeExportSettings}
+            selected={selected}
+            selectedSize={selectedSize}
+            groupCount={groupLabels.length}
+            total={screens.length}
+            progress={exportProgress}
+            message={exportMessage}
+            onExport={exportScope}
+          />
+        }
       />
 
-      {panels.left && <ScreensPanel screens={screens} active={activeScreen} onSelect={focusScreen} />}
+      {panels.left && <ScreensPanel screens={screens} active={activeScreen} onSelect={focusScreen} onExport={exportOne} />}
 
       <main
         ref={viewportRef}

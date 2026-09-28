@@ -27,10 +27,49 @@ Yêu cầu: Android SDK platform 37 (compileSdk 37, targetSdk 36, minSdk 24), JD
 Tài chính gọi API `http://127.0.0.1:4174` (`BuildConfig.FINANCE_API`). Chạy API từ gốc repo: `python prototype/finance_server.py`, rồi trên máy thật/emulator: `adb reverse tcp:4174 tcp:4174`. Khi API tắt, màn tài chính hiện lỗi + "Thử lại".
 
 ## So sánh với design canvas
-`jvmTest` của mỗi feature (và `composeApp` cho màn F17 chặn quyền) render màn hình 390×844dp (×2) và ghép cạnh ảnh canvas: `<module>/build/shots/<ID>-vs.png` (trái canvas, phải KMP). Ảnh canvas lấy từ `-Dpema.refDir=…` hoặc biến môi trường `PEMA_REF_DIR`. Khác biệt được chấp nhận: logo Pema thật thay chữ "pema" placeholder, dữ liệu mẫu thật (46 hồ sơ) thay dữ liệu minh họa của canvas.
+`jvmTest` của mỗi feature (và `composeApp` cho màn F17 chặn quyền) render màn hình 390×844dp (×2) và ghép cạnh ảnh canvas: `<module>/build/shots/<ID>-vs.png` (trái canvas, phải KMP). Khác biệt được chấp nhận: logo Pema thật thay chữ "pema" placeholder, dữ liệu mẫu thật (46 hồ sơ) thay dữ liệu minh họa của canvas.
+
+### Ảnh chụp design (`design-ref/`) — tự động, không cần chụp tay
+Ảnh canvas dùng để so sánh được tạo từ `Pema App redesign canvas/Pema App.dc.html` bằng script [`canvas-shots.cjs`](../.claude/skills/pema-canvas-to-kmp-compose/scripts/canvas-shots.cjs) và lưu ở `pema-kmp/design-ref/<ID>.png` (A1…K3, mỗi ảnh là một màn kèm khung điện thoại, 780×1690 px).
+
+**Cài một lần** (máy mới):
+```powershell
+cd E:\Desktop\cnbphongkham\design-viewer; npm install
+npx -y playwright@latest install chromium
+```
+
+**Dùng hằng ngày:** chỉ cần chạy test như bình thường — `jvmTest` tự chạy task `canvasRefs` trước:
+```powershell
+.\gradlew.bat jvmTest                       # tự tạo/cập nhật design-ref rồi tạo các ảnh *-vs.png
+.\gradlew.bat :feature:orders:jvmTest       # một module: ảnh ở feature\orders\build\shots\
+```
+- Canvas không đổi → bỏ qua ngay (Gradle up-to-date; script kiểm tra mã băm trong `design-ref/manifest.json`, ~0,1 giây).
+- Sửa `Pema App.dc.html` → lần chạy sau tự chụp lại cả 82 màn (~25 giây). Script tự bật design-viewer (cổng 4180) nếu chưa chạy và tự tắt khi xong.
+
+**Chạy tay khi cần:**
+```powershell
+.\gradlew.bat canvasRefs                                                        # như trên, không chạy test
+cd E:\Desktop\cnbphongkham
+node .claude\skills\pema-canvas-to-kmp-compose\scripts\canvas-shots.cjs --force        # chụp lại tất cả
+node .claude\skills\pema-canvas-to-kmp-compose\scripts\canvas-shots.cjs --only=I1,J3   # chỉ vài màn
+node .claude\skills\pema-canvas-to-kmp-compose\scripts\canvas-shots.cjs --out=D:\ref   # thư mục khác
+```
+- `CANVAS_URL=http://...` dùng design-viewer đang chạy ở địa chỉ khác; `PEMA_REF_DIR` cho test đọc ảnh từ thư mục khác.
+- Thiếu Node/Playwright/design-viewer: task chỉ cảnh báo, test vẫn chạy nhưng không có ảnh `-vs.png` (log in `shotVsCanvas: no canvas reference …`).
+- `design-ref/` nằm trong `.gitignore` (khoảng 9 MB, tạo lại được) — không commit.
+- Muốn tự xuất ảnh một màn / một nhóm / cả canvas bằng tay (PNG/JPG, 1x–3x): dùng nút **Xuất ảnh** trong Design Viewer — xem [README gốc › Design Viewer](../README.md#design-viewer--xem-design-canvas).
+
+**Thêm ảnh so sánh cho màn mới:** trong `jvmTest` của module gọi
+```kotlin
+@Test
+fun f4QuickOrder() {
+    shotVsCanvas("F4") { QuickOrderScreen(state = …) }
+}
+```
+rồi mở `<module>\build\shots\F4-vs.png` để đối chiếu với canvas.
 
 ## Trạng thái
-- Đã port toàn bộ 82 màn của canvas: 55 màn A–H (Flutter, 1:1) và 27 màn I/J/K (bổ sung từ web: logic theo `prototype/`, giao diện theo canvas). Mỗi mã màn đều có ảnh so sánh `-vs.png`; build Android xanh, 184/184 test pass.
+- Đã port toàn bộ 82 màn của canvas: 55 màn A–H (Flutter, 1:1) và 27 màn I/J/K (bổ sung từ web: logic theo `prototype/`, giao diện theo canvas). Mỗi mã màn đều có ảnh so sánh `-vs.png`; build Android xanh, 190/190 test pass.
 - Lối vào màn web: tab "Thêm"/màn chính của từng vai trò có mục "Vận hành phòng khám" (lọc theo quyền web `staff-context.js`); Patient 360 có mục "Patient 360 đầy đủ"; C6 có "Ghi nhận CSKH đầy đủ"; F13/F14 mở Chỉnh dịch vụ/Khóa phòng (chỉ chủ phòng khám); Trang chủ Care → Lịch hẹn (K1), Hồ sơ Care → Tài liệu & hóa đơn (K2).
 - Khác biệt có chủ đích so với canvas: dữ liệu mẫu thật của web (P001 Nguyễn Minh Linh, ngày 20/9/2026) thay tên/ngày minh họa; tab Hành trình (K3) giữ 4 mục của Flutter E2 và thêm dòng thời gian + câu "tiến độ số buổi, không phải mức cải thiện da" của web.
 - Dữ liệu demo chỉ nằm trong bộ nhớ tiến trình (`AppStores`, như tab web): xoay máy/quay về từ camera vẫn giữ; tắt hẳn app là về seed ban đầu.

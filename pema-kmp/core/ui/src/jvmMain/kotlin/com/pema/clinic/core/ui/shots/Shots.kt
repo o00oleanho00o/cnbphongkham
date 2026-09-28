@@ -128,12 +128,16 @@ fun sideBySide(reference: File, ours: File, out: File): File {
     return out
 }
 
-/** Canvas reference shots produced by `files/shots.cjs` from the design canvas. */
+/**
+ * Canvas reference shots, rendered by the root Gradle task `canvasRefs`
+ * (`.claude/skills/pema-canvas-to-kmp-compose/scripts/canvas-shots.cjs`) into `pema-kmp/design-ref`.
+ * jvmTest passes that folder as `-Dpema.refDir`; `PEMA_REF_DIR` overrides it.
+ */
 val canvasRefDir: File
     get() = File(
         System.getProperty("pema.refDir")
             ?: System.getenv("PEMA_REF_DIR")
-            ?: "C:/Users/My PC/.copilot/session-state/48ca5983-79c7-41d6-8cc6-1756de89f0fd/files/ref",
+            ?: "../../design-ref",
     )
 
 /**
@@ -143,5 +147,6 @@ val canvasRefDir: File
 fun shotVsCanvas(id: String, dir: File = File("build/shots"), content: @Composable () -> Unit): File {
     val ours = renderScreen(File(dir, "$id.png"), content = content)
     val ref = File(canvasRefDir, "$id.png")
+    if (!ref.exists()) println("shotVsCanvas: no canvas reference ${ref.path} – run `gradlew canvasRefs`.")
     return if (ref.exists()) sideBySide(ref, ours, File(dir, "$id-vs.png")) else ours
 }

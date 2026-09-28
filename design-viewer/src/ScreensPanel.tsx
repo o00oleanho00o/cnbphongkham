@@ -6,11 +6,13 @@ type ScreensPanelProps = {
   screens: Screen[];
   active: string;
   onSelect: (label: string) => void;
+  /** Exports one screen with the current export settings. */
+  onExport?: (label: string) => void;
 };
 
 type Group = { key: string; title: string; items: Screen[] };
 
-export const ScreensPanel = memo(function ScreensPanel({ screens, active, onSelect }: ScreensPanelProps) {
+export const ScreensPanel = memo(function ScreensPanel({ screens, active, onSelect, onExport }: ScreensPanelProps) {
   const [query, setQuery] = useState('');
 
   const groups = useMemo(() => {
@@ -57,7 +59,7 @@ export const ScreensPanel = memo(function ScreensPanel({ screens, active, onSele
             </h3>
             <ul>
               {g.items.map((s) => (
-                <li key={s.label}>
+                <li key={s.label} className="screen-row">
                   <button
                     type="button"
                     className="screen-item"
@@ -67,6 +69,17 @@ export const ScreensPanel = memo(function ScreensPanel({ screens, active, onSele
                     {s.id && <span className="screen-id">{s.id}</span>}
                     <span className="screen-name">{s.name}</span>
                   </button>
+                  {onExport && (
+                    <button
+                      type="button"
+                      className="screen-export"
+                      title={`Xuất ảnh ${s.id || s.name}`}
+                      aria-label={`Xuất ảnh ${s.label}`}
+                      onClick={() => onExport(s.label)}
+                    >
+                      <Icon name="download" />
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -83,6 +96,8 @@ export const ScreensPanel = memo(function ScreensPanel({ screens, active, onSele
         <dd>Kéo bằng chuột</dd>
         <dt>Shift + 1 / 0</dt>
         <dd>Vừa khung / 100%</dd>
+        <dt>Ctrl + Shift + E</dt>
+        <dd>Xuất ảnh màn đang chọn</dd>
       </dl>
     </aside>
   );

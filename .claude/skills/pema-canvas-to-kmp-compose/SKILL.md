@@ -42,21 +42,14 @@ Không bắt đầu feature agent trước khi bảng này rõ ràng. Tránh hai
 
 ## 2. Chuẩn bị ảnh canvas
 
-Canvas cung cấp ảnh đối chiếu, không cần chạy Flutter để chụp reference.
+Không cần tự chụp: `jvmTest` của mọi module chạy trước task Gradle `canvasRefs`, task này gọi [scripts/canvas-shots.cjs](scripts/canvas-shots.cjs) để render từng màn canvas (khung 390×844dp, ×2) vào `pema-kmp/design-ref/<ID>.png`.
 
-```powershell
-cd E:\Desktop\cnbphongkham\design-viewer
-npm run dev
-
-cd E:\Desktop\cnbphongkham
-node .claude\skills\pema-web-to-canvas\scripts\canvas.cjs list
-node <duong-dan-session>\files\shots.cjs <thu-muc-ngoai-repo>\ref
-```
-
-- `shots.cjs` render từng canvas ID với bezel ở 390×844dp, density 2.
-- Không commit ảnh reference hoặc artifact screenshot.
+- Canvas không đổi → bỏ qua ngay (Gradle up-to-date + mã băm trong `design-ref/manifest.json`); canvas đổi → tự chụp lại cả 82 màn (~25 giây).
+- Script tự bật design-viewer (vite, cổng 4180) nếu chưa chạy rồi tắt khi xong; `CANVAS_URL` để dùng viewer khác.
+- Chạy tay: `node .claude\skills\pema-canvas-to-kmp-compose\scripts\canvas-shots.cjs [--force] [--only=I1,J3] [--out=<dir>]` hoặc `.\gradlew.bat canvasRefs`.
+- Cần một lần: `npm install` trong `design-viewer/` và `npx -y playwright@latest install chromium`. Thiếu thì task chỉ cảnh báo, test vẫn chạy nhưng không có ảnh `-vs.png`.
+- `design-ref/` bị git ignore (tạo lại được). Không commit ảnh tham chiếu hay ảnh `build/shots`.
 - Dùng `shotVsCanvas("F4") { ... }` trong `jvmTest`; ảnh ghép nằm tại `<module>/build/shots/F4-vs.png` (canvas trái, KMP phải).
-- Nếu canvas thay đổi, tạo lại reference trước khi hiệu chỉnh KMP.
 
 ## 3. Thiết kế kiến trúc trước khi port
 
