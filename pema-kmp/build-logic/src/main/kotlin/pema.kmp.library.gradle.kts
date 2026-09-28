@@ -71,6 +71,7 @@ kotlin {
 tasks.withType<Test>().configureEach {
     if (name == "jvmTest") {
         dependsOn(":canvasRefs")
+        finalizedBy(":designSpecs")
         systemProperty("pema.refDir", rootProject.layout.projectDirectory.dir("design-ref").asFile.absolutePath)
     }
 }

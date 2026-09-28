@@ -26,6 +26,9 @@ Yêu cầu: Android SDK platform 37 (compileSdk 37, targetSdk 36, minSdk 24), JD
 
 Tài chính gọi API `http://127.0.0.1:4174` (`BuildConfig.FINANCE_API`). Chạy API từ gốc repo: `python prototype/finance_server.py`, rồi trên máy thật/emulator: `adb reverse tcp:4174 tcp:4174`. Khi API tắt, màn tài chính hiện lỗi + "Thử lại".
 
+## Spec/prompt từng màn (`design-specs/`, MCP `pema-design`)
+Mỗi màn A1…K3 có spec lưu sẵn ở [`design-specs/screens/<ID>.md`](../design-specs/README.md): nguồn logic (Flutter/web), route + file + composable KMP, bố cục block → Compose, câu bắt buộc, quy tắc, khác biệt được chấp nhận, bẫy đã gặp và prompt. Đọc spec thay vì đọc lại web/canvas; qua MCP `pema-design` (đăng ký sẵn trong `.mcp.json` / `.vscode/mcp.json`) dùng `get_screen`, `get_screen_image`, prompt `port_screen`. Điều học được khi chuyển đổi ghi vào `design-specs/notes.json` (hoặc tool `record_note`). Task `designSpecs` tự sinh lại sau `jvmTest`.
+
 ## So sánh với design canvas
 `jvmTest` của mỗi feature (và `composeApp` cho màn F17 chặn quyền) render màn hình 390×844dp (×2) và ghép cạnh ảnh canvas: `<module>/build/shots/<ID>-vs.png` (trái canvas, phải KMP). Khác biệt được chấp nhận: logo Pema thật thay chữ "pema" placeholder, dữ liệu mẫu thật (46 hồ sơ) thay dữ liệu minh họa của canvas.
 

@@ -6,6 +6,10 @@ To check which Pema web screens are missing from the claude.ai/design canvas (`P
 
 Whenever you add, change or remove anything visible in the Pema web (`prototype/clinic-web`, `prototype/patient-mobile`, `prototype/finance`, `prototype/shared/*.js|*.css`) — a screen, tab, modal, dialog, field, button, filter, status, flow, business-rule wording or CSS token — add an entry under "Chờ chuyển" in [web-changes.md](.claude/skills/pema-web-to-canvas/web-changes.md) in the same commit, using the template in that file. Refactors, tests, sample data and fixes with no visible change are exempt. Before committing, `node .claude/skills/pema-web-to-canvas/scripts/pending.cjs` must show no `✗ CHƯA GHI` files. Don't update the canvas itself unless asked; the skill reads this log instead of re-scanning every screen.
 
+## Screen specs (canvas → app)
+
+Every canvas screen (A1 … K3) has a saved spec + prompt in [design-specs/screens/<ID>.md](design-specs/README.md), also served by the MCP server `pema-design` (`.mcp.json`; tools `get_screen`, `get_screen_image`, `record_note`, prompt `port_screen`). Before building, porting or changing a screen in `pema-kmp/` (or the Flutter app), read its spec instead of re-reading the web, Flutter and canvas sources; open those only for what the spec lacks. After finishing, record anything new you learned about that screen — source functions, business rules, accepted differences, gotchas — in `design-specs/notes.json` (or `record_note`), then run `node .claude/skills/pema-canvas-to-kmp-compose/scripts/design-specs.cjs`; `--check` must pass before committing. Never hand-edit `design-specs/screens/*.md`.
+
 ## Flutter rules
 
 Official rules from [flutter/agent-plugins/rules](https://github.com/flutter/agent-plugins/tree/main/rules) (plugin `dart-flutter@dart-flutter`). The Flutter app lives in `flutter-template/`.

@@ -26,3 +26,25 @@ val canvasRefs by tasks.registering(Exec::class) {
         }
     }
 }
+
+/**
+ * Per-screen conversion specs (`design-specs/screens/<ID>.md`, index, block catalog) built from the
+ * canvas, the KMP/Flutter code and `design-specs/notes.json`; also served live by the `pema-design`
+ * MCP server. Cheap (no browser) and up to date while its inputs are unchanged.
+ */
+val designSpecs by tasks.registering(Exec::class) {
+    group = "documentation"
+    description = "Regenerate design-specs/ (per-screen prompts/specs) from canvas + code + notes."
+    val repo = rootDir.parentFile
+    val scripts = File(repo, ".claude/skills/pema-canvas-to-kmp-compose/scripts")
+    val specs = File(repo, "design-specs")
+    inputs.files(fileTree(scripts), File(repo, "Pema App redesign canvas/Pema App.dc.html"), File(specs, "notes.json"))
+    inputs.files(fileTree(rootDir) { include("**/*.kt"); exclude("**/build/**", "build-logic/**") })
+    inputs.files(fileTree(File(repo, "flutter-template/lib")) { include("**/*.dart") })
+    outputs.dir(File(specs, "screens"))
+    outputs.files(File(specs, "index.json"), File(specs, "INDEX.md"), File(specs, "BLOCKS.md"))
+    onlyIf("script present") { File(scripts, "design-specs.cjs").exists() }
+    workingDir = repo
+    commandLine("node", File(scripts, "design-specs.cjs").absolutePath)
+    isIgnoreExitValue = true
+}

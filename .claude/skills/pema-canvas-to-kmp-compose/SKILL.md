@@ -26,6 +26,8 @@ Không suy diễn tính năng từ canvas. Canvas I/J/K là màn web-only: logic
 
 ## 1. Phân loại phạm vi trước khi code
 
+**Đọc spec trước, không đọc lại web/canvas:** mỗi màn đã có spec + prompt ở [`design-specs/screens/<ID>.md`](../../../design-specs/README.md) (hoặc MCP `pema-design`: `get_screen(id)`, prompt `port_screen`). Spec gồm nguồn logic (Flutter/web), route + file KMP, bố cục block → Compose, câu bắt buộc, quy tắc, khác biệt được chấp nhận và bẫy đã gặp. Chỉ mở file nguồn khi spec thiếu; **sau khi làm xong, lưu điều mới học được** vào `design-specs/notes.json` (hoặc `record_note`) để lần sau không phải tìm lại.
+
 Liệt kê mã màn canvas và truy ngược từng mã về nguồn:
 
 - **A–H** hiện là các màn mirror Flutter; port nếu source Flutter có route/tab/trạng thái tương ứng.
@@ -179,6 +181,7 @@ Nếu MIUI báo `INSTALL_FAILED_USER_RESTRICTED`, không cố bypass: người d
 2. Cài và launch APK trên Android thật hoặc emulator; lưu evidence screenshot ngoài repo.
 3. So coverage table: nêu chính xác nhóm/mã đã port, nhóm web-only chưa port và giới hạn camera/iOS.
 4. Cập nhật `pema-kmp/README.md` và `CONVENTIONS.md` nếu thay đổi quy ước hoặc phạm vi.
+5. Ghi điều học được cho từng màn vào `design-specs/notes.json` (nguồn hàm, quy tắc, khác biệt, bẫy) rồi `node .claude\skills\pema-canvas-to-kmp-compose\scripts\design-specs.cjs`; `--check` phải xanh.
 5. Nếu sửa Pema web hiển thị, thêm entry `Chờ chuyển` trong `.claude/skills/pema-web-to-canvas/web-changes.md`; không cập nhật canvas trừ khi được yêu cầu.
 6. Không commit ảnh build, APK, database local, screenshot hoặc file tạm.
 
