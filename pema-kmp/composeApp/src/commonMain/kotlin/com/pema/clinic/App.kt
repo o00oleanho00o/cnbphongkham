@@ -64,8 +64,9 @@ fun App(financeApi: String = ApiConfig.DEFAULT_FINANCE_API) {
     val platform = rememberPlatformServices()
     val navController = rememberNavController()
     val navigator = remember(navController) { ShellNavigator(navController) }
-    val container = remember(platform, navigator, financeApi) { AppContainer(navigator, platform, financeApi) }
-    navigator.session = { container.deps.sessionStore.state.value }
+    val container = remember(financeApi) { AppStores.get(financeApi) }
+    val deps = remember(container, navigator, platform) { container.deps(navigator, platform) }
+    navigator.session = { container.sessionStore.state.value }
     val snackbar = remember { SnackbarHostState() }
     val rootScope = rememberCoroutineScope()
     val messenger = remember(snackbar, rootScope) { PemaMessenger(snackbar, rootScope) }
@@ -77,7 +78,7 @@ fun App(financeApi: String = ApiConfig.DEFAULT_FINANCE_API) {
         LocalOnBack provides navigator::back,
     ) {
         PemaTheme {
-            PaymentAlerts(container.deps) {
+            PaymentAlerts(deps) {
                 Box(Modifier.fillMaxSize().background(PemaColors.Paper)) {
                     NavHost(
                         navController = navController,
@@ -87,24 +88,24 @@ fun App(financeApi: String = ApiConfig.DEFAULT_FINANCE_API) {
                         popEnterTransition = { fadeIn(tween(220)) + scaleIn(tween(300), initialScale = 1.04f) },
                         popExitTransition = { fadeOut(tween(160)) + scaleOut(tween(300), targetScale = 0.94f) },
                     ) {
-                        workspaceGraph(container.deps)
-                        scheduleGraph(container.deps)
-                        patientsGraph(container.deps)
-                        aftercareGraph(container.deps)
-                        ordersGraph(container.deps)
-                        billingGraph(container.deps)
-                        careGraph(container.deps)
-                        financeGraph(container.deps)
+                        workspaceGraph(deps)
+                        scheduleGraph(deps)
+                        patientsGraph(deps)
+                        aftercareGraph(deps)
+                        ordersGraph(deps)
+                        billingGraph(deps)
+                        careGraph(deps)
+                        financeGraph(deps)
                         // Web-only screens (canvas I/J/K).
-                        operationsGraph(container.deps)
-                        clinicToolsGraph(container.deps)
-                        followUpInboxGraph(container.deps)
-                        invoiceCashierGraph(container.deps)
-                        careRecordGraph(container.deps)
-                        patient360ClinicalGraph(container.deps)
-                        patient360AdminGraph(container.deps)
-                        patientAppointmentsGraph(container.deps)
-                        patientDocumentsGraph(container.deps)
+                        operationsGraph(deps)
+                        clinicToolsGraph(deps)
+                        followUpInboxGraph(deps)
+                        invoiceCashierGraph(deps)
+                        careRecordGraph(deps)
+                        patient360ClinicalGraph(deps)
+                        patient360AdminGraph(deps)
+                        patientAppointmentsGraph(deps)
+                        patientDocumentsGraph(deps)
                         composable(
                             Routes.DeniedPattern,
                             arguments = listOf(navArgument("route") { type = NavType.StringType; defaultValue = "" }),

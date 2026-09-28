@@ -2,6 +2,7 @@ package com.pema.clinic.feature.patients
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -22,6 +25,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,6 +38,7 @@ import com.pema.clinic.core.common.Routes
 import com.pema.clinic.core.ui.theme.PemaColors
 import com.pema.clinic.core.ui.theme.PemaType
 import com.pema.clinic.core.ui.widgets.DetailScaffold
+import com.pema.clinic.core.ui.widgets.LocalPhoto
 import com.pema.clinic.core.ui.widgets.PemaChipWrap
 import com.pema.clinic.core.ui.widgets.PemaFilterChip
 import com.pema.clinic.core.ui.widgets.PemaHeading
@@ -55,6 +63,7 @@ import com.pema.clinic.shared.clinic.NewClinicPatientInput
 import com.pema.clinic.shared.clinic.createPatient
 import com.pema.clinic.shared.clinic.daysBetween
 import com.pema.clinic.shared.clinic.patient
+import com.pema.clinic.shared.clinic.viDate
 import kotlinx.coroutines.launch
 
 fun NavGraphBuilder.clinicToolsGraph(deps: FeatureDeps) {
@@ -143,15 +152,29 @@ internal data class PhotoStudioUiState(
     val photoConsent: Boolean = true,
     val latestSessionId: String = "minh họa",
     val region: String = "Mặt",
+    /** Web `photos(p)`: sessions with a real image for this view; first = before, last = after. */
+    val before: StudioPhoto? = null,
+    val after: StudioPhoto? = null,
+    val photoCount: Int = 0,
 ) {
     val metadata: String
         get() = "Metadata: vùng $region · góc $view · đồng ý chăm sóc: ${if (photoConsent) "có ghi nhận" else "chưa xác nhận"}"
+
+    /** Web studio notice: count of real photos for this view, or that the panels are illustrations. */
+    val notice: String
+        get() = (if (photoCount > 0) "$photoCount ảnh gắn với buổi điều trị, lọc cùng góc khai báo: $view. " else "") +
+            "Chưa kiểm định căn chỉnh ảnh; bác sĩ kiểm tra điều kiện chụp trước khi so sánh. " +
+            "Không suy ra hiệu quả y khoa từ ảnh minh họa."
 }
+
+@Immutable
+internal data class StudioPhoto(val path: String, val date: String)
 
 internal val photoStudioViews = listOf("Chính diện", "Má trái", "Má phải")
 
 internal fun photoStudioState(patient: ClinicPatient, view: String = "Chính diện", sliderMode: Boolean = false): PhotoStudioUiState {
     val latest = patient.sessions.lastOrNull { it.view.isBlank() || it.view == view }
+    val actual = patient.sessions.filter { it.image.isNotBlank() && it.image != "placeholder" && (it.view.isBlank() || it.view == view) }
     return PhotoStudioUiState(
         patientId = patient.id,
         name = patient.name,
@@ -161,6 +184,9 @@ internal fun photoStudioState(patient: ClinicPatient, view: String = "Chính di�
         photoConsent = patient.photoConsent,
         latestSessionId = latest?.id ?: "minh họa",
         region = latest?.region?.ifBlank { "Mặt" } ?: "Mặt",
+        before = actual.firstOrNull()?.let { StudioPhoto(it.image, it.date) },
+        after = actual.lastOrNull()?.let { StudioPhoto(it.image, it.date) },
+        photoCount = actual.size,
     )
 }
 
@@ -180,8 +206,9 @@ internal fun PhotoStudioRoute(deps: FeatureDeps) {
             onToggleCompare = { sliderMode = !sliderMode },
             onAddPhoto = {
                 scope.launch {
+                    // Web `capture`: photos are attached to a treatment session with consent.
                     messenger.show("Gắn ảnh với buổi điều trị và đồng ý ảnh")
-                    deps.navigator.go(Routes.ProgressPhotos)
+                    deps.navigator.go(Routes.SessionRecord)
                 }
             },
         )
@@ -201,15 +228,18 @@ internal fun PhotoStudioScreen(
             PemaFilterChip(label, selected = state.view == label, onClick = { onViewChange(label) })
         }
     }
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        StudioPhotoPanel("Trước")
-        StudioPhotoPanel("Sau")
+    val before = state.before
+    val after = state.after
+    if (state.sliderMode && before != null && after != null && before.path != after.path) {
+        StudioSlider(before, after)
+    } else {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            StudioPhotoPanel("Trước", before)
+            StudioPhotoPanel("Sau", after)
+        }
     }
     Spacer(Modifier.height(12.dp))
-    PemaNotice(
-        "Chưa kiểm định căn chỉnh ảnh; bác sĩ kiểm tra điều kiện chụp trước khi so sánh. " +
-            "Không suy ra hiệu quả y khoa từ ảnh minh họa.",
-    )
+    PemaNotice(state.notice)
     PemaText(state.metadata, size = 12f, color = PemaColors.Muted)
     Spacer(Modifier.height(12.dp))
     PemaOutlinedButton(
@@ -221,7 +251,11 @@ internal fun PhotoStudioScreen(
 }
 
 @Composable
-private fun RowScope.StudioPhotoPanel(label: String) {
+private fun RowScope.StudioPhotoPanel(label: String, photo: StudioPhoto? = null) {
+    if (photo != null) {
+        LocalPhoto(path = photo.path, modifier = Modifier.weight(1f), height = 220.dp, label = "$label · ${viDate(photo.date)}")
+        return
+    }
     Column(
         Modifier
             .weight(1f)
@@ -234,6 +268,28 @@ private fun RowScope.StudioPhotoPanel(label: String) {
         Text(label, style = PemaType.body)
         Text("Minh họa", style = PemaType.of(11f, color = PemaColors.Ink))
     }
+}
+
+/** Web "So sánh trượt": after-photo revealed over the before-photo by a slider. */
+@Composable
+private fun StudioSlider(before: StudioPhoto, after: StudioPhoto) {
+    var fraction by remember { mutableStateOf(0.5f) }
+    Box(Modifier.fillMaxWidth()) {
+        LocalPhoto(path = before.path, height = 330.dp, label = "Trước · ${viDate(before.date)}")
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .drawWithContent { clipRect(right = size.width * fraction) { this@drawWithContent.drawContent() } },
+        ) {
+            LocalPhoto(path = after.path, height = 330.dp, label = "Sau · ${viDate(after.date)}")
+        }
+    }
+    Slider(
+        value = fraction,
+        onValueChange = { fraction = it },
+        modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Vị trí so sánh trước và sau" },
+        colors = SliderDefaults.colors(thumbColor = PemaColors.Blue, activeTrackColor = PemaColors.Blue),
+    )
 }
 
 @Immutable

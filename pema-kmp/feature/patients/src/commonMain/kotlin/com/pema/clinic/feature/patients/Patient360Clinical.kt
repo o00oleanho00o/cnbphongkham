@@ -1,5 +1,9 @@
 package com.pema.clinic.feature.patients
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -10,9 +14,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -25,9 +31,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.pema.clinic.core.common.Routes
+import com.pema.clinic.core.hardware.CapturedPhoto
+import com.pema.clinic.core.hardware.HardwareFailure
 import com.pema.clinic.core.ui.theme.PemaColors
 import com.pema.clinic.core.ui.theme.PemaType
 import com.pema.clinic.core.ui.widgets.DetailScaffold
+import com.pema.clinic.core.ui.widgets.LocalPhoto
+import com.pema.clinic.core.ui.widgets.OnScreenCleared
+import com.pema.clinic.core.ui.widgets.PemaPhotoSourceSheet
 import com.pema.clinic.core.ui.widgets.PemaCardLine
 import com.pema.clinic.core.ui.widgets.PemaCardTitle
 import com.pema.clinic.core.ui.widgets.PemaCheckRow
@@ -65,6 +76,9 @@ import com.pema.clinic.shared.clinic.saveClinicalNote
 import com.pema.clinic.shared.clinic.staffContext
 import com.pema.clinic.shared.clinic.updateTreatmentPlan
 import com.pema.clinic.shared.clinic.viDate
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 fun NavGraphBuilder.patient360ClinicalGraph(deps: FeatureDeps) {
     composable(Routes.ClinicalHistory) { ClinicalHistoryRoute(deps) }
@@ -122,6 +136,9 @@ internal data class SessionRecordUiState(
     val view: String,
     val consent: Boolean,
     val photoSelected: Boolean = false,
+    /** Local landmark photo (camera or picker), shown as a preview. */
+    val photoPath: String? = null,
+    val photoBusy: Boolean = false,
     val canClinical: Boolean = true,
 )
 
@@ -379,8 +396,36 @@ internal fun SessionRecordRoute(deps: FeatureDeps) {
     var region by rememberSaveable(patient.id) { mutableStateOf("Mặt") }
     var view by rememberSaveable(patient.id) { mutableStateOf("Chính diện") }
     var consent by rememberSaveable(patient.id) { mutableStateOf(patient.photoConsent) }
-    var photoSelected by rememberSaveable(patient.id) { mutableStateOf(false) }
+    var photoPath by rememberSaveable(patient.id) { mutableStateOf<String?>(null) }
+    var photoBusy by remember { mutableStateOf(false) }
+    var showSource by remember { mutableStateOf(false) }
     val messenger = rememberPemaMessenger()
+    val scope = rememberCoroutineScope()
+    val camera = deps.platform.camera
+    // Read at cleanup time (not captured), so a saved photo is never deleted.
+    val pending = remember { PendingPhoto() }
+    pending.path = photoPath
+    fun replacePhoto(next: CapturedPhoto) {
+        photoPath?.takeIf { it != next.path }?.let { old -> scope.launch { camera.discard(CapturedPhoto(old, 0, 0, 0)) } }
+        photoPath = next.path
+    }
+    fun takePhoto(source: suspend () -> CapturedPhoto?) {
+        showSource = false
+        scope.launch {
+            photoBusy = true
+            try {
+                source()?.let(::replacePhoto)
+            } catch (failure: HardwareFailure) {
+                messenger.show(failure.message ?: "Không thể lấy ảnh.")
+            } finally {
+                photoBusy = false
+            }
+        }
+    }
+    LaunchedEffect(camera) { camera.recoveredPhotos().collect(::replacePhoto) }
+    OnScreenCleared("session-record") {
+        pending.path?.let { path -> CoroutineScope(Dispatchers.Default).launch { camera.discard(CapturedPhoto(path, 0, 0, 0)) } }
+    }
     SessionRecordScreen(
         state = SessionRecordUiState(
             notice = sessionNotice(patient),
@@ -390,7 +435,9 @@ internal fun SessionRecordRoute(deps: FeatureDeps) {
             region = region,
             view = view,
             consent = consent,
-            photoSelected = photoSelected,
+            photoSelected = photoPath != null,
+            photoPath = photoPath,
+            photoBusy = photoBusy,
             canClinical = staff.can("clinical"),
         ),
         onTypeChange = { sessionType = it },
@@ -399,9 +446,12 @@ internal fun SessionRecordRoute(deps: FeatureDeps) {
         onViewChange = { view = it },
         onConsentChange = { consent = it },
         onNextVisitClick = { messenger.show("Chọn ngày tái khám sẽ được nối với bộ chọn lịch.") },
-        onAddPhoto = {
-            photoSelected = true
-            messenger.show("Ảnh mốc sẽ được gắn khi camera được nối.")
+        onAddPhoto = { showSource = true },
+        onRetake = { takePhoto { camera.capture() } },
+        onPickOther = { takePhoto { camera.pick() } },
+        onRemovePhoto = {
+            photoPath?.let { old -> scope.launch { camera.discard(CapturedPhoto(old, 0, 0, 0)) } }
+            photoPath = null
         },
         onSave = {
             runClinicAction(messenger) {
@@ -416,16 +466,33 @@ internal fun SessionRecordRoute(deps: FeatureDeps) {
                         view = view,
                         protocolId = if (protocol.startsWith("Laser CO2")) "laser-co2" else null,
                         nextVisit = nextVisit,
-                        hasPhoto = photoSelected,
+                        hasPhoto = photoPath != null,
                         photoConsent = consent,
+                        photoPath = photoPath,
                     ),
                     staff,
                 )
+                // The photo now belongs to the session record.
+                pending.path = null
+                photoPath = null
                 messenger.show("Đã lưu buổi điều trị và cập nhật hành trình")
-                deps.navigator.go(Routes.Patient360)
+                deps.navigator.back()
             }
         },
     )
+    if (showSource) {
+        PemaPhotoSourceSheet(
+            title = "Ảnh mốc · $region · $view",
+            onCamera = { takePhoto { camera.capture() } },
+            onGallery = { takePhoto { camera.pick() } },
+            onDismiss = { showSource = false },
+        )
+    }
+}
+
+/** Unsaved landmark photo of the session form, deleted if the form is closed without saving. */
+private class PendingPhoto {
+    var path: String? = null
 }
 
 internal fun defaultSessionType(patient: ClinicPatient): String =
@@ -444,6 +511,7 @@ internal fun sessionNotice(patient: ClinicPatient): String {
     return "Buổi $next/${patient.total} · ${patient.doctor}\n$alert"
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun SessionRecordScreen(
     state: SessionRecordUiState,
@@ -455,6 +523,9 @@ internal fun SessionRecordScreen(
     onNextVisitClick: () -> Unit,
     onAddPhoto: () -> Unit,
     onSave: () -> Unit,
+    onRetake: () -> Unit = {},
+    onPickOther: () -> Unit = {},
+    onRemovePhoto: () -> Unit = {},
 ) {
     DetailScaffold(title = Routes.appBarTitleOf(Routes.SessionRecord)) {
         PemaNotice(state.notice)
@@ -469,7 +540,22 @@ internal fun SessionRecordScreen(
         PemaChipWrap(Modifier.padding(bottom = 10.dp)) {
             views.forEach { item -> PemaFilterChip(item, selected = state.view == item, onClick = { onViewChange(item) }) }
         }
-        PemaOutlinedButton(if (state.photoSelected) "Đã chọn ảnh mốc" else "Thêm ảnh mốc", onAddPhoto, icon = "add_a_photo")
+        val photoPath = state.photoPath
+        if (photoPath != null) {
+            LocalPhoto(path = photoPath, height = 220.dp, label = "Ảnh mốc · ${state.region} · ${state.view}")
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                PemaTextButton("Chụp lại", onClick = onRetake, icon = "refresh", enabled = !state.photoBusy)
+                PemaTextButton("Chọn ảnh khác", onClick = onPickOther, icon = "photo_library", enabled = !state.photoBusy)
+                PemaTextButton("Bỏ ảnh", onClick = onRemovePhoto, icon = "delete", enabled = !state.photoBusy)
+            }
+        } else {
+            PemaOutlinedButton(
+                if (state.photoBusy) "Đang lấy ảnh…" else if (state.photoSelected) "Đã chọn ảnh mốc" else "Thêm ảnh mốc",
+                onAddPhoto,
+                icon = "add_a_photo",
+                enabled = !state.photoBusy,
+            )
+        }
         PemaCheckRow("Người bệnh đã đồng ý dùng ảnh chăm sóc", state.consent, onConsentChange)
         if (state.canClinical) PemaPrimary("Lưu buổi điều trị", onSave)
     }

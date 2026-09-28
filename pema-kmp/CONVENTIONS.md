@@ -48,6 +48,9 @@ Quy tắc:
 - Chữ tiếng Việt giữ nguyên như Flutter. **File phải lưu UTF-8** (không dùng PowerShell `Set-Content`/`Out-File` mặc định — dùng tool create/edit hoặc `[IO.File]::WriteAllText(p, t, (New-Object Text.UTF8Encoding($false)))`).
 
 ## Bẫy Compose đã gặp trên thiết bị (JVM shot không bắt được)
+- Store của app nằm trong `AppStores` (một `AppContainer` mỗi tiến trình); `FeatureDeps` được dựng lại mỗi activity với navigator/platform mới. Không tạo store trong `remember` của composable gốc — xoay máy sẽ reset toàn bộ phiên.
+- Ảnh/camera: gọi `deps.platform.camera.capture()` / `pick()` trong coroutine, bắt `HardwareFailure` (câu tiếng Việt) để hiện snackbar; `null` = người dùng hủy. Màn có ảnh phải collect `camera.recoveredPhotos()` (ảnh về sau khi activity bị tạo lại) và xóa ảnh chưa lưu bằng `OnScreenCleared(key) { camera.discard(...) }` — không dùng `DisposableEffect` (chạy cả khi xoay máy). Giữ đường dẫn ảnh trong `rememberSaveable`.
+- Kiểm thử camera trên emulator: app camera hệ thống có cảnh ảo; mô phỏng Android giết app khi đang chụp bằng `adb shell settings put global always_finish_activities 1` (nhớ đặt lại `0`).
 - FAB trong `DetailScaffold`/`LazyDetailScaffold` đã được đệm theo thanh điều hướng hệ thống; đừng tự đặt FAB ngoài slot `floatingActionButton` (sẽ bị thanh điều hướng che).
 - Emulator "Resizable" sau nhiều lần `am force-stop` có thể giữ focus input cũ → phím Back gây ANR "does not have a focused window" sau khi đóng sheet. Đó là lỗi trạng thái emulator (khởi động lại emulator là hết), không phải lỗi app — kiểm tra `dumpsys input` FocusRequests trước khi sửa code.
 - Snackbar hiện trước/sau `back()` (lưu → quay lại): dùng `rememberPemaMessenger().show(msg)` (scope gốc trong `App.kt`, như Flutter `ScaffoldMessenger`). `rememberCoroutineScope()` của màn bị hủy khi pop → mất thông báo.

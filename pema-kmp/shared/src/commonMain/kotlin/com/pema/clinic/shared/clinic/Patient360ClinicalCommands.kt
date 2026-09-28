@@ -20,6 +20,8 @@ data class TreatmentSessionInput(
     val nextVisit: String?,
     val hasPhoto: Boolean,
     val photoConsent: Boolean,
+    /** Local path of the landmark photo (camera or picker); web `imageData`. */
+    val photoPath: String? = null,
 )
 
 /** Web `generate-note`: creates a doctor-editable draft, but does not write a clinical event yet. */
@@ -112,7 +114,7 @@ fun ClinicStore.recordTreatmentSession(patientId: String, input: TreatmentSessio
             reviewed = true,
             view = input.view,
             region = input.region,
-            image = if (input.hasPhoto) "placeholder" else "",
+            image = input.photoPath ?: if (input.hasPhoto) "placeholder" else "",
             aftercare = aftercare,
             protocolId = input.protocolId,
         )

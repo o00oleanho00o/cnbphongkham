@@ -1,14 +1,21 @@
 package com.pema.clinic.core.hardware
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+
 class FakeCameraService(
     private var available: Boolean = true,
     private var nextPhoto: CapturedPhoto? = CapturedPhoto("fake://photo.jpg", 1024, 768, 64_000),
 ) : CameraService {
     val discarded = mutableListOf<CapturedPhoto>()
+    /** Emit here to simulate a photo recovered after the screen was recreated. */
+    val recovered = kotlinx.coroutines.channels.Channel<CapturedPhoto>(kotlinx.coroutines.channels.Channel.UNLIMITED)
     fun setAvailable(value: Boolean) { available = value }
     fun setNextPhoto(photo: CapturedPhoto?) { nextPhoto = photo }
     override suspend fun isAvailable(): Boolean = available
     override suspend fun capture(): CapturedPhoto? = nextPhoto
+    override suspend fun pick(): CapturedPhoto? = nextPhoto
+    override fun recoveredPhotos(): Flow<CapturedPhoto> = recovered.receiveAsFlow()
     override suspend fun discard(photo: CapturedPhoto) { discarded += photo }
 }
 

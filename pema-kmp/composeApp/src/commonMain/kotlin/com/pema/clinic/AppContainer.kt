@@ -20,10 +20,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
+/**
+ * App-scoped stores (session, demo data, finance). They outlive the Android activity, so rotating
+ * the phone or returning from the camera app keeps the workspace and in-session edits; only
+ * [deps] is rebuilt with the current activity's navigator and platform services.
+ */
 class AppContainer(
-    navigator: AppNavigator,
-    platform: PlatformServices,
-    financeApi: String = ApiConfig.DEFAULT_FINANCE_API,
+    val financeApi: String = ApiConfig.DEFAULT_FINANCE_API,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
 ) {
     val catalogRepository = MutableCatalogRepository()
@@ -37,7 +40,7 @@ class AppContainer(
     val financeStore = FinanceStore(financeRepository, scope)
     val clinicStore = ClinicStore()
 
-    val deps = FeatureDeps(
+    fun deps(navigator: AppNavigator, platform: PlatformServices) = FeatureDeps(
         navigator = navigator,
         platform = platform,
         catalogRepository = catalogRepository,
@@ -50,4 +53,12 @@ class AppContainer(
         financeStore = financeStore,
         clinicStore = clinicStore,
     )
+}
+
+/** One [AppContainer] per process (demo data lives as long as the app process, like the web tab). */
+internal object AppStores {
+    private var container: AppContainer? = null
+
+    fun get(financeApi: String): AppContainer =
+        container?.takeIf { it.financeApi == financeApi } ?: AppContainer(financeApi).also { container = it }
 }

@@ -24,6 +24,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.pema.clinic.core.ui.widgets.OnScreenCleared
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -111,15 +114,17 @@ internal fun HomeCareScreen(
 internal fun SendUpdateRoute(deps: FeatureDeps) {
     val session by deps.sessionStore.state.collectAsStateWithLifecycle()
     val patientId = deps.catalogRepository.catalog().profiles[session.selected].id
-    val draft = remember { SendUpdateDraft() }
+    val draft = rememberSaveable(saver = SendUpdateDraft.Saver) { SendUpdateDraft() }
     val snackbar = LocalPemaSnackbar.current
     val scope = rememberCoroutineScope()
     val messenger = rememberPemaMessenger()
     val camera = deps.platform.camera
-    DisposableEffect(draft, camera) {
-        onDispose {
-            CoroutineScope(Dispatchers.Default).launch { draft.dispose(camera) }
-        }
+    // Discard an unsent photo only when the screen is closed, not when Android recreates it.
+    OnScreenCleared("send-update") {
+        CoroutineScope(Dispatchers.Default).launch { draft.dispose(camera) }
+    }
+    LaunchedEffect(camera) {
+        camera.recoveredPhotos().collect { draft.attach(it, camera) }
     }
     DetailScaffold(title = Routes.titleOf(Routes.SendUpdate)) {
         SendUpdateScreen(

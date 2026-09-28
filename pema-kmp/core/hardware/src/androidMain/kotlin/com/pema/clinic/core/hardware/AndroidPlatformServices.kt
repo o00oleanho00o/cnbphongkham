@@ -23,6 +23,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,7 +43,13 @@ import androidx.exifinterface.media.ExifInterface
 import java.io.File
 import java.io.FileOutputStream
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
@@ -50,24 +57,38 @@ actual fun rememberPlatformServices(): PlatformServices {
     val context = LocalContext.current
     val view = LocalView.current
     var pendingRawPath by rememberSaveable { mutableStateOf<String?>(null) }
-    val cameraCoordinator = remember { AndroidCameraCoordinator() }
+    val cameraCoordinator = remember { AndroidResultCoordinator<Boolean>() }
+    val pickCoordinator = remember { AndroidResultCoordinator<Uri?>() }
     val notificationCoordinator = remember { AndroidPermissionCoordinator() }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicture(),
-    ) { success -> cameraCoordinator.complete(success) }
+    ) { success ->
+        // No capture() waiting = the activity was recreated while the camera app was open.
+        if (!cameraCoordinator.complete(success)) {
+            CameraRecovery.recoverCapture(context.applicationContext, pendingRawPath, success)
+            pendingRawPath = null
+        }
+    }
+    val pickLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        if (!pickCoordinator.complete(uri) && uri != null) CameraRecovery.recoverPick(context.applicationContext, uri)
+    }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted -> notificationCoordinator.complete(granted) }
 
-    return remember(context, view, cameraLauncher, permissionLauncher) {
+    return remember(context, view, cameraLauncher, pickLauncher, permissionLauncher) {
         PlatformServices(
             camera = AndroidCameraService(
                 context = context,
                 coordinator = cameraCoordinator,
+                pickCoordinator = pickCoordinator,
                 getPendingRawPath = { pendingRawPath },
                 setPendingRawPath = { pendingRawPath = it },
                 launcher = cameraLauncher,
+                pickLauncher = pickLauncher,
             ),
             images = AndroidImageLoader(),
             printer = AndroidPrinter(context),
@@ -83,40 +104,98 @@ private const val JPEG_QUALITY = 85
 
 private const val CAMERA_URI_FLAGS = Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION
 
-private class AndroidCameraCoordinator {
-    private var deferred: CompletableDeferred<Boolean>? = null
+/** Matches an activity result with the suspended call that launched it. */
+private class AndroidResultCoordinator<T> {
+    private var deferred: CompletableDeferred<T>? = null
 
     @Synchronized
-    fun begin(next: CompletableDeferred<Boolean>): Boolean {
+    fun begin(next: CompletableDeferred<T>): Boolean {
         if (deferred != null) return false
         deferred = next
         return true
     }
 
+    /** Returns false when nobody is waiting (result delivered to a recreated activity). */
     @Synchronized
-    fun complete(success: Boolean) {
-        deferred?.takeIf { !it.isCompleted }?.complete(success)
+    fun complete(value: T): Boolean {
+        val waiting = deferred?.takeIf { !it.isCompleted } ?: return false
+        waiting.complete(value)
+        return true
     }
 
     @Synchronized
-    fun clear(expected: CompletableDeferred<Boolean>) {
+    fun clear(expected: CompletableDeferred<T>) {
         if (deferred === expected) deferred = null
+    }
+}
+
+/**
+ * Process-wide hand-off for camera/picker results that arrive after the screen that asked for
+ * them was recreated. Processed photos are delivered once through [CameraService.recoveredPhotos].
+ */
+private object CameraRecovery {
+    val photos = Channel<CapturedPhoto>(Channel.UNLIMITED)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    fun recoverCapture(context: Context, rawPath: String?, success: Boolean) {
+        val raw = rawPath?.let(::File) ?: return
+        runCatching {
+            context.revokeCameraUriPermissions(
+                FileProvider.getUriForFile(context, "${context.packageName}.pema.fileprovider", raw),
+            )
+        }
+        if (!success || !raw.exists() || raw.length() == 0L) {
+            raw.delete()
+            return
+        }
+        scope.launch { runCatching { processRawPhoto(context, raw) }.onSuccess { photos.send(it) } }
+    }
+
+    fun recoverPick(context: Context, uri: Uri) {
+        scope.launch { runCatching { importPickedPhoto(context, uri) }.onSuccess { photos.send(it) } }
     }
 }
 
 private class AndroidCameraService(
     private val context: Context,
-    private val coordinator: AndroidCameraCoordinator,
+    private val coordinator: AndroidResultCoordinator<Boolean>,
+    private val pickCoordinator: AndroidResultCoordinator<Uri?>,
     private val getPendingRawPath: () -> String?,
     private val setPendingRawPath: (String?) -> Unit,
     private val launcher: ManagedActivityResultLauncher<Uri, Boolean>,
+    private val pickLauncher: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>,
 ) : CameraService {
     private val appContext: Context = context.applicationContext
+
+    init {
+        cleanOrphanRawFiles(photoDir(), keep = getPendingRawPath())
+    }
 
     override suspend fun isAvailable(): Boolean = withContext(Dispatchers.Default) {
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         appContext.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) &&
             intent.resolveActivity(appContext.packageManager) != null
+    }
+
+    override fun recoveredPhotos(): Flow<CapturedPhoto> = CameraRecovery.photos.receiveAsFlow()
+
+    override suspend fun pick(): CapturedPhoto? {
+        val result = CompletableDeferred<Uri?>()
+        withContext(Dispatchers.Main.immediate) {
+            if (!pickCoordinator.begin(result)) throw HardwareFailure("Đang mở thư viện ảnh.")
+            try {
+                pickLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            } catch (error: ActivityNotFoundException) {
+                pickCoordinator.clear(result)
+                throw HardwareFailure("Thiết bị này chưa hỗ trợ chọn ảnh.")
+            }
+        }
+        return try {
+            val uri = result.await() ?: return null
+            withContext(Dispatchers.IO) { importPickedPhoto(appContext, uri) }
+        } finally {
+            pickCoordinator.clear(result)
+        }
     }
 
     override suspend fun capture(): CapturedPhoto? {
@@ -163,8 +242,13 @@ private class AndroidCameraService(
             }
         } finally {
             coordinator.clear(result)
-            appContext.revokeCameraUriPermissions(rawUri)
-            setPendingRawPath(null)
+            // Keep the raw path and the camera app's write grant when the wait was cancelled by
+            // recreation: the camera may still be writing, and the recreated activity receives
+            // the result and recovers the photo (see CameraRecovery).
+            if (result.isCompleted) {
+                appContext.revokeCameraUriPermissions(rawUri)
+                setPendingRawPath(null)
+            }
         }
     }
 
@@ -378,11 +462,49 @@ private class AndroidNotifier(
     }
 }
 
-private fun processRawPhoto(context: Context, source: File): CapturedPhoto {
+private fun processRawPhoto(context: Context, source: File): CapturedPhoto = try {
+    processRawPhotoOrThrow(context, source)
+} catch (failure: HardwareFailure) {
+    throw failure
+} catch (error: Exception) {
+    throw HardwareFailure("Không xử lý được ảnh. Hãy thử chụp hoặc chọn ảnh khác.")
+} catch (error: OutOfMemoryError) {
+    throw HardwareFailure("Ảnh quá lớn để xử lý. Hãy chọn ảnh khác.")
+}
+
+/** Copies a picked `content://` image into the photos cache and runs the same pipeline as capture. */
+private fun importPickedPhoto(context: Context, uri: Uri): CapturedPhoto {
+    val raw = File.createTempFile("pick_", ".img", File(context.cacheDir, "photos").apply { mkdirs() })
+    try {
+        val input = context.contentResolver.openInputStream(uri) ?: throw HardwareFailure("Không đọc được ảnh đã chọn.")
+        input.use { stream -> FileOutputStream(raw).use { stream.copyTo(it) } }
+    } catch (failure: HardwareFailure) {
+        raw.delete()
+        throw failure
+    } catch (error: Exception) {
+        raw.delete()
+        throw HardwareFailure("Không đọc được ảnh đã chọn.")
+    }
+    return processRawPhoto(context, raw)
+}
+
+/**
+ * Deletes leftovers of cancelled or killed captures (`raw_*`, except the one still pending) and
+ * picker imports older than 10 minutes (`pick_*`, possibly still being processed).
+ */
+private fun cleanOrphanRawFiles(dir: File, keep: String?) {
+    val cutoff = System.currentTimeMillis() - 10 * 60_000L
+    dir.listFiles { file ->
+        (file.name.startsWith("raw_") && file.absolutePath != keep) ||
+            (file.name.startsWith("pick_") && file.lastModified() < cutoff)
+    }?.forEach { it.delete() }
+}
+
+private fun processRawPhotoOrThrow(context: Context, source: File): CapturedPhoto {
     try {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(source.absolutePath, bounds)
-        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) error("Không đọc được ảnh")
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) throw HardwareFailure("Tệp không phải ảnh hợp lệ.")
 
         val decoded = BitmapFactory.decodeFile(
             source.absolutePath,
