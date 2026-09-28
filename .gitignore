@@ -4,3 +4,24 @@ prototype/native-preview/
 
 .local-finance-*.log
 prototype/__pycache__/
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Kotlin Multiplatform / Gradle
+**/.gradle/
+**/.kotlin/
+**/build/
+**/gradle/gradle-daemon-jvm.properties
+**/local.properties
+
+# Flutter / Dart
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/ephemeral/
+
+# JavaScript tooling
+**/node_modules/
