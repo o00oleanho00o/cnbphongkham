@@ -35,12 +35,21 @@ import com.pema.clinic.core.ui.widgets.LocalPemaSnackbar
 import com.pema.clinic.core.ui.widgets.PemaMessenger
 import com.pema.clinic.core.ui.widgets.PemaNotice
 import com.pema.clinic.feature.aftercare.aftercareGraph
+import com.pema.clinic.feature.aftercare.followUpInboxGraph
 import com.pema.clinic.feature.billing.billingGraph
+import com.pema.clinic.feature.billing.invoiceCashierGraph
+import com.pema.clinic.feature.billing.patientDocumentsGraph
 import com.pema.clinic.feature.care.careGraph
+import com.pema.clinic.feature.care.careRecordGraph
 import com.pema.clinic.feature.finance.PaymentAlerts
 import com.pema.clinic.feature.finance.financeGraph
+import com.pema.clinic.feature.operations.operationsGraph
 import com.pema.clinic.feature.orders.ordersGraph
+import com.pema.clinic.feature.patients.clinicToolsGraph
+import com.pema.clinic.feature.patients.patient360AdminGraph
+import com.pema.clinic.feature.patients.patient360ClinicalGraph
 import com.pema.clinic.feature.patients.patientsGraph
+import com.pema.clinic.feature.schedule.patientAppointmentsGraph
 import com.pema.clinic.feature.schedule.scheduleGraph
 import com.pema.clinic.feature.workspace.workspaceGraph
 import com.pema.clinic.shared.session.Session
@@ -86,6 +95,16 @@ fun App(financeApi: String = ApiConfig.DEFAULT_FINANCE_API) {
                         billingGraph(container.deps)
                         careGraph(container.deps)
                         financeGraph(container.deps)
+                        // Web-only screens (canvas I/J/K).
+                        operationsGraph(container.deps)
+                        clinicToolsGraph(container.deps)
+                        followUpInboxGraph(container.deps)
+                        invoiceCashierGraph(container.deps)
+                        careRecordGraph(container.deps)
+                        patient360ClinicalGraph(container.deps)
+                        patient360AdminGraph(container.deps)
+                        patientAppointmentsGraph(container.deps)
+                        patientDocumentsGraph(container.deps)
                         composable(
                             Routes.DeniedPattern,
                             arguments = listOf(navArgument("route") { type = NavType.StringType; defaultValue = "" }),
@@ -132,6 +151,8 @@ internal fun resolveRoute(route: String, session: Session?): String {
     fun guarded(title: String, target: String) =
         if (session?.allows(title) == false) Routes.denied(title) else target
     if (route.startsWith("finance?") || route.startsWith(Routes.FinanceProcedure) || route.startsWith(Routes.FinanceRates)) return route
+    val base = route.substringBefore('?')
+    if (base != route && base in Routes.all) return guarded(Routes.titleOf(base), route)
     val id = if (route in Routes.all) route else Routes.idOf(route) ?: return guarded(route, Routes.guide(route))
     return when (id) {
         Routes.Finance -> Routes.finance(0)

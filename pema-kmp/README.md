@@ -8,8 +8,8 @@ Bản viết lại app Pema (`flutter-template/`) bằng Kotlin Multiplatform, U
 - `core/common` — `Routes` (id ASCII + tiêu đề tiếng Việt, route có tham số `finance?tab=`, `guide`, `denied`), `AppNavigator`, Ktor client, `ApiConfig`.
 - `core/ui` — design system dựng 1:1 từ canvas `Pema App redesign canvas/Pema App.dc.html`: màu/typography (Be Vietnam Pro), icon Material Symbols (font), block (hero, tile, metric, notice…), control, `DetailScaffold`/`PemaScaffold` (tránh bàn phím như Flutter `resizeToAvoidBottomInset`), `PemaBottomNav`, sheet/dialog; harness chụp màn hình JVM `shots/Shots.kt`.
 - `core/hardware` — `PlatformServices` (camera, ảnh, in A5, gọi/mở link/chia sẻ, rung, thông báo); bản Android thật, iOS, và `FakePlatformServices` cho test.
-- `shared` — domain + data port 1:1 từ Flutter: session, patients, catalog (46 hồ sơ, 115 sản phẩm), orders, billing, care (CareQueue, ReviewQueue), finance (Ktor).
-- `feature/*` — workspace, schedule, patients, aftercare, orders, billing, care, finance. Mỗi feature có `commonTest` (logic) và `jvmTest` (ảnh so sánh với canvas). Ngoại lệ phụ thuộc: workspace nhúng `PatientSearch` (patients) và `CareQueue` (care), như Flutter.
+- `shared` — domain + data port 1:1 từ Flutter: session, patients, catalog (46 hồ sơ, 115 sản phẩm), orders, billing, care (CareQueue, ReviewQueue), finance (Ktor). Thêm `shared/clinic`: mô hình dữ liệu web (`prototype/shared/data.js`, `operations-data.js`, `crm-*.js`, `care-finance.js`, `staff-context.js`) — `ClinicStore` với lịch hẹn/phòng/dịch vụ, theo dõi, CRM, hóa đơn, Patient 360 đầy đủ; seed khớp 46 hồ sơ của catalog (test parity).
+- `feature/*` — workspace, schedule, patients, aftercare, orders, billing, care, finance, **operations** (mới: I1–I4, I8, I9). Mỗi feature có `commonTest` (logic) và `jvmTest` (ảnh so sánh với canvas). Ngoại lệ phụ thuộc: workspace nhúng `PatientSearch` (patients) và `CareQueue` (care), như Flutter. Màn web-only nằm trong file riêng: `patients/ClinicToolsScreens.kt` (I5, I7, I12), `patients/Patient360Clinical.kt` (J1–J5), `patients/Patient360Admin.kt` (J6–J11), `aftercare/FollowUpInbox.kt` (I6), `billing/InvoiceCashier.kt` (I10–I11), `billing/PatientDocuments.kt` (K2), `care/CareRecordScreen.kt` (I13), `schedule/PatientAppointments.kt` (K1); K3 là tab Hành trình của workspace.
 
 Quy ước chi tiết: [CONVENTIONS.md](CONVENTIONS.md).
 
@@ -18,7 +18,7 @@ Quy ước chi tiết: [CONVENTIONS.md](CONVENTIONS.md).
 $env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'; cd E:\Desktop\cnbphongkham\pema-kmp
 .\gradlew.bat :androidApp:assembleDebug        # APK: androidApp\build\outputs\apk\debug\androidApp-debug.apk
 .\gradlew.bat :androidApp:installDebug         # cài lên thiết bị đang cắm
-.\gradlew.bat jvmTest                          # logic + ảnh so sánh canvas trên JVM (107 test)
+.\gradlew.bat jvmTest                          # logic + ảnh so sánh canvas trên JVM (184 test)
 ```
 Hoặc mở thư mục `pema-kmp` trong Android Studio và chạy cấu hình `androidApp`.
 
@@ -30,8 +30,10 @@ Tài chính gọi API `http://127.0.0.1:4174` (`BuildConfig.FINANCE_API`). Chạ
 `jvmTest` của mỗi feature (và `composeApp` cho màn F17 chặn quyền) render màn hình 390×844dp (×2) và ghép cạnh ảnh canvas: `<module>/build/shots/<ID>-vs.png` (trái canvas, phải KMP). Ảnh canvas lấy từ `-Dpema.refDir=…` hoặc biến môi trường `PEMA_REF_DIR`. Khác biệt được chấp nhận: logo Pema thật thay chữ "pema" placeholder, dữ liệu mẫu thật (46 hồ sơ) thay dữ liệu minh họa của canvas.
 
 ## Trạng thái
-- Đã port toàn bộ màn hình và logic của Flutter theo canvas: 55 màn nhóm A–H đều có ảnh so sánh khớp canvas; build Android xanh, 107/107 test pass.
-- Nhóm I, J, K của canvas (27 màn "bổ sung từ web · chưa có trong Flutter") **chưa port** — nằm ngoài phạm vi chuyển 1:1 từ Flutter.
-- Đã chạy trên emulator Android 14: Clinic (5 tab), Bác sĩ, CSKH, Kế toán (2 tab), Pema Care (4 tab); đặt lịch, lên đơn, Patient 360, gửi cập nhật → bác sĩ phản hồi, tài chính 4 tab + bảng giá với API thật; không crash.
+- Đã port toàn bộ 82 màn của canvas: 55 màn A–H (Flutter, 1:1) và 27 màn I/J/K (bổ sung từ web: logic theo `prototype/`, giao diện theo canvas). Mỗi mã màn đều có ảnh so sánh `-vs.png`; build Android xanh, 184/184 test pass.
+- Lối vào màn web: tab "Thêm"/màn chính của từng vai trò có mục "Vận hành phòng khám" (lọc theo quyền web `staff-context.js`); Patient 360 có mục "Patient 360 đầy đủ"; C6 có "Ghi nhận CSKH đầy đủ"; F13/F14 mở Chỉnh dịch vụ/Khóa phòng (chỉ chủ phòng khám); Trang chủ Care → Lịch hẹn (K1), Hồ sơ Care → Tài liệu & hóa đơn (K2).
+- Khác biệt có chủ đích so với canvas: dữ liệu mẫu thật của web (P001 Nguyễn Minh Linh, ngày 20/9/2026) thay tên/ngày minh họa; tab Hành trình (K3) giữ 4 mục của Flutter E2 và thêm dòng thời gian + câu "tiến độ số buổi, không phải mức cải thiện da" của web.
+- Dữ liệu demo chỉ nằm trong bộ nhớ phiên (như Flutter/web localStorage): thoát app là về seed ban đầu.
+- Đã chạy trên emulator Android 14: Clinic (5 tab), Bác sĩ, CSKH, Kế toán (2 tab), Pema Care (4 tab); đặt lịch, lên đơn, Patient 360, gửi cập nhật → bác sĩ phản hồi, tài chính 4 tab + bảng giá với API thật; màn web: tiếp đón check-in, đặt lịch hẹn, điều phối theo ngày, thu tiền (sheet), Patient 360 J1–J11 (lưu kế hoạch, nhắn tin → hiện ở Tin nhắn của người bệnh), CSKH C6 → I13 → đặt lịch, Care K1 xác nhận lịch, K2, K3; không crash.
 - Camera native (TakePicture + FileProvider, xoay EXIF, 1600px/JPEG 85) đã viết nhưng **chưa kiểm thử trên máy thật** (hoãn theo yêu cầu).
 - iOS: target đã khai báo, code `iosMain` chưa được build (cần macOS + Xcode).

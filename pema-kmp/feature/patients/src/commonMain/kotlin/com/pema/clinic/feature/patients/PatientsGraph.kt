@@ -133,6 +133,36 @@ internal fun Patient360Route(deps: FeatureDeps) {
                 { deps.patientsStore.update(selected.profile.id) { it.copy(checkedIn = true) } }
             },
         )
+        Patient360WebSection(selected.session, onOpen = { deps.navigator.go(it) })
+    }
+}
+
+/** Web Patient 360 tabs and modals (canvas J1–J11), listed below the Flutter body; filtered by role. */
+@Composable
+private fun Patient360WebSection(session: Session, onOpen: (String) -> Unit) {
+    val tabs = listOf(
+        Routes.ClinicalHistory to "assignment",
+        Routes.AiBrief to "auto_awesome",
+        Routes.PlanOverview to "route",
+        Routes.SessionRecord to "medical_services",
+        Routes.PatientFinance to "account_balance_wallet",
+        Routes.PatientCrm to "support_agent",
+        Routes.PatientHistory to "history",
+    ).filter { session.allows(it.first) }
+    val actions = listOf(
+        Routes.PatientMessage to "chat_bubble_outline",
+        Routes.PatientNotes to "edit_note",
+        Routes.HomeCareSend to "favorite_border",
+    ).filter { session.allows(it.first) }
+    if (tabs.isEmpty() && actions.isEmpty()) return
+    PemaSection("Patient 360 đầy đủ")
+    (tabs + actions).forEach { (route, icon) ->
+        PemaTile(
+            title = Routes.titleOf(route),
+            sub = if (route in actions.map { it.first }) "Mở biểu mẫu" else "Xem và cập nhật",
+            icon = icon,
+            onClick = { onOpen(route) },
+        )
     }
 }
 

@@ -78,6 +78,7 @@ internal fun CustomerCareContactScreen(deps: FeatureDeps) {
         onSave = ::saveContact,
         onRebook = { deps.navigator.go(Routes.Booking) },
         onHandOff = ::handOffToDoctor,
+        onFullRecord = { deps.navigator.go(Routes.CareRecord) },
     )
 }
 
@@ -92,6 +93,8 @@ internal fun CustomerCareContactContent(
     onHandOff: () -> Unit,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = LocalOnBack.current,
+    /** Web CRM "Xử lý" form (canvas I13); null hides the link (Flutter C6 has none). */
+    onFullRecord: (() -> Unit)? = null,
 ) {
     DetailScaffold(title = Routes.titleOf(Routes.CustomerCare), modifier = modifier, onBack = onBack) {
         PemaHeading(profile.name, "${profile.id} · ${profile.caseLabel}")
@@ -115,6 +118,15 @@ internal fun CustomerCareContactContent(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             PemaTextButton("Chuyển bác sĩ xem", onClick = onHandOff, icon = "forward_to_inbox")
+        }
+        if (onFullRecord != null) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                PemaTextButton("Ghi nhận CSKH đầy đủ", onClick = onFullRecord, icon = "fact_check")
+            }
         }
     }
 }

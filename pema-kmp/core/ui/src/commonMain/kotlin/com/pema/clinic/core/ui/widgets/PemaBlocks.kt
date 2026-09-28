@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -101,16 +102,19 @@ fun PemaHero(title: String, sub: String, icon: String, modifier: Modifier = Modi
 /** Canvas `metrics` item · Flutter `metric(value, label)` (an `Expanded`). */
 @Composable
 fun RowScope.PemaMetric(value: String, label: String, modifier: Modifier = Modifier) {
-    Column(modifier.weight(1f).background(Color.White, RoundedCornerShape(18.dp)).padding(18.dp)) {
+    Column(modifier.weight(1f).fillMaxHeight().background(Color.White, RoundedCornerShape(18.dp)).padding(18.dp)) {
         Text(value, style = PemaType.metricValue)
         Text(label, style = PemaType.caption)
     }
 }
 
-/** Canvas `metrics`: a row of [PemaMetric] with 12dp gaps. */
+/** Canvas `metrics`: a row of [PemaMetric] with 12dp gaps; cards stretch to the tallest (CSS flex). */
 @Composable
 fun PemaMetrics(vararg items: Pair<String, String>, modifier: Modifier = Modifier) {
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Row(
+        modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
         items.forEach { (value, label) -> PemaMetric(value, label) }
     }
 }

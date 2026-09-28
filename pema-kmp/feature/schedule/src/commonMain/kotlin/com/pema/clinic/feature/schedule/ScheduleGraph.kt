@@ -26,6 +26,7 @@ import com.pema.clinic.core.ui.widgets.PemaFilterChip
 import com.pema.clinic.core.ui.widgets.PemaHeading
 import com.pema.clinic.core.ui.widgets.PemaHero
 import com.pema.clinic.core.ui.widgets.PemaNotice
+import com.pema.clinic.core.ui.widgets.PemaOutlinedButton
 import com.pema.clinic.core.ui.widgets.PemaPrimary
 import com.pema.clinic.core.ui.widgets.PemaTextButton
 import com.pema.clinic.core.ui.widgets.PemaTile
@@ -57,10 +58,18 @@ fun NavGraphBuilder.scheduleGraph(deps: FeatureDeps) {
         AppointmentRoute(vm)
     }
     composable(Routes.Services) {
-        ServicesScreen(onServiceClick = { deps.navigator.go(Routes.Booking) })
+        ServicesScreen(
+            onServiceClick = { deps.navigator.go(Routes.Booking) },
+            onEditService = { index: Int ->
+                deps.navigator.go(Routes.withArgs(Routes.ServiceEdit, "id" to "S$index"))
+            }.takeIf { deps.sessionStore.state.value.allows(Routes.ServiceEdit) },
+        )
     }
     composable(Routes.Resources) {
-        ResourcesScreen(onResourceClick = { deps.navigator.go(Routes.Booking) })
+        ResourcesScreen(
+            onResourceClick = { deps.navigator.go(Routes.Booking) },
+            onBlockRoom = { deps.navigator.go(Routes.RoomBlock) }.takeIf { deps.sessionStore.state.value.allows(Routes.RoomBlock) },
+        )
     }
 }
 
@@ -270,6 +279,8 @@ internal fun AppointmentScreen(
 internal fun ServicesScreen(
     onServiceClick: () -> Unit,
     onBack: (() -> Unit)? = LocalOnBack.current,
+    /** Web "Chỉnh dịch vụ" (canvas I9) for service S<index>; null hides it (Flutter F13 has none). */
+    onEditService: ((Int) -> Unit)? = null,
 ) {
     DetailScaffold(title = Routes.titleOf(Routes.Services), onBack = onBack) {
         PemaHeading("Danh mục dịch vụ", "Giá và thời lượng tham khảo như web")
@@ -281,6 +292,12 @@ internal fun ServicesScreen(
                 onClick = onServiceClick,
             )
         }
+        if (onEditService != null) {
+            PemaSection("Chỉnh dịch vụ")
+            scheduleServices.forEachIndexed { index, service ->
+                PemaTile(service.name, "Thời lượng, giá, trạng thái · áp dụng cho lịch mới", "edit", { onEditService(index) })
+            }
+        }
     }
 }
 
@@ -288,6 +305,8 @@ internal fun ServicesScreen(
 internal fun ResourcesScreen(
     onResourceClick: () -> Unit,
     onBack: (() -> Unit)? = LocalOnBack.current,
+    /** Web "Khóa thời gian phòng" (canvas I8); null hides it (Flutter F14 has none). */
+    onBlockRoom: (() -> Unit)? = null,
 ) {
     DetailScaffold(title = Routes.titleOf(Routes.Resources), onBack = onBack) {
         PemaHeading("Nguồn lực phòng khám", "Chạm lịch để điều phối theo ca")
@@ -300,6 +319,9 @@ internal fun ResourcesScreen(
             )
         }
         PemaNotice("Laser & thủ thuật · Bảo trì 14:00–15:00 ngày 23/09. Khóa phòng phức tạp duyệt ở web.")
+        if (onBlockRoom != null) {
+            PemaOutlinedButton("Khóa thời gian phòng", onClick = onBlockRoom, icon = "block")
+        }
     }
 }
 

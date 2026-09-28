@@ -16,6 +16,7 @@ kotlin {
             implementation(project(":feature:billing"))
             implementation(project(":feature:care"))
             implementation(project(":feature:finance"))
+            implementation(project(":feature:operations"))
         }
     }
 }

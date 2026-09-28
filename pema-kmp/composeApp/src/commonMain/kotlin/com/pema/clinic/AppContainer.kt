@@ -9,6 +9,7 @@ import com.pema.clinic.shared.billing.ReceiptsStore
 import com.pema.clinic.shared.care.CareQueue
 import com.pema.clinic.shared.care.ReviewQueue
 import com.pema.clinic.shared.catalog.MutableCatalogRepository
+import com.pema.clinic.shared.clinic.ClinicStore
 import com.pema.clinic.shared.finance.FinanceRemoteDataSource
 import com.pema.clinic.shared.finance.FinanceRepositoryImpl
 import com.pema.clinic.shared.finance.FinanceStore
@@ -34,6 +35,7 @@ class AppContainer(
     val reviewQueue = ReviewQueue(catalogRepository, patientsStore, sessionStore, scope)
     val financeRepository = FinanceRepositoryImpl(FinanceRemoteDataSource(createHttpClient(), financeApi))
     val financeStore = FinanceStore(financeRepository, scope)
+    val clinicStore = ClinicStore()
 
     val deps = FeatureDeps(
         navigator = navigator,
@@ -46,5 +48,6 @@ class AppContainer(
         careQueue = careQueue,
         reviewQueue = reviewQueue,
         financeStore = financeStore,
+        clinicStore = clinicStore,
     )
 }

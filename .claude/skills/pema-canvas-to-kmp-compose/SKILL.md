@@ -15,7 +15,7 @@ Mục tiêu là **port 1:1**, không phải dựng một UI “tương tự”:
 | Canvas | màu, typography, khoảng cách, radius, kích thước, thứ bậc thị giác và trạng thái tham chiếu |
 | Pema web | chỉ dùng để port các màn được ghi là web-only trong canvas (I/J/K) hoặc khi yêu cầu rõ |
 
-Không suy diễn tính năng từ canvas. Canvas I/J/K có thể là web-only: kiểm tra trước khi tuyên bố KMP đã đủ màn.
+Không suy diễn tính năng từ canvas. Canvas I/J/K là màn web-only: logic lấy từ `prototype/` (web JS) qua domain `shared/clinic`, giao diện theo canvas; xem trạng thái và file ở [references/screen-coverage.md](references/screen-coverage.md).
 
 Đọc trước:
 
@@ -122,6 +122,8 @@ Chỉ dùng agent song song khi module/file ownership không chồng lấp. Mỗ
 - yêu cầu build feature trước khi bàn giao.
 
 Agent không được tự đổi `App.kt`, `Routes`, build logic, `FeatureDeps` hoặc `core:ui`; báo integration áp dụng thay đổi. Sau đợt, integration xử lý dependency chéo và full build.
+
+**Màn web-only (I/J/K):** làm theo 2 đợt. Đợt 0 (một agent): port mô hình dữ liệu web (`data.js`, `operations-data.js`, `crm-*.js`, `care-finance.js`, `staff-context.js`) vào `shared/clinic` với test parity so với `patients.json`; integration thêm route/quyền/block `core:ui` dùng chung. Đợt 1 (nhiều agent song song): mỗi agent một file màn riêng + một file `*Commands.kt` riêng trong `shared/clinic`, xuất một hàm `NavGraphBuilder.xxxGraph(deps)` để integration đăng ký. Brief chung cho agent nên để trong một file (quy tắc + API domain) để mọi agent đọc cùng một nguồn.
 
 ## 7. Vòng kiểm chứng ảnh bắt buộc
 

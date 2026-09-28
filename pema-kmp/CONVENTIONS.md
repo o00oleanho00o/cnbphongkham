@@ -35,6 +35,12 @@ Quy tắc:
 - Block riêng của feature (thẻ đơn, phiếu A5, hàng CSKH, thẻ tài chính…) dựng trong module feature theo CSS của block đó trong canvas.
 - **Vòng so ảnh bắt buộc**: trong `jvmTest` của module gọi `shotVsCanvas("F4") { QuickOrderScreen(state, …) }` → `build/shots/F4-vs.png` = ảnh canvas (trái) | bản Compose (phải). Xem ảnh, sửa đến khi khớp. Ảnh tham chiếu lấy từ thư mục `-Dpema.refDir=` / biến môi trường `PEMA_REF_DIR` (mặc định: thư mục `ref` trong session).
 
+## Màn web-only (canvas I/J/K)
+- Logic theo `prototype/` (web), không phải Flutter; dữ liệu lấy từ `deps.clinicStore` (`shared/clinic`). Lệnh mới viết thành extension `ClinicStore.xxx()` trong `shared/clinic/<Feature>Commands.kt` dùng `transact` (lỗi = `ClinicError` với câu tiếng Việt của web).
+- Quyền: `Session.allows` theo `staff-context.js` (`pages` + `capabilities`); nút cần quyền (clinical/billing/config) ẩn theo `session.staffContext().can(...)`.
+- Không đổi hình của màn A–H khi thêm lối vào: thêm mục ở cuối màn, hoặc tham số callback tùy chọn (mặc định `null` = ẩn) để shot Flutter giữ nguyên.
+- Tiêu đề route phải duy nhất trong `Routes.titles` (dùng cho `idOf`); nếu app bar cần trùng tên màn khác thì khai báo trong `appBarTitles` và dùng `Routes.appBarTitleOf`.
+
 ## Mobile-first & hiệu năng
 - Thiết kế cho điện thoại dọc 360–412dp; vùng chạm ≥ 48dp; `LazyColumn`/`LazyRow` cho danh sách, có `key`.
 - State `@Immutable`/`data class`, list là `List` bất biến; tránh tính toán nặng trong composable (dùng `remember`/`derivedStateOf` hoặc ViewModel).
@@ -42,6 +48,8 @@ Quy tắc:
 - Chữ tiếng Việt giữ nguyên như Flutter. **File phải lưu UTF-8** (không dùng PowerShell `Set-Content`/`Out-File` mặc định — dùng tool create/edit hoặc `[IO.File]::WriteAllText(p, t, (New-Object Text.UTF8Encoding($false)))`).
 
 ## Bẫy Compose đã gặp trên thiết bị (JVM shot không bắt được)
+- FAB trong `DetailScaffold`/`LazyDetailScaffold` đã được đệm theo thanh điều hướng hệ thống; đừng tự đặt FAB ngoài slot `floatingActionButton` (sẽ bị thanh điều hướng che).
+- Emulator "Resizable" sau nhiều lần `am force-stop` có thể giữ focus input cũ → phím Back gây ANR "does not have a focused window" sau khi đóng sheet. Đó là lỗi trạng thái emulator (khởi động lại emulator là hết), không phải lỗi app — kiểm tra `dumpsys input` FocusRequests trước khi sửa code.
 - Snackbar hiện trước/sau `back()` (lưu → quay lại): dùng `rememberPemaMessenger().show(msg)` (scope gốc trong `App.kt`, như Flutter `ScaffoldMessenger`). `rememberCoroutineScope()` của màn bị hủy khi pop → mất thông báo.
 - State tab/bộ lọc/ô tìm kiếm của màn có thể bị route khác che: `rememberSaveable` (NavHost bỏ `remember` của màn bị che). Kiểu không vào được Bundle (data class, enum lồng) phải có `listSaver`/`mapSaver`, nếu không Android crash khi chuyển màn.
 - Không lồng `verticalScroll` trong `PemaBottomSheet`/`ModalBottomSheet` (crash); chỉ một lớp cuộn.

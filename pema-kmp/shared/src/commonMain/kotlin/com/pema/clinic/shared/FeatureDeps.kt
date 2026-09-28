@@ -6,6 +6,7 @@ import com.pema.clinic.shared.billing.ReceiptsStore
 import com.pema.clinic.shared.care.CareQueue
 import com.pema.clinic.shared.care.ReviewQueue
 import com.pema.clinic.shared.catalog.CatalogRepository
+import com.pema.clinic.shared.clinic.ClinicStore
 import com.pema.clinic.shared.finance.FinanceStore
 import com.pema.clinic.shared.orders.OrdersStore
 import com.pema.clinic.shared.patients.PatientsStore
@@ -33,4 +34,6 @@ data class FeatureDeps(
     val reviewQueue: ReviewQueue,
     /** App-scoped finance projection, polling and command state. */
     val financeStore: FinanceStore,
+    /** Web-clinic data model/state/commands for operations, CRM and Patient 360 screens. */
+    val clinicStore: ClinicStore = ClinicStore(),
 )
