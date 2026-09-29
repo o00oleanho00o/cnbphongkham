@@ -3,6 +3,14 @@ name: iOS build (pema-kmp)
 on:
   # Manual only: Actions tab → "iOS build (pema-kmp)" → Run workflow.
   workflow_dispatch:
+    inputs:
+      target:
+        description: "simulator = .app zip for Appetize / iOS Simulator; device = unsigned .ipa for iPhone"
+        type: choice
+        options:
+          - simulator
+          - device
+        default: simulator
 
 concurrency:
   group: ios-kmp-${{ github.ref }}
@@ -10,7 +18,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build unsigned IPA
+    name: Build (${{ inputs.target }})
     runs-on: macos-latest
     timeout-minutes: 60
     defaults:
@@ -46,7 +54,27 @@ jobs:
           brew install xcodegen
           xcodegen generate
 
+      - name: Build app (simulator)
+        if: inputs.target == 'simulator'
+        working-directory: pema-kmp/iosApp
+        run: |
+          xcodebuild \
+            -project iosApp.xcodeproj \
+            -target iosApp \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -arch arm64 \
+            SYMROOT="$PWD/build" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Zip simulator app
+        if: inputs.target == 'simulator'
+        working-directory: pema-kmp/iosApp/build/Debug-iphonesimulator
+        run: zip -qry Pema-simulator.zip Pema.app
+
       - name: Build app (device, unsigned)
+        if: inputs.target == 'device'
         working-directory: pema-kmp/iosApp
         run: |
           xcodebuild \
@@ -62,14 +90,25 @@ jobs:
             build
 
       - name: Package unsigned IPA
+        if: inputs.target == 'device'
         working-directory: pema-kmp/iosApp/build
         run: |
           mkdir -p Payload
           cp -R Release-iphoneos/Pema.app Payload/
           zip -qry Pema-unsigned.ipa Payload
 
-      # Direct upload: the artifact is the .ipa itself, no zip to extract.
-      - uses: actions/upload-artifact@v7
+      # Direct upload: the artifact is the file itself, no extra zip to extract.
+      - name: Upload simulator app
+        if: inputs.target == 'simulator'
+        uses: actions/upload-artifact@v7
+        with:
+          path: pema-kmp/iosApp/build/Debug-iphonesimulator/Pema-simulator.zip
+          archive: false
+          retention-days: 14
+
+      - name: Upload unsigned IPA
+        if: inputs.target == 'device'
+        uses: actions/upload-artifact@v7
         with:
           path: pema-kmp/iosApp/build/Pema-unsigned.ipa
           archive: false
