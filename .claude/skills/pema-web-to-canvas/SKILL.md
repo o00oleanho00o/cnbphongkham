@@ -1,104 +1,104 @@
 ---
 name: pema-web-to-canvas
-description: Đối chiếu Pema web (Clinic Web, Patient Mobile web, Finance) với design canvas "Pema App.dc.html" của claude.ai/design — bắt đầu từ nhật ký web-changes.md và git diff từ mốc đồng bộ thay vì quét lại toàn bộ — tìm màn/tab/dialog web còn thiếu hoặc đã đổi và dựng bổ sung vào canvas theo mẫu mobile Flutter, kiểm tra render rồi đẩy lên claude.ai/design. Dùng khi được yêu cầu "check web còn thiếu màn nào trong design", "chuyển template web sang design Flutter", "cập nhật canvas theo web". Không viết code .dart.
+description: Compare the Pema web (Clinic Web, Patient Mobile web, Finance) with the claude.ai/design canvas "Pema App.dc.html" — starting from the web-changes.md log and the git diff since the sync baseline instead of re-scanning everything — find web screens/tabs/dialogs that are missing or changed, build them into the canvas using the Flutter mobile patterns, check the render, then push to claude.ai/design. Use when asked "check which web screens are missing from the design", "convert web templates to the Flutter design", "update the canvas from the web". Does not write .dart code.
 ---
 
-# Web Pema → design canvas Flutter
+# Pema web → Flutter design canvas
 
-Canvas `Pema App redesign canvas/Pema App.dc.html` là bản thiết kế mobile của Flutter template, và là nơi bắt đầu thiết kế màn mới. Skill này bổ sung vào canvas các màn web chưa có, **chỉ ở mức thiết kế**. Code Flutter (`flutter-template/lib/`) không đụng tới; nếu cần thì làm riêng theo `AGENT.md` › "Quy tắc riêng cho template Flutter".
+The canvas `Pema App redesign canvas/Pema App.dc.html` is the mobile design of the Flutter template and the place where new screens are designed first. This skill adds web screens the canvas lacks, **at the design level only**. Flutter code (`flutter-template/lib/`) is not touched; if needed, do that separately following `AGENT.md` › "Flutter template rules".
 
-Đọc trước: `AGENT.md` (dữ liệu tổng hợp, Patient 360, AI/nháp cần bác sĩ duyệt) và `.agents/skills/pema-design/references/visual-system.md` (màu, chữ, radius Pema).
+Read first: `AGENT.md` (synthetic data, Patient 360, AI drafts need doctor review) and `.agents/skills/pema-design/references/visual-system.md` (Pema colors, type, radius).
 
-Đường dẫn script tính từ gốc repo: `S=.claude/skills/pema-web-to-canvas/scripts`. File tạm (dump, ảnh chụp) để ngoài repo (scratchpad hoặc `%TEMP%`), không commit.
+Script paths are relative to the repo root: `S=.claude/skills/pema-web-to-canvas/scripts`. Keep temp files (dumps, screenshots) outside the repo (scratchpad or `%TEMP%`); never commit them.
 
-## 1. Chuẩn bị
+## 1. Setup
 
-| Cần | Lệnh | Kiểm tra |
+| Need | Command | Check |
 |---|---|---|
 | Web prototype | `docker compose up -d pema-prototype` | http://127.0.0.1:4173/clinic-web/ |
 | Design viewer (dev, hot-swap) | `cd design-viewer && npm run dev` | http://localhost:4180 |
-| Playwright + Chromium | `npx -y playwright@latest install chromium` (một lần) | script tự tìm trong npx cache; hoặc đặt `PLAYWRIGHT_MODULE` |
+| Playwright + Chromium | `npx -y playwright@latest install chromium` (once) | scripts find it in the npx cache; or set `PLAYWRIGHT_MODULE` |
 
-Finance web cần `python prototype/finance_server.py` mới có số liệu. Không có thì dump vẫn liệt kê được 4 tab, và nhóm H của canvas đã phủ phần này.
+Finance web needs `python prototype/finance_server.py` to show numbers. Without it the dump still lists the 4 tabs, and canvas group H already covers this area.
 
-## 2. Xem web đã đổi gì từ lần đồng bộ trước
+## 2. See what changed on the web since the last sync
 
-**Bắt đầu từ đây, đừng quét cả web.** [web-changes.md](web-changes.md) là nhật ký do người/agent sửa web ghi lại (quy tắc ở `AGENT.md` › "Ghi nhận thay đổi web cho design canvas"). Nó có dòng **Mốc đồng bộ** là commit mà canvas đã khớp web.
+**Start here; don't scan the whole web.** [web-changes.md](web-changes.md) is the log written by whoever changes the web (rule in `AGENT.md` › "Logging web changes for the design canvas"). Its **Sync baseline** line is the commit the canvas last matched.
 
 ```sh
-node $S/pending.cjs      # mục "Chờ chuyển" + file web đổi từ mốc, ✗ = đổi mà chưa ai ghi, gợi ý --only
+node $S/pending.cjs      # "Pending" entries + web files changed since the baseline, ✗ = changed but not logged, suggested --only
 ```
 
-- **Không có mục chờ và không có file đổi** → báo "canvas đang khớp web" rồi dừng.
-- **Có mục chờ**: đọc từng mục (nơi sửa, thay đổi, canvas dự kiến) và mở đúng các màn canvas đó.
-- **File `✗ CHƯA GHI`**: đọc `git diff <mốc> -- <file>` (chỉ file đó) để tự viết mục còn thiếu vào "Chờ chuyển", rồi xử lý như mục bình thường.
-- Chỉ dump các màn liên quan, bằng lệnh `--only` mà `pending.cjs` in ra:
+- **No pending entries and no changed files** → report "canvas matches the web" and stop.
+- **Pending entries**: read each one (where, change, canvas target) and open exactly those canvas screens.
+- **`✗ NOT LOGGED` files**: read `git diff <baseline> -- <file>` (that file only), write the missing entry under "Pending" yourself, then handle it like any other entry.
+- Only dump the related screens, using the `--only` command that `pending.cjs` prints:
 
 ```sh
 node $S/dump-web.cjs "$TMP/web-dump.txt" --only=clinic:today,dialog:today
-node $S/canvas.cjs list | grep -E '^(I2|I4) '           # xem màn canvas tương ứng
+node $S/canvas.cjs list | grep -E '^(I2|I4) '           # see the matching canvas screens
 ```
 
-**Dump toàn bộ** (`dump-web.cjs` không có `--only`, cộng `canvas.cjs list`) chỉ làm khi: nhật ký thiếu mốc; mốc không còn trong git history; đổi token/shell dùng chung (`design.css`, `ui.js`); hoặc người dùng yêu cầu rà lại tất cả.
+**Full dump** (`dump-web.cjs` without `--only`, plus `canvas.cjs list`) only when: the log has no baseline; the baseline is no longer in git history; a shared token/shell changed (`design.css`, `ui.js`); or the user asks for a full review.
 
-`dump-web.cjs` tự duyệt mọi `data-nav`, `data-tab`, `data-modal`, `data-screen`, `data-finance-tab`. Dialog mở bằng nút (Đặt lịch, Thu tiền, Xử lý…) và màn mobile chỉ vào được qua một dòng nằm trong màn khác đều khai báo ở đầu script (`CLINIC_DIALOGS`, `MOBILE_LINKS`). Web thêm nút/màn mới thì bổ sung vào hai danh sách này. Dòng `FAILED` trong dump nghĩa là selector/nhãn nút đã đổi: sửa script, đừng bỏ qua. Web thêm file JS mới thì thêm dòng vào bảng `MAP` của `pending.cjs`.
+`dump-web.cjs` walks every `data-nav`, `data-tab`, `data-modal`, `data-screen`, `data-finance-tab` automatically. Dialogs opened by buttons ("Đặt lịch", "Thu tiền", "Xử lý"…) and mobile screens reachable only through a row inside another screen are declared at the top of the script (`CLINIC_DIALOGS`, `MOBILE_LINKS`). When the web adds a new button/screen, add it to those two lists. A `FAILED` line in the dump means a selector/button label changed: fix the script, don't skip it. When the web adds a new JS file, add a row to the `MAP` table in `pending.cjs`.
 
-## 3. Tìm phần thiếu
+## 3. Find what is missing
 
-So phần dump (theo mục nhật ký, hoặc toàn bộ) với [references/coverage.md](references/coverage.md) (bảng web → mã màn canvas) và các màn canvas tương ứng:
+Compare the dump (per log entry, or full) with [references/coverage.md](references/coverage.md) (web → canvas screen code table) and the matching canvas screens:
 
-- **Đã phủ**: canvas có màn cùng mục đích **và** cùng các trường/hành động chính. Chỉ trùng tiêu đề thì chưa đủ; ví dụ C6 là bản rút gọn, nên form CSKH đầy đủ của web vẫn thành I13.
-- **Thiếu**: trang, tab, modal hoặc dialog web có hành động hay dữ liệu mà canvas không thể hiện.
-- **Bỏ qua**: phần chỉ dành cho desktop (sidebar, bộ chọn tài khoản demo, kéo-thả lịch) và các màn chỉ Flutter có (cuối coverage.md).
+- **Covered**: the canvas has a screen with the same purpose **and** the same main fields/actions. A matching title is not enough; e.g. C6 is a reduced version, so the full CSKH form on the web still became I13.
+- **Missing**: a web page, tab, modal or dialog with actions or data the canvas does not show.
+- **Skip**: desktop-only parts (sidebar, demo account picker, calendar drag-and-drop) and Flutter-only screens (end of coverage.md).
 
-Liệt kê cho người dùng: màn web → lý do thiếu → mã canvas dự kiến, rồi làm tiếp. Không cần dừng xin duyệt, trừ khi phạm vi lớn bất thường.
+List for the user: web screen → why it is missing → planned canvas code, then continue. No need to stop for approval unless the scope is unusually large.
 
-## 4. Dựng màn vào canvas
+## 4. Build the screens into the canvas
 
-Thêm dữ liệu trong `build()` của canvas, ngay trước `const groups = [`. Cách dùng block xem ở [references/blocks.md](references/blocks.md).
+Add data in the canvas `build()`, right before `const groups = [`. Block usage is in [references/blocks.md](references/blocks.md).
 
-- **Nhóm**: giữ A–H nguyên vẹn (mirror Flutter). Bổ sung nối tiếp vào I (vận hành Clinic), J (Patient 360), K (Pema Care), đánh số tiếp (I14, J12…). Chỉ mở nhóm mới (L…) cho mảng mới hẳn, nhớ thêm vào `groups` và vào option của prop `group`.
-- **Chỉ dùng block có sẵn**, để màn nào cũng dựng được bằng widget Flutter hiện có. Không sửa template HTML, trừ khi thật sự thiếu block (xem blocks.md).
-- **Chuyển desktop sang mobile** (theo `pema-design`: màn con, sheet ngắn, không bê bảng desktop):
+- **Groups**: keep A–H intact (Flutter mirror). Append to I (Clinic operations), J (Patient 360), K (Pema Care), continuing the numbering (I14, J12…). Only open a new group (L…) for a genuinely new area; add it to `groups` and to the options of the `group` prop.
+- **Only use existing blocks**, so every screen can be built with existing Flutter widgets. Don't edit the HTML template unless a block is truly missing (see blocks.md).
+- **Desktop to mobile** (per `pema-design`: child screens, short sheets, no desktop tables):
 
   | Web | Canvas |
   |---|---|
-  | Bảng nhiều cột (tiếp đón, hóa đơn) | `fc(...)` mỗi dòng một thẻ: `ftitle` + `fl` + nút `ff`/`fb` |
-  | Lưới phòng × giờ, lịch tuần | `week()` + `dd` chọn phòng + `s(phòng)` + `t(giờ, …)` |
-  | Bộ lọc / tab trạng thái | `chips([...])`, mục chọn là `'sel'` |
-  | KPI cards | `m(...)` tối đa 3 ô, còn lại dùng `t(...)` |
-  | Modal có nhiều ô nhập | màn `det(...)` riêng với `dd`/`input`/`check` + `p(...)` |
-  | Lựa chọn ngắn (phương thức, nhóm) | `hasSheet` với `rows` radio |
-  | Timeline / lịch sử | chuỗi `t(ngày · sự kiện, người ghi nhận, icon, false)` |
+  | Multi-column table (reception, invoices) | `fc(...)`, one card per row: `ftitle` + `fl` + button `ff`/`fb` |
+  | Room × time grid, week calendar | `week()` + `dd` room picker + `s(room)` + `t(time, …)` |
+  | Filters / status tabs | `chips([...])`, selected item is `'sel'` |
+  | KPI cards | `m(...)` at most 3 tiles, the rest as `t(...)` |
+  | Modal with many inputs | its own `det(...)` screen with `dd`/`input`/`check` + `p(...)` |
+  | Short choice (method, group) | `hasSheet` with radio `rows` |
+  | Timeline / history | a series of `t(date · event, recorded by, icon, false)` |
 
-- **Dữ liệu**: dùng `pt`, `people`, `GROUPS`, `money()` của canvas, không chép tên hay số từ web. Giữ các câu ràng buộc nghiệp vụ của web: AI chỉ là nháp, không suy hoàn tất điều trị từ thanh toán, tin nhắn không phải kênh cấp cứu, ảnh minh họa không chấm hiệu quả, CSKH không gửi Zalo/SMS thật.
-- **Ghi chú màn** bắt đầu bằng `WEB + '<route/tab/modal> · <điểm khác khi chuyển sang mobile>'` để người duyệt biết nguồn.
-- Cập nhật câu giới thiệu trong `<header>` nếu phạm vi nhóm đổi.
+- **Data**: use the canvas `pt`, `people`, `GROUPS`, `money()`; don't copy names or numbers from the web. Keep the web's business-rule sentences (in Vietnamese, verbatim): AI is only a draft, completed treatment is never inferred from payment, messages are not an emergency channel, illustrative photos don't score efficacy, CSKH doesn't send real Zalo/SMS.
+- **Screen notes** start with `WEB + '<route/tab/modal> · <what differs when moved to mobile>'` so reviewers know the source.
+- Update the intro sentence in `<header>` if a group's scope changes.
 
-## 5. Kiểm tra
+## 5. Check
 
 ```sh
-node $S/canvas.cjs check "Pema App.dc.html" I,J,K "$TMP"   # exit 1 nếu có lỗi
+node $S/canvas.cjs check "Pema App.dc.html" I,J,K "$TMP"   # exit 1 on errors
 ```
 
-Đạt khi: `errors` rỗng, `unresolved` rỗng (không còn `{{ }}`), `overflow` rỗng, `total` = số cũ + số màn thêm. Sau đó **mở từng ảnh `canvas-<nhóm>.png` để xem**: chữ tràn, metric vỡ dòng, icon hiện thành chữ (sai tên), FAB/sheet che nội dung quan trọng. Chỉ có exit code 0 thì chưa đủ.
+Passes when: `errors` is empty, `unresolved` is empty (no `{{ }}` left), `overflow` is empty, `total` = old count + added screens. Then **open every `canvas-<group>.png` and look**: text overflow, wrapped metrics, icons rendered as text (wrong name), FAB/sheet covering important content. Exit code 0 alone is not enough.
 
-## 6. Đẩy lên claude.ai/design
+## 6. Push to claude.ai/design
 
-Project: "Pema App redesign canvas", id `7822035f-ae10-4b1f-a802-ce789b25a393` (project thường, không phải design system). Tool `DesignSync` chỉ dùng trong luồng `/design-sync` do người dùng tự chạy; nếu chưa chạy thì nhắc họ chạy. Trong luồng đó, **chỉ cập nhật đúng file đã sửa**:
+Project: "Pema App redesign canvas", id `7822035f-ae10-4b1f-a802-ce789b25a393` (a regular project, not a design system). The `DesignSync` tool is only used inside the `/design-sync` flow started by the user; if they haven't started it, remind them. In that flow, **only update the file you edited**:
 
-1. `DesignSync get_file` file đó. Kết quả lớn sẽ được lưu ra file JSON.
-2. `node $S/remote-diff.cjs <file JSON> "Pema App redesign canvas/Pema App.dc.html"`. Dòng `-` là chỉnh sửa chỉ có trên claude.ai/design: phải gộp vào local (hoặc hỏi người dùng) trước khi ghi đè. Không có dòng `-` thì an toàn.
-3. `finalize_plan` với `localDir` = thư mục canvas, `writes: ["Pema App.dc.html"]`, `deletes: []`, rồi `write_files` với `localPath`.
-4. `get_file` lại và so với file local (bỏ khác biệt CRLF) để xác nhận đã khớp.
+1. `DesignSync get_file` that file. Large results are saved to a JSON file.
+2. `node $S/remote-diff.cjs <JSON file> "Pema App redesign canvas/Pema App.dc.html"`. `-` lines are edits that exist only on claude.ai/design: merge them into local (or ask the user) before overwriting. No `-` lines means it is safe.
+3. `finalize_plan` with `localDir` = the canvas folder, `writes: ["Pema App.dc.html"]`, `deletes: []`, then `write_files` with `localPath`.
+4. `get_file` again and compare with the local file (ignoring CRLF differences) to confirm they match.
 
-Không xóa file remote, không tạo `.design-sync/config.json`, không chạy luồng build design system.
+Never delete remote files, never create `.design-sync/config.json`, never run the design-system build flow.
 
-## 7. Kết thúc
+## 7. Finish
 
-- Docker viewer (localhost:4190) đóng gói canvas lúc build: `docker compose up -d --build pema-design-viewer`.
-- Cập nhật [references/coverage.md](references/coverage.md) (mốc ngày, tổng số màn, dòng mới).
-- Cập nhật [web-changes.md](web-changes.md): chuyển từng mục đã làm từ "Chờ chuyển" xuống đầu "Đã xử lý", thêm dòng `- Kết quả: <mã canvas đã thêm/sửa>, đã/chưa đẩy lên claude.ai/design`. Đổi **Mốc đồng bộ** thành commit web vừa đối chiếu (`git rev-parse --short HEAD`, hoặc commit sẽ tạo ở bước dưới nếu thay đổi web chưa commit). Mục chưa làm được thì để lại ở "Chờ chuyển" kèm lý do. Chạy lại `pending.cjs`: phải báo 0 mục chờ và 0 file `✗`.
-- Theo `AGENT.md` với thay đổi chỉ UI: append checkpoint vào `SECTION_PROGRESS.md` (màn đã thêm, viewport 390×844, cách kiểm tra). Không ghi tính năng Flutter đã có chỉ vì canvas đã có màn.
-- `git diff --check`, rồi commit file canvas + coverage + web-changes, ví dụ `design: add web-only screens to Pema App canvas`. Không commit dump hay ảnh chụp.
-- Báo lại: màn đã thêm theo nhóm, kết quả `check`, đã/chưa đẩy lên claude.ai/design, và phần còn lại (vd `Pema Prototype.dc.html` bản bấm thử chưa có các màn mới).
+- The Docker viewer (localhost:4190) bundles the canvas at build time: `docker compose up -d --build pema-design-viewer`.
+- Update [references/coverage.md](references/coverage.md) (date, total screen count, new rows).
+- Update [web-changes.md](web-changes.md): move each finished entry from "Pending" to the top of "Done", adding `- Result: <canvas codes added/changed>, pushed/not pushed to claude.ai/design`. Change **Sync baseline** to the web commit you compared against (`git rev-parse --short HEAD`, or the commit created below if the web change is not committed yet). Leave unfinished entries under "Pending" with the reason. Rerun `pending.cjs`: it must report 0 pending entries and 0 `✗` files.
+- Per `AGENT.md` for UI-only changes: append a checkpoint to `SECTION_PROGRESS.md` (screens added, viewport 390×844, how it was checked). Don't record Flutter features as existing just because the canvas has the screen.
+- `git diff --check`, then commit the canvas + coverage + web-changes files, e.g. `design: add web-only screens to Pema App canvas`. Never commit dumps or screenshots.
+- Report: screens added per group, the `check` result, pushed/not pushed to claude.ai/design, and what remains (e.g. the clickable `Pema Prototype.dc.html` doesn't have the new screens yet).

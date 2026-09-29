@@ -14,7 +14,7 @@ const model = lib.buildModel();
 if (show) {
   const s = model.screens.find((x) => x.id.toLowerCase() === show.toLowerCase());
   if (!s) {
-    console.error('Không có màn ' + show);
+    console.error('No screen ' + show);
     process.exit(1);
   }
   process.stdout.write(lib.screenMarkdown(s, model));
@@ -35,10 +35,10 @@ const stale = fs.existsSync(screensDir)
 if (check) {
   const changed = [...files].filter(([p, text]) => !fs.existsSync(p) || fs.readFileSync(p, 'utf8') !== text).map(([p]) => lib.rel(p));
   if (changed.length || stale.length) {
-    console.error(`design-specs lỗi thời (${changed.length + stale.length} file): ${[...changed, ...stale].slice(0, 8).join(', ')} … → chạy node design-specs.cjs`);
+    console.error(`design-specs out of date (${changed.length + stale.length} file(s)): ${[...changed, ...stale].slice(0, 8).join(', ')} … → run node design-specs.cjs`);
     process.exit(1);
   }
-  console.log(`design-specs khớp (${model.screens.length} màn)`);
+  console.log(`design-specs up to date (${model.screens.length} screens)`);
   process.exit(0);
 }
 
@@ -51,4 +51,4 @@ for (const [p, text] of files) {
 }
 for (const f of stale) fs.unlinkSync(path.join(screensDir, f));
 const ported = model.screens.filter((s) => s.status === 'ported').length;
-console.log(`design-specs: ${model.screens.length} màn (${ported} đã port), ${written} file cập nhật → ${lib.rel(lib.SPECS)}`);
+console.log(`design-specs: ${model.screens.length} screens (${ported} ported), ${written} file(s) updated → ${lib.rel(lib.SPECS)}`);

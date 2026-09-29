@@ -1,126 +1,126 @@
 {
-  "_comment": "Ghi chú chuyển đổi do người/agent viết, được design-specs.cjs và MCP pema-design gộp vào spec từng màn. groups.<mã nhóm> áp cho mọi màn trong nhóm; screens.<mã màn> cho riêng màn đó. Các khóa: logic, rules, differences, gotchas, todo (mảng chuỗi). Thêm nhanh: MCP tool record_note hoặc sửa file này rồi chạy node .claude/skills/pema-canvas-to-kmp-compose/scripts/design-specs.cjs.",
+  "_comment": "Porting notes written by humans/agents, merged into each screen's spec by design-specs.cjs and the pema-design MCP. groups.<group code> applies to every screen in the group; screens.<screen code> to that screen only. Keys: logic, rules, differences, gotchas, todo (string arrays). Write in English; keep Vietnamese UI text and business wording verbatim in quotes. Quick add: MCP tool record_note, or edit this file then run node .claude/skills/pema-canvas-to-kmp-compose/scripts/design-specs.cjs.",
   "groups": {
     "A": {
-      "logic": ["Flutter `workspace_screen.dart` › OwnerBody theo tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."],
-      "rules": ["Chủ phòng khám có 5 tab: Hôm nay / Lịch hẹn / Hồ sơ / Theo dõi / Thêm. Bottom nav thuộc Workspace, không phải nav toàn cục."],
-      "differences": ["Logo Pema thật thay chữ \"pema\" của canvas.", "Dữ liệu mẫu thật (46 hồ sơ) thay tên minh họa."],
-      "gotchas": ["Tab đang chọn phải là `rememberSaveable`: NavHost bỏ `remember` khi đẩy route con, quay lại sẽ về tab 0."]
+      "logic": ["Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."],
+      "rules": ["The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."],
+      "differences": ["Real Pema logo instead of the canvas \"pema\" text.", "Real sample data (46 records) instead of illustrative names."],
+      "gotchas": ["The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0."]
     },
     "B": {
       "logic": ["Flutter `workspace_screen.dart` › staffBody() (doctor)."],
-      "rules": ["Bác sĩ có 2 tab (Công việc, Hồ sơ mẫu) và chỉ thấy hồ sơ mình phụ trách (`Session.owns`)."]
+      "rules": ["Doctors have 2 tabs (\"Công việc\", \"Hồ sơ mẫu\") and only see records they own (`Session.owns`)."]
     },
     "C": {
-      "logic": ["Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) nhúng trong Workspace; KMP `feature/care/CareQueue.kt`."],
-      "rules": ["3 trạng thái: Chưa liên hệ / Đã liên hệ / Chờ bác sĩ; 10 nhóm CSKH lọc trong bottom sheet."],
-      "gotchas": ["`rememberSaveable` của `CareQueueFilter` (data class) cần `listSaver`, nếu không Android crash khi chuyển màn."]
+      "logic": ["Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."],
+      "rules": ["3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."],
+      "gotchas": ["`rememberSaveable` of `CareQueueFilter` (data class) needs a `listSaver`, otherwise Android crashes when navigating."]
     },
     "D": {
       "logic": ["Flutter `workspace_screen.dart` › staffBody() (accountant)."],
-      "rules": ["Kế toán có 2 tab; route cho phép: Thu ngân, Hóa đơn, Hướng dẫn (+ web: Thu ngân · hóa đơn, Dịch vụ & tài chính, Lịch sử hợp nhất, Hồ sơ mới)."]
+      "rules": ["Accountants have 2 tabs; allowed routes: \"Thu ngân\", \"Hóa đơn\", \"Hướng dẫn\" (+ web: \"Thu ngân · hóa đơn\", \"Dịch vụ & tài chính\", \"Lịch sử hợp nhất\", \"Hồ sơ mới\")."]
     },
     "E": {
       "logic": ["Flutter `workspace_screen.dart` › CareBody (careMode = true)."],
-      "rules": ["Người bệnh có 4 tab: Trang chủ / Hành trình / Tin nhắn / Hồ sơ; chỉ route care được phép (`Session.allows`)."],
-      "gotchas": ["Store nằm trong `AppStores` theo tiến trình: xoay máy không được đưa về Clinic."]
+      "rules": ["Patients have 4 tabs: \"Trang chủ\" / \"Hành trình\" / \"Tin nhắn\" / \"Hồ sơ\"; only care routes are allowed (`Session.allows`)."],
+      "gotchas": ["Stores live in `AppStores` per process: rotating the phone must not send the user back to Clinic."]
     },
     "F": {
-      "logic": ["Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace."],
-      "gotchas": ["Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."]
+      "logic": ["Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."],
+      "gotchas": ["A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."]
     },
     "G": {
-      "logic": ["Flutter `Detail(route, care: true)`; chỉ các route careMode."]
+      "logic": ["Flutter `Detail(route, care: true)`; careMode routes only."]
     },
     "H": {
       "logic": ["Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."],
-      "rules": ["Gọi API tài chính `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API tắt → màn lỗi + \"Thử lại\"."],
-      "gotchas": ["Tab tài chính là `rememberSaveable(initialTab)`."]
+      "rules": ["Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."],
+      "gotchas": ["The finance tab is `rememberSaveable(initialTab)`."]
     },
     "I": {
-      "logic": ["Web-only: logic port từ `prototype/shared/*.js` vào domain `shared/clinic` (`ClinicStore`, lệnh `transact`, lỗi `ClinicError` giữ câu tiếng Việt của web).", "Quyền theo `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`."],
-      "rules": ["Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền)."],
-      "differences": ["Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas."]
+      "logic": ["Web-only: logic ported from `prototype/shared/*.js` into the `shared/clinic` domain (`ClinicStore`, `transact` commands, `ClinicError` errors keep the web's Vietnamese messages).", "Permissions follow `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`."],
+      "rules": ["Entry point: the \"Vận hành phòng khám\" item at the end of each role's main screen (filtered by permission)."],
+      "differences": ["Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates."]
     },
     "J": {
-      "logic": ["Web `prototype/shared/clinic.js` › patient360() các tab (consult, plan, session, photos, finance, crm, history) và modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`."],
-      "rules": ["Lối vào: mục \"Patient 360 đầy đủ\" trong F1, lọc theo vai trò.", "Hành động lâm sàng cần capability `clinical` (owner/doctor); vai trò khác thấy \"Cần tài khoản bác sĩ để thực hiện.\" / ẩn nút như `staff-context.js apply()`."],
-      "differences": ["Dữ liệu seed web thay tên/ngày minh họa."]
+      "logic": ["Web `prototype/shared/clinic.js` › patient360() tabs (consult, plan, session, photos, finance, crm, history) and modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`."],
+      "rules": ["Entry point: the \"Patient 360 đầy đủ\" item in F1, filtered by role.", "Clinical actions need the `clinical` capability (owner/doctor); other roles see \"Cần tài khoản bác sĩ để thực hiện.\" / hidden buttons, like `staff-context.js apply()`."],
+      "differences": ["Web seed data instead of illustrative names/dates."]
     },
     "K": {
       "logic": ["Web `prototype/patient-mobile` + `prototype/shared/patient.js`."],
-      "differences": ["Dữ liệu seed web thay tên/ngày minh họa."]
+      "differences": ["Web seed data instead of illustrative names/dates."]
     }
   },
   "screens": {
-    "A2": { "rules": ["WeekStrip tĩnh như Flutter (`const WeekStrip`): bấm ngày không đổi gì — đúng 1:1."] },
-    "A3": { "logic": ["Nhúng `PatientSearch` của feature:patients (ngoại lệ phụ thuộc giống Flutter)."] },
-    "A6": { "gotchas": ["Không lồng `verticalScroll` trong `PemaBottomSheet`/`ModalBottomSheet` (crash); lớp cuộn nằm ở overlay."] },
-    "A7": { "logic": ["`PaymentAlerts` bọc toàn app (feature:finance): SnackBar khi số thanh toán chưa đọc tăng, cả khi đang ở màn con; \"Xem\" mở Tài chính tab Thông báo (3)."] },
-    "C6": { "rules": ["Nội dung liên hệ là nội bộ, không hiện cho người bệnh."], "logic": ["Link \"Ghi nhận CSKH đầy đủ\" → I13 (callback tùy chọn, mặc định ẩn để shot Flutter giữ nguyên)."] },
-    "F1": { "logic": ["Mục \"Patient 360 đầy đủ\" (J1–J11) thêm ở cuối, lọc theo `Session.allows`."] },
-    "F10": { "logic": ["Hiện ảnh người bệnh gửi (`PatientState.photos`) bằng `LocalPhoto`."] },
-    "F13": { "logic": ["Chủ phòng khám thấy thêm mục \"Chỉnh dịch vụ\" → I9 `service-edit?id=S<index>` (callback tùy chọn)."] },
-    "F14": { "logic": ["Chủ phòng khám thấy nút \"Khóa thời gian phòng\" → I8 (callback tùy chọn)."] },
-    "F16": { "rules": ["Route lạ mở GuideScreen(route) (fallback của `resolveRoute`)."] },
-    "F17": { "rules": ["Màn chặn quyền (`_RouteGuard`): \"Tác vụ không thuộc không gian hiện tại. Quay lại để chọn đúng công việc.\"; KMP `DeniedScreen` trong composeApp, route `Routes.denied(title)`."] },
+    "A2": { "rules": ["Static WeekStrip like Flutter (`const WeekStrip`): tapping a day does nothing — correct 1:1."] },
+    "A3": { "logic": ["Embeds `PatientSearch` from feature:patients (dependency exception, as in Flutter)."] },
+    "A6": { "gotchas": ["Don't nest `verticalScroll` inside `PemaBottomSheet`/`ModalBottomSheet` (crash); the scroll layer is in the overlay."] },
+    "A7": { "logic": ["`PaymentAlerts` wraps the whole app (feature:finance): SnackBar when the unread payment count increases, even on child screens; \"Xem\" opens Finance on the notifications tab (3)."] },
+    "C6": { "rules": ["Contact notes are internal and never shown to the patient."], "logic": ["Link \"Ghi nhận CSKH đầy đủ\" → I13 (optional callback, hidden by default so the Flutter shot stays the same)."] },
+    "F1": { "logic": ["The \"Patient 360 đầy đủ\" items (J1–J11) are added at the end, filtered by `Session.allows`."] },
+    "F10": { "logic": ["Shows photos sent by the patient (`PatientState.photos`) with `LocalPhoto`."] },
+    "F13": { "logic": ["The clinic owner also sees \"Chỉnh dịch vụ\" → I9 `service-edit?id=S<index>` (optional callback)."] },
+    "F14": { "logic": ["The clinic owner also sees the \"Khóa thời gian phòng\" button → I8 (optional callback)."] },
+    "F16": { "rules": ["Unknown routes open GuideScreen(route) (fallback of `resolveRoute`)."] },
+    "F17": { "rules": ["Permission-blocked screen (`_RouteGuard`): \"Tác vụ không thuộc không gian hiện tại. Quay lại để chọn đúng công việc.\"; KMP `DeniedScreen` in composeApp, route `Routes.denied(title)`."] },
     "G2": {
-      "rules": ["Có ảnh thì phải tick \"Tôi đồng ý chia sẻ ảnh để chăm sóc\" mới gửi được."],
-      "logic": ["Camera: `deps.platform.camera.capture()` (app camera hệ thống, không cần quyền CAMERA), ảnh 1600px JPEG 85 bỏ EXIF/GPS trong `cache/photos`."],
-      "gotchas": ["Bản nháp dùng `rememberSaveable(saver = SendUpdateDraft.Saver)`; collect `camera.recoveredPhotos()` để nhận ảnh khi Android tạo lại activity; xóa ảnh chưa gửi bằng `OnScreenCleared`, không dùng `DisposableEffect`.", "Đã test trên Xiaomi M2003J15SC (Android 12/MIUI): tiến trình bị kill khi đang mở camera vẫn nhận lại ảnh và chữ. Không gian làm việc (Session) được lưu cùng back stack (`RestoreSessionAfterProcessDeath` trong App.kt), nên G2 khôi phục vẫn thuộc Pema Care.", "Gửi thành công gọi `camera.markSaved(path)` (trong `SendUpdateDraft.submit`): ảnh hết là nháp, và bị xoá ở lần khởi động tiến trình sau."]
+      "rules": ["With a photo, \"Tôi đồng ý chia sẻ ảnh để chăm sóc\" must be ticked before sending."],
+      "logic": ["Camera: `deps.platform.camera.capture()` (system camera app, no CAMERA permission), photo 1600px JPEG 85 with EXIF/GPS stripped in `cache/photos`."],
+      "gotchas": ["The draft uses `rememberSaveable(saver = SendUpdateDraft.Saver)`; collect `camera.recoveredPhotos()` to receive photos when Android recreates the activity; delete unsent photos with `OnScreenCleared`, not `DisposableEffect`.", "Tested on a Xiaomi M2003J15SC (Android 12/MIUI): when the process is killed while the camera is open, the photo and text are still recovered. The workspace (Session) is saved with the back stack (`RestoreSessionAfterProcessDeath` in App.kt), so the restored G2 still belongs to Pema Care.", "A successful send calls `camera.markSaved(path)` (in `SendUpdateDraft.submit`): the photo stops being a draft and is deleted on the next process start."]
     },
-    "G5": { "logic": ["Trước = ảnh đầu tiên (khi có ≥ 2 ảnh), Gần nhất = ảnh cuối, từ `PatientState.photos`."] },
-    "H7": { "rules": ["Trạng thái lỗi khi API tài chính tắt, nút \"Thử lại\"."] },
-    "I1": { "logic": ["Web `crm-ui.js` › dashboard(): KPI vận hành + CSKH (crmQueue)."], "rules": ["Dòng \"Ưu tiên chăm sóc\": chọn hồ sơ (`sessionStore.select`) rồi mở I13."] },
+    "G5": { "logic": ["\"Trước\" = first photo (when there are ≥ 2 photos), \"Gần nhất\" = last photo, from `PatientState.photos`."] },
+    "H7": { "rules": ["Error state when the finance API is down, with a \"Thử lại\" button."] },
+    "I1": { "logic": ["Web `crm-ui.js` › dashboard(): operations + CSKH KPIs (crmQueue)."], "rules": ["\"Ưu tiên chăm sóc\" rows: select the record (`sessionStore.select`) then open I13."] },
     "I2": {
-      "logic": ["Web `crm-ui.js` › today(); lệnh `ClinicStore.reception(id, status)` / `setStatus`."],
-      "gotchas": ["Chỉ lọc theo bác sĩ khi vai trò là doctor (web `Staff.owns`); owner thấy cả 31 lịch.", "FAB \"Đặt lịch mới\" phải nằm trong slot `floatingActionButton` của DetailScaffold (đã đệm thanh điều hướng)."]
+      "logic": ["Web `crm-ui.js` › today(); commands `ClinicStore.reception(id, status)` / `setStatus`."],
+      "gotchas": ["Only filter by doctor when the role is doctor (web `Staff.owns`); the owner sees all 31 appointments.", "The \"Đặt lịch mới\" FAB must be in DetailScaffold's `floatingActionButton` slot (already padded for the navigation bar)."]
     },
     "I3": {
-      "logic": ["Web `operations-ui.js` › schedule(): lịch theo phòng, đệm chuẩn bị, waitlist, khóa phòng."],
-      "differences": ["Khác Flutter A2: WeekStrip ở đây chọn được ngày (7 ngày seed từ DAY, nhãn thứ tính từ ngày thật)."],
-      "rules": ["Bấm lịch → I4 dời lịch `appointment-form?id=<id>`."]
+      "logic": ["Web `operations-ui.js` › schedule(): schedule per room, preparation buffer, waitlist, room blocks."],
+      "differences": ["Unlike Flutter A2, this WeekStrip can pick a day (7 days seeded from DAY, weekday labels computed from real dates)."],
+      "rules": ["Tapping an appointment → I4 reschedule `appointment-form?id=<id>`."]
     },
     "I4": {
-      "logic": ["Web `operations-ui.js` › booking dialog; `ClinicStore.validate` / `saveAppointment` (câu lỗi của web)."],
-      "rules": ["Tham số route: `appointment-form?id={id}&patient={patient}&crmTask={crmTask}`; có crmTask thì đánh dấu việc CSKH đã đặt lịch khi lưu thành công.", "Vai trò doctor: bác sĩ cố định là bác sĩ đang đăng nhập."]
+      "logic": ["Web `operations-ui.js` › booking dialog; `ClinicStore.validate` / `saveAppointment` (the web's error messages)."],
+      "rules": ["Route parameters: `appointment-form?id={id}&patient={patient}&crmTask={crmTask}`; with crmTask, the CSKH task is marked as booked when saving succeeds.", "Doctor role: the doctor is fixed to the signed-in doctor."]
     },
-    "I5": { "logic": ["Web `clinic.js` › patients() › Hồ sơ mới; lệnh `createPatient` (ClinicToolsCommands) đồng bộ cả `MutableCatalogRepository` để hồ sơ mới hiện trong tìm kiếm."] },
-    "I6": { "logic": ["Web `clinic.js` › followups(): lọc Ảnh / Triệu chứng / Quá hạn; doctor chỉ thấy hồ sơ mình (`owns`)."], "rules": ["Bấm mục → chọn hồ sơ rồi mở F10 Phản hồi."] },
+    "I5": { "logic": ["Web `clinic.js` › patients() › \"Hồ sơ mới\"; the `createPatient` command (ClinicToolsCommands) also syncs `MutableCatalogRepository` so the new record appears in search."] },
+    "I6": { "logic": ["Web `clinic.js` › followups(): filters \"Ảnh\" / \"Triệu chứng\" / \"Quá hạn\"; doctors only see their own records (`owns`)."], "rules": ["Tapping an item → select the record then open F10 \"Phản hồi\"."] },
     "I7": {
-      "logic": ["Web `clinic.js` › studio() + photos(p): ảnh thật = buổi điều trị có `image` cùng góc chụp; đầu = Trước, cuối = Sau; không có → ảnh minh họa."],
-      "rules": ["\"Thêm ảnh\" như web `capture`: mở J5 Ghi buổi điều trị (ảnh gắn với buổi + đồng ý ảnh).", "\"So sánh trượt\" chỉ khi có 2 ảnh khác nhau.", "So sánh trượt như web: ảnh Sau làm nền, ảnh Trước phủ phần bên trái tới vị trí thanh trượt (`clip-path: inset(0 (100-v)% 0 0)`), nhãn \"Trước ← → Sau\" góc trên; ngày Trước/Sau ở hai góc dưới."],
-      "gotchas": ["Đã test trên máy thật: bản đầu đảo chiều (Sau ở trái). Canvas không vẽ chế độ trượt, nên theo web."]
+      "logic": ["Web `clinic.js` › studio() + photos(p): real photos = treatment sessions with an `image` for the same view; first = \"Trước\", last = \"Sau\"; none → illustrative images."],
+      "rules": ["\"Thêm ảnh\" like web `capture`: opens J5 \"Ghi buổi điều trị\" (photo attached to a session + photo consent).", "\"So sánh trượt\" only when there are 2 different photos.", "Slider comparison as on the web: the \"Sau\" photo is the background, the \"Trước\" photo covers the left part up to the slider position (`clip-path: inset(0 (100-v)% 0 0)`), label \"Trước ← → Sau\" at the top; \"Trước\"/\"Sau\" dates in the two bottom corners."],
+      "gotchas": ["Tested on a real phone: the first version was reversed (\"Sau\" on the left). The canvas doesn't draw slider mode, so follow the web."]
     },
-    "I8": { "logic": ["Web `operations-ui.js` › resources() save-block; `ClinicStore.block` (08:00–18:00, có lý do, không vướng lịch)."] },
-    "I9": { "logic": ["Web `operations-ui.js` › services() dialog 'service'; `ClinicStore.updateService` (15–180 phút, đệm 0–60, giá ≥ 0)."], "rules": ["Route `service-edit?id={id}`, mặc định S2."] },
-    "I10": { "logic": ["Web `operations-ui.js` › cashier(): mọi hóa đơn toàn phòng khám, lọc Còn phải thu / Đã thanh toán."] },
-    "I11": { "logic": ["Web `operations-ui.js` › action 'pay' dialog; `ClinicStore.pay` (không vượt dư nợ, Tiền mặt/Chuyển khoản)."], "gotchas": ["Shot dùng overlay tĩnh như F12 (`previewPaymentSheet`)."] },
-    "I12": { "logic": ["Web `clinic.js` › ask(): câu hỏi gợi ý + truy vấn tự do, câu trả lời kèm \"Cách tính\" và nguồn."] },
+    "I8": { "logic": ["Web `operations-ui.js` › resources() save-block; `ClinicStore.block` (08:00–18:00, reason required, must not clash with appointments)."] },
+    "I9": { "logic": ["Web `operations-ui.js` › services() dialog 'service'; `ClinicStore.updateService` (15–180 minutes, buffer 0–60, price ≥ 0)."], "rules": ["Route `service-edit?id={id}`, default S2."] },
+    "I10": { "logic": ["Web `operations-ui.js` › cashier(): every invoice in the clinic, filters \"Còn phải thu\" / \"Đã thanh toán\"."] },
+    "I11": { "logic": ["Web `operations-ui.js` › action 'pay' dialog; `ClinicStore.pay` (never above the balance, \"Tiền mặt\"/\"Chuyển khoản\")."], "gotchas": ["The shot uses a static overlay like F12 (`previewPaymentSheet`)."] },
+    "I12": { "logic": ["Web `clinic.js` › ask(): suggested questions + free query, answers include \"Cách tính\" and sources."] },
     "I13": {
-      "logic": ["Web `crm-ui.js` form Xử lý; `ClinicStore.resolveCrmTask` / `prepareCrmBooking` (CashierCrmCommands)."],
-      "rules": ["Kết quả \"Đồng ý đặt lịch\" mở I4 với `crmTask` trước khi hoàn tất.", "Không gửi Zalo/SMS hay gọi thật."]
+      "logic": ["Web `crm-ui.js` \"Xử lý\" form; `ClinicStore.resolveCrmTask` / `prepareCrmBooking` (CashierCrmCommands)."],
+      "rules": ["The outcome \"Đồng ý đặt lịch\" opens I4 with `crmTask` before completing.", "No real Zalo/SMS or calls."]
     },
-    "J1": { "logic": ["Web consult tab + action generate-note / approve-note; `generateConsultDraft`, `approveConsultDraft`, `saveClinicalNote`."], "rules": ["AI chỉ tạo bản nháp; bác sĩ sửa và duyệt trước khi lưu."] },
+    "J1": { "logic": ["Web consult tab + actions generate-note / approve-note; `generateConsultDraft`, `approveConsultDraft`, `saveClinicalNote`."], "rules": ["AI only creates a draft; the doctor edits and approves it before saving."] },
     "J2": { "logic": ["Web modal 'note' + `Pema.brief(p)` → `brief(state, patient)`; approve-brief → `approveAiBrief`."] },
-    "J3": { "logic": ["Web plan tab."], "gotchas": ["Tiêu đề trùng Flutter \"Kế hoạch điều trị\": route `Routes.PlanOverview` có key duy nhất \"Kế hoạch điều trị · Clinic\", app bar lấy qua `Routes.appBarTitleOf`."] },
-    "J4": { "logic": ["Web modal 'plan-edit' + save-plan; `updateTreatmentPlan` (tổng ≥ số buổi đã làm, ≤ 20)."] },
+    "J3": { "logic": ["Web plan tab."], "gotchas": ["Title clashes with Flutter \"Kế hoạch điều trị\": route `Routes.PlanOverview` has the unique key \"Kế hoạch điều trị · Clinic\", the app bar title comes from `Routes.appBarTitleOf`."] },
+    "J4": { "logic": ["Web modal 'plan-edit' + save-plan; `updateTreatmentPlan` (total ≥ sessions done, ≤ 20)."] },
     "J5": {
-      "logic": ["Web session tab + save-session; `recordTreatmentSession` (TreatmentSessionInput.photoPath = ảnh mốc)."],
-      "rules": ["Có ảnh mốc thì phải có đồng ý ảnh; lưu không ảnh → tạo follow-up \"Thiếu ảnh mốc đánh giá\".", "Ảnh mốc: sheet \"Chụp ảnh / Chọn ảnh có sẵn\" (`PemaPhotoSourceSheet`), xem trước + Chụp lại / Chọn ảnh khác / Bỏ ảnh."],
-      "gotchas": ["Ảnh chưa lưu bị xóa bằng `OnScreenCleared` khi đóng màn; ảnh đã lưu thuộc về buổi điều trị.", "Ô đồng ý ảnh mặc định lấy `patient.photoConsent` (P001 đã tick sẵn) — chạm vào là bỏ tick, không phải lỗi chạm.", "Lưu buổi có ảnh gọi `camera.markSaved(path)` trước khi xoá `pending.path`."]
+      "logic": ["Web session tab + save-session; `recordTreatmentSession` (TreatmentSessionInput.photoPath = landmark photo)."],
+      "rules": ["A landmark photo requires photo consent; saving without a photo creates the follow-up \"Thiếu ảnh mốc đánh giá\".", "Landmark photo: sheet \"Chụp ảnh / Chọn ảnh có sẵn\" (`PemaPhotoSourceSheet`), preview + \"Chụp lại\" / \"Chọn ảnh khác\" / \"Bỏ ảnh\"."],
+      "gotchas": ["Unsaved photos are deleted by `OnScreenCleared` when the screen closes; saved photos belong to the treatment session.", "The photo consent box defaults to `patient.photoConsent` (P001 is pre-ticked) — tapping it unticks it; not a touch bug.", "Saving a session with a photo calls `camera.markSaved(path)` before clearing `pending.path`."]
     },
-    "J6": { "logic": ["Web finance tab + `care-finance.js`; `careFinanceSummary(patientId)`."], "rules": ["Không suy ra hoàn tất điều trị từ thanh toán.", "\"Mở thu ngân\" chỉ khi có capability billing."] },
+    "J6": { "logic": ["Web finance tab + `care-finance.js`; `careFinanceSummary(patientId)`."], "rules": ["Never infer completed treatment from payment.", "\"Mở thu ngân\" only with the billing capability."] },
     "J7": { "logic": ["Web `crm-ui.js` patient CRM panel; \"Sửa ngày dự kiến\" → `setExpectedVisit`."] },
-    "J8": { "logic": ["Web history tab: gộp sự kiện, mới nhất trước, người ghi nhận và nguồn."] },
-    "J9": { "logic": ["Web modal 'message'."], "rules": ["Tin nhắn hiện ở tab Tin nhắn của người bệnh (E3); không phải kênh cấp cứu; ẩn với CSKH/kế toán."] },
-    "J10": { "logic": ["Web modal 'edit' + save-facts (cảnh báo mỗi dòng một mục, đồng ý ảnh)."] },
-    "J11": { "logic": ["Web modal 'care' + save-care."], "rules": ["Hướng dẫn đã duyệt mới xuất hiện ở Chăm sóc tại nhà của người bệnh."] },
-    "K1": { "logic": ["Web `patient.js` › appointments(); `confirmPatientAttendance`."], "rules": ["Lối vào: tile \"Lịch hẹn tiếp theo\" ở Trang chủ Care."] },
-    "K2": { "logic": ["Web `patient.js` › docs(); chỉ mục đã duyệt, chỉ xem."], "rules": ["Lối vào: tab Hồ sơ Care → \"Tài liệu & hóa đơn\"."] },
+    "J8": { "logic": ["Web history tab: merged events, newest first, with recorder and source."] },
+    "J9": { "logic": ["Web modal 'message'."], "rules": ["Messages appear in the patient's \"Tin nhắn\" tab (E3); not an emergency channel; hidden from CSKH/accountants."] },
+    "J10": { "logic": ["Web modal 'edit' + save-facts (one alert per line, photo consent)."] },
+    "J11": { "logic": ["Web modal 'care' + save-care."], "rules": ["Only approved instructions appear in the patient's \"Chăm sóc tại nhà\"."] },
+    "K1": { "logic": ["Web `patient.js` › appointments(); `confirmPatientAttendance`."], "rules": ["Entry point: the \"Lịch hẹn tiếp theo\" tile on the Care home."] },
+    "K2": { "logic": ["Web `patient.js` › docs(); approved items only, read-only."], "rules": ["Entry point: Care \"Hồ sơ\" tab → \"Tài liệu & hóa đơn\"."] },
     "K3": {
       "logic": ["Web `patient.js` › journey(); `patientJourneyTimeline(patient)`."],
-      "differences": ["Gộp vào tab Hành trình (E2): giữ 4 mục của Flutter và thêm dòng thời gian \"Cập nhật gần đây\" + câu \"tiến độ số buổi, không phải mức cải thiện da\"."]
+      "differences": ["Merged into the \"Hành trình\" tab (E2): keeps Flutter's 4 items and adds the \"Cập nhật gần đây\" timeline + the sentence \"tiến độ số buổi, không phải mức cải thiện da\"."]
     }
   }
 }

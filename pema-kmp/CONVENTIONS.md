@@ -1,75 +1,77 @@
-# Quy ước pema-kmp (KMP + Compose Multiplatform)
+# pema-kmp conventions (KMP + Compose Multiplatform)
 
-Bản port của `flutter-template/` (Flutter) sang Kotlin Multiplatform.
-- **Nghiệp vụ, chữ hiển thị, luồng màn hình**: code Flutter là nguồn chuẩn — port 1:1 (mọi field, nút, điều kiện bật/tắt, snackbar, dialog, sheet, hiển thị theo vai trò).
-- **Giao diện**: design canvas `Pema App redesign canvas/Pema App.dc.html` (vẽ từ Flutter) là nguồn chuẩn — CSS của từng block (kích thước, padding, bo góc, màu, cỡ/độ đậm chữ) và ảnh tham chiếu từng màn (A1…H9).
+Port of `flutter-template/` (Flutter) to Kotlin Multiplatform.
+- **Business logic, display text, screen flows**: the Flutter code is the source of truth — port 1:1 (every field, button, enable/disable condition, snackbar, dialog, sheet, role-based visibility).
+- **Visuals**: the design canvas `Pema App redesign canvas/Pema App.dc.html` (drawn from Flutter) is the source of truth — the CSS of each block (size, padding, radius, color, font size/weight) and the reference image of each screen (A1…H9).
 
-## Module & quyền sở hữu
+## Modules & ownership
 
-| Module | Nội dung | Chủ sở hữu |
+| Module | Content | Owner |
 |---|---|---|
-| `core:common` | `Routes` (id ASCII + `Routes.titleOf(id)` = tên route Flutter, `finance(tab)`, `guide(title)`, `denied(title)`), `AppNavigator`, `AsyncUiState`, `ApiConfig`, Ktor `HttpClientFactory` | integration |
-| `core:ui` | Design system dựng 1:1 từ CSS canvas: `PemaColors`, `PemaTheme`/`PemaType` (Be Vietnam Pro), `PemaIcon` (font Material Icons như Flutter `Icons.*`), block (`PemaHeading`, `PemaHero`, `PemaMetrics`, `PemaActions`, `PemaTile`, `PemaNotice`, `PemaPrimary`…), control (nút, field, dropdown, chip, checkbox), `DetailScaffold`, `PemaMainTopBar`, `PemaBottomNav`, sheet/dialog/snackbar, `LocalPhoto`, `moneyFormat`; jvmMain: harness chụp màn `shots/Shots.kt` | integration |
+| `core:common` | `Routes` (ASCII id + `Routes.titleOf(id)` = Flutter route name, `finance(tab)`, `guide(title)`, `denied(title)`), `AppNavigator`, `AsyncUiState`, `ApiConfig`, Ktor `HttpClientFactory` | integration |
+| `core:ui` | Design system built 1:1 from the canvas CSS: `PemaColors`, `PemaTheme`/`PemaType` (Be Vietnam Pro), `PemaIcon` (Material Icons font like Flutter `Icons.*`), blocks (`PemaHeading`, `PemaHero`, `PemaMetrics`, `PemaActions`, `PemaTile`, `PemaNotice`, `PemaPrimary`…), controls (button, field, dropdown, chip, checkbox), `DetailScaffold`, `PemaMainTopBar`, `PemaBottomNav`, sheet/dialog/snackbar, `LocalPhoto`, `moneyFormat`; jvmMain: screenshot harness `shots/Shots.kt` | integration |
 | `core:hardware` | `PlatformServices` (camera, images, printer, launcher, haptics, notifier), `LocalPlatformServices`, `FakePlatformServices` | hardware |
-| `shared` | domain + state port 1:1 từ provider Flutter (session, catalog, patients, orders, billing, care, review queue, finance) | domain |
-| `feature:<x>` | màn hình + ViewModel + block riêng của feature | agent của feature đó |
-| `composeApp` | `App.kt` (NavHost, `_RouteGuard`, fallback Guide, snackbar, `PaymentAlerts` bọc navigator), `AppContainer.kt` | integration |
+| `shared` | domain + state ported 1:1 from Flutter providers (session, catalog, patients, orders, billing, care, review queue, finance) | domain |
+| `feature:<x>` | screens + ViewModels + the feature's own blocks | that feature's agent |
+| `composeApp` | `App.kt` (NavHost, `_RouteGuard`, Guide fallback, snackbar, `PaymentAlerts` around the navigator), `AppContainer.kt` | integration |
 | `androidApp` | `MainActivity` (edge-to-edge), manifest, icon | integration |
 
-Quy tắc:
-- Feature chỉ dùng `core:*` và `shared`. Ngoại lệ như Flutter: `feature:workspace` nhúng `CareQueue` (`feature:care`) và `PatientSearch` (`feature:patients`); app shell gọi `PaymentAlerts` (`feature:finance`).
-- Không sửa file ngoài phần mình sở hữu. Cần đổi `FeatureDeps`, `AppContainer`, `App.kt`, `Routes`, `core:ui` hay build file → ghi vào báo cáo, integration sẽ áp dụng.
-- Mỗi feature xuất `fun NavGraphBuilder.<name>Graph(deps: FeatureDeps)` và đăng ký `composable(Routes.X)` cho các route của mình. Điều hướng luôn qua `deps.navigator.go(...)`: shell tự áp guard vai trò (màn "Tác vụ không thuộc không gian hiện tại…"), route lạ → Guide, `/finance` + trang con không bị guard (như Flutter).
+Rules:
+- Features only depend on `core:*` and `shared`. Exceptions, as in Flutter: `feature:workspace` embeds `CareQueue` (`feature:care`) and `PatientSearch` (`feature:patients`); the app shell calls `PaymentAlerts` (`feature:finance`).
+- Don't edit files outside what you own. Changes to `FeatureDeps`, `AppContainer`, `App.kt`, `Routes`, `core:ui` or build files → put them in your report; integration applies them.
+- Each feature exports `fun NavGraphBuilder.<name>Graph(deps: FeatureDeps)` and registers `composable(Routes.X)` for its routes. Always navigate through `deps.navigator.go(...)`: the shell applies the role guard (screen "Tác vụ không thuộc không gian hiện tại…"), unknown routes → Guide, `/finance` + its sub-pages are not guarded (as in Flutter).
 
-## Thêm một màn hình
-1. `feature/<x>/src/commonMain/kotlin/com/pema/clinic/feature/<x>/<Name>Screen.kt` — `@Composable` stateless nhận state + callback (để test chụp màn cấp state giả được), cộng một `…Route(vm)` bọc ViewModel.
-2. ViewModel: `class <Name>ViewModel(...) : androidx.lifecycle.ViewModel()`, state là `StateFlow<...>` bất biến (`data class`), sự kiện là hàm. Tạo trong graph: `viewModel { <Name>ViewModel(deps) }`.
-3. Đọc state bằng `collectAsStateWithLifecycle()`.
-4. Tiêu đề: `DetailScaffold(title = Routes.titleOf(Routes.X))` — nút back lấy từ `LocalOnBack` do shell cấp.
-5. Điều hướng: `deps.navigator.go(Routes.Y)` / `back()` / `openFinance(tab)`. Snackbar: `LocalPemaSnackbar.current.showSnackbar(...)`.
-6. Phần cứng: `deps.platform` / `LocalPlatformServices.current`. Test dùng `FakePlatformServices`.
+## Adding a screen
+1. `feature/<x>/src/commonMain/kotlin/com/pema/clinic/feature/<x>/<Name>Screen.kt` — a stateless `@Composable` taking state + callbacks (so screenshot tests can pass fake state), plus a `…Route(vm)` wrapping the ViewModel.
+2. ViewModel: `class <Name>ViewModel(...) : androidx.lifecycle.ViewModel()`, state is an immutable `StateFlow<...>` (`data class`), events are functions. Created in the graph: `viewModel { <Name>ViewModel(deps) }`.
+3. Read state with `collectAsStateWithLifecycle()`.
+4. Title: `DetailScaffold(title = Routes.titleOf(Routes.X))` — the back button comes from `LocalOnBack` provided by the shell.
+5. Navigation: `deps.navigator.go(Routes.Y)` / `back()` / `openFinance(tab)`. Snackbar: `LocalPemaSnackbar.current.showSnackbar(...)`.
+6. Hardware: `deps.platform` / `LocalPlatformServices.current`. Tests use `FakePlatformServices`.
 
-## Giao diện: bám canvas
-- Chỉ dùng token trong `PemaColors` và kiểu chữ `PemaType.*` (đã gồm font Be Vietnam Pro). Không tự đặt màu/cỡ chữ khác canvas.
-- Icon: `PemaIcon("tên_material")` — Flutter `Icons.x_outlined` → `PemaIcon("x")`, `Icons.x` → `PemaIcon("x", filled = true)`.
-- Block riêng của feature (thẻ đơn, phiếu A5, hàng CSKH, thẻ tài chính…) dựng trong module feature theo CSS của block đó trong canvas.
-- **Vòng so ảnh bắt buộc**: trong `jvmTest` của module gọi `shotVsCanvas("F4") { QuickOrderScreen(state, …) }` → `build/shots/F4-vs.png` = ảnh canvas (trái) | bản Compose (phải). Xem ảnh, sửa đến khi khớp. Ảnh tham chiếu do task Gradle `canvasRefs` tự render từ canvas vào `pema-kmp/design-ref/` trước mỗi `jvmTest` (bỏ qua nếu canvas không đổi); chụp lại tay: `.\gradlew.bat canvasRefs` hoặc `node .claude\skills\pema-canvas-to-kmp-compose\scripts\canvas-shots.cjs --force`. `PEMA_REF_DIR` ghi đè thư mục.
+## Visuals: follow the canvas
+- Only use tokens from `PemaColors` and text styles `PemaType.*` (which include Be Vietnam Pro). Never set colors/font sizes that differ from the canvas.
+- Icons: `PemaIcon("material_name")` — Flutter `Icons.x_outlined` → `PemaIcon("x")`, `Icons.x` → `PemaIcon("x", filled = true)`.
+- Feature-specific blocks (order card, A5 slip, CSKH row, finance card…) are built in the feature module from that block's CSS in the canvas.
+- **Required image comparison loop**: in the module's `jvmTest`, call `shotVsCanvas("F4") { QuickOrderScreen(state, …) }` → `build/shots/F4-vs.png` = canvas image (left) | Compose (right). Look at it and fix until it matches. Reference images are rendered from the canvas into `pema-kmp/design-ref/` by the Gradle task `canvasRefs` before every `jvmTest` (skipped when the canvas is unchanged); re-render manually: `.\gradlew.bat canvasRefs` or `node .claude\skills\pema-canvas-to-kmp-compose\scripts\canvas-shots.cjs --force`. `PEMA_REF_DIR` overrides the folder.
 
-## Màn web-only (canvas I/J/K)
-- Logic theo `prototype/` (web), không phải Flutter; dữ liệu lấy từ `deps.clinicStore` (`shared/clinic`). Lệnh mới viết thành extension `ClinicStore.xxx()` trong `shared/clinic/<Feature>Commands.kt` dùng `transact` (lỗi = `ClinicError` với câu tiếng Việt của web).
-- Quyền: `Session.allows` theo `staff-context.js` (`pages` + `capabilities`); nút cần quyền (clinical/billing/config) ẩn theo `session.staffContext().can(...)`.
-- Không đổi hình của màn A–H khi thêm lối vào: thêm mục ở cuối màn, hoặc tham số callback tùy chọn (mặc định `null` = ẩn) để shot Flutter giữ nguyên.
-- Tiêu đề route phải duy nhất trong `Routes.titles` (dùng cho `idOf`); nếu app bar cần trùng tên màn khác thì khai báo trong `appBarTitles` và dùng `Routes.appBarTitleOf`.
+## Web-only screens (canvas I/J/K)
+- Logic follows `prototype/` (web), not Flutter; data comes from `deps.clinicStore` (`shared/clinic`). New commands are `ClinicStore.xxx()` extensions in `shared/clinic/<Feature>Commands.kt` using `transact` (errors = `ClinicError` with the web's Vietnamese message).
+- Permissions: `Session.allows` follows `staff-context.js` (`pages` + `capabilities`); buttons that need a capability (clinical/billing/config) are hidden via `session.staffContext().can(...)`.
+- Don't change how A–H screens look when adding entry points: add items at the end of the screen, or an optional callback parameter (default `null` = hidden) so the Flutter shots stay the same.
+- Route titles must be unique in `Routes.titles` (used by `idOf`); if an app bar needs the same name as another screen, declare it in `appBarTitles` and use `Routes.appBarTitleOf`.
 
-## Mobile-first & hiệu năng
-- Thiết kế cho điện thoại dọc 360–412dp; vùng chạm ≥ 48dp; `LazyColumn`/`LazyRow` cho danh sách, có `key`.
-- State `@Immutable`/`data class`, list là `List` bất biến; tránh tính toán nặng trong composable (dùng `remember`/`derivedStateOf` hoặc ViewModel).
-- Không block main thread; IO qua `suspend` + `Dispatchers.Default`/Ktor.
-- Chữ tiếng Việt giữ nguyên như Flutter. **File phải lưu UTF-8** (không dùng PowerShell `Set-Content`/`Out-File` mặc định — dùng tool create/edit hoặc `[IO.File]::WriteAllText(p, t, (New-Object Text.UTF8Encoding($false)))`).
+## Mobile-first & performance
+- Design for portrait phones 360–412dp; touch targets ≥ 48dp; `LazyColumn`/`LazyRow` for lists, with `key`.
+- State is `@Immutable`/`data class`, lists are immutable `List`s; avoid heavy work in composables (use `remember`/`derivedStateOf` or the ViewModel).
+- Never block the main thread; IO through `suspend` + `Dispatchers.Default`/Ktor.
+- Vietnamese UI text stays exactly as in Flutter. **Files must be saved as UTF-8** (don't use the default PowerShell `Set-Content`/`Out-File` — use the create/edit tools or `[IO.File]::WriteAllText(p, t, (New-Object Text.UTF8Encoding($false)))`).
 
-## Bẫy Compose đã gặp trên thiết bị (JVM shot không bắt được)
-- Store của app nằm trong `AppStores` (một `AppContainer` mỗi tiến trình); `FeatureDeps` được dựng lại mỗi activity với navigator/platform mới. Không tạo store trong `remember` của composable gốc — xoay máy sẽ reset toàn bộ phiên.
-- Ảnh/camera: gọi `deps.platform.camera.capture()` / `pick()` trong coroutine, bắt `HardwareFailure` (câu tiếng Việt) để hiện snackbar; `null` = người dùng hủy. Màn có ảnh phải collect `camera.recoveredPhotos()` (ảnh về sau khi activity bị tạo lại) và xóa ảnh chưa lưu bằng `OnScreenCleared(key) { camera.discard(...) }` — không dùng `DisposableEffect` (chạy cả khi xoay máy). Giữ đường dẫn ảnh trong `rememberSaveable`. Khi ảnh được gửi/lưu vào dữ liệu, gọi `camera.markSaved(path)`: ảnh hết là nháp và bị dọn ở lần khởi động tiến trình sau (dữ liệu demo chỉ nằm trong bộ nhớ).
-- Kiểm thử camera trên emulator: app camera hệ thống có cảnh ảo; mô phỏng Android giết app khi đang chụp bằng `adb shell settings put global always_finish_activities 1` (nhớ đặt lại `0`).
-- FAB trong `DetailScaffold`/`LazyDetailScaffold` đã được đệm theo thanh điều hướng hệ thống; đừng tự đặt FAB ngoài slot `floatingActionButton` (sẽ bị thanh điều hướng che).
-- Emulator "Resizable" sau nhiều lần `am force-stop` có thể giữ focus input cũ → phím Back gây ANR "does not have a focused window" sau khi đóng sheet. Đó là lỗi trạng thái emulator (khởi động lại emulator là hết), không phải lỗi app — kiểm tra `dumpsys input` FocusRequests trước khi sửa code.
-- Snackbar hiện trước/sau `back()` (lưu → quay lại): dùng `rememberPemaMessenger().show(msg)` (scope gốc trong `App.kt`, như Flutter `ScaffoldMessenger`). `rememberCoroutineScope()` của màn bị hủy khi pop → mất thông báo.
-- State tab/bộ lọc/ô tìm kiếm của màn có thể bị route khác che: `rememberSaveable` (NavHost bỏ `remember` của màn bị che). Kiểu không vào được Bundle (data class, enum lồng) phải có `listSaver`/`mapSaver`, nếu không Android crash khi chuyển màn.
-- Không lồng `verticalScroll` trong `PemaBottomSheet`/`ModalBottomSheet` (crash); chỉ một lớp cuộn.
-- Bàn phím: `PemaScaffold` đã tự đệm theo IME (giống `resizeToAvoidBottomInset`) và manifest dùng `adjustResize`; không tự thêm `imePadding()` lần nữa.
-- Tài nguyên `composeResources` trong module thư viện cần `androidResources.enable = true` (đã bật trong convention plugin).
+## Compose gotchas seen on devices (JVM shots don't catch them)
+- App stores live in `AppStores` (one `AppContainer` per process); `FeatureDeps` is rebuilt for each activity with the new navigator/platform. Never create stores in `remember` of the root composable — rotating the phone would reset the whole session.
+- The workspace (`Session`: role, selected patient) is saved with the back stack by `RestoreSessionAfterProcessDeath` in `App.kt` and restored before `NavHost` composes, so a screen restored after process death keeps its role.
+- Photos/camera: call `deps.platform.camera.capture()` / `pick()` in a coroutine, catch `HardwareFailure` (Vietnamese message) to show a snackbar; `null` = the user cancelled. Screens with photos must collect `camera.recoveredPhotos()` (photos that arrive after the activity was recreated) and delete unsaved photos with `OnScreenCleared(key) { camera.discard(...) }` — not `DisposableEffect` (it also runs on rotation). Keep the photo path in `rememberSaveable`. When a photo is sent/saved into the data, call `camera.markSaved(path)`: it stops being a draft and is cleaned up on the next process start (demo data only lives in memory).
+- Testing the camera on the emulator: the system camera app shows a virtual scene; simulate Android killing the app during capture with `adb shell settings put global always_finish_activities 1` (remember to set it back to `0`). On a real phone, `adb shell am kill com.pema.clinic.kmp` while the camera is open kills the process for real.
+- FABs in `DetailScaffold`/`LazyDetailScaffold` are already padded for the system navigation bar; don't place a FAB outside the `floatingActionButton` slot (the navigation bar would cover it).
+- A "Resizable" emulator after many `am force-stop`s can keep a stale input focus → the Back key causes the ANR "does not have a focused window" after closing a sheet. That is emulator state (restarting the emulator fixes it), not an app bug — check `dumpsys input` FocusRequests before changing code.
+- Snackbar shown before/after `back()` (save → go back): use `rememberPemaMessenger().show(msg)` (root scope in `App.kt`, like Flutter's `ScaffoldMessenger`). The screen's `rememberCoroutineScope()` is cancelled on pop → the message is lost.
+- Tab/filter/search state of a screen covered by another route: `rememberSaveable` (NavHost drops `remember` of covered screens). Types that can't go into a Bundle (data classes, nested enums) need a `listSaver`/`mapSaver`, otherwise Android crashes when navigating.
+- Don't nest `verticalScroll` inside `PemaBottomSheet`/`ModalBottomSheet` (crash); only one scrolling layer.
+- Keyboard: `PemaScaffold` already pads for the IME (like `resizeToAvoidBottomInset`) and the manifest uses `adjustResize`; don't add `imePadding()` again.
+- `composeResources` in library modules need `androidResources.enable = true` (already enabled in the convention plugin).
 
-## Lệnh Gradle (PowerShell, Windows)
+## Gradle commands (PowerShell, Windows)
 ```powershell
 $env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'; cd E:\Desktop\cnbphongkham\pema-kmp
-.\gradlew.bat :feature:<x>:compileAndroidMain --console=plain -q     # biên dịch 1 feature
-.\gradlew.bat :feature:<x>:jvmTest --console=plain -q                # test commonTest trên JVM
+.\gradlew.bat :feature:<x>:compileAndroidMain --console=plain -q     # compile one feature
+.\gradlew.bat :feature:<x>:jvmTest --console=plain -q                # run commonTest on the JVM
 .\gradlew.bat :shared:jvmTest --tests "com.pema.clinic.shared.<area>*" --console=plain -q
 .\gradlew.bat :androidApp:assembleDebug --console=plain -q           # APK (integration)
+.\gradlew.bat :composeApp:compileKotlinIosArm64 "-Pkotlin.native.enableKlibsCrossCompilation=true"   # type-check iosMain on Windows
 ```
-- Nhiều agent chạy song song: nếu gặp "Timeout waiting to lock" / "Gradle daemon busy" → đợi 30–60s rồi chạy lại.
-- iOS target được khai báo nhưng không build được trên Windows — không cần chạy.
-- Thiết bị: `E:\apdata\platform-tools\adb.exe`, điện thoại `08031a5f0407`, package `com.pema.clinic.kmp`.
+- Several agents in parallel: on "Timeout waiting to lock" / "Gradle daemon busy" → wait 30–60 s and rerun.
+- iOS: Windows can compile the iOS klibs (command above) but cannot link the app; the app is built by `.github/workflows/ios-kmp.yml` on GitHub Actions (see `iosApp/README.md`).
+- Device: `E:\apdata\platform-tools\adb.exe`, phone `08031a5f0407`, package `com.pema.clinic.kmp`.
 
-## Thư viện có sẵn (commonMain)
-Compose 1.12.1 (runtime/foundation/material3 1.9.0/ui/components-resources), navigation-compose 2.9.2, lifecycle-viewmodel-compose 2.10.0, coroutines, kotlinx-serialization-json, kotlinx-datetime (dùng `kotlin.time.Clock`/`Instant` + `@OptIn(ExperimentalTime::class)`), Ktor 3.6 (+ `ktor-client-mock` cho test). Test: `kotlin.test`.
+## Available libraries (commonMain)
+Compose 1.12.1 (runtime/foundation/material3 1.9.0/ui/components-resources), navigation-compose 2.9.2, lifecycle-viewmodel-compose 2.10.0, coroutines, kotlinx-serialization-json, kotlinx-datetime (use `kotlin.time.Clock`/`Instant` + `@OptIn(ExperimentalTime::class)`), Ktor 3.6 (+ `ktor-client-mock` for tests). Tests: `kotlin.test`.

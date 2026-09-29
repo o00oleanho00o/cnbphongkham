@@ -137,9 +137,9 @@ function blockLines(b) {
   if (b.week) return [`WeekStrip()  // ${b.days.map((d) => `${d.d} ${d.n}${d.on ? '*' : ''}`).join(' ')}`];
   if (b.chips) return [`PemaChipWrap { ${b.items.map((i) => `PemaFilterChip(${q(i.label)}${i.sel ? ', selected = true' : ''}${i.dis ? ', enabled = false' : ''})`).join('; ')} }`];
   if (b.check) return [`PemaCheckRow(${q(b.label)}, checked = ${!!b.on})`];
-  if (b.photos) return [`2 ô ảnh 220dp bo 18 nền PemaColors.Tint, icon "face" 76dp PhotoIcon: ${b.items.map((i) => q(i.label)).join(', ')} + chữ "Minh họa" (ảnh thật: LocalPhoto)`];
-  if (b.order) return [`OrderLineCard(${q(b.name)}, qty ${q(b.qty)}, đường dùng ${q(b.route)}${b.hasUsage ? `, cách dùng ${q(b.usage)}` : ''})  // feature:orders`];
-  if (b.a5) return [`Phiếu A5 ${q(b.kind)} · ${q(b.name)}: ${b.items.map((i) => q(i.text)).join(', ')} · footer ${q(b.footer)}  // feature:orders`];
+  if (b.photos) return [`2 photo tiles 220dp radius 18 bg PemaColors.Tint, icon "face" 76dp PhotoIcon: ${b.items.map((i) => q(i.label)).join(', ')} + text "Minh họa" (real photo: LocalPhoto)`];
+  if (b.order) return [`OrderLineCard(${q(b.name)}, qty ${q(b.qty)}, route ${q(b.route)}${b.hasUsage ? `, usage ${q(b.usage)}` : ''})  // feature:orders`];
+  if (b.a5) return [`A5 slip ${q(b.kind)} · ${q(b.name)}: ${b.items.map((i) => q(i.text)).join(', ')} · footer ${q(b.footer)}  // feature:orders`];
   if (b.txt) return [`PemaText(${q(b.text)}${b.s !== 14 ? `, size = ${b.s}f` : ''}${b.c !== '#17324D' ? `, color = ${b.c}` : ''}${b.w !== 400 ? `, weight = W${b.w}` : ''})`];
   if (b.sp) return [`Spacer(${b.h}.dp)`];
   if (b.buckets) return [`CareBuckets(${b.items.map((i) => `${q(i.label)} ${i.count}${i.on ? '*' : ''}`).join(', ')})  // feature:care`];
@@ -167,7 +167,7 @@ function blockLines(b) {
     return ['PemaInfoCard {', ...inner, '}'];
   }
   const kind = Object.keys(b).find((k) => b[k] === true) || '?';
-  return [`// block "${kind}" chưa có mapping: ${JSON.stringify(b).slice(0, 120)}`];
+  return [`// block "${kind}" has no mapping: ${JSON.stringify(b).slice(0, 120)}`];
 }
 
 function frameLines(s) {
@@ -176,7 +176,7 @@ function frameLines(s) {
     out.push(`PemaScaffold + PemaMainTopBar(roleLabel = ${q(s.role)}${s.bell ? `, unread = ${s.bellCount}` : ''})`);
     if (s.hasNav) out.push(`PemaBottomNav: ${s.nav.map((n) => `${n.label}${n.active ? '*' : ''}${n.hasBadge ? `(${n.badge})` : ''}`).join(' | ')}`);
   } else if (s.appDetail) {
-    out.push(`DetailScaffold(title = ${q(s.title)})  // nút back, padding 20`);
+    out.push(`DetailScaffold(title = ${q(s.title)})  // back button, padding 20`);
   }
   if (s.hasFab) out.push(`PemaExtendedFab(${q(s.fab.label)})`);
   if (s.hasSnack) out.push(`PemaSnackbar(${q(s.snack.text)}${s.snack.action ? `, action = ${q(s.snack.action)}` : ''})`);
@@ -258,7 +258,7 @@ function buildModel() {
           ? financeRoute
           : kmp.bodyRoutes(composable)[0] || shot?.routes.find((r) => r !== 'Workspace') || titleToRoute[s.title] || '';
       const route = composable === 'DeniedScreen'
-        ? { name: 'denied', id: 'denied?route={route}', title: `${s.title} (chặn quyền: Routes.denied(title))` }
+        ? { name: 'denied', id: 'denied?route={route}', title: `${s.title} (permission blocked: Routes.denied(title))` }
         : kmp.routes[routeName];
       const webOnly = /^Web ›/.test(s.note || '') || ['I', 'J', 'K'].includes(g.code);
       let flutterFile = '';
@@ -323,7 +323,7 @@ function buildModel() {
 
 // ---------- markdown / prompt ----------
 function bullet(list) {
-  return list.length ? list.map((x) => `- ${String(x).replace(/\n/g, '\n  ')}`).join('\n') : '- (chưa ghi)';
+  return list.length ? list.map((x) => `- ${String(x).replace(/\n/g, '\n  ')}`).join('\n') : '- (none recorded)';
 }
 
 /** Canvas block helper → Compose (core:ui unless noted). Shared by every screen spec. */
@@ -332,7 +332,7 @@ const BLOCK_CATALOG = [
   ['h2(title, sub)', 'h2', 'PemaH2(title, sub)'],
   ['s(title)', 'section', 'PemaSection(title)'],
   ['hero(title, sub, icon)', 'hero', 'PemaHero(title, sub, icon) — kicker "PEMA • CHĂM SÓC LIÊN TỤC"'],
-  ['m([v, l], …)', 'metrics', 'PemaMetrics(v to l, …) — các ô cao bằng nhau'],
+  ['m([v, l], …)', 'metrics', 'PemaMetrics(v to l, …) — tiles of equal height'],
   ['a([label, icon], …)', 'actions', 'PemaActions(listOf(PemaAction(label, icon) {…}))'],
   ['t(title, sub, icon, tap)', 'tile', 'PemaTile(title, sub, icon, onClick | null)'],
   ['n(text)', 'notice', 'PemaNotice(text)'],
@@ -343,10 +343,10 @@ const BLOCK_CATALOG = [
   ['input({label, value, lines})', 'input', 'PemaTextField(value, label, minLines)'],
   ['search(hint)', 'input+prefix', 'PemaSearchField(value, hint)'],
   ['dd(value, label)', 'dd', 'PemaDropdownField(value, options, label)'],
-  ['week()', 'week', 'WeekStrip() (days/selected/onSelect khi cần chọn ngày)'],
+  ['week()', 'week', 'WeekStrip() (days/selected/onSelect when a day must be picked)'],
   ['chips([[label, sel|dis]])', 'chips', 'PemaChipWrap { PemaFilterChip(label, selected, enabled) }'],
   ['check(label, on)', 'check', 'PemaCheckRow(label, checked)'],
-  ['photos()', 'photos', 'Ô ảnh 220dp bo 18 nền Tint + icon face 76dp (ảnh thật: LocalPhoto)'],
+  ['photos()', 'photos', 'Photo tile 220dp radius 18 bg Tint + icon face 76dp (real photo: LocalPhoto)'],
   ['txt(text, {s, c, w})', 'txt', 'PemaText(text, size, color, weight)'],
   ['sp(h)', 'sp', 'Spacer(h.dp)'],
   ['fc(…)', 'fcard', 'PemaInfoCard { … }'],
@@ -359,23 +359,23 @@ const BLOCK_CATALOG = [
   ['empty(text)', 'empty', 'PemaEmpty(text)'],
   ['pill(text, icon)', 'pill', 'PemaPillButton(text, icon)'],
   ['buckets / careSearch / listHead', '…', 'feature:care CareQueue (bucket, search row, list header)'],
-  ['order / a5', '…', 'feature:orders OrderLineCard / phiếu A5'],
+  ['order / a5', '…', 'feature:orders OrderLineCard / A5 slip'],
   ['period / finHero / mcard', '…', 'feature:finance PeriodRow / FinanceHero / MaterialRateCard'],
-  ['home(…)', 'appMain', 'PemaScaffold + PemaMainTopBar(role, bell) + PemaBottomNav (tab theo vai trò)'],
+  ['home(…)', 'appMain', 'PemaScaffold + PemaMainTopBar(role, bell) + PemaBottomNav (tabs per role)'],
   ['det(…)', 'appDetail', 'DetailScaffold(title = Routes.appBarTitleOf(Routes.X))'],
   ['{hasFab}', 'fab', 'DetailScaffold(floatingActionButton = { PemaExtendedFab(label) })'],
-  ['{hasSheet}', 'sheet', 'PemaBottomSheet { … } (không lồng verticalScroll)'],
+  ['{hasSheet}', 'sheet', 'PemaBottomSheet { … } (no nested verticalScroll)'],
   ['{hasSnack}', 'snack', 'rememberPemaMessenger().show(text) / PemaSnackbar'],
   ['{hasDialog}', 'dialog', 'PemaDialog(title) { … }'],
 ];
 
 function blocksMarkdown() {
-  return `<!-- Sinh tự động — xem README.md -->
+  return `<!-- Generated — see README.md -->
 # Canvas block → Compose
 
-Helper trong \`build()\` của \`Pema App.dc.html\` và component tương ứng (\`pema-kmp/core/ui/.../widgets\`). Màu/chữ: chỉ \`PemaColors.*\`, \`PemaType.*\`; icon \`PemaIcon("material_name", filled)\`.
+Helpers in \`build()\` of \`Pema App.dc.html\` and their components (\`pema-kmp/core/ui/.../widgets\`). Colors/type: only \`PemaColors.*\`, \`PemaType.*\`; icons \`PemaIcon("material_name", filled)\`.
 
-| Canvas | Khóa block | Compose |
+| Canvas | Block key | Compose |
 |---|---|---|
 ${BLOCK_CATALOG.map(([c, k, v]) => `| \`${c}\` | ${k} | ${v} |`).join('\n')}
 `;
@@ -383,57 +383,57 @@ ${BLOCK_CATALOG.map(([c, k, v]) => `| \`${c}\` | ${k} | ${v} |`).join('\n')}
 
 function screenPrompt(s) {
   const src = s.source.kind === 'web'
-    ? `Logic lấy từ Pema web (${s.source.hint}); xem mục "Nguồn logic".`
-    : `Logic lấy 1:1 từ Flutter ${s.source.class || '(xem mục Nguồn)'}${s.source.file ? ` (${s.source.file})` : ''}.`;
+    ? `Logic comes from the Pema web (${s.source.hint}); see "Logic source".`
+    : `Logic is ported 1:1 from Flutter ${s.source.class || '(see "Logic source")'}${s.source.file ? ` (${s.source.file})` : ''}.`;
   return [
-    `Dựng màn ${s.id} "${s.name}" (nhóm ${s.group} · ${s.groupTitle}) bằng Compose Multiplatform trong pema-kmp, giống 1:1 canvas \`Pema App.dc.html\` (khung 390×844dp).`,
+    `Build screen ${s.id} "${s.name}" (group ${s.group} · ${s.groupTitle}) with Compose Multiplatform in pema-kmp, 1:1 with the canvas \`Pema App.dc.html\` (390×844dp frame).`,
     src,
-    s.kmp.route ? `Route: Routes.${s.kmp.route.name} ("${s.kmp.route.id}"), app bar "${s.kmp.route.title}".` : (s.kind === 'tab' ? `Là tab "${s.tab}" của WorkspaceScreen, vai trò ${s.role}.` : ''),
-    `Chỉ dùng block core:ui (PemaHeading, PemaTile, PemaInfoCard…); bố cục từ trên xuống như mục "Bố cục". Giữ nguyên chữ tiếng Việt và các câu ràng buộc.`,
-    `Kiểm chứng: shotVsCanvas("${s.id}") { … } trong jvmTest rồi mở ${s.kmp.shotImage || '<module>/build/shots/' + s.id + '-vs.png'} (canvas trái | Compose phải).`,
+    s.kmp.route ? `Route: Routes.${s.kmp.route.name} ("${s.kmp.route.id}"), app bar "${s.kmp.route.title}".` : (s.kind === 'tab' ? `It is the "${s.tab}" tab of WorkspaceScreen, role ${s.role}.` : ''),
+    `Only use core:ui blocks (PemaHeading, PemaTile, PemaInfoCard…); top-to-bottom layout as in "Layout". Keep the Vietnamese text and the required sentences verbatim.`,
+    `Verify: shotVsCanvas("${s.id}") { … } in jvmTest, then open ${s.kmp.shotImage || '<module>/build/shots/' + s.id + '-vs.png'} (canvas left | Compose right).`,
   ].filter(Boolean).join('\n');
 }
 
 function screenMarkdown(s, model) {
-  return `<!-- Sinh tự động bởi .claude/skills/pema-canvas-to-kmp-compose/scripts/design-specs.cjs từ canvas (${model.canvasHash}), code KMP/Flutter và design-specs/notes.json. Sửa notes.json, không sửa file này. -->
+  return `<!-- Generated by .claude/skills/pema-canvas-to-kmp-compose/scripts/design-specs.cjs from the canvas (${model.canvasHash}), KMP/Flutter code and design-specs/notes.json. Edit notes.json, not this file. -->
 # ${s.id} · ${s.name}
 
-Nhóm **${s.group} · ${s.groupTitle}** · ${s.kind === 'tab' ? `tab "${s.tab}" (${s.role})` : 'màn chi tiết'} · trạng thái: **${s.status === 'ported' ? 'đã port' : 'chưa port'}**
+Group **${s.group} · ${s.groupTitle}** · ${s.kind === 'tab' ? `tab "${s.tab}" (${s.role})` : 'detail screen'} · status: **${s.status === 'ported' ? 'ported' : 'not ported'}**
 
-> ${s.note || '(không có ghi chú canvas)'}
+> ${s.note || '(no canvas note)'}
 
-## Nguồn logic
+## Logic source
 ${s.source.kind === 'web' ? `- Web: ${s.source.hint}` : `- Flutter: \`${s.source.class || '?'}\`${s.source.file ? ` — \`${s.source.file}\`` : ''}`}
 ${bullet(s.logic)}
 
 ## KMP
-- Route: ${s.kmp.route ? `\`Routes.${s.kmp.route.name}\` ("${s.kmp.route.id}") · app bar "${s.kmp.route.title}"` : s.kind === 'tab' ? '`Routes.Workspace` (tab trong WorkspaceScreen)' : '—'}
+- Route: ${s.kmp.route ? `\`Routes.${s.kmp.route.name}\` ("${s.kmp.route.id}") · app bar "${s.kmp.route.title}"` : s.kind === 'tab' ? '`Routes.Workspace` (tab in WorkspaceScreen)' : '—'}
 - Composable: ${s.kmp.composable ? `\`${s.kmp.composable}\`` : '—'}${s.kmp.file ? ` — \`${s.kmp.file}\`` : ''}
-- Graph đăng ký: ${s.kmp.graph.length ? s.kmp.graph.map((g) => `\`${g}\``).join(', ') : '—'}
-- Hàm domain \`shared/clinic\` import trong file (dùng chung cho mọi màn cùng file): ${s.kmp.domain.length ? s.kmp.domain.map((d) => `\`${d}\``).join(', ') : '—'}
+- Registered by graph: ${s.kmp.graph.length ? s.kmp.graph.map((g) => `\`${g}\``).join(', ') : '—'}
+- \`shared/clinic\` domain functions imported by the file (shared by every screen in it): ${s.kmp.domain.length ? s.kmp.domain.map((d) => `\`${d}\``).join(', ') : '—'}
 - Shot test: ${s.kmp.shotTest ? `\`${s.kmp.shotTest}\`` : '—'} → \`${s.kmp.shotImage || '—'}\`
-- Ảnh canvas: ${s.reference ? `\`${s.reference}\`` : '(chạy `gradlew canvasRefs`)'}
+- Canvas image: ${s.reference ? `\`${s.reference}\`` : '(run `gradlew canvasRefs`)'}
 
-## Khung
+## Frame
 ${s.frame.map((x) => `- ${x}`).join('\n') || '- —'}
 
-## Bố cục (từ trên xuống, canvas block → Compose)
+## Layout (top to bottom, canvas block → Compose)
 \`\`\`kotlin
 ${s.layout.join('\n')}
 \`\`\`
 
-## Câu bắt buộc trên canvas (giữ nguyên chữ)
+## Required canvas text (keep verbatim)
 ${bullet(s.constraints)}
 
-## Quy tắc nghiệp vụ
+## Business rules
 ${bullet(s.rules)}
 
-## Khác biệt được chấp nhận so với canvas
+## Accepted differences from the canvas
 ${bullet(s.differences)}
 
-## Bẫy đã gặp / lưu ý
+## Gotchas / notes
 ${bullet(s.gotchas)}
-${s.todo.length ? `\n## Còn phải làm\n${bullet(s.todo)}\n` : ''}
+${s.todo.length ? `\n## Still to do\n${bullet(s.todo)}\n` : ''}
 ## Prompt
 \`\`\`text
 ${screenPrompt(s)}
@@ -443,12 +443,12 @@ ${screenPrompt(s)}
 
 function indexMarkdown(model) {
   const rows = model.screens.map((s) => `| [${s.id}](screens/${s.id}.md) | ${s.name} | ${s.source.kind === 'web' ? 'web' : 'Flutter'} | ${s.kmp.composable ? `\`${s.kmp.composable}\`` : '—'} | ${s.kmp.module || '—'} | ${s.status === 'ported' ? '✓' : '—'} |`);
-  return `<!-- Sinh tự động — xem README.md -->
-# Danh mục màn (${model.screens.length})
+  return `<!-- Generated — see README.md -->
+# Screen index (${model.screens.length})
 
 Canvas: \`${model.canvas}\` (${model.canvasHash})
 
-| Mã | Màn | Nguồn logic | Composable KMP | Module | Port |
+| Code | Screen | Logic source | KMP composable | Module | Ported |
 |---|---|---|---|---|---|
 ${rows.join('\n')}
 `;

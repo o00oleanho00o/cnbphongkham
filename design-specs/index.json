@@ -143,17 +143,17 @@
         "Xem ảnh và phản hồi từ người bệnh"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody theo tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
       ],
       "rules": [
-        "Chủ phòng khám có 5 tab: Hôm nay / Lịch hẹn / Hồ sơ / Theo dõi / Thêm. Bottom nav thuộc Workspace, không phải nav toàn cục."
+        "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
       ],
       "differences": [
-        "Logo Pema thật thay chữ \"pema\" của canvas.",
-        "Dữ liệu mẫu thật (46 hồ sơ) thay tên minh họa."
+        "Real Pema logo instead of the canvas \"pema\" text.",
+        "Real sample data (46 records) instead of illustrative names."
       ],
       "gotchas": [
-        "Tab đang chọn phải là `rememberSaveable`: NavHost bỏ `remember` khi đẩy route con, quay lại sẽ về tab 0."
+        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0."
       ],
       "todo": [],
       "status": "ported"
@@ -232,18 +232,18 @@
         "Đặt / dời lịch"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody theo tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
       ],
       "rules": [
-        "Chủ phòng khám có 5 tab: Hôm nay / Lịch hẹn / Hồ sơ / Theo dõi / Thêm. Bottom nav thuộc Workspace, không phải nav toàn cục.",
-        "WeekStrip tĩnh như Flutter (`const WeekStrip`): bấm ngày không đổi gì — đúng 1:1."
+        "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav.",
+        "Static WeekStrip like Flutter (`const WeekStrip`): tapping a day does nothing — correct 1:1."
       ],
       "differences": [
-        "Logo Pema thật thay chữ \"pema\" của canvas.",
-        "Dữ liệu mẫu thật (46 hồ sơ) thay tên minh họa."
+        "Real Pema logo instead of the canvas \"pema\" text.",
+        "Real sample data (46 records) instead of illustrative names."
       ],
       "gotchas": [
-        "Tab đang chọn phải là `rememberSaveable`: NavHost bỏ `remember` khi đẩy route con, quay lại sẽ về tab 0."
+        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0."
       ],
       "todo": [],
       "status": "ported"
@@ -329,18 +329,18 @@
         "P012 · Đang điều trị"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody theo tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`).",
-        "Nhúng `PatientSearch` của feature:patients (ngoại lệ phụ thuộc giống Flutter)."
+        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`).",
+        "Embeds `PatientSearch` from feature:patients (dependency exception, as in Flutter)."
       ],
       "rules": [
-        "Chủ phòng khám có 5 tab: Hôm nay / Lịch hẹn / Hồ sơ / Theo dõi / Thêm. Bottom nav thuộc Workspace, không phải nav toàn cục."
+        "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
       ],
       "differences": [
-        "Logo Pema thật thay chữ \"pema\" của canvas.",
-        "Dữ liệu mẫu thật (46 hồ sơ) thay tên minh họa."
+        "Real Pema logo instead of the canvas \"pema\" text.",
+        "Real sample data (46 records) instead of illustrative names."
       ],
       "gotchas": [
-        "Tab đang chọn phải là `rememberSaveable`: NavHost bỏ `remember` khi đẩy route con, quay lại sẽ về tab 0."
+        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0."
       ],
       "todo": [],
       "status": "ported"
@@ -401,17 +401,17 @@
         "Hồ sơ mẫu · triệu chứng tăng"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody theo tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
       ],
       "rules": [
-        "Chủ phòng khám có 5 tab: Hôm nay / Lịch hẹn / Hồ sơ / Theo dõi / Thêm. Bottom nav thuộc Workspace, không phải nav toàn cục."
+        "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
       ],
       "differences": [
-        "Logo Pema thật thay chữ \"pema\" của canvas.",
-        "Dữ liệu mẫu thật (46 hồ sơ) thay tên minh họa."
+        "Real Pema logo instead of the canvas \"pema\" text.",
+        "Real sample data (46 records) instead of illustrative names."
       ],
       "gotchas": [
-        "Tab đang chọn phải là `rememberSaveable`: NavHost bỏ `remember` khi đẩy route con, quay lại sẽ về tab 0."
+        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0."
       ],
       "todo": [],
       "status": "ported"
@@ -490,17 +490,17 @@
         "Template tương tác • dữ liệu mẫu trong phiên. Chuyển Clinic/Care ở góc trên để duyệt bàn giao."
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody theo tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
       ],
       "rules": [
-        "Chủ phòng khám có 5 tab: Hôm nay / Lịch hẹn / Hồ sơ / Theo dõi / Thêm. Bottom nav thuộc Workspace, không phải nav toàn cục."
+        "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
       ],
       "differences": [
-        "Logo Pema thật thay chữ \"pema\" của canvas.",
-        "Dữ liệu mẫu thật (46 hồ sơ) thay tên minh họa."
+        "Real Pema logo instead of the canvas \"pema\" text.",
+        "Real sample data (46 records) instead of illustrative names."
       ],
       "gotchas": [
-        "Tab đang chọn phải là `rememberSaveable`: NavHost bỏ `remember` khi đẩy route con, quay lại sẽ về tab 0."
+        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0."
       ],
       "todo": [],
       "status": "ported"
@@ -593,18 +593,18 @@
         "Người bệnh · Pema Care"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody theo tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
       ],
       "rules": [
-        "Chủ phòng khám có 5 tab: Hôm nay / Lịch hẹn / Hồ sơ / Theo dõi / Thêm. Bottom nav thuộc Workspace, không phải nav toàn cục."
+        "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
       ],
       "differences": [
-        "Logo Pema thật thay chữ \"pema\" của canvas.",
-        "Dữ liệu mẫu thật (46 hồ sơ) thay tên minh họa."
+        "Real Pema logo instead of the canvas \"pema\" text.",
+        "Real sample data (46 records) instead of illustrative names."
       ],
       "gotchas": [
-        "Tab đang chọn phải là `rememberSaveable`: NavHost bỏ `remember` khi đẩy route con, quay lại sẽ về tab 0.",
-        "Không lồng `verticalScroll` trong `PemaBottomSheet`/`ModalBottomSheet` (crash); lớp cuộn nằm ở overlay."
+        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0.",
+        "Don't nest `verticalScroll` inside `PemaBottomSheet`/`ModalBottomSheet` (crash); the scroll layer is in the overlay."
       ],
       "todo": [],
       "status": "ported"
@@ -683,18 +683,18 @@
         "Xem ảnh và phản hồi từ người bệnh"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody theo tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`).",
-        "`PaymentAlerts` bọc toàn app (feature:finance): SnackBar khi số thanh toán chưa đọc tăng, cả khi đang ở màn con; \"Xem\" mở Tài chính tab Thông báo (3)."
+        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`).",
+        "`PaymentAlerts` wraps the whole app (feature:finance): SnackBar when the unread payment count increases, even on child screens; \"Xem\" opens Finance on the notifications tab (3)."
       ],
       "rules": [
-        "Chủ phòng khám có 5 tab: Hôm nay / Lịch hẹn / Hồ sơ / Theo dõi / Thêm. Bottom nav thuộc Workspace, không phải nav toàn cục."
+        "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
       ],
       "differences": [
-        "Logo Pema thật thay chữ \"pema\" của canvas.",
-        "Dữ liệu mẫu thật (46 hồ sơ) thay tên minh họa."
+        "Real Pema logo instead of the canvas \"pema\" text.",
+        "Real sample data (46 records) instead of illustrative names."
       ],
       "gotchas": [
-        "Tab đang chọn phải là `rememberSaveable`: NavHost bỏ `remember` khi đẩy route con, quay lại sẽ về tab 0."
+        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0."
       ],
       "todo": [],
       "status": "ported"
@@ -763,7 +763,7 @@
         "Flutter `workspace_screen.dart` › staffBody() (doctor)."
       ],
       "rules": [
-        "Bác sĩ có 2 tab (Công việc, Hồ sơ mẫu) và chỉ thấy hồ sơ mình phụ trách (`Session.owns`)."
+        "Doctors have 2 tabs (\"Công việc\", \"Hồ sơ mẫu\") and only see records they own (`Session.owns`)."
       ],
       "differences": [],
       "gotchas": [],
@@ -833,7 +833,7 @@
         "Flutter `workspace_screen.dart` › staffBody() (doctor)."
       ],
       "rules": [
-        "Bác sĩ có 2 tab (Công việc, Hồ sơ mẫu) và chỉ thấy hồ sơ mình phụ trách (`Session.owns`)."
+        "Doctors have 2 tabs (\"Công việc\", \"Hồ sơ mẫu\") and only see records they own (`Session.owns`)."
       ],
       "differences": [],
       "gotchas": [],
@@ -933,14 +933,14 @@
         "P010 · BS. Mai"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) nhúng trong Workspace; KMP `feature/care/CareQueue.kt`."
+        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
       ],
       "rules": [
-        "3 trạng thái: Chưa liên hệ / Đã liên hệ / Chờ bác sĩ; 10 nhóm CSKH lọc trong bottom sheet."
+        "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
       ],
       "differences": [],
       "gotchas": [
-        "`rememberSaveable` của `CareQueueFilter` (data class) cần `listSaver`, nếu không Android crash khi chuyển màn."
+        "`rememberSaveable` of `CareQueueFilter` (data class) needs a `listSaver`, otherwise Android crashes when navigating."
       ],
       "todo": [],
       "status": "ported"
@@ -1056,14 +1056,14 @@
         "Ảnh tiến triển · D+3"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) nhúng trong Workspace; KMP `feature/care/CareQueue.kt`."
+        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
       ],
       "rules": [
-        "3 trạng thái: Chưa liên hệ / Đã liên hệ / Chờ bác sĩ; 10 nhóm CSKH lọc trong bottom sheet."
+        "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
       ],
       "differences": [],
       "gotchas": [
-        "`rememberSaveable` của `CareQueueFilter` (data class) cần `listSaver`, nếu không Android crash khi chuyển màn."
+        "`rememberSaveable` of `CareQueueFilter` (data class) needs a `listSaver`, otherwise Android crashes when navigating."
       ],
       "todo": [],
       "status": "ported"
@@ -1127,14 +1127,14 @@
         "P005 · BS. Tâm"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) nhúng trong Workspace; KMP `feature/care/CareQueue.kt`."
+        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
       ],
       "rules": [
-        "3 trạng thái: Chưa liên hệ / Đã liên hệ / Chờ bác sĩ; 10 nhóm CSKH lọc trong bottom sheet."
+        "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
       ],
       "differences": [],
       "gotchas": [
-        "`rememberSaveable` của `CareQueueFilter` (data class) cần `listSaver`, nếu không Android crash khi chuyển màn."
+        "`rememberSaveable` of `CareQueueFilter` (data class) needs a `listSaver`, otherwise Android crashes when navigating."
       ],
       "todo": [],
       "status": "ported"
@@ -1195,14 +1195,14 @@
         "Không có khách trong bộ lọc này"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) nhúng trong Workspace; KMP `feature/care/CareQueue.kt`."
+        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
       ],
       "rules": [
-        "3 trạng thái: Chưa liên hệ / Đã liên hệ / Chờ bác sĩ; 10 nhóm CSKH lọc trong bottom sheet."
+        "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
       ],
       "differences": [],
       "gotchas": [
-        "`rememberSaveable` của `CareQueueFilter` (data class) cần `listSaver`, nếu không Android crash khi chuyển màn."
+        "`rememberSaveable` of `CareQueueFilter` (data class) needs a `listSaver`, otherwise Android crashes when navigating."
       ],
       "todo": [],
       "status": "ported"
@@ -1288,14 +1288,14 @@
         "P012 · Đang điều trị"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) nhúng trong Workspace; KMP `feature/care/CareQueue.kt`."
+        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
       ],
       "rules": [
-        "3 trạng thái: Chưa liên hệ / Đã liên hệ / Chờ bác sĩ; 10 nhóm CSKH lọc trong bottom sheet."
+        "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
       ],
       "differences": [],
       "gotchas": [
-        "`rememberSaveable` của `CareQueueFilter` (data class) cần `listSaver`, nếu không Android crash khi chuyển màn."
+        "`rememberSaveable` of `CareQueueFilter` (data class) needs a `listSaver`, otherwise Android crashes when navigating."
       ],
       "todo": [],
       "status": "ported"
@@ -1332,7 +1332,7 @@
       },
       "reference": "pema-kmp/design-ref/C6.png",
       "frame": [
-        "DetailScaffold(title = \"Chăm sóc khách hàng\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Chăm sóc khách hàng\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Trần Minh Anh\", \"P002 · Ảnh tiến triển · D+3\")",
@@ -1359,16 +1359,16 @@
         "Chuyển bác sĩ xem"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) nhúng trong Workspace; KMP `feature/care/CareQueue.kt`.",
-        "Link \"Ghi nhận CSKH đầy đủ\" → I13 (callback tùy chọn, mặc định ẩn để shot Flutter giữ nguyên)."
+        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`.",
+        "Link \"Ghi nhận CSKH đầy đủ\" → I13 (optional callback, hidden by default so the Flutter shot stays the same)."
       ],
       "rules": [
-        "3 trạng thái: Chưa liên hệ / Đã liên hệ / Chờ bác sĩ; 10 nhóm CSKH lọc trong bottom sheet.",
-        "Nội dung liên hệ là nội bộ, không hiện cho người bệnh."
+        "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet.",
+        "Contact notes are internal and never shown to the patient."
       ],
       "differences": [],
       "gotchas": [
-        "`rememberSaveable` của `CareQueueFilter` (data class) cần `listSaver`, nếu không Android crash khi chuyển màn."
+        "`rememberSaveable` of `CareQueueFilter` (data class) needs a `listSaver`, otherwise Android crashes when navigating."
       ],
       "todo": [],
       "status": "ported"
@@ -1428,7 +1428,7 @@
         "Flutter `workspace_screen.dart` › staffBody() (accountant)."
       ],
       "rules": [
-        "Kế toán có 2 tab; route cho phép: Thu ngân, Hóa đơn, Hướng dẫn (+ web: Thu ngân · hóa đơn, Dịch vụ & tài chính, Lịch sử hợp nhất, Hồ sơ mới)."
+        "Accountants have 2 tabs; allowed routes: \"Thu ngân\", \"Hóa đơn\", \"Hướng dẫn\" (+ web: \"Thu ngân · hóa đơn\", \"Dịch vụ & tài chính\", \"Lịch sử hợp nhất\", \"Hồ sơ mới\")."
       ],
       "differences": [],
       "gotchas": [],
@@ -1519,7 +1519,7 @@
         "Flutter `workspace_screen.dart` › staffBody() (accountant)."
       ],
       "rules": [
-        "Kế toán có 2 tab; route cho phép: Thu ngân, Hóa đơn, Hướng dẫn (+ web: Thu ngân · hóa đơn, Dịch vụ & tài chính, Lịch sử hợp nhất, Hồ sơ mới)."
+        "Accountants have 2 tabs; allowed routes: \"Thu ngân\", \"Hóa đơn\", \"Hướng dẫn\" (+ web: \"Thu ngân · hóa đơn\", \"Dịch vụ & tài chính\", \"Lịch sử hợp nhất\", \"Hồ sơ mới\")."
       ],
       "differences": [],
       "gotchas": [],
@@ -1597,11 +1597,11 @@
         "Flutter `workspace_screen.dart` › CareBody (careMode = true)."
       ],
       "rules": [
-        "Người bệnh có 4 tab: Trang chủ / Hành trình / Tin nhắn / Hồ sơ; chỉ route care được phép (`Session.allows`)."
+        "Patients have 4 tabs: \"Trang chủ\" / \"Hành trình\" / \"Tin nhắn\" / \"Hồ sơ\"; only care routes are allowed (`Session.allows`)."
       ],
       "differences": [],
       "gotchas": [
-        "Store nằm trong `AppStores` theo tiến trình: xoay máy không được đưa về Clinic."
+        "Stores live in `AppStores` per process: rotating the phone must not send the user back to Clinic."
       ],
       "todo": [],
       "status": "ported"
@@ -1668,11 +1668,11 @@
         "Flutter `workspace_screen.dart` › CareBody (careMode = true)."
       ],
       "rules": [
-        "Người bệnh có 4 tab: Trang chủ / Hành trình / Tin nhắn / Hồ sơ; chỉ route care được phép (`Session.allows`)."
+        "Patients have 4 tabs: \"Trang chủ\" / \"Hành trình\" / \"Tin nhắn\" / \"Hồ sơ\"; only care routes are allowed (`Session.allows`)."
       ],
       "differences": [],
       "gotchas": [
-        "Store nằm trong `AppStores` theo tiến trình: xoay máy không được đưa về Clinic."
+        "Stores live in `AppStores` per process: rotating the phone must not send the user back to Clinic."
       ],
       "todo": [],
       "status": "ported"
@@ -1738,11 +1738,11 @@
         "Flutter `workspace_screen.dart` › CareBody (careMode = true)."
       ],
       "rules": [
-        "Người bệnh có 4 tab: Trang chủ / Hành trình / Tin nhắn / Hồ sơ; chỉ route care được phép (`Session.allows`)."
+        "Patients have 4 tabs: \"Trang chủ\" / \"Hành trình\" / \"Tin nhắn\" / \"Hồ sơ\"; only care routes are allowed (`Session.allows`)."
       ],
       "differences": [],
       "gotchas": [
-        "Store nằm trong `AppStores` theo tiến trình: xoay máy không được đưa về Clinic."
+        "Stores live in `AppStores` per process: rotating the phone must not send the user back to Clinic."
       ],
       "todo": [],
       "status": "ported"
@@ -1813,11 +1813,11 @@
         "Flutter `workspace_screen.dart` › CareBody (careMode = true)."
       ],
       "rules": [
-        "Người bệnh có 4 tab: Trang chủ / Hành trình / Tin nhắn / Hồ sơ; chỉ route care được phép (`Session.allows`)."
+        "Patients have 4 tabs: \"Trang chủ\" / \"Hành trình\" / \"Tin nhắn\" / \"Hồ sơ\"; only care routes are allowed (`Session.allows`)."
       ],
       "differences": [],
       "gotchas": [
-        "Store nằm trong `AppStores` theo tiến trình: xoay máy không được đưa về Clinic."
+        "Stores live in `AppStores` per process: rotating the phone must not send the user back to Clinic."
       ],
       "todo": [],
       "status": "ported"
@@ -1854,7 +1854,7 @@
       },
       "reference": "pema-kmp/design-ref/F1.png",
       "frame": [
-        "DetailScaffold(title = \"Patient 360\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Patient 360\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Nguyễn Thu Hà\", \"P001 · BS. Tâm\")",
@@ -1895,13 +1895,13 @@
         "Check-in người bệnh"
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace.",
-        "Mục \"Patient 360 đầy đủ\" (J1–J11) thêm ở cuối, lọc theo `Session.allows`."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace.",
+        "The \"Patient 360 đầy đủ\" items (J1–J11) are added at the end, filtered by `Session.allows`."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -1938,7 +1938,7 @@
       },
       "reference": "pema-kmp/design-ref/F2.png",
       "frame": [
-        "DetailScaffold(title = \"Tư vấn\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Tư vấn\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"Ghi chú chuyên môn là bản nháp, cần bác sĩ xem lại.\")",
@@ -1956,12 +1956,12 @@
         "Xem tóm tắt AI"
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -1998,7 +1998,7 @@
       },
       "reference": "pema-kmp/design-ref/F3.png",
       "frame": [
-        "DetailScaffold(title = \"Buổi điều trị\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Buổi điều trị\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"Buổi 3/5 · BS. Tâm\")",
@@ -2016,12 +2016,12 @@
         "Hoàn tất buổi"
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -2058,7 +2058,7 @@
       },
       "reference": "pema-kmp/design-ref/F4.png",
       "frame": [
-        "DetailScaffold(title = \"Lên đơn nhanh\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Lên đơn nhanh\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"Nguyễn Thu Hà · P001\\n115 sản phẩm từ catalog web. Đơn nháp chưa gửi cho người bệnh.\")",
@@ -2093,12 +2093,12 @@
         "SP060 · Chai · 400.000 ₫\nCần phân loại"
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -2135,12 +2135,12 @@
       },
       "reference": "pema-kmp/design-ref/F5.png",
       "frame": [
-        "DetailScaffold(title = \"Kiểm tra đơn\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Kiểm tra đơn\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Kiểm tra trước khi duyệt\", \"2 dòng · 720.000 ₫\")",
-        "OrderLineCard(\"Kem dưỡng phục hồi B5 40ml\", qty \"1 Tuýp\", đường dùng \"Phiếu tư vấn\", cách dùng \"Thoa mỏng 2 lần/ngày sau làm sạch\")  // feature:orders",
-        "OrderLineCard(\"Serum phục hồi HA 30ml\", qty \"1 Chai\", đường dùng \"Cần phân loại\")  // feature:orders",
+        "OrderLineCard(\"Kem dưỡng phục hồi B5 40ml\", qty \"1 Tuýp\", route \"Phiếu tư vấn\", usage \"Thoa mỏng 2 lần/ngày sau làm sạch\")  // feature:orders",
+        "OrderLineCard(\"Serum phục hồi HA 30ml\", qty \"1 Chai\", route \"Cần phân loại\")  // feature:orders",
         "PemaNotice(\"Tài khoản bác sĩ mô phỏng. Chỉ duyệt khi đã phân loại và nhập hướng dẫn cho mọi dòng.\")",
         "PemaPrimary(\"Lưu nháp\", onClick = {…})",
         "PemaPrimary(\"Bác sĩ duyệt đơn\", onClick = null /* disabled */)"
@@ -2163,12 +2163,12 @@
         "Bác sĩ duyệt đơn"
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -2205,7 +2205,7 @@
       },
       "reference": "pema-kmp/design-ref/F6.png",
       "frame": [
-        "DetailScaffold(title = \"Đơn thuốc & tư vấn\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Đơn thuốc & tư vấn\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"Nháp → bác sĩ duyệt → người bệnh xem. In không đồng nghĩa đã cấp thuốc.\")",
@@ -2231,12 +2231,12 @@
         "Xem bố cục hai phiếu A5"
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -2273,12 +2273,12 @@
       },
       "reference": "pema-kmp/design-ref/F7.png",
       "frame": [
-        "DetailScaffold(title = \"Phiếu A5\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Phiếu A5\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"Bản duyệt bố cục trên điện thoại. In / chia sẻ PDF native sẽ nối sau khi duyệt template.\")",
-        "Phiếu A5 \"ĐƠN THUỐC\" · \"Nguyễn Thu Hà\": \"Tretinoin 0.025% 20g\\n1 Tuýp · Thoa mỏng buổi tối, tránh vùng mắt\" · footer \"Mang theo đơn này · Kiểm tra thuốc\\nBác sĩ khám\"  // feature:orders",
-        "Phiếu A5 \"PHIẾU TƯ VẤN\" · \"Nguyễn Thu Hà\": \"Kem chống nắng SPF50+ 50ml\\n1 Tuýp · Thoa mỗi sáng, thoa lại sau 2–3 giờ\" · footer \"Mang theo phiếu này · Kiểm tra sản phẩm\\nBác sĩ tư vấn\"  // feature:orders"
+        "A5 slip \"ĐƠN THUỐC\" · \"Nguyễn Thu Hà\": \"Tretinoin 0.025% 20g\\n1 Tuýp · Thoa mỏng buổi tối, tránh vùng mắt\" · footer \"Mang theo đơn này · Kiểm tra thuốc\\nBác sĩ khám\"  // feature:orders",
+        "A5 slip \"PHIẾU TƯ VẤN\" · \"Nguyễn Thu Hà\": \"Kem chống nắng SPF50+ 50ml\\n1 Tuýp · Thoa mỗi sáng, thoa lại sau 2–3 giờ\" · footer \"Mang theo phiếu này · Kiểm tra sản phẩm\\nBác sĩ tư vấn\"  // feature:orders"
       ],
       "constraints": [
         "Bản duyệt bố cục trên điện thoại. In / chia sẻ PDF native sẽ nối sau khi duyệt template."
@@ -2294,12 +2294,12 @@
         "Mang theo phiếu này · Kiểm tra sản phẩm\nBác sĩ tư vấn"
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -2336,7 +2336,7 @@
       },
       "reference": "pema-kmp/design-ref/F8.png",
       "frame": [
-        "DetailScaffold(title = \"Đặt lịch\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Đặt lịch\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Nguyễn Thu Hà\", \"Chọn ngày và giờ trước khi xác nhận\")",
@@ -2377,12 +2377,12 @@
         "Xác nhận lịch"
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -2419,7 +2419,7 @@
       },
       "reference": "pema-kmp/design-ref/F9.png",
       "frame": [
-        "DetailScaffold(title = \"Chi tiết lịch\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Chi tiết lịch\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHero(\"10:30 · 22/9/2026\", \"BS. Tâm · Khám da liễu\", icon = \"calendar_month\")  // kicker \"PEMA • CHĂM SÓC LIÊN TỤC\"",
@@ -2443,12 +2443,12 @@
         "Mở Patient 360"
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -2483,7 +2483,7 @@
       },
       "reference": "pema-kmp/design-ref/F10.png",
       "frame": [
-        "DetailScaffold(title = \"Phản hồi\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Phản hồi\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"CSKH bàn giao nội bộ: Khách báo da đỏ nhẹ, cần bác sĩ xem ảnh.\")",
@@ -2505,13 +2505,13 @@
         "Duyệt và phản hồi"
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace.",
-        "Hiện ảnh người bệnh gửi (`PatientState.photos`) bằng `LocalPhoto`."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace.",
+        "Shows photos sent by the patient (`PatientState.photos`) with `LocalPhoto`."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -2548,7 +2548,7 @@
       },
       "reference": "pema-kmp/design-ref/F11.png",
       "frame": [
-        "DetailScaffold(title = \"Thu ngân\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Thu ngân\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Khoản cần thanh toán\", \"Nguyễn Thu Hà\")",
@@ -2569,12 +2569,12 @@
         "Lên đơn mới"
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -2611,7 +2611,7 @@
       },
       "reference": "pema-kmp/design-ref/F12.png",
       "frame": [
-        "DetailScaffold(title = \"Thu ngân\")  // nút back, padding 20",
+        "DetailScaffold(title = \"Thu ngân\")  // back button, padding 20",
         "PemaBottomSheet(title = \"Xác nhận thu tiền\", sub = \"580.000 ₫\")",
         "  PemaNotice(\"Giao dịch mẫu · Không kết nối ngân hàng\")",
         "  PemaPrimary(\"Xác nhận tiền mặt\")"
@@ -2640,12 +2640,12 @@
         "Xác nhận tiền mặt"
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -2682,7 +2682,7 @@
       },
       "reference": "pema-kmp/design-ref/F13.png",
       "frame": [
-        "DetailScaffold(title = \"Dịch vụ\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Dịch vụ\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Danh mục dịch vụ\", \"Giá và thời lượng tham khảo như web\")",
@@ -2705,13 +2705,13 @@
         "1.200.000 ₫ · 45 + 15 phút"
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace.",
-        "Chủ phòng khám thấy thêm mục \"Chỉnh dịch vụ\" → I9 `service-edit?id=S<index>` (callback tùy chọn)."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace.",
+        "The clinic owner also sees \"Chỉnh dịch vụ\" → I9 `service-edit?id=S<index>` (optional callback)."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -2748,7 +2748,7 @@
       },
       "reference": "pema-kmp/design-ref/F14.png",
       "frame": [
-        "DetailScaffold(title = \"Bác sĩ & phòng\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Bác sĩ & phòng\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Nguồn lực phòng khám\", \"Chạm lịch để điều phối theo ca\")",
@@ -2772,13 +2772,13 @@
         "Laser & thủ thuật · Bảo trì 14:00–15:00 ngày 23/09. Khóa phòng phức tạp duyệt ở web."
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace.",
-        "Chủ phòng khám thấy nút \"Khóa thời gian phòng\" → I8 (callback tùy chọn)."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace.",
+        "The clinic owner also sees the \"Khóa thời gian phòng\" button → I8 (optional callback)."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -2815,7 +2815,7 @@
       },
       "reference": "pema-kmp/design-ref/F15.png",
       "frame": [
-        "DetailScaffold(title = \"Ask Pema\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Ask Pema\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHero(\"Bối cảnh trước\\nmỗi quyết định.\", \"AI mô phỏng • cần bác sĩ kiểm tra\", icon = \"auto_awesome\")  // kicker \"PEMA • CHĂM SÓC LIÊN TỤC\"",
@@ -2838,12 +2838,12 @@
         "Mở ghi chú để bác sĩ sửa"
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -2882,7 +2882,7 @@
       },
       "reference": "pema-kmp/design-ref/F16.png",
       "frame": [
-        "DetailScaffold(title = \"Hướng dẫn\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Hướng dẫn\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Một hành trình, nhiều điểm nối\", \"Hướng dẫn sử dụng Pema\")",
@@ -2908,14 +2908,14 @@
         "Duyệt Clinic/Care qua nút góc trên. Thao tác mẫu lưu trong bộ nhớ, tải lại sẽ bắt đầu phiên mới."
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
       ],
       "rules": [
-        "Route lạ mở GuideScreen(route) (fallback của `resolveRoute`)."
+        "Unknown routes open GuideScreen(route) (fallback of `resolveRoute`)."
       ],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -2938,7 +2938,7 @@
         "route": {
           "name": "denied",
           "id": "denied?route={route}",
-          "title": "Thu ngân (chặn quyền: Routes.denied(title))"
+          "title": "Thu ngân (permission blocked: Routes.denied(title))"
         },
         "composable": "DeniedScreen",
         "file": "pema-kmp/composeApp/src/commonMain/kotlin/com/pema/clinic/App.kt",
@@ -2950,7 +2950,7 @@
       },
       "reference": "pema-kmp/design-ref/F17.png",
       "frame": [
-        "DetailScaffold(title = \"Thu ngân\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Thu ngân\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"Tác vụ không thuộc không gian hiện tại. Quay lại để chọn đúng công việc.\")"
@@ -2962,14 +2962,14 @@
         "Tác vụ không thuộc không gian hiện tại. Quay lại để chọn đúng công việc."
       ],
       "logic": [
-        "Flutter `Detail(route)` qua `AppRouter._screen(route)`; màn push lên trên Workspace."
+        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
       ],
       "rules": [
-        "Màn chặn quyền (`_RouteGuard`): \"Tác vụ không thuộc không gian hiện tại. Quay lại để chọn đúng công việc.\"; KMP `DeniedScreen` trong composeApp, route `Routes.denied(title)`."
+        "Permission-blocked screen (`_RouteGuard`): \"Tác vụ không thuộc không gian hiện tại. Quay lại để chọn đúng công việc.\"; KMP `DeniedScreen` in composeApp, route `Routes.denied(title)`."
       ],
       "differences": [],
       "gotchas": [
-        "Snackbar hiện sau `back()` phải dùng `rememberPemaMessenger()` (scope gốc), không dùng `rememberCoroutineScope()` của màn."
+        "A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."
       ],
       "todo": [],
       "status": "ported"
@@ -3004,7 +3004,7 @@
       },
       "reference": "pema-kmp/design-ref/G1.png",
       "frame": [
-        "DetailScaffold(title = \"Chăm sóc tại nhà\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Chăm sóc tại nhà\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Nhẹ nhàng với làn da\", \"Hướng dẫn mẫu đã được bác sĩ kiểm tra\")",
@@ -3026,7 +3026,7 @@
         "Gửi cập nhật cho Pema"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; chỉ các route careMode."
+        "Flutter `Detail(route, care: true)`; careMode routes only."
       ],
       "rules": [],
       "differences": [],
@@ -3064,7 +3064,7 @@
       },
       "reference": "pema-kmp/design-ref/G2.png",
       "frame": [
-        "DetailScaffold(title = \"Gửi cập nhật\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Gửi cập nhật\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"Cập nhật sẽ vào hàng chờ để đội ngũ Pema xem.\")",
@@ -3088,17 +3088,17 @@
         "Gửi cập nhật"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; chỉ các route careMode.",
-        "Camera: `deps.platform.camera.capture()` (app camera hệ thống, không cần quyền CAMERA), ảnh 1600px JPEG 85 bỏ EXIF/GPS trong `cache/photos`."
+        "Flutter `Detail(route, care: true)`; careMode routes only.",
+        "Camera: `deps.platform.camera.capture()` (system camera app, no CAMERA permission), photo 1600px JPEG 85 with EXIF/GPS stripped in `cache/photos`."
       ],
       "rules": [
-        "Có ảnh thì phải tick \"Tôi đồng ý chia sẻ ảnh để chăm sóc\" mới gửi được."
+        "With a photo, \"Tôi đồng ý chia sẻ ảnh để chăm sóc\" must be ticked before sending."
       ],
       "differences": [],
       "gotchas": [
-        "Bản nháp dùng `rememberSaveable(saver = SendUpdateDraft.Saver)`; collect `camera.recoveredPhotos()` để nhận ảnh khi Android tạo lại activity; xóa ảnh chưa gửi bằng `OnScreenCleared`, không dùng `DisposableEffect`.",
-        "Đã test trên Xiaomi M2003J15SC (Android 12/MIUI): tiến trình bị kill khi đang mở camera vẫn nhận lại ảnh và chữ. Không gian làm việc (Session) được lưu cùng back stack (`RestoreSessionAfterProcessDeath` trong App.kt), nên G2 khôi phục vẫn thuộc Pema Care.",
-        "Gửi thành công gọi `camera.markSaved(path)` (trong `SendUpdateDraft.submit`): ảnh hết là nháp, và bị xoá ở lần khởi động tiến trình sau."
+        "The draft uses `rememberSaveable(saver = SendUpdateDraft.Saver)`; collect `camera.recoveredPhotos()` to receive photos when Android recreates the activity; delete unsent photos with `OnScreenCleared`, not `DisposableEffect`.",
+        "Tested on a Xiaomi M2003J15SC (Android 12/MIUI): when the process is killed while the camera is open, the photo and text are still recovered. The workspace (Session) is saved with the back stack (`RestoreSessionAfterProcessDeath` in App.kt), so the restored G2 still belongs to Pema Care.",
+        "A successful send calls `camera.markSaved(path)` (in `SendUpdateDraft.submit`): the photo stops being a draft and is deleted on the next process start."
       ],
       "todo": [],
       "status": "ported"
@@ -3135,7 +3135,7 @@
       },
       "reference": "pema-kmp/design-ref/G3.png",
       "frame": [
-        "DetailScaffold(title = \"Lịch của tôi\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Lịch của tôi\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHero(\"10:30 · 22/9/2026\", \"BS. Tâm · Khám da liễu\", icon = \"calendar_month\")  // kicker \"PEMA • CHĂM SÓC LIÊN TỤC\"",
@@ -3155,7 +3155,7 @@
         "Xác nhận tham dự"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; chỉ các route careMode."
+        "Flutter `Detail(route, care: true)`; careMode routes only."
       ],
       "rules": [],
       "differences": [],
@@ -3195,7 +3195,7 @@
       },
       "reference": "pema-kmp/design-ref/G4.png",
       "frame": [
-        "DetailScaffold(title = \"Kế hoạch điều trị\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Kế hoạch điều trị\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHero(\"Phục hồi & chăm sóc da\", \"2/5 buổi · BS. Tâm\", icon = \"route\")  // kicker \"PEMA • CHĂM SÓC LIÊN TỤC\"",
@@ -3223,7 +3223,7 @@
         "Xem chăm sóc tại nhà"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; chỉ các route careMode."
+        "Flutter `Detail(route, care: true)`; careMode routes only."
       ],
       "rules": [],
       "differences": [],
@@ -3263,11 +3263,11 @@
       },
       "reference": "pema-kmp/design-ref/G5.png",
       "frame": [
-        "DetailScaffold(title = \"Ảnh tiến triển\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Ảnh tiến triển\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Theo dõi bằng hình ảnh\", \"Ảnh minh họa • không đánh giá hiệu quả tự động\")",
-        "2 ô ảnh 220dp bo 18 nền PemaColors.Tint, icon \"face\" 76dp PhotoIcon: \"Trước\", \"Gần nhất\" + chữ \"Minh họa\" (ảnh thật: LocalPhoto)",
+        "2 photo tiles 220dp radius 18 bg PemaColors.Tint, icon \"face\" 76dp PhotoIcon: \"Trước\", \"Gần nhất\" + text \"Minh họa\" (real photo: LocalPhoto)",
         "PemaNotice(\"Chính diện · Vùng mặt · Cần cùng điều kiện ánh sáng\")",
         "PemaPrimary(\"Gửi ảnh cập nhật\", onClick = {…})"
       ],
@@ -3283,8 +3283,8 @@
         "Gửi ảnh cập nhật"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; chỉ các route careMode.",
-        "Trước = ảnh đầu tiên (khi có ≥ 2 ảnh), Gần nhất = ảnh cuối, từ `PatientState.photos`."
+        "Flutter `Detail(route, care: true)`; careMode routes only.",
+        "\"Trước\" = first photo (when there are ≥ 2 photos), \"Gần nhất\" = last photo, from `PatientState.photos`."
       ],
       "rules": [],
       "differences": [],
@@ -3324,7 +3324,7 @@
       },
       "reference": "pema-kmp/design-ref/G6.png",
       "frame": [
-        "DetailScaffold(title = \"Đơn thuốc & tư vấn\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Đơn thuốc & tư vấn\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"Chỉ hiển thị nội dung đã được bác sĩ duyệt.\")",
@@ -3348,7 +3348,7 @@
         "1 Tuýp · Thoa mỗi sáng, thoa lại sau 2–3 giờ"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; chỉ các route careMode."
+        "Flutter `Detail(route, care: true)`; careMode routes only."
       ],
       "rules": [],
       "differences": [],
@@ -3388,7 +3388,7 @@
       },
       "reference": "pema-kmp/design-ref/G7.png",
       "frame": [
-        "DetailScaffold(title = \"Hóa đơn\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Hóa đơn\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Khoản cần thanh toán\", \"Nguyễn Thu Hà\")",
@@ -3405,7 +3405,7 @@
         "DN-1"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; chỉ các route careMode."
+        "Flutter `Detail(route, care: true)`; careMode routes only."
       ],
       "rules": [],
       "differences": [],
@@ -3443,7 +3443,7 @@
       },
       "reference": "pema-kmp/design-ref/G8.png",
       "frame": [
-        "DetailScaffold(title = \"Quyền riêng tư\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Quyền riêng tư\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"Template không sử dụng dữ liệu bệnh nhân thật.\")",
@@ -3459,7 +3459,7 @@
         "Cài đặt đang được minh họa trong phiên duyệt."
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; chỉ các route careMode."
+        "Flutter `Detail(route, care: true)`; careMode routes only."
       ],
       "rules": [],
       "differences": [],
@@ -3497,7 +3497,7 @@
       },
       "reference": "pema-kmp/design-ref/H1.png",
       "frame": [
-        "DetailScaffold(title = \"Tài chính Pema\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
       "layout": [
         "PemaText(\"Vai trò mẫu • dữ liệu dùng chung với web\", size = 12f, color = #5D7184)",
@@ -3554,11 +3554,11 @@
         "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
       ],
       "rules": [
-        "Gọi API tài chính `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API tắt → màn lỗi + \"Thử lại\"."
+        "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
       ],
       "differences": [],
       "gotchas": [
-        "Tab tài chính là `rememberSaveable(initialTab)`."
+        "The finance tab is `rememberSaveable(initialTab)`."
       ],
       "todo": [],
       "status": "ported"
@@ -3593,7 +3593,7 @@
       },
       "reference": "pema-kmp/design-ref/H2.png",
       "frame": [
-        "DetailScaffold(title = \"Tài chính Pema\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
       "layout": [
         "PemaText(\"Vai trò mẫu • dữ liệu dùng chung với web\", size = 12f, color = #5D7184)",
@@ -3626,11 +3626,11 @@
         "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
       ],
       "rules": [
-        "Gọi API tài chính `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API tắt → màn lỗi + \"Thử lại\"."
+        "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
       ],
       "differences": [],
       "gotchas": [
-        "Tab tài chính là `rememberSaveable(initialTab)`."
+        "The finance tab is `rememberSaveable(initialTab)`."
       ],
       "todo": [],
       "status": "ported"
@@ -3665,7 +3665,7 @@
       },
       "reference": "pema-kmp/design-ref/H3.png",
       "frame": [
-        "DetailScaffold(title = \"Tài chính Pema\")  // nút back, padding 20",
+        "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20",
         "PemaExtendedFab(\"Ghi lượt\")"
       ],
       "layout": [
@@ -3747,11 +3747,11 @@
         "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
       ],
       "rules": [
-        "Gọi API tài chính `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API tắt → màn lỗi + \"Thử lại\"."
+        "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
       ],
       "differences": [],
       "gotchas": [
-        "Tab tài chính là `rememberSaveable(initialTab)`."
+        "The finance tab is `rememberSaveable(initialTab)`."
       ],
       "todo": [],
       "status": "ported"
@@ -3786,7 +3786,7 @@
       },
       "reference": "pema-kmp/design-ref/H4.png",
       "frame": [
-        "DetailScaffold(title = \"Tài chính Pema\")  // nút back, padding 20",
+        "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20",
         "PemaExtendedFab(\"Ghi lượt\")",
         "PemaDialog(title = \"Gõ CHOT để khóa kỳ 2026-09\", value = \"CHOT\")"
       ],
@@ -3869,11 +3869,11 @@
         "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
       ],
       "rules": [
-        "Gọi API tài chính `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API tắt → màn lỗi + \"Thử lại\"."
+        "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
       ],
       "differences": [],
       "gotchas": [
-        "Tab tài chính là `rememberSaveable(initialTab)`."
+        "The finance tab is `rememberSaveable(initialTab)`."
       ],
       "todo": [],
       "status": "ported"
@@ -3908,7 +3908,7 @@
       },
       "reference": "pema-kmp/design-ref/H5.png",
       "frame": [
-        "DetailScaffold(title = \"Tài chính Pema\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
       "layout": [
         "PemaText(\"Vai trò mẫu • dữ liệu dùng chung với web\", size = 12f, color = #5D7184)",
@@ -3950,11 +3950,11 @@
         "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
       ],
       "rules": [
-        "Gọi API tài chính `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API tắt → màn lỗi + \"Thử lại\"."
+        "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
       ],
       "differences": [],
       "gotchas": [
-        "Tab tài chính là `rememberSaveable(initialTab)`."
+        "The finance tab is `rememberSaveable(initialTab)`."
       ],
       "todo": [],
       "status": "ported"
@@ -3989,7 +3989,7 @@
       },
       "reference": "pema-kmp/design-ref/H6.png",
       "frame": [
-        "DetailScaffold(title = \"Tài chính Pema\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
       "layout": [
         "PemaText(\"Vai trò mẫu • dữ liệu dùng chung với web\", size = 12f, color = #5D7184)",
@@ -4030,11 +4030,11 @@
         "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
       ],
       "rules": [
-        "Gọi API tài chính `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API tắt → màn lỗi + \"Thử lại\"."
+        "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
       ],
       "differences": [],
       "gotchas": [
-        "Tab tài chính là `rememberSaveable(initialTab)`."
+        "The finance tab is `rememberSaveable(initialTab)`."
       ],
       "todo": [],
       "status": "ported"
@@ -4069,7 +4069,7 @@
       },
       "reference": "pema-kmp/design-ref/H7.png",
       "frame": [
-        "DetailScaffold(title = \"Tài chính Pema\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
       "layout": [
         "PemaText(\"Vai trò mẫu • dữ liệu dùng chung với web\", size = 12f, color = #5D7184)",
@@ -4091,12 +4091,12 @@
         "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
       ],
       "rules": [
-        "Gọi API tài chính `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API tắt → màn lỗi + \"Thử lại\".",
-        "Trạng thái lỗi khi API tài chính tắt, nút \"Thử lại\"."
+        "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\".",
+        "Error state when the finance API is down, with a \"Thử lại\" button."
       ],
       "differences": [],
       "gotchas": [
-        "Tab tài chính là `rememberSaveable(initialTab)`."
+        "The finance tab is `rememberSaveable(initialTab)`."
       ],
       "todo": [],
       "status": "ported"
@@ -4131,7 +4131,7 @@
       },
       "reference": "pema-kmp/design-ref/H8.png",
       "frame": [
-        "DetailScaffold(title = \"Chính sách thủ thuật\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Chính sách thủ thuật\")  // back button, padding 20"
       ],
       "layout": [
         "PemaText(\"Thay đổi áp dụng cho lượt mới. Tỷ lệ lịch sử được giữ nguyên.\")",
@@ -4156,11 +4156,11 @@
         "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
       ],
       "rules": [
-        "Gọi API tài chính `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API tắt → màn lỗi + \"Thử lại\"."
+        "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
       ],
       "differences": [],
       "gotchas": [
-        "Tab tài chính là `rememberSaveable(initialTab)`."
+        "The finance tab is `rememberSaveable(initialTab)`."
       ],
       "todo": [],
       "status": "ported"
@@ -4195,7 +4195,7 @@
       },
       "reference": "pema-kmp/design-ref/H9.png",
       "frame": [
-        "DetailScaffold(title = \"Ghi lượt đã thực hiện\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Ghi lượt đã thực hiện\")  // back button, padding 20"
       ],
       "layout": [
         "PemaDropdownField(value = \"P001\", options, label = \"Hồ sơ\")",
@@ -4252,11 +4252,11 @@
         "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
       ],
       "rules": [
-        "Gọi API tài chính `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API tắt → màn lỗi + \"Thử lại\"."
+        "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
       ],
       "differences": [],
       "gotchas": [
-        "Tab tài chính là `rememberSaveable(initialTab)`."
+        "The finance tab is `rememberSaveable(initialTab)`."
       ],
       "todo": [],
       "status": "ported"
@@ -4309,7 +4309,7 @@
       },
       "reference": "pema-kmp/design-ref/I1.png",
       "frame": [
-        "DetailScaffold(title = \"Tổng quan\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Tổng quan\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Chào buổi sáng, BS. Tâm\", \"Vận hành hôm nay và CSKH · 22/09/2026\")",
@@ -4360,16 +4360,16 @@
         "Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH."
       ],
       "logic": [
-        "Web-only: logic port từ `prototype/shared/*.js` vào domain `shared/clinic` (`ClinicStore`, lệnh `transact`, lỗi `ClinicError` giữ câu tiếng Việt của web).",
-        "Quyền theo `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
-        "Web `crm-ui.js` › dashboard(): KPI vận hành + CSKH (crmQueue)."
+        "Web-only: logic ported from `prototype/shared/*.js` into the `shared/clinic` domain (`ClinicStore`, `transact` commands, `ClinicError` errors keep the web's Vietnamese messages).",
+        "Permissions follow `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
+        "Web `crm-ui.js` › dashboard(): operations + CSKH KPIs (crmQueue)."
       ],
       "rules": [
-        "Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền).",
-        "Dòng \"Ưu tiên chăm sóc\": chọn hồ sơ (`sessionStore.select`) rồi mở I13."
+        "Entry point: the \"Vận hành phòng khám\" item at the end of each role's main screen (filtered by permission).",
+        "\"Ưu tiên chăm sóc\" rows: select the record (`sessionStore.select`) then open I13."
       ],
       "differences": [
-        "Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas."
+        "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -4423,7 +4423,7 @@
       },
       "reference": "pema-kmp/design-ref/I2.png",
       "frame": [
-        "DetailScaffold(title = \"Tiếp đón hôm nay\")  // nút back, padding 20",
+        "DetailScaffold(title = \"Tiếp đón hôm nay\")  // back button, padding 20",
         "PemaExtendedFab(\"Đặt lịch mới\")"
       ],
       "layout": [
@@ -4472,19 +4472,19 @@
         "Vắng"
       ],
       "logic": [
-        "Web-only: logic port từ `prototype/shared/*.js` vào domain `shared/clinic` (`ClinicStore`, lệnh `transact`, lỗi `ClinicError` giữ câu tiếng Việt của web).",
-        "Quyền theo `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
-        "Web `crm-ui.js` › today(); lệnh `ClinicStore.reception(id, status)` / `setStatus`."
+        "Web-only: logic ported from `prototype/shared/*.js` into the `shared/clinic` domain (`ClinicStore`, `transact` commands, `ClinicError` errors keep the web's Vietnamese messages).",
+        "Permissions follow `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
+        "Web `crm-ui.js` › today(); commands `ClinicStore.reception(id, status)` / `setStatus`."
       ],
       "rules": [
-        "Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền)."
+        "Entry point: the \"Vận hành phòng khám\" item at the end of each role's main screen (filtered by permission)."
       ],
       "differences": [
-        "Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas."
+        "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates."
       ],
       "gotchas": [
-        "Chỉ lọc theo bác sĩ khi vai trò là doctor (web `Staff.owns`); owner thấy cả 31 lịch.",
-        "FAB \"Đặt lịch mới\" phải nằm trong slot `floatingActionButton` của DetailScaffold (đã đệm thanh điều hướng)."
+        "Only filter by doctor when the role is doctor (web `Staff.owns`); the owner sees all 31 appointments.",
+        "The \"Đặt lịch mới\" FAB must be in DetailScaffold's `floatingActionButton` slot (already padded for the navigation bar)."
       ],
       "todo": [],
       "status": "ported"
@@ -4537,7 +4537,7 @@
       },
       "reference": "pema-kmp/design-ref/I3.png",
       "frame": [
-        "DetailScaffold(title = \"Điều phối theo phòng\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Điều phối theo phòng\")  // back button, padding 20"
       ],
       "layout": [
         "WeekStrip()  // T2 21 T3 22* T4 23 T5 24 T6 25 T7 26 CN 27",
@@ -4581,17 +4581,17 @@
         "15′ chuẩn bị phòng sau thủ thuật · 6 lịch chờ xếp · khoảng khóa phòng được kiểm tra khi dời lịch."
       ],
       "logic": [
-        "Web-only: logic port từ `prototype/shared/*.js` vào domain `shared/clinic` (`ClinicStore`, lệnh `transact`, lỗi `ClinicError` giữ câu tiếng Việt của web).",
-        "Quyền theo `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
-        "Web `operations-ui.js` › schedule(): lịch theo phòng, đệm chuẩn bị, waitlist, khóa phòng."
+        "Web-only: logic ported from `prototype/shared/*.js` into the `shared/clinic` domain (`ClinicStore`, `transact` commands, `ClinicError` errors keep the web's Vietnamese messages).",
+        "Permissions follow `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
+        "Web `operations-ui.js` › schedule(): schedule per room, preparation buffer, waitlist, room blocks."
       ],
       "rules": [
-        "Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền).",
-        "Bấm lịch → I4 dời lịch `appointment-form?id=<id>`."
+        "Entry point: the \"Vận hành phòng khám\" item at the end of each role's main screen (filtered by permission).",
+        "Tapping an appointment → I4 reschedule `appointment-form?id=<id>`."
       ],
       "differences": [
-        "Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas.",
-        "Khác Flutter A2: WeekStrip ở đây chọn được ngày (7 ngày seed từ DAY, nhãn thứ tính từ ngày thật)."
+        "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates.",
+        "Unlike Flutter A2, this WeekStrip can pick a day (7 days seeded from DAY, weekday labels computed from real dates)."
       ],
       "gotchas": [],
       "todo": [],
@@ -4645,7 +4645,7 @@
       },
       "reference": "pema-kmp/design-ref/I4.png",
       "frame": [
-        "DetailScaffold(title = \"Đặt lịch hẹn\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Đặt lịch hẹn\")  // back button, padding 20"
       ],
       "layout": [
         "PemaDropdownField(value = \"P001 · Nguyễn Thu Hà\", options, label = \"Bệnh nhân\")",
@@ -4684,17 +4684,17 @@
         "Tìm giờ trống"
       ],
       "logic": [
-        "Web-only: logic port từ `prototype/shared/*.js` vào domain `shared/clinic` (`ClinicStore`, lệnh `transact`, lỗi `ClinicError` giữ câu tiếng Việt của web).",
-        "Quyền theo `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
-        "Web `operations-ui.js` › booking dialog; `ClinicStore.validate` / `saveAppointment` (câu lỗi của web)."
+        "Web-only: logic ported from `prototype/shared/*.js` into the `shared/clinic` domain (`ClinicStore`, `transact` commands, `ClinicError` errors keep the web's Vietnamese messages).",
+        "Permissions follow `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
+        "Web `operations-ui.js` › booking dialog; `ClinicStore.validate` / `saveAppointment` (the web's error messages)."
       ],
       "rules": [
-        "Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền).",
-        "Tham số route: `appointment-form?id={id}&patient={patient}&crmTask={crmTask}`; có crmTask thì đánh dấu việc CSKH đã đặt lịch khi lưu thành công.",
-        "Vai trò doctor: bác sĩ cố định là bác sĩ đang đăng nhập."
+        "Entry point: the \"Vận hành phòng khám\" item at the end of each role's main screen (filtered by permission).",
+        "Route parameters: `appointment-form?id={id}&patient={patient}&crmTask={crmTask}`; with crmTask, the CSKH task is marked as booked when saving succeeds.",
+        "Doctor role: the doctor is fixed to the signed-in doctor."
       ],
       "differences": [
-        "Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas."
+        "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -4736,7 +4736,7 @@
       },
       "reference": "pema-kmp/design-ref/I5.png",
       "frame": [
-        "DetailScaffold(title = \"Hồ sơ mới\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Hồ sơ mới\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"Hồ sơ demo · tìm theo tên, mã hoặc số điện thoại trước khi tạo mới.\")",
@@ -4759,15 +4759,15 @@
         "Tạo hồ sơ"
       ],
       "logic": [
-        "Web-only: logic port từ `prototype/shared/*.js` vào domain `shared/clinic` (`ClinicStore`, lệnh `transact`, lỗi `ClinicError` giữ câu tiếng Việt của web).",
-        "Quyền theo `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
-        "Web `clinic.js` › patients() › Hồ sơ mới; lệnh `createPatient` (ClinicToolsCommands) đồng bộ cả `MutableCatalogRepository` để hồ sơ mới hiện trong tìm kiếm."
+        "Web-only: logic ported from `prototype/shared/*.js` into the `shared/clinic` domain (`ClinicStore`, `transact` commands, `ClinicError` errors keep the web's Vietnamese messages).",
+        "Permissions follow `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
+        "Web `clinic.js` › patients() › \"Hồ sơ mới\"; the `createPatient` command (ClinicToolsCommands) also syncs `MutableCatalogRepository` so the new record appears in search."
       ],
       "rules": [
-        "Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền)."
+        "Entry point: the \"Vận hành phòng khám\" item at the end of each role's main screen (filtered by permission)."
       ],
       "differences": [
-        "Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas."
+        "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -4807,7 +4807,7 @@
       },
       "reference": "pema-kmp/design-ref/I6.png",
       "frame": [
-        "DetailScaffold(title = \"Follow-up Inbox\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Follow-up Inbox\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Theo dõi\", \"Ảnh, triệu chứng và mốc bị bỏ sót\")",
@@ -4842,16 +4842,16 @@
         "Chưa lưu bộ ảnh chính diện buổi 2.\n22/9 · Giao: Điều dưỡng Hương"
       ],
       "logic": [
-        "Web-only: logic port từ `prototype/shared/*.js` vào domain `shared/clinic` (`ClinicStore`, lệnh `transact`, lỗi `ClinicError` giữ câu tiếng Việt của web).",
-        "Quyền theo `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
-        "Web `clinic.js` › followups(): lọc Ảnh / Triệu chứng / Quá hạn; doctor chỉ thấy hồ sơ mình (`owns`)."
+        "Web-only: logic ported from `prototype/shared/*.js` into the `shared/clinic` domain (`ClinicStore`, `transact` commands, `ClinicError` errors keep the web's Vietnamese messages).",
+        "Permissions follow `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
+        "Web `clinic.js` › followups(): filters \"Ảnh\" / \"Triệu chứng\" / \"Quá hạn\"; doctors only see their own records (`owns`)."
       ],
       "rules": [
-        "Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền).",
-        "Bấm mục → chọn hồ sơ rồi mở F10 Phản hồi."
+        "Entry point: the \"Vận hành phòng khám\" item at the end of each role's main screen (filtered by permission).",
+        "Tapping an item → select the record then open F10 \"Phản hồi\"."
       ],
       "differences": [
-        "Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas."
+        "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -4893,12 +4893,12 @@
       },
       "reference": "pema-kmp/design-ref/I7.png",
       "frame": [
-        "DetailScaffold(title = \"Ảnh trước / sau\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Ảnh trước / sau\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Before / After Studio\", \"Nguyễn Thu Hà · Nám · tăng sắc tố\")",
         "PemaChipWrap { PemaFilterChip(\"Chính diện\", selected = true); PemaFilterChip(\"Má trái\"); PemaFilterChip(\"Má phải\") }",
-        "2 ô ảnh 220dp bo 18 nền PemaColors.Tint, icon \"face\" 76dp PhotoIcon: \"Trước\", \"Sau\" + chữ \"Minh họa\" (ảnh thật: LocalPhoto)",
+        "2 photo tiles 220dp radius 18 bg PemaColors.Tint, icon \"face\" 76dp PhotoIcon: \"Trước\", \"Sau\" + text \"Minh họa\" (real photo: LocalPhoto)",
         "Spacer(12.dp)",
         "PemaNotice(\"Chưa kiểm định căn chỉnh ảnh; bác sĩ kiểm tra điều kiện chụp trước khi so sánh. Không suy ra hiệu quả y khoa từ ảnh minh họa.\")",
         "PemaText(\"Metadata: vùng Mặt · góc Chính diện · đồng ý chăm sóc: có ghi nhận\", size = 12f, color = #5D7184)",
@@ -4923,21 +4923,21 @@
         "Thêm ảnh"
       ],
       "logic": [
-        "Web-only: logic port từ `prototype/shared/*.js` vào domain `shared/clinic` (`ClinicStore`, lệnh `transact`, lỗi `ClinicError` giữ câu tiếng Việt của web).",
-        "Quyền theo `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
-        "Web `clinic.js` › studio() + photos(p): ảnh thật = buổi điều trị có `image` cùng góc chụp; đầu = Trước, cuối = Sau; không có → ảnh minh họa."
+        "Web-only: logic ported from `prototype/shared/*.js` into the `shared/clinic` domain (`ClinicStore`, `transact` commands, `ClinicError` errors keep the web's Vietnamese messages).",
+        "Permissions follow `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
+        "Web `clinic.js` › studio() + photos(p): real photos = treatment sessions with an `image` for the same view; first = \"Trước\", last = \"Sau\"; none → illustrative images."
       ],
       "rules": [
-        "Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền).",
-        "\"Thêm ảnh\" như web `capture`: mở J5 Ghi buổi điều trị (ảnh gắn với buổi + đồng ý ảnh).",
-        "\"So sánh trượt\" chỉ khi có 2 ảnh khác nhau.",
-        "So sánh trượt như web: ảnh Sau làm nền, ảnh Trước phủ phần bên trái tới vị trí thanh trượt (`clip-path: inset(0 (100-v)% 0 0)`), nhãn \"Trước ← → Sau\" góc trên; ngày Trước/Sau ở hai góc dưới."
+        "Entry point: the \"Vận hành phòng khám\" item at the end of each role's main screen (filtered by permission).",
+        "\"Thêm ảnh\" like web `capture`: opens J5 \"Ghi buổi điều trị\" (photo attached to a session + photo consent).",
+        "\"So sánh trượt\" only when there are 2 different photos.",
+        "Slider comparison as on the web: the \"Sau\" photo is the background, the \"Trước\" photo covers the left part up to the slider position (`clip-path: inset(0 (100-v)% 0 0)`), label \"Trước ← → Sau\" at the top; \"Trước\"/\"Sau\" dates in the two bottom corners."
       ],
       "differences": [
-        "Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas."
+        "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates."
       ],
       "gotchas": [
-        "Đã test trên máy thật: bản đầu đảo chiều (Sau ở trái). Canvas không vẽ chế độ trượt, nên theo web."
+        "Tested on a real phone: the first version was reversed (\"Sau\" on the left). The canvas doesn't draw slider mode, so follow the web."
       ],
       "todo": [],
       "status": "ported"
@@ -4990,7 +4990,7 @@
       },
       "reference": "pema-kmp/design-ref/I8.png",
       "frame": [
-        "DetailScaffold(title = \"Khóa thời gian phòng\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Khóa thời gian phòng\")  // back button, padding 20"
       ],
       "layout": [
         "PemaDropdownField(value = \"Laser & thủ thuật\", options, label = \"Phòng\")",
@@ -5024,15 +5024,15 @@
         "14:00–15:00 · Bảo trì thiết bị laser"
       ],
       "logic": [
-        "Web-only: logic port từ `prototype/shared/*.js` vào domain `shared/clinic` (`ClinicStore`, lệnh `transact`, lỗi `ClinicError` giữ câu tiếng Việt của web).",
-        "Quyền theo `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
-        "Web `operations-ui.js` › resources() save-block; `ClinicStore.block` (08:00–18:00, có lý do, không vướng lịch)."
+        "Web-only: logic ported from `prototype/shared/*.js` into the `shared/clinic` domain (`ClinicStore`, `transact` commands, `ClinicError` errors keep the web's Vietnamese messages).",
+        "Permissions follow `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
+        "Web `operations-ui.js` › resources() save-block; `ClinicStore.block` (08:00–18:00, reason required, must not clash with appointments)."
       ],
       "rules": [
-        "Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền)."
+        "Entry point: the \"Vận hành phòng khám\" item at the end of each role's main screen (filtered by permission)."
       ],
       "differences": [
-        "Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas."
+        "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -5086,7 +5086,7 @@
       },
       "reference": "pema-kmp/design-ref/I9.png",
       "frame": [
-        "DetailScaffold(title = \"Chỉnh dịch vụ\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Chỉnh dịch vụ\")  // back button, padding 20"
       ],
       "layout": [
         "PemaTextField(value = \"Laser theo chỉ định\", label = \"Tên dịch vụ\")",
@@ -5120,16 +5120,16 @@
         "Lưu dịch vụ"
       ],
       "logic": [
-        "Web-only: logic port từ `prototype/shared/*.js` vào domain `shared/clinic` (`ClinicStore`, lệnh `transact`, lỗi `ClinicError` giữ câu tiếng Việt của web).",
-        "Quyền theo `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
-        "Web `operations-ui.js` › services() dialog 'service'; `ClinicStore.updateService` (15–180 phút, đệm 0–60, giá ≥ 0)."
+        "Web-only: logic ported from `prototype/shared/*.js` into the `shared/clinic` domain (`ClinicStore`, `transact` commands, `ClinicError` errors keep the web's Vietnamese messages).",
+        "Permissions follow `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
+        "Web `operations-ui.js` › services() dialog 'service'; `ClinicStore.updateService` (15–180 minutes, buffer 0–60, price ≥ 0)."
       ],
       "rules": [
-        "Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền).",
-        "Route `service-edit?id={id}`, mặc định S2."
+        "Entry point: the \"Vận hành phòng khám\" item at the end of each role's main screen (filtered by permission).",
+        "Route `service-edit?id={id}`, default S2."
       ],
       "differences": [
-        "Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas."
+        "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -5170,7 +5170,7 @@
       },
       "reference": "pema-kmp/design-ref/I10.png",
       "frame": [
-        "DetailScaffold(title = \"Thu ngân · hóa đơn\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Thu ngân · hóa đơn\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Thu ngân\", \"Hóa đơn & thanh toán · dữ liệu mẫu\")",
@@ -5222,15 +5222,15 @@
         "0 ₫"
       ],
       "logic": [
-        "Web-only: logic port từ `prototype/shared/*.js` vào domain `shared/clinic` (`ClinicStore`, lệnh `transact`, lỗi `ClinicError` giữ câu tiếng Việt của web).",
-        "Quyền theo `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
-        "Web `operations-ui.js` › cashier(): mọi hóa đơn toàn phòng khám, lọc Còn phải thu / Đã thanh toán."
+        "Web-only: logic ported from `prototype/shared/*.js` into the `shared/clinic` domain (`ClinicStore`, `transact` commands, `ClinicError` errors keep the web's Vietnamese messages).",
+        "Permissions follow `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
+        "Web `operations-ui.js` › cashier(): every invoice in the clinic, filters \"Còn phải thu\" / \"Đã thanh toán\"."
       ],
       "rules": [
-        "Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền)."
+        "Entry point: the \"Vận hành phòng khám\" item at the end of each role's main screen (filtered by permission)."
       ],
       "differences": [
-        "Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas."
+        "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -5271,7 +5271,7 @@
       },
       "reference": "pema-kmp/design-ref/I11.png",
       "frame": [
-        "DetailScaffold(title = \"Thu ngân · hóa đơn\")  // nút back, padding 20",
+        "DetailScaffold(title = \"Thu ngân · hóa đơn\")  // back button, padding 20",
         "PemaBottomSheet(title = \"Thu tiền · Nguyễn Thu Hà\", sub = \"HD-DEMO-001 · Còn lại 150.000 ₫\")",
         "  row: icon \"radio_button_checked\" \"Tiền mặt\"",
         "  row: icon \"radio_button_unchecked\" \"Chuyển khoản\"",
@@ -5336,18 +5336,18 @@
         "Xác nhận thu tiền"
       ],
       "logic": [
-        "Web-only: logic port từ `prototype/shared/*.js` vào domain `shared/clinic` (`ClinicStore`, lệnh `transact`, lỗi `ClinicError` giữ câu tiếng Việt của web).",
-        "Quyền theo `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
-        "Web `operations-ui.js` › action 'pay' dialog; `ClinicStore.pay` (không vượt dư nợ, Tiền mặt/Chuyển khoản)."
+        "Web-only: logic ported from `prototype/shared/*.js` into the `shared/clinic` domain (`ClinicStore`, `transact` commands, `ClinicError` errors keep the web's Vietnamese messages).",
+        "Permissions follow `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
+        "Web `operations-ui.js` › action 'pay' dialog; `ClinicStore.pay` (never above the balance, \"Tiền mặt\"/\"Chuyển khoản\")."
       ],
       "rules": [
-        "Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền)."
+        "Entry point: the \"Vận hành phòng khám\" item at the end of each role's main screen (filtered by permission)."
       ],
       "differences": [
-        "Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas."
+        "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates."
       ],
       "gotchas": [
-        "Shot dùng overlay tĩnh như F12 (`previewPaymentSheet`)."
+        "The shot uses a static overlay like F12 (`previewPaymentSheet`)."
       ],
       "todo": [],
       "status": "ported"
@@ -5388,7 +5388,7 @@
       },
       "reference": "pema-kmp/design-ref/I12.png",
       "frame": [
-        "DetailScaffold(title = \"Ask Pema · hỏi đáp\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Ask Pema · hỏi đáp\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Ask Pema\", \"Truy vấn mô phỏng · chưa tích hợp mô hình AI\")",
@@ -5417,15 +5417,15 @@
         "Nguồn: Follow-up Inbox · kiểm tra lại trước khi dùng."
       ],
       "logic": [
-        "Web-only: logic port từ `prototype/shared/*.js` vào domain `shared/clinic` (`ClinicStore`, lệnh `transact`, lỗi `ClinicError` giữ câu tiếng Việt của web).",
-        "Quyền theo `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
-        "Web `clinic.js` › ask(): câu hỏi gợi ý + truy vấn tự do, câu trả lời kèm \"Cách tính\" và nguồn."
+        "Web-only: logic ported from `prototype/shared/*.js` into the `shared/clinic` domain (`ClinicStore`, `transact` commands, `ClinicError` errors keep the web's Vietnamese messages).",
+        "Permissions follow `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
+        "Web `clinic.js` › ask(): suggested questions + free query, answers include \"Cách tính\" and sources."
       ],
       "rules": [
-        "Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền)."
+        "Entry point: the \"Vận hành phòng khám\" item at the end of each role's main screen (filtered by permission)."
       ],
       "differences": [
-        "Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas."
+        "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -5469,7 +5469,7 @@
       },
       "reference": "pema-kmp/design-ref/I13.png",
       "frame": [
-        "DetailScaffold(title = \"Ghi nhận CSKH\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Ghi nhận CSKH\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Nguyễn Thu Hà\", \"Sau thủ thuật · D+1 · Còn 2 buổi\")",
@@ -5508,17 +5508,17 @@
         "Đồng ý đặt lịch sẽ mở form lịch trước khi hoàn tất."
       ],
       "logic": [
-        "Web-only: logic port từ `prototype/shared/*.js` vào domain `shared/clinic` (`ClinicStore`, lệnh `transact`, lỗi `ClinicError` giữ câu tiếng Việt của web).",
-        "Quyền theo `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
-        "Web `crm-ui.js` form Xử lý; `ClinicStore.resolveCrmTask` / `prepareCrmBooking` (CashierCrmCommands)."
+        "Web-only: logic ported from `prototype/shared/*.js` into the `shared/clinic` domain (`ClinicStore`, `transact` commands, `ClinicError` errors keep the web's Vietnamese messages).",
+        "Permissions follow `prototype/shared/staff-context.js` (`pages` + `capabilities`) → `Session.allows` + `session.staffContext().can(...)`.",
+        "Web `crm-ui.js` \"Xử lý\" form; `ClinicStore.resolveCrmTask` / `prepareCrmBooking` (CashierCrmCommands)."
       ],
       "rules": [
-        "Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền).",
-        "Kết quả \"Đồng ý đặt lịch\" mở I4 với `crmTask` trước khi hoàn tất.",
-        "Không gửi Zalo/SMS hay gọi thật."
+        "Entry point: the \"Vận hành phòng khám\" item at the end of each role's main screen (filtered by permission).",
+        "The outcome \"Đồng ý đặt lịch\" opens I4 with `crmTask` before completing.",
+        "No real Zalo/SMS or calls."
       ],
       "differences": [
-        "Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas."
+        "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -5567,7 +5567,7 @@
       },
       "reference": "pema-kmp/design-ref/J1.png",
       "frame": [
-        "DetailScaffold(title = \"Tiền sử & chẩn đoán\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Tiền sử & chẩn đoán\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Nguyễn Thu Hà\", \"Bác sĩ ghi nhận · không dùng AI tự chẩn đoán\")",
@@ -5598,16 +5598,16 @@
         "Tạo bản nháp ghi chú"
       ],
       "logic": [
-        "Web `prototype/shared/clinic.js` › patient360() các tab (consult, plan, session, photos, finance, crm, history) và modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
-        "Web consult tab + action generate-note / approve-note; `generateConsultDraft`, `approveConsultDraft`, `saveClinicalNote`."
+        "Web `prototype/shared/clinic.js` › patient360() tabs (consult, plan, session, photos, finance, crm, history) and modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
+        "Web consult tab + actions generate-note / approve-note; `generateConsultDraft`, `approveConsultDraft`, `saveClinicalNote`."
       ],
       "rules": [
-        "Lối vào: mục \"Patient 360 đầy đủ\" trong F1, lọc theo vai trò.",
-        "Hành động lâm sàng cần capability `clinical` (owner/doctor); vai trò khác thấy \"Cần tài khoản bác sĩ để thực hiện.\" / ẩn nút như `staff-context.js apply()`.",
-        "AI chỉ tạo bản nháp; bác sĩ sửa và duyệt trước khi lưu."
+        "Entry point: the \"Patient 360 đầy đủ\" item in F1, filtered by role.",
+        "Clinical actions need the `clinical` capability (owner/doctor); other roles see \"Cần tài khoản bác sĩ để thực hiện.\" / hidden buttons, like `staff-context.js apply()`.",
+        "AI only creates a draft; the doctor edits and approves it before saving."
       ],
       "differences": [
-        "Dữ liệu seed web thay tên/ngày minh họa."
+        "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -5656,7 +5656,7 @@
       },
       "reference": "pema-kmp/design-ref/J2.png",
       "frame": [
-        "DetailScaffold(title = \"AI brief trước buổi hẹn\")  // nút back, padding 20"
+        "DetailScaffold(title = \"AI brief trước buổi hẹn\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHero(\"Brief trước\\nbuổi hẹn.\", \"Nguyễn Thu Hà · Phục hồi & chăm sóc da\", icon = \"auto_awesome\")  // kicker \"PEMA • CHĂM SÓC LIÊN TỤC\"",
@@ -5682,15 +5682,15 @@
         "Duyệt & lưu brief"
       ],
       "logic": [
-        "Web `prototype/shared/clinic.js` › patient360() các tab (consult, plan, session, photos, finance, crm, history) và modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
+        "Web `prototype/shared/clinic.js` › patient360() tabs (consult, plan, session, photos, finance, crm, history) and modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
         "Web modal 'note' + `Pema.brief(p)` → `brief(state, patient)`; approve-brief → `approveAiBrief`."
       ],
       "rules": [
-        "Lối vào: mục \"Patient 360 đầy đủ\" trong F1, lọc theo vai trò.",
-        "Hành động lâm sàng cần capability `clinical` (owner/doctor); vai trò khác thấy \"Cần tài khoản bác sĩ để thực hiện.\" / ẩn nút như `staff-context.js apply()`."
+        "Entry point: the \"Patient 360 đầy đủ\" item in F1, filtered by role.",
+        "Clinical actions need the `clinical` capability (owner/doctor); other roles see \"Cần tài khoản bác sĩ để thực hiện.\" / hidden buttons, like `staff-context.js apply()`."
       ],
       "differences": [
-        "Dữ liệu seed web thay tên/ngày minh họa."
+        "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -5739,7 +5739,7 @@
       },
       "reference": "pema-kmp/design-ref/J3.png",
       "frame": [
-        "DetailScaffold(title = \"Kế hoạch điều trị\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Kế hoạch điều trị\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHero(\"Phục hồi & chăm sóc da\", \"Kế hoạch đang hoạt động · 2/5 buổi · BS. Tâm\", icon = \"route\")  // kicker \"PEMA • CHĂM SÓC LIÊN TỤC\"",
@@ -5784,18 +5784,18 @@
         "Điều chỉnh kế hoạch"
       ],
       "logic": [
-        "Web `prototype/shared/clinic.js` › patient360() các tab (consult, plan, session, photos, finance, crm, history) và modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
+        "Web `prototype/shared/clinic.js` › patient360() tabs (consult, plan, session, photos, finance, crm, history) and modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
         "Web plan tab."
       ],
       "rules": [
-        "Lối vào: mục \"Patient 360 đầy đủ\" trong F1, lọc theo vai trò.",
-        "Hành động lâm sàng cần capability `clinical` (owner/doctor); vai trò khác thấy \"Cần tài khoản bác sĩ để thực hiện.\" / ẩn nút như `staff-context.js apply()`."
+        "Entry point: the \"Patient 360 đầy đủ\" item in F1, filtered by role.",
+        "Clinical actions need the `clinical` capability (owner/doctor); other roles see \"Cần tài khoản bác sĩ để thực hiện.\" / hidden buttons, like `staff-context.js apply()`."
       ],
       "differences": [
-        "Dữ liệu seed web thay tên/ngày minh họa."
+        "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [
-        "Tiêu đề trùng Flutter \"Kế hoạch điều trị\": route `Routes.PlanOverview` có key duy nhất \"Kế hoạch điều trị · Clinic\", app bar lấy qua `Routes.appBarTitleOf`."
+        "Title clashes with Flutter \"Kế hoạch điều trị\": route `Routes.PlanOverview` has the unique key \"Kế hoạch điều trị · Clinic\", the app bar title comes from `Routes.appBarTitleOf`."
       ],
       "todo": [],
       "status": "ported"
@@ -5843,7 +5843,7 @@
       },
       "reference": "pema-kmp/design-ref/J4.png",
       "frame": [
-        "DetailScaffold(title = \"Điều chỉnh kế hoạch\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Điều chỉnh kế hoạch\")  // back button, padding 20"
       ],
       "layout": [
         "PemaTextField(value = \"Phục hồi & chăm sóc da\", label = \"Tên kế hoạch\")",
@@ -5865,15 +5865,15 @@
         "Lưu kế hoạch"
       ],
       "logic": [
-        "Web `prototype/shared/clinic.js` › patient360() các tab (consult, plan, session, photos, finance, crm, history) và modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
-        "Web modal 'plan-edit' + save-plan; `updateTreatmentPlan` (tổng ≥ số buổi đã làm, ≤ 20)."
+        "Web `prototype/shared/clinic.js` › patient360() tabs (consult, plan, session, photos, finance, crm, history) and modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
+        "Web modal 'plan-edit' + save-plan; `updateTreatmentPlan` (total ≥ sessions done, ≤ 20)."
       ],
       "rules": [
-        "Lối vào: mục \"Patient 360 đầy đủ\" trong F1, lọc theo vai trò.",
-        "Hành động lâm sàng cần capability `clinical` (owner/doctor); vai trò khác thấy \"Cần tài khoản bác sĩ để thực hiện.\" / ẩn nút như `staff-context.js apply()`."
+        "Entry point: the \"Patient 360 đầy đủ\" item in F1, filtered by role.",
+        "Clinical actions need the `clinical` capability (owner/doctor); other roles see \"Cần tài khoản bác sĩ để thực hiện.\" / hidden buttons, like `staff-context.js apply()`."
       ],
       "differences": [
-        "Dữ liệu seed web thay tên/ngày minh họa."
+        "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -5922,7 +5922,7 @@
       },
       "reference": "pema-kmp/design-ref/J5.png",
       "frame": [
-        "DetailScaffold(title = \"Ghi buổi điều trị\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Ghi buổi điều trị\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"Buổi 3/5 · BS. Tâm\\nHồ sơ có cảnh báo: Da nhạy cảm. Xác nhận trước khi thực hiện.\")",
@@ -5958,22 +5958,22 @@
         "Lưu buổi điều trị"
       ],
       "logic": [
-        "Web `prototype/shared/clinic.js` › patient360() các tab (consult, plan, session, photos, finance, crm, history) và modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
-        "Web session tab + save-session; `recordTreatmentSession` (TreatmentSessionInput.photoPath = ảnh mốc)."
+        "Web `prototype/shared/clinic.js` › patient360() tabs (consult, plan, session, photos, finance, crm, history) and modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
+        "Web session tab + save-session; `recordTreatmentSession` (TreatmentSessionInput.photoPath = landmark photo)."
       ],
       "rules": [
-        "Lối vào: mục \"Patient 360 đầy đủ\" trong F1, lọc theo vai trò.",
-        "Hành động lâm sàng cần capability `clinical` (owner/doctor); vai trò khác thấy \"Cần tài khoản bác sĩ để thực hiện.\" / ẩn nút như `staff-context.js apply()`.",
-        "Có ảnh mốc thì phải có đồng ý ảnh; lưu không ảnh → tạo follow-up \"Thiếu ảnh mốc đánh giá\".",
-        "Ảnh mốc: sheet \"Chụp ảnh / Chọn ảnh có sẵn\" (`PemaPhotoSourceSheet`), xem trước + Chụp lại / Chọn ảnh khác / Bỏ ảnh."
+        "Entry point: the \"Patient 360 đầy đủ\" item in F1, filtered by role.",
+        "Clinical actions need the `clinical` capability (owner/doctor); other roles see \"Cần tài khoản bác sĩ để thực hiện.\" / hidden buttons, like `staff-context.js apply()`.",
+        "A landmark photo requires photo consent; saving without a photo creates the follow-up \"Thiếu ảnh mốc đánh giá\".",
+        "Landmark photo: sheet \"Chụp ảnh / Chọn ảnh có sẵn\" (`PemaPhotoSourceSheet`), preview + \"Chụp lại\" / \"Chọn ảnh khác\" / \"Bỏ ảnh\"."
       ],
       "differences": [
-        "Dữ liệu seed web thay tên/ngày minh họa."
+        "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [
-        "Ảnh chưa lưu bị xóa bằng `OnScreenCleared` khi đóng màn; ảnh đã lưu thuộc về buổi điều trị.",
-        "Ô đồng ý ảnh mặc định lấy `patient.photoConsent` (P001 đã tick sẵn) — chạm vào là bỏ tick, không phải lỗi chạm.",
-        "Lưu buổi có ảnh gọi `camera.markSaved(path)` trước khi xoá `pending.path`."
+        "Unsaved photos are deleted by `OnScreenCleared` when the screen closes; saved photos belong to the treatment session.",
+        "The photo consent box defaults to `patient.photoConsent` (P001 is pre-ticked) — tapping it unticks it; not a touch bug.",
+        "Saving a session with a photo calls `camera.markSaved(path)` before clearing `pending.path`."
       ],
       "todo": [],
       "status": "ported"
@@ -6021,7 +6021,7 @@
       },
       "reference": "pema-kmp/design-ref/J6.png",
       "frame": [
-        "DetailScaffold(title = \"Dịch vụ & tài chính\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Dịch vụ & tài chính\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Hóa đơn của Nguyễn Thu Hà\", \"Không suy ra hoàn tất điều trị từ thanh toán\")",
@@ -6059,17 +6059,17 @@
         "Mở thu ngân"
       ],
       "logic": [
-        "Web `prototype/shared/clinic.js` › patient360() các tab (consult, plan, session, photos, finance, crm, history) và modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
+        "Web `prototype/shared/clinic.js` › patient360() tabs (consult, plan, session, photos, finance, crm, history) and modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
         "Web finance tab + `care-finance.js`; `careFinanceSummary(patientId)`."
       ],
       "rules": [
-        "Lối vào: mục \"Patient 360 đầy đủ\" trong F1, lọc theo vai trò.",
-        "Hành động lâm sàng cần capability `clinical` (owner/doctor); vai trò khác thấy \"Cần tài khoản bác sĩ để thực hiện.\" / ẩn nút như `staff-context.js apply()`.",
-        "Không suy ra hoàn tất điều trị từ thanh toán.",
-        "\"Mở thu ngân\" chỉ khi có capability billing."
+        "Entry point: the \"Patient 360 đầy đủ\" item in F1, filtered by role.",
+        "Clinical actions need the `clinical` capability (owner/doctor); other roles see \"Cần tài khoản bác sĩ để thực hiện.\" / hidden buttons, like `staff-context.js apply()`.",
+        "Never infer completed treatment from payment.",
+        "\"Mở thu ngân\" only with the billing capability."
       ],
       "differences": [
-        "Dữ liệu seed web thay tên/ngày minh họa."
+        "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -6118,7 +6118,7 @@
       },
       "reference": "pema-kmp/design-ref/J7.png",
       "frame": [
-        "DetailScaffold(title = \"CRM & CSKH hồ sơ\")  // nút back, padding 20"
+        "DetailScaffold(title = \"CRM & CSKH hồ sơ\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"BƯỚC TIẾP THEO · Dự kiến quay lại 22/9/2026\\nLịch đã đặt · Phụ trách: CSKH Thu\")",
@@ -6158,15 +6158,15 @@
         "Sửa ngày dự kiến"
       ],
       "logic": [
-        "Web `prototype/shared/clinic.js` › patient360() các tab (consult, plan, session, photos, finance, crm, history) và modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
+        "Web `prototype/shared/clinic.js` › patient360() tabs (consult, plan, session, photos, finance, crm, history) and modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
         "Web `crm-ui.js` patient CRM panel; \"Sửa ngày dự kiến\" → `setExpectedVisit`."
       ],
       "rules": [
-        "Lối vào: mục \"Patient 360 đầy đủ\" trong F1, lọc theo vai trò.",
-        "Hành động lâm sàng cần capability `clinical` (owner/doctor); vai trò khác thấy \"Cần tài khoản bác sĩ để thực hiện.\" / ẩn nút như `staff-context.js apply()`."
+        "Entry point: the \"Patient 360 đầy đủ\" item in F1, filtered by role.",
+        "Clinical actions need the `clinical` capability (owner/doctor); other roles see \"Cần tài khoản bác sĩ để thực hiện.\" / hidden buttons, like `staff-context.js apply()`."
       ],
       "differences": [
-        "Dữ liệu seed web thay tên/ngày minh họa."
+        "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -6215,7 +6215,7 @@
       },
       "reference": "pema-kmp/design-ref/J8.png",
       "frame": [
-        "DetailScaffold(title = \"Lịch sử hợp nhất\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Lịch sử hợp nhất\")  // back button, padding 20"
       ],
       "layout": [
         "PemaHeading(\"Lịch sử hợp nhất\", \"Sự kiện gốc, người ghi nhận và liên kết công việc\")",
@@ -6241,15 +6241,15 @@
         "Mục tiêu và lịch đánh giá đã trao đổi · BS. Tâm"
       ],
       "logic": [
-        "Web `prototype/shared/clinic.js` › patient360() các tab (consult, plan, session, photos, finance, crm, history) và modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
-        "Web history tab: gộp sự kiện, mới nhất trước, người ghi nhận và nguồn."
+        "Web `prototype/shared/clinic.js` › patient360() tabs (consult, plan, session, photos, finance, crm, history) and modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
+        "Web history tab: merged events, newest first, with recorder and source."
       ],
       "rules": [
-        "Lối vào: mục \"Patient 360 đầy đủ\" trong F1, lọc theo vai trò.",
-        "Hành động lâm sàng cần capability `clinical` (owner/doctor); vai trò khác thấy \"Cần tài khoản bác sĩ để thực hiện.\" / ẩn nút như `staff-context.js apply()`."
+        "Entry point: the \"Patient 360 đầy đủ\" item in F1, filtered by role.",
+        "Clinical actions need the `clinical` capability (owner/doctor); other roles see \"Cần tài khoản bác sĩ để thực hiện.\" / hidden buttons, like `staff-context.js apply()`."
       ],
       "differences": [
-        "Dữ liệu seed web thay tên/ngày minh họa."
+        "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -6298,7 +6298,7 @@
       },
       "reference": "pema-kmp/design-ref/J9.png",
       "frame": [
-        "DetailScaffold(title = \"Nhắn tin người bệnh\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Nhắn tin người bệnh\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"Tin nhắn sẽ hiển thị trên Pema Care của Nguyễn Thu Hà. Không phải kênh cấp cứu.\")",
@@ -6315,16 +6315,16 @@
         "Gửi tin nhắn"
       ],
       "logic": [
-        "Web `prototype/shared/clinic.js` › patient360() các tab (consult, plan, session, photos, finance, crm, history) và modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
+        "Web `prototype/shared/clinic.js` › patient360() tabs (consult, plan, session, photos, finance, crm, history) and modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
         "Web modal 'message'."
       ],
       "rules": [
-        "Lối vào: mục \"Patient 360 đầy đủ\" trong F1, lọc theo vai trò.",
-        "Hành động lâm sàng cần capability `clinical` (owner/doctor); vai trò khác thấy \"Cần tài khoản bác sĩ để thực hiện.\" / ẩn nút như `staff-context.js apply()`.",
-        "Tin nhắn hiện ở tab Tin nhắn của người bệnh (E3); không phải kênh cấp cứu; ẩn với CSKH/kế toán."
+        "Entry point: the \"Patient 360 đầy đủ\" item in F1, filtered by role.",
+        "Clinical actions need the `clinical` capability (owner/doctor); other roles see \"Cần tài khoản bác sĩ để thực hiện.\" / hidden buttons, like `staff-context.js apply()`.",
+        "Messages appear in the patient's \"Tin nhắn\" tab (E3); not an emergency channel; hidden from CSKH/accountants."
       ],
       "differences": [
-        "Dữ liệu seed web thay tên/ngày minh họa."
+        "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -6373,7 +6373,7 @@
       },
       "reference": "pema-kmp/design-ref/J10.png",
       "frame": [
-        "DetailScaffold(title = \"Thông tin cần nhớ\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Thông tin cần nhớ\")  // back button, padding 20"
       ],
       "layout": [
         "PemaTextField(value = \"Da nhạy cảm\\nTheo dõi đỏ da sau điều trị\", label = \"Cảnh báo · mỗi dòng một mục\", minLines = 2)",
@@ -6389,15 +6389,15 @@
         "Lưu thông tin"
       ],
       "logic": [
-        "Web `prototype/shared/clinic.js` › patient360() các tab (consult, plan, session, photos, finance, crm, history) và modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
-        "Web modal 'edit' + save-facts (cảnh báo mỗi dòng một mục, đồng ý ảnh)."
+        "Web `prototype/shared/clinic.js` › patient360() tabs (consult, plan, session, photos, finance, crm, history) and modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
+        "Web modal 'edit' + save-facts (one alert per line, photo consent)."
       ],
       "rules": [
-        "Lối vào: mục \"Patient 360 đầy đủ\" trong F1, lọc theo vai trò.",
-        "Hành động lâm sàng cần capability `clinical` (owner/doctor); vai trò khác thấy \"Cần tài khoản bác sĩ để thực hiện.\" / ẩn nút như `staff-context.js apply()`."
+        "Entry point: the \"Patient 360 đầy đủ\" item in F1, filtered by role.",
+        "Clinical actions need the `clinical` capability (owner/doctor); other roles see \"Cần tài khoản bác sĩ để thực hiện.\" / hidden buttons, like `staff-context.js apply()`."
       ],
       "differences": [
-        "Dữ liệu seed web thay tên/ngày minh họa."
+        "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -6446,7 +6446,7 @@
       },
       "reference": "pema-kmp/design-ref/J11.png",
       "frame": [
-        "DetailScaffold(title = \"Gửi chăm sóc tại nhà\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Gửi chăm sóc tại nhà\")  // back button, padding 20"
       ],
       "layout": [
         "PemaNotice(\"Hướng dẫn đã duyệt mới xuất hiện ở Chăm sóc tại nhà của người bệnh.\")",
@@ -6464,16 +6464,16 @@
         "Duyệt & gửi Pema Care"
       ],
       "logic": [
-        "Web `prototype/shared/clinic.js` › patient360() các tab (consult, plan, session, photos, finance, crm, history) và modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
+        "Web `prototype/shared/clinic.js` › patient360() tabs (consult, plan, session, photos, finance, crm, history) and modalHtml(type) (note, plan-edit, message, edit, care); `care-finance.js`, `crm-ui.js`.",
         "Web modal 'care' + save-care."
       ],
       "rules": [
-        "Lối vào: mục \"Patient 360 đầy đủ\" trong F1, lọc theo vai trò.",
-        "Hành động lâm sàng cần capability `clinical` (owner/doctor); vai trò khác thấy \"Cần tài khoản bác sĩ để thực hiện.\" / ẩn nút như `staff-context.js apply()`.",
-        "Hướng dẫn đã duyệt mới xuất hiện ở Chăm sóc tại nhà của người bệnh."
+        "Entry point: the \"Patient 360 đầy đủ\" item in F1, filtered by role.",
+        "Clinical actions need the `clinical` capability (owner/doctor); other roles see \"Cần tài khoản bác sĩ để thực hiện.\" / hidden buttons, like `staff-context.js apply()`.",
+        "Only approved instructions appear in the patient's \"Chăm sóc tại nhà\"."
       ],
       "differences": [
-        "Dữ liệu seed web thay tên/ngày minh họa."
+        "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -6514,7 +6514,7 @@
       },
       "reference": "pema-kmp/design-ref/K1.png",
       "frame": [
-        "DetailScaffold(title = \"Lịch hẹn\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Lịch hẹn\")  // back button, padding 20"
       ],
       "layout": [
         "PemaSection(\"Sắp tới\")",
@@ -6552,10 +6552,10 @@
         "Web `patient.js` › appointments(); `confirmPatientAttendance`."
       ],
       "rules": [
-        "Lối vào: tile \"Lịch hẹn tiếp theo\" ở Trang chủ Care."
+        "Entry point: the \"Lịch hẹn tiếp theo\" tile on the Care home."
       ],
       "differences": [
-        "Dữ liệu seed web thay tên/ngày minh họa."
+        "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -6597,7 +6597,7 @@
       },
       "reference": "pema-kmp/design-ref/K2.png",
       "frame": [
-        "DetailScaffold(title = \"Tài liệu & hóa đơn\")  // nút back, padding 20"
+        "DetailScaffold(title = \"Tài liệu & hóa đơn\")  // back button, padding 20"
       ],
       "layout": [
         "PemaSection(\"Hóa đơn của bạn\")",
@@ -6624,13 +6624,13 @@
       ],
       "logic": [
         "Web `prototype/patient-mobile` + `prototype/shared/patient.js`.",
-        "Web `patient.js` › docs(); chỉ mục đã duyệt, chỉ xem."
+        "Web `patient.js` › docs(); approved items only, read-only."
       ],
       "rules": [
-        "Lối vào: tab Hồ sơ Care → \"Tài liệu & hóa đơn\"."
+        "Entry point: Care \"Hồ sơ\" tab → \"Tài liệu & hóa đơn\"."
       ],
       "differences": [
-        "Dữ liệu seed web thay tên/ngày minh họa."
+        "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [],
       "todo": [],
@@ -6704,8 +6704,8 @@
       ],
       "rules": [],
       "differences": [
-        "Dữ liệu seed web thay tên/ngày minh họa.",
-        "Gộp vào tab Hành trình (E2): giữ 4 mục của Flutter và thêm dòng thời gian \"Cập nhật gần đây\" + câu \"tiến độ số buổi, không phải mức cải thiện da\"."
+        "Web seed data instead of illustrative names/dates.",
+        "Merged into the \"Hành trình\" tab (E2): keeps Flutter's 4 items and adds the \"Cập nhật gần đây\" timeline + the sentence \"tiến độ số buổi, không phải mức cải thiện da\"."
       ],
       "gotchas": [],
       "todo": [],

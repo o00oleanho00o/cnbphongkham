@@ -1,9 +1,9 @@
-<!-- Sinh tự động — xem README.md -->
-# Danh mục màn (82)
+<!-- Generated — see README.md -->
+# Screen index (82)
 
 Canvas: `Pema App redesign canvas/Pema App.dc.html` (5ff2b84206e016c6)
 
-| Mã | Màn | Nguồn logic | Composable KMP | Module | Port |
+| Code | Screen | Logic source | KMP composable | Module | Ported |
 |---|---|---|---|---|---|
 | [A1](screens/A1.md) | Hôm nay | Flutter | `WorkspaceScreen` | pema-kmp/feature/workspace | ✓ |
 | [A2](screens/A2.md) | Lịch hẹn | Flutter | `WorkspaceScreen` | pema-kmp/feature/workspace | ✓ |

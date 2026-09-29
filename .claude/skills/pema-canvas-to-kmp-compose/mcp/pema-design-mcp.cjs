@@ -24,7 +24,7 @@ const invalidate = () => (cache = { at: 0, model: null });
 
 function findScreen(id) {
   const s = model().screens.find((x) => x.id.toLowerCase() === String(id || '').trim().toLowerCase());
-  if (!s) throw new Error(`Không có màn "${id}". Dùng list_screens để xem mã (A1 … K3).`);
+  if (!s) throw new Error(`No screen "${id}". Use list_screens to see the codes (A1 … K3).`);
   return s;
 }
 
@@ -34,12 +34,12 @@ const text = (t) => ({ content: [{ type: 'text', text: t }] });
 const TOOLS = [
   {
     name: 'list_screens',
-    description: 'Danh sách màn của design canvas Pema (mã, tên, nhóm, nguồn logic Flutter/web, composable KMP, trạng thái port). Lọc theo nhóm (A–K) hoặc từ khóa.',
+    description: 'List the Pema design canvas screens (code, name, group, Flutter/web logic source, KMP composable, port status). Filter by group (A–K) or keyword.',
     inputSchema: {
       type: 'object',
       properties: {
-        group: { type: 'string', description: 'Mã nhóm A–K, ví dụ "I"' },
-        query: { type: 'string', description: 'Tìm trong mã, tên, ghi chú, chữ trên màn' },
+        group: { type: 'string', description: 'Group code A–K, e.g. "I"' },
+        query: { type: 'string', description: 'Search code, name, note and on-screen text' },
       },
     },
     run: ({ group, query } = {}) => {
@@ -48,17 +48,17 @@ const TOOLS = [
         .filter((s) => !group || s.group === String(group).toUpperCase())
         .filter((s) => !q || [s.id, s.name, s.note, ...s.texts].join(' ').toLowerCase().includes(q))
         .map((s) => `${s.id} · ${s.name} — ${s.source.kind === 'web' ? 'web' : 'Flutter'} → ${s.kmp.composable || '—'} (${s.kmp.module || '—'}) ${s.status === 'ported' ? '✓' : '✗'}`);
-      return text(rows.length ? rows.join('\n') : 'Không có màn khớp.');
+      return text(rows.length ? rows.join('\n') : 'No matching screens.');
     },
   },
   {
     name: 'get_screen',
-    description: 'Spec đầy đủ của một màn để dựng/chuyển đổi mà không phải đọc lại web/canvas: nguồn logic, route + file KMP, bố cục block → Compose, câu bắt buộc, quy tắc nghiệp vụ, khác biệt, bẫy đã gặp và prompt.',
+    description: 'Full spec of one screen, to build/port it without re-reading the web/canvas: logic source, route + KMP file, block → Compose layout, required text, business rules, accepted differences, known gotchas and a prompt.',
     inputSchema: {
       type: 'object',
       properties: {
-        id: { type: 'string', description: 'Mã màn, ví dụ "I2"' },
-        format: { type: 'string', enum: ['markdown', 'json'], description: 'Mặc định markdown' },
+        id: { type: 'string', description: 'Screen code, e.g. "I2"' },
+        format: { type: 'string', enum: ['markdown', 'json'], description: 'Default markdown' },
       },
       required: ['id'],
     },
@@ -69,24 +69,24 @@ const TOOLS = [
   },
   {
     name: 'get_screen_image',
-    description: 'Ảnh PNG của màn: "canvas" = ảnh design tham chiếu (pema-kmp/design-ref), "compare" = ảnh ghép canvas | Compose từ jvmTest.',
+    description: 'PNG of a screen: "canvas" = design reference image (pema-kmp/design-ref), "compare" = canvas | Compose side-by-side from jvmTest.',
     inputSchema: {
       type: 'object',
       properties: {
-        id: { type: 'string', description: 'Mã màn' },
-        kind: { type: 'string', enum: ['canvas', 'compare'], description: 'Mặc định canvas' },
+        id: { type: 'string', description: 'Screen code' },
+        kind: { type: 'string', enum: ['canvas', 'compare'], description: 'Default canvas' },
       },
       required: ['id'],
     },
     run: ({ id, kind }) => {
       const s = findScreen(id);
-      if (kind === 'compare' && !s.kmp.shotImage) throw new Error(`${s.id} chưa có shot test.`);
+      if (kind === 'compare' && !s.kmp.shotImage) throw new Error(`${s.id} has no shot test yet.`);
       const file = kind === 'compare' ? path.join(lib.ROOT, s.kmp.shotImage) : path.join(lib.REF_DIR, `${s.id}.png`);
       if (!fs.existsSync(file)) {
         const task = s.kmp.module.replace(/^pema-kmp\//, ':').replace(/\//g, ':');
         throw new Error(kind === 'compare'
-          ? `Chưa có ${lib.rel(file)} — chạy .\\gradlew.bat ${task}:jvmTest trong pema-kmp`
-          : `Chưa có ${lib.rel(file)} — chạy .\\gradlew.bat canvasRefs trong pema-kmp`);
+          ? `${lib.rel(file)} missing — run .\\gradlew.bat ${task}:jvmTest in pema-kmp`
+          : `${lib.rel(file)} missing — run .\\gradlew.bat canvasRefs in pema-kmp`);
       }
       return {
         content: [
@@ -98,37 +98,37 @@ const TOOLS = [
   },
   {
     name: 'get_block_catalog',
-    description: 'Bảng tra helper block của canvas (h, t, n, fc, fl, dd, chips…) → component Compose core:ui.',
+    description: 'Lookup table of canvas block helpers (h, t, n, fc, fl, dd, chips…) → core:ui Compose components.',
     inputSchema: { type: 'object', properties: {} },
     run: () => text(lib.blocksMarkdown()),
   },
   {
     name: 'record_note',
-    description: 'Lưu lại điều học được khi chuyển đổi một màn (nguồn logic, quy tắc, khác biệt được chấp nhận, bẫy, việc còn lại) vào design-specs/notes.json để lần sau không phải tìm lại. Tự sinh lại spec của màn.',
+    description: 'Save something learned while porting a screen (logic source, rule, accepted difference, gotcha, remaining work) into design-specs/notes.json so it need not be found again. Write in English; keep Vietnamese UI text and business wording verbatim in quotes. Regenerates that screen\'s spec.',
     inputSchema: {
       type: 'object',
       properties: {
-        id: { type: 'string', description: 'Mã màn' },
+        id: { type: 'string', description: 'Screen code' },
         kind: { type: 'string', enum: ['logic', 'rules', 'differences', 'gotchas', 'todo'] },
-        text: { type: 'string', description: 'Một câu ngắn, cụ thể (file, hàm, câu chữ)' },
+        text: { type: 'string', description: 'One short, concrete sentence (file, function, exact text)' },
       },
       required: ['id', 'kind', 'text'],
     },
     run: ({ id, kind, text: note }) => {
       const s = findScreen(id);
-      if (!String(note || '').trim()) throw new Error('text trống');
+      if (!String(note || '').trim()) throw new Error('text is empty');
       lib.addNote(s.id, kind, String(note).trim());
       invalidate();
       const fresh = findScreen(s.id);
       const out = path.join(lib.SPECS, 'screens', `${s.id}.md`);
       fs.mkdirSync(path.dirname(out), { recursive: true });
       fs.writeFileSync(out, lib.screenMarkdown(fresh, model()));
-      return text(`Đã lưu (${kind}) cho ${s.id} vào ${lib.rel(lib.NOTES)} và cập nhật ${lib.rel(out)}.`);
+      return text(`Saved (${kind}) for ${s.id} in ${lib.rel(lib.NOTES)} and updated ${lib.rel(out)}.`);
     },
   },
   {
     name: 'regenerate_specs',
-    description: 'Sinh lại toàn bộ design-specs/ (index, INDEX.md, BLOCKS.md, screens/*.md) từ canvas + code + notes.',
+    description: 'Regenerate all of design-specs/ (index, INDEX.md, BLOCKS.md, screens/*.md) from the canvas + code + notes.',
     inputSchema: { type: 'object', properties: {} },
     run: () => {
       invalidate();
@@ -143,10 +143,10 @@ const TOOLS = [
 function promptsList() {
   const port = {
     name: 'port_screen',
-    description: 'Chuyển/dựng lại một màn Pema sang KMP + Compose từ spec đã lưu (không cần đọc lại web/canvas).',
-    arguments: [{ name: 'id', description: 'Mã màn (A1 … K3)', required: true }],
+    description: 'Port/rebuild one Pema screen in KMP + Compose from its saved spec (no need to re-read the web/canvas).',
+    arguments: [{ name: 'id', description: 'Screen code (A1 … K3)', required: true }],
   };
-  return [port, ...model().screens.map((s) => ({ name: s.id, description: `${s.name} · nhóm ${s.group} (${s.source.kind === 'web' ? 'web' : 'Flutter'})` }))];
+  return [port, ...model().screens.map((s) => ({ name: s.id, description: `${s.name} · group ${s.group} (${s.source.kind === 'web' ? 'web' : 'Flutter'})` }))];
 }
 
 function promptGet(name, args = {}) {
@@ -158,7 +158,7 @@ function promptGet(name, args = {}) {
         role: 'user',
         content: {
           type: 'text',
-          text: `${lib.screenPrompt(s)}\n\nSpec đầy đủ (đọc thay cho web/canvas; nếu phát hiện điều mới hãy lưu bằng tool record_note):\n\n${lib.screenMarkdown(s, model())}`,
+          text: `${lib.screenPrompt(s)}\n\nFull spec (read this instead of the web/canvas; if you find something new, save it with the record_note tool):\n\n${lib.screenMarkdown(s, model())}`,
         },
       },
     ],
@@ -168,7 +168,7 @@ function promptGet(name, args = {}) {
 // ---------- resources ----------
 function resourcesList() {
   return [
-    { uri: 'pema-design://index', name: 'Danh mục màn', mimeType: 'text/markdown' },
+    { uri: 'pema-design://index', name: 'Screen index', mimeType: 'text/markdown' },
     { uri: 'pema-design://blocks', name: 'Canvas block → Compose', mimeType: 'text/markdown' },
     ...model().screens.map((s) => ({ uri: `pema-design://screens/${s.id}`, name: `${s.id} · ${s.name}`, mimeType: 'text/markdown' })),
   ];
@@ -179,7 +179,7 @@ function resourceRead(uri) {
   if (uri === 'pema-design://blocks') return lib.blocksMarkdown();
   const m = /^pema-design:\/\/screens\/(\w+)$/.exec(uri);
   if (m) return lib.screenMarkdown(findScreen(m[1]), model());
-  throw new Error('Không có resource ' + uri);
+  throw new Error('No resource ' + uri);
 }
 
 // ---------- JSON-RPC 2.0 over stdio (newline-delimited, MCP stdio transport) ----------
@@ -199,7 +199,7 @@ function handle(req) {
           protocolVersion: v,
           capabilities: { tools: {}, prompts: {}, resources: {} },
           serverInfo: SERVER,
-          instructions: 'Spec từng màn của app Pema (canvas Pema App.dc.html → KMP/Compose). Trước khi dựng/sửa một màn: get_screen(id). Sau khi học được điều mới: record_note.',
+          instructions: 'Per-screen specs of the Pema app (canvas Pema App.dc.html → KMP/Compose). Before building/changing a screen: get_screen(id). After learning something new: record_note.',
         });
       }
       case 'notifications/initialized':

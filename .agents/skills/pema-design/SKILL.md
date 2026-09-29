@@ -1,39 +1,39 @@
 ---
 name: pema-design
-description: Thiết kế, triển khai và review UI/UX Pema Digital Clinic cho Clinic Web, Patient Mobile và template Flutter; áp dụng nhận diện Pema, luồng chăm sóc, responsive và kiểm chứng nghiệp vụ khi thêm hoặc sửa màn hình của dự án.
+description: Design, implement, and review Pema Digital Clinic UI/UX for Clinic Web, Patient Mobile, and the Flutter template; apply Pema identity, care flows, responsiveness, and business validation when adding or changing project screens.
 ---
 
 # Pema Design
 
-Thiết kế để nhân viên tìm đúng bệnh nhân, hiểu việc cần làm và bàn giao được; người bệnh biết bước tiếp theo. Giữ nhận diện Pema và ngôn ngữ nghiệp vụ giữa web/native, điều chỉnh bố cục theo nền tảng. Skill này dùng cho dự án Pema, không áp phong cách này lên sản phẩm khác.
+Design so staff can find the right patient, understand the work to do, and hand it off; patients know the next step. Keep Pema identity and business language consistent across web/native, while adapting layout by platform. This skill is for the Pema project; do not apply this style to other products.
 
-## Đọc theo công việc
+## Read by task
 
-- Thiết kế màu, chữ, icon, ảnh nền hoặc component: [visual-system](references/visual-system.md).
-- Thêm màn, sửa navigation hoặc luồng nghiệp vụ: [screens-and-flows](references/screens-and-flows.md).
-- Sửa bố cục desktop/mobile/Flutter: [platform-layout](references/platform-layout.md).
-- Triển khai, kiểm thử và bàn giao: [delivery-and-review](references/delivery-and-review.md).
+- Designing color, type, icons, backgrounds, or components: [visual-system](references/visual-system.md).
+- Adding screens, changing navigation, or changing business flows: [screens-and-flows](references/screens-and-flows.md).
+- Fixing desktop/mobile/Flutter layout: [platform-layout](references/platform-layout.md).
+- Implementing, testing, and handing off: [delivery-and-review](references/delivery-and-review.md).
 
-Các đường dẫn source trong references tính từ gốc repository, không từ thư mục skill. Skill nằm tại `.agents/skills/pema-design/`; hướng dẫn chia sẻ ở `docs/23_PEMA_DESIGN_SKILL.md`. Nếu chỉ có bản skill rời, dùng hướng dẫn thiết kế bên trong và yêu cầu source khi cần kiểm chứng implementation; không giả định các file dự án tồn tại.
+Source paths in references are relative to the repository root, not the skill directory. The skill is at `.agents/skills/pema-design/`; the shared guide is at `docs/23_PEMA_DESIGN_SKILL.md`. If only the standalone skill is available, use the design guidance inside it and ask for source when implementation must be verified; do not assume project files exist.
 
-## Những quyết định cần giữ
+## Decisions to preserve
 
-1. **Pema hiện tại là xanh/Be Vietnam Pro.** Logo Pema local; primary #0B4F94, navy #083A6E, sky #3CAAE5, nền #F4F8FB. Manrope/teal trong tài liệu cũ là lịch sử. Không tự đổi thương hiệu theo giao diện mẫu mới tìm được.
-2. **Patient 360 là điểm nối bối cảnh.** Tác vụ liên quan phải giữ đúng patient/plan/order, thể hiện trạng thái và kết quả; menu hoặc card đẹp chưa chứng minh nghiệp vụ hoạt động.
-3. **Desktop dùng được chiều ngang; mobile gọn theo công việc.** Chuẩn Clinic Web 1920×1020 CSS pixels ở zoom 100%; không khóa workspace trong cột hẹp. Mobile home chỉ tóm tắt việc tiếp theo; chi tiết mở màn con, không kéo dài vô tận.
-4. **Giữ ý nghĩa, không sao chép bố cục.** Web dùng bảng/lịch tài nguyên; native dùng danh sách theo ngày, màn con và sheet ngắn. Flutter dùng widget Material 3, SafeArea và Navigator, không WebView bọc website.
-5. **Tách dữ liệu, thiết kế và khả năng thực tế.** Nháp khác đã duyệt; thanh toán không phải hoàn tất điều trị. Web dùng localStorage; Flutter PB01 memory-only, state theo patient; PB02 dùng API. Đọc ma trận parity trước khi mô tả tính năng native.
-6. **Tham khảo có chọn lọc.** Pema.vn là tham chiếu nhận diện; ảnh Annam, Fastboy/Go Check In và repo thiết kế là gợi ý để đánh giá, không phải yêu cầu sao chép hoặc thêm feature. Vòng đời chăm sóc dẫn thiết kế; CRM/loyalty/marketing chỉ thêm khi nằm trong scope được giao.
+1. **Current Pema is blue/Be Vietnam Pro.** Local Pema logo; primary #0B4F94, navy #083A6E, sky #3CAAE5, background #F4F8FB. Manrope/teal in older documents is historical. Do not change the brand yourself based on a newly found sample UI.
+2. **Patient 360 is the context bridge.** Related tasks must keep the correct patient/plan/order, show status and outcomes; a beautiful menu or card does not prove the business flow works.
+3. **Desktop uses horizontal space; mobile stays task-focused.** Clinic Web standard is 1920×1020 CSS pixels at 100% zoom; do not lock the workspace into a narrow column. Mobile home only summarizes the next work; details open in child screens, not an endless page.
+4. **Keep meaning; do not copy layout.** Web uses tables/resource calendars; native uses day-based lists, child screens, and short sheets. Flutter uses Material 3 widgets, SafeArea, and Navigator, not a WebView wrapping the website.
+5. **Separate data, design, and practical capability.** Draft differs from approved; payment does not mean treatment is complete. Web uses localStorage; Flutter PB01 is memory-only, state is patient-scoped; PB02 uses APIs. Read the parity matrix before describing native features.
+6. **Reference selectively.** Pema.vn is an identity reference; Annam images, Fastboy/Go Check In, and the design repo are cues for evaluation, not requirements to copy or add features. The care lifecycle drives design; CRM/loyalty/marketing is added only when it is in the assigned scope.
 
-## Cách thực hiện
+## How to work
 
-Xác định người dùng, nền tảng, tác vụ chính, trạng thái đầu/cuối và source hiện tại. Đọc `AGENT.md`, bộ PB01 theo 0→1→2→3 và tài liệu liên quan; xem màn thực tế nếu công cụ cho phép. Chỉ hỏi khi thiếu quyết định ảnh hưởng đáng kể đến kết quả.
+Identify the user, platform, primary task, start/end states, and current source. Read `AGENT.md`, the PB01 set in order 0→1→2→3, and related documents; inspect the real screen if tools allow. Ask only when a missing decision would significantly affect the result.
 
-Khi người dùng yêu cầu phân tích/plan, trình bày phát hiện và phương án trước khi sửa. Khi đã yêu cầu triển khai, thực hiện đến kiểm tra và bàn giao trong scope; không dừng xin duyệt từng bước. Nếu nhiệm vụ là template để duyệt, giữ rõ các phần mô phỏng, không tự mở rộng sang backend production.
+When the user asks for analysis/planning, present findings and options before editing. When implementation has been requested, work through verification and handoff within scope; do not stop to request approval at every step. If the task is a review template, keep simulated sections explicit and do not expand into production backend work yourself.
 
-Với mỗi màn mới, xác định: điểm vào → ngữ cảnh → hành động chính → validation → trạng thái sau lưu → bên nhận bàn giao → đường quay lại. Chọn độ nổi bật bằng hierarchy và khoảng cách trước khi thêm màu/card/ảnh. Tận dụng component và asset hiện có.
+For each new screen, define: entry point → context → primary action → validation → post-save state → handoff recipient → return path. Choose emphasis through hierarchy and spacing before adding color/cards/images. Reuse existing components and assets.
 
-Kiểm tra bằng dữ liệu có ý nghĩa và viewport phù hợp; xem screenshot lẫn tương tác. Báo rõ đã chạy gì, chưa chạy gì và giới hạn. Cập nhật Scope → Spec → Module Map → Architecture khi scope/hành vi đổi, rồi README, hướng dẫn và SECTION_PROGRESS. Skill hỗ trợ thực hiện công việc, không tự cấp quyền publish, gửi thông báo hay push Git ngoài yêu cầu người dùng.
+Test with meaningful data and suitable viewports; inspect both screenshots and interactions. State clearly what was run, what was not run, and any limits. Update Scope → Spec → Module Map → Architecture when scope/behavior changes, then README, guides, and SECTION_PROGRESS. The skill supports doing the work; it does not grant permission by itself to publish, send notifications, or push Git outside the user's request.
 
 
-Mobile CRM02: dùng `docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md` làm nguồn hiện trạng. Tài chính nằm trong Clinic shell; native chọn role trước tác vụ, không nhét CSKH/thu ngân/clinical chung home. Care ưu tiên một bước tiếp theo; nội bộ và bàn giao không thành tin nhắn người bệnh.
+Mobile CRM02: use `docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md` as the current-state source. Finance lives inside the Clinic shell; native selects the role before the task, and must not cram CSKH/cashier/clinical into one shared home. Care prioritizes one next step; internal work and handoffs must not become patient messages.

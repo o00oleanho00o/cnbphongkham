@@ -10,14 +10,14 @@ Mỗi màn của design canvas `Pema App redesign canvas/Pema App.dc.html` (A1 �
 | `index.json` | Toàn bộ dữ liệu trên dạng JSON | Sinh tự động |
 | `notes.json` | Ghi chú chuyển đổi: nguồn web, quy tắc nghiệp vụ, khác biệt được chấp nhận, bẫy đã gặp, việc còn lại | **Người / agent** |
 
-Mỗi spec gồm:
-- **Nguồn logic**: màn Flutter (class + file, suy ra từ `app_router.dart`) hoặc trang/tab/modal web.
+Mỗi spec gồm (tiêu đề mục trong spec viết bằng tiếng Anh để AI đọc ít token hơn; chữ trên giao diện vẫn giữ tiếng Việt):
+- **Logic source** (nguồn logic): màn Flutter (class + file, suy ra từ `app_router.dart`) hoặc trang/tab/modal web.
 - **KMP**: route (`Routes.X`), composable + file, graph, hàm domain `shared/clinic`, shot test và ảnh so sánh.
-- **Khung + Bố cục**: từng block canvas dịch sẵn sang Compose (`PemaHeading(…)`, `PemaInfoCard { … }`…), đúng thứ tự từ trên xuống, kèm chữ thật.
-- **Câu bắt buộc** (notice trên canvas), **Quy tắc nghiệp vụ**, **Khác biệt được chấp nhận**, **Bẫy đã gặp** (từ `notes.json`).
+- **Frame + Layout** (khung + bố cục): từng block canvas dịch sẵn sang Compose (`PemaHeading(…)`, `PemaInfoCard { … }`…), đúng thứ tự từ trên xuống, kèm chữ thật.
+- **Required canvas text** (câu bắt buộc, notice trên canvas), **Business rules** (quy tắc nghiệp vụ), **Accepted differences** (khác biệt được chấp nhận), **Gotchas** (bẫy đã gặp) — từ `notes.json`.
 - **Prompt** sẵn dùng.
 
-Phần tự sinh đọc thẳng từ canvas và code nên không bao giờ lệch; phần hiểu biết (vì sao, quy tắc, bẫy) nằm trong `notes.json`.
+Phần tự sinh đọc thẳng từ canvas và code nên không bao giờ lệch; phần hiểu biết (vì sao, quy tắc, bẫy) nằm trong `notes.json`. Ghi chú trong `notes.json` viết bằng tiếng Anh, còn chữ trên giao diện và câu nghiệp vụ thì giữ nguyên tiếng Việt trong ngoặc kép.
 
 ## Cập nhật
 ```powershell
