@@ -1,6 +1,6 @@
 # Pema KMP (Kotlin Multiplatform + Compose Multiplatform)
 
-Bản viết lại app Pema (`flutter-template/`) bằng Kotlin Multiplatform, UI dùng chung Compose Multiplatform cho Android (và iOS — cần máy Mac để build).
+Bản viết lại app Pema (`flutter-template/`) bằng Kotlin Multiplatform, UI dùng chung Compose Multiplatform cho Android và iOS (iOS build trên GitHub Actions, xem [iosApp/README.md](iosApp/README.md)).
 
 ## Cấu trúc
 - `androidApp` — app Android (`com.pema.clinic.kmp`), `MainActivity` (edge-to-edge, `adjustResize`), icon, manifest.
@@ -82,5 +82,5 @@ rồi mở `<module>\build\shots\F4-vs.png` để đối chiếu với canvas.
   - Dùng ở: G2 Gửi cập nhật (người bệnh) → F10 Phản hồi và G5 Ảnh tiến triển (phòng khám); J5 Ghi buổi điều trị (ảnh mốc, cần đồng ý ảnh; lưu không ảnh → tạo việc "Thiếu ảnh mốc") → I7 Ảnh trước / sau hiện ảnh thật theo góc chụp, có "So sánh trượt" khi có 2 ảnh.
   - Android hủy/tạo lại activity khi đang mở camera (xoay máy, thiếu RAM): ảnh vẫn được nhận lại (`CameraService.recoveredPhotos()`), bản nháp G2 giữ chữ + ảnh; ảnh chưa gửi chỉ bị xóa khi đóng màn (`OnScreenCleared`).
   - Dữ liệu demo nằm trong `AppStores` (theo tiến trình app): xoay máy hay quay về từ camera không làm mất phiên làm việc. Nếu Android kill tiến trình khi đang ở camera, màn đang mở, bản nháp và không gian làm việc (vai trò, hồ sơ đang chọn) được khôi phục; dữ liệu demo đã sửa thì về seed.
-  - iOS: `IosPlatformServices` có chụp ảnh (chưa build); chọn ảnh chưa có trên iOS.
-- iOS: target đã khai báo, code `iosMain` chưa được build (cần macOS + Xcode).
+  - iOS: `IosPlatformServices` có chụp ảnh; chọn ảnh chưa có trên iOS.
+- iOS: code `iosMain` của mọi module biên dịch được (đã kiểm tra bằng cross-compile klib trên Windows). App được build bởi workflow `.github/workflows/ios-kmp.yml` (XcodeGen + xcodebuild trên `macos-latest`) ra IPA chưa ký; chưa chạy thử trên iPhone.

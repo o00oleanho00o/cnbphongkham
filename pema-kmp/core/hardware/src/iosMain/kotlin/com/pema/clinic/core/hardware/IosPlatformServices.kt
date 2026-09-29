@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalForeignApi::class)
+
 package com.pema.clinic.core.hardware
 
 import androidx.compose.runtime.Composable
@@ -24,11 +26,12 @@ import platform.Foundation.NSDate
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
+import platform.Foundation.timeIntervalSince1970
 import platform.Foundation.writeToFile
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
 import platform.UIKit.UIImpactFeedbackGenerator
-import platform.UIKit.UIImpactFeedbackStyleLight
+import platform.UIKit.UIImpactFeedbackStyle
 import platform.UIKit.UIImage
 import platform.UIKit.UIImageJPEGRepresentation
 import platform.UIKit.UIImagePickerController
@@ -39,10 +42,9 @@ import platform.UIKit.UIGraphicsImageRendererFormat
 import platform.UIKit.UIMarkupTextPrintFormatter
 import platform.UIKit.UINavigationControllerDelegateProtocol
 import platform.UIKit.UINotificationFeedbackGenerator
-import platform.UIKit.UINotificationFeedbackTypeSuccess
-import platform.UIKit.UINotificationFeedbackTypeWarning
+import platform.UIKit.UINotificationFeedbackType
 import platform.UIKit.UIPrintInfo
-import platform.UIKit.UIPrintInfoOutputGeneral
+import platform.UIKit.UIPrintInfoOutputType
 import platform.UIKit.UIPrintInteractionController
 import platform.UIKit.UIViewController
 import platform.UserNotifications.UNAuthorizationOptionAlert
@@ -75,7 +77,7 @@ private object IosCameraState {
 
 private class IosCameraService : CameraService {
     override suspend fun isAvailable(): Boolean =
-        UIImagePickerController.isSourceTypeAvailable(platform.UIKit.UIImagePickerControllerSourceTypeCamera)
+        UIImagePickerController.isSourceTypeAvailable(platform.UIKit.UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera)
 
     override suspend fun capture(): CapturedPhoto? {
         if (IosCameraState.delegate != null) throw HardwareFailure("Đang mở camera.")
@@ -84,7 +86,7 @@ private class IosCameraService : CameraService {
 
         return suspendCancellableCoroutine { continuation ->
             val picker = UIImagePickerController()
-            picker.sourceType = platform.UIKit.UIImagePickerControllerSourceTypeCamera
+            picker.sourceType = platform.UIKit.UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
             val delegate = PemaImagePickerDelegate(continuation)
             IosCameraState.delegate = delegate
             picker.delegate = delegate
@@ -152,7 +154,7 @@ private class IosPrinter : Printer {
     override suspend fun printA5(title: String, lines: List<String>): Boolean {
         val formatter = UIMarkupTextPrintFormatter(markupText = buildPrintHtml(title, lines))
         val info = UIPrintInfo.printInfo()
-        info.outputType = UIPrintInfoOutputGeneral
+        info.outputType = UIPrintInfoOutputType.UIPrintInfoOutputGeneral
         info.jobName = title.ifBlank { "Pema" }
         val controller = UIPrintInteractionController.sharedPrintController()
         controller.printInfo = info
@@ -184,15 +186,15 @@ private class IosLauncher : Launcher {
 
 private class IosHaptics : Haptics {
     override fun tap() {
-        UIImpactFeedbackGenerator(style = UIImpactFeedbackStyleLight).impactOccurred()
+        UIImpactFeedbackGenerator(style = UIImpactFeedbackStyle.UIImpactFeedbackStyleLight).impactOccurred()
     }
 
     override fun success() {
-        UINotificationFeedbackGenerator().notificationOccurred(UINotificationFeedbackTypeSuccess)
+        UINotificationFeedbackGenerator().notificationOccurred(UINotificationFeedbackType.UINotificationFeedbackTypeSuccess)
     }
 
     override fun warning() {
-        UINotificationFeedbackGenerator().notificationOccurred(UINotificationFeedbackTypeWarning)
+        UINotificationFeedbackGenerator().notificationOccurred(UINotificationFeedbackType.UINotificationFeedbackTypeWarning)
     }
 }
 
@@ -207,8 +209,8 @@ private class IosNotifier : Notifier {
 
     override fun notify(id: Int, title: String, body: String) {
         val content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
+        content.setTitle(title)
+        content.setBody(body)
         val request = UNNotificationRequest.requestWithIdentifier(
             identifier = id.toString(),
             content = content,
@@ -297,7 +299,6 @@ private fun escapeHtml(value: String): String = buildString(value.length) {
     }
 }
 
-@OptIn(ExperimentalForeignApi::class)
 private fun NSData.toByteArray(): ByteArray {
     val count = length.toInt()
     if (count == 0) return ByteArray(0)

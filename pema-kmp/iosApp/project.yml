@@ -1,0 +1,37 @@
+# XcodeGen spec: `xcodegen generate` (in this folder) creates iosApp.xcodeproj.
+# The pre-build script compiles the Kotlin `ComposeApp` framework through Gradle.
+name: iosApp
+options:
+  bundleIdPrefix: com.pema.clinic
+  deploymentTarget:
+    iOS: "15.0"
+targets:
+  iosApp:
+    type: application
+    platform: iOS
+    sources:
+      - iOSApp.swift
+      - ContentView.swift
+    settings:
+      base:
+        PRODUCT_NAME: Pema
+        PRODUCT_BUNDLE_IDENTIFIER: com.pema.clinic.kmp
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        INFOPLIST_FILE: Info.plist
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Pema
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        FRAMEWORK_SEARCH_PATHS: $(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
+        OTHER_LDFLAGS: $(inherited) -framework ComposeApp
+        CODE_SIGN_STYLE: Automatic
+    preBuildScripts:
+      - name: Compile Kotlin framework
+        basedOnDependencyAnalysis: false
+        script: |
+          cd "$SRCROOT/.."
+          ./gradlew :composeApp:embedAndSignAppleFrameworkForXcode

@@ -3,6 +3,8 @@
 <plist version="1.0">
 <dict>
     <key>NSCameraUsageDescription</key>
-    <string>Pema d?ng camera ?? ch?p ?nh ti?n tri?n ?i?u tr?.</string>
+    <string>Pema dùng camera để chụp ảnh tiến triển điều trị.</string>
+    <key>CADisableMinimumFrameDurationOnPhone</key>
+    <true/>
 </dict>
 </plist>
