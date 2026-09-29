@@ -18,7 +18,7 @@ Quy ước chi tiết: [CONVENTIONS.md](CONVENTIONS.md).
 $env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'; cd E:\Desktop\cnbphongkham\pema-kmp
 .\gradlew.bat :androidApp:assembleDebug        # APK: androidApp\build\outputs\apk\debug\androidApp-debug.apk
 .\gradlew.bat :androidApp:installDebug         # cài lên thiết bị đang cắm
-.\gradlew.bat jvmTest                          # logic + ảnh so sánh canvas trên JVM (190 test)
+.\gradlew.bat jvmTest                          # logic + ảnh so sánh canvas trên JVM (192 test)
 ```
 Hoặc mở thư mục `pema-kmp` trong Android Studio và chạy cấu hình `androidApp`.
 
@@ -72,15 +72,15 @@ fun f4QuickOrder() {
 rồi mở `<module>\build\shots\F4-vs.png` để đối chiếu với canvas.
 
 ## Trạng thái
-- Đã port toàn bộ 82 màn của canvas: 55 màn A–H (Flutter, 1:1) và 27 màn I/J/K (bổ sung từ web: logic theo `prototype/`, giao diện theo canvas). Mỗi mã màn đều có ảnh so sánh `-vs.png`; build Android xanh, 190/190 test pass.
+- Đã port toàn bộ 82 màn của canvas: 55 màn A–H (Flutter, 1:1) và 27 màn I/J/K (bổ sung từ web: logic theo `prototype/`, giao diện theo canvas). Mỗi mã màn đều có ảnh so sánh `-vs.png`; build Android xanh, 192/192 test pass.
 - Lối vào màn web: tab "Thêm"/màn chính của từng vai trò có mục "Vận hành phòng khám" (lọc theo quyền web `staff-context.js`); Patient 360 có mục "Patient 360 đầy đủ"; C6 có "Ghi nhận CSKH đầy đủ"; F13/F14 mở Chỉnh dịch vụ/Khóa phòng (chỉ chủ phòng khám); Trang chủ Care → Lịch hẹn (K1), Hồ sơ Care → Tài liệu & hóa đơn (K2).
 - Khác biệt có chủ đích so với canvas: dữ liệu mẫu thật của web (P001 Nguyễn Minh Linh, ngày 20/9/2026) thay tên/ngày minh họa; tab Hành trình (K3) giữ 4 mục của Flutter E2 và thêm dòng thời gian + câu "tiến độ số buổi, không phải mức cải thiện da" của web.
 - Dữ liệu demo chỉ nằm trong bộ nhớ tiến trình (`AppStores`, như tab web): xoay máy/quay về từ camera vẫn giữ; tắt hẳn app là về seed ban đầu.
 - Đã chạy trên emulator Android 14: Clinic (5 tab), Bác sĩ, CSKH, Kế toán (2 tab), Pema Care (4 tab); đặt lịch, lên đơn, Patient 360, gửi cập nhật → bác sĩ phản hồi, tài chính 4 tab + bảng giá với API thật; màn web: tiếp đón check-in, đặt lịch hẹn, điều phối theo ngày, thu tiền (sheet), Patient 360 J1–J11 (lưu kế hoạch, nhắn tin → hiện ở Tin nhắn của người bệnh), CSKH C6 → I13 → đặt lịch, Care K1 xác nhận lịch, K2, K3; không crash.
-- Camera & ảnh (Android, đã chạy trên emulator; **chưa thử trên điện thoại thật**):
+- Camera & ảnh (Android; đã chạy trên emulator và điện thoại thật Xiaomi M2003J15SC, Android 12/MIUI, camera MIUI + photo picker Google — G2 → F10, J5 chụp/chọn ảnh, bỏ/chụp lại/hủy, app bị kill khi đang mở camera vẫn nhận lại ảnh):
   - Chụp bằng app camera hệ thống (`TakePicture` + FileProvider) hoặc chọn ảnh có sẵn bằng photo picker của Android — không cần quyền CAMERA/bộ nhớ. Ảnh được xoay theo EXIF, thu về cạnh dài 1600px, JPEG 85, bỏ toàn bộ EXIF/GPS, lưu ở `cache/photos/`.
   - Dùng ở: G2 Gửi cập nhật (người bệnh) → F10 Phản hồi và G5 Ảnh tiến triển (phòng khám); J5 Ghi buổi điều trị (ảnh mốc, cần đồng ý ảnh; lưu không ảnh → tạo việc "Thiếu ảnh mốc") → I7 Ảnh trước / sau hiện ảnh thật theo góc chụp, có "So sánh trượt" khi có 2 ảnh.
   - Android hủy/tạo lại activity khi đang mở camera (xoay máy, thiếu RAM): ảnh vẫn được nhận lại (`CameraService.recoveredPhotos()`), bản nháp G2 giữ chữ + ảnh; ảnh chưa gửi chỉ bị xóa khi đóng màn (`OnScreenCleared`).
-  - Dữ liệu demo nằm trong `AppStores` (theo tiến trình app): xoay máy hay quay về từ camera không làm mất phiên làm việc.
+  - Dữ liệu demo nằm trong `AppStores` (theo tiến trình app): xoay máy hay quay về từ camera không làm mất phiên làm việc. Nếu Android kill tiến trình khi đang ở camera, màn đang mở, bản nháp và không gian làm việc (vai trò, hồ sơ đang chọn) được khôi phục; dữ liệu demo đã sửa thì về seed.
   - iOS: `IosPlatformServices` có chụp ảnh (chưa build); chọn ảnh chưa có trên iOS.
 - iOS: target đã khai báo, code `iosMain` chưa được build (cần macOS + Xcode).

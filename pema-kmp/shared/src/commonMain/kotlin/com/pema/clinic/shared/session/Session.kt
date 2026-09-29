@@ -114,5 +114,12 @@ class SessionStore(private val catalog: CatalogRepository) {
 
     fun selectedProfile(): PatientProfile = catalog.catalog().profiles[state.value.selected]
 
+    /** Puts back a workspace saved by the UI after Android recreated the process. */
+    fun restore(session: Session) {
+        val count = catalog.catalog().profiles.size
+        if (session.staffSelected !in 0 until count || session.careSelected !in 0 until count) return
+        mutableState.value = session
+    }
+
     fun selectedPatientId(): String = selectedProfile().id
 }

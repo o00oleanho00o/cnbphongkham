@@ -10,8 +10,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -53,6 +60,7 @@ import com.pema.clinic.feature.schedule.patientAppointmentsGraph
 import com.pema.clinic.feature.schedule.scheduleGraph
 import com.pema.clinic.feature.workspace.workspaceGraph
 import com.pema.clinic.shared.session.Session
+import com.pema.clinic.shared.session.SessionStore
 
 /**
  * Flutter `PemaApp` + `AppRouter`: always starts at Workspace, pushes task
@@ -65,6 +73,7 @@ fun App(financeApi: String = ApiConfig.DEFAULT_FINANCE_API) {
     val navController = rememberNavController()
     val navigator = remember(navController) { ShellNavigator(navController) }
     val container = remember(financeApi) { AppStores.get(financeApi) }
+    RestoreSessionAfterProcessDeath(container.sessionStore)
     val deps = remember(container, navigator, platform) { container.deps(navigator, platform) }
     navigator.session = { container.sessionStore.state.value }
     val snackbar = remember { SnackbarHostState() }
@@ -162,3 +171,32 @@ internal fun resolveRoute(route: String, session: Session?): String {
         else -> guarded(Routes.titleOf(id), id)
     }
 }
+
+/**
+ * Android can kill the process while another app (camera, photo picker) is in front and later
+ * restore the back stack into a fresh process. The workspace is saved with the back stack and put
+ * back before [NavHost] composes, so a restored screen keeps its role and selected patient instead
+ * of showing, e.g., a Pema Care screen under the default owner workspace.
+ */
+@Composable
+private fun RestoreSessionAfterProcessDeath(store: SessionStore) {
+    var saved by rememberSaveable(stateSaver = SessionSaver) { mutableStateOf(store.state.value) }
+    remember(store) {
+        if (saved != store.state.value) store.restore(saved)
+    }
+    LaunchedEffect(store) { store.state.collect { saved = it } }
+}
+
+internal val SessionSaver: Saver<Session, Any> = listSaver(
+    save = { listOf(it.careMode, it.staffRole, it.staffDoctor, it.staffName, it.staffSelected, it.careSelected) },
+    restore = {
+        Session(
+            careMode = it[0] as Boolean,
+            staffRole = it[1] as String,
+            staffDoctor = it[2] as String,
+            staffName = it[3] as String,
+            staffSelected = it[4] as Int,
+            careSelected = it[5] as Int,
+        )
+    },
+)

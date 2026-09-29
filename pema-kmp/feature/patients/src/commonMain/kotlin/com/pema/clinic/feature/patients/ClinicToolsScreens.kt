@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -270,25 +271,43 @@ private fun RowScope.StudioPhotoPanel(label: String, photo: StudioPhoto? = null)
     }
 }
 
-/** Web "So sánh trượt": after-photo revealed over the before-photo by a slider. */
+/**
+ * Web "So sánh trượt": the before-photo covers the left part of the after-photo up to the slider
+ * position (`clip-path: inset(0 (100-v)% 0 0)`), labelled "Trước ← → Sau".
+ */
 @Composable
 private fun StudioSlider(before: StudioPhoto, after: StudioPhoto) {
     var fraction by remember { mutableStateOf(0.5f) }
     Box(Modifier.fillMaxWidth()) {
-        LocalPhoto(path = before.path, height = 330.dp, label = "Trước · ${viDate(before.date)}")
+        LocalPhoto(path = after.path, height = 330.dp)
         Box(
             Modifier
                 .fillMaxWidth()
                 .drawWithContent { clipRect(right = size.width * fraction) { this@drawWithContent.drawContent() } },
         ) {
-            LocalPhoto(path = after.path, height = 330.dp, label = "Sau · ${viDate(after.date)}")
+            LocalPhoto(path = before.path, height = 330.dp)
         }
+        StudioSliderLabel("Trước ← → Sau", Modifier.align(Alignment.TopStart))
+        StudioSliderLabel("Trước · ${viDate(before.date)}", Modifier.align(Alignment.BottomStart))
+        StudioSliderLabel("Sau · ${viDate(after.date)}", Modifier.align(Alignment.BottomEnd))
     }
     Slider(
         value = fraction,
         onValueChange = { fraction = it },
         modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Vị trí so sánh trước và sau" },
         colors = SliderDefaults.colors(thumbColor = PemaColors.Blue, activeTrackColor = PemaColors.Blue),
+    )
+}
+
+@Composable
+private fun StudioSliderLabel(text: String, modifier: Modifier) {
+    Text(
+        text,
+        style = PemaType.of(11f, color = Color.White),
+        modifier = modifier
+            .padding(8.dp)
+            .background(PemaColors.Black54, RoundedCornerShape(8.dp))
+            .padding(horizontal = 8.dp, vertical = 3.dp),
     )
 }
 

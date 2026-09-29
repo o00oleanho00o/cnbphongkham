@@ -3096,7 +3096,8 @@
       ],
       "differences": [],
       "gotchas": [
-        "Bản nháp dùng `rememberSaveable(saver = SendUpdateDraft.Saver)`; collect `camera.recoveredPhotos()` để nhận ảnh khi Android tạo lại activity; xóa ảnh chưa gửi bằng `OnScreenCleared`, không dùng `DisposableEffect`."
+        "Bản nháp dùng `rememberSaveable(saver = SendUpdateDraft.Saver)`; collect `camera.recoveredPhotos()` để nhận ảnh khi Android tạo lại activity; xóa ảnh chưa gửi bằng `OnScreenCleared`, không dùng `DisposableEffect`.",
+        "Đã test trên Xiaomi M2003J15SC (Android 12/MIUI): tiến trình bị kill khi đang mở camera vẫn nhận lại ảnh và chữ. Không gian làm việc (Session) được lưu cùng back stack (`RestoreSessionAfterProcessDeath` trong App.kt), nên G2 khôi phục vẫn thuộc Pema Care."
       ],
       "todo": [],
       "status": "ported"
@@ -4928,12 +4929,15 @@
       "rules": [
         "Lối vào: mục \"Vận hành phòng khám\" ở cuối màn chính của vai trò (lọc theo quyền).",
         "\"Thêm ảnh\" như web `capture`: mở J5 Ghi buổi điều trị (ảnh gắn với buổi + đồng ý ảnh).",
-        "\"So sánh trượt\" chỉ khi có 2 ảnh khác nhau."
+        "\"So sánh trượt\" chỉ khi có 2 ảnh khác nhau.",
+        "So sánh trượt như web: ảnh Sau làm nền, ảnh Trước phủ phần bên trái tới vị trí thanh trượt (`clip-path: inset(0 (100-v)% 0 0)`), nhãn \"Trước ← → Sau\" góc trên; ngày Trước/Sau ở hai góc dưới."
       ],
       "differences": [
         "Dữ liệu seed web (DAY = 2026-09-20, P001 Nguyễn Minh Linh) thay tên/ngày minh họa của canvas."
       ],
-      "gotchas": [],
+      "gotchas": [
+        "Đã test trên máy thật: bản đầu đảo chiều (Sau ở trái). Canvas không vẽ chế độ trượt, nên theo web."
+      ],
       "todo": [],
       "status": "ported"
     },
@@ -5966,7 +5970,8 @@
         "Dữ liệu seed web thay tên/ngày minh họa."
       ],
       "gotchas": [
-        "Ảnh chưa lưu bị xóa bằng `OnScreenCleared` khi đóng màn; ảnh đã lưu thuộc về buổi điều trị."
+        "Ảnh chưa lưu bị xóa bằng `OnScreenCleared` khi đóng màn; ảnh đã lưu thuộc về buổi điều trị.",
+        "Ô đồng ý ảnh mặc định lấy `patient.photoConsent` (P001 đã tick sẵn) — chạm vào là bỏ tick, không phải lỗi chạm."
       ],
       "todo": [],
       "status": "ported"
