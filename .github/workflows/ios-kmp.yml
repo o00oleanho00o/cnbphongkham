@@ -1,11 +1,8 @@
 name: iOS build (pema-kmp)
 
 on:
+  # Manual only: Actions tab → "iOS build (pema-kmp)" → Run workflow.
   workflow_dispatch:
-  push:
-    paths:
-      - "pema-kmp/**"
-      - ".github/workflows/ios-kmp.yml"
 
 concurrency:
   group: ios-kmp-${{ github.ref }}
