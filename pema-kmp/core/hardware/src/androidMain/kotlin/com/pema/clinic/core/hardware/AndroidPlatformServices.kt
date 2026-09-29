@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.ImageBitmap
@@ -48,6 +49,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -57,6 +59,7 @@ actual fun rememberPlatformServices(): PlatformServices {
     val context = LocalContext.current
     val view = LocalView.current
     var pendingRawPath by rememberSaveable { mutableStateOf<String?>(null) }
+    val drafts = rememberSaveable(saver = DraftPhotos.Saver) { DraftPhotos() }
     val cameraCoordinator = remember { AndroidResultCoordinator<Boolean>() }
     val pickCoordinator = remember { AndroidResultCoordinator<Uri?>() }
     val notificationCoordinator = remember { AndroidPermissionCoordinator() }
@@ -89,6 +92,7 @@ actual fun rememberPlatformServices(): PlatformServices {
                 setPendingRawPath = { pendingRawPath = it },
                 launcher = cameraLauncher,
                 pickLauncher = pickLauncher,
+                drafts = drafts,
             ),
             images = AndroidImageLoader(),
             printer = AndroidPrinter(context),
@@ -164,11 +168,13 @@ private class AndroidCameraService(
     private val setPendingRawPath: (String?) -> Unit,
     private val launcher: ManagedActivityResultLauncher<Uri, Boolean>,
     private val pickLauncher: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>,
+    private val drafts: DraftPhotos,
 ) : CameraService {
     private val appContext: Context = context.applicationContext
 
     init {
         cleanOrphanRawFiles(photoDir(), keep = getPendingRawPath())
+        StalePhotoSweep.runOnce(photoDir(), keep = drafts.snapshot())
     }
 
     override suspend fun isAvailable(): Boolean = withContext(Dispatchers.Default) {
@@ -177,7 +183,8 @@ private class AndroidCameraService(
             intent.resolveActivity(appContext.packageManager) != null
     }
 
-    override fun recoveredPhotos(): Flow<CapturedPhoto> = CameraRecovery.photos.receiveAsFlow()
+    override fun recoveredPhotos(): Flow<CapturedPhoto> =
+        CameraRecovery.photos.receiveAsFlow().onEach { drafts.add(it.path) }
 
     override suspend fun pick(): CapturedPhoto? {
         val result = CompletableDeferred<Uri?>()
@@ -192,7 +199,7 @@ private class AndroidCameraService(
         }
         return try {
             val uri = result.await() ?: return null
-            withContext(Dispatchers.IO) { importPickedPhoto(appContext, uri) }
+            withContext(Dispatchers.IO) { importPickedPhoto(appContext, uri) }.also { drafts.add(it.path) }
         } finally {
             pickCoordinator.clear(result)
         }
@@ -238,7 +245,7 @@ private class AndroidCameraService(
                 rawFile.delete()
                 null
             } else {
-                withContext(Dispatchers.Default) { processRawPhoto(appContext, rawFile) }
+                withContext(Dispatchers.Default) { processRawPhoto(appContext, rawFile) }.also { drafts.add(it.path) }
             }
         } finally {
             coordinator.clear(result)
@@ -253,10 +260,15 @@ private class AndroidCameraService(
     }
 
     override suspend fun discard(photo: CapturedPhoto) {
+        drafts.remove(photo.path)
         withContext(Dispatchers.IO) {
             val file = File(photo.path)
             if (isInsidePhotosDir(file, photoDir())) file.delete()
         }
+    }
+
+    override fun markSaved(path: String) {
+        drafts.remove(path)
     }
 
     private fun photoDir(): File = File(appContext.cacheDir, "photos").apply { mkdirs() }
@@ -498,6 +510,41 @@ private fun cleanOrphanRawFiles(dir: File, keep: String?) {
         (file.name.startsWith("raw_") && file.absolutePath != keep) ||
             (file.name.startsWith("pick_") && file.lastModified() < cutoff)
     }?.forEach { it.delete() }
+}
+
+/**
+ * Photos handed to a screen and neither discarded nor saved yet. Saved with the activity state, so
+ * a draft restored after Android killed the process still has its file.
+ */
+private class DraftPhotos(initial: Collection<String> = emptyList()) {
+    private val paths = LinkedHashSet(initial)
+
+    @Synchronized fun add(path: String) { paths += path }
+    @Synchronized fun remove(path: String) { paths -= path }
+    @Synchronized fun snapshot(): List<String> = paths.toList()
+
+    companion object {
+        val Saver = Saver<DraftPhotos, ArrayList<String>>(
+            save = { ArrayList(it.snapshot()) },
+            restore = { DraftPhotos(it) },
+        )
+    }
+}
+
+/**
+ * Demo data lives in memory, so photos sent or saved by a previous process belong to nothing once
+ * the process restarts. On the first camera service of a process, delete every processed photo
+ * (`pema_*`) except the drafts restored with the activity state.
+ */
+private object StalePhotoSweep {
+    private var done = false
+
+    @Synchronized
+    fun runOnce(dir: File, keep: Collection<String>) {
+        if (done) return
+        done = true
+        dir.listFiles { file -> file.name.startsWith("pema_") && file.absolutePath !in keep }?.forEach { it.delete() }
+    }
 }
 
 private fun processRawPhotoOrThrow(context: Context, source: File): CapturedPhoto {

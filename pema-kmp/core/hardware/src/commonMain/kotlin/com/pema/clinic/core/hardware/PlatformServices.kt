@@ -24,6 +24,12 @@ interface CameraService {
      */
     fun recoveredPhotos(): Flow<CapturedPhoto> = emptyFlow()
     suspend fun discard(photo: CapturedPhoto)
+    /**
+     * The photo was sent/saved into the app's (in-memory) demo data, so it is no longer a draft.
+     * Drafts survive Android restarting the process; saved photos are removed on the next process
+     * start, when the demo data they belonged to is gone.
+     */
+    fun markSaved(path: String) {}
 }
 interface ImageLoader { suspend fun load(path: String, maxHeightPx: Int): ImageBitmap? }
 interface Printer { suspend fun printA5(title: String, lines: List<String>): Boolean }

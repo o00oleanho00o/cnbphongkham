@@ -8,6 +8,7 @@ class FakeCameraService(
     private var nextPhoto: CapturedPhoto? = CapturedPhoto("fake://photo.jpg", 1024, 768, 64_000),
 ) : CameraService {
     val discarded = mutableListOf<CapturedPhoto>()
+    val saved = mutableListOf<String>()
     /** Emit here to simulate a photo recovered after the screen was recreated. */
     val recovered = kotlinx.coroutines.channels.Channel<CapturedPhoto>(kotlinx.coroutines.channels.Channel.UNLIMITED)
     fun setAvailable(value: Boolean) { available = value }
@@ -17,6 +18,7 @@ class FakeCameraService(
     override suspend fun pick(): CapturedPhoto? = nextPhoto
     override fun recoveredPhotos(): Flow<CapturedPhoto> = recovered.receiveAsFlow()
     override suspend fun discard(photo: CapturedPhoto) { discarded += photo }
+    override fun markSaved(path: String) { saved += path }
 }
 
 class FakeImageLoader : ImageLoader {

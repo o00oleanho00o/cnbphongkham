@@ -473,6 +473,7 @@ internal fun SessionRecordRoute(deps: FeatureDeps) {
                     staff,
                 )
                 // The photo now belongs to the session record.
+                photoPath?.let(camera::markSaved)
                 pending.path = null
                 photoPath = null
                 messenger.show("Đã lưu buổi điều trị và cập nhật hành trình")

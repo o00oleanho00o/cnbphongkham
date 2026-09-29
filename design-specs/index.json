@@ -3097,7 +3097,8 @@
       "differences": [],
       "gotchas": [
         "Bản nháp dùng `rememberSaveable(saver = SendUpdateDraft.Saver)`; collect `camera.recoveredPhotos()` để nhận ảnh khi Android tạo lại activity; xóa ảnh chưa gửi bằng `OnScreenCleared`, không dùng `DisposableEffect`.",
-        "Đã test trên Xiaomi M2003J15SC (Android 12/MIUI): tiến trình bị kill khi đang mở camera vẫn nhận lại ảnh và chữ. Không gian làm việc (Session) được lưu cùng back stack (`RestoreSessionAfterProcessDeath` trong App.kt), nên G2 khôi phục vẫn thuộc Pema Care."
+        "Đã test trên Xiaomi M2003J15SC (Android 12/MIUI): tiến trình bị kill khi đang mở camera vẫn nhận lại ảnh và chữ. Không gian làm việc (Session) được lưu cùng back stack (`RestoreSessionAfterProcessDeath` trong App.kt), nên G2 khôi phục vẫn thuộc Pema Care.",
+        "Gửi thành công gọi `camera.markSaved(path)` (trong `SendUpdateDraft.submit`): ảnh hết là nháp, và bị xoá ở lần khởi động tiến trình sau."
       ],
       "todo": [],
       "status": "ported"
@@ -5971,7 +5972,8 @@
       ],
       "gotchas": [
         "Ảnh chưa lưu bị xóa bằng `OnScreenCleared` khi đóng màn; ảnh đã lưu thuộc về buổi điều trị.",
-        "Ô đồng ý ảnh mặc định lấy `patient.photoConsent` (P001 đã tick sẵn) — chạm vào là bỏ tick, không phải lỗi chạm."
+        "Ô đồng ý ảnh mặc định lấy `patient.photoConsent` (P001 đã tick sẵn) — chạm vào là bỏ tick, không phải lỗi chạm.",
+        "Lưu buổi có ảnh gọi `camera.markSaved(path)` trước khi xoá `pending.path`."
       ],
       "todo": [],
       "status": "ported"

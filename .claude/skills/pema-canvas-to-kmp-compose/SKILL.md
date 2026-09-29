@@ -174,6 +174,7 @@ Nếu MIUI báo `INSTALL_FAILED_USER_RESTRICTED`, không cố bypass: người d
 | Build Gradle lock | Đợi 30–60 giây và chạy lại; không chạy nhiều Gradle full-build đồng thời |
 | Xoay máy reset toàn bộ phiên | Store phải nằm ngoài composition (`AppStores` theo tiến trình); chỉ dựng lại `FeatureDeps` với navigator/platform của activity mới |
 | Ảnh chụp mất khi Android tạo lại activity lúc đang mở camera | Không thu hồi quyền URI / không xóa file khi coroutine bị hủy; activity mới nhận kết quả rồi phát qua `recoveredPhotos()`; dọn file tạm bằng `OnScreenCleared` thay vì `DisposableEffect` |
+| Ảnh đã gửi/lưu nằm lại trong `cache/photos` sau khi tiến trình bị kill | Màn gọi `camera.markSaved(path)` khi gửi/lưu; lớp Android lưu danh sách ảnh nháp cùng saved state và, lần đầu mỗi tiến trình, xóa mọi `pema_*` không phải nháp |
 
 ## 10. Kết thúc
 

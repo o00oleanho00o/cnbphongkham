@@ -67,7 +67,7 @@
     "G2": {
       "rules": ["Có ảnh thì phải tick \"Tôi đồng ý chia sẻ ảnh để chăm sóc\" mới gửi được."],
       "logic": ["Camera: `deps.platform.camera.capture()` (app camera hệ thống, không cần quyền CAMERA), ảnh 1600px JPEG 85 bỏ EXIF/GPS trong `cache/photos`."],
-      "gotchas": ["Bản nháp dùng `rememberSaveable(saver = SendUpdateDraft.Saver)`; collect `camera.recoveredPhotos()` để nhận ảnh khi Android tạo lại activity; xóa ảnh chưa gửi bằng `OnScreenCleared`, không dùng `DisposableEffect`.", "Đã test trên Xiaomi M2003J15SC (Android 12/MIUI): tiến trình bị kill khi đang mở camera vẫn nhận lại ảnh và chữ. Không gian làm việc (Session) được lưu cùng back stack (`RestoreSessionAfterProcessDeath` trong App.kt), nên G2 khôi phục vẫn thuộc Pema Care."]
+      "gotchas": ["Bản nháp dùng `rememberSaveable(saver = SendUpdateDraft.Saver)`; collect `camera.recoveredPhotos()` để nhận ảnh khi Android tạo lại activity; xóa ảnh chưa gửi bằng `OnScreenCleared`, không dùng `DisposableEffect`.", "Đã test trên Xiaomi M2003J15SC (Android 12/MIUI): tiến trình bị kill khi đang mở camera vẫn nhận lại ảnh và chữ. Không gian làm việc (Session) được lưu cùng back stack (`RestoreSessionAfterProcessDeath` trong App.kt), nên G2 khôi phục vẫn thuộc Pema Care.", "Gửi thành công gọi `camera.markSaved(path)` (trong `SendUpdateDraft.submit`): ảnh hết là nháp, và bị xoá ở lần khởi động tiến trình sau."]
     },
     "G5": { "logic": ["Trước = ảnh đầu tiên (khi có ≥ 2 ảnh), Gần nhất = ảnh cuối, từ `PatientState.photos`."] },
     "H7": { "rules": ["Trạng thái lỗi khi API tài chính tắt, nút \"Thử lại\"."] },
@@ -108,7 +108,7 @@
     "J5": {
       "logic": ["Web session tab + save-session; `recordTreatmentSession` (TreatmentSessionInput.photoPath = ảnh mốc)."],
       "rules": ["Có ảnh mốc thì phải có đồng ý ảnh; lưu không ảnh → tạo follow-up \"Thiếu ảnh mốc đánh giá\".", "Ảnh mốc: sheet \"Chụp ảnh / Chọn ảnh có sẵn\" (`PemaPhotoSourceSheet`), xem trước + Chụp lại / Chọn ảnh khác / Bỏ ảnh."],
-      "gotchas": ["Ảnh chưa lưu bị xóa bằng `OnScreenCleared` khi đóng màn; ảnh đã lưu thuộc về buổi điều trị.", "Ô đồng ý ảnh mặc định lấy `patient.photoConsent` (P001 đã tick sẵn) — chạm vào là bỏ tick, không phải lỗi chạm."]
+      "gotchas": ["Ảnh chưa lưu bị xóa bằng `OnScreenCleared` khi đóng màn; ảnh đã lưu thuộc về buổi điều trị.", "Ô đồng ý ảnh mặc định lấy `patient.photoConsent` (P001 đã tick sẵn) — chạm vào là bỏ tick, không phải lỗi chạm.", "Lưu buổi có ảnh gọi `camera.markSaved(path)` trước khi xoá `pending.path`."]
     },
     "J6": { "logic": ["Web finance tab + `care-finance.js`; `careFinanceSummary(patientId)`."], "rules": ["Không suy ra hoàn tất điều trị từ thanh toán.", "\"Mở thu ngân\" chỉ khi có capability billing."] },
     "J7": { "logic": ["Web `crm-ui.js` patient CRM panel; \"Sửa ngày dự kiến\" → `setExpectedVisit`."] },

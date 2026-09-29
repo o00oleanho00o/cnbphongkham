@@ -79,9 +79,10 @@ internal class SendUpdateDraft(
         consent = false
     }
 
-    fun submit(store: PatientsStore, patientId: String): Boolean {
+    fun submit(store: PatientsStore, patientId: String, camera: CameraService): Boolean {
         if (!canSend) return false
         store.submitPatientUpdate(patientId, text, photo?.path)
+        photo?.let { camera.markSaved(it.path) }
         sent = true
         return true
     }

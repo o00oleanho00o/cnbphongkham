@@ -137,7 +137,7 @@ internal fun SendUpdateRoute(deps: FeatureDeps) {
             },
             onRemovePhoto = { scope.launch { draft.removePhoto(camera) } },
             onSubmit = {
-                if (draft.submit(deps.patientsStore, patientId)) {
+                if (draft.submit(deps.patientsStore, patientId, camera)) {
                     messenger.show("Đã gửi • Chờ đội ngũ xem")
                     deps.navigator.back()
                 }
