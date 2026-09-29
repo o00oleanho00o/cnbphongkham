@@ -1,7 +1,11 @@
 name: iOS build (pema-kmp)
 
 on:
-  # Manual only: Actions tab → "iOS build (pema-kmp)" → Run workflow.
+  # Runs on every push that touches pema-kmp; manual runs can pick the target.
+  push:
+    paths:
+      - "pema-kmp/**"
+      - ".github/workflows/ios-kmp.yml"
   workflow_dispatch:
     inputs:
       target:
@@ -18,8 +22,11 @@ concurrency:
 
 jobs:
   build:
-    name: Build (${{ inputs.target }})
+    name: Build (${{ inputs.target || 'simulator' }})
     runs-on: macos-latest
+    env:
+      # Push events have no inputs: build the simulator app by default.
+      TARGET: ${{ inputs.target || 'simulator' }}
     timeout-minutes: 60
     defaults:
       run:
@@ -55,7 +62,7 @@ jobs:
           xcodegen generate
 
       - name: Build app (simulator)
-        if: inputs.target == 'simulator'
+        if: env.TARGET == 'simulator'
         working-directory: pema-kmp/iosApp
         run: |
           xcodebuild \
@@ -69,12 +76,12 @@ jobs:
             build
 
       - name: Zip simulator app
-        if: inputs.target == 'simulator'
+        if: env.TARGET == 'simulator'
         working-directory: pema-kmp/iosApp/build/Debug-iphonesimulator
         run: zip -qry Pema-simulator.zip Pema.app
 
       - name: Build app (device, unsigned)
-        if: inputs.target == 'device'
+        if: env.TARGET == 'device'
         working-directory: pema-kmp/iosApp
         run: |
           xcodebuild \
@@ -90,7 +97,7 @@ jobs:
             build
 
       - name: Package unsigned IPA
-        if: inputs.target == 'device'
+        if: env.TARGET == 'device'
         working-directory: pema-kmp/iosApp/build
         run: |
           mkdir -p Payload
@@ -99,7 +106,7 @@ jobs:
 
       # Direct upload: the artifact is the file itself, no extra zip to extract.
       - name: Upload simulator app
-        if: inputs.target == 'simulator'
+        if: env.TARGET == 'simulator'
         uses: actions/upload-artifact@v7
         with:
           path: pema-kmp/iosApp/build/Debug-iphonesimulator/Pema-simulator.zip
@@ -107,7 +114,7 @@ jobs:
           retention-days: 14
 
       - name: Upload unsigned IPA
-        if: inputs.target == 'device'
+        if: env.TARGET == 'device'
         uses: actions/upload-artifact@v7
         with:
           path: pema-kmp/iosApp/build/Pema-unsigned.ipa
