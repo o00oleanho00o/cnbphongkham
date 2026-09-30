@@ -50,9 +50,10 @@ class AftercareLogicTest {
         assertEquals(listOf("/cache/photos/a.jpg"), camera.discarded)
 
         draft.consent = true
-        assertTrue(draft.submit(patients, id))
+        assertTrue(draft.submit(patients, id, camera))
         assertEquals(listOf("/cache/photos/b.jpg"), patients.of(id).photos)
         assertEquals(listOf("Da đỡ đỏ"), patients.of(id).updates)
+        assertEquals(listOf("/cache/photos/b.jpg"), camera.saved)
 
         draft.dispose(camera)
         assertEquals(listOf("/cache/photos/a.jpg"), camera.discarded)
@@ -118,6 +119,7 @@ class AftercareLogicTest {
 private class QueueCamera(vararg results: Any?) : CameraService {
     private val pending = results.toMutableList()
     val discarded = mutableListOf<String>()
+    val saved = mutableListOf<String>()
 
     override suspend fun isAvailable(): Boolean = true
 
@@ -129,6 +131,10 @@ private class QueueCamera(vararg results: Any?) : CameraService {
 
     override suspend fun discard(photo: CapturedPhoto) {
         discarded += photo.path
+    }
+
+    override fun markSaved(path: String) {
+        saved += path
     }
 }
 

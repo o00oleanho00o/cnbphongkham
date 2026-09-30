@@ -129,6 +129,15 @@ class WorkspaceShotsTest {
         shotVsCanvas("E2") { WorkspaceScreen(state = state(session = Session(careMode = true, careSelected = index), tab = 1)) }
     }
 
+    /** Canvas K3: the same Journey tab with the web patient record (timeline + progress disclaimer). */
+    @Test fun k3CareJourneyUpdates() {
+        val index = catalog.profiles.indexOfFirst { it.careGroup == "d1" }.coerceAtLeast(0)
+        val clinicPatient = com.pema.clinic.shared.clinic.ClinicStore().patient(catalog.profiles[index].id)
+        shotVsCanvas("K3") {
+            WorkspaceScreen(state = state(session = Session(careMode = true, careSelected = index), tab = 1).copy(clinicPatient = clinicPatient))
+        }
+    }
+
     @Test fun e3CareMessages() {
         val index = catalog.profiles.indexOfFirst { it.careGroup == "d1" }.coerceAtLeast(0)
         val profile = catalog.profiles[index]

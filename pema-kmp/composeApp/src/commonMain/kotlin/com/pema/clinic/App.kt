@@ -10,8 +10,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -35,15 +42,25 @@ import com.pema.clinic.core.ui.widgets.LocalPemaSnackbar
 import com.pema.clinic.core.ui.widgets.PemaMessenger
 import com.pema.clinic.core.ui.widgets.PemaNotice
 import com.pema.clinic.feature.aftercare.aftercareGraph
+import com.pema.clinic.feature.aftercare.followUpInboxGraph
 import com.pema.clinic.feature.billing.billingGraph
+import com.pema.clinic.feature.billing.invoiceCashierGraph
+import com.pema.clinic.feature.billing.patientDocumentsGraph
 import com.pema.clinic.feature.care.careGraph
+import com.pema.clinic.feature.care.careRecordGraph
 import com.pema.clinic.feature.finance.PaymentAlerts
 import com.pema.clinic.feature.finance.financeGraph
+import com.pema.clinic.feature.operations.operationsGraph
 import com.pema.clinic.feature.orders.ordersGraph
+import com.pema.clinic.feature.patients.clinicToolsGraph
+import com.pema.clinic.feature.patients.patient360AdminGraph
+import com.pema.clinic.feature.patients.patient360ClinicalGraph
 import com.pema.clinic.feature.patients.patientsGraph
+import com.pema.clinic.feature.schedule.patientAppointmentsGraph
 import com.pema.clinic.feature.schedule.scheduleGraph
 import com.pema.clinic.feature.workspace.workspaceGraph
 import com.pema.clinic.shared.session.Session
+import com.pema.clinic.shared.session.SessionStore
 
 /**
  * Flutter `PemaApp` + `AppRouter`: always starts at Workspace, pushes task
@@ -55,8 +72,10 @@ fun App(financeApi: String = ApiConfig.DEFAULT_FINANCE_API) {
     val platform = rememberPlatformServices()
     val navController = rememberNavController()
     val navigator = remember(navController) { ShellNavigator(navController) }
-    val container = remember(platform, navigator, financeApi) { AppContainer(navigator, platform, financeApi) }
-    navigator.session = { container.deps.sessionStore.state.value }
+    val container = remember(financeApi) { AppStores.get(financeApi) }
+    RestoreSessionAfterProcessDeath(container.sessionStore)
+    val deps = remember(container, navigator, platform) { container.deps(navigator, platform) }
+    navigator.session = { container.sessionStore.state.value }
     val snackbar = remember { SnackbarHostState() }
     val rootScope = rememberCoroutineScope()
     val messenger = remember(snackbar, rootScope) { PemaMessenger(snackbar, rootScope) }
@@ -68,7 +87,7 @@ fun App(financeApi: String = ApiConfig.DEFAULT_FINANCE_API) {
         LocalOnBack provides navigator::back,
     ) {
         PemaTheme {
-            PaymentAlerts(container.deps) {
+            PaymentAlerts(deps) {
                 Box(Modifier.fillMaxSize().background(PemaColors.Paper)) {
                     NavHost(
                         navController = navController,
@@ -78,14 +97,24 @@ fun App(financeApi: String = ApiConfig.DEFAULT_FINANCE_API) {
                         popEnterTransition = { fadeIn(tween(220)) + scaleIn(tween(300), initialScale = 1.04f) },
                         popExitTransition = { fadeOut(tween(160)) + scaleOut(tween(300), targetScale = 0.94f) },
                     ) {
-                        workspaceGraph(container.deps)
-                        scheduleGraph(container.deps)
-                        patientsGraph(container.deps)
-                        aftercareGraph(container.deps)
-                        ordersGraph(container.deps)
-                        billingGraph(container.deps)
-                        careGraph(container.deps)
-                        financeGraph(container.deps)
+                        workspaceGraph(deps)
+                        scheduleGraph(deps)
+                        patientsGraph(deps)
+                        aftercareGraph(deps)
+                        ordersGraph(deps)
+                        billingGraph(deps)
+                        careGraph(deps)
+                        financeGraph(deps)
+                        // Web-only screens (canvas I/J/K).
+                        operationsGraph(deps)
+                        clinicToolsGraph(deps)
+                        followUpInboxGraph(deps)
+                        invoiceCashierGraph(deps)
+                        careRecordGraph(deps)
+                        patient360ClinicalGraph(deps)
+                        patient360AdminGraph(deps)
+                        patientAppointmentsGraph(deps)
+                        patientDocumentsGraph(deps)
                         composable(
                             Routes.DeniedPattern,
                             arguments = listOf(navArgument("route") { type = NavType.StringType; defaultValue = "" }),
@@ -132,6 +161,8 @@ internal fun resolveRoute(route: String, session: Session?): String {
     fun guarded(title: String, target: String) =
         if (session?.allows(title) == false) Routes.denied(title) else target
     if (route.startsWith("finance?") || route.startsWith(Routes.FinanceProcedure) || route.startsWith(Routes.FinanceRates)) return route
+    val base = route.substringBefore('?')
+    if (base != route && base in Routes.all) return guarded(Routes.titleOf(base), route)
     val id = if (route in Routes.all) route else Routes.idOf(route) ?: return guarded(route, Routes.guide(route))
     return when (id) {
         Routes.Finance -> Routes.finance(0)
@@ -140,3 +171,32 @@ internal fun resolveRoute(route: String, session: Session?): String {
         else -> guarded(Routes.titleOf(id), id)
     }
 }
+
+/**
+ * Android can kill the process while another app (camera, photo picker) is in front and later
+ * restore the back stack into a fresh process. The workspace is saved with the back stack and put
+ * back before [NavHost] composes, so a restored screen keeps its role and selected patient instead
+ * of showing, e.g., a Pema Care screen under the default owner workspace.
+ */
+@Composable
+private fun RestoreSessionAfterProcessDeath(store: SessionStore) {
+    var saved by rememberSaveable(stateSaver = SessionSaver) { mutableStateOf(store.state.value) }
+    remember(store) {
+        if (saved != store.state.value) store.restore(saved)
+    }
+    LaunchedEffect(store) { store.state.collect { saved = it } }
+}
+
+internal val SessionSaver: Saver<Session, Any> = listSaver(
+    save = { listOf(it.careMode, it.staffRole, it.staffDoctor, it.staffName, it.staffSelected, it.careSelected) },
+    restore = {
+        Session(
+            careMode = it[0] as Boolean,
+            staffRole = it[1] as String,
+            staffDoctor = it[2] as String,
+            staffName = it[3] as String,
+            staffSelected = it[4] as Int,
+            careSelected = it[5] as Int,
+        )
+    },
+)

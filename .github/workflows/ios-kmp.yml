@@ -1,0 +1,118 @@
+name: iOS build (pema-kmp)
+
+on:
+  # Manual only (Actions tab -> Run workflow); no automatic build on push.
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "simulator = .app zip for Appetize / iOS Simulator; device = unsigned .ipa for iPhone"
+        type: choice
+        options:
+          - simulator
+          - device
+        default: simulator
+
+concurrency:
+  group: ios-kmp-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (${{ inputs.target || 'simulator' }})
+    runs-on: macos-latest
+    env:
+      # Push events have no inputs: build the simulator app by default.
+      TARGET: ${{ inputs.target || 'simulator' }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: pema-kmp
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Cache Kotlin/Native toolchain
+        uses: actions/cache@v6
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('pema-kmp/gradle/libs.versions.toml', 'pema-kmp/build-logic/**/*.kts') }}
+          restore-keys: konan-${{ runner.os }}-
+
+      - name: Prepare Gradle
+        run: |
+          chmod +x gradlew
+          # The runner has 7 GB RAM; leave room for the Kotlin/Native linker.
+          mkdir -p ~/.gradle
+          echo "org.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=1g" >> ~/.gradle/gradle.properties
+
+      - name: Generate Xcode project
+        working-directory: pema-kmp/iosApp
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Build app (simulator)
+        if: env.TARGET == 'simulator'
+        working-directory: pema-kmp/iosApp
+        run: |
+          xcodebuild \
+            -project iosApp.xcodeproj \
+            -target iosApp \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -arch arm64 \
+            SYMROOT="$PWD/build" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Zip simulator app
+        if: env.TARGET == 'simulator'
+        working-directory: pema-kmp/iosApp/build/Debug-iphonesimulator
+        run: zip -qry Pema-simulator.zip Pema.app
+
+      - name: Build app (device, unsigned)
+        if: env.TARGET == 'device'
+        working-directory: pema-kmp/iosApp
+        run: |
+          xcodebuild \
+            -project iosApp.xcodeproj \
+            -target iosApp \
+            -configuration Release \
+            -sdk iphoneos \
+            -arch arm64 \
+            SYMROOT="$PWD/build" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package unsigned IPA
+        if: env.TARGET == 'device'
+        working-directory: pema-kmp/iosApp/build
+        run: |
+          mkdir -p Payload
+          cp -R Release-iphoneos/Pema.app Payload/
+          zip -qry Pema-unsigned.ipa Payload
+
+      # Direct upload: the artifact is the file itself, no extra zip to extract.
+      - name: Upload simulator app
+        if: env.TARGET == 'simulator'
+        uses: actions/upload-artifact@v7
+        with:
+          path: pema-kmp/iosApp/build/Debug-iphonesimulator/Pema-simulator.zip
+          archive: false
+          retention-days: 14
+
+      - name: Upload unsigned IPA
+        if: env.TARGET == 'device'
+        uses: actions/upload-artifact@v7
+        with:
+          path: pema-kmp/iosApp/build/Pema-unsigned.ipa
+          archive: false
+          retention-days: 14

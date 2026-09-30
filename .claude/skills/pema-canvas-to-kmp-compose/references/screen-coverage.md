@@ -4,10 +4,27 @@ Use this table when planning or reporting a port. It prevents saying “all scre
 
 | Canvas group | Source | Current definition |
 |---|---|---|
-| A–H | Flutter | Mobile KMP port scope. Includes workspace by role, operational routes, care mode, and finance. |
-| I | `prototype/clinic-web` | Clinic web-only additions. Separate scope from Flutter parity. |
-| J | `prototype/clinic-web` Patient 360 | Full web Patient 360 additions. Separate scope from Flutter parity. |
-| K | `prototype/patient-mobile` | Patient web/mobile additions. Separate scope from Flutter parity. |
+| A–H | Flutter | Mobile KMP port scope. Includes workspace by role, operational routes, care mode, and finance. **Ported and verified.** |
+| I | `prototype/clinic-web` | Clinic web-only additions. **Ported and verified** (logic from web JS via `shared/clinic`). |
+| J | `prototype/clinic-web` Patient 360 | Full web Patient 360 additions. **Ported and verified.** |
+| K | `prototype/patient-mobile` | Patient web/mobile additions. **Ported and verified** (K3 merged into the E2 Journey tab). |
+
+## Web-only group map (I/J/K)
+
+| Codes | KMP file |
+|---|---|
+| I1–I4, I8, I9 | `feature/operations/OperationsGraph.kt` |
+| I5, I7, I12 | `feature/patients/ClinicToolsScreens.kt` |
+| I6 | `feature/aftercare/FollowUpInbox.kt` |
+| I10, I11 | `feature/billing/InvoiceCashier.kt` |
+| I13 | `feature/care/CareRecordScreen.kt` |
+| J1–J5 | `feature/patients/Patient360Clinical.kt` |
+| J6–J11 | `feature/patients/Patient360Admin.kt` |
+| K1 | `feature/schedule/PatientAppointments.kt` |
+| K2 | `feature/billing/PatientDocuments.kt` |
+| K3 | `feature/workspace/WorkspaceGraph.kt` (care tab 1, `patientJourneyTimeline`) |
+
+Web domain: `shared/clinic/` (`ClinicModels`, `ClinicSeed`, `ClinicStore`, `Operations`, `CrmCommands`, `*Commands.kt`). Seed parity test: `ClinicSeedParityTest`.
 
 ## Flutter-backed group map
 

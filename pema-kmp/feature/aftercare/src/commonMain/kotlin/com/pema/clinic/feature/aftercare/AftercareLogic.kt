@@ -2,6 +2,8 @@ package com.pema.clinic.feature.aftercare
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.setValue
 import com.pema.clinic.core.hardware.CameraService
 import com.pema.clinic.core.hardware.CapturedPhoto
@@ -49,6 +51,12 @@ internal class SendUpdateDraft(
 
     val canSend: Boolean get() = canSendUpdate(text, photo != null, consent)
 
+    /** A photo recovered after the screen was recreated (see `CameraService.recoveredPhotos`). */
+    suspend fun attach(next: CapturedPhoto, camera: CameraService) {
+        photo?.takeIf { it.path != next.path }?.let { camera.discard(it) }
+        photo = next
+    }
+
     suspend fun capture(camera: CameraService): String? {
         capturing = true
         return try {
@@ -71,9 +79,10 @@ internal class SendUpdateDraft(
         consent = false
     }
 
-    fun submit(store: PatientsStore, patientId: String): Boolean {
+    fun submit(store: PatientsStore, patientId: String, camera: CameraService): Boolean {
         if (!canSend) return false
         store.submitPatientUpdate(patientId, text, photo?.path)
+        photo?.let { camera.markSaved(it.path) }
         sent = true
         return true
     }
@@ -81,5 +90,23 @@ internal class SendUpdateDraft(
     suspend fun dispose(camera: CameraService) {
         val pending = photo
         if (!sent && pending != null) camera.discard(pending)
+    }
+
+    companion object {
+        /** Keeps text, consent and the captured photo when Android recreates the screen. */
+        val Saver: Saver<SendUpdateDraft, Any> = listSaver(
+            save = { draft ->
+                val p = draft.photo
+                listOf(draft.text, draft.consent, p?.path ?: "", p?.width ?: 0, p?.height ?: 0, p?.bytes ?: 0L)
+            },
+            restore = { v ->
+                val path = v[2] as String
+                SendUpdateDraft(
+                    initialText = v[0] as String,
+                    initialConsent = v[1] as Boolean,
+                    initialPhoto = if (path.isEmpty()) null else CapturedPhoto(path, v[3] as Int, v[4] as Int, v[5] as Long),
+                )
+            },
+        )
     }
 }

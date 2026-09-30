@@ -36,6 +36,33 @@ object Routes {
     const val Privacy = "privacy"
     const val Guide = "guide"
 
+    // Web-only screens (canvas groups I/J/K), rebuilt from prototype/clinic-web and patient-mobile.
+    const val OpsDashboard = "ops-dashboard"
+    const val Reception = "reception"
+    const val RoomSchedule = "room-schedule"
+    const val AppointmentForm = "appointment-form"
+    const val NewPatient = "new-patient"
+    const val FollowUpInbox = "follow-up-inbox"
+    const val PhotoStudio = "photo-studio"
+    const val RoomBlock = "room-block"
+    const val ServiceEdit = "service-edit"
+    const val CashierInvoices = "cashier-invoices"
+    const val AskQuery = "ask-query"
+    const val CareRecord = "care-record"
+    const val ClinicalHistory = "clinical-history"
+    const val AiBrief = "ai-brief"
+    const val PlanOverview = "plan-overview"
+    const val PlanEdit = "plan-edit"
+    const val SessionRecord = "session-record"
+    const val PatientFinance = "patient-finance"
+    const val PatientCrm = "patient-crm"
+    const val PatientHistory = "patient-history"
+    const val PatientMessage = "patient-message"
+    const val PatientNotes = "patient-notes"
+    const val HomeCareSend = "home-care-send"
+    const val PatientAppointments = "patient-appointments"
+    const val PatientDocuments = "patient-documents"
+
     val titles: Map<String, String> = mapOf(
         Workspace to "Không gian làm việc",
         SessionPicker to "Chọn không gian",
@@ -65,7 +92,41 @@ object Routes {
         FollowUpReply to "Phản hồi",
         Privacy to "Quyền riêng tư",
         Guide to "Hướng dẫn",
+        OpsDashboard to "Tổng quan",
+        Reception to "Tiếp đón hôm nay",
+        RoomSchedule to "Điều phối theo phòng",
+        AppointmentForm to "Đặt lịch hẹn",
+        NewPatient to "Hồ sơ mới",
+        FollowUpInbox to "Follow-up Inbox",
+        PhotoStudio to "Ảnh trước / sau",
+        RoomBlock to "Khóa thời gian phòng",
+        ServiceEdit to "Chỉnh dịch vụ",
+        CashierInvoices to "Thu ngân · hóa đơn",
+        AskQuery to "Ask Pema · hỏi đáp",
+        CareRecord to "Ghi nhận CSKH",
+        ClinicalHistory to "Tiền sử & chẩn đoán",
+        AiBrief to "AI brief trước buổi hẹn",
+        // Unique key for idOf(); the screen's app bar shows "Kế hoạch điều trị" (see [appBarTitles]).
+        PlanOverview to "Kế hoạch điều trị · Clinic",
+        PlanEdit to "Điều chỉnh kế hoạch",
+        SessionRecord to "Ghi buổi điều trị",
+        PatientFinance to "Dịch vụ & tài chính",
+        PatientCrm to "CRM & CSKH hồ sơ",
+        PatientHistory to "Lịch sử hợp nhất",
+        PatientMessage to "Nhắn tin người bệnh",
+        PatientNotes to "Thông tin cần nhớ",
+        HomeCareSend to "Gửi chăm sóc tại nhà",
+        PatientAppointments to "Lịch hẹn",
+        PatientDocuments to "Tài liệu & hóa đơn",
     )
+
+    /** App bar titles that differ from the unique [titles] key. */
+    private val appBarTitles: Map<String, String> = mapOf(
+        PlanOverview to "Kế hoạch điều trị",
+    )
+
+    /** Title shown in the app bar for a route id (canvas screen title). */
+    fun appBarTitleOf(route: String): String = appBarTitles[route] ?: titleOf(route)
 
     /** Title (= Flutter route name) for a route id; unknown ids are returned unchanged. */
     fun titleOf(route: String): String = titles[route] ?: route
@@ -80,7 +141,22 @@ object Routes {
         SendUpdate, FollowUpReply, Privacy, Guide,
     )
 
-    val all = listOf(Workspace, SessionPicker, FinanceProcedure, FinanceRates) + flutterRoutes
+    /** Routes added from the web prototype (not in Flutter). */
+    val webRoutes = listOf(
+        OpsDashboard, Reception, RoomSchedule, AppointmentForm, NewPatient, FollowUpInbox, PhotoStudio,
+        RoomBlock, ServiceEdit, CashierInvoices, AskQuery, CareRecord, ClinicalHistory, AiBrief,
+        PlanOverview, PlanEdit, SessionRecord, PatientFinance, PatientCrm, PatientHistory, PatientMessage,
+        PatientNotes, HomeCareSend, PatientAppointments, PatientDocuments,
+    )
+
+    val all = listOf(Workspace, SessionPicker, FinanceProcedure, FinanceRates) + flutterRoutes + webRoutes
+
+    /**
+     * Route with query arguments, e.g. `withArgs(ServiceEdit, "id" to "S2")` → `service-edit?id=S2`.
+     * Register the destination as `"service-edit?id={id}"` with a default value.
+     */
+    fun withArgs(route: String, vararg args: Pair<String, String>): String =
+        if (args.isEmpty()) route else route + "?" + args.joinToString("&") { (k, v) -> k + "=" + encodeArg(v) }
 
     /** NavHost pattern for Finance; `tab` is the Flutter `initialTab` argument (0..3). */
     const val FinancePattern = "finance?tab={tab}"

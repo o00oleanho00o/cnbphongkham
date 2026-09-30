@@ -67,6 +67,8 @@ import com.pema.clinic.shared.catalog.PatientProfile
 import com.pema.clinic.shared.finance.FinanceState
 import com.pema.clinic.shared.patients.PatientState
 import com.pema.clinic.shared.session.Session
+import com.pema.clinic.shared.clinic.ClinicPatient
+import com.pema.clinic.shared.clinic.patientJourneyTimeline
 import com.pema.clinic.shared.util.money
 
 fun NavGraphBuilder.workspaceGraph(deps: FeatureDeps) {
@@ -89,6 +91,8 @@ internal fun WorkspaceRoute(deps: FeatureDeps) {
     val selected = session.selected.coerceIn(0, catalog.profiles.lastIndex)
     val profile = catalog.profiles[selected]
     val patient = remember(patientsSnapshot, profile.id) { deps.patientsStore.of(profile.id) }
+    val clinicState by deps.clinicStore.state.collectAsStateWithLifecycle()
+    val clinicPatient = remember(clinicState, profile.id) { clinicState.patients.firstOrNull { it.id == profile.id } }
 
     // Saveable: NavHost drops plain `remember` state when a detail route is pushed on top.
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
@@ -140,6 +144,7 @@ internal fun WorkspaceRoute(deps: FeatureDeps) {
             financeState = financeState,
             reviewProfiles = reviewProfiles,
             showAccountSheet = false,
+            clinicPatient = clinicPatient,
         ),
         deps = deps,
         callbacks = WorkspaceCallbacks(
@@ -173,6 +178,8 @@ data class WorkspaceUiState(
     val financeState: FinanceState = FinanceState(),
     val reviewProfiles: List<PatientProfile> = emptyList(),
     val showAccountSheet: Boolean = false,
+    /** Web record of the same patient (Pema Care web additions: K3 timeline, clinic messages); null in Flutter-only shots. */
+    val clinicPatient: ClinicPatient? = null,
 )
 
 data class WorkspaceCallbacks(
@@ -301,6 +308,7 @@ private fun OwnerBody(state: WorkspaceUiState, selectedTab: Int, callbacks: Work
                 PemaTile(title, "Mở ${title.lowercase()}", "chevron_right", { callbacks.onOpen(route) })
             }
             PemaNotice("Template tương tác • dữ liệu mẫu trong phiên. Chuyển Clinic/Care ở góc trên để duyệt bàn giao.")
+            WebOperationsSection(state.session, callbacks)
         }
         else -> {
             PemaHeading("Chào buổi sáng, BS. Tâm", "Thứ Ba · 22 tháng 09, 2026")
@@ -354,6 +362,7 @@ private fun StaffBody(state: WorkspaceUiState, selectedTab: Int, callbacks: Work
                 PemaTile("Tài chính & tiền thủ thuật", "Đối soát, phiếu thu, chính sách và chốt kỳ", "account_balance_wallet", { callbacks.onOpenFinance(0) })
             }
             PemaTile("Thu ngân theo hồ sơ", state.profile.name, "receipt_long", { callbacks.onOpen(Routes.Cashier) })
+            WebOperationsSection(state.session, callbacks)
         }
         "doctor" -> {
             PemaHeading("Lịch & hồ sơ của tôi", state.session.staffName)
@@ -369,6 +378,7 @@ private fun StaffBody(state: WorkspaceUiState, selectedTab: Int, callbacks: Work
                     callbacks.onOpen(Routes.FollowUpReply)
                 })
             }
+            WebOperationsSection(state.session, callbacks)
         }
         else -> {
             if (deps != null) {
@@ -376,7 +386,35 @@ private fun StaffBody(state: WorkspaceUiState, selectedTab: Int, callbacks: Work
             } else {
                 PemaNotice("CareQueue – đang chuyển đổi")
             }
+            WebOperationsSection(state.session, callbacks)
         }
+    }
+}
+
+/**
+ * Web-only clinic operations (canvas group I) the current role may open, listed after the
+ * Flutter body. Order follows the web sidebar (`clinic.js` nav).
+ */
+@Composable
+private fun WebOperationsSection(session: Session, callbacks: WorkspaceCallbacks) {
+    val entries = listOf(
+        Routes.OpsDashboard to "space_dashboard",
+        Routes.Reception to "how_to_reg",
+        Routes.RoomSchedule to "meeting_room",
+        Routes.AppointmentForm to "event_available",
+        Routes.NewPatient to "person_add",
+        Routes.FollowUpInbox to "inbox",
+        Routes.PhotoStudio to "compare",
+        Routes.RoomBlock to "block",
+        Routes.ServiceEdit to "edit",
+        Routes.CashierInvoices to "receipt_long",
+        Routes.AskQuery to "manage_search",
+    ).filter { session.allows(it.first) }
+    if (entries.isEmpty()) return
+    PemaSection("Vận hành phòng khám")
+    entries.forEach { (route, icon) ->
+        val title = Routes.appBarTitleOf(route)
+        PemaTile(title, "Mở ${title.lowercase()}", icon, { callbacks.onOpen(route) })
     }
 }
 
@@ -385,8 +423,13 @@ private fun CareBody(state: WorkspaceUiState, selectedTab: Int, callbacks: Works
     val name = state.profile.name
     when (selectedTab) {
         1 -> {
+            val journey = state.clinicPatient?.let { patientJourneyTimeline(it) }
             PemaHeading("Hành trình của bạn", "Mỗi bước chăm sóc đều được ghi nhận")
-            PemaHero("Phục hồi & chăm sóc da", "${state.patient.sessions}/${state.profile.totalSessions} buổi đã hoàn tất", "spa")
+            PemaHero(
+                "Phục hồi & chăm sóc da",
+                journey?.heroSubText ?: "${state.patient.sessions}/${state.profile.totalSessions} buổi đã hoàn tất",
+                "spa",
+            )
             listOf(
                 "Kế hoạch điều trị" to Routes.TreatmentPlan,
                 "Ảnh tiến triển" to Routes.ProgressPhotos,
@@ -395,10 +438,19 @@ private fun CareBody(state: WorkspaceUiState, selectedTab: Int, callbacks: Works
             ).forEach { (title, route) ->
                 PemaTile(title, "Xem chi tiết và hướng dẫn", "chevron_right", { callbacks.onOpen(route) })
             }
+            // Canvas K3 (patient-mobile journey): recent updates timeline.
+            if (journey != null && journey.updates.isNotEmpty()) {
+                PemaSection(journey.sectionTitle)
+                journey.updates.forEach { update -> PemaTile(update.dateLabel, update.title, update.icon, null) }
+            }
         }
         2 -> {
             PemaHeading("Tin nhắn", "Đội ngũ Pema luôn đồng hành")
             PemaNotice("Nếu có dấu hiệu bất thường nặng, hãy liên hệ trực tiếp. Tin nhắn không phải kênh cấp cứu.")
+            // Clinic messages sent from Patient 360 (canvas J9) as on patient-mobile web.
+            state.clinicPatient?.messages?.filter { it.from == "clinic" }?.forEach { message ->
+                PemaTile("Đội ngũ Pema · ${message.date}", message.text, "forum", null)
+            }
             state.patient.updates.forEach { update -> PemaTile("Bạn", update, "chat_bubble_outline", null) }
             if (state.patient.response.isNotEmpty()) PemaTile("Đội ngũ Pema", state.patient.response, "verified", null)
             PemaPrimary("Gửi cập nhật", onClick = { callbacks.onOpen(Routes.SendUpdate) })
@@ -411,6 +463,7 @@ private fun CareBody(state: WorkspaceUiState, selectedTab: Int, callbacks: Works
                 "Hóa đơn" to Routes.Invoices,
                 "Quyền riêng tư" to Routes.Privacy,
                 "Hướng dẫn" to Routes.Guide,
+                Routes.titleOf(Routes.PatientDocuments) to Routes.PatientDocuments,
             ).forEach { (title, route) ->
                 PemaTile(title, "Thông tin của bạn", "chevron_right", { callbacks.onOpen(route) })
             }
@@ -436,7 +489,7 @@ private fun CareBody(state: WorkspaceUiState, selectedTab: Int, callbacks: Works
                 if (state.patient.day.isEmpty()) "Chưa có lịch hẹn" else "${state.patient.appointment} · ${state.patient.day}",
                 "BS. Tâm · Khám da liễu",
                 "calendar_today",
-                { callbacks.onOpen(Routes.MyAppointments) },
+                { callbacks.onOpen(Routes.PatientAppointments) },
             )
             PemaSection("Việc cần làm")
             PemaTile(

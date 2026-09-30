@@ -1,26 +1,26 @@
-# Đối chiếu web ↔ canvas
+# Web ↔ canvas coverage
 
-Mốc: 2026-09-23 · canvas `Pema App.dc.html` có 82 màn (A–H mirror Flutter, I–K bổ sung từ web).
-Khi chạy lại skill, so dump web mới với bảng này; màn/tab/dialog web mới xuất hiện hoặc đổi nội dung là ứng viên cần thêm/sửa. Cập nhật bảng sau mỗi lần chạy.
+Baseline: 2026-09-23 · canvas `Pema App.dc.html` has 82 screens (A–H mirror Flutter, I–K added from the web).
+When rerunning the skill, compare the new web dump with this table; any new or changed web screen/tab/dialog is a candidate to add or update. Update the table after every run.
 
 ## Clinic Web (`prototype/clinic-web`, `shared/clinic.js`, `operations-ui.js`, `crm-ui.js`)
 
 | Web | Canvas |
 |---|---|
-| `dashboard` Tổng quan | I1 (A1 là home Flutter rút gọn) |
+| `dashboard` Tổng quan | I1 (A1 is the reduced Flutter home) |
 | `today` Hôm nay · tiếp đón, Check-in / Vắng / Mời vào phòng | I2 |
-| `schedule` Điều phối lịch theo phòng | I3 (A2 là lịch Flutter) |
-| Dialog Đặt lịch hẹn (bệnh nhân, dịch vụ, bác sĩ, phòng, giờ) | I4 (F8 là bản Flutter) |
+| `schedule` Điều phối lịch theo phòng | I3 (A2 is the Flutter schedule) |
+| Dialog Đặt lịch hẹn (bệnh nhân, dịch vụ, bác sĩ, phòng, giờ) | I4 (F8 is the Flutter version) |
 | `patients` + Hồ sơ mới | A3 · I5 |
 | `crm` CSKH hôm nay | C1–C4 |
-| `crm` › Xử lý (kênh, kết quả, bước tiếp, phụ trách, ưu tiên) | I13 (C6 là bản Flutter) |
-| `followups` Follow-up Inbox + lọc | I6 · xử lý: F10 |
+| `crm` › Xử lý (kênh, kết quả, bước tiếp, phụ trách, ưu tiên) | I13 (C6 is the Flutter version) |
+| `followups` Follow-up Inbox + filter | I6 · handled in: F10 |
 | `studio` Ảnh trước / sau | I7 |
 | `resources` Bác sĩ & phòng · Khóa phòng | F14 · I8 |
 | `services` Dịch vụ · Chỉnh dịch vụ | F13 · I9 |
-| `cashier` Thu ngân · danh sách hóa đơn · Thu tiền (tiền mặt/chuyển khoản) | I10 · I11 (F11/F12 theo hồ sơ) |
+| `cashier` Thu ngân · invoice list · Thu tiền (tiền mặt/chuyển khoản) | I10 · I11 (F11/F12 by patient record) |
 | `cashier` › Lên đơn nhanh | F4–F7 |
-| `finance` Tài chính & tiền thủ thuật (4 tab) | H1–H9 |
+| `finance` Tài chính & tiền thủ thuật (4 tabs) | H1–H9 |
 | `ask` Ask Pema | I12 · F15 |
 | `guide` Hướng dẫn | F16 |
 
@@ -29,7 +29,7 @@ Khi chạy lại skill, so dump web mới với bảng này; màn/tab/dialog web
 | Web | Canvas |
 |---|---|
 | `overview` | F1 |
-| `consult` Tiền sử & chẩn đoán + nháp AI | J1 · F2 |
+| `consult` Tiền sử & chẩn đoán + AI draft | J1 · F2 |
 | `plan` Kế hoạch · modal `plan-edit` | J3 · J4 |
 | `session` Ghi buổi điều trị (protocol, vùng/góc chụp) | J5 · F3 |
 | `photos` | I7 |
@@ -43,8 +43,8 @@ Khi chạy lại skill, so dump web mới với bảng này; màn/tab/dialog web
 | Web | Canvas |
 |---|---|
 | `home` | E1 |
-| `appointments` (tab riêng trên web, Flutter không có) | K1 · G3 |
-| `journey` + cập nhật gần đây | E2 · K3 |
+| `appointments` (separate tab on web, not in Flutter) | K1 · G3 |
+| `journey` + recent updates | E2 · K3 |
 | `progress` / Ảnh trước & sau | G5 |
 | `care` Chăm sóc tại nhà | G1 |
 | `send` Gửi cập nhật | G2 |
@@ -52,6 +52,6 @@ Khi chạy lại skill, so dump web mới với bảng này; màn/tab/dialog web
 | `docs` Tài liệu & hóa đơn | K2 · G7 |
 | `profile` + Quyền riêng tư | E4 · G8 |
 
-## Chỉ có trên canvas (Flutter), không cần đối chiếu web
+## Canvas-only (Flutter), no web comparison needed
 
-A5 Thêm, A6 đổi workspace, A7 SnackBar thanh toán, B1–B2 bác sĩ, D1–D2 kế toán, F17 ngoài quyền truy cập, H7 mất kết nối.
+A5 "Thêm", A6 switch workspace, A7 payment SnackBar, B1–B2 doctor, D1–D2 accountant, F17 access denied, H7 connection lost.

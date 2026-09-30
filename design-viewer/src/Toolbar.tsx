@@ -1,4 +1,4 @@
-import { memo, type Dispatch, type SetStateAction } from 'react';
+import { memo, type Dispatch, type ReactNode, type SetStateAction } from 'react';
 import { displayName } from './docs';
 import { Icon, IconButton } from './Icon';
 import type { Tool } from './useCanvasInput';
@@ -21,6 +21,8 @@ type ToolbarProps = {
   panels: Panels;
   onPanels: Dispatch<SetStateAction<Panels>>;
   hasProps: boolean;
+  /** Export control (ExportMenu), shown before the page actions. */
+  exportSlot?: ReactNode;
 };
 
 export const Toolbar = memo(function Toolbar(p: ToolbarProps) {
@@ -64,6 +66,7 @@ export const Toolbar = memo(function Toolbar(p: ToolbarProps) {
       </div>
 
       <div className="toolbar-group toolbar-end">
+        {p.exportSlot}
         <IconButton icon="refresh" label="Tải lại trang" onClick={p.onReload} />
         <a className="icon-btn" href={p.rawHref} target="_blank" rel="noreferrer" title="Mở trang gốc trong tab mới" aria-label="Mở trang gốc trong tab mới">
           <Icon name="open_in_new" />

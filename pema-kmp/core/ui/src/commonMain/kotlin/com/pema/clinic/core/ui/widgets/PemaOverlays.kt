@@ -176,23 +176,34 @@ fun PemaExtendedFab(text: String, onClick: () -> Unit, icon: String = "add", mod
     )
 }
 
-/** Flutter `WeekStrip` (schedule) · canvas `week`: T2…CN, dates 21+i, index 1 selected. */
+/**
+ * Flutter `WeekStrip` (schedule) · canvas `week`: T2…CN, dates 21+i, index 1 selected.
+ * Pass [days] (weekday label to date label), [selected] and [onSelect] for a working day picker
+ * (web schedule); the default is Flutter's static strip.
+ */
 @Composable
-fun WeekStrip(modifier: Modifier = Modifier) {
+fun WeekStrip(
+    modifier: Modifier = Modifier,
+    days: List<Pair<String, String>> = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN").mapIndexed { i, d -> d to "${21 + i}" },
+    selected: Int = 1,
+    onSelect: ((Int) -> Unit)? = null,
+) {
     Row(modifier.fillMaxWidth().padding(bottom = 20.dp)) {
-        listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN").forEachIndexed { i, day ->
-            val on = i == 1
+        days.forEachIndexed { i, (day, date) ->
+            val on = i == selected
             Column(
                 Modifier
                     .weight(1f)
                     .padding(horizontal = 2.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(if (on) PemaColors.Blue else Color.White, RoundedCornerShape(12.dp))
+                    .let { if (onSelect != null) it.clickable { onSelect(i) } else it }
                     .padding(vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(day, style = PemaType.of(10f, color = if (on) Color.White else PemaColors.Muted))
                 Spacer(Modifier.height(8.dp))
-                Text("${21 + i}", style = PemaType.of(14f, androidx.compose.ui.text.font.FontWeight.W700, if (on) Color.White else PemaColors.Ink))
+                Text(date, style = PemaType.of(14f, androidx.compose.ui.text.font.FontWeight.W700, if (on) Color.White else PemaColors.Ink))
             }
         }
     }

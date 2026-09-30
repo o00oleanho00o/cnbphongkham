@@ -1,91 +1,86 @@
 ---
 name: pema-canvas-to-kmp-compose
-description: Chuyển màn hình Pema từ Flutter/web và design canvas sang KMP + Compose Multiplatform theo 1:1 về nghiệp vụ lẫn hình ảnh. Dùng khi được yêu cầu port Flutter sang KMP/Compose, dựng màn Compose theo Pema App canvas, hoặc kiểm tra độ khớp KMP với canvas. Không dùng để sửa canvas; dùng pema-web-to-canvas khi cần cập nhật canvas.
+description: Port Pema screens from Flutter/web and the design canvas to KMP + Compose Multiplatform, 1:1 in both business logic and visuals. Use when asked to port Flutter to KMP/Compose, build Compose screens from the Pema App canvas, or check how closely KMP matches the canvas. Not for editing the canvas; use pema-web-to-canvas to update the canvas.
 ---
 
 # Pema canvas → KMP + Compose Multiplatform
 
-KMP app nằm ở `pema-kmp/`; Flutter nguồn ở `flutter-template/`; canvas nguồn giao diện ở `Pema App redesign canvas/Pema App.dc.html`.
+The KMP app lives in `pema-kmp/`; the Flutter source in `flutter-template/`; the visual source canvas is `Pema App redesign canvas/Pema App.dc.html`.
 
-Mục tiêu là **port 1:1**, không phải dựng một UI “tương tự”:
+The goal is a **1:1 port**, not a “similar” UI:
 
-| Nguồn | Quyết định |
+| Source | Decides |
 |---|---|
-| Flutter `flutter-template/lib/` | nghiệp vụ, dữ liệu, điều kiện theo vai trò, field, nút, trạng thái, route, sheet, dialog, snackbar |
-| Canvas | màu, typography, khoảng cách, radius, kích thước, thứ bậc thị giác và trạng thái tham chiếu |
-| Pema web | chỉ dùng để port các màn được ghi là web-only trong canvas (I/J/K) hoặc khi yêu cầu rõ |
+| Flutter `flutter-template/lib/` | business logic, data, role conditions, fields, buttons, states, routes, sheets, dialogs, snackbars |
+| Canvas | colors, typography, spacing, radius, sizes, visual hierarchy and reference states |
+| Pema web | only for porting screens marked web-only in the canvas (I/J/K) or when explicitly asked |
 
-Không suy diễn tính năng từ canvas. Canvas I/J/K có thể là web-only: kiểm tra trước khi tuyên bố KMP đã đủ màn.
+Never infer features from the canvas. Canvas I/J/K are web-only screens: logic comes from `prototype/` (web JS) through the `shared/clinic` domain, visuals follow the canvas; status and files are in [references/screen-coverage.md](references/screen-coverage.md).
 
-Đọc trước:
+Read first:
 
 1. `pema-kmp/CONVENTIONS.md`
 2. `AGENT.md`
-3. `.agents/skills/pema-design/SKILL.md` và `references/visual-system.md`
-4. `.claude/skills/pema-web-to-canvas/SKILL.md` nếu phạm vi có Pema web hoặc canvas.
+3. `.agents/skills/pema-design/SKILL.md` and `references/visual-system.md`
+4. `.claude/skills/pema-web-to-canvas/SKILL.md` if the scope involves the Pema web or the canvas.
 
-## 1. Phân loại phạm vi trước khi code
+## 1. Classify the scope before coding
 
-Liệt kê mã màn canvas và truy ngược từng mã về nguồn:
+**Read the spec first; don't re-read the web/canvas:** every screen has a spec + prompt at [`design-specs/screens/<ID>.md`](../../../design-specs/README.md) (or MCP `pema-design`: `get_screen(id)`, prompt `port_screen`). The spec contains the logic source (Flutter/web), route + KMP file, block → Compose layout, required sentences, rules, accepted differences and known gotchas. Only open source files for what the spec lacks; **when done, save anything new you learned** in `design-specs/notes.json` (or `record_note`) so it doesn't have to be found again.
 
-- **A–H** hiện là các màn mirror Flutter; port nếu source Flutter có route/tab/trạng thái tương ứng.
-- **I** vận hành Clinic từ web, **J** Patient 360 web đầy đủ, **K** Pema Care web: là phạm vi riêng, không coi là hoàn thành chỉ vì A–H đã xong.
-- Mỗi modal, sheet, error/empty/loading state là một màn cần kiểm chứng nếu canvas có mã riêng.
+List the canvas screen codes and trace each back to its source:
 
-Lập bảng tối thiểu:
+- **A–H** mirror Flutter screens; port them if the Flutter source has the matching route/tab/state.
+- **I** Clinic operations from the web, **J** full web Patient 360, **K** web Pema Care: separate scope, not done just because A–H are done.
+- Every modal, sheet, error/empty/loading state with its own canvas code is a screen to verify.
 
-| Mã | Tên | Nguồn logic | Module KMP | Route/trạng thái | Kiểm chứng |
+Minimum table:
+
+| Code | Name | Logic source | KMP module | Route/state | Verification |
 |---|---|---|---|---|---|
 | F4 | Lên đơn | Flutter `quick_order` | `feature:orders` | `Routes.QuickOrder` | JVM shot + Android |
 
-Không bắt đầu feature agent trước khi bảng này rõ ràng. Tránh hai lỗi từng gặp: global bottom nav tưởng tượng và UI đẹp nhưng mất logic Flutter.
+Don't start feature agents before this table is clear. Avoid two mistakes seen before: an imagined global bottom nav, and a pretty UI that lost the Flutter logic.
 
-## 2. Chuẩn bị ảnh canvas
+## 2. Canvas reference images
 
-Canvas cung cấp ảnh đối chiếu, không cần chạy Flutter để chụp reference.
+No manual screenshots: every module's `jvmTest` first runs the Gradle task `canvasRefs`, which calls [scripts/canvas-shots.cjs](scripts/canvas-shots.cjs) to render each canvas screen (390×844dp frame, ×2) into `pema-kmp/design-ref/<ID>.png`.
 
-```powershell
-cd E:\Desktop\cnbphongkham\design-viewer
-npm run dev
+- Canvas unchanged → skipped immediately (Gradle up-to-date + hash in `design-ref/manifest.json`); canvas changed → all 82 screens are re-rendered (~25 s).
+- The script starts design-viewer (vite, port 4180) if it isn't running and stops it afterwards; `CANVAS_URL` points at another viewer.
+- Manual run: `node .claude\skills\pema-canvas-to-kmp-compose\scripts\canvas-shots.cjs [--force] [--only=I1,J3] [--out=<dir>]` or `.\gradlew.bat canvasRefs`.
+- One-time setup: `npm install` in `design-viewer/` and `npx -y playwright@latest install chromium`. If missing, the task only warns; tests still run but produce no `-vs.png`.
+- `design-ref/` is git-ignored (reproducible). Never commit reference images or `build/shots` images.
+- Use `shotVsCanvas("F4") { ... }` in `jvmTest`; the side-by-side image is `<module>/build/shots/F4-vs.png` (canvas left, KMP right).
 
-cd E:\Desktop\cnbphongkham
-node .claude\skills\pema-web-to-canvas\scripts\canvas.cjs list
-node <duong-dan-session>\files\shots.cjs <thu-muc-ngoai-repo>\ref
-```
+## 3. Design the architecture before porting
 
-- `shots.cjs` render từng canvas ID với bezel ở 390×844dp, density 2.
-- Không commit ảnh reference hoặc artifact screenshot.
-- Dùng `shotVsCanvas("F4") { ... }` trong `jvmTest`; ảnh ghép nằm tại `<module>/build/shots/F4-vs.png` (canvas trái, KMP phải).
-- Nếu canvas thay đổi, tạo lại reference trước khi hiệu chỉnh KMP.
+Keep module boundaries:
 
-## 3. Thiết kế kiến trúc trước khi port
-
-Giữ ranh giới module:
-
-| Module | Trách nhiệm |
+| Module | Responsibility |
 |---|---|
-| `core:common` | route ID ASCII, `AppNavigator`, API config |
-| `core:ui` | token canvas, font Be Vietnam Pro, block chung, scaffold, sheet, snackbar, screenshot harness |
-| `core:hardware` | expect/actual camera, gallery, in/invoker, haptic; fake cho test |
-| `shared` | model, repository/store, state business từ Flutter provider |
-| `feature:*` | composable route/screen và block riêng |
+| `core:common` | ASCII route IDs, `AppNavigator`, API config |
+| `core:ui` | canvas tokens, Be Vietnam Pro font, shared blocks, scaffolds, sheets, snackbar, screenshot harness |
+| `core:hardware` | expect/actual camera, gallery, print/launcher, haptics; fakes for tests |
+| `shared` | models, repositories/stores, business state from Flutter providers |
+| `feature:*` | route/screen composables and feature-only blocks |
 | `composeApp` | NavHost, route guard, app container, root messenger |
 
-Ưu tiên port domain/store trước UI. So dữ liệu JSON Flutter với KMP: số hồ sơ, sản phẩm, role/sample data và business rule phải khớp.
+Port domain/stores before UI. Compare Flutter JSON data with KMP: record count, products, role/sample data and business rules must match.
 
-`Routes` chỉ dùng ID ASCII ổn định. Chuỗi tiếng Việt là title/display text, không phải route; URL/route có dấu, dấu cách, `&` hoặc ký tự đặc biệt dễ hỏng navigation.
+`Routes` only uses stable ASCII IDs. Vietnamese strings are titles/display text, not routes; URLs/routes with diacritics, spaces, `&` or special characters easily break navigation.
 
-## 4. Dựng core UI từ canvas trước
+## 4. Build core UI from the canvas first
 
-Không cho từng feature tự tạo bảng màu/card/navigation. Port token và block dùng chung đầu tiên:
+Don't let each feature create its own palette/cards/navigation. Port shared tokens and blocks first:
 
-- màu Pema `blue #0B4F94`, `navy #083A6E`, `sky #3CAAE5`, `ink #17324D`, `muted #5D7184`, `paper #F4F8FB`, `line #E0EAF2`;
-- Be Vietnam Pro từ compose resources;
+- Pema colors `blue #0B4F94`, `navy #083A6E`, `sky #3CAAE5`, `ink #17324D`, `muted #5D7184`, `paper #F4F8FB`, `line #E0EAF2`;
+- Be Vietnam Pro from compose resources;
 - heading, section, hero, metric, tile, notice, action/card/input/chip;
-- `DetailScaffold` có app bar/back/max width và `PemaScaffold` có bottom nav/IME;
-- icon cùng một họ Material; surface/touch target theo canvas.
+- `DetailScaffold` with app bar/back/max width and `PemaScaffold` with bottom nav/IME;
+- icons from one Material family; surfaces/touch targets per the canvas.
 
-Khi assets của thư viện không vào APK, kiểm tra convention plugin:
+If library assets don't reach the APK, check the convention plugin:
 
 ```kotlin
 android {
@@ -93,39 +88,41 @@ android {
 }
 ```
 
-Không thay token canvas bằng palette “sáng tạo” khác. Chụp ít nhất một workspace/hero/reference trước khi chạy feature waves.
+Never replace canvas tokens with a “creative” palette. Screenshot at least one workspace/hero/reference before running feature waves.
 
-## 5. Port navigation và role flow 1:1
+## 5. Port navigation and role flows 1:1
 
-Flutter có push-navigation: Workspace là điểm vào; bottom nav thuộc workspace theo role, không phải nav toàn cục áp lên mọi route.
+Flutter uses push navigation: Workspace is the entry point; the bottom nav belongs to the workspace per role, not a global nav over every route.
 
-App shell cần:
+The app shell needs to:
 
-1. Bắt đầu từ Workspace.
-2. `NavHost` đăng ký route feature.
-3. `resolveRoute()` áp quyền như Flutter: route bị chặn mở trang `DeniedScreen`; route lạ mở `GuideScreen`.
-4. Giữ tab/nhóm/filter có thể quay lại bằng `rememberSaveable`.
-5. Route có tham số (như finance tab) phải được parse và đi qua `Routes`.
-6. `PaymentAlerts` bọc ở cấp app nếu Flutter bọc ở cấp app.
+1. Start at Workspace.
+2. Register feature routes in `NavHost`.
+3. Apply permissions in `resolveRoute()` like Flutter: blocked routes open `DeniedScreen`; unknown routes open `GuideScreen`.
+4. Keep tabs/groups/filters you can return to with `rememberSaveable`.
+5. Parse routes with parameters (e.g. finance tab) through `Routes`.
+6. Wrap `PaymentAlerts` at app level if Flutter wraps it at app level.
 
-Luôn đối chiếu role và `allows()` Flutter trước khi làm menu. Kiểm tra riêng owner, doctor, care, accountant và patient/care mode.
+Always check Flutter roles and `allows()` before building menus. Test owner, doctor, care, accountant and patient/care mode separately.
 
-## 6. Triển khai feature theo đợt
+## 6. Implement features in waves
 
-Chỉ dùng agent song song khi module/file ownership không chồng lấp. Mỗi agent phải nhận đủ:
+Only run agents in parallel when module/file ownership doesn't overlap. Each agent must receive:
 
-- đường dẫn source Flutter và mã canvas của feature;
-- danh sách field/nút/role/state cần giữ;
-- API/block `core:ui` được phép dùng;
-- file/module được sở hữu;
-- yêu cầu viết `commonTest` cho logic, `jvmTest` cho ảnh;
-- yêu cầu build feature trước khi bàn giao.
+- the Flutter source paths and the feature's canvas codes;
+- the list of fields/buttons/roles/states to keep;
+- the `core:ui` APIs/blocks it may use;
+- the files/modules it owns;
+- a requirement to write `commonTest` for logic and `jvmTest` for screenshots;
+- a requirement to build the feature before handing over.
 
-Agent không được tự đổi `App.kt`, `Routes`, build logic, `FeatureDeps` hoặc `core:ui`; báo integration áp dụng thay đổi. Sau đợt, integration xử lý dependency chéo và full build.
+Agents must not change `App.kt`, `Routes`, build logic, `FeatureDeps` or `core:ui` themselves; they report what integration should apply. After each wave, integration resolves cross-dependencies and runs the full build.
 
-## 7. Vòng kiểm chứng ảnh bắt buộc
+**Web-only screens (I/J/K):** two waves. Wave 0 (one agent): port the web data model (`data.js`, `operations-data.js`, `crm-*.js`, `care-finance.js`, `staff-context.js`) into `shared/clinic` with parity tests against `patients.json`; integration adds shared routes/permissions/`core:ui` blocks. Wave 1 (parallel agents): each agent owns one screen file + one `*Commands.kt` file in `shared/clinic` and exports a `NavGraphBuilder.xxxGraph(deps)` for integration to register. Keep the shared agent brief (rules + domain API) in one file so every agent reads the same source.
 
-Mỗi canvas ID được port:
+## 7. Required screenshot verification loop
+
+For every ported canvas ID:
 
 ```kotlin
 @Test
@@ -136,18 +133,18 @@ fun f4QuickOrder() {
 }
 ```
 
-Quy trình:
+Process:
 
-1. Render shot 390×844dp ×2.
-2. Mở `*-vs.png`; kiểm tra text overflow, gutter, radius, font, icon, sheet/scrim và fixed bottom bar.
-3. Sửa cho đến khi bố cục khớp; không chỉ nhìn test pass.
-4. Test đầy đủ state có canvas: default, filter, sheet/dialog, empty/error, role-specific.
+1. Render the shot at 390×844dp ×2.
+2. Open `*-vs.png`; check text overflow, gutters, radius, font, icons, sheet/scrim and fixed bottom bars.
+3. Fix until the layout matches; a passing test alone is not enough.
+4. Cover every state the canvas has: default, filter, sheet/dialog, empty/error, role-specific.
 
-Khác biệt chỉ được chấp nhận khi có lý do rõ ràng, ví dụ logo Pema thật thay placeholder hoặc sample data nguồn thật thay demo canvas.
+Differences are only accepted with a clear reason, e.g. the real Pema logo instead of a placeholder, or real source sample data instead of canvas demo data.
 
-## 8. Kiểm chứng Android thật (bắt buộc)
+## 8. Real Android verification (required)
 
-JVM shot không phát hiện lifecycle, keyboard, bundle saver, asset packaging, navigation pop hoặc nested scroll.
+JVM shots don't catch lifecycle, keyboard, bundle savers, asset packaging, navigation pops or nested scrolling.
 
 ```powershell
 $env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'
@@ -160,28 +157,32 @@ $adb='E:\apdata\platform-tools\adb.exe'
 & $adb -s <serial> shell monkey -p com.pema.clinic.kmp -c android.intent.category.LAUNCHER 1
 ```
 
-Walk each role and critical action (mở tab → route con → lưu → back → snackbar). Clear logcat before run, then inspect crash buffer. Với emulator đa-display, dùng đúng display ID trong `screencap`.
+Walk each role and critical action (open tab → child route → save → back → snackbar). Clear logcat before the run, then inspect the crash buffer. On multi-display emulators, use the right display ID in `screencap`.
 
-Nếu MIUI báo `INSTALL_FAILED_USER_RESTRICTED`, không cố bypass: người dùng phải chấp nhận cài qua USB hoặc chép APK và cài trực tiếp từ thiết bị.
+If MIUI reports `INSTALL_FAILED_USER_RESTRICTED`, don't try to bypass it: the user must allow USB installs or copy the APK and install it on the device.
 
-## 9. Bẫy Compose đã xác nhận trên Android
+## 9. Compose gotchas confirmed on Android
 
-| Vấn đề | Cách xử lý |
+| Problem | Fix |
 |---|---|
-| Snackbar mất khi `save → back()` | Dùng `rememberPemaMessenger().show()` từ scope gốc cung cấp ở `App.kt`; scope `rememberCoroutineScope()` của màn bị hủy khi pop |
-| Tab/filter/query mất sau route con | Dùng `rememberSaveable` |
-| Data class/enum custom crash khi save state | Cung cấp `listSaver` hoặc `mapSaver`, không lưu trực tiếp object không Bundle-compatible |
-| Crash trong bottom sheet | Không lồng hai `verticalScroll`; chỉ một vùng cuộn |
-| Keyboard che nội dung/snackbar | `PemaScaffold` đệm IME; Android manifest `windowSoftInputMode="adjustResize"`; không thêm IME padding trùng |
-| Font/logo/resource thiếu trong APK | Bật `androidResources.enable = true` trong module library |
-| Build Gradle lock | Đợi 30–60 giây và chạy lại; không chạy nhiều Gradle full-build đồng thời |
+| Snackbar lost on `save → back()` | Use `rememberPemaMessenger().show()` from the root scope provided in `App.kt`; the screen's `rememberCoroutineScope()` is cancelled on pop |
+| Tab/filter/query lost after a child route | Use `rememberSaveable` |
+| Custom data class/enum crashes when saving state | Provide a `listSaver` or `mapSaver`; never save non-Bundle-compatible objects directly |
+| Crash inside a bottom sheet | Don't nest two `verticalScroll`s; only one scrolling area |
+| Keyboard covers content/snackbar | `PemaScaffold` pads for the IME; Android manifest `windowSoftInputMode="adjustResize"`; don't add duplicate IME padding |
+| Font/logo/resources missing from the APK | Enable `androidResources.enable = true` in the library module |
+| Gradle build lock | Wait 30–60 s and rerun; don't run several full Gradle builds at once |
+| Rotation resets the whole session | Stores must live outside composition (`AppStores`, per process); only rebuild `FeatureDeps` with the new activity's navigator/platform |
+| Photo lost when Android recreates the activity while the camera is open | Don't revoke the URI grant / delete the file when the coroutine is cancelled; the new activity receives the result and emits it through `recoveredPhotos()`; clean temp files with `OnScreenCleared`, not `DisposableEffect` |
+| Sent/saved photos left in `cache/photos` after the process is killed | Screens call `camera.markSaved(path)` when sending/saving; the Android layer keeps the draft photo list in saved state and, on the first camera service of each process, deletes every `pema_*` that is not a draft |
+| Role/workspace reset after process death while another app (camera) was in front | Save the `Session` with the back stack (`RestoreSessionAfterProcessDeath` in `App.kt`) and restore it before `NavHost` composes |
 
-## 10. Kết thúc
+## 10. Finish
 
-1. Chạy `jvmTest :androidApp:assembleDebug`, đếm test/failure từ XML.
-2. Cài và launch APK trên Android thật hoặc emulator; lưu evidence screenshot ngoài repo.
-3. So coverage table: nêu chính xác nhóm/mã đã port, nhóm web-only chưa port và giới hạn camera/iOS.
-4. Cập nhật `pema-kmp/README.md` và `CONVENTIONS.md` nếu thay đổi quy ước hoặc phạm vi.
-5. Nếu sửa Pema web hiển thị, thêm entry `Chờ chuyển` trong `.claude/skills/pema-web-to-canvas/web-changes.md`; không cập nhật canvas trừ khi được yêu cầu.
-6. Không commit ảnh build, APK, database local, screenshot hoặc file tạm.
-
+1. Run `jvmTest :androidApp:assembleDebug`, count tests/failures from the XML.
+2. Install and launch the APK on a real Android device or emulator; keep evidence screenshots outside the repo.
+3. Compare with the coverage table: state exactly which groups/codes were ported, which web-only groups weren't, and the camera/iOS limits.
+4. Update `pema-kmp/README.md` and `CONVENTIONS.md` if conventions or scope changed.
+5. Record what you learned per screen in `design-specs/notes.json` (source functions, rules, differences, gotchas), then run `node .claude\skills\pema-canvas-to-kmp-compose\scripts\design-specs.cjs`; `--check` must pass.
+6. If you changed anything visible on the Pema web, add a `Pending` entry in `.claude/skills/pema-web-to-canvas/web-changes.md`; don't update the canvas unless asked.
+7. Never commit build images, APKs, local databases, screenshots or temp files.

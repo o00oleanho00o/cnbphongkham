@@ -17,23 +17,44 @@ private val careRoutes = setOf(
     Routes.Invoices,
     Routes.Privacy,
     Routes.Guide,
+    // patient-mobile web
+    Routes.PatientAppointments,
+    Routes.PatientDocuments,
 )
+/** Flutter CSKH routes + web `pages.care` (crm, schedule, patients, patient) with `booking`/`crm`. */
 private val customerCareRoutes = setOf(
     Routes.CustomerCare,
     Routes.Booking,
     Routes.AppointmentDetail,
     Routes.Guide,
+    Routes.RoomSchedule,
+    Routes.AppointmentForm,
+    Routes.CareRecord,
+    Routes.NewPatient,
+    Routes.PatientCrm,
+    Routes.PatientHistory,
 )
+/** Flutter accountant routes + web `pages.accountant` (finance, cashier, patients, patient). */
 private val accountantRoutes = setOf(
     Routes.Cashier,
     Routes.Invoices,
     Routes.Guide,
+    Routes.CashierInvoices,
+    Routes.NewPatient,
+    Routes.PatientFinance,
+    Routes.PatientHistory,
 )
+/** Flutter doctor blocks + web pages/capabilities a doctor lacks (config, billing, crm page, ask). */
 private val doctorBlockedRoutes = setOf(
     Routes.Cashier,
     Routes.Resources,
     Routes.Services,
     Routes.CustomerCare,
+    Routes.RoomBlock,
+    Routes.ServiceEdit,
+    Routes.CashierInvoices,
+    Routes.AskQuery,
+    Routes.CareRecord,
 )
 
 /** Demo workspace switch; not authentication or RBAC. */
@@ -92,6 +113,13 @@ class SessionStore(private val catalog: CatalogRepository) {
     }
 
     fun selectedProfile(): PatientProfile = catalog.catalog().profiles[state.value.selected]
+
+    /** Puts back a workspace saved by the UI after Android recreated the process. */
+    fun restore(session: Session) {
+        val count = catalog.catalog().profiles.size
+        if (session.staffSelected !in 0 until count || session.careSelected !in 0 until count) return
+        mutableState.value = session
+    }
 
     fun selectedPatientId(): String = selectedProfile().id
 }

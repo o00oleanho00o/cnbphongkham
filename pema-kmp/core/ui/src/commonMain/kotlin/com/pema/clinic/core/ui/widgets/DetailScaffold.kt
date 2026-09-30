@@ -142,7 +142,7 @@ fun DetailScaffold(
     PemaScaffold(
         modifier = modifier,
         topBar = { PemaTopBar(title = { PemaTopBarTitle(title) }, onBack = onBack, actions = actions) },
-        floatingActionButton = floatingActionButton,
+        floatingActionButton = { Box(Modifier.windowInsetsPadding(pemaNavigationBars.only(WindowInsetsSides.Bottom))) { floatingActionButton() } },
         bottomBar = bottomBar,
     ) { inner ->
         Box(Modifier.fillMaxSize().padding(inner), contentAlignment = Alignment.TopCenter) {
@@ -174,7 +174,7 @@ fun LazyDetailScaffold(
     PemaScaffold(
         modifier = modifier,
         topBar = { PemaTopBar(title = { PemaTopBarTitle(title) }, onBack = onBack, actions = actions) },
-        floatingActionButton = floatingActionButton,
+        floatingActionButton = { Box(Modifier.windowInsetsPadding(pemaNavigationBars.only(WindowInsetsSides.Bottom))) { floatingActionButton() } },
     ) { inner ->
         Box(Modifier.fillMaxSize().padding(inner), contentAlignment = Alignment.TopCenter) {
             LazyColumn(

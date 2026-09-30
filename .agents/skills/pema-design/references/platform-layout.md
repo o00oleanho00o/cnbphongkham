@@ -1,30 +1,30 @@
-# Bố cục theo nền tảng
+# Platform-specific layout
 
 ## Clinic Web
 
-Chuẩn 1920×1020 CSS pixels, zoom 100% (viewport nội dung, không phải toàn màn hình máy). Dùng chiều ngang khả dụng; không max-width 920/1050px cho toàn workspace. Tách cột ngữ cảnh và nội dung, giữ độ dài dòng văn bản vừa đọc thay vì kéo mọi paragraph hết màn.
+Standard 1920×1020 CSS pixels, 100% zoom (content viewport, not the machine's full screen). Use available horizontal space; do not set max-width 920/1050px for the entire workspace. Split context and content columns, keeping readable text line length instead of stretching every paragraph across the screen.
 
-Lịch: header/bộ lọc gọn, thống kê một hàng khi đủ chỗ, vùng tài nguyên theo chiều cao khả dụng. Bảng/lịch có thể cuộn bên trong; document không tràn ngang. Patient 360 cân đối timeline/ngữ cảnh; hướng dẫn có cột thao tác/bàn giao; dịch vụ/bác sĩ có thể 4 cột từ 1600px như layout đang có. Đây là pattern để chọn theo nội dung, không ép mọi màn thành grid 4 cột.
+Calendar: compact header/filters, one-row statistics when there is enough room, resource area sized to available height. Tables/calendars may scroll internally; the document must not overflow horizontally. Patient 360 balances timeline/context; instructions have action/handoff columns; services/doctors may use 4 columns from 1600px as the current layout does. This is a pattern to choose by content, not a rule forcing every screen into a 4-column grid.
 
-Kiểm thêm 1440×900, 1280×720, 1024×768, 390×844. Ở màn nhỏ ưu tiên thông tin/action thiết yếu, disclosure/filter gọn và scroll container rõ. Không thu font toàn trang hoặc ẩn controls nghiệp vụ để chữa overflow.
+Also check 1440×900, 1280×720, 1024×768, 390×844. On small screens, prioritize essential information/actions, compact disclosure/filters, and clear scroll containers. Do not shrink the whole page font or hide business controls to fix overflow.
 
 ## Patient Mobile web
 
-App shell theo viewport, header/navigation và nội dung cuộn không chồng nhau; chừa safe area dưới. Home cho lịch gần nhất, bước chăm sóc tiếp theo và vài shortcut; lịch sử đầy đủ ở Hành trình/màn con. Progressive disclosure/tải thêm dùng khi cần, không dựng toàn bộ timeline/ảnh/đơn nối dọc ở home.
+App shell follows the viewport; header/navigation and scrollable content do not overlap; leave bottom safe area. Home shows the nearest appointment, next care step, and a few shortcuts; full history lives in "Hành trình" (Journey) / child screens. Use progressive disclosure/load more when needed; do not build the whole timeline/images/orders as one long vertical home page.
 
-Mốc review hiện có 360×800, 375×667, 390×844. Kiểm thao tác khi bàn phím mở và nội dung dài; browser resize không thay bằng chứng thiết bị thật.
+Current review breakpoints are 360×800, 375×667, 390×844. Test interactions when the keyboard is open and content is long; browser resize is not a substitute for real device evidence.
 
 ## Flutter native template
 
-Material 3, SafeArea, Navigator/Back, date picker, scrollable form; sheet dành cho quyết định ngắn. Màn form dài hoặc review nhiều dòng có màn riêng. Giữ dữ liệu khi validation lỗi; bàn phím không che CTA/trường đang nhập. Giữ touch target 48 logical pixels và kiểm text scaling; không fixed height khiến tiếng Việt bị cắt.
+Material 3, SafeArea, Navigator/Back, date picker, scrollable forms; sheets are for short decisions. Long forms or multi-line reviews need their own screen. Preserve data when validation fails; the keyboard must not cover the CTA/current field. Keep 48 logical pixel touch targets and check text scaling; no fixed heights that clip Vietnamese.
 
-Review shell hỗ trợ 360×800, 390×844, 430×932, 768×1024. Widget tests hiện tại widths 360/390/430/768 **đều height 844**, không chứng minh toàn bộ các khung trên đã được kiểm. Android/iOS physical device, safe area hệ thống, keyboard, gesture và accessibility phải có evidence riêng khi scope yêu cầu.
+The review shell supports 360×800, 390×844, 430×932, 768×1024. Current widget tests use widths 360/390/430/768 but **all have height 844**, so they do not prove all frames above were tested. Android/iOS physical devices, system safe area, keyboard, gestures, and accessibility need separate evidence when scope requires it.
 
-Tablet có thể tăng cột/độ rộng hợp lý nhưng không biến thành desktop dashboard thu nhỏ. Không cố giữ một số lượng card cố định nếu chữ/dữ liệu dài làm mất khả năng thao tác.
+Tablet may increase columns/width sensibly but must not become a miniature desktop dashboard. Do not force a fixed number of cards if long text/data breaks usability.
 
-## Review screenshot có mục tiêu
+## Targeted screenshot review
 
-Kiểm lần lượt: định vị người bệnh/tác vụ → thứ bậc nội dung → khoảng cách/alignment → chữ/icon/contrast → chiều dài/scroll → trạng thái/navigation/CTA. Chụp trước/sau cùng viewport và state khi so sánh. Mỗi nhận xét cần chỉ ra vấn đề, ảnh hưởng thao tác và cách sửa; tránh nhận xét chung “chưa hiện đại”. Sau sửa test cả click/validation, không chỉ chụp màn rỗng đẹp.
+Check in order: patient/task orientation → content hierarchy → spacing/alignment → text/icon/contrast → length/scroll → state/navigation/CTA. Capture before/after in the same viewport and state when comparing. Every comment must identify the issue, the impact on operation, and the fix; avoid generic comments like “not modern enough”. After fixing, test click/validation too, not only a polished empty screenshot.
 
 
-CSKH native: chỉ hiển thị trạng thái, tìm kiếm, nút Lọc và danh sách khách ở màn chính. Các nhóm D1/D3/D7/tái khám/90/180 ngày/sinh nhật đặt trong sheet cuộn; chỉ hiện chip nhóm đang chọn. Tránh 10 chip wrap đẩy khách đầu khỏi viewport. Test thao tác lọc và đổi trạng thái, ngoài ảnh tĩnh.
+CSKH (customer care) native: show only status, search, the "Lọc" button, and the customer list on the main screen. Place D1/D3/D7/revisit/90/180 days/birthday groups in a scrollable sheet; show only the currently selected group chip. Avoid 10 wrapping chips pushing the first customer out of the viewport. Test filtering and status changes, beyond static screenshots.

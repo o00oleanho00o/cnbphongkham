@@ -66,3 +66,12 @@ kotlin {
         }
     }
 }
+
+// shotVsCanvas reads the canvas references rendered by the root `canvasRefs` task.
+tasks.withType<Test>().configureEach {
+    if (name == "jvmTest") {
+        dependsOn(":canvasRefs")
+        finalizedBy(":designSpecs")
+        systemProperty("pema.refDir", rootProject.layout.projectDirectory.dir("design-ref").asFile.absolutePath)
+    }
+}

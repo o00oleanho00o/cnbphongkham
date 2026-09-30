@@ -1,61 +1,61 @@
-# Màn hình và liên kết nghiệp vụ
+# Screens and business links
 
-## Mạch hệ thống
+## System flow
 
-Đến phòng khám → định danh/hồ sơ → khám/tư vấn → kế hoạch/dịch vụ → lịch/buổi → hướng dẫn/đơn đã duyệt → theo dõi D1/D3/D7 theo kế hoạch → cập nhật/ảnh có consent → bác sĩ xem/phản hồi → lịch tiếp theo.
+Arrival at clinic → identification/profile → exam/consultation → plan/service → schedule/session → approved instructions/prescription → D1/D3/D7 follow-up by plan → update/photos with consent → doctor review/response → next appointment.
 
-Đây là mô hình thiết kế, không có nghĩa mọi bước đã implement. Patient 360 tập hợp ngữ cảnh; event/record gốc mới là nguồn sự thật. Check-in không thay thế clinical visit; invoice không thay session; đã duyệt không đồng nghĩa đã cấp thuốc.
+This is a design model; it does not mean every step is already implemented. Patient 360 aggregates context; the original event/record remains the source of truth. Check-in does not replace a clinical visit; invoice does not replace session; approved does not mean medicine has been dispensed.
 
-## Phân chia nền tảng
+## Platform split
 
-| Ngữ cảnh | Web | Flutter/mobile |
+| Context | Web | Flutter/mobile |
 |---|---|---|
-| Tổng quan | KPI có đường tới việc cần xử lý | Việc tiếp theo, lịch gần nhất, shortcut ngắn |
-| Patient 360 | Bối cảnh + tab nội dung, tận dụng chiều ngang | Nhận diện gọn + mở từng màn nghiệp vụ |
-| Điều phối | Lịch/tài nguyên/bộ lọc, bảng chi tiết | Danh sách ngày, chi tiết, date picker; không nhét lịch desktop |
-| Đơn | Editor nhiều hàng và review/in riêng | Tìm → giỏ → kiểm tra → nháp/duyệt → tài liệu |
-| Theo dõi | Hàng chờ và trạng thái bàn giao | Danh sách công việc → phản hồi riêng |
-| Quản lý | Dịch vụ, bác sĩ/phòng, thu ngân | Tra cứu/tác vụ ngắn; quản trị phức tạp ưu tiên web |
+| Overview | KPIs with paths to work that needs handling | Next work, nearest appointment, short shortcuts |
+| Patient 360 | Context + content tabs, using horizontal space | Compact identity + open each business screen |
+| Coordination | Calendar/resources/filters, detailed tables | Day list, detail, date picker; do not cram in the desktop calendar |
+| Orders | Multi-line editor and review/print | Search → cart → check → draft/approve → document |
+| Follow-up | Queue and handoff status | Task list → separate response |
+| Management | Services, doctors/rooms, cashier | Lookup/short tasks; complex administration prefers web |
 
-Flutter Clinic: **Hôm nay / Lịch hẹn / Hồ sơ / Theo dõi / Thêm**. Care: **Trang chủ / Hành trình / Tin nhắn / Hồ sơ**. Không tăng tab chính chỉ vì thêm module; đặt tác vụ vào ngữ cảnh đúng. Switch Clinic/Care hiện là công cụ duyệt, không login.
+Flutter Clinic: **Hôm nay / Lịch hẹn / Hồ sơ / Theo dõi / Thêm**. Care: **Trang chủ / Hành trình / Tin nhắn / Hồ sơ**. Do not increase main tabs just because a module is added; place the task in the correct context. The current Clinic/Care switch is a review tool, not login.
 
-Các màn con hiện có: Patient 360; Đặt lịch/Chi tiết lịch/Lịch của tôi; Tư vấn/Kế hoạch điều trị/Buổi điều trị; Chăm sóc tại nhà/Gửi cập nhật/Phản hồi; Lên đơn nhanh/Kiểm tra đơn/Đơn thuốc & tư vấn/Phiếu A5; Hóa đơn/Thu ngân; Dịch vụ/Bác sĩ & phòng; Ảnh tiến triển/Ask Pema/Quyền riêng tư/Hướng dẫn.
+Current child screens: Patient 360; Đặt lịch/Chi tiết lịch/Lịch của tôi; Tư vấn/Kế hoạch điều trị/Buổi điều trị; Chăm sóc tại nhà/Gửi cập nhật/Phản hồi; Lên đơn nhanh/Kiểm tra đơn/Đơn thuốc & tư vấn/Phiếu A5; Hóa đơn/Thu ngân; Dịch vụ/Bác sĩ & phòng; Ảnh tiến triển/Ask Pema/Quyền riêng tư/Hướng dẫn.
 
-## Contract thiết kế cho mỗi tác vụ
+## Design contract for each task
 
-- Ghi rõ patient và record liên quan trước mutation. Giữ lựa chọn khi chuyển màn/quay lại; không để dữ liệu từ người trước trông như thuộc người sau.
-- Primary action diễn đạt kết quả (“Lưu nháp”, “Duyệt đơn”, “Gửi cập nhật”), không dùng “Xong” cho nhiều trạng thái khác nhau.
-- Validation đặt gần trường lỗi, giữ nội dung đã nhập. Empty state chỉ ra bước tiếp theo; loading/error/success có ý nghĩa. Không dùng toast thành công nếu chưa có mutation thật.
-- Xác định ai nhận kết quả, thấy ở đâu, điều kiện được thấy và hành động tiếp theo. Lưu trạng thái/quyền của record riêng với trạng thái UI.
-- Hướng dẫn sử dụng phải giải thích liên kết/bàn giao và xử lý ngoại lệ, không chỉ script bấm nút demo.
+- State the patient and related record before mutation. Preserve choices when moving between screens/back; never make data from the previous person look as if it belongs to the next person.
+- Primary action states the outcome (“Lưu nháp”, “Duyệt đơn”, “Gửi cập nhật”), not “Xong” for multiple different states.
+- Validation appears near the faulty field and preserves entered content. Empty state points to the next step; loading/error/success are meaningful. Do not use a success toast when there is no real mutation yet.
+- Define who receives the result, where it appears, the conditions for seeing it, and the next action. Store record status/permissions separately from UI state.
+- Usage guidance must explain linkage/handoff and exception handling, not only a demo button-click script.
 
-## Luồng quan trọng
+## Important flows
 
-**Dịch vụ/điều trị:** catalog dịch vụ → giá và số buổi chốt → plan → appointment → session đủ thông tin → aftercare/follow-up → Care. Trong implementation đầy đủ cần đối chiếu invoice/plan nhưng không hoàn tất chăm sóc từ payment.
+**Service/treatment:** service catalog → confirmed price and session count → plan → appointment → session with complete information → aftercare/follow-up → Care. In a complete implementation, invoice/plan must be reconciled, but care must not be completed from payment.
 
-**Đơn:** catalog → số lượng/hướng dẫn → nháp → kiểm tra phân loại → bác sĩ duyệt → Care/phiếu. Nguồn sản phẩm là Excel được cung cấp; snapshot hiện tại 115 dòng (30 thuốc, 78 tư vấn, 7 UNRESOLVED). Không suy thuốc từ tên; thiếu loại/cách dùng phải được xử lý trước duyệt. Nháp không hiển thị như hướng dẫn cho người bệnh. Web có lý do override/NONE/in tách A5; không mặc định Flutter đã có.
+**Orders:** catalog → quantity/instructions → draft → classification check → doctor approval → Care/slip. Product source is the supplied Excel file; current snapshot has 115 rows (30 medicines, 78 advice items, 7 UNRESOLVED). Do not infer medicine from the name; missing type/usage must be handled before approval. Draft must not appear as instructions for the patient. Web has override reasons/NONE/separate A5 print; do not assume Flutter has them by default.
 
-**Ảnh/phản hồi:** nội dung → consent nếu có ảnh → gửi → hàng chờ review → phản hồi/resolve/escalate → Care. Tách consent, file, trạng thái task; nhãn “ảnh đính kèm” không thay việc lưu ảnh thật. AI là nháp có người review, không tự chẩn đoán/đóng việc.
+**Photos/responses:** content → consent if there are photos → submit → review queue → respond/resolve/escalate → Care. Separate consent, files, and task status; the label “ảnh đính kèm” does not replace storing a real photo. AI is a human-reviewed draft, not autonomous diagnosis/task closure.
 
-**Thu ngân:** thể hiện tổng, đã thu, còn lại và chứng từ/trạng thái liên quan. Trong hệ thống đầy đủ cần ledger/cọc/thu từng phần/chống trùng; template hiện chưa đạt mức này.
+**Cashier:** show total, collected, remaining, and related documents/status. A complete system needs ledger/deposits/partial collection/duplicate prevention; the template has not reached this level.
 
-## Ranh giới hiện tại phải kiểm trước khi sửa
+## Current boundaries to check before editing
 
-Web Clinic/Patient Mobile dùng localStorage cùng origin/profile. Flutter độc lập, chỉ memory; order/receipt, lịch/note/buổi/follow-up/cart đã theo patient; Care/Clinic có selection riêng. Flutter lịch 09:00 khóa cứng; A5 chỉ card nhóm approved orders; ảnh/AI/privacy mô phỏng; thu ngân còn tính cả nháp, không invoice entity/ledger. Không che các thiếu hụt bằng UI giống production.
+Web Clinic/Patient Mobile use localStorage with the same origin/profile. Flutter is independent and memory-only; order/receipt, schedule/note/session/follow-up/cart are patient-scoped; Care/Clinic have separate selection. Flutter 09:00 schedule is hardcoded; A5 is only cards grouping approved orders; photos/AI/privacy are simulated; cashier still counts drafts and has no invoice entity/ledger. Do not hide these gaps with a production-like UI.
 
-Đọc `docs/22_NATIVE_PARITY_AND_VALIDATION.md` cho hiện trạng, `docs/20_CATALOG_ORDERS.md` cho web order/in, `docs/06_CLINIC_WORKFLOW.md` và PB01 cho contract hệ thống. Nếu được giao hoàn thiện nghiệp vụ, sửa nền dữ liệu và test cùng UI, rồi cập nhật ma trận; không cố giữ giới hạn template như yêu cầu vĩnh viễn.
-
-
-## Ngoại lệ tài chính PB02
-
-Tổng quan chủ phòng khám, thu/đối soát và tiền thủ thuật mới dùng API/SQLite chung web/Flutter. Giữ phân biệt doanh số, thực thu, công nợ và tiền bác sĩ; snapshot tỷ lệ, kỳ chốt, projection theo role và thông báo foreground. Đọc `docs/24_FINANCE_AND_PROCEDURE_FEES.md` và bộ PB02 trước khi sửa; giới hạn finance memory-only ở PB01 không áp cho module mới. Chạy `python prototype/finance_test.py` khi thay công thức/ledger.
+Read `docs/22_NATIVE_PARITY_AND_VALIDATION.md` for current state, `docs/20_CATALOG_ORDERS.md` for web orders/printing, `docs/06_CLINIC_WORKFLOW.md` and PB01 for the system contract. If assigned to complete business behavior, fix the data foundation and tests together with the UI, then update the matrix; do not treat template limits as permanent requirements.
 
 
-## CRM01 — phân không gian theo nhân viên
+## PB02 finance exception
 
-Chủ phòng khám xem dashboard toàn cảnh; bác sĩ có home/lịch/hồ sơ riêng; CSKH có work queue và workspace; kế toán có thu ngân/đối soát. BS. Tâm có góc nhìn chủ và bác sĩ riêng, không làm mẫu một dashboard chung cho mọi người. Patient 360 nối ngữ cảnh, task được mở theo quyền/tác vụ. Tài khoản hiện dùng sessionStorage demo, không phải auth server.
-
-CSKH hôm nay là chăm sóc chủ động; Theo dõi là review lâm sàng. Outcome đặt lịch phải chuyển tới form hiện có, validate rồi mới resolve. Không báo “đã quay lại” ngay khi booking. Quy ước/source: `docs/20_CRM01_PATIENT_LIFECYCLE.md`, `staff-context.js`, `crm-automation.js`, `crm-ui.js`.
+The clinic-owner overview, revenue/reconciliation, and procedure fees newly use shared web/Flutter API/SQLite. Keep revenue, cash received, debt, and doctor fee distinct; rate snapshots, closing periods, role-based projections, and foreground notifications. Read `docs/24_FINANCE_AND_PROCEDURE_FEES.md` and the PB02 set before editing; the PB01 memory-only finance limit does not apply to the new module. Run `python prototype/finance_test.py` when changing formulas/ledger.
 
 
-Mobile CRM02: dùng `docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md` làm nguồn hiện trạng. Tài chính nằm trong Clinic shell; native chọn role trước tác vụ, không nhét CSKH/thu ngân/clinical chung home. Care ưu tiên một bước tiếp theo; nội bộ và bàn giao không thành tin nhắn người bệnh.
+## CRM01 — staff-specific workspaces
+
+The clinic owner sees an overall dashboard; doctors have their own home/schedule/profiles; CSKH has a work queue and workspace; accounting has cashier/reconciliation. BS. Tâm has separate owner and doctor views; do not model one shared dashboard for everyone. Patient 360 links context, and tasks open according to permissions/task. Accounts currently use sessionStorage demo, not an auth server.
+
+CSKH today is proactive care; "Theo dõi" is clinical review. The appointment outcome must go to the existing form, validate, and only then resolve. Do not report “đã quay lại” as soon as booking starts. Conventions/sources: `docs/20_CRM01_PATIENT_LIFECYCLE.md`, `staff-context.js`, `crm-automation.js`, `crm-ui.js`.
+
+
+Mobile CRM02: use `docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md` as the current-state source. Finance lives inside the Clinic shell; native selects the role before the task, and must not cram CSKH/cashier/clinical into one shared home. Care prioritizes one next step; internal work and handoffs must not become patient messages.
