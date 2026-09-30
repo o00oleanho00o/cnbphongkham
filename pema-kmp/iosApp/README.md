@@ -6,7 +6,7 @@
 - Bước pre-build gọi `./gradlew :composeApp:embedAndSignAppleFrameworkForXcode` để biên dịch framework `ComposeApp` và chép compose resources vào app.
 
 ## Build trên GitHub Actions (không cần Mac)
-Workflow `.github/workflows/ios-kmp.yml` tự chạy mỗi khi push thay đổi trong `pema-kmp/` (mặc định build `simulator`), hoặc chạy tay ở tab **Actions → iOS build (pema-kmp) → Run workflow** (chọn nhánh và `target`; nút này chỉ hiện khi workflow đã nằm trên nhánh mặc định `master`):
+Workflow `.github/workflows/ios-kmp.yml` chỉ chạy tay (không tự chạy khi push): vào tab **Actions → iOS build (pema-kmp) → Run workflow** (chọn nhánh và `target`; nút này chỉ hiện khi workflow đã nằm trên nhánh mặc định `master`):
 
 - `simulator` (mặc định): artifact `Pema-simulator.zip` (thư mục `Pema.app` đã nén, dùng cho iOS Simulator). Tải lên [Appetize.io](https://appetize.io) (Apps → Upload, chọn iOS) để chạy trong trình duyệt. Dùng gói Free (30 phút/tháng) nên nhớ đóng phiên khi xong.
 - `device`: artifact `Pema-unsigned.ipa` (IPA chưa ký cho iPhone thật).
