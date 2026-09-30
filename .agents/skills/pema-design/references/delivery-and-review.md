@@ -1,57 +1,57 @@
-# Triển khai và bàn giao thiết kế
+# Design implementation and handoff
 
-## Nguồn trong repository
+## Sources in the repository
 
-| Việc | Nơi kiểm tra |
+| Work | Where to check |
 |---|---|
-| Quyết định/acceptance/module/runtime | `docs/SCOPE-PB01.md` → `SPEC-PB01.md` → `MODULEMAP-PB01.md` → `ARCH-PB01.md` |
-| Web style/asset | `prototype/shared/design.css`, `workspace-layout.css`, `styles.css`, CSS theo module và `assets/` |
+| Decisions/acceptance/module/runtime | `docs/SCOPE-PB01.md` → `SPEC-PB01.md` → `MODULEMAP-PB01.md` → `ARCH-PB01.md` |
+| Web style/assets | `prototype/shared/design.css`, `workspace-layout.css`, `styles.css`, module CSS, and `assets/` |
 | Web behavior | `prototype/shared/clinic.js`, `patient.js`, `operations-*`, `order-*`, `data.js` |
-| Flutter theme/navigation/screens | `flutter-template/lib/main.dart` |
-| Flutter state | `flutter-template/lib/state/` (Riverpod) |
-| Native build + giới hạn | `docs/21_NATIVE_RUNBOOK.md`, `22_NATIVE_PARITY_AND_VALIDATION.md` |
+| Flutter theme/navigation/screens | `flutter-template/lib/core/` (theme, router, widgets) + `lib/features/*/presentation/screens/` |
+| Flutter state | `flutter-template/lib/features/*/presentation/providers/` (Riverpod) |
+| Native build + limits | `docs/21_NATIVE_RUNBOOK.md`, `22_NATIVE_PARITY_AND_VALIDATION.md` |
 | Review frame | `prototype/native-review/index.html` |
 
-Đọc thứ tự CSS thực sự được load trước khi override; tránh append rule chồng chéo chỉ để thắng specificity. Sửa source, không sửa compiled `prototype/native-preview/`. Font/logo hiện có đủ để bắt đầu, không bắt buộc dịch vụ sinh ảnh hoặc công cụ trả phí.
+Read the actual CSS load order before overriding; avoid appending overlapping rules only to win specificity. Edit source, not compiled `prototype/native-preview/`. Current font/logo assets are enough to start; image-generation services or paid tools are not required.
 
-## Dữ liệu và mock
+## Data and mocks
 
-Dùng 46 bệnh nhân tổng hợp (36 nền + 10 nhóm CSKH) và catalog người dùng cung cấp; không nhập hồ sơ thật. Fixture cần đủ trạng thái và tên/note dài để lộ lỗi bố cục. Không giả số liệu/lịch sử đồng bộ khi dữ liệu đó chưa tồn tại.
+Use 46 synthetic patients (36 base + 10 CSKH groups) and the user-supplied catalog; do not enter real records. Fixtures need enough states and long names/notes to expose layout bugs. Do not fake synchronized metrics/history when that data does not exist.
 
-Catalog: `data/danhsach.xlsx` → `prototype/import-product-catalog.py` → `prototype/shared/product-catalog.json` → copy bundle `flutter-template/assets/products.json`. Sau đổi catalog, kiểm importer `--check`, hash hai JSON, số lượng/loại theo workbook và acceptance bị ảnh hưởng. Không hardcode 115 như invariant vĩnh viễn khi workbook đã đổi hợp lệ.
+Catalog: `data/danhsach.xlsx` → `prototype/import-product-catalog.py` → `prototype/shared/product-catalog.json` → copy bundle `flutter-template/assets/products.json`. After catalog changes, check importer `--check`, hashes of the two JSON files, counts/types against the workbook, and affected acceptance. Do not hardcode 115 as a permanent invariant after the workbook has validly changed.
 
-## Chọn kiểm tra theo thay đổi
+## Choose checks by change
 
-Server web: từ `prototype`, `python -m http.server 4173 --bind 127.0.0.1`; kiểm server hiện có trước khi chạy trùng. Dùng cùng origin/profile cho hai web app. Đọc dependencies của script khi chạy trên máy mới.
+Web server: from `prototype`, `python -m http.server 4173 --bind 127.0.0.1`; check for an existing server before running a duplicate. Use the same origin/profile for both web apps. Read script dependencies when running on a new machine.
 
-| Thay đổi | Kiểm tra phù hợp từ gốc repo |
+| Change | Suitable check from repo root |
 |---|---|
-| Desktop layout | `node prototype/review-desktop.cjs`; xem screenshot và overflow |
+| Desktop layout | `node prototype/review-desktop.cjs`; inspect screenshots and overflow |
 | Patient mobile UI | `node prototype/review-ui.cjs`, `node prototype/patient-smoke.cjs` |
-| Nghiệp vụ liên thông | `node prototype/check-linked.cjs`, `node prototype/data-audit.cjs` |
-| Lịch/dịch vụ/thu ngân | `node prototype/operations-test.cjs` |
-| Catalog/đơn/in web | `python prototype/import-product-catalog.py --check`, `node prototype/product-catalog-test.cjs`, `node prototype/order-test.cjs`; đổi print thì thêm `python prototype/order-pdf-test.py` |
-| Smoke web | `node prototype/smoke-final.cjs` khi thay đổi ảnh hưởng navigation/chung |
-| Flutter Dart/assets | Trong `flutter-template`: `flutter analyze`, `flutter test --reporter expanded`, `./build-preview.ps1`; xem các màn bị ảnh hưởng |
-| Chỉ docs/skill | Link/file tồn tại, đối chiếu source, frontmatter validator của môi trường nếu có, `git diff --check` |
+| Linked business behavior | `node prototype/check-linked.cjs`, `node prototype/data-audit.cjs` |
+| Schedule/services/cashier | `node prototype/operations-test.cjs` |
+| Catalog/orders/web print | `python prototype/import-product-catalog.py --check`, `node prototype/product-catalog-test.cjs`, `node prototype/order-test.cjs`; if print changes, add `python prototype/order-pdf-test.py` |
+| Web smoke | `node prototype/smoke-final.cjs` when the change affects navigation/shared behavior |
+| Flutter Dart/assets | In `flutter-template`: `flutter analyze`, `flutter test --reporter expanded`, `./build-preview.ps1`; inspect affected screens |
+| Docs/skill only | Links/files exist, source is cross-checked, environment frontmatter validator if available, `git diff --check` |
 
-Không chạy mọi suite cho mọi thay đổi nhỏ. Không dùng test PDF web để xác nhận native print, không dùng store test đơn/receipt để tuyên bố cách ly mọi dữ liệu. Sáu test Flutter ban đầu chỉ gồm store, bốn layout test và một thao tác catalog → review; đọc test source hiện tại trước báo coverage mới.
+Do not run every suite for every small change. Do not use web PDF tests to confirm native print, and do not use store tests for orders/receipts to claim all data isolation. The initial six Flutter tests only include store, four layout tests, and one catalog → review interaction; read the current test source before reporting new coverage.
 
-## Bàn giao có thể kiểm chứng
+## Verifiable handoff
 
-Báo ngắn: thay đổi gì và lý do, màn/luồng bị ảnh hưởng, kiểm tra thực sự đã chạy, screenshot/artifact, giới hạn còn mở. Ghi rõ phân tích, template duyệt, hay implementation hoàn chỉnh. Dấu tick chỉ cho việc đã làm; yêu thích thiết kế không tự chứng nhận auth/payment/clinical safety.
+Report briefly: what changed and why, affected screens/flows, checks actually run, screenshot/artifact, and remaining limits. State clearly whether it is analysis, an approval template, or complete implementation. Check marks are only for work done; liking the design does not certify auth/payment/clinical safety.
 
-Theo quy tắc dự án, khi thay đổi scope/hành vi cập nhật 0→1→2→3, sau đó README/tài liệu nghiệp vụ/UI/runbook/parity và append SECTION_PROGRESS. Khi chính quy ước thiết kế đổi, cập nhật skill tương ứng. Giữ lịch sử test đúng ngày và kênh.
+Per project rules, when scope/behavior changes, update 0→1→2→3, then README/business/UI/runbook/parity docs, and append SECTION_PROGRESS. When the design convention itself changes, update the corresponding skill. Keep test history on the correct date and channel.
 
-Nếu người dùng yêu cầu commit/push: xem diff, stage rõ file thuộc nhiệm vụ (kể cả docs liên quan), bỏ log/cache/artifact không liên quan, kiểm staged diff và push nhánh được chọn; xác minh remote SHA. Không tạo commit/push chỉ vì skill có hướng dẫn này.
-
-
-## Ngoại lệ tài chính PB02
-
-Tổng quan chủ phòng khám, thu/đối soát và tiền thủ thuật mới dùng API/SQLite chung web/Flutter. Giữ phân biệt doanh số, thực thu, công nợ và tiền bác sĩ; snapshot tỷ lệ, kỳ chốt, projection theo role và thông báo foreground. Đọc `docs/24_FINANCE_AND_PROCEDURE_FEES.md` và bộ PB02 trước khi sửa; giới hạn finance memory-only ở PB01 không áp cho module mới. Chạy `python prototype/finance_test.py` khi thay công thức/ledger.
+If the user requests commit/push: review the diff, stage only task files clearly (including related docs), exclude unrelated logs/cache/artifacts, inspect staged diff, and push the selected branch; verify the remote SHA. Do not create a commit/push just because this skill has this instruction.
 
 
-Thay đổi hiển thị trên web (màn, tab, modal, dialog, trường, nút, trạng thái, luồng, câu ràng buộc, token CSS) phải kèm một mục trong "Chờ chuyển" của `.claude/skills/pema-web-to-canvas/web-changes.md` cùng commit, để design canvas claude.ai/design được cập nhật đúng chỗ mà không phải rà lại toàn bộ màn. Chi tiết và mẫu ghi ở `AGENT.md` › "Ghi nhận thay đổi web cho design canvas".
+## PB02 finance exception
+
+The clinic-owner overview, revenue/reconciliation, and procedure fees newly use shared web/Flutter API/SQLite. Keep revenue, cash received, debt, and doctor fee distinct; rate snapshots, closing periods, role-based projections, and foreground notifications. Read `docs/24_FINANCE_AND_PROCEDURE_FEES.md` and the PB02 set before editing; the PB01 memory-only finance limit does not apply to the new module. Run `python prototype/finance_test.py` when changing formulas/ledger.
 
 
-Mobile CRM02: dùng `docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md` làm nguồn hiện trạng. Tài chính nằm trong Clinic shell; native chọn role trước tác vụ, không nhét CSKH/thu ngân/clinical chung home. Care ưu tiên một bước tiếp theo; nội bộ và bàn giao không thành tin nhắn người bệnh.
+Visible web changes (screen, tab, modal, dialog, field, button, status, flow, binding sentence, CSS token) must include an item in "Pending" of `.claude/skills/pema-web-to-canvas/web-changes.md` in the same commit, so the claude.ai/design canvas is updated in the right place without re-reviewing every screen. Details and the entry template are in `AGENT.md` › "Logging web changes for the design canvas".
+
+
+Mobile CRM02: use `docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md` as the current-state source. Finance lives inside the Clinic shell; native selects the role before the task, and must not cram CSKH/cashier/clinical into one shared home. Care prioritizes one next step; internal work and handoffs must not become patient messages.

@@ -1,53 +1,53 @@
-# Block của canvas `Pema App.dc.html`
+# Canvas blocks in `Pema App.dc.html`
 
-Mọi màn được khai báo bằng dữ liệu trong `class Component … build()` (thẻ `<script type="text/x-dc">`). Template HTML phía trên đã có sẵn cách vẽ từng block, nên **màn mới chỉ cần thêm dữ liệu, không sửa template**. Mỗi block tương ứng một widget/helper trong `flutter-template/lib/`, vì vậy màn dựng bằng các block này luôn làm được trong Flutter.
+Every screen is declared as data inside `class Component … build()` (the `<script type="text/x-dc">` tag). The HTML template above already knows how to render each block, so **new screens only need data added; do not edit the template**. Each block maps to a widget/helper in `flutter-template/lib/`, so any screen built from these blocks can be implemented in Flutter.
 
-## Tạo màn
+## Creating screens
 
-| Helper | Dùng khi | Ghi chú |
+| Helper | Use when | Notes |
 |---|---|---|
-| `home(id, name, note, role, navKey, tabIndex, blocks, o?)` | Màn tab chính: logo `pema`, nút đổi vai trò, bottom nav | `role`: `'Clinic' \| 'Bác sĩ' \| 'CSKH' \| 'Kế toán' \| 'Care'`; `navKey`: `owner \| staff \| care \| fin` |
-| `det(id, title, note, blocks, o?)` | Màn con (`Detail(route)`): nút back + tiêu đề | Dùng cho hầu hết màn chuyển từ web |
-| `fin(id, name, note, tabIndex, blocks, o?)` | Màn tài chính (`FinanceScreen`) | Tự thêm dòng vai trò + kỳ báo cáo |
+| `home(id, name, note, role, navKey, tabIndex, blocks, o?)` | Main tab screen: `pema` logo, role switch button, bottom nav | `role`: `'Clinic' \| 'Bác sĩ' \| 'CSKH' \| 'Kế toán' \| 'Care'`; `navKey`: `owner \| staff \| care \| fin` |
+| `det(id, title, note, blocks, o?)` | Child screen (`Detail(route)`): back button + title | Use for most screens moved from the web |
+| `fin(id, name, note, tabIndex, blocks, o?)` | Finance screen (`FinanceScreen`) | Automatically adds the role row + reporting period |
 
-`o` (tùy chọn) có thể có: `hasFab` + `fab: { label }` (icon luôn là `add`), `hasSnack` + `snack: { text, action }`, `hasSheet` + `sheet`, `hasDialog` + `dialog: { title, value }`, `title` (tiêu đề thanh trên khi khác `name`), `ts`/`tw` (cỡ/độ đậm tiêu đề).
+`o` (optional) may include: `hasFab` + `fab: { label }` (icon is always `add`), `hasSnack` + `snack: { text, action }`, `hasSheet` + `sheet`, `hasDialog` + `dialog: { title, value }`, `title` (top bar title when different from `name`), `ts`/`tw` (title size/weight).
 
-`note` hiện dưới tên màn trên canvas. Với màn lấy từ web, mở đầu bằng `WEB + '<route/tab/modal> · <điểm khác biệt khi chuyển sang mobile>'` (`const WEB = 'Web › '`).
+`note` appears under the screen name on the canvas. For screens sourced from the web, start with `WEB + '<route/tab/modal> · <what differs when moved to mobile>'` (`const WEB = 'Web › '`).
 
-## Block nội dung
+## Content blocks
 
-| Helper | Vẽ ra | Flutter |
+| Helper | Renders | Flutter |
 |---|---|---|
-| `h(title, sub)` | Heading 25/700 navy + dòng phụ | `heading()` |
-| `h2(title, sub)` | Heading 26/700 ink (CSKH) | `CareQueue` header |
-| `s(title)` | Tiêu đề mục 17/700 | `section()` |
-| `hero(title, sub, icon)` | Khối gradient navy→blue, icon mờ lớn; `title` nhận `\n` | `hero()` |
-| `m([value, label], …)` | Ô số liệu; **tối đa 3 ô, giá trị ngắn** (≤ 5 ký tự, vd `11,3tr`) | `metric()` |
-| `a([label, icon], …)` | Hàng lối tắt icon (3 ô) | `action()` |
-| `t(title, sub, icon, tap = true)` | Tile có avatar icon; `sub` nhận `\n`; `tap=false` bỏ chevron | `tile()` |
-| `n(text)` | Notice nền `#E8F4FB`, chữ navy; nhận `\n` | `notice()` |
-| `p(text, on = true)` | Nút chính 52px; `on=false` là nút bị khóa | `primary()` / `FilledButton` |
-| `outlined(text, icon)` | Nút viền 48px | `OutlinedButton.icon` |
-| `textBtn(text, icon)` | Nút chữ | `TextButton.icon` |
-| `input({ label, value, hint, prefix, lines })` | Ô nhập; có `value` thì nhãn nổi lên viền | `TextField` |
-| `search(hint?)` | Ô tìm kiếm có icon | `PatientSearch` |
-| `dd(value, label?)` | Dropdown 56px | `DropdownButtonFormField` |
-| `dateBtn(text)` | Nút chọn ngày | `showDatePicker` trigger |
-| `week()` | Dải 7 ngày, T3 22 đang chọn | `WeekStrip` |
+| `h(title, sub)` | 25/700 navy heading + subline | `heading()` |
+| `h2(title, sub)` | 26/700 ink heading (CSKH) | `CareQueue` header |
+| `s(title)` | 17/700 section title | `section()` |
+| `hero(title, sub, icon)` | Navy→blue gradient block, large faded icon; `title` accepts `\n` | `hero()` |
+| `m([value, label], …)` | Metric tiles; **maximum 3 tiles, short values** (≤ 5 characters, e.g. `11,3tr`) | `metric()` |
+| `a([label, icon], …)` | Icon shortcut row (3 cells) | `action()` |
+| `t(title, sub, icon, tap = true)` | Tile with avatar icon; `sub` accepts `\n`; `tap=false` removes chevron | `tile()` |
+| `n(text)` | Notice with `#E8F4FB` background, navy text; accepts `\n` | `notice()` |
+| `p(text, on = true)` | Primary 52px button; `on=false` is disabled | `primary()` / `FilledButton` |
+| `outlined(text, icon)` | 48px outlined button | `OutlinedButton.icon` |
+| `textBtn(text, icon)` | Text button | `TextButton.icon` |
+| `input({ label, value, hint, prefix, lines })` | Input field; when `value` exists, the label floats to the border | `TextField` |
+| `search(hint?)` | Search field with icon | `PatientSearch` |
+| `dd(value, label?)` | 56px dropdown | `DropdownButtonFormField` |
+| `dateBtn(text)` | Date picker button | `showDatePicker` trigger |
+| `week()` | 7-day strip, T3 22 selected | `WeekStrip` |
 | `chips([[label, state], …])` | Chip; state `'sel' \| '' \| 'dis'` | `ChoiceChip` |
-| `check(label, on)` | Dòng checkbox | `CheckboxListTile` |
-| `{ photos: true, items: [{ label }, …] }` | 2 ô ảnh minh họa (`photos()` = Trước / Gần nhất) | ảnh placeholder |
-| `order(name, qty, route, usage)` | Dòng kiểm tra đơn | order review row |
-| `a5(kind, items, footer)` | Bản xem phiếu A5 | A5 preview |
-| `txt(text, { s, c, w, ws })` | Đoạn chữ tự do (cỡ, màu, độ đậm, white-space) | `Text` |
-| `sp(h)` | Khoảng trống cao `h` px | `SizedBox` |
-| `buckets(active)` / `careSearch(active)` / `chip(label)` / `listHead(title, count)` / `careRow(person)` / `empty(text)` | Bộ block hàng chờ CSKH | `care_workspace.dart` |
-| `finHero(over, value, sub?)` / `pill(text, icon?)` / `mcard(title, sub)` | Block tài chính | `finance.dart` |
-| `fc(...items)` | Thẻ viền; bên trong dùng `ftitle(text)`, `fl(label, value)`, `txt(...)`, `fb(...labels)` (nút chữ), `ff(label)` (nút đặc), `fi(text)` (dòng icon tiền), `sp(h)` | `Card` + `Row` |
+| `check(label, on)` | Checkbox row | `CheckboxListTile` |
+| `{ photos: true, items: [{ label }, …] }` | 2 illustrative photo boxes (`photos()` = Trước / Gần nhất) | placeholder image |
+| `order(name, qty, route, usage)` | Order review row | order review row |
+| `a5(kind, items, footer)` | A5 form preview | A5 preview |
+| `txt(text, { s, c, w, ws })` | Free text block (size, color, weight, white-space) | `Text` |
+| `sp(h)` | Vertical spacer of `h` px | `SizedBox` |
+| `buckets(active)` / `careSearch(active)` / `chip(label)` / `listHead(title, count)` / `careRow(person)` / `empty(text)` | CSKH queue block set | `features/customer_care/presentation/widgets/care_queue.dart` |
+| `finHero(over, value, sub?)` / `pill(text, icon?)` / `mcard(title, sub)` | Finance blocks | `finance.dart` |
+| `fc(...items)` | Bordered card; inside use `ftitle(text)`, `fl(label, value)`, `txt(...)`, `fb(...labels)` (text buttons), `ff(label)` (filled button), `fi(text)` (money icon row), `sp(h)` | `Card` + `Row` |
 
 ## Sheet (bottom sheet)
 
-`sheet` là object phẳng, xem mẫu `accountSheet`, `groupSheet`, `paySheet`, `methodSheet`:
+`sheet` is a flat object; see the `accountSheet`, `groupSheet`, `paySheet`, `methodSheet` examples:
 
 ```js
 { pad: '0 20px 16px', align: 'stretch', title, ts: 22, tc: '#17324D', g1: 4, sub, ss: 14, sc: MUTED, g2: 12,
@@ -55,12 +55,12 @@ Mọi màn được khai báo bằng dữ liệu trong `class Component … buil
   hasNotice: true, notice: '…', hasPrimary: true, primary: 'Nút chính' }
 ```
 
-Sheet chỉ có danh sách dòng + notice + một nút. Form nhiều ô nhập phải làm thành màn `det(...)`.
+A sheet only supports a row list + notice + one button. Forms with many input fields must become a `det(...)` screen.
 
-## Giới hạn cần nhớ
+## Limits to remember
 
-- Khung 390×844 cắt phần tràn (`overflow:hidden`), giống màn đang cuộn. Nên để hành động chính trong khoảng 700px đầu.
-- Loại block mới cần cả template HTML lẫn key trong `KEYS` (hoặc `CH` nếu nằm trong `fc`). Chỉ thêm khi không block nào diễn đạt được, và phải có widget Flutter tương ứng.
-- Nhóm mới: thêm `{ code, title, sub, screens }` vào `groups`, và thêm `"<code> · <tên>"` vào `options` của prop `group` trong `data-props` (chuỗi đã escape `&quot;`).
-- Dữ liệu mẫu dùng `people`, `pt`, `GROUPS`, `money()` trong file (Nguyễn Thu Hà · P001 · BS. Tâm · 10:30 22/9/2026). Không chép tên/dữ liệu từ web (web dùng bộ hồ sơ khác).
-- Tên icon là Material Symbols Outlined (vd `photo_camera`, `event`, `task_alt`, `edit_calendar`, `no_photography`). Tên sai sẽ hiện thành chữ.
+- The 390×844 frame clips overflow (`overflow:hidden`), like the current scroll viewport. Keep the primary action within the first ~700px when possible.
+- A new block type needs both an HTML template and a key in `KEYS` (or `CH` when inside `fc`). Add one only when no existing block can express the UI, and only when there is a corresponding Flutter widget.
+- New group: add `{ code, title, sub, screens }` to `groups`, and add `"<code> · <name>"` to the `group` prop options in `data-props` (with `&quot;` escaped).
+- Sample data uses `people`, `pt`, `GROUPS`, `money()` in the file (Nguyễn Thu Hà · P001 · BS. Tâm · 10:30 22/9/2026). Do not copy names/data from the web (the web uses a different patient set).
+- Icon names are Material Symbols Outlined (e.g. `photo_camera`, `event`, `task_alt`, `edit_calendar`, `no_photography`). Wrong names render as text.

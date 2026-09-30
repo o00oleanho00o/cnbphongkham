@@ -12,7 +12,7 @@ Tài liệu tách kiến trúc demo đang chạy và đích pilot. LocalStorage 
 
 ## Native review container (22/09/2026)
 
-`flutter-template/` là project Flutter Material 3, targets Android/iOS/Web. Browser preview build từ Dart lên `/native-preview/`, không WebView và không chia sẻ localStorage web. State phiên nằm trong provider Riverpod (`riverpod_generator`) tại `lib/state/`, assets bundle chứa catalog 115 dòng. Production cần thay notifier memory bằng repository/API và bổ sung identity, lưu bền vững, permission/media, PDF/share và test thiết bị. Chưa có APK/iOS build nghiệm thu.
+`flutter-template/` là project Flutter Material 3, targets Android/iOS/Web. Browser preview build từ Dart lên `/native-preview/`, không WebView và không chia sẻ localStorage web. State phiên nằm trong provider Riverpod (`riverpod_generator`) tại `lib/features/*/presentation/providers/`; I/O đi qua datasource → repository (catalog asset, finance HTTP), assets bundle chứa catalog 115 dòng. Production cần thay notifier memory bằng repository/API và bổ sung identity, lưu bền vững, permission/media, PDF/share và test thiết bị. Chưa có APK/iOS build nghiệm thu.
 
 ## Current demo container view
 
@@ -156,4 +156,4 @@ Pema Design là gói Markdown/YAML version cùng repository trong `.agents/skill
 
 Finance mount(root) đóng polling và bỏ response cũ khi unmount, selector giới hạn root, role lấy từ PemaStaff duy nhất. /finance chuyển query sang /clinic-web/?screen=finance. Seed bổ sung có marker phiên bản, ID tránh va chạm; dữ liệu hiện có giữ nguyên. Mobile ensure CRM trước render với guard event. Flutter state theo patient trong memory, riêng selection Care/Clinic; phân vai UI là mô phỏng, chưa auth server.
 
-UI review CSKH mobile: trạng thái Cần làm / Đã liên hệ / Chờ bác sĩ ở đầu màn; tìm kiếm và nút Lọc mở sheet 10 nhóm, không trải 10 chip lên home. Card đầu nằm trong 440px đầu ở viewport 360; lọc/trạng thái phải thực sự đổi danh sách. Widget `care_workspace.dart` dùng cùng PatientState, ghi chú nội bộ giữ tách Care.
+UI review CSKH mobile: trạng thái Cần làm / Đã liên hệ / Chờ bác sĩ ở đầu màn; tìm kiếm và nút Lọc mở sheet 10 nhóm, không trải 10 chip lên home. Card đầu nằm trong 440px đầu ở viewport 360; lọc/trạng thái phải thực sự đổi danh sách. Widget `care_queue.dart` dùng cùng PatientState, ghi chú nội bộ giữ tách Care.

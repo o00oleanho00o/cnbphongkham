@@ -11,7 +11,7 @@ Flutter Material 3 cho Android/iOS. Bản trình duyệt được build từ cù
 
 ```sh
 flutter pub get
-dart run build_runner build   # sinh lib/state/*.g.dart
+dart run build_runner build --delete-conflicting-outputs   # sinh các file *.g.dart của provider
 flutter run -d chrome
 flutter test
 dart analyze   # gồm riverpod_lint (khai báo trong analysis_options.yaml)
@@ -19,6 +19,186 @@ flutter build web --base-href /native-preview/
 ```
 
 Android: `flutter run -d <device-id>` sau khi có Android SDK/emulator. iOS cần macOS/Xcode. Bản duyệt browser chưa thay thế kiểm thử bàn phím, camera, safe-area và gesture trên điện thoại thật.
+
+## Kiến trúc thư mục (feature-first)
+
+Chia theo tính năng trước, chia tầng sau. Mỗi feature tự đóng gói data, domain và presentation của nó.
+
+```text
+lib/
+├── main.dart                 # bootstrap: nạp catalog, ProviderScope + overrides
+├── app.dart                  # PemaApp: MaterialApp, theme, router, PaymentAlerts
+├── core/                     # dùng chung toàn app, không phụ thuộc feature
+│   ├── network/              # ApiConfig (PEMA_FINANCE_API), httpClientProvider
+│   ├── router/               # AppRoutes (tên route), AppRouter (route → screen + guard), context.openRoute
+│   ├── theme/                # AppColors, AppTheme.light
+│   ├── utils/                # money(), context.toast()
+│   └── widgets/              # DetailScaffold, PemaBottomNav, block heading/tile/notice/primary...
+└── features/
+    ├── catalog/              # catalog bundle trong assets
+    ├── session/              # vai trò, Clinic/Care, hồ sơ đang chọn
+    ├── patients/             # PatientState theo hồ sơ, Patient 360, tư vấn, kế hoạch, buổi điều trị
+    ├── orders/               # lên đơn, kiểm tra đơn, đơn thuốc, phiếu A5
+    ├── billing/              # thu ngân, receipts
+    ├── schedule/             # đặt lịch, chi tiết lịch, dịch vụ, bác sĩ & phòng
+    ├── aftercare/            # chăm sóc tại nhà, gửi cập nhật, phản hồi, quyền riêng tư
+    ├── customer_care/        # hàng chờ CSKH, liên hệ khách hàng
+    ├── finance/              # tài chính dùng API chung (PB02)
+    └── workspace/            # màn chính theo vai trò, hướng dẫn
+        ├── data/
+        │   ├── datasources/  # nói chuyện với nguồn dữ liệu: HTTP, asset, local storage (JSON thô)
+        │   ├── mappers/      # JSON ⇄ domain model; key JSON chỉ xuất hiện ở đây
+        │   └── repositories/ # *_repository_impl.dart: cài đặt interface của domain
+        ├── domain/
+        │   ├── models/       # model immutable viết bằng freezed (==, copyWith) + *.freezed.dart
+        │   └── repositories/ # interface trừu tượng (abstract class)
+        └── presentation/
+            ├── providers/    # Riverpod @riverpod / @Riverpod(keepAlive: true) + *.g.dart
+            ├── screens/      # mỗi route một màn
+            └── widgets/      # widget riêng của feature
+```
+
+Quy ước:
+
+- Luồng phụ thuộc: `screen → provider/notifier → repository (interface) → repository impl → datasource`. `domain/` không import Flutter UI hoặc `data/`. Tầng `data/` chỉ có ở feature thực sự có I/O (catalog, finance); feature chỉ có state trong phiên thì chỉ cần `domain/models` và `presentation/`.
+- Provider viết bằng `riverpod_generator`. State cần sống suốt phiên dùng `@Riverpod(keepAlive: true)`; provider suy diễn (derived) dùng `@riverpod`. Sau khi sửa provider hoặc model phải chạy `dart run build_runner build` và commit cả `*.g.dart` lẫn `*.freezed.dart`.
+- Áp dụng skill `flutter-apply-architecture-best-practices` (MVVM) theo cách feature-first:
+
+  | Skill | Trong repo này |
+  |---|---|
+  | View | `presentation/screens`, `presentation/widgets`: chỉ hiển thị và gọi lệnh, không lọc/tính toán nghiệp vụ |
+  | ViewModel | Riverpod `Notifier` hoặc provider dẫn xuất trong `presentation/providers` (ví dụ `FinanceNotifier`, `CareCases`, `ReviewQueue`, `currentBill`) |
+  | Repository | `domain/repositories` (interface) + `data/repositories` (impl) + `data/mappers` |
+  | Service | `data/datasources`: HTTP/asset, trả về JSON thô |
+  | Domain model | `domain/models`: freezed, có getter nghiệp vụ (`Product.needsClassification`, `FinanceSnapshot.receivable`, `PatientProfile.initials`...) |
+
+  Không tạo tầng UseCase vì logic hiện đủ gọn trong ViewModel; skill coi tầng này là tùy chọn.
+- **Không để `Map<String, dynamic>` tới presentation**. Datasource trả JSON, mapper đổi sang model, và screen chỉ dùng field có kiểu (`profile.totalSessions`, `data.summary.revenue`). Tên key web như `total`, `group`, `case`, `list` chỉ nằm trong mapper.
+- **Lệnh có kiểu**: ViewModel mở method riêng cho từng lệnh (`approveEntry(id)`, `recordPayment(key:, invoice:, amount:)`, `updateRate(...)`...), không dùng `command('action', map)`. Tên action và body API chỉ nằm trong repository impl.
+- Feature chỉ import `core/`, hoặc `domain`/`providers` của feature khác. Nối route với màn làm trong `core/router/app_router.dart`. Có hai ngoại lệ đã biết. `workspace` là shell ghép màn chính nên dùng widget của feature khác. Patient 360 mở trực tiếp `ProcedureForm` của finance, vì form cần tham số.
+- Điều hướng: `context.openRoute(AppRoutes.x)` và `context.openFinance(tab)`. Guard `session.allows(route)` nằm trong `AppRouter.page`, screen không tự kiểm tra lại.
+- Thêm tác vụ mới:
+  1. Khai báo tên route trong `AppRoutes`.
+  2. Tạo `features/<feature>/presentation/screens/<ten>_screen.dart`, dùng `DetailScaffold`.
+  3. Thêm một nhánh vào `AppRouter._screen`.
+  4. Nếu role nào được mở route này, cập nhật `Session.allows`.
+  5. Thêm test trong `test/`.
+- Thêm feature có dữ liệu:
+  1. Model freezed trong `domain/models`, kèm getter nghiệp vụ.
+  2. Interface trong `domain/repositories`, nhận và trả model (không nhận Map).
+  3. Datasource trong `data/datasources`, trả JSON thô.
+  4. Mapper trong `data/mappers`, đổi JSON ⇄ model.
+  5. Repository impl trong `data/repositories`, cộng provider `@Riverpod(keepAlive: true)`.
+  6. ViewModel (`Notifier`) trong `presentation/providers`, mỗi lệnh một method có kiểu.
+  7. Screen/widget chỉ `watch` ViewModel và gọi method.
+  8. Test mapper và repository (xem `test/architecture_test.dart`, dùng `MockClient`), cộng test ViewModel bằng `ProviderContainer.test`.
+
+### Quy tắc performance (Riverpod)
+
+- **Chỉ watch đúng thứ cần**:
+  - Dùng `ref.watch(p.select((s) => s.field))` khi chỉ cần một field. Nên trả về `bool`, `int` hoặc `String`, vì `select` so sánh bằng `==`, còn List/Map mới tạo luôn bị coi là khác.
+  - Ví dụ: `_RouteGuard` chỉ nghe `session.allows(route)`; Patient 360 chỉ nghe điều kiện ghi nhận thủ thuật.
+- **Rebuild nhỏ nhất có thể**: phần UI đổi thường xuyên tách thành `ConsumerWidget` riêng. Ví dụ: badge thông báo `_UnreadBadge` và tile doanh số `_FinanceSummaryTile` trong `workspace_screen.dart`, để polling tài chính không rebuild cả màn chính.
+- **Không phát state trùng**:
+  - Model freezed so sánh theo giá trị, và Riverpod 3 chỉ phát khi `previous != next`. Vì vậy poll tài chính 4 giây một lần, nếu response giống hệt, sẽ không gây rebuild.
+  - Provider dẫn xuất trả về List thì viết dạng class và override `updateShouldNotify` bằng `listEquals` (xem `PatientOrders`, `CareCases`, `ReviewQueue`).
+- **`const`**: `analysis_options.yaml` bật nhóm lint `prefer_const_*`. `dart analyze` phải sạch.
+- **autoDispose mặc định**: provider dẫn xuất dùng `@riverpod`. Chỉ state phiên, HTTP client và finance polling mới dùng `keepAlive: true`.
+- **Tham số family ổn định**: tham số là `String`/`int` (ví dụ `patientStateProvider(id)`, `patientOrdersProvider(id)`). Không truyền List/Map tạo mới trong `build`.
+- **Giữ dữ liệu cũ khi tải lại**: refresh không xóa `data` cũ, chỉ cập nhật khi có kết quả mới. Riêng khi đổi vai trò tài chính thì xóa có chủ đích, để không lộ projection của vai trò trước.
+- **Đo, đừng đoán**:
+  - Chạy `flutter run --profile -d <device-id>` và mở DevTools. Tab Performance xem frame; bật "Track widget rebuilds" để đếm rebuild.
+  - Không đo performance trên bản debug.
+
+## Chụp ảnh (native)
+
+Chụp ảnh đi qua MethodChannel riêng `pema/camera`, không dùng package bên ngoài.
+Android và iOS cùng một hợp đồng:
+
+| Method | Tham số | Kết quả |
+|---|---|---|
+| `isAvailable` | — | `bool` |
+| `capture` | — | `{path, width, height, bytes}` hoặc `null` nếu người dùng hủy |
+| `delete` | `path` | xóa file (chỉ trong thư mục ảnh của app) |
+
+Lỗi trả về `PlatformException` (`busy`, `no_camera`, `process_failed`), Dart đổi
+thành `CameraFailure` với thông báo tiếng Việt.
+
+- **Dart**: `lib/core/camera/camera_service.dart` (`CameraService`,
+  `NativeCameraService`, `cameraServiceProvider`), model `captured_photo.dart`,
+  widget hiển thị `lib/core/widgets/local_photo.dart` (decode theo kích thước
+  hiển thị để tiết kiệm RAM).
+- **Android**: `android/app/src/main/kotlin/.../PemaCamera.kt`, đăng ký trong
+  `MainActivity.kt`. Mở app camera hệ thống bằng `ACTION_IMAGE_CAPTURE` qua
+  FileProvider (`res/xml/pema_file_paths.xml`). **Không khai báo quyền `CAMERA`**:
+  nếu khai báo, Android bắt xin quyền runtime cho intent này.
+- **iOS**: `PemaCameraPlugin` trong `ios/Runner/AppDelegate.swift`
+  (`UIImagePickerController`), chuỗi quyền `NSCameraUsageDescription` trong
+  `Info.plist`. Phần này **chưa được chạy thử**; cần kiểm tra trên Mac bằng
+  `flutter run -d <iphone-id>`.
+- **Xử lý ảnh** (cả hai nền tảng): xoay đúng chiều, thu về cạnh dài tối đa 1600px,
+  JPEG chất lượng 85, **bỏ toàn bộ EXIF/GPS** (ảnh y tế). File nằm trong thư mục
+  cache (`cache/photos` / `tmp/photos`), file gốc bị xóa sau khi xử lý.
+- **Luồng UI**: Ảnh tiến triển → Gửi ảnh cập nhật → Chụp ảnh tiến triển → xem trước,
+  Chụp lại / Bỏ ảnh → tick đồng ý → Gửi cập nhật. Ảnh chưa gửi bị xóa khi rời màn.
+  Ảnh đã gửi lưu vào `PatientState.photos` (chỉ trong phiên, chưa upload server).
+- **Test**: `test/camera_test.dart` mock channel và dùng `FakeCamera` qua
+  override `cameraServiceProvider`.
+
+## Build APK Android để cài thử
+
+Kiểm tra điện thoại đã bật **USB debugging** và được Flutter nhận diện:
+
+```powershell
+flutter devices
+```
+
+Trong lúc phát triển, chạy trực tiếp để có hot reload:
+
+```powershell
+flutter run -d <device-id>
+```
+
+Để thử nghiệm gần với bản phát hành, ưu tiên APK `release`: chạy nhanh và nhỏ hơn
+APK `debug`. Build riêng theo kiến trúc giúp giảm thêm dung lượng:
+
+```powershell
+cd E:\Desktop\cnbphongkham\flutter-template
+flutter pub get
+flutter build apk --release --split-per-abi
+```
+
+Các APK được tạo trong `build\app\outputs\flutter-apk\`:
+
+| Kiến trúc thiết bị | File APK |
+|---|---|
+| ARM64, đa số điện thoại Android hiện nay | `app-arm64-v8a-release.apk` |
+| ARM 32-bit, điện thoại cũ | `app-armeabi-v7a-release.apk` |
+| x86-64, chủ yếu máy giả lập | `app-x86_64-release.apk` |
+
+Xem kiến trúc của thiết bị trong kết quả `flutter devices`, sau đó cài APK phù
+hợp. Ví dụ cho thiết bị `android-arm64`:
+
+```powershell
+& "E:\apdata\platform-tools\adb.exe" -s <device-id> install -r `
+  "build\app\outputs\flutter-apk\app-arm64-v8a-release.apk"
+```
+
+Đường dẫn Android SDK trên máy khác có thể không phải `E:\apdata`. Tìm đường
+dẫn ở dòng **Android SDK at** bằng `flutter doctor -v`, rồi dùng
+`<android-sdk>\platform-tools\adb.exe`.
+
+Nếu Android báo xung đột chữ ký (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`), gỡ bản
+cũ trước khi cài lại. Lệnh này xóa cả dữ liệu ứng dụng:
+
+```powershell
+& "<android-sdk>\platform-tools\adb.exe" -s <device-id> uninstall com.example.pema_native_template
+```
+
+Không cần chạy `flutter clean` cho mỗi lần build; chỉ dùng khi Gradle/build cache
+gặp lỗi. Cấu hình hiện tại ký bản `release` bằng debug key, chỉ phù hợp cài thử
+nội bộ. Trước khi phát hành lên Google Play phải tạo release keystore riêng và
+đổi `applicationId` khỏi `com.example.pema_native_template`.
 
 ## Hai không gian
 
@@ -55,7 +235,7 @@ Thiết kế chi tiết và mapping: [NATIVE-TEMPLATE.md](../docs/NATIVE-TEMPLAT
 - [Ma trận web/native](../docs/22_NATIVE_PARITY_AND_VALIDATION.md): hành vi thực tế, state theo patient và selection riêng, giới hạn thu ngân/A5/media, kiểm thử đã chạy và checklist còn mở.
 - [Bản đồ tài liệu](../docs/README.md): Scope → Spec → Module Map → Architecture; [quy tắc đóng góp](../AGENT.md).
 
-Build dành cho URL review dùng `./build-preview.ps1` (Flutter phải ở PATH), thay cho việc chỉ build mà chưa copy output. `prototype/native-preview/` không được commit. Validation hiện có gồm 18 test; cả bốn widget viewport đều height 844, chưa thay thế kiểm tra device hoặc toàn bộ flow Care.
+Build dành cho URL review dùng `./build-preview.ps1` (Flutter phải ở PATH), thay cho việc chỉ build mà chưa copy output. `prototype/native-preview/` không được commit. Validation hiện có gồm 39 test; cả bốn widget viewport đều height 844, chưa thay thế kiểm tra device hoặc toàn bộ flow Care.
 
 
 Header nay chọn Chủ / Bác sĩ / CSKH / Kế toán / Care, mỗi vai trò có màn bắt đầu riêng. Care → Hồ sơ chọn nhóm tài khoản. CRM native là template độc lập web, chưa rule engine động. [Hướng dẫn mới](../docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).

@@ -1,32 +1,32 @@
-# Nhật ký thay đổi web → design canvas
+# Web → design canvas change log
 
-Mốc đồng bộ: `1564115`
+Sync baseline: `1564115`
 
-Mỗi lần thêm/sửa/xóa màn, tab, modal, dialog, trường, hành động hay câu ràng buộc nghiệp vụ **hiển thị** trên web Pema (`prototype/clinic-web`, `prototype/patient-mobile`, `prototype/finance`, `prototype/shared/*.js|*.css`), thêm một mục vào **Chờ chuyển**, commit cùng thay đổi web. Skill `pema-web-to-canvas` đọc mục ở đây và chỉ dump/sửa những màn liên quan, không phải quét lại toàn bộ web.
+Every time a screen, tab, modal, dialog, field, action or business-rule sentence **visible** on the Pema web (`prototype/clinic-web`, `prototype/patient-mobile`, `prototype/finance`, `prototype/shared/*.js|*.css`) is added, changed or removed, add an entry under **Pending** and commit it together with the web change. The `pema-web-to-canvas` skill reads these entries and only dumps/edits the affected screens instead of re-scanning the whole web.
 
-**Cần ghi**: màn/tab/modal/dialog mới hoặc bị xóa · thêm/bớt/đổi trường, nút, bộ lọc, trạng thái · đổi luồng (nút mở màn nào, lưu xong đi đâu) · đổi câu cảnh báo/ràng buộc (AI nháp, consent, không phải kênh cấp cứu…) · đổi token màu/chữ/radius ở `design.css`.
-**Không cần ghi**: refactor không đổi giao diện · test/evidence · seed/dữ liệu mẫu (trừ khi thêm cột/trạng thái mới) · sửa lỗi không đổi hiển thị.
+**Log**: added or removed screen/tab/modal/dialog · added/removed/changed field, button, filter, status · changed flow (which screen a button opens, where saving goes) · changed warning/business-rule wording (AI draft, consent, not an emergency channel…) · changed color/type/radius token in `design.css`.
+**Don't log**: refactors with no UI change · tests/evidence · seed/sample data (unless it adds a new column/status) · fixes with no visible change.
 
-Mẫu (mục mới lên trên cùng):
+Template (newest entry on top):
 
 ```md
-### YYYY-MM-DD · <thêm|sửa|xóa> · <tên màn/tab/modal>
-- Nơi sửa: `prototype/shared/<file>` · selector `data-nav="…"` / `data-tab="…"` / `data-modal="…"` / nút "…"
-- Thay đổi: <trường/nút/trạng thái/câu nào thêm, bớt, đổi; luồng mới>
-- Canvas dự kiến: <mã màn trong references/coverage.md, vd I2, J6 · hoặc "màn mới">
-- Người ghi: <tên/agent> · commit/PR nếu có
+### YYYY-MM-DD · <add|change|remove> · <screen/tab/modal name>
+- Where: `prototype/shared/<file>` · selector `data-nav="…"` / `data-tab="…"` / `data-modal="…"` / button "…"
+- Change: <which field/button/status/sentence was added, removed, changed; new flow>
+- Canvas target: <screen code from references/coverage.md, e.g. I2, J6 · or "new screen">
+- Logged by: <name/agent> · commit/PR if any
 ```
 
-Không chắc mã canvas thì ghi "chưa rõ"; skill sẽ tra trong `references/coverage.md`.
+If unsure of the canvas code, write "unknown"; the skill looks it up in `references/coverage.md`. Keep Vietnamese UI labels and wording exactly as they appear on the web.
 
-## Chờ chuyển
+## Pending
 
-_(trống)_
+_(empty)_
 
-## Đã xử lý
+## Done
 
-Skill chuyển mục từ "Chờ chuyển" xuống đây kèm kết quả, rồi cập nhật **Mốc đồng bộ** thành commit đã đối chiếu. Giữ khoảng 20 mục gần nhất; mục cũ hơn xem git history.
+The skill moves entries from "Pending" down here with their result, then updates **Sync baseline** to the commit it compared against. Keep about the 20 most recent entries; older ones are in git history.
 
-### 2026-09-23 · đồng bộ toàn bộ · baseline
-- Dump toàn bộ Clinic Web, Patient 360, Patient Mobile, Finance; so với canvas 55 màn.
-- Kết quả: thêm I1–I13, J1–J11, K1–K3 (canvas 82 màn), đẩy lên claude.ai/design. Bảng đối chiếu ở `references/coverage.md`.
+### 2026-09-23 · full sync · baseline
+- Dumped all of Clinic Web, Patient 360, Patient Mobile and Finance; compared against the 55-screen canvas.
+- Result: added I1–I13, J1–J11, K1–K3 (82-screen canvas), pushed to claude.ai/design. Mapping table in `references/coverage.md`.

@@ -35,7 +35,7 @@ TenantId on every record; no PII in logs; encrypted transport/storage; signed me
 
 ## Bổ sung Flutter template — 22/09/2026
 
-Bổ sung Flutter Material 3 trong `flutter-template/`; state dùng Riverpod (`riverpod_generator`) trong `lib/state/`, catalog bundle, memory-only. Browser preview là Flutter build, review shell chỉ chứa iframe. Target Android/iOS có scaffold nhưng chưa nghiệm thu build/device. Không nối API hoặc localStorage của web. [ARCH-PB01](ARCH-PB01.md) mô tả state boundary hiện tại; [runbook](21_NATIVE_RUNBOOK.md) hướng dẫn build và đồng bộ catalog.
+Bổ sung Flutter Material 3 trong `flutter-template/`; state dùng Riverpod (`riverpod_generator`) trong `lib/features/*/presentation/providers/` (kiến trúc feature-first), catalog bundle, memory-only. Browser preview là Flutter build, review shell chỉ chứa iframe. Target Android/iOS có scaffold nhưng chưa nghiệm thu build/device. Không nối API hoặc localStorage của web. [ARCH-PB01](ARCH-PB01.md) mô tả state boundary hiện tại; [runbook](21_NATIVE_RUNBOOK.md) hướng dẫn build và đồng bộ catalog.
 
 
 ## Bổ sung tài chính PB02

@@ -1,83 +1,83 @@
-# AGENT.md — Quy tắc làm việc cho Pema Digital Clinic
+# AGENT.md — Working rules for Pema Digital Clinic
 
-## Quy tắc tài chính PB02
+## PB02 finance rules
 
-Khi sửa tài chính, đọc SCOPE/SPEC/MODULEMAP/ARCH-PB02 theo 0→1→2→3 và [hướng dẫn nghiệp vụ](docs/24_FINANCE_AND_PROCEDURE_FEES.md). Không trộn doanh số thực hiện với thực thu/tiền thủ thuật. Giữ snapshot tỷ lệ, chặn thu trùng/vượt nợ, không sửa kỳ chốt, không tự gán bác sĩ thực hiện từ owner hồ sơ. API phải trả projection theo role; role header vẫn chỉ là mô phỏng. Chạy `python prototype/finance_test.py` và Flutter test khi đổi logic; không đưa DB `.local/` hoặc dữ liệu thật vào Git. Giới hạn memory-only Flutter ở mục dưới chỉ áp dụng PB01; PB02 dùng HTTP/SQLite.
+When changing finance, read SCOPE/SPEC/MODULEMAP/ARCH-PB02 in order 0→1→2→3 and the [business guide](docs/24_FINANCE_AND_PROCEDURE_FEES.md). Do not mix performed revenue with collected cash/procedure fees. Keep rate snapshots, block duplicate collection and overpayment, never edit a closed period, and never auto-assign the performing doctor from the record owner. The API must return a projection per role; the role header is still only a simulation. Run `python prototype/finance_test.py` and the Flutter tests when logic changes; never put the `.local/` DB or real data into Git. The Flutter memory-only limit in the section below applies only to PB01; PB02 uses HTTP/SQLite.
 
 
-Áp dụng cho mọi thay đổi trong workspace Pema.
+Applies to every change in the Pema workspace.
 
-## Trước khi sửa
+## Before editing
 
-1. Đọc SCOPE-PB01, SPEC-PB01, MODULEMAP-PB01, ARCH-PB01 theo thứ tự.
-2. Đọc domain/product/architecture docs liên quan và kiểm tra hành vi prototype trước khi suy ra yêu cầu.
-3. Xác định thay đổi thuộc prototype hay pilot; không gọi là production nếu chưa có backend/security tương ứng.
+1. Read SCOPE-PB01, SPEC-PB01, MODULEMAP-PB01, ARCH-PB01 in that order.
+2. Read the related domain/product/architecture docs and check the prototype's behavior before inferring requirements.
+3. Decide whether the change belongs to the prototype or the pilot; do not call it production without the matching backend/security.
 
-## Sản phẩm và dữ liệu
+## Product and data
 
-- Hồ sơ bệnh nhân phải là dữ liệu tổng hợp; không đưa hồ sơ, ảnh, số điện thoại hay token thật vào repo, fixture hoặc screenshot. Catalog sản phẩm là ngoại lệ có chủ ý: dữ liệu từ Excel người dùng cung cấp, không được gọi là catalog giả lập.
-- Patient 360 nối bối cảnh nhưng record/event gốc là nguồn sự thật.
-- Giữ consent cho media và audit shape cho mutation.
-- AI/clinical draft có nguồn và bác sĩ review; không autonomous diagnosis, efficacy score hoặc đổi phác đồ tự động.
-- Không suy diễn chăm sóc hoàn tất từ thanh toán, hoặc đơn thuốc đã cấp từ việc được duyệt.
-- Giữ Clinic Web ↔ Patient Mobile và stable IDs khi sửa shared state.
+- Patient records must be synthetic; never put real records, photos, phone numbers or tokens in the repo, fixtures or screenshots. The product catalog is a deliberate exception: it comes from the user's Excel file and must not be called a simulated catalog.
+- Patient 360 connects context, but the original record/event is the source of truth.
+- Keep consent for media and an audit shape for mutations.
+- AI/clinical drafts carry their sources and are reviewed by a doctor; no autonomous diagnosis, efficacy scores or automatic protocol changes.
+- Never infer that care is complete from a payment, or that a prescription was dispensed because it was approved.
+- Keep Clinic Web ↔ Patient Mobile in sync and keep stable IDs when changing shared state.
 
-## Luồng tài liệu bắt buộc
+## Required document flow
 
-Khi thay đổi scope hoặc hành vi, cập nhật theo thứ tự:
+When scope or behavior changes, update in this order:
 
     0 SCOPE-PB01 → 1 SPEC-PB01 → 2 MODULEMAP-PB01 → 3 ARCH-PB01
 
-Sau đó cập nhật README, docs vận hành/domain liên quan và append checkpoint vào SECTION_PROGRESS. Nếu chỉ sửa UI, ghi màn/viewport/screenshot evidence và kiểm tra acceptance bị ảnh hưởng hay không.
+Then update the README, related operations/domain docs, and append a checkpoint to SECTION_PROGRESS. For UI-only changes, record the screen/viewport/screenshot evidence and check whether any acceptance criterion is affected.
 
-## Kiểm thử và bằng chứng
+## Testing and evidence
 
-- Chạy suite phù hợp: check-linked.cjs, review-desktop.cjs, operations-test.cjs, smoke-final.cjs, data-audit.cjs.
-- Với responsive, kiểm tra 1920×1020, 1440×900, 1280×720, 1024×768 và 390×844; không document overflow.
-- Xem screenshot, page errors, dữ liệu liên kết và trạng thái lỗi; exit code một mình chưa đủ.
-- Cập nhật docs khớp hành vi quan sát được, không ghi tính năng đã có chỉ vì dự kiến.
+- Run the relevant suites: check-linked.cjs, review-desktop.cjs, operations-test.cjs, smoke-final.cjs, data-audit.cjs.
+- For responsive work, check 1920×1020, 1440×900, 1280×720, 1024×768 and 390×844; no document overflow.
+- Look at screenshots, page errors, linked data and error states; an exit code alone is not enough.
+- Keep docs in line with observed behavior; do not document a feature as existing just because it is planned.
 
-## Quy tắc riêng cho template Flutter
+## Flutter template rules
 
-1. Đọc [mapping màn](docs/NATIVE-TEMPLATE.md), [runbook](docs/21_NATIVE_RUNBOOK.md) và [parity/test](docs/22_NATIVE_PARITY_AND_VALIDATION.md) trước khi sửa native. Xác định thay đổi là vòng duyệt thiết kế hay triển khai nghiệp vụ thật.
-2. Source là `flutter-template/lib/` và assets; `prototype/native-review/index.html` chỉ là khung duyệt. Không sửa `build/` hoặc `prototype/native-preview/` đã compile; build lại sau sửa source.
-3. Giữ logo Pema, Be Vietnam Pro local/OFL, primary #0B4F94, navy #083A6E, sky #3CAAE5. Dùng màn con và bottom sheet ngắn; không bê bảng desktop hoặc ép nhiều module lên home mobile. Token thay đổi phải cập nhật mapping và kiểm tra web liên quan.
-4. Catalog đi từ `data/danhsach.xlsx` → importer web → `prototype/shared/product-catalog.json` → `flutter-template/assets/products.json`. Kiểm hash/count/type, không sửa độc lập hai bản hoặc suy loại từ tên. Xem lệnh ở runbook.
-5. State Flutter là provider Riverpod sinh bằng `riverpod_generator` trong `flutter-template/lib/state/` (catalog, session, patients, orders/receipts, finance); memory-only, độc lập localStorage web. Provider giữ state phiên phải `keepAlive: true`; model immutable, sửa bằng method của notifier, không mutate map/list tại chỗ. State hiện tách theo patient: order/receipt, lịch/note/buổi/follow-up/cart, ghi chú CSKH và bàn giao; Care/Clinic giữ selection riêng. Khi sửa data model phải kiểm isolation và cập nhật ARCH/parity; giữ test cách ly mọi field mới và không suy ra persistence/auth từ cách ly memory.
-6. Header Clinic/Care không phải RBAC. Phiếu A5 không phải PDF/in native. Checkbox ảnh không tạo file hoặc consent bền vững. Không ghi đã tích hợp các capability này chỉ vì có UI.
-7. Khi sửa `lib/state/`: chạy `dart run build_runner build` và commit file `*.g.dart` sinh ra. Khi Dart/assets thay đổi: `dart analyze` (chạy cả `riverpod_lint`; `flutter analyze` không chạy plugin này), `flutter test --reporter expanded`, build preview; xem trực tiếp các màn bị ảnh hưởng. Review ở 360×800, 390×844, 430×932, 768×1024; suite hiện tại dùng height 844 ở cả bốn width. Không suy test tự động bằng test thiết bị.
-8. Ghi riêng test đã chạy, kiểm tra thủ công, acceptance còn mở; không dùng kết quả web để xác nhận native. Android/iOS device, keyboard, accessibility, camera, PDF cần bằng chứng riêng.
-9. Với thay đổi chỉ tài liệu: đối chiếu source, kiểm link nội bộ và `git diff --check`; không cần chạy lại suite app khi không đổi hành vi. Dẫn nguồn validation cũ rõ ngày, không ghi thành kết quả mới.
-10. Cập nhật 0→1→2→3 trước; sau đó README, NATIVE-TEMPLATE, runbook/parity và docs nghiệp vụ bị ảnh hưởng; append SECTION_PROGRESS. Không sửa lịch sử PASS thành claim rộng hơn.
+1. Read the [screen mapping](docs/NATIVE-TEMPLATE.md), [runbook](docs/21_NATIVE_RUNBOOK.md) and [parity/test](docs/22_NATIVE_PARITY_AND_VALIDATION.md) before changing native code. Decide whether the change is a design review round or a real business implementation.
+2. The source is `flutter-template/lib/` and its assets; `prototype/native-review/index.html` is only a review frame. Never edit the compiled `build/` or `prototype/native-preview/`; rebuild after changing the source.
+3. Keep the Pema logo, local Be Vietnam Pro (OFL), primary #0B4F94, navy #083A6E, sky #3CAAE5. Use child screens and short bottom sheets; do not carry desktop tables over or cram many modules onto the mobile home. Token changes must update the mapping and be checked against the related web.
+4. The catalog flows `data/danhsach.xlsx` → web importer → `prototype/shared/product-catalog.json` → `flutter-template/assets/products.json`. Check hash/count/type; never edit the two copies independently or infer the type from the name. Commands are in the runbook.
+5. Flutter state is Riverpod providers generated by `riverpod_generator` in `flutter-template/lib/features/<feature>/presentation/providers/` (catalog, session, patients, orders, billing/receipts, finance); the feature-first structure is in the `flutter-template` README; memory-only, independent of web localStorage. Providers holding session state must be `keepAlive: true`; models are immutable and changed through notifier methods, never by mutating maps/lists in place. State is currently split per patient: order/receipt, schedule/note/session/follow-up/cart, CSKH notes and handovers; Care/Clinic keep separate selections. When changing the data model, check isolation and update ARCH/parity; keep isolation tests for every new field and do not infer persistence/auth from memory isolation.
+6. The Clinic/Care header is not RBAC. The A5 slip is not a PDF/native print. The photo checkbox does not create a file or durable consent. Do not claim these capabilities are integrated just because there is UI.
+7. When changing `@riverpod` providers in `lib/`: run `dart run build_runner build --delete-conflicting-outputs` and commit the generated `*.g.dart` files. When Dart/assets change: `dart analyze` (it also runs `riverpod_lint`; `flutter analyze` does not run this plugin), `flutter test --reporter expanded`, build the preview; look at the affected screens directly. Review at 360×800, 390×844, 430×932, 768×1024; the current suite uses height 844 for all four widths. Automated tests do not substitute for device tests.
+8. Record separately which tests ran, what was checked manually and which acceptance items remain open; never use web results to validate native. Android/iOS device, keyboard, accessibility, camera and PDF need their own evidence.
+9. For documentation-only changes: check against the source, check internal links and run `git diff --check`; no need to rerun the app suites when behavior does not change. Cite old validation results with their date; never present them as new results.
+10. Update 0→1→2→3 first; then the README, NATIVE-TEMPLATE, runbook/parity and affected business docs; append to SECTION_PROGRESS. Never rewrite PASS history into a broader claim.
 
-## Git và bàn giao
+## Git and handover
 
-- Không reset, checkout -- hoặc xóa công việc của agent/người dùng khác.
-- Commit message nêu rõ phạm vi, ví dụ: docs: define Pema PB01 scope spec modules and architecture.
-- Trước commit chạy git diff --check và xem git status; chỉ commit file thuộc mục tiêu hoặc evidence do test tạo.
-- Push theo yêu cầu và xác minh remote/commit sau push.
-
-
-## Skill thiết kế của dự án
-
-Khi thiết kế, sửa hoặc review UI/UX Pema, đọc [pema-design](.agents/skills/pema-design/SKILL.md) và reference phù hợp. Hướng dẫn dùng/chia sẻ ở [docs/23_PEMA_DESIGN_SKILL.md](docs/23_PEMA_DESIGN_SKILL.md). Khi token, navigation hoặc capability đổi, cập nhật skill cùng docs, tránh để bản hướng dẫn lệch code. Skill không thay yêu cầu cụ thể của người dùng.
-
-Khi đối chiếu web với design canvas claude.ai/design và bổ sung màn còn thiếu (chỉ thiết kế, không code .dart), làm theo [pema-web-to-canvas](.claude/skills/pema-web-to-canvas/SKILL.md); cập nhật `references/coverage.md` của skill sau mỗi lần chạy.
-
-## Ghi nhận thay đổi web cho design canvas
-
-Mỗi thay đổi **hiển thị** trên web Pema (`prototype/clinic-web`, `prototype/patient-mobile`, `prototype/finance`, `prototype/shared/*.js|*.css`) phải thêm một mục vào "Chờ chuyển" của [web-changes.md](.claude/skills/pema-web-to-canvas/web-changes.md) trong **cùng commit**: màn/tab/modal/dialog thêm hoặc xóa, trường/nút/bộ lọc/trạng thái đổi, luồng đổi, câu ràng buộc nghiệp vụ đổi, token CSS đổi. Ghi nơi sửa (file + selector/nút), thay đổi, mã màn canvas dự kiến (tra `references/coverage.md`, không chắc ghi "chưa rõ"). Refactor không đổi giao diện, test, seed dữ liệu và sửa lỗi không đổi hiển thị thì không cần ghi. Không tự sửa canvas trong lúc sửa web, trừ khi được yêu cầu; skill chuyển đổi đọc nhật ký này thay vì rà lại toàn bộ màn. Kiểm tra trước commit: `node .claude/skills/pema-web-to-canvas/scripts/pending.cjs` không còn file `✗ CHƯA GHI`.
+- Never reset, `checkout --` or delete work of other agents/users.
+- Commit messages state the scope clearly, e.g.: docs: define Pema PB01 scope spec modules and architecture.
+- Before committing, run git diff --check and look at git status; only commit files that belong to the goal or evidence produced by tests.
+- Push only when asked, and verify the remote/commit after pushing.
 
 
-## CRM01 và tài khoản demo
+## Project design skill
 
-- Đọc bộ PB01 theo 0→1→2→3 và `docs/20_CRM01_PATIENT_LIFECYCLE.md` trước khi sửa. Nghiệp vụ CRM nằm ở crm-data/automation, UI không nhân bản rules.
-- Không gộp màn owner/bác sĩ/CSKH/kế toán. `staff-context.js` phân workspace và command demo, không phải authentication. Bác sĩ chỉ vào hồ sơ phụ trách/được phân lịch; CSKH không duyệt y khoa, kế toán không làm clinical.
-- Ngày demo 2026-09-20, idempotency rule+patient+source. Booking từ CRM phải cùng transaction với task/activity và đi qua validator lịch. Không tính reactivated từ booking; giữ task đã đóng khi rerun.
-- Migration không viết lại lâm sàng/hóa đơn hiện có. Tám case CRM01 cũ chỉ dùng seed mới/reset; 10 tài khoản Mobile CRM02 được bổ sung một lần khi nâng dữ liệu, không ghi đè hồ sơ hiện có. Opt-out marketing không xóa việc theo dõi an toàn. CRM log nội bộ không tự công bố lên patient app; projection mobile lấy đúng identity người bệnh, không dùng selected của nhân viên.
-- Chạy crm-test.cjs, crm-browser-test.cjs và suite regression liên quan; giữ kiểm lỗi save rollback, wrong patient, stale/duplicate task, quyền demo, prescription gating, 200-row pagination, 5 viewport. Khi kiểm output bị khóa file, dùng PEMA_EVIDENCE_DIR riêng; không đánh dấu PASS khi test chưa kết thúc.
+When designing, changing or reviewing Pema UI/UX, read [pema-design](.agents/skills/pema-design/SKILL.md) and the relevant reference. Usage/sharing guide: [docs/23_PEMA_DESIGN_SKILL.md](docs/23_PEMA_DESIGN_SKILL.md). When tokens, navigation or capabilities change, update the skill together with the docs so the guide does not drift from the code. The skill does not override the user's specific requests.
+
+When comparing the web with the claude.ai/design canvas and adding missing screens (design only, no .dart code), follow [pema-web-to-canvas](.claude/skills/pema-web-to-canvas/SKILL.md); update the skill's `references/coverage.md` after every run.
+
+## Logging web changes for the design canvas
+
+Every **visible** change to the Pema web (`prototype/clinic-web`, `prototype/patient-mobile`, `prototype/finance`, `prototype/shared/*.js|*.css`) must add an entry under "Pending" in [web-changes.md](.claude/skills/pema-web-to-canvas/web-changes.md) in the **same commit**: added or removed screen/tab/modal/dialog, changed field/button/filter/status, changed flow, changed business-rule wording, changed CSS token. Record where it changed (file + selector/button), what changed, and the expected canvas screen code (look it up in `references/coverage.md`; write "unknown" if unsure). Refactors with no visible change, tests, seed data and fixes with no visible change need no entry. Do not edit the canvas while changing the web unless asked; the conversion skill reads this log instead of re-scanning every screen. Check before committing: `node .claude/skills/pema-web-to-canvas/scripts/pending.cjs` shows no `✗ NOT LOGGED` files.
 
 
-## Mobile CRM02 và tài chính chung shell
+## CRM01 and demo accounts
 
-Đọc [hướng dẫn hiện trạng](docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md). Finance phải mount/dispose trong Clinic, selector/CSS giới hạn workspace, không thêm role picker thứ hai. Seed thêm 10 hồ sơ một lần, giữ hồ sơ đã có và xử lý va chạm ID. Cập nhật bundle bằng `node prototype/export-native-patients.cjs`; chạy `--check`, mobile-crm-test.cjs và Flutter mobile_roles_test. Ghi chú nội bộ/bàn giao CSKH không được đưa vào updates dành cho Care.
+- Read the PB01 set in order 0→1→2→3 and `docs/20_CRM01_PATIENT_LIFECYCLE.md` before editing. CRM business logic lives in crm-data/automation; the UI does not duplicate rules.
+- Do not merge the owner/doctor/CSKH/accountant screens. `staff-context.js` assigns workspaces and demo commands; it is not authentication. Doctors only open records they own or are scheduled for; CSKH does not do medical review; accountants do not do clinical work.
+- Demo date 2026-09-20, idempotency rule+patient+source. Booking from CRM must be in the same transaction as the task/activity and go through the schedule validator. Do not count reactivated from a booking; keep closed tasks when rerunning.
+- Migrations never rewrite existing clinical records/invoices. The eight old CRM01 cases only use a new seed/reset; the 10 Mobile CRM02 accounts are added once when upgrading data, never overwriting existing records. Marketing opt-out does not remove safety follow-up. The internal CRM log is never published to the patient app automatically; the mobile projection uses the patient's own identity, never the staff member's selection.
+- Run crm-test.cjs, crm-browser-test.cjs and the related regression suites; keep the checks for save rollback, wrong patient, stale/duplicate task, demo permissions, prescription gating, 200-row pagination, 5 viewports. When output files are locked, use a separate PEMA_EVIDENCE_DIR; never mark PASS before the tests finish.
+
+
+## Mobile CRM02 and shared-shell finance
+
+Read the [current-state guide](docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md). Finance must mount/dispose inside Clinic, selectors/CSS scoped to the workspace, no second role picker. Seed the extra 10 records once, keep existing records and handle ID collisions. Update the bundle with `node prototype/export-native-patients.cjs`; run `--check`, mobile-crm-test.cjs and the Flutter mobile_roles_test. Internal CSKH notes/handovers must not go into updates meant for Care.

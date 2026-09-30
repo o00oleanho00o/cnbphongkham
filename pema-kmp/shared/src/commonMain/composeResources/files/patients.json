@@ -1,0 +1,1032 @@
+[
+  {
+    "id": "P001",
+    "name": "Nguyễn Minh Linh",
+    "doctor": "BS. Tâm",
+    "sessions": 2,
+    "total": 5,
+    "appointment": "08:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P001:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P002",
+    "name": "Trần Ngọc Anh",
+    "doctor": "BS. Mai",
+    "sessions": 2,
+    "total": 4,
+    "appointment": "08:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P002:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P003",
+    "name": "Lê Hoàng Nam",
+    "doctor": "BS. An",
+    "sessions": 3,
+    "total": 4,
+    "appointment": "08:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P003:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P004",
+    "name": "Phạm Thảo Vy",
+    "doctor": "BS. Lan",
+    "sessions": 2,
+    "total": 3,
+    "appointment": "08:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P004:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P005",
+    "name": "Vũ Quỳnh Trang",
+    "doctor": "BS. Tâm",
+    "sessions": 1,
+    "total": 5,
+    "appointment": "09:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P005:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P006",
+    "name": "Đặng Gia Hân",
+    "doctor": "BS. Mai",
+    "sessions": 2,
+    "total": 3,
+    "appointment": "09:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P006:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P007",
+    "name": "Bùi Khánh An",
+    "doctor": "BS. An",
+    "sessions": 3,
+    "total": 5,
+    "appointment": "09:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P007:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P008",
+    "name": "Ngô Đức Minh",
+    "doctor": "BS. Lan",
+    "sessions": 2,
+    "total": 4,
+    "appointment": "09:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P008:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P009",
+    "name": "Đỗ Phương Nhi",
+    "doctor": "BS. Tâm",
+    "sessions": 3,
+    "total": 4,
+    "appointment": "10:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P009:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P010",
+    "name": "Hồ Bảo Ngọc",
+    "doctor": "BS. Mai",
+    "sessions": 2,
+    "total": 3,
+    "appointment": "10:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P010:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P011",
+    "name": "Dương Tuấn Kiệt",
+    "doctor": "BS. An",
+    "sessions": 3,
+    "total": 5,
+    "appointment": "10:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P011:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P012",
+    "name": "Võ Thanh Trúc",
+    "doctor": "BS. Lan",
+    "sessions": 2,
+    "total": 3,
+    "appointment": "10:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P012:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P013",
+    "name": "Nguyễn Mai Chi",
+    "doctor": "BS. Tâm",
+    "sessions": 1,
+    "total": 5,
+    "appointment": "11:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P013:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P014",
+    "name": "Trần Quốc Bảo",
+    "doctor": "BS. Mai",
+    "sessions": 2,
+    "total": 4,
+    "appointment": "11:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P014:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P015",
+    "name": "Lê Ngọc Diệp",
+    "doctor": "BS. An",
+    "sessions": 3,
+    "total": 4,
+    "appointment": "11:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P015:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P016",
+    "name": "Phạm Minh Khang",
+    "doctor": "BS. Lan",
+    "sessions": 2,
+    "total": 3,
+    "appointment": "11:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P016:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P017",
+    "name": "Vũ Hà My",
+    "doctor": "BS. Tâm",
+    "sessions": 1,
+    "total": 5,
+    "appointment": "13:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P017:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P018",
+    "name": "Đặng Phương Linh",
+    "doctor": "BS. Mai",
+    "sessions": 2,
+    "total": 3,
+    "appointment": "13:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P018:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P019",
+    "name": "Bùi Anh Thư",
+    "doctor": "BS. An",
+    "sessions": 3,
+    "total": 5,
+    "appointment": "13:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P019:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P020",
+    "name": "Ngô Nhật Hạ",
+    "doctor": "BS. Lan",
+    "sessions": 2,
+    "total": 4,
+    "appointment": "13:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P020:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P021",
+    "name": "Đỗ Đức Huy",
+    "doctor": "BS. Tâm",
+    "sessions": 3,
+    "total": 4,
+    "appointment": "14:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P021:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P022",
+    "name": "Hồ Mỹ Duyên",
+    "doctor": "BS. Mai",
+    "sessions": 2,
+    "total": 3,
+    "appointment": "14:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P022:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P023",
+    "name": "Dương Thanh Hà",
+    "doctor": "BS. An",
+    "sessions": 3,
+    "total": 5,
+    "appointment": "14:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P023:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P024",
+    "name": "Võ Tường Vy",
+    "doctor": "BS. Lan",
+    "sessions": 2,
+    "total": 3,
+    "appointment": "14:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P024:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P025",
+    "name": "Nguyễn Bảo Châu",
+    "doctor": "BS. Tâm",
+    "sessions": 1,
+    "total": 5,
+    "appointment": "15:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "01 · Sau Laser CO2 D+1",
+    "tasks": [
+      {
+        "id": "CRM:d1:P025:s24-0",
+        "type": "d1",
+        "title": "Sau thủ thuật D+1",
+        "status": "open"
+      },
+      {
+        "id": "CRM:due:P025:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P026",
+    "name": "Trần Minh Đức",
+    "doctor": "BS. Mai",
+    "sessions": 2,
+    "total": 4,
+    "appointment": "15:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "02 · D+3 gửi ảnh",
+    "tasks": [
+      {
+        "id": "CRM:d1:P026:s25-1",
+        "type": "d1",
+        "title": "Sau thủ thuật D+1",
+        "status": "open"
+      },
+      {
+        "id": "CRM:d3:P026:s25-1",
+        "type": "d3",
+        "title": "D+3 cần ảnh",
+        "status": "open"
+      },
+      {
+        "id": "CRM:due:P026:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P027",
+    "name": "Lê Hồng Nhung",
+    "doctor": "BS. An",
+    "sessions": 3,
+    "total": 4,
+    "appointment": "",
+    "day": "",
+    "group": "",
+    "case": "03 · Quá hạn 14 ngày",
+    "tasks": [
+      {
+        "id": "CRM:overdue:P027:2026-09-06",
+        "type": "overdue",
+        "title": "Quá hạn tái khám",
+        "status": "open"
+      },
+      {
+        "id": "CRM:no_show:P027:A0-26",
+        "type": "no_show",
+        "title": "Vắng/hủy chưa đặt lại",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P028",
+    "name": "Phạm Hải Yến",
+    "doctor": "BS. Lan",
+    "sessions": 2,
+    "total": 3,
+    "appointment": "",
+    "day": "",
+    "group": "",
+    "case": "04 · Vắng hẹn 2 ngày",
+    "tasks": [
+      {
+        "id": "CRM:overdue:P028:2026-09-15",
+        "type": "overdue",
+        "title": "Quá hạn tái khám",
+        "status": "open"
+      },
+      {
+        "id": "CRM:no_show:P028:A0-27",
+        "type": "no_show",
+        "title": "Vắng/hủy chưa đặt lại",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P029",
+    "name": "Vũ Gia Bảo",
+    "doctor": "BS. Tâm",
+    "sessions": 3,
+    "total": 6,
+    "appointment": "",
+    "day": "",
+    "group": "",
+    "case": "05 · Còn 3/6 buổi, vắng 60 ngày",
+    "tasks": [
+      {
+        "id": "CRM:overdue:P029:2026-08-21",
+        "type": "overdue",
+        "title": "Quá hạn tái khám",
+        "status": "open"
+      },
+      {
+        "id": "CRM:abandoned:P029:CRM-S29-2",
+        "type": "abandoned",
+        "title": "Nguy cơ bỏ liệu trình",
+        "status": "open"
+      },
+      {
+        "id": "CRM:no_show:P029:A0-28",
+        "type": "no_show",
+        "title": "Vắng/hủy chưa đặt lại",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P030",
+    "name": "Đặng Ngọc Hân",
+    "doctor": "BS. Mai",
+    "sessions": 2,
+    "total": 3,
+    "appointment": "",
+    "day": "",
+    "group": "",
+    "case": "06 · Khách cũ 180 ngày",
+    "tasks": [
+      {
+        "id": "CRM:overdue:P030:2026-04-23",
+        "type": "overdue",
+        "title": "Quá hạn tái khám",
+        "status": "open"
+      },
+      {
+        "id": "CRM:abandoned:P030:s29-1",
+        "type": "abandoned",
+        "title": "Nguy cơ bỏ liệu trình",
+        "status": "open"
+      },
+      {
+        "id": "CRM:no_show:P030:A0-29",
+        "type": "no_show",
+        "title": "Vắng/hủy chưa đặt lại",
+        "status": "open"
+      },
+      {
+        "id": "CRM:dormant180:P030:2026-03-24",
+        "type": "dormant180",
+        "title": "180 ngày chưa quay lại",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P031",
+    "name": "Bùi Thùy Dương",
+    "doctor": "BS. An",
+    "sessions": 3,
+    "total": 5,
+    "appointment": "",
+    "day": "",
+    "group": "",
+    "case": "07 · Gọi lại → đặt lịch",
+    "tasks": [
+      {
+        "id": "CRM:overdue:P031:2026-07-17",
+        "type": "overdue",
+        "title": "Quá hạn tái khám",
+        "status": "open"
+      },
+      {
+        "id": "CRM:abandoned:P031:s30-2",
+        "type": "abandoned",
+        "title": "Nguy cơ bỏ liệu trình",
+        "status": "open"
+      },
+      {
+        "id": "CRM:no_show:P031:A0-30",
+        "type": "no_show",
+        "title": "Vắng/hủy chưa đặt lại",
+        "status": "open"
+      },
+      {
+        "id": "CRM:dormant90:P031:2026-06-17",
+        "type": "dormant90",
+        "title": "90 ngày chưa quay lại",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P032",
+    "name": "Ngô Khánh Vy",
+    "doctor": "BS. Lan",
+    "sessions": 2,
+    "total": 4,
+    "appointment": "16:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "08 · Sinh nhật tuần này",
+    "tasks": [
+      {
+        "id": "CRM:d1:P032:s31-1",
+        "type": "d1",
+        "title": "Sau thủ thuật D+1",
+        "status": "open"
+      },
+      {
+        "id": "CRM:d3:P032:s31-1",
+        "type": "d3",
+        "title": "D+3 cần ảnh",
+        "status": "open"
+      },
+      {
+        "id": "CRM:d7:P032:s31-1",
+        "type": "d7",
+        "title": "D+7 bác sĩ review",
+        "status": "open"
+      },
+      {
+        "id": "CRM:due:P032:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      },
+      {
+        "id": "CRM:birthday:P032:2026-09-23",
+        "type": "birthday",
+        "title": "Sinh nhật trong tuần",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P033",
+    "name": "Đỗ Thanh Tùng",
+    "doctor": "BS. Tâm",
+    "sessions": 3,
+    "total": 4,
+    "appointment": "17:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P033:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P034",
+    "name": "Hồ Lan Anh",
+    "doctor": "BS. Mai",
+    "sessions": 2,
+    "total": 3,
+    "appointment": "17:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P034:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P035",
+    "name": "Dương Phúc An",
+    "doctor": "BS. An",
+    "sessions": 3,
+    "total": 5,
+    "appointment": "17:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P035:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P036",
+    "name": "Võ Minh Châu",
+    "doctor": "BS. Lan",
+    "sessions": 2,
+    "total": 3,
+    "appointment": "17:00",
+    "day": "2026-09-20",
+    "group": "",
+    "case": "",
+    "tasks": [
+      {
+        "id": "CRM:due:P036:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P037",
+    "name": "Nguyễn Ánh Dương",
+    "doctor": "BS. Tâm",
+    "sessions": 3,
+    "total": 6,
+    "appointment": "",
+    "day": "",
+    "group": "d1",
+    "case": "Sau thủ thuật D+1",
+    "tasks": [
+      {
+        "id": "CRM:d1:P037:MOBILE-P037-2",
+        "type": "d1",
+        "title": "Sau thủ thuật D+1",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P038",
+    "name": "Trần Minh Châu",
+    "doctor": "BS. Mai",
+    "sessions": 3,
+    "total": 6,
+    "appointment": "",
+    "day": "",
+    "group": "d3",
+    "case": "D+3 cần ảnh",
+    "tasks": [
+      {
+        "id": "CRM:d1:P038:MOBILE-P038-2",
+        "type": "d1",
+        "title": "Sau thủ thuật D+1",
+        "status": "open"
+      },
+      {
+        "id": "CRM:d3:P038:MOBILE-P038-2",
+        "type": "d3",
+        "title": "D+3 cần ảnh",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P039",
+    "name": "Lê Bảo Ngọc",
+    "doctor": "BS. Tâm",
+    "sessions": 3,
+    "total": 6,
+    "appointment": "",
+    "day": "",
+    "group": "d7",
+    "case": "D+7 bác sĩ review",
+    "tasks": [
+      {
+        "id": "CRM:d1:P039:MOBILE-P039-2",
+        "type": "d1",
+        "title": "Sau thủ thuật D+1",
+        "status": "open"
+      },
+      {
+        "id": "CRM:d3:P039:MOBILE-P039-2",
+        "type": "d3",
+        "title": "D+3 cần ảnh",
+        "status": "open"
+      },
+      {
+        "id": "CRM:d7:P039:MOBILE-P039-2",
+        "type": "d7",
+        "title": "D+7 bác sĩ review",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P040",
+    "name": "Phạm Gia Linh",
+    "doctor": "BS. Mai",
+    "sessions": 3,
+    "total": 6,
+    "appointment": "",
+    "day": "",
+    "group": "due",
+    "case": "Đến hạn tái khám",
+    "tasks": [
+      {
+        "id": "CRM:due:P040:2026-09-20",
+        "type": "due",
+        "title": "Đến hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P041",
+    "name": "Vũ Thanh Mai",
+    "doctor": "BS. Tâm",
+    "sessions": 3,
+    "total": 6,
+    "appointment": "",
+    "day": "",
+    "group": "overdue",
+    "case": "Quá hạn tái khám",
+    "tasks": [
+      {
+        "id": "CRM:overdue:P041:2026-09-06",
+        "type": "overdue",
+        "title": "Quá hạn tái khám",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P042",
+    "name": "Đặng Hoàng Yến",
+    "doctor": "BS. Mai",
+    "sessions": 3,
+    "total": 6,
+    "appointment": "",
+    "day": "",
+    "group": "no_show",
+    "case": "Vắng/hủy chưa đặt lại",
+    "tasks": [
+      {
+        "id": "CRM:overdue:P042:2026-09-15",
+        "type": "overdue",
+        "title": "Quá hạn tái khám",
+        "status": "open"
+      },
+      {
+        "id": "CRM:no_show:P042:MOBILE-A-P042",
+        "type": "no_show",
+        "title": "Vắng/hủy chưa đặt lại",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P043",
+    "name": "Bùi Ngọc Hà",
+    "doctor": "BS. Tâm",
+    "sessions": 3,
+    "total": 6,
+    "appointment": "",
+    "day": "",
+    "group": "abandoned",
+    "case": "Nguy cơ bỏ liệu trình",
+    "tasks": [
+      {
+        "id": "CRM:overdue:P043:2026-08-21",
+        "type": "overdue",
+        "title": "Quá hạn tái khám",
+        "status": "open"
+      },
+      {
+        "id": "CRM:abandoned:P043:MOBILE-P043-2",
+        "type": "abandoned",
+        "title": "Nguy cơ bỏ liệu trình",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P044",
+    "name": "Ngô Hải Anh",
+    "doctor": "BS. Mai",
+    "sessions": 3,
+    "total": 6,
+    "appointment": "",
+    "day": "",
+    "group": "dormant90",
+    "case": "90 ngày chưa quay lại",
+    "tasks": [
+      {
+        "id": "CRM:overdue:P044:2026-07-17",
+        "type": "overdue",
+        "title": "Quá hạn tái khám",
+        "status": "open"
+      },
+      {
+        "id": "CRM:abandoned:P044:MOBILE-P044-2",
+        "type": "abandoned",
+        "title": "Nguy cơ bỏ liệu trình",
+        "status": "open"
+      },
+      {
+        "id": "CRM:dormant90:P044:2026-06-17",
+        "type": "dormant90",
+        "title": "90 ngày chưa quay lại",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P045",
+    "name": "Đỗ Thu Hương",
+    "doctor": "BS. Tâm",
+    "sessions": 3,
+    "total": 6,
+    "appointment": "",
+    "day": "",
+    "group": "dormant180",
+    "case": "180 ngày chưa quay lại",
+    "tasks": [
+      {
+        "id": "CRM:overdue:P045:2026-04-18",
+        "type": "overdue",
+        "title": "Quá hạn tái khám",
+        "status": "open"
+      },
+      {
+        "id": "CRM:abandoned:P045:MOBILE-P045-2",
+        "type": "abandoned",
+        "title": "Nguy cơ bỏ liệu trình",
+        "status": "open"
+      },
+      {
+        "id": "CRM:dormant180:P045:2026-03-19",
+        "type": "dormant180",
+        "title": "180 ngày chưa quay lại",
+        "status": "open"
+      }
+    ]
+  },
+  {
+    "id": "P046",
+    "name": "Hồ Khánh Chi",
+    "doctor": "BS. Mai",
+    "sessions": 3,
+    "total": 6,
+    "appointment": "",
+    "day": "",
+    "group": "birthday",
+    "case": "Sinh nhật trong tuần",
+    "tasks": [
+      {
+        "id": "CRM:birthday:P046:2026-09-23",
+        "type": "birthday",
+        "title": "Sinh nhật trong tuần",
+        "status": "open"
+      }
+    ]
+  }
+]

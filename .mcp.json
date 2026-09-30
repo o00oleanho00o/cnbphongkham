@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "pema-design": {
+      "type": "stdio",
+      "command": "node",
+      "args": [".claude/skills/pema-canvas-to-kmp-compose/mcp/pema-design-mcp.cjs"]
+    }
+  }
+}

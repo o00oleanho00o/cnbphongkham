@@ -133,4 +133,4 @@ Bổ sung gói hướng dẫn Pema Design trong repository để đồng nghiệ
 
 Đồng bộ mobile và điều hướng: tài chính mở trong Clinic shell; URL cũ chuyển tới cùng workspace. Thêm 10 hồ sơ tổng hợp P037–P046 theo 10 nhóm CSKH, bổ sung một lần và không sửa 36 hồ sơ hiện có. Patient Mobile dùng bước tiếp theo theo rule, không lộ ghi chú nội bộ. Flutter bổ sung phân vai demo, chọn bệnh nhân theo tình huống và tách state theo patient; CRM native vẫn là template độc lập, không sync localStorage.
 
-UI review CSKH mobile: trạng thái Cần làm / Đã liên hệ / Chờ bác sĩ ở đầu màn; tìm kiếm và nút Lọc mở sheet 10 nhóm, không trải 10 chip lên home. Card đầu nằm trong 440px đầu ở viewport 360; lọc/trạng thái phải thực sự đổi danh sách. Widget `care_workspace.dart` dùng cùng PatientState, ghi chú nội bộ giữ tách Care.
+UI review CSKH mobile: trạng thái Cần làm / Đã liên hệ / Chờ bác sĩ ở đầu màn; tìm kiếm và nút Lọc mở sheet 10 nhóm, không trải 10 chip lên home. Card đầu nằm trong 440px đầu ở viewport 360; lọc/trạng thái phải thực sự đổi danh sách. Widget `care_queue.dart` dùng cùng PatientState, ghi chú nội bộ giữ tách Care.

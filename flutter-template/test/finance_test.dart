@@ -4,10 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pema_native_template/finance.dart';
-import 'package:pema_native_template/main.dart';
-import 'package:pema_native_template/state/catalog.dart';
-import 'package:pema_native_template/state/finance.dart';
+import 'package:pema_native_template/features/finance/presentation/screens/finance_screen.dart';
+import 'package:pema_native_template/features/finance/presentation/screens/procedure_form_screen.dart';
+import 'package:pema_native_template/app.dart';
+import 'package:pema_native_template/features/catalog/presentation/providers/catalog_provider.dart';
+import 'package:pema_native_template/core/network/http_client_provider.dart';
+import 'package:pema_native_template/features/finance/presentation/providers/finance_provider.dart';
 
 import 'support.dart';
 
@@ -79,7 +81,7 @@ Map<String, dynamic> fixture({String role = 'owner'}) => {
 };
 ProviderContainer financeContainer(http.Client client) =>
     ProviderContainer.test(
-      overrides: [financeClientProvider.overrideWithValue(client)],
+      overrides: [httpClientProvider.overrideWithValue(client)],
     );
 
 http.Response json(Object body, [int status = 200]) => http.Response(
@@ -111,9 +113,21 @@ void main() {
       expect(c.read(financeProvider).data, isNull);
       await finance.refresh();
       expect(c.read(financeProvider).unread, 0);
-      expect(c.read(financeProvider).data!['invoices'], isEmpty);
+      expect(c.read(financeProvider).data!.invoices, isEmpty);
+      expect(c.read(financeProvider).data!.summary.collected, isNull);
     },
   );
+  test('identical poll response does not notify finance watchers', () async {
+    final c = financeContainer(MockClient((r) async => json(fixture())));
+    var notified = 0;
+    c.listen(financeProvider, (_, _) => notified++);
+    final finance = c.read(financeProvider.notifier);
+    await finance.refresh();
+    expect(notified, 1);
+    await finance.refresh();
+    await finance.refresh();
+    expect(notified, 1);
+  });
   test(
     'API failed payment retains error and does not fabricate success',
     () async {
@@ -121,7 +135,14 @@ void main() {
         MockClient((r) async => json({'error': 'Số thu vượt công nợ'}, 400)),
       );
       final finance = c.read(financeProvider.notifier);
-      expect(await finance.command('payment', {'amount': 9999999}), false);
+      expect(
+        await finance.recordPayment(
+          key: 'k',
+          invoice: 'FIN-1',
+          amount: 9999999,
+        ),
+        false,
+      );
       expect(c.read(financeProvider).error, contains('vượt công nợ'));
       expect(c.read(financeProvider).data, isNull);
       expect(c.read(financeProvider).sending, false);
@@ -150,12 +171,12 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final catalog = (await tester.runAsync(Catalog.load))!;
+    final catalog = (await tester.runAsync(loadCatalog))!;
     final c = ProviderContainer(
       overrides: [
         catalogProvider.overrideWithValue(catalog),
         financeEnabledProvider.overrideWithValue(true),
-        financeClientProvider.overrideWithValue(
+        httpClientProvider.overrideWithValue(
           MockClient((r) async => json(state())),
         ),
       ],

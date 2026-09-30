@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pema_native_template/main.dart';
-import 'package:pema_native_template/state/catalog.dart';
-import 'package:pema_native_template/state/orders.dart';
-import 'package:pema_native_template/state/patients.dart';
-import 'package:pema_native_template/state/session.dart';
+import 'package:pema_native_template/app.dart';
+import 'package:pema_native_template/core/router/app_router.dart';
+import 'package:pema_native_template/features/catalog/presentation/providers/catalog_provider.dart';
+import 'package:pema_native_template/features/orders/presentation/providers/orders_provider.dart';
+import 'package:pema_native_template/features/billing/presentation/providers/receipts_provider.dart';
+import 'package:pema_native_template/features/patients/presentation/providers/patients_provider.dart';
+import 'package:pema_native_template/features/session/presentation/providers/session_provider.dart';
 
 import 'support.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test('catalog, draft approval and patient isolation', () async {
-    final c = clinicContainer(await Catalog.load());
+    final c = clinicContainer(await loadCatalog());
     final catalog = c.read(catalogProvider);
     expect(catalog.products.length, 115);
-    expect(
-      catalog.products.where((p) => p['outputType'] == 'UNRESOLVED').length,
-      7,
-    );
+    expect(catalog.products.where((p) => p.needsClassification).length, 7);
     final id = c.read(selectedPatientIdProvider);
     final patients = c.read(patientsProvider.notifier);
     final orders = c.read(ordersProvider.notifier);
@@ -37,10 +36,30 @@ void main() {
     orders.save(id, approve: true);
     expect(c.read(currentOrdersProvider).length, 1);
     expect(c.read(currentOrdersProvider).single.approved, true);
+    expect(
+      c.read(currentBillProvider).total,
+      c.read(currentOrdersProvider).single.total,
+    );
     c.read(receiptsProvider.notifier).settle(id, 100);
+    expect(c.read(currentBillProvider).paid, 100);
     c.read(sessionProvider.notifier).select(1);
     expect(c.read(currentOrdersProvider), isEmpty);
     expect(c.read(currentPaidProvider), 0);
+  });
+  test('saving another patient order keeps this patient list stable', () async {
+    final c = clinicContainer(await loadCatalog());
+    final catalog = c.read(catalogProvider);
+    final a = catalog.patientIds[0], b = catalog.patientIds[1];
+    var notified = 0;
+    c.listen(patientOrdersProvider(a), (_, _) => notified++);
+    c.read(patientsProvider.notifier).addToCart(b, catalog.products.first);
+    c.read(ordersProvider.notifier).save(b, approve: false);
+    c.read(patientOrdersProvider(a)); // flush the lazy recompute
+    expect(notified, 0);
+    c.read(patientsProvider.notifier).addToCart(a, catalog.products.first);
+    c.read(ordersProvider.notifier).save(a, approve: false);
+    expect(c.read(patientOrdersProvider(a)).length, 1);
+    expect(notified, 1);
   });
   for (final width in [360.0, 390.0, 430.0, 768.0]) {
     testWidgets('home and detail layouts at $width', (tester) async {
@@ -48,7 +67,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      final catalog = (await tester.runAsync(Catalog.load))!;
+      final catalog = (await tester.runAsync(loadCatalog))!;
       final c = clinicContainer(catalog);
       final id = c.read(selectedPatientIdProvider);
       final patients = c.read(patientsProvider.notifier);
@@ -83,7 +102,8 @@ void main() {
             c,
             MaterialApp(
               theme: ThemeData(fontFamily: 'BeVietnam'),
-              home: Detail(route: route),
+              onGenerateRoute: AppRouter.onGenerateRoute,
+              home: AppRouter.page(route),
             ),
           ),
         );
@@ -96,13 +116,19 @@ void main() {
   testWidgets('native order form adds catalog item and opens review', (
     tester,
   ) async {
-    final catalog = (await tester.runAsync(Catalog.load))!;
+    final catalog = (await tester.runAsync(loadCatalog))!;
     final c = clinicContainer(catalog);
     await tester.pumpWidget(
-      scoped(c, const MaterialApp(home: Detail(route: 'Lên đơn nhanh'))),
+      scoped(
+        c,
+        MaterialApp(
+          onGenerateRoute: AppRouter.onGenerateRoute,
+          home: AppRouter.page('Lên đơn nhanh'),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text(catalog.products.first['name']));
+    await tester.tap(find.text(catalog.products.first.name));
     await tester.pumpAndSettle();
     expect(c.read(currentPatientProvider).cart.length, 1);
     await tester.tap(find.textContaining('Xem đơn ·'));

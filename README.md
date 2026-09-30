@@ -75,9 +75,19 @@ Hai app là vanilla HTML/JavaScript, không cần `npm install` hoặc bước b
 
 ### Design Viewer — xem design canvas
 
-→ Mở **http://localhost:4190**
+→ Mở **http://localhost:4190** (Docker) hoặc `cd design-viewer; npm run dev` → **http://localhost:4180** (tự nạp lại khi sửa canvas).
 
 Phím tắt: `Ctrl+cuộn` phóng/thu, `Space+kéo` hoặc `H` để di chuyển, `V` để tương tác prototype, `Shift+1` vừa khung. Ghi nhớ vị trí zoom, props và trạng thái panel trong `localStorage`.
+
+**Xuất ảnh màn hình (như Figma):**
+- Chọn màn: bấm vào **tên màn** (ô mã + tên phía trên khung) trên canvas, hoặc bấm màn trong danh sách bên trái. Màn đang chọn có viền xanh; bấm đúp tên màn để phóng tới.
+- Nút **Xuất ảnh** (biểu tượng chia sẻ trên thanh công cụ) mở bảng xuất: chọn **tỉ lệ** 1x / 2x / 3x và **định dạng** PNG / JPG, rồi:
+  - **Xuất A1** — tải một ảnh `A1 · Hôm nay@2x.png` (390×844 → 780×1688 px ở 2x);
+  - **Nhóm A · 7 màn (.zip)** — cả nhóm của màn đang chọn;
+  - **Tất cả · 82 màn (.zip)** — toàn bộ canvas (~20 giây ở 2x).
+- Nút tải xuống xuất hiện khi rê chuột lên từng màn trong danh sách → xuất ngay màn đó với cài đặt hiện tại. Phím tắt `Ctrl+Shift+E` xuất màn đang chọn.
+- Ảnh gồm cả khung điện thoại (thanh trạng thái 9:41), không có viền chọn; PNG giữ góc bo trong suốt, JPG nền trắng. Font Be Vietnam Pro và icon Material Symbols được nhúng vào ảnh. Ảnh chụp đúng trạng thái đang hiển thị (props, màn prototype đang bấm tới).
+- Ảnh tham chiếu cho so sánh KMP (`pema-kmp/design-ref/`) được tạo tự động bằng `canvas-shots.cjs`, không cần xuất tay — xem [pema-kmp/README.md](pema-kmp/README.md).
 
 ## Giới hạn demo cần nói rõ
 

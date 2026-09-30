@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pema_native_template/main.dart';
-import 'package:pema_native_template/state/catalog.dart';
-import 'package:pema_native_template/state/patients.dart';
-import 'package:pema_native_template/state/session.dart';
+import 'package:pema_native_template/app.dart';
+import 'package:pema_native_template/features/catalog/presentation/providers/catalog_provider.dart';
+import 'package:pema_native_template/features/patients/domain/models/patient_state.dart';
+import 'package:pema_native_template/features/patients/presentation/providers/patients_provider.dart';
+import 'package:pema_native_template/features/session/domain/models/session.dart';
+import 'package:pema_native_template/features/session/presentation/providers/session_provider.dart';
 
 import 'support.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test('ten CSKH accounts and complete patient state isolation', () async {
-    final c = clinicContainer(await Catalog.load());
+    final c = clinicContainer(await loadCatalog());
     final profiles = c.read(catalogProvider).profiles;
     expect(profiles.length, 46);
-    final cases = profiles.where((p) => p['group'] != '').toList();
-    expect(cases.map((p) => p['group']).toSet().length, 10);
+    final cases = profiles.where((p) => p.inCareQueue).toList();
+    expect(cases.map((p) => p.careGroup).toSet().length, 10);
     for (final p in cases) {
-      expect((p['tasks'] as List).any((t) => t['type'] == p['group']), true);
+      expect(p.hasTask(p.careGroup), true);
     }
     final session = c.read(sessionProvider.notifier);
     final patients = c.read(patientsProvider.notifier);
@@ -74,7 +76,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      final c = clinicContainer((await tester.runAsync(Catalog.load))!);
+      final c = clinicContainer((await tester.runAsync(loadCatalog))!);
       PatientState current() => c.read(currentPatientProvider);
       await tester.pumpWidget(scoped(c, const PemaApp()));
       await tester.pumpAndSettle();
@@ -123,7 +125,7 @@ void main() {
       expect(find.text('Thu ngân'), findsNothing);
       await choose('BS. Mai · Bác sĩ điều trị');
       expect(find.text('Lịch & hồ sơ của tôi'), findsOneWidget);
-      expect(c.read(selectedProfileProvider)['doctor'], 'BS. Mai');
+      expect(c.read(selectedProfileProvider).doctor, 'BS. Mai');
       await choose('Kế toán · Đối soát & thu ngân');
       expect(find.text('Đối soát & thu ngân'), findsOneWidget);
       expect(find.text('CSKH hôm nay'), findsNothing);

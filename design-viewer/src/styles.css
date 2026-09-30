@@ -605,3 +605,153 @@ select {
     animation-duration: 2.4s;
   }
 }
+
+/* ---------- export (Figma-like) ---------- */
+.export {
+  position: relative;
+}
+.export-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--chrome);
+  box-shadow: 0 8px 28px rgba(8, 58, 110, 0.16);
+}
+.export-pop h2 {
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.export-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--chrome-2);
+}
+.segmented button {
+  min-width: 44px;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.segmented button[aria-checked='true'] {
+  background: var(--chrome);
+  color: var(--accent);
+  box-shadow: 0 1px 2px rgba(8, 58, 110, 0.12);
+}
+.export-size {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: var(--chrome);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.export-btn:hover:not(:disabled) {
+  background: var(--chrome-2);
+}
+.export-btn.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+.export-btn.primary:hover:not(:disabled) {
+  background: var(--accent-deep);
+}
+.export-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.export-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.export-progress progress {
+  flex: 1;
+  accent-color: var(--accent);
+}
+.export-msg {
+  margin: 0;
+  font-size: 12px;
+  color: var(--accent);
+}
+.export-hint {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.screen-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.screen-export {
+  position: absolute;
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: var(--chrome);
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+}
+.screen-export .icon {
+  font-size: 18px;
+}
+.screen-row:hover .screen-export,
+.screen-export:focus-visible,
+.screen-item[aria-current='true'] + .screen-export {
+  opacity: 1;
+}
+.screen-export:hover {
+  color: var(--accent);
+  background: var(--accent-tint);
+}

@@ -1,43 +1,43 @@
-# Nhận diện và hệ thị giác Pema
+# Pema identity and visual system
 
-Baseline tổng hợp từ vòng web và Flutter ngày 22/09/2026; đây là quy ước thiết kế dự án, không tuyên bố là brand manual chính thức. Khi token/code thay đổi có chủ ý, cập nhật reference này cùng docs UI.
+Baseline summarized from the web and Flutter cycle on 2026-09-22; this is the project's design convention, not a claim to be the official brand manual. When tokens/code intentionally change, update this reference together with the UI docs.
 
-## Màu và tương phản
+## Color and contrast
 
-| Token | Giá trị | Vai trò |
+| Token | Value | Role |
 |---|---|---|
-| Primary | #0B4F94 | CTA chính, active navigation, liên kết có nhấn |
-| Navy | #083A6E | Vùng nhận diện đậm, tiêu đề nhấn |
-| Sky | #3CAAE5 | Chi tiết đồ họa, highlight nhẹ; không mặc định làm nền chữ trắng nhỏ |
-| Ink | #17324D | Nội dung chính |
-| Muted | #5D7184 | Metadata/chú thích vẫn đọc được |
-| Paper | #F4F8FB | Nền app |
-| Surface | #FFFFFF | Form, hồ sơ, nội dung cần tập trung |
+| Primary | #0B4F94 | Main CTA, active navigation, clickable links |
+| Navy | #083A6E | Strong identity areas, emphasized headings |
+| Sky | #3CAAE5 | Graphic details, light highlights; not the default background for small white text |
+| Ink | #17324D | Main content |
+| Muted | #5D7184 | Metadata/notes that remain readable |
+| Paper | #F4F8FB | App background |
+| Surface | #FFFFFF | Forms, profiles, content needing focus |
 
-Màu trạng thái success/warning/error lấy semantic token/component hiện có sau khi kiểm tra contrast; không tự dùng xanh thương hiệu cho mọi status. Nhãn chữ/icon phải phân biệt trạng thái ngay cả khi không nhìn màu. Đo contrast trên nền thực tế: mục tiêu WCAG AA 4.5:1 cho chữ thường, 3:1 cho chữ lớn; kiểm focus và control boundaries. Không ghi “đạt accessibility” chỉ vì dùng Material.
+Status colors for success/warning/error come from existing semantic tokens/components after contrast is checked; do not use brand blue for every status yourself. Text/icon labels must distinguish status even without color vision. Measure contrast on the real background: target WCAG AA 4.5:1 for normal text, 3:1 for large text; check focus and control boundaries. Do not write “accessibility passed” just because Material is used.
 
-Phân cấp: nền nhạt → surface trắng → chữ rõ → một hành động nổi bật. Hạn chế gradient, shadow và badge cạnh tranh; tránh biến bảng lâm sàng thành dashboard marketing. Nhận diện có thể đậm ở hero, nhưng các hàng dữ liệu cần yên và dễ quét.
+Hierarchy: light background → white surface → clear text → one prominent action. Limit competing gradients, shadows, and badges; avoid turning clinical tables into marketing dashboards. Identity may be strong in hero areas, but data rows should stay calm and easy to scan.
 
 ## Font, icon, spacing
 
-- Be Vietnam Pro local cho tiếng Việt; regular/medium/semibold/bold. Không fallback Times/Georgia ở input/heading. Giữ giấy phép OFL và kiểm font thực sự load.
-- Điểm bắt đầu cho native: body 14–16, label 12, heading khoảng 25 logical pixels; điều chỉnh theo hierarchy, không thu nhỏ chữ để nhét nội dung. Web desktop heading khoảng 30 khi phù hợp layout hiện có. Test tên tiếng Việt dài, giá tiền và ghi chú nhiều dòng.
-- Spacing scale 4/8/12/16/20/24. Nhóm thông tin bằng proximity/alignment; không bọc mỗi label trong một card. Native card radius 18, hero 24, control theo theme hiện có (14); không áp mọi radius native lên web máy móc.
-- Web dùng Lucide SVG đồng bộ (mốc 20px/stroke 1.7 trong hệ hiện tại); native dùng Material outlined. Không trộn emoji/Unicode ngẫu nhiên làm icon nghiệp vụ. Icon-only cần accessible name/tooltip khi phù hợp; icon trang trí không gây lặp nội dung đọc.
-- Native touch target tối thiểu 48 logical pixels; check khoảng cách các nút, trạng thái disabled/loading và hit area thay vì chỉ kích thước nét icon.
+- Local Be Vietnam Pro for Vietnamese; regular/medium/semibold/bold. Do not fall back to Times/Georgia in inputs/headings. Keep the OFL license and verify the font actually loads.
+- Native starting point: body 14–16, label 12, heading about 25 logical pixels; adjust by hierarchy, not by shrinking text to cram content. Web desktop heading around 30 when suitable for the current layout. Test long Vietnamese names, prices, and multi-line notes.
+- Spacing scale 4/8/12/16/20/24. Group information through proximity/alignment; do not wrap every label in a card. Native card radius 18, hero 24, controls by the current theme (14); do not mechanically apply every native radius to web.
+- Web uses consistent Lucide SVG (20px/stroke 1.7 baseline in the current system); native uses Material outlined. Do not mix random emoji/Unicode as business icons. Icon-only controls need an accessible name/tooltip when appropriate; decorative icons must not duplicate screen-reader content.
+- Native touch target minimum is 48 logical pixels; check button spacing, disabled/loading states, and hit area instead of only the icon stroke size.
 
-## Logo, ảnh và nền
+## Logo, images, and backgrounds
 
-Asset gốc web ở `prototype/shared/assets/`: `pema-logo.png`, font `be-vietnam-pro-*`, `care-waves.svg`, icon/license Lucide. Flutter dùng `flutter-template/assets/` được khai báo trong pubspec. Tái sử dụng asset đã có, không nhân bản bộ thương hiệu mới trong skill.
+Original web assets are in `prototype/shared/assets/`: `pema-logo.png`, font `be-vietnam-pro-*`, `care-waves.svg`, Lucide icons/license. Flutter uses `flutter-template/assets/` declared in pubspec. Reuse existing assets; do not duplicate a new brand kit inside the skill.
 
-Giữ tỷ lệ logo và khoảng thở; không kéo giãn, tô màu lại hoặc đặt logo lên nền tương phản kém. Wave xanh nhẹ chỉ ở hero/vùng nhận diện, tránh sau bảng, đơn thuốc hoặc ghi chú bác sĩ. Nền đẹp phải giúp tập trung, không che chữ hoặc tăng chiều dài home.
+Preserve logo ratio and breathing room; do not stretch it, recolor it, or place it on a low-contrast background. Light blue waves are only for hero/identity areas, not behind tables, prescriptions, or doctor notes. A beautiful background must help focus, not hide text or make home longer.
 
-Ảnh bệnh nhân/Before–After giả lập phải có ngữ cảnh minh họa; không dùng ảnh AI như bằng chứng điều trị, không chấm điểm hiệu quả từ placeholder. Không đưa hồ sơ thật vào screenshot. Chỉ cần sinh ảnh khi asset hiện có không giải quyết được nhu cầu cụ thể; đây không phải bước bắt buộc.
+Simulated patient/Before–After photos must have illustrative context; do not use AI images as treatment evidence, and do not score effectiveness from placeholders. Do not put real records into screenshots. Generate images only when existing assets do not solve a specific need; this is not a mandatory step.
 
-Prompt ngắn gợi ý khi được yêu cầu ảnh nền: “Tạo nền trừu tượng cho Pema Clinic & Care: trắng và xanh #0B4F94/#3CAAE5, đường sóng mềm rất nhẹ, khoảng trống rộng cho chữ, sạch và điềm tĩnh; không chữ, không logo, không người, không hình ảnh kết quả điều trị; tỷ lệ [theo vị trí sử dụng].” Overlay chữ/logo bằng UI để giữ chất lượng và responsive.
+Short suggested prompt when a background image is requested: “Create an abstract background for Pema Clinic & Care: white and blue #0B4F94/#3CAAE5, very light soft wave lines, wide empty space for text, clean and calm; no text, no logo, no people, no treatment-result images; ratio [by placement].” Overlay text/logo in UI to keep quality and responsiveness.
 
-## Khi tham khảo thiết kế khác
+## When referencing other designs
 
-Ghi vấn đề đang giải quyết → pattern hữu ích → điều chỉnh cho Pema → cách kiểm tra. Không sao chép thương hiệu Annam/Fastboy. “Sở hữu vòng đời khách hàng” được chuyển thành mạch chăm sóc có bàn giao, không tự biến app thành công cụ quảng cáo hoặc thêm loyalty chưa được yêu cầu.
+Record the problem being solved → useful pattern → adaptation for Pema → how to check. Do not copy the Annam/Fastboy brand. “Owning the customer lifecycle” becomes a care flow with handoff; do not turn the app into an advertising tool or add loyalty unless requested.
 
-Nguồn định hướng đã dùng trong dự án: https://pema.vn/ ; https://github.com/Dammyjay93/interface-design ; https://github.com/vercel-labs/agent-skills . Không cần fetch lại các nguồn này cho mọi thay đổi nhỏ; source/token và quyết định được duyệt trong repo là baseline thực thi.
+Orientation sources already used in the project: https://pema.vn/ ; https://github.com/Dammyjay93/interface-design ; https://github.com/vercel-labs/agent-skills . There is no need to fetch these sources again for every small change; source/tokens and approved decisions in the repo are the implementation baseline.
