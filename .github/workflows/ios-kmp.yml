@@ -1,11 +1,7 @@
 name: iOS build (pema-kmp)
 
 on:
-  # Runs on every push that touches pema-kmp; manual runs can pick the target.
-  push:
-    paths:
-      - "pema-kmp/**"
-      - ".github/workflows/ios-kmp.yml"
+  # Manual only (Actions tab -> Run workflow); no automatic build on push.
   workflow_dispatch:
     inputs:
       target:
