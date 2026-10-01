@@ -93,19 +93,16 @@ def read_recent_logs(directory: Path, options: ReadLogsOptions) -> ReadLogsResul
         return True
 
     # Walk from the newest file to the old ones and STOP as soon as there are enough lines. The old version
-    # read
-    # and parsed the whole 7-day log (~6.5 MB measured) on every visit to return 200 lines.
-    #
-    # Take ONE extra line to know whether more log lies behind without counting the total.
+    # read and parsed the whole 7-day log (~6.5 MB measured) on every visit to return 200 lines.  Take ONE
+    # extra line to know whether more log lies behind without counting the total.
     can_lay = options.limit + 1
     before = options.before
     entries: list[LogEntry] = []
     scopes: set[str] = set()
     files_read = 0
     # How many lines matching the filter have EXACTLY the ``time`` of the last line walked, counted from the
-    # start
-    # of the stream (the lines skipped by the cursor included). This is the ``da_lay`` of the next page's
-    # cursor.
+    # start of the stream (the lines skipped by the cursor included). This is the ``da_lay`` of the next
+    # page's cursor.
     cung_moc = 0
     moc_dang_dem = -1
 
@@ -152,8 +149,7 @@ def read_recent_logs(directory: Path, options: ReadLogsOptions) -> ReadLogsResul
     page = entries[: options.limit]
     last = page[-1] if page else None
     # ``cung_moc`` now matches the EXTRA line (if any), not the last line of the page, so count again within
-    # the
-    # page instead of using that variable directly.
+    # the page instead of using that variable directly.
     next_cursor = (
         doi_con_tro_thanh_chuoi(
             ConTroLog(time=last.time, da_lay=_so_dong_cung_moc_tinh_tu_dau(page, last.time, before))
@@ -169,8 +165,7 @@ def _so_dong_cung_moc_tinh_tu_dau(page: list[LogEntry], moc: int, before: ConTro
     included.
 
     The previous page already returned ``before.da_lay`` lines at that mark, so if this page still has lines
-    at
-    the same mark they must be added up: not adding makes the next page skip too few and return exactly the
+    at the same mark they must be added up: not adding makes the next page skip too few and return exactly the
     lines just seen."""
     n = sum(1 for e in page if e.time == moc)
     return before.da_lay + n if before is not None and before.time == moc else n

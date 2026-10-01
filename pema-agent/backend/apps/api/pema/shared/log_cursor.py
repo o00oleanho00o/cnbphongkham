@@ -45,12 +45,10 @@ def doc_con_tro(raw: str | None) -> ConTroLog | None:
 
     A broken cursor must NOT fall back to the first page: that is how a client appends endless copies without
     anyone noticing (Hermes states the rule in ``list_sessions``: "Unknown cursor -> empty page, do not fall
-    back
-    to full list"). A caller that gets ``None`` returns an EMPTY page, not the first one.
+    back to full list"). A caller that gets ``None`` returns an EMPTY page, not the first one.
 
     ONLY a string of digits on both sides of the dot is accepted, exactly the form we generate. Not
-    ``float()``
-    followed by an integer check: ``Number("")`` is 0 in JS and not NaN, so a truncated cursor
+    ``float()`` followed by an integer check: ``Number("")`` is 0 in JS and not NaN, so a truncated cursor
     ("1700000000000.") slipped through as ``da_lay: 0`` and the next page returned the whole same-millisecond
     cluster AGAIN. A test caught exactly this case.
     """

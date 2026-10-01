@@ -4,10 +4,10 @@
 * ``FakeToolRegistry``: implements ``pema_contracts.tools.ToolRegistry`` over the 15-tool catalogue of
   zalo-agent (key, label, description, group, ``runs_in_scheduled_turn``, ``counts_as_capability``,
   availability rules, copied from ``tool-catalog-action.ts`` / ``tool-catalog-read.ts``) with trivial tool
-  bodies. The real registry is package D4's and is not on this branch; the filtering rules here are the
-  ones of ``listAvailableTools`` / ``kiemTraKhaDung`` and of ``ToolRegistry.list_available`` in
-  ``pema_contracts.tools``, so an engine test that passes here passes against D4's registry (package G
-  re-runs the D1 tests against the real one).
+  bodies. The real registry is package D4's and is not on this branch; the filtering rules here are the ones
+  of ``listAvailableTools`` / ``kiemTraKhaDung`` and of ``ToolRegistry.list_available`` in
+  ``pema_contracts.tools``, so an engine test that passes here passes against D4's registry (package G re-runs
+  the D1 tests against the real one).
 * ``make_caps``: a ``ChannelCapabilities`` for tests.
 """
 

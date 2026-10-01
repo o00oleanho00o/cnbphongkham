@@ -1,9 +1,9 @@
 # ported from: none (replaces the message converters of the three @ai-sdk providers)
 """Shared helpers of the three provider adapters: read the SDK-shaped ``ModelMessage`` parts.
 
-The engine speaks the Vercel ``ModelMessage`` shape (see ``pema.agent.model_types``); each adapter converts
-it to its vendor wire format. What is common lives here: normalising ``content`` to a list of parts, turning
-a tool-result ``output`` into the string the models read, and decoding tool arguments.
+The engine speaks the Vercel ``ModelMessage`` shape (see ``pema.agent.model_types``); each adapter converts it
+to its vendor wire format. What is common lives here: normalising ``content`` to a list of parts, turning a
+tool-result ``output`` into the string the models read, and decoding tool arguments.
 """
 
 from __future__ import annotations

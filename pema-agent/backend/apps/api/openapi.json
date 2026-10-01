@@ -13219,6 +13219,7 @@
     },
     "/api/v1/admin/model/provider/test": {
       "post": {
+        "description": "Call ONE minimal completion with the effective configuration: the \"Test connection\" button.\n\nIt goes through the STREAMING path the bot uses: testing one way while the bot runs another shows a green\nbutton while the bot dies of a 524, or the opposite, exactly when someone presses it to find the cause.",
         "operationId": "admin_model_test_provider",
         "responses": {
           "200": {
@@ -13802,6 +13803,7 @@
     },
     "/api/v1/admin/model/vision/sidecar": {
       "delete": {
+        "description": "Wipe the sidecar configuration, key included: the PATCH convention is \"empty key = keep the old key\",\nso there is no way to remove a key through PATCH.",
         "operationId": "admin_model_clear_vision_sidecar",
         "responses": {
           "204": {
@@ -17588,6 +17590,7 @@
     },
     "/api/v1/admin/usage/overview": {
       "get": {
+        "description": "The overview page: accounts (DB + online state) + usage per day. Every \"today\" is computed in\n``BOT_TIMEZONE`` (not the UTC day nor the browser's time): ``today_key`` + ``timezone`` come back with the\nanswer so the frontend uses them as is instead of deriving the day from the browser's clock, which drifts\nfrom the bot's local time. ``days`` is only 7, 14 or 30 (the DTO enforces it): ``?days=100000`` would scan\nthe whole turns table and fold it in memory.",
         "operationId": "admin_usage_get_overview",
         "parameters": [
           {

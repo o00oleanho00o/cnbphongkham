@@ -3,11 +3,11 @@
 tools (react, send a file, tag ...) -> the final text to send back.
 
 ``run_agent_turn`` is ``runAgentTurn``; ``DefaultAgentEngine`` is the
-``pema_contracts.agent_turn.AgentEngine``
-the channel turn processor (C2) and the scheduler (S) call. The messages of the turn are ALREADY in the
-database before this runs (the channel records them on receipt), so the history builder FILTERS them out,
-otherwise the model reads the question twice; and it reads the DB with a surplus equal to the number of rows
-about to be filtered, otherwise the history window shrinks silently with the batch size.
+``pema_contracts.agent_turn.AgentEngine`` the channel turn processor (C2) and the scheduler (S) call. The
+messages of the turn are ALREADY in the database before this runs (the channel records them on receipt), so
+the history builder FILTERS them out, otherwise the model reads the question twice; and it reads the DB with a
+surplus equal to the number of rows about to be filtered, otherwise the history window shrinks silently with
+the batch size.
 
 Forced deviations from zalo-agent (the reasoning of the comments is kept, translated):
 
@@ -32,8 +32,7 @@ Policy hooks (``pema_contracts.policy``), the call sites of package D1 (CONTRACT
   ``ToolContext.policy`` before naming a patient, an appointment or a medicine);
 * ``before_llm``: BEFORE any model call, on the batch, and again on every message injected mid-turn. A
   ``HAND_OFF`` stops the turn at once (``AgentTurnResult.handed_off``); the masked texts it returns replace
-  the
-  text the model (and the tools) see;
+  the text the model (and the tools) see;
 * ``after_llm``: on the final text (the normal answer and the wrap-up), before it is returned for delivery.
 ``filter_tool_keys`` is called by the tool registry (D4), ``allow_memory_write`` by ``save_memory`` (D4),
 ``on_outbound``/``check_job``/``proactive_cap`` by the channel pipeline and the scheduler (C2, S).
@@ -226,8 +225,7 @@ def _log_stream_error(error: BaseException) -> None:
     through the logger so it never reached the log file (exactly when it is needed most), and it printed the
     RAW error so the ``requestBodyValues`` of an ``APICallError`` (the whole system prompt + conversation +
     base64 images) landed on stdout. In the clinic that is patient conversation text. The errors go through
-    the
-    logger and its safe serializer only.
+    the logger and its safe serializer only.
 
     WARNING level, not DEBUG: a failed attempt is the only trace of a transient fault when a retry then
     succeeds. A turn that failed for good also gets an ERROR line with the classification; the two complement
@@ -427,9 +425,8 @@ async def _run_turn(
     # job must not read the thread's live conversation, to avoid mixing "what the user is talking about" with
     # "a job reporting at 3 a.m.". The messages of this turn and the ones waiting in the batcher are BOTH
     # already in the history and both about to be filtered: ask for exactly that many extra rows, or the
-    # window
-    # shrinks silently: a batch of 5 leaves the model 15 old messages instead of 20, a batch at the ceiling of
-    # 32 leaves 0, and the bot walks into the turn not knowing what it just answered.
+    # window shrinks silently: a batch of 5 leaves the model 15 old messages instead of 20, a batch at the
+    # ceiling of 32 leaves 0, and the bot walks into the turn not knowing what it just answered.
     tran_lich_su = get_tuning_int("HISTORY_CONTEXT_LIMIT")
     id_dang_cho: list[int] = (
         [] if isolated or cb.pending_history_ids is None else [int(i) for i in await cb.pending_history_ids()]
@@ -450,8 +447,7 @@ async def _run_turn(
         agent.context_window if agent.context_window is not None else get_tuning_int("LLM_CONTEXT_WINDOW")
     )
     # Computed ONCE here and shared by ``stop_when``, the guard thresholds and the stop-reason log: those
-    # three
-    # must talk about the same number, and each used to re-read ``agent.max_steps ?? tuning``.
+    # three must talk about the same number, and each used to re-read ``agent.max_steps ?? tuning``.
     tran_step = agent.max_steps if agent.max_steps is not None else get_tuning_int("LLM_MAX_STEPS")
 
     content_deps = TurnContentDeps(
@@ -526,16 +522,14 @@ async def _run_turn(
     quan_sat_step = tao_quan_sat_step(guard=guard, trace=trace, lay_lan_chay=lambda: lan_chay)
 
     # Mid-turn messages ALREADY PULLED from the waiting queue in this turn. They MUST be kept HERE and not
-    # only
-    # inside the loop's own message list: the fetch REMOVED them from the queue so there is no way to get them
-    # back, and every repair branch (retry without pixels, 429, context overflow, empty-completion retry) AND
-    # the wrap-up call rebuild the context from ``messages`` of THIS function, not from the loop's list.
+    # only inside the loop's own message list: the fetch REMOVED them from the queue so there is no way to get
+    # them back, and every repair branch (retry without pixels, 429, context overflow, empty-completion retry)
+    # AND the wrap-up call rebuild the context from ``messages`` of THIS function, not from the loop's list.
     # Dropping this list would lose messages exactly in the long turns, the only ones long enough for the
     # person to write again: the turn that hits the step ceiling goes to the wrap-up call, and the wrap-up
-    # call
-    # is what produces the answer sent out; the sender would get an answer composed for the OLD request while
-    # the model, told to "answer NOW", has no way to say it is ignoring a request. Same ownership rule as the
-    # ``trace`` list: whatever must survive several runs is held by this function.
+    # call is what produces the answer sent out; the sender would get an answer composed for the OLD request
+    # while the model, told to "answer NOW", has no way to say it is ignoring a request. Same ownership rule
+    # as the ``trace`` list: whatever must survive several runs is held by this function.
     tin_chen_da_keo: list[InboundMessage] = []
 
     async def lay_tin_chen() -> Sequence[InboundMessage]:
@@ -558,10 +552,8 @@ async def _run_turn(
         return masked
 
     # ``lay_image_mode`` is a FUNCTION: ``image_mode`` changes mid-turn when the provider refuses pixels and
-    # the
-    # loop rebuilds the input without images. Passing the value would build the injected message in a mode
-    # that
-    # is no longer valid.
+    # the loop rebuilds the input without images. Passing the value would build the injected message in a mode
+    # that is no longer valid.
     chen_tin_giua_luot = tao_bo_chen_tin(
         lay_tin_chen=lay_tin_chen if cb.fetch_injected_messages is not None else None,
         lay_image_mode=lambda: image_mode,
@@ -598,9 +590,8 @@ async def _run_turn(
 
         Goes through ``dung_tin_chen_trong_ngan_sach`` and not ``dung_tin_chen``: that is the ONLY door that
         applies the token ceiling and drops images when the injected message is too big. Bypassing it makes
-        the
-        context-overflow branch push 8 base64 image blocks back in, in the very turn the provider just refused
-        for being too long.
+        the context-overflow branch push 8 base64 image blocks back in, in the very turn the provider just
+        refused for being too long.
         """
         if not tin_chen_da_keo:
             return goc
@@ -640,8 +631,7 @@ async def _run_turn(
         he_thong = build_prompt()
         # Two filter layers intersect: the agent declares capability, the account applies policy; ``isolated``
         # drops the tools unfit for a scheduled turn (add_reaction has no real msg id, read_image has no
-        # image,
-        # save_memory blocks injection from a job, a job must not create jobs).
+        # image, save_memory blocks injection from a job, a job must not create jobs).
         tool_set = await deps.tools.build_agent_tools(
             ToolContext(
                 clinic_id=clinic_id,
@@ -667,10 +657,8 @@ async def _run_turn(
             # reach WEB_FETCH_MAX_CHARS), so a turn with few steps can still bloat. Measured on the real DB: a
             # turn accumulated 184,835 tokens over 8 steps. It uses the SAME discounted budget as the context
             # trimming, not the raw ceiling: against the raw ceiling this condition almost never ran, since
-            # the
-            # provider answers 400 before the usage of that call is back, so the function was never called
-            # with
-            # an exceeding number.
+            # the provider answers 400 before the usage of that call is back, so the function was never called
+            # with an exceeding number.
             stop_when=[
                 step_count_is(tran_step),
                 vuot_tran_token(ngan_sach_an_toan(tran_token)),
@@ -692,8 +680,7 @@ async def _run_turn(
             # poorly one must see which page it fetched (no content in the log, see agent_step_observer).
             on_step_finish=on_step_finish,
             # Step boundary: after the tool results, BEFORE the next LLM call: the insertion point goclaw
-            # uses.
-            # The overriding message list is carried to later steps, so inserting once is enough.
+            # uses. The overriding message list is carried to later steps, so inserting once is enough.
             prepare_step=prepare_step,
             sleep=deps.sleep,
             retry_initial_delay_s=deps.retry_initial_delay_s,
@@ -709,33 +696,24 @@ async def _run_turn(
         # The wrap-up MUST go through the budget. Otherwise the cure for "context about to overflow" is a call
         # BIGGER than the one that nearly overflowed: it sends ``messages`` AND all of ``da_lam`` (tool call +
         # tool result of every step) plus the reminder. Wrap up and get a 400, and the work of the whole turn
-        # is lost.
-        #
-        # The question is SEPARATED from the cut zone instead of relying on ``so_tin_bao_ve_cuoi``.
+        # is lost.  The question is SEPARATED from the cut zone instead of relying on ``so_tin_bao_ve_cuoi``.
         # The earlier version passed ``[...messages, ...da_lam, nhac_chot]`` with a protected tail of 2 and
-        # the
-        # comment "the current turn's message sits right before nhac_chot": WRONG by structure. The question
-        # is
-        # the last of ``messages``, i.e. BEFORE ALL of ``da_lam``; the two protected messages were really
-        # ``nhac_chot`` and one tool message of the last step. The cut drops from the START of the array, so
-        # the order dropped is: history -> THE USER'S QUESTION -> the tool pairs.
-        #
-        # Measured on a heavy turn (20 history messages + 8 tool pairs with 100k-char results): cut to 5
-        # messages and NO question left. The model got "answer NOW" without knowing what was asked: exactly
-        # what
-        # the wrap-up exists to avoid. This case only blows up on a heavy turn, i.e. right after burning 8
-        # steps.
+        # the comment "the current turn's message sits right before nhac_chot": WRONG by structure. The
+        # question is the last of ``messages``, i.e. BEFORE ALL of ``da_lam``; the two protected messages were
+        # really ``nhac_chot`` and one tool message of the last step. The cut drops from the START of the
+        # array, so the order dropped is: history -> THE USER'S QUESTION -> the tool pairs.  Measured on a
+        # heavy turn (20 history messages + 8 tool pairs with 100k-char results): cut to 5 messages and NO
+        # question left. The model got "answer NOW" without knowing what was asked: exactly what the wrap-up
+        # exists to avoid. This case only blows up on a heavy turn, i.e. right after burning 8 steps.
         cau_hoi = messages[-1] if messages else None
         truoc_cau_hoi = messages[:-1]
 
         # The injected messages go into the PROTECTED tail with the question and the reminder, NOT into the
-        # cut
-        # part. It is the newest thing and often the one that CORRECTS the request; cutting it and then
-        # telling
-        # the model "answer NOW" is wrapping up on an outdated request, and the wrap-up is what produces the
-        # sentence sent out. A variant of the trap fixed once above: that time the QUESTION was cut, this time
-        # the CORRECTION. Through the budget door like every other path that builds an injected message: the
-        # wrap-up is where the context is tightest (it already carries all of ``da_lam``).
+        # cut part. It is the newest thing and often the one that CORRECTS the request; cutting it and then
+        # telling the model "answer NOW" is wrapping up on an outdated request, and the wrap-up is what
+        # produces the sentence sent out. A variant of the trap fixed once above: that time the QUESTION was
+        # cut, this time the CORRECTION. Through the budget door like every other path that builds an injected
+        # message: the wrap-up is where the context is tightest (it already carries all of ``da_lam``).
         tin_chen_chot = (
             [await dung_tin_chen_trong_ngan_sach(tin_chen_da_keo, image_mode, tran_token, deps=content_deps)]
             if tin_chen_da_keo
@@ -860,18 +838,16 @@ async def _run_turn(
                     **dataclasses.asdict(hep.da_cat),
                 )
             # Attach the injected message AFTER cutting (``gan_tin_chen_vao`` in ``run_once``): it is the
-            # newest
-            # and may be the one that CHANGES the request, so cutting it to keep the old history keeps the
-            # wrong
-            # part. The builder already drops its images when it is too big, so it is not what overflowed.
+            # newest and may be the one that CHANGES the request, so cutting it to keep the old history keeps
+            # the wrong part. The builder already drops its images when it is too big, so it is not what
+            # overflowed.
             messages = hep.tin_nhan
             lan_chay += 1
             guard.dat_lai()
             return await run_once()
 
         # transient + unknown: the ``max_retries`` of the model call already tried; trying more here would
-        # only
-        # repeat the same thing. Raise so the caller tells the user.
+        # only repeat the same thing. Raise so the caller tells the user.
         raise err
 
     result: StreamTextResult
@@ -879,12 +855,9 @@ async def _run_turn(
         result = await run_once()
     except Exception as err:
         # Reactive fallback: the turn carries pixels and the provider refuses with a 4xx (an endpoint outside
-        # the
-        # router declares no capability and the detection guessed optimistically) -> remember the model as
-        # blind,
-        # rebuild without pixels and retry once. A combo through the router does not land here: the router
-        # strips
-        # the image quietly, no error.
+        # the router declares no capability and the detection guessed optimistically) -> remember the model as
+        # blind, rebuild without pixels and retry once. A combo through the router does not land here: the
+        # router strips the image quietly, no error.
         if (
             image_mode not in ("native", "hybrid")
             or not has_image_parts(messages)
@@ -899,8 +872,7 @@ async def _run_turn(
             result = await thu_lai_khong_pixel(err)
 
     # The router sometimes answers 200 with an EMPTY completion (0 tokens). The ``max_retries`` of the model
-    # call
-    # does not retry a "successful" response: retry ONCE here.
+    # call does not retry a "successful" response: retry ONCE here.
     if is_glitch(result):
         log.warning("router returned an empty completion (0 tokens): retrying once")
         lan_chay += 1
@@ -918,9 +890,8 @@ async def _run_turn(
         "agent turn finished",
         batch_size=len(batch),
         # Messages the user sent mid-turn. Present because the estimate below is over ``messages`` (WITHOUT
-        # the
-        # injected ones) while the real number has them: a turn with a nonzero value must be left out of the
-        # calibration of the two estimator constants.
+        # the injected ones) while the real number has them: a turn with a nonzero value must be left out of
+        # the calibration of the two estimator constants.
         so_tin_chen=len(tin_chen_da_keo),
         # native = the model reads images itself; describe = the sidecar describes; hybrid = a combo receives
         # pixels + description; blind = images dropped. After a reactive fallback this is the mode that REALLY
@@ -941,19 +912,16 @@ async def _run_turn(
         # The estimate next to the REAL number, logged at EVERY turn and not only the trimmed ones: the
         # calibration path of the two constants of ``token_estimate`` (chars per token, tokens per image). It
         # cannot be measured from the usage table (its columns are the TOTAL over all steps). Compared with
-        # the
-        # FIRST step, the only call whose input equals exactly system + tools + messages (a later step adds
-        # the
-        # tool results). Calibrate with ``ky_tu_input / that``, NOT with ``lech_phan_tram``: the latter
-        # compares the estimate over ``messages`` only with a ``that`` that covers system + tools too, so it
-        # is low systematically (a quick read next to the real number, not a calibration denominator).
+        # the FIRST step, the only call whose input equals exactly system + tools + messages (a later step
+        # adds the tool results). Calibrate with ``ky_tu_input / that``, NOT with ``lech_phan_tram``: the
+        # latter compares the estimate over ``messages`` only with a ``that`` that covers system + tools too,
+        # so it is low systematically (a quick read next to the real number, not a calibration denominator).
         ky_tu_input=dem_ky_tu_input_day_du(he_thong_da_gui, tool_set_da_gui, messages),
         uoc_luong=None if lech is None else dataclasses.asdict(lech),
     )
 
     # Still empty after the retry: answer with a fallback instead of silently leaving the sender hanging. A
-    # turn
-    # that "only reacts" is valid and does not land here (it has a tool call and tokens).
+    # turn that "only reacts" is valid and does not land here (it has a tool call and tokens).
     if is_glitch(result):
         log.error("router returned an empty completion twice in a row: answering with the fallback")
         return AgentTurnResult(
@@ -968,20 +936,15 @@ async def _run_turn(
     # it straight out hands the user exactly that as the answer, and next turn the model reads in the history
     # that it answered that way. (Before that persona the text was empty and the bot stayed silent: also
     # broken.) The cure is ONE wrap-up call with NO tools: the model must write the answer from what it
-    # gathered instead of throwing away the work of 8 steps.
-    #
-    # Since ``stop_when`` also has the TOKEN condition, a turn can stop early with ``steps < max_steps``, so
-    # the
-    # condition must be ``can_luot_chot`` (the last step still calls tools), not ``hit_step_limit`` (which
-    # also
-    # demands enough steps). Using the old function would send the progress narration out of a turn that
-    # stopped for tokens.
+    # gathered instead of throwing away the work of 8 steps.  Since ``stop_when`` also has the TOKEN
+    # condition, a turn can stop early with ``steps < max_steps``, so the condition must be ``can_luot_chot``
+    # (the last step still calls tools), not ``hit_step_limit`` (which also demands enough steps). Using the
+    # old function would send the progress narration out of a turn that stopped for tokens.
     last_step_tool_calls = len(result.steps[-1].tool_calls) if result.steps else 0
     if can_luot_chot(last_step_tool_calls=last_step_tool_calls):
         # The label must name EXACTLY one of the THREE stop conditions. The first version had two so it wrote
         # "out of steps" : "hit the token ceiling" as a binary; the guard was added later and every guard
-        # block
-        # was logged as the token ceiling: the very line one reads to understand why a turn was cut.
+        # block was logged as the token ceiling: the very line one reads to understand why a turn was cut.
         het_step = hit_step_limit(
             step_count=len(result.steps), max_steps=tran_step, last_step_tool_calls=last_step_tool_calls
         )

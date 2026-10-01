@@ -1,8 +1,8 @@
 # ported from: src/config/runtime-llm-settings.ts
 """Runtime override of the LLM configuration (changed from the admin screen, applied at once, no restart).
 
-Priority: ``agent.runtime_settings`` (DB override) then the environment (``env_llm``). The API key kept in
-the DB is encrypted with AES-256-GCM, the same cipher as every other secret (``secret_cipher``).
+Priority: ``agent.runtime_settings`` (DB override) then the environment (``env_llm``). The API key kept in the
+DB is encrypted with AES-256-GCM, the same cipher as every other secret (``secret_cipher``).
 
 Forced deviations (SQLite -> Postgres, sync -> async): the synchronous reads come from the in-memory
 ``RuntimeSettingsSnapshot`` of the CURRENT clinic (see ``runtime_settings_store``); the writes are async, go

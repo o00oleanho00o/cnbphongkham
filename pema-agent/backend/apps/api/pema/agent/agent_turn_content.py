@@ -1,7 +1,6 @@
 # ported from: src/agent/agent-turn-content.ts
 """Build the input of ONE agent turn in 4 image modes (the ``auto|native|text`` model of Hermes, plus
-``blind``
-when there is no sidecar and ``hybrid`` for the combos of a router):
+``blind`` when there is no sidecar and ``hybrid`` for the combos of a router):
 
 * native:   the main model reads images: attach pixels, as always.
 * describe: the main model can NOT read images but a sidecar exists: replace pixels by a text description (the
@@ -9,16 +8,14 @@ when there is no sidecar and ``hybrid`` for the combos of a router):
 * hybrid:   the model is a COMBO mixing members with and without vision: attach BOTH pixels AND description:
   the
             vision member sees the pixels, a turn that falls on a blind member (fallback, or a history image
-            that
-            does not trigger the router's auto-switch) has its pixels stripped but the text description
+            that does not trigger the router's auto-switch) has its pixels stripped but the text description
             survives.
 * blind:    cannot read images, no sidecar: drop the images and insert a note so the bot tells the truth
   instead
             of staying silent or inventing.
 
 Forced deviations (SQLite -> Postgres, sync -> async, Node file system -> injected seams): the image store,
-the
-downloader and the description cache are injected through ``TurnContentDeps`` (``loadStoredImage``,
+the downloader and the description cache are injected through ``TurnContentDeps`` (``loadStoredImage``,
 ``downloadImageAsBase64`` and the ``image-description-store`` of the original); ``ParsedMessage`` is
 ``InboundMessage``; ``StoredMessage.created_at`` is an aware datetime. The history renderer is synchronous and
 the description cache is async, so the descriptions of the history images that fit the budget are prefetched
@@ -149,21 +146,17 @@ async def build_turn_messages(
 
     ``id_bo_qua``: ids of the history rows that do NOT belong to this turn: messages waiting in the batcher.
     ``tran_lich_su``: ceiling of the number of history messages AFTER filtering; the caller must read the DB
-    with
-    a surplus equal to the number of rows about to be filtered and pass the real ceiling here; 0 = no cut.
-    ``tran_token``: token ceiling of the input = the MODEL's window, not the discounted budget (this function
-    discounts it through ``ngan_sach_an_toan``). MANDATORY (keyword without default): an optional parameter
-    with
-    default 0 means "forgot to pass it" silently switches the budget off, the very bug that hit the rebuild
-    path after the provider refused images. To not limit, pass 0 explicitly.
-    ``mo_ta_truoc``: the description step before the images of the history enter the context; a seam because
-    the
-    real path calls the sidecar over the network, and the invariant to pin is NOT "describes right" but
-    "describes the SAME LIST of images the render step will use". That invariant once broke SILENTLY: the
-    description step ran on the unfiltered history while the render ran on the filtered one, so the
-    description
-    budget fell on the images of this very turn, the old images were never described, and ``describe`` mode
-    also drops the pixels: the line reached the model as bare text with no trace of the image.
+    with a surplus equal to the number of rows about to be filtered and pass the real ceiling here; 0 = no
+    cut. ``tran_token``: token ceiling of the input = the MODEL's window, not the discounted budget (this
+    function discounts it through ``ngan_sach_an_toan``). MANDATORY (keyword without default): an optional
+    parameter with default 0 means "forgot to pass it" silently switches the budget off, the very bug that hit
+    the rebuild path after the provider refused images. To not limit, pass 0 explicitly. ``mo_ta_truoc``: the
+    description step before the images of the history enter the context; a seam because the real path calls
+    the sidecar over the network, and the invariant to pin is NOT "describes right" but "describes the SAME
+    LIST of images the render step will use". That invariant once broke SILENTLY: the description step ran on
+    the unfiltered history while the render ran on the filtered one, so the description budget fell on the
+    images of this very turn, the old images were never described, and ``describe`` mode also drops the
+    pixels: the line reached the model as bare text with no trace of the image.
     """
     image_mode = force_mode or await resolve_image_context_mode(override)
     # blind: history image budget = 0, the content falls back to the text "[gửi kèm N ảnh]"
@@ -202,17 +195,14 @@ async def build_turn_messages(
     )
     # The WHOLE batch of this turn is merged into EXACTLY ONE user message, so the zone protected from cutting
     # is the last 1 message. This number must match the line right below: change how the batch is merged and
-    # it
-    # must change too.
+    # it must change too.
     current = await build_current_turn_content(batch, image_mode, deps=deps)
     messages.append({"role": "user", "content": current})
 
     # The budget comes from the ceiling through ``ngan_sach_an_toan``: ONE function shared with the in-turn
-    # stop
-    # condition (``vuot_tran_token``) and the wrap-up call. This place used to multiply by 0.7 itself while
-    # the
-    # stop condition compared against 100% of the ceiling, so the two halves of one feature read the number in
-    # two different meanings.
+    # stop condition (``vuot_tran_token``) and the wrap-up call. This place used to multiply by 0.7 itself
+    # while the stop condition compared against 100% of the ceiling, so the two halves of one feature read the
+    # number in two different meanings.
     cat = cat_ngu_canh_theo_ngan_sach(
         tin_nhan=messages,
         tran_token=ngan_sach_an_toan(tran_token),
@@ -254,8 +244,7 @@ def _loc_lich_su_cho_luot(
     to the ceiling, otherwise the history window shrinks by the batch size and nobody sees it.
 
     Nothing to filter (a direct test call, or a scheduled turn with a synthetic message): only the cut
-    remains,
-    which is the old behaviour.
+    remains, which is the old behaviour.
     """
     bo_qua = set(id_bo_qua)
     for m in batch:

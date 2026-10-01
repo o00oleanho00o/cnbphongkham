@@ -4,8 +4,7 @@
 Called every agent turn, so a change from the UI takes effect at once.
 
 * ``openai-compatible``: OpenAI-compatible endpoint (Ollama, llama-server, vLLM, LiteLLM, OpenRouter, a
-  router)
-  through the base URL;
+  router) through the base URL;
 * ``anthropic``: direct call to the Anthropic API;
 * ``google``: direct call to the Gemini API.
 
@@ -103,16 +102,13 @@ def doi_provider_an_toan(base: ProviderModel, override: ModelOverrideLike | None
     """API-key leak guard: accept a provider override ONLY when it equals the shared provider.
 
     ``api_key`` and ``base_url`` always come from the shared configuration (a per-agent key does not exist).
-    So
-    an agent declaring ``model_provider="anthropic"`` while the shared configuration is a router would make
-    the
-    router's key go out as the ``x-api-key`` header to ``api.anthropic.com``: it leaks a credential to a third
-    party AND silences the bot with a 401.
+    So an agent declaring ``model_provider="anthropic"`` while the shared configuration is a router would make
+    the router's key go out as the ``x-api-key`` header to ``api.anthropic.com``: it leaks a credential to a
+    third party AND silences the bot with a 401.
 
     Blocked HERE and not only in the UI or at the API edge, because this is the one place every path goes
     through: a mismatching record already in the DB (hand-edited earlier), a new route that forgot to check,
-    or
-    a configuration load error that left the select box unlocked.
+    or a configuration load error that left the select box unlocked.
 
     ``model_name`` is dropped too when the provider is refused: the name was chosen FOR the other provider
     (``claude-opus-5`` for Anthropic) and sent to a router it earns a 400. Falling back to the shared
@@ -134,8 +130,8 @@ def doi_provider_an_toan(base: ProviderModel, override: ModelOverrideLike | None
 def model_hieu_luc(override: ModelOverrideLike | None = None) -> ProviderModel:
     """The provider + model that REALLY run, after the unsafe override was dropped.
 
-    Everything that needs "which model is running" must call this instead of reading
-    ``override.model_provider or base.provider`` itself: that is how four places once drifted apart.
+    Everything that needs "which model is running" must call this instead of reading ``override.model_provider
+    or base.provider`` itself: that is how four places once drifted apart.
     """
     base = get_effective_llm_settings()
     return doi_provider_an_toan(ProviderModel(base.provider, base.model), override)
@@ -212,6 +208,5 @@ def resolve_language_model(
             api_key=base.api_key, model=chosen.model, headers=headers, http_client=http_client
         )
     # google: see gemini_adapter for why it must NOT go through the OpenAI shim. An empty base URL lets the
-    # SDK
-    # use the vendor endpoint; see ``base_url_cho_google``.
+    # SDK use the vendor endpoint; see ``base_url_cho_google``.
     return GeminiModel(api_key=base.api_key, model=chosen.model, base_url=base.base_url, headers=headers)

@@ -1,43 +1,35 @@
 # ported from: src/agent/stream-text-result.ts (and the ``streamText`` call of agent-loop.ts it wrapped)
 """The multi-step tool loop that replaces the Vercel AI SDK's ``streamText`` + ``stopWhen`` + ``prepareStep``
-+
-``onStepFinish`` + ``maxRetries`` + ``timeout.totalMs``, and returns the SHAPE ``generateText`` used to return
-(``text``, ``steps``, ``total_usage``, ``finish_reason``, ``response``).
++ ``onStepFinish`` + ``maxRetries`` + ``timeout.totalMs``, and returns the SHAPE ``generateText`` used to
+return (``text``, ``steps``, ``total_usage``, ``finish_reason``, ``response``).
 
 Why the agent turn goes through a STREAMING model call at all (the reason of the original file, kept): the
 router sat behind a CDN that cut the connection with a 524 when the origin had not sent the FIRST BYTE within
 100 s, and a non-stream request makes the router gather the whole answer before sending anything. Measured on
 the project's router with the same ~4000-word prompt: ``stream=false`` -> HTTP 524 at second 125,
-``stream=true``
--> HTTP 200, first byte at 7.5 s, done at 135 s. The adapters of ``pema.agent.providers`` therefore stream on
-the
-wire; nothing is ever streamed to the channel because this loop reads each call to the end.
+``stream=true`` -> HTTP 200, first byte at 7.5 s, done at 135 s. The adapters of ``pema.agent.providers``
+therefore stream on the wire; nothing is ever streamed to the channel because this loop reads each call to the
+end.
 
 Forced deviations from the original (own loop instead of the SDK):
 
 * ``taoBoBatLoiStream`` / ``gomKetQuaStream`` existed because ``streamText`` SWALLOWED the original error and
   rejected its promises with a freshly built ``NoOutputGeneratedError``, and could even RESOLVE with a
-  truncated
-  result when step 2 failed after step 1 had been written. Here the loop is ours: an error raised by the model
-  call or by anything else propagates as the ORIGINAL exception, a failure at step N after step N-1 finished
-  raises (it never returns a truncated result), and every call of ``chay_stream`` has its own state, so the
-  error of a previous run cannot kill a later, successful one. The behaviours the original pinned with tests
-  are
-  kept as tests in ``test_run_agent_turn`` (original error type and HTTP code survive, mid-turn failure
-  raises,
-  a failed attempt followed by a successful retry does not kill the turn, a previous run's error does not
-  leak).
+  truncated result when step 2 failed after step 1 had been written. Here the loop is ours: an error raised by
+  the model call or by anything else propagates as the ORIGINAL exception, a failure at step N after step N-1
+  finished raises (it never returns a truncated result), and every call of ``chay_stream`` has its own state,
+  so the error of a previous run cannot kill a later, successful one. The behaviours the original pinned with
+  tests are kept as tests in ``test_run_agent_turn`` (original error type and HTTP code survive, mid-turn
+  failure raises, a failed attempt followed by a successful retry does not kill the turn, a previous run's
+  error does not leak).
 * ``maxRetries``: retry a model call that failed with a retryable error (408, 409, 429, 5xx, network) up to
   ``max_retries`` more times with exponential backoff (2 s, 4 s, ... or the provider's ``Retry-After`` when it
-  is
-  a sane number); never 400/401/403. The SDK wrapped the last error in ``RetryError("Failed after 3
-  attempts")``;
-  here the last error itself is raised (the classifier needs no unwrapping step).
+  is a sane number); never 400/401/403. The SDK wrapped the last error in ``RetryError("Failed after 3
+  attempts")``; here the last error itself is raised (the classifier needs no unwrapping step).
 * The SDK ran the tools of a step in parallel and turned an exception, an unknown tool name or invalid
-  arguments
-  into a ``tool-error`` content part that the model sees as an error result; that is kept. Arguments are
-  checked
-  only for being a JSON object here: validation against the tool's schema is the tool's own job (package D4).
+  arguments into a ``tool-error`` content part that the model sees as an error result; that is kept. Arguments
+  are checked only for being a JSON object here: validation against the tool's schema is the tool's own job
+  (package D4).
 * ``timeout.totalMs`` becomes ``asyncio.timeout`` around the whole loop; cancellation also reaches a running
   tool (the original's ``abortSignal``).
 """
@@ -126,8 +118,7 @@ async def _complete_with_retries(
             return await model.complete(request)
         except Exception as exc:
             # The failed attempt is logged even when a retry then succeeds (the original ``onError`` hook
-            # did):
-            # it is the only trace of a transient fault that the SDK's retries hid.
+            # did): it is the only trace of a transient fault that the SDK's retries hid.
             if on_attempt_error is not None:
                 on_attempt_error(exc)
             if attempt >= max_retries or not is_retryable_error(exc):

@@ -3,17 +3,15 @@
 
 The problem left after the batcher learned to merge messages (``message-batcher.ts``): the first turn still
 launches with partial context. Real case 2026-08-04: the user answered one sentence, the bot started building
-a
-document, 50 seconds later the user sent two more sentences clarifying the request. Merging only lowered 3
-turns
-to 2; the first turn still finished a whole 18,000-character document on a request that was not complete.
+a document, 50 seconds later the user sent two more sentences clarifying the request. Merging only lowered 3
+turns to 2; the first turn still finished a whole 18,000-character document on a request that was not
+complete.
 
 The insertion point is the STEP BOUNDARY: after the tool results, before the next LLM call, the place goclaw
 uses (``internal/pipeline/observe_stage.go`` consumes ``InjectCh``). In the loop this is ``prepare_step``
 (``stream_text_result``); the overriding message list is carried forward to later steps so inserting once is
 enough. The Anthropic path is safe: its adapter merges a ``tool`` message and the following ``user`` message
-into
-ONE ``user`` block, so a user message right after a tool result never breaks "roles must alternate".
+into ONE ``user`` block, so a user message right after a tool result never breaks "roles must alternate".
 
 Forced deviation: ``ParsedMessage`` is ``InboundMessage``; ``prepareStep`` returning ``{messages}`` or ``{}``
 becomes returning the new list or ``None`` (no change); the content builder takes its injected collaborators.
@@ -46,12 +44,10 @@ NHAN_TIN_CHEN = (
 NOT wrapped in ``<noi_dung_ngoai>`` like web content: this is a real person's words in the conversation, the
 same trust as the opening message of the turn (it passed the allowlist at ``shouldRespond``). Wrapping it as
 external data would teach the model to ignore exactly the person it must listen to. The injected message is
-now
-SURE to come from the same person as the opening one (the fetch is per ``(thread, sender)``), and the label
-keeps
-the old vague wording even though it could now be explicit: ``build_current_turn_content`` already pastes the
-name and send time of EACH message right below, so another identity claim in the label is superfluous and one
-more place to fix if the scope of the fetch changes again.
+now SURE to come from the same person as the opening one (the fetch is per ``(thread, sender)``), and the
+label keeps the old vague wording even though it could now be explicit: ``build_current_turn_content`` already
+pastes the name and send time of EACH message right below, so another identity claim in the label is
+superfluous and one more place to fix if the scope of the fetch changes again.
 
 It says plainly "đang làm dở" because without that sentence the model easily reads the injected message as a
 completely NEW request and drops the work in progress."""
@@ -89,8 +85,7 @@ async def dung_tin_chen_trong_ngan_sach(
     """Build the injected message and, if it is too big, rebuild it WITHOUT images.
 
     Drop the images, keep the text, not the whole message: the text is what changes the request, the images
-    stay
-    in the history so the next turn can read them again.
+    stay in the history so the next turn can read them again.
     """
     tin_chen = await dung_tin_chen(moi, image_mode, deps=deps)
     co_anh = str(get_tuning("ZALO_IMAGE_QUALITY"))
@@ -125,9 +120,8 @@ def tao_bo_chen_tin(
 
     The WHOLE body is in a try/except and every failing branch returns ``None`` (no change). This is the "do
     better" branch, not the mandatory one: an error here (a broken queue, an image of the injected message
-    that
-    cannot be downloaded) that is raised would kill the running turn, the one that just spent minutes calling
-    tools. Better to skip the insertion than lose the answer.
+    that cannot be downloaded) that is raised would kill the running turn, the one that just spent minutes
+    calling tools. Better to skip the insertion than lose the answer.
 
     ``lay_tin_chen`` None disables the whole path (a scheduled turn passes none). ``lay_image_mode`` is a
     FUNCTION: it changes mid-turn when the provider refuses pixels and the loop rebuilds the input without
@@ -148,9 +142,8 @@ def tao_bo_chen_tin(
             # Reset the guard counters: an injected message is NEW CONTEXT, it must not carry the sins of the
             # part before it. The model was stuck on the old direction and called one tool repeatedly, and now
             # the user just changed direction: blocking it with the counter of the old direction blocks
-            # exactly
-            # the new work. Same reason as the ``lan_chay += 1`` branches. No fear of running for ever: the
-            # step ceiling still stops it and that ceiling is NOT reset.
+            # exactly the new work. Same reason as the ``lan_chay += 1`` branches. No fear of running for
+            # ever: the step ceiling still stops it and that ceiling is NOT reset.
             guard.dat_lai()
 
             log.info("injecting messages the user sent mid-turn", so_tin=len(moi))

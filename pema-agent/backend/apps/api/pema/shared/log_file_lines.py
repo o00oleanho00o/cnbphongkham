@@ -2,15 +2,13 @@
 """Read a log file and split one ndjson line into a ``LogEntry``.
 
 Split from ``read_log_file`` so that file keeps the file choice, the filtering and the paging: this is the
-part
-that touches the disk and parses, with no business rule.
+part that touches the disk and parses, with no business rule.
 
-Forced deviation (pino -> stdlib ``logging``, see ``pema.shared.logger``): a line is
-``{"time": <ISO 8601>, "level": "<name>", "scope": ..., "msg": ..., <fields>}``; pino wrote ``time`` as epoch
-milliseconds and ``level`` as a number. The parser converts both, so ``LogEntry`` keeps the pino shape
-(``time``
-in ms, ``level`` as the pino number) that the cursor and the filters work on. ``pid`` and ``hostname`` do not
-exist in the Python lines (nothing to strip).
+Forced deviation (pino -> stdlib ``logging``, see ``pema.shared.logger``): a line is ``{"time": <ISO 8601>,
+"level": "<name>", "scope": ..., "msg": ..., <fields>}``; pino wrote ``time`` as epoch milliseconds and
+``level`` as a number. The parser converts both, so ``LogEntry`` keeps the pino shape (``time`` in ms,
+``level`` as the pino number) that the cursor and the filters work on. ``pid`` and ``hostname`` do not exist
+in the Python lines (nothing to strip).
 """
 
 from __future__ import annotations

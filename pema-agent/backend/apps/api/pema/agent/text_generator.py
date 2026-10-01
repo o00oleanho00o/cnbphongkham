@@ -7,8 +7,8 @@ What the original did and is kept:
 
 * ``resolveLanguageModel()`` WITHOUT a thread: a one-shot call has no prefix to reuse, so no session header;
   WITHOUT reasoning options: light work, no thinking tokens to burn;
-* ``streamText`` through ``chayStream`` and not ``generateText``: every LLM call of the project streams on
-  the wire (the 100 s first-byte limit of the proxy, see ``stream_text_result``);
+* ``streamText`` through ``chayStream`` and not ``generateText``: every LLM call of the project streams on the
+  wire (the 100 s first-byte limit of the proxy, see ``stream_text_result``);
 * ``maxRetries: 1`` (one retry of a retryable error, not the 2 of an agent turn), ``maxOutputTokens: 1024``;
 * ``truncated`` = the model hit ``max_output_tokens`` (``finish_reason`` "length"): the summariser must NOT
   store a cut summary.

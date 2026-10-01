@@ -49,8 +49,8 @@ def base_url_cho_google(base_url: str | None) -> str | None:
     Does TWO things, both because an old base URL stays in the DB when the user changes the "connection type":
 
     1. STRIP THE "/openai" TAIL. Google has two endpoints on one host: the native API at ``/v1beta`` and
-       the OpenAI shim at ``/v1beta/openai``. This provider speaks the native one; the shim path is a 404.
-       The quick "Google Gemini" button used to fill exactly that tail, so a saved config surely has it.
+       the OpenAI shim at ``/v1beta/openai``. This provider speaks the native one; the shim path is a 404. The
+       quick "Google Gemini" button used to fill exactly that tail, so a saved config surely has it.
     2. DROP another vendor's base URL altogether. Someone on OpenRouter or a router who switches to Google
        still has the old URL; sending the Google key there leaks it to a third party and earns a baffling
        401. Same accident that ``doi_provider_an_toan`` blocks at the provider level, so it is blocked the

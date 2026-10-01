@@ -14,15 +14,15 @@ package can code and test against it before D1 lands:
 
 Forced deviation (SQLite -> Postgres, sync -> async): the original read ``runtime_settings`` synchronously on
 EVERY call ("reading again each time is the whole point of putting it on the web"). Python cannot await in a
-plain call, so the override source is a ``TuningProvider`` that D1 backs with a short-lived in-memory
-snapshot of ``agent.runtime_settings`` (refreshed on write and on a timer, a few seconds at most). A changed
-value therefore still takes effect without a restart; it just is not instantaneous. The default provider
-here has no overrides, so before D1 lands behaviour is "environment, then default".
+plain call, so the override source is a ``TuningProvider`` that D1 backs with a short-lived in-memory snapshot
+of ``agent.runtime_settings`` (refreshed on write and on a timer, a few seconds at most). A changed value
+therefore still takes effect without a restart; it just is not instantaneous. The default provider here has no
+overrides, so before D1 lands behaviour is "environment, then default".
 
-Validation on READ is kept: a bad stored value is ignored (falls back) instead of killing the bot.
-Booleans are the string ``"true"``; enums must be one of ``options``; a time zone must be valid (a broken
-zone that slipped in by hand-editing the DB would make luxon fall back to UTC silently, shifting every
-schedule by 7 hours); numbers must be finite and inside ``[min, max]``.
+Validation on READ is kept: a bad stored value is ignored (falls back) instead of killing the bot. Booleans
+are the string ``"true"``; enums must be one of ``options``; a time zone must be valid (a broken zone that
+slipped in by hand-editing the DB would make luxon fall back to UTC silently, shifting every schedule by 7
+hours); numbers must be finite and inside ``[min, max]``.
 """
 
 from __future__ import annotations
@@ -167,13 +167,11 @@ def bot_time_zone() -> str:
 
 
 # --------------------------------------------------------------------------------------------------------
-# Package D1: the rest of runtime-tuning-settings.ts (list, cross rules, DB writes).
-#
-# The DB key of an override is ``tuning_<KEY>`` (``PREFIX`` of the original) in ``agent.runtime_settings``;
-# the
+# Package D1: the rest of runtime-tuning-settings.ts (list, cross rules, DB writes).  The DB key of an
+# override is ``tuning_<KEY>`` (``PREFIX`` of the original) in ``agent.runtime_settings``; the
 # ``RuntimeSettingsSnapshot`` is the ``TuningProvider`` that makes ``get_tuning`` read it (its ``override``
-# adds
-# the prefix). Writes are async and go through the snapshot (write-through, see ``runtime_settings_store``).
+# adds the prefix). Writes are async and go through the snapshot (write-through, see
+# ``runtime_settings_store``).
 
 TUNING_PREFIX = "tuning_"
 
@@ -223,8 +221,7 @@ def kiem_ram_video(co_mb: float, song_song: float, ram_may_mb: float) -> str | N
 
     Takes ``ram_may_mb`` as a PARAMETER and does not call the OS itself: a door inside a function that touches
     the system cannot be watched. The lesson paid for in ``envToiThieu``: tested hard as a function, but
-    whether
-    it is USED was measured by nobody.
+    whether it is USED was measured by nobody.
     """
     dinh_mb = song_song * (co_mb + RAM_MOI_LUOT_YTDLP_MB)
     tran_mb = round(ram_may_mb * PHAN_RAM_CHO_VIDEO)
@@ -254,8 +251,8 @@ class _MemoryStatus(ctypes.Structure):
 
 def total_memory_mb() -> float:
     """RAM of this machine in MB (``os.totalmem()``): ``sysconf`` on Linux, ``GlobalMemoryStatusEx`` on
-    Windows
-    (the development machines). 0 when unknown, which makes the video rule refuse nothing it cannot measure
+    Windows (the development machines). 0 when unknown, which makes the video rule refuse nothing it cannot
+    measure
     only if the caller treats 0 as unknown: ``validate_tuning`` skips the rule then."""
     if sys.platform == "win32":
         status = _MemoryStatus()
@@ -315,15 +312,11 @@ def _rule_context_vs_output(so: Callable[[str], float]) -> str | None:
 
 def _rule_document_vs_output(so: Callable[[str], float]) -> str | None:
     # The bot writes the file content INTO the tool call, so the document ceiling in characters must fit
-    # inside
-    # the token ceiling with room for thinking and the answer. The conversion MUST use ``KY_TU_MOI_TOKEN``:
-    # the
-    # SAME constant the context trimmer uses. This used to be a private 4 (the ENGLISH figure, 4.5 measured)
-    # in a
-    # Vietnamese bot while the real estimator runs at 2.5: the rule allowed 45,875 characters while the
-    # estimator
-    # only tolerates 28,672 (60% apart): someone setting 40,000 saved fine and the bot was cut off mid-file,
-    # exactly what this rule exists to prevent.
+    # inside the token ceiling with room for thinking and the answer. The conversion MUST use
+    # ``KY_TU_MOI_TOKEN``: the SAME constant the context trimmer uses. This used to be a private 4 (the
+    # ENGLISH figure, 4.5 measured) in a Vietnamese bot while the real estimator runs at 2.5: the rule allowed
+    # 45,875 characters while the estimator only tolerates 28,672 (60% apart): someone setting 40,000 saved
+    # fine and the bot was cut off mid-file, exactly what this rule exists to prevent.
     if uoc_token_tu_ky_tu(int(so("DOCUMENT_MAX_CHARS"))) > so("LLM_MAX_OUTPUT_TOKENS") * 0.7:
         return (
             "Trần ký tự tài liệu quá lớn so với trần token bot viết ra - "
@@ -334,16 +327,13 @@ def _rule_document_vs_output(so: Callable[[str], float]) -> str | None:
 
 def _rule_kb_result_budget(so: Callable[[str], float]) -> str | None:
     # I2: the result ceiling must HOLD what kb_search puts in, or the last chunks are silently dropped (the
-    # root
-    # bug: KB_TOP_K=5 and =20 once gave IDENTICAL results because the ceiling was too small for both).
-    #
+    # root bug: KB_TOP_K=5 and =20 once gave IDENTICAL results because the ceiling was too small for both).
     # Review round 3: the round-2 formula (chunkChars + 140) missed the OVERLAP (``chen_chong_lan`` of
     # chunk-text: a chunk under the same heading is prefixed with up to ``chunkChars * overlapPercent/100``
     # characters of the previous one, default 10%, so real content ~1320 for chunk=1200): fixed by multiplying
     # ``chunkChars * (1 + overlapPercent/100)``. 150 per chunk = 13 (label frame) + 80 (source name, a HIGH
-    # real
-    # case, NOT the hard ceiling of 200 of ``kb-routes``: adding 210 instead of 150 made the shipped default
-    # ``KB_MAX_RESULT_CHARS=8000`` break its own rule, 5*(1200*1.1+210)+520=8170>8000) + 50 (a 3-level
+    # real case, NOT the hard ceiling of 200 of ``kb-routes``: adding 210 instead of 150 made the shipped
+    # default ``KB_MAX_RESULT_CHARS=8000`` break its own rule, 5*(1200*1.1+210)+520=8170>8000) + 50 (a 3-level
     # breadcrumb, the "balance point" of the heading-aware chunking research) + 7 (separator). 520 = the
     # envelope (wrapping tag + 3 lines of instruction), measured 313-513 (513 = the real hard ceiling, the
     # source name is cut at 200 characters in ``wrapUntrustedContent``).
@@ -363,13 +353,10 @@ def _rule_kb_result_budget(so: Callable[[str], float]) -> str | None:
 def _rule_video_ram(so: Callable[[str], float]) -> str | None:
     # The bytes of a video now live in RAM, not on disk: ``uploadAttachment`` takes a Buffer and the user
     # decided against constant download-delete wearing the SSD. In exchange peak RAM = parallel runs x (video
-    # size + ~73 MB for the yt-dlp process, FIXED because that is Python itself).
-    #
-    # Without this rule the two sliders allow 2000 MB x 8 runs = 16 GB, and no single input sees it: the kind
-    # of
-    # bug that only shows when SEVERAL parameters combine. Anchored on the REAL RAM of the machine and not on
-    # an
-    # invented number: the same configuration is fine on a 16 GB machine and dies on a 1 GB VPS.
+    # size + ~73 MB for the yt-dlp process, FIXED because that is Python itself).  Without this rule the two
+    # sliders allow 2000 MB x 8 runs = 16 GB, and no single input sees it: the kind of bug that only shows
+    # when SEVERAL parameters combine. Anchored on the REAL RAM of the machine and not on an invented number:
+    # the same configuration is fine on a 16 GB machine and dies on a 1 GB VPS.
     ram = memory_probe()
     if ram <= 0:
         return None
@@ -389,8 +376,7 @@ LUAT_CHEO: tuple[_CrossRule, ...] = (
     _CrossRule(("VIDEO_MAX_SIZE_MB", "VIDEO_MAX_CONCURRENT"), _rule_video_ram),
 )
 """The constraints BETWEEN parameters, the thing nobody sees by looking at two separate inputs (setting the
-turn
-ceiling below the image ceiling kills a valid image turn).
+turn ceiling below the image ceiling kills a valid image turn).
 
 Each rule names the fields it concerns and applies ONLY when the user is changing one of them. Otherwise an
 existing configuration that is already off (set by hand in ``.env``, or a rule added later) would block EVERY

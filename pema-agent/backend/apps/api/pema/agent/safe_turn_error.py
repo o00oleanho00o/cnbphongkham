@@ -1,11 +1,10 @@
 # ported from: src/agent/provider-error-classifier.ts + failed-turn-trace.ts (how a failure is reported)
 """Turn ANY exception of a model call into the ONE exception the engine raises, ``AgentTurnError``.
 
-The kind is classified here (``phan_loai_loi_provider``, the SDK-specific part) so a consumer reads
-only ``error.kind``. ``safe_message`` is the ``forLog(err, 300)`` of the original: the exception type, the
-HTTP code
-and the first 300 characters of the message, never the request body (which carries the prompt, i.e. patient
-text). The original exception stays in ``__cause__`` for the safe error serializer of the logger.
+The kind is classified here (``phan_loai_loi_provider``, the SDK-specific part) so a consumer reads only
+``error.kind``. ``safe_message`` is the ``forLog(err, 300)`` of the original: the exception type, the HTTP
+code and the first 300 characters of the message, never the request body (which carries the prompt, i.e.
+patient text). The original exception stays in ``__cause__`` for the safe error serializer of the logger.
 """
 
 from __future__ import annotations

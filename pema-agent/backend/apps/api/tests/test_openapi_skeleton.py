@@ -126,6 +126,17 @@ async def test_health_is_the_only_live_endpoint(client: httpx.AsyncClient) -> No
     assert resp.status_code == 200
     assert resp.json()["status"] == "ok"
 
+# GET endpoints that left the 501 skeleton because their package implemented them (each has its own route tests).
+IMPLEMENTED_GET = {
+    "/api/v1/admin/model/provider",
+    "/api/v1/admin/model/vision",
+    "/api/v1/admin/model/tuning",
+    "/api/v1/admin/usage/overview",
+    "/api/v1/admin/traces",
+    "/api/v1/admin/traces/turn/{turn_id}",
+    "/api/v1/admin/logs/app",
+}
+
 
 def _fill_path(path: str) -> str:
     def repl(match: re.Match[str]) -> str:
@@ -158,7 +169,7 @@ async def test_every_get_endpoint_answers_501_with_error_envelope(
     checked = 0
     for path, item in schema["paths"].items():
         op = item.get("get")
-        if op is None or path == "/healthz":
+        if op is None or path == "/healthz" or path in IMPLEMENTED_GET:
             continue
         params = {
             p["name"]: str(uuid4())

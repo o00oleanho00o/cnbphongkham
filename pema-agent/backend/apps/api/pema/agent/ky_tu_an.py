@@ -16,8 +16,8 @@ syllables), and U+2800 BRAILLE PATTERN BLANK (the Braille SPACE: filtering it gl
 which is the real price).
 
 NOT filtered: U+1D41D MATHEMATICAL BOLD SMALL D (it changes the MEANING inside a formula, and filtering one
-code among 1024 of its block is the illusion of a filter: an attacker takes another code of the block).
-ONLY these ranges, not ``\\p{Cf}`` globally and no NFKC: a broader filter breaks ZWJ emoji sequences, ZWNJ
+code among 1024 of its block is the illusion of a filter: an attacker takes another code of the block). ONLY
+these ranges, not ``\\p{Cf}`` globally and no NFKC: a broader filter breaks ZWJ emoji sequences, ZWNJ
 (Persian/Indic text) and other valid Unicode variants; the only price of the Tags range is the subdivision
 flags (England, Scotland, Wales), irrelevant to a Vietnamese bot.
 

@@ -6,21 +6,20 @@ by a hand-written tool loop (PLAN-AI01 section 3), so the few SDK shapes the ori
 here, in Python naming, and every ported module imports them from this one file:
 
 * ``ModelMessage``: a plain ``dict`` in the SDK's own shape, so the ported pure modules (token estimate,
-  context trimming, history conversion) keep working on the same structure as the original and the
-  translated tests can build messages as literals::
+  context trimming, history conversion) keep working on the same structure as the original and the translated
+  tests can build messages as literals::
 
-      {"role": "system" | "user" | "assistant" | "tool", "content": str | list[part]}
-      text part        {"type": "text", "text": str}
-      image/file part  {"type": "file", "data": <base64>, "mediaType": "image/jpeg"}
-      reasoning part   {"type": "reasoning", "text": str}
-      tool call        {"type": "tool-call", "toolCallId": str, "toolName": str, "input": dict}
-      tool result      {"type": "tool-result", "toolCallId": str, "toolName": str,
+      {"role": "system" | "user" | "assistant" | "tool", "content": str | list[part]} text part
+      {"type": "text", "text": str} image/file part  {"type": "file", "data": <base64>, "mediaType":
+      "image/jpeg"} reasoning part   {"type": "reasoning", "text": str} tool call        {"type": "tool-call",
+      "toolCallId": str, "toolName": str, "input": dict} tool result      {"type": "tool-result",
+      "toolCallId": str, "toolName": str,
                         "output": {"type": "text" | "json" | "error-text", "value": ...}}
 
   The keys keep the SDK's camelCase because they ARE the wire shape of the message list, not Python API.
 * ``RawStep`` (+ ``ToolCallPart``, ``ToolResultPart``, ``StepContentPart``, ``ModelUsage``): what the loop
-  reads after every step (``onStepFinish`` of the original): the guard counts from it, the observer logs
-  from it, ``summarize_step`` turns it into the stored ``StepTrace``.
+  reads after every step (``onStepFinish`` of the original): the guard counts from it, the observer logs from
+  it, ``summarize_step`` turns it into the stored ``StepTrace``.
 * ``ChatModel`` / ``ModelRequest`` / ``ModelCompletion``: ONE model call. The SDK's ``LanguageModel`` +
   ``doStream`` become ``ChatModel.complete``. The provider adapters (``pema.agent.providers``) stream
   internally and hand back a finished completion, which is what ``stream-text-result.ts`` achieved for the
