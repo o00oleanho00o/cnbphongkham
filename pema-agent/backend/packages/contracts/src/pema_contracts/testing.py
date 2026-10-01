@@ -10,7 +10,6 @@ from __future__ import annotations
 from collections import deque
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-from types import TracebackType
 from uuid import UUID, uuid4
 
 from pema_contracts.agent_turn import GeneratedText, TurnJob
@@ -189,9 +188,7 @@ class _Hold:
             raise RuntimeError("thread lock already held: turns of one thread must be serialised")
         self._lock.held.add(self._key)
 
-    async def __aexit__(
-        self, exc_type: type[BaseException] | None, exc: BaseException | None, tb: TracebackType | None
-    ) -> None:
+    async def __aexit__(self, exc_type: object, exc: object, tb: object) -> None:
         self._lock.held.discard(self._key)
 
 
@@ -202,7 +199,8 @@ class InMemoryThreadLock:
     def __init__(self) -> None:
         self.held: set[tuple[str, str]] = set()
 
-    def hold(self, account_id: str, thread_id: str) -> _Hold:
+    def hold(self, account_id: str, thread_id: str, clinic_id: UUID | None = None) -> _Hold:
+        """``clinic_id`` is accepted for the protocol and ignored: the fake is for single-clinic tests."""
         return _Hold(self, (account_id, thread_id))
 
 

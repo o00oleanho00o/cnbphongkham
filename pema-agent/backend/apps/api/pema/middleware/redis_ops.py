@@ -5,7 +5,10 @@ New module (no TypeScript source): zalo-agent had no Redis. Keeping the surface 
 lets a test substitute another implementation. Everything atomic is a Lua script run through ``eval`` (no
 ``WATCH`` loops), see ``redis_backends``.
 
-The client must be created with ``decode_responses=True`` (``AsyncRedisOps.from_url`` does that).
+The client must be created with ``decode_responses=True`` (``AsyncRedisOps.from_url`` does that) and with a
+read timeout LONGER than the longest blocking call: ``redis-py`` 8 defaults ``socket_timeout`` to 5 seconds,
+which made a ``BLMOVE`` of 5 seconds (the idle poll of the turn worker) fail with ``TimeoutError`` every time
+the queue was empty. ``make_redis_client`` is the one place that builds the client.
 """
 
 from __future__ import annotations
@@ -28,6 +31,18 @@ class RedisOps(Protocol):
     async def aclose(self) -> None: ...
 
 
+SOCKET_TIMEOUT_S = 60.0
+"""Read timeout of the client: well above the blocking poll of the turn queue (5 s)."""
+
+
+def make_redis_client(url: str) -> Any:
+    from redis.asyncio import Redis  # local import: only the processes that use Redis load it
+
+    return Redis.from_url(  # pyright: ignore[reportUnknownMemberType]
+        url, decode_responses=True, socket_timeout=SOCKET_TIMEOUT_S, health_check_interval=30
+    )
+
+
 class AsyncRedisOps:
     def __init__(self, client: Any) -> None:
         self._client = client
@@ -35,9 +50,7 @@ class AsyncRedisOps:
 
     @classmethod
     def from_url(cls, url: str) -> AsyncRedisOps:
-        from redis.asyncio import Redis  # local import: only the processes that use Redis load it
-
-        return cls(Redis.from_url(url, decode_responses=True))  # pyright: ignore[reportUnknownMemberType]
+        return cls(make_redis_client(url))
 
     async def eval(self, script: str, keys: Sequence[str], args: Sequence[str | int | float]) -> object:
         registered = self._scripts.get(script)

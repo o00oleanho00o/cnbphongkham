@@ -510,17 +510,20 @@ class StorePendingInbox:
     parked batch is taken (the original ``layTinDangDo`` scope, so a group member's messages are not stolen).
     Without it every parked batch of the thread is taken, which is right for a direct thread (one sender)."""
 
-    def __init__(self, store: PendingBatchStore, clinic_id: UUID) -> None:
+    def __init__(self, store: PendingBatchStore, clinic_id: UUID | None = None) -> None:
         self._store = store
         self._clinic_id = clinic_id
 
-    def _key(self, account_id: str, thread_id: str) -> str:
-        return ThreadRef(self._clinic_id, account_id, thread_id).key
+    def _key(self, account_id: str, thread_id: str, clinic_id: UUID | None) -> str:
+        clinic = clinic_id if clinic_id is not None else self._clinic_id
+        if clinic is None:
+            raise ValueError("a pending inbox needs the clinic of the thread")
+        return ThreadRef(clinic, account_id, thread_id).key
 
     async def take_injected(
-        self, account_id: str, thread_id: str, sender_id: str | None = None
+        self, account_id: str, thread_id: str, sender_id: str | None = None, clinic_id: UUID | None = None
     ) -> Sequence[InboundMessage]:
-        thread_key = self._key(account_id, thread_id)
+        thread_key = self._key(account_id, thread_id, clinic_id)
         if sender_id is not None:
             batch = await self._store.pop(thread_key, sender_id, only_if_parked=True)
             return [] if batch is None else batch.messages
@@ -533,8 +536,10 @@ class StorePendingInbox:
                 taken.extend(popped.messages)
         return taken
 
-    async def pending_history_ids(self, account_id: str, thread_id: str) -> Sequence[int]:
+    async def pending_history_ids(
+        self, account_id: str, thread_id: str, clinic_id: UUID | None = None
+    ) -> Sequence[int]:
         ids: list[int] = []
-        for batch in await self._store.list_for_thread(self._key(account_id, thread_id)):
+        for batch in await self._store.list_for_thread(self._key(account_id, thread_id, clinic_id)):
             ids.extend(m.history_row_id for m in batch.messages if m.history_row_id is not None)
         return ids

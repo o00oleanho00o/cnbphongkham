@@ -626,7 +626,7 @@ def second_worker(env: Env, name: str) -> SchedulerDeps:
         usage=env.usage,  # type: ignore[arg-type]
         engine=env.engine,
         outbound=FakeOutbound(),
-        thread_lock=InMemoryThreadLock(),  # type: ignore[arg-type]  # fake of A: __aexit__ narrower than the protocol
+        thread_lock=InMemoryThreadLock(),
         clinic_actions=env.actions,  # type: ignore[arg-type]
         wrap_untrusted=env.deps.wrap_untrusted,
         worker_id=name,

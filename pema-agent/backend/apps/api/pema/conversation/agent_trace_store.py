@@ -33,7 +33,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pema.config.runtime_tuning_settings import get_tuning_int
 from pema.conversation.sql_util import affected_rows
 from pema.core.db import ClinicDatabase
+from pema_contracts.admin_agent import TraceTurnRow
 from pema_contracts.agent_turn import StepTrace
+from pema_contracts.conversation import TraceStepRow
 
 _INSERT = text(
     """
@@ -263,3 +265,106 @@ class AgentTraceStore:
         async with self._db.session(clinic_id) as session:
             result = await session.execute(_PRUNE, {"clinic_id": clinic_id, "cutoff": cutoff})
             return affected_rows(result)
+
+
+_READER_TURNS = text(
+    """
+    SELECT t.id, t.account_id, t.thread_id, t.source, t.input_tokens, t.output_tokens, t.total_tokens,
+           t.steps, t.created_at,
+           NULLIF((SELECT th.display_name FROM agent.threads th WHERE th.clinic_id = t.clinic_id
+                   AND th.account_id = t.account_id AND th.thread_id = t.thread_id), '') AS thread_name
+    FROM agent.usage t
+    WHERE t.clinic_id = :clinic_id
+      AND (CAST(:before AS bigint) IS NULL OR t.id < CAST(:before AS bigint))
+      AND (CAST(:account_id AS text) IS NULL OR t.account_id = CAST(:account_id AS text))
+      AND (CAST(:thread_id AS text) IS NULL OR t.thread_id = CAST(:thread_id AS text))
+    ORDER BY t.id DESC LIMIT :limit
+    """
+)
+
+_READER_STEPS = text(
+    """
+    SELECT id, turn_id, created_at, step_number, attempt, text, reasoning, tool_calls, tool_results,
+           tool_errors, finish_reason, warnings, input_tokens, output_tokens
+    FROM agent.usage_steps WHERE clinic_id = :clinic_id AND turn_id = :turn_id
+    ORDER BY attempt ASC, step_number ASC, id ASC
+    """
+)
+
+
+class PgTraceReader:
+    """The read side of the admin ``/traces`` routes (``TraceReader`` of ``routers/admin_usage``): turns
+    newest first with a cursor, and the steps of one turn, in the shapes of the API contract. Staff-only data
+    (``admin.usage``): the steps hold the verbatim messages."""
+
+    def __init__(self, db: ClinicDatabase) -> None:
+        self._db = db
+
+    async def list_recent_turns(
+        self,
+        clinic_id: UUID,
+        *,
+        before: int | None,
+        limit: int,
+        account_id: str | None = None,
+        thread_id: str | None = None,
+    ) -> list[TraceTurnRow]:
+        async with self._db.session(clinic_id) as session:
+            rows = (
+                (
+                    await session.execute(
+                        _READER_TURNS,
+                        {
+                            "clinic_id": clinic_id,
+                            "before": before,
+                            "account_id": account_id,
+                            "thread_id": thread_id,
+                            "limit": limit,
+                        },
+                    )
+                )
+                .mappings()
+                .all()
+            )
+        return [
+            TraceTurnRow(
+                id=r["id"],
+                account_id=r["account_id"],
+                thread_id=r["thread_id"],
+                source="schedule" if r["source"] == "schedule" else "message",
+                input_tokens=r["input_tokens"],
+                output_tokens=r["output_tokens"],
+                total_tokens=r["total_tokens"],
+                steps=r["steps"],
+                created_at=r["created_at"],
+                thread_name=r["thread_name"],
+            )
+            for r in rows
+        ]
+
+    async def get_turn_steps(self, clinic_id: UUID, turn_id: int) -> list[TraceStepRow]:
+        async with self._db.session(clinic_id) as session:
+            rows = (
+                (await session.execute(_READER_STEPS, {"clinic_id": clinic_id, "turn_id": turn_id}))
+                .mappings()
+                .all()
+            )
+        return [
+            TraceStepRow(
+                id=r["id"],
+                turn_id=r["turn_id"],
+                created_at=r["created_at"],
+                step_number=r["step_number"],
+                attempt=r["attempt"],
+                text=r["text"],
+                reasoning=r["reasoning"],
+                tool_calls=_json_list(r["tool_calls"]),
+                tool_results=_json_list(r["tool_results"]),
+                tool_errors=_json_list(r["tool_errors"]),
+                finish_reason=r["finish_reason"],
+                warnings=[str(w) for w in _json_list(r["warnings"])],
+                input_tokens=r["input_tokens"],
+                output_tokens=r["output_tokens"],
+            )
+            for r in rows
+        ]

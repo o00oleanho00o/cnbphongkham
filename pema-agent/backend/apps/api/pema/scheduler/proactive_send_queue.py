@@ -67,7 +67,7 @@ class ProactiveSendQueue:
         ask into the thread chain - the window that holds the lock shrinks to exactly the real send time."""
 
         async def locked() -> T:
-            async with self._thread_lock.hold(account_id, thread_id):
+            async with self._thread_lock.hold(account_id, thread_id, clinic_id):
                 return await fn()
 
         return await self.enqueue_proactive_send(locked, gate_key=send_gate_key(clinic_id, account_id))

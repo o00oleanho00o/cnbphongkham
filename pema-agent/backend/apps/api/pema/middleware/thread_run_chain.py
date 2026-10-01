@@ -212,14 +212,19 @@ class _Hold:
 
 
 class ClinicThreadLock:
-    """Adapts a chain to ``pema_contracts.agent_turn.ThreadLock`` for ONE clinic."""
+    """Adapts a chain to ``pema_contracts.agent_turn.ThreadLock``. ``clinic_id`` of the constructor is the
+    default for a caller that does not pass one; a worker serving several clinics builds it without a default
+    and every caller passes its clinic (a missing clinic is an error, never a shared key)."""
 
-    def __init__(self, chain: HoldsThreadKey, clinic_id: UUID) -> None:
+    def __init__(self, chain: HoldsThreadKey, clinic_id: UUID | None = None) -> None:
         self._chain = chain
         self._clinic_id = clinic_id
 
-    def hold(self, account_id: str, thread_id: str) -> ThreadLockHandle:
-        return self._chain.hold_key(thread_key_of(self._clinic_id, account_id, thread_id))
+    def hold(self, account_id: str, thread_id: str, clinic_id: UUID | None = None) -> ThreadLockHandle:
+        clinic = clinic_id if clinic_id is not None else self._clinic_id
+        if clinic is None:
+            raise ValueError("a thread lock needs the clinic of the thread")
+        return self._chain.hold_key(thread_key_of(clinic, account_id, thread_id))
 
 
 class QueueThreadRunner:

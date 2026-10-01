@@ -51,6 +51,10 @@ class Settings(BaseSettings):
     secret_encryption_key: SecretStr | None = None
     """Key of ``secret_cipher`` (AES-GCM) for bot tokens, Zalo credentials, MCP headers, API keys."""
 
+    crm_runner_interval_seconds: int = 900
+    """How often the API process runs the CRM rules for every clinic (0 turns the runner off). The runner
+    reads ``clinic.*``, so it lives in the API process (role ``be_app``), not in the worker."""
+
     zalo_personal_enabled: bool = False
     zalo_bridge_url: str = "http://localhost:8200"
     zalo_bridge_secret: SecretStr | None = None

@@ -172,6 +172,18 @@ def tool_capability_section(available: Sequence[ToolSpec]) -> str:
     return TIEU_DE_KHA_NANG + _CO_CONG_CU_0 + "\n".join(lines) + _CO_CONG_CU_1
 
 
+CHUA_XAC_MINH_DANH_TINH = (
+    "Danh tính của người đang nhắn CHƯA được xác minh với hồ sơ của phòng khám (policy hồ sơ bệnh nhân). "
+    "Tuyệt đối không nhắc tên, lịch hẹn, thuốc hay thông tin điều trị cụ thể của ai; chỉ trả lời thông tin "
+    "chung của phòng khám. Nếu họ hỏi chuyện cá nhân (lịch của tôi, thuốc của tôi, kết quả của tôi), hãy "
+    "lịch sự mời họ cho biết số điện thoại đã đăng ký tại phòng khám hoặc mã xác nhận do lễ tân gửi, để "
+    "nhân viên xác minh rồi mới trao đổi tiếp. Không tự xác nhận hộ."
+)
+"""Added to the system prompt of a turn where the profile demands identity verification (``patient_channel``)
+and ``verify_identity`` answered "not verified": the model asks for the way to verify instead of guessing.
+The linking itself (phone number or one-time code in the patient's message) is ``pema.policy.identity``."""
+
+
 def build_system_prompt(
     agent: AgentProfile,
     msg: InboundMessage,
@@ -181,6 +193,7 @@ def build_system_prompt(
     *,
     registry: ToolRegistry,
     channel: ChannelCapabilities | None = None,
+    identity_unverified: bool = False,
 ) -> str:
     # Only date + weekday, no time - a time that changes every minute would break the prompt cache every
     # minute. Without this line the model guesses the date from training data and answers wrong.
@@ -215,6 +228,9 @@ def build_system_prompt(
         # This rule line makes the model state the true cause and point to a channel that works.
         if channel is not None and channel.persona_rule:
             sections.append(channel.persona_rule)
+
+    if identity_unverified:
+        sections.append(CHUA_XAC_MINH_DANH_TINH)
 
     if agent.persona.strip():
         sections.append(f"Persona riêng của bạn (tên agent: {agent.name}):\n{agent.persona.strip()}")

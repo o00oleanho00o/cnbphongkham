@@ -158,7 +158,7 @@ async def make_env(admin_engine: Engine) -> AsyncIterator[Callable[..., Env]]:
             usage=usage,  # type: ignore[arg-type]
             engine=engine,
             outbound=outbound,
-            thread_lock=InMemoryThreadLock(),  # type: ignore[arg-type]  # fake of A: __aexit__ is narrower than the protocol
+            thread_lock=InMemoryThreadLock(),
             clinic_actions=actions,  # type: ignore[arg-type]
             wrap_untrusted=fake_wrap_untrusted,
             hooks=hooks if hooks is not None else PermissivePolicyHooks(),

@@ -28,8 +28,7 @@ Forced deviations (SQLite -> Postgres, two stores, CONTRACTS section 4):
   ``duplicate`` answer (the update was already recorded) writes nothing more. History failures are NOT caught
   here: the caller decides (the router logs and still answers, as the original did).
 * ``persist_images`` replaces ``persistBatchImages`` (package D2's media store) as an injected seam.
-* ``describe_for_history`` mirrors ``describeForHistory`` of ``zalo-message-parser.ts`` (package C2); it is
-  kept private here so this package does not import code that is not merged yet.
+* ``describe_for_history`` is C2's (``zalo_message_parser``), the one function both channels use.
 
 Shared by both channels (C2 imports it).
 """
@@ -42,6 +41,7 @@ from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
 
+from pema.channels.zalo_personal.zalo_message_parser import describe_for_history
 from pema.shared.logger import create_logger
 from pema_contracts.actions import ActionContext, ActionSource
 from pema_contracts.channel import InboundMessage
@@ -91,14 +91,6 @@ def webhook_action_context(clinic_id: UUID, request_id: str | None = None) -> Ac
     return ActionContext(
         clinic_id=clinic_id, actor_type=ActorType.SYSTEM, source=ActionSource.WEBHOOK, request_id=request_id
     )
-
-
-def describe_for_history(msg: InboundMessage) -> str:
-    """Content written to history for one incoming message. An image cannot enter the text column, so a
-    countable trace is left; a message with only an image still needs text, otherwise the next turn reads an
-    empty row and cannot tell what happened."""
-    image_note = f" [gửi kèm {len(msg.images)} ảnh]" if msg.images else ""
-    return f"{msg.text}{image_note}".strip() or "[ảnh]"
 
 
 def image_paths_of(images: Sequence[object]) -> list[str]:

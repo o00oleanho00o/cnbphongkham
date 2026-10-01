@@ -59,6 +59,7 @@ from pema.scheduler.scheduled_job_prompt import build_synthetic_message, with_la
 from pema.scheduler.scheduled_job_reply_target import JobSendTarget, make_job_target
 from pema.scheduler.scheduled_job_send import route_outbound
 from pema.scheduler.silent_sentinel import is_silent_response
+from pema.scheduler.template_placeholders import fill_template_placeholders
 from pema.shared.logger import create_logger
 from pema.shared.turn_log_context import TurnLogContext, run_in_turn_log_context
 from pema_contracts.agent_turn import (
@@ -70,7 +71,7 @@ from pema_contracts.agent_turn import (
 )
 from pema_contracts.agents import AccountConfig
 from pema_contracts.policy import JobAction, OutboundOrigin, ScheduledJobPolicy
-from pema_contracts.scheduler import JobKind, JobRunStatus, ScheduledJob
+from pema_contracts.scheduler import JobKind, JobOrigin, JobRunStatus, ScheduledJob
 from pema_contracts.turn_errors import AgentTurnError, ProviderErrorKind
 
 log = create_logger("run-scheduled-job")
@@ -225,7 +226,11 @@ async def _run_message_job(deps: SchedulerDeps, rc: RunContext, target: ReplyTar
     source_text = job.payload
     template_key: str | None = None
 
-    if rc.policy.profile.scheduled_jobs is not ScheduledJobPolicy.ANY:  # clinic
+    # A job of the CRM rules carries a TEMPLATE KEY as payload under every profile (B2 ``auto_reminder``); only
+    # the profile that allows free text sends the payload as it is.
+    if (
+        rc.policy.profile.scheduled_jobs is not ScheduledJobPolicy.ANY or job.origin is JobOrigin.CRM_RULE
+    ):  # clinic
         template = await deps.templates.get_template(job.clinic_id, job.payload.strip())
         if template is None:
             await conclude_blocked_not_run(
@@ -249,7 +254,13 @@ async def _run_message_job(deps: SchedulerDeps, rc: RunContext, target: ReplyTar
                     ),
                 )
                 return
-        source_text = template.body
+        # The blanks of the template ({ten}, {ngay}, {gio}) hold personal data: filled only for a VERIFIED
+        # identity, otherwise the text is not sent (a half-filled text never leaves).
+        filled = await fill_template_placeholders(deps, rc, template.body)
+        if filled.text is None:
+            await conclude_blocked_not_run(deps, job, rc.run_id, filled.reason, rc.scheduled_for)
+            return
+        source_text = filled.text
         template_key = template.template_key
 
     # ``payload`` is text the MODEL wrote when setting the schedule (through the ``schedule_task`` tool), and
@@ -322,6 +333,7 @@ async def _run_agent_job(
                     isolated=True,
                     source=TurnSource.SCHEDULE,
                     scheduled_job_id=job.id,
+                    turn_id=turn_id,
                 ),
                 TurnCallbacks(trace=trace),
             )

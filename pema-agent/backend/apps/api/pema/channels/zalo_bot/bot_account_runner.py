@@ -15,6 +15,10 @@ Forced deviations:
   which is the reason the original returned ``kenh``.
 * Webhook mode (new): with ``webhook`` given, the account registers ``setWebhook(url, secret)`` instead of
   polling. The two are mutually exclusive on the Bot API.
+* ``listen=False`` (new, package G): a SEND-ONLY account. The API and the worker are two processes that both
+  need the channel object (the worker sends the reply of a turn, the API sends a staff reply and verifies a
+  webhook) but only ONE of them may poll or register the webhook: the one that listens. The other registers
+  the channel in its registry and does nothing else.
 """
 
 from __future__ import annotations
@@ -88,6 +92,7 @@ async def chay_tai_khoan_bot(
     registry: InMemoryChannelRegistry,
     webhook: WebhookRegistration | None = None,
     client_factory: ClientFactory | None = None,
+    listen: bool = True,
 ) -> RunningBotAccount:
     client = (client_factory or _default_client)(token)
 
@@ -116,7 +121,10 @@ async def chay_tai_khoan_bot(
     kenh = ZaloBotChannel(client, account_id, webhook_secret=None if webhook is None else webhook.secret)
 
     poll: PollHandle | None = None
-    if webhook is not None:
+    if not listen:
+        # Send-only: no polling, no ``setWebhook``, no stray-webhook removal (the other process owns them).
+        pass
+    elif webhook is not None:
         # Webhook mode: register the URL and the secret, and do NOT poll (the two are mutually exclusive).
         try:
             await client.set_webhook(webhook.url, webhook.secret)
@@ -144,7 +152,11 @@ async def chay_tai_khoan_bot(
     # ``{ dung }`` and that was the one technical reason scheduled jobs could not run on the bot channel, not
     # that the Bot API lacks proactive sending (measured: 10 messages in 416 ms).
     registry.register(clinic_id, kenh)
-    _log.info("Đã khởi động tài khoản bot", account_id=account_id, mode="webhook" if webhook else "polling")
+    _log.info(
+        "Đã khởi động tài khoản bot",
+        account_id=account_id,
+        mode="send_only" if not listen else "webhook" if webhook else "polling",
+    )
     return RunningBotAccount(clinic_id, account_id, kenh, client, poll, registry)
 
 

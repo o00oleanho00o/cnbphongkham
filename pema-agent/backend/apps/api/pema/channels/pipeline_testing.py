@@ -153,7 +153,7 @@ class FakePending:
     taken: int = 0
 
     async def take_injected(
-        self, account_id: str, thread_id: str, sender_id: str | None = None
+        self, account_id: str, thread_id: str, sender_id: str | None = None, clinic_id: UUID | None = None
     ) -> Sequence[InboundMessage]:
         mine = [
             m
@@ -164,7 +164,9 @@ class FakePending:
         self.taken += len(mine)
         return mine
 
-    async def pending_history_ids(self, account_id: str, thread_id: str) -> Sequence[int]:
+    async def pending_history_ids(
+        self, account_id: str, thread_id: str, clinic_id: UUID | None = None
+    ) -> Sequence[int]:
         return [
             m.history_row_id
             for m in self.waiting

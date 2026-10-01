@@ -303,7 +303,7 @@ async def _xu_ly_luot(
     # reaction, lưu ảnh
     # - là việc ở đây.
     async def lay_tin_chen() -> Sequence[InboundMessage]:
-        moi = await _take_injected(services, config.id, latest)
+        moi = await _take_injected(services, clinic_id, config.id, latest)
         if not moi:
             return moi
         await _acknowledge(channel, config, moi, moi[-1])
@@ -320,7 +320,7 @@ async def _xu_ly_luot(
         # cũng phải ra
         # khỏi lịch sử của lượt này, không thì nó vào prompt như một câu hỏi chưa ai trả lời và model trả lời
         # luôn - rồi lượt của người kia trả lời lần nữa
-        return await services.pending.pending_history_ids(config.id, latest.thread_id)
+        return await services.pending.pending_history_ids(config.id, latest.thread_id, clinic_id)
 
     def ghi_nhan_da_gui(noi_dung: str) -> None:
         # Tin do TOOL gửi thẳng xuống kênh trong lượt này (file, ảnh, tag). Ghi NGAY lúc gửi: tin người
@@ -349,7 +349,9 @@ async def _xu_ly_luot(
         await gan_anh_vao_history(services, clinic_id, batch)
 
         result = await services.engine.run_turn(
-            AgentTurnRequest(clinic_id=clinic_id, account_id=config.id, batch=batch, request_id=request_id),
+            AgentTurnRequest(
+                clinic_id=clinic_id, account_id=config.id, batch=batch, request_id=request_id, turn_id=turn_id
+            ),
             callbacks,
         )
         await services.usage.finish_agent_turn(clinic_id, turn_id, result.usage)
@@ -463,11 +465,11 @@ async def _auto_react(channel: ReactionChannel, config: AccountConfig, msg: Inbo
 
 
 async def _take_injected(
-    services: TurnServices, account_id: str, latest: InboundMessage
+    services: TurnServices, clinic_id: UUID, account_id: str, latest: InboundMessage
 ) -> Sequence[InboundMessage]:
     # Theo NGƯỜI GỬI: batch nay là của đúng một người, và tin của người khác trong nhóm đã có lượt riêng
     # - kéo vào đây là cướp mất lượt đó. ``PendingInbox.take_injected`` carries the sender for that.
-    return await services.pending.take_injected(account_id, latest.thread_id, latest.sender_id)
+    return await services.pending.take_injected(account_id, latest.thread_id, latest.sender_id, clinic_id)
 
 
 # ----------------------------------------------------------------------------------------- Inbox and review
@@ -641,7 +643,7 @@ async def process_turn_job(services: TurnServices, queue: TurnQueue, job: TurnJo
         return
     try:
         if services.thread_lock is not None:
-            async with services.thread_lock.hold(job.account_id, job.thread_id):
+            async with services.thread_lock.hold(job.account_id, job.thread_id, job.clinic_id):
                 await process_batch(
                     services,
                     job.clinic_id,

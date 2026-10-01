@@ -163,17 +163,21 @@ class PendingInbox(Protocol):
     ``TurnCallbacks`` from it."""
 
     async def take_injected(
-        self, account_id: str, thread_id: str, sender_id: str | None = None
+        self, account_id: str, thread_id: str, sender_id: str | None = None, clinic_id: UUID | None = None
     ) -> Sequence[InboundMessage]:
         """Remove and return the waiting messages so the running turn can fold them in at a step boundary.
 
         ``sender_id`` is the ``layTinDangDo(threadKey, senderId)`` scope of the original: the batcher keys its
         queues by (thread, sender) and a turn must never steal another person's message (that person has a
         turn of their own). The turn passes the sender of its latest message; ``None`` takes every parked
-        batch of the thread, which is right only for a direct thread (one possible sender)."""
+        batch of the thread, which is right only for a direct thread (one possible sender). ``clinic_id``
+        scopes the thread (account ids are unique per clinic only); an implementation bound to ONE clinic may
+        leave it out."""
         ...
 
-    async def pending_history_ids(self, account_id: str, thread_id: str) -> Sequence[int]:
+    async def pending_history_ids(
+        self, account_id: str, thread_id: str, clinic_id: UUID | None = None
+    ) -> Sequence[int]:
         """History row ids of the waiting messages, to exclude them from the history window (they are
         already recorded at receipt)."""
         ...
@@ -182,7 +186,11 @@ class PendingInbox(Protocol):
 class ThreadLock(Protocol):
     """Port of ``thread-run-chain.ts``: one turn at a time per (account, thread), across processes."""
 
-    def hold(self, account_id: str, thread_id: str) -> ThreadLockHandle: ...
+    def hold(self, account_id: str, thread_id: str, clinic_id: UUID | None = None) -> ThreadLockHandle:
+        """``clinic_id`` scopes the key: account ids are unique per clinic only, and one Redis serves every
+        clinic of a worker. Callers that know the clinic (the turn processor, the scheduler) pass it; an
+        implementation bound to ONE clinic may leave it out."""
+        ...
 
 
 class ThreadLockHandle(Protocol):

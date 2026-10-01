@@ -42,7 +42,9 @@ class BotAccountManager:
         settings: ZaloBotSettings,
         clinic_slug_of: Callable[[UUID], Awaitable[str | None]] | None = None,
         client_factory: ClientFactory | None = None,
+        listen: bool = True,
     ) -> None:
+        self._listen = listen
         self._accounts = accounts
         self._router = router
         self._registry = registry
@@ -85,8 +87,11 @@ class BotAccountManager:
             token=token,
             router=self._router,
             registry=self._registry,
-            webhook=await self._webhook_for(config.clinic_id, config.id),
+            # A send-only account registers nothing, so it needs neither the URL nor the clinic slug (the worker
+            # cannot read ``clinic.clinic`` and must not need to).
+            webhook=await self._webhook_for(config.clinic_id, config.id) if self._listen else None,
             client_factory=self._client_factory,
+            listen=self._listen,
         )
         self._running[key] = running
         return True

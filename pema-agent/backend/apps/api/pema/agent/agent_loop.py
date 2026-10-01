@@ -614,6 +614,9 @@ async def _run_turn(
             isolated,
             registry=deps.tools,
             channel=caps,
+            identity_unverified=profile.require_identity_verification
+            and not isolated
+            and not ctx.identity_verified,
         )
 
     def thread_session() -> ThreadSession:

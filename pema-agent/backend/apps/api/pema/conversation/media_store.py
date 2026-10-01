@@ -213,6 +213,10 @@ class MediaStore:
         ``MEDIA_RETENTION_DAYS``) hoặc đường dẫn thoát khỏi thư mục media của phòng khám đều trả ``None``."""
         return await asyncio.to_thread(self._load_stored_image_sync, clinic_id, rel_path)
 
+    def load_stored_image_sync(self, clinic_id: UUID, rel_path: str) -> StoredImage | None:
+        """The synchronous read, for a caller that cannot await (the engine's ``StoredImageLoader``)."""
+        return self._load_stored_image_sync(clinic_id, rel_path)
+
     def _load_stored_image_sync(self, clinic_id: UUID, rel_path: str) -> StoredImage | None:
         try:
             media_dir = self._media_dir(clinic_id).resolve()
