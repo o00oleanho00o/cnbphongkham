@@ -1,12 +1,11 @@
 package com.pema.clinic.feature.patients
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
@@ -162,16 +161,16 @@ class PatientsShotTest {
             topBar = { PemaMainTopBar(roleLabel, onRoleClick = {}, unread = unread) },
             bottomBar = { PemaBottomNav(navItems, selectedIndex, onSelect = {}) },
         ) { inner ->
+            val search = rememberPatientSearchState(deps)
             Box(Modifier.fillMaxSize().padding(inner), contentAlignment = Alignment.TopCenter) {
-                Column(
+                LazyColumn(
                     Modifier
                         .widthIn(max = 720.dp)
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 24.dp),
+                        .fillMaxSize(),
+                    contentPadding = PaddingValues(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 24.dp),
                 ) {
-                    PemaHeading(headingTitle, headingSub)
-                    PatientSearch(deps = deps, onOpen = {})
+                    item { PemaHeading(headingTitle, headingSub) }
+                    patientSearchItems(search, onOpen = {})
                 }
             }
         }

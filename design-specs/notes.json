@@ -5,7 +5,10 @@
       "logic": ["Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."],
       "rules": ["The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."],
       "differences": ["Real Pema logo instead of the canvas \"pema\" text.", "Real sample data (46 records) instead of illustrative names."],
-      "gotchas": ["The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0."]
+      "gotchas": [
+        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0.",
+        "The Workspace body is one `LazyColumn` for every tab/role (`ownerItems`/`staffItems`/`careItems` in WorkspaceGraph.kt): add blocks as `item { … }` and tiles with the `tile(...)` helper, never a scrolling `Column` + `forEach` (all rows were composed on each tab switch: ~2 s on a Redmi Note 9 debug build). The `LazyListState` is saved per tab (`rememberSaveable(role, tab)`), so each tab opens at its top and keeps its position after a pushed route."
+      ]
     },
     "B": {
       "logic": ["Flutter `workspace_screen.dart` › staffBody() (doctor)."],
@@ -54,7 +57,10 @@
   },
   "screens": {
     "A2": { "rules": ["Static WeekStrip like Flutter (`const WeekStrip`): tapping a day does nothing — correct 1:1."] },
-    "A3": { "logic": ["Embeds `PatientSearch` from feature:patients (dependency exception, as in Flutter)."] },
+    "A3": {
+      "logic": ["Embeds PatientSearch from feature:patients (dependency exception, as in Flutter) as lazy items: `rememberPatientSearchState(deps)` (saved query + rows filtered in `remember`) and `LazyListScope.patientSearchItems(state, onOpen)` (search field, then one `PemaTile` per profile keyed by its code). Same API for the staff \"Hồ sơ mẫu\" tab (B2, C5, D2)."],
+      "gotchas": ["The owner sees all 46 profiles: keep the list lazy (only the ~7 on-screen tiles are composed). Measured on the emulator (debug build), first open went from 728 ms to 269 ms per tab switch; screenshots stayed pixel-identical."]
+    },
     "A6": { "gotchas": ["Don't nest `verticalScroll` inside `PemaBottomSheet`/`ModalBottomSheet` (crash); the scroll layer is in the overlay."] },
     "A7": { "logic": ["`PaymentAlerts` wraps the whole app (feature:finance): SnackBar when the unread payment count increases, even on child screens; \"Xem\" opens Finance on the notifications tab (3)."] },
     "C6": { "rules": ["Contact notes are internal and never shown to the patient."], "logic": ["Link \"Ghi nhận CSKH đầy đủ\" → I13 (optional callback, hidden by default so the Flutter shot stays the same)."] },

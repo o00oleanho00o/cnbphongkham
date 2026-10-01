@@ -7,21 +7,21 @@ Canvas: `Pema App redesign canvas/Pema App.dc.html` (5ff2b84206e016c6)
 |---|---|---|---|---|---|
 | [A1](screens/A1.md) | Hôm nay | Flutter | `WorkspaceScreen` | pema-kmp/feature/workspace | ✓ |
 | [A2](screens/A2.md) | Lịch hẹn | Flutter | `WorkspaceScreen` | pema-kmp/feature/workspace | ✓ |
-| [A3](screens/A3.md) | Hồ sơ | Flutter | `PatientSearch` | pema-kmp/feature/patients | ✓ |
+| [A3](screens/A3.md) | Hồ sơ | Flutter | `patientSearchItems` | pema-kmp/feature/patients | ✓ |
 | [A4](screens/A4.md) | Theo dõi | Flutter | `WorkspaceScreen` | pema-kmp/feature/workspace | ✓ |
 | [A5](screens/A5.md) | Thêm | Flutter | `WorkspaceScreen` | pema-kmp/feature/workspace | ✓ |
 | [A6](screens/A6.md) | Đổi không gian làm việc | Flutter | `WorkspaceScreen` | pema-kmp/feature/workspace | ✓ |
 | [A7](screens/A7.md) | Có thanh toán mới | Flutter | `WorkspaceScreen` | pema-kmp/feature/workspace | ✓ |
 | [B1](screens/B1.md) | Công việc | Flutter | `WorkspaceScreen` | pema-kmp/feature/workspace | ✓ |
-| [B2](screens/B2.md) | Hồ sơ mẫu | Flutter | `PatientSearch` | pema-kmp/feature/patients | ✓ |
+| [B2](screens/B2.md) | Hồ sơ mẫu | Flutter | `patientSearchItems` | pema-kmp/feature/patients | ✓ |
 | [C1](screens/C1.md) | Hàng chờ CSKH | Flutter | `CareQueueContent` | pema-kmp/feature/care | ✓ |
 | [C2](screens/C2.md) | Lọc nhóm chăm sóc | Flutter | `CareQueueContent` | pema-kmp/feature/care | ✓ |
 | [C3](screens/C3.md) | Đang lọc nhóm | Flutter | `CareQueueContent` | pema-kmp/feature/care | ✓ |
 | [C4](screens/C4.md) | Bộ lọc trống | Flutter | `CareQueueContent` | pema-kmp/feature/care | ✓ |
-| [C5](screens/C5.md) | Hồ sơ mẫu | Flutter | `PatientSearch` | pema-kmp/feature/patients | ✓ |
+| [C5](screens/C5.md) | Hồ sơ mẫu | Flutter | `patientSearchItems` | pema-kmp/feature/patients | ✓ |
 | [C6](screens/C6.md) | Chăm sóc khách hàng | Flutter | `CustomerCareContactContent` | pema-kmp/feature/care | ✓ |
 | [D1](screens/D1.md) | Đối soát & thu ngân | Flutter | `WorkspaceScreen` | pema-kmp/feature/workspace | ✓ |
-| [D2](screens/D2.md) | Hồ sơ mẫu | Flutter | `PatientSearch` | pema-kmp/feature/patients | ✓ |
+| [D2](screens/D2.md) | Hồ sơ mẫu | Flutter | `patientSearchItems` | pema-kmp/feature/patients | ✓ |
 | [E1](screens/E1.md) | Trang chủ | Flutter | `WorkspaceScreen` | pema-kmp/feature/workspace | ✓ |
 | [E2](screens/E2.md) | Hành trình | Flutter | `WorkspaceScreen` | pema-kmp/feature/workspace | ✓ |
 | [E3](screens/E3.md) | Tin nhắn | Flutter | `WorkspaceScreen` | pema-kmp/feature/workspace | ✓ |
