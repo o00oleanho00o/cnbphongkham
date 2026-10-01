@@ -1,0 +1,28 @@
+# Minimal dev stack from package A: Postgres (pgvector) and Redis only.
+# Package F extends this file with api, worker, zalo-personal-bridge and ollama.
+name: pema-agent
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${PEMA_PG_SUPERUSER_PASSWORD:?set it in infra/.env (see .env.example)}
+      POSTGRES_DB: pema
+    ports:
+      - "127.0.0.1:${PEMA_PG_PORT:-5432}:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pema"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:${PEMA_REDIS_PORT:-6379}:6379"
+
+volumes:
+  pg-data:

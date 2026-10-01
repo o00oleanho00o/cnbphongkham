@@ -1,0 +1,137 @@
+[project]
+name = "pema-agent-backend"
+version = "0.1.0"
+description = "Pema Digital Clinic CSKH agent: uv workspace root (not a package)."
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/*", "apps/*"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9",
+    "pyright>=1.1.390",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "import-linter>=2.1",
+    "httpx>=0.27",
+]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+src = ["packages/contracts/src", "apps/api"]
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "C4", "PT", "RUF", "S", "T20", "N", "ASYNC"]
+ignore = [
+    "RUF001", "RUF002", "RUF003",  # Vietnamese text in strings/docstrings is intentional
+    "B008",                        # FastAPI Depends(...) in argument defaults
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101", "S105", "S106", "E501", "PT012"]
+"**/alembic/versions/*.py" = ["E501", "S608"]
+"**/alembic/env.py" = ["S608"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pema_contracts", "pema"]
+known-third-party = ["alembic"]
+
+# ------------------------------------------------------------- pyright
+[tool.pyright]
+typeCheckingMode = "strict"
+pythonVersion = "3.12"
+include = ["packages", "apps"]
+exclude = ["**/.venv", "**/__pycache__", "**/node_modules"]
+venvPath = "."
+venv = ".venv"
+extraPaths = ["packages/contracts/src", "apps/api"]
+
+# -------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+testpaths = ["packages", "apps"]
+addopts = "-ra --import-mode=importlib"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "db: needs a clean Postgres with pgvector reachable via PEMA_TEST_DATABASE_URL (skipped otherwise)",
+]
+
+# ------------------------------------------------------- import-linter
+# Architecture rules of PLAN-AI01 section 3. Package-level ownership is in docs/CONTRACTS-AI01.md.
+[tool.importlinter]
+root_packages = ["pema_contracts", "pema"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "contracts is a leaf: it never imports the application"
+type = "forbidden"
+source_modules = ["pema_contracts"]
+forbidden_modules = ["pema"]
+
+[[tool.importlinter.contracts]]
+name = "clinic domain and actions never import channels, api, agent, workers or middleware"
+type = "forbidden"
+source_modules = ["pema.clinic.domain", "pema.clinic.actions"]
+forbidden_modules = [
+    "pema.channels",
+    "pema.api",
+    "pema.agent",
+    "pema.workers",
+    "pema.middleware",
+]
+
+[[tool.importlinter.contracts]]
+name = "agent-side packages reach the clinic only through pema.clinic.actions"
+type = "forbidden"
+source_modules = [
+    "pema.agent",
+    "pema.conversation",
+    "pema.knowledge",
+    "pema.scheduler",
+    "pema.mcp",
+    "pema.policy",
+    "pema.channels",
+    "pema.middleware",
+    "pema.documents",
+    "pema.images",
+    "pema.video",
+    "pema.workers",
+]
+forbidden_modules = [
+    "pema.clinic.models",
+    "pema.clinic.domain",
+    "pema.clinic.rbac",
+    "pema.clinic.audit",
+    "pema.clinic.crm_rules",
+]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "only the composition layer imports pema.api, pema.workers and pema.bootstrap"
+type = "forbidden"
+source_modules = [
+    "pema.agent",
+    "pema.channels",
+    "pema.clinic",
+    "pema.config",
+    "pema.conversation",
+    "pema.core",
+    "pema.documents",
+    "pema.images",
+    "pema.knowledge",
+    "pema.mcp",
+    "pema.middleware",
+    "pema.policy",
+    "pema.scheduler",
+    "pema.shared",
+    "pema.video",
+]
+forbidden_modules = ["pema.api", "pema.workers", "pema.bootstrap"]
