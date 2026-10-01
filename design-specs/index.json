@@ -1,11 +1,11 @@
 {
-  "canvasHash": "5ff2b84206e016c6",
+  "canvasHash": "a4091a5ee4871e7f",
   "canvas": "Pema App redesign canvas/Pema App.dc.html",
   "groups": [
     {
       "code": "A",
       "title": "Clinic · Chủ phòng khám",
-      "sub": "staffRole = owner · 5 tab · main.dart › Workspace",
+      "sub": "staffRole = owner · 5 tab · WorkspaceScreen",
       "count": 7
     },
     {
@@ -17,7 +17,7 @@
     {
       "code": "C",
       "title": "CSKH",
-      "sub": "staffRole = care · Mai Anh · care_workspace.dart › CareQueue",
+      "sub": "staffRole = care · Mai Anh · feature:care › CareQueue",
       "count": 6
     },
     {
@@ -35,7 +35,7 @@
     {
       "code": "F",
       "title": "Nghiệp vụ Clinic",
-      "sub": "main.dart › Detail(route) · góc nhìn chủ phòng khám",
+      "sub": "DetailScaffold(route) · góc nhìn chủ phòng khám",
       "count": 17
     },
     {
@@ -47,25 +47,25 @@
     {
       "code": "H",
       "title": "Tài chính",
-      "sub": "finance.dart › FinanceScreen, RateScreen, ProcedureForm",
+      "sub": "feature:finance › FinanceScreen, RateScreen, ProcedureFormScreen",
       "count": 9
     },
     {
       "code": "I",
       "title": "Vận hành Clinic · bổ sung từ web",
-      "sub": "prototype/clinic-web · chưa có trong Flutter · dựng lại theo mẫu mobile",
+      "sub": "prototype/clinic-web · dựng lại theo mẫu mobile",
       "count": 13
     },
     {
       "code": "J",
       "title": "Patient 360 đầy đủ · bổ sung từ web",
-      "sub": "clinic.js › patient360 tab & modal · chưa có trong Flutter",
+      "sub": "clinic.js › patient360 tab & modal",
       "count": 11
     },
     {
       "code": "K",
       "title": "Pema Care · bổ sung từ web",
-      "sub": "prototype/patient-mobile · màn web chưa có trong Flutter",
+      "sub": "prototype/patient-mobile",
       "count": 3
     }
   ],
@@ -80,9 +80,9 @@
       "role": "Clinic",
       "tab": "Hôm nay",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -143,7 +143,7 @@
         "Xem ảnh và phản hồi từ người bệnh"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`)."
       ],
       "rules": [
         "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
@@ -169,9 +169,9 @@
       "role": "Clinic",
       "tab": "Lịch hẹn",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -233,11 +233,11 @@
         "Đặt / dời lịch"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`)."
       ],
       "rules": [
         "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav.",
-        "Static WeekStrip like Flutter (`const WeekStrip`): tapping a day does nothing — correct 1:1."
+        "Static WeekStrip: tapping a day does nothing — intended."
       ],
       "differences": [
         "Real Pema logo instead of the canvas \"pema\" text.",
@@ -260,9 +260,9 @@
       "role": "Clinic",
       "tab": "Hồ sơ",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "patientSearchItems",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientSearch.kt"
       },
       "kmp": {
         "route": {
@@ -331,8 +331,8 @@
         "P012 · Đang điều trị"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`).",
-        "Embeds PatientSearch from feature:patients (dependency exception, as in Flutter) as lazy items: `rememberPatientSearchState(deps)` (saved query + rows filtered in `remember`) and `LazyListScope.patientSearchItems(state, onOpen)` (search field, then one `PemaTile` per profile keyed by its code). Same API for the staff \"Hồ sơ mẫu\" tab (B2, C5, D2)."
+        "`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`).",
+        "Embeds PatientSearch from feature:patients (dependency exception) as lazy items: `rememberPatientSearchState(deps)` (saved query + rows filtered in `remember`) and `LazyListScope.patientSearchItems(state, onOpen)` (search field, then one `PemaTile` per profile keyed by its code). Same API for the staff \"Hồ sơ mẫu\" tab (B2, C5, D2)."
       ],
       "rules": [
         "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
@@ -359,9 +359,9 @@
       "role": "Clinic",
       "tab": "Theo dõi",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -405,7 +405,7 @@
         "Hồ sơ mẫu · triệu chứng tăng"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`)."
       ],
       "rules": [
         "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
@@ -431,9 +431,9 @@
       "role": "Clinic",
       "tab": "Thêm",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -495,7 +495,7 @@
         "Template tương tác • dữ liệu mẫu trong phiên. Chuyển Clinic/Care ở góc trên để duyệt bàn giao."
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`)."
       ],
       "rules": [
         "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
@@ -521,9 +521,9 @@
       "role": "Clinic",
       "tab": "Hôm nay",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -599,7 +599,7 @@
         "Người bệnh · Pema Care"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`)."
       ],
       "rules": [
         "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
@@ -626,9 +626,9 @@
       "role": "Clinic",
       "tab": "Hôm nay",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -690,7 +690,7 @@
         "Xem ảnh và phản hồi từ người bệnh"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`).",
+        "`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`).",
         "`PaymentAlerts` wraps the whole app (feature:finance): SnackBar when the unread payment count increases, even on child screens; \"Xem\" opens Finance on the notifications tab (3)."
       ],
       "rules": [
@@ -717,9 +717,9 @@
       "role": "Bác sĩ",
       "tab": "Công việc",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -768,7 +768,7 @@
         "Lê Hoàng Yến"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › staffBody() (doctor)."
+        "`WorkspaceScreen` › staff body (doctor)."
       ],
       "rules": [
         "Doctors have 2 tabs (\"Công việc\", \"Hồ sơ mẫu\") and only see records they own (`Session.owns`)."
@@ -788,9 +788,9 @@
       "role": "Bác sĩ",
       "tab": "Hồ sơ mẫu",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "patientSearchItems",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientSearch.kt"
       },
       "kmp": {
         "route": {
@@ -838,7 +838,7 @@
         "P011 · Đang điều trị"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › staffBody() (doctor)."
+        "`WorkspaceScreen` › staff body (doctor)."
       ],
       "rules": [
         "Doctors have 2 tabs (\"Công việc\", \"Hồ sơ mẫu\") and only see records they own (`Session.owns`)."
@@ -858,9 +858,9 @@
       "role": "CSKH",
       "tab": "Công việc",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "CareQueueContent",
+        "file": "pema-kmp/feature/care/src/commonMain/kotlin/com/pema/clinic/feature/care/CareQueue.kt"
       },
       "kmp": {
         "route": {
@@ -941,7 +941,7 @@
         "P010 · BS. Mai"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
+        "CareQueue (`feature/care/CareQueue.kt`, state `shared/care/CareQueue.kt`) embedded in Workspace."
       ],
       "rules": [
         "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
@@ -963,9 +963,9 @@
       "role": "CSKH",
       "tab": "Công việc",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "CareQueueContent",
+        "file": "pema-kmp/feature/care/src/commonMain/kotlin/com/pema/clinic/feature/care/CareQueue.kt"
       },
       "kmp": {
         "route": {
@@ -1064,7 +1064,7 @@
         "Ảnh tiến triển · D+3"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
+        "CareQueue (`feature/care/CareQueue.kt`, state `shared/care/CareQueue.kt`) embedded in Workspace."
       ],
       "rules": [
         "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
@@ -1086,9 +1086,9 @@
       "role": "CSKH",
       "tab": "Công việc",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "CareQueueContent",
+        "file": "pema-kmp/feature/care/src/commonMain/kotlin/com/pema/clinic/feature/care/CareQueue.kt"
       },
       "kmp": {
         "route": {
@@ -1135,7 +1135,7 @@
         "P005 · BS. Tâm"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
+        "CareQueue (`feature/care/CareQueue.kt`, state `shared/care/CareQueue.kt`) embedded in Workspace."
       ],
       "rules": [
         "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
@@ -1157,9 +1157,9 @@
       "role": "CSKH",
       "tab": "Công việc",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "CareQueueContent",
+        "file": "pema-kmp/feature/care/src/commonMain/kotlin/com/pema/clinic/feature/care/CareQueue.kt"
       },
       "kmp": {
         "route": {
@@ -1203,7 +1203,7 @@
         "Không có khách trong bộ lọc này"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
+        "CareQueue (`feature/care/CareQueue.kt`, state `shared/care/CareQueue.kt`) embedded in Workspace."
       ],
       "rules": [
         "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
@@ -1225,9 +1225,9 @@
       "role": "CSKH",
       "tab": "Hồ sơ mẫu",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "patientSearchItems",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientSearch.kt"
       },
       "kmp": {
         "route": {
@@ -1296,7 +1296,7 @@
         "P012 · Đang điều trị"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
+        "CareQueue (`feature/care/CareQueue.kt`, state `shared/care/CareQueue.kt`) embedded in Workspace."
       ],
       "rules": [
         "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
@@ -1318,9 +1318,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "CustomerCareContactScreen",
-        "file": "flutter-template/lib/features/customer_care/presentation/screens/customer_care_contact_screen.dart"
+        "kind": "kmp",
+        "class": "CustomerCareContactContent",
+        "file": "pema-kmp/feature/care/src/commonMain/kotlin/com/pema/clinic/feature/care/CareGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1367,8 +1367,8 @@
         "Chuyển bác sĩ xem"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`.",
-        "Link \"Ghi nhận CSKH đầy đủ\" → I13 (optional callback, hidden by default so the Flutter shot stays the same)."
+        "CareQueue (`feature/care/CareQueue.kt`, state `shared/care/CareQueue.kt`) embedded in Workspace.",
+        "Link \"Ghi nhận CSKH đầy đủ\" → I13 (optional callback, hidden by default so the C6 shot stays the same)."
       ],
       "rules": [
         "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet.",
@@ -1391,9 +1391,9 @@
       "role": "Kế toán",
       "tab": "Công việc",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1433,7 +1433,7 @@
         "Nguyễn Thu Hà"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › staffBody() (accountant)."
+        "`WorkspaceScreen` › staff body (accountant)."
       ],
       "rules": [
         "Accountants have 2 tabs; allowed routes: \"Thu ngân\", \"Hóa đơn\", \"Hướng dẫn\" (+ web: \"Thu ngân · hóa đơn\", \"Dịch vụ & tài chính\", \"Lịch sử hợp nhất\", \"Hồ sơ mới\")."
@@ -1453,9 +1453,9 @@
       "role": "Kế toán",
       "tab": "Hồ sơ mẫu",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "patientSearchItems",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientSearch.kt"
       },
       "kmp": {
         "route": {
@@ -1524,7 +1524,7 @@
         "P012 · Đang điều trị"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › staffBody() (accountant)."
+        "`WorkspaceScreen` › staff body (accountant)."
       ],
       "rules": [
         "Accountants have 2 tabs; allowed routes: \"Thu ngân\", \"Hóa đơn\", \"Hướng dẫn\" (+ web: \"Thu ngân · hóa đơn\", \"Dịch vụ & tài chính\", \"Lịch sử hợp nhất\", \"Hồ sơ mới\")."
@@ -1544,9 +1544,9 @@
       "role": "Care",
       "tab": "Trang chủ",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1602,7 +1602,7 @@
         "Bác sĩ đã gửi hướng dẫn cho bạn"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › CareBody (careMode = true)."
+        "`WorkspaceScreen` › care body (care mode)."
       ],
       "rules": [
         "Patients have 4 tabs: \"Trang chủ\" / \"Hành trình\" / \"Tin nhắn\" / \"Hồ sơ\"; only care routes are allowed (`Session.allows`)."
@@ -1624,9 +1624,9 @@
       "role": "Care",
       "tab": "Hành trình",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1673,7 +1673,7 @@
         "Đơn thuốc & tư vấn"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › CareBody (careMode = true)."
+        "`WorkspaceScreen` › care body (care mode)."
       ],
       "rules": [
         "Patients have 4 tabs: \"Trang chủ\" / \"Hành trình\" / \"Tin nhắn\" / \"Hồ sơ\"; only care routes are allowed (`Session.allows`)."
@@ -1695,9 +1695,9 @@
       "role": "Care",
       "tab": "Tin nhắn",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1743,7 +1743,7 @@
         "Gửi cập nhật"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › CareBody (careMode = true)."
+        "`WorkspaceScreen` › care body (care mode)."
       ],
       "rules": [
         "Patients have 4 tabs: \"Trang chủ\" / \"Hành trình\" / \"Tin nhắn\" / \"Hồ sơ\"; only care routes are allowed (`Session.allows`)."
@@ -1765,9 +1765,9 @@
       "role": "Care",
       "tab": "Hồ sơ",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1818,7 +1818,7 @@
         "Hướng dẫn"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › CareBody (careMode = true)."
+        "`WorkspaceScreen` › care body (care mode)."
       ],
       "rules": [
         "Patients have 4 tabs: \"Trang chủ\" / \"Hành trình\" / \"Tin nhắn\" / \"Hồ sơ\"; only care routes are allowed (`Session.allows`)."
@@ -1840,9 +1840,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "Patient360Screen",
-        "file": "flutter-template/lib/features/patients/presentation/screens/patient_360_screen.dart"
+        "kind": "kmp",
+        "class": "Patient360Route",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientsGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1903,7 +1903,7 @@
         "Check-in người bệnh"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace.",
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace.",
         "The \"Patient 360 đầy đủ\" items (J1–J11) are added at the end, filtered by `Session.allows`."
       ],
       "rules": [],
@@ -1924,9 +1924,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "ConsultationScreen",
-        "file": "flutter-template/lib/features/patients/presentation/screens/consultation_screen.dart"
+        "kind": "kmp",
+        "class": "ConsultationRoute",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientsGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1964,7 +1964,7 @@
         "Xem tóm tắt AI"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -1984,9 +1984,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "TreatmentSessionScreen",
-        "file": "flutter-template/lib/features/patients/presentation/screens/treatment_session_screen.dart"
+        "kind": "kmp",
+        "class": "TreatmentSessionRoute",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientsGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2024,7 +2024,7 @@
         "Hoàn tất buổi"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2044,9 +2044,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "QuickOrderScreen",
-        "file": "flutter-template/lib/features/orders/presentation/screens/quick_order_screen.dart"
+        "file": "pema-kmp/feature/orders/src/commonMain/kotlin/com/pema/clinic/feature/orders/OrdersGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2101,7 +2101,7 @@
         "SP060 · Chai · 400.000 ₫\nCần phân loại"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2121,9 +2121,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "OrderReviewScreen",
-        "file": "flutter-template/lib/features/orders/presentation/screens/order_review_screen.dart"
+        "file": "pema-kmp/feature/orders/src/commonMain/kotlin/com/pema/clinic/feature/orders/OrdersGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2171,7 +2171,7 @@
         "Bác sĩ duyệt đơn"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2191,9 +2191,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "PrescriptionsScreen",
-        "file": "flutter-template/lib/features/orders/presentation/screens/prescriptions_screen.dart"
+        "file": "pema-kmp/feature/orders/src/commonMain/kotlin/com/pema/clinic/feature/orders/OrdersGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2239,7 +2239,7 @@
         "Xem bố cục hai phiếu A5"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2259,9 +2259,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "A5PrintPreviewScreen",
-        "file": "flutter-template/lib/features/orders/presentation/screens/a5_print_preview_screen.dart"
+        "file": "pema-kmp/feature/orders/src/commonMain/kotlin/com/pema/clinic/feature/orders/OrdersGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2302,7 +2302,7 @@
         "Mang theo phiếu này · Kiểm tra sản phẩm\nBác sĩ tư vấn"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2322,9 +2322,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "BookingScreen",
-        "file": "flutter-template/lib/features/schedule/presentation/screens/booking_screen.dart"
+        "file": "pema-kmp/feature/schedule/src/commonMain/kotlin/com/pema/clinic/feature/schedule/ScheduleGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2385,7 +2385,7 @@
         "Xác nhận lịch"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2405,9 +2405,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "AppointmentDetailScreen",
-        "file": "flutter-template/lib/features/schedule/presentation/screens/appointment_detail_screen.dart"
+        "kind": "kmp",
+        "class": "AppointmentScreen",
+        "file": "pema-kmp/feature/schedule/src/commonMain/kotlin/com/pema/clinic/feature/schedule/ScheduleGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2451,7 +2451,7 @@
         "Mở Patient 360"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2471,9 +2471,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FollowUpReplyScreen",
-        "file": "flutter-template/lib/features/aftercare/presentation/screens/follow_up_reply_screen.dart"
+        "file": "pema-kmp/feature/aftercare/src/commonMain/kotlin/com/pema/clinic/feature/aftercare/AftercareScreens.kt"
       },
       "kmp": {
         "route": {
@@ -2513,7 +2513,7 @@
         "Duyệt và phản hồi"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace.",
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace.",
         "Shows photos sent by the patient (`PatientState.photos`) with `LocalPhoto`."
       ],
       "rules": [],
@@ -2534,9 +2534,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "CashierScreen",
-        "file": "flutter-template/lib/features/billing/presentation/screens/cashier_screen.dart"
+        "file": "pema-kmp/feature/billing/src/commonMain/kotlin/com/pema/clinic/feature/billing/BillingGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2577,7 +2577,7 @@
         "Lên đơn mới"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2597,9 +2597,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "CashierScreen",
-        "file": "flutter-template/lib/features/billing/presentation/screens/cashier_screen.dart"
+        "file": "pema-kmp/feature/billing/src/commonMain/kotlin/com/pema/clinic/feature/billing/BillingGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2648,7 +2648,7 @@
         "Xác nhận tiền mặt"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2668,9 +2668,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "ServicesScreen",
-        "file": "flutter-template/lib/features/schedule/presentation/screens/services_screen.dart"
+        "file": "pema-kmp/feature/schedule/src/commonMain/kotlin/com/pema/clinic/feature/schedule/ScheduleGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2713,7 +2713,7 @@
         "1.200.000 ₫ · 45 + 15 phút"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace.",
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace.",
         "The clinic owner also sees \"Chỉnh dịch vụ\" → I9 `service-edit?id=S<index>` (optional callback)."
       ],
       "rules": [],
@@ -2734,9 +2734,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "ResourcesScreen",
-        "file": "flutter-template/lib/features/schedule/presentation/screens/resources_screen.dart"
+        "file": "pema-kmp/feature/schedule/src/commonMain/kotlin/com/pema/clinic/feature/schedule/ScheduleGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2780,7 +2780,7 @@
         "Laser & thủ thuật · Bảo trì 14:00–15:00 ngày 23/09. Khóa phòng phức tạp duyệt ở web."
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace.",
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace.",
         "The clinic owner also sees the \"Khóa thời gian phòng\" button → I8 (optional callback)."
       ],
       "rules": [],
@@ -2801,9 +2801,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "AskPemaScreen",
-        "file": "flutter-template/lib/features/patients/presentation/screens/ask_pema_screen.dart"
+        "kind": "kmp",
+        "class": "AskPemaRoute",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientsGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2846,7 +2846,7 @@
         "Mở ghi chú để bác sĩ sửa"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2866,9 +2866,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "GuideScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/guide_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2916,7 +2916,7 @@
         "Duyệt Clinic/Care qua nút góc trên. Thao tác mẫu lưu trong bộ nhớ, tải lại sẽ bắt đầu phiên mới."
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [
         "Unknown routes open GuideScreen(route) (fallback of `resolveRoute`)."
@@ -2938,9 +2938,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "_RouteGuard",
-        "file": "flutter-template/lib/core/router/app_router.dart"
+        "kind": "kmp",
+        "class": "DeniedScreen",
+        "file": "pema-kmp/composeApp/src/commonMain/kotlin/com/pema/clinic/App.kt"
       },
       "kmp": {
         "route": {
@@ -2970,7 +2970,7 @@
         "Tác vụ không thuộc không gian hiện tại. Quay lại để chọn đúng công việc."
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [
         "Permission-blocked screen (`_RouteGuard`): \"Tác vụ không thuộc không gian hiện tại. Quay lại để chọn đúng công việc.\"; KMP `DeniedScreen` in composeApp, route `Routes.denied(title)`."
@@ -2992,9 +2992,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "HomeCareScreen",
-        "file": "flutter-template/lib/features/aftercare/presentation/screens/home_care_screen.dart"
+        "file": "pema-kmp/feature/aftercare/src/commonMain/kotlin/com/pema/clinic/feature/aftercare/AftercareScreens.kt"
       },
       "kmp": {
         "route": {
@@ -3034,7 +3034,7 @@
         "Gửi cập nhật cho Pema"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only."
+        "Care-mode detail routes only (`Session.allows`)."
       ],
       "rules": [],
       "differences": [],
@@ -3052,9 +3052,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "SendUpdateScreen",
-        "file": "flutter-template/lib/features/aftercare/presentation/screens/send_update_screen.dart"
+        "file": "pema-kmp/feature/aftercare/src/commonMain/kotlin/com/pema/clinic/feature/aftercare/AftercareScreens.kt"
       },
       "kmp": {
         "route": {
@@ -3096,7 +3096,7 @@
         "Gửi cập nhật"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only.",
+        "Care-mode detail routes only (`Session.allows`).",
         "Camera: `deps.platform.camera.capture()` (system camera app, no CAMERA permission), photo 1600px JPEG 85 with EXIF/GPS stripped in `cache/photos`."
       ],
       "rules": [
@@ -3121,9 +3121,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "AppointmentDetailScreen",
-        "file": "flutter-template/lib/features/schedule/presentation/screens/appointment_detail_screen.dart"
+        "kind": "kmp",
+        "class": "AppointmentScreen",
+        "file": "pema-kmp/feature/schedule/src/commonMain/kotlin/com/pema/clinic/feature/schedule/ScheduleGraph.kt"
       },
       "kmp": {
         "route": {
@@ -3163,7 +3163,7 @@
         "Xác nhận tham dự"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only."
+        "Care-mode detail routes only (`Session.allows`)."
       ],
       "rules": [],
       "differences": [],
@@ -3181,9 +3181,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "TreatmentPlanScreen",
-        "file": "flutter-template/lib/features/patients/presentation/screens/treatment_plan_screen.dart"
+        "kind": "kmp",
+        "class": "TreatmentPlanRoute",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientsGraph.kt"
       },
       "kmp": {
         "route": {
@@ -3231,7 +3231,7 @@
         "Xem chăm sóc tại nhà"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only."
+        "Care-mode detail routes only (`Session.allows`)."
       ],
       "rules": [],
       "differences": [],
@@ -3249,9 +3249,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "ProgressPhotosScreen",
-        "file": "flutter-template/lib/features/patients/presentation/screens/progress_photos_screen.dart"
+        "kind": "kmp",
+        "class": "ProgressPhotosRoute",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientsGraph.kt"
       },
       "kmp": {
         "route": {
@@ -3291,7 +3291,7 @@
         "Gửi ảnh cập nhật"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only.",
+        "Care-mode detail routes only (`Session.allows`).",
         "\"Trước\" = first photo (when there are ≥ 2 photos), \"Gần nhất\" = last photo, from `PatientState.photos`."
       ],
       "rules": [],
@@ -3310,9 +3310,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "PrescriptionsScreen",
-        "file": "flutter-template/lib/features/orders/presentation/screens/prescriptions_screen.dart"
+        "file": "pema-kmp/feature/orders/src/commonMain/kotlin/com/pema/clinic/feature/orders/OrdersGraph.kt"
       },
       "kmp": {
         "route": {
@@ -3356,7 +3356,7 @@
         "1 Tuýp · Thoa mỗi sáng, thoa lại sau 2–3 giờ"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only."
+        "Care-mode detail routes only (`Session.allows`)."
       ],
       "rules": [],
       "differences": [],
@@ -3374,9 +3374,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "CashierScreen",
-        "file": "flutter-template/lib/features/billing/presentation/screens/cashier_screen.dart"
+        "file": "pema-kmp/feature/billing/src/commonMain/kotlin/com/pema/clinic/feature/billing/BillingGraph.kt"
       },
       "kmp": {
         "route": {
@@ -3413,7 +3413,7 @@
         "DN-1"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only."
+        "Care-mode detail routes only (`Session.allows`)."
       ],
       "rules": [],
       "differences": [],
@@ -3431,9 +3431,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "PrivacyScreen",
-        "file": "flutter-template/lib/features/aftercare/presentation/screens/privacy_screen.dart"
+        "file": "pema-kmp/feature/aftercare/src/commonMain/kotlin/com/pema/clinic/feature/aftercare/AftercareScreens.kt"
       },
       "kmp": {
         "route": {
@@ -3467,7 +3467,7 @@
         "Cài đặt đang được minh họa trong phiên duyệt."
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only."
+        "Care-mode detail routes only (`Session.allows`)."
       ],
       "rules": [],
       "differences": [],
@@ -3485,9 +3485,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FinanceScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/finance_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/FinanceScreen.kt"
       },
       "kmp": {
         "route": {
@@ -3559,7 +3559,7 @@
         "Chính sách tỷ lệ thủ thuật"
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -3581,9 +3581,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FinanceScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/finance_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/FinanceScreen.kt"
       },
       "kmp": {
         "route": {
@@ -3631,7 +3631,7 @@
         "Tiền thủ thuật không phải lợi nhuận. Công nợ là toàn bộ số còn phải thu."
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -3653,9 +3653,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FinanceScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/finance_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/FinanceScreen.kt"
       },
       "kmp": {
         "route": {
@@ -3752,7 +3752,7 @@
         "Chốt tháng đã kết thúc"
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -3774,9 +3774,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FinanceScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/finance_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/FinanceScreen.kt"
       },
       "kmp": {
         "route": {
@@ -3874,7 +3874,7 @@
         "Chốt tháng đã kết thúc"
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -3896,9 +3896,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FinanceScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/finance_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/FinanceScreen.kt"
       },
       "kmp": {
         "route": {
@@ -3955,7 +3955,7 @@
         "1.200.000 ₫"
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -3977,9 +3977,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FinanceScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/finance_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/FinanceScreen.kt"
       },
       "kmp": {
         "route": {
@@ -4035,7 +4035,7 @@
         "Đồng bộ khi ứng dụng đang mở; push nền chưa được cấu hình."
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -4057,9 +4057,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FinanceScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/finance_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/FinanceScreen.kt"
       },
       "kmp": {
         "route": {
@@ -4096,7 +4096,7 @@
         "Thử lại"
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\".",
@@ -4119,9 +4119,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "RateScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/rate_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/RateScreen.kt"
       },
       "kmp": {
         "route": {
@@ -4161,7 +4161,7 @@
         "5.0% · collected · phiên bản 1"
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -4183,9 +4183,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "ProcedureForm",
-        "file": "flutter-template/lib/features/finance/presentation/screens/procedure_form_screen.dart"
+        "kind": "kmp",
+        "class": "ProcedureFormScreen",
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/ProcedureFormScreen.kt"
       },
       "kmp": {
         "route": {
@@ -4257,7 +4257,7 @@
         "Ghi nhận • Chờ kế toán duyệt"
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -4599,7 +4599,7 @@
       ],
       "differences": [
         "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates.",
-        "Unlike Flutter A2, this WeekStrip can pick a day (7 days seeded from DAY, weekday labels computed from real dates)."
+        "Unlike A2, this WeekStrip can pick a day (7 days seeded from DAY, weekday labels computed from real dates)."
       ],
       "gotchas": [],
       "todo": [],
@@ -5803,7 +5803,7 @@
         "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [
-        "Title clashes with Flutter \"Kế hoạch điều trị\": route `Routes.PlanOverview` has the unique key \"Kế hoạch điều trị · Clinic\", the app bar title comes from `Routes.appBarTitleOf`."
+        "Title clashes with the existing \"Kế hoạch điều trị\" route: route `Routes.PlanOverview` has the unique key \"Kế hoạch điều trị · Clinic\", the app bar title comes from `Routes.appBarTitleOf`."
       ],
       "todo": [],
       "status": "ported"
@@ -6492,13 +6492,13 @@
       "name": "Lịch hẹn",
       "group": "K",
       "groupTitle": "Pema Care · bổ sung từ web",
-      "note": "Web › patient-mobile › appointments · Flutter chưa có tab này; mở từ Trang chủ",
+      "note": "Web › patient-mobile › appointments · không phải tab chính của app; mở từ Trang chủ",
       "kind": "detail",
       "role": "",
       "tab": "",
       "source": {
         "kind": "web",
-        "hint": "patient-mobile › appointments · Flutter chưa có tab này; mở từ Trang chủ"
+        "hint": "patient-mobile › appointments · không phải tab chính của app; mở từ Trang chủ"
       },
       "kmp": {
         "route": {
@@ -6713,7 +6713,7 @@
       "rules": [],
       "differences": [
         "Web seed data instead of illustrative names/dates.",
-        "Merged into the \"Hành trình\" tab (E2): keeps Flutter's 4 items and adds the \"Cập nhật gần đây\" timeline + the sentence \"tiến độ số buổi, không phải mức cải thiện da\"."
+        "Merged into the \"Hành trình\" tab (E2): keeps E2's 4 items and adds the \"Cập nhật gần đây\" timeline + the sentence \"tiến độ số buổi, không phải mức cải thiện da\"."
       ],
       "gotchas": [],
       "todo": [],

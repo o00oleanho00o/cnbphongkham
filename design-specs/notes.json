@@ -2,7 +2,7 @@
   "_comment": "Porting notes written by humans/agents, merged into each screen's spec by design-specs.cjs and the pema-design MCP. groups.<group code> applies to every screen in the group; screens.<screen code> to that screen only. Keys: logic, rules, differences, gotchas, todo (string arrays). Write in English; keep Vietnamese UI text and business wording verbatim in quotes. Quick add: MCP tool record_note, or edit this file then run node .claude/skills/pema-canvas-to-kmp-compose/scripts/design-specs.cjs.",
   "groups": {
     "A": {
-      "logic": ["Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."],
+      "logic": ["`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`)."],
       "rules": ["The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."],
       "differences": ["Real Pema logo instead of the canvas \"pema\" text.", "Real sample data (46 records) instead of illustrative names."],
       "gotchas": [
@@ -11,32 +11,32 @@
       ]
     },
     "B": {
-      "logic": ["Flutter `workspace_screen.dart` › staffBody() (doctor)."],
+      "logic": ["`WorkspaceScreen` › staff body (doctor)."],
       "rules": ["Doctors have 2 tabs (\"Công việc\", \"Hồ sơ mẫu\") and only see records they own (`Session.owns`)."]
     },
     "C": {
-      "logic": ["Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."],
+      "logic": ["CareQueue (`feature/care/CareQueue.kt`, state `shared/care/CareQueue.kt`) embedded in Workspace."],
       "rules": ["3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."],
       "gotchas": ["`rememberSaveable` of `CareQueueFilter` (data class) needs a `listSaver`, otherwise Android crashes when navigating."]
     },
     "D": {
-      "logic": ["Flutter `workspace_screen.dart` › staffBody() (accountant)."],
+      "logic": ["`WorkspaceScreen` › staff body (accountant)."],
       "rules": ["Accountants have 2 tabs; allowed routes: \"Thu ngân\", \"Hóa đơn\", \"Hướng dẫn\" (+ web: \"Thu ngân · hóa đơn\", \"Dịch vụ & tài chính\", \"Lịch sử hợp nhất\", \"Hồ sơ mới\")."]
     },
     "E": {
-      "logic": ["Flutter `workspace_screen.dart` › CareBody (careMode = true)."],
+      "logic": ["`WorkspaceScreen` › care body (care mode)."],
       "rules": ["Patients have 4 tabs: \"Trang chủ\" / \"Hành trình\" / \"Tin nhắn\" / \"Hồ sơ\"; only care routes are allowed (`Session.allows`)."],
       "gotchas": ["Stores live in `AppStores` per process: rotating the phone must not send the user back to Clinic."]
     },
     "F": {
-      "logic": ["Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."],
+      "logic": ["Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."],
       "gotchas": ["A snackbar shown after `back()` must use `rememberPemaMessenger()` (root scope), not the screen's `rememberCoroutineScope()`."]
     },
     "G": {
-      "logic": ["Flutter `Detail(route, care: true)`; careMode routes only."]
+      "logic": ["Care-mode detail routes only (`Session.allows`)."]
     },
     "H": {
-      "logic": ["Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."],
+      "logic": ["`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."],
       "rules": ["Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."],
       "gotchas": ["The finance tab is `rememberSaveable(initialTab)`."]
     },
@@ -56,14 +56,14 @@
     }
   },
   "screens": {
-    "A2": { "rules": ["Static WeekStrip like Flutter (`const WeekStrip`): tapping a day does nothing — correct 1:1."] },
+    "A2": { "rules": ["Static WeekStrip: tapping a day does nothing — intended."] },
     "A3": {
-      "logic": ["Embeds PatientSearch from feature:patients (dependency exception, as in Flutter) as lazy items: `rememberPatientSearchState(deps)` (saved query + rows filtered in `remember`) and `LazyListScope.patientSearchItems(state, onOpen)` (search field, then one `PemaTile` per profile keyed by its code). Same API for the staff \"Hồ sơ mẫu\" tab (B2, C5, D2)."],
+      "logic": ["Embeds PatientSearch from feature:patients (dependency exception) as lazy items: `rememberPatientSearchState(deps)` (saved query + rows filtered in `remember`) and `LazyListScope.patientSearchItems(state, onOpen)` (search field, then one `PemaTile` per profile keyed by its code). Same API for the staff \"Hồ sơ mẫu\" tab (B2, C5, D2)."],
       "gotchas": ["The owner sees all 46 profiles: keep the list lazy (only the ~7 on-screen tiles are composed). Measured on the emulator (debug build), first open went from 728 ms to 269 ms per tab switch; screenshots stayed pixel-identical."]
     },
     "A6": { "gotchas": ["Don't nest `verticalScroll` inside `PemaBottomSheet`/`ModalBottomSheet` (crash); the scroll layer is in the overlay."] },
     "A7": { "logic": ["`PaymentAlerts` wraps the whole app (feature:finance): SnackBar when the unread payment count increases, even on child screens; \"Xem\" opens Finance on the notifications tab (3)."] },
-    "C6": { "rules": ["Contact notes are internal and never shown to the patient."], "logic": ["Link \"Ghi nhận CSKH đầy đủ\" → I13 (optional callback, hidden by default so the Flutter shot stays the same)."] },
+    "C6": { "rules": ["Contact notes are internal and never shown to the patient."], "logic": ["Link \"Ghi nhận CSKH đầy đủ\" → I13 (optional callback, hidden by default so the C6 shot stays the same)."] },
     "F1": { "logic": ["The \"Patient 360 đầy đủ\" items (J1–J11) are added at the end, filtered by `Session.allows`."] },
     "F10": { "logic": ["Shows photos sent by the patient (`PatientState.photos`) with `LocalPhoto`."] },
     "F13": { "logic": ["The clinic owner also sees \"Chỉnh dịch vụ\" → I9 `service-edit?id=S<index>` (optional callback)."] },
@@ -84,7 +84,7 @@
     },
     "I3": {
       "logic": ["Web `operations-ui.js` › schedule(): schedule per room, preparation buffer, waitlist, room blocks."],
-      "differences": ["Unlike Flutter A2, this WeekStrip can pick a day (7 days seeded from DAY, weekday labels computed from real dates)."],
+      "differences": ["Unlike A2, this WeekStrip can pick a day (7 days seeded from DAY, weekday labels computed from real dates)."],
       "rules": ["Tapping an appointment → I4 reschedule `appointment-form?id=<id>`."]
     },
     "I4": {
@@ -109,7 +109,7 @@
     },
     "J1": { "logic": ["Web consult tab + actions generate-note / approve-note; `generateConsultDraft`, `approveConsultDraft`, `saveClinicalNote`."], "rules": ["AI only creates a draft; the doctor edits and approves it before saving."] },
     "J2": { "logic": ["Web modal 'note' + `Pema.brief(p)` → `brief(state, patient)`; approve-brief → `approveAiBrief`."] },
-    "J3": { "logic": ["Web plan tab."], "gotchas": ["Title clashes with Flutter \"Kế hoạch điều trị\": route `Routes.PlanOverview` has the unique key \"Kế hoạch điều trị · Clinic\", the app bar title comes from `Routes.appBarTitleOf`."] },
+    "J3": { "logic": ["Web plan tab."], "gotchas": ["Title clashes with the existing \"Kế hoạch điều trị\" route: route `Routes.PlanOverview` has the unique key \"Kế hoạch điều trị · Clinic\", the app bar title comes from `Routes.appBarTitleOf`."] },
     "J4": { "logic": ["Web modal 'plan-edit' + save-plan; `updateTreatmentPlan` (total ≥ sessions done, ≤ 20)."] },
     "J5": {
       "logic": ["Web session tab + save-session; `recordTreatmentSession` (TreatmentSessionInput.photoPath = landmark photo)."],
@@ -126,7 +126,7 @@
     "K2": { "logic": ["Web `patient.js` › docs(); approved items only, read-only."], "rules": ["Entry point: Care \"Hồ sơ\" tab → \"Tài liệu & hóa đơn\"."] },
     "K3": {
       "logic": ["Web `patient.js` › journey(); `patientJourneyTimeline(patient)`."],
-      "differences": ["Merged into the \"Hành trình\" tab (E2): keeps Flutter's 4 items and adds the \"Cập nhật gần đây\" timeline + the sentence \"tiến độ số buổi, không phải mức cải thiện da\"."]
+      "differences": ["Merged into the \"Hành trình\" tab (E2): keeps E2's 4 items and adds the \"Cập nhật gần đây\" timeline + the sentence \"tiến độ số buổi, không phải mức cải thiện da\"."]
     }
   }
 }

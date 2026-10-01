@@ -23,8 +23,8 @@ a:hover{color:#083A6E}
 
   <header style="display:flex;flex-direction:column;gap:12px;max-width:1100px">
     <div style="font-size:13px;font-weight:600;letter-spacing:.12em;color:#0B4F94">PEMA · NATIVE REVIEW</div>
-    <h1 style="margin:0;font-size:44px;line-height:1.15;font-weight:700;color:#083A6E;letter-spacing:-0.02em">Base design dựng lại từ Flutter template</h1>
-    <p style="margin:0;font-size:16px;line-height:1.6;color:#5D7184;max-width:860px;text-wrap:pretty">Mỗi màn hình bám theo lib/main.dart, care_workspace.dart, finance.dart và widgets/pema_bottom_nav.dart; state nằm ở lib/state/ (Riverpod: session, catalog, patients, orders, finance). Dữ liệu người bệnh, sản phẩm và tài chính là dữ liệu mẫu vì assets/patients.json, products.json và pema-logo.png chưa có trong thư mục tải lên. Nhóm I–K bổ sung các màn có trên Clinic Web / Patient Mobile web nhưng chưa có trong Flutter, dựng lại theo mẫu mobile bằng cùng bộ block.</p>
+    <h1 style="margin:0;font-size:44px;line-height:1.15;font-weight:700;color:#083A6E;letter-spacing:-0.02em">Base design của app Pema (KMP · Compose Multiplatform)</h1>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#5D7184;max-width:860px;text-wrap:pretty">Mỗi màn hình là một màn của app mobile (pema-kmp: feature:workspace, feature:care, feature:finance, core:ui PemaBottomNav); state nằm ở pema-kmp/shared (session, catalog, patients, orders, finance). Dữ liệu người bệnh, sản phẩm và tài chính trên canvas là dữ liệu minh họa. Nhóm I–K bổ sung các màn có trên Clinic Web / Patient Mobile web, dựng lại theo mẫu mobile bằng cùng bộ block.</p>
   </header>
 
   <section style="display:flex;flex-direction:column;gap:28px;max-width:2860px">
@@ -67,7 +67,7 @@ a:hover{color:#083A6E}
           <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div style="width:64px;height:48px;border:1.5px solid #0B4F94;border-radius:20px 20px 0 0"></div><span style="font-size:12px;color:#5D7184">20 · nav</span></div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div style="width:64px;height:48px;border:1.5px solid #0B4F94;border-radius:24px"></div><span style="font-size:12px;color:#5D7184">24 · hero</span></div>
         </div>
-        <div style="font-size:12px;color:#5D7184;line-height:1.5;text-wrap:pretty">Icon: Material Icons (outlined) theo Flutter, hiển thị bằng Material Symbols. Nút chính cao 52, input 56, tile 72–76.</div>
+        <div style="font-size:12px;color:#5D7184;line-height:1.5;text-wrap:pretty">Icon: Material Icons (outlined), hiển thị bằng Material Symbols. Nút chính cao 52, input 56, tile 72–76.</div>
       </div>
     </div>
   </section>
@@ -961,7 +961,7 @@ class Component extends DCLogic {
         input({ label: 'Ghi chú xác nhận hoàn tất' }), sp(14), p('Ghi nhận • Chờ kế toán duyệt')], { ts: 22, tw: 400 })
     ];
 
-    // I–K · Bổ sung từ web (prototype/clinic-web, patient-mobile): chưa có trong Flutter, dựng bằng block sẵn có.
+    // I–K · Bổ sung từ web (prototype/clinic-web, patient-mobile), dựng bằng block sẵn có.
     const WEB = 'Web › ';
     const invoiceCard = (name, code, svc, total, paid) => fc(ftitle(name), txt(`${code} · ${svc}`, { s: 12, c: MUTED }), sp(4),
       fl('Tổng tiền', money(total)), fl('Đã thu', money(paid)), fl('Còn lại', money(total - paid)),
@@ -1116,7 +1116,7 @@ class Component extends DCLogic {
     ];
 
     const K = [
-      det('K1', 'Lịch hẹn', WEB + 'patient-mobile › appointments · Flutter chưa có tab này; mở từ Trang chủ', [
+      det('K1', 'Lịch hẹn', WEB + 'patient-mobile › appointments · không phải tab chính của app; mở từ Trang chủ', [
         s('Sắp tới'), hero('10:30 · 22/9/2026', 'Tái khám & đánh giá · BS. Tâm', 'calendar_month'), sp(8), p('Xác nhận tôi sẽ đến'),
         s('Các lịch đã đặt'),
         t('22/9/2026 · 10:30', 'Tái khám & đánh giá · 30 phút · BS. Tâm', 'calendar_today', false),
@@ -1140,17 +1140,17 @@ class Component extends DCLogic {
     ];
 
     const groups = [
-      { code: 'A', title: 'Clinic · Chủ phòng khám', sub: 'staffRole = owner · 5 tab · main.dart › Workspace', screens: A },
+      { code: 'A', title: 'Clinic · Chủ phòng khám', sub: 'staffRole = owner · 5 tab · WorkspaceScreen', screens: A },
       { code: 'B', title: 'Bác sĩ điều trị', sub: 'staffRole = doctor · BS. Tâm · staffBody()', screens: B },
-      { code: 'C', title: 'CSKH', sub: 'staffRole = care · Mai Anh · care_workspace.dart › CareQueue', screens: C },
+      { code: 'C', title: 'CSKH', sub: 'staffRole = care · Mai Anh · feature:care › CareQueue', screens: C },
       { code: 'D', title: 'Kế toán', sub: 'staffRole = accountant · staffBody()', screens: D },
       { code: 'E', title: 'Pema Care · Người bệnh', sub: 'careMode = true · 4 tab', screens: E },
-      { code: 'F', title: 'Nghiệp vụ Clinic', sub: 'main.dart › Detail(route) · góc nhìn chủ phòng khám', screens: F },
+      { code: 'F', title: 'Nghiệp vụ Clinic', sub: 'DetailScaffold(route) · góc nhìn chủ phòng khám', screens: F },
       { code: 'G', title: 'Nghiệp vụ Pema Care', sub: 'Detail(route, care: true) · route được phép trong careMode', screens: G },
-      { code: 'H', title: 'Tài chính', sub: 'finance.dart › FinanceScreen, RateScreen, ProcedureForm', screens: H },
-      { code: 'I', title: 'Vận hành Clinic · bổ sung từ web', sub: 'prototype/clinic-web · chưa có trong Flutter · dựng lại theo mẫu mobile', screens: I },
-      { code: 'J', title: 'Patient 360 đầy đủ · bổ sung từ web', sub: 'clinic.js › patient360 tab & modal · chưa có trong Flutter', screens: J },
-      { code: 'K', title: 'Pema Care · bổ sung từ web', sub: 'prototype/patient-mobile · màn web chưa có trong Flutter', screens: K }
+      { code: 'H', title: 'Tài chính',       sub: 'feature:finance › FinanceScreen, RateScreen, ProcedureFormScreen', screens: H },
+            { code: 'I', title: 'Vận hành Clinic · bổ sung từ web', sub: 'prototype/clinic-web · dựng lại theo mẫu mobile', screens: I },
+            { code: 'J', title: 'Patient 360 đầy đủ · bổ sung từ web', sub: 'clinic.js › patient360 tab & modal', screens: J },
+            { code: 'K', title: 'Pema Care · bổ sung từ web', sub: 'prototype/patient-mobile', screens: K }
     ];
 
     const KEYS = ['heading', 'h2', 'section', 'hero', 'metrics', 'actions', 'tile', 'notice', 'primary', 'outlined', 'textBtn', 'input', 'dd', 'week', 'chips', 'check', 'photos', 'order', 'a5', 'txt', 'sp', 'buckets', 'careSearch', 'inputChip', 'listHead', 'careRow', 'empty', 'period', 'finHero', 'ftitle', 'fcard', 'pill', 'mcard', 'dateBtn'];

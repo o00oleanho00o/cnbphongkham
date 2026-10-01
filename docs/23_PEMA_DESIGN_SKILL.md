@@ -1,6 +1,6 @@
 # Chia sẻ và sử dụng Pema Design
 
-Skill nằm trong repo tại [`.agents/skills/pema-design/SKILL.md`](../.agents/skills/pema-design/SKILL.md). Bản này tổng hợp các quyết định thiết kế đã làm cùng chủ dự án: nhận diện Pema, tối ưu desktop 1920×1020, mobile theo tác vụ, Flutter Clinic/Care, nghiệp vụ liên kết và bằng chứng kiểm thử. Skill hướng dẫn tiếp tục thiết kế, không thay source hoặc brand manual chính thức.
+Skill nằm trong repo tại [`.agents/skills/pema-design/SKILL.md`](../.agents/skills/pema-design/SKILL.md). Bản này tổng hợp các quyết định thiết kế đã làm cùng chủ dự án: nhận diện Pema, tối ưu desktop 1920×1020, mobile theo tác vụ, app mobile Clinic/Care (KMP), nghiệp vụ liên kết và bằng chứng kiểm thử. Skill hướng dẫn tiếp tục thiết kế, không thay source hoặc brand manual chính thức.
 
 ## Đồng nghiệp dùng thế nào
 
@@ -20,9 +20,9 @@ Các reference dùng đường dẫn source tương đối theo gốc repo, khô
 
 > Dùng $pema-design tối ưu màn lịch Clinic Web cho 1920×1020, giữ được xếp lịch theo bác sĩ/phòng, filter và trạng thái. Triển khai, kiểm tra thêm 1440/1280/1024/390, test nghiệp vụ bị ảnh hưởng và cập nhật tài liệu theo 0→1→2→3.
 
-**Thiết kế Flutter để duyệt:**
+**Thiết kế cho app mobile:**
 
-> Dùng $pema-design chuyển luồng [tên luồng] sang Flutter Clinic/Care theo nhận diện hiện tại. Làm template tương tác để duyệt, giữ ý nghĩa nghiệp vụ nhưng tối ưu cho điện thoại. Nêu rõ state thực, mô phỏng và khả năng chưa tích hợp; kiểm tra màn nhỏ và nội dung dài.
+> Dùng $pema-design chuyển luồng [tên luồng] sang app mobile Clinic/Care (`pema-kmp`) theo nhận diện hiện tại. Thiết kế trên canvas trước, giữ ý nghĩa nghiệp vụ nhưng tối ưu cho điện thoại. Nêu rõ state thực, mô phỏng và khả năng chưa tích hợp; kiểm tra màn nhỏ và nội dung dài.
 
 **Ảnh nền:**
 
@@ -35,11 +35,11 @@ Các reference dùng đường dẫn source tương đối theo gốc repo, khô
 | [SKILL.md](../.agents/skills/pema-design/SKILL.md) | Chọn workflow, giữ quyết định cốt lõi |
 | [Visual system](../.agents/skills/pema-design/references/visual-system.md) | Màu, font, icon, spacing, logo, wave/ảnh và nguồn tham khảo |
 | [Screens & flows](../.agents/skills/pema-design/references/screens-and-flows.md) | Navigation, Patient 360, dịch vụ/đơn/lịch/thu ngân/follow-up và parity |
-| [Platform layout](../.agents/skills/pema-design/references/platform-layout.md) | Responsive desktop, mobile web, Flutter, review screenshot |
+| [Platform layout](../.agents/skills/pema-design/references/platform-layout.md) | Responsive desktop, mobile web, app mobile, review screenshot |
 | [Delivery & review](../.agents/skills/pema-design/references/delivery-and-review.md) | Source map, dữ liệu, chọn test và bàn giao |
 
 ## Duy trì
 
-Đây là skill riêng của dự án; không áp cứng cho thương hiệu khác. Các giới hạn Flutter mô tả snapshot hiện tại để tránh hứa quá mức, không cấm phát triển tiếp. Khi nền dữ liệu, navigation hoặc token đổi, cập nhật code/docs và reference tương ứng trong cùng thay đổi. Không gọi test lịch sử là test vừa chạy; không coi skill tự cấp quyền commit/push hoặc publish.
+Đây là skill riêng của dự án; không áp cứng cho thương hiệu khác. Các giới hạn app mobile mô tả snapshot hiện tại để tránh hứa quá mức, không cấm phát triển tiếp. Khi nền dữ liệu, navigation hoặc token đổi, cập nhật code/docs và reference tương ứng trong cùng thay đổi. Không gọi test lịch sử là test vừa chạy; không coi skill tự cấp quyền commit/push hoặc publish.
 
 Kiểm tra khi sửa skill: frontmatter/name, links tài liệu, đường dẫn source, loại bỏ placeholder chưa hoàn thiện; nếu môi trường có `skill-creator`, chạy `scripts/quick_validate.py` của skill đó với đường dẫn thư mục `pema-design`. Validator chỉ kiểm cấu trúc; vẫn phải đối chiếu lời hướng dẫn với code và thử trên công việc thật để đánh giá chất lượng thiết kế.

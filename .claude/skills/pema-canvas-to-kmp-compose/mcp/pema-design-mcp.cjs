@@ -6,7 +6,7 @@
 //   prompts   port_screen(id) + one prompt per screen ("A1" … "K3")
 //   resources pema-design://screens/<ID> · pema-design://blocks · pema-design://index
 //
-// Data is built live from the canvas, the KMP/Flutter code and design-specs/notes.json
+// Data is built live from the canvas, the KMP code and design-specs/notes.json
 // (see ../scripts/specs-lib.cjs), so it never goes stale. Register: see design-specs/README.md.
 const fs = require('fs');
 const path = require('path');
@@ -34,7 +34,7 @@ const text = (t) => ({ content: [{ type: 'text', text: t }] });
 const TOOLS = [
   {
     name: 'list_screens',
-    description: 'List the Pema design canvas screens (code, name, group, Flutter/web logic source, KMP composable, port status). Filter by group (A–K) or keyword.',
+    description: 'List the Pema design canvas screens (code, name, group, KMP/web logic source, KMP composable, port status). Filter by group (A–K) or keyword.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -47,7 +47,7 @@ const TOOLS = [
       const rows = model().screens
         .filter((s) => !group || s.group === String(group).toUpperCase())
         .filter((s) => !q || [s.id, s.name, s.note, ...s.texts].join(' ').toLowerCase().includes(q))
-        .map((s) => `${s.id} · ${s.name} — ${s.source.kind === 'web' ? 'web' : 'Flutter'} → ${s.kmp.composable || '—'} (${s.kmp.module || '—'}) ${s.status === 'ported' ? '✓' : '✗'}`);
+        .map((s) => `${s.id} · ${s.name} — ${s.source.kind === 'web' ? 'web' : 'KMP'} → ${s.kmp.composable || '—'} (${s.kmp.module || '—'}) ${s.status === 'ported' ? '✓' : '✗'}`);
       return text(rows.length ? rows.join('\n') : 'No matching screens.');
     },
   },
@@ -146,7 +146,7 @@ function promptsList() {
     description: 'Port/rebuild one Pema screen in KMP + Compose from its saved spec (no need to re-read the web/canvas).',
     arguments: [{ name: 'id', description: 'Screen code (A1 … K3)', required: true }],
   };
-  return [port, ...model().screens.map((s) => ({ name: s.id, description: `${s.name} · group ${s.group} (${s.source.kind === 'web' ? 'web' : 'Flutter'})` }))];
+  return [port, ...model().screens.map((s) => ({ name: s.id, description: `${s.name} · group ${s.group} (${s.source.kind === 'web' ? 'web' : 'KMP'})` }))];
 }
 
 function promptGet(name, args = {}) {

@@ -48,7 +48,7 @@ PB01 tạo vertical slice để lễ tân tìm đúng người bệnh, đội ng
 
 ## Native template duyệt thiết kế (22/09/2026)
 
-Thêm template Flutter Clinic/Care, giữ nhận diện và luồng web, catalog 115 sản phẩm. Có mã Dart và browser preview từ Flutter để duyệt trước. State mẫu trong phiên; không phải triển khai native production. Chi tiết: [NATIVE-TEMPLATE](NATIVE-TEMPLATE.md).
+Thêm template Flutter Clinic/Care, giữ nhận diện và luồng web, catalog 115 sản phẩm. Có mã Dart và browser preview từ Flutter để duyệt trước. State mẫu trong phiên; không phải triển khai native production. App mobile hiện tại: [pema-kmp](../pema-kmp/README.md).
 
 ### Boundary native tại ngày 22/09/2026
 
@@ -59,7 +59,7 @@ Thêm template Flutter Clinic/Care, giữ nhận diện và luồng web, catalog
 - DoD vòng template: mã Flutter build được; ghi rõ màn/tác vụ/giới hạn; phân biệt test đã chạy và checklist chờ duyệt. Hoàn tất kỹ thuật không đồng nghĩa chủ sản phẩm đã duyệt thiết kế hoặc native production đã sẵn sàng.
 - Cần chốt tiếp: Clinic/Care là hai app hay một app theo role; nghiệp vụ nào phải chạy offline; ưu tiên backend, lịch, media hay in native sau duyệt.
 
-Xem [ma trận parity và bằng chứng](22_NATIVE_PARITY_AND_VALIDATION.md) trước khi lập scope triển khai tiếp.
+Xem [trạng thái app mobile](../pema-kmp/README.md) trước khi lập scope triển khai tiếp.
 
 ## Ngoài phạm vi hoặc để pilot sau
 

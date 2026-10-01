@@ -52,7 +52,7 @@ Chromium smoke đã thực thi các thao tác chính trên dữ liệu giả l�
 
 ## Bổ sung Flutter template — 22/09/2026
 
-Các kết quả web phía trên giữ nguyên phạm vi và ngày kiểm tra. Bằng chứng Flutter trước lần cập nhật tài liệu: analyze sạch, 6 test (1 store, 4 layout widths 360/390/430/768 đều height 844, 1 tương tác catalog → review), build web thành công. Visual review chỉ Clinic home, role sheet, Care home 390×844. Chưa có test đầy đủ Care/end-to-end/device. Chi tiết [VALIDATION](../flutter-template/VALIDATION.md) và [coverage/checklist](22_NATIVE_PARITY_AND_VALIDATION.md). Lần sửa tài liệu này không chạy lại suite Flutter.
+Các kết quả web phía trên giữ nguyên phạm vi và ngày kiểm tra. Bằng chứng Flutter trước lần cập nhật tài liệu: analyze sạch, 6 test (1 store, 4 layout widths 360/390/430/768 đều height 844, 1 tương tác catalog → review), build web thành công. Visual review chỉ Clinic home, role sheet, Care home 390×844. Chưa có test đầy đủ Care/end-to-end/device. Trạng thái app mobile hiện tại: [pema-kmp/README.md](../pema-kmp/README.md). Lần sửa tài liệu này không chạy lại suite Flutter.
 
 
 ## Mobile CRM02 — bằng chứng mới 22/09/2026

@@ -14,11 +14,11 @@ App shell follows the viewport; header/navigation and scrollable content do not 
 
 Current review breakpoints are 360×800, 375×667, 390×844. Test interactions when the keyboard is open and content is long; browser resize is not a substitute for real device evidence.
 
-## Flutter native template
+## Mobile app (KMP + Compose Multiplatform)
 
-Material 3, SafeArea, Navigator/Back, date picker, scrollable forms; sheets are for short decisions. Long forms or multi-line reviews need their own screen. Preserve data when validation fails; the keyboard must not cover the CTA/current field. Keep 48 logical pixel touch targets and check text scaling; no fixed heights that clip Vietnamese.
+Compose Material 3 via `core:ui`, safe areas/IME padding, push navigation/Back, date picker, scrollable forms; sheets are for short decisions. Long forms or multi-line reviews need their own screen. Preserve data when validation fails; the keyboard must not cover the CTA/current field. Keep 48dp touch targets and check text scaling; no fixed heights that clip Vietnamese.
 
-The review shell supports 360×800, 390×844, 430×932, 768×1024. Current widget tests use widths 360/390/430/768 but **all have height 844**, so they do not prove all frames above were tested. Android/iOS physical devices, system safe area, keyboard, gestures, and accessibility need separate evidence when scope requires it.
+JVM screenshot tests (`shotVsCanvas`) render 390×844dp only, so they do not prove other sizes were tested. Android/iOS physical devices, system safe area, keyboard, gestures, and accessibility need separate evidence when scope requires it.
 
 Tablet may increase columns/width sensibly but must not become a miniature desktop dashboard. Do not force a fixed number of cards if long text/data breaks usability.
 

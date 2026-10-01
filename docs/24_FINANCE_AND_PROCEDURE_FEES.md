@@ -1,9 +1,9 @@
 # Tài chính chủ phòng khám và tiền thủ thuật — PB02
 
-> **Hiện trạng Mobile CRM02 (22/09/2026):** tài chính trong Clinic shell, 46 hồ sơ mẫu/10 nhóm chăm sóc; Flutter phân workspace và tách state theo patient. Các mô tả state chung hoặc chưa có native CRM phía dưới là baseline trước bản mở rộng này. Xem [hướng dẫn cập nhật](25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).
+> **Hiện trạng Mobile CRM02 (22/09/2026):** tài chính trong Clinic shell, 46 hồ sơ mẫu/10 nhóm chăm sóc; app mobile phân workspace và tách state theo patient. Các mô tả state chung hoặc chưa có native CRM phía dưới là baseline trước bản mở rộng này. Xem [hướng dẫn cập nhật](25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).
 
 
-Cập nhật 22/09/2026. Phần này đã có API/SQLite cục bộ dùng chung cho web và Flutter; các module lâm sàng PB01 vẫn giữ runtime cũ. Đây là dữ liệu thử, chưa dùng để tính lương hoặc xử lý tiền thật.
+Cập nhật 22/09/2026. Phần này đã có API/SQLite cục bộ dùng chung cho web và app mobile; các module lâm sàng PB01 vẫn giữ runtime cũ. Đây là dữ liệu thử, chưa dùng để tính lương hoặc xử lý tiền thật.
 
 ## Nghiệp vụ đã phân tích
 
@@ -29,7 +29,7 @@ Ví dụ laser 2.500.000, giảm 100.000: doanh số 2.400.000. BS chính nhận
 
 ### Ghi người thực hiện ngay trong hệ thống
 
-Web: Clinic → Tài chính & tiền thủ thuật → Tiền thủ thuật → Ghi nhận lượt. Link từ Clinic giữ patient đang chọn. Flutter: Clinic → Tài chính phòng khám → Thủ thuật → Ghi lượt; Patient 360 có shortcut khi tài khoản có quyền và API đã tải.
+Web: Clinic → Tài chính & tiền thủ thuật → Tiền thủ thuật → Ghi nhận lượt. Link từ Clinic giữ patient đang chọn. App mobile: Clinic → Tài chính phòng khám → Thủ thuật → Ghi lượt; Patient 360 có shortcut khi tài khoản có quyền và API đã tải.
 
 Chọn hồ sơ, thủ thuật, ngày đã thực hiện, giá/giảm giá, bác sĩ chính/phối hợp, tỷ trọng và tỷ lệ tiền, ghi chú xác nhận hoàn tất. Không tự đoán người thực hiện từ bác sĩ phụ trách hồ sơ. Lượt vào hàng chờ kế toán duyệt; danh sách sẽ tính tiền tự động, không cần điền công thức Excel cuối tháng.
 
@@ -43,10 +43,10 @@ Chỉ chốt tháng đã kết thúc, không còn lượt chờ duyệt. Với c
 
 ### Thanh toán → thông báo
 
-- Phiếu thu từ module tài chính (web hoặc Flutter) cập nhật invoice, payment và notification trong một SQLite transaction.
+- Phiếu thu từ module tài chính (web hoặc app mobile) cập nhật invoice, payment và notification trong một SQLite transaction.
 - Retry cùng mã/nội dung trả cùng phiếu; mã đã dùng với nội dung khác hoặc số thu vượt nợ bị từ chối. Không tạo thông báo khi thất bại.
 - Thu ngân web cũ vẫn ghi localStorage; bridge mirror toàn snapshot hóa đơn và payment ledger sang API, retry mỗi 10 giây nếu cần. Payment ID có namespace chống trùng. Link trên header báo đã đồng bộ/chờ kết nối. Không coi mirror là giao dịch thu tiền thứ hai.
-- Inbox owner lưu trạng thái đọc trên server. Flutter poll khoảng 4 giây khi foreground; có badge và snackbar cho thông báo mới trong phiên Clinic. Care không hiện thông báo tiền của phòng khám.
+- Inbox owner lưu trạng thái đọc trên server. App mobile poll khoảng 4 giây khi foreground; có badge và snackbar cho thông báo mới trong phiên Clinic. Care không hiện thông báo tiền của phòng khám.
 - **Chưa có FCM/APNs, background push khi đóng app, SMS hay Zalo.** Cần credential/provider, bản cài và nghiệm thu thiết bị cho bước đó. Polling trên browser không được gọi là push OS.
 
 ## Cách chạy
@@ -59,9 +59,9 @@ python prototype/finance_server.py
 
 API ở `http://127.0.0.1:4174`; database `.local/finance.sqlite3` bị git-ignore. Không xóa DB để reset nếu muốn giữ lịch sử thử. `--db <path>` và `--port <number>` dành cho test cô lập. SQLite hiện lưu một document JSON trong transaction; chưa phải schema relational/migration production.
 
-Static server cũ ở 4173; nếu chưa chạy, từ `prototype` chạy `python -m http.server 4173 --bind 127.0.0.1`. Mở [Tài chính web](http://127.0.0.1:4173/finance/) hoặc [Flutter review](http://127.0.0.1:4173/native-review/).
+Static server cũ ở 4173; nếu chưa chạy, từ `prototype` chạy `python -m http.server 4173 --bind 127.0.0.1`. Mở [Tài chính web](http://127.0.0.1:4173/finance/) hoặc app mobile (`pema-kmp`).
 
-Build Flutter theo [runbook](21_NATIVE_RUNBOOK.md). Dependency mới `http`; finance controller có timeout, lỗi hiển thị, retry và tạm ngưng poll khi lifecycle không foreground. API base có thể cấu hình bằng `--dart-define=PEMA_FINANCE_API=...`. Server hiện bind loopback, nên máy thật cần thiết lập tunnel/reverse phù hợp trong môi trường phát triển; chưa nghiệm thu Android/iOS networking/cleartext/ATS. Không expose API demo ra Internet.
+Build app mobile theo [pema-kmp/README.md](../pema-kmp/README.md). `FinanceStore` có timeout, lỗi hiển thị, retry và polling. API base là `BuildConfig.FINANCE_API` (mặc định `http://127.0.0.1:4174`). Server hiện bind loopback, nên máy thật/emulator cần `adb reverse tcp:4174 tcp:4174` trong môi trường phát triển; chưa nghiệm thu Android/iOS networking/cleartext/ATS. Không expose API demo ra Internet.
 
 Khi API tắt, tài chính hiển thị lỗi/thử lại, không giả vờ đã lưu. Chức năng lâm sàng cũ vẫn hoạt động; receipts web chờ đồng bộ. DB finance và localStorage là hai kho riêng: reset Clinic web không reset DB tài chính. Không có sync lâm sàng toàn hệ thống.
 

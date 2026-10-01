@@ -1,4 +1,4 @@
 interface:
   display_name: "Pema Design"
-  short_description: "Design Pema consistently across web, mobile, and Flutter"
+  short_description: "Design Pema consistently across web and the mobile app"
   default_prompt: "Use $pema-design to design and check Pema screens against the project's current identity, business flows, and platforms."

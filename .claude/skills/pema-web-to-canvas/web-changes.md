@@ -21,7 +21,11 @@ If unsure of the canvas code, write "unknown"; the skill looks it up in `referen
 
 ## Pending
 
-_(empty)_
+### 2026-10-01 · change · Hướng dẫn › Mobile, CSKH & tài chính theo vai trò
+- Where: `prototype/shared/guide.js` · guide item `id:'mobile-finance'`
+- Change: wording only — the steps "Flutter: chọn không gian ở header…" / "Flutter Care → Hồ sơ…" / "Flutter CRM là bản mẫu…" now say "App mobile…" ("chọn không gian ở thanh trên"); the Flutter template is no longer the mobile app.
+- Canvas target: F16 (Hướng dẫn) only if it shows this guide item; otherwise none
+- Logged by: Copilot
 
 ## Done
 

@@ -126,7 +126,7 @@ Luồng build: `Dart + bundled assets → flutter build web → prototype/native
 
 Mobile CRM02 đã kiểm cách ly lịch/note/buổi/cập nhật/phản hồi/cart/đơn đang sửa/ghi chú CSKH; Care và Clinic giữ selection riêng. Đây là cách ly state trong memory, không phải authorization. Pilot vẫn cần patientId trên từng record bền vững, repository theo domain, quyền server và test chống lẫn dữ liệu. Approval hiện là bool, chưa immutable/versioned và chưa có reviewer timestamp. Phiếu chỉ là projection trên approved orders, không document service.
 
-Đích kiến trúc bên dưới là yêu cầu pilot, chưa phải implementation Flutter. Runbook: [21_NATIVE_RUNBOOK](21_NATIVE_RUNBOOK.md).
+Đích kiến trúc bên dưới là yêu cầu pilot, chưa phải implementation Flutter. App mobile hiện tại: [pema-kmp/README.md](../pema-kmp/README.md).
 
 ## Open architecture decisions
 
