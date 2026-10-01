@@ -45,7 +45,7 @@ import asyncio
 import dataclasses
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import Any, Protocol
 from uuid import UUID
 
 from pema.agent.agent_loop_conditions import (
@@ -254,22 +254,75 @@ def _usage_of(total: ModelUsage, steps: int) -> TokenUsage:
     )
 
 
-def _masked(batch: Sequence[InboundMessage], decision: BeforeLlmDecision) -> list[InboundMessage]:
-    """The batch as the model must see it: texts replaced by the masked ones the policy returned."""
-    if not decision.masked_text_by_msg_id:
-        return list(batch)
-    return [
-        m.model_copy(update={"text": decision.masked_text_by_msg_id[m.msg_id]})
-        if m.msg_id in decision.masked_text_by_msg_id
-        else m
-        for m in batch
-    ]
+class Masker:
+    """The PII mask of the policy applied to EVERYTHING a turn shows the model besides the batch text that
+    ``before_llm`` already masked: history lines, the sender name, durable facts, the thread summary and tool
+    results (CONTRACTS section 3, policy hook call sites; the integration note of package P).
+
+    ``PolicyHooks`` itself has no such method, so the real hooks of package P expose two OPTIONAL ones next to
+    the eight, ``mask_text(ctx, text)`` and ``mask_name(ctx, name)``, and this class uses them when present.
+    ``PermissivePolicyHooks`` has neither: nothing is masked (``staff_assistant``). The hook itself decides
+    whether the profile masks (it is a no-op when it does not); the mask store is the process memory of the
+    turn's chat, so ``before_llm`` and ``after_llm`` must run in the SAME worker process.
+    """
+
+    def __init__(self, policy: PolicyHooks, ctx: PolicyContext) -> None:
+        self._policy: Any = policy
+        self._ctx = ctx
+
+    def text(self, value: str) -> str:
+        fn = getattr(self._policy, "mask_text", None)
+        return str(fn(self._ctx, value)) if callable(fn) and value else value
+
+    def name(self, value: str) -> str:
+        fn = getattr(self._policy, "mask_name", None)
+        if callable(fn) and value:
+            return str(fn(self._ctx, value))
+        return self.text(value)
+
+    def message(self, m: StoredMessage) -> StoredMessage:
+        return m.model_copy(
+            update={
+                "content": self.text(m.content),
+                "sender_name": None if m.sender_name is None else self.name(m.sender_name),
+            }
+        )
+
+
+def _for_model(
+    batch: Sequence[InboundMessage], decision: BeforeLlmDecision, masker: Masker
+) -> list[InboundMessage]:
+    """The batch as the model must see it: the texts the policy masked replaced, the sender names masked."""
+    out: list[InboundMessage] = []
+    for m in batch:
+        update: dict[str, object] = {}
+        if m.msg_id in decision.masked_text_by_msg_id:
+            update["text"] = decision.masked_text_by_msg_id[m.msg_id]
+        if m.sender_name:
+            update["sender_name"] = masker.name(m.sender_name)
+        out.append(m.model_copy(update=update) if update else m)
+    return out
 
 
 def _default_caps(account: AccountConfig) -> ChannelCapabilities:
     """Capabilities when the channel of the account is not running in this process (a scheduled turn of an
     account that is stopped): nothing the channel could do is promised."""
     return ChannelCapabilities(channel=account.channel, can_send_proactive=False)
+
+
+@dataclass
+class _Progress:
+    """What a turn did so far, readable by ``run_agent_turn`` even when the turn is cut short."""
+
+    usage: ModelUsage = field(default_factory=ModelUsage)
+    steps: int = 0
+    hand_off: BeforeLlmDecision | None = None
+
+
+class _MidTurnHandOff(BaseException):
+    """Raised at the step boundary when a message injected mid-turn made the policy hand the conversation off:
+    the model is NOT called again and whatever it wrote so far is NOT used. A ``BaseException`` so the repair
+    branches (``except Exception``) never mistake it for a provider failure."""
 
 
 async def run_agent_turn(
@@ -290,12 +343,28 @@ async def run_agent_turn(
     # The latest message represents the turn: tools (reaction, quote) act on this one.
     latest = request.batch[-1]
     turn_id: int | None = request.turn_id
+    progress = _Progress()
     try:
         if turn_id is None:
             turn_id = await deps.conversation.open_agent_turn(
                 clinic_id, account.id, latest.thread_id, request.source
             )
-        return await _run_turn(deps, request, cb, account, agent, turn_id)
+        return await _run_turn(deps, request, cb, account, agent, turn_id, progress)
+    except _MidTurnHandOff:
+        # A message that arrived mid-turn tripped the policy: whatever the model wrote is NOT used.
+        decision = progress.hand_off
+        log.info(
+            "turn handed off mid-turn",
+            reason=decision.reason if decision else None,
+            flags=len(decision.red_flags) if decision else 0,
+        )
+        return AgentTurnResult(
+            text="",
+            usage=_usage_of(progress.usage, progress.steps),
+            turn_id=turn_id,
+            handed_off=True,
+            hand_off_reason=(decision.reason if decision else None) or "hand_off",
+        )
     except AgentTurnError:
         raise
     except Exception as err:
@@ -309,6 +378,7 @@ async def _run_turn(
     account: AccountConfig,
     agent: AgentProfile,
     turn_id: int,
+    progress: _Progress,
 ) -> AgentTurnResult:
     clinic_id = request.clinic_id
     isolated = request.isolated
@@ -344,7 +414,8 @@ async def _run_turn(
             text="", turn_id=turn_id, handed_off=True, hand_off_reason=decision.reason or "hand_off"
         )
     mask_token = decision.mask_token
-    model_batch = _masked(batch, decision)
+    masker = Masker(deps.policy, ctx)
+    model_batch = _for_model(batch, decision, masker)
     model_latest = model_batch[-1]
 
     # Read ONCE for the whole turn: the router session key must be the same at every step, the wrap-up call
@@ -366,9 +437,12 @@ async def _run_turn(
     history: list[StoredMessage] = (
         []
         if isolated
-        else await deps.conversation.get_recent_messages(
-            clinic_id, account.id, latest.thread_id, tran_lich_su + len(batch) + len(id_dang_cho)
-        )
+        else [
+            masker.message(m)
+            for m in await deps.conversation.get_recent_messages(
+                clinic_id, account.id, latest.thread_id, tran_lich_su + len(batch) + len(id_dang_cho)
+            )
+        ]
     )
     # Effective token ceiling: the agent's own wins over the shared setting (same as max steps and reasoning
     # effort). It lives on the agent because the ceiling depends on the MODEL's window.
@@ -410,16 +484,19 @@ async def _run_turn(
     memory = PromptMemory(facts=[], thread_summary="")
     if not isolated:
         memory = PromptMemory(
-            facts=await deps.conversation.get_memories_for_context(
-                clinic_id,
-                account_id=account.id,
-                thread_id=latest.thread_id,
-                sender_id=latest.sender_id,
-                is_group=latest.is_group,
+            facts=[
+                item.model_copy(update={"content": masker.text(item.content)})
+                for item in await deps.conversation.get_memories_for_context(
+                    clinic_id,
+                    account_id=account.id,
+                    thread_id=latest.thread_id,
+                    sender_id=latest.sender_id,
+                    is_group=latest.is_group,
+                )
+            ],
+            thread_summary=masker.text(
+                (await deps.conversation.get_thread_summary(clinic_id, account.id, latest.thread_id)).summary
             ),
-            thread_summary=(
-                await deps.conversation.get_thread_summary(clinic_id, account.id, latest.thread_id)
-            ).summary,
         )
 
     # ``trace`` is the CALLER's list shared by EVERY run in the turn (the glitch retry and the rebuild without
@@ -460,10 +537,9 @@ async def _run_turn(
     # the model, told to "answer NOW", has no way to say it is ignoring a request. Same ownership rule as the
     # ``trace`` list: whatever must survive several runs is held by this function.
     tin_chen_da_keo: list[InboundMessage] = []
-    hand_off: BeforeLlmDecision | None = None
 
     async def lay_tin_chen() -> Sequence[InboundMessage]:
-        nonlocal hand_off, mask_token
+        nonlocal mask_token
         fetch = cb.fetch_injected_messages
         moi = list(await fetch()) if fetch is not None else []
         if not moi:
@@ -471,11 +547,11 @@ async def _run_turn(
         # The policy sees every message BEFORE the model does, also the ones that arrive mid-turn.
         mid = await deps.policy.before_llm(ctx, moi)
         if mid.action is BeforeLlmAction.HAND_OFF:
-            hand_off = mid
+            progress.hand_off = mid
             return []
         if mid.mask_token is not None:
             mask_token = mid.mask_token
-        masked = _masked(moi, mid)
+        masked = _for_model(moi, mid, masker)
         # Recorded IMMEDIATELY, before the content is built: if building fails (an image that cannot be
         # downloaded) the messages are still here for the next rebuild to use.
         tin_chen_da_keo.extend(masked)
@@ -493,6 +569,18 @@ async def _run_turn(
         guard=guard,
         deps=content_deps,
     )
+
+    async def prepare_step(current: list[ModelMessage]) -> list[ModelMessage] | None:
+        injected = await chen_tin_giua_luot(current)
+        if progress.hand_off is not None:
+            raise _MidTurnHandOff
+        return injected
+
+    def on_step_finish(step: RawStep) -> None:
+        progress.steps += 1
+        if step.usage is not None:
+            progress.usage = progress.usage.plus(step.usage)
+        quan_sat_step(step)
 
     async def gan_tin_chen_vao(goc: list[ModelMessage]) -> list[ModelMessage]:
         """Attach the injected messages to the context, built RIGHT BEFORE each model call.
@@ -588,9 +676,8 @@ async def _run_turn(
                 vuot_tran_token(ngan_sach_an_toan(tran_token)),
                 # The guard decided to block: stop the loop. The last step still has tool calls, so
                 # ``can_luot_chot`` catches it and the turn goes to the wrap-up call: the model must answer
-                # with what it has gathered instead of leaving the user a progress narration. A mid-turn
-                # hand-off stops the loop too (the answer is discarded below).
-                lambda _steps: guard.da_chan() or hand_off is not None,
+                # with what it has gathered instead of leaving the user a progress narration.
+                lambda _steps: guard.da_chan(),
             ],
             max_output_tokens=get_tuning_int("LLM_MAX_OUTPUT_TOKENS"),
             # Thinking on by LLM_REASONING_EFFORT: verify with usage.reasoning_tokens > 0 in the log below.
@@ -603,14 +690,15 @@ async def _run_turn(
             headers=None,
             # Log every tool call with its input size and a short head of the output: when the bot answers
             # poorly one must see which page it fetched (no content in the log, see agent_step_observer).
-            on_step_finish=quan_sat_step,
+            on_step_finish=on_step_finish,
             # Step boundary: after the tool results, BEFORE the next LLM call: the insertion point goclaw
             # uses.
             # The overriding message list is carried to later steps, so inserting once is enough.
-            prepare_step=chen_tin_giua_luot,
+            prepare_step=prepare_step,
             sleep=deps.sleep,
             retry_initial_delay_s=deps.retry_initial_delay_s,
             on_attempt_error=_log_stream_error,
+            tool_output_text_filter=masker.text,
         )
 
     async def run_wrap_up(da_lam: list[ModelMessage]) -> str:
@@ -862,17 +950,6 @@ async def _run_turn(
         ky_tu_input=dem_ky_tu_input_day_du(he_thong_da_gui, tool_set_da_gui, messages),
         uoc_luong=None if lech is None else dataclasses.asdict(lech),
     )
-
-    if hand_off is not None:
-        # A message that arrived mid-turn tripped the policy: whatever the model wrote is NOT used.
-        log.info("turn handed off mid-turn", reason=hand_off.reason, flags=len(hand_off.red_flags))
-        return AgentTurnResult(
-            text="",
-            usage=_usage_of(result.total_usage, len(result.steps)),
-            turn_id=turn_id,
-            handed_off=True,
-            hand_off_reason=hand_off.reason or "hand_off",
-        )
 
     # Still empty after the retry: answer with a fallback instead of silently leaving the sender hanging. A
     # turn

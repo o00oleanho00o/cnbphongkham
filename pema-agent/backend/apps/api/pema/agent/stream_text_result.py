@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import json
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, cast
@@ -136,7 +137,13 @@ async def _complete_with_retries(
             attempt += 1
 
 
-def _tool_output_part(output: object) -> dict[str, Any]:
+def _tool_output_part(output: object, text_filter: Callable[[str], str] | None = None) -> dict[str, Any]:
+    """The SDK output wrapper of a tool result. ``text_filter`` (the PII mask of ``patient_channel``) sees the
+    TEXT the model will read: a JSON output becomes text then, because masking inside a JSON document could
+    break its syntax (a placeholder replacing a bare number)."""
+    if text_filter is not None:
+        text = output if isinstance(output, str) else json.dumps(output, ensure_ascii=False, default=str)
+        return {"type": "text", "value": text_filter(text)}
     if isinstance(output, str):
         return {"type": "text", "value": output}
     return {"type": "json", "value": output}
@@ -222,6 +229,7 @@ async def _run_loop(
     sleep: Callable[[float], Awaitable[None]],
     retry_initial_delay_s: float,
     on_attempt_error: Callable[[BaseException], None] | None,
+    tool_output_text_filter: Callable[[str], str] | None,
 ) -> StreamTextResult:
     current = list(messages)
     steps: list[RawStep] = []
@@ -281,10 +289,14 @@ async def _run_loop(
                         input=call.input,
                     )
                 )
-                output: dict[str, Any] = _tool_output_part(result.output)
+                output: dict[str, Any] = _tool_output_part(result.output, tool_output_text_filter)
             elif error is not None:
                 content.append(error)
-                output = {"type": "error-text", "value": _error_text(error.error)}
+                error_text = _error_text(error.error)
+                output = {
+                    "type": "error-text",
+                    "value": tool_output_text_filter(error_text) if tool_output_text_filter else error_text,
+                }
             else:  # pragma: no cover - _run_one_tool returns exactly one of the two
                 continue
             tool_message_parts.append(
@@ -361,6 +373,7 @@ async def chay_stream(
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     retry_initial_delay_s: float = 2.0,
     on_attempt_error: Callable[[BaseException], None] | None = None,
+    tool_output_text_filter: Callable[[str], str] | None = None,
 ) -> StreamTextResult:
     """THE way to run the model in this project (``chayStream``): one multi-step run with its own state.
 
@@ -392,6 +405,7 @@ async def chay_stream(
                 sleep=sleep,
                 retry_initial_delay_s=retry_initial_delay_s,
                 on_attempt_error=on_attempt_error,
+                tool_output_text_filter=tool_output_text_filter,
             )
     except TimeoutError as exc:
         if not deadline.expired():
