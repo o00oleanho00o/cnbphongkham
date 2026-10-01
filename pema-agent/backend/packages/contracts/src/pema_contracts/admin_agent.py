@@ -68,6 +68,11 @@ class AccountOut(AccountConfig):
     has_credentials: bool = Field(
         default=False, description="A Zalo credential (personal) or token (bot) is stored."
     )
+    warning: str | None = Field(
+        default=None,
+        description="Set when the change was saved but the listener did NOT come up (for example a start "
+        "that failed after enabling or after a token change). Plain text, never a secret.",
+    )
 
 
 class BotTokenSet(ApiModel):

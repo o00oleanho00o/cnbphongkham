@@ -25,21 +25,19 @@ Forced deviations / dependencies:
 
 * zca-js ``API`` becomes the narrow ``UploadAttachmentApi`` Protocol (only ``upload_attachment`` is called
   here); ``gui_video_qua_zalo.ZaloVideoApi`` is a superset, so one adapter serves both modules.
-* ``readImageSize`` belongs to ``src/zalo/zalo-image-variant.ts`` (package C2, ``pema.channels.zalo_personal.
-  zalo_image_variant.read_image_size``), which does not exist in this worktree. It becomes the injectable
-  ``PhuThuocAnhBia.doc_kich_thuoc_anh``. The default is a private copy of the same byte logic (PNG IHDR and
-  the JPEG SOF scan) so this module is usable alone; once C2 lands, the tool layer can inject C2's function
-  and the copy below can be deleted (open item).
+* ``readImageSize`` belongs to ``src/zalo/zalo-image-variant.ts`` (package C2); the default of the
+  injectable ``PhuThuocAnhBia.doc_kich_thuoc_anh`` is C2's ``zalo_image_variant.read_image_size``, there is no
+  second copy of the byte logic.
 * The download goes through ``download_from_public_url`` (SSRF guard) exactly as the original.
 """
 
 from __future__ import annotations
 
-import struct
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any, Protocol, cast
 
+from pema.channels.zalo_personal.zalo_image_variant import read_image_size
 from pema.shared.logger import create_logger
 from pema.shared.safe_remote_download import DownloadOptions, download_from_public_url
 
@@ -97,32 +95,11 @@ class _KichThuoc:
 
 
 def doc_kich_thuoc_anh_mac_dinh(data: bytes) -> KichThuocAnh | None:
-    """Read JPEG/PNG size from a few leading bytes: does not decode the image. Same logic as
-    ``readImageSize`` of ``zalo-image-variant.ts``; ``None`` when it cannot be recognised."""
-    # PNG: 8-byte signature, IHDR width/height are two 32-bit big-endian numbers
-    if len(data) > 24 and struct.unpack_from(">I", data, 0)[0] == 0x89504E47:
-        return _KichThuoc(
-            width=struct.unpack_from(">I", data, 16)[0], height=struct.unpack_from(">I", data, 20)[0]
-        )
-
-    # JPEG: scan to the SOF marker (0xC0-0xCF except DHT/JPG/DAC) to get the size
-    if len(data) > 4 and data[0] == 0xFF and data[1] == 0xD8:
-        offset = 2
-        while offset + 9 < len(data):
-            if data[offset] != 0xFF:
-                offset += 1
-                continue
-            marker = data[offset + 1]
-            if 0xC0 <= marker <= 0xCF and marker not in (0xC4, 0xC8, 0xCC):
-                return _KichThuoc(
-                    height=struct.unpack_from(">H", data, offset + 5)[0],
-                    width=struct.unpack_from(">H", data, offset + 7)[0],
-                )
-            segment_length = struct.unpack_from(">H", data, offset + 2)[0]
-            if segment_length < 2:
-                return None  # broken segment: stop instead of looping forever
-            offset += 2 + segment_length
-    return None
+    """Read JPEG/PNG size from a few leading bytes: does not decode the image. It is ``readImageSize`` of
+    ``zalo-image-variant.ts`` (package C2, ``zalo_image_variant.read_image_size``); ``None`` when it cannot be
+    recognised."""
+    size = read_image_size(data)
+    return None if size is None else _KichThuoc(width=size[0], height=size[1])
 
 
 async def _tai_anh_mac_dinh(url: str, max_bytes: int) -> bytes | None:

@@ -20,6 +20,12 @@ import { ROLE_LABEL, type UserSummary } from "@/lib/session/session-context";
 import { coCanHoiTruocKhiRoi, xinPhepRoiTrang } from "@/lib/admin/shared/unsaved-changes-guard";
 import { useTheme } from "@/lib/admin/shared/use-theme";
 
+/** Footer text before the version: nothing when the role cannot see the accounts */
+function connectionLabel(online: boolean | null): string {
+  if (online === null) return "";
+  return online ? "Đã kết nối · " : "Ngoại tuyến · ";
+}
+
 /**
  * Sidebar theo mẫu GoClaw. Từ lg trở lên: cột cố định trong layout.
  * Dưới lg: drawer trượt từ trái, mở bằng nút hamburger ở topbar mobile.
@@ -42,8 +48,8 @@ export function SidebarNav({
   onCloseMobile,
 }: {
   sections: NavSection[];
-  /** Có ít nhất 1 account Zalo đang chạy - cho chấm trạng thái ở footer */
-  online: boolean;
+  /** Có ít nhất 1 account Zalo đang chạy - cho chấm trạng thái ở footer; null = vai trò không xem được */
+  online: boolean | null;
   user: UserSummary;
   onLogout: () => void;
   mobileOpen: boolean;
@@ -158,10 +164,12 @@ export function SidebarNav({
           </div>
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-2 text-[12px] text-ink-soft">
-              <span
-                className={`h-2 w-2 rounded-full ${online ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}
-              />
-              {online ? "Đã kết nối" : "Ngoại tuyến"} · v{process.env.NEXT_PUBLIC_APP_VERSION}
+              {online !== null && (
+                <span
+                  className={`h-2 w-2 rounded-full ${online ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}
+                />
+              )}
+              {connectionLabel(online)}v{process.env.NEXT_PUBLIC_APP_VERSION}
             </span>
             <div className="flex items-center gap-0.5">
               <button

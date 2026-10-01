@@ -137,7 +137,7 @@ export function Patient360View({ data }: { data: P360 }) {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card title="Thông tin" section="overview" active={active}>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
             <Fact label="Ngày sinh" value={formatDate(patient.birth_date)} />

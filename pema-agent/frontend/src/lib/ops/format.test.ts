@@ -6,6 +6,7 @@ import {
   daysBetween,
   dueLabel,
   endOfTodayIso,
+  formatDateTime,
   isOverdue,
   localInputToIso,
 } from "./format";
@@ -24,6 +25,16 @@ describe("clinic dates", () => {
 
   it("days_between_counts_clinic_calendar_days", () => {
     expect(daysBetween(NOW, new Date("2026-09-22T03:00:00+07:00"))).toBe(2);
+  });
+});
+
+describe("date and time text", () => {
+  it("a_datetime_prints_day_month_then_hour_minute_in_clinic_time", () => {
+    expect(formatDateTime("2026-09-20T02:05:00Z")).toBe("20/09 09:05");
+  });
+
+  it("a_missing_datetime_prints_a_dash", () => {
+    expect(formatDateTime(null)).toBe("-");
   });
 });
 

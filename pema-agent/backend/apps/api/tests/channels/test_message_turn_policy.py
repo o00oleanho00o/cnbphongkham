@@ -14,9 +14,9 @@ import pytest
 
 from pema.channels.deliver_chat_reply import DeliveryDeps, deliver_chat_reply
 from pema.channels.pipeline_testing import FakeActions, FakeEngine, TurnRig, answer
-from pema.channels.policy_review_mirror import media_flag_job_id, red_flag_job_id
 from pema.channels.send_reply_in_parts import ReplyTarget, reset_khu_trung_bao_loi
 from pema.channels.zalo_personal.kenh_ca_nhan import duong_gui_zca_js
+from pema.policy.review import media_flag_job_id, red_flag_job_id
 from pema_contracts.agent_turn import AgentTurnRequest, AgentTurnResult, TokenUsage, TurnCallbacks
 from pema_contracts.channel import ThreadKind
 from pema_contracts.conversations import MessageStatus

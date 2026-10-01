@@ -28,8 +28,8 @@ import json
 from collections.abc import Mapping
 from typing import Any, cast
 
-from pema.agent.failed_result import la_ket_qua_loi
 from pema.agent.model_types import RawStep
+from pema.agent.tools.tool_failure_result import la_ket_qua_loi
 from pema_contracts.agent_turn import StepTrace
 
 

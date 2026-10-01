@@ -147,6 +147,7 @@ async def _build_scope(
         agent_disabled_tools=agent.disabled_tools if agent is not None else [],
         account_disabled_tools=[],
         channel=services.channels.capabilities_for(kind),
+        clinic_id=clinic_id,
     )
     return scope, account, agent
 

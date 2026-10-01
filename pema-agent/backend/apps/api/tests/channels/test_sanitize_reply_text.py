@@ -9,15 +9,13 @@ from __future__ import annotations
 import re
 import time
 
-import pytest
-
+from pema.agent.prompt_leak_markers import DAU_HIEU_RO_PROMPT
 from pema.channels.sanitize_reply_text import (
-    DAU_HIEU_RO_PROMPT,
     co_dau_hieu_ro_prompt,
-    la_dong_sentinel,
     lam_sach_giu_dinh_dang,
     lam_sach_tra_loi,
 )
+from pema.scheduler.silent_sentinel import la_dong_sentinel
 
 
 def sach(t: str) -> str:
@@ -307,21 +305,16 @@ def test_lam_sach_tra_loi_prompt_leak_co_dau_hieu_ro_prompt_is_usable_on_its_own
     assert co_dau_hieu_ro_prompt("<noi_dung_ngoai nguon=...") is True
 
 
-def test_mirrors_match_owner_modules() -> None:
-    """(port) bản sao DAU_HIEU_RO_PROMPT / la_dong_sentinel khớp module chủ (bật khi gói D1 và S đã tích hợp)"""
-    leak = pytest.importorskip("pema.agent.prompt_leak_markers")
-    sentinel = pytest.importorskip("pema.scheduler.silent_sentinel")
-    assert tuple(leak.DAU_HIEU_RO_PROMPT) == DAU_HIEU_RO_PROMPT
-    for line in [
-        "[SILENT]",
-        " [ silent ] ",
-        "[SILENT] là nhãn",
-        "",
-        "x [SILENT]",
-        "[SILENT]\u00a0",
-        "\ufeff[SILENT]",
-    ]:
-        assert sentinel.la_dong_sentinel(line) == la_dong_sentinel(line), repr(line)
+def test_cac_chu_so_huu_khong_con_ban_sao_dau_hieu_va_sentinel_cung_mot_nguon() -> None:
+    """(port) không còn bản sao: dấu hiệu rò prompt và dòng sentinel đến từ module chủ (D1, S)"""
+    from pema.channels import sanitize_reply_text as module
+
+    assert module.DAU_HIEU_RO_PROMPT is DAU_HIEU_RO_PROMPT
+    assert module.la_dong_sentinel is la_dong_sentinel
+    for line in ["[SILENT]", " [ silent ] ", "\ufeff[SILENT]", "[SILENT]\u00a0"]:
+        assert la_dong_sentinel(line) is True, repr(line)
+    for line in ["", "x [SILENT]", "[SILENT] là nhãn"]:
+        assert la_dong_sentinel(line) is False, repr(line)
 
 
 # ------------------------------------------------------------- nhãn [SILENT] lọt vào lượt chat thường

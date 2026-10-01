@@ -19,7 +19,7 @@ Forced deviations (``@ai-sdk/mcp`` -> ``mcp`` SDK, sync -> async, one tenant -> 
   JSON schema of the tool;
 * ``Promise.race`` timeout becomes ``asyncio.timeout`` and really cancels the call;
 * the wrapper and the failure-result builder are parameters (``wrap`` and ``fail``), defaulting to the
-  stand-ins of ``mcp_untrusted_content``, so package G can wire D4's versions;
+  versions of package D4 (``wrap_untrusted_content`` and ``ket_qua_loi``);
 * an MCP result with ``isError: true`` is returned as a FAILURE (the original wrapped its text like a success,
   which the tool loop guard then never counted); its text is untrusted, so it goes inside the wrapper;
 * three extra door-2 checks that do not exist in the original and are cheap: the ``MCP_ENABLED`` kill switch
@@ -38,9 +38,10 @@ from dataclasses import dataclass
 from typing import Final, cast
 from uuid import UUID
 
+from pema.agent.tools.tool_failure_result import ket_qua_loi as tool_failure_result
+from pema.agent.tools.wrap_untrusted_content import wrap_untrusted_content
 from pema.config.runtime_tuning_settings import get_tuning_bool
 from pema.mcp.mcp_profile_gate import MCP_ALLOWED_PROFILES, MCP_TOOL_KEY_PREFIX, mcp_allowed_for_profile
-from pema.mcp.mcp_untrusted_content import tool_failure_result, wrap_untrusted_content
 from pema_contracts.common import JsonObject
 from pema_contracts.policy import PolicyProfileKey
 from pema_contracts.tools import AgentTool, ToolContext, ToolGroup, ToolScope, ToolSpec

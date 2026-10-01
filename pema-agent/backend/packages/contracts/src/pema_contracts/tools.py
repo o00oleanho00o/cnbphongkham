@@ -63,6 +63,7 @@ CLINIC_TOOL_KEYS: tuple[str, ...] = (
     "patient.get_care_context",
     "appointment.book",
     "review_item.create",
+    "escalation.create",
 )
 """Clinic tools (PLAN-AI01 principle 3): each one calls the very action the REST route calls."""
 
@@ -97,6 +98,9 @@ class ToolScope:
     agent_disabled_tools: Sequence[str]
     account_disabled_tools: Sequence[str]
     channel: ChannelCapabilities
+    clinic_id: UUID | None = None
+    """The clinic the scope is for. Agent ids are unique per clinic only, so a source keyed by agent id alone
+    (the MCP tools) needs it; ``None`` keeps the old agent-id-only lookup (tests, a page with no clinic)."""
 
 
 @dataclass
@@ -151,7 +155,14 @@ class McpToolProvider(Protocol):
     yields an empty list.
     """
 
-    def tools_for_agent(self, agent_id: str) -> Sequence[ToolSpec]: ...
+    def tools_for_agent(self, agent_id: str) -> Sequence[ToolSpec]:
+        """Agent-id-only lookup. Agent ids are unique per clinic only: when the bindings of ONE id exist in
+        more than one clinic the answer is empty (fail closed)."""
+        ...
+
+    def tools_for_agent_in_clinic(self, clinic_id: UUID, agent_id: str) -> Sequence[ToolSpec]:
+        """The same, exact for the clinic of the turn. The registry uses it when the scope has a clinic."""
+        ...
 
 
 class ToolRegistry(Protocol):

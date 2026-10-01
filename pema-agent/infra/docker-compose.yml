@@ -1,18 +1,77 @@
-# Minimal dev stack from package A: Postgres (pgvector) and Redis only.
-# Package F extends this file with api, worker, zalo-personal-bridge and ollama.
+# Pema Agent stack. Package A shipped postgres + redis; package F adds migrate, api, worker, frontend,
+# the Node bridge and Ollama.
+#
+#   default (no profile)  postgres, redis, migrate (one-shot), api
+#   profile worker        agent turns + scheduler + KB ingest. NEEDS `pema.workers.main` (package G).
+#   profile frontend      Next.js dashboard. NEEDS the Next.js app of package E (output: "standalone").
+#   profile bridge        Node zca-js bridge (personal Zalo account, risk of account lock). NEEDS package C2.
+#   profile ollama        Ollama with an NVIDIA GPU. Optional: Ollama may instead run natively on the GPU PC
+#                         (see infra/ubuntu/HUONG-DAN-UBUNTU.md).
+#   profile app           worker + frontend together (convenience; same prerequisites as above)
+#
+# Run from pema-agent/ (the Makefile does this):
+#   docker compose -f infra/docker-compose.yml --env-file infra/.env up -d
+#   docker compose -f infra/docker-compose.yml --env-file infra/.env --profile app --profile ollama up -d
+#
+# Network exposure: every published port binds to a loopback address by default. Change PEMA_*_BIND to a
+# Tailscale IP to reach a service from the other machine; never to 0.0.0.0 on a machine with a public IP.
+# (Docker publishes ports around ufw, so the bind address is the control that counts.)
 name: pema-agent
+
+x-backend-build: &backend-build
+  context: ..
+  dockerfile: infra/docker/api.Dockerfile
+
+# Variables every Python process reads (pema.config.env.Settings, prefix PEMA_). Inside the compose network
+# the hosts are service names, so the URLs are composed here from the passwords in .env, not copied from it.
+x-backend-env: &backend-env
+  PEMA_ENVIRONMENT: ${PEMA_ENVIRONMENT:-prod}
+  PEMA_LOG_LEVEL: ${PEMA_LOG_LEVEL:-INFO}
+  PEMA_LOG_FILE_ENABLED: ${PEMA_LOG_FILE_ENABLED:-false}
+  PEMA_LOG_FILE_KEEP_DAYS: ${PEMA_LOG_FILE_KEEP_DAYS:-14}
+  PEMA_DATA_DIR: /var/lib/pema
+  PEMA_BOT_TIMEZONE: ${PEMA_BOT_TIMEZONE:-Asia/Ho_Chi_Minh}
+  PEMA_DATABASE_URL: postgresql+psycopg://be_app:${PEMA_BE_APP_PASSWORD:?set it in infra/.env}@postgres:5432/pema
+  PEMA_WORKER_DATABASE_URL: postgresql+psycopg://agent_worker:${PEMA_AGENT_WORKER_PASSWORD:?set it in infra/.env}@postgres:5432/pema
+  PEMA_REDIS_URL: redis://:${PEMA_REDIS_PASSWORD:?set it in infra/.env}@redis:6379/0
+  PEMA_JWT_SECRET: ${PEMA_JWT_SECRET:?set it in infra/.env}
+  PEMA_SECRET_ENCRYPTION_KEY: ${PEMA_SECRET_ENCRYPTION_KEY:?set it in infra/.env}
+  PEMA_ZALO_PERSONAL_ENABLED: ${PEMA_ZALO_PERSONAL_ENABLED:-false}
+  PEMA_ZALO_BRIDGE_URL: http://zalo-personal-bridge:8200
+  PEMA_ZALO_BRIDGE_SECRET: ${PEMA_ZALO_BRIDGE_SECRET:-}
+  # LLM endpoint seed (original unprefixed names; the dashboard value in agent.runtime_settings wins).
+  LLM_PROVIDER: ${LLM_PROVIDER:-openai-compatible}
+  LLM_BASE_URL: ${LLM_BASE_URL:-}
+  LLM_API_KEY: ${LLM_API_KEY:-}
+  LLM_MODEL: ${LLM_MODEL:-}
 
 services:
   postgres:
-    image: pgvector/pgvector:pg17
+    image: pgvector/pgvector:${PEMA_PGVECTOR_TAG:-pg17}
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${PEMA_PG_SUPERUSER_PASSWORD:?set it in infra/.env (see .env.example)}
       POSTGRES_DB: pema
+      # data checksums catch silent disk corruption (relevant on a single clinic PC); scram for every TCP login.
+      # The local socket inside the container stays `trust` (image default): whoever can `docker exec` is
+      # already root on the host, and the backup/restore scripts rely on it.
+      POSTGRES_INITDB_ARGS: --data-checksums --auth-host=scram-sha-256
+    command:
+      - postgres
+      - -c
+      - shared_buffers=${PEMA_PG_SHARED_BUFFERS:-512MB}
+      - -c
+      - effective_cache_size=${PEMA_PG_EFFECTIVE_CACHE_SIZE:-1536MB}
+      - -c
+      - max_connections=100
+      - -c
+      - password_encryption=scram-sha-256
     ports:
-      - "127.0.0.1:${PEMA_PG_PORT:-5432}:5432"
+      - "${PEMA_PG_BIND:-127.0.0.1}:${PEMA_PG_PORT:-5432}:5432"
     volumes:
       - pg-data:/var/lib/postgresql/data
+    shm_size: 256mb
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d pema"]
       interval: 5s
@@ -20,9 +79,183 @@ services:
       retries: 20
 
   redis:
-    image: redis:7-alpine
+    image: redis:${PEMA_REDIS_TAG:-7-alpine}
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${PEMA_REDIS_PASSWORD:?set it in infra/.env (see .env.example)}
+      REDISCLI_AUTH: ${PEMA_REDIS_PASSWORD:-}
+    # The password reaches redis-server through the environment, not through the compose command line,
+    # so it does not show up in `docker inspect` args. AOF on: the turn queue and thread locks survive a restart.
+    command:
+      - sh
+      - -c
+      - exec redis-server --requirepass "$$REDIS_PASSWORD" --appendonly yes --save 300 10 --maxmemory ${PEMA_REDIS_MAXMEMORY:-256mb} --maxmemory-policy noeviction
     ports:
-      - "127.0.0.1:${PEMA_REDIS_PORT:-6379}:6379"
+      - "${PEMA_REDIS_BIND:-127.0.0.1}:${PEMA_REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # One-shot: create/refresh roles and passwords, then `alembic upgrade heads` as the owner role.
+  migrate:
+    build: *backend-build
+    image: pema-agent-api:${PEMA_IMAGE_TAG:-local}
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PEMA_MIGRATION_DATABASE_URL: postgresql+psycopg://postgres:${PEMA_PG_SUPERUSER_PASSWORD:?set it in infra/.env}@postgres:5432/pema
+      PEMA_BE_APP_PASSWORD: ${PEMA_BE_APP_PASSWORD:?set it in infra/.env}
+      PEMA_AGENT_WORKER_PASSWORD: ${PEMA_AGENT_WORKER_PASSWORD:?set it in infra/.env}
+    command: ["/opt/pema/scripts/migrate.sh"]
+
+  api:
+    build: *backend-build
+    image: pema-agent-api:${PEMA_IMAGE_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    environment: *backend-env
+    command:
+      - uvicorn
+      - --factory
+      - pema.bootstrap:create_app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --workers
+      - "1"
+      # behind tailscale serve / a reverse proxy
+      - --proxy-headers
+    ports:
+      - "${PEMA_API_BIND:-127.0.0.1}:${PEMA_API_PORT:-8000}:8000"
+    volumes:
+      - pema-data:/var/lib/pema
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3).status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+  # Agent turns, scheduler loop, KB ingest. Same image as the API. Talks to the LLM over HTTP only, so it can
+  # run on the server (LLM_BASE_URL points at the GPU PC over Tailscale) or on the GPU PC itself.
+  worker:
+    profiles: ["worker", "app"]
+    build: *backend-build
+    image: pema-agent-api:${PEMA_IMAGE_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    environment: *backend-env
+    # Package G creates pema/workers/main.py. Until then this container exits at once (restart loop).
+    command: ["python", "-m", "pema.workers.main"]
+    volumes:
+      - pema-data:/var/lib/pema
+
+  frontend:
+    profiles: ["frontend", "app"]
+    build:
+      context: ..
+      dockerfile: infra/docker/frontend.Dockerfile
+    image: pema-agent-frontend:${PEMA_IMAGE_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      PEMA_API_INTERNAL_URL: http://api:8000
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+    ports:
+      - "${PEMA_FRONTEND_BIND:-127.0.0.1}:${PEMA_FRONTEND_PORT:-3000}:3000"
+
+  zalo-personal-bridge:
+    profiles: ["bridge"]
+    build:
+      context: ..
+      dockerfile: infra/docker/bridge.Dockerfile
+    image: pema-agent-bridge:${PEMA_IMAGE_TAG:-local}
+    restart: unless-stopped
+    environment:
+      PORT: "8200"
+      # HMAC secret shared with the API (inbound webhook + outbound calls)
+      PEMA_ZALO_BRIDGE_SECRET: ${PEMA_ZALO_BRIDGE_SECRET:?set it when the bridge profile is on}
+      PEMA_API_WEBHOOK_BASE: http://api:8000/api/v1/webhooks/zalo-bridge
+    # Internal only: the API reaches it at http://zalo-personal-bridge:8200. Never publish this port.
+    expose:
+      - "8200"
+
+  ollama:
+    profiles: ["ollama"]
+    image: ollama/ollama:${PEMA_OLLAMA_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-30m}
+      OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-2}
+      OLLAMA_MAX_LOADED_MODELS: ${OLLAMA_MAX_LOADED_MODELS:-2}
+      OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-16384}
+      OLLAMA_FLASH_ATTENTION: "1"
+      OLLAMA_KV_CACHE_TYPE: ${OLLAMA_KV_CACHE_TYPE:-q8_0}
+    # Needs the NVIDIA Container Toolkit on the host (see the Ubuntu guide). Without a GPU, drop this block.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    ports:
+      - "${PEMA_OLLAMA_BIND:-127.0.0.1}:${PEMA_OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+
+  # One-shot: download the chat and embedding models into the ollama volume.
+  ollama-pull:
+    profiles: ["ollama"]
+    image: ollama/ollama:${PEMA_OLLAMA_TAG:-latest}
+    restart: "no"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      PEMA_LLM_MODEL_PULL: ${PEMA_LLM_MODEL_PULL:-hf.co/Qwen/Qwen3-8B-GGUF:Q5_K_M}
+      PEMA_EMBED_MODEL_PULL: ${PEMA_EMBED_MODEL_PULL:-bge-m3}
+      OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-16384}
+    # Also creates the short alias `pema-chat` with an explicit num_ctx: without it Ollama loads the GGUF's own
+    # (very large) context and spills layers to the CPU on a 12 GB card (measured, see the Ubuntu guide).
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        ollama pull "$$PEMA_LLM_MODEL_PULL"
+        ollama pull "$$PEMA_EMBED_MODEL_PULL"
+        { echo "FROM $$PEMA_LLM_MODEL_PULL"; echo "PARAMETER num_ctx $$OLLAMA_CONTEXT_LENGTH"; } > /tmp/Modelfile
+        ollama create pema-chat -f /tmp/Modelfile
 
 volumes:
   pg-data:
+  redis-data:
+  pema-data:
+  ollama-models:

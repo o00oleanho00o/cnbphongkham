@@ -104,7 +104,7 @@ function InboxContent() {
   );
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div className="mx-auto max-w-[1600px]">
       <PageHeader
         icon={IconInbox}
         title="Inbox"

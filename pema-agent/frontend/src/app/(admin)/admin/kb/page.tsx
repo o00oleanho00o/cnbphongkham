@@ -264,7 +264,7 @@ export default function KnowledgePage() {
             "Ngày",
             "",
           ]}
-          minWidth={1180}
+          minWidth={1100}
           ghimCotCuoi
         >
           {sources === null ? (

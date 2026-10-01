@@ -162,8 +162,15 @@ class PendingInbox(Protocol):
     process, the turn in the worker); consumed by package C2's turn processor, which builds the
     ``TurnCallbacks`` from it."""
 
-    async def take_injected(self, account_id: str, thread_id: str) -> Sequence[InboundMessage]:
-        """Remove and return the waiting messages so the running turn can fold them in at a step boundary."""
+    async def take_injected(
+        self, account_id: str, thread_id: str, sender_id: str | None = None
+    ) -> Sequence[InboundMessage]:
+        """Remove and return the waiting messages so the running turn can fold them in at a step boundary.
+
+        ``sender_id`` is the ``layTinDangDo(threadKey, senderId)`` scope of the original: the batcher keys its
+        queues by (thread, sender) and a turn must never steal another person's message (that person has a
+        turn of their own). The turn passes the sender of its latest message; ``None`` takes every parked
+        batch of the thread, which is right only for a direct thread (one possible sender)."""
         ...
 
     async def pending_history_ids(self, account_id: str, thread_id: str) -> Sequence[int]:

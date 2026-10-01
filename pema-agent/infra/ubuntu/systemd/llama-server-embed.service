@@ -1,0 +1,29 @@
+# ROADMAP unit: llama-server serving bge-m3 embeddings (1024 dimensions, matches agent.kb_chunk.embedding).
+# Same caveats as llama-server-chat.service: verify the flags against `llama-server --help`.
+# --pooling cls is what bge-m3 expects (the GGUF metadata normally sets it; stating it is harmless).
+# --ubatch-size must be at least the longest chunk in tokens or the server rejects the input.
+[Unit]
+Description=llama-server (bge-m3 embeddings) for Pema Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=llama
+Group=llama
+ExecStart=/opt/llama.cpp/build/bin/llama-server \
+  --model /srv/llama/models/bge-m3-Q8_0.gguf \
+  --alias bge-m3 \
+  --host 127.0.0.1 --port 8081 \
+  --n-gpu-layers 99 \
+  --embeddings --pooling cls \
+  --ctx-size 8192 --batch-size 2048 --ubatch-size 2048
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/srv/llama/models
+
+[Install]
+WantedBy=multi-user.target

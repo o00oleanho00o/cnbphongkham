@@ -88,6 +88,35 @@ class InboxRef(ApiModel):
     duplicate: bool = Field(default=False, description="update_id already recorded; nothing new was written.")
 
 
+class AppointmentProposalRequest(ApiModel):
+    """What the agent knows when it proposes a slot. ``job_id`` is the idempotency key."""
+
+    job_id: str = Field(min_length=1, max_length=128)
+    patient_ref: str = Field(description="Patient code such as 'P025', never a name or phone.")
+    conversation_ref: str | None = Field(default=None, description="clinic.conversation id as string.")
+    starts_at: VnDatetime
+    duration_min: int = Field(default=30, ge=5, le=480)
+    doctor_id: UUID | None = None
+    note: str | None = Field(default=None, max_length=500)
+    draft_text: str | None = Field(
+        default=None,
+        max_length=2000,
+        description="Reply to send once staff confirm; a default is used when omitted.",
+    )
+    model: str | None = None
+    prompt_version: str | None = None
+
+
+class EscalationRequest(ApiModel):
+    """Tool ``escalation.create``: a red flag or an explicit request for a doctor."""
+
+    job_id: str = Field(min_length=1, max_length=128)
+    patient_ref: str | None = None
+    conversation_ref: str | None = None
+    red_flags: list[str] = Field(default_factory=list[str], description="Codes such as 'bleeding', 'fever'.")
+    summary: str | None = Field(default=None, max_length=500, description="Already masked by the PII policy.")
+
+
 class AgentFacingClinicActions(Protocol):
     """Every method audits its mutations (actor_type='agent') and filters by ``ctx.clinic_id``."""
 
@@ -104,8 +133,22 @@ class AgentFacingClinicActions(Protocol):
         ``patient_channel`` the result is a PROPOSAL that a human confirms (open item for B1)."""
         ...
 
+    async def propose_appointment(
+        self, ctx: ActionContext, request: AppointmentProposalRequest
+    ) -> ReviewItemOut:
+        """What the tool ``appointment.book`` really calls (product decision of 2026-10-01): the agent never
+        books, it PROPOSES. Validates with the same schedule rules as the UI, requires a VERIFIED identity,
+        and writes a ``reply_draft`` review item (``payload.proposal == 'appointment'``) that a staff member
+        confirms: confirming books the appointment and sends the text. Idempotent on ``request.job_id``."""
+        ...
+
     async def create_review_item(self, ctx: ActionContext, request: ReviewItemCreate) -> ReviewItemOut:
         """Tool ``review_item.create``. Idempotent on ``request.job_id``."""
+        ...
+
+    async def create_escalation(self, ctx: ActionContext, request: EscalationRequest) -> ReviewItemOut:
+        """Tool ``escalation.create``: a ``triage_alert`` that only a doctor decides. Idempotent on
+        ``request.job_id``."""
         ...
 
     async def resolve_identity(

@@ -16,7 +16,9 @@ pnpm dev             # against the real API (PEMA_API_URL, default http://127.0.
 pnpm build && pnpm start
 pnpm lint && pnpm typecheck && pnpm test
 pnpm gen:types       # ../backend/apps/api/openapi.json -> src/lib/api/schema.d.ts (never edit by hand)
-pnpm shots           # Playwright screenshots at the 5 project viewports (needs `pnpm dev:mock` running)
+pnpm shots           # Playwright: every screen at the 5 project viewports into shots/ (needs `pnpm dev:mock` running);
+                     # env SHOTS_ROLE=owner|manager|doctor|cs|reception, SHOTS_ROUTES=/today,/review. It also fails on
+                     # horizontal document overflow, page errors and 5xx answers.
 ```
 
 The browser talks only to its own origin; `next.config.ts` rewrites `/api/*` and `/healthz` to the backend, so the session cookie is first-party and there is no CORS. Mock sign-in (fictional users, all with password `demo1234`, clinic `pema-demo`): `owner@pema.test`, `manager@pema.test`, `doctor@pema.test`, `cs@pema.test`, `reception@pema.test`.
@@ -56,3 +58,18 @@ Reference clone (read only): `E:\Desktop\zalo-agent-ref\web\src`. Target paths o
 6. Quality: no `any`, no `console.*`, named imports, hoist constant objects and wrap handlers passed to children in `useCallback`, clean timers and listeners in `useEffect`. Never log or render secrets: keys come back masked (`api_key_masked`), tokens only go up.
 7. Mobile first: 390x844 must work with no document-level horizontal scroll (tables scroll inside their card), touch targets of at least 44px on phone widths, text readable without zoom. Desktop uses the width (1920x1020, 1440x900, 1280x720, 1024x768).
 8. Mock: add the area's handlers under `mock/handlers/` with fictional Vietnamese data (no real name, phone, token, photo).
+
+## Port notes (what differs from `web/` of zalo-agent, and why)
+
+- **One route per page of the original**, under `/admin/*` (PORT-MAP lists a single `page.tsx` for several originals). Sign-in is `/login`
+  (clinic + email + password, session cookie), `/admin/auth` is "Tài khoản của tôi" with the change-password form, which is disabled
+  because the contract has no such operation.
+- **Typed OpenAPI client** replaces `dashboard-api-client.ts`. The DTOs are snake_case and English; where a component was written against
+  the original shape a small pure adapter rebuilds it (`tuning-types.ts`, `trace-types.ts`) so the ported component and its tests stay as written.
+- **Pema-only code** (no original): `components/ops/*`, `lib/ops/*`, the policy page, the channel switchboard and kill switch, the audit log tab,
+  the doctor sign-off column and the "Thử tìm" modal of the knowledge base, the policy profile fields of accounts and agents.
+- **Mirrors of two import-free files** the browser needs: `lib/admin/tuning/tuning-number-presets.ts` and `lib/admin/shared/ky-tu-moi-token.ts`
+  (their Python twins belong to packages D1 and A). Keep the constants identical.
+- Removed because the contract has no data for them (open items for the backend packages): token usage per thread and the thread summary,
+  contact/memory counts and total messages on the overview, vision `mode` and sidecar test, image-generation test, "also delete memory" when
+  clearing a thread, change password, a staff list for "Phụ trách", `channel`/`send_mode`/message body on a CRM task.

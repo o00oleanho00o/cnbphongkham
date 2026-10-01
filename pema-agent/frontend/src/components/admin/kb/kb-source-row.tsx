@@ -119,7 +119,7 @@ export function KbSourceRow({
       <td className="px-4 py-3 text-ink-soft">
         {source.kind === "file" ? source.format || "file" : "Gõ tay"}
       </td>
-      <td className="px-4 py-3">
+      <td className="px-4 py-3 whitespace-nowrap">
         <Badge tone={trangThai.tone}>{trangThai.text}</Badge>
       </td>
       {/* Cột này là thứ DUY NHẤT phân biệt "đã cắt đoạn xong" với "bot dùng
@@ -153,7 +153,7 @@ export function KbSourceRow({
           )}
         </button>
       </td>
-      <td className="px-4 py-3">
+      <td className="px-4 py-3 whitespace-nowrap">
         {canApprove ? (
           <button
             onClick={() => void doiDuyet()}
@@ -169,23 +169,26 @@ export function KbSourceRow({
             <ToggleKnob on={daDuyet} />
           </button>
         ) : null}
-        <div className="mt-1">
-          {daDuyet ? (
-            <Badge tone="green" dot={false}>
-              Bác sĩ đã duyệt
-            </Badge>
-          ) : (
-            <Badge tone="amber" dot={false}>
-              Chưa được bác sĩ duyệt
-            </Badge>
-          )}
+        <div
+          className={`mt-1 text-[12px] font-medium ${
+            daDuyet
+              ? "text-emerald-700 dark:text-emerald-300"
+              : "text-amber-700 dark:text-amber-300"
+          }`}
+          title={
+            daDuyet
+              ? "Bác sĩ đã duyệt nguồn này"
+              : "Chưa được bác sĩ duyệt: kênh bệnh nhân không dùng nguồn này"
+          }
+        >
+          {daDuyet ? "Đã duyệt" : "Chưa duyệt"}
         </div>
       </td>
       <td className="px-4 py-3 text-ink-soft">{source.chunk_count ?? 0}</td>
       <td className="px-4 py-3 text-ink-soft">{formatBytes(source.byte_size ?? 0)}</td>
       <td className="px-4 py-3 text-ink-soft">{formatTime(source.created_at)}</td>
       <td className={`px-4 py-3 ${O_GHIM_PHAI}`}>
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center justify-end gap-3 whitespace-nowrap">
           {/* Hiện cho CẢ "cho_xu_ly" lẫn "hong": nguồn có thể KẸT ở "Chờ xử lý"
               mà không có đường thoát nào - xảy ra khi hạ "Số lần thử lại một
               nguồn" trên trang Cấu hình lúc đang chạy, nguồn đã tiêu quá số lượt

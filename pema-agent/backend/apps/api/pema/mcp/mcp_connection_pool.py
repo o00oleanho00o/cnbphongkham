@@ -40,6 +40,8 @@ from collections.abc import Collection
 from dataclasses import dataclass
 from uuid import UUID
 
+from pema.agent.tools.tool_failure_result import ket_qua_loi as tool_failure_result
+from pema.agent.tools.wrap_untrusted_content import wrap_untrusted_content
 from pema.config.runtime_tuning_settings import get_tuning_bool, get_tuning_int
 from pema.mcp.mcp_agent_binding import McpBindingCache, McpBindingStore
 from pema.mcp.mcp_client_connect import ConnectConfig, ConnectFn, McpConnection, connect_server
@@ -59,7 +61,6 @@ from pema.mcp.mcp_types import (
     McpServerStatus,
     McpToolInfo,
 )
-from pema.mcp.mcp_untrusted_content import tool_failure_result, wrap_untrusted_content
 from pema.shared.logger import create_logger
 from pema_contracts.policy import PolicyProfileKey
 from pema_contracts.tools import ToolSpec
@@ -111,6 +112,18 @@ class McpConnectionPool:
         self._fail = fail
         self._allowed_profiles = allowed_profiles
         self.connected: dict[ServerKey, ConnectedServer] = {}
+
+    def tool_specs_for_agent_in_clinic(self, clinic_id: UUID, agent_id: str) -> list[ToolSpec]:
+        """The same as ``tool_specs_for_agent`` but exact for ONE clinic: agent ids repeat across clinics, so
+        the turn passes its own and only the bindings of that clinic count (no ambiguity, no fail-closed)."""
+        if not get_tuning_bool("MCP_ENABLED"):
+            return []
+        wanted = {key for key in self._bindings.servers_of_agent(agent_id) if key[0] == clinic_id}
+        specs: list[ToolSpec] = []
+        for key, server in self.connected.items():
+            if key in wanted:
+                specs.extend(server.specs)
+        return specs
 
     def tool_specs_for_agent(self, agent_id: str) -> list[ToolSpec]:
         """``mcpToolDefinitions``: tools of servers that are CONNECTED (in ``connected``) AND BOUND to this

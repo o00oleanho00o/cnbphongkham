@@ -75,11 +75,14 @@ class BotAccountAdminService:
         stored = await self._accounts.get_account(clinic_id, account_id) or account
 
         running = False
+        warning: str | None = None
         try:
             running = await self._manager.restart(stored)
         except Exception as err:
             _log.warning("Lưu token xong nhưng khởi động lại thất bại", err=err, account_id=account_id)
+            warning = "Đã lưu token nhưng chưa khởi động lại được tài khoản bot."
 
         return AccountOut.model_validate(
-            stored.model_dump() | {"has_bot_token": True, "running": running, "has_credentials": True}
+            stored.model_dump()
+            | {"has_bot_token": True, "running": running, "has_credentials": True, "warning": warning}
         )

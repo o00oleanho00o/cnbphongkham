@@ -16,13 +16,17 @@ from __future__ import annotations
 
 import re
 
+from pema.shared.js_whitespace import JS_S, js_trim
+
+_JS_S_PLUS = re.compile(f"{JS_S}+")
+
 SILENT_TOKEN = "[SILENT]"  # noqa: S105 - a sentinel string, not a credential
 
 
 def _is_exact_token(line: str) -> bool:
     """A (trimmed) line that contains ONLY the token; inner whitespace does not count (``[ SILENT ]`` still
     matches)."""
-    return re.sub(r"\s+", "", line.strip().upper()) == SILENT_TOKEN
+    return _JS_S_PLUS.sub("", js_trim(line).upper()) == SILENT_TOKEN
 
 
 def la_dong_sentinel(line: str) -> bool:
@@ -47,14 +51,14 @@ def is_silent_response(text: str) -> bool:
     A token in the MIDDLE of a sentence is STILL SENT: "mình định [SILENT] nhưng đây là tóm tắt hôm nay: ..."
     has to arrive; a real answer must not be swallowed by mistake.
     """
-    stripped = text.strip()
+    stripped = js_trim(text)
     if not stripped:
         return False
 
     if _is_exact_token(stripped):
         return True
 
-    lines = [ln for ln in re.split(r"\r?\n", stripped) if ln.strip() != ""]
+    lines = [ln for ln in re.split(r"\r?\n", stripped) if js_trim(ln) != ""]
     if lines and (_is_exact_token(lines[0]) or _is_exact_token(lines[-1])):
         return True
 

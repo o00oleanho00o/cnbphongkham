@@ -58,14 +58,14 @@ log = create_logger("account-routes")
 KNOWN_TOOL_KEYS = frozenset(BUILTIN_TOOL_KEYS) | frozenset(CLINIC_TOOL_KEYS)
 
 
-async def _with_status(services: C2Services, config: AccountConfig) -> AccountOut:
+async def _with_status(services: C2Services, config: AccountConfig, warning: str | None = None) -> AccountOut:
     running = services.registry.get_running(config.clinic_id, config.id) is not None
     if config.channel is ChannelKind.ZALO_PERSONAL:
         has_credentials = await services.vault.has_credentials(config.clinic_id, config.id)
     else:
         has_credentials = config.has_bot_token
     return AccountOut.model_validate(
-        {**config.model_dump(), "running": running, "has_credentials": has_credentials}
+        {**config.model_dump(), "running": running, "has_credentials": has_credentials, "warning": warning}
     )
 
 
@@ -163,6 +163,7 @@ async def update_account(account_id: str, body: AccountUpdate, request: Request)
     # Toggle enabled tác động listener ngay; start fail (chưa login QR) không phải lỗi của PATCH -
     # account vẫn ở
     # trạng thái bật, `running=false` cho UI thấy
+    warning: str | None = None
     if body.enabled is False:
         await _stop(services, account)
     elif body.enabled is True and services.registry.get_running(ctx.clinic_id, account_id) is None:
@@ -173,8 +174,11 @@ async def update_account(account_id: str, body: AccountUpdate, request: Request)
                 await services.bot_lifecycle.start(ctx.clinic_id, account_id)
         except (DomainError, ZaloBridgeError) as err:
             log.info("account enabled but not started", account_id=account_id, reason=type(err).__name__)
+            warning = (
+                "Đã lưu nhưng chưa khởi động được tài khoản (chưa đăng nhập QR hoặc kênh chưa sẵn sàng)."
+            )
 
-    return await _with_status(services, account)
+    return await _with_status(services, account, warning)
 
 
 @router.delete(

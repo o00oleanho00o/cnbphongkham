@@ -128,7 +128,7 @@ export default function AccountsPage() {
     <div>
       <PageHeader
         icon={IconSignal}
-        title="Accounts"
+        title="Tài khoản Zalo"
         subtitle="Tài khoản Zalo của bot - mỗi account gắn một agent (não) và có policies riêng"
         aside={
           <button

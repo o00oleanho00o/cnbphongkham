@@ -20,12 +20,9 @@ from pema.clinic.actions import (
     review_items,
     templates,
 )
-from pema.clinic.actions.agent_facing import (
-    AppointmentProposalRequest,
-    ClinicAgentFacingActions,
-    EscalationRequest,
-)
+from pema.clinic.actions.agent_facing import ClinicAgentFacingActions
 from pema.clinic.actions.outbound import FakeOutboundDelivery, OutboundDelivery, OutboundRequest
+from pema_contracts.clinic_actions import AppointmentProposalRequest, EscalationRequest
 
 __all__ = [
     "AppointmentProposalRequest",

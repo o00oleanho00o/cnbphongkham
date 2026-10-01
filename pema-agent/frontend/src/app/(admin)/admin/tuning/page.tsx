@@ -57,10 +57,6 @@ export default function TuningPage() {
   const { group: nhom } = useParams<{ group?: string }>();
   const router = useRouter();
 
-  useEffect(() => {
-    void nap();
-  }, []);
-
   async function nap() {
     try {
       const r = tuningTuApi(await unwrap(http.GET("/api/v1/admin/model/tuning")));
@@ -71,6 +67,10 @@ export default function TuningPage() {
       setLoi(errorMessage(e));
     }
   }
+
+  useEffect(() => {
+    void nap();
+  }, []);
 
   // URL trống hoặc trỏ tới nhóm không tồn tại (gõ tay, link cũ) thì đưa về nhóm
   // đầu tiên. `replace` để nút Back không kẹt lại ở địa chỉ hỏng.

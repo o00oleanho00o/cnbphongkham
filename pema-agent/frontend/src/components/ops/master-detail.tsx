@@ -24,8 +24,8 @@ export function MasterDetail({
 }) {
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(320px,400px)_minmax(0,1fr)] xl:grid-cols-[420px_minmax(0,1fr)]">
-      <div className={detailOpen ? "hidden lg:block" : "block"}>{list}</div>
-      <div className={detailOpen ? "block" : "hidden lg:block"}>
+      <div className={detailOpen ? "hidden min-w-0 lg:block" : "block min-w-0"}>{list}</div>
+      <div className={detailOpen ? "block min-w-0" : "hidden min-w-0 lg:block"}>
         {detailOpen ? (
           <div>
             <button

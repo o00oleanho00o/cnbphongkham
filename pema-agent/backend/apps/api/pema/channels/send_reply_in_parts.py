@@ -15,8 +15,8 @@ scheduler for proactive messages), so what reaches this module may be sent.
 Forced deviations:
 
 * sync -> async; the per-thread send queue is injected (``enqueue_send``). Production uses
-  ``pema.middleware.rate_limiter.enqueue_send`` (package C1, same ``(thread_key, task)`` signature), loaded
-  lazily so this package does not depend on C1 at import time; tests inject an immediate queue;
+  ``pema.middleware.rate_limiter.enqueue_send`` (package C1, same ``(thread_key, task)`` signature); tests
+  inject an immediate queue;
 * zca-js ``Style``/``ThreadType``/``SendMessageQuote`` become ``TextStyle``/``ThreadKind``/``QuoteRef`` of
   ``pema_contracts.channel``;
 * a ``ChannelPort`` signals a guard (kill switch, cap, window, not a friend) by a REJECTED
@@ -28,11 +28,9 @@ Forced deviations:
 
 from __future__ import annotations
 
-import importlib
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from time import monotonic
-from typing import Any
 
 from pema.channels.reply_quote import trich_dan_trong_ngan_sach
 from pema.channels.split_styled_message import (
@@ -42,6 +40,7 @@ from pema.channels.split_styled_message import (
     dem_doan_bo_dinh_dang,
 )
 from pema.config.runtime_tuning_settings import get_tuning_int
+from pema.middleware.rate_limiter import enqueue_send as enqueue_send_rate_limited
 from pema.shared.logger import create_logger
 from pema_contracts.channel import ChannelPort, QuoteRef, SendStatus, TextStyle, ThreadKind
 from pema_contracts.errors import ErrorCode
@@ -149,10 +148,9 @@ class ChannelSendRejectedError(Exception):
 
 
 def default_enqueue_send() -> EnqueueSend:
-    """Production queue: ``pema.middleware.rate_limiter.enqueue_send`` (package C1). Loaded lazily."""
-    module: Any = importlib.import_module("pema.middleware.rate_limiter")
-    enqueue: EnqueueSend = module.enqueue_send
-    return enqueue
+    """Production queue: ``pema.middleware.rate_limiter.enqueue_send`` (package C1): one send at a time per
+    thread key, with the random human-like gap between messages."""
+    return enqueue_send_rate_limited
 
 
 def reply_target_from_channel(

@@ -31,8 +31,9 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from pema.agent.tools.function_tool import FunctionTool
-from pema.agent.tools.tool_deps import MemoryEditFailed, MemoryEditScope, ToolDeps
+from pema.agent.tools.tool_deps import ToolDeps
 from pema.agent.tools.tool_failure_result import KetQuaLoiTool, ket_qua_loi
+from pema_contracts.conversation import MemoryEditFailed, MemoryEditScope
 from pema_contracts.policy import MemorySource, PolicyProfileKey
 from pema_contracts.tools import ToolContext
 

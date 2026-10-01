@@ -8,9 +8,8 @@ Bộ test này canh BẤT BIẾN của cơ chế NONCE, không canh một chuỗ
 ký tự gì vào tên thẻ giả) có thể trùng với thẻ đóng THẬT của LẦN GỌI NÀY" - vì nonce sinh SAU khi attacker đã
 viết xong nội dung, nên attacker không thể biết trước để viết đúng.
 
-Forced deviation: ``THE_NOI_DUNG_NGOAI`` comes from ``leak_marker_refs`` until package D1 provides
-``pema.agent.prompt_leak_markers``; ``test_the_noi_dung_ngoai_bang_prompt_leak_markers`` checks the equality
-as soon as that module exists (skipped before).
+``THE_NOI_DUNG_NGOAI`` is imported from ``pema.agent.prompt_leak_markers`` (package D1): the tag the tool
+writes and the tag the prompt-leak guard looks for are one constant.
 """
 
 from __future__ import annotations
@@ -19,7 +18,7 @@ import re
 
 import pytest
 
-from pema.agent.tools.leak_marker_refs import THE_NOI_DUNG_NGOAI as THE
+from pema.agent.prompt_leak_markers import THE_NOI_DUNG_NGOAI as THE
 from pema.agent.tools.wrap_untrusted_content import trich_the_dong_thuc, wrap_untrusted_content
 
 DAI = "x" * 100
@@ -40,12 +39,6 @@ def hau_to_dong_cuoi(ra: str) -> str:
 def the_dong_that_cua(ra: str) -> str:
     """Thẻ đóng THẬT của một lần bọc - suy từ hậu tố trích ở thẻ mở"""
     return f"</{THE}{hau_to_mo(ra)}>"
-
-
-def test_the_noi_dung_ngoai_bang_prompt_leak_markers() -> None:
-    """hằng số cục bộ phải bằng hằng của prompt_leak_markers (D1) - skip tới khi D1 có mặt"""
-    markers = pytest.importorskip("pema.agent.prompt_leak_markers")
-    assert markers.THE_NOI_DUNG_NGOAI == THE
 
 
 # --------------------------------------------------- wrapUntrustedContent - ranh giới tin cậy

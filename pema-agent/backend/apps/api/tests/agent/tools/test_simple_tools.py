@@ -35,12 +35,12 @@ from pema.agent.tools.testing import (
     make_tool_context,
     make_tool_deps,
 )
-from pema.agent.tools.tool_deps import MemoryEditFailed, MemoryEditOk
 from pema.agent.tools.tool_failure_result_test_helper import ket_qua_thanh_cong, loi_cua_tool
 from pema.config.env import get_settings
 from pema.shared.safe_remote_download import DownloadOptions, RemoteFile
 from pema_contracts.channel import ChannelKind, InboundMessage, ThreadKind
 from pema_contracts.common import JsonObject
+from pema_contracts.conversation import MemoryEditFailed, MemoryEditOk
 from pema_contracts.policy import (
     MemorySource,
     PolicyContext,

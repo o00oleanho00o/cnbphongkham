@@ -36,7 +36,7 @@ async def test_reply_target_mang_tran_ky_tu_va_co_dinh_dang_cua_kenh() -> None:
     assert target.tran_ky_tu_mot_tin == 2000
     assert target.mang_dinh_dang is False
     assert target.quote is None, "quote do caller thêm: chỉ lượt tin nhắn trong nhóm mới có tin để trích"
-    assert (target.thread_key, target.thread_id, target.thread_kind) == ("k", "t1", ThreadKind.USER)
+    assert (target.thread_key, target.thread_id, target.thread_type) == ("k", "t1", ThreadKind.USER)
 
 
 async def test_gui_mot_doan_chuyen_text_styles_quote_va_proactive_xuong_kenh() -> None:
@@ -70,7 +70,7 @@ async def test_kenh_tu_choi_mot_doan_thi_nem_send_rejected_khong_bi_doc_nhu_da_g
     target = reply_target_tu_kenh(kenh=channel, thread_id="t1", thread_kind=ThreadKind.USER, thread_key="k")
     with pytest.raises(SendRejectedError) as raised:
         await target.gui_mot_doan(DoanCanGui("x"))
-    assert raised.value.result is rejected
+    assert raised.value.error_code is ErrorCode.CHANNEL_DAILY_CAP_REACHED
 
 
 async def test_oa_api_la_stub_moi_loi_goi_deu_nem_not_implemented() -> None:

@@ -28,7 +28,7 @@ dependencies = [
     "openai>=1.54",
     "anthropic>=0.40",
     "google-genai>=0.3",
-    "mcp>=1.2",
+    "mcp>=2.2",
     # scheduler time handling (S, B2): cron-parser -> croniter, luxon -> zoneinfo + tzdata
     "croniter>=3.0",
     "tzdata>=2024.2",

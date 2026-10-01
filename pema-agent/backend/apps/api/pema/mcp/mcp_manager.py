@@ -35,6 +35,8 @@ import contextlib
 from collections.abc import Awaitable, Callable, Collection, Sequence
 from uuid import UUID
 
+from pema.agent.tools.tool_failure_result import ket_qua_loi as tool_failure_result
+from pema.agent.tools.wrap_untrusted_content import wrap_untrusted_content
 from pema.config.runtime_tuning_settings import get_tuning_bool, get_tuning_int
 from pema.mcp.mcp_agent_binding import McpBindingCache, McpBindingStore
 from pema.mcp.mcp_client_connect import ConnectFn, connect_server, describe_error
@@ -44,7 +46,6 @@ from pema.mcp.mcp_server_store import McpServerStore
 from pema.mcp.mcp_tool_definition import FailFn, WrapFn
 from pema.mcp.mcp_tool_provider import SwitchableMcpToolProvider, mcp_tool_provider
 from pema.mcp.mcp_types import McpRuntimeStatus, McpServerStatus
-from pema.mcp.mcp_untrusted_content import tool_failure_result, wrap_untrusted_content
 from pema.shared.logger import create_logger
 from pema_contracts.policy import PolicyProfileKey
 from pema_contracts.tools import ToolSpec
@@ -94,6 +95,14 @@ class DefaultMcpManager:
         """``mcpToolDefinitions`` (``McpToolProvider``): synchronous, never raises."""
         try:
             return self._pool.tool_specs_for_agent(agent_id)
+        except Exception as exc:  # contract: never raises
+            _log.error("mcp tool lookup failed", err=exc, agent_id=agent_id)
+            return []
+
+    def tools_for_agent_in_clinic(self, clinic_id: UUID, agent_id: str) -> Sequence[ToolSpec]:
+        """``McpToolProvider.tools_for_agent_in_clinic``: exact for the clinic of the turn. Never raises."""
+        try:
+            return self._pool.tool_specs_for_agent_in_clinic(clinic_id, agent_id)
         except Exception as exc:  # contract: never raises
             _log.error("mcp tool lookup failed", err=exc, agent_id=agent_id)
             return []
@@ -214,7 +223,7 @@ class DefaultMcpManager:
         gap."""
         if not get_tuning_bool("MCP_ENABLED") or self._loop_task is not None:
             return
-        self._provider.set_source(self.tools_for_agent)
+        self._provider.set_source(self.tools_for_agent, self.tools_for_agent_in_clinic)
         self._loop_task = asyncio.ensure_future(self._run())
 
     async def _run(self) -> None:

@@ -147,21 +147,19 @@ class FakeConversation:
 
 @dataclass
 class FakePending:
-    """``PendingInbox`` (plus the sender-aware extension). ``waiting`` holds the injected messages."""
+    """``PendingInbox``. ``waiting`` holds the injected messages."""
 
     waiting: list[InboundMessage] = field(default_factory=list[InboundMessage])
     taken: int = 0
 
-    async def take_injected(self, account_id: str, thread_id: str) -> Sequence[InboundMessage]:
-        mine = [m for m in self.waiting if m.thread_id == thread_id]
-        self.waiting = [m for m in self.waiting if m.thread_id != thread_id]
-        self.taken += len(mine)
-        return mine
-
-    async def take_injected_for_sender(
-        self, account_id: str, thread_id: str, sender_id: str
-    ) -> list[InboundMessage]:
-        mine = [m for m in self.waiting if m.thread_id == thread_id and m.sender_id == sender_id]
+    async def take_injected(
+        self, account_id: str, thread_id: str, sender_id: str | None = None
+    ) -> Sequence[InboundMessage]:
+        mine = [
+            m
+            for m in self.waiting
+            if m.thread_id == thread_id and (sender_id is None or m.sender_id == sender_id)
+        ]
         self.waiting = [m for m in self.waiting if m not in mine]
         self.taken += len(mine)
         return mine

@@ -27,7 +27,7 @@ export function FilterChip({
       type="button"
       aria-pressed={selected}
       onClick={onClick}
-      className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium whitespace-nowrap transition-colors lg:min-h-9 ${
+      className={`inline-flex min-h-11 items-center gap-1.5 self-start rounded-full border px-3.5 text-[13px] font-medium whitespace-nowrap transition-colors lg:min-h-9 ${
         selected
           ? "border-brand-500 bg-brand-500 text-white"
           : "border-line bg-surface text-ink-soft hover:bg-tile hover:text-ink"

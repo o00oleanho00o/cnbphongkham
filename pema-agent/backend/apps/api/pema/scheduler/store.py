@@ -9,10 +9,9 @@ raised as ``DomainError(POLICY_DENIED)``; a ``downgrade_to_draft`` is accepted (
 re-decided at every run, so the policy of the moment of the run is the one that counts). The ``once`` /
 ``max_runs`` invariant and ``dedupe_key`` idempotency live in ``ScheduledJobStore.create_job``.
 
-``run_trial`` goes through the real pipeline: see the note of ``run_scheduled_job_trial``. The Protocol
-docstring says "sends nothing"; the ported behaviour (and the reason it exists) is "really runs the job but
-never moves the real schedule", which under ``patient_channel`` can only end in a review draft. Reported as an
-open item."""
+``run_trial`` goes through the real pipeline: see the note of ``run_scheduled_job_trial``. It really runs the
+job but never moves the real schedule, which under ``patient_channel`` can only end in a review draft (the
+contract docstring and the route summary say so)."""
 
 from __future__ import annotations
 
@@ -21,9 +20,10 @@ from uuid import UUID
 from pema.scheduler.deps import SchedulerDeps
 from pema.scheduler.run_context import decide_job, resolve_policy_context
 from pema.scheduler.run_scheduled_job_trial import run_scheduled_job_trial
+from pema.scheduler.scheduled_job_store import UpdateScheduledJobInput
 from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.policy import JobAction
-from pema_contracts.scheduler import CreateScheduledJobInput, JobRunRecord, ScheduledJob
+from pema_contracts.scheduler import CreateScheduledJobInput, JobRunRecord, ParsedSchedule, ScheduledJob
 
 
 class PgSchedulerStore:
@@ -46,6 +46,25 @@ class PgSchedulerStore:
     async def get_job(
         self, clinic_id: UUID, account_id: str, thread_id: str, job_id: str
     ) -> ScheduledJob | None:
+        return await self._deps.jobs.get_job(clinic_id, account_id, thread_id, job_id)
+
+    async def update_job(
+        self,
+        clinic_id: UUID,
+        account_id: str,
+        thread_id: str,
+        job_id: str,
+        *,
+        name: str | None = None,
+        payload: str | None = None,
+        schedule: ParsedSchedule | None = None,
+    ) -> ScheduledJob | None:
+        """``JobUpdater``: the partial update of the ``schedule_task`` tool. The policy of the moment is
+        applied at every RUN (``run_scheduled_job`` decides again), so an edit cannot widen what a job
+        may do."""
+        patch = UpdateScheduledJobInput(name=name, payload=payload, schedule=schedule)
+        if not await self._deps.jobs.update_job(clinic_id, account_id, thread_id, job_id, patch):
+            return None
         return await self._deps.jobs.get_job(clinic_id, account_id, thread_id, job_id)
 
     async def get_job_unscoped(self, clinic_id: UUID, job_id: str) -> ScheduledJob | None:

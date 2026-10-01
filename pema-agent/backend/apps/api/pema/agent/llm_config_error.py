@@ -13,7 +13,7 @@ incoming message goes the whole way to ``resolve_language_model`` and then raise
 ``unknown`` -> the sender receives the sentence "bạn nhắn lại giúp mình sau ít phút nhé". That is a LIE:
 waiting any length of time never fixes it, exactly the disease the ``auth`` branch was born to cure.
 
-Recognised by type, NOT by scanning the words of the message - same reason as ``failed_result``: a rule
+Recognised by type, NOT by scanning the words of the message - same reason as ``tool_failure_result``: a rule
 based on wording means one changed word blinds the guard with no test going red.
 
 PURE module: no import of the application.

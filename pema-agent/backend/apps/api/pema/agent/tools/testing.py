@@ -15,10 +15,6 @@ from uuid import UUID
 
 from pema.agent.tools.tool_deps import (
     CleanedReply,
-    JobUpdater,
-    MemoryEditOk,
-    MemoryEditResult,
-    MemoryEditScope,
     ParseScheduleResult,
     StoredImage,
     StyledText,
@@ -35,7 +31,13 @@ from pema_contracts.channel import (
     ThreadKind,
 )
 from pema_contracts.common import JsonObject, now_vn
-from pema_contracts.conversation import SaveMemoryResult, StoredMessage
+from pema_contracts.conversation import (
+    MemoryEditOk,
+    MemoryEditResult,
+    MemoryEditScope,
+    SaveMemoryResult,
+    StoredMessage,
+)
 from pema_contracts.knowledge import KbHit
 from pema_contracts.policy import (
     DEFAULT_PROFILES,
@@ -605,7 +607,6 @@ __all__ = [
     "FakeStoredImages",
     "FakeVision",
     "ImmediateSendQueue",
-    "JobUpdater",
     "MemoryEditScope",
     "RecordingChannel",
     "SavedFact",

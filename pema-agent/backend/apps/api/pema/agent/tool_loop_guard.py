@@ -3,7 +3,7 @@
 
 Forced deviation (Vercel AI SDK -> own loop): the step shape the guard reads is ``model_types.RawStep``
 (``tool_results`` + ``content`` parts of type ``tool-error``) instead of a structural TS type, and the
-failure shape check is ``failed_result.la_ket_qua_loi``.
+failure shape check is ``tool_failure_result.la_ket_qua_loi`` (D4).
 
 Before this module the only upper bound was ``stepCountIs(8)``: a model calling ``web_fetch`` on the same
 failing URL 5 times in a row burned 5/8 steps with nobody stopping it, the user waited and got a truncated
@@ -29,10 +29,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal
 
-from pema.agent.failed_result import la_ket_qua_loi
 from pema.agent.model_types import RawStep
 from pema.agent.tool_call_signature import bam_ngan, chu_ky_lenh_goi, chuan_hoa_json
 from pema.agent.tool_loop_guard_thresholds import NguongGuard, canh_bao_tu, nguong_theo_tran_step
+from pema.agent.tools.tool_failure_result import la_ket_qua_loi
 
 # Re-export: the signature and the thresholds are both part of this module's contract, the reader does not
 # need to know which file they live in

@@ -120,7 +120,7 @@ export default function TemplatesPage() {
         <EmptyState title="Chưa có mẫu nào" hint="Soạn mẫu đầu tiên và nhờ bác sĩ duyệt." />
       )}
 
-      <ul className="grid gap-3 lg:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {items.map((t) => (
           <li key={t.id} className="gc-card flex flex-col p-4">
             <div className="flex items-start justify-between gap-2">

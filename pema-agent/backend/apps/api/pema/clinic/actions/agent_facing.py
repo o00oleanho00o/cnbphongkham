@@ -33,7 +33,6 @@ from datetime import UTC, date, timedelta
 from typing import Any
 from uuid import UUID
 
-from pydantic import Field
 from sqlalchemy import text as sql
 from sqlalchemy.exc import DBAPIError
 
@@ -48,13 +47,15 @@ from pema_contracts.appointments import AppointmentCreate, AppointmentOut, Appoi
 from pema_contracts.channel import ChannelKind, InboundMessage
 from pema_contracts.clinic_actions import (
     AgentAppointmentView,
+    AppointmentProposalRequest,
     CareContext,
+    EscalationRequest,
     FollowupMilestone,
     IdentityLink,
     IdentityLinkStatus,
     InboxRef,
 )
-from pema_contracts.common import VN_TZ, ApiModel, VnDatetime
+from pema_contracts.common import VN_TZ
 from pema_contracts.conversations import MessageStatus
 from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.review import (
@@ -80,35 +81,6 @@ _OUTBOUND_STATUSES = {
 DEFAULT_PROPOSAL_TEXT = (
     "Phòng khám đã ghi nhận đề xuất lịch hẹn lúc {when}. Nhân viên sẽ xác nhận lại với bạn sớm."
 )
-
-
-class AppointmentProposalRequest(ApiModel):
-    """What the agent knows when it proposes a slot. ``job_id`` is the idempotency key."""
-
-    job_id: str = Field(min_length=1, max_length=128)
-    patient_ref: str = Field(description="Patient code such as 'P025', never a name or phone.")
-    conversation_ref: str | None = Field(default=None, description="clinic.conversation id as string.")
-    starts_at: VnDatetime
-    duration_min: int = Field(default=30, ge=5, le=480)
-    doctor_id: UUID | None = None
-    note: str | None = Field(default=None, max_length=500)
-    draft_text: str | None = Field(
-        default=None,
-        max_length=2000,
-        description="Reply to send once staff confirm; a default is used when omitted.",
-    )
-    model: str | None = None
-    prompt_version: str | None = None
-
-
-class EscalationRequest(ApiModel):
-    """Tool ``escalation.create``: a red flag or an explicit request for a doctor."""
-
-    job_id: str = Field(min_length=1, max_length=128)
-    patient_ref: str | None = None
-    conversation_ref: str | None = None
-    red_flags: list[str] = Field(default_factory=list[str], description="Codes such as 'bleeding', 'fever'.")
-    summary: str | None = Field(default=None, max_length=500, description="Already masked by the PII policy.")
 
 
 def _agent_actor(ctx: ActionContext) -> str:

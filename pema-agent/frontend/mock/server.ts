@@ -15,7 +15,9 @@ export async function buildRouter(): Promise<Router> {
   registerAuth(router);
   const dir = fileURLToPath(new URL("./handlers/", import.meta.url));
   for (const file of readdirSync(dir).filter((f) => f.endsWith(".ts") && !f.endsWith(".test.ts"))) {
-    const mod = (await import(/* @vite-ignore */ `./handlers/${file}`)) as { register?: (r: Router) => void };
+    const mod = (await import(/* @vite-ignore */ `./handlers/${file}`)) as {
+      register?: (r: Router) => void;
+    };
     mod.register?.(router);
   }
   return router;

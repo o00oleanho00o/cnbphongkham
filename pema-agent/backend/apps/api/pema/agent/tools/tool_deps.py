@@ -15,9 +15,10 @@ optional ``MediaChannel`` / ``ReactionChannel`` / ``GroupChannel`` abilities), `
 
 Contract gaps found while porting (reported to package G, each has a Protocol below so the tools do not wait):
 
-* ``MemoryEditPort``: ``suaFactTheoDoanChu`` / ``xoaFactTheoDoanChu`` (``memory-edit-store.ts``): the
-  ``MemoryStore`` contract only has ``save_memory_fact``.
-* ``JobUpdater``: ``updateJob`` of ``scheduled-job-store.ts``: ``SchedulerPort`` has no update.
+* ``MemoryEditPort``: ``suaFactTheoDoanChu`` / ``xoaFactTheoDoanChu`` (``memory-edit-store.ts``): now in
+  ``pema_contracts.conversation``, implemented by D2.
+* ``JobUpdater``: ``updateJob`` of ``scheduled-job-store.ts``: now in ``pema_contracts.scheduler``,
+  implemented by S.
 * ``ScheduleParser``: ``parseSchedule`` of ``schedule-parser.ts`` is a pure function owned by package S.
 * ``ReplyTextCleaner`` / ``MarkdownStyler`` / ``SendQueue``: ``sanitize-reply-text.ts``,
   ``markdown-to-zalo-styles.ts`` (C2) and ``rate-limiter.ts#enqueueSend`` (C1)."""
@@ -26,15 +27,14 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Literal, Protocol
-from uuid import UUID
+from typing import Protocol
 
 from pema.video.gui_video_qua_zalo import ZaloVideoApi
 from pema_contracts.channel import TextStyle
-from pema_contracts.conversation import HistoryStore, MemoryStore
+from pema_contracts.conversation import HistoryStore, MemoryEditPort, MemoryStore
 from pema_contracts.knowledge import KnowledgeSearch
 from pema_contracts.policy import PermissivePolicyHooks, PolicyHooks
-from pema_contracts.scheduler import ParsedSchedule, ScheduledJob, ScheduleInput, SchedulerPort
+from pema_contracts.scheduler import JobUpdater, ParsedSchedule, ScheduleInput, SchedulerPort
 from pema_contracts.tools import ToolContext
 
 # ------------------------------------------------------------------ text cleaning (C2)
@@ -107,45 +107,8 @@ class VisionSidecar(Protocol):
 # ------------------------------------------------------------------ memory edit (D2)
 
 
-@dataclass(frozen=True)
-class MemoryEditScope:
-    """``PhamViSuaFact``: narrow exactly like the set the model can SEE. In a group, what is remembered
-    about a PERSON can only be touched when it was learned in that group (``only_group_learned``)."""
-
-    account_id: str
-    subject_id: str
-    only_group_learned: bool
-
-
-@dataclass(frozen=True)
-class MemoryEditOk:
-    old_content: str
-    """``noiDungCu``."""
-
-
-@dataclass(frozen=True)
-class MemoryEditFailed:
-    kind: Literal["khong_khop", "khop_nhieu"]
-    existing_facts: list[str] = field(default_factory=list[str])
-    """``factHienCo``: for ``khong_khop``."""
-    matching_facts: list[str] = field(default_factory=list[str])
-    """``factKhop``: for ``khop_nhieu``."""
-
-
-type MemoryEditResult = MemoryEditOk | MemoryEditFailed
-
-
-class MemoryEditPort(Protocol):
-    """``suaFactTheoDoanChu`` / ``xoaFactTheoDoanChu`` of ``memory-edit-store.ts`` (package D2)."""
-
-    async def edit_fact_by_fragment(
-        self, clinic_id: UUID, scope: MemoryEditScope, fragment: str, new_content: str
-    ) -> MemoryEditResult: ...
-
-    async def delete_fact_by_fragment(
-        self, clinic_id: UUID, scope: MemoryEditScope, fragment: str
-    ) -> MemoryEditResult: ...
-
+# ``MemoryEditScope``, ``MemoryEditOk``, ``MemoryEditFailed``, ``MemoryEditResult`` and
+# ``MemoryEditPort`` live in ``pema_contracts.conversation`` (package D2 implements the port).
 
 # ------------------------------------------------------------------ scheduler (S)
 
@@ -166,22 +129,6 @@ class ScheduleParser(Protocol):
     def parse_schedule(
         self, schedule: ScheduleInput, *, time_zone: str, min_interval_minutes: int
     ) -> ParseScheduleResult: ...
-
-
-class JobUpdater(Protocol):
-    """``updateJob`` of ``scheduled-job-store.ts``, scoped to (account, thread) like ``get_job`` (S)."""
-
-    async def update_job(
-        self,
-        clinic_id: UUID,
-        account_id: str,
-        thread_id: str,
-        job_id: str,
-        *,
-        name: str | None = None,
-        payload: str | None = None,
-        schedule: ParsedSchedule | None = None,
-    ) -> ScheduledJob | None: ...
 
 
 # ------------------------------------------------------------------ knowledge availability (D3)

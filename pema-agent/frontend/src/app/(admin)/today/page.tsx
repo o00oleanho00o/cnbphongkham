@@ -113,7 +113,7 @@ export default function TodayPage() {
   const canResolve = can("crm.task.resolve");
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-[1400px]">
       <PageHeader
         icon={IconClipboardCheck}
         title="Việc hôm nay"
@@ -169,7 +169,7 @@ export default function TodayPage() {
         />
       )}
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {visible.map((task) => (
           <TaskCard
             key={task.id}

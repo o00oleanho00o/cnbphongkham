@@ -19,6 +19,7 @@ from uuid import UUID
 
 import pytest
 
+from pema.agent.tools.tool_failure_result import la_ket_qua_loi as is_tool_failure_result
 from pema.config.runtime_tuning_settings import (
     StaticTuningProvider,
     install_tuning_provider,
@@ -28,7 +29,6 @@ from pema.mcp.mcp_agent_binding import McpBindingCache
 from pema.mcp.mcp_manager import DefaultMcpManager
 from pema.mcp.mcp_tool_provider import SwitchableMcpToolProvider
 from pema.mcp.mcp_types import McpServerStatus
-from pema.mcp.mcp_untrusted_content import is_tool_failure_result
 from pema.mcp.testing import FakeConnector, InMemoryMcpStore, remote_tools
 from pema.shared.doi_cho_den_khi import WaitOptions, doi_cho_den_khi
 from pema_contracts.channel import ChannelKind

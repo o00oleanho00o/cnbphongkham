@@ -55,6 +55,7 @@ class KbSource(ApiModel):
     byte_size: int = Field(default=0, description="``so_byte``")
     attempts: int = Field(default=0, description="``so_lan_thu``: times the worker claimed it.")
     approved_by_clinical_owner: bool = False
+    agent_count: int = Field(default=0, description="``soAgent``: how many agents may read this source.")
     created_at: VnDatetime
     updated_at: VnDatetime
 

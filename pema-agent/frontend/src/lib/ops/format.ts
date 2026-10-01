@@ -1,8 +1,6 @@
 // Date helpers of the clinic screens. The clinic works in Vietnam time (+07:00) whatever the zone of the
 // browser, same reasoning as `format-bot-time.ts` of the ported dashboard: "due at 9am" is 9am at the
 // clinic, not for whoever happens to look from another zone. Every API boundary is ISO 8601 with offset.
-import { formatBotTime } from "@/lib/admin/shared/format-bot-time";
-
 export const CLINIC_TIME_ZONE = "Asia/Ho_Chi_Minh";
 
 const DAY_MS = 86_400_000;
@@ -31,8 +29,23 @@ export function endOfTodayIso(date: Date = new Date()): string {
   return `${clinicDateKey(date)}T23:59:59+07:00`;
 }
 
+/** "20/09 09:00" in clinic time. Built from parts: the vi-VN pattern of Intl prints "09:00 20-09". */
 export function formatDateTime(iso: string | null | undefined): string {
-  return formatBotTime(iso, CLINIC_TIME_ZONE);
+  if (!iso) return "-";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "-";
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: CLINIC_TIME_ZONE,
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  // some engines print midnight as "24"
+  const hour = get("hour") === "24" ? "00" : get("hour");
+  return `${get("day")}/${get("month")} ${hour}:${get("minute")}`;
 }
 
 /** "20/09/2026" from an ISO date or datetime. */

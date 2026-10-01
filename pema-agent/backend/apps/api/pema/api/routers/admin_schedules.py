@@ -73,7 +73,11 @@ async def delete_schedule(ctx: Ctx, job_id: str) -> None:
     await ctx.service.delete(ctx.clinic_id, job_id)
 
 
-@router.post("/{job_id}/run", response_model=JobRunRecord, summary="Trial run: executes, sends nothing")
+@router.post(
+    "/{job_id}/run",
+    response_model=JobRunRecord,
+    summary="Run now: same pipeline as the tick, schedule unchanged",
+)
 async def run_schedule_trial(ctx: Ctx, job_id: str) -> JobRunRecord:
     return await ctx.service.run_trial(ctx.clinic_id, job_id)
 

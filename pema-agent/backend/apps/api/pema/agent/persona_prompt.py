@@ -204,6 +204,7 @@ def build_system_prompt(
             channel=channel
             if channel is not None
             else ChannelCapabilities(channel=account.channel, can_send_proactive=False),
+            clinic_id=account.clinic_id,
         )
         available = registry.list_available(scope, isolated=isolated)
         sections.append(tool_capability_section(available))

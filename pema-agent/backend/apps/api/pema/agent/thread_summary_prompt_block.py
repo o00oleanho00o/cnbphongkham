@@ -21,9 +21,9 @@ PURE module: no env, no DB.
 
 from __future__ import annotations
 
-from pema.agent.ky_tu_an import loc_ky_tu_an
 from pema.agent.prompt_leak_markers import THE_BOI_CANH as THE
 from pema.agent.tag_name_padding import tag_name_regex
+from pema.agent.tools.tag_ky_tu_an import loc_ky_tu_an
 
 # Every letter of the tag name joined by the padding class (invisible character / diacritic / underscore)
 TEN_THE_RE = tag_name_regex(THE)

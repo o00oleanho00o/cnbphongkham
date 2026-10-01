@@ -45,6 +45,7 @@ export function iconForGroup(groupId: string): IconFn {
 }
 
 export function GroupIconBox({ groupId, size = 18 }: { groupId: string; size?: number }) {
-  const Icon = iconForGroup(groupId);
+  // Lookup in the constant table (not a call result) so the icon is a stable component
+  const Icon = ICON_BY_GROUP[groupId] ?? IconBolt;
   return <Icon size={size} />;
 }

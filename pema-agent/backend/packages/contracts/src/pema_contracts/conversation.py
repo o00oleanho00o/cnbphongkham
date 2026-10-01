@@ -18,6 +18,7 @@ Conventions:
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from typing import Literal, Protocol
 from uuid import UUID
 
@@ -172,6 +173,47 @@ class MemoryStore(Protocol):
     ) -> list[MemoryFact]: ...
 
     async def delete_memory_fact(self, clinic_id: UUID, account_id: str, fact_id: int) -> bool: ...
+
+
+@dataclass(frozen=True)
+class MemoryEditScope:
+    """``PhamViSuaFact``: narrow exactly like the set the model can SEE. In a group, what is remembered
+    about a PERSON can only be touched when it was learned in that group (``only_group_learned``)."""
+
+    account_id: str
+    subject_id: str
+    only_group_learned: bool
+
+
+@dataclass(frozen=True)
+class MemoryEditOk:
+    old_content: str
+    """``noiDungCu``."""
+
+
+@dataclass(frozen=True)
+class MemoryEditFailed:
+    kind: Literal["khong_khop", "khop_nhieu"]
+    existing_facts: list[str] = field(default_factory=list[str])
+    """``factHienCo``: for ``khong_khop``."""
+    matching_facts: list[str] = field(default_factory=list[str])
+    """``factKhop``: for ``khop_nhieu``."""
+
+
+type MemoryEditResult = MemoryEditOk | MemoryEditFailed
+
+
+class MemoryEditPort(Protocol):
+    """``suaFactTheoDoanChu`` / ``xoaFactTheoDoanChu`` of ``memory-edit-store.ts``. Implemented by package D2
+    (``PostgresConversationStore.memory_edits``), used by the ``save_memory`` tool (D4)."""
+
+    async def edit_fact_by_fragment(
+        self, clinic_id: UUID, scope: MemoryEditScope, fragment: str, new_content: str
+    ) -> MemoryEditResult: ...
+
+    async def delete_fact_by_fragment(
+        self, clinic_id: UUID, scope: MemoryEditScope, fragment: str
+    ) -> MemoryEditResult: ...
 
 
 class ThreadStore(Protocol):

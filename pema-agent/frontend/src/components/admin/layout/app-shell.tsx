@@ -154,7 +154,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <ShellFrame
           sections={sections}
           tabs={tabs}
-          online={accounts.some((a) => a.online)}
+          online={canAccounts ? accounts.some((a) => a.online) : null}
           user={me.user}
           menuOpen={menuOpen}
           onMenu={setMenuOpen}
@@ -181,7 +181,7 @@ function ShellFrame({
 }: {
   sections: NavSection[];
   tabs: NavItem[];
-  online: boolean;
+  online: boolean | null;
   user: UserSummary;
   menuOpen: boolean;
   onMenu: (open: boolean) => void;

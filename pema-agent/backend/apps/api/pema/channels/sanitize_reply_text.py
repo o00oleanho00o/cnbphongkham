@@ -27,10 +27,10 @@ rồi im lặng là tự bịt mắt mình lúc chẩn đoán.
 
 Forced deviations:
 
-* The module-private section "MIRROR" below copies ``DAU_HIEU_RO_PROMPT``
-  (``src/agent/prompt-leak-markers.ts``) and ``laDongSentinel`` (``src/scheduler/silent-sentinel.ts``)
-  because ``pema.agent`` and ``pema.scheduler`` do not exist in this package's tree yet. Package G replaces
-  the mirror by the imports.
+* ``DAU_HIEU_RO_PROMPT`` (``src/agent/prompt-leak-markers.ts``) and ``la_dong_sentinel``
+  (``src/scheduler/silent-sentinel.ts``) are imported from their owners (``pema.agent.prompt_leak_markers``,
+  ``pema.scheduler.silent_sentinel``): the guard and the producer of the markers are ONE constant, and the
+  sentinel line is judged by ONE function.
 * JS regex semantics are reproduced explicitly: ``\\w`` is ``[A-Za-z0-9_]``, ``\\s`` is the ECMAScript
   whitespace set, multiline ``^`` / ``$`` also break at CR, LS and PS, the ``i`` flag folds ASCII only (see
   ``utf16_text``).
@@ -43,57 +43,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from pema.agent.prompt_leak_markers import DAU_HIEU_RO_PROMPT
 from pema.channels.sanitize_code_block import MOC_KHOI, tach_khoi_code, tra_khoi_code_ve
 from pema.channels.utf16_text import JS_LINE_END, JS_LINE_START, JS_S, js_trim
-
-# ============================== MIRROR ==============================
-# MIRROR of pema.agent.prompt_leak_markers / pema.scheduler.silent_sentinel; package G replaces the mirror by
-# the imports.
-
-# src/agent/prompt-leak-markers.ts: tên thẻ bọc nội dung ngoài / khối "điều đã ghi nhớ" / "bối cảnh đã chốt".
-THE_NOI_DUNG_NGOAI = "noi_dung_ngoai"
-THE_DIEU_DA_NHO = "dieu_da_nho"
-THE_BOI_CANH = "boi_canh_da_chot"
-
-# Tiêu đề mục an toàn trong `BASE_PERSONA`
-TIEU_DE_QUY_TAC_AN_TOAN = "Quy tắc an toàn (tuyệt đối, không có ngoại lệ):"
-
-# Mở đầu mục liệt kê tool. CHỈ là mảnh để ghép, KHÔNG dùng làm dấu hiệu canh rò - xem `KHA_NANG_DAY_DU`.
-TIEU_DE_KHA_NANG = "Khả năng của bạn lúc này"
-
-# Hai câu ĐẦY ĐỦ mà persona thật sự sinh ra từ `TIEU_DE_KHA_NANG` (canh bằng câu đầy đủ, không phải mẩu
-# tiếng Việt thường ngày).
-KHA_NANG_DAY_DU = (
-    f"{TIEU_DE_KHA_NANG} (đúng những công cụ đang bật",
-    f"{TIEU_DE_KHA_NANG}: KHÔNG có công cụ nào",
-)
-
-# Bộ dấu hiệu để KẾT LUẬN câu trả lời đã rò system prompt. Chọn loại RẤT ĐẶC TRƯNG: chặn nhầm một câu trả
-# lời hợp lệ còn khó chịu hơn lọt một câu rò.
-DAU_HIEU_RO_PROMPT: tuple[str, ...] = (
-    f"<{THE_NOI_DUNG_NGOAI}",
-    f"<{THE_DIEU_DA_NHO}",
-    f"<{THE_BOI_CANH}",
-    TIEU_DE_QUY_TAC_AN_TOAN,
-    *KHA_NANG_DAY_DU,
-)
-
-# src/scheduler/silent-sentinel.ts
-_SILENT_LABEL = "[SILENT]"
-_JS_S_PLUS = re.compile(f"{JS_S}+")
-
-
-def _is_exact_token(line: str) -> bool:
-    """Dòng (đã trim) CHỈ chứa đúng token, khoảng trắng bên trong không tính (vd "[ SILENT ]" vẫn khớp)."""
-    return _JS_S_PLUS.sub("", js_trim(line).upper()) == _SILENT_LABEL
-
-
-def la_dong_sentinel(line: str) -> bool:
-    """Dòng này có phải CHỈ là nhãn sentinel không (cấp DÒNG, khác `is_silent_response` cấp CẢ câu)."""
-    return _is_exact_token(line)
-
-
-# ============================ END MIRROR ============================
+from pema.scheduler.silent_sentinel import la_dong_sentinel
 
 
 @dataclass(frozen=True)

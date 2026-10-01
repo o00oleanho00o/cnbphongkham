@@ -15,8 +15,8 @@ Forced deviations:
 * every route needs a session context (``lay_ngu_canh_kb``) and a permission (``kb.read`` to read,
   ``kb.manage`` to change); the doctor's sign-off (``PATCH .../approval``) is for the roles ``doctor`` and
   ``owner`` only. The response of a source NEVER carries its raw text (``raw_text`` is always empty);
-* the original's list also returned ``soAgent`` (how many agents may read a source); the contract DTO has no
-  such field, so it is not in the response (open item: an additive optional field in ``KbSource``).
+* the original's list also returned ``soAgent`` (how many agents may read a source): it is the optional
+  ``KbSource.agent_count``, filled by the list route only (one query for all sources).
 """
 
 from __future__ import annotations
@@ -66,7 +66,11 @@ def _ngu_canh(request: Request, permission: Permission) -> KbRequestContext:
 @router.get("/sources", response_model=list[KbSource], summary="Sources with status")
 async def list_kb_sources(request: Request) -> list[KbSource]:
     ctx = _ngu_canh(request, Permission.KB_READ)
-    return await lay_store(request).list_sources(ctx.clinic_id)
+    store = lay_store(request)
+    sources = await store.list_sources(ctx.clinic_id)
+    # ``soAgent`` of the original list: how many agents may read each source (one query for all sources).
+    counts = await store.count_agents_by_source(ctx.clinic_id)
+    return [source.model_copy(update={"agent_count": counts.get(source.id, 0)}) for source in sources]
 
 
 @router.post(

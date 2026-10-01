@@ -13,8 +13,8 @@ Kept from the original, with the reasons of its comments:
 * ``DELETE .../history`` wipes the whole context of a conversation: messages, summary, trace, downloaded
   images; ``xoaTriNho=true`` also deletes the durable facts learned IN this thread. The option is read from
   the raw query string and ONLY the exact string ``true`` turns it on: accepting any "truthy" value would
-  let a mistyped URL (``?xoaTriNho=0``) delete memory. It is not declared in the OpenAPI skeleton (a
-  contract change goes through package G, see the report); the route works without it;
+  let a mistyped URL (``?xoaTriNho=0``) delete memory. It is declared in the OpenAPI document as a plain
+  string for that reason (a ``bool`` would accept ``1`` and ``yes``);
 * the pending batch is cancelled BEFORE the database is touched (``AdminStores.cancel_pending_batch``);
 * there is NO command for it in the chat (goclaw has ``/reset`` for the writer of a group). The bot reads
   messages of strangers, so a wipe through chat is an attack surface not worth the trade; the dashboard has
@@ -33,9 +33,10 @@ Every mutation is audited when an audit sink is wired (ids and counts only, neve
 
 from __future__ import annotations
 
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import Query, Request, status
+from fastapi import Query, status
 
 from pema.api.deps import Limit, Offset, admin_router
 from pema.api.routers.admin_stores import AdminStores, ClinicId, Stores, record_audit
@@ -130,10 +131,21 @@ async def clear_thread_summary(account_id: str, thread_id: str, clinic_id: Clini
     summary="Wipe history, summary and media (bumps the context epoch)",
 )
 async def wipe_thread_history(
-    request: Request, account_id: str, thread_id: str, clinic_id: ClinicId, stores: Stores
+    account_id: str,
+    thread_id: str,
+    clinic_id: ClinicId,
+    stores: Stores,
+    xoa_tri_nho: Annotated[
+        str | None,
+        Query(
+            alias="xoaTriNho",
+            description='Only the exact string "true" also deletes the durable facts learned IN this thread.',
+        ),
+    ] = None,
 ) -> None:
-    # Only the exact string "true" turns the memory wipe on (see module docstring).
-    wipe_memories = request.query_params.get("xoaTriNho") == "true"
+    # Only the exact string "true" turns the memory wipe on (see module docstring): a typed ``bool`` would
+    # accept ``1``/``yes``/``on`` and let a mistyped URL delete memory.
+    wipe_memories = xoa_tri_nho == "true"
 
     pending = await _cancel_pending(stores, clinic_id, account_id, thread_id)
     result = await stores.conversation.wiper.wipe_thread_context(

@@ -6,7 +6,7 @@ here the ``KnowledgeSearch`` port of ``ToolDeps`` is a small in-file fake (``Fak
 per-agent binding of hits, matches the question with a diacritics-folded OR of its words (like the FTS query
 of the original) and honours ``limit``. ``tuning.setTuning(key, n)`` / ``setTuning(key, null)`` become
 ``install_tuning_provider(StaticTuningProvider(...))`` / ``reset_tuning_provider()``. The ``THE_NOI_DUNG_NGOAI``
-marker comes from ``leak_marker_refs`` until package D1 provides ``prompt_leak_markers``. The presence in the
+marker comes from ``prompt_leak_markers`` (package D1). The presence in the
 schema is checked through ``DefaultToolRegistry`` with ``FakeKbAvailability``.
 """
 
@@ -19,8 +19,8 @@ from uuid import UUID
 
 import pytest
 
+from pema.agent.prompt_leak_markers import THE_NOI_DUNG_NGOAI
 from pema.agent.tools.kb_search_tool import create_kb_search_tool, kep_so_luong
-from pema.agent.tools.leak_marker_refs import THE_NOI_DUNG_NGOAI
 from pema.agent.tools.testing import FakeKbAvailability, make_tool_context, make_tool_deps
 from pema.agent.tools.tool_failure_result_test_helper import ket_qua_thanh_cong, loi_cua_tool
 from pema.config.runtime_tuning_settings import (

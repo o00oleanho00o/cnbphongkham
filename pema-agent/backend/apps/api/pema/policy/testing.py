@@ -24,7 +24,9 @@ from pema_contracts.appointments import AppointmentCreate, AppointmentOut
 from pema_contracts.channel import ChannelKind, InboundMessage
 from pema_contracts.clinic_actions import (
     AgentAppointmentView,
+    AppointmentProposalRequest,
     CareContext,
+    EscalationRequest,
     IdentityLink,
     IdentityLinkStatus,
     InboxRef,
@@ -32,7 +34,14 @@ from pema_contracts.clinic_actions import (
 from pema_contracts.common import now_vn
 from pema_contracts.conversations import MessageStatus
 from pema_contracts.policy import DEFAULT_PROFILES, PolicyContext, PolicyProfileKey
-from pema_contracts.review import ReviewItemCreate, ReviewItemOut, ReviewStatus
+from pema_contracts.review import (
+    ReviewItemCreate,
+    ReviewItemOut,
+    ReviewKind,
+    ReviewOrigin,
+    ReviewStatus,
+    RiskLevel,
+)
 from pema_contracts.testing import FAKE_CLINIC_ID
 
 
@@ -85,6 +94,27 @@ class FakeClinicActions:
         )
         self._by_job[request.job_id] = out
         return out
+
+    async def propose_appointment(
+        self, ctx: ActionContext, request: AppointmentProposalRequest
+    ) -> ReviewItemOut:
+        raise NotImplementedError
+
+    async def create_escalation(self, ctx: ActionContext, request: EscalationRequest) -> ReviewItemOut:
+        return await self.create_review_item(
+            ctx,
+            ReviewItemCreate(
+                job_id=request.job_id,
+                clinic_id=ctx.clinic_id,
+                patient_ref=request.patient_ref,
+                conversation_ref=request.conversation_ref,
+                kind=ReviewKind.TRIAGE_ALERT,
+                origin=ReviewOrigin.POLICY,
+                draft_text=request.summary,
+                risk_level=RiskLevel.RED_FLAG,
+                red_flags=request.red_flags,
+            ),
+        )
 
     async def resolve_identity(
         self, ctx: ActionContext, channel: ChannelKind, external_user_id: str

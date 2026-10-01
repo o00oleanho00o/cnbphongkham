@@ -2,7 +2,7 @@
 """Test names are the snake_case form of ``describe_it``; the original Vietnamese title is the docstring.
 
 ``ctx`` builds a real ``ToolContext`` (the original cast a fake agent to it). The wrapper and failure helpers are
-the stand-ins of ``mcp_untrusted_content`` (D4's versions are wired by package G).
+the real D4 helpers (``wrap_untrusted_content``, ``ket_qua_loi``).
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from uuid import UUID
 
 import pytest
 
+from pema.agent.tools.tool_failure_result import la_ket_qua_loi as is_tool_failure_result
 from pema.config.runtime_tuning_settings import (
     StaticTuningProvider,
     install_tuning_provider,
@@ -24,7 +25,6 @@ from pema.mcp.mcp_tool_definition import (
     extract_mcp_result_text,
     mcp_tool_name,
 )
-from pema.mcp.mcp_untrusted_content import is_tool_failure_result
 from pema_contracts.channel import ChannelCapabilities, ChannelKind
 from pema_contracts.common import JsonObject
 from pema_contracts.policy import (

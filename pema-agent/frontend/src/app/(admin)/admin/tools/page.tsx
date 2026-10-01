@@ -101,6 +101,8 @@ export default function ToolsPage() {
         if (accountsRes[0]) setAccountId(accountsRes[0].id);
       })
       .catch((e: unknown) => setError(errorMessage(e)));
+    // one-off load: `accountId` is empty here and set from the answer, the next effect reloads on change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Đổi account là phải nạp lại catalog: tool bị chặn cứng theo LOẠI KÊNH

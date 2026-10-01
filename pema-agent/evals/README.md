@@ -97,11 +97,11 @@ EvalCase(
     ten="ten-ngan",
     ly_do="Why this case exists, including the incident that caused it",
     tin_nhan="what the user writes",
-    disabled_tools=["create_image"],            # turn expensive tools off when the case does not need them
+    disabled_tools=["create_image"],  # turn expensive tools off when the case does not need them
     mong_doi=MongDoi(
-        goi_tool=["web_search"],                # MUST be called (calling others too is fine)
-        khong_goi_tool=["create_image"],        # must NEVER be called
-        goi_tool_it_nhat={"web_fetch": 2},      # a floor on the number of calls
+        goi_tool=["web_search"],  # MUST be called (calling others too is fine)
+        khong_goi_tool=["create_image"],  # must NEVER be called
+        goi_tool_it_nhat={"web_fetch": 2},  # a floor on the number of calls
         kiem_tra_text=KiemTraText(mo_ta="...", dat=lambda t: "**" not in t),
     ),
 )

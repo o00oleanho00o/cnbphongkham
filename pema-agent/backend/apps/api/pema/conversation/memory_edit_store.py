@@ -39,6 +39,12 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pema.core.db import ClinicDatabase
+from pema_contracts.conversation import (
+    MemoryEditFailed,
+    MemoryEditOk,
+    MemoryEditResult,
+    MemoryEditScope,
+)
 
 # Fact model ĐANG NHÌN THẤY về subject này, đúng luật inject. ``only_group_facts`` (chiFactHocTrongNhom) =
 # true khi đang ở nhóm và subject là một NGƯỜI: lúc đó chỉ fact học trong nhóm mới được đụng tới.
@@ -116,9 +122,40 @@ def _find_matching_fact(visible: list[_Row], snippet: str) -> _Row | FactEditRes
     return matches[0]
 
 
+def _to_port_result(result: FactEditResult) -> MemoryEditResult:
+    """The contract result (``MemoryEditPort``): the Vietnamese ``kind`` codes of the original."""
+    if result.ok:
+        return MemoryEditOk(old_content=result.old_content or "")
+    if result.kind == "ambiguous":
+        return MemoryEditFailed(kind="khop_nhieu", matching_facts=list(result.matched_facts))
+    return MemoryEditFailed(kind="khong_khop", existing_facts=list(result.existing_facts))
+
+
 class MemoryEditStoreImpl:
+    """Implements ``pema_contracts.conversation.MemoryEditPort`` (``edit_fact_by_fragment`` /
+    ``delete_fact_by_fragment``) over the snippet methods below."""
+
     def __init__(self, db: ClinicDatabase) -> None:
         self._db = db
+
+    async def edit_fact_by_fragment(
+        self, clinic_id: UUID, scope: MemoryEditScope, fragment: str, new_content: str
+    ) -> MemoryEditResult:
+        result = await self.edit_fact_by_snippet(
+            clinic_id,
+            FactEditScope(scope.account_id, scope.subject_id, scope.only_group_learned),
+            fragment,
+            new_content,
+        )
+        return _to_port_result(result)
+
+    async def delete_fact_by_fragment(
+        self, clinic_id: UUID, scope: MemoryEditScope, fragment: str
+    ) -> MemoryEditResult:
+        result = await self.delete_fact_by_snippet(
+            clinic_id, FactEditScope(scope.account_id, scope.subject_id, scope.only_group_learned), fragment
+        )
+        return _to_port_result(result)
 
     async def edit_fact_by_snippet(
         self, clinic_id: UUID, scope: FactEditScope, snippet: str, new_content: str

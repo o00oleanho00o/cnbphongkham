@@ -22,6 +22,9 @@ const version = (
 const config: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
+  // `next dev` would otherwise write AGENTS.md and CLAUDE.md next to the app; the repo has its own rules.
+  agentRules: false,
+  devIndicators: false,
   env: { NEXT_PUBLIC_APP_VERSION: version },
   async rewrites() {
     return [

@@ -113,6 +113,19 @@ class FakeScheduler:
             if j.clinic_id == clinic_id and (account_id is None or j.account_id == account_id)
         ]
 
+    async def get_job_by_dedupe_key(self, clinic_id: UUID, dedupe_key: str) -> ScheduledJob | None:
+        for job in self.jobs.values():
+            if job.clinic_id == clinic_id and job.dedupe_key == dedupe_key:
+                return job
+        return None
+
+    async def set_enabled_by_dedupe_key(self, clinic_id: UUID, dedupe_key: str, enabled: bool) -> bool:
+        job = await self.get_job_by_dedupe_key(clinic_id, dedupe_key)
+        if job is None:
+            return False
+        self.jobs[job.id] = job.model_copy(update={"enabled": enabled})
+        return True
+
     async def set_enabled(
         self, clinic_id: UUID, account_id: str, thread_id: str, job_id: str, enabled: bool
     ) -> bool:

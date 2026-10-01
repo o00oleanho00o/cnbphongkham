@@ -29,33 +29,29 @@ from __future__ import annotations
 
 import struct
 
-# ECMAScript WhiteSpace + LineTerminator (ES2023 12.2, 12.3): TAB VT FF SP NBSP ZWNBSP + Zs, LF CR LS PS.
-JS_WS_CHARS = "\t\n\x0b\x0c\r \xa0 " + "".join(chr(c) for c in range(0x2000, 0x200B)) + "    　﻿"
+from pema.shared.js_whitespace import JS_NOT_S, JS_S, JS_WS_CHARS, js_trim, js_trim_end, js_trim_start
 
-JS_S = f"[{JS_WS_CHARS}]"
-"""Regex fragment for JS ``\\s``."""
-
-JS_NOT_S = f"[^{JS_WS_CHARS}]"
-"""Regex fragment for JS ``\\S``."""
+__all__ = [
+    "JS_LINE_END",
+    "JS_LINE_START",
+    "JS_NOT_S",
+    "JS_S",
+    "JS_WS_CHARS",
+    "from_units",
+    "index_to_utf16",
+    "js_trim",
+    "js_trim_end",
+    "js_trim_start",
+    "khong_cat_giua_cap_thay_the",
+    "to_units",
+    "utf16_len",
+    "utf16_slice",
+    "utf16_to_index",
+]
 
 # JS multiline ``^`` / ``$`` also treat CR, LS and PS as line terminators (Python's ``re.M`` only knows LF).
 JS_LINE_START = "(?<![^\\n\\r\\u2028\\u2029])"
 JS_LINE_END = "(?![^\\n\\r\\u2028\\u2029])"
-
-
-def js_trim(text: str) -> str:
-    """``String.prototype.trim``."""
-    return text.strip(JS_WS_CHARS)
-
-
-def js_trim_start(text: str) -> str:
-    """``String.prototype.trimStart``."""
-    return text.lstrip(JS_WS_CHARS)
-
-
-def js_trim_end(text: str) -> str:
-    """``String.prototype.trimEnd``."""
-    return text.rstrip(JS_WS_CHARS)
 
 
 def _is_bmp(text: str) -> bool:

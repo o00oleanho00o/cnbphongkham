@@ -141,14 +141,11 @@ async def test_process_batch_tin_nhan_them_giua_luot_hang_cho_rong_thi_moi_thu_y
 
 
 async def test_process_batch_tin_chen_cua_nguoi_khac_trong_nhom_khong_bi_cuop_khoi_luot_cua_ho() -> None:
-    """(port) tin chen theo NGƯỜI GỬI: hàng chờ không biết người gửi thì nhóm không tiêm gì, tin ở lại cho lượt riêng"""
-    # ``pema_contracts.PendingInbox.take_injected`` has no sender argument. A group with such an inbox injects
-    # nothing (a person's waiting message must not be stolen by someone else's turn); a direct chat has one
-    # possible sender and may use it.
+    """tin chen theo NGƯỜI GỬI: lượt của Hải chỉ kéo tin của Hải, tin của Nam ở lại cho lượt riêng"""
+    # ``PendingInbox.take_injected`` carries the sender of the latest message (``layTinDangDo`` scope).
     seen: list[list[InboundMessage]] = []
     rig = TurnRig.create(engine=engine_pulling("ok", seen))
-    plain = _PlainPending(rig.pending.waiting)
-    rig.services.pending = plain
+    plain = rig.pending
     nam = await rig.receive("Nam hỏi tỉ giá", "m-nam", thread_id="nhom", sender="Nam", is_group=True)
     plain.waiting.append(nam)
 
@@ -158,18 +155,3 @@ async def test_process_batch_tin_chen_cua_nguoi_khac_trong_nhom_khong_bi_cuop_kh
 
     assert seen == [[]], "tin của Nam không được kéo vào lượt của Hải"
     assert plain.waiting == [nam], "và vẫn nằm trong hàng chờ cho lượt riêng của Nam"
-
-
-class _PlainPending:
-    """A ``PendingInbox`` that implements ONLY the contract (no sender-aware method)."""
-
-    def __init__(self, waiting: list[InboundMessage]) -> None:
-        self.waiting = waiting
-
-    async def take_injected(self, account_id: str, thread_id: str) -> list[InboundMessage]:
-        mine = [m for m in self.waiting if m.thread_id == thread_id]
-        self.waiting = [m for m in self.waiting if m.thread_id != thread_id]
-        return mine
-
-    async def pending_history_ids(self, account_id: str, thread_id: str) -> list[int]:
-        return [m.history_row_id for m in self.waiting if m.history_row_id is not None]

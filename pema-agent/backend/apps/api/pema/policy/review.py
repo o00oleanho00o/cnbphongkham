@@ -89,11 +89,13 @@ def build_red_flag_item(
     red_flags: Sequence[str],
     *,
     patient_code: str | None = None,
+    conversation_ref: str | None = None,
 ) -> ReviewItemCreate:
     return ReviewItemCreate(
         job_id=red_flag_job_id(ctx, batch),
         clinic_id=ctx.clinic_id,
         patient_ref=patient_code,
+        conversation_ref=conversation_ref,
         kind=ReviewKind.TRIAGE_ALERT,
         origin=ReviewOrigin.POLICY,
         draft_text=RED_FLAG_HOLDING_DRAFT,
@@ -104,7 +106,11 @@ def build_red_flag_item(
 
 
 def build_media_flag_item(
-    ctx: PolicyContext, batch: Sequence[InboundMessage], *, patient_code: str | None = None
+    ctx: PolicyContext,
+    batch: Sequence[InboundMessage],
+    *,
+    patient_code: str | None = None,
+    conversation_ref: str | None = None,
 ) -> ReviewItemCreate:
     kinds = sorted({m.kind.value for m in batch if not m.is_self})
     payload = _batch_payload(ctx, batch, "inbound_media")
@@ -113,6 +119,7 @@ def build_media_flag_item(
         job_id=media_flag_job_id(ctx, batch),
         clinic_id=ctx.clinic_id,
         patient_ref=patient_code,
+        conversation_ref=conversation_ref,
         kind=ReviewKind.MEDIA_FLAG,
         origin=ReviewOrigin.POLICY,
         draft_text=MEDIA_FLAG_HOLDING_DRAFT,

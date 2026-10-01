@@ -255,8 +255,30 @@ class SchedulerPort(Protocol):
     async def list_runs(self, clinic_id: UUID, job_id: str, limit: int = 20) -> list[JobRunRecord]: ...
 
     async def run_trial(self, clinic_id: UUID, job_id: str) -> JobRunRecord:
-        """Dry run (run-scheduled-job-trial.ts): runs the job but sends nothing."""
+        """Run now (run-scheduled-job-trial.ts): runs the job through the SAME pipeline as the tick
+        loop (so under ``staff_assistant`` a message really goes out) but never moves the real schedule
+        (``next_run_at``, ``run_count`` and delivery attempts are restored). Under ``patient_channel`` the
+        outcome is a review draft, never a direct send."""
         ...
+
+
+class JobUpdater(Protocol):
+    """``updateJob`` of ``scheduled-job-store.ts``, scoped to (account, thread) like ``get_job``. Implemented
+    by package S (``PgSchedulerStore.update_job``), used by the ``schedule_task`` tool (D4). A field left as
+    ``None`` keeps its old value; ``next_run_at`` is recomputed only when the schedule really changes.
+    ``None`` is returned when the job does not exist in that thread (it never reveals a job of another)."""
+
+    async def update_job(
+        self,
+        clinic_id: UUID,
+        account_id: str,
+        thread_id: str,
+        job_id: str,
+        *,
+        name: str | None = None,
+        payload: str | None = None,
+        schedule: ParsedSchedule | None = None,
+    ) -> ScheduledJob | None: ...
 
 
 def thread_kind_of(thread_type: int) -> ThreadKind:

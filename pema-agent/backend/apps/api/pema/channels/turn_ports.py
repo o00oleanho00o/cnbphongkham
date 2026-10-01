@@ -11,7 +11,7 @@ package needs from ``pema_contracts`` (``AgentEngine``, ``HistoryStore``, ``Usag
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from typing import Protocol, runtime_checkable
+from typing import Protocol
 from uuid import UUID
 
 from pema_contracts.channel import InboundMessage
@@ -31,20 +31,6 @@ class ThreadSummarizer(Protocol):
     Swallows its own errors."""
 
     async def __call__(self, clinic_id: UUID, account_id: str, thread_id: str) -> None: ...
-
-
-@runtime_checkable
-class SenderAwarePendingInbox(Protocol):
-    """``layTinDangDo(threadKey, senderId)``: the original takes the waiting messages of ONE sender,
-    because the
-    batcher keys its queues by ``(thread, sender)`` and a turn must never steal another person's message (that
-    person has a turn of their own). ``pema_contracts.PendingInbox.take_injected`` has no sender argument; a
-    batcher that implements this method is used in preference. Without it a direct chat (one possible sender)
-    falls back to ``take_injected`` and a group injects nothing."""
-
-    async def take_injected_for_sender(
-        self, account_id: str, thread_id: str, sender_id: str
-    ) -> list[InboundMessage]: ...
 
 
 class HoldForReview(Protocol):

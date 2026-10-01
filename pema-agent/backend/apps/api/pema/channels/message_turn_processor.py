@@ -51,11 +51,6 @@ from typing import Any
 from uuid import UUID
 
 from pema.channels.deliver_chat_reply import DeliveryDeps, KetQuaGiao, deliver_chat_reply
-from pema.channels.policy_review_mirror import (
-    build_media_flag_item,
-    build_outbound_review_item,
-    build_red_flag_item,
-)
 from pema.channels.reply_quote import trich_dan_tu_tin
 from pema.channels.send_reply_in_parts import (
     EnqueueSend,
@@ -66,8 +61,12 @@ from pema.channels.send_reply_in_parts import (
 from pema.channels.turn_ports import (
     HoldForReview,
     ImagePersister,
-    SenderAwarePendingInbox,
     ThreadSummarizer,
+)
+from pema.policy.review import (
+    build_media_flag_item,
+    build_outbound_review_item,
+    build_red_flag_item,
 )
 from pema.shared.logger import create_logger
 from pema.shared.turn_log_context import TurnLogContext, run_in_turn_log_context
@@ -467,14 +466,8 @@ async def _take_injected(
     services: TurnServices, account_id: str, latest: InboundMessage
 ) -> Sequence[InboundMessage]:
     # Theo NGƯỜI GỬI: batch nay là của đúng một người, và tin của người khác trong nhóm đã có lượt riêng
-    # - kéo vào
-    # đây là cướp mất lượt đó. See ``SenderAwarePendingInbox`` for the contract gap and the safe fallback.
-    pending = services.pending
-    if isinstance(pending, SenderAwarePendingInbox):
-        return await pending.take_injected_for_sender(account_id, latest.thread_id, latest.sender_id)
-    if not latest.is_group:
-        return await pending.take_injected(account_id, latest.thread_id)
-    return []
+    # - kéo vào đây là cướp mất lượt đó. ``PendingInbox.take_injected`` carries the sender for that.
+    return await services.pending.take_injected(account_id, latest.thread_id, latest.sender_id)
 
 
 # ----------------------------------------------------------------------------------------- Inbox and review

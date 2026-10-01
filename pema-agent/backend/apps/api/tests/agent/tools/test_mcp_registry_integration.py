@@ -8,6 +8,7 @@ Registry x MCP provider integration. The provider is a fake ``McpToolProvider`` 
 from __future__ import annotations
 
 from collections.abc import Sequence
+from uuid import UUID
 
 from pema.agent.tools.function_tool import FunctionTool, NoArgs
 from pema.agent.tools.testing import make_scope, make_tool_deps
@@ -42,6 +43,9 @@ class _Provider:
         self.bound = bound
 
     def tools_for_agent(self, agent_id: str) -> Sequence[ToolSpec]:
+        return self.bound.get(agent_id, [])
+
+    def tools_for_agent_in_clinic(self, clinic_id: UUID, agent_id: str) -> Sequence[ToolSpec]:
         return self.bound.get(agent_id, [])
 
 
