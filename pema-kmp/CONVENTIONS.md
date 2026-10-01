@@ -43,6 +43,9 @@ Rules:
 
 ## Mobile-first & performance
 - Design for portrait phones 360–412dp; touch targets ≥ 48dp; `LazyColumn`/`LazyRow` for lists, with `key`.
+- Screens whose content can grow past one screen (lists of patients, tiles, rows) use a `LazyColumn` body (`LazyDetailScaffold`, or a `LazyListScope.xxxItems(...)` builder like `patientSearchItems`) — not `Column` + `verticalScroll` + `forEach`, which composes every row on each open/tab switch. Filter/sort in `remember(inputs)` or the ViewModel, not on every recomposition.
+- `PemaIcon` draws its glyph from a `TextMeasurer` cache shared through `PemaTheme` (`LocalPemaIconMeasurer`); don't replace it with a `BasicText` per icon.
+- Judge speed on a **release** build (`Build Variants` → `release`, already signed with the debug key): debug builds of Compose are 3–6× slower (measured: owner "Hồ sơ" tab 269 ms debug vs 67 ms release on the emulator). Measure with `adb shell dumpsys gfxinfo com.pema.clinic.kmp framestats`.
 - State is `@Immutable`/`data class`, lists are immutable `List`s; avoid heavy work in composables (use `remember`/`derivedStateOf` or the ViewModel).
 - Never block the main thread; IO through `suspend` + `Dispatchers.Default`/Ktor.
 - Vietnamese UI text stays exactly as in Flutter. **Files must be saved as UTF-8** (don't use the default PowerShell `Set-Content`/`Out-File` — use the create/edit tools or `[IO.File]::WriteAllText(p, t, (New-Object Text.UTF8Encoding($false)))`).

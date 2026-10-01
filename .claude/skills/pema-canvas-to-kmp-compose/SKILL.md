@@ -176,6 +176,7 @@ If MIUI reports `INSTALL_FAILED_USER_RESTRICTED`, don't try to bypass it: the us
 | Photo lost when Android recreates the activity while the camera is open | Don't revoke the URI grant / delete the file when the coroutine is cancelled; the new activity receives the result and emits it through `recoveredPhotos()`; clean temp files with `OnScreenCleared`, not `DisposableEffect` |
 | Sent/saved photos left in `cache/photos` after the process is killed | Screens call `camera.markSaved(path)` when sending/saving; the Android layer keeps the draft photo list in saved state and, on the first camera service of each process, deletes every `pema_*` that is not a draft |
 | Role/workspace reset after process death while another app (camera) was in front | Save the `Session` with the back stack (`RestoreSessionAfterProcessDeath` in `App.kt`) and restore it before `NavHost` composes |
+| Tab switch takes ~2 s on a low-end phone (owner "Hồ sơ": 46 rows) | Long bodies are a `LazyColumn` (items keyed, filtering in `remember`), not `Column` + `verticalScroll` + `forEach`; embedded lists export `LazyListScope.xxxItems(...)` (e.g. `patientSearchItems`). Check speed on a release build and with `dumpsys gfxinfo <pkg> framestats`; pixel-diff the shots before/after |
 
 ## 10. Finish
 

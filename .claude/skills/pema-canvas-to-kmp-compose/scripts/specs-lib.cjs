@@ -61,6 +61,8 @@ function kmpIndex() {
   for (const f of main) {
     const t = read(f);
     for (const [, name] of t.matchAll(/^(?:internal |private |public )?fun (?:[\w.]+\.)?([A-Z]\w*)\(/gm)) defs[name] ||= f;
+    // Lazy-list builders (`fun LazyListScope.patientSearchItems(`) render a screen's rows.
+    for (const [, name] of t.matchAll(/^(?:internal |public )?fun LazyListScope\.([a-z]\w*Items)\(/gm)) defs[name] ||= f;
     const domain = [...t.matchAll(/^import com\.pema\.clinic\.shared\.clinic\.([a-z]\w*)$/gm)].map((x) => x[1]);
     const graphs = [...t.matchAll(/fun NavGraphBuilder\.(\w+)\(/g)].map((x) => x[1]);
     fileInfo[f] = { domain, graphs };
@@ -82,8 +84,9 @@ function kmpIndex() {
       let composable = calls.find((n) => /(Screen|Content|Overlay|Body)$/.test(n)) || calls[0] || '';
       // Test helpers (`BillingShot(...)`, `PatientSearchWorkspace(...)`) wrap the real screen.
       if (composable && !defs[composable]) {
-        const inner = [...bodyOf(t, composable).matchAll(/\b([A-Z]\w*)\(/g)].map((x) => x[1]).filter((n) => defs[n]);
-        composable = inner.find((n) => /(Screen|Content)$/.test(n)) || inner.find((n) => !/^Pema/.test(n)) || inner[0] || composable;
+        const inner = [...bodyOf(t, composable).matchAll(/\b([A-Za-z]\w*)\(/g)].map((x) => x[1]).filter((n) => defs[n]);
+        composable = inner.find((n) => /(Screen|Content)$/.test(n)) || inner.find((n) => /^[a-z]\w*Items$/.test(n))
+          || inner.find((n) => /^[A-Z]/.test(n) && !/^Pema/.test(n)) || inner.find((n) => /^[A-Z]/.test(n)) || composable;
       }
       const shotRoutes = [...win.matchAll(/Routes\.(\w+)/g)].map((x) => x[1]).filter((r) => routes[r]);
       shots[m[1]] ||= { test: f, line: i + 1, composable, routes: [...new Set(shotRoutes)] };
@@ -249,7 +252,7 @@ function buildModel() {
       const shot = kmp.shots[s.id];
       let composable = shot?.composable || '';
       // Workspace tabs (A–E, K3) all render through WorkspaceScreen, whatever helper the shot uses.
-      if (s.appMain && kmp.defs.WorkspaceScreen && !/CareQueue|PatientSearch/.test(composable)) composable = 'WorkspaceScreen';
+      if (s.appMain && kmp.defs.WorkspaceScreen && !/CareQueue|PatientSearch|patientSearch/.test(composable)) composable = 'WorkspaceScreen';
       const file = kmp.defs[composable];
       const financeRoute = { FinanceScreen: 'Finance', RateScreen: 'FinanceRates', ProcedureFormScreen: 'FinanceProcedure', DeniedScreen: '' }[composable];
       const routeName = s.appMain
