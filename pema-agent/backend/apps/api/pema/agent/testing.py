@@ -82,7 +82,8 @@ def _builtin_catalogue(registry: FakeToolRegistry) -> list[ToolSpec]:
         unavailable_hint: str | None = None,
     ) -> ToolSpec:
         def build(ctx: ToolContext) -> AgentTool:
-            tool = FakeTool(name=key, description=description, result=registry.result_overrides.get(key, result))
+            body = registry.result_overrides.get(key, result)
+            tool = FakeTool(name=key, description=description, result=body)
             registry.built.setdefault(key, []).append(tool)
             return tool
 
@@ -240,7 +241,7 @@ class FakeToolRegistry:
     result_overrides: Mapping[str, object | Callable[[JsonObject], object]] = field(
         default_factory=dict[str, object | Callable[[JsonObject], object]]
     )
-    """Body result per tool key, replacing the trivial default (``evals/`` gives the web tools canned data)."""
+    """Body result per tool key, replacing the trivial default (``evals/`` gives the web tools data)."""
     built: dict[str, list[FakeTool]] = field(default_factory=dict[str, list[FakeTool]])
     """Every tool object built so far, by key (tests read ``built["send_file"][0].calls``)."""
 

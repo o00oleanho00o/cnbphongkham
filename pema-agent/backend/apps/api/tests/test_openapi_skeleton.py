@@ -126,6 +126,7 @@ async def test_health_is_the_only_live_endpoint(client: httpx.AsyncClient) -> No
     assert resp.status_code == 200
     assert resp.json()["status"] == "ok"
 
+
 # GET endpoints that left the 501 skeleton because their package implemented them (each has its own route tests).
 IMPLEMENTED_GET = {
     "/api/v1/admin/model/provider",
