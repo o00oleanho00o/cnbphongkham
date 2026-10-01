@@ -1,6 +1,6 @@
 ---
 name: pema-design
-description: Design, implement, and review Pema Digital Clinic UI/UX for Clinic Web, Patient Mobile, and the Flutter template; apply Pema identity, care flows, responsiveness, and business validation when adding or changing project screens.
+description: Design, implement, and review Pema Digital Clinic UI/UX for Clinic Web, Patient Mobile, and the mobile app (KMP + Compose Multiplatform, `pema-kmp/`); apply Pema identity, care flows, responsiveness, and business validation when adding or changing project screens.
 ---
 
 # Pema Design
@@ -11,7 +11,7 @@ Design so staff can find the right patient, understand the work to do, and hand 
 
 - Designing color, type, icons, backgrounds, or components: [visual-system](references/visual-system.md).
 - Adding screens, changing navigation, or changing business flows: [screens-and-flows](references/screens-and-flows.md).
-- Fixing desktop/mobile/Flutter layout: [platform-layout](references/platform-layout.md).
+- Fixing desktop/mobile/app layout: [platform-layout](references/platform-layout.md).
 - Implementing, testing, and handing off: [delivery-and-review](references/delivery-and-review.md).
 
 Source paths in references are relative to the repository root, not the skill directory. The skill is at `.agents/skills/pema-design/`; the shared guide is at `docs/23_PEMA_DESIGN_SKILL.md`. If only the standalone skill is available, use the design guidance inside it and ask for source when implementation must be verified; do not assume project files exist.
@@ -21,8 +21,8 @@ Source paths in references are relative to the repository root, not the skill di
 1. **Current Pema is blue/Be Vietnam Pro.** Local Pema logo; primary #0B4F94, navy #083A6E, sky #3CAAE5, background #F4F8FB. Manrope/teal in older documents is historical. Do not change the brand yourself based on a newly found sample UI.
 2. **Patient 360 is the context bridge.** Related tasks must keep the correct patient/plan/order, show status and outcomes; a beautiful menu or card does not prove the business flow works.
 3. **Desktop uses horizontal space; mobile stays task-focused.** Clinic Web standard is 1920×1020 CSS pixels at 100% zoom; do not lock the workspace into a narrow column. Mobile home only summarizes the next work; details open in child screens, not an endless page.
-4. **Keep meaning; do not copy layout.** Web uses tables/resource calendars; native uses day-based lists, child screens, and short sheets. Flutter uses Material 3 widgets, SafeArea, and Navigator, not a WebView wrapping the website.
-5. **Separate data, design, and practical capability.** Draft differs from approved; payment does not mean treatment is complete. Web uses localStorage; Flutter PB01 is memory-only, state is patient-scoped; PB02 uses APIs. Read the parity matrix before describing native features.
+4. **Keep meaning; do not copy layout.** Web uses tables/resource calendars; native uses day-based lists, child screens, and short sheets. The app uses Compose Material 3 components from `core:ui`, safe areas, and push navigation, not a WebView wrapping the website.
+5. **Separate data, design, and practical capability.** Draft differs from approved; payment does not mean treatment is complete. Web uses localStorage; the app keeps PB01 demo data in memory per process, state is patient-scoped; PB02 uses APIs. Read `pema-kmp/README.md` (status) before describing app features.
 6. **Reference selectively.** Pema.vn is an identity reference; Annam images, Fastboy/Go Check In, and the design repo are cues for evaluation, not requirements to copy or add features. The care lifecycle drives design; CRM/loyalty/marketing is added only when it is in the assigned scope.
 
 ## How to work

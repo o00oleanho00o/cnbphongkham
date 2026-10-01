@@ -1,6 +1,6 @@
 # design-specs — spec/prompt từng màn Pema
 
-Mỗi màn của design canvas `Pema App redesign canvas/Pema App.dc.html` (A1 … K3) có một spec đủ để dựng lại hoặc chuyển đổi màn đó **mà không phải đọc lại web, Flutter hay canvas** — giống cách Stitch / Claude Design giữ prompt phía sau mỗi màn.
+Mỗi màn của design canvas `Pema App redesign canvas/Pema App.dc.html` (A1 … K3) có một spec đủ để dựng lại hoặc chuyển đổi màn đó **mà không phải đọc lại web hay canvas** — giống cách Stitch / Claude Design giữ prompt phía sau mỗi màn.
 
 | File | Nội dung | Ai sửa |
 |---|---|---|
@@ -11,7 +11,7 @@ Mỗi màn của design canvas `Pema App redesign canvas/Pema App.dc.html` (A1 �
 | `notes.json` | Ghi chú chuyển đổi: nguồn web, quy tắc nghiệp vụ, khác biệt được chấp nhận, bẫy đã gặp, việc còn lại | **Người / agent** |
 
 Mỗi spec gồm (tiêu đề mục trong spec viết bằng tiếng Anh để AI đọc ít token hơn; chữ trên giao diện vẫn giữ tiếng Việt):
-- **Logic source** (nguồn logic): màn Flutter (class + file, suy ra từ `app_router.dart`) hoặc trang/tab/modal web.
+- **Logic source** (nguồn logic): composable KMP đang cài đặt (A–H) hoặc trang/tab/modal web (I–K).
 - **KMP**: route (`Routes.X`), composable + file, graph, hàm domain `shared/clinic`, shot test và ảnh so sánh.
 - **Frame + Layout** (khung + bố cục): từng block canvas dịch sẵn sang Compose (`PemaHeading(…)`, `PemaInfoCard { … }`…), đúng thứ tự từ trên xuống, kèm chữ thật.
 - **Required canvas text** (câu bắt buộc, notice trên canvas), **Business rules** (quy tắc nghiệp vụ), **Accepted differences** (khác biệt được chấp nhận), **Gotchas** (bẫy đã gặp) — từ `notes.json`.

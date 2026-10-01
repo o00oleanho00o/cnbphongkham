@@ -1,19 +1,19 @@
 ---
 name: pema-canvas-to-kmp-compose
-description: Port Pema screens from Flutter/web and the design canvas to KMP + Compose Multiplatform, 1:1 in both business logic and visuals. Use when asked to port Flutter to KMP/Compose, build Compose screens from the Pema App canvas, or check how closely KMP matches the canvas. Not for editing the canvas; use pema-web-to-canvas to update the canvas.
+description: Build or change Pema screens in KMP + Compose Multiplatform from the design canvas (visuals) and the existing KMP/web logic, 1:1 in both business logic and visuals. Use when asked to build Compose screens from the Pema App canvas, port web screens to KMP, or check how closely KMP matches the canvas. Not for editing the canvas; use pema-web-to-canvas to update the canvas.
 ---
 
 # Pema canvas → KMP + Compose Multiplatform
 
-The KMP app lives in `pema-kmp/`; the Flutter source in `flutter-template/`; the visual source canvas is `Pema App redesign canvas/Pema App.dc.html`.
+The KMP app lives in `pema-kmp/`; the visual source canvas is `Pema App redesign canvas/Pema App.dc.html`.
 
 The goal is a **1:1 port**, not a “similar” UI:
 
 | Source | Decides |
 |---|---|
-| Flutter `flutter-template/lib/` | business logic, data, role conditions, fields, buttons, states, routes, sheets, dialogs, snackbars |
+| KMP `pema-kmp/` (`shared`, `feature:*`; A–H already ported) | business logic, data, role conditions, fields, buttons, states, routes, sheets, dialogs, snackbars of existing screens |
 | Canvas | colors, typography, spacing, radius, sizes, visual hierarchy and reference states |
-| Pema web | only for porting screens marked web-only in the canvas (I/J/K) or when explicitly asked |
+| Pema web `prototype/` | logic of web-sourced screens (I/J/K) and of new screens added to the canvas from the web |
 
 Never infer features from the canvas. Canvas I/J/K are web-only screens: logic comes from `prototype/` (web JS) through the `shared/clinic` domain, visuals follow the canvas; status and files are in [references/screen-coverage.md](references/screen-coverage.md).
 
@@ -26,11 +26,11 @@ Read first:
 
 ## 1. Classify the scope before coding
 
-**Read the spec first; don't re-read the web/canvas:** every screen has a spec + prompt at [`design-specs/screens/<ID>.md`](../../../design-specs/README.md) (or MCP `pema-design`: `get_screen(id)`, prompt `port_screen`). The spec contains the logic source (Flutter/web), route + KMP file, block → Compose layout, required sentences, rules, accepted differences and known gotchas. Only open source files for what the spec lacks; **when done, save anything new you learned** in `design-specs/notes.json` (or `record_note`) so it doesn't have to be found again.
+**Read the spec first; don't re-read the web/canvas:** every screen has a spec + prompt at [`design-specs/screens/<ID>.md`](../../../design-specs/README.md) (or MCP `pema-design`: `get_screen(id)`, prompt `port_screen`). The spec contains the logic source (KMP/web), route + KMP file, block → Compose layout, required sentences, rules, accepted differences and known gotchas. Only open source files for what the spec lacks; **when done, save anything new you learned** in `design-specs/notes.json` (or `record_note`) so it doesn't have to be found again.
 
 List the canvas screen codes and trace each back to its source:
 
-- **A–H** mirror Flutter screens; port them if the Flutter source has the matching route/tab/state.
+- **A–H** are the core mobile screens, already ported; their logic lives in the KMP code — change it there, keeping the canvas look.
 - **I** Clinic operations from the web, **J** full web Patient 360, **K** web Pema Care: separate scope, not done just because A–H are done.
 - Every modal, sheet, error/empty/loading state with its own canvas code is a screen to verify.
 
@@ -38,9 +38,9 @@ Minimum table:
 
 | Code | Name | Logic source | KMP module | Route/state | Verification |
 |---|---|---|---|---|---|
-| F4 | Lên đơn | Flutter `quick_order` | `feature:orders` | `Routes.QuickOrder` | JVM shot + Android |
+| F4 | Lên đơn | KMP `QuickOrderScreen` | `feature:orders` | `Routes.QuickOrder` | JVM shot + Android |
 
-Don't start feature agents before this table is clear. Avoid two mistakes seen before: an imagined global bottom nav, and a pretty UI that lost the Flutter logic.
+Don't start feature agents before this table is clear. Avoid two mistakes seen before: an imagined global bottom nav, and a pretty UI that lost the existing business logic.
 
 ## 2. Canvas reference images
 
@@ -62,11 +62,11 @@ Keep module boundaries:
 | `core:common` | ASCII route IDs, `AppNavigator`, API config |
 | `core:ui` | canvas tokens, Be Vietnam Pro font, shared blocks, scaffolds, sheets, snackbar, screenshot harness |
 | `core:hardware` | expect/actual camera, gallery, print/launcher, haptics; fakes for tests |
-| `shared` | models, repositories/stores, business state from Flutter providers |
+| `shared` | models, repositories/stores, business state |
 | `feature:*` | route/screen composables and feature-only blocks |
 | `composeApp` | NavHost, route guard, app container, root messenger |
 
-Port domain/stores before UI. Compare Flutter JSON data with KMP: record count, products, role/sample data and business rules must match.
+Port domain/stores before UI. Keep the bundled JSON (`shared/src/commonMain/composeResources/files/`) in sync with the web fixtures (`node prototype/export-native-patients.cjs --check`, catalog importer): record count, products, role/sample data and business rules must match.
 
 `Routes` only uses stable ASCII IDs. Vietnamese strings are titles/display text, not routes; URLs/routes with diacritics, spaces, `&` or special characters easily break navigation.
 
@@ -92,24 +92,24 @@ Never replace canvas tokens with a “creative” palette. Screenshot at least o
 
 ## 5. Port navigation and role flows 1:1
 
-Flutter uses push navigation: Workspace is the entry point; the bottom nav belongs to the workspace per role, not a global nav over every route.
+The app uses push navigation: Workspace is the entry point; the bottom nav belongs to the workspace per role, not a global nav over every route.
 
 The app shell needs to:
 
 1. Start at Workspace.
 2. Register feature routes in `NavHost`.
-3. Apply permissions in `resolveRoute()` like Flutter: blocked routes open `DeniedScreen`; unknown routes open `GuideScreen`.
+3. Apply permissions in `resolveRoute()`: blocked routes open `DeniedScreen`; unknown routes open `GuideScreen`.
 4. Keep tabs/groups/filters you can return to with `rememberSaveable`.
 5. Parse routes with parameters (e.g. finance tab) through `Routes`.
-6. Wrap `PaymentAlerts` at app level if Flutter wraps it at app level.
+6. Wrap `PaymentAlerts` at app level.
 
-Always check Flutter roles and `allows()` before building menus. Test owner, doctor, care, accountant and patient/care mode separately.
+Always check the roles and `Session.allows()` before building menus. Test owner, doctor, care, accountant and patient/care mode separately.
 
 ## 6. Implement features in waves
 
 Only run agents in parallel when module/file ownership doesn't overlap. Each agent must receive:
 
-- the Flutter source paths and the feature's canvas codes;
+- the source paths (KMP/web) and the feature's canvas codes;
 - the list of fields/buttons/roles/states to keep;
 - the `core:ui` APIs/blocks it may use;
 - the files/modules it owns;

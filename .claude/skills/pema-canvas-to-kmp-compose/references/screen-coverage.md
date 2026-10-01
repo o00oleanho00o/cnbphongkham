@@ -1,10 +1,10 @@
 # Pema KMP screen coverage
 
-Use this table when planning or reporting a port. It prevents saying “all screens are done” when only Flutter-backed screens were ported.
+Use this table when planning or reporting a port. It prevents saying “all screens are done” when only the core A–H screens were ported.
 
 | Canvas group | Source | Current definition |
 |---|---|---|
-| A–H | Flutter | Mobile KMP port scope. Includes workspace by role, operational routes, care mode, and finance. **Ported and verified.** |
+| A–H | KMP (core mobile screens) | Mobile KMP scope. Includes workspace by role, operational routes, care mode, and finance. **Ported and verified.** |
 | I | `prototype/clinic-web` | Clinic web-only additions. **Ported and verified** (logic from web JS via `shared/clinic`). |
 | J | `prototype/clinic-web` Patient 360 | Full web Patient 360 additions. **Ported and verified.** |
 | K | `prototype/patient-mobile` | Patient web/mobile additions. **Ported and verified** (K3 merged into the E2 Journey tab). |
@@ -26,7 +26,7 @@ Use this table when planning or reporting a port. It prevents saying “all scre
 
 Web domain: `shared/clinic/` (`ClinicModels`, `ClinicSeed`, `ClinicStore`, `Operations`, `CrmCommands`, `*Commands.kt`). Seed parity test: `ClinicSeedParityTest`.
 
-## Flutter-backed group map
+## Core group map (A–H)
 
 | Group | Function | Primary KMP ownership |
 |---|---|---|
