@@ -143,8 +143,9 @@ class RuntimeSettingsSnapshot:
         return self._by_clinic.get(clinic_id, {}).get(key)
 
     def override(self, key: str) -> str | None:
-        """``TuningProvider``: the stored raw string for ``key`` in the current clinic."""
-        return self.read(key)
+        """``TuningProvider``: the stored raw string of the tuning parameter ``key`` (DB key ``tuning_<key>``)
+        in the current clinic."""
+        return self.read("tuning_" + key)
 
     # ------------------------------------------------------------------ refresh
     async def refresh(self, clinic_id: UUID) -> None:
