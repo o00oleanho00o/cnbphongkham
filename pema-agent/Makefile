@@ -36,14 +36,14 @@ setup:
 	cd $(FRONTEND) && pnpm install
 
 lint:
-	cd $(BACKEND) && uv run ruff check .
-	cd $(BACKEND) && uv run ruff format --check .
+	cd $(BACKEND) && uv run ruff check . ../evals
+	cd $(BACKEND) && uv run ruff format --check . ../evals
 	cd $(BACKEND) && uv run pyright
 	cd $(BACKEND) && uv run lint-imports
 
 format:
-	cd $(BACKEND) && uv run ruff check --fix .
-	cd $(BACKEND) && uv run ruff format .
+	cd $(BACKEND) && uv run ruff check --fix . ../evals
+	cd $(BACKEND) && uv run ruff format . ../evals
 
 typecheck:
 	cd $(BACKEND) && uv run pyright

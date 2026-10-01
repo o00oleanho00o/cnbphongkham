@@ -80,6 +80,7 @@ from pema_contracts.policy import (
 from pema_contracts.review import ReviewItemCreate
 from pema_contracts.roles import ActorType
 from pema_contracts.scheduler import CreateScheduledJobInput, JobKind
+from pema_contracts.tools import CLINIC_TOOL_KEYS
 
 log = create_logger("policy")
 
@@ -304,6 +305,10 @@ class ClinicPolicyHooks:
             blocked.add(SAVE_MEMORY_TOOL_KEY)
         if profile.key is PolicyProfileKey.PATIENT_CHANNEL:
             blocked.update(k for k in keys if k.startswith(MCP_TOOL_PREFIX))
+        if not profile.require_identity_verification:
+            # The clinic tools resolve the patient from a VERIFIED identity; a profile that never verifies
+            # (``staff_assistant``, the original zalo-agent behaviour) has no patient to resolve.
+            blocked.update(CLINIC_TOOL_KEYS)
         return frozenset(k for k in keys if k not in blocked)
 
     # ----------------------------------------------------------------------- allow_memory_write

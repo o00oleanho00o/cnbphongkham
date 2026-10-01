@@ -23,11 +23,12 @@ Forced deviations from the original, all consequences of what is and is not on t
   and the send path). That is the channel packages' (C1/C2), so the runner goes through ``run_agent_turn``
   (the engine, D1) and sends the reply through ``EvalWiring.format_reply`` into the fake Zalo API. Without a
   ``format_reply`` the runner has no styles to show: the cases that assert formatting then FAIL with "the
-  runner did not provide it" (``cham_case``), never skip silently. Wire C2's markdown-to-styles translation
-  there to measure formatting.
-* The original used the production tool set; this branch builds it from ``FakeToolRegistry`` with canned
-  synthetic web results (``eval_canned_tools``). Pass D4's registry as ``EvalWiring.registry`` to use the real
-  tool bodies; ``search_probe`` then re-enables the web-search precondition check.
+  runner did not provide it" (``cham_case``), never skip silently. ``real_wiring`` wires C2's translation.
+* The original used the production tool set. ``main`` now wires D4's registry (``EvalWiring.registry``,
+  real tool bodies over fake stores) and C2's reply formatting (``EvalWiring.format_reply``) through
+  ``real_wiring``; an
+  ``EvalWiring()`` built by hand still has the canned tool set of ``eval_canned_tools``, which the tests of
+  this runner use; ``search_probe`` re-enables the web-search precondition check.
 * The system sentences the original read from ``send-reply-in-parts`` (``TECHNICAL_ERROR_REPLY``,
   ``LOI_THEO_LOAI``) are not needed: the engine raises ``AgentTurnError`` for every failure, and the sentence
   it falls back to (``STEP_LIMIT_REPLY``, ``ROUTER_DOWN_REPLY``) is still compared.
@@ -254,8 +255,15 @@ def select_cases(only: str, cases: list[EvalCase]) -> list[EvalCase]:
     return [c for c in cases if c.ten in chi_chay] if chi_chay else cases
 
 
+def real_wiring() -> EvalWiring:
+    """The real seams: D4's tool registry and C2's reply formatting (``evals.eval_wiring``)."""
+    from evals.eval_wiring import real_format_reply, real_registry
+
+    return EvalWiring(registry=real_registry, format_reply=real_format_reply)
+
+
 async def main(wiring: EvalWiring | None = None, write: Write = _stdout) -> int:
-    wiring = wiring or EvalWiring()
+    wiring = wiring or real_wiring()
     chi_chay = os.environ.get("EVAL_ONLY", "")
     danh_sach = select_cases(chi_chay, EVAL_CASES)
 

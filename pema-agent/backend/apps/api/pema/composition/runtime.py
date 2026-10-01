@@ -255,6 +255,7 @@ def build_runtime(
         vision=VisionSidecarAdapter(),
         sidecar_configured=sidecar_configured,
         policy=hooks,
+        clinic_actions=clinic_actions,
         video_api_for=video_api_for,
     )
     tool_registry = DefaultToolRegistry(tool_deps, mcp_provider=mcp_tool_provider)

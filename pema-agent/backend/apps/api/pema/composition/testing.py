@@ -1,7 +1,8 @@
 """Harness of the closed-loop integration tests (package G; import in tests only).
 
 It runs the REAL application twice, as in production: the API (``create_app`` with its lifespan, role
-``be_app``) and the worker (``start_worker``, role ``agent_worker``), over a real Postgres and a real Redis. The
+``be_app``) and the worker (``start_worker``, role ``agent_worker``), over a real Postgres and a real Redis.
+The
 only fakes are the two things that leave the building: the Zalo Bot API (one ``FakeBotClient`` shared by both
 processes, it records every message the system sends) and the LLM (a ``ScriptedModel`` that records every
 prompt). No real Zalo, no real model, no network.
@@ -64,8 +65,9 @@ class Loop:
     """A bot account of its own for every loop, so one test never reads the rows of another."""
     _updates: int = field(default=0)
     _run: str = field(default_factory=lambda: uuid4().hex[:8])
-    """Part of every message id: ``agent.channel_update_seen`` outlives a test, a repeated id is a duplicate."""
-    _baseline_review_ids: set[UUID] = field(default_factory=set[UUID])
+    """Part of every message id: ``agent.channel_update_seen`` outlives a test, a repeated id is a
+    duplicate."""
+    baseline_review_ids: set[UUID] = field(default_factory=set[UUID])
     _clients: list[httpx.AsyncClient] = field(default_factory=list[httpx.AsyncClient])
 
     @property
@@ -135,7 +137,8 @@ class Loop:
             await client.aclose()
 
     async def staff(self, user_key: str) -> httpx.AsyncClient:
-        """A client signed in as a member of the demo clinic (``cs.maianh``, ``doctor.mai``, ``owner`` ...)."""
+        """A client signed in as a member of the demo clinic (``cs.maianh``, ``doctor.mai``, ``owner``
+        ...)."""
         from pema.api import dashboard_auth
 
         client = httpx.AsyncClient(
@@ -172,7 +175,7 @@ class Loop:
                 .mappings()
                 .all()
             )
-        return [dict(r) for r in rows if r["id"] not in self._baseline_review_ids]
+        return [dict(r) for r in rows if r["id"] not in self.baseline_review_ids]
 
     async def wait_review_items(self, count: int = 1) -> list[dict[str, Any]]:
         await self.wait_for(lambda: _has_reviews(self, count), f"{count} new review item(s) in the queue")
@@ -196,7 +199,8 @@ async def open_loop(
     scheduler: bool = False,
 ) -> AsyncGenerator[Loop]:
     """Start the API and the worker over ``db`` / ``worker_db`` and one Redis. ``profile`` is the policy
-    profile of the account AND of the default agent (``staff_assistant`` = send directly, ``patient_channel`` =
+    profile of the account AND of the default agent (``staff_assistant`` = send directly,
+    ``patient_channel`` =
     every outbound text is held for a person)."""
     settings = Settings(
         redis_url=redis_url,
@@ -281,7 +285,7 @@ async def open_loop(
             account_id=account_id,
             downloads=downloads,
         )
-        loop._baseline_review_ids = {UUID(str(r["id"])) for r in await _all_review_ids(db, world.clinic_id)}
+        loop.baseline_review_ids = {UUID(str(r["id"])) for r in await _all_review_ids(db, world.clinic_id)}
         stack.push_async_callback(loop.close_clients)
         yield loop
 
@@ -289,7 +293,7 @@ async def open_loop(
 async def _flush_redis(redis_url: str) -> None:
     from redis.asyncio import Redis
 
-    client = Redis.from_url(redis_url)  # pyright: ignore[reportUnknownMemberType]
+    client: Any = Redis.from_url(redis_url)  # pyright: ignore[reportUnknownMemberType]
     try:
         await client.flushdb()
     finally:

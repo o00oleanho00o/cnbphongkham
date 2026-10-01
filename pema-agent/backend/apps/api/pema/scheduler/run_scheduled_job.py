@@ -226,8 +226,8 @@ async def _run_message_job(deps: SchedulerDeps, rc: RunContext, target: ReplyTar
     source_text = job.payload
     template_key: str | None = None
 
-    # A job of the CRM rules carries a TEMPLATE KEY as payload under every profile (B2 ``auto_reminder``); only
-    # the profile that allows free text sends the payload as it is.
+    # A job of the CRM rules carries a TEMPLATE KEY as payload under every profile (B2
+    # ``auto_reminder``); only the profile that allows free text sends the payload as it is.
     if (
         rc.policy.profile.scheduled_jobs is not ScheduledJobPolicy.ANY or job.origin is JobOrigin.CRM_RULE
     ):  # clinic

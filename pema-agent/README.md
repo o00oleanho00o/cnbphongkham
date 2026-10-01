@@ -1,66 +1,122 @@
 # pema-agent
 
-CSKH (patient care) agent for Pema Digital Clinic. Two things in one code base:
+Agent chăm sóc khách hàng (CSKH) bằng chữ qua Zalo cho Pema Digital Clinic, và CRM phòng khám phía server, trong một codebase:
 
-1. a **Python derivative of [zalo-agent](https://github.com/vuhai2002/zalo-agent)** (MIT, TypeScript): Zalo
-   channels, agent loop, persona, tools, memory, knowledge base, scheduler, MCP client, token accounting;
-2. a **clinic CRM** (patient 360, appointments, care tasks, Inbox, review queue) and one Next.js frontend for
-   both the CRM and the AI administration.
+1. **Bản dịch Python của [zalo-agent](https://github.com/vuhai2002/zalo-agent)** (MIT, TypeScript): kênh Zalo, vòng lặp agent, persona, công cụ, bộ nhớ, kho tri thức, bộ lập lịch, MCP client, kế toán token.
+2. **CRM phòng khám** (Patient 360, lịch hẹn, việc chăm sóc, Inbox, hàng chờ duyệt) và **một FE Next.js** cho cả vận hành lẫn cấu hình AI.
 
-Zalo is the channel to the patient. This phase is text-only CSKH; image/video/document/web tools are ported but
-switched off in the `patient_channel` policy profile. Every outgoing text to a patient is reviewed by a person
-in that profile. All data in this repository is synthetic.
+Zalo là kênh ra khách. Giai đoạn này chỉ CSKH bằng chữ. Có hai hồ sơ chính sách: `staff_assistant` (giống zalo-agent gốc) và `patient_channel` (an toàn lâm sàng: mọi tin ra khách do người duyệt, cờ đỏ đến bác sĩ trước khi gọi mô hình, che PII, xác minh danh tính). Dữ liệu trong repo là **hư cấu**.
 
-Start with [docs/PLAN-AI01.md](docs/PLAN-AI01.md) (goal, architecture, packages), then
-[docs/CONTRACTS-AI01.md](docs/CONTRACTS-AI01.md) (interfaces, ownership, conventions) and
-[docs/PORT-MAP.md](docs/PORT-MAP.md) (every zalo-agent file and where it goes in Python).
-Licences of the upstream projects: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+> **Trạng thái trung thực.** Mã và test hoàn thành với **đồ giả** (mô hình giả, client Bot API giả, cầu nối giả) và với Postgres + Redis tạm. **Chưa chạy** với Zalo thật, mô hình thật, Ollama cài trên Ubuntu thật, sao lưu mã hóa age/gpg, hay thiết bị thật cho FE. Chi tiết: [SCOPE-AI01 mục 8](docs/SCOPE-AI01.md#8-điều-chưa-kiểm-chứng). Tài khoản Zalo cá nhân là kênh **không chính thức** có rủi ro bị khóa; mặc định tắt.
 
-```
-Zalo -> webhook (FastAPI, role be_app) -> batcher -> Redis TurnQueue -> worker (role agent_worker)
-                                                         |  agent loop, tools, policy hooks
-Staff -> Next.js -> FastAPI (OpenAPI is the contract)    +-> ChannelPort.send_text (reviewed first in patient_channel)
-Postgres: clinic.* (CRM, RLS) | clinic_agent.* (the agent's only door) | agent.* (engine, pgvector)
-```
+## Tài liệu (đọc theo thứ tự)
 
-| Path | What |
+| Tài liệu | Nội dung |
 |---|---|
-| `backend/packages/contracts` | `pema_contracts`: DTOs, `ChannelPort`, the ports between packages, fakes |
-| `backend/apps/api/pema` | the application: `channels`, `middleware`, `agent`, `conversation`, `knowledge`, `scheduler`, `mcp`, `documents`, `images`, `video`, `config`, `clinic`, `policy`, `api`, `workers`, `shared`, `core` |
-| `backend/apps/api/alembic` | DDL: `0001` clinic, `0002` agent, `0003` clinic_agent |
-| `backend/bridges/zalo-personal` | optional Node bridge around zca-js (placeholder until package C2) |
-| `frontend` | OpenAPI type generation now; Next.js app in package E |
-| `infra` | dev docker-compose (Postgres + pgvector, Redis), `.env.example` |
-| `kb-samples`, `evals` | fictional knowledge documents; the 17 original eval scenarios + the CSKH set |
-| `docs` | PLAN, CONTRACTS, PORT-MAP (SCOPE/SPEC/MODULEMAP/ARCH-AI01 come from package F) |
+| [docs/PLAN-AI01.md](docs/PLAN-AI01.md) | Mục tiêu, kiến trúc kế hoạch, gói việc, hồ sơ chính sách |
+| [docs/CONTRACTS-AI01.md](docs/CONTRACTS-AI01.md) | Hợp đồng giữa các gói, thư mục sở hữu, quy ước |
+| [docs/SCOPE-AI01.md](docs/SCOPE-AI01.md) | Phạm vi, quyết định đã chốt, điều chưa kiểm chứng, **việc mở cần chủ phòng khám/bác sĩ quyết** |
+| [docs/SPEC-AI01.md](docs/SPEC-AI01.md) | Hành vi, use case, tiêu chí nghiệm thu và bằng chứng, phân quyền |
+| [docs/MODULEMAP-AI01.md](docs/MODULEMAP-AI01.md) | Module, gói sở hữu, ranh giới import |
+| [docs/ARCH-AI01.md](docs/ARCH-AI01.md) | Tiến trình, DB, luồng tin, kênh, an toàn, triển khai |
+| [docs/PORT-MAP.md](docs/PORT-MAP.md) | Mỗi file zalo-agent → module Python; cuối file có "Khác biệt so với PORT-MAP ban đầu" |
+| [infra/README.md](infra/README.md), [infra/ubuntu/HUONG-DAN-UBUNTU.md](infra/ubuntu/HUONG-DAN-UBUNTU.md) | Compose, role DB, sao lưu; hướng dẫn Ubuntu + Ollama + Tailscale |
+| [frontend/README.md](frontend/README.md), [backend/bridges/zalo-personal/README.md](backend/bridges/zalo-personal/README.md), [evals/README.md](evals/README.md) | FE và mock; cầu nối Zalo cá nhân và rủi ro; eval với mô hình thật |
+| [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | Bản quyền zalo-agent và zca-js (MIT) |
 
-## Quick start
+Quy tắc chung của repo: [AGENT.md](../AGENT.md) và [ARCH-PB01](../docs/ARCH-PB01.md) ở thư mục gốc.
+
+## Sơ đồ
 
 ```
-make setup        # uv sync --all-packages, pnpm install
+Zalo ─► webhook (api, FastAPI, role be_app) ─► gộp tin ─► Redis TurnQueue ─► worker (role agent_worker)
+Zalo cá nhân ─► cầu nối Node (zca-js, tuỳ chọn) ─► webhook                      │ vòng lặp agent, tool, hook chính sách
+Nhân viên ─► Next.js ─► api (OpenAPI là hợp đồng)                                └─► ChannelPort.send_text
+                                                                     (patient_channel: người duyệt trước khi gửi)
+Postgres: clinic.* (CRM, RLS) | clinic_agent.* (cửa duy nhất của agent) | agent.* (engine, pgvector)
+Redis: hàng đợi lượt, khoá thread, gộp tin, khoá lịch      LLM: Ollama / llama-server trên PC GPU (Qwen3-8B, bge-m3)
+```
+
+| Đường dẫn | Nội dung |
+|---|---|
+| `backend/packages/contracts` | `pema_contracts`: DTO, `ChannelPort`, các port giữa gói, đồ giả |
+| `backend/apps/api/pema` | ứng dụng: `channels`, `middleware`, `agent`, `conversation`, `knowledge`, `scheduler`, `mcp`, `documents`, `images`, `video`, `config`, `clinic`, `policy`, `api`, `composition`, `workers`, `shared`, `core` |
+| `backend/apps/api/alembic` | DDL (`0001` clinic, `0002` agent, `0003` clinic_agent, các migration của từng gói, `g_0005` gộp đầu nhánh) |
+| `backend/apps/api/openapi.json` | hợp đồng API (sinh bằng `make openapi`) |
+| `backend/bridges/zalo-personal` | cầu nối Node cho tài khoản Zalo cá nhân (tuỳ chọn, cờ tắt) |
+| `frontend` | Next.js App Router, backend giả để chạy không cần dịch vụ nào |
+| `infra` | docker-compose, `.env.example`, script role/migrate/sao lưu, hướng dẫn Ubuntu |
+| `kb-samples`, `evals` | tài liệu da liễu hư cấu; 17 kịch bản gốc + bộ ca CSKH |
+
+## Chạy
+
+Cần `uv` (Python 3.12+), `pnpm` (Node 22), Docker. Chạy từ thư mục `pema-agent/`. Không có `make` (Windows thuần) thì chạy tay các lệnh trong từng công thức của `Makefile`.
+
+### Cài và kiểm tra
+
+```
+make setup        # uv sync --all-packages; pnpm install (frontend)
 make lint         # ruff, ruff format --check, pyright strict, import-linter
-make test         # pytest (the DB tests need PEMA_TEST_DATABASE_URL, a throwaway Postgres)
-make openapi      # backend/apps/api/openapi.json
-make types        # frontend/src/lib/api/schema.d.ts from that file
-cp infra/.env.example infra/.env   # edit the placeholders
-make up           # Postgres + Redis
-make db-upgrade   # ctx, clinic, clinic_agent, agent (reads infra/.env)
+make test         # pytest; test cần DB/Redis bị BỎ QUA nếu thiếu biến môi trường
 ```
 
-Without `make` (plain Windows), run the commands of each Makefile recipe directly. DB tests:
+`make test` không đặt biến nào **không** kiểm RLS, vai trò DB hay vòng khép kín. Để chạy đủ, dùng một Postgres + pgvector và một Redis **tạm** (không bao giờ trỏ vào DB có dữ liệu cần giữ: fixture xóa mọi schema Pema trong đó rồi chạy lại migration):
 
 ```
 docker run -d --name pema-pg-test -e POSTGRES_PASSWORD=testpw -e POSTGRES_DB=pema \
     -p 127.0.0.1:55432:5432 pgvector/pgvector:pg17
-PEMA_TEST_DATABASE_URL=postgresql+psycopg://postgres:testpw@127.0.0.1:55432/pema make test-db
+docker run -d --name pema-redis-test -p 127.0.0.1:56379:6379 redis:7-alpine
+export PEMA_TEST_DATABASE_URL=postgresql+psycopg://postgres:testpw@127.0.0.1:55432/pema
+export PEMA_TEST_REDIS_URL=redis://127.0.0.1:56379/0
+make test         # nay gồm test đánh dấu db và redis, và kịch bản vòng khép kín
 ```
 
-## Rules that hold everywhere
+Kiểm riêng từng phần:
 
-* The agent side reaches the clinic only through `pema.clinic.actions` (import-linter), and in the database the
-  `agent_worker` role has no privilege on `clinic.*` (views and functions of `clinic_agent` only).
-* Every table has `clinic_id` and row level security; open work with `ClinicDatabase.session(clinic_id)`.
-* Timestamps on the wire are ISO 8601 with `+07:00`. UI language is Vietnamese.
-* Never commit `.env`, tokens, real phone numbers or names. No PII in logs (the logger redacts known keys).
-* Zalo personal-account mode is off unless `PEMA_ZALO_PERSONAL_ENABLED` is set and a QR login was done; it risks
-  a Zalo account lock (unofficial API).
+```
+cd backend && uv run pytest apps/api/tests/policy                  # chính sách: cờ đỏ, PII, xác minh
+cd backend && uv run pytest apps/api/tests/integration             # vòng khép kín (cần DB + Redis)
+cd backend && uv run pytest -c pyproject.toml --rootdir=. ../evals  # eval với mô hình giả (không thuộc make test)
+cd backend/bridges/zalo-personal && pnpm install && pnpm test      # cầu nối (không bao giờ đăng nhập Zalo)
+cd frontend && pnpm lint && pnpm typecheck && pnpm test
+make openapi && make types   # sinh lại openapi.json rồi kiểu TypeScript
+```
+
+### FE với backend giả (không cần dịch vụ nào)
+
+```
+cd frontend
+pnpm install
+pnpm dev:mock     # backend giả :4010 + next dev :3000
+```
+
+Mở `http://127.0.0.1:3000`, đăng nhập với phòng khám `pema-demo`, mật khẩu `demo1234`, một trong `owner@pema.test`, `manager@pema.test`, `doctor@pema.test`, `cs@pema.test`, `reception@pema.test` (người dùng hư cấu của mock). `pnpm shots` chụp mọi màn ở 5 viewport (cần mock đang chạy; thất bại nếu tràn ngang). Mock bám đúng `openapi.json` (có test hợp đồng). Đây **không** phải backend thật và chưa kiểm trên thiết bị thật.
+
+### Stack bằng Docker Compose
+
+```
+make infra-secrets   # tạo infra/.env với bí mật ngẫu nhiên (từ chối ghi đè); sao lưu ngoại tuyến PEMA_SECRET_ENCRYPTION_KEY
+make infra-config    # kiểm file compose với mọi profile
+make up              # postgres + pgvector, redis, migrate (một lần: role + alembic upgrade heads), api  → /healthz
+make ps
+make up-app          # thêm worker và frontend (profile app)
+make up-ollama       # thêm container Ollama có GPU NVIDIA (hoặc cài Ollama trực tiếp, xem hướng dẫn Ubuntu)
+make down
+```
+
+Không có profile `worker` thì API nhận webhook và xếp lượt nhưng không ai chạy lượt. Tham số mô hình (`LLM_BASE_URL`, `LLM_MODEL=pema-chat`) và tuỳ chọn mạng (`PEMA_*_BIND`, chỉ loopback theo mặc định) ở `infra/.env.example`. Dữ liệu mẫu hư cấu cho một phòng khám: `uv run python -m pema.clinic.actions.seed_demo` (xem docstring của module; không có mật khẩu mặc định trong repo). Bot Zalo, QR cho tài khoản cá nhân, persona và KB cấu hình ở trang quản trị AI của FE.
+
+Lưu ý hạ tầng đã biết: đọc mã cho thấy ảnh Docker của cầu nối (`bridge` profile) có thể không dựng được vì Dockerfile chạy `pnpm run build` còn `package.json` của cầu nối không có script này; chưa thử build ([ARCH-AI01 mục 13](docs/ARCH-AI01.md#13-quyết-định-kiến-trúc-còn-mở)).
+
+## Quy tắc áp dụng khắp nơi
+
+- Phía agent chạm phòng khám **chỉ** qua `pema.clinic.actions` (import-linter); trong DB role `agent_worker` không có quyền gì trên `clinic.*` (chỉ view/hàm của `clinic_agent`).
+- Mọi bảng có `clinic_id` và RLS; mở công việc bằng `ClinicDatabase.session(clinic_id)`.
+- Thời gian trên đường truyền là ISO 8601 có `+07:00`. Giao diện tiếng Việt.
+- Không commit `.env`, token, số điện thoại hay tên thật. Không PII trong log.
+- Không bao giờ tự gửi tin cho bệnh nhân trong `patient_channel` mà không có người duyệt; agent chỉ đề xuất lịch; sinh nhật không tự gửi; `marketingOptOut` chặn tiếp thị.
+- Chế độ Zalo cá nhân chỉ bật khi đặt `PEMA_ZALO_PERSONAL_ENABLED` và đã quét QR; dùng **tài khoản phụ**.
+
+## Giấy phép và nguồn gốc
+
+Phần engine là bản dịch từng module của zalo-agent (MIT, © 2026 Vu Van Hai) và dùng `zca-js` (MIT); thông báo nguyên văn ở [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Cách quan hệ phái sinh hoạt động và bản tham chiếu nằm ngoài repo: [ARCH-AI01 mục 11](docs/ARCH-AI01.md#11-quan-hệ-phái-sinh-và-giấy-phép).

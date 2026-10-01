@@ -14,7 +14,7 @@ from pema.agent.streaming_model_test_helper import ScriptedModel, goi_tool, tra_
 from pema.composition.testing import Loop, LoopFactory
 from pema_contracts.policy import PolicyProfileKey
 
-pytestmark = pytest.mark.db
+pytestmark = [pytest.mark.db, pytest.mark.redis]
 
 
 async def test_staff_assistant_tin_zalo_den_engine_goi_tool_roi_tra_loi_gui_thang(

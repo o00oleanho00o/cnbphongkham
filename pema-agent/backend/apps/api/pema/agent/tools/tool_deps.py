@@ -31,6 +31,7 @@ from typing import Protocol
 
 from pema.video.gui_video_qua_zalo import ZaloVideoApi
 from pema_contracts.channel import TextStyle
+from pema_contracts.clinic_actions import AgentFacingClinicActions
 from pema_contracts.conversation import HistoryStore, MemoryEditPort, MemoryStore
 from pema_contracts.knowledge import KnowledgeSearch
 from pema_contracts.policy import PermissivePolicyHooks, PolicyHooks
@@ -176,6 +177,8 @@ class ToolDeps:
     sidecar_configured: Callable[[], bool]
     """``isSidecarConfigured`` of ``runtime-vision-settings.ts`` (package D1)."""
     policy: PolicyHooks = field(default_factory=PermissivePolicyHooks)
+    clinic_actions: AgentFacingClinicActions | None = None
+    """The clinic door of the agent (package B1). Given: the three clinic tools of ``clinic_tools`` exist."""
     video_api_for: Callable[[ToolContext], ZaloVideoApi | None] = no_video_api
     """The zca-js style upload/send road for ``tai_video`` (``ZaloVideoApi`` of ``pema.video``): the
     contract's ``MediaChannel.send_video(url)`` cannot upload bytes, and a video must be uploaded to Zalo

@@ -12,7 +12,7 @@ import pytest
 from pema.composition.testing import LoopFactory, scripted
 from pema_contracts.policy import PolicyProfileKey
 
-pytestmark = pytest.mark.db
+pytestmark = [pytest.mark.db, pytest.mark.redis]
 
 RED_FLAG_TEXTS = [
     "em bị chảy máu nhiều sau khi làm",

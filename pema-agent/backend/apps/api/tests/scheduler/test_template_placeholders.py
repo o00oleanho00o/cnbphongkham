@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from types import SimpleNamespace
-from typing import Any, cast
+from typing import cast
 from uuid import UUID, uuid4
 
 from pema.scheduler.deps import SchedulerDeps
@@ -143,5 +143,5 @@ async def test_cho_trong_ten_dung_ten_cua_nguoi_da_xac_minh() -> None:
     ok_deps, ok_rc = rig(Hooks(IdentityStatus(verified=True, patient_id=PATIENT)), Actions(name="Khách Mẫu"))
     assert (await fill_template_placeholders(ok_deps, ok_rc, "Chào {ten}.")).text == "Chào Khách Mẫu."
 
-    no_name: Any = rig(Hooks(IdentityStatus(verified=True, patient_id=PATIENT)), Actions(name=None))
-    assert (await fill_template_placeholders(*no_name, "Chào {ten}.")).text is None
+    miss_deps, miss_rc = rig(Hooks(IdentityStatus(verified=True, patient_id=PATIENT)), Actions(name=None))
+    assert (await fill_template_placeholders(miss_deps, miss_rc, "Chào {ten}.")).text is None

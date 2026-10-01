@@ -147,6 +147,18 @@
             "default": true,
             "title": "Typing Indicator Enabled",
             "type": "boolean"
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set when the change was saved but the listener did NOT come up (for example a start that failed after enabling or after a token change). Plain text, never a secret.",
+            "title": "Warning"
           }
         },
         "required": [
@@ -3302,6 +3314,12 @@
       "KbSource": {
         "additionalProperties": false,
         "properties": {
+          "agent_count": {
+            "default": 0,
+            "description": "``soAgent``: how many agents may read this source.",
+            "title": "Agent Count",
+            "type": "integer"
+          },
           "approved_by_clinical_owner": {
             "default": false,
             "title": "Approved By Clinical Owner",
@@ -7437,7 +7455,7 @@
     }
   },
   "info": {
-    "description": "Backend of the Pema Digital Clinic CSKH agent (clinic CRM + a Python derivative of zalo-agent). All timestamps are ISO 8601 with +07:00. Errors use ErrorResponse with a stable ErrorCode. Mutating endpoints that accept an Idempotency-Key replay the first result for the same key. Skeleton phase: every endpoint except /healthz returns 501.",
+    "description": "Backend of the Pema Digital Clinic CSKH agent (clinic CRM + a Python derivative of zalo-agent). All timestamps are ISO 8601 with +07:00. Errors use ErrorResponse with a stable ErrorCode. Mutating endpoints that accept an Idempotency-Key replay the first result for the same key. Staff endpoints need the session cookie of POST /auth/login; the permission of each role follows the matrix of docs/ARCH-PB01.md and a missing session or permission is refused (401, 403).",
     "title": "Pema CSKH Agent API",
     "version": "0.1.0"
   },
@@ -15064,7 +15082,7 @@
             "SessionCookie": []
           }
         ],
-        "summary": "Trial run: executes, sends nothing",
+        "summary": "Run now: same pipeline as the tick, schedule unchanged",
         "tags": [
           "admin-schedules"
         ]
@@ -16030,6 +16048,24 @@
             "schema": {
               "title": "Thread Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "Only the exact string \"true\" also deletes the durable facts learned IN this thread.",
+            "in": "query",
+            "name": "xoaTriNho",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only the exact string \"true\" also deletes the durable facts learned IN this thread.",
+              "title": "Xoatrinho"
             }
           }
         ],

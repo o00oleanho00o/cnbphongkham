@@ -31,7 +31,7 @@ from pema.scheduler.redis_locks import (
 REDIS_URL = os.environ.get("PEMA_TEST_REDIS_URL")
 
 
-@pytest_asyncio.fixture(params=["memory", "redis"])
+@pytest_asyncio.fixture(params=["memory", pytest.param("redis", marks=pytest.mark.redis)])
 async def backend(request: pytest.FixtureRequest) -> AsyncIterator[LockBackend]:
     if request.param == "memory":
         yield InMemoryLockBackend()

@@ -672,7 +672,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Minimal completion with the effective config */
+        /**
+         * Minimal completion with the effective config
+         * @description Call ONE minimal completion with the effective configuration: the "Test connection" button.
+         *
+         *     It goes through the STREAMING path the bot uses: testing one way while the bot runs another shows a green
+         *     button while the bot dies of a 524, or the opposite, exactly when someone presses it to find the cause.
+         */
         post: operations["admin_model_test_provider"];
         delete?: never;
         options?: never;
@@ -727,7 +733,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Remove the sidecar override */
+        /**
+         * Remove the sidecar override
+         * @description Wipe the sidecar configuration, key included: the PATCH convention is "empty key = keep the old key",
+         *     so there is no way to remove a key through PATCH.
+         */
         delete: operations["admin_model_clear_vision_sidecar"];
         options?: never;
         head?: never;
@@ -881,7 +891,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Trial run: executes, sends nothing */
+        /** Run now: same pipeline as the tick, schedule unchanged */
         post: operations["admin_schedules_run_schedule_trial"];
         delete?: never;
         options?: never;
@@ -1174,7 +1184,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Accounts, usage per day and system info */
+        /**
+         * Accounts, usage per day and system info
+         * @description The overview page: accounts (DB + online state) + usage per day. Every "today" is computed in
+         *     ``BOT_TIMEZONE`` (not the UTC day nor the browser's time): ``today_key`` + ``timezone`` come back with the
+         *     answer so the frontend uses them as is instead of deriving the day from the browser's clock, which drifts
+         *     from the bot's local time. ``days`` is only 7, 14 or 30 (the DTO enforces it): ``?days=100000`` would scan
+         *     the whole turns table and fold it in memory.
+         */
         get: operations["admin_usage_get_overview"];
         put?: never;
         post?: never;
@@ -1844,6 +1861,11 @@ export interface components {
              * @default true
              */
             typing_indicator_enabled: boolean;
+            /**
+             * Warning
+             * @description Set when the change was saved but the listener did NOT come up (for example a start that failed after enabling or after a token change). Plain text, never a secret.
+             */
+            warning?: string | null;
         };
         /** AccountOverview */
         AccountOverview: {
@@ -2964,6 +2986,12 @@ export interface components {
         };
         /** KbSource */
         KbSource: {
+            /**
+             * Agent Count
+             * @description ``soAgent``: how many agents may read this source.
+             * @default 0
+             */
+            agent_count: number;
             /**
              * Approved By Clinical Owner
              * @default false
@@ -11161,7 +11189,10 @@ export interface operations {
     };
     admin_threads_wipe_thread_history: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Only the exact string "true" also deletes the durable facts learned IN this thread. */
+                xoaTriNho?: string | null;
+            };
             header?: never;
             path: {
                 account_id: string;

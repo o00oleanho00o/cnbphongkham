@@ -8,7 +8,7 @@ Redis (``PEMA_TEST_REDIS_URL``); without either the tests are skipped. The datab
 from __future__ import annotations
 
 import os
-from collections.abc import AsyncGenerator, Iterator
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -77,15 +77,15 @@ def loop_env(monkeypatch: pytest.MonkeyPatch, jwt_env: None) -> Iterator[None]:
 
 
 @pytest.fixture
-async def make_loop(
+def make_loop(
     loop_env: None,
     db: ClinicDatabase,
     worker_db: ClinicDatabase,
     world_a: SeedResult,
     redis_url: str,
     tmp_path: Path,
-) -> AsyncGenerator[LoopFactory]:
-    yield LoopFactory(db, worker_db, world_a, redis_url, tmp_path)
+) -> LoopFactory:
+    return LoopFactory(db, worker_db, world_a, redis_url, tmp_path)
 
 
 __all__ += ["Loop"]

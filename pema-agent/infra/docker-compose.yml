@@ -2,7 +2,8 @@
 # the Node bridge and Ollama.
 #
 #   default (no profile)  postgres, redis, migrate (one-shot), api
-#   profile worker        agent turns + scheduler + KB ingest. NEEDS `pema.workers.main` (package G).
+#   profile worker        agent turns + scheduler + KB ingest (`python -m pema.workers.main`). Without it the
+#                         API answers webhooks and queues turns, but nobody runs them.
 #   profile frontend      Next.js dashboard. NEEDS the Next.js app of package E (output: "standalone").
 #   profile bridge        Node zca-js bridge (personal Zalo account, risk of account lock). NEEDS package C2.
 #   profile ollama        Ollama with an NVIDIA GPU. Optional: Ollama may instead run natively on the GPU PC
@@ -24,6 +25,8 @@ x-backend-build: &backend-build
 
 # Variables every Python process reads (pema.config.env.Settings, prefix PEMA_). Inside the compose network
 # the hosts are service names, so the URLs are composed here from the passwords in .env, not copied from it.
+# The database URL is NOT here: each process gets only the role it may use (below). The worker must not hold
+# the `be_app` password, because its role (`agent_worker`) has no privilege on `clinic.*` on purpose.
 x-backend-env: &backend-env
   PEMA_ENVIRONMENT: ${PEMA_ENVIRONMENT:-prod}
   PEMA_LOG_LEVEL: ${PEMA_LOG_LEVEL:-INFO}
@@ -31,8 +34,6 @@ x-backend-env: &backend-env
   PEMA_LOG_FILE_KEEP_DAYS: ${PEMA_LOG_FILE_KEEP_DAYS:-14}
   PEMA_DATA_DIR: /var/lib/pema
   PEMA_BOT_TIMEZONE: ${PEMA_BOT_TIMEZONE:-Asia/Ho_Chi_Minh}
-  PEMA_DATABASE_URL: postgresql+psycopg://be_app:${PEMA_BE_APP_PASSWORD:?set it in infra/.env}@postgres:5432/pema
-  PEMA_WORKER_DATABASE_URL: postgresql+psycopg://agent_worker:${PEMA_AGENT_WORKER_PASSWORD:?set it in infra/.env}@postgres:5432/pema
   PEMA_REDIS_URL: redis://:${PEMA_REDIS_PASSWORD:?set it in infra/.env}@redis:6379/0
   PEMA_JWT_SECRET: ${PEMA_JWT_SECRET:?set it in infra/.env}
   PEMA_SECRET_ENCRYPTION_KEY: ${PEMA_SECRET_ENCRYPTION_KEY:?set it in infra/.env}
@@ -44,6 +45,20 @@ x-backend-env: &backend-env
   LLM_BASE_URL: ${LLM_BASE_URL:-}
   LLM_API_KEY: ${LLM_API_KEY:-}
   LLM_MODEL: ${LLM_MODEL:-}
+  # Zalo Bot API: `polling` (the worker listens) or `webhook` (the API listens; needs the public https URL).
+  PEMA_ZALO_BOT_MODE: ${PEMA_ZALO_BOT_MODE:-polling}
+  PEMA_ZALO_BOT_WEBHOOK_BASE_URL: ${PEMA_ZALO_BOT_WEBHOOK_BASE_URL:-}
+  # Knowledge-base embeddings (bge-m3 through an OpenAI-compatible endpoint). Off = keyword search only.
+  PEMA_EMBEDDING_ENABLED: ${PEMA_EMBEDDING_ENABLED:-true}
+  PEMA_EMBEDDING_BASE_URL: ${PEMA_EMBEDDING_BASE_URL:-http://ollama:11434/v1}
+  PEMA_EMBEDDING_MODEL: ${PEMA_EMBEDDING_MODEL:-bge-m3}
+  PEMA_CRM_RUNNER_INTERVAL_SECONDS: ${PEMA_CRM_RUNNER_INTERVAL_SECONDS:-900}
+
+x-api-database: &api-database
+  PEMA_DATABASE_URL: postgresql+psycopg://be_app:${PEMA_BE_APP_PASSWORD:?set it in infra/.env}@postgres:5432/pema
+
+x-worker-database: &worker-database
+  PEMA_WORKER_DATABASE_URL: postgresql+psycopg://agent_worker:${PEMA_AGENT_WORKER_PASSWORD:?set it in infra/.env}@postgres:5432/pema
 
 services:
   postgres:
@@ -123,7 +138,8 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
-    environment: *backend-env
+    environment:
+      <<: [*backend-env, *api-database]
     command:
       - uvicorn
       - --factory
@@ -159,8 +175,8 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
-    environment: *backend-env
-    # Package G creates pema/workers/main.py. Until then this container exits at once (restart loop).
+    environment:
+      <<: [*backend-env, *worker-database]
     command: ["python", "-m", "pema.workers.main"]
     volumes:
       - pema-data:/var/lib/pema

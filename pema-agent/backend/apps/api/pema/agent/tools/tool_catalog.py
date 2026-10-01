@@ -13,6 +13,7 @@ catalogue matches it."""
 
 from __future__ import annotations
 
+from pema.agent.tools.clinic_tools import clinic_tool_definitions
 from pema.agent.tools.tool_catalog_action import action_tool_definitions
 from pema.agent.tools.tool_catalog_read import read_tool_definitions
 from pema.agent.tools.tool_catalog_types import ToolContext, ToolDefinition, ToolGroup
@@ -24,7 +25,7 @@ TOOL_KEYS: tuple[str, ...] = BUILTIN_TOOL_KEYS
 
 def build_tool_definitions(deps: ToolDeps) -> list[ToolSpec]:
     """``TOOL_DEFINITIONS``: the READ group then the ACTION group, as in the original."""
-    return [*read_tool_definitions(deps), *action_tool_definitions(deps)]
+    return [*read_tool_definitions(deps), *action_tool_definitions(deps), *clinic_tool_definitions(deps)]
 
 
 __all__ = ["TOOL_KEYS", "ToolContext", "ToolDefinition", "ToolGroup", "build_tool_definitions"]

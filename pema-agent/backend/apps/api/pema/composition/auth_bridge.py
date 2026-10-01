@@ -11,8 +11,9 @@ ONE place that fills all of them from B1's authentication, so the rules stay in 
   clinic of the task. A missing or bad session fills NOTHING: every router then answers 401 (deny by
   default);
 * the permission of the router family is checked HERE for the routers that have no permission check of
-  their own (model, usage, tools, schedules, MCP): a role without it gets 403 before the route runs. The
-  routers that check their own permission (accounts, channels, agents, KB, policy, rules, B1's) keep doing
+  their own (model, usage, tools, schedules, MCP, policy): a role without it gets 403 before the route runs.
+  The
+  routers that check their own permission (accounts, channels, agents, KB, rules, B1's) keep doing
   so;
 * ``resolve_staff_context`` is the ``staff_context_resolver`` of C1 and the ``authorize`` of C2.
 
@@ -52,6 +53,7 @@ ROUTER_PERMISSION: dict[str, Permission] = {
     "tools": Permission.ADMIN_TOOLS,
     "schedules": Permission.ADMIN_SCHEDULES,
     "mcp": Permission.ADMIN_MCP,
+    "policy": Permission.ADMIN_POLICY,
 }
 """Router families WITHOUT a permission check of their own: the middleware enforces it. The others check in
 their service (B1 actions, D2 ``require_admin_agents``, D3 ``cap_quyen``, C1/C2 ``authorize``, P ``can``)."""
@@ -94,13 +96,26 @@ def _request_id_of(scope: Scope) -> str | None:
     return None
 
 
+async def _refuse(scope: Scope, receive: Receive, send: Send, error: DomainError) -> None:
+    response = JSONResponse(
+        status_code=error.http_status,
+        content=error.to_response(_request_id_of(scope)).model_dump(mode="json"),
+    )
+    await response(scope, receive, send)
+
+
 class StaffSessionMiddleware:
     """Pure ASGI middleware (not ``BaseHTTPMiddleware``): the downstream app runs in the SAME task, so the
     settings clinic set here is visible to the route and to the synchronous readers it calls."""
 
-    def __init__(self, app: ASGIApp, db: Callable[[], ClinicDatabase]) -> None:
+    def __init__(
+        self, app: ASGIApp, db: Callable[[], ClinicDatabase], enforce: Callable[[], bool] = lambda: True
+    ) -> None:
         self.app = app
         self._db = db
+        self._enforce = enforce
+        """Whether an anonymous call to a guarded family is refused here. ``False`` only for a bare
+        ``create_app()`` with no composition root (the route tests that replace the dependencies by hand)."""
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         family = _family(scope["path"]) if scope["type"] == "http" else None
@@ -109,18 +124,25 @@ class StaffSessionMiddleware:
             return
         token = _cookie_of(scope, get_settings().session_cookie_name)
         user = await dashboard_auth.verify_session_token(self._db(), token) if token else None
+        required = ROUTER_PERMISSION.get(family)
         if user is None:
+            if required is not None and self._enforce():
+                # These routers do not look at the session themselves (the permission lives HERE), so an
+                # anonymous call must stop here: some of them (the application log) need no clinic at all.
+                await _refuse(
+                    scope, receive, send, DomainError(ErrorCode.UNAUTHENTICATED, "Bạn chưa đăng nhập.")
+                )
+                return
             await self.app(scope, receive, send)
             return
         permissions = permissions_for(ActorType.USER, user.role)
-        required = ROUTER_PERMISSION.get(family)
         if required is not None and required not in permissions:
-            error = DomainError(ErrorCode.FORBIDDEN, "Bạn không có quyền thực hiện thao tác này.")
-            response = JSONResponse(
-                status_code=error.http_status,
-                content=error.to_response(_request_id_of(scope)).model_dump(mode="json"),
+            await _refuse(
+                scope,
+                receive,
+                send,
+                DomainError(ErrorCode.FORBIDDEN, "Bạn không có quyền thực hiện thao tác này."),
             )
-            await response(scope, receive, send)
             return
         state = _state_of(scope)
         state["clinic_id"] = user.clinic_id

@@ -28,7 +28,7 @@ from pema.scheduler.scheduler_loop import SchedulerLoop
 from pema_contracts.policy import PolicyProfileKey
 from pema_contracts.scheduler import JobOrigin, ScheduledJob
 
-pytestmark = pytest.mark.db
+pytestmark = [pytest.mark.db, pytest.mark.redis]
 
 D1_TEXT = "Phòng khám hỏi thăm bạn sau buổi điều trị hôm qua. Cần gì xin nhắn lại cho chúng tôi ạ."
 

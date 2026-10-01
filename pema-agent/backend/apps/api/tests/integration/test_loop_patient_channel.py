@@ -13,7 +13,7 @@ from pema.agent.streaming_model_test_helper import prompt_text
 from pema.composition.testing import LoopFactory, scripted
 from pema_contracts.policy import PolicyProfileKey
 
-pytestmark = pytest.mark.db
+pytestmark = [pytest.mark.db, pytest.mark.redis]
 
 ASK_VERIFY = "Dạ anh/chị cho em xin số điện thoại đã đăng ký tại phòng khám để nhân viên xác minh ạ."
 DRAFT = "Dạ chào chị, da hơi đỏ nhẹ sau laser trong 1-2 ngày là thường gặp ạ."

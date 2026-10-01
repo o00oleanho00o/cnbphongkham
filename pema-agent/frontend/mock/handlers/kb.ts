@@ -25,7 +25,7 @@ type Stored = {
 };
 
 /** Defaults the contract marks as always present */
-const BASE = { error: "", path: "", raw_text: "" };
+const BASE = { error: "", path: "", raw_text: "", agent_count: 0 };
 
 const AFTERCARE_CHUNKS: S["KbChunk"][] = [
   {
@@ -214,7 +214,9 @@ function fieldOf(ctx: Ctx, field: string): string {
 export function register(r: Router): void {
   r.get("/api/v1/admin/kb/sources", "kb.read", (): Reply => {
     advance();
-    return { body: store.map((s) => s.source) };
+    return {
+      body: store.map((s) => ({ ...s.source, agent_count: agentsOfSource(s.source.id).length })),
+    };
   });
 
   r.post("/api/v1/admin/kb/sources/file", "kb.manage", (ctx): Reply => {

@@ -39,6 +39,8 @@ REDIS_URL = os.environ.get("PEMA_TEST_REDIS_URL")
 if not REDIS_URL:
     pytest.skip("PEMA_TEST_REDIS_URL not set; no Redis to test against", allow_module_level=True)
 
+pytestmark = pytest.mark.redis
+
 CLINIC = UUID("00000000-0000-4000-8000-0000000000c1")
 
 

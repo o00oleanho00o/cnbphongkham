@@ -212,3 +212,4 @@ class ApiLifecycle:
         await self._personal.bridge.aclose()
         await self._rt.close()
         set_settings_clinic(None)
+        install_tools_admin_services(None)

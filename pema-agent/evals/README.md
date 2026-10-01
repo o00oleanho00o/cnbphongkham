@@ -37,7 +37,7 @@ Notes for the run:
 * `LLM_TURN_TIMEOUT_MS` is forced to 180 s by the runner (`eval_env.EVAL_TUNING_OVERRIDES`). A small local model
   on a busy GPU may need more: change the override, never run with a hidden different value.
 * Cases that assert FORMATTING (`danh-sach-de-luot-mat`, `tro-chuyen-thi-dung-trang-tri`, `thu-moi-khi-duoc-nho`)
-  report FAILED with "the runner did not provide it" until a `format_reply` is wired (see "What is faked").
+  report FAILED with "the runner did not provide it" unless a `format_reply` is wired; `python -m evals.run_eval` wires C2's (`eval_wiring.real_format_reply`).
   That is deliberate: a skipped case would be a false green.
 * Local models vary a lot between runs. Re-run a red case 3 times before changing a persona rule, and read
   `Bot trả lời` in the failure block.
@@ -72,8 +72,8 @@ not in CI.
 | Original (`run-eval.ts`) | This port |
 |---|---|
 | goes through `processBatch` (production message processor) | goes through `run_agent_turn` (the engine, D1): the processor is the channel packages' (C1/C2) |
-| production tool set, real web search/fetch | `FakeToolRegistry` with canned synthetic web data (`eval_canned_tools.py`); pass D4's registry in `EvalWiring.registry` for the real bodies, plus `search_probe` to re-enable the web-search precondition |
-| reply text and styles recorded by the fake zca-js API | the reply goes through `EvalWiring.format_reply` (C2's markdown-to-styles translation) into `FakeZaloApi`; without it formatting cases FAIL, never skip |
+| production tool set, real web search/fetch | `python -m evals.run_eval` wires D4's registry over fake stores (`eval_wiring.real_registry`: real tool bodies, no database); an `EvalWiring()` built by hand keeps `FakeToolRegistry` with canned synthetic web data (`eval_canned_tools.py`); `search_probe` re-enables the web-search precondition |
+| reply text and styles recorded by the fake zca-js API | the reply goes through `EvalWiring.format_reply` (C2's clean-up and markdown-to-styles, `eval_wiring.real_format_reply`) into `FakeZaloApi`; without it formatting cases FAIL, never skip |
 | temp SQLite dir | in-memory settings + fake stores; env overrides restored at the end |
 
 ## The set: 17 original scenarios

@@ -1,7 +1,8 @@
 """Fill the blanks of an approved message template, safely (package G, no TS source).
 
-A doctor-approved template may carry blanks: ``{ten}`` (the patient's name), ``{ngay}`` and ``{gio}`` (date and
-time of the next appointment). Before this module the scheduler sent the body as it was and the patient read
+A doctor-approved template may carry blanks: ``{ten}`` (the patient's name), ``{ngay}`` and ``{gio}``
+(date and time of the next appointment). Before this module the scheduler sent the body as it was and the
+patient read
 "lịch hẹn vào {gio} ngày {ngay}".
 
 The blanks hold personal data, so they are filled ONLY when the identity of the thread is VERIFIED

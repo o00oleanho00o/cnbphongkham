@@ -91,7 +91,11 @@ def create_app(*, runtime: Runtime | None = None, bot_client_factory: ClientFact
         return _default_database(settings.database_url)
 
     install_error_handlers(app)
-    app.add_middleware(StaffSessionMiddleware, db=current_db)
+    app.add_middleware(
+        StaffSessionMiddleware,
+        db=current_db,
+        enforce=lambda: getattr(app.state, "runtime", None) is not None,
+    )
     app.include_router(build_system_router())
     app.include_router(build_api_router())
     return app

@@ -910,3 +910,65 @@ Dashboard (`web/`, package E translates the FEATURES to Next.js), evals, scripts
 | `plans/260824-0116-ap-dung-pattern-tu-deepseek-harness/ (7 files)` |  | no port | - | upstream planning notes; read for the rationale of a decision, not ported |
 | `plans/260825-0125-tab-ban-be/ (2 files)` |  | no port | - | upstream planning notes; read for the rationale of a decision, not ported |
 | `plans/260829-0726-mcp-client-cam-mcp-ngoai/ (9 files)` |  | no port | - | upstream planning notes; read for the rationale of a decision, not ported |
+
+## Khác biệt so với PORT-MAP ban đầu
+
+Cập nhật 2026-10-02 (gói F), đối chiếu với cây file thật trên nhánh `feat/ai-agent-backend` (commit `1ce6cca`). Các bảng phía trên được giữ nguyên như gói A viết; đây là chỗ thực tế lệch khỏi chúng. Mục này chỉ dùng gạch đầu dòng và bảng ba cột để `tests/test_port_map.py` (đọc các dòng bảng năm cột) không đổi kết quả.
+
+**Kết quả đối chiếu máy**: mọi đích `pema/**/*.py` ghi trong các hàng của bảng đều tồn tại (0 đích thiếu). Ngược lại, 104 file Python dưới `pema/` (không tính `__init__.py` và các thư mục ghi bằng dấu ngoặc nhọn hoặc `*` ở bảng "Modules with no zalo-agent source") không có tên trong PORT-MAP; chúng được phân loại bên dưới. Có 10 test mà bảng đã ghi đường dẫn nhưng **không tồn tại** dưới tên đó (xem cuối mục).
+
+### Gói P: nhiều module hơn kế hoạch
+
+PORT-MAP ghi gói P có 0 hàng và bốn file `pema/policy/{profiles,redflags,pii,identity}.py`. Thực tế `pema/policy/` có 12 file (kể cả `__init__.py`). Ngoài bốn file trên, gói P thêm:
+
+- `hooks.py` (`ClinicPolicyHooks`, tám hook), `gateway.py` (cửa `agent_worker` vào `clinic_agent`), `review.py` (dựng `review_item` do chính sách mở), `turn_guard.py` (thứ tự chuẩn của một lượt, hàm tham chiếu), `identity_admin.py` (phía nhân viên: xác nhận, từ chối, cấp mã; chạy ở API với `be_app`), `testing.py` (đồ giả), `text_normalize.py` (chuẩn hóa chữ cho cờ đỏ và PII).
+- Router `admin_policy` và migration `p0001_identity_link` (bảng `clinic.identity_link_code`, `clinic.identity_link_attempt`, các hàm liên kết).
+
+### Tệp "no port" nhưng đã được dịch
+
+- `src/conversation/xoa-han-session.ts` và `.test.ts` ghi "no port" với lý do "hết hạn phiên dashboard". Mô tả đó sai file: tệp này là "xóa hẳn một session (cuộc trò chuyện)" của trang Sessions. Gói D2 đã dịch thành `pema/conversation/xoa_han_session.py` (route `DELETE /admin/threads/{account_id}/{thread_id}`); docstring của module ghi lại sai lệch này. Hai hàng trong bảng `src/conversation` **không** được sửa để giữ nguyên định dạng máy đọc; hãy đọc chúng cùng ghi chú này.
+
+### Gói G: composition và tiến trình
+
+`pema/composition/` (8 file: `runtime`, `intake`, `outbound`, `api_wiring`, `auth_bridge`, `adapters`, `testing`, `__init__`) không có hàng nào và không có nguồn TypeScript: đó là gốc ghép (composition root) tạo mọi đối tượng một lần mỗi tiến trình và nối các gói theo CONTRACTS-AI01. Cùng gói G: phần ghép trong `pema/bootstrap.py` (lifespan), `pema/workers/main.py` (điểm vào `python -m pema.workers.main`), migration `g_0005_merge_heads`, `uv.lock` và `openapi.json` sinh lại, các kịch bản vòng khép kín trong `tests/integration/`, tool phòng khám `pema/agent/tools/clinic_tools.py` (`patient.get_care_context`, `appointment.book` dạng đề xuất, `escalation.create`; khóa `review_item.create` nằm trong `CLINIC_TOOL_KEYS` nhưng chưa đăng ký thành tool).
+
+### Workers
+
+Bảng "no zalo-agent source" ghi D1 làm `pema/workers/agent_worker.py`. File đó **không tồn tại**. Việc đó do `pema/workers/turn_worker.py` làm (claim `TurnJob`, chạy `process_turn_job`); thêm `scheduler_worker.py` (S), `kb_ingest_worker.py` (D3), `main.py` (G).
+
+### File có thật nhưng PORT-MAP không gọi tên (phân loại)
+
+| Nhóm | File | Ghi chú |
+|---|---|---|
+| Đồ giả và hỗ trợ test | `pema/agent/{testing,testing_conversation,testing_engine}.py`, `agent/tools/testing.py`, `api/{clinic_testing,kb_test_support}.py`, `api/routers/admin_stores_testing.py`, `channels/pipeline_testing.py`, `channels/zalo_bot/testing.py`, `channels/zalo_personal/{testing,service_testing}.py`, `composition/testing.py`, `config/testing_settings.py`, `conversation/pg_testing.py`, `knowledge/kb_test_support.py`, `mcp/testing.py`, `policy/testing.py`, `scheduler/{testing,testing_env}.py` | nằm trong gói sản xuất để test và eval dùng chung; không có nguồn TS |
+| Kho/ghép Postgres, Redis | `conversation/{store,sql_util}.py`, `knowledge/postgres_knowledge_store.py`, `config/{runtime_settings_kv,runtime_settings_store}.py`, `middleware/{redis_backends,redis_ops}.py`, `scheduler/{store,redis_locks,pg_readers,session_scope,run_context,deps,ports,admin_service}.py`, `api/routers/admin_stores.py` | hệ quả của SQLite → Postgres và một tiến trình → Redis |
+| Clinic (B1) | `clinic/models/{audit,base,care,crm,inbox,scheduling,tenant}.py` và routers `auth`, `patients`, `appointments`, `crm`, `conversations`, `review_items`, `admin_audit`, `admin_templates`, `system` | mới, không có TS |
+| CRM (B2) | router `admin_crm_rules` | nguồn là JS của prototype, không phải zalo-agent |
+| Kênh (C1, C2) | `channels/zalo_bot/{settings,bot_account_manager,bot_account_admin}.py`; `channels/zalo_personal/{proactive_gate,bridge_events,bridge_signing,channel_settings,credential_vault,audit_writer,services}.py`; `channels/{registry,turn_ports,utf16_text}.py`; routers `webhooks_zalo_bot`, `webhooks_zalo_bridge`, `admin_bot_accounts`, `admin_channels` | `proactive_gate` là cổng an toàn của clinic (kill switch, cửa sổ, trần, khoảng cách) đặt trong `send_text` |
+| Agent, MCP, tri thức | `agent/{model_types,safe_turn_error,text_generator,tag_name_padding}.py`, `agent/tools/{function_tool,tool_deps,tool_send,tool_policy_tags,unicode_char_classes}.py`, `mcp/{mcp_profile_gate,mcp_schema}.py`, `knowledge/{chu_ky_file,kb_extract_timeout_boot_guard}.py` | `mcp_profile_gate` thực thi "patient_channel chặn mọi tool MCP" |
+| Tiện ích | `api/{deps,errors,export_openapi}.py`, `core/event_loop.py`, `shared/js_whitespace.py`, `scheduler/template_placeholders.py` | `template_placeholders`: chỗ giữ của mẫu chỉ điền khi danh tính đã xác minh |
+
+### Migration
+
+PORT-MAP ghi "Schema = Alembic 0001..0003". Thực tế còn `b1_0004_auth_session_and_inbox`, `b2_0001_crm_protocol_marker`, `s_0004_scheduler_runtime`, `p0001_identity_link`, và `g_0005_merge_heads` gộp các đầu nhánh. Cách chạy là `alembic upgrade heads`.
+
+### Test được ghi tên nhưng không có dưới tên đó
+
+Mười đường dẫn test trong các hàng bảng không tồn tại (hành vi liên quan có thể nằm trong file test khác tên; chưa kiểm từng cái): `tests/api/routers/test_log_routes.py`, `test_overview_routes.py`, `test_schedule_routes.py` (có `tests/scheduler/test_schedule_routes.py`), `test_trace_routes.py`, `test_trace_routes_paging.py`, `test_tuning_routes.py`, `test_vision_routes.py`; `tests/api/test_dashboard_password_route.py`; `tests/scheduler/test_scheduled_job_send.py`; `tests/test_startup_order.py` (gói G, "thứ tự khởi động của tiến trình" chưa viết). Đây là việc mở: viết bù hoặc sửa hàng PORT-MAP.
+
+### Hạ tầng và tài liệu (các hàng "F")
+
+- `Dockerfile` → ghi `infra/Dockerfile.api, Dockerfile.worker`; thực tế một ảnh dùng chung cho api, worker và migrate tại `infra/docker/api.Dockerfile`, cộng `infra/docker/frontend.Dockerfile` và `infra/docker/bridge.Dockerfile` (mỗi cái có `.dockerignore` riêng).
+- `docs/deployment-guide.md` và `docs/vps-setup-checklist.md` → ghi `docs/`; thực tế là `infra/ubuntu/HUONG-DAN-UBUNTU.md` (tiếng Việt) kèm `infra/ubuntu/systemd/`.
+- `docs/system-architecture.md` → `docs/ARCH-AI01.md` (đã viết; cùng SCOPE, SPEC, MODULEMAP-AI01).
+- `docs/ke-toan-token-cua-agent.html`, `docs/mcp-client-architecture.html`: ghi "giữ làm sơ đồ nếu còn đúng"; **chưa chuyển** (không có trong `pema-agent/docs/`).
+- `Caddyfile.site` và `deploy.sh` → ghi `infra/ (reverse proxy)`: **chưa có**. Chưa có reverse proxy trong repo; hướng dẫn Ubuntu dùng Tailscale (webhook công khai cần Tailscale Funnel hoặc reverse proxy do người quản trị tự dựng).
+- `.env.production.example` gộp vào `infra/.env.example`; `config/accounts.example.json` → `infra/accounts.example.json` đúng như ghi.
+
+### Frontend (các hàng "E")
+
+Hàng ghi một `page.tsx` cho nhiều trang gốc, nhưng thực tế mỗi trang của dashboard gốc là một route riêng dưới `frontend/src/app/(admin)/admin/<vùng>/page.tsx` (ví dụ `admin/accounts`, `admin/agents`, `admin/kb`, `admin/schedules`, `admin/tuning/[group]`). Thành phần dịch ở `frontend/src/components/admin/<vùng>` và logic ở `frontend/src/lib/admin/<vùng>`; mã không có bản gốc ở `components/ops`, `lib/ops` và trang `admin/policy`. Dashboard gốc dùng `dashboard-api-client.ts` với DTO tên tiếng Việt; bản Next.js dùng client gõ kiểu từ `openapi.json` (DTO snake_case tiếng Anh) kèm vài adapter thuần (`tuning-types.ts`, `trace-types.ts`). Chi tiết ở `frontend/README.md` (mục "Port notes").
+
+### Eval
+
+`evals/` có thêm `eval_cases_clinic.py`, `clinic_cases.json`, `eval_wiring.py`, `eval_canned_tools.py` (gói P và D1) ngoài các file được ánh xạ. `evals/` không nằm trong `testpaths` của `make test` (việc mở cho G).

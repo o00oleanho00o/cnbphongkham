@@ -44,7 +44,6 @@ EXPECTED_PATHS = [
     "/api/v1/admin/tools/image-gen",
     "/api/v1/admin/kb/sources",
     "/api/v1/admin/kb/search",
-    "/api/v1/admin/schedules",
     "/api/v1/admin/schedules/{job_id}/run",
     "/api/v1/admin/mcp/servers",
     "/api/v1/admin/mcp/servers/{server_id}/reapprove",
@@ -121,22 +120,10 @@ def test_kill_switch_and_daily_cap_are_in_the_channel_settings_schema(schema: di
     assert {"kill_switch_on", "daily_cap", "proactive_sent_today", "bridge_state"} <= set(props)
 
 
-async def test_health_is_the_only_live_endpoint(client: httpx.AsyncClient) -> None:
+async def test_health_answers_without_a_session(client: httpx.AsyncClient) -> None:
     resp = await client.get("/healthz")
     assert resp.status_code == 200
     assert resp.json()["status"] == "ok"
-
-
-# GET endpoints that left the 501 skeleton because their package implemented them (each has its own route tests).
-IMPLEMENTED_GET = {
-    "/api/v1/admin/model/provider",
-    "/api/v1/admin/model/vision",
-    "/api/v1/admin/model/tuning",
-    "/api/v1/admin/usage/overview",
-    "/api/v1/admin/traces",
-    "/api/v1/admin/traces/turn/{turn_id}",
-    "/api/v1/admin/logs/app",
-}
 
 
 def _fill_path(path: str) -> str:
@@ -164,13 +151,33 @@ def _fill_path(path: str) -> str:
     return re.sub(r"\{(\w+)\}", repl, path)
 
 
-async def test_every_get_endpoint_answers_501_with_error_envelope(
+# A bare ``create_app()`` (no lifespan, no composition root) has no service behind the routes of these packages:
+# they answer 501 ``not_implemented`` until ``wire_api`` installs the service. Everything else is already
+# guarded by the session and answers 401 to an anonymous caller. Nothing answers 200 with data.
+UNWIRED_WHEN_BARE_PREFIXES = (
+    "/api/v1/admin/accounts",
+    "/api/v1/admin/channels",
+    "/api/v1/admin/friends",
+    "/api/v1/admin/policy",
+    "/api/v1/admin/rules",
+    "/api/v1/webhooks/",
+)
+
+
+# The application log needs no clinic, so on a bare app (no composition root, no middleware enforcement) it
+# answers; on the wired app ``StaffSessionMiddleware`` refuses an anonymous call (see
+# ``tests/integration/test_admin_access_matrix.py``).
+GUARDED_BY_THE_MIDDLEWARE_WHEN_WIRED = {"/api/v1/admin/logs/app"}
+
+
+async def test_a_bare_app_never_serves_a_staff_route_to_an_anonymous_caller(
     client: httpx.AsyncClient, schema: dict[str, Any]
 ) -> None:
-    checked = 0
+    """app trần: mọi route nhân viên trả 401 (chưa đăng nhập) hoặc 501 (chưa nối dịch vụ), không bao giờ 200"""
+    unauthenticated = 0
     for path, item in schema["paths"].items():
         op = item.get("get")
-        if op is None or path == "/healthz" or path in IMPLEMENTED_GET:
+        if op is None or path == "/healthz" or path in GUARDED_BY_THE_MIDDLEWARE_WHEN_WIRED:
             continue
         params = {
             p["name"]: str(uuid4())
@@ -178,10 +185,17 @@ async def test_every_get_endpoint_answers_501_with_error_envelope(
             if p["in"] == "query" and p.get("required")
         }
         resp = await client.get(_fill_path(path), params=params)
-        assert resp.status_code == 501, path
-        assert resp.json()["error"]["code"] == "not_implemented", path
-        checked += 1
-    assert checked >= 40
+        envelope: Any = resp.json()
+        assert "error" in envelope, f"{path} answered {resp.status_code} with data"
+        body = envelope["error"]["code"]
+        if path.startswith(UNWIRED_WHEN_BARE_PREFIXES):
+            assert (resp.status_code, body) == (501, "not_implemented"), path
+        elif resp.status_code == 401:
+            assert body == "unauthenticated", path
+            unauthenticated += 1
+        else:
+            assert (resp.status_code, body) == (501, "not_implemented"), path
+    assert unauthenticated >= 25
 
 
 async def test_validation_errors_use_the_error_envelope_without_echoing_input(
@@ -194,12 +208,11 @@ async def test_validation_errors_use_the_error_envelope_without_echoing_input(
     assert "a@example.test" not in resp.text
 
 
-async def test_post_with_valid_body_reaches_the_501_stub(client: httpx.AsyncClient) -> None:
-    resp = await client.post(
-        "/api/v1/auth/login",
-        json={"clinic_slug": "demo", "email": "staff@example.test", "password": "synthetic"},
-    )
-    assert resp.status_code == 501
+async def test_a_mutating_staff_route_refuses_an_anonymous_caller(client: httpx.AsyncClient) -> None:
+    """POST của nhân viên không có phiên -> 401, không chạm tới nghiệp vụ"""
+    resp = await client.post(f"/api/v1/review-items/{uuid4()}/reject", json={"version": 1, "reason": "x"})
+    assert resp.status_code == 401
+    assert resp.json()["error"]["code"] == "unauthenticated"
 
 
 async def test_bot_token_with_bad_shape_is_rejected_before_the_stub(client: httpx.AsyncClient) -> None:
