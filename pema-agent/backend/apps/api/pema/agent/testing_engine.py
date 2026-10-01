@@ -53,14 +53,15 @@ def tin_nhan(text: str = "hôm nay ngày mấy", **extra: object) -> InboundMess
 
 
 def fake_account(**patch: object) -> AccountConfig:
-    return fake_account_config(
-        id=ACCOUNT_ID,
-        channel=ChannelKind.ZALO_PERSONAL,
-        agent_id="khong-co-agent-nay",
-        auto_react_enabled=False,
-        typing_indicator_enabled=False,
+    fields: dict[str, object] = {
+        "id": ACCOUNT_ID,
+        "channel": ChannelKind.ZALO_PERSONAL,
+        "agent_id": "khong-co-agent-nay",
+        "auto_react_enabled": False,
+        "typing_indicator_enabled": False,
         **patch,
-    )
+    }
+    return fake_account_config(**fields)
 
 
 async def no_sleep(_seconds: float) -> None:
