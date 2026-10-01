@@ -31,16 +31,20 @@ describe("isPrivateAddress", () => {
     });
   });
 
-  ["93.184.216.34", "8.8.8.8", "172.32.0.1", "2606:2800:220:1:248:1893:25c8:1946"].forEach((address) => {
-    it(`${address}_is_public`, () => {
-      assert.equal(isPrivateAddress(address), false);
-    });
-  });
+  ["93.184.216.34", "8.8.8.8", "172.32.0.1", "2606:2800:220:1:248:1893:25c8:1946"].forEach(
+    (address) => {
+      it(`${address}_is_public`, () => {
+        assert.equal(isPrivateAddress(address), false);
+      });
+    },
+  );
 });
 
 describe("checkPublicHttpUrl", () => {
   it("a_public_https_url_is_accepted", async () => {
-    assert.deepEqual(await checkPublicHttpUrl("https://videos.example.test/a.mp4", publicHost), { ok: true });
+    assert.deepEqual(await checkPublicHttpUrl("https://videos.example.test/a.mp4", publicHost), {
+      ok: true,
+    });
   });
 
   it("a_host_that_resolves_to_a_mix_with_a_private_address_is_refused", async () => {
@@ -65,7 +69,10 @@ describe("checkPublicHttpUrl", () => {
 
   it("other_schemes_credentials_and_garbage_are_refused", async () => {
     assert.equal((await checkPublicHttpUrl("file:///etc/passwd", publicHost)).ok, false);
-    assert.equal((await checkPublicHttpUrl("https://u:p@videos.example.test/a", publicHost)).ok, false);
+    assert.equal(
+      (await checkPublicHttpUrl("https://u:p@videos.example.test/a", publicHost)).ok,
+      false,
+    );
     assert.equal((await checkPublicHttpUrl("not a url", publicHost)).ok, false);
   });
 
@@ -74,6 +81,9 @@ describe("checkPublicHttpUrl", () => {
       throw new Error("ENOTFOUND");
     };
     assert.equal((await checkPublicHttpUrl("https://nowhere.example.test/a", failing)).ok, false);
-    assert.equal((await checkPublicHttpUrl("https://empty.example.test/a", async () => [])).ok, false);
+    assert.equal(
+      (await checkPublicHttpUrl("https://empty.example.test/a", async () => [])).ok,
+      false,
+    );
   });
 });

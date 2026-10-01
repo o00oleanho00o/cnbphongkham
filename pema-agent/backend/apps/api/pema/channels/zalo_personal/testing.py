@@ -6,12 +6,27 @@ The suite runs with ``--import-mode=importlib`` and no ``tests`` package, so sha
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
+from datetime import datetime
+from uuid import UUID
 
-from pema.channels.zalo_personal.bridge_client import ReceiptParams, ZaloApi, ZaloBridgeError
-from pema_contracts.channel import QuoteRef, TextStyle, ThreadKind
+from pema.channels.zalo_personal.bridge_client import (
+    BridgeAccountState,
+    BridgeQrStatus,
+    KillSwitchState,
+    ReceiptParams,
+    ZaloApi,
+    ZaloBridgeError,
+)
+from pema.channels.zalo_personal.channel_settings import ChannelSettings
+from pema.channels.zalo_personal.kenh_ca_nhan import ZaloPersonalChannel
+from pema.channels.zalo_personal.proactive_gate import ProactiveGate
+from pema_contracts.agents import AccountConfig
+from pema_contracts.channel import ChannelKind, QuoteRef, TextStyle, ThreadKind
 from pema_contracts.common import JsonObject
+from pema_contracts.scheduler import ProactiveSendGuard
+from pema_contracts.testing import FAKE_CLINIC_ID, fake_account_config
 
 
 @dataclass
@@ -48,6 +63,8 @@ class FakeZaloApi:
     rejected: list[str] = field(default_factory=list[str])
     fail_send_with: list[ZaloBridgeError] = field(default_factory=list[ZaloBridgeError])
     fail_accept_for: set[str] = field(default_factory=set[str])
+    send_attempts: int = 0
+    """Every call of ``send_message``, failed or not."""
 
     @property
     def account_id(self) -> str:
@@ -67,6 +84,7 @@ class FakeZaloApi:
         mentions: Sequence[JsonObject] = (),
         proactive: bool = False,
     ) -> JsonObject:
+        self.send_attempts += 1
         if self.fail_send_with:
             raise self.fail_send_with.pop(0)
         self.sent.append(
@@ -132,3 +150,116 @@ class FakeZaloApi:
 
 
 _check: ZaloApi = FakeZaloApi()
+
+
+@dataclass
+class StaticPolicyReader:
+    """``ChannelPolicyReader`` over a mutable row: change ``settings`` to flip the kill switch."""
+
+    settings: ChannelSettings = field(
+        default_factory=lambda: ChannelSettings(channel=ChannelKind.ZALO_PERSONAL, enabled=True, version=1)
+    )
+    reads: int = 0
+
+    async def get_policy(self, clinic_id: UUID, channel: ChannelKind) -> ChannelSettings:
+        self.reads += 1
+        return self.settings
+
+
+def make_personal_channel(
+    api: ZaloApi | None = None,
+    *,
+    config: AccountConfig | None = None,
+    reader: StaticPolicyReader | None = None,
+    flag: bool = True,
+    counter: ProactiveSendGuard | None = None,
+    now: Callable[[], datetime] | None = None,
+    sleep: Callable[[float], Awaitable[None]] | None = None,
+    uniform: Callable[[float, float], float] | None = None,
+    secret: str | None = "bridge-test-secret-0123456789",  # noqa: S107 - a fake secret
+) -> ZaloPersonalChannel:
+    """A ``ZaloPersonalChannel`` over fakes. The policy row defaults to ``enabled`` with no kill switch."""
+    fake_api = api or FakeZaloApi()
+    cfg = config or fake_account_config(channel=ChannelKind.ZALO_PERSONAL, id=fake_api.account_id)
+    extra: dict[str, object] = {}
+    if now is not None:
+        extra["now"] = now
+    if sleep is not None:
+        extra["sleep"] = sleep
+    if uniform is not None:
+        extra["uniform"] = uniform
+    gate = ProactiveGate(
+        clinic_id=FAKE_CLINIC_ID,
+        account_id=cfg.id,
+        reader=reader or StaticPolicyReader(),
+        api=fake_api,
+        flag_enabled=lambda: flag,
+        counter=counter,
+        **extra,  # type: ignore[arg-type]
+    )
+    return ZaloPersonalChannel(
+        clinic_id_str=str(FAKE_CLINIC_ID), config=cfg, api=fake_api, gate=gate, bridge_secret=lambda: secret
+    )
+
+
+@dataclass
+class FakeBridge:
+    """``BridgeGateway`` in memory: records every call, never touches a network."""
+
+    own_id: str = "self-1"
+    states: dict[str, str] = field(default_factory=dict[str, str])
+    started: list[tuple[str, str, JsonObject, KillSwitchState]] = field(
+        default_factory=list[tuple[str, str, JsonObject, KillSwitchState]]
+    )
+    stopped: list[str] = field(default_factory=list[str])
+    stop_all_calls: int = 0
+    kill_switch: KillSwitchState | None = None
+    qr_started: list[str] = field(default_factory=list[str])
+    qr_answers: list[BridgeQrStatus] = field(default_factory=list[BridgeQrStatus])
+    fail_start: ZaloBridgeError | None = None
+    before_start_returns: Callable[[], None] | None = None
+    apis: dict[str, FakeZaloApi] = field(default_factory=dict[str, FakeZaloApi])
+
+    async def start_account(
+        self, account_id: str, *, clinic_slug: str, credential: JsonObject, kill_switch: KillSwitchState
+    ) -> str:
+        if self.fail_start is not None:
+            raise self.fail_start
+        self.started.append((account_id, clinic_slug, credential, kill_switch))
+        self.kill_switch = kill_switch
+        self.states[account_id] = "connected"
+        if self.before_start_returns is not None:
+            self.before_start_returns()
+        return self.own_id
+
+    async def stop_account(self, account_id: str) -> None:
+        self.stopped.append(account_id)
+        self.states[account_id] = "stopped"
+
+    async def stop_all(self) -> None:
+        self.stop_all_calls += 1
+        for key in self.states:
+            self.states[key] = "stopped"
+
+    async def get_state(self, account_id: str) -> BridgeAccountState:
+        state = self.states.get(account_id, "stopped")
+        return BridgeAccountState(
+            account_id=account_id, state=state, own_id=self.own_id if state == "connected" else ""
+        )
+
+    async def start_qr_login(self, account_id: str, *, clinic_slug: str) -> BridgeQrStatus:
+        self.qr_started.append(account_id)
+        return self.qr_answers.pop(0) if self.qr_answers else BridgeQrStatus(state="starting")
+
+    async def get_qr_login(self, account_id: str) -> BridgeQrStatus:
+        return self.qr_answers.pop(0) if self.qr_answers else BridgeQrStatus(state="idle")
+
+    async def set_kill_switch(self, state: KillSwitchState) -> None:
+        self.kill_switch = state
+
+    def account_api(self, account_id: str, own_id: str = "") -> ZaloApi:
+        api = self.apis.get(account_id)
+        if api is None:
+            api = FakeZaloApi(account=account_id, own_id=own_id or self.own_id)
+            self.apis[account_id] = api
+        return api

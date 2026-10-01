@@ -182,10 +182,16 @@ class ChannelSettingsRepository:
             await self._ensure_row(session, ctx.clinic_id, channel)
             if changes:
                 assignments = ", ".join(f"{column} = :{column}" for column in changes)
-                params: dict[str, object] = {**changes, "channel": channel.value, "actor": ctx.actor_user_id}
+                # A row created by this very call starts at version 1: no bump (``current.version == 0``).
+                params: dict[str, object] = {
+                    **changes,
+                    "channel": channel.value,
+                    "actor": ctx.actor_user_id,
+                    "bump": 1 if current.version else 0,
+                }
                 await session.execute(
                     text(
-                        f"UPDATE clinic.channel_setting SET {assignments}, version = version + 1, "  # noqa: S608
+                        f"UPDATE clinic.channel_setting SET {assignments}, version = version + :bump, "  # noqa: S608
                         "updated_by = :actor WHERE channel = :channel"
                     ),
                     params,

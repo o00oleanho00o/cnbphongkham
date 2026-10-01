@@ -24,8 +24,9 @@ RAISES ``ZaloBridgeError`` so ``send_reply_in_parts`` keeps its retry-without-st
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 
+from pema.channels.send_reply_in_parts import DoanCanGui
 from pema.channels.zalo_personal.bridge_client import ZaloApi, ZaloBridgeError
 from pema.channels.zalo_personal.bridge_signing import verify_signature
 from pema.channels.zalo_personal.message_receipts import send_seen_receipt
@@ -64,27 +65,22 @@ _GUARD_KINDS: dict[str, ErrorCode] = {
 
 def duong_gui_zca_js(
     api: ZaloApi, thread_id: str, thread_type: ThreadKind, *, proactive: bool = False
-) -> Callable[..., object]:
+) -> Callable[[DoanCanGui], Awaitable[object]]:
     """``duongGuiZcaJs``: the send path of ONE thread over a ``ZaloApi``.
 
-    Only attaches ``styles`` when there are any and ``quote`` when present: zca-js builds
-    ``textProperties`` only for
-    a non-empty ``styles`` and switches to the ``.../quote`` endpoint when a quote is given, so an empty value
-    would change the API call for nothing. One factory instead of every caller writing it: three places
-    are three
-    chances to forget one of the two rules, and forgetting is silent.
+    Only attaches ``styles`` when there are any and ``quote`` when present: zca-js builds ``textProperties``
+    only for a non-empty ``styles`` and switches to the ``.../quote`` endpoint when a quote is given, so an
+    empty value would change the API call for nothing. One factory instead of every caller writing it: three
+    places are three chances to forget one of the two rules, and forgetting is silent.
     """
 
-    async def gui(doan: object) -> object:
-        text: str = getattr(doan, "text")  # noqa: B009 - DoanCanGui, kept untyped to avoid an import cycle
-        styles: Sequence[TextStyle] = getattr(doan, "styles", ())
-        quote: QuoteRef | None = getattr(doan, "quote", None)
+    async def gui(doan: DoanCanGui) -> object:
         return await api.send_message(
-            text=text,
+            text=doan.text,
             thread_id=thread_id,
             thread_type=thread_type,
-            styles=styles if styles else (),
-            quote=quote,
+            styles=doan.styles if doan.styles else (),
+            quote=doan.quote,
             proactive=proactive,
         )
 

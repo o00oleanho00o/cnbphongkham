@@ -117,7 +117,11 @@ describe("AccountManager: start and stop", () => {
     gateway.releaseLogin();
     await Promise.all([pendingFirst, pendingSecond]);
 
-    assert.equal(first.listener.stops >= 1, true, "the first attachment was replaced by the second");
+    assert.equal(
+      first.listener.stops >= 1,
+      true,
+      "the first attachment was replaced by the second",
+    );
     assert.equal(manager.get("acc-1")?.api, second.api);
   });
 });
@@ -146,7 +150,10 @@ describe("AccountManager: events to the API", () => {
 
     fake.listener.emitFriendEvent(fakeFriendEvent(FriendEventType.REQUEST, "2000009"));
 
-    assert.deepEqual(publisher.ofType("friend_event").map((event) => event.event.kind), ["request"]);
+    assert.deepEqual(
+      publisher.ofType("friend_event").map((event) => event.event.kind),
+      ["request"],
+    );
     assert.equal(publisher.ofType("friend_event")[0]?.event.thread_id, "2000009");
   });
 
@@ -271,11 +278,17 @@ describe("AccountManager: reported state", () => {
     const account = manager.get("acc-1");
     assert.ok(account);
 
-    Array.from({ length: 5 }).forEach(() => account.safety.failed({ proactive: false, dayKey: "x" }, true));
+    Array.from({ length: 5 }).forEach(() =>
+      account.safety.failed({ proactive: false, dayKey: "x" }, true),
+    );
     manager.reportBlocked(account);
     mock.timers.tick(ON_DINH_MS);
 
-    assert.deepEqual(publisher.states(), ["blocked"], "a blocked account is never reported connected");
+    assert.deepEqual(
+      publisher.states(),
+      ["blocked"],
+      "a blocked account is never reported connected",
+    );
     assert.equal(account.state, "blocked");
   });
 

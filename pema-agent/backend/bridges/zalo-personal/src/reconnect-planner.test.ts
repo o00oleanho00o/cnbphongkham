@@ -82,7 +82,11 @@ describe("KeHoachKetNoiLai", () => {
     k.danhDauKetNoi(0);
     assert.equal(k.danhDauDong(200, 0).onDinh, true); // đứng, tiêu ketNoiLuc
     // lần đóng kế tiếp mà không danhDauKetNoi lại -> phải là chớp-tắt
-    assert.equal(k.danhDauDong(999_999, 0).onDinh, false, "ketNoiLuc đã tiêu, không được tính lại theo mốc cũ");
+    assert.equal(
+      k.danhDauDong(999_999, 0).onDinh,
+      false,
+      "ketNoiLuc đã tiêu, không được tính lại theo mốc cũ",
+    );
   });
 
   it("jitter được cộng vào delay", () => {

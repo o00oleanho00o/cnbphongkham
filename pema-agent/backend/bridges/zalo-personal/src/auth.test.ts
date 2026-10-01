@@ -44,7 +44,10 @@ describe("auth: HMAC of the wire protocol", () => {
 
     it("string_and_byte_bodies_give_the_same_signature", () => {
       const bytes = new TextEncoder().encode(BODY);
-      assert.equal(computeSignature(SECRET, String(NOW), bytes), computeSignature(SECRET, String(NOW), BODY));
+      assert.equal(
+        computeSignature(SECRET, String(NOW), bytes),
+        computeSignature(SECRET, String(NOW), BODY),
+      );
     });
   });
 
@@ -67,7 +70,10 @@ describe("auth: HMAC of the wire protocol", () => {
     });
 
     it("a_tampered_timestamp_is_refused", () => {
-      assert.deepEqual(verify({ timestamp: String(NOW + 1) }), { ok: false, reason: "bad_signature" });
+      assert.deepEqual(verify({ timestamp: String(NOW + 1) }), {
+        ok: false,
+        reason: "bad_signature",
+      });
     });
 
     it("a_signature_that_is_not_64_hex_characters_is_refused", () => {

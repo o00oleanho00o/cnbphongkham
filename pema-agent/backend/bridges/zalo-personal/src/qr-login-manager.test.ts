@@ -199,7 +199,11 @@ describe("QrLoginManager: session lifetime (new)", () => {
     assert.equal(newSession.seq, oldSession.seq + 1);
     assert.equal(first.signal.aborted, true);
     first.emit({ type: "qr", qrBase64: "STALE" });
-    assert.equal(manager.getQrLoginStatus("acc-seq").state, "starting", "events of the old session are ignored");
+    assert.equal(
+      manager.getQrLoginStatus("acc-seq").state,
+      "starting",
+      "events of the old session are ignored",
+    );
   });
 
   it("a_declined_session_stays_declined_when_the_aborted_login_rejects", async () => {

@@ -96,7 +96,10 @@ describe("app: health and the disabled flag", () => {
       accounts: 1,
     });
     await sender.post("/v1/accounts/acc-1/stop", {});
-    assert.equal(((await (await bridge.app.request("/health")).json()) as { accounts: number }).accounts, 0);
+    assert.equal(
+      ((await (await bridge.app.request("/health")).json()) as { accounts: number }).accounts,
+      0,
+    );
   });
 
   it("a_disabled_bridge_answers_503_bridge_disabled_for_every_route_and_never_calls_zalo", async () => {
@@ -137,7 +140,9 @@ describe("app: HMAC authentication", () => {
 
   it("a_signature_made_with_the_wrong_secret_is_refused", async () => {
     const { bridge, clock } = build();
-    const wrong = signedSender(bridge.app, "another-secret-0123456789", () => Math.floor(clock.now / 1000));
+    const wrong = signedSender(bridge.app, "another-secret-0123456789", () =>
+      Math.floor(clock.now / 1000),
+    );
     const result = await errorOf(await wrong.get("/v1/accounts"));
     assert.equal(result.status, 401);
   });
@@ -157,7 +162,10 @@ describe("app: HMAC authentication", () => {
 
     const response = await bridge.app.request("/v1/kill-switch", {
       method: "POST",
-      headers: { "content-type": "application/json", ...signedHeaders(SECRET, signedFor, Math.floor(clock.now / 1000)) },
+      headers: {
+        "content-type": "application/json",
+        ...signedHeaders(SECRET, signedFor, Math.floor(clock.now / 1000)),
+      },
       body: sent,
     });
 
@@ -175,8 +183,8 @@ describe("app: HMAC authentication", () => {
   it("only_get_health_is_unsigned", async () => {
     const { bridge } = build();
     const checks = await Promise.all(
-      ["/v1/accounts", "/v1/kill-switch", "/v1/accounts/acc-1/state"].map(async (path) =>
-        (await bridge.app.request(path)).status,
+      ["/v1/accounts", "/v1/kill-switch", "/v1/accounts/acc-1/state"].map(
+        async (path) => (await bridge.app.request(path)).status,
       ),
     );
     assert.deepEqual(checks, [401, 401, 401]);
@@ -231,7 +239,9 @@ describe("app: account lifecycle", () => {
     const stopAll = await sender.post("/v1/accounts/stop-all", {});
 
     assert.equal(stopAll.status, 200);
-    const list = (await readEnvelope(await sender.get("/v1/accounts")))["accounts"] as Array<{ state: string }>;
+    const list = (await readEnvelope(await sender.get("/v1/accounts")))["accounts"] as Array<{
+      state: string;
+    }>;
     assert.deepEqual(
       list.map((account) => account.state),
       ["stopped", "stopped"],
@@ -240,7 +250,9 @@ describe("app: account lifecycle", () => {
 
   it("start_without_a_credential_is_a_422_bad_request", async () => {
     const { sender } = build();
-    const result = await errorOf(await sender.post("/v1/accounts/acc-1/start", { clinic_slug: "clinic-a" }));
+    const result = await errorOf(
+      await sender.post("/v1/accounts/acc-1/start", { clinic_slug: "clinic-a" }),
+    );
     assert.equal(result.status, 422);
     assert.equal(result.kind, "bad_request");
   });
@@ -259,7 +271,10 @@ describe("app: account lifecycle", () => {
     const raw = "{not json";
     const response = await bridge.app.request("/v1/accounts/acc-1/start", {
       method: "POST",
-      headers: { "content-type": "application/json", ...signedHeaders(SECRET, raw, Math.floor(clock.now / 1000)) },
+      headers: {
+        "content-type": "application/json",
+        ...signedHeaders(SECRET, raw, Math.floor(clock.now / 1000)),
+      },
       body: raw,
     });
     assert.equal(response.status, 400);
@@ -298,7 +313,11 @@ describe("app: account lifecycle", () => {
       kill_switch: { on: true, scope: "proactive", reason: "clinic switch" },
     });
 
-    assert.deepEqual(bridge.killSwitch.get(), { on: true, scope: "proactive", reason: "clinic switch" });
+    assert.deepEqual(bridge.killSwitch.get(), {
+      on: true,
+      scope: "proactive",
+      reason: "clinic switch",
+    });
   });
 
   it("start_replaces_a_running_account_of_the_same_id", async () => {
@@ -320,11 +339,14 @@ describe("app: kill switch", () => {
 
     const state = await readEnvelope(await sender.get("/v1/kill-switch"));
 
-    assert.deepEqual({ on: state["on"], scope: state["scope"], reason: state["reason"] }, {
-      on: true,
-      scope: "proactive",
-      reason: "clinic switch",
-    });
+    assert.deepEqual(
+      { on: state["on"], scope: state["scope"], reason: state["reason"] },
+      {
+        on: true,
+        scope: "proactive",
+        reason: "clinic switch",
+      },
+    );
   });
 
   it("scope_all_blocks_a_reply_and_a_proactive_send_and_zalo_is_not_called", async () => {
@@ -332,7 +354,9 @@ describe("app: kill switch", () => {
     await sender.post("/v1/kill-switch", { on: true, scope: "all" });
 
     const reply = await errorOf(await sender.post("/v1/accounts/acc-1/send", sendBody()));
-    const proactive = await errorOf(await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true })));
+    const proactive = await errorOf(
+      await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true })),
+    );
 
     assert.deepEqual([reply.status, reply.kind], [409, "kill_switch"]);
     assert.deepEqual([proactive.status, proactive.kind], [409, "kill_switch"]);
@@ -343,7 +367,9 @@ describe("app: kill switch", () => {
     const { sender, fake } = await running();
     await sender.post("/v1/kill-switch", { on: true, scope: "proactive" });
 
-    const proactive = await errorOf(await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true })));
+    const proactive = await errorOf(
+      await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true })),
+    );
     const reply = await sender.post("/v1/accounts/acc-1/send", sendBody());
 
     assert.equal(proactive.kind, "kill_switch");
@@ -394,7 +420,12 @@ describe("app: send and the safety gates", () => {
   it("an_id_beyond_the_safe_integer_range_survives_as_a_string", async () => {
     const { sender } = await running(
       {},
-      { sendMessage: async () => ({ message: { msgId: 9007199254740993n as unknown as number }, attachment: [] }) },
+      {
+        sendMessage: async () => ({
+          message: { msgId: 9007199254740993n as unknown as number },
+          attachment: [],
+        }),
+      },
     );
     const response = await sender.post("/v1/accounts/acc-1/send", sendBody());
     assert.equal(((await response.json()) as { msg_id: string }).msg_id, "9007199254740993");
@@ -421,9 +452,14 @@ describe("app: send and the safety gates", () => {
   it("styles_are_attached_only_when_non_empty", async () => {
     const { sender, fake } = await running();
     await sender.post("/v1/accounts/acc-1/send", sendBody({ styles: [] }));
-    await sender.post("/v1/accounts/acc-1/send", sendBody({ styles: [{ start: 0, len: 4, st: "b" }] }));
+    await sender.post(
+      "/v1/accounts/acc-1/send",
+      sendBody({ styles: [{ start: 0, len: 4, st: "b" }] }),
+    );
 
-    const [empty, styled] = fake.callsTo("sendMessage").map((call) => call.args[0] as Record<string, unknown>);
+    const [empty, styled] = fake
+      .callsTo("sendMessage")
+      .map((call) => call.args[0] as Record<string, unknown>);
 
     assert.equal("styles" in (empty ?? {}), false);
     assert.deepEqual(styled?.["styles"], [{ start: 0, len: 4, st: "b" }]);
@@ -443,7 +479,9 @@ describe("app: send and the safety gates", () => {
     await sender.post("/v1/accounts/acc-1/send", sendBody());
     await sender.post("/v1/accounts/acc-1/send", sendBody({ quote }));
 
-    const [plain, quoted] = fake.callsTo("sendMessage").map((call) => call.args[0] as Record<string, unknown>);
+    const [plain, quoted] = fake
+      .callsTo("sendMessage")
+      .map((call) => call.args[0] as Record<string, unknown>);
 
     assert.equal("quote" in (plain ?? {}), false);
     assert.deepEqual(quoted?.["quote"], { ...quote, cliMsgId: "77", ts: "1700000000000" });
@@ -456,7 +494,9 @@ describe("app: send and the safety gates", () => {
     await sender.post("/v1/accounts/acc-1/send", sendBody({ mentions: [] }));
     await sender.post("/v1/accounts/acc-1/send", sendBody());
 
-    const [given, empty, absent] = fake.callsTo("sendMessage").map((call) => call.args[0] as Record<string, unknown>);
+    const [given, empty, absent] = fake
+      .callsTo("sendMessage")
+      .map((call) => call.args[0] as Record<string, unknown>);
 
     assert.deepEqual(given?.["mentions"], mentions);
     assert.equal("mentions" in (empty ?? {}), false);
@@ -466,23 +506,35 @@ describe("app: send and the safety gates", () => {
   it("more_than_twenty_mentions_or_a_negative_position_is_a_422", async () => {
     const { sender } = await running();
     const many = Array.from({ length: 21 }, (_, index) => ({ pos: index, uid: "2000002", len: 1 }));
-    const tooMany = await errorOf(await sender.post("/v1/accounts/acc-1/send", sendBody({ mentions: many })));
+    const tooMany = await errorOf(
+      await sender.post("/v1/accounts/acc-1/send", sendBody({ mentions: many })),
+    );
     const negative = await errorOf(
-      await sender.post("/v1/accounts/acc-1/send", sendBody({ mentions: [{ pos: -1, uid: "2000002", len: 1 }] })),
+      await sender.post(
+        "/v1/accounts/acc-1/send",
+        sendBody({ mentions: [{ pos: -1, uid: "2000002", len: 1 }] }),
+      ),
     );
     assert.deepEqual([tooMany.status, negative.status], [422, 422]);
   });
 
   it("a_body_missing_proactive_or_with_a_bad_thread_type_is_a_422_and_zalo_is_not_called", async () => {
     const { sender, fake } = await running();
-    const { proactive: _omitted, ...withoutProactive } = sendBody();
+    const withoutProactive: Record<string, unknown> = { ...sendBody() };
+    delete withoutProactive.proactive;
 
     const first = await sender.post("/v1/accounts/acc-1/send", withoutProactive);
     const second = await sender.post("/v1/accounts/acc-1/send", sendBody({ thread_type: 2 }));
     const third = await sender.post("/v1/accounts/acc-1/send", sendBody({ text: "" }));
-    const fourth = await sender.post("/v1/accounts/acc-1/send", sendBody({ styles: [{ start: 0, len: 1, st: "zz" }] }));
+    const fourth = await sender.post(
+      "/v1/accounts/acc-1/send",
+      sendBody({ styles: [{ start: 0, len: 1, st: "zz" }] }),
+    );
 
-    assert.deepEqual([first.status, second.status, third.status, fourth.status], [422, 422, 422, 422]);
+    assert.deepEqual(
+      [first.status, second.status, third.status, fourth.status],
+      [422, 422, 422, 422],
+    );
     assert.equal(fake.callsTo("sendMessage").length, 0);
   });
 
@@ -504,7 +556,9 @@ describe("app: send and the safety gates", () => {
     await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true }));
     await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true }));
 
-    const refused = await errorOf(await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true })));
+    const refused = await errorOf(
+      await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true })),
+    );
     const reply = await sender.post("/v1/accounts/acc-1/send", sendBody());
 
     assert.deepEqual([refused.status, refused.kind], [429, "rate_limited"]);
@@ -513,13 +567,22 @@ describe("app: send and the safety gates", () => {
   });
 
   it("the_daily_ceiling_follows_the_day_of_the_configured_time_zone", async () => {
-    const { sender, clock } = await running({ maxProactivePerDayPerAccount: 1, maxSendsPerMinutePerAccount: 100 });
+    const { sender, clock } = await running({
+      maxProactivePerDayPerAccount: 1,
+      maxSendsPerMinutePerAccount: 100,
+    });
     clock.now = Date.parse("2026-10-01T16:59:00Z"); // 23:59 in Ho Chi Minh
     await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true }));
-    assert.equal((await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true }))).status, 429);
+    assert.equal(
+      (await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true }))).status,
+      429,
+    );
 
     clock.now = Date.parse("2026-10-01T17:01:00Z"); // 00:01 next day
-    assert.equal((await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true }))).status, 200);
+    assert.equal(
+      (await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true }))).status,
+      200,
+    );
   });
 
   it("a_failed_proactive_send_refunds_its_daily_slot", async () => {
@@ -534,28 +597,50 @@ describe("app: send and the safety gates", () => {
       },
     );
 
-    const failed = await errorOf(await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true })));
+    const failed = await errorOf(
+      await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true })),
+    );
     assert.deepEqual([failed.status, failed.kind], [502, "transport"]);
     assert.equal(bridge.accounts.list()[0]?.proactive_sent_today, 0);
 
     fail = false;
-    assert.equal((await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true }))).status, 200);
+    assert.equal(
+      (await sender.post("/v1/accounts/acc-1/send", sendBody({ proactive: true }))).status,
+      200,
+    );
   });
 
   it("a_rejection_by_zalo_answers_502_zalo_rejected_with_the_numeric_code", async () => {
-    const { sender } = await running({}, { sendMessage: async () => { throw new ZaloApiError("bad style", 112); } });
+    const { sender } = await running(
+      {},
+      {
+        sendMessage: async () => {
+          throw new ZaloApiError("bad style", 112);
+        },
+      },
+    );
     const result = await errorOf(await sender.post("/v1/accounts/acc-1/send", sendBody()));
     assert.deepEqual([result.status, result.kind, result.code], [502, "zalo_rejected", 112]);
   });
 
   it("a_failure_without_a_code_answers_502_transport", async () => {
-    const { sender } = await running({}, { sendMessage: async () => { throw new Error("ETIMEDOUT"); } });
+    const { sender } = await running(
+      {},
+      {
+        sendMessage: async () => {
+          throw new Error("ETIMEDOUT");
+        },
+      },
+    );
     const result = await errorOf(await sender.post("/v1/accounts/acc-1/send", sendBody()));
     assert.deepEqual([result.status, result.kind, result.code], [502, "transport", undefined]);
   });
 
   it("the_gates_are_checked_in_order_kill_switch_then_breaker_then_ceilings", async () => {
-    const { sender, bridge } = await running({ blockAfterRejectedSends: 1, maxSendsPerMinutePerAccount: 1 });
+    const { sender, bridge } = await running({
+      blockAfterRejectedSends: 1,
+      maxSendsPerMinutePerAccount: 1,
+    });
     const account = bridge.accounts.get("acc-1");
     assert.ok(account);
     account.safety.failed({ proactive: false, dayKey: "x" }, true); // opens the breaker
@@ -570,14 +655,17 @@ describe("app: send and the safety gates", () => {
 });
 
 describe("app: breaker", () => {
+  let rejectedCalls = 0;
   const rejecting = {
     sendMessage: async () => {
+      rejectedCalls += 1;
       throw new ZaloApiError("rejected", 112);
     },
   };
 
   it("consecutive_rejections_block_the_account_and_report_account_state_blocked_once", async () => {
-    const { sender, publisher, fake } = await running({ blockAfterRejectedSends: 3 }, rejecting);
+    rejectedCalls = 0;
+    const { sender, publisher } = await running({ blockAfterRejectedSends: 3 }, rejecting);
 
     const statuses = await Promise.all(
       [1, 2, 3].map(async () => (await sender.post("/v1/accounts/acc-1/send", sendBody())).status),
@@ -586,7 +674,7 @@ describe("app: breaker", () => {
 
     assert.deepEqual(statuses, [502, 502, 502]);
     assert.deepEqual([after.status, after.kind], [409, "blocked"]);
-    assert.equal(fake.callsTo("sendMessage").length, 3, "the fourth send never reached zca-js");
+    assert.equal(rejectedCalls, 3, "the fourth send never reached zca-js");
     assert.deepEqual(publisher.ofType("account_state"), [
       { type: "account_state", state: "blocked", reason: "send_rejected_repeatedly" },
     ]);
@@ -597,7 +685,9 @@ describe("app: breaker", () => {
     await sender.post("/v1/accounts/acc-1/send", sendBody());
 
     const state = await readEnvelope(await sender.get("/v1/accounts/acc-1/state"));
-    const list = (await readEnvelope(await sender.get("/v1/accounts")))["accounts"] as Array<{ state: string }>;
+    const list = (await readEnvelope(await sender.get("/v1/accounts")))["accounts"] as Array<{
+      state: string;
+    }>;
 
     assert.equal(state["state"], "blocked");
     assert.equal(list[0]?.state, "blocked");
@@ -659,7 +749,10 @@ describe("app: breaker", () => {
   it("blocked_clears_on_a_new_start", async () => {
     const { sender, gateway } = await running({ blockAfterRejectedSends: 1 }, rejecting);
     await sender.post("/v1/accounts/acc-1/send", sendBody());
-    assert.equal((await errorOf(await sender.post("/v1/accounts/acc-1/send", sendBody()))).kind, "blocked");
+    assert.equal(
+      (await errorOf(await sender.post("/v1/accounts/acc-1/send", sendBody()))).kind,
+      "blocked",
+    );
 
     gateway.nextSessions.push(createFakeSession(createFakeApi()));
     await sender.post("/v1/accounts/acc-1/start", startBody);
@@ -674,7 +767,9 @@ describe("app: breaker", () => {
     await sender.post("/v1/accounts/acc-1/login/qr", { clinic_slug: "clinic-a" });
     gateway.qrControls[0]?.succeed(createFakeSession(createFakeApi()));
     await doiChoDenKhi(
-      async () => ((await readEnvelope(await sender.get("/v1/accounts/acc-1/state")))["state"] === "connecting"),
+      async () =>
+        (await readEnvelope(await sender.get("/v1/accounts/acc-1/state")))["state"] ===
+        "connecting",
       { moTa: "account re-attached after the QR login" },
     );
 
@@ -700,7 +795,10 @@ describe("app: send-attachment", () => {
 
     assert.equal(response.status, 200);
     const [payload, threadId, type] = fake.callsTo("sendMessage")[0]?.args as [
-      { msg: string; attachments: Array<{ data: Buffer; filename: string; metadata: { totalSize: number } }> },
+      {
+        msg: string;
+        attachments: Array<{ data: Buffer; filename: string; metadata: { totalSize: number } }>;
+      },
       string,
       number,
     ];
@@ -720,14 +818,22 @@ describe("app: send-attachment", () => {
     const [payload] = fake.callsTo("sendMessage")[0]?.args as [
       { attachments: Array<{ metadata: { width?: number; height?: number } }> },
     ];
-    assert.deepEqual([payload.attachments[0]?.metadata.width, payload.attachments[0]?.metadata.height], [1, 1]);
+    assert.deepEqual(
+      [payload.attachments[0]?.metadata.width, payload.attachments[0]?.metadata.height],
+      [1, 1],
+    );
   });
 
   it("a_file_over_10_mb_decoded_is_refused_before_zalo_is_called", async () => {
     const { sender, fake } = await running();
     const tooBig = Buffer.alloc(10 * 1024 * 1024 + 1).toString("base64");
 
-    const result = await errorOf(await sender.post("/v1/accounts/acc-1/send-attachment", attachmentBody({ data_base64: tooBig })));
+    const result = await errorOf(
+      await sender.post(
+        "/v1/accounts/acc-1/send-attachment",
+        attachmentBody({ data_base64: tooBig }),
+      ),
+    );
 
     assert.deepEqual([result.status, result.kind], [422, "bad_request"]);
     assert.equal(fake.callsTo("sendMessage").length, 0);
@@ -737,14 +843,20 @@ describe("app: send-attachment", () => {
     const { sender } = await running();
     const exactly = Buffer.alloc(10 * 1024 * 1024).toString("base64");
     assert.ok(exactly.length < MAX_BODY_BYTES);
-    const response = await sender.post("/v1/accounts/acc-1/send-attachment", attachmentBody({ data_base64: exactly }));
+    const response = await sender.post(
+      "/v1/accounts/acc-1/send-attachment",
+      attachmentBody({ data_base64: exactly }),
+    );
     assert.equal(response.status, 200);
   });
 
   it("text_that_is_not_base64_is_refused", async () => {
     const { sender } = await running();
     const result = await errorOf(
-      await sender.post("/v1/accounts/acc-1/send-attachment", attachmentBody({ data_base64: "not base64 !!" })),
+      await sender.post(
+        "/v1/accounts/acc-1/send-attachment",
+        attachmentBody({ data_base64: "not base64 !!" }),
+      ),
     );
     assert.equal(result.status, 422);
   });
@@ -752,7 +864,10 @@ describe("app: send-attachment", () => {
   it("a_filename_with_a_path_is_refused", async () => {
     const { sender } = await running();
     const result = await errorOf(
-      await sender.post("/v1/accounts/acc-1/send-attachment", attachmentBody({ filename: "../etc/passwd.txt" })),
+      await sender.post(
+        "/v1/accounts/acc-1/send-attachment",
+        attachmentBody({ filename: "../etc/passwd.txt" }),
+      ),
     );
     assert.equal(result.status, 422);
   });
@@ -790,11 +905,18 @@ describe("app: send-video", () => {
   it("the_video_url_and_caption_are_forwarded_to_zalo", async () => {
     const { sender, fake } = await running();
 
-    const response = await sender.post("/v1/accounts/acc-1/send-video", videoBody({ thumbnail_url: "https://videos.example.test/t.jpg" }));
+    const response = await sender.post(
+      "/v1/accounts/acc-1/send-video",
+      videoBody({ thumbnail_url: "https://videos.example.test/t.jpg" }),
+    );
 
     assert.deepEqual(await response.json(), { ok: true, msg_id: "222" });
     assert.deepEqual(fake.callsTo("sendVideo")[0]?.args, [
-      { msg: "Video hướng dẫn", videoUrl: "https://videos.example.test/huong-dan.mp4", thumbnailUrl: "https://videos.example.test/t.jpg" },
+      {
+        msg: "Video hướng dẫn",
+        videoUrl: "https://videos.example.test/huong-dan.mp4",
+        thumbnailUrl: "https://videos.example.test/t.jpg",
+      },
       "2000001",
       0,
     ]);
@@ -813,10 +935,17 @@ describe("app: send-video", () => {
     ];
 
     const statuses = await Promise.all(
-      urls.map(async (url) => (await sender.post("/v1/accounts/acc-1/send-video", videoBody({ video_url: url }))).status),
+      urls.map(
+        async (url) =>
+          (await sender.post("/v1/accounts/acc-1/send-video", videoBody({ video_url: url })))
+            .status,
+      ),
     );
 
-    assert.deepEqual(statuses, urls.map(() => 422));
+    assert.deepEqual(
+      statuses,
+      urls.map(() => 422),
+    );
     assert.equal(fake.callsTo("sendVideo").length, 0);
   });
 
@@ -852,19 +981,36 @@ describe("app: send-video", () => {
 
 describe("app: typing, receipts and reactions", () => {
   const params = [
-    { msgId: "m1", cliMsgId: "c1", uidFrom: "2000001", idTo: "1000001", msgType: "webchat", st: 3, at: 0, cmd: 501, ts: "1700000000000" },
+    {
+      msgId: "m1",
+      cliMsgId: "c1",
+      uidFrom: "2000001",
+      idTo: "1000001",
+      msgType: "webchat",
+      st: 3,
+      at: 0,
+      cmd: 501,
+      ts: "1700000000000",
+    },
   ];
 
   it("typing_sends_one_typing_event", async () => {
     const { sender, fake } = await running();
-    const response = await sender.post("/v1/accounts/acc-1/typing", { thread_id: "2000001", thread_type: 1 });
+    const response = await sender.post("/v1/accounts/acc-1/typing", {
+      thread_id: "2000001",
+      thread_type: 1,
+    });
     assert.equal(response.status, 200);
     assert.deepEqual(fake.callsTo("sendTypingEvent")[0]?.args, ["2000001", 1]);
   });
 
   it("delivered_receipts_pass_is_seen_false_and_the_nine_fields", async () => {
     const { sender, fake } = await running();
-    await sender.post("/v1/accounts/acc-1/receipts/delivered", { is_seen: false, params, thread_type: 0 });
+    await sender.post("/v1/accounts/acc-1/receipts/delivered", {
+      is_seen: false,
+      params,
+      thread_type: 0,
+    });
     assert.deepEqual(fake.callsTo("sendDeliveredEvent")[0]?.args, [false, params, 0]);
   });
 
@@ -877,7 +1023,9 @@ describe("app: typing, receipts and reactions", () => {
   it("more_than_fifty_receipts_in_one_call_is_a_422", async () => {
     const { sender } = await running();
     const many = Array.from({ length: 51 }, () => params[0]);
-    const result = await errorOf(await sender.post("/v1/accounts/acc-1/receipts/seen", { params: many, thread_type: 0 }));
+    const result = await errorOf(
+      await sender.post("/v1/accounts/acc-1/receipts/seen", { params: many, thread_type: 0 }),
+    );
     assert.equal(result.status, 422);
   });
 
@@ -910,13 +1058,24 @@ describe("app: typing, receipts and reactions", () => {
 
   it("calls_for_an_account_that_is_not_running_answer_not_running", async () => {
     const { sender } = build();
-    const result = await errorOf(await sender.post("/v1/accounts/nobody/typing", { thread_id: "1", thread_type: 0 }));
+    const result = await errorOf(
+      await sender.post("/v1/accounts/nobody/typing", { thread_id: "1", thread_type: 0 }),
+    );
     assert.deepEqual([result.status, result.kind], [409, "not_running"]);
   });
 
   it("a_zalo_failure_on_typing_is_mapped_like_any_other", async () => {
-    const { sender } = await running({}, { sendTypingEvent: async () => { throw new ZaloApiError("no", 200); } });
-    const result = await errorOf(await sender.post("/v1/accounts/acc-1/typing", { thread_id: "2000001", thread_type: 0 }));
+    const { sender } = await running(
+      {},
+      {
+        sendTypingEvent: async () => {
+          throw new ZaloApiError("no", 200);
+        },
+      },
+    );
+    const result = await errorOf(
+      await sender.post("/v1/accounts/acc-1/typing", { thread_id: "2000001", thread_type: 0 }),
+    );
     assert.deepEqual([result.status, result.kind, result.code], [502, "zalo_rejected", 200]);
   });
 });
@@ -954,23 +1113,41 @@ describe("app: directory and friends", () => {
 
     const body = await readEnvelope(await sender.get("/v1/accounts/acc-1/friends"));
 
-    assert.deepEqual(body["friends"], [{ userId: "2000001", displayName: "Bạn Thử Nghiệm", zaloName: "ban.thu" }]);
+    assert.deepEqual(body["friends"], [
+      { userId: "2000001", displayName: "Bạn Thử Nghiệm", zaloName: "ban.thu" },
+    ]);
     assert.equal(JSON.stringify(body).includes("0900000000"), false);
     assert.equal(JSON.stringify(body).includes("1990"), false);
   });
 
   it("accept_and_reject_pass_the_uid_to_zalo", async () => {
     const { sender, fake } = await running();
-    assert.equal((await sender.post("/v1/accounts/acc-1/friends/accept", { uid: "2000007" })).status, 200);
-    assert.equal((await sender.post("/v1/accounts/acc-1/friends/reject", { uid: "2000008" })).status, 200);
+    assert.equal(
+      (await sender.post("/v1/accounts/acc-1/friends/accept", { uid: "2000007" })).status,
+      200,
+    );
+    assert.equal(
+      (await sender.post("/v1/accounts/acc-1/friends/reject", { uid: "2000008" })).status,
+      200,
+    );
     assert.deepEqual(fake.callsTo("acceptFriendRequest")[0]?.args, ["2000007"]);
     assert.deepEqual(fake.callsTo("rejectFriendRequest")[0]?.args, ["2000008"]);
   });
 
   it("accept_without_a_uid_is_a_422_and_a_zalo_failure_is_a_502", async () => {
-    const { sender } = await running({}, { acceptFriendRequest: async () => { throw new Error("boom"); } });
+    const { sender } = await running(
+      {},
+      {
+        acceptFriendRequest: async () => {
+          throw new Error("boom");
+        },
+      },
+    );
     assert.equal((await sender.post("/v1/accounts/acc-1/friends/accept", {})).status, 422);
-    assert.equal((await sender.post("/v1/accounts/acc-1/friends/accept", { uid: "2000007" })).status, 502);
+    assert.equal(
+      (await sender.post("/v1/accounts/acc-1/friends/accept", { uid: "2000007" })).status,
+      502,
+    );
   });
 
   it("group_info_passes_the_thread_id", async () => {
@@ -985,38 +1162,59 @@ describe("app: QR login", () => {
   it("a_qr_login_goes_from_starting_to_waiting_scan_to_success_and_the_account_runs", async () => {
     const { sender, gateway, publisher } = build();
 
-    const started = await readEnvelope(await sender.post("/v1/accounts/acc-1/login/qr", { clinic_slug: "clinic-a" }));
+    const started = await readEnvelope(
+      await sender.post("/v1/accounts/acc-1/login/qr", { clinic_slug: "clinic-a" }),
+    );
     assert.equal(started["state"], "starting");
 
     gateway.qrControls[0]?.emit({ type: "qr", qrBase64: "QR_PNG_BASE64" });
     const waiting = await readEnvelope(await sender.get("/v1/accounts/acc-1/login/qr"));
-    assert.deepEqual([waiting["state"], waiting["qr_png_base64"]], ["waiting_scan", "QR_PNG_BASE64"]);
+    assert.deepEqual(
+      [waiting["state"], waiting["qr_png_base64"]],
+      ["waiting_scan", "QR_PNG_BASE64"],
+    );
 
     gateway.qrControls[0]?.emit({ type: "scanned" });
-    assert.equal((await readEnvelope(await sender.get("/v1/accounts/acc-1/login/qr")))["state"], "scanned");
+    assert.equal(
+      (await readEnvelope(await sender.get("/v1/accounts/acc-1/login/qr")))["state"],
+      "scanned",
+    );
 
     gateway.qrControls[0]?.succeed(createFakeSession(createFakeApi(), "1000099"));
     await doiChoDenKhi(
-      async () => (await readEnvelope(await sender.get("/v1/accounts/acc-1/login/qr")))["state"] === "success",
+      async () =>
+        (await readEnvelope(await sender.get("/v1/accounts/acc-1/login/qr")))["state"] ===
+        "success",
       { moTa: "QR status success" },
     );
 
     const done = await readEnvelope(await sender.get("/v1/accounts/acc-1/login/qr"));
     assert.equal(done["qr_png_base64"], undefined, "the QR is dropped once the login is done");
-    assert.equal((await readEnvelope(await sender.get("/v1/accounts/acc-1/state")))["state"], "connecting");
-    assert.deepEqual(publisher.ofType("credential_updated"), [{ type: "credential_updated", credential: TEST_CREDENTIAL }]);
+    assert.equal(
+      (await readEnvelope(await sender.get("/v1/accounts/acc-1/state")))["state"],
+      "connecting",
+    );
+    assert.deepEqual(publisher.ofType("credential_updated"), [
+      { type: "credential_updated", credential: TEST_CREDENTIAL },
+    ]);
   });
 
   it("a_declined_login_reads_declined", async () => {
     const { sender, gateway } = build();
     await sender.post("/v1/accounts/acc-1/login/qr", { clinic_slug: "clinic-a" });
     gateway.qrControls[0]?.emit({ type: "declined" });
-    assert.equal((await readEnvelope(await sender.get("/v1/accounts/acc-1/login/qr")))["state"], "declined");
+    assert.equal(
+      (await readEnvelope(await sender.get("/v1/accounts/acc-1/login/qr")))["state"],
+      "declined",
+    );
   });
 
   it("an_account_without_a_session_reads_idle", async () => {
     const { sender } = build();
-    assert.equal((await readEnvelope(await sender.get("/v1/accounts/acc-9/login/qr")))["state"], "idle");
+    assert.equal(
+      (await readEnvelope(await sender.get("/v1/accounts/acc-9/login/qr")))["state"],
+      "idle",
+    );
   });
 
   it("a_qr_session_times_out_after_three_minutes", async () => {

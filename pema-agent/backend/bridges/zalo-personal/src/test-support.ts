@@ -160,7 +160,12 @@ export function createFakeApi(overrides: Partial<Omit<ZaloApi, "listener">> = {}
     },
     ...overrides,
   };
-  return { api, listener, calls, callsTo: (method) => calls.filter((call) => call.method === method) };
+  return {
+    api,
+    listener,
+    calls,
+    callsTo: (method) => calls.filter((call) => call.method === method),
+  };
 }
 
 export function createFakeSession(fake: FakeApi = createFakeApi(), ownId = "1000001"): ZaloSession {
@@ -258,12 +263,16 @@ export function signedSender(
   nowSeconds: () => number = () => Math.floor(Date.now() / 1000),
 ): Sender {
   return {
-    get: async (path) => app.request(path, { method: "GET", headers: signedHeaders(secret, "", nowSeconds()) }),
+    get: async (path) =>
+      app.request(path, { method: "GET", headers: signedHeaders(secret, "", nowSeconds()) }),
     post: async (path, body) => {
       const raw = JSON.stringify(body);
       return app.request(path, {
         method: "POST",
-        headers: { "content-type": "application/json", ...signedHeaders(secret, raw, nowSeconds()) },
+        headers: {
+          "content-type": "application/json",
+          ...signedHeaders(secret, raw, nowSeconds()),
+        },
         body: raw,
       });
     },

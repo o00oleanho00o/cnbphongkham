@@ -47,7 +47,10 @@ export type ListenerOptions = {
  * session on the same account), 3003 = the server kicked this connection, 1006 = abnormal closure.
  * Kicked again and again without ever staying up = the session was revoked: `logged_out`.
  */
-function classifyDeadSession(code: number): { state: "session_dead" | "logged_out"; reason: string } {
+function classifyDeadSession(code: number): {
+  state: "session_dead" | "logged_out";
+  reason: string;
+} {
   if (code === CloseReason.KickConnection) return { state: "logged_out", reason: "kicked_by_zalo" };
   if (code === CloseReason.DuplicateConnection) {
     return { state: "session_dead", reason: "duplicate_connection" };

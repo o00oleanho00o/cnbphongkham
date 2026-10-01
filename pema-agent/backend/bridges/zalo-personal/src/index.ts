@@ -18,7 +18,10 @@ function loadConfigOrExit(): BridgeConfig {
     return loadConfig(process.env);
   } catch (err) {
     // ConfigError messages never contain a value, only the name of the setting.
-    log.fatal({ reason: err instanceof ConfigError ? err.message : "invalid configuration" }, "Cannot start");
+    log.fatal(
+      { reason: err instanceof ConfigError ? err.message : "invalid configuration" },
+      "Cannot start",
+    );
     process.exit(1);
   }
 }
@@ -30,7 +33,10 @@ async function main(): Promise<void> {
   setLogLevel(config.logLevel);
 
   if (!LOOPBACK_HOSTS.has(config.host)) {
-    log.warn({ host: config.host }, "The bridge is not bound to loopback: keep it off any public network");
+    log.warn(
+      { host: config.host },
+      "The bridge is not bound to loopback: keep it off any public network",
+    );
   }
 
   if (!config.enabled) {
@@ -45,10 +51,16 @@ async function main(): Promise<void> {
     import("./zalo-client.js"),
     import("./event-publisher.js"),
   ]);
-  const publisher = new HttpEventPublisher({ secret: config.secret, apiBaseUrl: config.apiBaseUrl });
+  const publisher = new HttpEventPublisher({
+    secret: config.secret,
+    apiBaseUrl: config.apiBaseUrl,
+  });
   const bridge = createBridge({ config, gateway: createZcaGateway(), publisher });
   const server = serve({ fetch: bridge.app.fetch, hostname: config.host, port: config.port });
-  log.info({ host: config.host, port: config.port }, "zalo-personal bridge listening (no account is running)");
+  log.info(
+    { host: config.host, port: config.port },
+    "zalo-personal bridge listening (no account is running)",
+  );
 
   const shutdown = (signal: string): void => {
     log.warn({ signal }, "Shutting down: stopping every account");

@@ -152,7 +152,10 @@ describe("AccountSafety: breaker", () => {
   });
 
   it("an_open_breaker_refuses_every_send_as_blocked", () => {
-    const safety = new AccountSafety({ ...LIMITS, blockAfterRejectedSends: 1 }, clockAt(MORNING).now);
+    const safety = new AccountSafety(
+      { ...LIMITS, blockAfterRejectedSends: 1 },
+      clockAt(MORNING).now,
+    );
     safety.failed(admitted(safety), true);
 
     const refused = safety.admit(false);
@@ -177,11 +180,18 @@ describe("AccountSafety: breaker", () => {
     safety.failed(admitted(safety), true);
     safety.failed(admitted(safety), true);
     assert.equal(safety.failed(admitted(safety), false).blockedNow, false);
-    assert.equal(safety.failed(admitted(safety), true).blockedNow, true, "the third rejection still opens it");
+    assert.equal(
+      safety.failed(admitted(safety), true).blockedNow,
+      true,
+      "the third rejection still opens it",
+    );
   });
 
   it("only_clearing_the_breaker_lets_the_account_send_again", () => {
-    const safety = new AccountSafety({ ...LIMITS, blockAfterRejectedSends: 1 }, clockAt(MORNING).now);
+    const safety = new AccountSafety(
+      { ...LIMITS, blockAfterRejectedSends: 1 },
+      clockAt(MORNING).now,
+    );
     safety.failed(admitted(safety), true);
     assert.equal(safety.admit(false).ok, false);
 

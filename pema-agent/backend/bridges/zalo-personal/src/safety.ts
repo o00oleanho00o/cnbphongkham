@@ -113,7 +113,11 @@ export class AccountSafety {
    */
   admit(proactive: boolean): SendAdmission {
     if (this.blockedFlag) {
-      return { ok: false, kind: "blocked", message: "Account is blocked after repeated rejected sends" };
+      return {
+        ok: false,
+        kind: "blocked",
+        message: "Account is blocked after repeated rejected sends",
+      };
     }
     const nowMs = this.now();
     const recent = this.sendTimestamps.filter((timestamp) => nowMs - timestamp < MINUTE_MS);

@@ -19,12 +19,7 @@ const log = createLogger("qr-login-manager");
  */
 
 export type QrLoginStatus =
-  | "starting"
-  | "waiting_scan"
-  | "scanned"
-  | "success"
-  | "declined"
-  | "error";
+  "starting" | "waiting_scan" | "scanned" | "success" | "declined" | "error";
 
 type QrSession = {
   seq: number;
@@ -95,7 +90,11 @@ export class QrLoginManager {
     const stillCurrent = (): boolean => this.sessions.get(accountId)?.seq === seq;
 
     this.deps
-      .login(accountId, (event) => this.onEvent(session, stillCurrent, event), session.controller.signal)
+      .login(
+        accountId,
+        (event) => this.onEvent(session, stillCurrent, event),
+        session.controller.signal,
+      )
       .then(async (apiSession) => {
         if (!stillCurrent()) return;
         session.status = "success";

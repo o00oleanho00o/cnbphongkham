@@ -2,14 +2,44 @@
   "name": "pema-agent-frontend",
   "version": "0.1.0",
   "private": true,
-  "description": "Pema CSKH agent dashboard. Package A ships only the OpenAPI type generator; package E adds Next.js (and owns this file from then on).",
+  "description": "Pema CSKH agent dashboard (Next.js App Router): clinic operations plus AI administration (port of the zalo-agent dashboard).",
   "type": "module",
   "scripts": {
+    "dev": "next dev",
+    "dev:mock": "node scripts/dev-mock.mjs",
+    "mock": "tsx mock/main.ts",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "gen:types": "openapi-typescript ../backend/apps/api/openapi.json -o src/lib/api/schema.d.ts",
-    "check:types": "tsc --noEmit"
+    "check:types": "tsc --noEmit",
+    "shots": "tsx scripts/viewport-shots.ts"
+  },
+  "dependencies": {
+    "next": "^16.3.7",
+    "openapi-fetch": "^0.17.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
-    "openapi-typescript": "^7.4.0",
-    "typescript": "^5.6.0"
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^26.6.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.7",
+    "openapi-typescript": "^7.13.0",
+    "playwright": "^1.63.0",
+    "postcss": "^8.5.28",
+    "prettier": "^3.9.9",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.3"
   }
 }

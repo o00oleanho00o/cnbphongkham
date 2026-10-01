@@ -11,13 +11,7 @@
 import { Hono } from "hono";
 import type { AccountManager, ManagedAccount } from "./account-registry.js";
 import type { AppDeps } from "./deps.js";
-import {
-  fail,
-  failFromThrown,
-  ok,
-  parseJsonBody,
-  type AppEnv,
-} from "./http.js";
+import { fail, failFromThrown, ok, parseJsonBody, type AppEnv } from "./http.js";
 import { createLogger, errorInfo } from "./logger.js";
 import { toZaloReaction } from "./reaction-icons.js";
 import {
@@ -132,7 +126,11 @@ export function messagingRoutes(deps: AppDeps): Hono<AppEnv> {
 
     // Styles and mentions only when non-empty, quote only when present: `duongGuiZcaJs` applies the rules.
     return guardedSend(gates, id, proactive, (api) =>
-      duongGuiZcaJs(api, thread_id, thread_type)({
+      duongGuiZcaJs(
+        api,
+        thread_id,
+        thread_type,
+      )({
         text,
         ...(styles ? { styles } : {}),
         ...(quote ? { quote } : {}),

@@ -39,7 +39,6 @@ from pema.config.runtime_tuning_settings import get_tuning
 from pema.shared.logger import create_logger
 from pema_contracts.agents import AccountConfig, AccountStore
 from pema_contracts.channel import InboundMessage
-from pema_contracts.conversation import ContactStore, ThreadStore
 
 log = create_logger("message-router")
 
@@ -54,46 +53,73 @@ class RespondDecision:
 
 
 class AllowlistFilter(Protocol):
-    def __call__(self, config: AccountConfig, msg: InboundMessage, bot_enabled: bool) -> RespondDecision: ...
+    def __call__(
+        self, config: AccountConfig, msg: InboundMessage, bot_enabled: bool, /
+    ) -> RespondDecision: ...
 
 
 class IncomingRecorder(Protocol):
     """``ghiTinDenVaoHistory`` (C1 ``record_incoming_message``): history + Inbox at receipt, stamps
     ``msg.history_row_id``. ``luu_anh_ngay`` downloads the images now (no agent turn will do it)."""
 
-    async def __call__(self, clinic_id: UUID, msg: InboundMessage, *, luu_anh_ngay: bool) -> int: ...
+    async def __call__(self, clinic_id: UUID, msg: InboundMessage, /, *, luu_anh_ngay: bool) -> int: ...
 
 
 class PayloadAnomalyReporter(Protocol):
     """``reportPayloadAnomalies`` (C1): logs unexpected payload shapes, ids only."""
 
-    def __call__(self, account_id: str, msg: InboundMessage) -> None: ...
+    def __call__(self, account_id: str, msg: InboundMessage, /) -> None: ...
 
 
 class MessageBatcher(Protocol):
     """``enqueueMessage`` of ``message-batcher.ts`` (C1, Redis): debounce + merge, then a ``TurnJob`` on the
     ``TurnQueue``. ``False`` = dropped because the pending queue of the thread hit its ceiling."""
 
-    async def enqueue_message(self, clinic_id: UUID, thread_key: str, msg: InboundMessage) -> bool: ...
+    async def enqueue_message(self, clinic_id: UUID, thread_key: str, msg: InboundMessage, /) -> bool: ...
 
 
 class BusyWaitNotifier(Protocol):
     """``maybeNotifyBusyWait`` (C1 ``busy_wait_notice``): reassurance text when a thread is busy for a
     long time."""
 
-    async def __call__(self, target: ReplyTarget) -> None: ...
+    async def __call__(self, target: ReplyTarget, /) -> None: ...
 
 
 class ImagePersister(Protocol):
     """``persistBatchImages`` (D2 ``media_store``): downloads images, stamps ``InboundImage.local_path``."""
 
-    async def __call__(self, clinic_id: UUID, account_id: str, messages: list[InboundMessage]) -> None: ...
+    async def __call__(self, clinic_id: UUID, account_id: str, messages: list[InboundMessage], /) -> None: ...
 
 
 class ImageAttacher(Protocol):
     """``setMessageImages`` after the download (D2 ``history_store``)."""
 
-    async def __call__(self, clinic_id: UUID, msg: InboundMessage) -> None: ...
+    async def __call__(self, clinic_id: UUID, msg: InboundMessage, /) -> None: ...
+
+
+class ContactActivity(Protocol):
+    """The one method of ``ContactStore`` (D2) the router calls: ``recordContactActivity``."""
+
+    async def record_contact_activity(
+        self, clinic_id: UUID, account_id: str, user_id: str, display_name: str
+    ) -> None: ...
+
+
+class ThreadActivity(Protocol):
+    """The two ``ThreadStore`` (D2) methods the router calls: ``recordThreadActivity``, ``isBotEnabled``."""
+
+    async def record_thread_activity(
+        self,
+        clinic_id: UUID,
+        *,
+        account_id: str,
+        thread_id: str,
+        thread_type: int,
+        display_name: str,
+        sender_name: str,
+    ) -> None: ...
+
+    async def is_bot_enabled(self, clinic_id: UUID, account_id: str, thread_id: str) -> bool: ...
 
 
 class ThreadNames(Protocol):
@@ -111,8 +137,8 @@ class ThreadNames(Protocol):
 @dataclass
 class RouterDeps:
     accounts: AccountStore
-    contacts: ContactStore
-    threads: ThreadStore
+    contacts: ContactActivity
+    threads: ThreadActivity
     thread_names: ThreadNames
     should_respond: AllowlistFilter
     record_incoming: IncomingRecorder
@@ -160,6 +186,10 @@ async def route_incoming_message(
     # cảnh báo
     # ở đây thì không còn chỗ nào biết
     deps.report_anomalies(config.id, msg)
+    if not msg.thread_id:
+        # A message without a thread has nowhere to be answered and nothing to be recorded against: it is
+        # reported above and dropped here, explicitly (the original relied on the allowlist filter to do it).
+        return
 
     if not msg.is_self and msg.thread_id:
         # "Đã nhận" cho MỌI tin về tới listener, kể cả tin sắp bị lọc - client Zalo thật cũng báo nhận tự

@@ -16,19 +16,10 @@ import type { Credential } from "./zalo-types.js";
 const log = createLogger("event-publisher");
 
 export type AccountStateEventState =
-  | "connected"
-  | "disconnected"
-  | "session_dead"
-  | "logged_out"
-  | "blocked";
+  "connected" | "disconnected" | "session_dead" | "logged_out" | "blocked";
 
 export type FriendEventKind =
-  | "add"
-  | "remove"
-  | "request"
-  | "undo_request"
-  | "reject_request"
-  | "other";
+  "add" | "remove" | "request" | "undo_request" | "reject_request" | "other";
 
 export type BridgeEvent =
   | { type: "message"; self_id: string; message: unknown }
@@ -176,7 +167,10 @@ export class HttpEventPublisher implements EventPublisher {
       });
       if (response.ok) return "done";
       if (!isRetryableStatus(response.status)) {
-        log.warn({ type: item.event.type, status: response.status }, "API refused the event: dropped");
+        log.warn(
+          { type: item.event.type, status: response.status },
+          "API refused the event: dropped",
+        );
         return "done";
       }
       log.warn({ type: item.event.type, status: response.status }, "API failed to take the event");

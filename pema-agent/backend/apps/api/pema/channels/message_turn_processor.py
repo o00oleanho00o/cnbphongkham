@@ -51,6 +51,11 @@ from typing import Any
 from uuid import UUID
 
 from pema.channels.deliver_chat_reply import DeliveryDeps, KetQuaGiao, deliver_chat_reply
+from pema.channels.policy_review_mirror import (
+    build_media_flag_item,
+    build_outbound_review_item,
+    build_red_flag_item,
+)
 from pema.channels.reply_quote import trich_dan_tu_tin
 from pema.channels.send_reply_in_parts import (
     EnqueueSend,
@@ -98,7 +103,7 @@ from pema_contracts.policy import (
     PolicyHooks,
     effective_profile_key,
 )
-from pema_contracts.review import ReviewItemCreate, ReviewKind, ReviewOrigin, RiskLevel
+from pema_contracts.review import ReviewItemCreate
 from pema_contracts.roles import ActorType
 from pema_contracts.turn_errors import (
     AgentTurnError,
@@ -238,17 +243,19 @@ async def _xu_ly_luot(
     async def hold_for_review(
         text: str, *, origin: OutboundOrigin, extra: dict[str, object] | None = None
     ) -> str | None:
-        return await _create_review_item(
-            services,
-            agent_ctx,
-            inbox,
-            idempotency=f"{base_key}:{origin.value}",
-            kind=ReviewKind.REPLY_DRAFT,
-            review_origin=ReviewOrigin.AGENT_TURN,
-            text=text,
-            risk=RiskLevel.NORMAL,
-            payload=extra,
+        # ``on_outbound`` only DECIDED (HOLD_FOR_REVIEW); opening the item is the job of this caller. The
+        # ``job_id`` is stable for the job (and the origin), so a retried turn finds the first item.
+        conversation_id = await inbox.conversation_id()
+        item = build_outbound_review_item(
+            policy,
+            text,
+            origin,
+            job_id=f"{base_key}:{origin.value}",
+            conversation_ref=str(conversation_id) if conversation_id is not None else None,
         )
+        if extra:
+            item = item.model_copy(update={"payload": {**(item.payload or {}), **extra}})
+        return await _open_review_item(services, agent_ctx, item)
 
     async def notify_failure(loai_loi: str | None) -> None:
         await _notify_failure(services, policy, reply_target, hold_for_review, loai_loi)
@@ -359,7 +366,7 @@ async def _xu_ly_luot(
         if result.handed_off:
             # A policy hook stopped the turn BEFORE the model (red flag, media, identity): the caller owns the
             # hand-off. A person gets a review item and the patient gets nothing automatic.
-            await _hand_off(services, agent_ctx, inbox, base_key, batch, result.hand_off_reason)
+            await _hand_off(services, agent_ctx, inbox, policy, batch, result.hand_off_reason)
             return
 
         if not result.text:
@@ -533,76 +540,55 @@ async def _record_outbound(inbox: _InboxLink, giao: KetQuaGiao, text: str) -> No
         await inbox.record_outbound(text, MessageStatus.FAILED)
 
 
-async def _create_review_item(
-    services: TurnServices,
-    ctx: ActionContext,
-    inbox: _InboxLink,
-    *,
-    idempotency: str,
-    kind: ReviewKind,
-    review_origin: ReviewOrigin,
-    text: str | None,
-    risk: RiskLevel,
-    red_flags: list[str] | None = None,
-    payload: dict[str, object] | None = None,
-) -> str | None:
+async def _open_review_item(services: TurnServices, ctx: ActionContext, item: ReviewItemCreate) -> str | None:
+    """``AgentFacingClinicActions.create_review_item`` (idempotent on ``item.job_id``). ``None`` when it could
+    not be created: the caller then does NOT send the text it wanted to hold."""
     actions = services.clinic_actions
     if actions is None:
         return None
-    conversation_id = await inbox.conversation_id()
     try:
-        item = await actions.create_review_item(
-            ctx,
-            ReviewItemCreate(
-                job_id=idempotency,
-                clinic_id=ctx.clinic_id,
-                conversation_ref=str(conversation_id) if conversation_id is not None else None,
-                kind=kind,
-                origin=review_origin,
-                draft_text=text,
-                payload=payload,
-                risk_level=risk,
-                red_flags=red_flags or [],
-            ),
-        )
+        created = await actions.create_review_item(ctx, item)
     except Exception as err:
-        log.error("cannot create the review item", err=err, kind=kind.value)
+        log.error("cannot create the review item", err=err, kind=item.kind.value)
         return None
-    return str(item.id)
+    return str(created.id)
 
 
 async def _hand_off(
     services: TurnServices,
     ctx: ActionContext,
     inbox: _InboxLink,
-    base_key: str,
+    policy: PolicyContext,
     batch: Sequence[InboundMessage],
     reason: str | None,
 ) -> None:
-    """The engine stopped before the model. ``reason`` is a short code from package P (``red_flag...``,
-    ``media``,
-    ``identity``); the kind of review item follows it and anything unknown is treated as the safest case: a
-    triage alert for a doctor."""
+    """The engine stopped before the model (``before_llm`` answered ``HAND_OFF``).
+
+    ``inbound_media``: nothing to do but log. When it reports that the escalation FAILED (``*_failed``) or
+    gives a code this package does not know, the item is opened here with the SAME ``job_id``
+    a code this package does not know, the item is opened here with the SAME ``job_id``
+    (``create_review_item`` is idempotent, so the worst case is the one item), always with the Inbox
+    ``conversation_ref``; unknown codes are treated as the safest case, a triage alert for a doctor.
+    """
     code = (reason or "").lower()
-    if "media" in code:
-        kind, risk = ReviewKind.MEDIA_FLAG, RiskLevel.ATTENTION
-    elif "identity" in code:
-        kind, risk = ReviewKind.IDENTITY_CHECK, RiskLevel.ATTENTION
+    if code in ("red_flag", "inbound_media"):
+        log.warning("turn handed off to a person", reason=code, opened_by="policy_hook")
+        return
+    conversation_id = await inbox.conversation_id()
+    conversation_ref = str(conversation_id) if conversation_id is not None else None
+    if code == "inbound_media_flag_failed":
+        item = build_media_flag_item(policy, batch, conversation_ref=conversation_ref)
     else:
-        kind, risk = ReviewKind.TRIAGE_ALERT, RiskLevel.RED_FLAG
-    item_id = await _create_review_item(
-        services,
-        ctx,
-        inbox,
-        idempotency=f"{base_key}:hand_off",
-        kind=kind,
-        review_origin=ReviewOrigin.POLICY,
-        text=None,
-        risk=risk,
-        red_flags=[code] if code else [],
-        payload={"hand_off_reason": code, "messages": len(batch)},
+        item = build_red_flag_item(
+            policy, batch, [code] if code else ["unknown"], conversation_ref=conversation_ref
+        )
+    item_id = await _open_review_item(services, ctx, item)
+    log.warning(
+        "turn handed off to a person",
+        reason=code,
+        kind=item.kind.value,
+        review_item_created=item_id is not None,
     )
-    log.warning("turn handed off to a person", kind=kind.value, review_item_created=item_id is not None)
 
 
 async def _notify_failure(

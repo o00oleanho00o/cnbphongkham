@@ -8,7 +8,12 @@ import {
   startListener,
   type ListenerReport,
 } from "./zalo-listener.js";
-import { createFakeListener, fakeFriendEvent, fakeUserMessage, type FakeListener } from "./test-support.js";
+import {
+  createFakeListener,
+  fakeFriendEvent,
+  fakeUserMessage,
+  type FakeListener,
+} from "./test-support.js";
 
 const NO_JITTER = (): number => 0;
 const FLAPS_TO_SUSPICION = 5;
@@ -150,13 +155,17 @@ describe("startListener: suspected dead session", () => {
 
     const dead = reports.filter((report) => report.state === "session_dead");
     assert.deepEqual(dead, [{ state: "session_dead", reason: "reconnect_flapping" }]);
-    assert.equal(listener.starts, 1 + FLAPS_TO_SUSPICION, "the original behaviour holds: keep backing off");
+    assert.equal(
+      listener.starts,
+      1 + FLAPS_TO_SUSPICION,
+      "the original behaviour holds: keep backing off",
+    );
   });
 
   it("the_report_waits_for_the_threshold_to_persist_before_giving_up", () => {
     const { listener } = harness();
-    Array.from({ length: FLAPS_TO_SUSPICION + SO_CHU_KY_CHO_THEM_TRUOC_KHI_BO_CUOC - 1 }).forEach(() =>
-      flap(listener),
+    Array.from({ length: FLAPS_TO_SUSPICION + SO_CHU_KY_CHO_THEM_TRUOC_KHI_BO_CUOC - 1 }).forEach(
+      () => flap(listener),
     );
     const beforeLast = listener.starts;
 
@@ -180,7 +189,9 @@ describe("startListener: suspected dead session", () => {
 
   it("being_kicked_again_and_again_is_reported_as_logged_out", () => {
     const { listener, reports } = harness();
-    Array.from({ length: FLAPS_TO_SUSPICION }).forEach(() => flap(listener, CloseReason.KickConnection));
+    Array.from({ length: FLAPS_TO_SUSPICION }).forEach(() =>
+      flap(listener, CloseReason.KickConnection),
+    );
 
     assert.deepEqual(
       reports.filter((report) => report.state === "logged_out"),
@@ -230,7 +241,10 @@ describe("startListener: suspected dead session", () => {
       mock.timers.tick(70_000);
     });
 
-    assert.equal(reports.some((report) => report.state === "session_dead"), true);
+    assert.equal(
+      reports.some((report) => report.state === "session_dead"),
+      true,
+    );
   });
 });
 
@@ -307,7 +321,12 @@ describe("startListener: lifecycle and handlers", () => {
 
     const withHandler = createFakeListener();
     const received: unknown[] = [];
-    startListener("acc-3", { listener: withHandler }, () => undefined, (event) => void received.push(event));
+    startListener(
+      "acc-3",
+      { listener: withHandler },
+      () => undefined,
+      (event) => void received.push(event),
+    );
     const event = fakeFriendEvent(FriendEventType.REQUEST);
     withHandler.emitFriendEvent(event);
 

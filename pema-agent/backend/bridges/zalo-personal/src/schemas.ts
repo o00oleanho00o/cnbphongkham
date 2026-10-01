@@ -98,7 +98,10 @@ export const sendVideoBodySchema = sendTargetSchema.extend({
   height: z.number().int().min(1).optional(),
 });
 
-export const typingBodySchema = z.object({ thread_id: threadIdSchema, thread_type: threadTypeSchema });
+export const typingBodySchema = z.object({
+  thread_id: threadIdSchema,
+  thread_type: threadTypeSchema,
+});
 
 const receiptParamSchema = z.object({
   msgId: z.string().min(1),
@@ -142,7 +145,9 @@ export const groupInfoQuerySchema = z.object({ thread_id: threadIdSchema });
  * The validated body satisfies zca-js' `Style` (start/len/st checked against the library's own
  * `TextStyle` values); only TypeScript cannot see through the discriminated union.
  */
-export function toZcaStyles(styles: z.infer<typeof styleSchema>[] | undefined): Style[] | undefined {
+export function toZcaStyles(
+  styles: z.infer<typeof styleSchema>[] | undefined,
+): Style[] | undefined {
   return styles as Style[] | undefined;
 }
 
@@ -151,6 +156,8 @@ export function toZcaStyles(styles: z.infer<typeof styleSchema>[] | undefined): 
  * as an exact object; the bridge forwards what the API sends (it got it from a listener Message), so the
  * shape is validated structurally above and cast here.
  */
-export function toZcaQuote(quote: z.infer<typeof quoteSchema> | undefined): SendMessageQuote | undefined {
+export function toZcaQuote(
+  quote: z.infer<typeof quoteSchema> | undefined,
+): SendMessageQuote | undefined {
   return quote as SendMessageQuote | undefined;
 }

@@ -22,13 +22,16 @@ function readOption(args: readonly string[], name: string): string | undefined {
 }
 
 /** Returns the command, or an error text to show with the usage. */
-export function parseKillSwitchArgs(args: readonly string[]): KillSwitchCommand | { error: string } {
+export function parseKillSwitchArgs(
+  args: readonly string[],
+): KillSwitchCommand | { error: string } {
   const action = args[0];
   if (action === "status") return { action: "status" };
   if (action === "off") return { action: "off" };
   if (action !== "on") return { error: "Expected on, off or status" };
   const scope = readOption(args, "--scope") ?? "all";
-  if (scope !== "all" && scope !== "proactive") return { error: "--scope must be all or proactive" };
+  if (scope !== "all" && scope !== "proactive")
+    return { error: "--scope must be all or proactive" };
   const reason = readOption(args, "--reason");
   return { action: "on", scope, ...(reason ? { reason } : {}) };
 }
@@ -56,7 +59,11 @@ export async function sendKillSwitch(
     : JSON.stringify(
         command.action === "off"
           ? { on: false }
-          : { on: true, scope: command.scope, ...(command.reason ? { reason: command.reason } : {}) },
+          : {
+              on: true,
+              scope: command.scope,
+              ...(command.reason ? { reason: command.reason } : {}),
+            },
       );
   const response = await fetchImpl(url, {
     method: isStatus ? "GET" : "POST",

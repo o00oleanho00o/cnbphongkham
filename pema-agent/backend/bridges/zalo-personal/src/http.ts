@@ -62,7 +62,9 @@ const MAX_MESSAGE_LENGTH = 300;
 /** Map a thrown zca-js error to the envelope (HTTP 502 for both kinds). */
 export function failFromThrown(err: unknown): Response {
   const message =
-    err instanceof Error && err.message ? err.message.slice(0, MAX_MESSAGE_LENGTH) : "Zalo request failed";
+    err instanceof Error && err.message
+      ? err.message.slice(0, MAX_MESSAGE_LENGTH)
+      : "Zalo request failed";
   if (laLoiMayChuTuChoi(err)) {
     return fail("zalo_rejected", message, { code: (err as { code: number }).code });
   }
@@ -83,7 +85,8 @@ export function parseJsonBody<T>(c: AppContext, schema: z.ZodType<T>): Parsed<T>
   const raw = c.get("rawBody");
   const text = new TextDecoder().decode(raw);
   const value = parseJsonText(text);
-  if (!value.ok) return { ok: false, response: fail("bad_request", "Body is not valid JSON", { status: 400 }) };
+  if (!value.ok)
+    return { ok: false, response: fail("bad_request", "Body is not valid JSON", { status: 400 }) };
   const result = schema.safeParse(value.value);
   if (!result.success) {
     return { ok: false, response: fail("bad_request", describeIssues(result.error)) };

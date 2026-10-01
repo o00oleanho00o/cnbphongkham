@@ -92,7 +92,7 @@ class ChannelBlockedListener(Protocol):
     the manual-send state; the kill switch already makes every proactive send fail with a recognisable
     code."""
 
-    async def on_channel_blocked(self, clinic_id: UUID, account_id: str, state: str) -> None: ...
+    async def on_channel_blocked(self, clinic_id: UUID, account_id: str, state: str, /) -> None: ...
 
 
 @dataclass(frozen=True)

@@ -37,7 +37,8 @@ export function signedHeaders(
   };
 }
 
-export type VerifyFailure = "missing_headers" | "bad_timestamp" | "stale_timestamp" | "bad_signature";
+export type VerifyFailure =
+  "missing_headers" | "bad_timestamp" | "stale_timestamp" | "bad_signature";
 
 export type VerifyResult = { ok: true } | { ok: false; reason: VerifyFailure };
 

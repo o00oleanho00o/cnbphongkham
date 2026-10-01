@@ -1,0 +1,102 @@
+/* ported from: web/src/styles.css
+ *
+ * Deviations: Tailwind v4 through PostCSS (not the Vite plugin); the Zalo blue `zalo-*` scale became the
+ * Pema `brand-*` scale (primary #0B4F94, navy #083A6E, sky #3CAAE5); font Be Vietnam Pro (local, OFL,
+ * loaded by next/font in layout.tsx) instead of Plus Jakarta Sans. The class names `gc-card`, `gc-tile`,
+ * `gc-input` and the semantic tokens (canvas, surface, ink, ink-soft, line, tile) are kept so the ported
+ * dashboard markup stays identical to the original.
+ */
+@import "tailwindcss";
+
+/* Bật dark mode theo class `.dark` trên <html> thay vì chỉ nghe media query:
+   người dùng phải TỰ CHỌN được sáng/tối bất kể hệ điều hành đang đặt gì. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens. Pema identity (docs: .agents/skills/pema-design/references/visual-system.md):
+ * primary #0B4F94 = main CTA / active navigation, navy #083A6E = strong headings and hover,
+ * sky #3CAAE5 = graphic details only (never small white text on it), ink #17324D = content,
+ * muted #5D7184 = metadata, paper #F4F8FB = app background, line #D9E5EE.
+ */
+@theme inline {
+  --font-sans: var(--font-be-vietnam-pro), system-ui, sans-serif;
+}
+
+@theme {
+  --color-brand-50: #e8f4fb;
+  --color-brand-100: #cfe6f6;
+  --color-brand-200: #9fcdee;
+  --color-brand-400: #3caae5; /* sky */
+  --color-brand-500: #0b4f94; /* primary */
+  --color-brand-600: #083a6e; /* navy: hover and pressed */
+  --color-brand-700: #083a6e; /* text on brand-50 */
+
+  --color-canvas: #f4f8fb; /* nền trang */
+  --color-surface: #ffffff; /* nền card/panel - KHÔNG dùng bg-white trực tiếp */
+  --color-ink: #17324d; /* chữ chính */
+  --color-ink-soft: #5d7184; /* chữ phụ (4.9:1 trên nền trắng) */
+  --color-line: #d9e5ee; /* border card */
+  --color-tile: #eaf1f7; /* nền tile/hover */
+
+  --shadow-card: 0 5px 18px rgba(18, 61, 99, 0.06);
+}
+
+/*
+ * Chế độ tối: ĐỊNH NGHĨA LẠI đúng bộ token ở trên, không đụng tới component.
+ * Nhờ vậy `bg-surface`, `text-ink`, `border-line`... trong mọi file tự đổi theo.
+ */
+.dark {
+  --color-brand-50: #10263f; /* nền nhạt cho mục đang chọn */
+  --color-brand-100: #163a5f;
+  --color-brand-200: #235688;
+  --color-brand-400: #3caae5;
+  --color-brand-500: #2b7fc9; /* sáng hơn bản light để nổi trên nền tối */
+  --color-brand-600: #5aaef0;
+  --color-brand-700: #9cd3f7; /* chữ trên nền brand-50 tối */
+
+  --color-canvas: #0a1624;
+  --color-surface: #112236;
+  --color-ink: #e6eef6;
+  --color-ink-soft: #9db0c3;
+  --color-line: #1f3550;
+  --color-tile: #18304a;
+}
+
+body {
+  @apply bg-canvas font-sans text-ink antialiased;
+  font-size: 15px;
+}
+
+/*
+ * Tailwind v4 đổi preflight: button nhận cursor:default (v3 là pointer).
+ * Trả lại pointer cho mọi thứ bấm được thay vì rắc cursor-pointer khắp JSX.
+ */
+button:not(:disabled),
+select:not(:disabled),
+summary,
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+/* Keyboard focus must stay visible on every interactive element (WCAG 2.4.7). */
+:focus-visible {
+  outline: 2px solid var(--color-brand-400);
+  outline-offset: 2px;
+}
+
+/* Trong @layer components để utility (pl-9...) vẫn override được khi cần */
+@layer components {
+  /* Card chuẩn mẫu: border mảnh, radius 14 (Pema), bóng rất nhẹ. */
+  .gc-card {
+    @apply rounded-[14px] border border-line bg-surface shadow-(--shadow-card);
+  }
+
+  /* Tile nhỏ trong panel (System Health): nền muted mờ */
+  .gc-tile {
+    @apply rounded-xl border border-line bg-tile/40 p-3;
+  }
+
+  .gc-input {
+    @apply rounded-lg border border-line bg-surface px-3 py-2 text-[15px] text-ink outline-none placeholder:text-ink-soft/60 focus:border-brand-500 focus:ring-2 focus:ring-brand-100;
+  }
+}

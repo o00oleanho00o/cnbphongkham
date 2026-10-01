@@ -99,7 +99,12 @@ class QrLoginManager:
         self._seq_counter = 0
         self._tasks: set[asyncio.Task[None]] = set()
 
-    async def start_qr_login(self, clinic_id: UUID, account_id: str) -> QrSession:
+    async def start_qr_login(
+        self, clinic_id: UUID, account_id: str, deps: QrLoginDeps | None = None
+    ) -> QrSession:
+        """``deps`` overrides the manager's own for this session (the original took it per call, tests inject
+        a fake login)."""
+        use = deps or self._deps
         key = (clinic_id, account_id)
         existing = self._sessions.get(key)
         active = (
@@ -138,7 +143,7 @@ class QrLoginManager:
 
         async def run() -> None:
             try:
-                result = await self._deps.login(clinic_id, account_id, on_event)
+                result = await use.login(clinic_id, account_id, on_event)
             except Exception as err:
                 if not still_current():
                     return
@@ -151,7 +156,7 @@ class QrLoginManager:
                 return
             session.status = "success"
             session.qr_base64 = None
-            await self._deps.attach(clinic_id, account_id, result)
+            await use.attach(clinic_id, account_id, result)
             log.info("Login QR từ dashboard thành công", account_id=account_id)
 
         task = asyncio.get_running_loop().create_task(run())

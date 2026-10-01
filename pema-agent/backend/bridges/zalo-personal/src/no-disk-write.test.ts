@@ -31,11 +31,9 @@ describe("credential handling: nothing is written to disk", () => {
     workDir = fs.mkdtempSync(path.join(os.tmpdir(), "zalo-bridge-no-disk-"));
     process.chdir(workDir);
     writes.length = 0;
-    const record =
-      (name: string) =>
-      (): void => {
-        writes.push(name);
-      };
+    const record = (name: string) => (): void => {
+      writes.push(name);
+    };
     mock.method(fs, "writeFileSync", record("writeFileSync"));
     mock.method(fs, "appendFileSync", record("appendFileSync"));
     mock.method(fs, "mkdirSync", record("mkdirSync"));
@@ -63,7 +61,10 @@ describe("credential handling: nothing is written to disk", () => {
     gateway.nextSessions.push(createFakeSession(fake));
 
     // When the API starts an account with a credential, a message arrives and a reply is sent
-    await sender.post("/v1/accounts/acc-1/start", { clinic_slug: "clinic-a", credential: TEST_CREDENTIAL });
+    await sender.post("/v1/accounts/acc-1/start", {
+      clinic_slug: "clinic-a",
+      credential: TEST_CREDENTIAL,
+    });
     fake.listener.emitMessage(fakeUserMessage());
     await sender.post("/v1/accounts/acc-1/send", {
       thread_id: "2000001",
@@ -75,7 +76,9 @@ describe("credential handling: nothing is written to disk", () => {
     gateway.qrControls[0]?.emit({ type: "qr", qrBase64: "QR_PNG_BASE64" });
     gateway.qrControls[0]?.succeed(createFakeSession(createFakeApi(), "1000099"));
     await doiChoDenKhi(
-      async () => (await readEnvelope(await sender.get("/v1/accounts/acc-2/login/qr")))["state"] === "success",
+      async () =>
+        (await readEnvelope(await sender.get("/v1/accounts/acc-2/login/qr")))["state"] ===
+        "success",
       { moTa: "QR login success" },
     );
 

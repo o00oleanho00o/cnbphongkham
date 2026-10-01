@@ -10,7 +10,12 @@ import {
   type LoginQRCallback,
   type LoginQRCallbackEvent,
 } from "zca-js";
-import { exportCredentialFromApi, loginWithCredentials, loginWithQRForWeb, type ZaloLike } from "./zalo-client.js";
+import {
+  exportCredentialFromApi,
+  loginWithCredentials,
+  loginWithQRForWeb,
+  type ZaloLike,
+} from "./zalo-client.js";
 import { TEST_CREDENTIAL } from "./test-support.js";
 import type { QrLoginEvent } from "./zalo-types.js";
 
@@ -50,7 +55,10 @@ describe("loginWithCredentials", () => {
       },
       loginQR: async () => fakeLoggedInApi(),
     };
-    await assert.rejects(loginWithCredentials(TEST_CREDENTIAL, () => zalo), /cookie rejected/);
+    await assert.rejects(
+      loginWithCredentials(TEST_CREDENTIAL, () => zalo),
+      /cookie rejected/,
+    );
   });
 });
 
@@ -110,16 +118,28 @@ const actions = (calls: { retry: number; abort: number }) => ({
   abort: () => void (calls.abort += 1),
 });
 
-const generated = (calls: { retry: number; abort: number }, image = "QR_BASE64"): LoginQRCallbackEvent => ({
+const generated = (
+  calls: { retry: number; abort: number },
+  image = "QR_BASE64",
+): LoginQRCallbackEvent => ({
   type: LoginQRCallbackEventType.QRCodeGenerated,
-  data: { code: "c", image, options: { enabledCheckOCR: false, enabledMultiLayer: false }, token: "t" },
+  data: {
+    code: "c",
+    image,
+    options: { enabledCheckOCR: false, enabledMultiLayer: false },
+    token: "t",
+  },
   actions: { saveToFile: async () => undefined, ...actions(calls) },
 });
 
 describe("loginWithQRForWeb", () => {
   it("a_generated_qr_is_handed_over_as_raw_base64_without_touching_the_disk", () => {
     const h = qrHarness();
-    void loginWithQRForWeb((event) => h.events.push(event), new AbortController().signal, () => h.zalo);
+    void loginWithQRForWeb(
+      (event) => h.events.push(event),
+      new AbortController().signal,
+      () => h.zalo,
+    );
 
     h.fire(generated(h.calls, "AAA"));
 
@@ -128,7 +148,11 @@ describe("loginWithQRForWeb", () => {
 
   it("an_expired_qr_is_regenerated_by_calling_retry_because_the_library_does_not", () => {
     const h = qrHarness();
-    void loginWithQRForWeb((event) => h.events.push(event), new AbortController().signal, () => h.zalo);
+    void loginWithQRForWeb(
+      (event) => h.events.push(event),
+      new AbortController().signal,
+      () => h.zalo,
+    );
 
     h.fire({ type: LoginQRCallbackEventType.QRCodeExpired, data: null, actions: actions(h.calls) });
 
@@ -138,7 +162,11 @@ describe("loginWithQRForWeb", () => {
 
   it("a_scanned_qr_is_reported_without_the_account_name_or_avatar", () => {
     const h = qrHarness();
-    void loginWithQRForWeb((event) => h.events.push(event), new AbortController().signal, () => h.zalo);
+    void loginWithQRForWeb(
+      (event) => h.events.push(event),
+      new AbortController().signal,
+      () => h.zalo,
+    );
 
     h.fire({
       type: LoginQRCallbackEventType.QRCodeScanned,
@@ -151,9 +179,17 @@ describe("loginWithQRForWeb", () => {
 
   it("a_declined_qr_is_reported_and_the_login_is_aborted_so_the_promise_settles", () => {
     const h = qrHarness();
-    void loginWithQRForWeb((event) => h.events.push(event), new AbortController().signal, () => h.zalo);
+    void loginWithQRForWeb(
+      (event) => h.events.push(event),
+      new AbortController().signal,
+      () => h.zalo,
+    );
 
-    h.fire({ type: LoginQRCallbackEventType.QRCodeDeclined, data: { code: "c" }, actions: actions(h.calls) });
+    h.fire({
+      type: LoginQRCallbackEventType.QRCodeDeclined,
+      data: { code: "c" },
+      actions: actions(h.calls),
+    });
 
     assert.deepEqual(h.events, [{ type: "declined" }]);
     assert.deepEqual(h.calls, { retry: 0, abort: 1 });
@@ -162,7 +198,11 @@ describe("loginWithQRForWeb", () => {
   it("aborting_the_signal_aborts_the_login_of_the_latest_qr", () => {
     const h = qrHarness();
     const controller = new AbortController();
-    void loginWithQRForWeb((event) => h.events.push(event), controller.signal, () => h.zalo);
+    void loginWithQRForWeb(
+      (event) => h.events.push(event),
+      controller.signal,
+      () => h.zalo,
+    );
     h.fire(generated(h.calls));
 
     controller.abort();
@@ -173,7 +213,11 @@ describe("loginWithQRForWeb", () => {
   it("after_the_signal_is_aborted_an_expiry_aborts_instead_of_asking_for_a_new_qr", () => {
     const h = qrHarness();
     const controller = new AbortController();
-    void loginWithQRForWeb((event) => h.events.push(event), controller.signal, () => h.zalo);
+    void loginWithQRForWeb(
+      (event) => h.events.push(event),
+      controller.signal,
+      () => h.zalo,
+    );
     controller.abort();
 
     h.fire({ type: LoginQRCallbackEventType.QRCodeExpired, data: null, actions: actions(h.calls) });
@@ -185,7 +229,11 @@ describe("loginWithQRForWeb", () => {
   it("a_qr_generated_after_the_abort_is_never_shown", () => {
     const h = qrHarness();
     const controller = new AbortController();
-    void loginWithQRForWeb((event) => h.events.push(event), controller.signal, () => h.zalo);
+    void loginWithQRForWeb(
+      (event) => h.events.push(event),
+      controller.signal,
+      () => h.zalo,
+    );
     controller.abort();
 
     h.fire(generated(h.calls));
@@ -196,7 +244,11 @@ describe("loginWithQRForWeb", () => {
 
   it("the_login_info_event_carries_no_secret_into_the_web_flow", () => {
     const h = qrHarness();
-    void loginWithQRForWeb((event) => h.events.push(event), new AbortController().signal, () => h.zalo);
+    void loginWithQRForWeb(
+      (event) => h.events.push(event),
+      new AbortController().signal,
+      () => h.zalo,
+    );
 
     h.fire({
       type: LoginQRCallbackEventType.GotLoginInfo,
@@ -209,7 +261,11 @@ describe("loginWithQRForWeb", () => {
 
   it("a_finished_login_resolves_to_a_session_with_the_own_id", async () => {
     const h = qrHarness();
-    const pending = loginWithQRForWeb((event) => h.events.push(event), new AbortController().signal, () => h.zalo);
+    const pending = loginWithQRForWeb(
+      (event) => h.events.push(event),
+      new AbortController().signal,
+      () => h.zalo,
+    );
 
     h.finish();
 
@@ -218,7 +274,11 @@ describe("loginWithQRForWeb", () => {
 
   it("a_failed_login_rejects_with_the_library_error", async () => {
     const h = qrHarness();
-    const pending = loginWithQRForWeb((event) => h.events.push(event), new AbortController().signal, () => h.zalo);
+    const pending = loginWithQRForWeb(
+      (event) => h.events.push(event),
+      new AbortController().signal,
+      () => h.zalo,
+    );
 
     h.fail(new Error("Cannot get scan result"));
 

@@ -6,13 +6,7 @@
  */
 import { Hono } from "hono";
 import type { AppDeps } from "./deps.js";
-import {
-  fail,
-  failFromThrown,
-  ok,
-  parseJsonBody,
-  type AppEnv,
-} from "./http.js";
+import { fail, failFromThrown, ok, parseJsonBody, type AppEnv } from "./http.js";
 import { createLogger, errorInfo } from "./logger.js";
 import { accountIdSchema, killSwitchSchema, qrBodySchema, startBodySchema } from "./schemas.js";
 

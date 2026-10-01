@@ -6,7 +6,17 @@ import { REACTION_ICON_KEYS, isReactionIconKey, toZaloReaction } from "./reactio
 
 describe("reaction icons", () => {
   it("the_nine_keys_are_heart_like_haha_wow_ok_rose_kiss_cry_angry", () => {
-    assert.deepEqual(REACTION_ICON_KEYS, ["heart", "like", "haha", "wow", "ok", "rose", "kiss", "cry", "angry"]);
+    assert.deepEqual(REACTION_ICON_KEYS, [
+      "heart",
+      "like",
+      "haha",
+      "wow",
+      "ok",
+      "rose",
+      "kiss",
+      "cry",
+      "angry",
+    ]);
   });
 
   it("each_key_maps_to_its_zalo_reaction", () => {

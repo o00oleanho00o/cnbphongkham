@@ -26,7 +26,10 @@ function scriptedFetch(replies: Reply[] = []) {
   return { fetchImpl, seen };
 }
 
-function publisherWith(replies: Reply[] = [], extra: Partial<ConstructorParameters<typeof HttpEventPublisher>[0]> = {}) {
+function publisherWith(
+  replies: Reply[] = [],
+  extra: Partial<ConstructorParameters<typeof HttpEventPublisher>[0]> = {},
+) {
   const { fetchImpl, seen } = scriptedFetch(replies);
   const sleeps: number[] = [];
   const publisher = new HttpEventPublisher({
@@ -131,12 +134,19 @@ describe("HttpEventPublisher", () => {
     const { publisher, seen } = publisherWith();
     publisher.publish(target, { type: "credential_updated", credential: TEST_CREDENTIAL });
     await publisher.flush();
-    assert.deepEqual(JSON.parse(seen[0]?.body ?? ""), { type: "credential_updated", credential: TEST_CREDENTIAL });
+    assert.deepEqual(JSON.parse(seen[0]?.body ?? ""), {
+      type: "credential_updated",
+      credential: TEST_CREDENTIAL,
+    });
   });
 
   it("ids_beyond_the_safe_integer_range_are_written_as_strings", async () => {
     const { publisher, seen } = publisherWith();
-    publisher.publish(target, { type: "message", self_id: "1", message: { data: { id: 9007199254740993n } } });
+    publisher.publish(target, {
+      type: "message",
+      self_id: "1",
+      message: { data: { id: 9007199254740993n } },
+    });
     await publisher.flush();
     assert.equal(seen[0]?.body.includes('"9007199254740993"'), true);
   });
@@ -167,7 +177,11 @@ describe("HttpEventPublisher", () => {
         return new Response("{}", { status: 200 });
       },
     });
-    const named = (reason: string): BridgeEvent => ({ type: "account_state", state: "connected", reason });
+    const named = (reason: string): BridgeEvent => ({
+      type: "account_state",
+      state: "connected",
+      reason,
+    });
 
     ["a", "b", "c", "d"].forEach((reason) => publisher.publish(target, named(reason)));
     release();

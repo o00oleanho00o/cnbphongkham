@@ -38,7 +38,10 @@ describe("config: environment of the bridge", () => {
     });
 
     it("a_secret_of_16_characters_is_accepted", () => {
-      const config = loadConfig({ PEMA_ZALO_PERSONAL_ENABLED: "1", PEMA_ZALO_BRIDGE_SECRET: SECRET });
+      const config = loadConfig({
+        PEMA_ZALO_PERSONAL_ENABLED: "1",
+        PEMA_ZALO_BRIDGE_SECRET: SECRET,
+      });
       assert.equal(config.enabled, true);
       assert.equal(config.secret, SECRET);
     });

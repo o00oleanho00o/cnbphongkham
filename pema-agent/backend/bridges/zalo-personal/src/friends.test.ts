@@ -9,10 +9,21 @@ import { fakeFriendEvent } from "./test-support.js";
 describe("summarizeFriends", () => {
   it("only_user_id_display_name_and_zalo_name_are_kept", () => {
     const result = summarizeFriends([
-      { userId: "1", displayName: "A", zaloName: "a", phoneNumber: "0900000000", dob: "x", avatar: "y" },
+      {
+        userId: "1",
+        displayName: "A",
+        zaloName: "a",
+        phoneNumber: "0900000000",
+        dob: "x",
+        avatar: "y",
+      },
     ]);
     assert.deepEqual(result, [{ userId: "1", displayName: "A", zaloName: "a" }]);
-    assert.deepEqual(Object.keys(result[0] ?? {}).toSorted(), ["displayName", "userId", "zaloName"]);
+    assert.deepEqual(Object.keys(result[0] ?? {}).toSorted(), [
+      "displayName",
+      "userId",
+      "zaloName",
+    ]);
   });
 
   it("anything_that_is_not_a_list_gives_an_empty_list", () => {
@@ -41,7 +52,12 @@ describe("normalizeFriendEvent", () => {
   });
 
   it("thread_id_is_self_flag_and_data_are_carried_over", () => {
-    const event = { type: FriendEventType.REQUEST, threadId: "2000001", isSelf: true, data: { fromUid: "2000001" } };
+    const event = {
+      type: FriendEventType.REQUEST,
+      threadId: "2000001",
+      isSelf: true,
+      data: { fromUid: "2000001" },
+    };
     const normalized = normalizeFriendEvent(event as never); // synthetic request payload
     assert.deepEqual(normalized, {
       kind: "request",

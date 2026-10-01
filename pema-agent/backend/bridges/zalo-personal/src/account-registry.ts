@@ -166,7 +166,11 @@ export class AccountManager {
     return account;
   }
 
-  private attachSession(account: ManagedAccount, session: ZaloSession, announceCredential: boolean): void {
+  private attachSession(
+    account: ManagedAccount,
+    session: ZaloSession,
+    announceCredential: boolean,
+  ): void {
     const token = Symbol(account.id);
     account.safety.clearBlocked();
     account.api = session.api;
@@ -226,7 +230,8 @@ export class AccountManager {
     this.clearStableTimer(account);
     if (report.state === "disconnected") {
       // A terminal verdict stays until a stable connection replaces it.
-      if (account.listenerState === "session_dead" || account.listenerState === "logged_out") return;
+      if (account.listenerState === "session_dead" || account.listenerState === "logged_out")
+        return;
       account.listenerState = "disconnected";
       // Only a state the API was told is connected needs a "disconnected": flaps never were connected.
       if (account.reportedState === "connected") {

@@ -107,9 +107,11 @@ async def test_typing_indicator_chot_chan_max_duration_tu_tat_khi_caller_quen_go
     rec = Recorder()
     start_typing_indicator(rec.send, "t-treo", ThreadKind.USER, interval_ms=20, max_duration_ms=45)
 
-    await asyncio.sleep(0.07)
+    # Wide margins: the guard fires at 45 ms; read the counter long after it (and after in-flight sends ended).
+    await asyncio.sleep(0.3)
+    await _yield()
     at_guard = len(rec.calls)
-    await asyncio.sleep(0.08)
+    await asyncio.sleep(0.1)
     assert len(rec.calls) == at_guard, "quá maxDuration phải tự dừng"
 
 

@@ -21,7 +21,11 @@ function capturingFetch(status = 200) {
   return { fetchImpl, captured };
 }
 
-const ENV = { PEMA_ZALO_BRIDGE_SECRET: SECRET, PEMA_ZALO_BRIDGE_HOST: "127.0.0.1", PEMA_ZALO_BRIDGE_PORT: "8200" };
+const ENV = {
+  PEMA_ZALO_BRIDGE_SECRET: SECRET,
+  PEMA_ZALO_BRIDGE_HOST: "127.0.0.1",
+  PEMA_ZALO_BRIDGE_PORT: "8200",
+};
 const NOW = 1_700_000_000;
 
 describe("parseKillSwitchArgs", () => {
@@ -53,12 +57,21 @@ describe("sendKillSwitch", () => {
   it("on_posts_a_signed_json_body_to_the_bridge", async () => {
     const { fetchImpl, captured } = capturingFetch();
 
-    const result = await sendKillSwitch({ action: "on", scope: "all", reason: "test" }, ENV, fetchImpl, NOW);
+    const result = await sendKillSwitch(
+      { action: "on", scope: "all", reason: "test" },
+      ENV,
+      fetchImpl,
+      NOW,
+    );
 
     assert.equal(result.ok, true);
     assert.equal(captured[0]?.url, "http://127.0.0.1:8200/v1/kill-switch");
     assert.equal(captured[0]?.method, "POST");
-    assert.deepEqual(JSON.parse(captured[0]?.body ?? ""), { on: true, scope: "all", reason: "test" });
+    assert.deepEqual(JSON.parse(captured[0]?.body ?? ""), {
+      on: true,
+      scope: "all",
+      reason: "test",
+    });
     const headers = captured[0]?.headers ?? {};
     assert.deepEqual(
       verifySignature({
@@ -97,7 +110,10 @@ describe("sendKillSwitch", () => {
 
   it("a_missing_secret_is_an_error_that_does_not_send_anything", async () => {
     const { fetchImpl, captured } = capturingFetch();
-    await assert.rejects(sendKillSwitch({ action: "on", scope: "all" }, {}, fetchImpl, NOW), /SECRET/);
+    await assert.rejects(
+      sendKillSwitch({ action: "on", scope: "all" }, {}, fetchImpl, NOW),
+      /SECRET/,
+    );
     assert.equal(captured.length, 0);
   });
 
@@ -109,7 +125,12 @@ describe("sendKillSwitch", () => {
 
   it("an_ipv6_host_is_bracketed_in_the_url", async () => {
     const { fetchImpl, captured } = capturingFetch();
-    await sendKillSwitch({ action: "status" }, { ...ENV, PEMA_ZALO_BRIDGE_HOST: "::1" }, fetchImpl, NOW);
+    await sendKillSwitch(
+      { action: "status" },
+      { ...ENV, PEMA_ZALO_BRIDGE_HOST: "::1" },
+      fetchImpl,
+      NOW,
+    );
     assert.equal(captured[0]?.url, "http://[::1]:8200/v1/kill-switch");
   });
 });

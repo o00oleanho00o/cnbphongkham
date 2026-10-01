@@ -97,7 +97,8 @@ async def list_accounts(request: Request) -> list[AccountOut]:
 
 @router.get("/reaction-icons", response_model=list[ReactionIcon], summary="Reaction icons for auto-react")
 async def list_reaction_icons(request: Request) -> list[ReactionIcon]:
-    """Danh sách reaction cho UI chọn - giữ 1 nguồn duy nhất ở server, tránh frontend chép lại rồi lệch."""
+    # Danh sách reaction cho UI chọn - giữ 1 nguồn duy nhất ở server, tránh frontend chép lại rồi lệch.
+    # (a comment, not a docstring: a docstring would change the OpenAPI description, a contract file.)
     services = get_c2(request)
     await services.authorize(request, Permission.ADMIN_ACCOUNTS)
     return [ReactionIcon(key=key, emoji=REACTION_ICONS[key].emoji) for key in REACTION_ICON_KEYS]
@@ -224,7 +225,7 @@ def _qr_out(state: str, qr_data_uri: str | None, error: str | None) -> QrLoginSt
     summary="Start QR login (personal account)",
 )
 async def start_qr_login(account_id: str, request: Request) -> QrLoginStatus:
-    """Bắt đầu phiên login QR (idempotent - đang có phiên sống thì trả phiên đó)."""
+    # Bắt đầu phiên login QR (idempotent - đang có phiên sống thì trả phiên đó).
     services = get_c2(request)
     ctx = await services.authorize(request, Permission.ADMIN_ACCOUNTS)
     config = await _require_account(services, ctx, account_id)
@@ -251,8 +252,8 @@ async def start_qr_login(account_id: str, request: Request) -> QrLoginStatus:
 
 @router.get("/{account_id}/login/status", response_model=QrLoginStatus, summary="Poll the QR login state")
 async def get_qr_login_status(account_id: str, request: Request) -> QrLoginStatus:
-    """UI polling mỗi ~1.5s: trạng thái + ảnh QR khi đang chờ quét. The QR image is the key to the account: it
-    travels only through this authenticated route and is never logged."""
+    # UI polling mỗi ~1.5s: trạng thái + ảnh QR khi đang chờ quét. The QR image is the key to the account: it
+    # travels only through this authenticated route and is never logged.
     services = get_c2(request)
     ctx = await services.authorize(request, Permission.ADMIN_ACCOUNTS)
     state = services.qr.get_qr_login_status(ctx.clinic_id, account_id)

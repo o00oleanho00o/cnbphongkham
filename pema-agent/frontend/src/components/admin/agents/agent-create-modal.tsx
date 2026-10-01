@@ -1,0 +1,160 @@
+// ported from: web/src/pages/agent-create-modal.tsx
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useChotNen } from "@/lib/admin/shared/backdrop-close-guard";
+import { slugifyVietnamese } from "@/lib/admin/shared/slugify-vietnamese";
+import { AgentIdField, kiemDinhDangId } from "@/components/admin/agents/agent-id-field";
+import { AgentPolicyField } from "@/components/admin/agents/agent-policy-field";
+import { idDaCoRoi, type BanNhapAgent } from "@/lib/admin/agents/agent-draft";
+import { HO_SO_MAC_DINH, type PolicyProfileKey } from "@/lib/admin/agents/agent-policy-profile";
+
+/**
+ * Bước 1 của việc tạo agent - chỉ THU THẬP, không ghi gì vào DB.
+ *
+ * Bấm "Tiếp tục" là sang trang tạo (`agent-create-page.tsx`) với đúng những gì
+ * vừa nhập; agent chỉ sinh ra khi bấm Tạo ở trang đó. Trước đây modal này POST
+ * thẳng rồi mới nhảy sang trang sửa, nên agent đã nằm trong DB trong khi màn
+ * hình đang mời người dùng "Lưu thay đổi" - đọc ra như chưa lưu mà thực ra đã
+ * lưu, và nút Lưu thì mờ vì chưa có gì đổi.
+ */
+export function AgentCreateModal({
+  onClose,
+  onTiepTuc,
+  idDangCo,
+}: {
+  onClose: () => void;
+  onTiepTuc: (banNhap: BanNhapAgent) => void;
+  /** Id của các agent đang có - để chặn trùng ngay tại đây */
+  idDangCo: string[];
+}) {
+  const [icon, setIcon] = useState("🤖");
+  const [ten, setTen] = useState("");
+  // null = ID đang bám theo tên. Bấm "sửa" là chốt lại một chuỗi và NGỪNG bám -
+  // không có mốc này thì gõ tiếp tên sẽ ghi đè cái người dùng vừa gõ tay.
+  const [idTuGo, setIdTuGo] = useState<string | null>(null);
+  const [persona, setPersona] = useState("");
+  // New: the restrictive profile is the default, the person must choose the permissive one on purpose
+  const [policyProfile, setPolicyProfile] = useState<PolicyProfileKey>(HO_SO_MAC_DINH);
+  const oTenRef = useRef<HTMLInputElement>(null);
+  const nen = useChotNen(onClose);
+
+  const id = idTuGo ?? slugifyVietnamese(ten);
+  const tenTrong = ten.trim() === "";
+  // Tên toàn ký tự lạ (vd "日本語") cho ra slug rỗng - phải bắt người dùng tự gõ
+  const idTrong = id === "";
+  const trungId = idDaCoRoi(id, idDangCo);
+
+  useEffect(() => {
+    oTenRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4 backdrop-blur-[2px]"
+      {...nen}
+      role="dialog"
+      aria-modal="true"
+    >
+      {/* Trần chiều cao + cuộn nội bộ: cửa sổ thấp (điện thoại nằm ngang,
+          laptop zoom cao) làm hộp này tràn khỏi màn mà KHÔNG cuộn được - lớp
+          phủ là `fixed inset-0` nên trang cuộn cũng không kéo nó vào. `dvh`
+          chứ không `vh` để trên điện thoại còn trừ đúng phần thanh địa chỉ
+          đang chiếm chỗ. */}
+      <div className="max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-2xl bg-surface p-6 shadow-xl">
+        <h2 className="text-[17px] font-semibold text-ink">Tạo agent mới</h2>
+        <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">
+          Đặt tên trước đã. Bước sau còn model, số bước và công cụ - agent chỉ được tạo khi bạn bấm
+          Tạo ở đó.
+        </p>
+
+        <div className="mt-5 flex gap-3">
+          <div className="w-20">
+            <label htmlFor="ag-icon" className="mb-2 block text-[13px] font-medium text-ink">
+              Icon
+            </label>
+            <input
+              id="ag-icon"
+              className="gc-input w-full text-center text-lg"
+              value={icon}
+              onChange={(e) => setIcon(e.target.value)}
+              maxLength={8}
+            />
+          </div>
+          <div className="flex-1">
+            <label htmlFor="ag-ten" className="mb-2 block text-[13px] font-medium text-ink">
+              Tên hiển thị
+            </label>
+            <input
+              ref={oTenRef}
+              id="ag-ten"
+              className="gc-input w-full"
+              value={ten}
+              onChange={(e) => setTen(e.target.value)}
+              placeholder="vd: Chăm Sóc Khách Hàng"
+              maxLength={100}
+            />
+          </div>
+        </div>
+
+        <AgentIdField
+          id={id}
+          idTuGo={idTuGo}
+          // Trùng thì để nguyên trạng thái đang bám theo tên: đổi tên agent vẫn
+          // là cách sửa hợp lệ, mà bung ô nhập ngay giữa lúc đang gõ tên thì bố
+          // cục nhảy dựng lên. Câu báo lỗi tự chỉ đường sang nút "sửa".
+          loi={
+            trungId ? 'ID này đã có agent khác dùng - đổi tên hoặc bấm "sửa" để đặt id khác.' : ""
+          }
+          tenTrong={tenTrong}
+          onGoTay={() => setIdTuGo(id)}
+          onDoiId={setIdTuGo}
+        />
+
+        <div className="mt-5">
+          <label htmlFor="ag-persona" className="mb-2 block text-[13px] font-medium text-ink">
+            Agent này làm gì?{" "}
+            <span className="font-normal text-ink-soft">
+              (để trống cũng được, bước sau sửa tiếp)
+            </span>
+          </label>
+          <textarea
+            id="ag-persona"
+            className="gc-input min-h-28 w-full resize-y leading-relaxed"
+            value={persona}
+            onChange={(e) => setPersona(e.target.value)}
+            placeholder="Bạn là trợ lý chăm sóc khách hàng, xưng 'em' với khách..."
+            maxLength={8000}
+          />
+        </div>
+
+        <div className="mt-5">
+          <AgentPolicyField value={policyProfile} onChange={setPolicyProfile} />
+        </div>
+
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-line px-4 py-2 text-[14px] font-medium text-ink-soft hover:bg-tile"
+          >
+            Hủy
+          </button>
+          <button
+            type="button"
+            onClick={() => onTiepTuc({ id, name: ten.trim(), icon, persona, policyProfile })}
+            disabled={
+              tenTrong || idTrong || trungId || kiemDinhDangId(id) !== "" || icon.trim() === ""
+            }
+            className="rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+          >
+            Tiếp tục
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
