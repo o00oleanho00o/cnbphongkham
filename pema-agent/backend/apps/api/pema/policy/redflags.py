@@ -304,10 +304,23 @@ RED_FLAG_RULES: tuple[RedFlagRule, ...] = (
         "dau_du_doi",
         r"(?<![a-z])dau\s*(?:du\s*doi|dien\s*cuong|khung\s*khiep|khong\s*chiu\s*noi|nhieu\s*(?:sau|khi)\s*tiem)(?![a-z])",
     ),
+    # ------------------------------------------------- English (a patient may write in English)
+    # The text is folded first, so a double letter has already collapsed ("bleeding" reads "bleding"): the
+    # patterns allow both spellings. Never negated: "no fever" costs a doctor a glance, a missed "bleeding"
+    # can cost a patient.
+    _r(BLEEDING, "en_bleeding", r"(?<![a-z])ble+d(?:ing|s)?(?![a-z])", negatable=False),
+    _r(FEVER, "en_fever", r"(?<![a-z])(?:fever|feverish|high\s*temperature)(?![a-z])", negatable=False),
+    _r(PUS, "en_pus", r"(?<![a-z])(?:pus|abs+cess?|infected|infection)(?![a-z])", negatable=False),
+    _r(
+        DYSPNEA,
+        "en_breathing",
+        r"(?<![a-z])(?:cant|can+ot|can\s*not|unable\s*to|hard\s*to|dif+icult(?:y)?(?:\s*to)?|trouble|short(?:ness)?\s*of)\s*(?:to\s*)?breath(?:e|ing)?(?![a-z])",
+        negatable=False,
+    ),
 )
 
 _NEGATOR = re.compile(
-    r"(?<![a-z])(?:khong|ko|k|kg|khg|chua|het|chang|hok|hong|dau\s*co|khoi|bot)\s*"
+    r"(?<![a-z])(?:khong|ko|k|kg|khg|chua|het|chang|hok|hong|dau\s*co|khoi)\s*"
     r"(?:bi\s*|thay\s*|co\s*|con\s*|hien\s*tuong\s*|dau\s*hieu\s*|nua\s*|them\s*)*$"
 )
 _STILL_ONGOING = re.compile(r"(?<![a-z])(?:chua|khong|ko|k|kg|hok|hong|van\s*chua|van\s*khong)\s*het\s*$")
@@ -377,12 +390,21 @@ def detect_red_flags(text: str, rules: Iterable[RedFlagRule] = RED_FLAG_RULES) -
 
 def detect_red_flags_in_batch(texts: Iterable[str]) -> RedFlagResult:
     """Union over every message of a turn: ONE red-flag message anywhere in the batch triggers."""
+    messages = list(texts)
     hits: list[RedFlagHit] = []
     suppressed: list[RedFlagHit] = []
-    for text in texts:
+    for text in messages:
         result = detect_red_flags(text)
         hits.extend(result.hits)
         suppressed.extend(result.suppressed)
+    if len(messages) > 1:
+        # A sign split over two messages ("chảy" / "máu") reads as one phrase to the model, which sees the
+        # lines one after the other, so it must read as one phrase here too. A hit that only exists in the
+        # joined text is a false positive at worst (a doctor's glance); a miss can cost a patient.
+        seen = {(hit.category, hit.label) for hit in hits}
+        for hit in detect_red_flags(" ".join(messages)).hits:
+            if (hit.category, hit.label) not in seen:
+                hits.append(hit)
     return RedFlagResult(hits=tuple(hits), suppressed=tuple(suppressed))
 
 

@@ -8,6 +8,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
+import pytest
+
 from pema.shared.safe_error_serializer import serialize_error_safely
 
 
@@ -117,3 +119,24 @@ def test_code_and_message_of_a_channel_error_are_not_filtered_out() -> None:
     out = serialize_error_safely(err)
     assert out["message"] == "Không gửi được tin"
     assert out["code"] == 118
+
+
+# ---------------------------------------------------------------- package G (SECURITY-REVIEW-AI01 SEC-05)
+def test_a_pydantic_validation_error_never_logs_the_offending_input() -> None:
+    """ValidationError của pydantic trích nguyên input_value (lời bệnh nhân): chỉ giữ loại lỗi và vị trí"""
+    from pydantic import BaseModel, ValidationError
+
+    class Probe(BaseModel):
+        count: int
+
+    secret = (
+        "số điện thoại " + "0900000" + "000 của em Lan"
+    )  # not one literal: a traceback quotes source lines
+    with pytest.raises(ValidationError) as caught:
+        Probe.model_validate({"count": secret})
+    safe: dict[str, Any] = serialize_error_safely(caught.value)
+    rendered = str(safe)
+    assert "0900000000" not in rendered
+    assert "Lan" not in rendered
+    assert "count" in str(safe["message"])
+    assert "int_parsing" in str(safe["message"])

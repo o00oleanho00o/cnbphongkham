@@ -105,7 +105,8 @@ const ALL: Permission[] = [
 ];
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
-  owner: ALL,
+  // `admin.users` (reset another user's password) is the owner's alone; the manager does not get it.
+  owner: [...ALL, "admin.users"],
   manager: ALL,
   doctor: [
     "patient.read",
@@ -150,6 +151,22 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
 };
 
 const sessions = new Map<string, Session>();
+
+const RESET_LIMIT = 5;
+const RESET_WINDOW_MS = 60_000;
+const resets = new Map<string, { count: number; resetAt: number }>();
+
+/** 5 resets per minute per owner, like the real route. */
+function allowReset(userId: string): boolean {
+  const now = Date.now();
+  const entry = resets.get(userId);
+  if (!entry || now >= entry.resetAt) {
+    resets.set(userId, { count: 1, resetAt: now + RESET_WINDOW_MS });
+    return true;
+  }
+  entry.count += 1;
+  return entry.count <= RESET_LIMIT;
+}
 
 export function userSummary(userId: string): Schemas["UserSummary"] {
   const u = USERS.find((x) => x.id === userId);
@@ -220,6 +237,56 @@ export function register(r: Router): void {
       user: userSummary(s.userId),
     };
     return { body };
+  });
+
+  // Mirrors the real route: needs the current password, 8-character floor, must differ, every OTHER session
+  // of the user ends, the session that made the change keeps working (204, same cookie).
+  r.post("/api/v1/auth/password", null, (ctx): Reply => {
+    const s = requireSession(ctx);
+    const { current_password, new_password } = ctx.body as {
+      current_password?: string;
+      new_password?: string;
+    };
+    const user = USERS.find((u) => u.id === s.userId);
+    if (!user) fail(401, "unauthenticated", "Phiên đăng nhập không còn hiệu lực.");
+    if (user.password !== current_password) {
+      fail(401, "unauthenticated", "Mật khẩu hiện tại không đúng.");
+    }
+    if (typeof new_password !== "string" || new_password.length < 8) {
+      fail(422, "validation_failed", "Mật khẩu mới cần ít nhất 8 ký tự.");
+    }
+    if (new_password === user.password) {
+      fail(422, "validation_failed", "Mật khẩu mới phải khác mật khẩu hiện tại.");
+    }
+    user.password = new_password;
+    for (const [id, other] of sessions) {
+      if (other.userId === user.id && id !== s.id) sessions.delete(id);
+    }
+    return { status: 204 };
+  });
+
+  // Mirrors the real route (backend test tests/api/test_admin_users_password_route.py): owner only (403 from
+  // the permission table), unknown user 404, not your own account (422), 8-character floor (422), at most 5
+  // resets per minute per owner (429), every session of the reset user ends, 204 and no body.
+  r.post("/api/v1/admin/users/{user_id}/password", "admin.users", (ctx): Reply => {
+    const s = requireSession(ctx);
+    if (!allowReset(s.userId)) {
+      fail(429, "rate_limited", "Đặt lại mật khẩu quá nhiều lần. Vui lòng đợi một phút.");
+    }
+    const { new_password } = ctx.body as { new_password?: string };
+    if (ctx.params.user_id === s.userId) {
+      fail(422, "validation_failed", "Hãy dùng chức năng đổi mật khẩu của chính bạn.");
+    }
+    if (typeof new_password !== "string" || new_password.length < 8) {
+      fail(422, "validation_failed", "Mật khẩu mới cần ít nhất 8 ký tự.");
+    }
+    const user = USERS.find((u) => u.id === ctx.params.user_id);
+    if (!user) fail(404, "not_found", "Không tìm thấy tài khoản.");
+    user.password = new_password;
+    for (const [id, other] of sessions) {
+      if (other.userId === user.id) sessions.delete(id);
+    }
+    return { status: 204 };
   });
 
   r.get("/api/v1/me", null, (ctx): Reply => {

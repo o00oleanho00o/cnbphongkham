@@ -5,8 +5,8 @@
 # Stages: builder (uv resolves and installs the locked dependencies) -> runtime (no uv, no compiler, non-root).
 #
 # The lock must match the manifests: `uv sync --locked` FAILS the build when apps/api/pyproject.toml has
-# dependencies that uv.lock does not (packages append libraries; package G regenerates uv.lock). For a local
-# build before G has done that: --build-arg UV_SYNC_FLAGS="" (re-resolves, not reproducible).
+# dependencies that uv.lock does not (packages append libraries; regenerate uv.lock with `uv lock`). For a local
+# build before the lock is regenerated: --build-arg UV_SYNC_FLAGS="" (re-resolves, not reproducible).
 FROM python:3.12-slim-bookworm AS builder
 
 ARG UV_SYNC_FLAGS="--locked"

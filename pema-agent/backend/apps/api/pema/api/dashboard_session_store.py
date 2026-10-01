@@ -9,7 +9,10 @@ hashing: the signature authenticates the cookie and the ROW is what can be revok
 * logout deletes the row, so a leaked cookie stops working at once (a self-contained token would not);
 * every row stores the fingerprint of the password in force when it was created, so changing the password
   invalidates every older session (``prune_stale_fingerprint``);
-* an expired row is never accepted.
+* an expired row is never accepted;
+* (SEC-24, new) every row also has ``absolute_expires_at``, fixed at login: ``refresh`` slides ``expires_at``
+  but never past it, and a row past it is never accepted. A cookie that is stolen and kept alive by refreshing
+  therefore still dies at the ceiling.
 
 These are Core statements, not ORM objects, on purpose: housekeeping (pruning, revocation) must not trip
 the "every ORM mutation is audited" guard. The callers audit the business event (login, logout, refresh,
@@ -40,6 +43,7 @@ class SessionPrincipal:
     display_name: str
     clinic_name: str
     expires_at: datetime
+    absolute_expires_at: datetime
     password_fingerprint: str
     password_hash: str | None
 
@@ -53,6 +57,7 @@ async def insert_session(
     password_fingerprint: str,
     created_at: datetime,
     expires_at: datetime,
+    absolute_expires_at: datetime,
 ) -> None:
     await session.execute(
         insert(AuthSession).values(
@@ -62,6 +67,7 @@ async def insert_session(
             password_fingerprint=password_fingerprint,
             created_at=created_at,
             expires_at=expires_at,
+            absolute_expires_at=absolute_expires_at,
         )
     )
 
@@ -75,6 +81,7 @@ async def find_principal(session: AsyncSession, session_id: UUID, now: datetime)
                 AuthSession.user_id,
                 AuthSession.clinic_id,
                 AuthSession.expires_at,
+                AuthSession.absolute_expires_at,
                 AuthSession.password_fingerprint,
                 UserAccount.role,
                 UserAccount.display_name,
@@ -89,6 +96,7 @@ async def find_principal(session: AsyncSession, session_id: UUID, now: datetime)
             .where(
                 AuthSession.id == session_id,
                 AuthSession.expires_at > now,
+                AuthSession.absolute_expires_at > now,
                 UserAccount.active.is_(True),
                 Clinic.active.is_(True),
             )
@@ -104,14 +112,23 @@ async def find_principal(session: AsyncSession, session_id: UUID, now: datetime)
         display_name=row.display_name,
         clinic_name=row.name,
         expires_at=row.expires_at,
+        absolute_expires_at=row.absolute_expires_at,
         password_fingerprint=row.password_fingerprint,
         password_hash=row.password_hash,
     )
 
 
-async def extend_session(session: AsyncSession, session_id: UUID, expires_at: datetime) -> None:
-    await session.execute(
-        update(AuthSession).where(AuthSession.id == session_id).values(expires_at=expires_at)
+async def extend_session(
+    session: AsyncSession, session_id: UUID, expires_at: datetime, now: datetime
+) -> datetime | None:
+    """Slide the rolling expiry to ``expires_at``, never past the row's own ceiling (``LEAST`` in SQL, so the
+    bound holds even if a caller computed it wrongly). ``None`` when the row is gone or already past its
+    ceiling: the caller answers 401. Returns the expiry actually stored."""
+    return await session.scalar(
+        update(AuthSession)
+        .where(AuthSession.id == session_id, AuthSession.absolute_expires_at > now)
+        .values(expires_at=func.least(expires_at, AuthSession.absolute_expires_at))
+        .returning(AuthSession.expires_at)
     )
 
 
@@ -146,7 +163,9 @@ async def prune_sessions(
     await session.execute(
         delete(AuthSession).where(
             AuthSession.user_id == user_id,
-            (AuthSession.expires_at <= now) | (AuthSession.password_fingerprint != current_fingerprint),
+            (AuthSession.expires_at <= now)
+            | (AuthSession.absolute_expires_at <= now)
+            | (AuthSession.password_fingerprint != current_fingerprint),
         )
     )
 

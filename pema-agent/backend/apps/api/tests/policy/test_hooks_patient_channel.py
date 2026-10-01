@@ -627,3 +627,30 @@ def test_context_default_profile_is_patient_channel() -> None:
     """ngữ cảnh mặc định của test là patient_channel (an toàn mặc định)"""
     ctx: PolicyContext = make_policy_context()
     assert ctx.profile.key is PolicyProfileKey.PATIENT_CHANNEL
+
+
+# ------------------------------------------------------------------ package G (SECURITY-REVIEW-AI01 SEC-03)
+@pytest.mark.parametrize("msg_type", ["chat.voice", "chat.video.msg", "share.file", "chat.location.new"])
+async def test_personal_account_attachments_filed_as_text_are_handed_off(msg_type: str) -> None:
+    """tệp đính kèm của tài khoản cá nhân (kind text, không chữ) cũng chuyển người, không đi vào LLM"""
+    hooks, actions, _ = make_hooks()
+    message = make_inbound("", raw={"msgType": msg_type})
+    decision = await hooks.before_llm(CTX, [message])
+    assert decision.action is BeforeLlmAction.HAND_OFF
+    assert [i.kind for i in actions.review_items] == [ReviewKind.MEDIA_FLAG]
+
+
+async def test_unsupported_kind_is_handed_off() -> None:
+    """tin loại 'unsupported' (video, vị trí...) chuyển người thay vì để agent trả lời một tin rỗng"""
+    hooks, actions, _ = make_hooks()
+    decision = await hooks.before_llm(CTX, [make_inbound("", kind=InboundKind.UNSUPPORTED)])
+    assert decision.action is BeforeLlmAction.HAND_OFF
+    assert [i.kind for i in actions.review_items] == [ReviewKind.MEDIA_FLAG]
+
+
+async def test_a_plain_text_message_with_a_text_msg_type_still_goes_to_the_model() -> None:
+    """tin chữ thường (msgType webchat) vẫn đi bình thường"""
+    hooks, actions, _ = make_hooks()
+    decision = await hooks.before_llm(CTX, [make_inbound("chào bác sĩ", raw={"msgType": "webchat"})])
+    assert decision.action is BeforeLlmAction.CONTINUE
+    assert not actions.review_items

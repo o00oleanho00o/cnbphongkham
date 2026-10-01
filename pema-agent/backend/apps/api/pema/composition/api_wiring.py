@@ -7,7 +7,10 @@ only fills them from the ``Runtime`` and from B1's session (``auth_bridge``).
 ``ApiLifecycle`` starts and stops the API-side background work: the bot accounts of this process (send-only or
 listening, see ``intake``), the personal accounts behind the bridge when the flag is on, the batcher recovery,
 the KB availability snapshot, the settings refresh loop and the CRM rule runner. The runner lives HERE and not
-in the worker because the rule store reads ``clinic.*`` and only ``be_app`` may (CONTRACTS decision 7).
+in the worker because the rule store reads ``clinic.*`` and only ``be_app`` may (CONTRACTS decision 7). The
+retention run of scope ``clinic`` (messages of closed conversations, expired sessions and link codes) lives
+here
+for the same reason; the worker runs scope ``agent`` (``pema.retention``).
 """
 
 from __future__ import annotations
@@ -39,9 +42,13 @@ from pema.composition.intake import BotStack, PersonalStack
 from pema.composition.outbound import RegistryOutboundDelivery
 from pema.composition.runtime import Runtime
 from pema.config.runtime_settings_store import current_settings_clinic, set_settings_clinic
+from pema.config.runtime_tuning_settings import get_tuning_int
 from pema.conversation.agent_trace_store import PgTraceReader
 from pema.middleware.thread_run_chain import ThreadRef
 from pema.policy.identity_admin import PolicyAdminService
+from pema.retention.policy import Scope, policy_from_settings
+from pema.retention.runner import RetentionRunner
+from pema.retention.schedule import start_retention_loop
 from pema.scheduler.admin_service import ScheduleAdminService
 from pema.shared.logger import create_logger
 from pema_contracts.actions import ActionContext, ActionSource
@@ -74,7 +81,7 @@ def wire_api(app: FastAPI, rt: Runtime, bot: BotStack, personal: PersonalStack) 
     state = app.state
     state.runtime = rt
     state.clinic_db = rt.db
-    state.outbound_delivery = RegistryOutboundDelivery(rt.accounts, rt.channels)
+    state.outbound_delivery = RegistryOutboundDelivery(rt.accounts, rt.channels, rt.conversation)
     state.admin_stores = AdminStores(
         agents=rt.agents,
         accounts=rt.accounts,
@@ -165,6 +172,7 @@ class ApiLifecycle:
         self._bot = bot
         self._personal = personal
         self._crm_task: asyncio.Task[None] | None = None
+        self._retention_task: asyncio.Task[None] | None = None
 
     async def start(self) -> None:
         rt = self._rt
@@ -183,6 +191,14 @@ class ApiLifecycle:
         interval = rt.settings.crm_runner_interval_seconds
         if interval > 0:
             self._crm_task = asyncio.get_running_loop().create_task(self._crm_loop(interval))
+        self._retention_task = start_retention_loop(
+            RetentionRunner(
+                rt.db,
+                lambda: policy_from_settings(rt.settings, get_tuning_int),
+                scopes=(Scope.CLINIC,),
+            ),
+            interval_seconds=rt.settings.retention_interval_seconds,
+        )
 
     async def _crm_loop(self, interval_s: int) -> None:
         runner = CrmRulesRunner(SqlCrmRuleStore(self._rt.db), self._rt.scheduler)
@@ -206,6 +222,11 @@ class ApiLifecycle:
             crm.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await crm
+        retention, self._retention_task = self._retention_task, None
+        if retention is not None:
+            retention.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await retention
         await self._bot.manager.stop_all()
         if self._rt.settings.zalo_personal_enabled:
             await self._personal.manager.stop_all_accounts()

@@ -49,3 +49,5 @@ class AuthSession(Base):
     password_fingerprint: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    absolute_expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    """Hard ceiling fixed at login; ``refresh`` never moves ``expires_at`` past it (SEC-24)."""

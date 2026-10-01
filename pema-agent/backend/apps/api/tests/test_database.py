@@ -512,3 +512,48 @@ def test_downgrade_then_upgrade_round_trips(admin_engine: Engine) -> None:
     assert _tables(admin_engine, "clinic") == set()
     command.upgrade(cfg, "heads")
     assert _tables(admin_engine, "clinic") >= CLINIC_TABLES
+
+
+# ------------------------------------------------------------------ package G (SECURITY-REVIEW-AI01 SEC-10)
+def test_every_security_definer_function_pins_a_search_path_ending_in_pg_temp(admin_engine: Engine) -> None:
+    """mọi hàm SECURITY DEFINER cố định search_path và để pg_temp cuối cùng (không bị che bởi bảng tạm)"""
+    with admin_engine.connect() as conn:
+        rows = conn.execute(
+            text(
+                "SELECT p.oid::regprocedure::text AS sig, "
+                "(SELECT substr(c, 13) FROM unnest(p.proconfig) AS c WHERE c LIKE 'search_path=%') AS sp "
+                "FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace "
+                "WHERE p.prosecdef AND n.nspname IN ('ctx', 'clinic_agent', 'clinic', 'agent')"
+            )
+        ).all()
+    assert len(rows) >= 10, "the definer functions of the migrations must be found"
+    for sig, search_path in rows:
+        assert search_path is not None, f"{sig} has no fixed search_path"
+        assert search_path.split(",")[0].strip() == "pg_catalog", sig
+        assert search_path.split(",")[-1].strip() == "pg_temp", sig
+
+
+def test_no_function_of_the_agent_door_is_executable_by_public(admin_engine: Engine) -> None:
+    """không hàm nào của ctx/clinic_agent mở cho PUBLIC; agent_worker chỉ chạy được các hàm được cấp"""
+    with admin_engine.connect() as conn:
+        public = (
+            conn.execute(
+                text(
+                    "SELECT p.oid::regprocedure::text FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace "
+                    "WHERE n.nspname IN ('ctx', 'clinic_agent') "
+                    "AND EXISTS (SELECT 1 FROM aclexplode(COALESCE(p.proacl, acldefault('f', p.proowner))) a "
+                    "WHERE a.grantee = 0 AND a.privilege_type = 'EXECUTE')"
+                )
+            )
+            .scalars()
+            .all()
+        )
+        assert public == []
+        temp_for_public = conn.execute(
+            text(
+                "SELECT EXISTS (SELECT 1 FROM pg_database d, "
+                "aclexplode(COALESCE(d.datacl, acldefault('d', d.datdba))) a "
+                "WHERE d.datname = current_database() AND a.grantee = 0 AND a.privilege_type = 'TEMPORARY')"
+            )
+        ).scalar_one()
+    assert temp_for_public is False

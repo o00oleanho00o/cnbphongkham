@@ -1202,6 +1202,32 @@
         "title": "BridgeState",
         "type": "string"
       },
+      "ChangePasswordRequest": {
+        "additionalProperties": false,
+        "description": "A signed-in user changes their OWN password (``POST /auth/password``). The floor of the new password\n(8 characters) and the 'must differ' rule are checked by the action, so the refusal carries the Vietnamese\nmessage of the original and is not a bare schema error.",
+        "properties": {
+          "current_password": {
+            "format": "password",
+            "maxLength": 1024,
+            "title": "Current Password",
+            "type": "string",
+            "writeOnly": true
+          },
+          "new_password": {
+            "format": "password",
+            "maxLength": 1024,
+            "title": "New Password",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "ChangePasswordRequest",
+        "type": "object"
+      },
       "ChannelKind": {
         "enum": [
           "zalo_bot",
@@ -3735,6 +3761,7 @@
           },
           "password": {
             "format": "password",
+            "maxLength": 1024,
             "title": "Password",
             "type": "string",
             "writeOnly": true
@@ -5202,6 +5229,7 @@
           "admin.kill_switch",
           "admin.logs",
           "admin.accounts",
+          "admin.users",
           "admin.agents",
           "admin.model",
           "admin.tools",
@@ -5423,6 +5451,24 @@
         ],
         "title": "ReasoningEffort",
         "type": "string"
+      },
+      "ResetPasswordRequest": {
+        "additionalProperties": false,
+        "description": "The owner sets a new password for ANOTHER staff account (``POST /admin/users/{user_id}/password``).\nThe floor of the new password (8 characters) is checked by the action, like ``ChangePasswordRequest``,\nso the refusal carries the Vietnamese message. No current password: the owner does not know it.",
+        "properties": {
+          "new_password": {
+            "format": "password",
+            "maxLength": 1024,
+            "title": "New Password",
+            "type": "string",
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "new_password"
+        ],
+        "title": "ResetPasswordRequest",
+        "type": "object"
       },
       "ReviewApprove": {
         "additionalProperties": false,
@@ -17738,6 +17784,118 @@
         ]
       }
     },
+    "/api/v1/admin/users/{user_id}/password": {
+      "post": {
+        "description": "Owner only (`admin.users`). Sets a new password for a user of the SAME clinic (another clinic's id is a 404) and ends EVERY session of that user at once. Not for the caller's own account: use `POST /auth/password`. The new password has the same 8-character floor as a password change. Limited to 5 resets per minute per owner. The audit entry records who reset whose account, never the password.",
+        "operationId": "admin_users_reset_user_password",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Owner resets another staff member's password",
+        "tags": [
+          "admin-users"
+        ]
+      }
+    },
     "/api/v1/appointments": {
       "get": {
         "operationId": "appointments_list_appointments",
@@ -19058,6 +19216,106 @@
           }
         ],
         "summary": "Clear the session cookie",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password": {
+      "post": {
+        "description": "Needs the current password, so a borrowed cookie cannot take the account over. Every OTHER session of the user ends at once; the session that made the change keeps working. Wrong attempts count against the login rate limit (5 per minute per user).",
+        "operationId": "auth_change_password",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Change the signed-in user's own password",
         "tags": [
           "auth"
         ]
@@ -22709,6 +22967,10 @@
     {
       "description": "Audit log reader. (B1)",
       "name": "admin-audit"
+    },
+    {
+      "description": "Staff accounts: owner resets a password. (B1)",
+      "name": "admin-users"
     },
     {
       "description": "Doctor-approved message templates. (B1)",

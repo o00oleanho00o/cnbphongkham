@@ -1,7 +1,7 @@
 """The clinic tools of the agent (package G, no TS source): PLAN-AI01 principle 3, "the agent goes through the
 same action layer as the UI".
 
-Three tools, each one is a method of ``AgentFacingClinicActions`` (package B1), the only door of the agent
+Four tools, each one is a method of ``AgentFacingClinicActions`` (package B1), the only door of the agent
 side
 into clinic data:
 
@@ -9,9 +9,14 @@ into clinic data:
   counters, next appointments, consents), never a name, a phone number or a note;
 * ``appointment.book``: PROPOSES an appointment (``propose_appointment``): the agent never books, a member of
   staff confirms (product decision of 2026-10-01);
+* ``review_item.create``: the agent DRAFTS a message for staff to review (``create_review_item``, kind
+  ``followup_draft``): PLAN-AI01 section 5 ("agent chỉ soạn nháp"). It never reaches the patient by itself, a
+  member of staff approves, edits or rejects it. The reply of the turn itself is already held for review by
+  the policy, so this tool is for a message that is NOT the answer of this turn (a scheduled job's follow-up,
+  a check-in the model proposes);
 * ``escalation.create``: raises a ``triage_alert`` that goes to a doctor (``create_escalation``).
 
-Rules shared by the three, and the reasons:
+Rules shared by the four, and the reasons:
 
 * the patient is NEVER an argument. The model could be talked into asking for another patient's context, so
   the
@@ -52,6 +57,8 @@ from pema_contracts.clinic_actions import (
     IdentityLinkStatus,
 )
 from pema_contracts.errors import DomainError
+from pema_contracts.policy import PolicyHooks
+from pema_contracts.review import ReviewItemCreate, ReviewKind, ReviewOrigin
 from pema_contracts.roles import ActorType
 from pema_contracts.tools import AgentTool, ToolContext, ToolGroup, ToolSpec
 
@@ -92,8 +99,13 @@ async def _verified_patient_code(actions: AgentFacingClinicActions, ctx: ToolCon
 async def _conversation_ref(actions: AgentFacingClinicActions, ctx: ToolContext) -> str | None:
     """The Inbox conversation of this turn, so a review item can be sent from (``record_inbound_message`` is
     idempotent on ``update_id``: the message is already recorded, the answer carries the conversation id)."""
+    # ``ctx.message`` is the message AS THE MODEL SEES IT: the sender name and the text are already masked
+    # (``[NGUOI_1]``, ``[SDT_1]``). ``record_inbound_message`` upserts the channel identity, so handing it the
+    # masked name would overwrite the real display name with a placeholder. It only needs the update id (the
+    # message is already recorded), so the personal content is dropped (SECURITY-REVIEW-AI01 SEC-07).
+    lookup = ctx.message.model_copy(update={"sender_name": "", "text": ""})
     try:
-        ref = await actions.record_inbound_message(_action_context(ctx), ctx.message)
+        ref = await actions.record_inbound_message(_action_context(ctx), lookup)
     except Exception as err:
         log.warning("conversation of the turn not found", err=err)
         return None
@@ -246,8 +258,60 @@ def create_escalation_tool(
     )
 
 
+class ReviewDraftInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    draft_text: str = Field(
+        min_length=1,
+        max_length=2000,
+        description="Nội dung tin nhắn nháp để nhân viên duyệt, giọng của phòng khám, không chẩn đoán",
+    )
+
+
+def create_review_draft_tool(
+    ctx: ToolContext, actions: AgentFacingClinicActions, policy: PolicyHooks
+) -> FunctionTool[ReviewDraftInput]:
+    async def handler(args: ReviewDraftInput) -> object:
+        try:
+            code = await _verified_patient_code(actions, ctx)
+            # The model wrote with placeholders ([NGUOI_1]); staff must read the real text, as they do for
+            # the reply of the turn (``after_llm`` restores it with the vault session of the thread).
+            text = await policy.after_llm(ctx.policy, args.draft_text, None)
+            request = ReviewItemCreate(
+                job_id=_turn_key(ctx, "review_item.create", args.draft_text),
+                clinic_id=ctx.clinic_id,
+                patient_ref=code,
+                conversation_ref=await _conversation_ref(actions, ctx),
+                kind=ReviewKind.FOLLOWUP_DRAFT,
+                origin=ReviewOrigin.SCHEDULED_AGENT if ctx.isolated else ReviewOrigin.AGENT_TURN,
+                draft_text=text,
+                model=ctx.agent.model_name,
+            )
+            await actions.create_review_item(_action_context(ctx), request)
+        except DomainError as err:
+            return ket_qua_loi(err.message)
+        except Exception as err:
+            log.error("review_item.create failed", err=err)
+            return ket_qua_loi("Lưu bản nháp thất bại. Nói thật với người dùng, đừng hứa tin đã được gửi.")
+        return (
+            "Đã lưu BẢN NHÁP chờ nhân viên duyệt. Bản nháp CHƯA được gửi cho ai. "
+            "Đừng nói với người dùng là tin đã được gửi."
+        )
+
+    return FunctionTool(
+        name="review_item.create",
+        description=(
+            "Soạn một tin nhắn NHÁP cho nhân viên phòng khám duyệt (ví dụ tin hỏi thăm sau điều trị). Tin "
+            "KHÔNG được gửi đi: nhân viên sẽ duyệt, sửa hoặc từ chối. Dùng cho tin KHÔNG phải câu trả lời "
+            "của lượt này; câu trả lời của lượt này tự được giữ để duyệt, đừng soạn nháp trùng nội dung."
+        ),
+        input_model=ReviewDraftInput,
+        handler=handler,
+    )
+
+
 def clinic_tool_definitions(deps: ToolDeps) -> list[ToolSpec]:
-    """The three specs, or none when no clinic actions are wired."""
+    """The four specs, or none when no clinic actions are wired."""
     actions = deps.clinic_actions
     if actions is None:
         return []
@@ -257,6 +321,9 @@ def clinic_tool_definitions(deps: ToolDeps) -> list[ToolSpec]:
 
     def build_book(ctx: ToolContext) -> AgentTool:
         return create_book_tool(ctx, actions)
+
+    def build_review_draft(ctx: ToolContext) -> AgentTool:
+        return create_review_draft_tool(ctx, actions, deps.policy)
 
     def build_escalation(ctx: ToolContext) -> AgentTool:
         return create_escalation_tool(ctx, actions)
@@ -277,6 +344,13 @@ def clinic_tool_definitions(deps: ToolDeps) -> list[ToolSpec]:
             group=ToolGroup.ACTION,
             runs_in_scheduled_turn=False,
             build=build_book,
+        ),
+        ToolSpec(
+            key="review_item.create",
+            label="Soạn nháp chờ duyệt",
+            description="Soạn tin nhắn nháp cho nhân viên duyệt; chưa có người duyệt thì tin không được gửi",
+            group=ToolGroup.ACTION,
+            build=build_review_draft,
         ),
         ToolSpec(
             key="escalation.create",

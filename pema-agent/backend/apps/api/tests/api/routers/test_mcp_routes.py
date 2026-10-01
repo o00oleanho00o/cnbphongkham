@@ -20,10 +20,15 @@ from uuid import UUID
 import httpx
 import pytest
 
-from pema.api.mcp_route_guards import McpAdminContext, get_mcp_admin_context
+from pema.api.mcp_route_guards import (
+    McpAdminContext,
+    check_server_url,
+    get_mcp_admin_context,
+)
 from pema.bootstrap import create_app
 from pema.mcp.mcp_agent_binding import McpBindingCache
 from pema.mcp.testing import InMemoryMcpStore
+from pema_contracts.errors import DomainError
 from pema_contracts.testing import FAKE_CLINIC_ID, InMemoryAgentStore, fake_agent_profile
 
 BASE = "/api/v1/admin/mcp"
@@ -241,3 +246,40 @@ async def test_mcp_routes_patch_with_a_bad_header_is_rejected_and_changes_nothin
     assert res.status_code == 422
     assert setup.manager.calls == []
     assert (await setup.store.list_servers(FAKE_CLINIC_ID))[0].name == "svr"
+
+
+# ---------------------------------------------------------------- package G (SECURITY-REVIEW-AI01 SEC-29)
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://169.254.169.254/latest/meta-data/",
+        "http://[::ffff:169.254.169.254]/",
+        "http://[fe80::1]/mcp",
+        "http://0.0.0.0:8080/mcp",
+        "http://224.0.0.1/mcp",
+        "http://metadata.google.internal/computeMetadata/v1/",
+        "http://METADATA.GOOGLE.INTERNAL./x",
+        "https://user:pw@mcp.example.test/mcp",
+        "https://mcp.example.test:notaport/mcp",
+    ],
+)
+def test_an_mcp_url_that_reaches_a_metadata_service_or_carries_a_credential_is_refused(url: str) -> None:
+    """URL MCP trỏ tới dịch vụ metadata, địa chỉ đặc biệt hoặc chứa mật khẩu thì bị từ chối"""
+    with pytest.raises(DomainError):
+        check_server_url(url)
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://mcp.example.test/mcp",
+        "http://127.0.0.1:8123/mcp",
+        "http://192.168.1.20:9000/mcp",
+        "http://[::1]:9/x",
+    ],
+)
+def test_a_server_on_the_clinic_network_is_still_accepted(url: str) -> None:
+    """máy chủ MCP trong mạng nội bộ của phòng khám vẫn được phép (quyết định sản phẩm ghi ở báo cáo)"""
+    check_server_url(url)

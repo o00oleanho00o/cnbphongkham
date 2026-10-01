@@ -1,20 +1,22 @@
 # syntax=docker/dockerfile:1
 # Next.js dashboard (package E). Build context: pema-agent/. Ignore rules: frontend.Dockerfile.dockerignore.
 #
-# DEPENDS ON PACKAGE E. Until frontend/ holds a Next.js app this build fails at `pnpm run build` (package A
-# only ships the OpenAPI type generator). Package E must also set `output: "standalone"` in next.config.*,
-# because the runtime stage copies .next/standalone. The server reads PEMA_API_INTERNAL_URL at runtime.
+# next.config.ts sets `output: "standalone"`, which the runtime stage copies (.next/standalone). The browser talks
+# only to this server; it forwards /api/* to the API. Next.js bakes those rewrites at BUILD time, so the API
+# address is the build argument PEMA_API_INTERNAL_URL (compose passes http://api:8000); changing it needs a rebuild.
 FROM node:22-alpine AS deps
 WORKDIR /app
 ENV CI=true
 RUN corepack enable
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
+# pnpm-workspace.yaml holds the pnpm settings of this project (allowBuilds), so it travels with the lockfile
+COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 
 FROM node:22-alpine AS builder
 WORKDIR /app
-ENV CI=true NEXT_TELEMETRY_DISABLED=1
+ARG PEMA_API_INTERNAL_URL=http://api:8000
+ENV CI=true NEXT_TELEMETRY_DISABLED=1 PEMA_API_INTERNAL_URL=${PEMA_API_INTERNAL_URL}
 RUN corepack enable
 COPY --from=deps /app/node_modules ./node_modules
 # the OpenAPI file is the input of `pnpm run gen:types` (kept committed, so a build does not regenerate it)

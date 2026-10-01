@@ -33,6 +33,8 @@ from pema_contracts.roles import ActorType, Permission
 WRONG_CURRENT_MESSAGE = "Mật khẩu hiện tại không đúng."
 TOO_SHORT_MESSAGE = f"Mật khẩu mới cần ít nhất {passwords.MIN_PASSWORD_LENGTH} ký tự."
 SAME_AS_OLD_MESSAGE = "Mật khẩu mới phải khác mật khẩu hiện tại."
+RESET_OWN_MESSAGE = "Hãy dùng chức năng đổi mật khẩu của chính bạn."
+USER_NOT_FOUND_MESSAGE = "Không tìm thấy tài khoản."
 
 
 def verify_user_password(user: UserAccount | None, plain: str) -> bool:
@@ -86,16 +88,22 @@ async def change_password(
 
 
 async def set_password(db: ClinicDatabase, ctx: ActionContext, user_id: UUID, new_password: str) -> None:
-    """An owner resets another account's password (``admin.accounts``). Every session of that user ends."""
-    require(ctx, Permission.ADMIN_ACCOUNTS)
+    """The OWNER resets another account's password (``admin.users``, owner only). Every session of that user
+    ends, including one the user is working in right now. Not for one's own account (that is
+    ``change_password``, which asks for the current password). A user of another clinic is a 404, exactly like
+    an unknown id (row level security leaves nothing to find), so ids cannot be probed across clinics."""
+    require(ctx, Permission.ADMIN_USERS)
+    if ctx.actor_user_id == user_id:
+        raise DomainError(ErrorCode.VALIDATION_FAILED, RESET_OWN_MESSAGE)
     _check_new_password(new_password)
     async with db.session(ctx.clinic_id) as session:
         user = await session.scalar(
             select(UserAccount).where(UserAccount.id == user_id, UserAccount.clinic_id == ctx.clinic_id)
         )
         if user is None:
-            raise DomainError(ErrorCode.NOT_FOUND, "Không tìm thấy tài khoản.")
+            raise DomainError(ErrorCode.NOT_FOUND, USER_NOT_FOUND_MESSAGE)
         user.password_hash = passwords.hash_password(new_password)
         await session.flush()
         await sessions.delete_other_sessions(session, user.id, None)
+        # No password, no hash in the audit row: who reset whose account is the whole story.
         await audit.record(session, ctx, "auth.reset_password", "user_account", user.id)

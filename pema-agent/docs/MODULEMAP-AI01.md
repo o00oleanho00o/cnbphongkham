@@ -68,7 +68,7 @@ Nguồn JS: `prototype/shared/crm-data.js` và `crm-automation.js` (không phả
 | `agent/agent_loop.py` và phụ trợ | Vòng lặp tool tự viết, guard lặp tool, điều kiện dừng, ngân sách ngữ cảnh theo token, tiêm tin giữa lượt, trace | D1 |
 | `agent/persona_*`, `prompt_leak_markers` | Persona, luật tool, dấu hiệu lộ prompt | D1 |
 | `agent/providers` | `openai` (OpenAI-compatible: Ollama, llama-server), Anthropic, Gemini | D1 |
-| `agent/tools` | Registry và 15 tool gốc; `clinic_tools.py` (ba tool phòng khám, qua `agent_facing`) | D4 (`clinic_tools`: G) |
+| `agent/tools` | Registry và 15 tool gốc; `clinic_tools.py` (bốn tool phòng khám, qua `agent_facing`) | D4 (`clinic_tools`: G) |
 | `conversation` | Lịch sử, bộ nhớ, tóm tắt cuộn, thread, danh bạ, usage/token, trace, ảnh mô tả, xóa phiên (`xoa_han_session`) | D2 |
 
 ## Tri thức, công cụ, MCP

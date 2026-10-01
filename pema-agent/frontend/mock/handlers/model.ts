@@ -10,7 +10,7 @@ const maskKey = (key: string): string => (key ? `••••${key.slice(-4)}` :
 
 const provider = {
   provider: "openai-compatible" as S["LlmProviderKind"],
-  base_url: "http://127.0.0.1:11434/v1",
+  base_url: "https://openrouter.ai/api/v1",
   model: "qwen3-8b",
   api_key: "",
 };

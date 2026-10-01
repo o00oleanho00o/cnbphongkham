@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pema.api.clinic_testing import (
+    admin,
     app,
     client_factory,
     db,
@@ -15,6 +16,7 @@ from pema.api.clinic_testing import (
 )
 
 __all__ = [
+    "admin",
     "app",
     "client_factory",
     "db",

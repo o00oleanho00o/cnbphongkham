@@ -4,6 +4,7 @@ New tests (no original). Running against a REAL Ollama is described in ``kb-samp
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import httpx
 import pytest
@@ -90,3 +91,21 @@ def test_only_clinic_internal_addresses_are_accepted_by_default() -> None:
     kiem_tra_dia_chi_noi_bo("https://api.openai.com/v1", allow_remote=True)
     with pytest.raises(EmbeddingError):
         OllamaEmbeddingClient(EmbeddingSettings(base_url="https://embeddings.example.com/v1"))
+
+
+def test_embeddings_are_off_by_default_while_the_local_llm_is_paused(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Tạm tắt LLM local: không đặt PEMA_EMBEDDING_ENABLED thì không dựng embedder (chỉ tìm theo từ khóa)."""
+    from pema.workers.kb_ingest_worker import tao_embedder
+
+    monkeypatch.delenv("PEMA_EMBEDDING_ENABLED", raising=False)
+    monkeypatch.chdir(tmp_path)  # no stray .env file
+    assert EmbeddingSettings().enabled is False
+    assert tao_embedder() is None
+
+
+def test_embeddings_can_be_switched_back_on_by_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Bật lại bằng PEMA_EMBEDDING_ENABLED=true mà không sửa code."""
+    monkeypatch.setenv("PEMA_EMBEDDING_ENABLED", "true")
+    assert EmbeddingSettings().enabled is True

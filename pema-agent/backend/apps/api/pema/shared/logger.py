@@ -59,9 +59,49 @@ REDACTED_KEYS: frozenset[str] = frozenset(
         "headers",
         "cookie",
         "credential",
+        # package G (SECURITY-REVIEW-AI01 SEC-05): other names a patient's words or a secret travel under
+        "caption",
+        "draft_text",
+        "final_text",
+        "raw_text",
+        "prompt",
+        "system_prompt",
+        "reply",
+        "summary",
+        "fact",
+        "query",
+        "quote",
+        "patient_name",
+        "credentials",
+        "api_secret",
+        "set_cookie",
+        "set-cookie",
+        "x-api-key",
     }
 )
 """Field keys never written to a log. Matching is case-insensitive."""
+
+REDACTED_SUFFIXES: tuple[str, ...] = (
+    "_token",
+    "_secret",
+    "_password",
+    "_api_key",
+    "_cookie",
+    "_credential",
+    "_credentials",
+    "_phone",
+    "_email",
+    "_text",
+    "_body",
+)
+"""A key that ENDS with one of these is redacted as well (``bot_token``, ``refresh_token``, ``masked_body``).
+Not a substring match on purpose: ``tokens_in`` or ``max_output_tokens`` are counters and stay readable."""
+
+
+def is_redacted_key(key: str) -> bool:
+    lowered = key.lower()
+    return lowered in REDACTED_KEYS or lowered.endswith(REDACTED_SUFFIXES)
+
 
 REDACTED = "[redacted]"
 
@@ -112,7 +152,7 @@ class ScopedLogger:
         for key, value in fields.items():
             if key == "err":
                 clean["err"] = serialize_error_safely(value)
-            elif key.lower() in REDACTED_KEYS:
+            elif is_redacted_key(key):
                 clean[key] = REDACTED
             else:
                 clean[key] = value

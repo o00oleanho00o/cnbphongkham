@@ -55,6 +55,8 @@ from pema.config.env import Settings
 from pema.middleware.allowlist_filter import should_respond
 from pema.middleware.message_batcher import MessageBatcher
 from pema.middleware.thread_run_chain import QueueThreadRunner, ThreadRef
+from pema.scheduler.proactive_send_counter_store import ProactiveSendCounterStore
+from pema.scheduler.proactive_send_guard import PgProactiveSendGuard
 from pema.shared.logger import create_logger
 from pema_contracts.agents import AccountConfig
 from pema_contracts.channel import InboundMessage
@@ -210,6 +212,7 @@ def build_personal_stack(
     policy_reader: ChannelPolicyReader
     channel_settings = ChannelSettingsRepository(rt.db)
     policy_reader = channel_settings if rt.role is ProcessRole.API else WorkerChannelPolicyReader(rt.db)
+    counters = ProactiveSendCounterStore(rt.db)
 
     def flag_enabled() -> bool:
         return config.zalo_personal_enabled
@@ -225,6 +228,7 @@ def build_personal_stack(
         policy_reader=policy_reader,
         flag_enabled=flag_enabled,
         bridge_secret=bridge_secret,
+        counter_for=lambda clinic_id: PgProactiveSendGuard(counters, clinic_id),
     )
     qr = build_qr_manager(bridge, manager, rt.accounts, _clinic_ref)
 

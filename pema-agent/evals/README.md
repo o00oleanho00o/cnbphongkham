@@ -14,7 +14,21 @@ Exit code 0 when every case passes, 1 when a case fails or the run stops on a mi
 **No real-model run was made by package D1.** What was run is the fake-model suite below (`pytest`). The
 instructions for the real run on the GPU PC are in the next section and are untested end to end.
 
-## Real run with Ollama (GPU PC)
+## Real run with a third-party API (current default)
+
+Since 2026-10-02 the agent uses a third-party LLM API, as zalo-agent does; the local Ollama is paused. Any
+provider kind works. Use synthetic data only: the eval text leaves the machine.
+
+```bash
+export LLM_PROVIDER=openai-compatible          # or anthropic / google (then leave LLM_BASE_URL empty)
+export LLM_BASE_URL=https://openrouter.ai/api/v1
+export LLM_MODEL=<a model id of that provider that supports tool calling>
+export LLM_API_KEY=<your key>                  # never commit it
+cd pema-agent/backend
+uv run python -m evals.run_eval
+```
+
+## Real run with Ollama (GPU PC) - paused (TẠM TẮT LLM LOCAL, 2026-10-02)
 
 Ollama speaks the OpenAI chat-completions API, so it goes through the `openai-compatible` provider of
 `pema.agent.providers.openai_compatible`. Ollama does not check the key but the runner insists on a non-empty one.
@@ -152,5 +166,7 @@ uv run pyright -p ../evals/pyrightconfig.json
 
 `test_eval_assert.py`, `test_eval_formatting_view.py` and `test_preflight_web_search.py` are the translated
 originals; `test_run_eval.py` runs the real engine against a scripted model; `test_eval_env.py` and
-`test_eval_report.py` cover the configuration and the table. These are not part of `make test` (the workspace
-`testpaths` is `packages` and `apps`): wiring them in is an open item for package G.
+`test_eval_report.py` cover the configuration and the table. They ARE part of `make test`: the workspace
+`testpaths` of `backend/pyproject.toml` lists `../evals` next to `packages` and `apps`, so a bare `uv run pytest`
+runs them (78 tests, fake model); `make lint` checks them with ruff too. Only the run against a REAL model
+(`run_eval.py`) is separate.

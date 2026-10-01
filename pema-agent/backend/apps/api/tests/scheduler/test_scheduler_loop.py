@@ -13,7 +13,6 @@ instead of waiting for the real timer (the timer itself is covered by ``start`` 
 from __future__ import annotations
 
 import asyncio
-import time
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
@@ -71,11 +70,13 @@ def sent_count(env: Env) -> Callable[[], int]:
 
 
 class SlowChannel:
-    """Wraps the env channel: ``send_text`` sleeps ``delay`` seconds after recording the part."""
+    """Wraps the env channel: ``send_text`` waits after recording the part, for ``delay`` seconds or, when a
+    ``gate`` is given, until the test sets it (an event instead of a clock: no millisecond threshold to flake)."""
 
-    def __init__(self, inner: object, delay: float) -> None:
+    def __init__(self, inner: object, delay: float, gate: asyncio.Event | None = None) -> None:
         self._inner = inner
         self._delay = delay
+        self._gate = gate
 
     def __getattr__(self, name: str) -> object:
         return getattr(self._inner, name)
@@ -93,7 +94,10 @@ class SlowChannel:
         result = await self._inner.send_text(  # type: ignore[attr-defined]
             thread_id, text, thread_kind=thread_kind, styles=styles, quote=quote, proactive=proactive
         )
-        await asyncio.sleep(self._delay)
+        if self._gate is not None:
+            await self._gate.wait()
+        else:
+            await asyncio.sleep(self._delay)
         return result  # type: ignore[no-any-return]
 
 
@@ -274,24 +278,28 @@ async def test_run_scheduler_tick_is_not_blocked_by_a_slow_job_and_the_next_tick
     make_env: EnvMaker,
 ) -> None:
     """tick tự trả về nhanh dù vừa dispatch job chậm, và tick GỌI NGAY SAU đó cũng không bị 'dính' theo"""
+    # The original asserted "< 150 ms" against a 250 ms job. A clock threshold flakes on a loaded machine, so the
+    # slow job here is held at a gate that only the test opens: if a tick awaited the job it could never return
+    # (the ``wait_for`` would time out), and "job not finished after two ticks" is true by construction.
     env = make_env(tuning=BASE)
-    env.registry.register(env.clinic_id, SlowChannel(env.channel, 0.25))  # type: ignore[arg-type]
+    gate = asyncio.Event()
+    env.registry.register(env.clinic_id, SlowChannel(env.channel, 0, gate))  # type: ignore[arg-type]
     job = await env.make_job(thread_id="t-cham", payload="việc chậm", schedule=once_due())
     loop = loop_of(env)
 
-    t0 = time.monotonic()
-    await loop.run_tick(env.clinic_id, datetime.now(UTC))
-    first_ms = (time.monotonic() - t0) * 1000
-    assert first_ms < 150, f"tick lần 1 phải trả về nhanh dù vừa dispatch 1 job chậm ({first_ms:.0f}ms)"
+    try:
+        await asyncio.wait_for(loop.run_tick(env.clinic_id, datetime.now(UTC)), timeout=10)
+        await doi_cho_so_luong(
+            sent_count(env), 1, WaitOptions(mo_ta="job chậm đã bắt đầu gửi (đang ở cổng chặn)")
+        )
+        await asyncio.wait_for(loop.run_tick(env.clinic_id, datetime.now(UTC)), timeout=10)
 
-    t1 = time.monotonic()
-    await loop.run_tick(env.clinic_id, datetime.now(UTC))
-    second_ms = (time.monotonic() - t1) * 1000
-    assert second_ms < 150, f"tick lần 2 (gọi ngay sau tick 1) cũng phải trả về nhanh ({second_ms:.0f}ms)"
-
-    current = await last_run(env, job.id)
-    assert current is not None
-    assert current.status is not JobRunStatus.OK, "job chậm phải CHƯA xong ngay sau 2 lần gọi tick liên tiếp"
+        current = await last_run(env, job.id)
+        assert current is not None
+        assert current.status is not JobRunStatus.OK, "job chậm phải CHƯA xong khi cổng chặn còn đóng"
+        assert len(env.channel.sent) == 1, "tick 2 không được nhặt lại job đã dispatch"
+    finally:
+        gate.set()
 
     async def finished() -> bool:
         run_row = await last_run(env, job.id)

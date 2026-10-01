@@ -1201,6 +1201,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users/{user_id}/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Owner resets another staff member's password
+         * @description Owner only (`admin.users`). Sets a new password for a user of the SAME clinic (another clinic's id is a 404) and ends EVERY session of that user at once. Not for the caller's own account: use `POST /auth/password`. The new password has the same 8-character floor as a password change. Limited to 5 resets per minute per owner. The audit entry records who reset whose account, never the password.
+         */
+        post: operations["admin_users_reset_user_password"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/appointments": {
         parameters: {
             query?: never;
@@ -1350,6 +1370,26 @@ export interface paths {
         put?: never;
         /** Clear the session cookie */
         post: operations["auth_logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change the signed-in user's own password
+         * @description Needs the current password, so a borrowed cookie cannot take the account over. Every OTHER session of the user ends at once; the session that made the change keeps working. Wrong attempts count against the login rate limit (5 per minute per user).
+         */
+        post: operations["auth_change_password"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2208,6 +2248,24 @@ export interface components {
          * @enum {string}
          */
         BridgeState: "not_configured" | "awaiting_qr" | "connected" | "blocked" | "down";
+        /**
+         * ChangePasswordRequest
+         * @description A signed-in user changes their OWN password (``POST /auth/password``). The floor of the new password
+         *     (8 characters) and the 'must differ' rule are checked by the action, so the refusal carries the Vietnamese
+         *     message of the original and is not a bare schema error.
+         */
+        ChangePasswordRequest: {
+            /**
+             * Current Password
+             * Format: password
+             */
+            current_password: string;
+            /**
+             * New Password
+             * Format: password
+             */
+            new_password: string;
+        };
         /**
          * ChannelKind
          * @enum {string}
@@ -3713,7 +3771,7 @@ export interface components {
          * Permission
          * @enum {string}
          */
-        Permission: "patient.read" | "patient.write" | "patient.read_360" | "consent.read" | "consent.write" | "appointment.read" | "appointment.write" | "appointment.check_in" | "session.write" | "crm.task.read" | "crm.task.resolve" | "crm.activity.write" | "conversation.read" | "conversation.reply" | "review.read" | "review.decide" | "review.decide_clinical" | "kb.read" | "kb.manage" | "admin.rules" | "admin.channels" | "admin.kill_switch" | "admin.logs" | "admin.accounts" | "admin.agents" | "admin.model" | "admin.tools" | "admin.schedules" | "admin.mcp" | "admin.usage" | "admin.policy" | "agent.submit";
+        Permission: "patient.read" | "patient.write" | "patient.read_360" | "consent.read" | "consent.write" | "appointment.read" | "appointment.write" | "appointment.check_in" | "session.write" | "crm.task.read" | "crm.task.resolve" | "crm.activity.write" | "conversation.read" | "conversation.reply" | "review.read" | "review.decide" | "review.decide_clinical" | "kb.read" | "kb.manage" | "admin.rules" | "admin.channels" | "admin.kill_switch" | "admin.logs" | "admin.accounts" | "admin.users" | "admin.agents" | "admin.model" | "admin.tools" | "admin.schedules" | "admin.mcp" | "admin.usage" | "admin.policy" | "agent.submit";
         /** PermissionsResponse */
         PermissionsResponse: {
             /** Permissions */
@@ -3800,6 +3858,19 @@ export interface components {
          * @enum {string}
          */
         ReasoningEffort: "off" | "low" | "medium" | "high" | "xhigh";
+        /**
+         * ResetPasswordRequest
+         * @description The owner sets a new password for ANOTHER staff account (``POST /admin/users/{user_id}/password``).
+         *     The floor of the new password (8 characters) is checked by the action, like ``ChangePasswordRequest``,
+         *     so the refusal carries the Vietnamese message. No current password: the owner does not know it.
+         */
+        ResetPasswordRequest: {
+            /**
+             * New Password
+             * Format: password
+             */
+            new_password: string;
+        };
         /** ReviewApprove */
         ReviewApprove: {
             /**
@@ -12473,6 +12544,93 @@ export interface operations {
             };
         };
     };
+    admin_users_reset_user_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     appointments_list_appointments: {
         parameters: {
             query?: {
@@ -13367,6 +13525,91 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    auth_change_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             204: {

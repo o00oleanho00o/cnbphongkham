@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from pema.api.request_id import clean_request_id
 from pema.shared.logger import create_logger
 from pema_contracts.errors import DomainError, ErrorBody, ErrorCode, ErrorResponse
 
@@ -13,7 +14,7 @@ _log = create_logger("api.errors")
 
 
 def _request_id(request: Request) -> str | None:
-    return request.headers.get("x-request-id")
+    return clean_request_id(request.headers.get("x-request-id"))
 
 
 async def _domain_error_handler(request: Request, exc: Exception) -> JSONResponse:

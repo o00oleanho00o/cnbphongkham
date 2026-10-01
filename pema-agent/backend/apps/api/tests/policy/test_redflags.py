@@ -310,3 +310,67 @@ def test_the_four_required_categories_and_the_provisional_ones_are_declared() ->
 def test_provisional_categories_are_flagged(text: str, category: str) -> None:
     """hai nhóm bổ sung (dị ứng nặng, mạch máu/thị lực) được gắn cờ"""
     assert category in detect_red_flags(text).flags
+
+
+# ------------------------------------------------------------------ package G (SECURITY-REVIEW-AI01 SEC-02)
+@pytest.mark.parametrize(
+    "texts",
+    [
+        ["em bị chảy", "máu"],
+        ["chay", "mau nhieu"],
+        ["Dạ em thấy khó", "thở quá"],
+        ["em bị", "sốt"],
+    ],
+)
+def test_a_sign_split_over_two_messages_of_one_batch_is_flagged(texts: list[str]) -> None:
+    """dấu hiệu bị tách làm hai tin trong cùng lượt vẫn bị bắt (mô hình đọc hai dòng liền nhau)"""
+    assert detect_red_flags_in_batch(texts).triggered
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "ｃｈａｙ ｍａｕ",  # full-width letters
+        "chảy​ máu",  # zero width space next to a real space
+        "chảy ​máu",
+        "ch​ảy m‍áu",
+        "chảy máu",  # no-break space
+        "chảy　máu",  # ideographic space
+        "k​hó thở",
+        "em bị 𝐬ốt",  # mathematical bold letter
+    ],
+)
+def test_unicode_tricks_do_not_hide_a_red_flag(text: str) -> None:
+    """chữ toàn chiều rộng, ký tự vô hình, khoảng trắng lạ không che được cờ đỏ"""
+    assert detect_red_flags(text).triggered
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["bớt chảy máu rồi nhưng vẫn còn", "bớt sốt nhưng vẫn mệt", "bot chay mau"],
+)
+def test_less_is_not_gone_so_it_does_not_suppress_a_flag(text: str) -> None:
+    """ "bớt" nghĩa là còn, không phải hết: không được coi là phủ định"""
+    assert detect_red_flags(text).triggered
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "there is bleeding from the wound",
+        "I have a fever since last night",
+        "the wound is infected and full of pus",
+        "I can't breathe",
+        "short of breath after the injection",
+        "difficulty breathing",
+    ],
+)
+def test_english_messages_are_flagged(text: str) -> None:
+    """bệnh nhân viết tiếng Anh vẫn được bắt cờ đỏ"""
+    assert detect_red_flags(text).triggered
+
+
+def test_ordinary_text_still_passes_after_the_hardening() -> None:
+    """tin bình thường vẫn không bị bắt oan sau khi siết"""
+    batch = ["chào bác sĩ", "em muốn đặt lịch", "sốt ruột quá", "màu cam"]
+    assert not detect_red_flags_in_batch(batch).triggered

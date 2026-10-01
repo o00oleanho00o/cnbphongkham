@@ -54,8 +54,12 @@ class EmbeddingSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="PEMA_EMBEDDING_", env_file=".env", extra="ignore")
 
-    enabled: bool = True
-    """Off = the knowledge base runs on keyword search only (no vectors are computed or stored)."""
+    enabled: bool = False
+    """Off = the knowledge base runs on keyword search only (no vectors are computed or stored).
+
+    TẠM TẮT LLM LOCAL (2026-10-02): default off because bge-m3 runs on the local Ollama, which is paused while
+    the agent uses a third-party LLM API. Keyword search is what zalo-agent itself does. Re-enable with
+    ``PEMA_EMBEDDING_ENABLED=true`` (or set this default back to True)."""
     base_url: str = "http://localhost:11434/v1"
     """OpenAI-compatible root. Ollama default. The client posts to ``<base_url>/embeddings``."""
     model: str = "bge-m3"

@@ -19,6 +19,7 @@ from pema.agent.tools.clinic_tools import (
     create_book_tool,
     create_escalation_tool,
     create_get_care_context_tool,
+    create_review_draft_tool,
 )
 from pema.agent.tools.testing import make_policy_context, make_tool_context, make_tool_deps
 from pema.agent.tools.tool_failure_result import la_ket_qua_loi
@@ -66,6 +67,7 @@ class FakeActions:
     )
     proposals: list[AppointmentProposalRequest] = field(default_factory=list[AppointmentProposalRequest])
     escalations: list[EscalationRequest] = field(default_factory=list[EscalationRequest])
+    review_items: list[ReviewItemCreate] = field(default_factory=list[ReviewItemCreate])
     contexts_asked: list[str] = field(default_factory=list[str])
     refuse: DomainError | None = None
 
@@ -104,7 +106,10 @@ class FakeActions:
         return self._item(request.job_id)
 
     async def create_review_item(self, ctx: ActionContext, request: ReviewItemCreate) -> ReviewItemOut:
-        raise NotImplementedError
+        if self.refuse is not None:
+            raise self.refuse
+        self.review_items.append(request)
+        return self._item(request.job_id)
 
     async def create_escalation(self, ctx: ActionContext, request: EscalationRequest) -> ReviewItemOut:
         self.escalations.append(request)
@@ -164,7 +169,7 @@ def context(*, verified: bool, msg_id: str = "m-1") -> ToolContext:
 
 
 async def test_chua_xac_minh_thi_ca_ba_tool_tra_loi_hong_co_danh_dau_khong_cham_vao_ho_so() -> None:
-    """chưa xác minh -> cả ba tool là kết quả lỗi có đánh dấu (không đoán, không chạm hồ sơ)"""
+    """chưa xác minh -> cả các tool là kết quả lỗi có đánh dấu (không đoán, không chạm hồ sơ)"""
     actions = FakeActions()
     ctx = context(verified=False)
     care = await create_get_care_context_tool(ctx, actions).execute({})
@@ -243,8 +248,95 @@ async def test_escalation_chuyen_bac_si_voi_ma_benh_nhan_khi_da_xac_minh_va_van_
 
 
 def test_tool_phong_kham_chi_co_khi_noi_actions_va_dung_khoa_hop_dong() -> None:
-    """không nối clinic_actions -> không có tool nào; nối -> đúng 3 khóa của hợp đồng"""
+    """không nối clinic_actions -> không có tool nào; nối -> đúng 4 khóa của hợp đồng"""
     assert clinic_tool_definitions(make_tool_deps()) == []
     keys = [spec.key for spec in clinic_tool_definitions(make_tool_deps(clinic_actions=FakeActions()))]
-    assert keys == ["patient.get_care_context", "appointment.book", "escalation.create"]
-    assert set(keys) <= set(CLINIC_TOOL_KEYS)
+    assert keys == ["patient.get_care_context", "appointment.book", "review_item.create", "escalation.create"]
+    assert set(keys) == set(CLINIC_TOOL_KEYS), "every key of the contract is a registered tool"
+
+
+async def test_the_inbox_lookup_never_receives_the_masked_name_or_text() -> None:
+    """tra hội thoại Inbox không được truyền tên/nội dung đã che (sẽ ghi đè tên thật bằng [NGUOI_1])"""
+
+    class Recording(FakeActions):
+        def __init__(self) -> None:
+            super().__init__()
+            self.seen: list[InboundMessage] = []
+
+        async def record_inbound_message(self, ctx: ActionContext, message: InboundMessage) -> InboxRef:
+            self.seen.append(message)
+            return InboxRef(conversation_id=uuid4(), duplicate=True)
+
+    actions = Recording()
+    base = context(verified=True)
+    masked = base.message.model_copy(update={"sender_name": "[NGUOI_1]", "text": "sdt [SDT_1]"})
+    ctx = dataclasses.replace(base, message=masked)
+    await create_escalation_tool(ctx, actions).execute(
+        {"summary": "sưng đau tăng", "red_flags": ["swelling"]}
+    )
+    assert actions.seen, "the tool must look the conversation up"
+    assert actions.seen[0].sender_name == ""
+    assert actions.seen[0].text == ""
+    assert actions.escalations[0].conversation_ref is not None
+
+
+async def test_review_item_create_soan_nhap_followup_cho_nhan_vien_duyet_khong_gui_di() -> None:
+    """review_item.create: tạo bản NHÁP followup_draft (idempotent theo lượt), không có tham số bệnh nhân, không gửi"""
+    actions = FakeActions()
+    ctx = context(verified=True)
+    tool = create_review_draft_tool(ctx, actions, make_tool_deps().policy)
+    args = {"draft_text": "Chào chị, phòng khám hỏi thăm sau buổi điều trị hôm qua ạ."}
+
+    first = await tool.execute(args)
+    await tool.execute(args)
+    await create_review_draft_tool(
+        context(verified=True, msg_id="m-2"), actions, make_tool_deps().policy
+    ).execute(args)
+
+    assert isinstance(first, str)
+    assert "CHƯA được gửi" in first
+    item = actions.review_items[0]
+    assert item.kind is ReviewKind.FOLLOWUP_DRAFT
+    assert item.origin is ReviewOrigin.AGENT_TURN
+    assert item.patient_ref == "P025"
+    assert item.draft_text == args["draft_text"]
+    assert item.clinic_id == ctx.clinic_id
+    assert item.risk_level is RiskLevel.NORMAL
+    assert item.job_id == actions.review_items[1].job_id
+    assert actions.review_items[2].job_id != item.job_id, "tin khác -> yêu cầu khác"
+    props = tool.parameters.get("properties", {})
+    assert set(props) == {"draft_text"}, "bệnh nhân, loại, rủi ro, cờ đỏ không phải tham số của model"
+
+
+async def test_review_item_create_chua_xac_minh_van_soan_nhap_nhung_khong_kem_ma_benh_nhan() -> None:
+    """chưa xác minh: bản nháp vẫn vào hàng chờ (nhân viên duyệt) nhưng không gắn hồ sơ nào"""
+    actions = FakeActions()
+    tool = create_review_draft_tool(context(verified=False), actions, make_tool_deps().policy)
+    await tool.execute({"draft_text": "Nhắc lịch tái khám."})
+    assert actions.review_items[0].patient_ref is None
+
+
+async def test_review_item_create_bi_tu_choi_hoac_loi_thi_tra_loi_hong_khong_hua_da_gui() -> None:
+    """action từ chối -> kết quả lỗi có đánh dấu mang câu của DomainError; nháp rỗng bị schema chặn"""
+    actions = FakeActions(refuse=DomainError(ErrorCode.FORBIDDEN, "Không được tạo mục chờ duyệt."))
+    tool = create_review_draft_tool(context(verified=True), actions, make_tool_deps().policy)
+
+    refused = await tool.execute({"draft_text": "Chào chị."})
+
+    assert la_ket_qua_loi(refused)
+    assert refused["loi"] == "Không được tạo mục chờ duyệt."
+    assert actions.review_items == []
+
+
+async def test_review_item_create_khoi_phuc_ten_that_nhu_cau_tra_loi_cua_luot() -> None:
+    """bản nháp model viết với mã giữ chỗ được khôi phục bằng after_llm (nhân viên đọc chữ thật)"""
+
+    class Restoring:
+        async def after_llm(self, ctx: object, text: str, mask_token: str | None) -> str:
+            assert mask_token is None
+            return text.replace("[NGUOI_1]", "chị Lan")
+
+    actions = FakeActions()
+    tool = create_review_draft_tool(context(verified=True), actions, Restoring())  # pyright: ignore[reportArgumentType]
+    await tool.execute({"draft_text": "Chào [NGUOI_1], hẹn gặp lại."})
+    assert actions.review_items[0].draft_text == "Chào chị Lan, hẹn gặp lại."

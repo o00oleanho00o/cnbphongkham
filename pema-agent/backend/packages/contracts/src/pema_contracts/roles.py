@@ -60,6 +60,9 @@ class Permission(StrEnum):
     ADMIN_LOGS = "admin.logs"
     ADMIN_ACCOUNTS = "admin.accounts"
     """Zalo accounts, QR login, bot token, friends."""
+    ADMIN_USERS = "admin.users"
+    """Staff accounts of the clinic (reset another user's password). Owner only: a manager manages Zalo
+    accounts but must not be able to take over an owner's login."""
     ADMIN_AGENTS = "admin.agents"
     """Agents, persona, per-agent model and tools, threads, memories."""
     ADMIN_MODEL = "admin.model"

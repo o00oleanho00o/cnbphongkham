@@ -1,5 +1,9 @@
 # Hướng dẫn dựng Pema Agent trên Ubuntu cài hẳn (không WSL2)
 
+> **TẠM TẮT LLM LOCAL (2026-10-02).** Agent đang dùng API LLM của bên thứ ba (đặt `LLM_*` trong `infra/.env`
+> hoặc trên màn Quản trị > Model). Các mục về driver NVIDIA, Ollama, `bge-m3` và llama-server chưa cần làm; giữ
+> lại để bật LLM local sau này (bỏ chú thích service `ollama` trong `docker-compose.yml` và target `up-ollama`).
+
 Dành cho người quản trị máy. Gói F viết, dựa trên `docker-compose.yml` và các script trong `infra/`.
 
 **Trạng thái kiểm chứng (đọc trước).** Đã chạy thật: Docker/compose, Postgres+pgvector, Redis, role, migration,

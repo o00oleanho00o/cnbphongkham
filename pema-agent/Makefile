@@ -10,7 +10,7 @@ LOAD_ENV_ROOT := set -a; if [ -f infra/.env ]; then . infra/.env; fi; set +a;
 LOAD_ENV := set -a; if [ -f ../infra/.env ]; then . ../infra/.env; fi; set +a;
 
 .PHONY: help setup lint format typecheck test test-db openapi types db-upgrade db-downgrade clean \
-        infra-secrets infra-config up up-app up-ollama down logs ps db-migrate db-bootstrap backup restore-verify
+        infra-secrets infra-config up up-app down logs ps db-migrate db-bootstrap backup restore-verify
 
 help:
 	@echo "setup       install Python (uv) and frontend (pnpm) dependencies"
@@ -24,9 +24,9 @@ help:
 	@echo "db-upgrade  alembic upgrade heads for ctx, clinic, clinic_agent, agent (reads infra/.env)"
 	@echo "infra-secrets  create infra/.env with random secrets (refuses to overwrite)"
 	@echo "infra-config   docker compose config (validates the compose file; uses infra/.env or .env.example)"
-	@echo "up / down      start / stop postgres, redis, migrate, api (profiles: worker, frontend, bridge, ollama)"
-	@echo "up-app         up + worker + frontend (needs packages E and G)"
-	@echo "up-ollama      up + Ollama container with NVIDIA GPU and model download"
+	@echo "up / down      start / stop postgres, redis, migrate, api (profiles: worker, frontend, bridge)"
+	@echo "up-app         up + worker + frontend"
+	@echo "               LLM = third-party API (LLM_* in infra/.env); local Ollama is paused"
 	@echo "db-migrate     roles + alembic upgrade heads inside the compose network (one-shot migrate service)"
 	@echo "db-bootstrap   only the role/password bootstrap, from the host (needs psql); rotates passwords"
 	@echo "backup / restore-verify   infra/scripts/backup-postgres.sh, restore into a scratch DB (FILE=...)"
@@ -76,7 +76,7 @@ infra-secrets:
 infra-config:
 	@f=infra/.env; \
 	if [ ! -f "$$f" ]; then d=$$(mktemp -d); f="$$d/env"; infra/scripts/gen-secrets.sh "$$f" >/dev/null; fi; \
-	docker compose -f infra/docker-compose.yml --env-file "$$f" --profile app --profile bridge --profile ollama config --quiet && echo "compose file valid"
+	docker compose -f infra/docker-compose.yml --env-file "$$f" --profile app --profile bridge config --quiet && echo "compose file valid"
 
 up:
 	$(COMPOSE) up -d --build
@@ -84,8 +84,10 @@ up:
 up-app:
 	$(COMPOSE) --profile app up -d --build
 
-up-ollama:
-	$(COMPOSE) --profile ollama up -d
+# TẠM TẮT LLM LOCAL (2026-10-02): re-enable together with the `ollama` services in infra/docker-compose.yml
+# (and add up-ollama back to .PHONY).
+# up-ollama:
+# 	$(COMPOSE) --profile ollama up -d
 
 down:
 	$(COMPOSE) down

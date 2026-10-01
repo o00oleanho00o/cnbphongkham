@@ -217,3 +217,19 @@ async def test_thieu_quyen_hoac_chua_dang_nhap_bi_chan(make_client: ClientFactor
     assert (await client.delete(f"{BASE}/zp-1")).status_code == 403
     assert (await client.get(BASE, headers={"x-test-anonymous": "1"})).status_code == 401
     assert await rig.accounts.get_account(FAKE_CLINIC_ID, "zp-1") is not None
+
+
+async def test_tao_tai_khoan_khong_co_ho_so_an_toan_can_them_quyen_admin_policy(
+    make_client: ClientFactory,
+) -> None:
+    """tạo account với hồ sơ staff_assistant (nới an toàn) cần cả admin.policy, như đổi hồ sơ của account/agent"""
+    rig = build_test_rig()
+    rig.denied.add(Permission.ADMIN_POLICY)
+    client = make_client(rig)
+
+    loosened = await client.post(BASE, json={"id": "zp-9", "label": "x", "policy_profile": "staff_assistant"})
+    safe = await client.post(BASE, json={"id": "zp-8", "label": "x"})
+
+    assert loosened.status_code == 403
+    assert await rig.accounts.get_account(FAKE_CLINIC_ID, "zp-9") is None
+    assert safe.status_code == 201, "hồ sơ patient_channel mặc định không cần admin.policy"

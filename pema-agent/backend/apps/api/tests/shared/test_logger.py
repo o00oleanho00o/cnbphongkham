@@ -90,3 +90,26 @@ def test_err_is_serialised_safely(log_file: Path) -> None:
     raw = log_file.read_text(encoding="utf-8")
     assert "SECRET CONVERSATION" not in raw
     assert "boom" in raw
+
+
+# ---------------------------------------------------------------- package G (SECURITY-REVIEW-AI01 SEC-05)
+def test_more_keys_and_suffixes_are_redacted_but_counters_are_not(log_file: Path) -> None:
+    """thêm khóa nhạy cảm (caption, draft_text, *_token...) bị che; bộ đếm như tokens_in vẫn đọc được"""
+    log = create_logger("pii")
+    log.error(
+        "x",
+        caption="ảnh của Lan",
+        draft_text="Dạ chào Lan",
+        bot_token="123:abc",
+        refresh_token="r",
+        masked_body="b",
+        tokens_in=12,
+        max_output_tokens=1024,
+        text_chars=30,
+    )
+    fields = _lines(log_file)[-1]
+    for key in ("caption", "draft_text", "bot_token", "refresh_token", "masked_body"):
+        assert fields[key] == REDACTED, key
+    assert fields["tokens_in"] == 12
+    assert fields["max_output_tokens"] == 1024
+    assert fields["text_chars"] == 30

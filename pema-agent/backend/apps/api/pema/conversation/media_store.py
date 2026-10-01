@@ -31,7 +31,7 @@ import os
 import re
 import shutil
 import time
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from uuid import UUID
@@ -238,6 +238,40 @@ class MediaStore:
         cutoff = (now if now is not None else time.time()) - get_tuning_int("MEDIA_RETENTION_DAYS") * 86400
         return await asyncio.to_thread(self._cleanup_sync, cutoff)
 
+    async def cleanup_expired_media_for_clinic(
+        self, clinic_id: UUID, retention_days: int, *, now: float | None = None, dry_run: bool = False
+    ) -> int:
+        """The same sweep as ``cleanup_expired_media`` for ONE clinic and an explicit number of days (the
+        retention job: ``pema.retention``). ``dry_run`` only counts. 0 days keeps everything (returns 0)."""
+        if retention_days <= 0:
+            return 0
+        cutoff = (now if now is not None else time.time()) - retention_days * 86400
+        return await asyncio.to_thread(_remove_expired_in, self._media_dir(clinic_id), cutoff, dry_run)
+
+    async def delete_media_files(self, clinic_id: UUID, rel_paths: Iterable[str]) -> int:
+        """Delete the files named by ``rel_path`` (as stored in ``agent.history.images``) and the directories
+        they leave empty. A path that escapes the media directory of the clinic is ignored, a file that is
+        already gone is not an error. Returns how many files were removed."""
+        return await asyncio.to_thread(self._delete_media_files_sync, clinic_id, list(rel_paths))
+
+    def _delete_media_files_sync(self, clinic_id: UUID, rel_paths: list[str]) -> int:
+        media_dir = self._media_dir(clinic_id).resolve()
+        removed = 0
+        for rel_path in rel_paths:
+            try:
+                abs_path = (self._clinic_dir(clinic_id) / rel_path).resolve()
+                if not abs_path.is_relative_to(media_dir) or abs_path == media_dir or not abs_path.is_file():
+                    continue
+                abs_path.unlink()
+                removed += 1
+                parent = abs_path.parent
+                while parent != media_dir and not any(parent.iterdir()):
+                    parent.rmdir()
+                    parent = parent.parent
+            except (OSError, ValueError) as err:
+                _log.debug("Không xóa được file media - bỏ qua", err=err)
+        return removed
+
     def _cleanup_sync(self, cutoff: float) -> int:
         removed = 0
         try:
@@ -254,7 +288,9 @@ def _write_file(path: Path, data: bytes) -> None:
     path.write_bytes(data)
 
 
-def _remove_expired_in(directory: Path, cutoff: float) -> int:
+def _remove_expired_in(directory: Path, cutoff: float, dry_run: bool = False) -> int:
+    """Delete (or, with ``dry_run``, only count) the files older than ``cutoff`` and the directories left
+    empty."""
     removed = 0
     try:
         entries = list(os.scandir(directory))
@@ -264,11 +300,12 @@ def _remove_expired_in(directory: Path, cutoff: float) -> int:
         full = Path(entry.path)
         try:
             if entry.is_dir():
-                removed += _remove_expired_in(full, cutoff)
-                if not any(full.iterdir()):
+                removed += _remove_expired_in(full, cutoff, dry_run)
+                if not dry_run and not any(full.iterdir()):
                     full.rmdir()
             elif full.stat().st_mtime < cutoff:
-                full.unlink()
+                if not dry_run:
+                    full.unlink()
                 removed += 1
         except OSError as err:
             _log.debug("Không dọn được file media - bỏ qua", err=err)

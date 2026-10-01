@@ -246,3 +246,33 @@ async def test_stop_all_accounts_dong_het_va_goi_stop_all_cua_bridge(rig: Rig) -
 
     assert rig.manager.get_running_accounts() == []
     assert rig.bridge.stop_all_calls == 1
+
+
+async def test_the_gate_of_an_attached_account_uses_the_counter_of_its_clinic(rig: Rig) -> None:
+    """cổng gửi chủ động của account dùng bộ đếm của ĐÚNG phòng khám (Postgres), không phải bộ đếm trong RAM"""
+    from pema.channels.zalo_personal.proactive_gate import InMemoryProactiveCounter
+
+    asked: list[UUID] = []
+    shared = InMemoryProactiveCounter()
+
+    def counter_for(clinic_id: UUID) -> InMemoryProactiveCounter:
+        asked.append(clinic_id)
+        return shared
+
+    manager = AccountManager(
+        accounts=rig.accounts,
+        vault=rig.vault,
+        bridge=rig.bridge,
+        registry=rig.registry,
+        policy_reader=rig.reader,
+        flag_enabled=lambda: True,
+        bridge_secret=lambda: "secret-0123456789abcdef",
+        counter_for=counter_for,
+    )
+    config = await rig.accounts.get_account(CLINIC, CA_NHAN)
+    assert config is not None
+    await manager.attach_account(CLINIC, config, "self-1")
+    kenh = manager.get_running_account_kenh(CLINIC, CA_NHAN)
+    assert kenh is not None
+    assert asked == [CLINIC]
+    assert kenh.gate._counter is shared  # pyright: ignore[reportPrivateUsage]

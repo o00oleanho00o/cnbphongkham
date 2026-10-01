@@ -66,36 +66,45 @@ class NormalizedText:
 
 
 def normalize_for_flags(text: str) -> NormalizedText:
-    """Fold and clean ``text`` for the red-flag rules (see module docstring)."""
+    """Fold and clean ``text`` for the red-flag rules (see module docstring).
+
+    Beyond the fold: compatibility forms are read as their plain letters (NFKC per character, so a full-width
+    ``ｃｈａｙ`` or a styled letter matches), every invisible format character (zero width space/joiner, soft
+    hyphen, bidi mark: category ``Cf``) is dropped wherever it sits, and every exotic space becomes a plain
+    one. Each emitted character keeps the index of the ORIGINAL character it came from."""
     original = to_nfc(text)
     chars: list[str] = []
     index: list[int] = []
     run_char = ""
-    for i, ch in enumerate(original):
-        folded = fold_char(ch)
-        # a separator glued between two letters ("m.ủ", "s-ốt") is dropped
-        if (
-            folded in _SEPARATORS_INSIDE_WORD
-            and chars
-            and chars[-1].isalpha()
-            and i + 1 < len(original)
-            and fold_char(original[i + 1]).isalpha()
-        ):
+    for i, raw in enumerate(original):
+        if unicodedata.category(raw) == "Cf":
             continue
-        # a zero typed between letters is an "o" ("s0t", "kh0 th0")
-        if (
-            folded == "0"
-            and chars
-            and chars[-1].isalpha()
-            and i + 1 < len(original)
-            and fold_char(original[i + 1]).isalpha()
-        ):
-            folded = "o"
-        # stretched letters ("chayyy", "sốtt", "khoooo"): a run of one letter collapses to one letter.
-        # Vietnamese has no native double letter after the fold, so no real word is damaged.
-        if folded.isalpha() and folded == run_char:
-            continue
-        run_char = folded if folded.isalpha() else ""
-        chars.append(folded)
-        index.append(i)
+        compat = unicodedata.normalize("NFKC", raw)
+        pieces = [" "] if raw.isspace() else [fold_char(c) for c in (compat or raw)]
+        for folded in pieces:
+            # a separator glued between two letters ("m.ủ", "s-ốt") is dropped
+            if (
+                folded in _SEPARATORS_INSIDE_WORD
+                and chars
+                and chars[-1].isalpha()
+                and i + 1 < len(original)
+                and fold_char(original[i + 1]).isalpha()
+            ):
+                continue
+            # a zero typed between letters is an "o" ("s0t", "kh0 th0")
+            if (
+                folded == "0"
+                and chars
+                and chars[-1].isalpha()
+                and i + 1 < len(original)
+                and fold_char(original[i + 1]).isalpha()
+            ):
+                folded = "o"
+            # stretched letters ("chayyy", "sốtt", "khoooo"): a run of one letter collapses to one letter.
+            # Vietnamese has no native double letter after the fold, so no real word is damaged.
+            if folded.isalpha() and folded == run_char:
+                continue
+            run_char = folded if folded.isalpha() else ""
+            chars.append(folded)
+            index.append(i)
     return NormalizedText(original=original, folded="".join(chars), source_index=tuple(index))

@@ -1,18 +1,19 @@
-# Pema Agent stack. Package A shipped postgres + redis; package F adds migrate, api, worker, frontend,
-# the Node bridge and Ollama.
+# Pema Agent stack: postgres, redis, migrate, api, worker, frontend and the Node bridge.
+# The LLM is a third-party API (LLM_PROVIDER / LLM_BASE_URL / LLM_API_KEY), as in zalo-agent.
 #
 #   default (no profile)  postgres, redis, migrate (one-shot), api
 #   profile worker        agent turns + scheduler + KB ingest (`python -m pema.workers.main`). Without it the
 #                         API answers webhooks and queues turns, but nobody runs them.
-#   profile frontend      Next.js dashboard. NEEDS the Next.js app of package E (output: "standalone").
-#   profile bridge        Node zca-js bridge (personal Zalo account, risk of account lock). NEEDS package C2.
-#   profile ollama        Ollama with an NVIDIA GPU. Optional: Ollama may instead run natively on the GPU PC
+#   profile frontend      Next.js dashboard (output: "standalone"; the API address is a build argument).
+#   profile bridge        Node zca-js bridge (personal Zalo account, risk of account lock). Internal only.
+#   profile ollama        TẠM TẮT LLM LOCAL (2026-10-02): the `ollama` and `ollama-pull` services are commented out
+#                         at the end of this file. Ollama with an NVIDIA GPU, or natively on the GPU PC
 #                         (see infra/ubuntu/HUONG-DAN-UBUNTU.md).
-#   profile app           worker + frontend together (convenience; same prerequisites as above)
+#   profile app           worker + frontend together (convenience)
 #
 # Run from pema-agent/ (the Makefile does this):
 #   docker compose -f infra/docker-compose.yml --env-file infra/.env up -d
-#   docker compose -f infra/docker-compose.yml --env-file infra/.env --profile app --profile ollama up -d
+#   docker compose -f infra/docker-compose.yml --env-file infra/.env --profile app up -d
 #
 # Network exposure: every published port binds to a loopback address by default. Change PEMA_*_BIND to a
 # Tailscale IP to reach a service from the other machine; never to 0.0.0.0 on a machine with a public IP.
@@ -41,6 +42,7 @@ x-backend-env: &backend-env
   PEMA_ZALO_BRIDGE_URL: http://zalo-personal-bridge:8200
   PEMA_ZALO_BRIDGE_SECRET: ${PEMA_ZALO_BRIDGE_SECRET:-}
   # LLM endpoint seed (original unprefixed names; the dashboard value in agent.runtime_settings wins).
+  # Third-party API (OpenRouter, OpenAI, DeepSeek, a 9Router/LiteLLM router, Anthropic, Gemini): see .env.example.
   LLM_PROVIDER: ${LLM_PROVIDER:-openai-compatible}
   LLM_BASE_URL: ${LLM_BASE_URL:-}
   LLM_API_KEY: ${LLM_API_KEY:-}
@@ -49,9 +51,11 @@ x-backend-env: &backend-env
   PEMA_ZALO_BOT_MODE: ${PEMA_ZALO_BOT_MODE:-polling}
   PEMA_ZALO_BOT_WEBHOOK_BASE_URL: ${PEMA_ZALO_BOT_WEBHOOK_BASE_URL:-}
   # Knowledge-base embeddings (bge-m3 through an OpenAI-compatible endpoint). Off = keyword search only.
-  PEMA_EMBEDDING_ENABLED: ${PEMA_EMBEDDING_ENABLED:-true}
-  PEMA_EMBEDDING_BASE_URL: ${PEMA_EMBEDDING_BASE_URL:-http://ollama:11434/v1}
-  PEMA_EMBEDDING_MODEL: ${PEMA_EMBEDDING_MODEL:-bge-m3}
+  # TẠM TẮT LLM LOCAL (2026-10-02): bge-m3 runs on the local Ollama, so embeddings default to off (keyword
+  # search, as in zalo-agent). Re-enable: default `true` and uncomment the two lines below.
+  PEMA_EMBEDDING_ENABLED: ${PEMA_EMBEDDING_ENABLED:-false}
+  # PEMA_EMBEDDING_BASE_URL: ${PEMA_EMBEDDING_BASE_URL:-http://ollama:11434/v1}
+  # PEMA_EMBEDDING_MODEL: ${PEMA_EMBEDDING_MODEL:-bge-m3}
   PEMA_CRM_RUNNER_INTERVAL_SECONDS: ${PEMA_CRM_RUNNER_INTERVAL_SECONDS:-900}
 
 x-api-database: &api-database
@@ -186,17 +190,25 @@ services:
     build:
       context: ..
       dockerfile: infra/docker/frontend.Dockerfile
+      # baked into the Next.js rewrites at build time (see next.config.ts)
+      args:
+        PEMA_API_INTERNAL_URL: http://api:8000
     image: pema-agent-frontend:${PEMA_IMAGE_TAG:-local}
     restart: unless-stopped
     depends_on:
       api:
         condition: service_healthy
     environment:
-      PEMA_API_INTERNAL_URL: http://api:8000
       HOSTNAME: 0.0.0.0
       PORT: "3000"
     ports:
       - "${PEMA_FRONTEND_BIND:-127.0.0.1}:${PEMA_FRONTEND_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
 
   zalo-personal-bridge:
     profiles: ["bridge"]
@@ -206,72 +218,88 @@ services:
     image: pema-agent-bridge:${PEMA_IMAGE_TAG:-local}
     restart: unless-stopped
     environment:
-      PORT: "8200"
-      # HMAC secret shared with the API (inbound webhook + outbound calls)
+      # Same flag as the API (default off): disabled, the bridge serves only GET /health and never loads zca-js.
+      PEMA_ZALO_PERSONAL_ENABLED: ${PEMA_ZALO_PERSONAL_ENABLED:-false}
+      # HMAC secret shared with the API (inbound events + outbound calls)
       PEMA_ZALO_BRIDGE_SECRET: ${PEMA_ZALO_BRIDGE_SECRET:?set it when the bridge profile is on}
-      PEMA_API_WEBHOOK_BASE: http://api:8000/api/v1/webhooks/zalo-bridge
+      # Listen on every interface OF THE CONTAINER so the api service can reach it over the compose network.
+      # This is not exposure: the port is only `expose`d below, never published to the host.
+      PEMA_ZALO_BRIDGE_HOST: 0.0.0.0
+      PEMA_ZALO_BRIDGE_PORT: "8200"
+      # Events go to {base}/webhooks/zalo-bridge/{clinic_slug}/{account_id}
+      PEMA_API_BASE_URL: http://api:8000/api/v1
+      PEMA_BOT_TIMEZONE: ${PEMA_BOT_TIMEZONE:-Asia/Ho_Chi_Minh}
+      ZALO_BRIDGE_LOG_LEVEL: ${ZALO_BRIDGE_LOG_LEVEL:-info}
     # Internal only: the API reaches it at http://zalo-personal-bridge:8200. Never publish this port.
     expose:
       - "8200"
-
-  ollama:
-    profiles: ["ollama"]
-    image: ollama/ollama:${PEMA_OLLAMA_TAG:-latest}
-    restart: unless-stopped
-    environment:
-      OLLAMA_HOST: 0.0.0.0:11434
-      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-30m}
-      OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-2}
-      OLLAMA_MAX_LOADED_MODELS: ${OLLAMA_MAX_LOADED_MODELS:-2}
-      OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-16384}
-      OLLAMA_FLASH_ATTENTION: "1"
-      OLLAMA_KV_CACHE_TYPE: ${OLLAMA_KV_CACHE_TYPE:-q8_0}
-    # Needs the NVIDIA Container Toolkit on the host (see the Ubuntu guide). Without a GPU, drop this block.
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    ports:
-      - "${PEMA_OLLAMA_BIND:-127.0.0.1}:${PEMA_OLLAMA_PORT:-11434}:11434"
-    volumes:
-      - ollama-models:/root/.ollama
     healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 15s
-      timeout: 10s
-      retries: 10
-      start_period: 20s
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8200/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
 
-  # One-shot: download the chat and embedding models into the ollama volume.
-  ollama-pull:
-    profiles: ["ollama"]
-    image: ollama/ollama:${PEMA_OLLAMA_TAG:-latest}
-    restart: "no"
-    depends_on:
-      ollama:
-        condition: service_healthy
-    environment:
-      OLLAMA_HOST: http://ollama:11434
-      PEMA_LLM_MODEL_PULL: ${PEMA_LLM_MODEL_PULL:-hf.co/Qwen/Qwen3-8B-GGUF:Q5_K_M}
-      PEMA_EMBED_MODEL_PULL: ${PEMA_EMBED_MODEL_PULL:-bge-m3}
-      OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-16384}
-    # Also creates the short alias `pema-chat` with an explicit num_ctx: without it Ollama loads the GGUF's own
-    # (very large) context and spills layers to the CPU on a 12 GB card (measured, see the Ubuntu guide).
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        set -e
-        ollama pull "$$PEMA_LLM_MODEL_PULL"
-        ollama pull "$$PEMA_EMBED_MODEL_PULL"
-        { echo "FROM $$PEMA_LLM_MODEL_PULL"; echo "PARAMETER num_ctx $$OLLAMA_CONTEXT_LENGTH"; } > /tmp/Modelfile
-        ollama create pema-chat -f /tmp/Modelfile
+  # TẠM TẮT LLM LOCAL (2026-10-02): local LLM services. Re-enable: remove the leading `# ` of this block and
+  # of the `ollama-models` volume, then `make up-ollama`.
+  # ollama:
+  #   profiles: ["ollama"]
+  #   image: ollama/ollama:${PEMA_OLLAMA_TAG:-latest}
+  #   restart: unless-stopped
+  #   environment:
+  #     OLLAMA_HOST: 0.0.0.0:11434
+  #     OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-30m}
+  #     OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-2}
+  #     OLLAMA_MAX_LOADED_MODELS: ${OLLAMA_MAX_LOADED_MODELS:-2}
+  #     OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-16384}
+  #     OLLAMA_FLASH_ATTENTION: "1"
+  #     OLLAMA_KV_CACHE_TYPE: ${OLLAMA_KV_CACHE_TYPE:-q8_0}
+  #   # Needs the NVIDIA Container Toolkit on the host (see the Ubuntu guide). Without a GPU, drop this block.
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu]
+  #   ports:
+  #     - "${PEMA_OLLAMA_BIND:-127.0.0.1}:${PEMA_OLLAMA_PORT:-11434}:11434"
+  #   volumes:
+  #     - ollama-models:/root/.ollama
+  #   healthcheck:
+  #     test: ["CMD", "ollama", "list"]
+  #     interval: 15s
+  #     timeout: 10s
+  #     retries: 10
+  #     start_period: 20s
+  #
+  # # One-shot: download the chat and embedding models into the ollama volume.
+  # ollama-pull:
+  #   profiles: ["ollama"]
+  #   image: ollama/ollama:${PEMA_OLLAMA_TAG:-latest}
+  #   restart: "no"
+  #   depends_on:
+  #     ollama:
+  #       condition: service_healthy
+  #   environment:
+  #     OLLAMA_HOST: http://ollama:11434
+  #     PEMA_LLM_MODEL_PULL: ${PEMA_LLM_MODEL_PULL:-hf.co/Qwen/Qwen3-8B-GGUF:Q5_K_M}
+  #     PEMA_EMBED_MODEL_PULL: ${PEMA_EMBED_MODEL_PULL:-bge-m3}
+  #     OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-16384}
+  #   # Also creates the short alias `pema-chat` with an explicit num_ctx: without it Ollama loads the GGUF's own
+  #   # (very large) context and spills layers to the CPU on a 12 GB card (measured, see the Ubuntu guide).
+  #   entrypoint:
+  #     - /bin/sh
+  #     - -c
+  #     - |
+  #       set -e
+  #       ollama pull "$$PEMA_LLM_MODEL_PULL"
+  #       ollama pull "$$PEMA_EMBED_MODEL_PULL"
+  #       { echo "FROM $$PEMA_LLM_MODEL_PULL"; echo "PARAMETER num_ctx $$OLLAMA_CONTEXT_LENGTH"; } > /tmp/Modelfile
+  #       ollama create pema-chat -f /tmp/Modelfile
 
 volumes:
   pg-data:
   redis-data:
   pema-data:
-  ollama-models:
+  # ollama-models:  # TẠM TẮT LLM LOCAL (2026-10-02)

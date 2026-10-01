@@ -22,8 +22,11 @@ Forced deviations:
 
 Clinic note: the summary is built from the history of the thread, which holds patient text; the generator is
 the configured model of the clinic (a local model or the provider the owner chose), the same as the turn
-itself. In ``patient_channel`` the caller must pass a generator that applies PII masking
-(``PolicyHooks.before_llm``); this module does not know the policy.
+itself. This module does not know the policy, so a caller under ``patient_channel`` MUST pass
+``prompt_filter`` (the PII mask of the policy, ``PolicyHooks.mask_text``): the prompt is built from the
+RAW history (names, phone numbers) and the filter is applied to the whole prompt before any model call. A
+filter that raises means NO model call (fail closed). Package G found the first version of the worker calling
+this without a filter (SECURITY-REVIEW-AI01, SEC-01).
 """
 
 from __future__ import annotations
@@ -194,8 +197,12 @@ class ThreadSummarizer:
         account_id: str,
         thread_id: str,
         generate: SummaryGenerator | None = None,
+        prompt_filter: Callable[[str], str] | None = None,
     ) -> bool:
-        """Gọi sau mỗi lượt trả lời. Chỉ tốn 1 LLM call khi backlog đủ lớn."""
+        """Gọi sau mỗi lượt trả lời. Chỉ tốn 1 LLM call khi backlog đủ lớn.
+
+        ``prompt_filter``: applied to the whole prompt right before the model call (the PII mask of
+        ``patient_channel``)."""
         try:
             collected = await self.collect_summary_backlog(clinic_id, account_id, thread_id)
             if len(collected.backlog) < get_tuning_int("SUMMARY_TRIGGER_MESSAGES"):
@@ -208,7 +215,10 @@ class ThreadSummarizer:
                 )
                 return False
 
-            result = await generator(build_summary_prompt(collected.old_summary, collected.backlog))
+            prompt = build_summary_prompt(collected.old_summary, collected.backlog)
+            if prompt_filter is not None:
+                prompt = prompt_filter(prompt)
+            result = await generator(prompt)
             if result.truncated:
                 # Bản cụt: KHÔNG ghi đè, KHÔNG tiến covers_to. Giữ summary cũ, lần sau thử lại (backlog vẫn
                 # còn nguyên vì covers_to đứng yên).

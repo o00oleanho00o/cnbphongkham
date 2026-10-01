@@ -45,6 +45,22 @@ def _none(_: SeedResult) -> dict[str, object]:
 ENDPOINTS: tuple[Endpoint, ...] = (
     Endpoint("me", "GET", "/me", ALL),
     Endpoint("permissions", "GET", "/permissions", ALL),
+    # every staff role changes its OWN password; the wrong current password here ends in 401, never 403
+    Endpoint(
+        "change_own_password",
+        "POST",
+        "/auth/password",
+        ALL,
+        lambda w: {"current_password": "not-the-password", "new_password": "another-password-1"},
+    ),
+    # resetting ANOTHER user's password is the owner's alone (admin.users); the fake id is a 404 for the owner
+    Endpoint(
+        "reset_user_password",
+        "POST",
+        f"/admin/users/{FAKE}/password",
+        frozenset({OWNER}),
+        lambda w: {"new_password": "another-password-1"},
+    ),
     Endpoint("list_patients", "GET", "/patients", ALL),
     Endpoint(
         "create_patient",

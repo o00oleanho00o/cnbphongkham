@@ -18,6 +18,7 @@ from functools import lru_cache
 
 from fastapi import FastAPI
 
+from pema.api.body_limit import BodyLimitMiddleware
 from pema.api.errors import install_error_handlers
 from pema.api.router import TAGS_METADATA, build_api_router, build_system_router, unique_operation_id
 from pema.channels.zalo_bot.bot_account_runner import ClientFactory
@@ -74,7 +75,12 @@ def create_app(*, runtime: Runtime | None = None, bot_client_factory: ClientFact
             if lifecycle is not None:
                 await lifecycle.stop()
 
+    # The interactive docs and the schema describe every route to whoever can reach the API: only in ``dev``.
+    docs_open = settings.environment == "dev"
     app = FastAPI(
+        docs_url="/docs" if docs_open else None,
+        redoc_url="/redoc" if docs_open else None,
+        openapi_url="/openapi.json" if docs_open else None,
         title=API_TITLE,
         version=__version__,
         description=API_DESCRIPTION,
@@ -96,6 +102,8 @@ def create_app(*, runtime: Runtime | None = None, bot_client_factory: ClientFact
         db=current_db,
         enforce=lambda: getattr(app.state, "runtime", None) is not None,
     )
+    # Added LAST = outermost: the body ceiling is applied before anything reads a body.
+    app.add_middleware(BodyLimitMiddleware)
     app.include_router(build_system_router())
     app.include_router(build_api_router())
     return app

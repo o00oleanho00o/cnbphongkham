@@ -85,10 +85,26 @@ from pema_contracts.tools import CLINIC_TOOL_KEYS
 log = create_logger("policy")
 
 MEDIA_KINDS_TO_FLAG: frozenset[InboundKind] = frozenset(
-    {InboundKind.IMAGE, InboundKind.FILE, InboundKind.VOICE}
+    {InboundKind.IMAGE, InboundKind.FILE, InboundKind.VOICE, InboundKind.UNSUPPORTED}
 )
 """Inbound kinds that cannot be read by the text-only agent and go to a person. A voice note is included
-on purpose: it may say "tôi khó thở" and would otherwise bypass the red-flag check. Stickers do not."""
+on purpose: it may say "tôi khó thở" and would otherwise bypass the red-flag check. ``UNSUPPORTED`` (a video,
+a location, anything the channel could not classify) too: a patient may be showing a wound. Stickers do
+not."""
+
+MEDIA_MSG_TYPE_HINTS: tuple[str, ...] = ("voice", "video", "file", "location", "gif", "doc", "audio", "photo")
+"""Fragments of the channel's own message type (``raw["msgType"]`` of a personal-account message, for example
+``chat.voice``, ``chat.video.msg``, ``share.file``). The personal-account parser files every non-photo
+attachment under ``InboundKind.TEXT`` with an empty text, so the kind alone would let a voice note or a video
+through to the model as an empty message."""
+
+
+def _is_unreadable_media(message: InboundMessage) -> bool:
+    if message.kind in MEDIA_KINDS_TO_FLAG or message.images:
+        return True
+    msg_type = message.raw.get("msgType")
+    return isinstance(msg_type, str) and any(hint in msg_type.lower() for hint in MEDIA_MSG_TYPE_HINTS)
+
 
 SAVE_MEMORY_TOOL_KEY = "save_memory"
 MCP_TOOL_PREFIX = "mcp__"
@@ -170,7 +186,7 @@ class ClinicPolicyHooks:
             flags = list(found.flags)
 
         media_present = profile.inbound_media is InboundMediaAction.FLAG_AND_HAND_OFF and any(
-            m.kind in MEDIA_KINDS_TO_FLAG or m.images for m in inbound
+            _is_unreadable_media(m) for m in inbound
         )
 
         if flags or media_present:

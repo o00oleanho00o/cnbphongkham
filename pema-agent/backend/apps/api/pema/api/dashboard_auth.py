@@ -10,6 +10,11 @@ session table):
   ``sid`` (session id); every request ALSO loads the session row (``dashboard_session_store``), so logout
   revokes for real, a password change evicts older sessions, and a role change or a deactivation applies at
   once (the role is read from the user row, never from the token);
+* (SEC-24) a session has two clocks: ``expires_at`` slides (``Settings.session_ttl_minutes`` after the last
+  login or refresh) and ``absolute_expires_at`` does not (``PEMA_SESSION_ABSOLUTE_DAYS`` after the login, 7 by
+  default, 1 to 30 allowed). ``refresh`` never pushes the sliding expiry past the ceiling, a request past
+  it is a 401, and the cookie ``Max-Age`` and the JWT ``exp`` are capped by it, so a stolen cookie cannot
+  be kept alive by refreshing it;
 * the rate limit is kept as is (5 attempts per minute per key, buckets pruned past 500) and keyed twice:
   by client IP and by ``clinic:email``, so one account cannot be ground down from many addresses.
 
@@ -31,6 +36,7 @@ from uuid import UUID, uuid4
 
 import jwt
 from fastapi import Depends, Request, Response
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,6 +44,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pema.api import dashboard_password_store as password_store
 from pema.api import dashboard_session_store as session_store
 from pema.api.client_ip import resolve_client_ip
+from pema.api.request_id import clean_request_id
 from pema.clinic import audit
 from pema.clinic.actions._common import now
 from pema.clinic.actions.outbound import OutboundDelivery
@@ -57,6 +64,10 @@ JWT_ALGORITHM = "HS256"
 MIN_JWT_SECRET_CHARS = 32
 BAD_CREDENTIALS_MESSAGE = "Email hoặc mật khẩu không đúng."
 NOT_SIGNED_IN_MESSAGE = "Cần đăng nhập."
+SESSION_ENDED_MESSAGE = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
+DEFAULT_SESSION_ABSOLUTE_DAYS = 7
+MIN_SESSION_ABSOLUTE_DAYS = 1
+MAX_SESSION_ABSOLUTE_DAYS = 30
 
 # ===== Login rate limit: stops password brute force (ported unchanged) =====
 
@@ -119,6 +130,11 @@ class DashboardAuthSettings(BaseSettings):
     """``DASHBOARD_BEHIND_PROXY``: trust the rightmost ``X-Forwarded-For`` entry (a proxy appends it)."""
     session_cookie_secure: bool | None = None
     """``None`` = secure unless ``PEMA_ENVIRONMENT`` is ``dev``."""
+    session_absolute_days: int = Field(
+        default=DEFAULT_SESSION_ABSOLUTE_DAYS, ge=MIN_SESSION_ABSOLUTE_DAYS, le=MAX_SESSION_ABSOLUTE_DAYS
+    )
+    """``SESSION_ABSOLUTE_DAYS``: hard lifetime of a session counted from the login. Out of range refuses
+    to start (fail closed) instead of silently running with a session that never ends or ends at once."""
 
 
 @lru_cache
@@ -195,6 +211,8 @@ class AuthenticatedUser:
     clinic_name: str
     session_id: UUID
     expires_at: datetime
+    absolute_expires_at: datetime
+    """The ceiling of this session (SEC-24): ``expires_at`` never goes past it."""
 
     def summary(self) -> UserSummary:
         return UserSummary(
@@ -224,6 +242,15 @@ class AuthenticatedUser:
 
 def _session_ttl() -> timedelta:
     return timedelta(minutes=get_settings().session_ttl_minutes)
+
+
+def _session_absolute_lifetime() -> timedelta:
+    return timedelta(days=get_auth_settings().session_absolute_days)
+
+
+def _max_age_seconds(stamp: datetime, expires_at: datetime) -> int:
+    """Cookie ``Max-Age``: until the (capped) expiry, so the browser drops the cookie with the session."""
+    return max(0, int((expires_at - stamp).total_seconds()))
 
 
 def _unauthenticated() -> DomainError:
@@ -257,7 +284,8 @@ async def verify_session_token(db: ClinicDatabase, token: str | None) -> Authent
         display_name=principal.display_name,
         clinic_name=principal.clinic_name,
         session_id=principal.session_id,
-        expires_at=principal.expires_at,
+        expires_at=min(principal.expires_at, principal.absolute_expires_at),
+        absolute_expires_at=principal.absolute_expires_at,
     )
 
 
@@ -295,7 +323,8 @@ async def login(
 
     plain = body.password.get_secret_value()
     stamp = now()
-    expires_at = stamp + _session_ttl()
+    absolute_expires_at = stamp + _session_absolute_lifetime()
+    expires_at = min(stamp + _session_ttl(), absolute_expires_at)
     async with db.session(clinic_id) as session:
         user = await session.scalar(
             select(UserAccount).where(
@@ -321,6 +350,7 @@ async def login(
                 password_fingerprint=passwords.fingerprint(user.password_hash),
                 created_at=stamp,
                 expires_at=expires_at,
+                absolute_expires_at=absolute_expires_at,
             )
             user.last_login_at = stamp
             await session.flush()
@@ -343,6 +373,7 @@ async def login(
                 clinic_name=clinic_name,
                 session_id=session_id,
                 expires_at=expires_at,
+                absolute_expires_at=absolute_expires_at,
             )
         else:
             authed = None
@@ -355,7 +386,7 @@ async def login(
         raise DomainError(ErrorCode.UNAUTHENTICATED, BAD_CREDENTIALS_MESSAGE)
     clear_login_attempts(account_key)
     token = create_session_token(TokenClaims(authed.user_id, clinic_id, authed.session_id), stamp, expires_at)
-    return LoginResult(token=token, user=authed, max_age_seconds=int(_session_ttl().total_seconds()))
+    return LoginResult(token=token, user=authed, max_age_seconds=_max_age_seconds(stamp, expires_at))
 
 
 async def _clinic_name(session: AsyncSession) -> str:
@@ -364,11 +395,17 @@ async def _clinic_name(session: AsyncSession) -> str:
 
 
 async def refresh(db: ClinicDatabase, user: AuthenticatedUser, request_id: str | None = None) -> LoginResult:
-    """Extend the current session and issue a new cookie."""
+    """Slide the current session forward and issue a new cookie, but never past the absolute ceiling fixed at
+    login (SEC-24). Past the ceiling the answer is 401: the user signs in again."""
     stamp = now()
-    expires_at = stamp + _session_ttl()
+    if user.absolute_expires_at <= stamp:
+        raise DomainError(ErrorCode.UNAUTHENTICATED, SESSION_ENDED_MESSAGE)
+    wanted = min(stamp + _session_ttl(), user.absolute_expires_at)
     async with db.session(user.clinic_id) as session:
-        await session_store.extend_session(session, user.session_id, expires_at)
+        expires_at = await session_store.extend_session(session, user.session_id, wanted, stamp)
+        if expires_at is None:
+            # The row went away or crossed its ceiling between the request check and now.
+            raise DomainError(ErrorCode.UNAUTHENTICATED, SESSION_ENDED_MESSAGE)
         await audit.record(
             session, user.action_context(request_id), "auth.refresh", "user_account", user.user_id
         )
@@ -380,11 +417,12 @@ async def refresh(db: ClinicDatabase, user: AuthenticatedUser, request_id: str |
         clinic_name=user.clinic_name,
         session_id=user.session_id,
         expires_at=expires_at,
+        absolute_expires_at=user.absolute_expires_at,
     )
     token = create_session_token(
         TokenClaims(user.user_id, user.clinic_id, user.session_id), stamp, expires_at
     )
-    return LoginResult(token=token, user=renewed, max_age_seconds=int(_session_ttl().total_seconds()))
+    return LoginResult(token=token, user=renewed, max_age_seconds=_max_age_seconds(stamp, expires_at))
 
 
 async def revoke_session(db: ClinicDatabase, user: AuthenticatedUser, request_id: str | None = None) -> None:
@@ -465,7 +503,7 @@ def action_context(request: Request, user: CurrentUser) -> ActionContext:
     """``ActionContext`` of the signed-in staff member. ``Idempotency-Key`` is read from the header (the
     routes that accept it declare it in OpenAPI; reading it here keeps every route's signature unchanged)."""
     return user.action_context(
-        request_id=request.headers.get("x-request-id"),
+        request_id=clean_request_id(request.headers.get("x-request-id")),
         idempotency_key=(request.headers.get("idempotency-key") or None),
     )
 

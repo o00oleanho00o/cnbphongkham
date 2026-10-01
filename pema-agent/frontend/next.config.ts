@@ -6,8 +6,13 @@ import type { NextConfig } from "next";
  * The browser only ever talks to this origin; Next forwards `/api/*` to the backend so the session
  * cookie stays first-party (no CORS). Point PEMA_API_URL at the real API, or at `pnpm mock`
  * (http://127.0.0.1:4010) while the backend packages are still being built.
+ *
+ * `PEMA_API_INTERNAL_URL` (the compose network address of the api service, e.g. http://api:8000) wins over
+ * `PEMA_API_URL`. Next.js evaluates `rewrites()` at BUILD time and bakes the result into the standalone
+ * server, so this variable must be present when `next build` runs (a Docker build argument), not at runtime.
  */
-const API_URL = process.env.PEMA_API_URL ?? "http://127.0.0.1:8000";
+const API_URL =
+  process.env.PEMA_API_INTERNAL_URL ?? process.env.PEMA_API_URL ?? "http://127.0.0.1:8000";
 
 /**
  * Version LẤY TỪ package.json, không gõ tay trong JSX (bản gốc làm vậy qua `__APP_VERSION__` của

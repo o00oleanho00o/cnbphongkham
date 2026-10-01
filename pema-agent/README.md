@@ -76,7 +76,7 @@ Kiểm riêng từng phần:
 ```
 cd backend && uv run pytest apps/api/tests/policy                  # chính sách: cờ đỏ, PII, xác minh
 cd backend && uv run pytest apps/api/tests/integration             # vòng khép kín (cần DB + Redis)
-cd backend && uv run pytest -c pyproject.toml --rootdir=. ../evals  # eval với mô hình giả (không thuộc make test)
+cd backend && uv run pytest ../evals                                # eval với mô hình giả (cũng nằm trong make test)
 cd backend/bridges/zalo-personal && pnpm install && pnpm test      # cầu nối (không bao giờ đăng nhập Zalo)
 cd frontend && pnpm lint && pnpm typecheck && pnpm test
 make openapi && make types   # sinh lại openapi.json rồi kiểu TypeScript
@@ -106,7 +106,7 @@ make down
 
 Không có profile `worker` thì API nhận webhook và xếp lượt nhưng không ai chạy lượt. Tham số mô hình (`LLM_BASE_URL`, `LLM_MODEL=pema-chat`) và tuỳ chọn mạng (`PEMA_*_BIND`, chỉ loopback theo mặc định) ở `infra/.env.example`. Dữ liệu mẫu hư cấu cho một phòng khám: `uv run python -m pema.clinic.actions.seed_demo` (xem docstring của module; không có mật khẩu mặc định trong repo). Bot Zalo, QR cho tài khoản cá nhân, persona và KB cấu hình ở trang quản trị AI của FE.
 
-Lưu ý hạ tầng đã biết: đọc mã cho thấy ảnh Docker của cầu nối (`bridge` profile) có thể không dựng được vì Dockerfile chạy `pnpm run build` còn `package.json` của cầu nối không có script này; chưa thử build ([ARCH-AI01 mục 13](docs/ARCH-AI01.md#13-quyết-định-kiến-trúc-còn-mở)).
+Ảnh Docker của cầu nối (`bridge` profile) và của FE đã dựng thật và khởi động thử (không cần Zalo thật); cầu nối chạy bằng tsx, không có bước build, và chỉ lắng nghe trong mạng compose.
 
 ## Quy tắc áp dụng khắp nơi
 

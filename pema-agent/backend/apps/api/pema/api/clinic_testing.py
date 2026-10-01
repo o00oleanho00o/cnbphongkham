@@ -83,6 +83,13 @@ def _schema_is_current(admin: str) -> bool:
                 and conn.execute(
                     text("SELECT to_regclass('clinic_agent.review_item_summary') IS NOT NULL")
                 ).scalar()
+                and conn.execute(
+                    text(
+                        "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE "
+                        "table_schema = 'clinic' AND table_name = 'auth_session' "
+                        "AND column_name = 'absolute_expires_at')"
+                    )
+                ).scalar()
             )
     except Exception:
         return False
@@ -188,6 +195,55 @@ async def client_factory(app: FastAPI) -> AsyncIterator[ClientFactory]:
     yield make
     for http in clients:
         await http.aclose()
+
+
+async def add_staff_account(db: ClinicDatabase, world: SeedResult, *, role: str = "cs_staff") -> str:
+    """A NEW staff account (unique e-mail, password ``ACCOUNT_PASSWORD``); returns the e-mail. For tests that
+    change or reset a password: the seeded accounts are shared by all tests of the session and keep theirs."""
+    from uuid import uuid4
+
+    from pema.clinic import audit
+    from pema.clinic.models import UserAccount
+    from pema.clinic.rbac import passwords
+    from pema_contracts.actions import ActionContext
+    from pema_contracts.roles import ActorType
+
+    user_id = uuid4()
+    email = f"account.{user_id.hex[:10]}@example.test"
+    async with db.session(world.clinic_id) as session:
+        session.add(
+            UserAccount(
+                id=user_id,
+                clinic_id=world.clinic_id,
+                email=email,
+                display_name="Tài khoản thử (mẫu)",
+                role=role,
+                password_hash=passwords.hash_password(ACCOUNT_PASSWORD),
+            )
+        )
+        await session.flush()
+        await audit.record(
+            session,
+            ActionContext(clinic_id=world.clinic_id, actor_type=ActorType.SYSTEM),
+            "test.add_user",
+            "user_account",
+            user_id,
+        )
+    return email
+
+
+async def sign_in(
+    app: FastAPI, clinic_slug: str, email: str, password: str = ACCOUNT_PASSWORD
+) -> httpx.AsyncClient:
+    """An HTTP client signed in as ``email`` (the caller closes it). Fails the test when the login fails."""
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+    http = httpx.AsyncClient(transport=transport, base_url="http://test")
+    response = await http.post(
+        "/api/v1/auth/login", json={"clinic_slug": clinic_slug, "email": email, "password": password}
+    )
+    dashboard_auth.reset_login_rate_limit()
+    assert response.status_code == 200, response.text  # noqa: S101
+    return http
 
 
 _days = itertools.count(1)

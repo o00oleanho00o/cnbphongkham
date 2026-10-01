@@ -22,6 +22,8 @@ import json
 import traceback
 from typing import Any, cast
 
+from pydantic import ValidationError
+
 SAFE_FIELDS: tuple[str, ...] = (
     "message",
     "name",
@@ -64,10 +66,13 @@ def serialize_error_safely(err: object, depth: int = 0) -> SafeError:
         out[key] = _safe_json(cast("object", value)) if isinstance(value, dict | list | tuple) else value
 
     if isinstance(err, BaseException):
-        # ``str(err)`` is the message; it is the thing you most need to read.
-        out["message"] = str(err)
+        # ``str(err)`` is the message; it is the thing you most need to read. EXCEPT a pydantic
+        # ``ValidationError``: its text quotes the offending ``input_value`` (a patient's words, a phone
+        # number), so it is reduced to the error types and locations (package G, SEC-05).
+        message = _validation_summary(err) or str(err)
+        out["message"] = message
         out["type"] = type(err).__name__
-        stack = "".join(traceback.format_exception(type(err), err, err.__traceback__))
+        stack = "".join(traceback.format_tb(err.__traceback__)) + f"{type(err).__name__}: {message}"
         if stack.strip():
             out["stack"] = stack if len(stack) <= STACK_MAX else f"{stack[:STACK_MAX]}..."
         cause = err.__cause__ or err.__context__
@@ -77,6 +82,14 @@ def serialize_error_safely(err: object, depth: int = 0) -> SafeError:
         out["cause"] = serialize_error_safely(attrs["cause"], depth + 1)
 
     return out
+
+
+def _validation_summary(err: BaseException) -> str | None:
+    """``N validation error(s): <loc> <type>; ...`` for a pydantic ``ValidationError``, else ``None``."""
+    if not isinstance(err, ValidationError):
+        return None
+    parts = [f"{'.'.join(str(p) for p in e['loc'])} {e['type']}" for e in err.errors(include_input=False)]
+    return f"{err.error_count()} validation error(s): " + "; ".join(parts[:10])
 
 
 def _safe_json(value: object) -> object:

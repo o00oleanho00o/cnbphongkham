@@ -207,6 +207,15 @@ async def test_an_owner_resets_another_account_and_every_session_of_it_ends(
         await store.set_password(db, reception.action_context(), user_id, NEW_PASSWORD)
     assert caught.value.code is ErrorCode.FORBIDDEN
 
+    manager_session = await auth.login(
+        db, _req("manager@example.test", ACCOUNT_PASSWORD), client_ip="198.51.100.43"
+    )
+    manager = await auth.verify_session_token(db, manager_session.token)
+    assert manager is not None
+    with pytest.raises(DomainError) as caught_manager:
+        await store.set_password(db, manager.action_context(), user_id, NEW_PASSWORD)
+    assert caught_manager.value.code is ErrorCode.FORBIDDEN, "a manager must not take over a login"
+
 
 async def _add_user(db: ClinicDatabase, world: SeedResult, email: str) -> UUID:
     from pema.clinic import audit

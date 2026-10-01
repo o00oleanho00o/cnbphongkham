@@ -13,7 +13,14 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DBAPIError
 
-from pema.api.clinic_testing import ACCOUNT_PASSWORD, ClientFactory, fresh_start, record_inbound
+from pema.api.clinic_testing import (
+    ACCOUNT_PASSWORD,
+    ClientFactory,
+    add_staff_account,
+    fresh_start,
+    record_inbound,
+    sign_in,
+)
 from pema.clinic import audit
 from pema.clinic.actions import FakeOutboundDelivery
 from pema.clinic.actions.seed_demo import SeedResult
@@ -24,13 +31,24 @@ from pema_contracts.roles import ActorType
 
 pytestmark = pytest.mark.db
 
-B1_TAGS = {"auth", "patients", "appointments", "crm", "conversations", "review-items", "admin-templates"}
+B1_TAGS = {
+    "auth",
+    "patients",
+    "appointments",
+    "crm",
+    "conversations",
+    "review-items",
+    "admin-templates",
+    "admin-users",
+}
 
 # operation id of every mutating B1 route -> the audit action it must write
 MUTATIONS: dict[str, str] = {
     "auth_login": "auth.login",
     "auth_refresh": "auth.refresh",
     "auth_logout": "auth.logout",
+    "auth_change_password": "auth.change_password",
+    "admin_users_reset_user_password": "auth.reset_password",
     "patients_create_patient": "patient.create",
     "patients_update_patient": "patient.update",
     "patients_record_consent": "consent.record",
@@ -290,6 +308,31 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
         json={"version": 2},
     )
 
+    # a throw-away account: changing the password of a seeded one would break every later test
+    changer = await sign_in(app, "clinic-a", await add_staff_account(db, world_a))
+    await call(
+        "auth_change_password",
+        changer,
+        "POST",
+        "/auth/password",
+        json={"current_password": ACCOUNT_PASSWORD, "new_password": "a-brand-new-password-1"},
+    )
+    await changer.aclose()
+
+    # the owner resets the password of another throw-away account (never the seeded ones)
+    victim_email = await add_staff_account(db, world_a)
+    with admin.connect() as conn:
+        victim_id = conn.execute(
+            text("SELECT id FROM clinic.user_account WHERE email = :e"), {"e": victim_email}
+        ).scalar_one()
+    owner = await client_factory("clinic-a", "owner")
+    await call(
+        "admin_users_reset_user_password",
+        owner,
+        "POST",
+        f"/admin/users/{victim_id}/password",
+        json={"new_password": "owner-chosen-password-1"},
+    )
     await call("auth_logout", reception, "POST", "/auth/logout")
     assert seen.keys() == MUTATIONS.keys(), f"not exercised: {set(MUTATIONS) - set(seen)}"
 

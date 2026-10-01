@@ -75,7 +75,7 @@ Vai trò nhân viên theo `pema_contracts.roles`: chủ phòng khám (`owner`), 
 Nguồn: PLAN-AI01 mục 8 (2026-10-01), CONTRACTS-AI01 mục 7, và ghi chú trong mã.
 
 1. Chưa có Zalo OA/ZNS; chỉ Bot API và tài khoản cá nhân. `oa_api.py` là stub.
-2. PC chạy **Ubuntu cài hẳn**; LLM qua Ollama (Qwen3-8B Q5_K_M, nhúng `bge-m3`), sau chuyển llama-server (roadmap).
+2. PC chạy **Ubuntu cài hẳn**; LLM qua Ollama (Qwen3-8B Q5_K_M, nhúng `bge-m3`), sau chuyển llama-server (roadmap). **Từ 2026-10-02 tạm dùng API LLM bên thứ ba** (như zalo-agent), LLM local và embedding tạm tắt; xem PLAN-AI01 mục 8. Nội dung hội thoại rời hạ tầng phòng khám; `patient_channel` vẫn che PII trước LLM.
 3. Vitech/MISA không đụng trong AI01. Giữ cả Zalo và ứng dụng bệnh nhân (web + KMP).
 4. Bác sĩ trong đội duyệt mẫu tin, KB và nháp. Pháp lý thuộc chủ phòng khám.
 5. Mặc định hồ sơ của account và agent là `patient_channel` (an toàn khi quên cấu hình).

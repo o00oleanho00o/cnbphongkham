@@ -154,7 +154,7 @@ export function VisionSettingsModal({
               className="gc-input w-full"
               value={baseUrl}
               onChange={(e) => setBaseUrl(e.target.value)}
-              placeholder="http://127.0.0.1:11434/v1"
+              placeholder="https://generativelanguage.googleapis.com/v1beta/openai"
             />
           </ModalField>
           <ModalField

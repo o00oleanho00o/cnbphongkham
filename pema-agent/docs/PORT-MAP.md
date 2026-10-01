@@ -284,8 +284,8 @@ Each package runs in its own worktree and sees only the contracts of A. The seam
 | `src/conversation/usage-store.ts` | 111 | `pema/conversation/usage_store.py` | D2 |  |
 | `src/conversation/wipe-thread-context.test.ts` | 256 | `tests/conversation/test_wipe_thread_context.py` | D2 |  |
 | `src/conversation/wipe-thread-context.ts` | 135 | `pema/conversation/wipe_thread_context.py` | D2 |  |
-| `src/conversation/xoa-han-session.test.ts` | 119 | no port | - | expires dashboard sessions; replaced by the stateless JWT session of the API (B1) |
-| `src/conversation/xoa-han-session.ts` | 62 | no port | - | expires dashboard sessions; replaced by the stateless JWT session of the API (B1) |
+| `src/conversation/xoa-han-session.test.ts` | 119 | `tests/conversation/test_xoa_han_session.py` | D2 | deletes one whole session (conversation) from the Sessions page; route `DELETE /admin/threads/{account_id}/{thread_id}` |
+| `src/conversation/xoa-han-session.ts` | 62 | `pema/conversation/xoa_han_session.py` | D2 | deletes one whole session (conversation) from the Sessions page; route `DELETE /admin/threads/{account_id}/{thread_id}` |
 
 ## `src/documents`
 
@@ -439,7 +439,7 @@ Each package runs in its own worktree and sees only the contracts of A. The seam
 | `src/scheduler/scheduled-job-prompt.ts` | 65 | `pema/scheduler/scheduled_job_prompt.py` | S |  |
 | `src/scheduler/scheduled-job-record.ts` | 112 | `pema/scheduler/scheduled_job_record.py` | S |  |
 | `src/scheduler/scheduled-job-reply-target.ts` | 62 | `pema/scheduler/scheduled_job_reply_target.py` | S |  |
-| `src/scheduler/scheduled-job-send.test.ts` | 236 | `tests/scheduler/test_scheduled_job_send.py` | S |  |
+| `src/scheduler/scheduled-job-send.test.ts` | 236 | `tests/scheduler/test_run_scheduled_job.py` | S |  |
 | `src/scheduler/scheduled-job-send.ts` | 177 | `pema/scheduler/scheduled_job_send.py` | S |  |
 | `src/scheduler/scheduled-job-store.test.ts` | 364 | `tests/scheduler/test_scheduled_job_store.py` | S |  |
 | `src/scheduler/scheduled-job-store.ts` | 285 | `pema/scheduler/scheduled_job_store.py` | S |  |
@@ -457,7 +457,7 @@ Each package runs in its own worktree and sees only the contracts of A. The seam
 | `src/server/client-ip.ts` | 42 | `pema/api/client_ip.py` | B1 | client IP for login rate limiting |
 | `src/server/dashboard-auth.test.ts` | 109 | `tests/api/test_dashboard_auth.py` | B1 | password+cookie dashboard auth -> JWT cookie, RBAC (pema.clinic.rbac) |
 | `src/server/dashboard-auth.ts` | 137 | `pema/api/dashboard_auth.py` | B1 | password+cookie dashboard auth -> JWT cookie, RBAC (pema.clinic.rbac) |
-| `src/server/dashboard-password-route.test.ts` | 108 | `tests/api/test_dashboard_password_route.py` | B1 |  |
+| `src/server/dashboard-password-route.test.ts` | 108 | `tests/api/test_dashboard_password_route.py` | B1 | route `POST /auth/password` added in the final integration round; 204 with the same cookie, 422 (not 400) for a short password |
 | `src/server/dashboard-password-store.test.ts` | 117 | `tests/api/test_dashboard_password_store.py` | B1 | single dashboard password -> per-user argon2 hashes in clinic.user_account |
 | `src/server/dashboard-password-store.ts` | 106 | `pema/api/dashboard_password_store.py` | B1 | single dashboard password -> per-user argon2 hashes in clinic.user_account |
 | `src/server/dashboard-server-mcp-mount.test.ts` | 25 | `tests/api/test_dashboard_server_mcp_mount.py` | D5 | MCP routes mounted on the app; adapt to the router skeleton |
@@ -485,28 +485,28 @@ Each package runs in its own worktree and sees only the contracts of A. The seam
 | `src/server/routes/kb-route-guards.ts` | 125 | `pema/api/kb_route_guards.py` | D3 | size caps before parsing |
 | `src/server/routes/kb-routes.test.ts` | 726 | `tests/api/routers/test_kb_routes.py` | D3 |  |
 | `src/server/routes/kb-routes.ts` | 231 | `pema/api/routers/admin_kb.py` | D3 |  |
-| `src/server/routes/log-routes.test.ts` | 102 | `tests/api/routers/test_log_routes.py` | D1 | logs_router |
+| `src/server/routes/log-routes.test.ts` | 102 | `tests/api/routers/test_admin_usage_routes.py` | D1 | logs_router |
 | `src/server/routes/log-routes.ts` | 51 | `pema/api/routers/admin_usage.py` | D1 | logs_router |
 | `src/server/routes/mcp-route-guards.ts` | 41 | `pema/api/mcp_route_guards.py` | D5 |  |
 | `src/server/routes/mcp-routes.test.ts` | 131 | `tests/api/routers/test_mcp_routes.py` | D5 |  |
 | `src/server/routes/mcp-routes.ts` | 95 | `pema/api/routers/admin_mcp.py` | D5 |  |
 | `src/server/routes/memory-routes.ts` | 29 | `pema/api/routers/admin_threads.py` | D2 | memories_router |
-| `src/server/routes/overview-routes.test.ts` | 81 | `tests/api/routers/test_overview_routes.py` | D1 |  |
+| `src/server/routes/overview-routes.test.ts` | 81 | `tests/api/routers/test_admin_usage_routes.py` | D1 |  |
 | `src/server/routes/overview-routes.ts` | 66 | `pema/api/routers/admin_usage.py` | D1 |  |
 | `src/server/routes/provider-routes.ts` | 120 | `pema/api/routers/admin_model.py` | D1 |  |
-| `src/server/routes/schedule-routes.test.ts` | 454 | `tests/api/routers/test_schedule_routes.py` | S |  |
+| `src/server/routes/schedule-routes.test.ts` | 454 | `tests/scheduler/test_schedule_routes.py` | S |  |
 | `src/server/routes/schedule-routes.ts` | 181 | `pema/api/routers/admin_schedules.py` | S |  |
 | `src/server/routes/thread-routes-wipe.test.ts` | 145 | `tests/api/routers/test_thread_routes_wipe.py` | D2 |  |
 | `src/server/routes/thread-routes.ts` | 122 | `pema/api/routers/admin_threads.py` | D2 |  |
 | `src/server/routes/tool-routes.test.ts` | 152 | `tests/api/routers/test_tool_routes.py` | D4 |  |
 | `src/server/routes/tool-routes.ts` | 146 | `pema/api/routers/admin_tools.py` | D4 |  |
-| `src/server/routes/trace-routes-paging.test.ts` | 128 | `tests/api/routers/test_trace_routes_paging.py` | D1 |  |
-| `src/server/routes/trace-routes.test.ts` | 122 | `tests/api/routers/test_trace_routes.py` | D1 | traces_router |
+| `src/server/routes/trace-routes-paging.test.ts` | 128 | `tests/api/routers/test_admin_usage_routes.py` | D1 |  |
+| `src/server/routes/trace-routes.test.ts` | 122 | `tests/api/routers/test_admin_usage_routes.py` | D1 | traces_router |
 | `src/server/routes/trace-routes.ts` | 83 | `pema/api/routers/admin_usage.py` | D1 | traces_router |
-| `src/server/routes/tuning-routes.test.ts` | 239 | `tests/api/routers/test_tuning_routes.py` | D1 |  |
+| `src/server/routes/tuning-routes.test.ts` | 239 | `tests/api/routers/test_admin_model_routes.py` | D1 |  |
 | `src/server/routes/tuning-routes.ts` | 82 | `pema/api/routers/admin_model.py` | D1 |  |
 | `src/server/routes/version-routes.ts` | 10 | no port | - | reports the latest zalo-agent release (update-check); not applicable |
-| `src/server/routes/vision-routes.test.ts` | 144 | `tests/api/routers/test_vision_routes.py` | D1 |  |
+| `src/server/routes/vision-routes.test.ts` | 144 | `tests/api/routers/test_admin_model_routes.py` | D1 |  |
 | `src/server/routes/vision-routes.ts` | 73 | `pema/api/routers/admin_model.py` | D1 |  |
 
 ## `src/shared`
@@ -891,7 +891,7 @@ Dashboard (`web/`, package E translates the FEATURES to Next.js), evals, scripts
 | `.env.example` | 71 | `infra/.env.example` | F | PEMA_* variables + the original tuning names |
 | `.env.production.example` | 91 | `infra/.env.example` | F |  |
 | `.dockerignore` | 44 | `infra/` | F |  |
-| `Dockerfile` | 119 | `infra/Dockerfile.api, infra/Dockerfile.worker` | F | Python images |
+| `Dockerfile` | 119 | `infra/docker/api.Dockerfile` | F | Python images |
 | `docker-compose.prod.yml` | 119 | `infra/docker-compose.yml` | F | adds postgres(pgvector), redis |
 | `Caddyfile.site` | 68 | `infra/ (reverse proxy)` | F | optional |
 | `deploy.sh` | 76 | `infra/` | F |  |
@@ -915,7 +915,7 @@ Dashboard (`web/`, package E translates the FEATURES to Next.js), evals, scripts
 
 Cập nhật 2026-10-02 (gói F), đối chiếu với cây file thật trên nhánh `feat/ai-agent-backend` (commit `1ce6cca`). Các bảng phía trên được giữ nguyên như gói A viết; đây là chỗ thực tế lệch khỏi chúng. Mục này chỉ dùng gạch đầu dòng và bảng ba cột để `tests/test_port_map.py` (đọc các dòng bảng năm cột) không đổi kết quả.
 
-**Kết quả đối chiếu máy**: mọi đích `pema/**/*.py` ghi trong các hàng của bảng đều tồn tại (0 đích thiếu). Ngược lại, 104 file Python dưới `pema/` (không tính `__init__.py` và các thư mục ghi bằng dấu ngoặc nhọn hoặc `*` ở bảng "Modules with no zalo-agent source") không có tên trong PORT-MAP; chúng được phân loại bên dưới. Có 10 test mà bảng đã ghi đường dẫn nhưng **không tồn tại** dưới tên đó (xem cuối mục).
+**Kết quả đối chiếu máy**: mọi đích `pema/**/*.py` ghi trong các hàng của bảng đều tồn tại (0 đích thiếu). Ngược lại, 104 file Python dưới `pema/` (không tính `__init__.py` và các thư mục ghi bằng dấu ngoặc nhọn hoặc `*` ở bảng "Modules with no zalo-agent source") không có tên trong PORT-MAP; chúng được phân loại bên dưới. Mười đường dẫn test từng ghi sai tên đã được sửa ở vòng cuối (xem cuối mục).
 
 ### Gói P: nhiều module hơn kế hoạch
 
@@ -924,13 +924,13 @@ PORT-MAP ghi gói P có 0 hàng và bốn file `pema/policy/{profiles,redflags,p
 - `hooks.py` (`ClinicPolicyHooks`, tám hook), `gateway.py` (cửa `agent_worker` vào `clinic_agent`), `review.py` (dựng `review_item` do chính sách mở), `turn_guard.py` (thứ tự chuẩn của một lượt, hàm tham chiếu), `identity_admin.py` (phía nhân viên: xác nhận, từ chối, cấp mã; chạy ở API với `be_app`), `testing.py` (đồ giả), `text_normalize.py` (chuẩn hóa chữ cho cờ đỏ và PII).
 - Router `admin_policy` và migration `p0001_identity_link` (bảng `clinic.identity_link_code`, `clinic.identity_link_attempt`, các hàm liên kết).
 
-### Tệp "no port" nhưng đã được dịch
+### Tệp từng ghi "no port" nhưng đã được dịch
 
-- `src/conversation/xoa-han-session.ts` và `.test.ts` ghi "no port" với lý do "hết hạn phiên dashboard". Mô tả đó sai file: tệp này là "xóa hẳn một session (cuộc trò chuyện)" của trang Sessions. Gói D2 đã dịch thành `pema/conversation/xoa_han_session.py` (route `DELETE /admin/threads/{account_id}/{thread_id}`); docstring của module ghi lại sai lệch này. Hai hàng trong bảng `src/conversation` **không** được sửa để giữ nguyên định dạng máy đọc; hãy đọc chúng cùng ghi chú này.
+- `src/conversation/xoa-han-session.ts` và `.test.ts` từng ghi "no port" với lý do "hết hạn phiên dashboard". Mô tả đó sai file: tệp này là "xóa hẳn một session (cuộc trò chuyện)" của trang Sessions. Gói D2 đã dịch thành `pema/conversation/xoa_han_session.py` (route `DELETE /admin/threads/{account_id}/{thread_id}`). Vòng sửa cuối đã sửa hai hàng của bảng `src/conversation` thành đích thật.
 
 ### Gói G: composition và tiến trình
 
-`pema/composition/` (8 file: `runtime`, `intake`, `outbound`, `api_wiring`, `auth_bridge`, `adapters`, `testing`, `__init__`) không có hàng nào và không có nguồn TypeScript: đó là gốc ghép (composition root) tạo mọi đối tượng một lần mỗi tiến trình và nối các gói theo CONTRACTS-AI01. Cùng gói G: phần ghép trong `pema/bootstrap.py` (lifespan), `pema/workers/main.py` (điểm vào `python -m pema.workers.main`), migration `g_0005_merge_heads`, `uv.lock` và `openapi.json` sinh lại, các kịch bản vòng khép kín trong `tests/integration/`, tool phòng khám `pema/agent/tools/clinic_tools.py` (`patient.get_care_context`, `appointment.book` dạng đề xuất, `escalation.create`; khóa `review_item.create` nằm trong `CLINIC_TOOL_KEYS` nhưng chưa đăng ký thành tool).
+`pema/composition/` (8 file: `runtime`, `intake`, `outbound`, `api_wiring`, `auth_bridge`, `adapters`, `testing`, `__init__`) không có hàng nào và không có nguồn TypeScript: đó là gốc ghép (composition root) tạo mọi đối tượng một lần mỗi tiến trình và nối các gói theo CONTRACTS-AI01. Cùng gói G: phần ghép trong `pema/bootstrap.py` (lifespan), `pema/workers/main.py` (điểm vào `python -m pema.workers.main`), migration `g_0005_merge_heads`, `uv.lock` và `openapi.json` sinh lại, các kịch bản vòng khép kín trong `tests/integration/`, tool phòng khám `pema/agent/tools/clinic_tools.py` (bốn tool `patient.get_care_context`, `appointment.book` dạng đề xuất, `review_item.create` soạn nháp followup chờ duyệt, `escalation.create`; bốn khóa của `CLINIC_TOOL_KEYS` đều đã đăng ký), route `POST /auth/password` (đổi mật khẩu của chính mình, dịch `dashboard-password-route.ts`).
 
 ### Workers
 
@@ -954,7 +954,7 @@ PORT-MAP ghi "Schema = Alembic 0001..0003". Thực tế còn `b1_0004_auth_sessi
 
 ### Test được ghi tên nhưng không có dưới tên đó
 
-Mười đường dẫn test trong các hàng bảng không tồn tại (hành vi liên quan có thể nằm trong file test khác tên; chưa kiểm từng cái): `tests/api/routers/test_log_routes.py`, `test_overview_routes.py`, `test_schedule_routes.py` (có `tests/scheduler/test_schedule_routes.py`), `test_trace_routes.py`, `test_trace_routes_paging.py`, `test_tuning_routes.py`, `test_vision_routes.py`; `tests/api/test_dashboard_password_route.py`; `tests/scheduler/test_scheduled_job_send.py`; `tests/test_startup_order.py` (gói G, "thứ tự khởi động của tiến trình" chưa viết). Đây là việc mở: viết bù hoặc sửa hàng PORT-MAP.
+Đã sửa ở vòng cuối: các hàng của `log-routes`, `overview-routes`, `trace-routes`, `trace-routes-paging` trỏ vào `tests/api/routers/test_admin_usage_routes.py`; `tuning-routes` và `vision-routes` vào `tests/api/routers/test_admin_model_routes.py`; `schedule-routes` vào `tests/scheduler/test_schedule_routes.py`; `scheduled-job-send` vào `tests/scheduler/test_run_scheduled_job.py`. `tests/test_startup_order.py` có thật. `dashboard-password-route` đã có route `POST /auth/password` và `tests/api/test_dashboard_password_route.py`. `tests/test_port_map_targets.py` pin danh sách thiếu là rỗng: mọi đích của bảng đều tồn tại.
 
 ### Hạ tầng và tài liệu (các hàng "F")
 
@@ -971,4 +971,4 @@ Hàng ghi một `page.tsx` cho nhiều trang gốc, nhưng thực tế mỗi tra
 
 ### Eval
 
-`evals/` có thêm `eval_cases_clinic.py`, `clinic_cases.json`, `eval_wiring.py`, `eval_canned_tools.py` (gói P và D1) ngoài các file được ánh xạ. `evals/` không nằm trong `testpaths` của `make test` (việc mở cho G).
+`evals/` có thêm `eval_cases_clinic.py`, `clinic_cases.json`, `eval_wiring.py`, `eval_canned_tools.py` (gói P và D1) ngoài các file được ánh xạ. `evals/` nằm trong `testpaths` của `backend/pyproject.toml` (`../evals`), nên `make test` chạy cả 78 test của nó; `make lint` kiểm cả `../evals` bằng ruff.

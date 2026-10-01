@@ -71,13 +71,14 @@ Các loại `review_item`: `reply_draft` (trả lời tin bệnh nhân), `follow
 
 ### 2.6 Tool của agent
 
-15 tool gốc (`BUILTIN_TOOL_KEYS`) và ba tool phòng khám. `patient_channel` tắt `send_file`, `create_word_document`, `create_excel_file`, `create_image`, `tai_video`, `read_image`, `web_search`, `web_fetch`, toàn bộ tool MCP, và ẩn `save_memory`. Ba tool phòng khám chỉ có khi `ToolDeps.clinic_actions` được đưa vào và hồ sơ đòi xác minh:
+15 tool gốc (`BUILTIN_TOOL_KEYS`) và bốn tool phòng khám. `patient_channel` tắt `send_file`, `create_word_document`, `create_excel_file`, `create_image`, `tai_video`, `read_image`, `web_search`, `web_fetch`, toàn bộ tool MCP, và ẩn `save_memory`. Bốn tool phòng khám chỉ có khi `ToolDeps.clinic_actions` được đưa vào và hồ sơ đòi xác minh:
 
 - `patient.get_care_context`: bối cảnh chăm sóc (số buổi còn lại, lịch sắp tới, đồng ý), **không** tên, SĐT hay ghi chú.
 - `appointment.book`: chỉ **đề xuất** lịch; nhân viên xác nhận.
+- `review_item.create`: **soạn nháp** một tin nhắn (`followup_draft`) cho nhân viên duyệt; tin không đi đâu cho đến khi có người duyệt. Chỉ nhận nội dung nháp (không nhận bệnh nhân, loại, mức rủi ro hay cờ đỏ). Câu trả lời của chính lượt đó đã tự được giữ để duyệt, nên tool này dành cho tin KHÔNG phải câu trả lời của lượt (tin hỏi thăm của job agent theo lịch, đề xuất chăm sóc).
 - `escalation.create`: tạo `triage_alert` cho bác sĩ.
 
-Bệnh nhân **không bao giờ** là tham số của tool: tool lấy bệnh nhân từ danh tính đã xác minh của lượt, để mô hình bị dụ cũng không đọc được hồ sơ người khác. Khóa idempotency của lần ghi dẫn xuất từ (phòng khám, account, thread, id tin gây ra lượt). Khóa `review_item.create` có trong `CLINIC_TOOL_KEYS` nhưng **không** được đăng ký thành tool ở hiện trạng.
+Bệnh nhân **không bao giờ** là tham số của tool: tool lấy bệnh nhân từ danh tính đã xác minh của lượt, để mô hình bị dụ cũng không đọc được hồ sơ người khác. Khóa idempotency của lần ghi dẫn xuất từ (phòng khám, account, thread, id tin gây ra lượt). Cả bốn khóa của `CLINIC_TOOL_KEYS` đều là tool đã đăng ký.
 
 ### 2.7 Bộ lập lịch và tin chủ động
 

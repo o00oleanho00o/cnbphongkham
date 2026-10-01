@@ -87,6 +87,12 @@ def test_every_permission_code_is_granted_to_someone() -> None:
         ),
         (P.ADMIN_ACCOUNTS, {Role.MANAGER, Role.OWNER}, {Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION}),
         (P.ADMIN_USAGE, {Role.MANAGER, Role.OWNER}, {Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION}),
+        # resetting another staff member's password (SEC-24): the owner alone, a manager cannot take over a login
+        (
+            P.ADMIN_USERS,
+            {Role.OWNER},
+            {Role.MANAGER, Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT},
+        ),
         (P.KB_MANAGE, {Role.MANAGER, Role.OWNER, Role.DOCTOR}, {Role.CS_STAFF, Role.RECEPTION, Role.PATIENT}),
     ],
 )

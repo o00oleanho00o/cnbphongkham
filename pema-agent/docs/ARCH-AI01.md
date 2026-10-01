@@ -91,7 +91,7 @@ Tin đến giữa lúc lượt đang chạy được gộp vào lượt đó (kh
 3. **Vòng lặp tool** với văn bản đã che; tool bị lọc theo hồ sơ (`filter_tool_keys`); tool phòng khám đi qua `AgentFacingClinicActions` (cùng action với UI), bệnh nhân lấy từ danh tính đã xác minh của lượt.
 4. **`after_llm`** khôi phục chỉ tên trong câu trả lời.
 5. **`on_outbound` → `HOLD_FOR_REVIEW`**: người gọi tạo `reply_draft` (idempotent theo id tin), nháp nằm ở hàng chờ.
-6. **Nhân viên duyệt** (sửa tuỳ ý) ở `/review`: văn bản đã duyệt được lưu `queued` cùng giao dịch với quyết định, rồi giao cho kênh qua `RegistryOutboundDelivery` (tài khoản đầu tiên theo id đang chạy của loại kênh, trong phòng khám). Kill switch, trần và cửa sổ giờ vẫn áp dụng nếu tin thuộc nguồn chủ động.
+6. **Nhân viên duyệt** (sửa tuỳ ý) ở `/review`: văn bản đã duyệt được lưu `queued` cùng giao dịch với quyết định, rồi giao cho kênh qua `RegistryOutboundDelivery` (tài khoản đã nhận tin của bệnh nhân, tìm qua dòng `agent.threads` của hội thoại; hoạt động gần nhất nếu hai tài khoản cùng biết bệnh nhân; chỉ khi không dòng nào khớp mới rơi về tài khoản đang chạy đầu tiên theo id, kèm cảnh báo log). Kill switch, trần và cửa sổ giờ vẫn áp dụng nếu tin thuộc nguồn chủ động.
 
 ### 4.3 `staff_assistant`
 
@@ -148,6 +148,7 @@ Các tầng độc lập: bỏ lọt ở tầng này (ví dụ tên viết thư�
 
 ## 9. Mô hình và tri thức
 
+- **Trạng thái 2026-10-02:** agent gọi API LLM bên thứ ba qua cùng ba adapter (`openai-compatible`, `anthropic`, `google`), cấu hình trên màn Quản trị > Model hoặc `LLM_*` trong `infra/.env`. Ollama và embedding `bge-m3` **tạm tắt** (nhãn `TẠM TẮT LLM LOCAL` trong compose, Makefile, `.env.example`, preset FE; `PEMA_EMBEDDING_ENABLED` mặc định `false`), nên KB chỉ tìm từ khóa. Các ghi chú Ollama dưới đây mô tả cấu hình khi bật lại.
 - LLM qua provider `openai-compatible` (Ollama hoặc llama-server); thêm adapter Anthropic và Gemini. Quyết định chốt: Qwen3-8B Q5_K_M và `bge-m3`. Luôn gọi bằng tên `pema-chat` (do `pull-models.sh` và dịch vụ `ollama-pull` tạo, có `num_ctx` 16384): gọi thẳng tên GGUF mà không đặt `num_ctx` thì Ollama nạp ngữ cảnh 40960, mô hình phình 13 GB và 18% chạy trên CPU (F đã đo).
 - **Đã đo (F)**: Q5_K_M, `num_ctx 16384`, `OLLAMA_NUM_PARALLEL=2`, KV q8_0, Ollama trong Docker trên RTX 3060 12 GB (Windows, GPU dùng chung với màn hình): `pema-chat` 8,2 GB và `bge-m3` 664 MB, 100% GPU, tổng 9,5 GB. **Chưa đo**: Ubuntu không màn hình, Q6_K, chất lượng gọi tool và tiếng Việt của mô hình với engine này (cần chạy `evals`).
 - KB: Postgres FTS (`ts_rank_cd` trên cột bỏ dấu) + pgvector hợp nhất bằng RRF; phần vector là mở rộng duy nhất so với bản gốc. `PEMA_EMBEDDING_ENABLED=false` thì chỉ tìm từ khóa.
@@ -184,13 +185,11 @@ Quyết định đã chốt: SCOPE-AI01 mục 7. Điều chưa kiểm chứng (Z
 
 Việc cần chủ phòng khám hoặc bác sĩ quyết định (cờ đỏ, phân quyền, persona xác minh, trấn an tự động, nhắc trước khi duyệt mẫu, trần 10, thời hạn lưu theo NĐ 13/2023, vị trí server, lưu tệp, webhook HTTPS, MCP cho bệnh nhân): SCOPE-AI01 mục 9. Phần kỹ thuật còn mở:
 
-- **Chọn account khi nhiều account cùng loại kênh trong một phòng khám**: hiện gửi tin đã duyệt chọn account đầu tiên theo id đang chạy. Cần gắn account với hội thoại.
+- **Chọn account khi nhiều account cùng loại kênh trong một phòng khám**: đã sửa ở vòng cuối (`pema/composition/outbound.py`): chọn account có dòng `agent.threads` cho thread của hội thoại. Còn lại: `clinic.conversation` vẫn không có cột account (chưa đổi schema); hội thoại do nhân viên tạo tay, chưa có tin đến, rơi về account đầu tiên theo id.
 - **Một worker mỗi phòng khám hay chung**, và tiến trình nào sở hữu account Zalo nào.
 - **Liên kết phiên bệnh nhân với `clinic.patient`** (vai trò `patient` rỗng); cần cho ứng dụng bệnh nhân gọi API này.
 - **Đặt lịch của agent**: hiện là đề xuất; cần chủ phòng khám xác nhận quy trình.
 - **Lưu tệp**: volume cục bộ hay object storage (cũng là việc mở ở SCOPE).
 - **Khôi phục sao lưu và WAL liên tục**; UPS.
-- **Nối eval vào `make test`**: `evals/` hiện chạy bằng lệnh riêng.
-- **Sửa tài liệu hạ tầng còn nói "chờ gói G/E/C2"**: sau khi tích hợp, `infra/README.md` và đầu `docker-compose.yml` vẫn ghi worker chờ gói G, frontend chờ gói E, cầu nối chờ gói C2, trong khi các gói đó đã vào nhánh; và bảng dịch vụ của `infra/README.md` còn ghi các gói đó là điều kiện cần (cầu nối: `package.json` và `pnpm-lock.yaml` nay đã có). Lượt tài liệu này không sửa `infra/` (ngoài phạm vi), nên việc chỉnh các dòng đó để lại.
 - **Migration**: gói mới thêm migration riêng và có nhiều đầu; `g_0005_merge_heads` đã gộp; gói sau phải gộp tiếp.
-- **Ảnh Docker của cầu nối có vẻ không dựng được (đọc mã, chưa thử build)**: `infra/docker/bridge.Dockerfile` chạy `pnpm run build` nhưng `package.json` của cầu nối chỉ có `start` (chạy `tsx src/index.ts`) và không có `build`; `pnpm prune --prod` cũng sẽ gỡ `tsx` nếu nó là devDependency. Cần C2 và F thống nhất (thêm script `build` hoặc sửa Dockerfile). Chưa có bằng chứng nào về việc cầu nối chạy ngoài test của chính nó (profile compose `bridge` hay `pnpm start`).
+- **Đã xử lý ở vòng sửa cuối**: ảnh Docker của cầu nối (bỏ bước build; chạy bằng tsx, `tsx` chuyển sang `dependencies`; compose đặt `PEMA_ZALO_BRIDGE_HOST=0.0.0.0` trong container, `PEMA_ZALO_PERSONAL_ENABLED`, `PEMA_API_BASE_URL`, healthcheck, vẫn chỉ `expose`) và của FE (`PEMA_API_INTERNAL_URL` là build arg vì Next.js chốt `rewrites()` lúc build) đã dựng và chạy thử thật; ghi chú "chờ gói G/E/C2" đã bỏ; eval đã nằm trong `make test` qua `testpaths` (`../evals`); tool `review_item.create` đã đăng ký; `POST /auth/password` đã có.

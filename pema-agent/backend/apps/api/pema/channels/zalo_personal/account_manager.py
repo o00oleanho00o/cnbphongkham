@@ -78,6 +78,7 @@ class AccountManager:
         flag_enabled: Callable[[], bool],
         bridge_secret: Callable[[], str | None],
         counter: ProactiveSendGuard | None = None,
+        counter_for: Callable[[UUID], ProactiveSendGuard] | None = None,
         clinic_ref: Callable[[UUID], Awaitable[str]] | None = None,
     ) -> None:
         self._accounts = accounts
@@ -88,6 +89,10 @@ class AccountManager:
         self._flag_enabled = flag_enabled
         self._bridge_secret = bridge_secret
         self._counter = counter
+        self._counter_for = counter_for
+        """Per-clinic counter (the Postgres ``PgProactiveSendGuard``): the daily cap of the channel gate must
+        survive a restart and be shared by the API and the worker process, which an in-process counter is not
+        (SECURITY-REVIEW-AI01 SEC-21). ``counter`` is the single-process fallback of tests."""
         self._clinic_ref = clinic_ref or _clinic_id_as_ref
         self._running: dict[tuple[UUID, str], RunningAccount] = {}
 
@@ -137,7 +142,7 @@ class AccountManager:
             reader=self._policy_reader,
             api=api,
             flag_enabled=self._flag_enabled,
-            counter=self._counter,
+            counter=self._counter_for(clinic_id) if self._counter_for is not None else self._counter,
         )
         await gate.refresh()
         channel = ZaloPersonalChannel(

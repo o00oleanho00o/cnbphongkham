@@ -48,6 +48,7 @@ from pema_contracts.admin_agent import (
 from pema_contracts.agents import AccountConfig
 from pema_contracts.channel import ChannelKind
 from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.policy import PolicyProfileKey
 from pema_contracts.roles import Permission
 from pema_contracts.tools import BUILTIN_TOOL_KEYS, CLINIC_TOOL_KEYS
 
@@ -108,6 +109,10 @@ async def list_reaction_icons(request: Request) -> list[ReactionIcon]:
 async def create_account(body: AccountCreate, request: Request) -> AccountOut:
     services = get_c2(request)
     ctx = await services.authorize(request, Permission.ADMIN_ACCOUNTS)
+    if body.policy_profile is PolicyProfileKey.STAFF_ASSISTANT:
+        # Creating an account WITHOUT the clinic safety profile is the same loosening as moving an account
+        # out of it (PUT /admin/policy/accounts/{id}, agents): it needs ``admin.policy`` too.
+        await services.authorize(request, Permission.ADMIN_POLICY)
     if await services.accounts.get_account(ctx.clinic_id, body.id) is not None:
         raise DomainError(ErrorCode.INVALID_STATE, "Account id đã tồn tại")
     await _check_agent(services, ctx, body.agent_id)

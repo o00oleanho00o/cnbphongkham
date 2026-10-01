@@ -6,7 +6,7 @@ roadmap, Tailscale/WireGuard, firewall, backups, UPS). Owner: package F (infrast
 
 ```
 infra/
-  docker-compose.yml        postgres+pgvector, redis, migrate, api  | profiles: worker, frontend, bridge, ollama, app
+  docker-compose.yml        postgres+pgvector, redis, migrate, api  | profiles: worker, frontend, bridge, app (ollama paused)
   .env.example              every variable, placeholders only (copy to .env, never commit it)
   docker/                   api.Dockerfile (api + worker + migrate), frontend.Dockerfile, bridge.Dockerfile
                             (+ <name>.Dockerfile.dockerignore, BuildKit picks them up)
@@ -37,15 +37,15 @@ Without `make` (Windows): the recipes are plain `docker compose -f infra/docker-
 | `redis` | default | password (`PEMA_REDIS_PASSWORD`), AOF, `noeviction` (queue and locks must not be evicted) | |
 | `migrate` | default | one-shot: `bootstrap-roles.sh` then `alembic upgrade heads`; safe to rerun | postgres |
 | `api` | default | FastAPI via uvicorn `--factory pema.bootstrap:create_app`, healthcheck `/healthz` | migrate, redis |
-| `worker` | `worker`, `app` | `python -m pema.workers.main`; same image as the API | **package G** creates `pema/workers/main.py`; until then the container exits at start |
-| `frontend` | `frontend`, `app` | Next.js standalone server | **package E** (needs a `build` script and `output: "standalone"`) |
-| `zalo-personal-bridge` | `bridge` | Node 22 + zca-js, internal only (never published), risk of Zalo account lock | **package C2** (needs `package.json`, `pnpm-lock.yaml`, `build`/`start` scripts) |
-| `ollama`, `ollama-pull` | `ollama` | GPU container + model download; needs the NVIDIA Container Toolkit. The native install of the guide is the usual route | |
+| `worker` | `worker`, `app` | `python -m pema.workers.main`; same image as the API | |
+| `frontend` | `frontend`, `app` | Next.js standalone server; the API address is the build argument `PEMA_API_INTERNAL_URL` (Next.js bakes rewrites at build time), healthcheck `/login` | api |
+| `zalo-personal-bridge` | `bridge` | Node 22 + zca-js run by tsx (no build step; tsx is a runtime dependency), internal only (`expose`, never published; listens on 0.0.0.0 inside the container so the API can reach it), healthcheck `/health`, risk of Zalo account lock. Disabled unless `PEMA_ZALO_PERSONAL_ENABLED=true` | |
+| `ollama`, `ollama-pull` | `ollama` | **TẠM TẮT LLM LOCAL (2026-10-02)**: commented out in `docker-compose.yml`; the agent uses a third-party LLM API (`LLM_*` in `.env`). When re-enabled: GPU container + model download; needs the NVIDIA Container Toolkit | |
 
 One image serves `api`, `worker` and `migrate` (`pema-agent-api:${PEMA_IMAGE_TAG}`): multi-stage, uv
 `--locked` install, non-root user (uid 10001), no compiler. `uv sync --locked` fails the build when
-`apps/api/pyproject.toml` has dependencies that `uv.lock` lacks (packages append libraries, package G regenerates
-the lock); a local workaround is `--build-arg UV_SYNC_FLAGS=""`.
+`apps/api/pyproject.toml` has dependencies that `uv.lock` lacks (packages append libraries, regenerate the lock
+with `uv lock`); a local workaround is `--build-arg UV_SYNC_FLAGS=""`.
 
 ## Database roles and migrations
 
@@ -55,8 +55,8 @@ the lock); a local workaround is `--build-arg UV_SYNC_FLAGS=""`.
   NOLOGIN), creates the `vector` extension and, by default, revokes `CONNECT` from PUBLIC. Passwords are read by
   psql from the environment (`\getenv`), never from argv, and `log_statement` is switched off for the session so
   the `ALTER ROLE ... PASSWORD` text cannot reach the server log. Rerun it to rotate a password.
-* `scripts/migrate.sh` waits for Postgres, runs the bootstrap, then `alembic upgrade heads` (all heads; package G
-  merges them) and prints the head count and `alembic current`. `PEMA_SKIP_ROLE_BOOTSTRAP=true` skips the first step
+* `scripts/migrate.sh` waits for Postgres, runs the bootstrap, then `alembic upgrade heads` (all heads, merged by
+  `g_0005_merge_heads` and its successors) and prints the head count and `alembic current`. `PEMA_SKIP_ROLE_BOOTSTRAP=true` skips the first step
   when a DBA manages roles.
 * The owner role is the Postgres superuser in compose. For a managed database give `PEMA_MIGRATION_DATABASE_URL`
   an owner role that may `CREATE EXTENSION vector` (or let a superuser run `bootstrap-roles.sh` once).

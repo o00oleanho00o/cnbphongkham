@@ -32,6 +32,7 @@ permission, so a route can never run without that check.
 
 from __future__ import annotations
 
+import ipaddress
 import re
 from dataclasses import dataclass
 from typing import Annotated, Final, NoReturn, Protocol
@@ -61,16 +62,48 @@ def _invalid(message: str) -> NoReturn:
     raise DomainError(ErrorCode.VALIDATION_FAILED, message)
 
 
+METADATA_HOSTS: Final = frozenset({"metadata", "metadata.google.internal", "instance-data", "metadata.goog"})
+"""Names of the cloud metadata services (they hand out instance credentials to whoever asks)."""
+
+
+def _is_forbidden_literal(host: str) -> bool:
+    """An IP literal of a class no MCP server lives at: link-local (``169.254.169.254`` cloud metadata),
+    unspecified, multicast, reserved, in any spelling (``::ffff:169.254.169.254`` included). Loopback and the
+    private ranges stay allowed: a clinic runs its own MCP tools on its own network."""
+    try:
+        address = ipaddress.ip_address(host.strip("[]"))
+    except ValueError:
+        return False
+    if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped is not None:
+        address = address.ipv4_mapped
+    if address.is_loopback:
+        return False  # ``::1`` sits in the reserved ``::/8`` block but is the local machine
+    return address.is_link_local or address.is_unspecified or address.is_multicast or address.is_reserved
+
+
 def check_server_url(url: str) -> None:
+    """Scheme, host and shape of an MCP URL typed by an admin.
+
+    SSRF (SECURITY-REVIEW-AI01 SEC-29): the server connects to this URL from inside the clinic network, so the
+    metadata classes above are refused, and so is user info (``https://user:pw@host``: a credential belongs in
+    a header, where it is encrypted and masked, not in a URL that is stored and shown). A hostname that
+    RESOLVES to such an address is not caught here (a check at save time cannot beat DNS rebinding); the
+    complete answer is a connect-time guard like ``shared.private_address_guard``, which would also forbid
+    the legitimate loopback/private MCP servers: a product decision, listed as open."""
     if len(url) > MAX_URL_LENGTH:
         _invalid(f"URL máy chủ MCP dài tối đa {MAX_URL_LENGTH} ký tự.")
     try:
         parts = urlsplit(url)
         host = parts.hostname
+        _ = parts.port  # raises ValueError for a port that is not a number
     except ValueError:
         _invalid("URL máy chủ MCP không hợp lệ.")
     if parts.scheme not in {"http", "https"} or not host or any(c.isspace() for c in url):
         _invalid("URL máy chủ MCP không hợp lệ.")
+    if parts.username is not None or parts.password is not None:
+        _invalid("URL máy chủ MCP không được chứa tên đăng nhập hay mật khẩu: hãy đặt trong header.")
+    if host.lower().rstrip(".") in METADATA_HOSTS or _is_forbidden_literal(host):
+        _invalid("Địa chỉ máy chủ MCP không được phép.")
 
 
 def check_headers(headers: dict[str, str] | None) -> None:

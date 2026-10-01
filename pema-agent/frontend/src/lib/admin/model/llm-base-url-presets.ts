@@ -54,7 +54,8 @@ export const BASE_URL_PRESETS: BaseUrlPreset[] = [
   { label: "Mistral", baseUrl: "https://api.mistral.ai/v1" },
   // https://console.groq.com/docs/openai
   { label: "Groq", baseUrl: "https://api.groq.com/openai/v1" },
-  { label: "Ollama (máy nhà)", baseUrl: "http://localhost:11434/v1" },
+  // TẠM TẮT LLM LOCAL (2026-10-02): agent đang dùng API LLM bên thứ ba. Bật lại: bỏ dấu // ở dòng dưới.
+  // { label: "Ollama (máy nhà)", baseUrl: "http://localhost:11434/v1" },
 ];
 
 /** Giá trị của mục "Tự nhập" - chuỗi rỗng để không đụng vào base URL đang có */

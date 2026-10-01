@@ -11,7 +11,12 @@ The worker connects as role ``agent_worker`` (no privilege on ``clinic.*``) and 
   it is webhook), and the personal accounts behind the bridge when the flag is on, plus their friend sweep;
 * the MCP manager (D5), the settings refresh loop, the KB availability snapshot;
 * housekeeping: ``RedisTurnQueue.reclaim_expired`` (a job whose worker died goes back to the queue), the purge
-  of ``agent.channel_update_seen``, the daily media/trace cleanup.
+  of ``agent.channel_update_seen``, and the retention run of scope ``agent`` (``pema.retention``: history,
+  memories,
+  trace, job runs, image descriptions and the media files; it replaces the former daily media/trace cleanup
+  and
+  takes its periods from ``PEMA_RETENTION_*``, falling back to ``AGENT_TRACE_RETENTION_DAYS`` and
+  ``MEDIA_RETENTION_DAYS``).
 
 The CRM rule runner is NOT here: it reads ``clinic.*`` and so runs in the API process (CONTRACTS decision 7).
 """
@@ -23,6 +28,7 @@ import contextlib
 import signal
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
 
 from pema.channels.message_turn_processor import TurnServices
@@ -38,14 +44,18 @@ from pema.channels.zalo_personal.friend_request_store import FriendRequestStore
 from pema.composition.intake import BotStack, PersonalStack, build_bot_stack, build_personal_stack
 from pema.composition.runtime import ProcessRole, Runtime, build_runtime
 from pema.config.env import Settings, get_settings
-from pema.conversation.media_store import start_media_cleanup_schedule
+from pema.config.runtime_tuning_settings import get_tuning_int
 from pema.core.event_loop import ensure_selector_event_loop_policy
 from pema.knowledge.kb_extract_timeout_boot_guard import kiem_tra_kb_extract_timeout
 from pema.knowledge.kb_ingest_worker import KbIngestWorker
+from pema.retention.policy import Scope, policy_from_settings
+from pema.retention.runner import RetentionRunner
+from pema.retention.schedule import start_retention_loop
 from pema.shared.logger import configure_logging, create_logger
 from pema.workers.kb_ingest_worker import chay_mai_mai, tao_embedder
 from pema.workers.scheduler_worker import run_scheduler_worker
 from pema.workers.turn_worker import TurnWorker, TurnWorkerOptions
+from pema_contracts.policy import DEFAULT_PROFILES, PiiMaskMode, PolicyContext, effective_profile_key
 
 log = create_logger("workers.main")
 
@@ -53,11 +63,49 @@ RECLAIM_INTERVAL_S = 60.0
 PURGE_INTERVAL_S = 6 * 60 * 60.0
 
 
+def summary_mask_of(hooks: object, ctx: PolicyContext) -> Callable[[str], str] | None:
+    """``PolicyHooks.mask_text`` bound to ``ctx`` (the optional method the real hooks expose next to the
+    eight), or ``None`` when the hooks cannot mask."""
+    mask: Any = getattr(hooks, "mask_text", None)
+    if not callable(mask):
+        return None
+
+    def apply(prompt: str) -> str:
+        return str(mask(ctx, prompt))
+
+    return apply
+
+
 def build_turn_services(rt: Runtime) -> TurnServices:
     """What a turn needs, from the runtime of the worker."""
 
     async def summarize_thread(clinic_id: UUID, account_id: str, thread_id: str) -> None:
-        await rt.conversation.summarizer.maybe_summarize_thread(clinic_id, account_id, thread_id)
+        # The summary prompt is built from the RAW history: under a profile that masks PII the prompt goes
+        # through the mask of the policy first, and without that mask no summary is made at all (fail closed).
+        account = await rt.accounts.get_account(clinic_id, account_id)
+        if account is None:
+            return
+        agent = await rt.agents.get_agent_for_account(clinic_id, account)
+        profile = DEFAULT_PROFILES[effective_profile_key(account.policy_profile, agent.policy_profile)]
+        prompt_filter: Callable[[str], str] | None = None
+        if profile.pii_mask is PiiMaskMode.REQUIRED:
+            ctx = PolicyContext(
+                clinic_id=clinic_id,
+                account_id=account.id,
+                agent_id=agent.id,
+                channel=account.channel,
+                thread_id=thread_id,
+                profile=profile,
+            )
+            prompt_filter = summary_mask_of(rt.hooks, ctx)
+            if prompt_filter is None:
+                log.warning(
+                    "summary skipped: the profile masks PII but the policy cannot", account_id=account_id
+                )
+                return
+        await rt.conversation.summarizer.maybe_summarize_thread(
+            clinic_id, account_id, thread_id, prompt_filter=prompt_filter
+        )
 
     return TurnServices(
         engine=rt.engine,
@@ -143,7 +191,7 @@ async def _run(
     stop_friend_sweep: Callable[[], None] | None = None
     graceful: list[asyncio.Task[None]] = []
     periodic: list[asyncio.Task[None]] = []
-    media_task: asyncio.Task[None] | None = None
+    retention_task: asyncio.Task[None] | None = None
     try:
         for clinic_id in await rt.db.list_active_clinic_ids():
             await rt.snapshot.refresh(clinic_id)
@@ -176,13 +224,14 @@ async def _run(
             loop.create_task(_every(RECLAIM_INTERVAL_S, "reclaim", rt.turn_queue.reclaim_expired)),
             loop.create_task(_every(PURGE_INTERVAL_S, "dedupe-purge", lambda: _purge_dedupe(rt, bot))),
         ]
-        media_task = start_media_cleanup_schedule(
-            media=rt.media,
-            list_clinic_ids=rt.db.list_active_clinic_ids,
-            prune_image_descriptions=lambda clinic_id, days: rt.conversation.prune_expired_image_descriptions(
-                clinic_id, days
+        retention_task = start_retention_loop(
+            RetentionRunner(
+                rt.db,
+                lambda: policy_from_settings(rt.settings, get_tuning_int),
+                media=rt.media,
+                scopes=(Scope.AGENT,),
             ),
-            prune_traces=rt.conversation.traces.prune_old_traces,
+            interval_seconds=rt.settings.retention_interval_seconds,
         )
         log.info("worker started", role=rt.role.value)
         if started is not None:
@@ -191,14 +240,14 @@ async def _run(
     finally:
         turn_worker.stop()
         stop.set()
-        for task in [*periodic, *([media_task] if media_task is not None else [])]:
+        for task in [*periodic, *([retention_task] if retention_task is not None else [])]:
             task.cancel()
         for result in await asyncio.gather(*graceful, *periodic, return_exceptions=True):
             if isinstance(result, BaseException) and not isinstance(result, asyncio.CancelledError):
                 log.error("worker task ended with an error", err=result)
-        if media_task is not None:
+        if retention_task is not None:
             with contextlib.suppress(asyncio.CancelledError):
-                await media_task
+                await retention_task
         if stop_friend_sweep is not None:
             stop_friend_sweep()
         await rt.mcp.manager.stop()

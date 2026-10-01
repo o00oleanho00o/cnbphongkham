@@ -138,8 +138,17 @@ Thứ tự: **A** → (B1, B2, C1, C2, D1, D2, D3, D4, D5, S, P, E song song; F 
 ## 8. Quyết định đã chốt (2026-10-01)
 
 - Chưa có Zalo OA/ZNS → chỉ Bot API và tài khoản cá nhân; `oa_api.py` là stub.
-- PC chạy **Ubuntu cài hẳn**; LLM qua Ollama, sau là llama-server.
+- PC chạy **Ubuntu cài hẳn**; LLM qua Ollama, sau là llama-server. **Tạm thay bằng API bên thứ ba từ 2026-10-02**, xem dưới.
 - Vitech/MISA không đụng trong AI01.
 - Giữ cả Zalo và Patient app (web + KMP).
 - Bác sĩ trong đội duyệt template/KB/nháp. Pháp lý (Nghị định 13/2023) thuộc trách nhiệm chủ phòng khám; code giữ che PII, consent, audit, RLS.
 - Chưa quyết: vị trí server (phòng khám hay cloud VN), sao lưu, UPS.
+
+**Cập nhật 2026-10-02 (chủ dự án yêu cầu): tạm dùng API LLM của bên thứ ba, như zalo-agent.** Cấu hình mặc định
+trỏ tới một provider bên ngoài (`openai-compatible` qua OpenRouter/OpenAI/DeepSeek/9Router, hoặc `anthropic`,
+`google`), nhập trên màn Quản trị > Model. LLM local (Ollama, `pema-chat`, `bge-m3`) **tạm tắt**: service `ollama`
+trong compose, target `up-ollama`, khối Ollama của `.env.example` và preset Ollama trên FE được chú thích với nhãn
+`TẠM TẮT LLM LOCAL (2026-10-02)`; embedding mặc định tắt nên kho kiến thức chỉ tìm theo từ khóa (đúng như bản gốc).
+Code adapter không đổi. Hệ quả: nội dung hội thoại rời hạ tầng phòng khám. `patient_channel` vẫn che PII trước mọi
+lời gọi LLM; `staff_assistant` thì không bắt buộc che, nên nhân viên không được dán dữ liệu bệnh nhân vào kênh đó.
+Cần hợp đồng xử lý dữ liệu với nhà cung cấp theo Nghị định 13/2023 trước khi dùng dữ liệu thật.
