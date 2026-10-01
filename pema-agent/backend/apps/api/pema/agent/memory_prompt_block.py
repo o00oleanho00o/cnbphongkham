@@ -44,9 +44,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from pema.agent.ky_tu_an import loc_ky_tu_an
 from pema.agent.prompt_leak_markers import THE_DIEU_DA_NHO as THE
 from pema.agent.tag_name_padding import tag_name_regex
-from pema.agent.tools.tag_ky_tu_an import loc_ky_tu_an
 from pema_contracts.conversation import MemoryContextItem
 
 # Every LETTER of the tag name (word-separating underscores dropped) joined by a padding class that accepts

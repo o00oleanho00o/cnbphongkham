@@ -37,19 +37,19 @@ THREAD_ID = "thread-1"
 
 
 def tin_nhan(text: str = "hôm nay ngày mấy", **extra: object) -> InboundMessage:
-    """The message of the original tests (``tinNhan()``)."""
-    return make_inbound(
-        text,
-        channel=ChannelKind.ZALO_PERSONAL,
-        account_id=ACCOUNT_ID,
-        thread_id=THREAD_ID,
-        sender_id="user-1",
-        sender_name="Hải",
-        update_id="u-1",
-        msg_id="m1",
-        cli_msg_id="c1",
+    """The message of the original tests (``tinNhan()``); ``extra`` overrides any field."""
+    fields: dict[str, object] = {
+        "channel": ChannelKind.ZALO_PERSONAL,
+        "account_id": ACCOUNT_ID,
+        "thread_id": THREAD_ID,
+        "sender_id": "user-1",
+        "sender_name": "Hải",
+        "update_id": "u-1",
+        "msg_id": "m1",
+        "cli_msg_id": "c1",
         **extra,
-    )
+    }
+    return make_inbound(text, **fields)  # type: ignore[arg-type]
 
 
 def fake_account(**patch: object) -> AccountConfig:

@@ -75,8 +75,9 @@ class AgentTurnRequest(ApiModel):
     request_id: str | None = None
     turn_id: int | None = Field(
         default=None,
-        description="Row of ``agent.usage`` the caller ALREADY opened (``UsageStore.open_agent_turn``). None: "
-        "the engine opens one itself and returns it in the result / the error. Additive, added by package D1.",
+        description="Row of ``agent.usage`` the caller ALREADY opened (``UsageStore.open_agent_turn``). "
+        "None: the engine opens one itself and returns it in the result / the error. "
+        "Additive, added by package D1.",
     )
 
 

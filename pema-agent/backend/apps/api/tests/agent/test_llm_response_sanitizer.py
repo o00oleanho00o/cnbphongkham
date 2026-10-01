@@ -91,7 +91,7 @@ def always(response: Any) -> Callable[[Any], Any]:
     return handler
 
 
-def post(url: str ="https://router.test/v1/chat/completions", body: str = "{}") -> Any:
+def post(url: str = "https://router.test/v1/chat/completions", body: str = "{}") -> Any:
     return httpx.Request("POST", url, content=body.encode("utf-8"))
 
 

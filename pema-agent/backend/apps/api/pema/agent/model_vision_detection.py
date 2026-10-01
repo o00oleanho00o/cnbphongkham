@@ -90,7 +90,7 @@ async def default_fetcher(url: str, api_key: str, *, http_client: Any | None = N
 
 
 def make_models_fetcher(http_client: Any | None = None) -> ModelsFetcher:
-    """A fetcher over an injected HTTP client (tests: ``http.AsyncClient(transport=http.MockTransport(...))``)."""
+    """A fetcher over an injected HTTP client (a test passes ``http.AsyncClient`` over a mock transport)."""
 
     async def fetch(url: str, api_key: str) -> object:
         return await default_fetcher(url, api_key, http_client=http_client)

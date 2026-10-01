@@ -74,7 +74,7 @@ class SidecarImage:
 
 @dataclass(frozen=True)
 class SidecarResult:
-    """Result of one sidecar call. ``truncated`` is mandatory: a description cut in the middle that gets cached
+    """Result of one sidecar call. ``truncated`` is mandatory: a description cut in the middle that is cached
     makes the cut copy live FOR EVER, every later turn reads it and nobody knows why the bot answers with a
     gap."""
 
@@ -113,15 +113,13 @@ def make_sidecar_caller(*, http_client_factory: Callable[[], Any] | None = None)
             ],
             max_output_tokens=DESCRIBE_MAX_TOKENS,
         )
-        for attempt in range(2):  # maxRetries: 1
-            try:
-                completion = await model.complete(request)
-                break
-            except Exception as exc:
-                if attempt == 0 and is_retryable_error(exc):
-                    await asyncio.sleep(_RETRY_DELAY_S)
-                    continue
+        try:
+            completion = await model.complete(request)
+        except Exception as exc:  # maxRetries: 1
+            if not is_retryable_error(exc):
                 raise
+            await asyncio.sleep(_RETRY_DELAY_S)
+            completion = await model.complete(request)
         # finish_reason "length" = the model was mid-sentence when it hit the token ceiling
         return SidecarResult(text=completion.text.strip(), truncated=completion.finish_reason == "length")
 
@@ -159,7 +157,8 @@ async def describe_image(
         # A truncated description is still USABLE for this turn (better than nothing) but must ABSOLUTELY
         # NOT be cached: the cut copy would live for ever and every later turn would read it
         if image.cache_key and not result.truncated:
-            await store.save_image_description(clinic_id, image.cache_key, description, settings.sidecar.model)
+            model = settings.sidecar.model
+            await store.save_image_description(clinic_id, image.cache_key, description, model)
         if result.truncated:
             log.warning(
                 "image description cut at the token ceiling - used for this turn, NOT cached; "
@@ -176,7 +175,7 @@ async def describe_image(
             )
         return description
     except Exception as exc:
-        log.warning("sidecar image description failed - skipping this image", cache_key=image.cache_key, err=exc)
+        log.warning("sidecar description failed - skipping this image", cache_key=image.cache_key, err=exc)
         return None
 
 
@@ -234,7 +233,7 @@ TEST_PIXEL_PNG_BASE64: Final = (
 """A white 1x1 PNG - enough for the "Test sidecar" button to prove the vision path really runs."""
 
 
-async def test_sidecar(call: SidecarCaller | None = None) -> str:
+async def test_sidecar(call: SidecarCaller | None = None) -> str:  # noqa: PT028 - not a pytest test
     """Call the sidecar with a tiny test image - return the error verbatim for the UI to show."""
     settings = get_vision_settings()
     if not is_sidecar_configured(settings):

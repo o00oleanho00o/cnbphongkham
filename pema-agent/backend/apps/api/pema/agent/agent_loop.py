@@ -55,7 +55,7 @@ from pema.agent.agent_loop_conditions import (
     nhan_ly_do_dung,
     vuot_tran_token,
 )
-from pema.agent.agent_step_observer import for_log, tao_quan_sat_step
+from pema.agent.agent_step_observer import tao_quan_sat_step
 from pema.agent.agent_step_trace import summarize_step
 from pema.agent.agent_turn_content import (
     ImageContextMode,
@@ -76,6 +76,7 @@ from pema.agent.model_types import ChatModel, ModelMessage, ModelUsage, RawStep
 from pema.agent.model_vision_detection import mark_model_no_vision
 from pema.agent.persona_prompt import PromptMemory, build_system_prompt
 from pema.agent.provider_error_classifier import giay_cho_lai, ma_http_cua, phan_loai_loi_provider
+from pema.agent.safe_turn_error import to_turn_error
 from pema.agent.stream_text_result import StreamTextResult, chay_stream, step_count_is
 from pema.agent.token_estimate import (
     TOKEN_MOI_ANH_THEO_CO,
@@ -298,14 +299,7 @@ async def run_agent_turn(
     except AgentTurnError:
         raise
     except Exception as err:
-        kind = phan_loai_loi_provider(err)
-        code = ma_http_cua(err)
-        # Never the request body or the text: ``for_log`` of the message only (a provider message names the
-        # problem, not the prompt) and the original exception stays in ``__cause__`` for the safe serializer.
-        message = (
-            f"{type(err).__name__}{f' http {code}' if code is not None else ''}: {for_log(str(err), 300)}"
-        )
-        raise AgentTurnError(kind, message, turn_id=turn_id) from err
+        raise to_turn_error(err, turn_id=turn_id) from err
 
 
 async def _run_turn(
@@ -470,8 +464,8 @@ async def _run_turn(
 
     async def lay_tin_chen() -> Sequence[InboundMessage]:
         nonlocal hand_off, mask_token
-        assert cb.fetch_injected_messages is not None
-        moi = list(await cb.fetch_injected_messages())
+        fetch = cb.fetch_injected_messages
+        moi = list(await fetch()) if fetch is not None else []
         if not moi:
             return []
         # The policy sees every message BEFORE the model does, also the ones that arrive mid-turn.

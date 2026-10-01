@@ -48,7 +48,7 @@ import asyncio
 import contextlib
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from pema.agent.model_types import (
     ChatModel,
@@ -100,11 +100,11 @@ def _retry_after_s(err: BaseException) -> float | None:
     headers: Any = getattr(err, "response_headers", None)
     if not isinstance(headers, Mapping):
         return None
-    raw = headers.get("retry-after")  # type: ignore[reportUnknownMemberType]
+    raw: object = cast("Mapping[str, object]", headers).get("retry-after")
     if raw is None:
         return None
     try:
-        seconds = float(raw)
+        seconds = float(str(raw))
     except (TypeError, ValueError):
         return None
     return seconds if 0 <= seconds <= MAX_RETRY_AFTER_S else None
@@ -165,7 +165,8 @@ async def _run_one_tool(
             error=f"Invalid input for tool {call.tool_name}: {call.invalid_input}",
         )
     try:
-        output = await tool.execute(call.input if isinstance(call.input, dict) else {})
+        args: object = call.input
+        output = await tool.execute(cast("dict[str, Any]", args) if isinstance(args, dict) else {})
     except asyncio.CancelledError:
         raise
     except Exception as exc:
@@ -369,6 +370,9 @@ async def chay_stream(
     WHOLE run (``timeout.totalMs``); without it a router that accepts the connection and then hangs would hold
     the thread for the connection timeout x ``max_retries`` x steps while later messages queue behind it.
     """
+    # The SDK's default ``stopWhen`` is ``stepCountIs(1)``: a call without conditions (the wrap-up) makes ONE
+    # step.
+    conditions = list(stop_when) or [step_count_is(1)]
     deadline = asyncio.timeout(timeout_s)
     try:
         async with deadline:
@@ -377,7 +381,7 @@ async def chay_stream(
                 system=system,
                 messages=messages,
                 tools=tools,
-                stop_when=stop_when,
+                stop_when=conditions,
                 max_output_tokens=max_output_tokens,
                 provider_options=provider_options,
                 headers=headers,
