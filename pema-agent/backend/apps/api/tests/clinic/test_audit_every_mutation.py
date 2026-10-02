@@ -75,6 +75,11 @@ MUTATIONS: dict[str, str] = {
 }
 
 
+# Presence heartbeats (ST-R) change nothing in the database: they live in Redis for 30 seconds, and one audit row
+# every 15 seconds per open conversation would only bury the log. Not mutations of clinic data.
+EPHEMERAL: frozenset[str] = frozenset({"conversations_touch_presence", "conversations_leave_presence"})
+
+
 def test_the_table_covers_every_mutating_route_of_the_clinic_api(app: FastAPI) -> None:
     """A new POST/PATCH/PUT/DELETE route without an audit expectation fails here."""
     mutating = {
@@ -83,7 +88,7 @@ def test_the_table_covers_every_mutating_route_of_the_clinic_api(app: FastAPI) -
         for method, operation in item.items()
         if method in {"post", "patch", "put", "delete"} and set(operation["tags"]) & B1_TAGS
     }
-    assert mutating == set(MUTATIONS)
+    assert mutating - EPHEMERAL == set(MUTATIONS)
 
 
 async def _audit_actions(admin: Engine, request_id: str) -> set[str]:
