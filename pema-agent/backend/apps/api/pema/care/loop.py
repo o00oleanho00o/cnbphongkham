@@ -8,10 +8,15 @@ the priority queue. ``CareTurnWorker`` takes them one at a time (one GPU) and ca
 ``run_turn(care_agent_id, event)`` in order:
 
 1. the agent is paused (kill switch of this agent) -> nothing happens, ``paused`` row in ``actions_log``;
-2. ``conversation_control.state`` is not ``AUTO`` -> nothing is done, only a ``paused`` row (the history is
-   kept by the channel pipeline); what M2c adds for ``STAFF`` (reminders) is not here;
-3. the PII-masked context is loaded (``PatientContextLoader``), the skill ``handoff`` is asked (M2b; the
-   stand-in always answers; a ``handoff`` verdict stops the turn here, M2b/M2c own what follows);
+2. ``conversation_control.state`` is not ``AUTO`` (``HANDOFF_ROUTING`` or ``STAFF``, PLAN-M section 5) -> the
+   agent is silent to the patient: the history is kept by the channel pipeline and, when a ``SuggestionSink``
+   is wired (M2b), a PATIENT message gets a suggestion for the staff (``review_item`` kind
+   ``suggestion``, never sent); everything else only writes a ``paused`` row. What M2c adds for ``STAFF``
+   (reminders) is not here;
+3. the PII-masked context is loaded (``PatientContextLoader``), the skill ``handoff`` is asked (M2b). A
+   ``handoff`` verdict stops the turn here: when a ``HandoffRequester`` is wired (``CareControl``) it
+   moves the conversation to ``HANDOFF_ROUTING`` and sends the one holding message; without one (the stand-in
+   ``AlwaysAnswer`` never hands off) the turn only logs it;
 4. the shared pipeline is called with the care-agent persona (``Harness``) and returns a decision;
 5. the decision is acted on by autonomy level (M3 ``AutonomyPolicy``; the stand-in is L0): a draft goes to a
    person as a ``review_item``. Always a draft, whatever the level: a birthday (PLAN-M section 11, rule 4:
@@ -57,6 +62,8 @@ from pema.care.ports import (
     DeferredSend,
     HandoffAction,
     HandoffDecider,
+    HandoffRequester,
+    HandoffVerdict,
     Harness,
     HarnessDecision,
     HarnessRequest,
@@ -68,6 +75,7 @@ from pema.care.ports import (
     Scheduler,
     SendOutcome,
     SendWindowProvider,
+    SuggestionSink,
 )
 from pema.care.priority import CarePriorityQueue
 from pema.config.runtime_tuning_settings import bot_time_zone, get_tuning_int
@@ -78,11 +86,16 @@ logger = logging.getLogger(__name__)
 
 CARE_PERSONA = "care_agent"
 """Key of the persona the harness uses for a care turn (resolved by the wiring package)."""
+CARE_SUGGEST_PERSONA = "care_agent_suggest"
+"""Persona of a turn that writes a suggestion for staff (the conversation is with a person); never sent."""
 
 # ``action_type`` vocabulary (``<what>:<why>``)
 SKIPPED_AGENT_PAUSED = "turn:skipped_agent_paused"
 SKIPPED_STATE_PREFIX = "turn:skipped_state_"
 HANDOFF_REQUESTED = "turn:handoff_requested"
+HANDOFF_FAILED = "turn:handoff_failed"
+SUGGESTED_STATE_PREFIX = "suggestion:state_"
+SUGGESTION_FAILED = "suggestion:failed"
 NO_ACTION = "turn:no_action"
 FAILED_HARNESS = "turn:failed_harness"
 FAILED_CONTEXT = "turn:failed_context"
@@ -100,6 +113,7 @@ class TurnStatus(StrEnum):
     SKIPPED_PAUSED = "skipped_paused"
     SKIPPED_STATE = "skipped_state"
     HANDOFF = "handoff"
+    SUGGESTED = "suggested"
     NO_ACTION = "no_action"
     FAILED = "failed"
     DRAFTED = "drafted"
@@ -135,6 +149,8 @@ class CareTurnRunner:
         handoff: HandoffDecider | None = None,
         autonomy: AutonomyPolicy | None = None,
         cap_per_day: int | None = None,
+        requester: HandoffRequester | None = None,
+        suggestions: SuggestionSink | None = None,
     ) -> None:
         self._store = store
         self._context_loader = context_loader
@@ -148,6 +164,8 @@ class CareTurnRunner:
         self._handoff: HandoffDecider = handoff if handoff is not None else AlwaysAnswer()
         self._autonomy: AutonomyPolicy = autonomy if autonomy is not None else L0Autonomy()
         self._cap_per_day = cap_per_day
+        self._requester = requester
+        self._suggestions = suggestions
 
     async def run_turn(self, care_agent_id: UUID, event: CareEvent) -> TurnOutcome:
         now = self._clock()
@@ -187,6 +205,8 @@ class CareTurnRunner:
 
         state = await self._store.get_control_state(agent.patient_id)
         if state is not ControlState.AUTO:
+            if self._suggestions is not None and event.kind is EventKind.PATIENT_MESSAGE:
+                return await self._suggest(agent, event, state, now)
             await self._log(agent, SKIPPED_STATE_PREFIX + state.value.lower(), ActionDisposition.PAUSED, now)
             return TurnOutcome(TurnStatus.SKIPPED_STATE)
 
@@ -201,8 +221,7 @@ class CareTurnRunner:
 
         verdict = await self._handoff.decide(agent, event, context)
         if verdict.action is HandoffAction.HANDOFF:
-            await self._log(agent, HANDOFF_REQUESTED, ActionDisposition.PAUSED, now)
-            return TurnOutcome(TurnStatus.HANDOFF)
+            return await self._hand_off(agent, event, context, verdict, now)
 
         try:
             decision = await self._harness.process(
@@ -226,6 +245,65 @@ class CareTurnRunner:
             await self._log(agent, NO_ACTION, ActionDisposition.PAUSED, now, decision.depth)
             return TurnOutcome(TurnStatus.NO_ACTION)
         return await self._act(agent, event, context, decision, text, now)
+
+    async def _hand_off(
+        self,
+        agent: CareAgentSnapshot,
+        event: CareEvent,
+        context: PatientContext,
+        verdict: HandoffVerdict,
+        now: datetime,
+    ) -> TurnOutcome:
+        depth = verdict.decision.depth.value if verdict.decision is not None else None
+        if self._requester is not None and verdict.decision is not None:
+            try:
+                await self._requester.request_handoff(agent, event, context, verdict.decision, now)
+            except Exception as exc:  # the state did not change, so the next event decides again
+                logger.error(
+                    "care handoff failed", extra={"care_agent_id": str(agent.id), "error": type(exc).__name__}
+                )
+                await self._log(agent, HANDOFF_FAILED, ActionDisposition.PAUSED, now, depth)
+                return TurnOutcome(TurnStatus.FAILED)
+        await self._log(agent, HANDOFF_REQUESTED, ActionDisposition.PAUSED, now, depth)
+        return TurnOutcome(TurnStatus.HANDOFF)
+
+    async def _suggest(
+        self, agent: CareAgentSnapshot, event: CareEvent, state: ControlState, now: datetime
+    ) -> TurnOutcome:
+        """The conversation is with a person: write what the agent WOULD say as a suggestion for staff. It is
+        never sent and the skill ``handoff`` is not asked again (a person already has the patient)."""
+        sink = self._suggestions
+        if sink is None:
+            return TurnOutcome(TurnStatus.SKIPPED_STATE)
+        try:
+            context = await self._context_loader.load(agent, event)
+            decision = await self._harness.process(
+                HarnessRequest(
+                    care_agent_id=agent.id,
+                    profile=agent.profile or PATIENT_CHANNEL_PROFILE,
+                    persona=CARE_SUGGEST_PERSONA,
+                    event=event,
+                    context=context,
+                )
+            )
+        except Exception as exc:
+            logger.error(
+                "care suggestion failed", extra={"care_agent_id": str(agent.id), "error": type(exc).__name__}
+            )
+            await self._log(agent, SUGGESTION_FAILED, ActionDisposition.PAUSED, now)
+            return TurnOutcome(TurnStatus.FAILED)
+        text = decision.text.strip() if decision.text is not None else ""
+        if not text:
+            await self._log(agent, NO_ACTION, ActionDisposition.PAUSED, now, decision.depth)
+            return TurnOutcome(TurnStatus.NO_ACTION)
+        item_id = await sink.create_suggestion(agent, context.patient_ref, text, state)
+        if item_id is None:
+            await self._log(agent, SUGGESTION_FAILED, ActionDisposition.PAUSED, now, decision.depth)
+            return TurnOutcome(TurnStatus.FAILED)
+        await self._log(
+            agent, SUGGESTED_STATE_PREFIX + state.value.lower(), ActionDisposition.PAUSED, now, decision.depth
+        )
+        return TurnOutcome(TurnStatus.SUGGESTED)
 
     async def _act(
         self,

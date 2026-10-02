@@ -7,7 +7,8 @@ nothing can mistake it for the clinic's real 24/7 contact (entered on the dashbo
 
 Idempotent: ids come from ``uuid5`` and every insert is ``ON CONFLICT`` (profiles and the on-call row are left
 alone when they exist; ownership of the two patients is set to the values below). The two patients are paired
-with their care agent through ``ensure_care_agent``, the same call the creation hook makes.
+with their care agent through ``ensure_care_agent``, the same call the creation hook makes. M2b adds the
+row of the skill ``handoff`` (``agent.skills``) with its temporary, doctor-pending defaults.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from uuid import UUID, uuid5
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from pema.care.handoff_skill import ensure_handoff_skill
 from pema.care.models import OnCallContact, PatientOwnership, StaffProfile
 from pema.care.pairing import ensure_care_agent
 from pema.core.db import ClinicDatabase, get_installation_clinic_id
@@ -90,6 +92,7 @@ async def seed_care_dev(
             )
             .on_conflict_do_nothing(index_elements=[OnCallContact.id])
         )
+        await ensure_handoff_skill(session, clinic_id)
         for code, cs_key, doctor_key in OWNERSHIP:
             patient_id = patients[code]
             care_agents[code] = (await ensure_care_agent(session, patient_id, clinic_id=clinic_id)).id

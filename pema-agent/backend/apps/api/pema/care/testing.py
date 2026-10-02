@@ -8,19 +8,27 @@ account and thread ids are made up. The fakes count their calls so a test can as
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 from pema.care.events import CareEvent
+from pema.care.handoff_types import DepthLlmOutput, HandoffConfig, InvalidTransitionError, level_code
 from pema.care.models import ControlState
 from pema.care.ports import (
+    AutonomyOverride,
     CareAgentSnapshot,
     ChannelTarget,
+    ControlSnapshot,
     DeferredSend,
+    HandoffRequestSnapshot,
+    HandoffSettings,
+    HandoffSpec,
     HarnessDecision,
     HarnessRequest,
+    OpenedHandoff,
     PatientContext,
+    ReleaseSpec,
     SendOutcome,
     TickFinding,
 )
@@ -238,3 +246,187 @@ class FakeTickRules:
                     )
                 )
         return found
+
+
+# ------------------------------------------------------------------------------------- M2b fakes
+class InMemoryControlStore:
+    """``ControlStore`` over dicts. It shares the control states and the action log with an
+    ``InMemoryCareStore`` so a turn loop built on that store sees every transition. Atomic like the SQL
+    one (no ``await`` between the check and the change)."""
+
+    def __init__(self, care: InMemoryCareStore) -> None:
+        self.care = care
+        self.requests: list[HandoffRequestSnapshot] = []
+        self.controls: dict[UUID, ControlSnapshot] = {}
+        self.memory: list[tuple[UUID, str, str]] = []
+        self.override_log: list[tuple[UUID, AutonomyOverride]] = []
+
+    def _agent(self, patient_id: UUID) -> CareAgentSnapshot:
+        for agent in self.care.agents.values():
+            if agent.patient_id == patient_id:
+                return agent
+        raise InvalidTransitionError("no care agent for this patient")
+
+    def _state(self, patient_id: UUID) -> ControlState:
+        return self.care.states.get(patient_id, ControlState.AUTO)
+
+    def _open(self, patient_id: UUID) -> HandoffRequestSnapshot | None:
+        for request in reversed(self.requests):
+            if request.patient_id == patient_id and request.outcome is None:
+                return request
+        return None
+
+    def _replace(self, request: HandoffRequestSnapshot) -> None:
+        self.requests = [request if r.id == request.id else r for r in self.requests]
+
+    def _log(self, agent: CareAgentSnapshot, action: str, depth: str | None, at: datetime) -> None:
+        self.care.actions.append(ActionRow(agent.id, action, "paused", depth, at))
+
+    async def get_control(self, patient_id: UUID) -> ControlSnapshot:
+        return self.controls.get(patient_id, ControlSnapshot(self._state(patient_id)))
+
+    async def agent_for_patient(self, patient_id: UUID) -> CareAgentSnapshot | None:
+        try:
+            return self._agent(patient_id)
+        except InvalidTransitionError:
+            return None
+
+    async def record_action(
+        self, care_agent_id: UUID, *, action_type: str, disposition: str, depth: str | None, at: datetime
+    ) -> None:
+        await self.care.record_action(
+            care_agent_id, action_type=action_type, disposition=disposition, depth=depth, at=at
+        )
+
+    async def get_open_request(self, patient_id: UUID) -> HandoffRequestSnapshot | None:
+        return self._open(patient_id)
+
+    async def open_handoff(
+        self, agent: CareAgentSnapshot, spec: HandoffSpec, *, log_action: str, at: datetime
+    ) -> OpenedHandoff:
+        if self._state(agent.patient_id) is not ControlState.AUTO:
+            existing = self._open(agent.patient_id) or next(
+                (r for r in reversed(self.requests) if r.patient_id == agent.patient_id), None
+            )
+            if existing is None:
+                raise InvalidTransitionError("conversation is not in AUTO and has no handoff request")
+            return OpenedHandoff(existing, created=False)
+        request = HandoffRequestSnapshot(
+            id=uuid4(),
+            patient_id=agent.patient_id,
+            care_agent_id=agent.id,
+            reason=spec.reason,
+            summary=spec.summary,
+            depth=spec.depth,
+            confidence=spec.confidence,
+            required_skill=spec.required_skill,
+            urgency=spec.urgency,
+            created_at=at,
+        )
+        self.requests.append(request)
+        self.care.states[agent.patient_id] = ControlState.HANDOFF_ROUTING
+        self.controls[agent.patient_id] = ControlSnapshot(ControlState.HANDOFF_ROUTING, since=at)
+        self._log(agent, log_action, spec.depth, at)
+        return OpenedHandoff(request, created=True)
+
+    async def accept(
+        self, patient_id: UUID, staff_id: UUID, *, log_action: str, at: datetime
+    ) -> HandoffRequestSnapshot:
+        agent = self._agent(patient_id)
+        request = self._open(patient_id)
+        if self._state(patient_id) is not ControlState.HANDOFF_ROUTING or request is None:
+            raise InvalidTransitionError(f"cannot accept from {self._state(patient_id).value}")
+        accepted = replace(request, accepted_by=staff_id, outcome="accepted")
+        self._replace(accepted)
+        self.care.states[patient_id] = ControlState.STAFF
+        self.controls[patient_id] = ControlSnapshot(ControlState.STAFF, since=at, staff_owner=staff_id)
+        self._log(agent, log_action, request.depth, at)
+        return accepted
+
+    async def record_decline(
+        self, patient_id: UUID, staff_id: UUID, *, log_action: str, at: datetime
+    ) -> HandoffRequestSnapshot:
+        agent = self._agent(patient_id)
+        request = self._open(patient_id)
+        if self._state(patient_id) is not ControlState.HANDOFF_ROUTING or request is None:
+            raise InvalidTransitionError(f"cannot decline from {self._state(patient_id).value}")
+        self._log(agent, log_action, request.depth, at)
+        return request
+
+    async def release(
+        self, patient_id: UUID, staff_id: UUID, spec: ReleaseSpec, *, log_action: str, at: datetime
+    ) -> ControlSnapshot:
+        agent = self._agent(patient_id)
+        if self._state(patient_id) is not ControlState.STAFF:
+            raise InvalidTransitionError(f"cannot release from {self._state(patient_id).value}")
+        self.care.states[patient_id] = ControlState.AUTO
+        snapshot = ControlSnapshot(ControlState.AUTO, since=at, release_note=spec.release_note)
+        self.controls[patient_id] = snapshot
+        if spec.memory_fact is not None:
+            self.memory.append((agent.id, spec.memory_fact, "staff"))
+        self._log(agent, log_action, None, at)
+        if spec.override is not None:
+            self.override_log.append((agent.id, spec.override))
+            until = spec.override.until.isoformat() if spec.override.until else None
+            self.care.agents[agent.id] = replace(
+                agent, autonomy_override={"level": level_code(spec.override.level), "until": until}
+            )
+            self._log(agent, f"autonomy:override_set:level{spec.override.level}", None, at)
+        return snapshot
+
+    async def set_auto_release_after(
+        self, patient_id: UUID, after: timedelta | None, *, log_action: str, at: datetime
+    ) -> None:
+        agent = self._agent(patient_id)
+        current = self.controls.get(patient_id, ControlSnapshot(self._state(patient_id)))
+        self.controls[patient_id] = replace(current, auto_release_after=after)
+        self._log(agent, log_action, None, at)
+
+
+class FakeSuggestions:
+    def __init__(self, *, ok: bool = True) -> None:
+        self.ok = ok
+        self.items: list[tuple[UUID, str, str, ControlState]] = []
+
+    async def create_suggestion(
+        self, agent: CareAgentSnapshot, patient_ref: str, text: str, state: ControlState
+    ) -> str | None:
+        self.items.append((agent.id, patient_ref, text, state))
+        return str(uuid4()) if self.ok else None
+
+
+class FakeDepthLlm:
+    """The "model" of the depth classifier: counts calls, returns a fixed answer (or None, or raises)."""
+
+    def __init__(self, answer: DepthLlmOutput | None = None, *, fail: bool = False) -> None:
+        self.answer = answer
+        self.fail = fail
+        self.calls: list[str] = []
+
+    async def classify(self, masked_text: str, *, instruction: str) -> DepthLlmOutput | None:
+        self.calls.append(masked_text)
+        if self.fail:
+            raise RuntimeError("model unavailable")
+        return self.answer
+
+
+class StaticTexts:
+    """``MessageTextSource`` that returns the same texts for every event."""
+
+    def __init__(self, *texts: str) -> None:
+        self.texts = list(texts)
+
+    async def patient_texts(self, agent: CareAgentSnapshot, event: CareEvent) -> Sequence[str]:
+        return self.texts
+
+
+class StaticHandoffConfig:
+    """``HandoffConfigSource`` with a fixed config; ``reads`` counts how often it was read."""
+
+    def __init__(self, config: HandoffConfig | None = None) -> None:
+        self.config = config or HandoffConfig()
+        self.reads = 0
+
+    async def get(self, clinic_id: UUID) -> HandoffSettings:
+        self.reads += 1
+        return HandoffSettings("instruction (fixture)", self.config)
