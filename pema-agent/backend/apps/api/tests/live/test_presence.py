@@ -175,3 +175,52 @@ async def test_a_store_that_is_down_never_fails_the_heartbeat_or_the_leave(bus: 
     await _drain()
     assert bus.published == []
     service.aclose()
+
+
+async def test_a_person_flipping_the_state_cannot_make_everybody_reload_without_end(
+    bus: InMemoryLiveEventBus,
+) -> None:
+    """SEC-54: every state flip is a ``presence.changed``; past the per-person ceiling the call is
+    acknowledged and ignored, so a script cannot turn one cheap request into a reload of every Inbox."""
+    clock = Clock()
+    store = InMemoryPresenceStore(clock=clock)
+    service = PresenceService(store, max_ops=10, window_s=60.0, clock=clock)
+    conversation, user = uuid4(), uuid4()
+    for index in range(50):
+        state = PresenceState.REPLYING if index % 2 else PresenceState.VIEWING
+        await service.beat(conversation, user, state)
+    await _drain()
+    assert len(bus.published) <= 10
+    other = uuid4()
+    await service.beat(conversation, other, PresenceState.VIEWING)  # somebody else is not affected
+    assert {entry.user_id for entry in (await service.viewers([conversation]))[conversation]} == {user, other}
+    service.aclose()
+
+
+async def test_the_ceiling_is_a_sliding_window_and_leave_calls_count_too() -> None:
+    clock = Clock()
+    store = InMemoryPresenceStore(clock=clock)
+    service = PresenceService(store, max_ops=3, window_s=60.0, clock=clock)
+    conversation, user = uuid4(), uuid4()
+    await service.beat(conversation, user, PresenceState.VIEWING)
+    await service.leave(conversation, user)
+    await service.beat(conversation, user, PresenceState.VIEWING)
+    await service.leave(conversation, user)  # fourth call: ignored, the entry stays
+    assert await service.viewers([conversation])
+    clock.now += 61
+    await service.leave(conversation, user)  # the window moved on
+    assert await service.viewers([conversation]) == {}
+    service.aclose()
+
+
+async def test_a_normal_browser_never_hits_the_ceiling() -> None:
+    """A beat every 15 seconds for an hour is 240 calls in 60 windows: never more than 4 per window."""
+    clock = Clock()
+    store = InMemoryPresenceStore(clock=clock)
+    service = PresenceService(store, clock=clock)
+    conversation, user = uuid4(), uuid4()
+    for _ in range(240):
+        clock.now += 15
+        await service.beat(conversation, user, PresenceState.VIEWING)
+        assert await service.viewers([conversation])
+    service.aclose()
