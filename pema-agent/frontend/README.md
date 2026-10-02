@@ -4,6 +4,7 @@ One Next.js app (App Router, TypeScript, Tailwind v4, Vietnamese UI, mobile-firs
 
 - **Vận hành** (clinic operations): Việc hôm nay, Inbox, Hàng đợi duyệt AI, Hồ sơ bệnh nhân (Patient 360, read only), Tin nhắn mẫu đã duyệt.
 - **Quản trị AI** (owner and manager): the dashboard of `vuhai2002/zalo-agent` translated feature by feature (accounts and QR login, agents and persona, model and tuning, tools, knowledge sources, schedules, MCP servers, usage and traces, logs), plus the kill switch per channel and the policy profile of each account and agent.
+- **Nhân viên** (`/admin/users`, owner and manager): the staff accounts of the clinic. Everyone with `admin.users.read` lists and filters (name or e-mail, role, active or locked); only the owner (`admin.users`) adds, edits name and role, locks or unlocks and resets a password, and never on their own account. A lock or a role change signs the person out everywhere, which the confirmation says. Rules and audit are the backend's (`dashboard_staff_store.py`); `lib/ops/staff-view.ts` only words its answers.
 
 It is UI only. Every business rule, permission and audit is the backend's (`backend/apps/api`). The menu is filtered by the permission list of `GET /api/v1/me`, which is a convenience, never a control.
 
@@ -54,7 +55,7 @@ Reference clone (read only): `E:\Desktop\zalo-agent-ref\web\src`. Target paths o
 2. Keep names, constants, thresholds and the reason comments of the original (they are the specification). Record forced deviations in a comment under the header.
 3. API: use `http` and `unwrap` from `@/lib/api/client` and DTO types from `Schemas` in `@/lib/api` (snake_case, English names; the original's Vietnamese-named DTOs no longer exist). Errors arrive as `ApiError` with the BE's Vietnamese message. Never invent an endpoint: if the contract lacks one, show the control disabled or hide it, and list it as an open item.
 4. react-router becomes `next/link`, `useRouter`, `usePathname`, `useParams`, `useSearchParams` (wrap in `<Suspense>` in the page). Vite globals (`__APP_VERSION__`, `import.meta`) become `process.env.NEXT_PUBLIC_*`.
-5. Tests: `node:test` to vitest with the same titles (`describe`/`it` from `vitest`, `node:assert/strict` may stay); fake timers via `vi.useFakeTimers()`.
+5. Tests: `node:test` to vitest with the same titles (`describe`/`it` from `vitest`, `node:assert/strict` may stay); fake timers via `vi.useFakeTimers()`. A screen test is `page.test.tsx` next to the page with `// @vitest-environment jsdom` on its first line (Testing Library, the typed client replaced by a fake).
 6. Quality: no `any`, no `console.*`, named imports, hoist constant objects and wrap handlers passed to children in `useCallback`, clean timers and listeners in `useEffect`. Never log or render secrets: keys come back masked (`api_key_masked`), tokens only go up.
 7. Mobile first: 390x844 must work with no document-level horizontal scroll (tables scroll inside their card), touch targets of at least 44px on phone widths, text readable without zoom. Desktop uses the width (1920x1020, 1440x900, 1280x720, 1024x768).
 8. Mock: add the area's handlers under `mock/handlers/` with fictional Vietnamese data (no real name, phone, token, photo).
@@ -72,4 +73,4 @@ Reference clone (read only): `E:\Desktop\zalo-agent-ref\web\src`. Target paths o
   (their Python twins belong to packages D1 and A). Keep the constants identical.
 - Removed because the contract has no data for them (open items for the backend packages): token usage per thread and the thread summary,
   contact/memory counts and total messages on the overview, vision `mode` and sidecar test, image-generation test, "also delete memory" when
-  clearing a thread, change password, a staff list for "Phụ trách", `channel`/`send_mode`/message body on a CRM task.
+  clearing a thread, change password, a staff list for "Phụ trách" (the list now exists, but only owner and manager may read it; opening it to CSKH is an open product decision), `channel`/`send_mode`/message body on a CRM task.

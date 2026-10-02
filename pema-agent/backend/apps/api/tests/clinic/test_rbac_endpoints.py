@@ -61,6 +61,23 @@ ENDPOINTS: tuple[Endpoint, ...] = (
         frozenset({OWNER}),
         lambda w: {"new_password": "another-password-1"},
     ),
+    # staff accounts (H4): reading the list is owner + manager (admin.users.read); every change is the owner's
+    Endpoint("list_users", "GET", "/admin/users", frozenset({OWNER, MANAGER})),
+    Endpoint(
+        "create_user",
+        "POST",
+        "/admin/users",
+        frozenset({OWNER}),
+        # role "patient" and a short password: the owner gets past the permission check and ends in a 422
+        lambda w: {"display_name": "x", "email": "rbac@example.test", "role": "patient", "password": "short"},
+    ),
+    Endpoint(
+        "update_user",
+        "PATCH",
+        f"/admin/users/{FAKE}",
+        frozenset({OWNER}),
+        lambda w: {"version": 1, "display_name": "x"},
+    ),
     Endpoint("list_patients", "GET", "/patients", ALL),
     Endpoint(
         "create_patient",

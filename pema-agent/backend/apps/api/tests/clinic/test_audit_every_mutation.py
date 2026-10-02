@@ -48,6 +48,8 @@ MUTATIONS: dict[str, str] = {
     "auth_refresh": "auth.refresh",
     "auth_logout": "auth.logout",
     "auth_change_password": "auth.change_password",
+    "admin_users_create_user": "user.create",
+    "admin_users_update_user": "user.update",
     "admin_users_reset_user_password": "auth.reset_password",
     "patients_create_patient": "patient.create",
     "patients_update_patient": "patient.update",
@@ -332,6 +334,26 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
         "POST",
         f"/admin/users/{victim_id}/password",
         json={"new_password": "owner-chosen-password-1"},
+    )
+    # the owner creates an account, then edits it (role + lock); both are audited
+    created = await call(
+        "admin_users_create_user",
+        owner,
+        "POST",
+        "/admin/users",
+        json={
+            "display_name": "Nhân viên kiểm toán (mẫu)",
+            "email": f"audit.{uuid4().hex[:8]}@example.test",
+            "role": "cs_staff",
+            "password": "owner-chosen-password-1",
+        },
+    )
+    await call(
+        "admin_users_update_user",
+        owner,
+        "PATCH",
+        f"/admin/users/{created.json()['id']}",
+        json={"version": created.json()["version"], "role": "reception", "active": False},
     )
     await call("auth_logout", reception, "POST", "/auth/logout")
     assert seen.keys() == MUTATIONS.keys(), f"not exercised: {set(MUTATIONS) - set(seen)}"

@@ -88,6 +88,7 @@ Nguồn: PLAN-AI01 mục 8 (2026-10-01), CONTRACTS-AI01 mục 7, và ghi chú tr
 12. **Phiên đăng nhập có hạn tuyệt đối** (`PEMA_SESSION_ABSOLUTE_DAYS`, mặc định 7, 1 đến 30) bên cạnh hạn trượt 480 phút; chủ phòng khám đặt lại mật khẩu nhân viên qua `POST /api/v1/admin/users/{user_id}/password` (quyền `admin.users`, chỉ chủ). Vòng tích hợp H, 2026-10-02.
 13. **Có tác vụ xóa theo thời hạn lưu** (`pema.retention`; worker chạy scope `agent`, API chạy scope `clinic`), nhưng mặc định giữ dữ liệu lâm sàng và tin nhắn vô thời hạn; chỉ dữ liệu thuần kỹ thuật có đời ngắn. Không bao giờ xóa `clinic.audit_log`, bệnh nhân, lịch hẹn, đồng ý, mục duyệt đang mở.
 14. **Truy cập công khai qua Caddy** (profile `proxy`, ba chế độ TLS `auto`/`internal`/`off`); chỉ Caddy publish 80/443, API chỉ tin `X-Forwarded-For` từ `PEMA_TRUSTED_PROXIES`, cookie phiên `Secure`; FE đọc địa chỉ API lúc chạy (`PEMA_API_INTERNAL_URL`).
+15. **Màn Nhân viên** (`/admin/users`, vòng H4, 2026-10-02): chủ và quản lý xem danh sách nhân viên (`admin.users.read`); chỉ chủ thêm, sửa họ tên và vai trò, khóa hoặc mở khóa, đặt lại mật khẩu (`admin.users`). Không xóa hẳn nhân viên. Chủ không tự khóa hay tự đổi vai trò của mình, phòng khám luôn còn một chủ đang hoạt động, khóa hoặc đổi vai trò thì người đó bị đăng xuất khỏi mọi thiết bị. Chưa quyết: owner có được khóa hay đặt lại mật khẩu owner khác không (hiện được); có mở quyền xem danh sách cho CSKH và lễ tân (để ô "Phụ trách" dùng danh sách) không (chưa mở).
 
 ## 8. Điều chưa kiểm chứng
 

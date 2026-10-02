@@ -38,7 +38,7 @@ import jwt
 from fastapi import Depends, Request, Response
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pema.api import dashboard_password_store as password_store
@@ -361,7 +361,12 @@ async def login(
                 expires_at=expires_at,
                 absolute_expires_at=absolute_expires_at,
             )
-            user.last_login_at = stamp
+            # A Core UPDATE, not ``user.last_login_at = ...``: the ORM would bump ``version`` on every
+            # login, and an owner editing this account in the staff screen would get a spurious 409 because
+            # the person signed in meanwhile. ``version`` guards edits of the account, not its sign-ins.
+            await session.execute(
+                update(UserAccount).where(UserAccount.id == user.id).values(last_login_at=stamp)
+            )
             await session.flush()
             ctx = ActionContext(
                 clinic_id=clinic_id,

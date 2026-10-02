@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 
 from pema_contracts.common import ApiModel, VnDatetime
 from pema_contracts.roles import Permission, Role
@@ -55,3 +55,44 @@ class MeResponse(ApiModel):
 class PermissionsResponse(ApiModel):
     role: Role
     permissions: list[Permission]
+
+
+class StaffUserOut(ApiModel):
+    """One staff account of the clinic as the owner and the manager see it (``GET /admin/users``). Never
+    carries a password or a hash. ``email`` is the sign-in name (lower case, unique per clinic)."""
+
+    id: UUID
+    display_name: str
+    email: str
+    role: Role
+    active: bool = Field(description="False = locked: cannot sign in and every session was ended.")
+    last_login_at: VnDatetime | None = None
+    created_at: VnDatetime
+    version: int = Field(ge=1, description="Optimistic lock: send it back in PATCH.")
+
+
+class StaffUserCreate(ApiModel):
+    """The owner creates a staff account (``POST /admin/users``). ``patient`` is not a staff role. The initial
+    password follows the 8-character floor of a password change (checked by the action, so the refusal carries
+    the Vietnamese message)."""
+
+    display_name: str = Field(min_length=1, max_length=120)
+    email: str = Field(min_length=3, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    role: Role
+    password: SecretStr = Field(max_length=1024)
+
+    @field_validator("email")
+    @classmethod
+    def _lower_case_email(cls, value: str) -> str:
+        return value.lower()
+
+
+class StaffUserUpdate(ApiModel):
+    """The owner edits a staff account (``PATCH /admin/users/{user_id}``). Only the fields sent change.
+    Locking (``active: false``) or changing the role ends every session of that user; the owner cannot lock
+    or re-role their own account, and the clinic always keeps one active owner."""
+
+    version: int = Field(ge=1)
+    display_name: str | None = Field(default=None, min_length=1, max_length=120)
+    role: Role | None = None
+    active: bool | None = None

@@ -60,6 +60,7 @@ MANAGER_PERMISSIONS: frozenset[Permission] = frozenset(
         P.ADMIN_KILL_SWITCH,
         P.ADMIN_LOGS,
         P.ADMIN_ACCOUNTS,
+        P.ADMIN_USERS_READ,  # may LIST staff, never change them (that is ADMIN_USERS, owner only)
         P.ADMIN_AGENTS,
         P.ADMIN_MODEL,
         P.ADMIN_TOOLS,

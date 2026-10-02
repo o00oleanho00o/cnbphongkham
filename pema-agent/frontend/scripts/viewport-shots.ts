@@ -45,6 +45,7 @@ const ROUTES = [
   "/admin/tuning/agent",
   "/admin/tuning/providers",
   "/admin/policy",
+  "/admin/users",
   "/admin/auth",
 ];
 

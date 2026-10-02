@@ -93,6 +93,12 @@ def test_every_permission_code_is_granted_to_someone() -> None:
             {Role.OWNER},
             {Role.MANAGER, Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT},
         ),
+        # listing staff (H4): owner and manager read, nobody else; changing them stays the owner's alone
+        (
+            P.ADMIN_USERS_READ,
+            {Role.OWNER, Role.MANAGER},
+            {Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT},
+        ),
         (P.KB_MANAGE, {Role.MANAGER, Role.OWNER, Role.DOCTOR}, {Role.CS_STAFF, Role.RECEPTION, Role.PATIENT}),
     ],
 )

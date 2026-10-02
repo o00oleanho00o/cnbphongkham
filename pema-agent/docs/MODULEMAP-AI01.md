@@ -124,7 +124,7 @@ Next.js App Router, TypeScript, Tailwind v4, Be Vietnam Pro, màu Pema (`brand-5
 | Vùng | Route |
 |---|---|
 | Vận hành | `/today`, `/inbox`, `/review`, `/patients`, `/patients/[id]`, `/templates` |
-| Quản trị AI | `/admin/{overview, accounts, agents, agents/new, agents/[id], contacts, friends, threads, memory, kb, schedules, mcp, tools, tuning, tuning/[group], traces, logs, policy, auth}` |
+| Quản trị AI | `/admin/{overview, accounts, agents, agents/new, agents/[id], contacts, friends, threads, memory, kb, schedules, mcp, tools, tuning, tuning/[group], traces, logs, policy, users, auth}` (`/admin/users` là màn **Nhân viên**: menu hiện khi có `admin.users.read` (chủ, quản lý); các nút thêm, sửa, khóa, đặt lại mật khẩu chỉ hiện khi có `admin.users` (chủ) và không hiện trên tài khoản của chính mình) |
 | Phiên | `/login` |
 
 `frontend/mock` là backend giả phục vụ cùng đường dẫn của `openapi.json`, có test hợp đồng để mock không lệch. Mã dịch từ `web/` của zalo-agent ở `src/components/admin/<vùng>` và `src/lib/admin/<vùng>`; mã Pema-only (không có bản gốc) ở `src/components/ops` và `src/lib/ops`, trang chính sách, công tắc kênh, cột ký duyệt KB, "Thử tìm".

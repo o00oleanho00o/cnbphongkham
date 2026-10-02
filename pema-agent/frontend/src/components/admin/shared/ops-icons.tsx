@@ -92,3 +92,11 @@ export const IconImageOff = (p: IconProps) => (
     <path d="m4 18 5-5 3 3 3-3 5 5M3.5 3.5l17 17" />
   </svg>
 );
+
+export const IconIdBadge = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="4.5" y="3.5" width="15" height="17" rx="2.4" />
+    <circle cx="12" cy="10" r="2.4" />
+    <path d="M8.2 17c.6-1.8 2-2.8 3.8-2.8s3.2 1 3.8 2.8" />
+  </svg>
+);

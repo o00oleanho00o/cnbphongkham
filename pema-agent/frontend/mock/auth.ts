@@ -9,6 +9,8 @@ import {
   isoFromNow,
   uuid,
   DAY,
+  HOUR,
+  MIN,
   type Ctx,
   type Permission,
   type Reply,
@@ -23,12 +25,18 @@ export const CLINIC_SLUG = "pema-demo";
 export const CLINIC_NAME = "Phòng khám Pema (dữ liệu mẫu)";
 export const COOKIE = "pema_session";
 
-type MockUser = {
+export type MockUser = {
   id: string;
   email: string;
   password: string;
   role: Role;
   display_name: string;
+  /** false = locked by the owner: cannot sign in, every session ended. */
+  active: boolean;
+  created_at: string;
+  last_login_at: string | null;
+  /** Optimistic lock of the staff screen (`PATCH /admin/users/{user_id}`). */
+  version: number;
 };
 
 /** Synthetic staff. Password is the same for all and printed in the README on purpose. */
@@ -39,6 +47,10 @@ export const USERS: MockUser[] = [
     password: "demo1234",
     role: "owner",
     display_name: "Nguyễn Thanh Hà",
+    active: true,
+    created_at: isoFromNow(-240 * DAY),
+    last_login_at: isoFromNow(-2 * MIN),
+    version: 1,
   },
   {
     id: uuid(2, 1),
@@ -46,6 +58,10 @@ export const USERS: MockUser[] = [
     password: "demo1234",
     role: "manager",
     display_name: "Phạm Quốc Việt",
+    active: true,
+    created_at: isoFromNow(-200 * DAY),
+    last_login_at: isoFromNow(-3 * HOUR),
+    version: 1,
   },
   {
     id: uuid(3, 1),
@@ -53,6 +69,10 @@ export const USERS: MockUser[] = [
     password: "demo1234",
     role: "doctor",
     display_name: "BS. Lê Minh Tâm",
+    active: true,
+    created_at: isoFromNow(-180 * DAY),
+    last_login_at: isoFromNow(-26 * HOUR),
+    version: 1,
   },
   {
     id: uuid(4, 1),
@@ -60,6 +80,10 @@ export const USERS: MockUser[] = [
     password: "demo1234",
     role: "cs_staff",
     display_name: "Mai Anh",
+    active: true,
+    created_at: isoFromNow(-150 * DAY),
+    last_login_at: isoFromNow(-50 * MIN),
+    version: 1,
   },
   {
     id: uuid(5, 1),
@@ -67,6 +91,43 @@ export const USERS: MockUser[] = [
     password: "demo1234",
     role: "reception",
     display_name: "Võ Ngọc Trâm",
+    active: true,
+    created_at: isoFromNow(-120 * DAY),
+    last_login_at: isoFromNow(-5 * DAY),
+    version: 1,
+  },
+  {
+    id: uuid(11, 1),
+    email: "bsan@pema.test",
+    password: "demo1234",
+    role: "doctor",
+    display_name: "BS. Trương Hoài An",
+    active: true,
+    created_at: isoFromNow(-90 * DAY),
+    last_login_at: isoFromNow(-2 * DAY),
+    version: 1,
+  },
+  {
+    id: uuid(6, 1),
+    email: "thu@pema.test",
+    password: "demo1234",
+    role: "cs_staff",
+    display_name: "Đặng Minh Thư",
+    active: true,
+    created_at: isoFromNow(-60 * DAY),
+    last_login_at: null,
+    version: 1,
+  },
+  {
+    id: uuid(7, 1),
+    email: "lan@pema.test",
+    password: "demo1234",
+    role: "reception",
+    display_name: "Bùi Ngọc Lan",
+    active: false,
+    created_at: isoFromNow(-300 * DAY),
+    last_login_at: isoFromNow(-70 * DAY),
+    version: 2,
   },
 ];
 
@@ -102,6 +163,8 @@ const ALL: Permission[] = [
   "admin.mcp",
   "admin.usage",
   "admin.policy",
+  // The manager LISTS staff (`GET /admin/users`); changing them is `admin.users`, the owner's alone.
+  "admin.users.read",
 ];
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
@@ -152,20 +215,33 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
 
 const sessions = new Map<string, Session>();
 
-const RESET_LIMIT = 5;
-const RESET_WINDOW_MS = 60_000;
-const resets = new Map<string, { count: number; resetAt: number }>();
+const ATTEMPT_LIMIT = 5;
+const ATTEMPT_WINDOW_MS = 60_000;
+const attempts = new Map<string, { count: number; resetAt: number }>();
 
-/** 5 resets per minute per owner, like the real route. */
-function allowReset(userId: string): boolean {
+/** 5 attempts per minute per owner and kind of action (`reset`, `create`), like the real routes. */
+export function allowAttempt(kind: string, userId: string): boolean {
+  const key = `${kind}:${userId}`;
   const now = Date.now();
-  const entry = resets.get(userId);
+  const entry = attempts.get(key);
   if (!entry || now >= entry.resetAt) {
-    resets.set(userId, { count: 1, resetAt: now + RESET_WINDOW_MS });
+    attempts.set(key, { count: 1, resetAt: now + ATTEMPT_WINDOW_MS });
     return true;
   }
   entry.count += 1;
-  return entry.count <= RESET_LIMIT;
+  return entry.count <= ATTEMPT_LIMIT;
+}
+
+/** Forget every attempt (tests share one minute; the dev mock never calls it). */
+export function resetAttempts(): void {
+  attempts.clear();
+}
+
+/** End every session of a user (a lock, a role change, a password reset). */
+export function revokeSessionsOf(userId: string): void {
+  for (const [id, other] of sessions) {
+    if (other.userId === userId) sessions.delete(id);
+  }
 }
 
 export function userSummary(userId: string): Schemas["UserSummary"] {
@@ -202,9 +278,11 @@ export function register(r: Router): void {
       password?: string;
     };
     const user = USERS.find((u) => u.email === email?.toLowerCase());
-    if (clinic_slug !== CLINIC_SLUG || !user || user.password !== password) {
+    // A locked account is refused exactly like a wrong password (no hint that the account exists).
+    if (clinic_slug !== CLINIC_SLUG || !user || !user.active || user.password !== password) {
       throw new HttpError(401, "unauthenticated", "Sai phòng khám, email hoặc mật khẩu.");
     }
+    user.last_login_at = isoFromNow(0);
     const id = randomUUID();
     sessions.set(id, {
       id,
@@ -270,7 +348,7 @@ export function register(r: Router): void {
   // resets per minute per owner (429), every session of the reset user ends, 204 and no body.
   r.post("/api/v1/admin/users/{user_id}/password", "admin.users", (ctx): Reply => {
     const s = requireSession(ctx);
-    if (!allowReset(s.userId)) {
+    if (!allowAttempt("reset", s.userId)) {
       fail(429, "rate_limited", "Đặt lại mật khẩu quá nhiều lần. Vui lòng đợi một phút.");
     }
     const { new_password } = ctx.body as { new_password?: string };
@@ -283,9 +361,7 @@ export function register(r: Router): void {
     const user = USERS.find((u) => u.id === ctx.params.user_id);
     if (!user) fail(404, "not_found", "Không tìm thấy tài khoản.");
     user.password = new_password;
-    for (const [id, other] of sessions) {
-      if (other.userId === user.id) sessions.delete(id);
-    }
+    revokeSessionsOf(user.id);
     return { status: 204 };
   });
 

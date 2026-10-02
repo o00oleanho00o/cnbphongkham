@@ -23,6 +23,7 @@ import {
 } from "@/components/admin/shared/dashboard-icons";
 import {
   IconClipboardCheck,
+  IconIdBadge,
   IconInbox,
   IconShieldCheck,
   IconUser,
@@ -123,6 +124,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Tài khoản Zalo",
         icon: IconSignal,
         needs: ["admin.accounts"],
+      },
+      {
+        to: "/admin/users",
+        label: "Nhân viên",
+        icon: IconIdBadge,
+        needs: ["admin.users.read"],
       },
       { to: "/admin/agents", label: "Agents", icon: IconBot, needs: ["admin.agents"] },
       { to: "/admin/tools", label: "Tools", icon: IconBolt, needs: ["admin.tools"] },
