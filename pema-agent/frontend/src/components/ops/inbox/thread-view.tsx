@@ -13,6 +13,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } fro
 import { SelectMenu, type SelectOption } from "@/components/admin/shared/select-menu";
 import { Badge } from "@/components/admin/shared/ui-bits";
 import { IconImageOff } from "@/components/admin/shared/ops-icons";
+import { AssigneeStatus } from "@/components/ops/assignee-status";
 import { conversationTitle } from "@/components/ops/inbox/conversation-list";
 import { PresenceLine } from "@/components/ops/inbox/presence-line";
 import {
@@ -26,7 +27,6 @@ import { useToast } from "@/components/ops/toast";
 import type { Schemas } from "@/lib/api";
 import { ApiError, errorMessage, http, newIdempotencyKey, unwrap } from "@/lib/api/client";
 import { viewersOf, type PresenceViewer } from "@/lib/live/live-types";
-import { useAssignableStaff } from "@/lib/live/use-assignable-staff";
 import { usePresenceHeartbeat } from "@/lib/live/use-presence-heartbeat";
 import {
   OWNER_KEEP,
@@ -38,6 +38,7 @@ import { formatDateTime } from "@/lib/ops/format";
 import { CONVERSATION_STATUS_LABEL, MESSAGE_STATUS_LABEL, SENDER_LABEL } from "@/lib/ops/labels";
 import { presenceStateFor, presenceText, someoneReplying } from "@/lib/ops/presence-view";
 import { useSession } from "@/lib/session/session-context";
+import { useAssignableStaff } from "@/lib/staff/use-assignable-staff";
 import { useLoad } from "@/lib/use-load";
 
 type Conversation = Schemas["ConversationOut"];
@@ -126,7 +127,12 @@ export function ThreadView({
   const endRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLOListElement>(null);
   const atBottom = useRef(true);
-  const { staff, error: staffError } = useAssignableStaff();
+  const {
+    staff,
+    loading: staffLoading,
+    error: staffError,
+    reload: reloadStaff,
+  } = useAssignableStaff();
 
   const load = useCallback(
     async (signal: AbortSignal): Promise<Loaded> => {
@@ -263,6 +269,7 @@ export function ThreadView({
     currentId: conversation.assigned_user_id,
     staff,
     keepWhenUnassigned: true,
+    allowUnassign: true,
   };
 
   function changeOwner(value: string) {
@@ -302,10 +309,7 @@ export function ThreadView({
                 Nhận xử lý
               </SecondaryButton>
             )}
-            <div
-              className="sm:w-64"
-              title={staffError ? "Không tải được danh sách nhân viên" : undefined}
-            >
+            <div className="sm:w-64">
               <SelectMenu
                 size="md"
                 ariaLabel="Phụ trách hội thoại"
@@ -314,6 +318,7 @@ export function ThreadView({
                 options={ownerOptions(ownerInput)}
                 onChange={changeOwner}
               />
+              <AssigneeStatus loading={staffLoading} error={staffError} onRetry={reloadStaff} />
             </div>
             <div className="sm:w-44">
               <SelectMenu

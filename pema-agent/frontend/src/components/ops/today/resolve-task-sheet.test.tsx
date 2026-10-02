@@ -10,7 +10,7 @@ import { ResolveTaskSheet } from "@/components/ops/today/resolve-task-sheet";
 import { ToastProvider } from "@/components/ops/toast";
 import { ApiError } from "@/lib/api/client";
 import type { Schemas } from "@/lib/api";
-import type { AssignableStaff } from "@/lib/live/live-types";
+import type { AssignableStaff } from "@/lib/staff/assignable-staff";
 import { SessionProvider } from "@/lib/session/session-context";
 
 const api = vi.hoisted(() => ({ post: vi.fn(), staff: vi.fn() }));
@@ -19,7 +19,10 @@ vi.mock("@/lib/api/client", async (importActual) => {
   const actual = await importActual<typeof import("@/lib/api/client")>();
   return { ...actual, http: { POST: (...args: unknown[]) => api.post(...args) } };
 });
-vi.mock("@/lib/live/live-api", () => ({ fetchAssignableStaff: () => api.staff() }));
+vi.mock("@/lib/staff/assignable-staff", () => ({
+  fetchAssignableStaff: () => api.staff(),
+  invalidateAssignableStaff: () => undefined,
+}));
 
 const ME = "00000000-0000-4000-8000-000000000004";
 const LAN = "00000000-0000-4000-8000-000000000007";
@@ -30,7 +33,7 @@ const STAFF: AssignableStaff[] = [
   { id: HA, name: "Nguyễn Thanh Hà", role: "owner" },
   { id: TAM, name: "BS. Lê Minh Tâm", role: "doctor" },
   { id: ME, name: "Mai Anh", role: "cs_staff" },
-  { id: LAN, name: "Bùi Ngọc Lan", role: "reception" },
+  { id: LAN, name: "Bùi Ngọc Lan", role: "manager" },
 ];
 
 function task(overrides: Partial<Schemas["CrmTaskOut"]> = {}): Schemas["CrmTaskOut"] {
@@ -137,7 +140,7 @@ describe("ResolveTaskSheet owner box", () => {
     renderSheet(task());
     await waitFor(() => expect(api.staff).toHaveBeenCalled());
     const user = await openOwnerBox();
-    await user.click(await screen.findByRole("option", { name: "Bùi Ngọc Lan (Lễ tân)" }));
+    await user.click(await screen.findByRole("option", { name: "Bùi Ngọc Lan (Quản lý)" }));
     await fillAndSave(user);
     await waitFor(() => expect(api.post).toHaveBeenCalled());
     const options = api.post.mock.calls[0]?.[1] as { body: { owner_user_id: string } };
@@ -170,5 +173,55 @@ describe("ResolveTaskSheet owner box", () => {
     await screen.findByText(/Chưa tải được danh sách nhân viên/);
     await openOwnerBox();
     expect(optionTexts()).toEqual(["Tôi (Mai Anh)", "Giữ nguyên: Bùi Ngọc Lan"]);
+  });
+
+  it("says the colleagues are loading while keeping Tôi available", async () => {
+    api.staff.mockReset().mockReturnValue(new Promise(() => undefined));
+    renderSheet(task());
+    expect(await screen.findByText("Đang tải danh sách nhân viên...")).toBeTruthy();
+    await openOwnerBox();
+    expect(optionTexts()).toEqual(["Tôi (Mai Anh)"]);
+  });
+
+  it("offers Thử lại when the colleagues cannot be read and lists them after a retry", async () => {
+    api.staff.mockReset().mockRejectedValueOnce(new ApiError(429, "Quá nhiều lần"));
+    api.staff.mockResolvedValue(STAFF);
+    renderSheet(task());
+    const user = userEvent.setup();
+    await screen.findByText(/Chưa tải được danh sách nhân viên/);
+
+    await user.click(screen.getByRole("button", { name: "Thử lại" }));
+
+    await waitFor(() => expect(screen.queryByText(/Chưa tải được danh sách nhân viên/)).toBeNull());
+    await user.click(screen.getByLabelText("Phụ trách"));
+    await waitFor(() => expect(optionTexts()).toHaveLength(4));
+    expect(optionTexts()).toContain("BS. Lê Minh Tâm (Bác sĩ)");
+  });
+
+  it("never offers Chưa giao: a CRM task always has an owner", async () => {
+    renderSheet(task({ owner_user_id: LAN, owner_name: "Bùi Ngọc Lan" }));
+    await waitFor(() => expect(api.staff).toHaveBeenCalled());
+    await openOwnerBox();
+    await waitFor(() => expect(optionTexts()).toHaveLength(4));
+    expect(optionTexts()).not.toContain("Chưa giao");
+  });
+
+  it("can be used with the keyboard alone: Enter opens, arrows move, Enter picks", async () => {
+    renderSheet(task());
+    await waitFor(() => expect(api.staff).toHaveBeenCalled());
+    const user = userEvent.setup();
+    const box = screen.getByLabelText("Phụ trách");
+    await waitFor(() => expect(screen.queryByText("Đang tải danh sách nhân viên...")).toBeNull());
+    box.focus();
+
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(screen.getAllByRole("option")).toHaveLength(4));
+    await user.keyboard("{ArrowDown}{Enter}");
+
+    expect(box.textContent).toContain("Nguyễn Thanh Hà");
+    await fillAndSave(user);
+    await waitFor(() => expect(api.post).toHaveBeenCalled());
+    const options = api.post.mock.calls[0]?.[1] as { body: { owner_user_id: string } };
+    expect(options.body.owner_user_id).toBe(HA);
   });
 });

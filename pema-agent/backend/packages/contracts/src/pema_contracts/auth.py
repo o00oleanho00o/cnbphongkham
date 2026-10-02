@@ -97,3 +97,13 @@ class StaffUserUpdate(ApiModel):
     display_name: str | None = Field(default=None, min_length=1, max_length=120)
     role: Role | None = None
     active: bool | None = None
+
+
+class AssignableStaffOut(ApiModel):
+    """A colleague a task or a conversation can be handed to (``GET /staff/assignable``, every signed-in staff
+    member may read it). The minimum a picker needs: no e-mail, phone, last sign-in or lock state (locked
+    accounts are never listed). ``role`` is only one of the roles that can handle conversations and tasks."""
+
+    id: UUID
+    name: str
+    role: Role
