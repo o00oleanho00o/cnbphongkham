@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections import defaultdict, deque
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Any, Protocol
@@ -32,6 +33,12 @@ PRESENCE_TTL_S = 30.0
 KEY_PREFIX = "pema:presence"
 EXPIRY_NOTICE_SLACK_S = 1.0
 """The extra ``presence.changed`` after the last heartbeat is sent this long after the entry expired."""
+MAX_OPS_PER_WINDOW = 120
+WINDOW_S = 60.0
+"""SEC-54: heartbeats and leave calls one person may make per window (the browser makes about 4 a minute per
+open conversation plus one per click and per typing start/stop). Past it the call is acknowledged and ignored:
+without a ceiling, flipping ``viewing``/``replying`` would make every colleague's Inbox reload several times a
+second."""
 
 
 @dataclass(frozen=True)
@@ -167,12 +174,32 @@ class PresenceService:
         *,
         ttl_s: float = PRESENCE_TTL_S,
         expiry_slack_s: float = EXPIRY_NOTICE_SLACK_S,
+        max_ops: int = MAX_OPS_PER_WINDOW,
+        window_s: float = WINDOW_S,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._store = store
         self._expiry_delay_s = ttl_s + expiry_slack_s
         self._timers: dict[tuple[UUID, UUID], asyncio.TimerHandle] = {}
+        self._max_ops = max_ops
+        self._window_s = window_s
+        self._clock = clock
+        self._recent: defaultdict[UUID, deque[float]] = defaultdict(deque)
+
+    def _allow(self, user_id: UUID) -> bool:
+        """Sliding window per person; the dict holds only people with a call inside the window."""
+        now = self._clock()
+        recent = self._recent[user_id]
+        while recent and now - recent[0] >= self._window_s:
+            recent.popleft()
+        if len(recent) >= self._max_ops:
+            return False
+        recent.append(now)
+        return True
 
     async def beat(self, conversation_id: UUID, user_id: UUID, state: PresenceState) -> None:
+        if not self._allow(user_id):
+            return
         try:
             changed = await self._store.touch(conversation_id, user_id, state)
         except Exception as err:
@@ -183,6 +210,8 @@ class PresenceService:
             emit_live(LiveEventType.PRESENCE_CHANGED, conversation_id)
 
     async def leave(self, conversation_id: UUID, user_id: UUID) -> None:
+        if not self._allow(user_id):
+            return
         self._disarm(conversation_id, user_id)
         try:
             was_there = await self._store.leave(conversation_id, user_id)
