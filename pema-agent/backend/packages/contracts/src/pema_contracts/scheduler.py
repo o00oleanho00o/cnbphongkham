@@ -29,6 +29,7 @@ from pydantic import Field
 
 from pema_contracts.channel import ThreadKind
 from pema_contracts.common import ApiModel, VnDatetime
+from pema_contracts.installation import installation_clinic_id
 
 MAX_DELIVERY_ATTEMPTS = 3
 """``MAX_DELIVERY_ATTEMPTS`` of delivery-attempt-store.ts."""
@@ -150,7 +151,7 @@ class ScheduledJob(ApiModel):
 class CreateScheduledJobInput(ApiModel):
     """Port of ``CreateScheduledJobInput`` (scheduled-job-store.ts)."""
 
-    clinic_id: UUID  # clinic
+    clinic_id: UUID = Field(default_factory=installation_clinic_id)
     account_id: str
     thread_id: str
     thread_type: int

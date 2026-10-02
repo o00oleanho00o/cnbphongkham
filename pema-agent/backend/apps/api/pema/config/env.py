@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from uuid import UUID
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -38,6 +39,14 @@ class Settings(BaseSettings):
 
     bot_timezone: str = "Asia/Ho_Chi_Minh"
     """``BOT_TIMEZONE``: zone for 'today', cron and the daily proactive cap."""
+
+    # --- single tenant (ST-A): one installation is ONE clinic, with its own database. -------------------
+    clinic_name: str = "Pema Clinic"
+    """``PEMA_CLINIC_NAME``: name of the one clinic. Read by the migration/bootstrap
+    (``clinic.ensure_clinic``) when the database has no clinic yet; an installed clinic is never renamed."""
+    clinic_id: UUID | None = None
+    """``PEMA_CLINIC_ID`` (optional): the installation id. Unset = read once from ``clinic.clinic``. When
+    set it is the id the migration creates the clinic with, and processes use it without asking the DB."""
 
     database_url: str = "postgresql+psycopg://be_app@localhost:5432/pema"
     worker_database_url: str = "postgresql+psycopg://agent_worker@localhost:5432/pema"
@@ -89,6 +98,21 @@ class Settings(BaseSettings):
     zalo_personal_enabled: bool = False
     zalo_bridge_url: str = "http://localhost:8200"
     zalo_bridge_secret: SecretStr | None = None
+
+    @field_validator("clinic_id", mode="before")
+    @classmethod
+    def _empty_clinic_id_is_unset(cls, value: object) -> object:
+        """docker-compose passes an unset variable as an empty string: it means "read it from the DB"."""
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
+    @field_validator("clinic_name", mode="before")
+    @classmethod
+    def _empty_clinic_name_is_default(cls, value: object) -> object:
+        if isinstance(value, str) and not value.strip():
+            return "Pema Clinic"
+        return value
 
     @field_validator("retention_trace_days", "retention_media_days", mode="before")
     @classmethod

@@ -27,6 +27,7 @@ from pydantic import Field
 
 from pema_contracts.channel import InboundMessage
 from pema_contracts.common import ApiModel, JsonObject, VnDatetime
+from pema_contracts.installation import installation_clinic_id
 
 
 class TurnSource(StrEnum):
@@ -60,7 +61,7 @@ class StepTrace(ApiModel):
 
 
 class AgentTurnRequest(ApiModel):
-    clinic_id: UUID
+    clinic_id: UUID = Field(default_factory=installation_clinic_id)
     account_id: str
     batch: list[InboundMessage] = Field(
         min_length=1, description="Merged messages of the turn; the last one represents it."
@@ -135,7 +136,7 @@ class TurnJob(ApiModel):
     """What the API process puts on the Redis queue for the worker, after the batcher closed a batch."""
 
     job_id: UUID
-    clinic_id: UUID
+    clinic_id: UUID = Field(default_factory=installation_clinic_id)
     account_id: str
     thread_id: str
     messages: list[InboundMessage] = Field(min_length=1)

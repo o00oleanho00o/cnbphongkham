@@ -25,6 +25,7 @@ from pema_contracts.channel import (
     ThreadKind,
 )
 from pema_contracts.common import now_vn
+from pema_contracts.installation import installation_clinic_id_or_none
 from pema_contracts.policy import PolicyProfileKey
 
 
@@ -220,7 +221,7 @@ class FakeTextGenerator:
 def new_turn_job(clinic_id: UUID | None = None, *messages: InboundMessage) -> TurnJob:
     return TurnJob(
         job_id=uuid4(),
-        clinic_id=clinic_id or uuid4(),
+        clinic_id=clinic_id or installation_clinic_id_or_none() or uuid4(),
         account_id="acc-1",
         thread_id="thread-1",
         messages=list(messages) or [make_inbound()],
