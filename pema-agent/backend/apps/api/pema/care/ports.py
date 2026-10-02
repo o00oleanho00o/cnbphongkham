@@ -65,13 +65,26 @@ M2c (staff routing, SLA, on-call, reminder pause and reconcile)
   (``CareEventBus``).
 * ``ReminderPauser`` (the loop) and ``ReminderHooks`` (``CareControl``):
   ``pema.care.reminders.ReminderService``.
+
+M4 (specialists, ``pema.care.specialists``)
+* ``SlotSearch``: B1 has no free-slot query yet (``AgentFacingClinicActions`` can only PROPOSE an
+  appointment),
+  so ``appointment.search_slots`` codes against this one-method port.
+* ``KnowledgeAccess``: D3's ``KnowledgeStore`` narrowed to what the Knowledge agent may do (search with the
+  approved-only switch, ingest a text, list); adapter ``specialists.adapters.StoreKnowledgeAccess``.
+* ``AppointmentConfirmPolicy``: M3's answer to "does L1 ``appointment_confirm`` apply to this care agent now".
+* ``SpecialistRunner``: runs ONE specialist (model loop or the deterministic Reviewer) and reports tokens and
+  steps; ``specialists.runner.LlmSpecialistRunner`` is the model-backed one.
+* ``TaskStore``: ``agent.tasks`` (``tasks.SqlTaskStore``). Refuses a task at depth 2.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from enum import StrEnum
 from typing import Any, Protocol, runtime_checkable
 from uuid import UUID
 
@@ -79,7 +92,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from pema.care.events import CareEvent
 from pema.care.handoff_types import DepthLlmOutput, HandoffAction, HandoffConfig, HandoffDecision
-from pema.care.models import ControlState
+from pema.care.models import ControlState, TaskStatus
 from pema.care.routing_types import (
     DeclineRecord,
     DueReminder,
@@ -94,8 +107,11 @@ from pema.care.routing_types import (
     SlaCheck,
     StaffInfo,
 )
+from pema.care.specialists.spec import SpecialistCall, SpecialistRun
+from pema.care.task_result import TaskResult
 from pema.care.window import SendWindow
 from pema_contracts.common import JsonObject
+from pema_contracts.knowledge import KbHit
 
 
 @runtime_checkable
@@ -558,6 +574,89 @@ class TickRuleSource(Protocol):
     async def findings(self, agents: Sequence[CareAgentSnapshot], now: datetime) -> Sequence[TickFinding]:
         """Batch API (one query per batch, never one per patient)."""
         ...
+
+
+# ------------------------------------------------------------------------------------- M4 ports
+@dataclass(frozen=True)
+class SlotQuery:
+    from_date: date
+    to_date: date
+    duration_min: int = 30
+
+
+@dataclass(frozen=True)
+class FreeSlot:
+    starts_at: datetime
+    """Timezone-aware."""
+    duration_min: int
+
+
+class SlotSearch(Protocol):
+    async def search(self, query: SlotQuery) -> Sequence[FreeSlot]:
+        """Free slots of the clinic, soonest first. Read only."""
+        ...
+
+
+@dataclass(frozen=True)
+class KbSourceBrief:
+    source_id: str
+    name: str
+    status: str
+    approved: bool
+
+
+class KnowledgeAccess(Protocol):
+    async def search(self, question: str, *, only_approved: bool, limit: int = 5) -> list[KbHit]: ...
+
+    async def ingest_text(self, name: str, text: str) -> KbSourceBrief:
+        """Creates the source. It is NOT bound to any agent and NOT approved: staff do both."""
+        ...
+
+    async def list_sources(self) -> list[KbSourceBrief]: ...
+
+
+class AppointmentConfirmPolicy(Protocol):
+    async def l1_applies(self, care_agent_id: UUID, now: datetime) -> bool:
+        """``effective_level(care_agent, 'appointment_confirm') >= L1`` (M3)."""
+        ...
+
+
+class SpecialistRunner(Protocol):
+    async def run(self, call: SpecialistCall) -> SpecialistRun: ...
+
+
+class TaskStore(Protocol):
+    async def create_root(self, care_agent_id: UUID, *, started_at: datetime, deadline_at: datetime) -> UUID:
+        """The task of the care agent's own turn: the parent of its delegations (``parent_id`` NULL)."""
+        ...
+
+    async def create_child(
+        self,
+        parent_id: UUID,
+        *,
+        agent_id: str,
+        input: JsonObject,
+        started_at: datetime,
+        deadline_at: datetime,
+    ) -> UUID:
+        """A delegation. Raises ``DepthError`` when ``parent_id`` is itself a child (depth stays 1)."""
+        ...
+
+    async def finish(
+        self,
+        task_id: UUID,
+        *,
+        status: TaskStatus,
+        result: TaskResult | None,
+        tokens: int,
+        cost: Decimal,
+        finished_at: datetime,
+        error: str | None = None,
+    ) -> None: ...
+
+
+class DepthError(RuntimeError):
+    """A delegation under a delegation (depth 2) was attempted."""
 
 
 # ------------------------------------------------------------------------------------ stand-ins
