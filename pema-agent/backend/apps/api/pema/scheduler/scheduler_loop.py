@@ -11,10 +11,11 @@ Do NOT wrap the whole ``run_scheduled_job`` in the thread lock here (the thread 
 sending, inside ``deliver_proactively`` - wrapping at this layer would nest 2 locks for the SAME thread and
 deadlock).
 
-Forced deviations (one process -> several workers over several clinics):
+Forced deviations (one process -> several workers over the ONE clinic of the installation):
 
 * ``startScheduler`` / ``runSchedulerTick`` become ``SchedulerLoop.start`` / ``run_tick(clinic_id, now)``; the
-  loop iterates ``list_active_clinic_ids`` (the worker, ``pema.workers.scheduler_worker``, owns the process);
+  clinic is the installation clinic (single tenant, ``get_installation_clinic_id``), there is no loop over
+  clinics (the worker, ``pema.workers.scheduler_worker``, owns the process);
 * "clear-before-dispatch" is an ATOMIC claim (compare-and-swap on ``next_run_at``) in the SAME transaction
   that opens the run: of N workers that read the same due row exactly one gets ``True`` and runs it, and a
   crash cannot leave a claimed job without a ``running`` row. This is the invariant "a job never runs twice"
@@ -29,7 +30,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import time
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Coroutine
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
@@ -37,6 +38,7 @@ from uuid import UUID
 from sqlalchemy import text
 
 from pema.config.runtime_tuning_settings import bot_time_zone, get_tuning_bool, get_tuning_int
+from pema.core.db import get_installation_clinic_id
 from pema.scheduler.deps import SchedulerDeps
 from pema.scheduler.job_run_log_store import FinishRunParams
 from pema.scheduler.next_run import DueJob, compute_next_run, decide_due_action
@@ -52,19 +54,15 @@ from pema_contracts.scheduler import JobKind, JobRunStatus, ScheduledJob, Schedu
 
 log = create_logger("scheduler-loop")
 
-ClinicIds = Callable[[], Awaitable[list[UUID]]]
-
 
 class SchedulerLoop:
     def __init__(
         self,
         deps: SchedulerDeps,
         *,
-        clinic_ids: ClinicIds | None = None,
         tick_lease: TickLease | None = None,
     ) -> None:
         self._deps = deps
-        self._clinic_ids: ClinicIds = clinic_ids if clinic_ids is not None else deps.db.list_active_clinic_ids
         self._tick_lease = tick_lease
         self._task: asyncio.Task[None] | None = None
         self._tasks: set[asyncio.Task[None]] = set()
@@ -83,8 +81,7 @@ class SchedulerLoop:
         if self._task is not None:
             return  # already running - calling twice must not double the tick loop
 
-        for clinic_id in await self._clinic_ids():
-            await self.recover_clinic(clinic_id)
+        await self.recover_clinic(await get_installation_clinic_id(self._deps.db))
 
         self._task = asyncio.create_task(self._run_forever())
         log.info("Scheduler đã khởi động", tick_ms=get_tuning_int("SCHEDULER_TICK_MS"))
@@ -145,14 +142,14 @@ class SchedulerLoop:
     # ------------------------------------------------------------------------------------------ tick
 
     async def run_tick_all(self, now: datetime) -> None:
-        """One tick over every active clinic."""
+        """One tick over the clinic of the installation."""
         if not get_tuning_bool("SCHEDULER_ENABLED"):
             return
-        for clinic_id in await self._clinic_ids():
-            if self._tick_lease is not None and not await self._tick_lease.try_hold(clinic_id):
-                continue
-            await self._recover_if_due(clinic_id)
-            await self.run_tick(clinic_id, now)
+        clinic_id = await get_installation_clinic_id(self._deps.db)
+        if self._tick_lease is not None and not await self._tick_lease.try_hold(clinic_id):
+            return
+        await self._recover_if_due(clinic_id)
+        await self.run_tick(clinic_id, now)
 
     async def run_tick(self, clinic_id: UUID, now: datetime) -> None:
         """1 scan of the due jobs of one clinic. Public (not only reachable through the timer) so a test calls
@@ -209,7 +206,7 @@ class SchedulerLoop:
                     log.warning(
                         "Job chưa dispatch được - tick sau thử lại", job_id=job.id, reason=preflight.reason
                     )
-                    async with deps.db.session(job.clinic_id) as s:
+                    async with deps.db.session() as s:
                         await deps.jobs.mark_blocked(job.clinic_id, job.id, preflight.reason, session=s)
                         # NOT because of a failed send - this is the MOST COMMON block in production
                         # (account/thread blocked right at the tick). Without this line: 3 failed sends WEEKS
@@ -247,7 +244,7 @@ class SchedulerLoop:
             )
 
             # The claim is ATOMIC (compare-and-swap on next_run_at) and opens the run in the SAME transaction.
-            async with deps.db.session(job.clinic_id) as s:
+            async with deps.db.session() as s:
                 claimed = await deps.jobs.claim_due_job(
                     job.clinic_id, job.id, expected_dt, next_run_at, session=s
                 )
@@ -324,7 +321,7 @@ class SchedulerLoop:
 
 async def count_running_rows(deps: SchedulerDeps, clinic_id: UUID) -> int:
     """Diagnostics for tests and the admin API: how many runs are open in the clinic right now."""
-    async with deps.db.session(clinic_id) as s:
+    async with deps.db.session() as s:
         value = (
             await s.execute(
                 text(

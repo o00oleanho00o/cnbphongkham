@@ -58,7 +58,7 @@ def _at(moment: datetime) -> Any:
 
 
 def _request(email: str, password: str = ACCOUNT_PASSWORD) -> LoginRequest:
-    return LoginRequest(clinic_slug="clinic-a", email=email, password=SecretStr(password))
+    return LoginRequest(email=email, password=SecretStr(password))
 
 
 def _max_age(response: httpx.Response) -> int:
@@ -70,7 +70,7 @@ def _max_age(response: httpx.Response) -> int:
 async def _stored(db: ClinicDatabase, world: SeedResult, token: str) -> tuple[datetime, datetime, datetime]:
     """(created_at, expires_at, absolute_expires_at) of the session the token points at."""
     claims = jwt.decode(token, JWT_SECRET, algorithms=["HS256"], options={"verify_exp": False})
-    async with db.session(world.clinic_id) as session:
+    async with db.session() as session:
         row = (
             await session.execute(
                 text(
@@ -123,12 +123,12 @@ def test_the_bounds_are_accepted(jwt_env: None, monkeypatch: pytest.MonkeyPatch)
 
 @pytest.mark.db
 async def test_login_fixes_the_ceiling_at_seven_days_and_the_cookie_lives_the_idle_time(
-    jwt_env: None, db: ClinicDatabase, world_a: SeedResult
+    jwt_env: None, db: ClinicDatabase, world: SeedResult
 ) -> None:
     """đăng nhập đặt mốc tuyệt đối = lúc đăng nhập + 7 ngày; cookie sống theo hạn trượt (8 giờ) vì nó ngắn hơn"""
     result = await auth.login(db, _request("reception.lan@example.test"), client_ip="198.51.100.60")
 
-    created, expires, absolute = await _stored(db, world_a, result.token)
+    created, expires, absolute = await _stored(db, world, result.token)
     assert absolute == created + timedelta(days=7) == DEMO_NOW + timedelta(days=7)
     assert expires == DEMO_NOW + TTL
     assert result.max_age_seconds == int(TTL.total_seconds())
@@ -140,7 +140,7 @@ async def test_login_fixes_the_ceiling_at_seven_days_and_the_cookie_lives_the_id
 
 @pytest.mark.db
 async def test_refresh_before_the_ceiling_works_and_slides_the_idle_expiry(
-    one_day_ceiling: None, db: ClinicDatabase, world_a: SeedResult
+    one_day_ceiling: None, db: ClinicDatabase, world: SeedResult
 ) -> None:
     """refresh trước mốc tuyệt đối thì được, hạn trượt dịch về sau"""
     result = await auth.login(db, _request("reception.lan@example.test"), client_ip="198.51.100.61")
@@ -158,7 +158,7 @@ async def test_refresh_before_the_ceiling_works_and_slides_the_idle_expiry(
 
 @pytest.mark.db
 async def test_refresh_never_pushes_the_expiry_past_the_ceiling_and_the_cookie_never_outlives_it(
-    one_day_ceiling: None, db: ClinicDatabase, world_a: SeedResult
+    one_day_ceiling: None, db: ClinicDatabase, world: SeedResult
 ) -> None:
     """refresh không bao giờ đẩy hạn quá mốc tuyệt đối; Max-Age của cookie và exp của JWT cũng không vượt mốc"""
     result = await auth.login(db, _request("reception.lan@example.test"), client_ip="198.51.100.62")
@@ -178,7 +178,7 @@ async def test_refresh_never_pushes_the_expiry_past_the_ceiling_and_the_cookie_n
     assert renewed.max_age_seconds == 3 * 3600
     claims = jwt.decode(renewed.token, JWT_SECRET, algorithms=["HS256"], options={"verify_exp": False})
     assert claims["exp"] == int(ceiling.timestamp())
-    _, expires, absolute = await _stored(db, world_a, renewed.token)
+    _, expires, absolute = await _stored(db, world, renewed.token)
     assert expires == absolute == ceiling
 
     # another refresh a minute before the ceiling is still cut to it
@@ -190,7 +190,7 @@ async def test_refresh_never_pushes_the_expiry_past_the_ceiling_and_the_cookie_n
 
 @pytest.mark.db
 async def test_past_the_ceiling_the_session_is_dead_and_refresh_answers_401(
-    one_day_ceiling: None, db: ClinicDatabase, world_a: SeedResult
+    one_day_ceiling: None, db: ClinicDatabase, world: SeedResult
 ) -> None:
     """quá mốc tuyệt đối thì phiên chết, refresh trả 401 và phải đăng nhập lại"""
     result = await auth.login(db, _request("reception.lan@example.test"), client_ip="198.51.100.63")
@@ -214,23 +214,23 @@ async def test_past_the_ceiling_the_session_is_dead_and_refresh_answers_401(
     with _at(ceiling + timedelta(seconds=5)), pytest.raises(DomainError) as caught:
         await auth.refresh(db, user)
     assert caught.value.code is ErrorCode.UNAUTHENTICATED
-    _, expires, absolute = await _stored(db, world_a, renewed.token)
+    _, expires, absolute = await _stored(db, world, renewed.token)
     assert expires <= absolute == ceiling
 
     # signing in again works and starts a new ceiling
     with _at(ceiling + timedelta(hours=1)):
         again = await auth.login(db, _request("reception.lan@example.test"), client_ip="198.51.100.64")
         assert await auth.verify_session_token(db, again.token) is not None
-        _, _, new_absolute = await _stored(db, world_a, again.token)
+        _, _, new_absolute = await _stored(db, world, again.token)
     assert new_absolute == ceiling + timedelta(hours=1) + timedelta(days=1)
 
 
 @pytest.mark.db
 async def test_the_refresh_route_answers_401_past_the_ceiling_and_a_capped_max_age_before_it(
-    one_day_ceiling: None, app: Any, db: ClinicDatabase, world_a: SeedResult
+    one_day_ceiling: None, app: Any, db: ClinicDatabase, world: SeedResult
 ) -> None:
     """POST /auth/refresh: 200 với Max-Age bị chặn bởi mốc tuyệt đối, sau mốc thì 401"""
-    http = await sign_in(app, "clinic-a", "reception.lan@example.test")
+    http = await sign_in(app, "reception.lan@example.test")
     try:
         ceiling = DEMO_NOW + timedelta(days=1)
         for hours in (7, 14):
@@ -255,7 +255,7 @@ async def test_the_refresh_route_answers_401_past_the_ceiling_and_a_capped_max_a
 
 @pytest.mark.db
 async def test_a_short_ceiling_caps_even_the_first_cookie(
-    jwt_env: None, db: ClinicDatabase, world_a: SeedResult
+    jwt_env: None, db: ClinicDatabase, world: SeedResult
 ) -> None:
     """hạn trượt dài hơn mốc tuyệt đối thì ngay cookie đầu tiên cũng bị chặn bởi mốc"""
     with pytest.MonkeyPatch.context() as patch:
@@ -278,14 +278,14 @@ async def test_a_short_ceiling_caps_even_the_first_cookie(
 
 @pytest.mark.db
 async def test_a_password_change_still_revokes_the_other_sessions_and_keeps_the_ceiling_of_this_one(
-    one_day_ceiling: None, app: Any, db: ClinicDatabase, world_a: SeedResult
+    one_day_ceiling: None, app: Any, db: ClinicDatabase, world: SeedResult
 ) -> None:
     """đổi mật khẩu vẫn thu hồi các phiên khác; phiên vừa đổi giữ nguyên mốc tuyệt đối"""
-    email = await add_staff_account(db, world_a)
-    mine = await sign_in(app, "clinic-a", email)
-    other = await sign_in(app, "clinic-a", email)
+    email = await add_staff_account(db, world)
+    mine = await sign_in(app, email)
+    other = await sign_in(app, email)
     try:
-        before = await _stored(db, world_a, mine.cookies["pema_session"])
+        before = await _stored(db, world, mine.cookies["pema_session"])
         assert (await other.get("/api/v1/me")).status_code == 200
 
         response = await mine.post(
@@ -296,7 +296,7 @@ async def test_a_password_change_still_revokes_the_other_sessions_and_keeps_the_
         assert response.status_code == 204
         assert (await other.get("/api/v1/me")).status_code == 401
         assert (await mine.get("/api/v1/me")).status_code == 200
-        after = await _stored(db, world_a, mine.cookies["pema_session"])
+        after = await _stored(db, world, mine.cookies["pema_session"])
         assert after[2] == before[2], "changing the password must not move the ceiling"
         with _at(DEMO_NOW + timedelta(days=1, minutes=1)):
             assert (await mine.get("/api/v1/me")).status_code == 401, "the ceiling still applies after it"
@@ -307,14 +307,14 @@ async def test_a_password_change_still_revokes_the_other_sessions_and_keeps_the_
 
 @pytest.mark.db
 async def test_login_prunes_sessions_past_their_ceiling(
-    one_day_ceiling: None, db: ClinicDatabase, world_a: SeedResult
+    one_day_ceiling: None, db: ClinicDatabase, world: SeedResult
 ) -> None:
     """đăng nhập dọn phiên đã quá mốc tuyệt đối"""
-    email = await add_staff_account(db, world_a)
+    email = await add_staff_account(db, world)
     old = await auth.login(db, _request(email), client_ip="198.51.100.66")
     with _at(DEMO_NOW + timedelta(days=2)):
         await auth.login(db, _request(email), client_ip="198.51.100.67")
-        async with db.session(world_a.clinic_id) as session:
+        async with db.session() as session:
             claims = jwt.decode(old.token, JWT_SECRET, algorithms=["HS256"], options={"verify_exp": False})
             left = await session.scalar(
                 text("SELECT count(*) FROM clinic.auth_session WHERE id = :i"), {"i": claims["sid"]}
@@ -327,7 +327,7 @@ async def test_login_prunes_sessions_past_their_ceiling(
 
 @pytest.mark.db
 async def test_the_migration_backfills_existing_sessions_with_created_at_plus_seven_days(
-    world_a: SeedResult, admin: Engine
+    world: SeedResult, admin: Engine
 ) -> None:
     """migration thêm cột và backfill phiên đang có = created_at + 7 ngày; cột NOT NULL"""
     config = Config(str(API_INI))
@@ -341,7 +341,7 @@ async def test_the_migration_backfills_existing_sessions_with_created_at_plus_se
                     "(id, clinic_id, user_id, password_fingerprint, created_at, expires_at) "
                     "VALUES (:i, :c, :u, 'fp', '2026-09-01T00:00:00+00', '2026-09-01T08:00:00+00')"
                 ),
-                {"i": session_id, "c": world_a.clinic_id, "u": world_a.users["reception.lan"]},
+                {"i": session_id, "c": world.clinic_id, "u": world.users["reception.lan"]},
             )
     finally:
         command.upgrade(config, "heads")

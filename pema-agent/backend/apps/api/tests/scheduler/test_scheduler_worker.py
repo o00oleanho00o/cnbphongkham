@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime, timedelta
-from uuid import UUID
 
 import pytest
 
@@ -14,7 +13,7 @@ from pema.scheduler.run_scheduled_job import RunScheduledJobOptions, run_schedul
 from pema.scheduler.testing_env import Env
 from pema.shared.doi_cho_den_khi import WaitOptions, doi_cho_so_luong
 from pema.shared.zone_time import to_iso_z
-from pema.workers.scheduler_worker import build_send_gate, recover_clinics, run_scheduler_worker
+from pema.workers.scheduler_worker import build_send_gate, recover_installation, run_scheduler_worker
 from pema_contracts.channel import QuoteRef, SendResult, TextStyle, ThreadKind
 from pema_contracts.scheduler import JobRunStatus, OnceSchedule
 
@@ -24,20 +23,17 @@ EnvMaker = Callable[..., Env]
 BASE: dict[str, str | int | float | bool] = {"SCHEDULER_SEND_GAP_MS": 0, "SCHEDULER_ONCE_GRACE_MINUTES": 1}
 
 
-async def test_run_scheduler_worker_processes_due_jobs_of_every_active_clinic_and_stops_cleanly(
+async def test_run_scheduler_worker_processes_due_jobs_of_the_clinic_and_stops_cleanly(
     make_env: EnvMaker,
 ) -> None:
-    """worker: chạy vòng tick qua các phòng khám, dừng sạch khi nhận tín hiệu (đợi các lượt đang chạy chốt sổ)"""
+    """worker: chạy vòng tick cho phòng khám của bản cài đặt, dừng sạch khi nhận tín hiệu (đợi các lượt đang chạy chốt sổ)"""
     env = make_env(tuning=BASE)
     due = OnceSchedule(run_at_utc=to_iso_z(datetime.now(UTC) - timedelta(seconds=5)))
     job = await env.make_job(thread_id="t-worker", payload="tin của worker", schedule=due)
     stop = asyncio.Event()
 
-    async def clinic_ids() -> list[UUID]:
-        return [env.clinic_id]
-
     worker = asyncio.create_task(
-        run_scheduler_worker(env.deps, lock_backend=InMemoryLockBackend(), stop=stop, clinic_ids=clinic_ids)
+        run_scheduler_worker(env.deps, lock_backend=InMemoryLockBackend(), stop=stop)
     )
     await doi_cho_so_luong(
         lambda: len(env.channel.sent), 1, WaitOptions(tran_ms=3000, mo_ta="tin của worker")
@@ -50,10 +46,10 @@ async def test_run_scheduler_worker_processes_due_jobs_of_every_active_clinic_an
     assert [r.status for r in runs] == [JobRunStatus.OK], "lượt phải được chốt sổ trước khi worker dừng"
 
 
-async def test_recover_clinics_interrupts_dead_runs_and_revives_their_claimed_once_jobs(
+async def test_recover_installation_interrupts_dead_runs_and_revives_their_claimed_once_jobs(
     make_env: EnvMaker,
 ) -> None:
-    """recover_clinics (CLI vận hành): lượt của worker đã chết -> interrupted, job 'once' nó giành dở -> phục hồi"""
+    """recover_installation (CLI vận hành): lượt của worker đã chết -> interrupted, job 'once' nó giành dở -> phục hồi"""
     env = make_env(tuning=BASE, stale_run_seconds=0)
     run_at = to_iso_z(datetime.now(UTC) + timedelta(hours=1))
     job = await env.make_job(thread_id="t-recover", schedule=OnceSchedule(run_at_utc=run_at))
@@ -61,7 +57,7 @@ async def test_recover_clinics_interrupts_dead_runs_and_revives_their_claimed_on
     await env.deps.runs.open_run(env.clinic_id, job.id, worker_id="worker-dead")
     await asyncio.sleep(0.05)  # the stale window of this env is 0 s: any heartbeat in the past is stale
 
-    await recover_clinics(env.deps, [env.clinic_id])
+    await recover_installation(env.deps)
 
     runs = await env.deps.runs.list_runs(env.clinic_id, job.id)
     assert runs[0].status is JobRunStatus.INTERRUPTED

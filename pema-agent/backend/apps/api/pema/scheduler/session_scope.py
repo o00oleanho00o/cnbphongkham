@@ -4,7 +4,7 @@ The original stores were bound to ONE synchronous SQLite handle, so "bookkeeping
 (``finishRun`` + ``markRun`` + ``resetDeliveryAttempts``) was three separate statements that could be
 interrupted between two of them. On Postgres each store method accepts an optional open ``AsyncSession`` so
 the callers that need atomicity (claim + open run, conclude) compose the statements in ONE transaction, and
-the callers that do not simply let the method open its own ``db.session(clinic_id)`` (RLS context included).
+the callers that do not simply let the method open its own ``db.session()``.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ async def use_session(
     if session is not None:
         yield session
         return
-    async with db.session(clinic_id) as opened:
+    async with db.session() as opened:
         yield opened
 
 

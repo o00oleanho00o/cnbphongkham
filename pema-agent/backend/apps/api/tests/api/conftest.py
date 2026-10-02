@@ -11,8 +11,7 @@ from pema.api.clinic_testing import (
     jwt_env,
     pg_url,
     worker_db,
-    world_a,
-    world_b,
+    world,
 )
 
 __all__ = [
@@ -24,6 +23,5 @@ __all__ = [
     "jwt_env",
     "pg_url",
     "worker_db",
-    "world_a",
-    "world_b",
+    "world",
 ]

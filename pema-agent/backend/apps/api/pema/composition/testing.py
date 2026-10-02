@@ -29,13 +29,14 @@ from pema.agent.streaming_model_test_helper import ScriptedModel, tra_loi
 from pema.bootstrap import create_app
 from pema.channels.zalo_bot.settings import derive_webhook_secret
 from pema.channels.zalo_bot.testing import SYNTHETIC_TOKEN, FakeBotClient
-from pema.clinic.actions.seed_demo import SeedResult, seed_demo
+from pema.clinic.actions.seed_demo import SeedResult
 from pema.composition.runtime import ProcessRole, Runtime, build_runtime
 from pema.config.account_store import AccountStoreImpl
 from pema.config.agent_store import AgentStoreImpl
 from pema.config.env import Settings
 from pema.conversation.media_store import DownloadedImage
 from pema.core.db import ClinicDatabase
+from pema.core.installation import INSTALLATION_SLUG
 from pema.shared.doi_cho_den_khi import WaitOptions, doi_cho_den_khi
 from pema.workers.main import WorkerHandle, start_worker
 from pema_contracts.channel import ChannelKind
@@ -147,11 +148,7 @@ class Loop:
         self._clients.append(client)
         response = await client.post(
             "/api/v1/auth/login",
-            json={
-                "clinic_slug": self.slug,
-                "email": f"{user_key}@example.test",
-                "password": ACCOUNT_PASSWORD,
-            },
+            json={"email": f"{user_key}@example.test", "password": ACCOUNT_PASSWORD},
         )
         dashboard_auth.reset_login_rate_limit()
         if response.status_code != 200:
@@ -320,16 +317,15 @@ class LoopFactory:
     def open(
         self, model: ScriptedModel, profile: PolicyProfileKey, *, scheduler: bool = False
     ) -> contextlib.AbstractAsyncContextManager[Loop]:
-        """The shared demo clinic ``clinic-a``."""
-        return self._open(self._world, "clinic-a", model, profile, scheduler)
+        """The demo clinic (the one clinic of the installation, emptied and seeded for this test)."""
+        return self._open(self._world, INSTALLATION_SLUG, model, profile, scheduler)
 
     async def open_fresh(
         self, model: ScriptedModel, profile: PolicyProfileKey, *, scheduler: bool = False
     ) -> contextlib.AbstractAsyncContextManager[Loop]:
-        """A demo clinic of its own: the tasks, jobs and review items of other tests stay out of the way."""
-        slug = f"loop-{uuid4().hex[:8]}"
-        world = await seed_demo(self._db, password=ACCOUNT_PASSWORD, slug=slug)
-        return self._open(world, slug, model, profile, scheduler)
+        """Same as ``open``: the clinic is already emptied for every test (single tenant), so the tasks, jobs
+        and review items of other tests are gone."""
+        return self._open(self._world, INSTALLATION_SLUG, model, profile, scheduler)
 
     def _open(
         self, world: SeedResult, slug: str, model: ScriptedModel, profile: PolicyProfileKey, scheduler: bool

@@ -70,7 +70,7 @@ async def test_chi_nhan_vien_co_quyen_moi_ghi_duoc_cau_hinh_mo_hinh(make_loop: L
 async def _assert_audited(loop: Loop) -> None:
     from sqlalchemy import text
 
-    async with loop.api.db.session(loop.clinic_id) as session:
+    async with loop.api.db.session() as session:
         rows = (
             await session.execute(
                 text("SELECT count(*) FROM clinic.audit_log WHERE entity_type = 'runtime_settings'")

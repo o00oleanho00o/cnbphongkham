@@ -18,9 +18,9 @@ from alembic.script import ScriptDirectory
 from pydantic import ValidationError
 
 from pema.config.env import Settings
-from pema.conversation.pg_testing import BE_PASSWORD, WORKER_PASSWORD, ClinicEnv
+from pema.conversation.pg_testing import BE_PASSWORD, WORKER_PASSWORD
 from pema.core.db import ClinicDatabase
-from pema.retention.pg_testing import Seed
+from pema.retention.pg_testing import RetentionEnv, Seed
 from pema.retention.policy import RetentionPolicy, Scope, policy_from_settings
 from pema.retention.runner import RetentionRunner, RunStatus, ScopeReport
 from pema.retention.schedule import start_retention_loop
@@ -119,7 +119,7 @@ class _CountingRunner(RetentionRunner):
         self.passes = 0
         self._fail_first = fail_first
 
-    async def run_active_clinics(self, *, dry_run: bool = False) -> list[ScopeReport]:
+    async def run_all(self, *, dry_run: bool = False) -> list[ScopeReport]:
         self.passes += 1
         if self._fail_first and self.passes == 1:
             raise RuntimeError("database is down")
@@ -158,7 +158,7 @@ def test_the_worker_runs_the_agent_scope_and_the_api_process_the_clinic_scope() 
 
 def test_the_migration_chain_has_one_head() -> None:
     heads = ScriptDirectory.from_config(Config(str(API_DIR / "alembic.ini"))).get_heads()
-    assert heads == ["h_0008_merge_heads"]
+    assert len(heads) == 1, heads
 
 
 def test_no_retention_sql_names_the_audit_log_in_a_delete() -> None:
@@ -168,7 +168,7 @@ def test_no_retention_sql_names_the_audit_log_in_a_delete() -> None:
 
 
 # ------------------------------------------------------------------------------------------ command line
-def _settings(env: ClinicEnv, *, history_days: int = 0, message_days: int = 0) -> Settings:
+def _settings(env: RetentionEnv, *, history_days: int = 0, message_days: int = 0) -> Settings:
     return Settings(
         database_url=env.server.role_url("be_app", BE_PASSWORD),
         worker_database_url=env.server.role_url("agent_worker", WORKER_PASSWORD),
@@ -178,21 +178,19 @@ def _settings(env: ClinicEnv, *, history_days: int = 0, message_days: int = 0) -
 
 
 @pytest.mark.db
-async def test_cli_dry_run_for_one_clinic_prints_the_counts_and_changes_nothing(
-    env: ClinicEnv, seed: Seed
-) -> None:
+async def test_cli_dry_run_prints_the_counts_and_changes_nothing(env: RetentionEnv, seed: Seed) -> None:
     seed.history(env.clinic_id, age=40, n=2)
     seed.conversation(env.clinic_id, "closed", age=100)
     out = io.StringIO()
     code = await run_cli(
-        ["--dry-run", "--clinic", str(env.clinic_id)],
+        ["--dry-run"],
         settings=_settings(env, history_days=30, message_days=90),
         out=out,
     )
     printed = out.getvalue()
     assert code == 0
-    assert f"clinic {env.clinic_id} scope=agent" in printed
-    assert f"clinic {env.clinic_id} scope=clinic" in printed
+    assert "scope=agent status=done" in printed
+    assert "scope=clinic status=done" in printed
     assert "would delete history: 2" in printed
     assert "would delete conversations: 1" in printed
     assert seed.count("agent.history", env.clinic_id) == 2
@@ -200,28 +198,30 @@ async def test_cli_dry_run_for_one_clinic_prints_the_counts_and_changes_nothing(
 
 
 @pytest.mark.db
-async def test_cli_agent_scope_connects_as_the_worker_role_and_deletes(env: ClinicEnv, seed: Seed) -> None:
+async def test_cli_agent_scope_connects_as_the_worker_role_and_deletes(env: RetentionEnv, seed: Seed) -> None:
     seed.history(env.clinic_id, age=40, n=2)
     settings = _settings(env, history_days=30).model_copy(
         update={"database_url": "postgresql+psycopg://be_app:wrong@127.0.0.1:1/none"}
     )
     out = io.StringIO()
-    code = await run_cli(["--scope", "agent", "--clinic", str(env.clinic_id)], settings=settings, out=out)
+    code = await run_cli(["--scope", "agent"], settings=settings, out=out)
     assert code == 0, out.getvalue()
     assert "deleted history: 2" in out.getvalue()
     assert seed.count("agent.history", env.clinic_id) == 0
 
 
 @pytest.mark.db
-async def test_cli_without_clinic_visits_every_active_clinic(env: ClinicEnv, seed: Seed) -> None:
-    other = seed.new_clinic()
+async def test_cli_has_no_clinic_option_one_installation_is_one_clinic(env: RetentionEnv, seed: Seed) -> None:
     seed.history(env.clinic_id, age=40)
-    seed.history(other, age=40)
+    with pytest.raises(SystemExit):
+        await run_cli(
+            ["--clinic", str(env.clinic_id)], settings=_settings(env, history_days=30), out=io.StringIO()
+        )
     out = io.StringIO()
     code = await run_cli(["--scope", "clinic"], settings=_settings(env, history_days=30), out=out)
     assert code == 0
-    assert f"clinic {other} scope=clinic" in out.getvalue()
-    assert f"clinic {env.clinic_id} scope=clinic" in out.getvalue()
+    assert "scope=clinic status=done" in out.getvalue()
+    assert "scope=agent" not in out.getvalue()
 
 
 def test_the_report_of_a_skipped_run_says_why() -> None:

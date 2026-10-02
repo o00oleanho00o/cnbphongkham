@@ -4,12 +4,12 @@
 The logic of one pass (claim, extract in an isolated child process, embed, save, release stuck sources) is
 ``pema.knowledge.kb_ingest_worker.KbIngestWorker``; THIS module is what the original ``batDauWorker`` did
 around it - the boot sweep, the immediate first pass and the repeating timer - adapted to a worker process
-that serves several clinics:
+of a single-tenant installation (one clinic, one database):
 
 * connects as the ``agent_worker`` role (``Settings.worker_database_url``): no privilege on ``clinic.*``, only
   ``agent.*`` - which is all the knowledge base needs;
-* every ``TICK_MS`` it walks ``ctx.list_active_clinic_ids()`` and runs one safe pass per clinic (the pass
-  itself takes a per-clinic advisory lock, so several worker processes can run side by side);
+* every ``TICK_MS`` it runs one safe pass for the clinic of the installation (the pass itself takes an
+  advisory lock, so several worker processes can run side by side);
 * refuses to start on a ``KB_EXTRACT_TIMEOUT_MS`` that is below the floor (``kb_extract_timeout_boot_guard``);
 * stops cleanly on SIGINT/SIGTERM: the pass in progress finishes, the loop does not start another.
 
@@ -22,10 +22,9 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import signal
-from uuid import UUID
 
 from pema.config.env import get_settings
-from pema.core.db import ClinicDatabase
+from pema.core.db import ClinicDatabase, get_installation_clinic_id
 from pema.core.event_loop import ensure_selector_event_loop_policy
 from pema.knowledge.embedding_client import EmbeddingSettings, OllamaEmbeddingClient
 from pema.knowledge.kb_extract_timeout_boot_guard import kiem_tra_kb_extract_timeout
@@ -36,15 +35,13 @@ from pema_contracts.knowledge import EmbeddingClient
 log = create_logger("workers.kb_ingest")
 
 
-async def chay_mot_luot_tat_ca_phong_kham(worker: KbIngestWorker, db: ClinicDatabase) -> int:
-    """One pass for every active clinic. A failing clinic is logged and does not stop the others."""
-    clinic_ids = await db.list_active_clinic_ids()
-    for clinic_id in clinic_ids:
-        try:
-            await worker.chay_mot_vong_an_toan(clinic_id)
-        except Exception as err:
-            log.error("vòng xử lý kho tri thức thất bại", err=err, clinic_id=str(clinic_id))
-    return len(clinic_ids)
+async def chay_mot_luot(worker: KbIngestWorker, db: ClinicDatabase) -> None:
+    """One pass for the clinic of the installation. A failing pass is logged; the loop goes on."""
+    clinic_id = await get_installation_clinic_id(db)
+    try:
+        await worker.chay_mot_vong_an_toan(clinic_id)
+    except Exception as err:
+        log.error("vòng xử lý kho tri thức thất bại", err=err)
 
 
 async def chay_mai_mai(
@@ -57,14 +54,13 @@ async def chay_mai_mai(
     """Boot sweep + first pass AT ONCE (a source uploaded while the worker was restarting does not wait for
     the first tick; that first pass also releases every ``dang_xu_ly`` stuck from the previous run), then one
     pass per tick until ``stop`` is set."""
-    boot: list[UUID] = await db.list_active_clinic_ids()
-    await worker.bat_dau_worker(boot)
+    await worker.bat_dau_worker([await get_installation_clinic_id(db)])
     while not stop.is_set():
         with contextlib.suppress(TimeoutError):
             await asyncio.wait_for(stop.wait(), timeout=tick_s)
         if stop.is_set():
             break
-        await chay_mot_luot_tat_ca_phong_kham(worker, db)
+        await chay_mot_luot(worker, db)
 
 
 def tao_embedder() -> EmbeddingClient | None:

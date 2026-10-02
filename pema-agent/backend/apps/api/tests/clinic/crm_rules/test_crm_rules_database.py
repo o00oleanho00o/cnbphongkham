@@ -33,6 +33,7 @@ from pema.clinic.crm_rules.runner import CrmRulesRunner
 from pema.clinic.crm_rules.sql_store import SqlCrmRuleStore
 from pema.clinic.crm_rules.testing import NOW, FakeScheduler
 from pema.core.db import ClinicDatabase
+from pema.core.testing import ensure_test_clinic, truncate_installation_data
 from pema_contracts.actions import ActionContext
 from pema_contracts.crm import CrmRuleUpdate, RuleKey, RuleSendMode
 from pema_contracts.errors import DomainError, ErrorCode
@@ -91,12 +92,11 @@ def _run(conn: Any, sql: str, **params: object) -> Any:
 
 @pytest.fixture
 def clinic(admin_engine: Engine) -> Ids:
-    """A fresh clinic with staff, an agent, a bot account, an approved template and six patients."""
-    ids: Ids = {"clinic": uuid.uuid4()}
-    c = ids["clinic"]
-    slug = f"b2-{c.hex[:10]}"
+    """The one clinic, emptied, with staff, an agent, a bot account, an approved template and six patients."""
     with admin_engine.begin() as conn:
-        _run(conn, "INSERT INTO clinic.clinic (id, slug, name) VALUES (:c, :s, 'Synthetic B2')", c=c, s=slug)
+        c = ensure_test_clinic(conn)
+        truncate_installation_data(conn)
+        ids: Ids = {"clinic": c}
         for role, key in (("owner", "owner"), ("doctor", "doctor"), ("cs_staff", "cs"), ("doctor", "other")):
             ids[key] = _run(
                 conn,
@@ -409,25 +409,9 @@ async def test_opting_out_supersedes_the_marketing_task_and_keeps_the_clinical_o
     assert status["abandoned"] == "open"
 
 
-async def test_another_clinic_sees_none_of_these_tasks_and_the_worker_role_cannot_read_them(
-    db: ClinicDatabase, clinic: Ids, admin_engine: Engine
-) -> None:
-    """Phòng khám khác không thấy việc nào; vai trò agent_worker không đọc được bảng việc CRM."""
+async def test_the_worker_role_cannot_read_the_crm_task_table(db: ClinicDatabase, clinic: Ids) -> None:
+    """Vai trò agent_worker không đọc được bảng việc CRM."""
     await _runner(db, FakeScheduler()).run_clinic(clinic["clinic"], NOW)
-    other = uuid.uuid4()
-    with admin_engine.begin() as conn:
-        _run(
-            conn,
-            "INSERT INTO clinic.clinic (id, slug, name) VALUES (:c, :s, 'Other')",
-            c=other,
-            s=f"o-{other.hex[:10]}",
-        )
-    report = await _runner(db, FakeScheduler()).run_clinic(other, NOW)
-    assert (report.patients, report.tasks_created) == (0, 0)
-    async with db.session(other) as session:
-        rows = (await session.execute(text("SELECT count(*) FROM clinic.crm_task"))).scalar_one()
-    assert rows == 0
-
     worker = create_engine(_role_url("agent_worker", WORKER_PASSWORD))
     try:
         with pytest.raises(ProgrammingError), worker.connect() as conn:

@@ -205,14 +205,14 @@ ENDPOINTS: tuple[Endpoint, ...] = (
 
 @pytest.mark.parametrize("endpoint", ENDPOINTS, ids=lambda e: e.name)
 async def test_each_role_gets_403_exactly_when_the_matrix_denies_it(
-    endpoint: Endpoint, client_factory: ClientFactory, world_a: SeedResult
+    endpoint: Endpoint, client_factory: ClientFactory, world: SeedResult
 ) -> None:
     path = endpoint.path
-    for code, patient_id in world_a.patients.items():
+    for code, patient_id in world.patients.items():
         path = path.replace("{" + code + "}", str(patient_id))
-    body = (endpoint.body or _none)(world_a)
+    body = (endpoint.body or _none)(world)
     for role in sorted(ALL):
-        client = await client_factory("clinic-a", role)
+        client = await client_factory(role)
         response = await client.request(
             endpoint.method, f"/api/v1{path}", json=body if endpoint.body else None
         )
@@ -225,16 +225,14 @@ async def test_each_role_gets_403_exactly_when_the_matrix_denies_it(
             assert response.json()["error"]["code"] == "forbidden"
 
 
-async def test_the_patient_role_is_denied_every_clinic_action(
-    db: ClinicDatabase, world_a: SeedResult
-) -> None:
+async def test_the_patient_role_is_denied_every_clinic_action(db: ClinicDatabase, world: SeedResult) -> None:
     """Người bệnh: không có quyền nào của nhân viên (chưa có liên kết phiên bệnh nhân với hồ sơ)"""
     ctx = ActionContext(
-        clinic_id=world_a.clinic_id, actor_type=ActorType.USER, actor_user_id=uuid4(), actor_role=Role.PATIENT
+        clinic_id=world.clinic_id, actor_type=ActorType.USER, actor_user_id=uuid4(), actor_role=Role.PATIENT
     )
     calls = [
         actions.patients.list_patients(db, ctx),
-        actions.patient_360.get_patient_360(db, ctx, world_a.patients["P025"]),
+        actions.patient_360.get_patient_360(db, ctx, world.patients["P025"]),
         actions.appointments.list_appointments(db, ctx),
         actions.crm_tasks.list_tasks(db, ctx),
         actions.conversations.list_conversations(db, ctx),
@@ -248,8 +246,8 @@ async def test_the_patient_role_is_denied_every_clinic_action(
         assert caught.value.code is ErrorCode.FORBIDDEN
 
 
-async def test_an_agent_actor_cannot_use_the_staff_actions(db: ClinicDatabase, world_a: SeedResult) -> None:
-    ctx = ActionContext(clinic_id=world_a.clinic_id, actor_type=ActorType.AGENT)
+async def test_an_agent_actor_cannot_use_the_staff_actions(db: ClinicDatabase, world: SeedResult) -> None:
+    ctx = ActionContext(clinic_id=world.clinic_id, actor_type=ActorType.AGENT)
     with pytest.raises(DomainError) as caught:
         await actions.patients.list_patients(db, ctx)
     assert caught.value.code is ErrorCode.FORBIDDEN

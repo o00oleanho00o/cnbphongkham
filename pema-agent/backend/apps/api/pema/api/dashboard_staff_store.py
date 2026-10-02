@@ -7,15 +7,15 @@ sessions, so it lives in ``pema.api`` like them (the action layer may not import
 Rules, all enforced here and never by the screen:
 
 * reading the list is ``admin.users.read`` (owner and manager); every change is ``admin.users`` (owner only);
-* rows of another clinic are a 404 (row level security leaves nothing to find; the ``clinic_id`` filter is the
-  second lock); a user that is not a staff role (``patient``) is never listed and never editable here;
+* the ``clinic_id`` filter (the installation id) is kept on every query; an id that is not found is a 404;
+  a user that is not a staff role (``patient``) is never listed and never editable here;
 * a staff member is never deleted (audit rows and foreign keys point at them): the only way out is to LOCK
   (``active = false``). A locked account cannot sign in and every session it had is deleted at once;
 * a role change also deletes every session of that user, so no access granted by the old role lives on;
 * the owner cannot lock or re-role their OWN account (422), and the clinic always keeps at least one ACTIVE
   owner (422): the active owners are locked ``FOR UPDATE`` before the check, so two owners demoting each other
   at the same moment cannot leave the clinic without one;
-* the e-mail (the sign-in name) is unique per clinic (409 on a duplicate);
+* the e-mail (the sign-in name) is unique (409 on a duplicate);
 * optimistic concurrency by ``version`` (409 ``version_conflict``);
 * the audit row carries field NAMES, roles and ids, never a name, an e-mail or a password.
 """
@@ -96,7 +96,7 @@ async def list_staff(
                 UserAccount.email.ilike(pattern, escape="\\"),
             )
         )
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         total = await session.scalar(select(func.count()).select_from(UserAccount).where(*conditions)) or 0
         rows = (
             await session.scalars(
@@ -118,7 +118,7 @@ async def create_staff(db: ClinicDatabase, ctx: ActionContext, payload: StaffUse
     plain = payload.password.get_secret_value()
     if len(plain) < passwords.MIN_PASSWORD_LENGTH:
         raise DomainError(ErrorCode.VALIDATION_FAILED, TOO_SHORT_MESSAGE)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row = UserAccount(
             clinic_id=ctx.clinic_id,
             email=payload.email,
@@ -165,7 +165,7 @@ async def update_staff(
         raise DomainError(ErrorCode.VALIDATION_FAILED, NOTHING_TO_CHANGE_MESSAGE)
     if payload.role is not None:
         _require_staff_role(payload.role)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         owners: list[UUID] = []
         if payload.role is not None or payload.active is not None:
             # Before anything is read: the count of active owners must not change under our feet.

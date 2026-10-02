@@ -1,15 +1,15 @@
-"""Fixtures of the scheduler tests: a real Postgres (skipped without ``PEMA_TEST_DATABASE_URL``), one NEW clinic
-per test (RLS keeps tests apart, nothing to clean), and the fakes of ``pema.scheduler.testing``.
+"""Fixtures of the scheduler tests: a real Postgres (skipped without ``PEMA_TEST_DATABASE_URL``), the ONE clinic
+of the database emptied before every test (``truncate_installation_data``), and the fakes of
+``pema.scheduler.testing``.
 
 The database is the throwaway one of ``tests/test_database.py`` (superuser URL): the module-scoped fixture
 drops every Pema schema and re-runs the alembic history, then the tests connect as the REAL runtime role
-``agent_worker`` so grants and RLS are exercised exactly as in production.
+``agent_worker`` so grants are exercised exactly as in production.
 """
 
 from __future__ import annotations
 
 import os
-import uuid
 from collections.abc import AsyncIterator, Callable, Iterator
 from pathlib import Path
 
@@ -27,6 +27,7 @@ from pema.config.runtime_tuning_settings import (
     reset_tuning_provider,
 )
 from pema.core.db import ClinicDatabase
+from pema.core.testing import ensure_test_clinic, truncate_installation_data
 from pema.scheduler.deps import SchedulerDeps
 from pema.scheduler.testing import (
     FakeClinicActions,
@@ -81,7 +82,8 @@ def worker_url() -> str:
 
 @pytest_asyncio.fixture
 async def make_env(admin_engine: Engine) -> AsyncIterator[Callable[..., Env]]:
-    """``env = make_env(profile=..., hooks=..., tuning={...})``: a fresh clinic with a running account."""
+    """``env = make_env(profile=..., hooks=..., tuning={...})``: the clinic, emptied, with a running account.
+    One ``Env`` per test: a second call empties the data of the first."""
     created: list[Env] = []
 
     def factory(
@@ -98,12 +100,9 @@ async def make_env(admin_engine: Engine) -> AsyncIterator[Callable[..., Env]]:
     ) -> Env:
         all_tuning: dict[str, str | int | float | bool] = {"SCHEDULER_SEND_GAP_MS": 0, **(tuning or {})}
         install_tuning_provider(StaticTuningProvider(all_tuning))
-        clinic_id = uuid.uuid4()
         with admin_engine.begin() as conn:
-            conn.execute(
-                text("INSERT INTO clinic.clinic (id, slug, name) VALUES (:id, :slug, 'Synthetic')"),
-                {"id": clinic_id, "slug": f"s-{clinic_id.hex[:12]}"},
-            )
+            clinic_id = ensure_test_clinic(conn)
+            truncate_installation_data(conn)
             conn.execute(
                 text(
                     "INSERT INTO agent.agents (clinic_id, id, name, policy_profile) "

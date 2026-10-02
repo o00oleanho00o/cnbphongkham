@@ -116,12 +116,10 @@ async def test_get_job_unscoped_reads_regardless_of_scope_internal_use_only(make
     assert found.id == job.id
 
 
-async def test_get_job_unscoped_a_job_of_another_clinic_is_invisible(make_env: EnvMaker) -> None:
-    """(clinic) job của phòng khám khác không đọc được dù biết đúng id - RLS + clinic_id"""
-    env_a = make_env()
-    env_b = make_env()
-    job = await env_a.make_job(thread_id="t-clinic-a")
-    assert await env_b.deps.jobs.get_job_unscoped(env_b.clinic_id, job.id) is None
+async def test_get_job_unscoped_an_unknown_id_is_none(make_env: EnvMaker) -> None:
+    """id không tồn tại -> None"""
+    env = make_env()
+    assert await env.deps.jobs.get_job_unscoped(env.clinic_id, "khong-ton-tai") is None
 
 
 async def test_list_jobs_for_thread_lists_only_that_account_and_thread(make_env: EnvMaker) -> None:

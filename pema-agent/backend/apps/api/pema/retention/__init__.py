@@ -1,4 +1,4 @@
-"""Data retention: delete expired data per clinic (package H2; new, no TS source).
+"""Data retention: delete expired data of the installation's clinic (package H2; new, no TS source).
 
 ``policy`` (days per group from ``PEMA_RETENTION_*``, 0 = keep), ``rules`` (the SQL, as data), ``runner``
 (batches, advisory lock, dry run, audit row) and ``schedule`` (the periodic loop that the worker and the API

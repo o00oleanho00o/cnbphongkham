@@ -7,7 +7,7 @@ thread of one account, or every account of the clinic (``account_id`` None) - th
 of the thread store used by the Sessions page.
 
 Forced deviation: the original used an empty ``accountId`` string for "all accounts"; here it is ``None``.
-The clinic filter is the RLS context plus an explicit ``clinic_id`` predicate.
+The clinic filter is an explicit ``clinic_id`` predicate (the installation id).
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ class ScheduledJobListStore:
 
     async def list_jobs_for_account(self, clinic_id: UUID, account_id: str | None) -> list[ScheduledJob]:
         """``account_id=None`` (or empty) = every account (the dashboard shows the mixed view by default)."""
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             if account_id:
                 rows = (
                     (

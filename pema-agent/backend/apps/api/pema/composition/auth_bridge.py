@@ -202,7 +202,7 @@ class StaffSessionMiddleware:
         """One row per successful change (the response is already on its way: a failure here is logged, it
         cannot undo the change)."""
         try:
-            async with self._db().session(ctx.clinic_id) as session:
+            async with self._db().session() as session:
                 await audit.record(
                     session,
                     ctx,

@@ -104,7 +104,7 @@ class ClinicAgentFacingActions:
     async def get_care_context(self, ctx: ActionContext, patient_ref: str) -> CareContext | None:
         _agent_actor(ctx)
         today = now().astimezone(VN_TZ).date()
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             ref = (
                 await session.execute(
                     sql(
@@ -214,7 +214,7 @@ class ClinicAgentFacingActions:
         self, ctx: ActionContext, patient_ref: str, limit: int = 5
     ) -> list[AgentAppointmentView]:
         _agent_actor(ctx)
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 await session.execute(
                     sql(
@@ -254,7 +254,7 @@ class ClinicAgentFacingActions:
         _agent_actor(ctx)
         stamp = now()
         schedule.validate_slot(request.starts_at, request.duration_min, stamp, require_future=True)
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             patient = (
                 await session.execute(
                     sql("SELECT id, code FROM clinic_agent.patient_ref WHERE code = :code"),
@@ -341,7 +341,7 @@ class ClinicAgentFacingActions:
         _agent_actor(ctx)
         if request.clinic_id != ctx.clinic_id:
             raise DomainError(ErrorCode.FORBIDDEN, "Không được tạo mục chờ duyệt cho phòng khám khác.")
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             item_id = (
                 await session.execute(
                     sql(
@@ -414,7 +414,7 @@ class ClinicAgentFacingActions:
         self, ctx: ActionContext, channel: ChannelKind, external_user_id: str
     ) -> IdentityLink:
         _agent_actor(ctx)
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 await session.execute(
                     sql("SELECT * FROM clinic_agent.resolve_identity(:c, :u)"),
@@ -433,7 +433,7 @@ class ClinicAgentFacingActions:
     async def record_inbound_message(self, ctx: ActionContext, message: InboundMessage) -> InboxRef:
         """Inbox of record. Idempotent on ``update_id``: a duplicate delivery writes nothing."""
         actor = _agent_actor(ctx)
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 await session.execute(
                     sql(
@@ -474,7 +474,7 @@ class ClinicAgentFacingActions:
         if status not in _OUTBOUND_STATUSES:
             raise DomainError(ErrorCode.VALIDATION_FAILED, "Trạng thái tin nhắn đi không hợp lệ.")
         try:
-            async with self._db.session(ctx.clinic_id) as session:
+            async with self._db.session() as session:
                 row = (
                     await session.execute(
                         sql(

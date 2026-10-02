@@ -43,7 +43,7 @@ async def test_staff_assistant_tin_zalo_den_engine_goi_tool_roi_tra_loi_gui_than
 async def _count(loop: Loop, sql: str, **params: object) -> int:
     from sqlalchemy import text
 
-    async with loop.api.db.session(loop.clinic_id) as session:
+    async with loop.api.db.session() as session:
         return int((await session.execute(text(sql), params)).scalar_one())
 
 
