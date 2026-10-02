@@ -33,6 +33,8 @@ PRESENCE_TTL_S = 30.0
 KEY_PREFIX = "pema:presence"
 EXPIRY_NOTICE_SLACK_S = 1.0
 """The extra ``presence.changed`` after the last heartbeat is sent this long after the entry expired."""
+LOG_EVERY_S = 30.0
+"""A broken store is reported at most this often (every heartbeat and Inbox load would otherwise log)."""
 MAX_OPS_PER_WINDOW = 120
 WINDOW_S = 60.0
 """SEC-54: heartbeats and leave calls one person may make per window (the browser makes about 4 a minute per
@@ -185,6 +187,14 @@ class PresenceService:
         self._window_s = window_s
         self._clock = clock
         self._recent: defaultdict[UUID, deque[float]] = defaultdict(deque)
+        self._last_logged = float("-inf")
+
+    def _report(self, message: str, err: Exception) -> None:
+        now = self._clock()
+        if now - self._last_logged < LOG_EVERY_S:
+            return
+        self._last_logged = now
+        log.warning(message, err=err)
 
     def _allow(self, user_id: UUID) -> bool:
         """Sliding window per person; the dict holds only people with a call inside the window."""
@@ -203,7 +213,7 @@ class PresenceService:
         try:
             changed = await self._store.touch(conversation_id, user_id, state)
         except Exception as err:
-            log.warning("presence heartbeat not stored", err=err)
+            self._report("presence heartbeat not stored", err)
             return
         self._arm_expiry_notice(conversation_id, user_id)
         if changed:
@@ -216,7 +226,7 @@ class PresenceService:
         try:
             was_there = await self._store.leave(conversation_id, user_id)
         except Exception as err:
-            log.warning("presence leave not stored", err=err)
+            self._report("presence leave not stored", err)
             return
         if was_there:
             emit_live(LiveEventType.PRESENCE_CHANGED, conversation_id)
@@ -226,7 +236,7 @@ class PresenceService:
         try:
             return await self._store.viewers(conversation_ids)
         except Exception as err:
-            log.warning("presence not readable", err=err)
+            self._report("presence not readable", err)
             return {}
 
     def _arm_expiry_notice(self, conversation_id: UUID, user_id: UUID) -> None:
