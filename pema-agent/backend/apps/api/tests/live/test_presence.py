@@ -224,3 +224,28 @@ async def test_a_normal_browser_never_hits_the_ceiling() -> None:
         await service.beat(conversation, user, PresenceState.VIEWING)
         assert await service.viewers([conversation])
     service.aclose()
+
+
+async def test_a_store_that_stays_down_is_logged_once_in_a_while_not_on_every_call(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reported: list[str] = []
+
+    class SpyLog:
+        def warning(self, message: str, **_fields: object) -> None:
+            reported.append(message)
+
+    monkeypatch.setattr("pema.live.presence.log", SpyLog())
+    clock = Clock()
+    store = InMemoryPresenceStore(clock=clock)
+    store.fail = True
+    service = PresenceService(store, clock=clock)
+    conversation, user = uuid4(), uuid4()
+    for _ in range(20):
+        await service.beat(conversation, user, PresenceState.VIEWING)
+        await service.viewers([conversation])
+    assert len(reported) == 1
+    clock.now += 31
+    await service.viewers([conversation])
+    assert len(reported) == 2
+    service.aclose()
