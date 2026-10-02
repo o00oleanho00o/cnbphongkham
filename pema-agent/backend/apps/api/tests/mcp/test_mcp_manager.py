@@ -347,21 +347,6 @@ async def test_mcp_manager_a_grant_revoked_in_the_database_blocks_execution_even
     assert rig.connector.connections[0].calls == []
 
 
-async def test_mcp_manager_same_agent_id_bound_in_two_clinics_exposes_no_tool() -> None:
-    """cùng agent id được gán ở 2 phòng khám -> không lộ tool nào (không biết lượt thuộc phòng nào)"""
-    rig = make_rig("tra_cuu")
-    rig.clinics.append(OTHER_CLINIC)
-    s1 = await rig.server("svr")
-    other = await rig.store.create_server(OTHER_CLINIC, name="svr", url="https://y/mcp")
-    await rig.bind("default", s1)
-    await rig.bind("default", other.id, clinic_id=OTHER_CLINIC)
-    await rig.manager.reconnect_server(FAKE_CLINIC_ID, s1)
-    await rig.manager.reconnect_server(OTHER_CLINIC, other.id)
-    assert rig.keys("default") == []
-    await rig.store.clear_for_agent(OTHER_CLINIC, "default")
-    assert len(rig.keys("default")) == 1
-
-
 async def test_mcp_manager_tools_for_agent_never_raises() -> None:
     """tools_for_agent không bao giờ ném (hợp đồng McpToolProvider)"""
 

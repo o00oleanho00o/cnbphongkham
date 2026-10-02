@@ -1,4 +1,4 @@
-"""Events POSTed by the Node bridge to ``/webhooks/zalo-bridge/{clinic_slug}/{account_id}`` (already
+"""Events POSTed by the Node bridge to ``/webhooks/zalo-bridge/{account_id}`` (already
 authenticated).
 
 New module: in zalo-agent ``zalo-listener.ts`` called the handlers in-process (``routeIncomingMessage``,
@@ -75,7 +75,7 @@ class SqlUpdateDedupe:
         self._db = db
 
     async def first_time(self, clinic_id: UUID, account_id: str, update_id: str) -> bool:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             result = await session.execute(
                 text(
                     "INSERT INTO agent.channel_update_seen (clinic_id, account_id, update_id) "

@@ -12,7 +12,6 @@ import { z } from "zod";
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
 export const accountIdSchema = z.string().regex(/^[A-Za-z0-9._:-]{1,128}$/, "invalid account id");
-export const clinicSlugSchema = z.string().regex(/^[A-Za-z0-9_-]{1,64}$/, "invalid clinic_slug");
 
 const threadIdSchema = z.string().min(1).max(64);
 const threadTypeSchema = z.union([z.literal(0), z.literal(1)]);
@@ -36,12 +35,11 @@ export const killSwitchSchema = z.object({
 });
 
 export const startBodySchema = z.object({
-  clinic_slug: clinicSlugSchema,
   credential: credentialSchema,
   kill_switch: killSwitchSchema.optional(),
 });
 
-export const qrBodySchema = z.object({ clinic_slug: clinicSlugSchema });
+export const qrBodySchema = z.object({});
 
 const styleSchema = z.object({
   start: z.number().int().min(0),

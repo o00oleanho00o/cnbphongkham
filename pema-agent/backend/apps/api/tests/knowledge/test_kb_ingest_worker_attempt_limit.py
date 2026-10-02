@@ -65,7 +65,7 @@ async def test_nguon_ket_lap_lai_marked_hong_after_exactly_the_max_attempts_not_
     assert (await lay(kb, n.id)).trang_thai == "dang_xu_ly"
 
     # "Restart": attempts(1) < ceiling(2) -> back to cho_xu_ly to retry
-    await worker.go_nguon_ket_dau_tick(kb.clinic_id)
+    await worker.go_nguon_ket_dau_tick()
     assert (await lay(kb, n.id)).trang_thai == "cho_xu_ly"
 
     # Attempt 2 (the LAST allowed): claim again (1 -> 2)
@@ -73,7 +73,7 @@ async def test_nguon_ket_lap_lai_marked_hong_after_exactly_the_max_attempts_not_
     assert (await lay(kb, n.id)).trang_thai == "dang_xu_ly"
 
     # "Restart" 2: attempts(2) >= ceiling(2) -> give up, mark hong
-    await worker.go_nguon_ket_dau_tick(kb.clinic_id)
+    await worker.go_nguon_ket_dau_tick()
     sau = await lay(kb, n.id)
     assert sau.trang_thai == "hong"
     assert sau.so_lan_thu == 2
@@ -97,11 +97,11 @@ async def test_nguon_ket_lap_lai_a_different_ceiling_needs_that_many_attempts_no
 
     for lan in range(1, 4):
         assert await gianh(kb, n.id) is True, f"lần {lan} phải giành được"
-        await worker.go_nguon_ket_dau_tick(kb.clinic_id)
+        await worker.go_nguon_ket_dau_tick()
         assert (await lay(kb, n.id)).trang_thai == "cho_xu_ly", f"sau lần {lan}/4 phải còn cho_xu_ly"
 
     assert await gianh(kb, n.id) is True, "lần 4 phải giành được"
-    await worker.go_nguon_ket_dau_tick(kb.clinic_id)
+    await worker.go_nguon_ket_dau_tick()
     sau = await lay(kb, n.id)
     assert sau.trang_thai == "hong"
     assert sau.so_lan_thu == 4
@@ -114,7 +114,7 @@ async def test_go_nguon_ket_dau_tick_runs_every_tick_through_chay_mot_vong_an_to
     # BEFORE the fix ``go_nguon_ket_dau_tick`` was called only at boot, and a source stuck AFTER boot had no
     # way to release itself. Two ticks in a row prove the SECOND one - not only the first - releases too.
     worker = KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=CaiDatIngest.tu_tuning())
-    await worker.chay_mot_vong_an_toan(kb.clinic_id)  # tick 1: nothing stuck
+    await worker.chay_mot_vong_an_toan()  # tick 1: nothing stuck
 
     # The stick happens BETWEEN two ticks - the real case: a worker killed by its deadline, the catch leaves
     # dang_xu_ly and waits for the next tick to judge.
@@ -127,7 +127,7 @@ async def test_go_nguon_ket_dau_tick_runs_every_tick_through_chay_mot_vong_an_to
         "tiền đề: nguồn phải đang kẹt dang_xu_ly trước tick 2"
     )
 
-    await worker.chay_mot_vong_an_toan(kb.clinic_id)  # tick 2 (periodic, not boot)
+    await worker.chay_mot_vong_an_toan()  # tick 2 (periodic, not boot)
 
     sau = await lay(kb, n.id)
     assert sau.trang_thai != "dang_xu_ly", "goNguonKetDauTick() phải chạy lại ở MỖI tick"
@@ -136,10 +136,10 @@ async def test_go_nguon_ket_dau_tick_runs_every_tick_through_chay_mot_vong_an_to
     assert sau.so_doan > 0
 
 
-async def test_chay_mot_vong_an_toan_a_second_process_holding_the_clinic_lock_makes_this_pass_skip(
+async def test_chay_mot_vong_an_toan_a_second_process_holding_the_lock_makes_this_pass_skip(
     kb: KbHarness, tmp_path: Path
 ) -> None:
-    """(thêm) khóa advisory theo phòng khám: tiến trình khác đang chạy vòng thì vòng này bỏ qua, không đụng nguồn"""
+    """(thêm) khóa advisory (một khóa cho cả bản cài đặt): tiến trình khác đang chạy vòng thì vòng này bỏ qua, không đụng nguồn"""
     from sqlalchemy import text
 
     from pema.knowledge.kb_ingest_worker import khoa_advisory
@@ -148,15 +148,13 @@ async def test_chay_mot_vong_an_toan_a_second_process_holding_the_clinic_lock_ma
         n = await tao_nguon(s, kb.clinic_id, ten="x", loai="text", noi_dung_goc="# A\n\nthân bài")
         await s.execute(text("SELECT 1"))
     with kb.kb_database.admin_engine.connect() as giu:
-        giu.execute(text("SELECT pg_advisory_lock(:k)"), {"k": khoa_advisory(kb.clinic_id)})
+        giu.execute(text("SELECT pg_advisory_lock(:k)"), {"k": khoa_advisory()})
         try:
             await KbIngestWorker(
                 kb.db, data_dir=tmp_path, cai_dat=CaiDatIngest.tu_tuning()
-            ).chay_mot_vong_an_toan(kb.clinic_id)
+            ).chay_mot_vong_an_toan()
             assert (await lay(kb, n.id)).trang_thai == "cho_xu_ly", "vòng bị khóa thì không được đụng nguồn"
         finally:
-            giu.execute(text("SELECT pg_advisory_unlock(:k)"), {"k": khoa_advisory(kb.clinic_id)})
-    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=CaiDatIngest.tu_tuning()).chay_mot_vong_an_toan(
-        kb.clinic_id
-    )
+            giu.execute(text("SELECT pg_advisory_unlock(:k)"), {"k": khoa_advisory()})
+    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=CaiDatIngest.tu_tuning()).chay_mot_vong_an_toan()
     assert (await lay(kb, n.id)).trang_thai == "san_sang"

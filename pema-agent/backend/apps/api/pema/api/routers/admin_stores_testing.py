@@ -53,9 +53,6 @@ class Harness:
             out["x-test-permissions"] = permissions
         return out
 
-    def headers_for(self, clinic_id: UUID, permissions: str = ADMIN_AGENTS) -> dict[str, str]:
-        return {"x-test-clinic": str(clinic_id), "x-test-permissions": permissions}
-
 
 @asynccontextmanager
 async def open_harness(env: ClinicEnv, media_root: Path) -> AsyncGenerator[Harness]:

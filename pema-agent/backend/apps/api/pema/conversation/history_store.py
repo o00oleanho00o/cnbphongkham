@@ -6,7 +6,7 @@ It is NOT the Inbox of record (``clinic.message`` is): the channel layer writes 
 Forced deviations:
 
 * ``node:sqlite`` (sync) becomes SQLAlchemy async over Postgres; every method takes ``clinic_id`` first and
-  opens its unit of work with ``ClinicDatabase.session(clinic_id)`` (row level security);
+  opens its unit of work with ``ClinicDatabase.session()`` (single tenant: no row level security);
 * ``created_at`` is ``timestamptz``: an explicit value is an aware ``datetime`` and the read side returns
   it normalised to +07:00 (``VnDatetime``); the id is a ``bigint`` identity column;
 * the ``images`` column is ``jsonb`` instead of a JSON string.
@@ -130,7 +130,7 @@ class HistoryStoreImpl:
             "content": message.content,
             "images": json.dumps(message.images) if message.images else None,
         }
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             if message.created_at is not None:
                 row_id = (
                     await session.execute(
@@ -155,7 +155,7 @@ class HistoryStoreImpl:
         """Gắn ảnh vào tin đã ghi - dùng cho passive listen (ghi tin ngay, ảnh tải xong sau)."""
         if len(images) == 0:
             return
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 _SET_IMAGES, {"clinic_id": clinic_id, "id": message_id, "images": json.dumps(list(images))}
             )
@@ -165,7 +165,7 @@ class HistoryStoreImpl:
     ) -> list[StoredMessage]:
         """Oldest first, the N newest (``limit`` defaults to ``HISTORY_CONTEXT_LIMIT``)."""
         effective = limit if limit is not None else get_tuning_int("HISTORY_CONTEXT_LIMIT")
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 (
                     await session.execute(
@@ -195,7 +195,7 @@ class HistoryStoreImpl:
     ) -> list[StoredMessage]:
         """Đọc tin nhắn phân trang cho dashboard - keyset theo id (ổn định khi có tin mới chen vào, không lệch
         trang như OFFSET). ``before_id`` bỏ trống = từ tin mới nhất."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 (
                     await session.execute(

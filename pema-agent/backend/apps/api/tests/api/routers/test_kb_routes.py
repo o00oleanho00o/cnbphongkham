@@ -702,16 +702,3 @@ async def test_auth_a_reader_cannot_write_and_a_caller_without_kb_permissions_ca
     assert (await kb_api.client.get(f"{kb_api.base}/sources", headers=doc)).status_code == 200
     khong_quyen = kb_api.headers(permissions="patient.read")
     assert (await kb_api.client.get(f"{kb_api.base}/sources", headers=khong_quyen)).status_code == 403
-
-
-async def test_clinic_boundary_a_caller_of_another_clinic_sees_and_changes_nothing(kb_api: KbApi) -> None:
-    """(thêm, RLS) phòng khám khác không thấy, không xóa, không duyệt được nguồn"""
-    id_ = await tao_text(kb_api, "Của phòng khám A")
-    khac = kb_api.headers(role="owner", clinic=kb_api.kb_database.other_clinic_id)
-    assert (await kb_api.client.get(f"{kb_api.base}/sources", headers=khac)).json() == []
-    assert (await kb_api.client.delete(f"{kb_api.base}/sources/{id_}", headers=khac)).status_code == 404
-    res = await kb_api.client.patch(
-        f"{kb_api.base}/sources/{id_}/approval", json={"approved": True}, headers=khac
-    )
-    assert res.status_code == 404
-    assert so_nguon(kb_api) == 1

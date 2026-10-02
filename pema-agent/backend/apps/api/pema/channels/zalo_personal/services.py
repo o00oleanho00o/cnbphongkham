@@ -37,10 +37,10 @@ from pema_contracts.actions import ActionContext
 from pema_contracts.agents import AccountStore, AgentStore
 from pema_contracts.channel import ChannelRegistry
 from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.installation import installation_clinic_id
 from pema_contracts.roles import Permission
 
 type Authorize = Callable[[Request, Permission], Awaitable[ActionContext]]
-type ClinicResolver = Callable[[str], Awaitable[UUID | None]]
 
 
 class AccountLifecycle(Protocol):
@@ -59,9 +59,6 @@ class C2Services:
     """``PEMA_ZALO_PERSONAL_ENABLED``: off means no traffic at all."""
     bridge_secret: Callable[[], str | None]
     authorize: Authorize
-    resolve_clinic: ClinicResolver
-    """Webhook path segment (clinic slug, or the clinic id as text) -> clinic id, ``None`` when
-    unknown/inactive."""
     accounts: AccountStore
     agents: AgentStore
     vault: CredentialVault
@@ -73,6 +70,8 @@ class C2Services:
     registry: ChannelRegistry
     events: BridgeEventHandler
     bot_lifecycle: AccountLifecycle | None = None
+    clinic_id: Callable[[], UUID] = installation_clinic_id
+    """The one clinic of the installation (single tenant); the bridge webhook has no clinic in its path."""
 
 
 def get_c2(request: Request) -> C2Services:

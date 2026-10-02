@@ -9,7 +9,6 @@ isolation and the account/agent foreign key.
 from __future__ import annotations
 
 import json
-import uuid
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -465,25 +464,6 @@ async def test_credential_round_trip_and_a_wrong_key_reads_as_none(
     env_module.get_settings.cache_clear()
     await accounts.set_credential(env.clinic_id, "acc-cred", None)
     assert await accounts.get_credential(env.clinic_id, "acc-cred") is None
-
-
-async def test_stores_of_one_clinic_never_see_another_clinics_accounts_or_agents(env: ClinicEnv) -> None:
-    """(thêm) RLS: cùng id ở phòng khám khác là dòng khác, list không lẫn"""
-    agents, accounts = AgentStoreImpl(env.db), AccountStoreImpl(env.db)
-    other = env.add_clinic(uuid.uuid4(), default_agent=False)
-    await _new_account(accounts, env, "acc-chung")
-    await accounts.create_account(
-        other, account_id="acc-chung", label="Của phòng B", channel=ChannelKind.ZALO_BOT, agent_id=None
-    )
-
-    mine = await accounts.get_account(env.clinic_id, "acc-chung")
-    theirs = await accounts.get_account(other, "acc-chung")
-    assert mine is not None
-    assert theirs is not None
-    assert (mine.label, theirs.label) == ("Nick test", "Của phòng B")
-    assert [a.id for a in await accounts.list_accounts(other)] == ["acc-chung"]
-    assert len(await agents.list_agents(env.clinic_id)) == 1
-    assert (await agents.ensure_default_agent(env.clinic_id)).clinic_id == env.clinic_id
 
 
 async def test_list_agents_reports_the_account_count_default_first(env: ClinicEnv) -> None:

@@ -115,9 +115,6 @@ class MemorySettings:
         self.audit.append(("channel.bridge_report", channel))
         return updated
 
-    async def clinic_slug(self, clinic_id: UUID) -> str | None:
-        return "demo-clinic"
-
 
 @dataclass
 class MemoryFriends:
@@ -249,10 +246,7 @@ def build_test_rig(
         bridge_secret=lambda: BRIDGE_SECRET,
     )
 
-    async def clinic_ref(cid: UUID) -> str:
-        return str(cid)
-
-    qr = build_qr_manager(bridge, manager, account_store, clinic_ref, poll_seconds=0.0)
+    qr = build_qr_manager(bridge, manager, account_store, poll_seconds=0.0)
 
     class Names:
         def __init__(self) -> None:
@@ -332,16 +326,10 @@ def build_test_rig(
             clinic_id=clinic_id, actor_type=ActorType.USER, actor_role=Role.OWNER, source=ActionSource.UI
         )
 
-    async def resolve_clinic(segment: str) -> UUID | None:
-        if segment in ("demo-clinic", str(clinic_id)):
-            return clinic_id
-        return None
-
     services = C2Services(
         flag_enabled=lambda: flag_box["on"],
         bridge_secret=lambda: BRIDGE_SECRET,
         authorize=authorize,
-        resolve_clinic=resolve_clinic,
         accounts=account_store,
         agents=agents,
         vault=vault,
@@ -352,6 +340,7 @@ def build_test_rig(
         audit=audit,
         registry=registry,
         events=events,
+        clinic_id=lambda: clinic_id,
     )
     return TestRig(
         services=services,

@@ -7,8 +7,8 @@ zalo-agent read ``runtime_settings`` SYNCHRONOUSLY on every ``getTuning`` / ``ge
 takes effect on the next call, no restart). Postgres cannot be awaited from a plain function and
 ``get_tuning`` is called synchronously from ~55 places, so the port splits the two halves:
 
-* ``RuntimeSettingsStore``: the async persistence (``SqlRuntimeSettingsStore`` over ``ClinicDatabase``, so row
-  level security applies; ``InMemoryRuntimeSettingsStore`` for tests);
+* ``RuntimeSettingsStore``: the async persistence (``SqlRuntimeSettingsStore`` over ``ClinicDatabase``;
+  ``InMemoryRuntimeSettingsStore`` for tests);
 * ``RuntimeSettingsSnapshot``: a per-clinic in-memory copy read synchronously. It is refreshed on every write
   made through it (write-through: the admin screen sees its change at once) and on a timer (a change made by
   another process shows within ``interval_s``, a few seconds). It implements ``TuningProvider`` so
@@ -69,18 +69,24 @@ class InMemoryRuntimeSettingsStore:
 
 
 class SqlRuntimeSettingsStore:
-    """``agent.runtime_settings`` through ``ClinicDatabase`` (the session sets ``app.clinic_id`` for RLS)."""
+    """``agent.runtime_settings`` through ``ClinicDatabase`` (single tenant: no RLS, the rows of the
+    installation clinic are read by ``clinic_id``)."""
 
     def __init__(self, db: ClinicDatabase) -> None:
         self._db = db
 
     async def load_all(self, clinic_id: UUID) -> dict[str, str]:
-        async with self._db.session(clinic_id) as session:
-            rows = (await session.execute(text("SELECT key, value FROM agent.runtime_settings"))).all()
+        async with self._db.session() as session:
+            rows = (
+                await session.execute(
+                    text("SELECT key, value FROM agent.runtime_settings WHERE clinic_id = :clinic_id"),
+                    {"clinic_id": clinic_id},
+                )
+            ).all()
         return {str(key): str(value) for key, value in rows}
 
     async def set(self, clinic_id: UUID, key: str, value: str) -> None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 text(
                     "INSERT INTO agent.runtime_settings (clinic_id, key, value, updated_at) "
@@ -97,11 +103,11 @@ class SqlRuntimeSettingsStore:
     async def delete_many(self, clinic_id: UUID, keys: Sequence[str]) -> None:
         if not keys:
             return
-        statement = text("DELETE FROM agent.runtime_settings WHERE key IN :keys").bindparams(
-            bindparam("keys", expanding=True)
-        )
-        async with self._db.session(clinic_id) as session:
-            await session.execute(statement, {"keys": list(keys)})
+        statement = text(
+            "DELETE FROM agent.runtime_settings WHERE clinic_id = :clinic_id AND key IN :keys"
+        ).bindparams(bindparam("keys", expanding=True))
+        async with self._db.session() as session:
+            await session.execute(statement, {"clinic_id": clinic_id, "keys": list(keys)})
 
 
 _current_clinic: ContextVar[UUID | None] = ContextVar("pema_settings_clinic", default=None)

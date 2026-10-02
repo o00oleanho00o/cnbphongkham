@@ -4,7 +4,7 @@ admin routes and the ingest worker share.
 NEW module (the original had module-level functions bound to one global SQLite connection). It only
 COMPOSES the ported modules - ``kb_source_store``, ``kb_source_queries``, ``kb_chunk_store``,
 ``kb_agent_binding``, ``kb_search``, ``kb_file_store`` - each unit of work in ``ClinicDatabase.session(
-clinic_id)`` so row level security applies, and turns their dataclasses into the contract DTOs.
+clinic_id)`` (single tenant: no row level security) and turns their dataclasses into the contract DTOs.
 
 Rules this class keeps (the contract's normative list):
 * DEFAULT-DENY: an agent with no source bound reads nothing (``search``);
@@ -135,7 +135,7 @@ class PostgresKnowledgeStore:
         if not text.strip():
             raise DomainError(ErrorCode.VALIDATION_FAILED, "Nội dung không được để trống")
         so_byte = len(text.encode("utf-8"))
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             nguon = await tao_nguon(
                 session, clinic_id, ten=ten, loai="text", noi_dung_goc=text, so_byte=so_byte
             )
@@ -162,7 +162,7 @@ class PostgresKnowledgeStore:
         file_id = secrets.token_hex(8)
         duong_dan = await asyncio.to_thread(luu_file, file_id, dinh_dang, data, data_dir=self._data_dir)
         try:
-            async with self._db.session(clinic_id) as session:
+            async with self._db.session() as session:
                 nguon = await tao_nguon(
                     session,
                     clinic_id,
@@ -181,18 +181,18 @@ class PostgresKnowledgeStore:
         return _dto(nguon)
 
     async def get_source(self, clinic_id: UUID, source_id: str) -> KbSource | None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             nguon = await lay_nguon(session, clinic_id, source_id)
         return _dto(nguon) if nguon is not None else None
 
     async def list_sources(self, clinic_id: UUID) -> list[KbSource]:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             return [_dto(n) for n in await danh_sach_nguon_gon(session, clinic_id)]
 
     async def count_agents_by_source(self, clinic_id: UUID) -> dict[str, int]:
         """``soAgent`` of the list screen: ``0`` (no key) is the only thing that tells "chunked and ready"
         from "usable by the bot". Not in the contract DTO yet (open item)."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             return await dem_agent_theo_nguon(session, clinic_id)
 
     async def set_status(
@@ -204,13 +204,13 @@ class PostgresKnowledgeStore:
         error: str = "",
         chunk_count: int | None = None,
     ) -> None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await dat_trang_thai(session, clinic_id, source_id, status.value, loi=error, so_doan=chunk_count)
 
     async def delete_source(self, clinic_id: UUID, source_id: str) -> int:
         # Read ``storage_key`` BEFORE deleting the row - deleting the row first loses the way to the file and
         # the disk swells forever with orphan files nothing can clean any more.
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             nguon = await lay_nguon(session, clinic_id, source_id)
             if nguon is None:
                 raise _khong_tim_thay()
@@ -220,7 +220,7 @@ class PostgresKnowledgeStore:
         return so_doan_da_xoa
 
     async def reindex_source(self, clinic_id: UUID, source_id: str) -> None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             nguon = await lay_nguon(session, clinic_id, source_id)
             if nguon is None:
                 raise _khong_tim_thay()
@@ -242,18 +242,18 @@ class PostgresKnowledgeStore:
             await dat_trang_thai(session, clinic_id, source_id, "cho_xu_ly", so_lan_thu=0)
 
     async def list_chunks(self, clinic_id: UUID, source_id: str, *, offset: int, limit: int) -> list[KbChunk]:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             if await lay_nguon(session, clinic_id, source_id) is None:
                 raise _khong_tim_thay()
             doan = await lay_doan_cua_nguon(session, clinic_id, source_id, offset, limit)
         return [KbChunk(order=d.thu_tu, title=d.tieu_de, content=d.noi_dung) for d in doan]
 
     async def count_chunks(self, clinic_id: UUID, source_id: str) -> int:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             return await dem_doan(session, clinic_id, source_id)
 
     async def set_approved(self, clinic_id: UUID, source_id: str, approved: bool, *, by_user: UUID) -> None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             result = await session.execute(
                 text(
                     "UPDATE agent.kb_document SET approved_by_clinical_owner = :a, "
@@ -270,11 +270,11 @@ class PostgresKnowledgeStore:
     # ------------------------------------------------------------------ bindings
 
     async def sources_of_agent(self, clinic_id: UUID, agent_id: str) -> list[str]:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             return await nguon_cua_agent(session, clinic_id, agent_id)
 
     async def agents_of_source(self, clinic_id: UUID, source_id: str) -> list[str]:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             if await lay_nguon(session, clinic_id, source_id) is None:
                 raise _khong_tim_thay()
             return await agent_cua_nguon(session, clinic_id, source_id)
@@ -282,7 +282,7 @@ class PostgresKnowledgeStore:
     async def set_sources_for_agent(self, clinic_id: UUID, agent_id: str, source_ids: list[str]) -> None:
         kiem_tra_danh_sach_id(source_ids, toi_da=SO_NGUON_TOI_DA_MOI_AGENT, ten="nguồn")
         try:
-            async with self._db.session(clinic_id) as session:
+            async with self._db.session() as session:
                 # I9 (TOCTOU): the existence checks and the write are in ONE transaction and the table has
                 # foreign keys, so an agent/source deleted in between makes the INSERT fail instead of
                 # leaving an orphan binding (the original had to read the body BEFORE checking for this).
@@ -306,7 +306,7 @@ class PostgresKnowledgeStore:
     async def set_agents_for_source(self, clinic_id: UUID, source_id: str, agent_ids: list[str]) -> None:
         kiem_tra_danh_sach_id(agent_ids, toi_da=SO_AGENT_TOI_DA_MOI_NGUON, ten="agent")
         try:
-            async with self._db.session(clinic_id) as session:
+            async with self._db.session() as session:
                 if await lay_nguon(session, clinic_id, source_id) is None:
                     raise _khong_tim_thay()
                 ton_tai = await ton_tai_cac_agent(session, clinic_id, agent_ids)
@@ -343,7 +343,7 @@ class PostgresKnowledgeStore:
         way to carry the account (open item for D4)."""
         # Embed BEFORE opening the database transaction: no connection is held while a model is called.
         vector = await nhung_cau_hoi(self._embedder, question)
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             ket_qua = await tim_trong_kho_tri_thuc(
                 session,
                 clinic_id,

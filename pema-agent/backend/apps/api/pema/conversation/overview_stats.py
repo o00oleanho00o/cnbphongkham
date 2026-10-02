@@ -5,7 +5,7 @@ Placed in ``conversation/`` (PORT-MAP): it only counts rows of ``agent.threads``
 ``agent.memories`` and ``agent.history``. ``UsageStore.get_account_stats`` (contract) serves the other "today"
 counters (turns and tokens); this module keeps the original five counts and the system info.
 
-Forced deviations: SQLite sync -> SQLAlchemy async + Postgres (``clinic_id`` + RLS); the five ``SELECT
+Forced deviations: SQLite sync -> SQLAlchemy async + Postgres (``clinic_id``, no RLS); the five ``SELECT
 COUNT(*)`` statements (the original ran them one by one, with the table name interpolated into the SQL) are
 ONE statement with five scalar subqueries and fixed table names; ``getSystemInfo`` reported
 ``process.version`` (Node) and the effective LLM settings. The LLM settings belong to package D1
@@ -64,7 +64,7 @@ class OverviewStats:
     ) -> OverviewAccountStats:
         """``start_of_today_utc``: mốc UTC ISO của đầu ngày hôm nay theo ``BOT_TIMEZONE`` - tính sẵn ở caller
         (route) rồi truyền xuống."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 (
                     await session.execute(

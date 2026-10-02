@@ -28,8 +28,8 @@ EXPECTED_PATHS = [
     "/api/v1/admin/templates",
     "/api/v1/admin/templates/{template_id}/approve",
     # channels (C1, C2)
-    "/api/v1/webhooks/zalo-bot/{clinic_slug}/{account_id}",
-    "/api/v1/webhooks/zalo-bridge/{clinic_slug}/{account_id}",
+    "/api/v1/webhooks/zalo-bot/{account_id}",
+    "/api/v1/webhooks/zalo-bridge/{account_id}",
     "/api/v1/admin/channels/{channel}/kill-switch",
     "/api/v1/admin/accounts",
     "/api/v1/admin/accounts/{account_id}/login",

@@ -8,11 +8,9 @@ time over the RAW body before anything else happens. Off unless ``PEMA_ZALO_PERS
 The outbound
 direction (send, QR login, friends) is API -> bridge.
 
-``clinic_slug`` is the clinic slug, or the clinic id as text (the worker, which cannot read ``clinic.*``,
-starts
-accounts and only knows the id). The path never carries a secret; the body of a ``message`` event carries
-personal
-content and the body of ``credential_updated`` a secret: neither is logged.
+The path carries no clinic (single tenant: one installation is one clinic) and never a secret; the body of a
+``message`` event carries personal content and the body of ``credential_updated`` a secret: neither is
+logged.
 """
 
 from __future__ import annotations
@@ -34,12 +32,11 @@ log = create_logger("webhooks.zalo-bridge")
 
 
 @router.post(
-    "/webhooks/zalo-bridge/{clinic_slug}/{account_id}",
+    "/webhooks/zalo-bridge/{account_id}",
     response_model=WebhookAck,
     summary="Personal-account bridge event receiver (HMAC signed)",
 )
 async def receive_zalo_bridge_event(
-    clinic_slug: str,
     account_id: str,
     payload: Annotated[dict[str, Any], Body(description="Bridge event envelope.")],
     request: Request,
@@ -54,8 +51,4 @@ async def receive_zalo_bridge_event(
         log.warning("bridge event rejected: bad signature", account_id=account_id)
         raise DomainError(ErrorCode.CHANNEL_WEBHOOK_REJECTED, "Chữ ký của bridge không hợp lệ.")
 
-    clinic_id = await services.resolve_clinic(clinic_slug)
-    if clinic_id is None:
-        raise DomainError(ErrorCode.NOT_FOUND, "Không tìm thấy phòng khám.")
-
-    return await services.events.handle(clinic_id, account_id, payload)
+    return await services.events.handle(services.clinic_id(), account_id, payload)
