@@ -16,7 +16,6 @@ turn.
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from uuid import UUID
 
 from pema.shared.logger import create_logger
 from pema_contracts.tools import ToolSpec
@@ -24,29 +23,20 @@ from pema_contracts.tools import ToolSpec
 _log = create_logger("mcp.tool-provider")
 
 type McpToolSource = Callable[[str], Sequence[ToolSpec]]
-type McpClinicToolSource = Callable[[UUID, str], Sequence[ToolSpec]]
 
 
 def _empty_source(agent_id: str) -> Sequence[ToolSpec]:
     return []
 
 
-def _empty_clinic_source(clinic_id: UUID, agent_id: str) -> Sequence[ToolSpec]:
-    return []
-
-
 class SwitchableMcpToolProvider:
     def __init__(self) -> None:
         self._source: McpToolSource = _empty_source
-        self._clinic_source: McpClinicToolSource = _empty_clinic_source
 
-    def set_source(
-        self, source: McpToolSource | None, clinic_source: McpClinicToolSource | None = None
-    ) -> None:
+    def set_source(self, source: McpToolSource | None) -> None:
         """The manager calls it at start; a test injects a fake function. ``None`` restores the empty
-        default. ``clinic_source`` answers for the clinic of the turn (``tools_for_agent_in_clinic``)."""
+        default."""
         self._source = source or _empty_source
-        self._clinic_source = clinic_source or _empty_clinic_source
 
     def tools_for_agent(self, agent_id: str) -> Sequence[ToolSpec]:
         """Read by the registry on every turn: current source, no database access of its own."""
@@ -54,14 +44,6 @@ class SwitchableMcpToolProvider:
             return list(self._source(agent_id))
         except Exception as exc:  # contract: never raises
             _log.error("mcp tool source failed", err=exc, agent_id=agent_id)
-            return []
-
-    def tools_for_agent_in_clinic(self, clinic_id: UUID, agent_id: str) -> Sequence[ToolSpec]:
-        """Exact for the clinic of the turn (agent ids repeat across clinics). Never raises."""
-        try:
-            return list(self._clinic_source(clinic_id, agent_id))
-        except Exception as exc:  # contract: never raises
-            _log.error("mcp clinic tool source failed", err=exc, agent_id=agent_id)
             return []
 
 

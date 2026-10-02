@@ -76,5 +76,5 @@ class SqlAuditSink:
         entity_id: str | None,
         details: dict[str, object] | None = None,
     ) -> None:
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             await write_audit(session, ctx, action, entity_type, entity_id, details)

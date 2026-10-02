@@ -8,8 +8,8 @@ of a single-tenant installation (one clinic, one database):
 
 * connects as the ``agent_worker`` role (``Settings.worker_database_url``): no privilege on ``clinic.*``, only
   ``agent.*`` - which is all the knowledge base needs;
-* every ``TICK_MS`` it runs one safe pass for the clinic of the installation (the pass itself takes an
-  advisory lock, so several worker processes can run side by side);
+* every ``TICK_MS`` it runs one safe pass (the pass itself takes ONE advisory lock, so several worker
+  processes can run side by side; there is no loop over clinics);
 * refuses to start on a ``KB_EXTRACT_TIMEOUT_MS`` that is below the floor (``kb_extract_timeout_boot_guard``);
 * stops cleanly on SIGINT/SIGTERM: the pass in progress finishes, the loop does not start another.
 
@@ -35,11 +35,10 @@ from pema_contracts.knowledge import EmbeddingClient
 log = create_logger("workers.kb_ingest")
 
 
-async def chay_mot_luot(worker: KbIngestWorker, db: ClinicDatabase) -> None:
-    """One pass for the clinic of the installation. A failing pass is logged; the loop goes on."""
-    clinic_id = await get_installation_clinic_id(db)
+async def chay_mot_luot(worker: KbIngestWorker) -> None:
+    """One pass of the installation. A failing pass is logged; the loop goes on with the next tick."""
     try:
-        await worker.chay_mot_vong_an_toan(clinic_id)
+        await worker.chay_mot_vong_an_toan()
     except Exception as err:
         log.error("vòng xử lý kho tri thức thất bại", err=err)
 
@@ -54,13 +53,14 @@ async def chay_mai_mai(
     """Boot sweep + first pass AT ONCE (a source uploaded while the worker was restarting does not wait for
     the first tick; that first pass also releases every ``dang_xu_ly`` stuck from the previous run), then one
     pass per tick until ``stop`` is set."""
-    await worker.bat_dau_worker([await get_installation_clinic_id(db)])
+    await get_installation_clinic_id(db)
+    await worker.bat_dau_worker()
     while not stop.is_set():
         with contextlib.suppress(TimeoutError):
             await asyncio.wait_for(stop.wait(), timeout=tick_s)
         if stop.is_set():
             break
-        await chay_mot_luot(worker, db)
+        await chay_mot_luot(worker)
 
 
 def tao_embedder() -> EmbeddingClient | None:

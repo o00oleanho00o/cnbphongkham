@@ -40,7 +40,6 @@ export class ManagedAccount {
 
   constructor(
     readonly id: string,
-    public clinicSlug: string,
     readonly safety: AccountSafety,
   ) {}
 
@@ -106,10 +105,10 @@ export class AccountManager {
    * first). A start is the operator's decision, so it also clears the breaker (`blocked`). The
    * credential is passed to zca-js and not kept anywhere else.
    */
-  start(accountId: string, clinicSlug: string, credential: Credential): Promise<{ ownId: string }> {
+  start(accountId: string, credential: Credential): Promise<{ ownId: string }> {
     return this.runExclusive(accountId, async () => {
       this.stopNow(accountId);
-      const account = this.getOrCreate(accountId, clinicSlug);
+      const account = this.getOrCreate(accountId);
       account.listenerState = "connecting";
       try {
         const session = await this.deps.gateway.login(credential);
@@ -123,10 +122,10 @@ export class AccountManager {
   }
 
   /** Attach the session of a successful QR login and tell the API the new credential. */
-  attachFromQr(accountId: string, clinicSlug: string, session: ZaloSession): Promise<void> {
+  attachFromQr(accountId: string, session: ZaloSession): Promise<void> {
     return this.runExclusive(accountId, async () => {
       this.stopNow(accountId);
-      this.attachSession(this.getOrCreate(accountId, clinicSlug), session, true);
+      this.attachSession(this.getOrCreate(accountId), session, true);
     });
   }
 
@@ -145,12 +144,9 @@ export class AccountManager {
     this.publishState(account, "blocked", "send_rejected_repeatedly");
   }
 
-  private getOrCreate(accountId: string, clinicSlug: string): ManagedAccount {
+  private getOrCreate(accountId: string): ManagedAccount {
     const existing = this.accounts.get(accountId);
-    if (existing) {
-      existing.clinicSlug = clinicSlug;
-      return existing;
-    }
+    if (existing) return existing;
     const { config } = this.deps;
     const safety = new AccountSafety(
       {
@@ -161,7 +157,7 @@ export class AccountManager {
       },
       this.now,
     );
-    const account = new ManagedAccount(accountId, clinicSlug, safety);
+    const account = new ManagedAccount(accountId, safety);
     this.accounts.set(accountId, account);
     return account;
   }
@@ -178,7 +174,7 @@ export class AccountManager {
     account.token = token;
     account.listenerState = "connecting";
     account.reportedState = null;
-    const target = { accountId: account.id, clinicSlug: account.clinicSlug };
+    const target = { accountId: account.id };
     const current = (): boolean => account.token === token;
 
     if (announceCredential) {
@@ -270,7 +266,7 @@ export class AccountManager {
     if (account.reportedState === state) return;
     account.reportedState = state;
     const event: BridgeEvent = { type: "account_state", state, reason };
-    this.deps.publisher.publish({ accountId: account.id, clinicSlug: account.clinicSlug }, event);
+    this.deps.publisher.publish({ accountId: account.id }, event);
   }
 
   private stopNow(accountId: string): void {

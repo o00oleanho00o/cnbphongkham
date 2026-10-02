@@ -44,14 +44,14 @@ class ImageDescriptionStoreImpl:
         self._db = db
 
     async def get_image_description(self, clinic_id: UUID, rel_path: str) -> str | None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (await session.execute(_GET, {"clinic_id": clinic_id, "rel_path": rel_path})).first()
         return str(row[0]) if row is not None else None
 
     async def save_image_description(
         self, clinic_id: UUID, rel_path: str, description: str, model: str
     ) -> None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 _SET,
                 {"clinic_id": clinic_id, "rel_path": rel_path, "description": description, "model": model},
@@ -63,7 +63,7 @@ class ImageDescriptionStoreImpl:
         ``MediaStore.delete_thread_media`` rồi truyền vào."""
         if len(rel_paths) == 0:
             return 0
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             result = await session.execute(
                 _DELETE_BY_PATHS, {"clinic_id": clinic_id, "paths": list(rel_paths)}
             )
@@ -75,6 +75,6 @@ class ImageDescriptionStoreImpl:
         """Dọn mô tả cũ hơn N ngày - cùng nhịp với dọn file media để hai bên kể cùng một câu chuyện: quá hạn
         thì cả pixel lẫn mô tả đều rơi về text "[gửi kèm N ảnh]". Trả về số row đã xóa."""
         cutoff = (now or datetime.now(UTC)) - timedelta(days=retention_days)
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             result = await session.execute(_PRUNE, {"clinic_id": clinic_id, "cutoff": cutoff})
             return affected_rows(result)

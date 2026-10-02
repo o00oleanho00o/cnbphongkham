@@ -12,7 +12,6 @@ rejects is logged and skipped, never fatal for the other accounts. A rejected to
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from uuid import UUID
 
 from pema.channels.registry import InMemoryChannelRegistry
@@ -40,7 +39,6 @@ class BotAccountManager:
         router: BotMessageRouter,
         registry: InMemoryChannelRegistry,
         settings: ZaloBotSettings,
-        clinic_slug_of: Callable[[UUID], Awaitable[str | None]] | None = None,
         client_factory: ClientFactory | None = None,
         listen: bool = True,
     ) -> None:
@@ -49,7 +47,6 @@ class BotAccountManager:
         self._router = router
         self._registry = registry
         self._settings = settings
-        self._clinic_slug_of = clinic_slug_of
         self._client_factory = client_factory
         self._running: dict[tuple[UUID, str], RunningBotAccount] = {}
 
@@ -59,13 +56,10 @@ class BotAccountManager:
     async def _webhook_for(self, clinic_id: UUID, account_id: str) -> WebhookRegistration | None:
         if self._settings.mode != "webhook":
             return None
-        if not self._settings.webhook_base_url or self._clinic_slug_of is None:
+        if not self._settings.webhook_base_url:
             raise LoiZaloBotApi("Webhook mode cần PEMA_ZALO_BOT_WEBHOOK_BASE_URL", "setWebhook")
-        slug = await self._clinic_slug_of(clinic_id)
-        if slug is None:
-            raise LoiZaloBotApi("Không tìm được clinic của account", "setWebhook")
         return WebhookRegistration(
-            url=webhook_url_for(self._settings.webhook_base_url, slug, account_id),
+            url=webhook_url_for(self._settings.webhook_base_url, account_id),
             secret=derive_webhook_secret(clinic_id, account_id),
         )
 
@@ -87,9 +81,7 @@ class BotAccountManager:
             token=token,
             router=self._router,
             registry=self._registry,
-            # A send-only account registers nothing, so it needs neither the URL nor the clinic slug (the
-            # worker
-            # cannot read ``clinic.clinic`` and must not need to).
+            # A send-only account registers nothing, so it does not need the webhook URL.
             webhook=await self._webhook_for(config.clinic_id, config.id) if self._listen else None,
             client_factory=self._client_factory,
             listen=self._listen,
@@ -107,7 +99,7 @@ class BotAccountManager:
         return await self.start(config)
 
     async def start_all(self) -> int:
-        """Start every enabled bot account of every clinic. Returns how many are running."""
+        """Start every enabled bot account of the installation. Returns how many are running."""
         started = 0
         for config in await self._accounts.list_all_enabled_accounts():
             if config.channel is not ChannelKind.ZALO_BOT:

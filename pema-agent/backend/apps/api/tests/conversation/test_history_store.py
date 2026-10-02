@@ -177,23 +177,6 @@ async def test_history_store_list_messages_paged_is_keyset_by_id(env: ClinicEnv)
     assert [m.content for m in second] == ["tin-2", "tin-3", "tin-4"]
 
 
-async def test_history_store_rows_of_another_clinic_are_invisible(env: ClinicEnv) -> None:
-    """(thêm) RLS: cùng account/thread ở phòng khám khác không thấy nhau"""
-    import uuid
-
-    store = HistoryStoreImpl(env.db)
-    other = env.add_clinic(uuid.uuid4(), ("acc-1",))
-    await store.append_message(env.clinic_id, "acc-1", "t-rls", _user("của phòng A"))
-    await store.append_message(other, "acc-1", "t-rls", _user("của phòng B"))
-
-    assert [m.content for m in await store.get_recent_messages(env.clinic_id, "acc-1", "t-rls", 10)] == [
-        "của phòng A"
-    ]
-    assert [m.content for m in await store.get_recent_messages(other, "acc-1", "t-rls", 10)] == [
-        "của phòng B"
-    ]
-
-
 # Tin đến từ Zalo được ghi ở CUỐI lượt, nên để DB tự sinh `created_at` là lấy giờ KẾT THÚC lượt - lượt 249 giây
 # làm mốc lệch 4 phút so với lúc người ta bấm gửi. Mà chính mốc này là nhãn `[dd/mm hh:mm]` model đọc.
 

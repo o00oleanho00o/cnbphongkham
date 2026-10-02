@@ -4,7 +4,7 @@
 Forced deviations (SQLite -> Postgres, sync -> async, one tenant -> clinics):
 
 * module-level functions with prepared statements become ``PgMcpServerStore``: SQLAlchemy Core over
-  ``ClinicDatabase``; every method takes ``clinic_id`` and runs in ``db.session(clinic_id)`` so RLS applies.
+  ``ClinicDatabase``; every method takes ``clinic_id`` and runs in ``db.session()`` (single tenant: no RLS).
   ``McpServerStore`` is the Protocol the manager and the admin routes depend on (``InMemoryMcpStore`` in
   ``pema.mcp.testing`` is the second implementation);
 * names: ``taoServer`` is ``create_server``, ``layServerNoiBo`` is ``get_internal``, ``danhSachServer`` is
@@ -166,7 +166,7 @@ class PgMcpServerStore:
         enabled: bool = True,
     ) -> McpServer:
         server_id = secrets.token_hex(8)
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 (
                     await session.execute(
@@ -189,7 +189,7 @@ class PgMcpServerStore:
         return _map_row(row)
 
     async def get_server(self, clinic_id: UUID, server_id: str) -> McpServer | None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 (await session.execute(select(mcp_servers).where(mcp_servers.c.id == server_id)))
                 .mappings()
@@ -198,7 +198,7 @@ class PgMcpServerStore:
         return _map_row(row) if row is not None else None
 
     async def get_internal(self, clinic_id: UUID, server_id: str) -> McpServerInternal | None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 (await session.execute(select(mcp_servers).where(mcp_servers.c.id == server_id)))
                 .mappings()
@@ -207,7 +207,7 @@ class PgMcpServerStore:
         return _map_internal(clinic_id, row) if row is not None else None
 
     async def list_servers(self, clinic_id: UUID) -> list[McpServer]:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 (
                     await session.execute(
@@ -220,7 +220,7 @@ class PgMcpServerStore:
         return [_map_row(r) for r in rows]
 
     async def list_internal(self, clinic_id: UUID) -> list[McpServerInternal]:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 (
                     await session.execute(
@@ -251,7 +251,7 @@ class PgMcpServerStore:
             values["enabled"] = enabled
         if headers is not None:
             values["headers_enc"] = encrypt_headers(headers)
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             if not values:
                 found = await session.execute(select(mcp_servers.c.id).where(mcp_servers.c.id == server_id))
                 return found.first() is not None
@@ -264,7 +264,7 @@ class PgMcpServerStore:
             return result.first() is not None
 
     async def clear_headers(self, clinic_id: UUID, server_id: str) -> bool:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             result = await session.execute(
                 update(mcp_servers)
                 .where(mcp_servers.c.id == server_id)
@@ -276,7 +276,7 @@ class PgMcpServerStore:
     async def delete_server(self, clinic_id: UUID, server_id: str) -> bool:
         """There is a real foreign key with ON DELETE CASCADE, but the bindings are still deleted explicitly
         in the SAME transaction, like the original ("clean both tables in one transaction")."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(delete(agent_mcp_servers).where(agent_mcp_servers.c.server_id == server_id))
             result = await session.execute(
                 delete(mcp_servers).where(mcp_servers.c.id == server_id).returning(mcp_servers.c.id)
@@ -286,7 +286,7 @@ class PgMcpServerStore:
     async def set_status(
         self, clinic_id: UUID, server_id: str, status: McpServerStatus, error: str = ""
     ) -> None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 update(mcp_servers)
                 .where(mcp_servers.c.id == server_id)
@@ -296,7 +296,7 @@ class PgMcpServerStore:
     async def save_snapshot_fingerprint(
         self, clinic_id: UUID, server_id: str, snapshot: list[McpToolInfo], fingerprint_json: str
     ) -> None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 update(mcp_servers)
                 .where(mcp_servers.c.id == server_id)
@@ -307,7 +307,7 @@ class PgMcpServerStore:
             )
 
     async def get_fingerprint(self, clinic_id: UUID, server_id: str) -> str:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             value = (
                 await session.execute(select(mcp_servers.c.fingerprint).where(mcp_servers.c.id == server_id))
             ).scalar_one_or_none()

@@ -9,12 +9,13 @@ connection).
 
 Forced deviations:
 * SQLite -> Postgres, sync -> async: the worker is a class bound to a ``ClinicDatabase`` (role
-  ``agent_worker``) and every pass is for ONE clinic (``clinic_id``); the process that loops over
-  ``ctx.list_active_clinic_ids()`` is ``pema.workers.kb_ingest_worker``. Each step uses its OWN short
+  ``agent_worker``). Single tenant: the database holds ONE clinic, so a pass is a pass of the installation
+  (the clinic id is the installation id, ``get_installation_clinic_id``; there is no loop over clinics);
+  the process that repeats the pass is ``pema.workers.kb_ingest_worker``. Each step uses its OWN short
   transaction: the claim COMMITS before the (possibly minutes long) extraction, so no database transaction
   is held open while a document is parsed;
-* "one process, one ``dangChayVong`` flag" -> a Postgres advisory lock per clinic held for the whole pass
-  (``_khoa_vong``): two worker processes cannot run a pass for the same clinic at the same time, which is
+* "one process, one ``dangChayVong`` flag" -> ONE Postgres advisory lock (a fixed key, no longer per clinic)
+  held for the whole pass (``_khoa_vong``): two worker processes cannot run a pass at the same time, which is
   the assumption ``go_nguon_ket_dau_tick`` relies on (it resets EVERY ``dang_xu_ly`` source, so it must
   never run while another process is really processing one). The in-process flag stays too;
 * NEW step: after extraction the chunks are embedded (bge-m3) when an embedding client is configured. A
@@ -38,7 +39,7 @@ from uuid import UUID
 from sqlalchemy import text
 
 from pema.config.runtime_tuning_settings import get_tuning_int
-from pema.core.db import ClinicDatabase
+from pema.core.db import ClinicDatabase, get_installation_clinic_id
 from pema.knowledge.chay_trich_xuat_tach_luong import (
     LoiTrichXuatBiNgatGiuaChung,
     trich_xuat_tach_luong,
@@ -90,8 +91,9 @@ class CaiDatIngest:
         )
 
 
-def khoa_advisory(clinic_id: UUID) -> int:
-    digest = hashlib.blake2b(f"kb-ingest:{clinic_id}".encode(), digest_size=8).digest()
+def khoa_advisory() -> int:
+    """The one advisory-lock key of the knowledge-base pass (single tenant: not per clinic)."""
+    digest = hashlib.blake2b(b"kb-ingest", digest_size=8).digest()
     return int.from_bytes(digest, "big", signed=True)
 
 
@@ -103,19 +105,28 @@ class KbIngestWorker:
         embedder: EmbeddingClient | None = None,
         data_dir: Path | None = None,
         cai_dat: CaiDatIngest | None = None,
+        clinic_id: UUID | None = None,
     ) -> None:
         self._db = db
         self._embedder = embedder
         self._data_dir = data_dir
         self._cai_dat = cai_dat
-        self._dang_chay_vong: set[UUID] = set()
+        self._clinic_id = clinic_id
+        """The installation clinic; ``None``: read once through ``get_installation_clinic_id``."""
+        self._dang_chay_vong = False
+
+    async def _clinic(self) -> UUID:
+        if self._clinic_id is None:
+            self._clinic_id = await get_installation_clinic_id(self._db)
+        return self._clinic_id
 
     def _cai_dat_hien_tai(self) -> CaiDatIngest:
         return self._cai_dat if self._cai_dat is not None else CaiDatIngest.tu_tuning()
 
-    async def _danh_hong(self, clinic_id: UUID, source_id: str, loi: str) -> None:
+    async def _danh_hong(self, source_id: str, loi: str) -> None:
         try:
-            async with self._db.session(clinic_id) as session:
+            clinic_id = await self._clinic()
+            async with self._db.session() as session:
                 await dat_trang_thai(session, clinic_id, source_id, "hong", loi=loi)
         except Exception as err:
             log.error("không ghi được trạng thái hong của nguồn", err=err, source_id=source_id)
@@ -129,8 +140,9 @@ class KbIngestWorker:
             log.warning("embedding đoạn thất bại, lưu đoạn không có vector", err=err)
             return None
 
-    async def xu_ly_mot_nguon(self, clinic_id: UUID, n: KbSourceTomTat) -> None:
+    async def xu_ly_mot_nguon(self, n: KbSourceTomTat) -> None:
         cai_dat = self._cai_dat_hien_tai()
+        clinic_id = await self._clinic()
         try:
             # Claim CONDITIONALLY (compare-then-change atomic, raising ``attempts``) - see
             # ``gianh_nguon_cho_xu_ly``. A failed claim (``False``) SKIPS the source entirely: it was
@@ -140,7 +152,7 @@ class KbIngestWorker:
             # SQL reason (not the ordinary "claim failed"). Raised outside the try it would leave
             # ``xu_ly_mot_vong`` and abandon the WHOLE scan - the sources processed AFTER the faulty one
             # would never be examined.
-            async with self._db.session(clinic_id) as session:
+            async with self._db.session() as session:
                 gianh_duoc = await gianh_nguon_cho_xu_ly(session, clinic_id, n.id, cai_dat.tran_lan_thu)
             if not gianh_duoc:
                 return
@@ -150,7 +162,7 @@ class KbIngestWorker:
                 # ``noi_dung_goc`` is read back ONLY AFTER claiming, for EXACTLY ONE source at a time - the
                 # "cho_xu_ly" list does NOT pull this column (I5: 8 sources x 5 million characters = +30 MB
                 # for one call if the snapshot pulled the full text of EVERY waiting source into RAM at once).
-                async with self._db.session(clinic_id) as session:
+                async with self._db.session() as session:
                     day = await lay_nguon(session, clinic_id, n.id)
                 if day is None:
                     return  # deleted between the claim and the re-read - rare but safe
@@ -173,7 +185,7 @@ class KbIngestWorker:
 
             vectors = await self._nhung_cac_doan([van_ban_de_nhung(n.ten, d) for d in doan])
 
-            async with self._db.session(clinic_id) as session:
+            async with self._db.session() as session:
                 # I4: a DELETE can slip in EXACTLY while the worker is awaiting extraction - the source is
                 # gone then the chunks must NOT be written (they would be orphans forever; here the foreign
                 # key would also refuse the insert).
@@ -212,20 +224,21 @@ class KbIngestWorker:
             # it is retried, same behaviour as before this phase.
             loi = str(err) or type(err).__name__
             log.warning("xử lý nguồn kho tri thức thất bại", source_id=n.id)
-            await self._danh_hong(clinic_id, n.id, loi)
+            await self._danh_hong(n.id, loi)
 
-    async def xu_ly_mot_vong(self, clinic_id: UUID) -> None:
+    async def xu_ly_mot_vong(self) -> None:
         """Process every source in ``cho_xu_ly``; one broken source does not stop the round."""
-        async with self._db.session(clinic_id) as session:
+        clinic_id = await self._clinic()
+        async with self._db.session() as session:
             dang_cho = await lay_nguon_theo_trang_thai(session, clinic_id, "cho_xu_ly")
         for n in dang_cho:
-            await self.xu_ly_mot_nguon(clinic_id, n)
+            await self.xu_ly_mot_nguon(n)
             # Yield the event loop between EVERY source - extraction runs in its own process (no longer
             # blocks the main loop when the CPU is heavy) but claiming/reading the file/writing the
             # database is still on the main loop, and yielding between sources is cheap.
             await asyncio.sleep(0)
 
-    async def go_nguon_ket_dau_tick(self, clinic_id: UUID) -> None:
+    async def go_nguon_ket_dau_tick(self) -> None:
         """Called AT THE START OF EVERY TICK (through ``chay_mot_vong_an_toan`` below), NOT only at boot:
         every ``dang_xu_ly`` left behind - from the previous start (worker killed midway) OR from the tick
         right before (the worker killed by its deadline - the catch in ``xu_ly_mot_nguon`` deliberately LEAVES
@@ -241,7 +254,8 @@ class KbIngestWorker:
         ``KB_EXTRACT_TIMEOUT_MS`` of its own round, so the real upper bound is ``TICK_MS +
         KB_EXTRACT_TIMEOUT_MS`` (at most 605s with the two default ceilings)."""
         tran_lan_thu = self._cai_dat_hien_tai().tran_lan_thu
-        async with self._db.session(clinic_id) as session:
+        clinic_id = await self._clinic()
+        async with self._db.session() as session:
             ket = await lay_nguon_theo_trang_thai(session, clinic_id, "dang_xu_ly")
             for n in ket:
                 if n.so_lan_thu >= tran_lan_thu:
@@ -259,11 +273,11 @@ class KbIngestWorker:
                     await dat_trang_thai(session, clinic_id, n.id, "cho_xu_ly")
 
     @contextlib.asynccontextmanager
-    async def _khoa_vong(self, clinic_id: UUID) -> AsyncGenerator[bool]:
-        """A Postgres advisory lock for the pass of ONE clinic, on a dedicated connection held for the whole
-        pass; yields ``False`` when another process already holds it."""
+    async def _khoa_vong(self) -> AsyncGenerator[bool]:
+        """A Postgres advisory lock for the pass, on a dedicated connection held for the whole pass; yields
+        ``False`` when another process already holds it."""
         async with self._db.engine.connect() as conn:
-            khoa = khoa_advisory(clinic_id)
+            khoa = khoa_advisory()
             lay_duoc = bool(
                 (await conn.execute(text("SELECT pg_try_advisory_lock(:k)"), {"k": khoa})).scalar()
             )
@@ -274,7 +288,7 @@ class KbIngestWorker:
                     await conn.execute(text("SELECT pg_advisory_unlock(:k)"), {"k": khoa})
                 await conn.rollback()
 
-    async def chay_mot_vong_an_toan(self, clinic_id: UUID) -> None:
+    async def chay_mot_vong_an_toan(self) -> None:
         """A complete tick: release the sources left stuck in ``dang_xu_ly`` by the previous tick/start FIRST,
         only then process the ``cho_xu_ly`` sources - public so a test can call it directly instead of waiting
         for the real ``TICK_MS``.
@@ -286,20 +300,21 @@ class KbIngestWorker:
         while another source is REALLY being processed in THIS very tick (a new tick only starts after the
         previous one is completely done) - it only releases exactly the sources stuck from the previous
         tick/start. ACROSS processes the advisory lock gives the same guarantee."""
-        if clinic_id in self._dang_chay_vong:
+        if self._dang_chay_vong:
             return
-        self._dang_chay_vong.add(clinic_id)
+        self._dang_chay_vong = True
         try:
-            async with self._khoa_vong(clinic_id) as lay_duoc:
+            async with self._khoa_vong() as lay_duoc:
                 if not lay_duoc:
                     return
-                await self.go_nguon_ket_dau_tick(clinic_id)
-                await self.xu_ly_mot_vong(clinic_id)
+                await self.go_nguon_ket_dau_tick()
+                await self.xu_ly_mot_vong()
         finally:
-            self._dang_chay_vong.discard(clinic_id)
+            self._dang_chay_vong = False
 
-    async def don_luc_khoi_dong(self, clinic_id: UUID) -> None:
-        async with self._db.session(clinic_id) as session:
+    async def don_luc_khoi_dong(self) -> None:
+        clinic_id = await self._clinic()
+        async with self._db.session() as session:
             ket = await don_doan_mo_coi(session, clinic_id)
         if ket.so_doan > 0:
             log.info(
@@ -308,12 +323,11 @@ class KbIngestWorker:
                 so_hang_fts=ket.so_hang_fts,
             )
 
-    async def bat_dau_worker(self, clinic_ids: list[UUID]) -> None:
-        """Boot work of the original ``batDauWorker`` for the given clinics: sweep the orphan chunks, then
+    async def bat_dau_worker(self) -> None:
+        """Boot work of the original ``batDauWorker``: sweep the orphan chunks, then
         run one pass at once (a source uploaded while the bot was restarting does not wait for the first
         ``TICK_MS``; that first pass ALSO releases every ``dang_xu_ly`` stuck from the previous run). The
-        loop itself - repeating every ``TICK_MS`` over ``ctx.list_active_clinic_ids()`` and stopping on a
-        signal - is ``pema.workers.kb_ingest_worker``."""
-        for clinic_id in clinic_ids:
-            await self.don_luc_khoi_dong(clinic_id)
-            await self.chay_mot_vong_an_toan(clinic_id)
+        loop itself - repeating every ``TICK_MS`` and stopping on a signal - is
+        ``pema.workers.kb_ingest_worker``."""
+        await self.don_luc_khoi_dong()
+        await self.chay_mot_vong_an_toan()

@@ -12,7 +12,7 @@ orphan any more and there is no separate FTS row to clean (``so_hang_fts`` alway
 the original where the FTS rows matched the chunks 1-1). It is kept because the safety net is cheap and
 useful after a restore from a backup or a manual repair done with constraints off.
 
-Called ONCE at boot (``kb_ingest_worker.bat_dau_worker``) per clinic, not periodically.
+Called ONCE at boot (``kb_ingest_worker.bat_dau_worker``) (one clinic per installation), not periodically.
 """
 
 from __future__ import annotations

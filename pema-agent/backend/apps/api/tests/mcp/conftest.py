@@ -24,6 +24,7 @@ from sqlalchemy.engine import make_url
 from pema.config import env as env_module
 from pema.config.runtime_tuning_settings import reset_tuning_provider
 from pema.core.db import ClinicDatabase
+from pema.core.testing import ensure_test_clinic, truncate_installation_data
 from pema.mcp.mcp_agent_binding import McpBindingCache, McpBindingStore, PgMcpPolicyStore
 from pema.mcp.mcp_server_store import McpServerStore, PgMcpServerStore
 from pema.mcp.testing import InMemoryMcpStore
@@ -99,10 +100,8 @@ async def bundle(request: pytest.FixtureRequest) -> AsyncIterator[StoreBundle]:
     admin: Engine = request.getfixturevalue("pg_admin")
     assert ADMIN_URL is not None
     with admin.begin() as conn:
-        conn.execute(
-            text("INSERT INTO clinic.clinic (id, slug, name) VALUES (:id, :slug, 'Synthetic')"),
-            {"id": clinic_id, "slug": f"c-{clinic_id.hex[:12]}"},
-        )
+        clinic_id = ensure_test_clinic(conn)
+        truncate_installation_data(conn)
     db = ClinicDatabase(
         make_url(ADMIN_URL).set(username="be_app", password=BE_PASSWORD).render_as_string(False)
     )

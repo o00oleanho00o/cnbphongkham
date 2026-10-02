@@ -1,14 +1,15 @@
 """Test support for the Postgres-backed stores of package D2 (not a port: zalo-agent tests opened a SQLite
 file in a temp dir with ``setupTestEnv``; here every test file gets a THROWAWAY database with the real
-Alembic history applied, so RLS, foreign keys and grants are exercised exactly as in production).
+Alembic history applied, so foreign keys and grants are exercised exactly as in production).
 
 Why a separate database and not the schemas of ``tests/test_database.py``: that module drops and re-creates
 the schemas of the database named in ``PEMA_TEST_DATABASE_URL``. This helper creates its own database
 (``pema_d2_<random>``) on the same server, so both can run in one pytest session. Roles (``be_app``,
 ``agent_worker``) are cluster-wide and are created by migration 0001 when missing.
 
-Per test: a fresh clinic id, so rows of two tests never meet and no cleanup is needed (RLS keeps them apart,
-which is itself part of what the tests prove).
+Single tenant: the migrated database already holds its ONE clinic (``clinic.clinic`` accepts no second
+row). Per test: ``ensure_test_clinic`` (the same clinic id every time) and ``truncate_installation_data``
+(every table of ``clinic.*`` and ``agent.*`` except the clinic row), so rows of two tests never meet.
 
 Nothing here is imported by production code. pytest fixtures live in the ``conftest.py`` files of the test
 directories; they only call this module.
@@ -19,7 +20,7 @@ from __future__ import annotations
 import os
 import uuid
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -30,6 +31,7 @@ from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.engine import make_url
 
 from pema.core.db import ClinicDatabase
+from pema.core.testing import ensure_test_clinic, truncate_installation_data
 
 API_DIR = Path(__file__).resolve().parents[2]
 BE_PASSWORD = "be-app-test-secret"  # noqa: S105 - synthetic, throwaway test database
@@ -88,13 +90,13 @@ class PgTestServer:
 
 @dataclass
 class ClinicEnv:
-    """A fresh clinic with its own database handles. ``db`` is the API role, ``worker_db`` the worker role."""
+    """The one clinic of the throwaway database, emptied, with its own database handles. ``db`` is the API
+    role, ``worker_db`` the worker role."""
 
     server: PgTestServer
     clinic_id: UUID
     db: ClinicDatabase
     worker_db: ClinicDatabase
-    extra_clinics: list[UUID] = field(default_factory=list[UUID])
 
     @classmethod
     def create(
@@ -104,26 +106,11 @@ class ClinicEnv:
         *,
         default_agent: bool = True,
     ) -> ClinicEnv:
-        env = cls(
-            server=server,
-            clinic_id=uuid.uuid4(),
-            db=ClinicDatabase(server.role_url("be_app", BE_PASSWORD), pool_size=3),
-            worker_db=ClinicDatabase(server.role_url("agent_worker", WORKER_PASSWORD), pool_size=2),
-        )
-        env.add_clinic(env.clinic_id, account_ids, default_agent=default_agent)
-        return env
-
-    def add_clinic(
-        self, clinic_id: UUID, account_ids: tuple[str, ...] = (), *, default_agent: bool = True
-    ) -> UUID:
-        """Insert a clinic, its default agent (unless ``default_agent`` is False, then no account either)
-        and the given accounts (as superuser, bypassing RLS)."""
-        slug = f"c-{clinic_id.hex[:12]}"
-        with self.server.admin_engine.begin() as conn:
-            conn.execute(
-                text("INSERT INTO clinic.clinic (id, slug, name) VALUES (:id, :slug, 'Synthetic clinic')"),
-                {"id": clinic_id, "slug": slug},
-            )
+        """Empty the database, then insert the default agent (unless ``default_agent`` is False, then no
+        account either) and the given accounts (as superuser) into the one clinic."""
+        with server.admin_engine.begin() as conn:
+            clinic_id = ensure_test_clinic(conn)
+            truncate_installation_data(conn)
             if default_agent:
                 conn.execute(
                     text(
@@ -140,9 +127,12 @@ class ClinicEnv:
                     ),
                     {"c": clinic_id, "id": account_id, "label": account_id, "agent": DEFAULT_AGENT_ID},
                 )
-        if clinic_id != self.clinic_id:
-            self.extra_clinics.append(clinic_id)
-        return clinic_id
+        return cls(
+            server=server,
+            clinic_id=clinic_id,
+            db=ClinicDatabase(server.role_url("be_app", BE_PASSWORD), pool_size=3),
+            worker_db=ClinicDatabase(server.role_url("agent_worker", WORKER_PASSWORD), pool_size=2),
+        )
 
     def add_accounts(self, *account_ids: str) -> None:
         with self.server.admin_engine.begin() as conn:
@@ -156,17 +146,17 @@ class ClinicEnv:
                 )
 
     async def fetch(self, sql: str, **params: Any) -> list[Mapping[str, Any]]:
-        """Run a SELECT in the clinic context (RLS applies) and return rows as mappings."""
-        async with self.db.session(self.clinic_id) as session:
+        """Run a SELECT as the API role and return rows as mappings."""
+        async with self.db.session() as session:
             result = await session.execute(text(sql), params)
             return [dict(row) for row in result.mappings().all()]
 
     async def scalar(self, sql: str, **params: Any) -> Any:
-        async with self.db.session(self.clinic_id) as session:
+        async with self.db.session() as session:
             return (await session.execute(text(sql), params)).scalar()
 
     async def execute(self, sql: str, **params: Any) -> None:
-        async with self.db.session(self.clinic_id) as session:
+        async with self.db.session() as session:
             await session.execute(text(sql), params)
 
     async def dispose(self) -> None:
