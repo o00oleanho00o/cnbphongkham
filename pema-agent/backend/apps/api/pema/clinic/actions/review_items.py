@@ -117,7 +117,7 @@ async def list_review_items(
         conditions.append(ReviewItem.patient_id == patient_id)
     if conversation_id is not None:
         conditions.append(ReviewItem.conversation_id == conversation_id)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         total = await session.scalar(select(func.count()).select_from(ReviewItem).where(*conditions)) or 0
         rows = await session.execute(
             select(ReviewItem, Patient.code)
@@ -140,7 +140,7 @@ async def list_review_items(
 
 async def get_review_item(db: ClinicDatabase, ctx: ActionContext, item_id: UUID) -> ReviewItemOut:
     require(ctx, Permission.REVIEW_READ)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         item, code = await _load(session, ctx, item_id)
         return review_out(item, code)
 
@@ -198,7 +198,7 @@ async def approve_review_item(
     delivery: OutboundDelivery | None = None,
 ) -> ReviewItemOut:
     require_any(ctx, (Permission.REVIEW_DECIDE, Permission.REVIEW_DECIDE_CLINICAL))
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         item, code = await _load(session, ctx, item_id)
         _authorize_decision(ctx, item)
         if await audit.find_replay(session, ctx, "review_item.approve", item.id):
@@ -297,7 +297,7 @@ async def reject_review_item(
     db: ClinicDatabase, ctx: ActionContext, item_id: UUID, payload: ReviewReject
 ) -> ReviewItemOut:
     require_any(ctx, (Permission.REVIEW_DECIDE, Permission.REVIEW_DECIDE_CLINICAL))
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         item, code = await _load(session, ctx, item_id)
         _authorize_decision(ctx, item)
         if await audit.find_replay(session, ctx, "review_item.reject", item.id):
@@ -322,7 +322,7 @@ async def escalate_review_item(
     db: ClinicDatabase, ctx: ActionContext, item_id: UUID, payload: ReviewEscalate
 ) -> ReviewItemOut:
     require(ctx, Permission.REVIEW_DECIDE)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         item, code = await _load(session, ctx, item_id)
         if await audit.find_replay(session, ctx, "review_item.escalate", item.id):
             return review_out(item, code)

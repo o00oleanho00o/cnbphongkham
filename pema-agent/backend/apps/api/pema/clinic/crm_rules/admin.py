@@ -73,7 +73,7 @@ class SqlCrmRuleAdminService:
 
     async def list_rules(self, ctx: ActionContext) -> list[CrmRuleOut]:
         require_rules_admin(ctx)
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             await seed_default_rules(session, ctx.clinic_id)
             result = await session.execute(
                 text(
@@ -95,7 +95,7 @@ class SqlCrmRuleAdminService:
                 "Quy tắc sinh nhật chỉ tạo việc cho nhân viên, không gửi tự động.",
             )
         fields = changed_fields(body)
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             await seed_default_rules(session, ctx.clinic_id)
             result = await session.execute(
                 text(

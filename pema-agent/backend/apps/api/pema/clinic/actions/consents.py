@@ -28,7 +28,7 @@ from pema_contracts.roles import Permission
 
 async def list_consents(db: ClinicDatabase, ctx: ActionContext, patient_id: UUID) -> list[ConsentOut]:
     require(ctx, Permission.CONSENT_READ)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         await load_patient(session, ctx, patient_id)
         await require_patient_access(session, ctx, patient_id)
         rows = (
@@ -45,7 +45,7 @@ async def record_consent(
     db: ClinicDatabase, ctx: ActionContext, patient_id: UUID, payload: ConsentCreate
 ) -> ConsentOut:
     require(ctx, Permission.CONSENT_WRITE)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         patient = await load_patient(session, ctx, patient_id)
         await require_patient_access(session, ctx, patient_id)
         stamp = now()

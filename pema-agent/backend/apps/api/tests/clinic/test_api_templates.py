@@ -26,10 +26,10 @@ def _body(key: str | None = None, **kw: object) -> dict[str, object]:
 
 
 async def test_a_new_template_is_an_inactive_draft_and_only_a_doctor_approves_it(
-    client_factory: ClientFactory, world_a: SeedResult
+    client_factory: ClientFactory, world: SeedResult
 ) -> None:
-    manager = await client_factory("clinic-a", "manager")
-    mai = await client_factory("clinic-a", "doctor.mai")
+    manager = await client_factory("manager")
+    mai = await client_factory("doctor.mai")
     draft = await manager.post("/api/v1/admin/templates", json=_body())
     assert draft.status_code == 201, draft.text
     template = draft.json()
@@ -41,7 +41,7 @@ async def test_a_new_template_is_an_inactive_draft_and_only_a_doctor_approves_it
     assert approved.status_code == 200, approved.text
     body = approved.json()
     assert body["active"] is True
-    assert body["approved_by"] == str(world_a.users["doctor.mai"])
+    assert body["approved_by"] == str(world.users["doctor.mai"])
     assert body["approved_at"] is not None
     # a doctor also reads the list to find what to approve
     keys = [t["template_key"] for t in (await mai.get("/api/v1/admin/templates")).json()]
@@ -49,10 +49,10 @@ async def test_a_new_template_is_an_inactive_draft_and_only_a_doctor_approves_it
 
 
 async def test_editing_the_body_clears_the_approval_but_editing_the_title_does_not(
-    client_factory: ClientFactory, world_a: SeedResult
+    client_factory: ClientFactory, world: SeedResult
 ) -> None:
-    manager = await client_factory("clinic-a", "manager")
-    mai = await client_factory("clinic-a", "doctor.mai")
+    manager = await client_factory("manager")
+    mai = await client_factory("doctor.mai")
     template = (await manager.post("/api/v1/admin/templates", json=_body())).json()
     approved = (
         await mai.post(f"/api/v1/admin/templates/{template['id']}/approve", json={"version": 1})
@@ -76,10 +76,10 @@ async def test_editing_the_body_clears_the_approval_but_editing_the_title_does_n
 
 
 async def test_an_approved_template_can_always_be_deactivated(
-    client_factory: ClientFactory, world_a: SeedResult
+    client_factory: ClientFactory, world: SeedResult
 ) -> None:
-    manager = await client_factory("clinic-a", "manager")
-    mai = await client_factory("clinic-a", "doctor.mai")
+    manager = await client_factory("manager")
+    mai = await client_factory("doctor.mai")
     template = (await manager.post("/api/v1/admin/templates", json=_body())).json()
     approved = (
         await mai.post(f"/api/v1/admin/templates/{template['id']}/approve", json={"version": 1})
@@ -92,10 +92,10 @@ async def test_an_approved_template_can_always_be_deactivated(
 
 
 async def test_duplicate_keys_and_bad_keys_are_refused_and_care_staff_cannot_write(
-    client_factory: ClientFactory, world_a: SeedResult
+    client_factory: ClientFactory, world: SeedResult
 ) -> None:
-    manager = await client_factory("clinic-a", "manager")
-    cs = await client_factory("clinic-a", "cs.maianh")
+    manager = await client_factory("manager")
+    cs = await client_factory("cs.maianh")
     body = _body()
     assert (await manager.post("/api/v1/admin/templates", json=body)).status_code == 201
     assert (await manager.post("/api/v1/admin/templates", json=body)).status_code == 422
@@ -105,15 +105,15 @@ async def test_duplicate_keys_and_bad_keys_are_refused_and_care_staff_cannot_wri
 
 
 async def test_the_worker_sees_only_active_and_approved_templates_through_its_view(
-    client_factory: ClientFactory, world_a: SeedResult, worker_db: ClinicDatabase
+    client_factory: ClientFactory, world: SeedResult, worker_db: ClinicDatabase
 ) -> None:
     """chỉ job kind: message đã được bác sĩ duyệt mới có thể gửi trong patient_channel"""
-    manager = await client_factory("clinic-a", "manager")
-    mai = await client_factory("clinic-a", "doctor.mai")
+    manager = await client_factory("manager")
+    mai = await client_factory("doctor.mai")
     draft = (await manager.post("/api/v1/admin/templates", json=_body())).json()
     live = (await manager.post("/api/v1/admin/templates", json=_body())).json()
     await mai.post(f"/api/v1/admin/templates/{live['id']}/approve", json={"version": 1})
-    async with worker_db.session(world_a.clinic_id) as session:
+    async with worker_db.session() as session:
         keys = set(
             (
                 await session.execute(text("SELECT template_key FROM clinic_agent.message_template_approved"))

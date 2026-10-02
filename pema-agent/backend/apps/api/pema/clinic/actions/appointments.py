@@ -246,7 +246,7 @@ async def list_appointments(
         conditions.append(Appointment.doctor_id == doctor_id)
     if status is not None:
         conditions.append(Appointment.status == status.value)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         total = await session.scalar(select(func.count()).select_from(Appointment).where(*conditions)) or 0
         rows = await session.execute(
             select(Appointment, Patient.code)
@@ -264,7 +264,7 @@ async def list_appointments(
 
 async def get_appointment(db: ClinicDatabase, ctx: ActionContext, appointment_id: UUID) -> AppointmentOut:
     require(ctx, Permission.APPOINTMENT_READ)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row, code = await _load(session, ctx, appointment_id)
         return appointment_out(row, code)
 
@@ -278,7 +278,7 @@ async def create_appointment(
         require(ctx, Permission.APPOINTMENT_WRITE)
     if is_doctor_scoped(ctx):
         _own_only(ctx, payload.doctor_id)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         task: CrmTask | None = None
         if payload.crm_task_id is not None:
             task = await session.scalar(
@@ -316,7 +316,7 @@ async def update_appointment(
     db: ClinicDatabase, ctx: ActionContext, appointment_id: UUID, payload: AppointmentUpdate
 ) -> AppointmentOut:
     require(ctx, Permission.APPOINTMENT_WRITE)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row, code = await _load(session, ctx, appointment_id)
         _own_only(ctx, row.doctor_id)
         check_version(row.version, payload.version)
@@ -375,7 +375,7 @@ async def _transition(
 ) -> AppointmentOut:
     require(ctx, permission)
     action = f"appointment.{verb}"
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row, code = await _load(session, ctx, appointment_id)
         _own_only(ctx, row.doctor_id)
         if await audit.find_replay(session, ctx, action, row.id):

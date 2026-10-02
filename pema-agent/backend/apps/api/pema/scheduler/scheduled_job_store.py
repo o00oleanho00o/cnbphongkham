@@ -6,7 +6,7 @@
 Forced deviations:
 
 * ``node:sqlite`` (sync, one process) becomes SQLAlchemy async over Postgres; every method takes the clinic id
-  (RLS context) as its first argument and optionally joins an open session (``session_scope``);
+  (the installation id) as its first argument and optionally joins an open session (``session_scope``);
 * the one-process invariants become atomic SQL: ``mark_run`` is a single ``UPDATE`` that increments
   ``run_count`` and decides the ``max_runs`` shut-off from the row itself (no read-then-write, so two
   concurrent finishes cannot lose an increment), and ``claim_due_job`` is a compare-and-swap on
@@ -235,7 +235,7 @@ class ScheduledJobStore:
         treated as nonexistent (returns ``False``), not even revealing that it exists. The read-modify-write
         runs under ``SELECT ... FOR UPDATE`` so two edits cannot overwrite each other.
         """
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             row = (
                 (
                     await s.execute(
@@ -318,7 +318,7 @@ class ScheduledJobStore:
     async def set_enabled(
         self, clinic_id: UUID, account_id: str, thread_id: str, job_id: str, enabled: bool
     ) -> bool:
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             result = await s.execute(
                 text(
                     "UPDATE agent.jobs SET enabled = :enabled WHERE clinic_id = :clinic_id AND id = :id "
@@ -357,7 +357,7 @@ class ScheduledJobStore:
     async def set_enabled_by_dedupe_key(self, clinic_id: UUID, dedupe_key: str, enabled: bool) -> bool:
         """Switch a job on/off by the idempotency key of the CRM rule that created it (the scope is the key
         itself: it is unique per clinic, so no IDOR path through a guessable id)."""
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             result = await s.execute(
                 text(
                     "UPDATE agent.jobs SET enabled = :enabled "
@@ -373,7 +373,7 @@ class ScheduledJobStore:
         # is deleted never opens a run again, so without cascading its history would be orphaned FOREVER; the
         # dashboard tells the user "the run history of this schedule is deleted with it" - that sentence has
         # to be TRUE.
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             result = await s.execute(
                 text(
                     "DELETE FROM agent.jobs WHERE clinic_id = :clinic_id AND id = :id "

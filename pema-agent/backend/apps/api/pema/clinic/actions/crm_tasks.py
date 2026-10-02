@@ -119,7 +119,7 @@ async def list_tasks(
     rank = case((CrmTask.rule_key.in_(("d1", "d3", "d7")), 0), else_=1)
     priority = case((CrmTask.priority == "high", 0), (CrmTask.priority == "normal", 1), else_=2)
     owner = aliased(UserAccount)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         total = await session.scalar(select(func.count()).select_from(CrmTask).where(*conditions)) or 0
         rows = await session.execute(
             select(CrmTask, Patient.code, owner.display_name)
@@ -136,7 +136,7 @@ async def list_tasks(
 
 async def get_task(db: ClinicDatabase, ctx: ActionContext, task_id: UUID) -> CrmTaskOut:
     require(ctx, Permission.CRM_TASK_READ)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row, code, name = await _load_task(session, ctx, task_id)
         return task_out(row, code, name)
 
@@ -156,7 +156,7 @@ async def resolve_task(
     db: ClinicDatabase, ctx: ActionContext, task_id: UUID, payload: CrmTaskResolve
 ) -> CrmTaskOut:
     require(ctx, Permission.CRM_TASK_RESOLVE)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         task, code, _ = await _load_task(session, ctx, task_id)
         if await audit.find_replay(session, ctx, "crm_task.resolve", task.id):
             owner_name = await _owner_name(session, ctx, task.owner_user_id)
@@ -297,7 +297,7 @@ async def list_activities(
     if task_id is not None:
         conditions.append(CrmActivity.task_id == task_id)
     actor = aliased(UserAccount)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         total = await session.scalar(select(func.count()).select_from(CrmActivity).where(*conditions)) or 0
         rows = await session.execute(
             select(CrmActivity, actor.display_name)
@@ -321,7 +321,7 @@ async def create_activity(
     stamp = now()
     if payload.next_action_at is not None and payload.next_action_at <= stamp:
         raise DomainError(ErrorCode.VALIDATION_FAILED, "Bước tiếp theo phải sau thời điểm hiện tại.")
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         patient = await load_patient(session, ctx, payload.patient_id)
         await require_patient_access(session, ctx, payload.patient_id)
         if payload.task_id is not None:
