@@ -2,6 +2,7 @@
 // `pema_contracts/live.py`):
 //
 //   GET    /api/v1/events                            SSE; each event is JSON `{type, id}`; no message text
+//                                                    (`handoff.changed` and `care.changed`: id is the patient)
 //   POST   /api/v1/conversations/{id}/presence       heartbeat, body `{state: "viewing" | "replying"}`
 //   DELETE /api/v1/conversations/{id}/presence       I left the conversation
 //   `viewers: [{user_id, name, state}]` in a conversation (list and detail), the caller excluded
@@ -18,6 +19,8 @@ const EVENT_TYPE_SET: Record<LiveEventType, true> = {
   "tasks.changed": true,
   "review.changed": true,
   "presence.changed": true,
+  "handoff.changed": true,
+  "care.changed": true,
 };
 
 /** What changed, never the content: `id` is the object (conversation, task, review item) or null for "some". */
