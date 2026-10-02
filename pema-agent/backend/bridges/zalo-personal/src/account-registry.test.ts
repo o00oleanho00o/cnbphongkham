@@ -30,7 +30,7 @@ function setup(configOverrides = {}) {
 async function startWithFake(manager: AccountManager, gateway: FakeGateway, accountId = "acc-1") {
   const fake = createFakeApi();
   gateway.nextSessions.push(createFakeSession(fake));
-  await manager.start(accountId, "clinic-a", TEST_CREDENTIAL);
+  await manager.start(accountId, TEST_CREDENTIAL);
   return fake;
 }
 
@@ -39,7 +39,7 @@ describe("AccountManager: start and stop", () => {
     const { gateway, manager } = setup();
     gateway.nextSessions.push(createFakeSession(createFakeApi(), "1000042"));
 
-    const result = await manager.start("acc-1", "clinic-a", TEST_CREDENTIAL);
+    const result = await manager.start("acc-1", TEST_CREDENTIAL);
 
     assert.equal(result.ownId, "1000042");
     assert.deepEqual(gateway.loginCalls, [TEST_CREDENTIAL]);
@@ -63,7 +63,7 @@ describe("AccountManager: start and stop", () => {
     const { gateway, manager } = setup();
     gateway.loginError = new Error("bad cookie");
 
-    await assert.rejects(manager.start("acc-1", "clinic-a", TEST_CREDENTIAL), /bad cookie/);
+    await assert.rejects(manager.start("acc-1", TEST_CREDENTIAL), /bad cookie/);
 
     assert.equal(manager.get("acc-1")?.state, "stopped");
     assert.equal(manager.activeCount(), 0);
@@ -75,7 +75,7 @@ describe("AccountManager: start and stop", () => {
     fake.listener.failNextStart = true;
     gateway.nextSessions.push(createFakeSession(fake));
 
-    await assert.rejects(manager.start("acc-1", "clinic-a", TEST_CREDENTIAL), /start failed/);
+    await assert.rejects(manager.start("acc-1", TEST_CREDENTIAL), /start failed/);
 
     assert.equal(manager.get("acc-1")?.state, "stopped");
   });
@@ -112,8 +112,8 @@ describe("AccountManager: start and stop", () => {
     const second = createFakeApi();
     gateway.nextSessions.push(createFakeSession(first), createFakeSession(second));
 
-    const pendingFirst = manager.start("acc-1", "clinic-a", TEST_CREDENTIAL);
-    const pendingSecond = manager.start("acc-1", "clinic-a", TEST_CREDENTIAL);
+    const pendingFirst = manager.start("acc-1", TEST_CREDENTIAL);
+    const pendingSecond = manager.start("acc-1", TEST_CREDENTIAL);
     gateway.releaseLogin();
     await Promise.all([pendingFirst, pendingSecond]);
 
@@ -127,18 +127,18 @@ describe("AccountManager: start and stop", () => {
 });
 
 describe("AccountManager: events to the API", () => {
-  it("a_listener_message_is_published_with_the_own_id_and_the_clinic_target", async () => {
+  it("a_listener_message_is_published_with_the_own_id_and_its_account_target", async () => {
     const { gateway, publisher, manager } = setup();
     const fake = createFakeApi();
     gateway.nextSessions.push(createFakeSession(fake, "1000042"));
-    await manager.start("acc-1", "clinic-a", TEST_CREDENTIAL);
+    await manager.start("acc-1", TEST_CREDENTIAL);
     const message = fakeUserMessage();
 
     fake.listener.emitMessage(message);
 
     assert.deepEqual(publisher.events, [
       {
-        target: { accountId: "acc-1", clinicSlug: "clinic-a" },
+        target: { accountId: "acc-1" },
         event: { type: "message", self_id: "1000042", message },
       },
     ]);
@@ -171,7 +171,7 @@ describe("AccountManager: events to the API", () => {
     const { publisher, manager } = setup();
     const fake = createFakeApi();
 
-    await manager.attachFromQr("acc-1", "clinic-a", createFakeSession(fake));
+    await manager.attachFromQr("acc-1", createFakeSession(fake));
 
     assert.deepEqual(publisher.ofType("credential_updated"), [
       { type: "credential_updated", credential: TEST_CREDENTIAL },

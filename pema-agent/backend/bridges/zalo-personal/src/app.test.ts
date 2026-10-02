@@ -50,7 +50,7 @@ function build(configOverrides: Partial<BridgeConfig> = {}, lookup = PUBLIC_LOOK
   return { bridge, gateway, publisher, sender, clock };
 }
 
-const startBody = { clinic_slug: "clinic-a", credential: TEST_CREDENTIAL };
+const startBody = { credential: TEST_CREDENTIAL };
 
 /** A bridge with account `acc-1` already started on a fresh fake API. */
 async function running(
@@ -109,7 +109,7 @@ describe("app: health and the disabled flag", () => {
       sender.post("/v1/accounts/acc-1/start", startBody),
       sender.get("/v1/accounts"),
       sender.post("/v1/accounts/acc-1/send", sendBody()),
-      sender.post("/v1/accounts/acc-1/login/qr", { clinic_slug: "clinic-a" }),
+      sender.post("/v1/accounts/acc-1/login/qr", {}),
       sender.post("/v1/kill-switch", { on: true }),
       bridge.app.request("/v1/accounts"),
     ];
@@ -250,9 +250,7 @@ describe("app: account lifecycle", () => {
 
   it("start_without_a_credential_is_a_422_bad_request", async () => {
     const { sender } = build();
-    const result = await errorOf(
-      await sender.post("/v1/accounts/acc-1/start", { clinic_slug: "clinic-a" }),
-    );
+    const result = await errorOf(await sender.post("/v1/accounts/acc-1/start", {}));
     assert.equal(result.status, 422);
     assert.equal(result.kind, "bad_request");
   });
@@ -260,7 +258,6 @@ describe("app: account lifecycle", () => {
   it("a_validation_error_never_echoes_the_values_it_rejected", async () => {
     const { sender } = build();
     const response = await sender.post("/v1/accounts/acc-1/start", {
-      clinic_slug: "clinic-a",
       credential: { cookie: "SECRET-COOKIE-VALUE", imei: "i", userAgent: "u" },
     });
     assert.equal((await response.text()).includes("SECRET-COOKIE-VALUE"), false);
@@ -764,7 +761,7 @@ describe("app: breaker", () => {
     const { sender, gateway } = await running({ blockAfterRejectedSends: 1 }, rejecting);
     await sender.post("/v1/accounts/acc-1/send", sendBody());
 
-    await sender.post("/v1/accounts/acc-1/login/qr", { clinic_slug: "clinic-a" });
+    await sender.post("/v1/accounts/acc-1/login/qr", {});
     gateway.qrControls[0]?.succeed(createFakeSession(createFakeApi()));
     await doiChoDenKhi(
       async () =>
@@ -1162,9 +1159,7 @@ describe("app: QR login", () => {
   it("a_qr_login_goes_from_starting_to_waiting_scan_to_success_and_the_account_runs", async () => {
     const { sender, gateway, publisher } = build();
 
-    const started = await readEnvelope(
-      await sender.post("/v1/accounts/acc-1/login/qr", { clinic_slug: "clinic-a" }),
-    );
+    const started = await readEnvelope(await sender.post("/v1/accounts/acc-1/login/qr", {}));
     assert.equal(started["state"], "starting");
 
     gateway.qrControls[0]?.emit({ type: "qr", qrBase64: "QR_PNG_BASE64" });
@@ -1201,7 +1196,7 @@ describe("app: QR login", () => {
 
   it("a_declined_login_reads_declined", async () => {
     const { sender, gateway } = build();
-    await sender.post("/v1/accounts/acc-1/login/qr", { clinic_slug: "clinic-a" });
+    await sender.post("/v1/accounts/acc-1/login/qr", {});
     gateway.qrControls[0]?.emit({ type: "declined" });
     assert.equal(
       (await readEnvelope(await sender.get("/v1/accounts/acc-1/login/qr")))["state"],
@@ -1219,7 +1214,7 @@ describe("app: QR login", () => {
 
   it("a_qr_session_times_out_after_three_minutes", async () => {
     const { sender, gateway, clock } = build();
-    await sender.post("/v1/accounts/acc-1/login/qr", { clinic_slug: "clinic-a" });
+    await sender.post("/v1/accounts/acc-1/login/qr", {});
     gateway.qrControls[0]?.emit({ type: "qr", qrBase64: "QR" });
 
     clock.now += 3 * 60_000;
@@ -1232,17 +1227,17 @@ describe("app: QR login", () => {
 
   it("a_second_qr_login_supersedes_a_dead_one_and_aborts_it", async () => {
     const { sender, gateway } = build();
-    await sender.post("/v1/accounts/acc-1/login/qr", { clinic_slug: "clinic-a" });
+    await sender.post("/v1/accounts/acc-1/login/qr", {});
     gateway.qrControls[0]?.emit({ type: "declined" });
 
-    await sender.post("/v1/accounts/acc-1/login/qr", { clinic_slug: "clinic-a" });
+    await sender.post("/v1/accounts/acc-1/login/qr", {});
 
     assert.equal(gateway.qrControls.length, 2);
     assert.equal(gateway.qrControls[0]?.signal.aborted, true);
   });
 
-  it("the_qr_login_without_a_clinic_slug_is_a_422", async () => {
+  it("the_qr_login_body_carries_no_clinic_and_is_accepted_empty", async () => {
     const { sender } = build();
-    assert.equal((await sender.post("/v1/accounts/acc-1/login/qr", {})).status, 422);
+    assert.equal((await sender.post("/v1/accounts/acc-1/login/qr", {})).status, 200);
   });
 });

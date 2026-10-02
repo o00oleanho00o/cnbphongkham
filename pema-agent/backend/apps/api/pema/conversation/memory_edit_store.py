@@ -1,7 +1,7 @@
 # ported from: src/conversation/memory-edit-store.ts
 """Sửa và xóa fact đã nhớ, khớp theo ĐOẠN CHỮ NGẮN thay vì id.
 
-Forced deviations: SQLite sync -> SQLAlchemy async + Postgres (``clinic_id`` + RLS). The Vietnamese result
+Forced deviations: SQLite sync -> SQLAlchemy async + Postgres (``clinic_id``, no RLS). The Vietnamese result
 shapes of the original (``{ok, loai: "khong_khop" | "khop_nhieu", factHienCo, factKhop, noiDungCu}``) become a
 small dataclass with English names (``kind``: ``"no_match"`` / ``"ambiguous"``), like ``SaveMemoryResult``
 did for ``KetQuaGhiNho``. The tool that calls this (D4's ``save_memory``) formats the Vietnamese text.
@@ -161,7 +161,7 @@ class MemoryEditStoreImpl:
         self, clinic_id: UUID, scope: FactEditScope, snippet: str, new_content: str
     ) -> FactEditResult:
         """Thay nội dung fact đang chứa ``snippet`` bằng ``new_content`` (``suaFactTheoDoanChu``)."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             found = _find_matching_fact(await _visible_facts(session, clinic_id, scope), snippet)
             if isinstance(found, FactEditResult):
                 return found
@@ -172,7 +172,7 @@ class MemoryEditStoreImpl:
         self, clinic_id: UUID, scope: FactEditScope, snippet: str
     ) -> FactEditResult:
         """Xóa fact đang chứa ``snippet`` (``xoaFactTheoDoanChu``)."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             found = _find_matching_fact(await _visible_facts(session, clinic_id, scope), snippet)
             if isinstance(found, FactEditResult):
                 return found

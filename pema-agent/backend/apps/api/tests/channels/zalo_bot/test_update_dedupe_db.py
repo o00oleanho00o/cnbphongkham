@@ -7,7 +7,7 @@ Set ``PEMA_TEST_DATABASE_URL`` to a superuser URL of a THROWAWAY database, as fo
         pgvector/pgvector:pg17
     PEMA_TEST_DATABASE_URL=postgresql+psycopg://postgres:testpw@127.0.0.1:<port>/pema uv run pytest -m db
 
-The store runs as the ``be_app`` role, so row level security applies like in production.
+The store runs as the ``be_app`` role like in production (single tenant: one clinic, no row level security).
 """
 
 from __future__ import annotations
@@ -27,6 +27,7 @@ from sqlalchemy.engine import make_url
 
 from pema.channels.zalo_bot.webhook import PostgresUpdateDedupe
 from pema.core.db import ClinicDatabase
+from pema.core.testing import ensure_test_clinic
 
 pytestmark = pytest.mark.db
 
@@ -56,19 +57,14 @@ def admin_engine() -> Iterator[Engine]:
 
 
 @pytest.fixture(scope="module")
-def clinics(admin_engine: Engine) -> tuple[uuid.UUID, uuid.UUID]:
-    a, b = uuid.uuid4(), uuid.uuid4()
+def clinic_a(admin_engine: Engine) -> uuid.UUID:
+    """The one clinic of the database."""
     with admin_engine.begin() as conn:
-        for clinic_id, slug in ((a, "dedupe-a"), (b, "dedupe-b")):
-            conn.execute(
-                text("INSERT INTO clinic.clinic (id, slug, name) VALUES (:id, :slug, :name)"),
-                {"id": clinic_id, "slug": slug, "name": f"Synthetic {slug}"},
-            )
-    return a, b
+        return ensure_test_clinic(conn)
 
 
 @pytest.fixture
-async def dedupe(clinics: tuple[uuid.UUID, uuid.UUID]) -> AsyncIterator[PostgresUpdateDedupe]:
+async def dedupe(clinic_a: uuid.UUID) -> AsyncIterator[PostgresUpdateDedupe]:
     assert ADMIN_URL is not None
     url = (
         make_url(ADMIN_URL).set(username="be_app", password=BE_PASSWORD).render_as_string(hide_password=False)
@@ -78,51 +74,42 @@ async def dedupe(clinics: tuple[uuid.UUID, uuid.UUID]) -> AsyncIterator[Postgres
     await db.dispose()
 
 
-async def test_lan_dau_la_moi_lan_hai_la_trung(
-    dedupe: PostgresUpdateDedupe, clinics: tuple[uuid.UUID, uuid.UUID]
-) -> None:
+async def test_lan_dau_la_moi_lan_hai_la_trung(dedupe: PostgresUpdateDedupe, clinic_a: uuid.UUID) -> None:
     """lần đầu thấy update là mới, lần hai là trùng"""
-    clinic_a, _ = clinics
     assert await dedupe.first_seen(clinic_a, "acc-1", "upd-1") is True
     assert await dedupe.first_seen(clinic_a, "acc-1", "upd-1") is False
 
 
-async def test_khoa_la_clinic_account_update_id_khong_lan_nhau(
-    dedupe: PostgresUpdateDedupe, clinics: tuple[uuid.UUID, uuid.UUID]
+async def test_khoa_la_account_update_id_khong_lan_nhau(
+    dedupe: PostgresUpdateDedupe, clinic_a: uuid.UUID
 ) -> None:
-    """cùng update_id nhưng khác account hoặc khác clinic thì KHÔNG phải bản trùng"""
-    clinic_a, clinic_b = clinics
+    """cùng update_id nhưng khác account thì KHÔNG phải bản trùng"""
     assert await dedupe.first_seen(clinic_a, "acc-1", "upd-2") is True
     assert await dedupe.first_seen(clinic_a, "acc-2", "upd-2") is True
-    assert await dedupe.first_seen(clinic_b, "acc-1", "upd-2") is True
 
 
 async def test_hai_giao_hang_dong_thoi_dung_mot_ben_thang(
-    dedupe: PostgresUpdateDedupe, clinics: tuple[uuid.UUID, uuid.UUID]
+    dedupe: PostgresUpdateDedupe, clinic_a: uuid.UUID
 ) -> None:
     """INSERT ... ON CONFLICT DO NOTHING RETURNING là 'ai tới trước thắng' nguyên tử"""
-    clinic_a, _ = clinics
     results = await asyncio.gather(*(dedupe.first_seen(clinic_a, "acc-1", "upd-race") for _ in range(8)))
     assert sorted(results) == [False] * 7 + [True]
 
 
 async def test_forget_cho_phep_xu_ly_lai_khi_lan_dau_that_bai(
-    dedupe: PostgresUpdateDedupe, clinics: tuple[uuid.UUID, uuid.UUID]
+    dedupe: PostgresUpdateDedupe, clinic_a: uuid.UUID
 ) -> None:
     """gỡ dấu thì lần gửi lại được xử lý (nhánh xử lý thất bại của webhook)"""
-    clinic_a, _ = clinics
     assert await dedupe.first_seen(clinic_a, "acc-1", "upd-retry") is True
     await dedupe.forget(clinic_a, "acc-1", "upd-retry")
     assert await dedupe.first_seen(clinic_a, "acc-1", "upd-retry") is True
 
 
-async def test_purge_xoa_dau_cu_va_chi_trong_clinic_cua_no(
-    dedupe: PostgresUpdateDedupe, clinics: tuple[uuid.UUID, uuid.UUID], admin_engine: Engine
+async def test_purge_xoa_dau_cu_hon_han(
+    dedupe: PostgresUpdateDedupe, clinic_a: uuid.UUID, admin_engine: Engine
 ) -> None:
-    """purge xóa dấu cũ hơn hạn, chỉ trong clinic được hỏi (RLS)"""
-    clinic_a, clinic_b = clinics
+    """purge xóa dấu cũ hơn hạn"""
     await dedupe.first_seen(clinic_a, "acc-1", "upd-old")
-    await dedupe.first_seen(clinic_b, "acc-1", "upd-old")
     with admin_engine.begin() as conn:
         conn.execute(text("UPDATE agent.channel_update_seen SET seen_at = now() - interval '30 days'"))
 
@@ -130,4 +117,3 @@ async def test_purge_xoa_dau_cu_va_chi_trong_clinic_cua_no(
 
     assert removed >= 1
     assert await dedupe.first_seen(clinic_a, "acc-1", "upd-old") is True, "đã purge thì coi như chưa thấy"
-    assert await dedupe.first_seen(clinic_b, "acc-1", "upd-old") is False, "clinic khác không bị đụng tới"

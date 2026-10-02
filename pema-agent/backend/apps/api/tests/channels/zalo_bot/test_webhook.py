@@ -9,7 +9,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator
 from typing import Any
-from uuid import UUID
 
 import httpx
 import pytest
@@ -30,8 +29,7 @@ from pema.channels.zalo_bot.webhook import InMemoryUpdateDedupe, ZaloBotWebhookS
 from pema.config.runtime_tuning_settings import StaticTuningProvider, install_tuning_provider
 
 SECRET = "w" * 32
-SLUG = "demo-clinic"
-URL = f"{API_PREFIX}/webhooks/zalo-bot/{SLUG}/acc-bot"
+URL = f"{API_PREFIX}/webhooks/zalo-bot/acc-bot"
 HEADERS = {"X-Bot-Api-Secret-Token": SECRET}
 WRAPPED: dict[str, Any] = {"ok": True, "result": SYNTHETIC_UPDATE}
 
@@ -49,11 +47,8 @@ def build_app(s: RouterStack, *, dedupe: InMemoryUpdateDedupe | None = None) -> 
     install_error_handlers(app)
     app.include_router(webhooks_zalo_bot.router, prefix=API_PREFIX)
 
-    async def resolve_clinic(slug: str) -> UUID | None:
-        return s.clinic_id if slug == SLUG else None
-
     app.state.zalo_bot_webhook = ZaloBotWebhookService(
-        resolve_clinic=resolve_clinic,
+        clinic_id=s.clinic_id,
         registry=s.registry,
         router=s.router,
         dedupe=dedupe or InMemoryUpdateDedupe(),
@@ -105,20 +100,24 @@ async def test_thieu_header_secret_bi_tu_choi(client: httpx.AsyncClient) -> None
     assert (await client.post(URL, json=WRAPPED)).status_code == 401
 
 
-async def test_clinic_hay_account_khong_ton_tai_tra_cung_mot_loi_khong_lo_thong_tin(
+async def test_account_khong_ton_tai_tra_cung_mot_loi_khong_lo_thong_tin(
     client: httpx.AsyncClient,
 ) -> None:
-    """clinic/account không tồn tại -> CÙNG 401 và cùng thân như sai secret (endpoint công khai, không lộ gì)"""
+    """account không tồn tại -> CÙNG 401 và cùng thân như sai secret (endpoint công khai, không lộ gì)"""
     wrong_secret = await client.post(URL, json=WRAPPED, headers={"X-Bot-Api-Secret-Token": "sai"})
-    unknown_clinic = await client.post(
-        f"{API_PREFIX}/webhooks/zalo-bot/khong-co/acc-bot", json=WRAPPED, headers=HEADERS
-    )
     unknown_account = await client.post(
-        f"{API_PREFIX}/webhooks/zalo-bot/{SLUG}/khong-co", json=WRAPPED, headers=HEADERS
+        f"{API_PREFIX}/webhooks/zalo-bot/khong-co", json=WRAPPED, headers=HEADERS
     )
-    for res in (unknown_clinic, unknown_account):
-        assert res.status_code == 401
-        assert res.json() == wrong_secret.json()
+    assert unknown_account.status_code == 401
+    assert unknown_account.json() == wrong_secret.json()
+
+
+async def test_duong_dan_webhook_khong_mang_phong_kham(client: httpx.AsyncClient) -> None:
+    """đường dẫn cũ có đoạn phòng khám không còn tồn tại (một bản cài đặt là một phòng khám)"""
+    old = await client.post(
+        f"{API_PREFIX}/webhooks/zalo-bot/demo-clinic/acc-bot", json=WRAPPED, headers=HEADERS
+    )
+    assert old.status_code in (404, 405)
 
 
 async def test_giao_lai_cung_update_id_tra_duplicate_va_khong_ghi_lan_hai(

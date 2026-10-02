@@ -41,7 +41,7 @@ async def test_the_worker_stores_one_vector_per_chunk_when_an_embedder_is_config
         )
     await KbIngestWorker(
         kb.db, data_dir=tmp_path, embedder=HashingEmbeddingClient(), cai_dat=CAI_DAT
-    ).xu_ly_mot_vong(kb.clinic_id)
+    ).xu_ly_mot_vong()
     assert (
         kb.kb_database.scalar("SELECT status FROM agent.kb_document WHERE id = :id", {"id": n.id})
         == "san_sang"
@@ -59,9 +59,7 @@ async def test_a_down_embedding_service_does_not_fail_the_source_chunks_are_stor
     """máy embedding tắt: nguồn vẫn san_sang, đoạn lưu không có vector (từ khóa vẫn tìm được)"""
     async with kb.session() as s:
         n = await tao_nguon(s, kb.clinic_id, ten="x", loai="text", noi_dung_goc="# A\n\nthân bài")
-    await KbIngestWorker(kb.db, data_dir=tmp_path, embedder=DownEmbedder(), cai_dat=CAI_DAT).xu_ly_mot_vong(
-        kb.clinic_id
-    )
+    await KbIngestWorker(kb.db, data_dir=tmp_path, embedder=DownEmbedder(), cai_dat=CAI_DAT).xu_ly_mot_vong()
     async with kb.session() as s:
         sau = await lay_nguon(s, kb.clinic_id, n.id)
     assert sau is not None
@@ -76,5 +74,5 @@ async def test_a_successful_pass_clears_the_old_error_text_of_a_source_that_fail
     async with kb.session() as s:
         n = await tao_nguon(s, kb.clinic_id, ten="x", loai="text", noi_dung_goc="# A\n\nthân bài")
     kb.kb_database.execute("UPDATE agent.kb_document SET error = 'lỗi cũ' WHERE id = :id", {"id": n.id})
-    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=CAI_DAT).xu_ly_mot_vong(kb.clinic_id)
+    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=CAI_DAT).xu_ly_mot_vong()
     assert kb.kb_database.scalar("SELECT error FROM agent.kb_document WHERE id = :id", {"id": n.id}) == ""

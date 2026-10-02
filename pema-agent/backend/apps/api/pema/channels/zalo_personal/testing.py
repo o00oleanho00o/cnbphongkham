@@ -208,8 +208,8 @@ class FakeBridge:
 
     own_id: str = "self-1"
     states: dict[str, str] = field(default_factory=dict[str, str])
-    started: list[tuple[str, str, JsonObject, KillSwitchState]] = field(
-        default_factory=list[tuple[str, str, JsonObject, KillSwitchState]]
+    started: list[tuple[str, JsonObject, KillSwitchState]] = field(
+        default_factory=list[tuple[str, JsonObject, KillSwitchState]]
     )
     stopped: list[str] = field(default_factory=list[str])
     stop_all_calls: int = 0
@@ -221,11 +221,11 @@ class FakeBridge:
     apis: dict[str, FakeZaloApi] = field(default_factory=dict[str, FakeZaloApi])
 
     async def start_account(
-        self, account_id: str, *, clinic_slug: str, credential: JsonObject, kill_switch: KillSwitchState
+        self, account_id: str, *, credential: JsonObject, kill_switch: KillSwitchState
     ) -> str:
         if self.fail_start is not None:
             raise self.fail_start
-        self.started.append((account_id, clinic_slug, credential, kill_switch))
+        self.started.append((account_id, credential, kill_switch))
         self.kill_switch = kill_switch
         self.states[account_id] = "connected"
         if self.before_start_returns is not None:
@@ -247,7 +247,7 @@ class FakeBridge:
             account_id=account_id, state=state, own_id=self.own_id if state == "connected" else ""
         )
 
-    async def start_qr_login(self, account_id: str, *, clinic_slug: str) -> BridgeQrStatus:
+    async def start_qr_login(self, account_id: str) -> BridgeQrStatus:
         self.qr_started.append(account_id)
         return self.qr_answers.pop(0) if self.qr_answers else BridgeQrStatus(state="starting")
 

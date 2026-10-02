@@ -1,7 +1,7 @@
 # ported from: src/conversation/usage-store.ts
 """Token accounting per agent turn (table ``agent.usage``, the ``agent_turns`` table of zalo-agent).
 
-Forced deviations: SQLite sync -> SQLAlchemy async + Postgres (``clinic_id`` + RLS, ``timestamptz``). The
+Forced deviations: SQLite sync -> SQLAlchemy async + Postgres (``clinic_id``, no RLS, ``timestamptz``). The
 contract adds three methods that the original kept elsewhere: ``append_step`` / ``save_turn_trace`` (the trace
 of ``agent-trace-store``, which owns the steps table here too) and ``get_account_stats`` (the "today" counters
 of the overview page: threads, messages, turns and tokens; the counts of ``overview-stats.ts`` are in
@@ -104,7 +104,7 @@ class UsageStoreImpl:
         ``source`` mặc định 'message' để MỌI lời gọi hiện có không phải sửa gì cả - chỉ lượt do job lịch hẹn
         tự bắn mới cần truyền 'schedule'.
         """
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row_id = (
                 await session.execute(
                     _OPEN,
@@ -121,7 +121,7 @@ class UsageStoreImpl:
     async def finish_agent_turn(self, clinic_id: UUID, turn_id: int, usage: TokenUsage) -> None:
         """Chốt usage khi lượt xong - nguồn cho cột Context màn Sessions + thống kê chi phí. Lượt ném lỗi vẫn
         nên gọi (với số đo được tới lúc hỏng) để row không nằm lại ở 0."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 _FINISH,
                 {
@@ -144,7 +144,7 @@ class UsageStoreImpl:
     async def get_thread_usage_totals(
         self, clinic_id: UUID, account_id: str, thread_id: str
     ) -> ThreadUsageTotals:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 (
                     await session.execute(
@@ -163,7 +163,7 @@ class UsageStoreImpl:
         """ "Today" starts at ``start_of_today_utc`` (``start_of_day_utc(bot_time_zone())``): passed in as
         a parameter, never a UTC midnight hard-coded in SQL (that is 07:00 in Vietnam, wrong in both
         directions)."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 (
                     await session.execute(
@@ -192,7 +192,7 @@ class UsageStoreImpl:
         """Thống kê theo ngày (theo ``time_zone``, không phải UTC) từ mốc ``since_utc_iso`` - cho trang
         Overview. ``since_utc_iso`` nên tính bằng ``start_of_day_utc`` lùi N ngày để không lọt mất giờ đầu
         ngày VN."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 (
                     await session.execute(

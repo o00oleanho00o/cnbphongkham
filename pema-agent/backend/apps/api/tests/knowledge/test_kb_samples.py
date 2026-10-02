@@ -42,7 +42,7 @@ async def test_the_samples_ingest_and_are_found_by_a_customer_style_question(
             continue
         nguon = await store.create_file_source(kb.clinic_id, name=f.stem, format="md", data=f.read_bytes())
         ids[f.name] = nguon.id
-    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=CAI_DAT).xu_ly_mot_vong(kb.clinic_id)
+    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=CAI_DAT).xu_ly_mot_vong()
     await store.set_sources_for_agent(kb.clinic_id, "tro-ly", list(ids.values()))
 
     for cau_hoi, mong in (

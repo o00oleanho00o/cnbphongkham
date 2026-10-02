@@ -6,7 +6,6 @@ described ONCE, overwritten on re-describe, pruned on the retention rhythm, keye
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -35,15 +34,6 @@ async def test_image_description_store_save_then_get_and_re_describe_overwrites(
     assert (
         await env.scalar("SELECT model FROM agent.image_descriptions WHERE rel_path = :p", p=rel) == "model-b"
     )
-
-
-async def test_image_description_store_same_path_in_another_clinic_is_a_different_row(env: ClinicEnv) -> None:
-    """(thêm) cùng rel_path ở phòng khám khác là dòng khác"""
-    store = ImageDescriptionStoreImpl(env.db)
-    other = env.add_clinic(uuid.uuid4())
-    rel = "media/acc-1/t-1/m-1-0.jpg"
-    await store.save_image_description(env.clinic_id, rel, "của phòng A", "m")
-    assert await store.get_image_description(other, rel) is None
 
 
 async def test_image_description_store_prune_removes_only_descriptions_older_than_the_retention(

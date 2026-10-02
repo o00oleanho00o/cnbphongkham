@@ -23244,19 +23244,10 @@
         ]
       }
     },
-    "/api/v1/webhooks/zalo-bot/{clinic_slug}/{account_id}": {
+    "/api/v1/webhooks/zalo-bot/{account_id}": {
       "post": {
         "operationId": "webhooks_receive_zalo_bot_update",
         "parameters": [
-          {
-            "in": "path",
-            "name": "clinic_slug",
-            "required": true,
-            "schema": {
-              "title": "Clinic Slug",
-              "type": "string"
-            }
-          },
           {
             "in": "path",
             "name": "account_id",
@@ -23368,19 +23359,10 @@
         ]
       }
     },
-    "/api/v1/webhooks/zalo-bridge/{clinic_slug}/{account_id}": {
+    "/api/v1/webhooks/zalo-bridge/{account_id}": {
       "post": {
         "operationId": "webhooks_receive_zalo_bridge_event",
         "parameters": [
-          {
-            "in": "path",
-            "name": "clinic_slug",
-            "required": true,
-            "schema": {
-              "title": "Clinic Slug",
-              "type": "string"
-            }
-          },
           {
             "in": "path",
             "name": "account_id",

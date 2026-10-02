@@ -93,7 +93,7 @@ class SqlPolicyGateway:
         self._db = db
 
     async def patient_flags(self, clinic_id: UUID, patient_id: UUID) -> PatientPolicyFlags | None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 await session.execute(
                     text(
@@ -122,7 +122,7 @@ class SqlPolicyGateway:
         )
 
     async def approved_template(self, clinic_id: UUID, template_key: str) -> ApprovedTemplate | None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 await session.execute(
                     text(
@@ -137,7 +137,7 @@ class SqlPolicyGateway:
         return ApprovedTemplate(template_key=str(row.template_key), marketing=bool(row.marketing))
 
     async def _link(self, clinic_id: UUID, statement: str, params: dict[str, object]) -> LinkResult:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (await session.execute(text(statement), params)).first()
         if row is None:
             return LinkResult(LinkOutcome.NO_MATCH)

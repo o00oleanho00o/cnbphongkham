@@ -30,7 +30,7 @@ export type BridgeEvent =
   | { type: "credential_updated"; credential: Credential }
   | { type: "account_state"; state: AccountStateEventState; reason: string };
 
-export type EventTarget = { accountId: string; clinicSlug: string };
+export type EventTarget = { accountId: string };
 
 /** `publish` never throws and never waits: it only enqueues. */
 export type EventPublisher = {
@@ -139,9 +139,8 @@ export class HttpEventPublisher implements EventPublisher {
   }
 
   private endpoint(target: EventTarget): string {
-    const slug = encodeURIComponent(target.clinicSlug);
     const account = encodeURIComponent(target.accountId);
-    return `${this.options.apiBaseUrl}/webhooks/zalo-bridge/${slug}/${account}`;
+    return `${this.options.apiBaseUrl}/webhooks/zalo-bridge/${account}`;
   }
 
   private serialize(item: QueuedEvent): string | null {

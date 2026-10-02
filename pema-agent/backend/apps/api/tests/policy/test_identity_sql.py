@@ -1,9 +1,9 @@
-"""The SQL side of the policy on a clean Postgres: identity link functions, grants, RLS, admin service.
+"""The SQL side of the policy on a clean Postgres: identity link functions, grants, admin service.
 
 Skipped without ``PEMA_TEST_DATABASE_URL`` (same convention as ``tests/test_database.py``; use a THROWAWAY
 database, the fixture drops every Pema schema and re-runs the alembic history). Covers revision
 ``p0001_identity_link`` as the two runtime roles use it: ``agent_worker`` (functions only) and ``be_app``
-(tables, RLS). All data is synthetic.
+(tables). Single tenant: the database holds ONE clinic. All data is synthetic.
 """
 
 from __future__ import annotations
@@ -22,6 +22,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.exc import DBAPIError, ProgrammingError
 
 from pema.core.db import ClinicDatabase
+from pema.core.testing import ensure_test_clinic
 from pema.policy.gateway import LinkOutcome, SqlPolicyGateway
 from pema.policy.identity import link_code_hash, phone_hash
 from pema.policy.identity_admin import PolicyAdminService
@@ -70,19 +71,17 @@ def be_db() -> AbstractAsyncContextManager[ClinicDatabase]:
 
 
 class World:
-    """Two clinics. Clinic A has: an owner, a reception user, patients P025 (phone), P026 and P027 (the
-    same family phone), P028 (opted out of marketing, a marketing template, consents)."""
+    """The one clinic. It has: an owner, a reception user, patients P025 (phone), P026 and P027 (the same
+    family phone), P028 (opted out of marketing, a marketing template, consents)."""
 
-    def __init__(self) -> None:
-        self.clinic_a = uuid.uuid4()
-        self.clinic_b = uuid.uuid4()
+    def __init__(self, clinic_id: uuid.UUID) -> None:
+        self.clinic_a = clinic_id
         self.owner = uuid.uuid4()
         self.reception = uuid.uuid4()
         self.p025 = uuid.uuid4()
         self.p026 = uuid.uuid4()
         self.p027 = uuid.uuid4()
         self.p028 = uuid.uuid4()
-        self.b_patient = uuid.uuid4()
 
 
 def _reset(engine: Engine) -> None:
@@ -107,13 +106,8 @@ def admin_engine() -> Iterator[Engine]:
 
 @pytest.fixture(scope="module")
 def world(admin_engine: Engine) -> World:
-    w = World()
     with admin_engine.begin() as conn:
-        for clinic_id, slug in ((w.clinic_a, "pol-a"), (w.clinic_b, "pol-b")):
-            conn.execute(
-                text("INSERT INTO clinic.clinic (id, slug, name) VALUES (:id, :slug, :name)"),
-                {"id": clinic_id, "slug": slug, "name": f"Synthetic {slug}"},
-            )
+        w = World(ensure_test_clinic(conn))
         for user_id, role, email in (
             (w.owner, "owner", "owner@example.invalid"),
             (w.reception, "reception", "reception@example.invalid"),
@@ -130,7 +124,6 @@ def world(admin_engine: Engine) -> World:
             (w.p026, w.clinic_a, "P026", "Synthetic Parent", "0912 345 678", False),
             (w.p027, w.clinic_a, "P027", "Synthetic Child", "0912-345-678", False),
             (w.p028, w.clinic_a, "P028", "Synthetic Optout", "0987654321", True),
-            (w.b_patient, w.clinic_b, "P001", "Synthetic Other Clinic", "0901234567", False),
         ]
         for pid, clinic_id, code, name, phone, opt_out in patients:
             conn.execute(
@@ -230,17 +223,6 @@ async def test_phone_hash_creates_a_pending_candidate_and_never_verifies(
     assert (row["status"], row["patient_id"], row["verified_by"]) == ("pending", world.p025, None)
 
 
-async def test_phone_hash_only_sees_its_own_clinic(world: World) -> None:
-    """phòng khám B có SĐT giống hệt nhưng không bị thấy từ phòng khám A (và ngược lại)"""
-    digest = phone_hash("0901234567")
-    assert digest is not None
-    async with worker_db() as db:
-        a = await SqlPolicyGateway(db).link_by_phone_hash(world.clinic_a, CH, "uid-iso", digest)
-        b = await SqlPolicyGateway(db).link_by_phone_hash(world.clinic_b, CH, "uid-iso", digest)
-    assert a.patient_id == world.p025
-    assert b.patient_id == world.b_patient
-
-
 async def test_a_family_phone_is_ambiguous_and_links_nobody(admin_engine: Engine, world: World) -> None:
     """SĐT của hai hồ sơ (cha mẹ/con): ambiguous, không gán cho ai"""
     digest = phone_hash("0912345678")
@@ -333,15 +315,11 @@ async def test_the_database_stores_only_the_hash_of_a_code(admin_engine: Engine,
     assert issued.code not in dump
 
 
-async def test_expired_unknown_and_foreign_clinic_codes_are_refused(
-    admin_engine: Engine, world: World
-) -> None:
-    """mã hết hạn, mã lạ, mã của phòng khám khác đều bị từ chối"""
+async def test_expired_and_unknown_codes_are_refused(admin_engine: Engine, world: World) -> None:
+    """mã hết hạn và mã lạ đều bị từ chối"""
     expired = link_code_hash("EXPDAAAA")
-    foreign = link_code_hash("FRNDBBBB")
     unknown = link_code_hash("UNKNCCCC")
     assert expired is not None
-    assert foreign is not None
     assert unknown is not None
     with admin_engine.begin() as conn:
         conn.execute(
@@ -351,29 +329,11 @@ async def test_expired_unknown_and_foreign_clinic_codes_are_refused(
             ),
             {"c": world.clinic_a, "p": world.p025, "h": expired, "u": world.owner},
         )
-        other_owner = uuid.uuid4()
-        conn.execute(
-            text(
-                "INSERT INTO clinic.user_account (id, clinic_id, email, display_name, role) "
-                "VALUES (:id, :c, 'owner-b@example.invalid', 'Synthetic', 'owner')"
-            ),
-            {"id": other_owner, "c": world.clinic_b},
-        )
-        conn.execute(
-            text(
-                "INSERT INTO clinic.identity_link_code (clinic_id, patient_id, code_hash, issued_by, expires_at) "
-                "VALUES (:c, :p, :h, :u, now() + interval '10 minutes')"
-            ),
-            {"c": world.clinic_b, "p": world.b_patient, "h": foreign, "u": other_owner},
-        )
     async with worker_db() as db:
         gw = SqlPolicyGateway(db)
         assert (
             await gw.redeem_link_code(world.clinic_a, CH, "uid-x1", expired)
         ).outcome is LinkOutcome.EXPIRED_CODE
-        assert (
-            await gw.redeem_link_code(world.clinic_a, CH, "uid-x2", foreign)
-        ).outcome is LinkOutcome.INVALID_CODE
         assert (
             await gw.redeem_link_code(world.clinic_a, CH, "uid-x3", unknown)
         ).outcome is LinkOutcome.INVALID_CODE
@@ -419,22 +379,8 @@ async def test_worker_cannot_read_identity_tables_or_call_the_helpers(world: Wor
             "SELECT clinic_agent.link_attempts_exceeded(gen_random_uuid(), 'zalo_bot', 'x')",
         ):
             with pytest.raises((ProgrammingError, DBAPIError)):
-                async with db.session(world.clinic_a) as session:
+                async with db.session() as session:
                     await session.execute(text(statement))
-
-
-async def test_functions_refuse_to_run_without_a_clinic_context(world: World) -> None:
-    """hai hàm từ chối chạy khi không có ngữ cảnh phòng khám"""
-    digest = phone_hash("0901234567")
-    assert digest is not None
-    async with worker_db() as db:
-        for statement in (
-            "SELECT * FROM clinic_agent.link_identity_by_phone_hash('zalo_bot', 'u', :h)",
-            "SELECT * FROM clinic_agent.redeem_identity_code('zalo_bot', 'u', :h)",
-        ):
-            with pytest.raises(DBAPIError, match="no clinic context"):
-                async with db.system_session() as session:
-                    await session.execute(text(statement), {"h": digest})
 
 
 async def test_functions_reject_a_hash_that_is_not_a_sha256(world: World) -> None:
@@ -445,14 +391,14 @@ async def test_functions_reject_a_hash_that_is_not_a_sha256(world: World) -> Non
             "SELECT * FROM clinic_agent.redeem_identity_code('zalo_bot', 'u', 'K7QM4XNR')",
         ):
             with pytest.raises(DBAPIError):
-                async with db.session(world.clinic_a) as session:
+                async with db.session() as session:
                     await session.execute(text(statement))
 
 
 async def test_attempt_log_is_append_only_for_the_api_role(world: World) -> None:
     """be_app đọc được nhật ký thử liên kết nhưng không sửa/xóa được"""
     async with be_db() as db:
-        async with db.session(world.clinic_a) as session:
+        async with db.session() as session:
             count = (
                 await session.execute(text("SELECT count(*) FROM clinic.identity_link_attempt"))
             ).scalar_one()
@@ -462,7 +408,7 @@ async def test_attempt_log_is_append_only_for_the_api_role(world: World) -> None
             "DELETE FROM clinic.identity_link_attempt",
         ):
             with pytest.raises((ProgrammingError, DBAPIError)):
-                async with db.session(world.clinic_a) as session:
+                async with db.session() as session:
                     await session.execute(text(statement))
 
 
@@ -492,23 +438,21 @@ async def test_gateway_reads_flags_and_approved_templates_through_views(world: W
         gw = SqlPolicyGateway(db)
         optout = await gw.patient_flags(world.clinic_a, world.p028)
         plain = await gw.patient_flags(world.clinic_a, world.p025)
-        foreign = await gw.patient_flags(world.clinic_a, world.b_patient)
+        unknown_patient = await gw.patient_flags(world.clinic_a, uuid.uuid4())
         promo = await gw.approved_template(world.clinic_a, "promo_laser")
         followup = await gw.approved_template(world.clinic_a, "followup_d1")
         retired = await gw.approved_template(world.clinic_a, "retired")
-        other_clinic = await gw.approved_template(world.clinic_b, "promo_laser")
     assert optout is not None
     assert optout.marketing_opt_out is True
     assert (optout.consent_messaging, optout.consent_marketing) == (True, False)
     assert plain is not None
     assert plain.marketing_opt_out is False
-    assert foreign is None
+    assert unknown_patient is None
     assert promo is not None
     assert promo.marketing is True
     assert followup is not None
     assert followup.marketing is False
     assert retired is None
-    assert other_clinic is None
 
 
 # --------------------------------------------------------------------------- admin service
@@ -589,10 +533,10 @@ async def test_admin_actions_are_deny_by_default(world: World) -> None:
 
 
 async def test_issue_code_for_an_unknown_patient_is_not_found(world: World) -> None:
-    """phát mã cho hồ sơ không tồn tại (hoặc của phòng khám khác) báo not_found"""
+    """phát mã cho hồ sơ không tồn tại báo not_found"""
     async with be_db() as be:
         service = PolicyAdminService(db=be, accounts=InMemoryAccountStore())
-        for patient in (uuid.uuid4(), world.b_patient):
+        for patient in (uuid.uuid4(),):
             with pytest.raises(DomainError) as exc:
                 await service.issue_link_code(_staff(world, world.owner, Role.OWNER), patient)
             assert exc.value.code is ErrorCode.NOT_FOUND

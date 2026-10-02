@@ -1,4 +1,4 @@
-"""``POST /webhooks/zalo-bridge/{clinic_slug}/{account_id}``: HMAC first, then the event dispatch (new module)."""
+"""``POST /webhooks/zalo-bridge/{account_id}``: HMAC first, then the event dispatch (new module)."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from pema_contracts.testing import FAKE_CLINIC_ID, fake_account_config
 
 ClientFactory = Callable[[TestRig], httpx.AsyncClient]
 ACC = "zp-1"
-URL = f"/api/v1/webhooks/zalo-bridge/demo-clinic/{ACC}"
+URL = f"/api/v1/webhooks/zalo-bridge/{ACC}"
 
 
 def signed(
@@ -110,18 +110,18 @@ async def test_co_tien_trinh_tat_thi_bridge_bi_tu_choi_503_ke_ca_khi_chu_ky_dung
     assert rig.batched == []
 
 
-async def test_phong_kham_la_404_va_chap_nhan_ca_slug_lan_id(make_client: ClientFactory) -> None:
+async def test_duong_dan_khong_mang_phong_kham_va_duong_dan_cu_khong_con(make_client: ClientFactory) -> None:
     rig = rig_with_account()
     client = make_client(rig)
     raw, headers = signed(message_event())
 
-    unknown = await client.post(f"/api/v1/webhooks/zalo-bridge/khong-co/{ACC}", content=raw, headers=headers)
-    by_id = await client.post(
+    ok = await client.post(URL, content=raw, headers=headers)
+    old = await client.post(
         f"/api/v1/webhooks/zalo-bridge/{FAKE_CLINIC_ID}/{ACC}", content=raw, headers=headers
     )
 
-    assert unknown.status_code == 404
-    assert by_id.status_code == 200
+    assert ok.status_code == 200
+    assert old.status_code in (404, 405)
 
 
 async def test_bridge_gui_lai_cung_mot_tin_thi_chi_xu_ly_mot_lan(make_client: ClientFactory) -> None:

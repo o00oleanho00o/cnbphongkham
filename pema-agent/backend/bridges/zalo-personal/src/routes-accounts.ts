@@ -41,12 +41,12 @@ export function accountRoutes(deps: AppDeps): Hono<AppEnv> {
     if (!id) return badId();
     const body = parseJsonBody(c, startBodySchema);
     if (!body.ok) return body.response;
-    const { clinic_slug, credential, kill_switch } = body.data;
+    const { credential, kill_switch } = body.data;
 
     // The API passes its kill switch on every start; apply it first so it holds even if the login fails.
     if (kill_switch) killSwitch.set(kill_switch);
     try {
-      const { ownId } = await accounts.start(id, clinic_slug, credential);
+      const { ownId } = await accounts.start(id, credential);
       return ok({ own_id: ownId });
     } catch (err) {
       log.warn({ accountId: id, ...errorInfo(err) }, "start failed");
@@ -66,7 +66,7 @@ export function accountRoutes(deps: AppDeps): Hono<AppEnv> {
     if (!id) return badId();
     const body = parseJsonBody(c, qrBodySchema);
     if (!body.ok) return body.response;
-    const session = qr.startQrLogin(id, body.data.clinic_slug);
+    const session = qr.startQrLogin(id);
     return ok({ state: session.status });
   });
 

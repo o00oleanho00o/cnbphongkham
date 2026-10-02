@@ -119,7 +119,7 @@ class Loop:
     async def _deliver(self, payload: dict[str, Any]) -> httpx.Response:
         secret = derive_webhook_secret(self.clinic_id, self.account_id)
         return await self.http.post(
-            f"/api/v1/webhooks/zalo-bot/{self.slug}/{self.account_id}",
+            f"/api/v1/webhooks/zalo-bot/{self.account_id}",
             content=json.dumps(payload),
             headers={"content-type": "application/json", "X-Bot-Api-Secret-Token": secret},
         )
@@ -159,7 +159,7 @@ class Loop:
         """Review items created since the loop opened (the seeded demo items are left out)."""
         from sqlalchemy import text
 
-        async with self.api.db.session(self.clinic_id) as session:
+        async with self.api.db.session() as session:
             rows = (
                 (
                     await session.execute(
@@ -350,6 +350,6 @@ async def _has_reviews(loop: Loop, count: int) -> bool:
 async def _all_review_ids(db: ClinicDatabase, clinic_id: UUID) -> list[dict[str, Any]]:
     from sqlalchemy import text
 
-    async with db.session(clinic_id) as session:
+    async with db.session() as session:
         rows = (await session.execute(text("SELECT id FROM clinic.review_item"))).mappings().all()
     return [dict(r) for r in rows]

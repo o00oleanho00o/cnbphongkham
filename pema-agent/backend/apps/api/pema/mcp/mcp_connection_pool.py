@@ -23,11 +23,10 @@ Forced deviations (sync -> async, one tenant -> clinics, ``ai`` SDK -> ``mcp`` S
   ``tool_specs_for_agent``; ``trangThaiCacServer`` is ``runtime_status``;
 * the original gated ``MCP_ENABLED`` in ``mcpToolDefinitions`` (read by the registry every turn) and NOT only
   at boot, so a kill switch flipped on the dashboard while connections are open blocks at once. Kept;
-* ``tool_specs_for_agent(agent_id)`` has no clinic argument (contract: ``McpToolProvider``). Agent ids are
-  unique per clinic only, so the same id may exist in two clinics. If bindings of ONE agent id are found in
-  more than one clinic the answer is EMPTY (fail closed, logged), because the pool cannot tell which clinic
-  the turn belongs to. The execution re-check (door 2) knows the clinic of the turn and is always exact. Open
-  item: have the registry pass ``clinic_id`` (see the report);
+* ``tool_specs_for_agent(agent_id)`` has no clinic argument (contract: ``McpToolProvider``). Single tenant:
+  one installation is one clinic, so an agent id is unambiguous and there is no ``..._in_clinic`` variant and
+  no "bound in several clinics" fail-closed branch any more (both existed only because two clinics could
+  share an agent id). The execution re-check (door 2) still checks the binding with the clinic of the turn;
 * ``config_stamp`` is new: a hash of the url and headers a connection was opened with, so the health sync can
   see that another process changed them (the admin API and the worker are different processes).
 """
@@ -113,18 +112,6 @@ class McpConnectionPool:
         self._allowed_profiles = allowed_profiles
         self.connected: dict[ServerKey, ConnectedServer] = {}
 
-    def tool_specs_for_agent_in_clinic(self, clinic_id: UUID, agent_id: str) -> list[ToolSpec]:
-        """The same as ``tool_specs_for_agent`` but exact for ONE clinic: agent ids repeat across clinics, so
-        the turn passes its own and only the bindings of that clinic count (no ambiguity, no fail-closed)."""
-        if not get_tuning_bool("MCP_ENABLED"):
-            return []
-        wanted = {key for key in self._bindings.servers_of_agent(agent_id) if key[0] == clinic_id}
-        specs: list[ToolSpec] = []
-        for key, server in self.connected.items():
-            if key in wanted:
-                specs.extend(server.specs)
-        return specs
-
     def tool_specs_for_agent(self, agent_id: str) -> list[ToolSpec]:
         """``mcpToolDefinitions``: tools of servers that are CONNECTED (in ``connected``) AND BOUND to this
         agent.
@@ -135,12 +122,7 @@ class McpConnectionPool:
         at boot, which is useless between two restarts for exactly what it exists to stop."""
         if not get_tuning_bool("MCP_ENABLED"):
             return []
-        bound = self._bindings.servers_of_agent(agent_id)
-        clinics = {clinic_id for clinic_id, _ in bound}
-        if len(clinics) > 1:
-            _log.warning("agent id bound in several clinics: no mcp tool exposed", agent_id=agent_id)
-            return []
-        wanted = set(bound)
+        wanted = set(self._bindings.servers_of_agent(agent_id))
         specs: list[ToolSpec] = []
         for key, server in self.connected.items():
             if key in wanted:

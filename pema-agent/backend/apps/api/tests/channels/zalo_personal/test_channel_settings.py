@@ -44,24 +44,24 @@ def system(clinic_id: uuid.UUID) -> ActionContext:
 
 
 async def audit_actions(db: ClinicDatabase, clinic_id: uuid.UUID) -> list[str]:
-    async with db.session(clinic_id) as session:
+    async with db.session() as session:
         rows = await session.execute(text("SELECT action FROM clinic.audit_log ORDER BY id"))
         return [r[0] for r in rows]
 
 
 async def test_hang_chua_ton_tai_thi_doc_ra_mac_dinh_tat_fail_closed(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     repo = ChannelSettingsRepository(be_db)
-    settings = await repo.get(clinic_ids[1], ChannelKind.ZALO_OA)
+    settings = await repo.get(clinic_id, ChannelKind.ZALO_OA)
     assert (settings.enabled, settings.kill_switch_on, settings.version) == (False, False, 0)
 
 
 async def test_update_tao_hang_khoa_lac_quan_va_ghi_audit(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     repo = ChannelSettingsRepository(be_db)
-    clinic = clinic_ids[0]
+    clinic = clinic_id
 
     created = await repo.update(
         staff(clinic),
@@ -89,13 +89,13 @@ async def test_update_tao_hang_khoa_lac_quan_va_ghi_audit(
 
 
 async def test_update_khoang_nghi_toi_da_nho_hon_toi_thieu_bi_tu_choi(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     repo = ChannelSettingsRepository(be_db)
-    current = await repo.get(clinic_ids[0], PERSONAL)
+    current = await repo.get(clinic_id, PERSONAL)
     with pytest.raises(DomainError) as info:
         await repo.update(
-            staff(clinic_ids[0]),
+            staff(clinic_id),
             PERSONAL,
             ChannelSettingsUpdate(version=current.version, min_gap_seconds=30, max_gap_seconds=10),
         )
@@ -103,11 +103,11 @@ async def test_update_khoang_nghi_toi_da_nho_hon_toi_thieu_bi_tu_choi(
 
 
 async def test_kill_switch_ghi_audit_va_worker_thay_ngay_qua_view(
-    be_db: ClinicDatabase, worker_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, worker_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     repo = ChannelSettingsRepository(be_db)
     reader = WorkerChannelPolicyReader(worker_db)
-    clinic = clinic_ids[0]
+    clinic = clinic_id
     assert (await reader.get_policy(clinic, PERSONAL)).kill_switch_on is False
 
     after = await repo.set_kill_switch(staff(clinic), PERSONAL, on=True, reason="khẩn cấp")
@@ -125,19 +125,19 @@ async def test_kill_switch_ghi_audit_va_worker_thay_ngay_qua_view(
 
 
 async def test_worker_khong_doc_duoc_bang_that_chi_doc_qua_view(
-    worker_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    worker_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     with pytest.raises(DBAPIError):
-        async with worker_db.session(clinic_ids[0]) as session:
+        async with worker_db.session() as session:
             await session.execute(text("SELECT kill_switch_reason FROM clinic.channel_setting"))
 
 
 async def test_bridge_bao_bi_khoa_thi_bat_kill_switch_cung_giao_dich_va_ghi_audit_he_thong(
-    be_db: ClinicDatabase, worker_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, worker_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     repo = ChannelSettingsRepository(be_db)
     reader = WorkerChannelPolicyReader(worker_db)
-    clinic = clinic_ids[0]
+    clinic = clinic_id
 
     blocked = await repo.apply_bridge_report(
         system(clinic),
@@ -150,7 +150,7 @@ async def test_bridge_bao_bi_khoa_thi_bat_kill_switch_cung_giao_dich_va_ghi_audi
     assert blocked.kill_switch_on is True
     assert blocked.kill_switch_reason == AUTO_KILL_REASON_BLOCKED
     assert (await reader.get_policy(clinic, PERSONAL)).kill_switch_on is True
-    async with be_db.session(clinic) as session:
+    async with be_db.session() as session:
         row = (
             await session.execute(
                 text(
@@ -164,11 +164,11 @@ async def test_bridge_bao_bi_khoa_thi_bat_kill_switch_cung_giao_dich_va_ghi_audi
 
 
 async def test_ket_noi_lai_khong_bao_gio_tu_tat_kill_switch(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     """một người quyết định khi nào gửi lại"""
     repo = ChannelSettingsRepository(be_db)
-    clinic = clinic_ids[0]
+    clinic = clinic_id
     after = await repo.apply_bridge_report(
         system(clinic), PERSONAL, bridge_state=BridgeState.CONNECTED, kill_switch_reason=None
     )
@@ -176,37 +176,18 @@ async def test_ket_noi_lai_khong_bao_gio_tu_tat_kill_switch(
     assert after.kill_switch_on is True
 
 
-async def test_hai_phong_kham_khong_thay_cai_dat_kenh_cua_nhau(
-    be_db: ClinicDatabase, worker_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
-) -> None:
-    repo = ChannelSettingsRepository(be_db)
-    other = clinic_ids[1]
-    assert (await repo.get(other, PERSONAL)).kill_switch_on is False
-    assert (await WorkerChannelPolicyReader(worker_db).get_policy(other, PERSONAL)).kill_switch_on is False
-    assert len(await repo.list_all(other)) == 3, "đủ ba kênh, kênh chưa có hàng hiện mặc định"
-
-
-async def test_clinic_slug_doc_duoc_trong_ngu_canh_phong_kham(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
-) -> None:
-    repo = ChannelSettingsRepository(be_db)
-    assert await repo.clinic_slug(clinic_ids[0]) == "c2-clinic-a"
-    assert await repo.clinic_slug(uuid.uuid4()) is None, "id lạ: không có hàng nào hiện ra (RLS)"
-
-
 async def test_update_id_khong_lap_lai_khi_bridge_gui_lai_cung_mot_tin(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     dedupe = SqlUpdateDedupe(be_db)
-    clinic = clinic_ids[0]
+    clinic = clinic_id
     assert await dedupe.first_time(clinic, "zp-1", "msg-xyz") is True
     assert await dedupe.first_time(clinic, "zp-1", "msg-xyz") is False
-    assert await dedupe.first_time(clinic_ids[1], "zp-1", "msg-xyz") is True, "mỗi phòng khám đếm riêng"
 
 
 async def test_audit_sink_ghi_mot_dong_chi_co_ten_truong_va_ma(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     sink = SqlAuditSink(be_db)
-    await sink.record(staff(clinic_ids[0]), "account.update", "account", "zp-1", {"fields": ["label"]})
-    assert "account.update" in await audit_actions(be_db, clinic_ids[0])
+    await sink.record(staff(clinic_id), "account.update", "account", "zp-1", {"fields": ["label"]})
+    assert "account.update" in await audit_actions(be_db, clinic_id)
