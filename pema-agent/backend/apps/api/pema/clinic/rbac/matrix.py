@@ -68,6 +68,11 @@ MANAGER_PERMISSIONS: frozenset[Permission] = frozenset(
         P.ADMIN_MCP,
         P.ADMIN_USAGE,
         P.ADMIN_POLICY,
+        P.CARE_READ,
+        P.CARE_ACT,
+        P.CARE_ADMIN,
+        P.CARE_MATRIX,
+        P.CARE_APPROVE,
     }
 )
 
@@ -91,6 +96,10 @@ DOCTOR_PERMISSIONS: frozenset[Permission] = frozenset(
         P.REVIEW_DECIDE_CLINICAL,  # "Duyet prescription/AI draft": doctor only (with the owner)
         P.KB_READ,
         P.KB_MANAGE,  # doctor sign-off on KB documents (approved_by_clinical_owner)
+        P.CARE_READ,  # narrowed to own patients by the service (like the inbox)
+        P.CARE_ACT,
+        P.CARE_MATRIX,  # the thresholds are the doctor's decision (PLAN-AI01-M section 15.1)
+        P.CARE_APPROVE,
     }
 )
 
@@ -112,6 +121,8 @@ CS_STAFF_PERMISSIONS: frozenset[Permission] = frozenset(
         P.REVIEW_READ,
         P.REVIEW_DECIDE,  # non-clinical items only; never REVIEW_DECIDE_CLINICAL
         P.KB_READ,
+        P.CARE_READ,  # supervises the agent of the patients they look after; no matrix, no admin
+        P.CARE_ACT,
     }
 )
 

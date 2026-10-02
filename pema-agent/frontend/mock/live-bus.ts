@@ -9,7 +9,12 @@ import { EventEmitter } from "node:events";
 import { USERS } from "./auth";
 
 export type LiveEventType =
-  "inbox.changed" | "tasks.changed" | "review.changed" | "presence.changed";
+  | "inbox.changed"
+  | "tasks.changed"
+  | "review.changed"
+  | "presence.changed"
+  | "handoff.changed"
+  | "care.changed";
 export type LiveMessage = { type: LiveEventType; id: string | null };
 export type PresenceState = "viewing" | "replying";
 export type Viewer = { user_id: string; name: string; state: PresenceState };
@@ -19,6 +24,7 @@ const SIMULATE_ROTATION: readonly LiveEventType[] = [
   "inbox.changed",
   "tasks.changed",
   "review.changed",
+  "handoff.changed",
 ];
 
 const bus = new EventEmitter();
@@ -111,6 +117,11 @@ export function resetPresence(): void {
 
 type Announce = { type: LiveEventType; idParam?: string };
 
+const CARE_PATIENT: readonly Announce[] = [
+  { type: "handoff.changed", idParam: "patient_id" },
+  { type: "care.changed", idParam: "patient_id" },
+];
+
 /** Which mutation announces which event, by route template (what the real backend does on commit). */
 const ANNOUNCE: Record<string, readonly Announce[]> = {
   "PATCH /api/v1/conversations/{conversation_id}": [
@@ -130,6 +141,12 @@ const ANNOUNCE: Record<string, readonly Announce[]> = {
   ],
   "POST /api/v1/review-items/{item_id}/reject": [{ type: "review.changed", idParam: "item_id" }],
   "POST /api/v1/review-items/{item_id}/escalate": [{ type: "review.changed", idParam: "item_id" }],
+  "POST /api/v1/care/handoffs/{patient_id}/accept": CARE_PATIENT,
+  "POST /api/v1/care/handoffs/{patient_id}/decline": CARE_PATIENT,
+  "POST /api/v1/care/patients/{patient_id}/release": CARE_PATIENT,
+  "POST /api/v1/care/patients/{patient_id}/tell-agent": [
+    { type: "care.changed", idParam: "patient_id" },
+  ],
 };
 
 /** Called by the server after a successful request. */

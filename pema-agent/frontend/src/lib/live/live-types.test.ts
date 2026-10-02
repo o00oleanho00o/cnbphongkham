@@ -10,8 +10,15 @@ describe("parseLiveEvent", () => {
     });
   });
 
-  it("accepts the four agreed types and keeps a missing id as null", () => {
-    const types = ["inbox.changed", "tasks.changed", "review.changed", "presence.changed"];
+  it("accepts the six agreed types and keeps a missing id as null", () => {
+    const types = [
+      "inbox.changed",
+      "tasks.changed",
+      "review.changed",
+      "presence.changed",
+      "handoff.changed",
+      "care.changed",
+    ];
     types.forEach((type) => {
       expect(parseLiveEvent(JSON.stringify({ type }))).toEqual({ type, id: null });
     });
