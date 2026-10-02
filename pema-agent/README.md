@@ -110,6 +110,17 @@ Không có profile `worker` thì API nhận webhook và xếp lượt nhưng kh�
 
 Ảnh Docker của cầu nối (`bridge` profile) và của FE đã dựng thật và khởi động thử (không cần Zalo thật); cầu nối chạy bằng tsx, không có bước build, và chỉ lắng nghe trong mạng compose.
 
+## Giao việc cho đồng nghiệp ("Phụ trách")
+
+| Điểm cuối | Ai gọi | Ghi chú |
+|---|---|---|
+| `GET /api/v1/staff/assignable` | mọi nhân viên đã đăng nhập (kể cả lễ tân, CSKH) | `[{id, name, role}]` của nhân viên **đang hoạt động** có vai trò làm được hội thoại và việc CSKH (chủ, quản lý, bác sĩ, CSKH; không lễ tân), A-Z theo tên; không email, SĐT, hash, lần đăng nhập cuối; 60 lần/phút mỗi người; 401 khi chưa có phiên |
+| `PATCH /api/v1/conversations/{id}` (`assigned_user_id`) | quyền `conversation.reply` | giao cho đồng nghiệp hoặc `null` (chưa giao) |
+| `POST /api/v1/crm/tasks/{id}/resolve` (`owner_user_id`) | quyền `crm_task.resolve` | người phụ trách của việc CSKH |
+| `POST/PATCH /api/v1/patients` (`doctor_id`, `cs_owner_id`) | quyền `patient.write` | bác sĩ điều trị, CSKH phụ trách hồ sơ |
+
+Mọi nơi nhận người được giao chạy chung một kiểm tra phía máy chủ (`pema/clinic/actions/assignees.py`): người đó phải thuộc bản cài, đang hoạt động và có vai trò giao được, nếu không là 422 với cùng một câu trả lời (không lộ tài khoản nào tồn tại hay bị khóa). Dòng audit ghi id người giao trước và sau (không ghi tên). Quy tắc chọn vai trò và mục SEC-60 đến SEC-63 ở `docs/SECURITY-REVIEW-AI01.md`.
+
 ## Quy tắc áp dụng khắp nơi
 
 - Phía agent chạm phòng khám **chỉ** qua `pema.clinic.actions` (import-linter); trong DB role `agent_worker` không có quyền gì trên `clinic.*` (chỉ view/hàm của `clinic_agent`).
