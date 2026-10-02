@@ -22,6 +22,8 @@ EXPECTED_PATHS = [
     "/api/v1/crm/tasks",
     "/api/v1/crm/activities",
     "/api/v1/conversations/{conversation_id}/messages",
+    "/api/v1/conversations/{conversation_id}/presence",
+    "/api/v1/events",
     "/api/v1/review-items/{item_id}/approve",
     "/api/v1/admin/rules",
     "/api/v1/admin/logs/audit",

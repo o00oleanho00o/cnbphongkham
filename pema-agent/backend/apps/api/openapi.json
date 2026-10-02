@@ -1749,6 +1749,14 @@
           "version": {
             "title": "Version",
             "type": "integer"
+          },
+          "viewers": {
+            "description": "Colleagues who have this conversation open now, the caller excluded. A warning, not a lock; empty when presence is unavailable.",
+            "items": {
+              "$ref": "#/components/schemas/PresenceViewer"
+            },
+            "title": "Viewers",
+            "type": "array"
           }
         },
         "required": [
@@ -1876,6 +1884,14 @@
           "version": {
             "title": "Version",
             "type": "integer"
+          },
+          "viewers": {
+            "description": "Colleagues who have this conversation open now, the caller excluded. A warning, not a lock; empty when presence is unavailable.",
+            "items": {
+              "$ref": "#/components/schemas/PresenceViewer"
+            },
+            "title": "Viewers",
+            "type": "array"
           }
         },
         "required": [
@@ -3506,6 +3522,43 @@
         ],
         "title": "KillSwitchRequest",
         "type": "object"
+      },
+      "LiveEvent": {
+        "additionalProperties": false,
+        "description": "The ``data`` of one server-sent event (default ``message`` event type).",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The changed object, or null for 'some of them'.",
+            "title": "Id"
+          },
+          "type": {
+            "$ref": "#/components/schemas/LiveEventType"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "LiveEvent",
+        "type": "object"
+      },
+      "LiveEventType": {
+        "enum": [
+          "inbox.changed",
+          "tasks.changed",
+          "review.changed",
+          "presence.changed"
+        ],
+        "title": "LiveEventType",
+        "type": "string"
       },
       "LlmProviderKind": {
         "description": "``LLM_PROVIDER_KINDS`` of src/config/llm-provider-kind.ts.",
@@ -5394,6 +5447,55 @@
           "profiles"
         ],
         "title": "PolicyProfilesOut",
+        "type": "object"
+      },
+      "PresenceBeat": {
+        "additionalProperties": false,
+        "description": "Body of the heartbeat the browser sends every 15 seconds while a conversation is open.",
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/PresenceState"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "PresenceBeat",
+        "type": "object"
+      },
+      "PresenceState": {
+        "enum": [
+          "viewing",
+          "replying"
+        ],
+        "title": "PresenceState",
+        "type": "string"
+      },
+      "PresenceViewer": {
+        "additionalProperties": false,
+        "description": "A colleague who has the conversation open now (the caller is never in the list).",
+        "properties": {
+          "name": {
+            "description": "Display name of the staff member; staff-only information.",
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/PresenceState"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "state"
+        ],
+        "title": "PresenceViewer",
         "type": "object"
       },
       "ProactiveCapScope": {
@@ -20705,6 +20807,217 @@
         ]
       }
     },
+    "/api/v1/conversations/{conversation_id}/presence": {
+      "delete": {
+        "operationId": "conversations_leave_presence",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Presence: I left this conversation",
+        "tags": [
+          "conversations"
+        ]
+      },
+      "post": {
+        "description": "Sent every 15 seconds while the conversation is open; an entry expires after 30 seconds. A WARNING shown to colleagues in `viewers`, never a lock: it does not block sending. Needs the right to read the conversation (403, or 404 when it is not visible). Answers 204 also when the presence store is unavailable.",
+        "operationId": "conversations_touch_presence",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresenceBeat"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Presence heartbeat: I am looking at or answering this conversation",
+        "tags": [
+          "conversations"
+        ]
+      }
+    },
     "/api/v1/conversations/{conversation_id}/read": {
       "post": {
         "operationId": "conversations_mark_conversation_read",
@@ -21519,6 +21832,104 @@
         "summary": "Log a contact attempt and close or reschedule the task",
         "tags": [
           "crm"
+        ]
+      }
+    },
+    "/api/v1/events": {
+      "get": {
+        "description": "Each event is the default `message` event whose data is a `LiveEvent` JSON. It says that something changed, never what: refetch the list you show. A comment line every 15 seconds keeps the connection open. The stream ends when the session ends; the browser reconnects by itself. 503 while the live bus is down (the screen then polls), 429 past 5 streams per person.",
+        "operationId": "live_stream_events",
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveEvent",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "text/event-stream of LiveEvent."
+          },
+          "401": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Live updates (server-sent events)",
+        "tags": [
+          "live"
         ]
       }
     },
@@ -23520,6 +23931,10 @@
     {
       "description": "Human review queue for agent output. (B1)",
       "name": "review-items"
+    },
+    {
+      "description": "Live updates (server-sent events) and presence. (ST-R)",
+      "name": "live"
     },
     {
       "description": "Channel webhooks, not for the FE. (C1 Bot API, C2 bridge)",

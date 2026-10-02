@@ -46,6 +46,7 @@ vi.mock("@/lib/api/client", async (importActual) => {
 });
 vi.mock("@/lib/live/live-api", () => ({
   postPresence: (...args: unknown[]) => api.presence(...args),
+  leavePresence: () => Promise.resolve(),
   fetchAssignableStaff: () => api.staff(),
 }));
 

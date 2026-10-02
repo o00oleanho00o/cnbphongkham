@@ -29,7 +29,6 @@ RESPONSE_HEADERS: dict[str, str] = {
     # no-transform: a compressing proxy (Next.js, Caddy) must not hold the stream back to fill a gzip block
     "Cache-Control": "no-cache, no-transform",
     "X-Accel-Buffering": "no",
-    "Connection": "keep-alive",
 }
 
 
@@ -57,21 +56,23 @@ async def event_stream(
     *,
     access: StreamAccess,
     refresh_access: Callable[[], Awaitable[StreamAccess | None]],
-    keepalive_s: float = KEEPALIVE_S,
-    recheck_s: float = RECHECK_S,
+    keepalive_s: float | None = None,
+    recheck_s: float | None = None,
 ) -> AsyncIterator[str]:
     """Yields the SSE frames until the session ends, the bus is lost or the client goes away (the generator
     is then cancelled; ``finally`` releases the subscription either way). ``refresh_access`` returns the
     current access, or ``None`` when the session is over."""
+    keepalive = KEEPALIVE_S if keepalive_s is None else keepalive_s
+    recheck = RECHECK_S if recheck_s is None else recheck_s
     current = access
     last_check = time.monotonic()
     try:
         yield f"retry: {RETRY_MS}\n\n"
         while not sub.closed:
-            batch = await sub.next_batch(keepalive_s)
+            batch = await sub.next_batch(keepalive)
             if sub.closed:
                 return
-            if time.monotonic() - last_check >= recheck_s * 0.9:
+            if time.monotonic() - last_check >= recheck * 0.9:
                 last_check = time.monotonic()
                 refreshed = await refresh_access()
                 if refreshed is None:

@@ -161,9 +161,15 @@ def _parse_member(member: str) -> PresenceEntry | None:
 class PresenceService:
     """What the routes use. Never raises for a store failure."""
 
-    def __init__(self, store: PresenceStore, *, ttl_s: float = PRESENCE_TTL_S) -> None:
+    def __init__(
+        self,
+        store: PresenceStore,
+        *,
+        ttl_s: float = PRESENCE_TTL_S,
+        expiry_slack_s: float = EXPIRY_NOTICE_SLACK_S,
+    ) -> None:
         self._store = store
-        self._expiry_delay_s = ttl_s + EXPIRY_NOTICE_SLACK_S
+        self._expiry_delay_s = ttl_s + expiry_slack_s
         self._timers: dict[tuple[UUID, UUID], asyncio.TimerHandle] = {}
 
     async def beat(self, conversation_id: UUID, user_id: UUID, state: PresenceState) -> None:
