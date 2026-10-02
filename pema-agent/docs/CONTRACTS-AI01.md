@@ -254,10 +254,10 @@ section wins.
 | Item | State | Who changes callers |
 |---|---|---|
 | `pema.core.db.get_installation_clinic_id(db, *, verify=False) -> UUID` | NEW, source of truth: cache per `ClinicDatabase`, then `PEMA_CLINIC_ID`, then `ctx.the_clinic_id()`; also fills `pema_contracts.installation`. Call it once at start-up (`verify=True` compares `PEMA_CLINIC_ID` with the DB) | all |
-| `ClinicDatabase.session(clinic_id=None)` | the argument is DEPRECATED and IGNORED (no `app.clinic_id` is set); callers drop it | ST-B, ST-C |
-| `ClinicDatabase.system_session()` | DEPRECATED alias of `session()` | ST-B, ST-C |
-| `ClinicDatabase.resolve_clinic(slug=None)` | DEPRECATED shim: ignores the slug, returns the installation id (never `None`) | ST-B (login), ST-C (webhooks, bridge) |
-| `ClinicDatabase.list_active_clinic_ids()` | DEPRECATED shim: `[installation id]`; the loops over clinics (scheduler, KB ingest, retention, MCP, snapshots) become one pass | ST-B, ST-C |
+| `ClinicDatabase.session()` | REMOVED the `clinic_id` argument (no `app.clinic_id` is set); no caller passes it any more (ST-G1) | done |
+| `ClinicDatabase.system_session()` | REMOVED (ST-G1; no caller left) | done |
+| `ClinicDatabase.resolve_clinic(slug=None)` | REMOVED (ST-G1; login, webhooks and bridge read the installation id) | done |
+| `ClinicDatabase.list_active_clinic_ids()` | REMOVED (ST-G1); the loops over clinics (scheduler, KB ingest, retention, MCP, snapshots) are one pass | done |
 | `ClinicDatabase.read_installation_clinic_id()` / `.installation_clinic_id` | NEW (uncached read / cache) | |
 | `pema_contracts.installation`: `installation_clinic_id()`, `installation_clinic_id_or_none()`, `set_installation_clinic_id()`, `reset_installation_clinic_id()`, `InstallationClinicNotLoadedError` | NEW (leaf, process-wide value) | |
 | `clinic_id` of `ActionContext`, `TurnJob`, `AgentTurnRequest`, `ReviewItemCreate`, `CreateScheduledJobInput` | now `Field(default_factory=installation_clinic_id)`: leave it out and it is filled (raises if the id was not loaded); passing it still works | ST-B/ST-C drop the argument at call sites |
@@ -265,7 +265,7 @@ section wins.
 | `Settings.clinic_name` (`PEMA_CLINIC_NAME`), `Settings.clinic_id` (`PEMA_CLINIC_ID`, optional) in `pema.config.env` | NEW | ST-F puts them in compose/`.env.example` |
 | `pema.core.installation.ensure_clinic(conn, name=None, *, clinic_id=None, timezone=None) -> UUID`, `ensure_clinic_async(...)`, CLI `python -m pema.core.installation` | NEW: idempotent create-or-get of the one clinic (owner connection) for seeds and bootstrap | ST-B (`seed_demo`), ST-F (bootstrap) |
 | `pema.core.testing.ensure_test_clinic(conn) -> UUID`, `ensure_test_clinic_async(conn)`, `truncate_installation_data(conn)` | NEW test helpers (below) | ST-B, ST-C |
-| Login `clinic_slug`, webhook path `/webhooks/zalo-bot/{clinic_slug}/{account_id}`, bridge clinic segment | UNCHANGED (routes are not touched in this step); to be removed with an OpenAPI regeneration by their owners | ST-B, ST-C, ST-E |
+| Login `clinic_slug`, webhook path `/webhooks/zalo-bot/{clinic_slug}/{account_id}`, bridge clinic segment | REMOVED (ST-B, ST-C, ST-E); the paths are now `/api/v1/webhooks/zalo-bot/{account_id}` and `/api/v1/webhooks/zalo-bridge/{account_id}`, `openapi.json` and `schema.d.ts` regenerated | done |
 
 ### 10.3 Recipe for the fixtures (ST-B, ST-C)
 
