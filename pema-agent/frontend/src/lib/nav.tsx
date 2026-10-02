@@ -19,6 +19,7 @@ import {
   IconGrid,
   IconHeart,
   IconSignal,
+  IconSliders,
   IconUsers,
 } from "@/components/admin/shared/dashboard-icons";
 import {
@@ -73,6 +74,14 @@ export const NAV_SECTIONS: NavSection[] = [
         tab: true,
       },
       {
+        to: "/care/handoffs",
+        label: "Yêu cầu chờ tôi",
+        tabLabel: "Chờ tôi",
+        icon: IconBot,
+        needs: ["care.read"],
+        tab: true,
+      },
+      {
         to: "/patients",
         label: "Hồ sơ bệnh nhân",
         tabLabel: "Hồ sơ",
@@ -86,6 +95,31 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: IconFileText,
         needs: ["kb.read"],
       },
+    ],
+  },
+  {
+    title: "Agent chăm sóc",
+    items: [
+      {
+        to: "/admin/care/staff",
+        label: "Kỹ năng và ca trực",
+        icon: IconUsers,
+        needs: ["care.admin"],
+      },
+      { to: "/admin/care/on-call", label: "Số trực 24/24", icon: IconClock, needs: ["care.admin"] },
+      {
+        to: "/admin/care/matrix",
+        label: "Ma trận ngưỡng",
+        icon: IconSliders,
+        needs: ["care.matrix"],
+      },
+      {
+        to: "/admin/care/timing",
+        label: "SLA và khung giờ",
+        icon: IconGear,
+        needs: ["care.admin"],
+      },
+      { to: "/admin/care/alerts", label: "Cảnh báo agent", icon: IconBolt, needs: ["care.admin"] },
     ],
   },
   {

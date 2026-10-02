@@ -48,6 +48,15 @@ const ROUTES = [
   "/admin/policy",
   "/admin/users",
   "/admin/auth",
+  "/care/handoffs",
+  "/care/patients/00000000-0000-4000-8002-000000000007/timeline",
+  "/care/patients/00000000-0000-4000-8002-000000000007/release",
+  "/care/patients/00000000-0000-4000-8002-000000000007/tell-agent",
+  "/admin/care/staff",
+  "/admin/care/on-call",
+  "/admin/care/matrix",
+  "/admin/care/timing",
+  "/admin/care/alerts",
 ];
 
 const EMAIL: Record<string, string> = {

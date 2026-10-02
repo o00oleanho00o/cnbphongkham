@@ -11,6 +11,7 @@ import { Badge, InitialAvatar } from "@/components/admin/shared/ui-bits";
 import { PriorityBadge } from "@/components/ops/ops-ui";
 import type { Schemas } from "@/lib/api";
 import { ageYears, dueLabel, formatDate, formatDateTime } from "@/lib/ops/format";
+import { useSession } from "@/lib/session/session-context";
 import {
   APPOINTMENT_STATUS_LABEL,
   CHANNEL_LABEL,
@@ -75,6 +76,7 @@ function Muted({ children }: { children: ReactNode }) {
 
 export function Patient360View({ data }: { data: P360 }) {
   const [active, setActive] = useState<SectionKey>("overview");
+  const { can } = useSession();
   const { patient, profile } = data;
   const age = ageYears(patient.birth_date);
   const stage = LIFECYCLE_LABEL[profile.lifecycle_stage] ?? profile.lifecycle_stage;
@@ -110,6 +112,14 @@ export function Patient360View({ data }: { data: P360 }) {
             <Badge tone="red" dot={false}>
               Cần theo dõi
             </Badge>
+          )}
+          {can("care.read") && (
+            <Link
+              href={`/care/patients/${patient.id}/timeline`}
+              className="inline-flex min-h-11 items-center px-2 text-[13px] font-medium text-brand-500 hover:text-brand-600 lg:min-h-9"
+            >
+              Agent chăm sóc
+            </Link>
           )}
         </div>
       </header>
