@@ -24,11 +24,6 @@ export function clinicDateKey(date: Date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
-/** Last second of the clinic's today, the `due_by` of "Việc hôm nay". */
-export function endOfTodayIso(date: Date = new Date()): string {
-  return `${clinicDateKey(date)}T23:59:59+07:00`;
-}
-
 /** "20/09 09:00" in clinic time. Built from parts: the vi-VN pattern of Intl prints "09:00 20-09". */
 export function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return "-";

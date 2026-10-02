@@ -5,7 +5,6 @@ import {
   clinicDateKey,
   daysBetween,
   dueLabel,
-  endOfTodayIso,
   formatDateTime,
   isOverdue,
   localInputToIso,
@@ -17,10 +16,6 @@ const NOW = new Date("2026-09-20T02:00:00Z");
 describe("clinic dates", () => {
   it("late_evening_utc_is_already_the_next_day_in_vietnam", () => {
     expect(clinicDateKey(new Date("2026-09-19T18:30:00Z"))).toBe("2026-09-20");
-  });
-
-  it("end_of_today_is_the_last_second_with_the_clinic_offset", () => {
-    expect(endOfTodayIso(NOW)).toBe("2026-09-20T23:59:59+07:00");
   });
 
   it("days_between_counts_clinic_calendar_days", () => {

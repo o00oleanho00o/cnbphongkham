@@ -28,7 +28,7 @@ import type { LiveEventType } from "@/lib/live/live-types";
 import { useLiveEvents } from "@/lib/live/use-live-events";
 import { type ChannelFilter, matchesChannel } from "@/lib/ops/crm-task-view";
 import { copyText, messageToCopy } from "@/lib/ops/clipboard";
-import { clinicDateKey, endOfTodayIso, formatDate } from "@/lib/ops/format";
+import { clinicDateKey, formatDate } from "@/lib/ops/format";
 import { CHANNEL_LABEL, RULE_LABEL, TASK_STATUS_LABEL } from "@/lib/ops/labels";
 import { displayName, usePatientIndex } from "@/lib/ops/use-patient-names";
 import { useSession } from "@/lib/session/session-context";
@@ -71,8 +71,9 @@ export default function TodayPage() {
               task_status: status,
               rule_key: rule ? (rule as Schemas["RuleKey"]) : undefined,
               owner_user_id: mineOnly ? user.id : undefined,
-              // "Hôm nay" = everything due by the end of the clinic's day, overdue included.
-              due_by: status === "resolved" ? undefined : endOfTodayIso(),
+              // "Hôm nay" = everything due by the end of the clinic's day, overdue included. The API takes a
+              // DATE (a datetime is a 422 "Dữ liệu gửi lên không hợp lệ") and reads it as that whole day.
+              due_by: status === "resolved" ? undefined : clinicDateKey(),
               limit: PAGE_SIZE,
             },
           },

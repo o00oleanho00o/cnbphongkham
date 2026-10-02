@@ -460,7 +460,8 @@ export function register(r: Router): void {
       .filter((t) => !rule || t.rule_key === rule)
       .filter((t) => !owner || t.owner_user_id === owner)
       .filter((t) => !patient || t.patient_id === patient)
-      .filter((t) => !dueBy || Date.parse(t.due_at) <= Date.parse(dueBy))
+      // the real API takes a DATE and reads it as that whole clinic day (+07:00)
+      .filter((t) => !dueBy || Date.parse(t.due_at) <= Date.parse(`${dueBy}T23:59:59+07:00`))
       .toSorted((a, b) => a.due_at.localeCompare(b.due_at));
     return { body: paginate(found, ctx.query) };
   });
