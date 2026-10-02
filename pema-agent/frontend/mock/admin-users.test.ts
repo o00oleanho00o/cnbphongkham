@@ -43,7 +43,7 @@ async function signIn(
   const res = await fetch(`${base}/api/v1/auth/login`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ clinic_slug: "pema-demo", email, password }),
+    body: JSON.stringify({ email, password }),
   });
   return { status: res.status, cookie: res.headers.get("set-cookie")?.split(";")[0] ?? "" };
 }

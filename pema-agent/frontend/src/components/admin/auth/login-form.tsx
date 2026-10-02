@@ -2,11 +2,12 @@
 "use client";
 
 // Deviations: the original asked for one shared dashboard password; the clinic CRM has users, so the
-// form is clinic + email + password and the BE answers with an httpOnly session cookie (`POST
-// /api/v1/auth/login`). After sign-in we read the permissions to land on the first screen the role may
-// open. `next` is only honoured for same-origin paths.
+// form is email + password and the BE answers with an httpOnly session cookie (`POST /api/v1/auth/login`).
+// One installation is ONE clinic (CONTRACTS-AI01 section 10), so there is no clinic field and nothing about
+// a clinic is remembered in the browser. After sign-in we read the permissions to land on the first screen
+// the role may open. `next` is only honoured for same-origin paths.
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import { SecretInput } from "@/components/admin/shared/secret-input";
 import { anhNen } from "@/lib/admin/shared/background-image";
@@ -15,16 +16,8 @@ import { ApiError, http, unwrap } from "@/lib/api/client";
 import { homeFor } from "@/lib/nav";
 import type { Permission } from "@/lib/session/session-context";
 
-const DEFAULT_CLINIC = process.env.NEXT_PUBLIC_DEFAULT_CLINIC_SLUG ?? "";
-const CLINIC_KEY = "pema-agent-clinic";
-
-function readClinic(): string {
-  try {
-    return localStorage.getItem(CLINIC_KEY) ?? DEFAULT_CLINIC;
-  } catch {
-    return DEFAULT_CLINIC;
-  }
-}
+/** Key of the clinic code older builds kept in the browser; removed on sight, never written again. */
+const LEGACY_CLINIC_KEY = "pema-agent-clinic";
 
 /** Only same-origin absolute paths: `//evil.example` and `https://...` are ignored. */
 function safeNext(raw: string | null): string | null {
@@ -35,12 +28,19 @@ function safeNext(raw: string | null): string | null {
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const [clinic, setClinic] = useState(readClinic);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const { theme } = useTheme();
+
+  useEffect(() => {
+    try {
+      localStorage.removeItem(LEGACY_CLINIC_KEY);
+    } catch {
+      /* localStorage bị chặn: không có gì để dọn */
+    }
+  }, []);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -49,20 +49,21 @@ export function LoginForm() {
     try {
       await unwrap(
         http.POST("/api/v1/auth/login", {
-          body: { clinic_slug: clinic.trim(), email: email.trim(), password },
+          body: { email: email.trim(), password },
         }),
       );
-      try {
-        localStorage.setItem(CLINIC_KEY, clinic.trim());
-      } catch {
-        /* localStorage bị chặn: chỉ mất phần nhớ phòng khám */
-      }
       const me = await unwrap(http.GET("/api/v1/me"));
       const granted = new Set<Permission>(me.permissions);
       const home = homeFor((needs) => needs.some((p) => granted.has(p)));
       router.replace(safeNext(params.get("next")) ?? home);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Không kết nối được server");
+      setError(
+        err instanceof ApiError && err.status === 401
+          ? "Sai email hoặc mật khẩu."
+          : err instanceof ApiError
+            ? err.message
+            : "Không kết nối được server",
+      );
     } finally {
       setBusy(false);
     }
@@ -81,18 +82,6 @@ export function LoginForm() {
           <h1 className="text-[17px] font-semibold text-ink">Đăng nhập CSKH</h1>
           <div className="text-[13px] text-ink-soft">Chăm sóc khách hàng và trợ lý AI</div>
         </div>
-
-        <label htmlFor="clinic" className="mb-1.5 block text-[13px] font-medium text-ink">
-          Phòng khám
-        </label>
-        <input
-          id="clinic"
-          value={clinic}
-          onChange={(e) => setClinic(e.target.value)}
-          autoComplete="organization"
-          placeholder="ma-phong-kham"
-          className="gc-input mb-3 w-full"
-        />
 
         <label htmlFor="email" className="mb-1.5 block text-[13px] font-medium text-ink">
           Email
@@ -119,7 +108,7 @@ export function LoginForm() {
 
         <button
           type="submit"
-          disabled={busy || !clinic.trim() || !email.trim() || password.length === 0}
+          disabled={busy || !email.trim() || password.length === 0}
           className="min-h-11 w-full rounded-lg bg-brand-500 py-2.5 text-[14px] font-medium text-white hover:bg-brand-600 disabled:opacity-50"
         >
           {busy ? "Đang đăng nhập..." : "Đăng nhập"}
