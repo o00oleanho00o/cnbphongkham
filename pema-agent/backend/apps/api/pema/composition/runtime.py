@@ -15,7 +15,7 @@ travels) and the policy hook call sites of section 3.
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Literal
@@ -82,18 +82,6 @@ from pema_contracts.agent_turn import AgentEngine, AgentTurnRequest, AgentTurnRe
 from pema_contracts.knowledge import EmbeddingClient
 
 
-def installation_clinic_ids(database: ClinicDatabase) -> Callable[[], Awaitable[list[UUID]]]:
-    """``() -> [installation clinic id]``: what the components that still take a "which clinics" source
-    (the settings snapshot, the KB availability snapshot, the MCP manager) are given. One installation is one
-    clinic, so the list always has exactly one id; the components lose the argument with their owning
-    package."""
-
-    async def ids() -> list[UUID]:
-        return [await get_installation_clinic_id(database)]
-
-    return ids
-
-
 class ProcessRole(StrEnum):
     API = "api"
     WORKER = "worker"
@@ -155,10 +143,6 @@ class Runtime:
     async def clinic_id(self) -> UUID:
         """The id of the one clinic of this installation (read once, then cached)."""
         return await get_installation_clinic_id(self.db)
-
-    async def clinic_ids(self) -> list[UUID]:
-        """``[clinic_id]``, for the components that take a callable returning "the clinics"."""
-        return [await self.clinic_id()]
 
     async def close(self) -> None:
         await self.kb_availability.stop()
@@ -225,7 +209,7 @@ def build_runtime(
         embedder=_embedder_from_env() if embedder == "env" else embedder,
         data_dir=settings.data_dir,
     )
-    kb_availability = KbAvailabilitySnapshot(knowledge, installation_clinic_ids(database))
+    kb_availability = KbAvailabilitySnapshot(knowledge)
 
     mcp_cache = McpBindingCache()
     mcp_servers = PgMcpServerStore(database)
@@ -234,7 +218,6 @@ def build_runtime(
         server_store=mcp_servers,
         binding_store=mcp_bindings,
         bindings=mcp_cache,
-        clinic_ids=installation_clinic_ids(database),
         wrap=wrap_untrusted_content,
         fail=ket_qua_loi,
     )

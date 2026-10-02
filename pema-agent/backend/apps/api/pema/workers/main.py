@@ -195,7 +195,7 @@ async def _run(
     retention_task: asyncio.Task[None] | None = None
     try:
         await rt.snapshot.refresh(await get_installation_clinic_id(rt.db, verify=True))
-        rt.snapshot.start_refresh_loop(rt.clinic_ids)
+        rt.snapshot.start_refresh_loop()
         rt.kb_availability.start()
         await rt.kb_availability.refresh()
         await rt.mcp.manager.start()

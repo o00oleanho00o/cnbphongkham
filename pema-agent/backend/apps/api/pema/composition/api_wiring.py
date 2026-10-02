@@ -41,7 +41,6 @@ from pema.composition.auth_bridge import (
 from pema.composition.intake import BotStack, PersonalStack
 from pema.composition.outbound import RegistryOutboundDelivery
 from pema.composition.runtime import Runtime
-from pema.config.runtime_settings_store import current_settings_clinic, set_settings_clinic
 from pema.config.runtime_tuning_settings import get_tuning_int
 from pema.conversation.agent_trace_store import PgTraceReader
 from pema.core.db import get_installation_clinic_id
@@ -54,7 +53,7 @@ from pema.scheduler.admin_service import ScheduleAdminService
 from pema.shared.logger import create_logger
 from pema_contracts.actions import ActionContext, ActionSource
 from pema_contracts.common import JsonObject
-from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.installation import installation_clinic_id
 from pema_contracts.roles import ActorType, Permission
 
 log = create_logger("composition.api")
@@ -147,19 +146,13 @@ def wire_api(app: FastAPI, rt: Runtime, bot: BotStack, personal: PersonalStack) 
     app.dependency_overrides[get_mcp_admin_context] = mcp_context
 
     # D4: tools admin
-    def current_clinic() -> UUID:
-        clinic_id = current_settings_clinic()
-        if clinic_id is None:
-            raise DomainError(ErrorCode.UNAUTHENTICATED, "Bạn chưa đăng nhập.")
-        return clinic_id
-
     install_tools_admin_services(
         ToolsAdminServices(
             registry=rt.tool_registry,
             accounts=rt.accounts,
             agents=rt.agents,
             channels=StaticChannelCapabilities(),
-            clinic_id=current_clinic,
+            clinic_id=installation_clinic_id,
         )
     )
 
@@ -181,7 +174,7 @@ class ApiLifecycle:
         # batcher below already see the overrides saved on the dashboard. ``verify=True``: a
         # ``PEMA_CLINIC_ID`` that is not the clinic of this database stops the start-up.
         await rt.snapshot.refresh(await get_installation_clinic_id(rt.db, verify=True))
-        rt.snapshot.start_refresh_loop(rt.clinic_ids)
+        rt.snapshot.start_refresh_loop()
         rt.kb_availability.start()
         recovered = await self._bot.batcher.recover()
         log.info("batcher recovered", batches=recovered)
@@ -227,5 +220,4 @@ class ApiLifecycle:
             await self._personal.manager.stop_all_accounts()
         await self._personal.bridge.aclose()
         await self._rt.close()
-        set_settings_clinic(None)
         install_tools_admin_services(None)
