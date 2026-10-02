@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from pema_contracts.roles import ActorType, Permission, Role
+from pema_contracts.roles import STAFF_ROLES, ActorType, Permission, Role
 
 P = Permission
 
@@ -160,6 +160,18 @@ package, not through the REST actions."""
 
 CLINICAL_ROLES: frozenset[Role] = frozenset({Role.OWNER, Role.DOCTOR})
 """Roles allowed to see and decide clinical review items (``requires_doctor``)."""
+
+
+ASSIGNABLE_ROLES: frozenset[Role] = frozenset(
+    role for role in STAFF_ROLES if ROLE_PERMISSIONS[role] & {P.CONVERSATION_REPLY, P.CRM_TASK_RESOLVE}
+)
+"""Roles a task, a conversation or a patient's "Phụ trách" can be handed to (ST-S): staff who can
+actually work the item, that is who hold ``conversation.reply`` or ``crm_task.resolve``. Derived from the
+matrix above, not a second list, so a role that gains or loses those permissions follows. Today: owner,
+manager, doctor, cs_staff. Reception is excluded (no conversations, no CRM queue: an item handed to them
+would sit unseen) and so is ``patient`` (not a staff role). Whether a role may be assigned is separate
+from who may assign: that is the permission of the action (``conversation.reply``,
+``crm_task.resolve``, ``patient.write``)."""
 
 
 def permissions_for(actor_type: ActorType, role: Role | None) -> frozenset[Permission]:

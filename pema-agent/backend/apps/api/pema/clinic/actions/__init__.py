@@ -11,6 +11,7 @@ changed clinic data without one).
 
 from pema.clinic.actions import (
     appointments,
+    assignees,
     audit_logs,
     consents,
     conversations,
@@ -32,6 +33,7 @@ __all__ = [
     "OutboundDelivery",
     "OutboundRequest",
     "appointments",
+    "assignees",
     "audit_logs",
     "consents",
     "conversations",
