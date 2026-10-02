@@ -218,9 +218,12 @@ async function inboundStep(browser: Browser): Promise<void> {
   const cards = (p: Page) => p.locator("article[aria-label]");
   await cards(b.page).first().waitFor({ timeout: 10_000 });
   const countBefore = await cards(b.page).count();
+  const clinicToday = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(
+    new Date(),
+  );
   const tasks = await api<{
     items: { id: string; version: number; status: string; owner_user_id: string }[];
-  }>(a, "/crm/tasks?status=open&limit=100");
+  }>(a, `/crm/tasks?task_status=open&due_by=${clinicToday}&limit=100`);
   const task = tasks.items[0];
   if (!task) throw new Error("no open task in the demo data");
   const resolved = await a.context.request.post(`${BASE}/api/v1/crm/tasks/${task.id}/resolve`, {
