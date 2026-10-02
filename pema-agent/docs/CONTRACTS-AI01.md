@@ -309,42 +309,14 @@ keep working (the migration creates the clinic in it; set `PEMA_CLINIC_NAME` if 
   `ARCH-AI01` sections 3 and 8, `SECURITY-REVIEW-AI01` SEC-06/SEC-12 (RLS is gone; the accepted limit is now "one clinic
   per database"), `MODULEMAP-AI01`, `PORT-MAP.md` mentions, the open item "one worker per clinic" of section 9.
 
-### 10.5 Tests that break because RLS and "many clinics" are gone (measured by a full run, not fixed here)
+### 10.5 Tests (history of the ST-A step, closed in ST-G1)
 
-Full `pytest` on a clean Postgres 17 + Redis 7: **3709 passed, 10 skipped, 393 failed, 497 errors**. The failures and
-errors are fixtures that insert a second clinic, or tests of RLS/slug behaviour; `tests/test_database.py`, the contracts
-tests and `tests/test_openapi_skeleton.py` pass. Files, with the number of failed plus errored tests:
-
-* **ST-B**: `tests/api/test_admin_users_password_route.py` (13), `test_admin_users_routes.py` (42),
-  `test_dashboard_auth.py` (7), `test_dashboard_password_store.py` (2), `test_dashboard_session_absolute.py` (7);
-  `tests/clinic/`: `crm_rules/test_crm_rules_database.py` (9), `test_agent_facing.py` (12), `test_api_appointments.py` (17),
-  `test_api_auth_patients.py` (13), `test_api_conversations_reviews.py` (19), `test_api_crm.py` (13),
-  `test_api_templates.py` (5), `test_audit_every_mutation.py` (2), `test_rbac_endpoints.py` (31),
-  `test_rls_isolation.py` (7, delete), `test_seed_demo.py` (2); `tests/integration/`: `test_admin_access_matrix.py` (2),
-  `test_admin_audit.py` (2), `test_loop_clinic_tools.py` (2), `test_loop_crm_scheduler.py` (4),
-  `test_loop_patient_channel.py` (1), `test_loop_red_flags_and_media.py` (4); `tests/retention/`:
-  `test_retention_agent_scope.py` (12), `test_retention_cli_and_wiring.py` (4), `test_retention_clinic_scope.py` (13),
-  `test_retention_safety.py` (9); `tests/scheduler/`: `test_delivery_attempt_store.py` (5), `test_job_run_log_store.py` (8),
-  `test_lich_hen_kenh_bot.py` (8), `test_proactive_send_counter_store.py` (20), `test_proactive_send_guard.py` (29),
-  `test_run_scheduled_job.py` (27), `test_run_scheduled_job_trial.py` (4), `test_schedule_routes.py` (22),
-  `test_scheduled_job_store.py` (33), `test_scheduler_loop.py` (25), `test_scheduler_policy.py` (19),
-  `test_scheduler_worker.py` (3). Fixture sources: `pema/retention/pg_testing.py`, `pema/api/clinic_testing.py`,
-  `pema/api/admin_stores_testing.py`, `tests/scheduler/conftest.py`.
-* **ST-C**: `tests/api/routers/`: `test_admin_agents_routes.py` (19), `test_admin_threads_routes.py` (8),
-  `test_delete_contact_session_routes.py` (10), `test_kb_routes.py` (46), `test_thread_routes_wipe.py` (11) (fixture
-  `tests/api/routers/conftest.py`); `tests/channels/zalo_bot/test_update_dedupe_db.py` (5);
-  `tests/channels/zalo_personal/`: `test_channel_settings.py` (11), `test_friend_request_store.py` (9) (fixture
-  `conftest.py`); `tests/config/`: `test_account_agent_stores.py` (27), `test_account_store.py` (4),
-  `test_runtime_settings_store_db.py` (4) (fixture `conftest.py`); `tests/conversation/` (all the DB store tests:
-  `test_agent_trace_store`, `test_contact_store`, `test_history_store`, `test_image_description_store`,
-  `test_memory_edit_store`, `test_memory_store`, `test_overview_stats`, `test_thread_store`, `test_thread_summarizer`,
-  `test_usage_store`, `test_wipe_thread_context`, `test_xoa_han_session`; 128 tests; fixtures
-  `pema/conversation/pg_testing.py`, `tests/conversation/conftest.py`); `tests/knowledge/` (`test_don_doan_mo_coi`,
-  `test_kb_agent_binding`, `test_kb_chunk_store`, `test_kb_fts_query`, `test_kb_ingest_worker*`, `test_kb_samples`,
-  `test_kb_search*`, `test_kb_source_queries`, `test_kb_source_store`, `test_postgres_knowledge_store`; fixture
-  `pema/knowledge/kb_test_support.py`); `tests/mcp/` (`test_mcp_agent_binding` 11, `test_mcp_agent_binding_cleanup` 2,
-  `test_mcp_schema` 4, `test_mcp_server_store` 12; fixture `tests/mcp/conftest.py`); `tests/policy/test_identity_sql.py`
-  (20); `tests/workers/test_kb_ingest_worker_runner.py` (2).
+After the database step alone, a full `pytest` run on Postgres 17 + Redis 7 showed 393 failures and 497 errors: fixtures
+that insert a second clinic, and tests of RLS or slug behaviour. ST-B and ST-C moved the fixtures to the one clinic
+(`ensure_test_clinic` + `truncate_installation_data`) and deleted the tests that only checked isolation between two
+clinics (`tests/clinic/test_rls_isolation.py`, the per-clinic cases of the runtime settings and MCP boot tests). After the
+merge of the four packages and the clean-up of ST-G1 (below) the full backend run on a clean Postgres 17 + Redis 7 is
+**4583 passed, 10 skipped, 0 failed, 0 errors** (the skips are optional tools and platform limits).
 
 ### 10.6 Rules for new code from now on
 
@@ -366,3 +338,30 @@ the clinic calls `ctx.the_clinic_id()`. Python that needs the id calls `get_inst
   ST-C; the Caddy block on `zalo-bridge/*` is unchanged).
 * A second clinic is a second stack (own `.env`, secrets, compose project, ports, database, Redis, domain, backups):
   `infra/README.md`, "One system, one clinic".
+
+### 10.8 Integration state (ST-G1: merge of ST-B, ST-C, ST-E, ST-F and clean-up)
+
+* One migration head, `st_0009_single_tenant`; `alembic upgrade heads` on an empty database leaves exactly one row in
+  `clinic.clinic` (`test_the_migration_chain_has_one_head` does not name the head).
+* Removed from `pema/core/db.py`: `session(clinic_id)` argument, `system_session`, `resolve_clinic`,
+  `list_active_clinic_ids`. Removed "which clinics" callables: `RuntimeSettingsSnapshot.start_refresh_loop(clinic_ids)`
+  (now `start_refresh_loop(interval_s=...)`, it refreshes the installation clinic it was given by `refresh`),
+  `KbAvailabilitySnapshot(store, clinic_ids)` (now `KbAvailabilitySnapshot(store)`), `DefaultMcpManager(clinic_ids=...)`,
+  `installation_clinic_ids()` and `Runtime.clinic_ids()` of the composition root. `RuntimeSettingsSnapshot` holds one
+  set of rows; the `ContextVar` that picked a clinic for a synchronous read (`use_settings_clinic`,
+  `set_settings_clinic`, `current_settings_clinic`) is gone, nothing sets a "current clinic" per task or request.
+* **Kept on purpose, "installation id"**: the `clinic_id` argument of the stores and ports (`AccountStore`, `AgentStore`,
+  `ConversationStore`, `KnowledgeStore`, `RuntimeSettingsStore` and `RuntimeSettingsSnapshot.refresh/set/delete`,
+  `update_llm_settings` and the other settings writers, MCP stores, `ThreadLock`, ...), the `clinic_id` fields of
+  `PolicyContext`, `ToolContext`, `AccountConfig`, `AgentProfile`, `ScheduledJob`, `McpPolicy`, `UserSummary`, `ToolScope`
+  and the `clinic_id` column of every table. Removing them touches the contract of several packages and every test
+  fixture at once for no behavioural gain; callers pass the installation id (`get_installation_clinic_id(db)`, or the
+  DTO default). A new store may omit the argument and read `installation_clinic_id()`.
+* Webhooks: `POST /api/v1/webhooks/zalo-bot/{account_id}` and `POST /api/v1/webhooks/zalo-bridge/{account_id}`; the
+  bridge `.env.example`, Caddyfile, `infra/README.md` and the Ubuntu guide use the same paths. `openapi.json` and
+  `frontend/src/lib/api/schema.d.ts` are regenerated (`make openapi types`); `LoginRequest` is e-mail + password.
+* Not yet in the backend (wave 4, the frontend mock serves them as `PENDING_CONTRACT`): `GET /api/v1/events` (SSE),
+  `POST /api/v1/conversations/{conversation_id}/presence`, `GET /api/v1/staff/assignable`.
+* New closed-loop tests: `tests/integration/test_loop_single_tenant.py` (real login with e-mail and password only, then
+  `/me` and refresh; two Zalo bot accounts of the one clinic answer their own customers independently, each with its own
+  webhook secret). The harness `pema.composition.testing.open_loop` takes `extra_accounts`.
