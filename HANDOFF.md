@@ -1,9 +1,10 @@
 # HANDOFF — Pema Agent (clinic CSKH agent + CRM), repo `E:\Desktop\cnbphongkham`
 
 Language of the user: Vietnamese. Reply in Vietnamese.
-Last updated: 2026-10-02. Branch `feat/ai-agent-backend`, tip `294e4dc` (48 commits ahead of `master`), NOT pushed.
-Status: **PLAN-AI01 v2 is built, merged and tested.** The user paused further work ("tạm chưa xử lý"); wait for the
-user's next instruction before starting anything.
+Last updated: 2026-10-02. **Two parallel branches** (user decision): `feat/ai-agent-backend` (multi-tenant, tip
+`294e4dc`, frozen) and `feat/single-tenant` (one system = one clinic, the branch to work on; new features go here first).
+Status: **single-tenant conversion and the three multi-user fixes are built, merged and tested** on
+`feat/single-tenant`. Wait for the user's next instruction before starting anything.
 
 ## HARD RULES (read first)
 
@@ -13,7 +14,8 @@ user's next instruction before starting anything.
   `.claude/agents/pema-builder.md`, and in user memory. Tell every subagent; check `git log --format=%B` of their
   commits before merging. The user rewrote history on 2026-10-02 to remove old attribution lines; the branch now has 0.
 - Commit/push only when the user asks (merging finished subagent branches into the feature branch was accepted
-  practice during the build). Never push.
+  practice during the build). On 2026-10-02 the user asked to commit and push `feat/single-tenant`; never force-push,
+  never push `worktree-agent-*` or `integration/*` branches.
 - All new code lives under `pema-agent/`. Outside it, only the pointer line in root `README.md`, the checkpoint in
   `SECTION_PROGRESS.md`, and the rule lines in `AGENT.md`/`CLAUDE.md`/`.claude/agents/pema-builder.md` were changed.
   `prototype/`, `pema-kmp/`, `docs/` PB01/PB02, `finance_server.py` are read-only. Never read `flutter-template/`.
@@ -30,7 +32,50 @@ channel for customer care (CSKH). Scope: CSKH by text toward patients (intake, p
 symptom reports with red-flag escalation, booking/reminders). The agent engine is a full Python port of
 `vuhai2002/zalo-agent` (MIT; notice in `pema-agent/THIRD_PARTY_NOTICES.md`) plus clinic CRM and one Next.js FE.
 
-## Current Progress (what exists, all on `feat/ai-agent-backend`)
+## Single-tenant branch (`feat/single-tenant`) — read this first
+
+Why: clinics, hospitals and banks want high security and each runs its own system. Decisions: remove RLS entirely
+(one database = one clinic; keep ALL other protections), keep both branches in parallel, keep several Zalo accounts per
+clinic as in zalo-agent. Details: `pema-agent/docs/CONTRACTS-AI01.md` §10 (single-tenant), §11 (live updates),
+`ARCH-AI01.md` §14 (two branches) and §15 (live), `SECURITY-REVIEW-AI01.md` (SEC-45..63), `pema-agent/README.md`.
+
+- **DB:** `clinic.clinic` holds exactly one row (CHECK + UNIQUE + delete trigger); no RLS policies, no
+  `set_config('app.clinic_id')`; `ctx.the_clinic_id()`, `clinic.ensure_clinic`. Alembic single head
+  `st_0009_single_tenant`. `clinic_id` columns and store/port arguments are KEPT on purpose as an "installation id"
+  (CONTRACTS §10.8); removing them is a later contract change. Roles `be_app`/`agent_worker` and the `clinic_agent`
+  views/SECURITY DEFINER functions stay (agent_worker still cannot read raw `clinic.*`).
+- **Env:** `PEMA_CLINIC_NAME`, optional `PEMA_CLINIC_ID`; `migrate.sh` stops if a second clinic row exists or the id
+  changed.
+- **Login:** email + password only (`clinic_slug` is refused with 422). Webhooks:
+  `/api/v1/webhooks/zalo-bot/{account_id}` and `/api/v1/webhooks/zalo-bridge/{account_id}`; webhooks already registered
+  at Zalo with the old path must be registered again. Clients outside `pema-agent/` (patient app, KMP, scripts) that
+  send a slug or use old paths are NOT checked.
+- **Live updates (new):** `GET /api/v1/events` (SSE, session required, re-verified every 15 s, per-user cap 5, no PII in
+  payloads, types `inbox.changed`/`tasks.changed`/`review.changed`/`presence.changed`) over Redis pub/sub
+  (`pema.live`); presence `POST/DELETE /api/v1/conversations/{id}/presence` (TTL 30 s, warning only, no lock) and
+  `viewers` on conversation DTOs; Caddy skips compression for the stream. FE falls back to polling when the stream is
+  down. Known: a closed tab leaves its viewer ~31 s (SEC-58); stream caps are per API process.
+- **Assignee picker (new):** `GET /api/v1/staff/assignable` (any logged-in staff; active owner/manager/doctor/cs_staff;
+  `{id,name,role}` only), one server-side check for conversation, CRM task and patient assignees, audit with ids.
+- **Verified on the merged tip `0639903` (real Postgres pgvector pg17 + Redis 7, throwaway containers):** pytest
+  4714 passed, 10 skipped, 0 failed; ruff, pyright strict, import-linter clean; FE vitest 407 passed, eslint/tsc/
+  prettier clean, `next build` OK; bridge 296 passed. Real compose stack behind Caddy: login by email+password,
+  assignable list, assign conversation → colleague's SSE stream got `inbox.changed`; two-browser run (presence in
+  ≤2 s, inbound message in both Inboxes in ≤2 s without reload, Redis stop/start recovers). `live-real-check.ts` is a
+  manual script, not CI. Not run: the 200-stream process cap with many users.
+- **Pitfalls found:** the api Dockerfile used a shared uv cache that served a stale wheel (now `--no-cache`); a
+  Postgres container on Docker Desktop stalls at checkpoint during long test runs (use `-c fsync=off` for throwaway
+  DBs); the FE once sent `due_by` as datetime where the API wants a date (fixed; the mock had hidden it); tooling that
+  creates worktrees refuses when the drive letter case differs (`e:` vs `E:`): create the worktree by hand with
+  `git worktree add E:/...`.
+- **Open (from SEC-63 and reviews):** assigning a conversation to a doctor outside their patient scope hides it from
+  them (block it or widen scope?); a user locked after assignment keeps their items until reassigned; reception sees
+  colleague names and roles; no general per-user rate limit on staff routes except login.
+
+The sections below were written for `feat/ai-agent-backend` and still describe the shared engine; where they mention
+RLS, clinic slug login or `h_0008_merge_heads`, the single-tenant branch differs as described above.
+
+## Current Progress (what exists, written at `feat/ai-agent-backend` tip `294e4dc`)
 
 Docs to read first: `pema-agent/docs/PLAN-AI01.md` (v2, §8 decisions), `CONTRACTS-AI01.md`, `PORT-MAP.md`,
 `SCOPE-AI01.md`, `SPEC-AI01.md`, `MODULEMAP-AI01.md`, `ARCH-AI01.md` (§13 open items), `SECURITY-REVIEW-AI01.md`
@@ -140,7 +185,10 @@ real device or against the real API outside the proxy test, model quality (evals
 2. Apply the owner's answers to the open decisions above (each is a small, isolated change).
 3. Real-environment acceptance: Ubuntu box, real LLM key, Zalo Bot API test bot, then QR login on a secondary
    personal account, then `evals` against the chosen model.
-4. Housekeeping when the user agrees: 24 `.claude/worktrees/agent-*` worktrees, 24 `worktree-agent-*` branches and
-   the temporary branches `integration/ai01` and `integration/h` are still on disk; nothing was deleted. All their
+4. Housekeeping when the user agrees: about 35 `.claude/worktrees/*` worktrees (incl. `st-g2a`), the `worktree-agent-*`
+   branches and the temporary branches `integration/ai01`, `integration/h`, `integration/st`, `integration/st-live` are
+   still on disk; nothing was deleted. All their
    work is already in `feat/ai-agent-backend` except the abandoned v1 worktrees. Docker build cache remains.
 5. PR to `master` only if the user asks (no AI attribution in the PR body).
+6. Package M (per-patient care agent, multi-agent) is planned in `pema-agent/docs` (recipes committed); nothing built.
+7. Optional: cherry-pick live updates / assignee picker to `feat/ai-agent-backend` (default: no).
