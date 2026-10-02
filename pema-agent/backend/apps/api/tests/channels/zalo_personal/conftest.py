@@ -25,6 +25,7 @@ from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.engine import make_url
 
 from pema.core.db import ClinicDatabase
+from pema.core.testing import ensure_test_clinic, truncate_installation_data
 
 API_DIR = Path(__file__).resolve().parents[3]
 API_INI = API_DIR / "alembic.ini"
@@ -55,27 +56,24 @@ def admin_engine() -> Iterator[Engine]:
 
 
 @pytest.fixture(scope="module")
-def clinic_ids(admin_engine: Engine) -> tuple[uuid.UUID, uuid.UUID]:
-    """Two synthetic clinics, each with a default agent and a personal-account row ``zp-1``."""
-    first, second = uuid.uuid4(), uuid.uuid4()
+def clinic_id(admin_engine: Engine) -> uuid.UUID:
+    """The one clinic of the database (single tenant), emptied, with a default agent and a personal-account
+    row ``zp-1``."""
     with admin_engine.begin() as conn:
-        for clinic_id, slug in ((first, "c2-clinic-a"), (second, "c2-clinic-b")):
-            conn.execute(
-                text("INSERT INTO clinic.clinic (id, slug, name) VALUES (:id, :slug, :name)"),
-                {"id": clinic_id, "slug": slug, "name": f"Synthetic {slug}"},
-            )
-            conn.execute(
-                text("INSERT INTO agent.agents (clinic_id, id, name) VALUES (:c, 'default', 'Default')"),
-                {"c": clinic_id},
-            )
-            conn.execute(
-                text(
-                    "INSERT INTO agent.accounts (clinic_id, id, label, channel, agent_id) "
-                    "VALUES (:c, 'zp-1', 'Personal', 'zalo_personal', 'default')"
-                ),
-                {"c": clinic_id},
-            )
-    return first, second
+        clinic = ensure_test_clinic(conn)
+        truncate_installation_data(conn)
+        conn.execute(
+            text("INSERT INTO agent.agents (clinic_id, id, name) VALUES (:c, 'default', 'Default')"),
+            {"c": clinic},
+        )
+        conn.execute(
+            text(
+                "INSERT INTO agent.accounts (clinic_id, id, label, channel, agent_id) "
+                "VALUES (:c, 'zp-1', 'Personal', 'zalo_personal', 'default')"
+            ),
+            {"c": clinic},
+        )
+    return clinic
 
 
 def _role_url(role: str, password: str) -> str:

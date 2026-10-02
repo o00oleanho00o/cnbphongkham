@@ -121,7 +121,7 @@ async def test_che_do_webhook_dang_ky_url_va_secret_va_khong_poll() -> None:
     s = make_router_stack()
     fake = FakeBotClient()
     hook = WebhookRegistration(
-        url="https://cskh.example.test/api/v1/webhooks/zalo-bot/demo/acc-bot", secret="x" * 32
+        url="https://cskh.example.test/api/v1/webhooks/zalo-bot/acc-bot", secret="x" * 32
     )
     running = await start(s, fake, hook)
 

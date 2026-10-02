@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 # Create or refresh the two runtime roles and their passwords, idempotently.
 #
-#   be_app        API process: DML on clinic.* and agent.*, RLS applies.
+#   be_app        API process: DML on clinic.* and agent.* (no row level security since st_0009: the database
+#                 holds ONE clinic, so the grants below are the whole access control).
 #   agent_worker  worker process: DML on agent.*, reads clinic_agent views, NOTHING on clinic.*.
 #
-# What this script does NOT do: create schemas, tables, RLS or grants. Those belong to the Alembic revisions
-# 0001..0003 (ctx, clinic, agent, clinic_agent), which `migrate.sh` runs right after this script. The roles
-# are created here (and again, harmlessly, by revision 0001) so that the passwords come from the environment
-# and never from a file in git.
+# One database = one clinic. Roles are cluster-wide in Postgres: do not point two clinics' stacks at the same
+# Postgres cluster (each clinic has its own Postgres, see infra/README.md "One system, one clinic").
+#
+# What this script does NOT do: create schemas, tables, grants or the clinic row. Those belong to the Alembic
+# revisions (ctx, clinic, agent, clinic_agent, and st_0009 for the single clinic), which `migrate.sh` runs right
+# after this script. The roles are created here (and again, harmlessly, by revision 0001) so that the passwords
+# come from the environment and never from a file in git.
 #
 # Inputs (environment, never arguments, so no password shows in `ps`):
 #   PEMA_MIGRATION_DATABASE_URL   owner/superuser URL, e.g. postgresql+psycopg://postgres:...@host:5432/pema

@@ -156,12 +156,7 @@ class McpToolProvider(Protocol):
     """
 
     def tools_for_agent(self, agent_id: str) -> Sequence[ToolSpec]:
-        """Agent-id-only lookup. Agent ids are unique per clinic only: when the bindings of ONE id exist in
-        more than one clinic the answer is empty (fail closed)."""
-        ...
-
-    def tools_for_agent_in_clinic(self, clinic_id: UUID, agent_id: str) -> Sequence[ToolSpec]:
-        """The same, exact for the clinic of the turn. The registry uses it when the scope has a clinic."""
+        """Agent-id lookup (single tenant: one installation is one clinic, so an agent id is unambiguous)."""
         ...
 
 

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Logical backup of the Pema database: one custom-format dump of `pema` + the cluster's roles (globals),
-# verified, encrypted, with simple retention. Run from the host that runs docker compose (cron or the systemd
-# timer in infra/ubuntu/systemd).
+# verified, encrypted, with simple retention. One installation = one clinic = one database, so the dump is the
+# WHOLE clinic (every patient, message and credential it has); treat it with that weight. A second clinic has its
+# own stack and must use its own PEMA_BACKUP_DIR and its own age key. Run from the host that runs docker compose
+# (cron or the systemd timer in infra/ubuntu/systemd).
 #
 # The dump holds patient data (synthetic in this repository, real in a clinic). It is therefore ENCRYPTED
 # unless you explicitly allow plaintext for a throwaway test:
@@ -60,7 +62,7 @@ TMP="$(mktemp -d "$DIR/.tmp.XXXXXX")"
 trap 'rm -rf "$TMP" "$OUT.part"' EXIT
 
 # 1. Dump inside the container as the superuser (local socket, no password in our argv). Owners and GRANTs
-#    stay in the archive (no --no-owner / --no-privileges): the role split and RLS depend on them.
+#    stay in the archive (no --no-owner / --no-privileges): the role split and the grants depend on them.
 "${COMPOSE[@]}" exec -T "$SERVICE" pg_dump -U postgres -Fc "$DB" >"$TMP/db.dump"
 "${COMPOSE[@]}" exec -T "$SERVICE" pg_dumpall -U postgres --globals-only >"$TMP/globals.sql"
 
@@ -69,6 +71,8 @@ trap 'rm -rf "$TMP" "$OUT.part"' EXIT
 for schema in clinic agent clinic_agent; do
   grep -q " SCHEMA - $schema " "$TMP/db.list" || { echo "backup check failed: schema $schema missing" >&2; exit 2; }
 done
+# the installation's clinic row must be in the archive (restoring without it would leave an unusable system)
+grep -q " TABLE DATA clinic clinic " "$TMP/db.list" || { echo "backup check failed: clinic.clinic data missing" >&2; exit 2; }
 
 # 3. Bundle and encrypt. tar keeps both files in one object so a restore cannot mix dates.
 tar -C "$TMP" -cf - db.dump globals.sql | encrypt >"$OUT.part"

@@ -35,8 +35,7 @@ export function createBridge(options: BridgeOptions): Bridge {
   const accounts = new AccountManager({ config, gateway, publisher, now });
   const qr = new QrLoginManager({
     login: (_accountId, onEvent, signal) => gateway.loginQR(onEvent, signal),
-    attach: (accountId, clinicSlug, session) =>
-      accounts.attachFromQr(accountId, clinicSlug, session),
+    attach: (accountId, session) => accounts.attachFromQr(accountId, session),
     stopAccount: (accountId) => accounts.stop(accountId),
     now,
   });

@@ -181,7 +181,7 @@ class BridgeGateway(Protocol):
     ``HttpBridgeClient``; tests use a fake."""
 
     async def start_account(
-        self, account_id: str, *, clinic_slug: str, credential: JsonObject, kill_switch: KillSwitchState
+        self, account_id: str, *, credential: JsonObject, kill_switch: KillSwitchState
     ) -> str:
         """Log in with the stored credential and start the listener. Returns the own uid."""
         ...
@@ -192,7 +192,7 @@ class BridgeGateway(Protocol):
 
     async def get_state(self, account_id: str) -> BridgeAccountState: ...
 
-    async def start_qr_login(self, account_id: str, *, clinic_slug: str) -> BridgeQrStatus: ...
+    async def start_qr_login(self, account_id: str) -> BridgeQrStatus: ...
 
     async def get_qr_login(self, account_id: str) -> BridgeQrStatus: ...
 
@@ -271,13 +271,12 @@ class HttpBridgeClient:
     # -- BridgeGateway
 
     async def start_account(
-        self, account_id: str, *, clinic_slug: str, credential: JsonObject, kill_switch: KillSwitchState
+        self, account_id: str, *, credential: JsonObject, kill_switch: KillSwitchState
     ) -> str:
         payload = await self.request(
             "POST",
             f"/v1/accounts/{account_id}/start",
             {
-                "clinic_slug": clinic_slug,
                 "credential": credential,
                 "kill_switch": {
                     "on": kill_switch.on,
@@ -302,10 +301,8 @@ class HttpBridgeClient:
             own_id=str(payload.get("own_id", "")),
         )
 
-    async def start_qr_login(self, account_id: str, *, clinic_slug: str) -> BridgeQrStatus:
-        payload = await self.request(
-            "POST", f"/v1/accounts/{account_id}/login/qr", {"clinic_slug": clinic_slug}
-        )
+    async def start_qr_login(self, account_id: str) -> BridgeQrStatus:
+        payload = await self.request("POST", f"/v1/accounts/{account_id}/login/qr", {})
         return _qr_status(payload)
 
     async def get_qr_login(self, account_id: str) -> BridgeQrStatus:

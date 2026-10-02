@@ -100,9 +100,9 @@ and nothing was delivered).
 
 **Routes (API to bridge).**
 
-- `POST /accounts/:id/start` `{clinic_slug, credential:{cookie, imei, userAgent}, kill_switch?:{on, scope, reason?}}` -> `{own_id}`
+- `POST /accounts/:id/start` `{credential:{cookie, imei, userAgent}, kill_switch?:{on, scope, reason?}}` -> `{own_id}`
 - `POST /accounts/:id/stop`, `POST /accounts/stop-all`, `GET /accounts`, `GET /accounts/:id/state`
-- `POST /accounts/:id/login/qr` `{clinic_slug}`, `GET /accounts/:id/login/qr` -> `{state, qr_png_base64?, error?}`
+- `POST /accounts/:id/login/qr` `{}`, `GET /accounts/:id/login/qr` -> `{state, qr_png_base64?, error?}`
 - `POST /accounts/:id/send` `{thread_id, thread_type: 0|1, text, styles?, quote?, mentions?, proactive}` -> `{msg_id}`.
   Gates, in order: running, kill switch, breaker, per-minute ceiling, per-day proactive ceiling.
 - `POST /accounts/:id/typing`, `/receipts/delivered`, `/receipts/seen`, `/reaction`
@@ -111,7 +111,7 @@ and nothing was delivered).
 - `POST /accounts/:id/send-attachment`, `POST /accounts/:id/send-video` (same gates as `send`)
 - `POST /kill-switch` `{on, scope?, reason?}`, `GET /kill-switch`
 
-**Events (bridge to API)**, posted to `{PEMA_API_BASE_URL}/webhooks/zalo-bridge/{clinic_slug}/{account_id}`, signed,
+**Events (bridge to API)**, posted to `{PEMA_API_BASE_URL}/webhooks/zalo-bridge/{account_id}`, signed,
 retried 3 times with backoff: `message`, `friend_event` (`kind`: `add|remove|request|undo_request|reject_request|other`),
 `credential_updated`, `account_state` (`connected|disconnected|session_dead|logged_out|blocked`).
 

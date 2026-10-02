@@ -113,17 +113,3 @@ async def test_kb_source_store_delete_does_not_touch_another_source(kb: KbHarnes
         await xoa_nguon(s, kb.clinic_id, a.id)
     async with kb.session() as s:
         assert await dem_doan(s, kb.clinic_id, b.id) == 1
-
-
-async def test_kb_source_store_clinic_isolation_another_clinic_sees_and_deletes_nothing(
-    kb: KbHarness,
-) -> None:
-    """(thêm, RLS) phòng khám khác không thấy và không xóa được nguồn"""
-    async with kb.session() as s:
-        n = await tao_nguon(s, kb.clinic_id, ten="của phòng khám A", loai="text", noi_dung_goc="x")
-    async with kb.session(kb.other_clinic_id) as s:
-        assert await lay_nguon(s, kb.other_clinic_id, n.id) is None
-        assert await danh_sach_nguon(s, kb.other_clinic_id) == []
-        await xoa_nguon(s, kb.other_clinic_id, n.id)
-    async with kb.session() as s:
-        assert await lay_nguon(s, kb.clinic_id, n.id) is not None

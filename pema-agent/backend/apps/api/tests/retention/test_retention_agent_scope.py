@@ -12,8 +12,7 @@ from pathlib import Path
 import pytest
 
 from pema.conversation.media_store import MediaStore
-from pema.conversation.pg_testing import ClinicEnv
-from pema.retention.pg_testing import Seed
+from pema.retention.pg_testing import RetentionEnv, Seed
 from pema.retention.policy import RetentionPolicy, Scope
 from pema.retention.runner import RetentionRunner, ScopeReport
 
@@ -34,12 +33,12 @@ KEEP = RetentionPolicy(
 )
 
 
-def _runner(env: ClinicEnv, policy: RetentionPolicy, media: MediaStore | None = None) -> RetentionRunner:
+def _runner(env: RetentionEnv, policy: RetentionPolicy, media: MediaStore | None = None) -> RetentionRunner:
     return RetentionRunner(env.worker_db, policy, media=media, scopes=(Scope.AGENT,))
 
 
-async def _run(env: ClinicEnv, policy: RetentionPolicy, media: MediaStore | None = None) -> ScopeReport:
-    return await _runner(env, policy, media).run_scope(env.clinic_id, Scope.AGENT)
+async def _run(env: RetentionEnv, policy: RetentionPolicy, media: MediaStore | None = None) -> ScopeReport:
+    return await _runner(env, policy, media).run_scope(Scope.AGENT)
 
 
 def _policy(**days: int) -> RetentionPolicy:
@@ -47,7 +46,7 @@ def _policy(**days: int) -> RetentionPolicy:
     return RetentionPolicy(**values)
 
 
-def _write(media: MediaStore, env: ClinicEnv, rel_path: str, age_days: int) -> Path:
+def _write(media: MediaStore, env: RetentionEnv, rel_path: str, age_days: int) -> Path:
     path = media.root / str(env.clinic_id) / rel_path
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(b"synthetic image bytes")
@@ -57,7 +56,7 @@ def _write(media: MediaStore, env: ClinicEnv, rel_path: str, age_days: int) -> P
 
 
 async def test_history_older_than_the_period_is_deleted_and_newer_rows_stay(
-    env: ClinicEnv, seed: Seed
+    env: RetentionEnv, seed: Seed
 ) -> None:
     seed.history(env.clinic_id, age=40, n=3)
     seed.history(env.clinic_id, age=10, n=2)
@@ -67,7 +66,9 @@ async def test_history_older_than_the_period_is_deleted_and_newer_rows_stay(
     assert seed.count("agent.history", env.clinic_id, "created_at < now() - interval '30 days'") == 0
 
 
-async def test_zero_days_keeps_every_group_even_when_the_data_is_very_old(env: ClinicEnv, seed: Seed) -> None:
+async def test_zero_days_keeps_every_group_even_when_the_data_is_very_old(
+    env: RetentionEnv, seed: Seed
+) -> None:
     seed.history(env.clinic_id, age=900)
     seed.memory(env.clinic_id, age=900)
     seed.usage_turn(env.clinic_id, age=900)
@@ -89,7 +90,7 @@ async def test_zero_days_keeps_every_group_even_when_the_data_is_very_old(env: C
 
 
 async def test_history_deletion_removes_the_image_files_and_descriptions_of_the_deleted_rows(
-    env: ClinicEnv, seed: Seed, tmp_path: Path
+    env: RetentionEnv, seed: Seed, tmp_path: Path
 ) -> None:
     media = MediaStore(tmp_path / "volume")
     old_file = _write(media, env, "media/acc-1/t-1/m1-0.jpg", age_days=1)
@@ -111,7 +112,7 @@ async def test_history_deletion_removes_the_image_files_and_descriptions_of_the_
 
 
 async def test_a_path_that_escapes_the_media_directory_is_ignored(
-    env: ClinicEnv, seed: Seed, tmp_path: Path
+    env: RetentionEnv, seed: Seed, tmp_path: Path
 ) -> None:
     media = MediaStore(tmp_path / "volume")
     outside = tmp_path / "volume" / "secret.txt"
@@ -124,7 +125,7 @@ async def test_a_path_that_escapes_the_media_directory_is_ignored(
 
 
 async def test_media_files_and_descriptions_older_than_media_days_go_and_newer_ones_stay(
-    env: ClinicEnv, seed: Seed, tmp_path: Path
+    env: RetentionEnv, seed: Seed, tmp_path: Path
 ) -> None:
     media = MediaStore(tmp_path / "volume")
     old = _write(media, env, "media/acc-1/t-1/old.jpg", age_days=20)
@@ -140,7 +141,7 @@ async def test_media_files_and_descriptions_older_than_media_days_go_and_newer_o
 
 
 async def test_summary_of_a_thread_idle_past_the_period_is_cleared_and_an_active_one_is_kept(
-    env: ClinicEnv, seed: Seed
+    env: RetentionEnv, seed: Seed
 ) -> None:
     seed.thread(env.clinic_id, "t-idle", last_message_age=60)
     seed.thread(env.clinic_id, "t-active", last_message_age=3)
@@ -160,7 +161,7 @@ async def test_summary_of_a_thread_idle_past_the_period_is_cleared_and_an_active
     assert again.counts.get("thread_summaries", 0) == 0, "idempotent: a cleared thread is not touched again"
 
 
-async def test_memories_older_than_the_period_are_deleted(env: ClinicEnv, seed: Seed) -> None:
+async def test_memories_older_than_the_period_are_deleted(env: RetentionEnv, seed: Seed) -> None:
     seed.memory(env.clinic_id, age=100)
     seed.memory(env.clinic_id, age=5)
     report = await _run(env, _policy(memory_days=30))
@@ -169,7 +170,7 @@ async def test_memories_older_than_the_period_are_deleted(env: ClinicEnv, seed: 
 
 
 async def test_trace_steps_expire_but_the_token_ledger_stays_while_usage_days_is_zero(
-    env: ClinicEnv, seed: Seed
+    env: RetentionEnv, seed: Seed
 ) -> None:
     seed.usage_turn(env.clinic_id, age=20, steps=3)
     seed.usage_turn(env.clinic_id, age=2, steps=2)
@@ -179,7 +180,7 @@ async def test_trace_steps_expire_but_the_token_ledger_stays_while_usage_days_is
     assert seed.count("agent.usage", env.clinic_id) == 2, "the ledger holds no text and keeps its own clock"
 
 
-async def test_usage_days_deletes_the_ledger_and_its_steps_by_cascade(env: ClinicEnv, seed: Seed) -> None:
+async def test_usage_days_deletes_the_ledger_and_its_steps_by_cascade(env: RetentionEnv, seed: Seed) -> None:
     seed.usage_turn(env.clinic_id, age=400, steps=2)
     seed.usage_turn(env.clinic_id, age=2, steps=2)
     report = await _run(env, _policy(usage_days=365))
@@ -188,7 +189,7 @@ async def test_usage_days_deletes_the_ledger_and_its_steps_by_cascade(env: Clini
     assert seed.count("agent.usage_steps", env.clinic_id) == 2
 
 
-async def test_old_job_runs_are_deleted_but_a_running_row_never(env: ClinicEnv, seed: Seed) -> None:
+async def test_old_job_runs_are_deleted_but_a_running_row_never(env: RetentionEnv, seed: Seed) -> None:
     seed.job_run(env.clinic_id, "job-1", age=90, status="ok")
     seed.job_run(env.clinic_id, "job-1", age=90, status="error")
     seed.job_run(env.clinic_id, "job-1", age=90, status="running")
@@ -200,7 +201,7 @@ async def test_old_job_runs_are_deleted_but_a_running_row_never(env: ClinicEnv, 
     assert seed.count("agent.jobs", env.clinic_id) == 1, "the job itself (a promise to the patient) stays"
 
 
-async def test_a_second_run_deletes_nothing_more(env: ClinicEnv, seed: Seed) -> None:
+async def test_a_second_run_deletes_nothing_more(env: RetentionEnv, seed: Seed) -> None:
     seed.history(env.clinic_id, age=40, n=4)
     seed.memory(env.clinic_id, age=40)
     policy = _policy(history_days=30, memory_days=30)
@@ -214,18 +215,18 @@ async def test_a_second_run_deletes_nothing_more(env: ClinicEnv, seed: Seed) -> 
 
 
 async def test_work_is_done_in_batches_and_a_group_that_hits_the_cap_says_so(
-    env: ClinicEnv, seed: Seed
+    env: RetentionEnv, seed: Seed
 ) -> None:
     seed.history(env.clinic_id, age=40, n=7)
     runner = RetentionRunner(
         env.worker_db, _policy(history_days=30, batch_size=2), scopes=(Scope.AGENT,), max_batches=2
     )
-    first = await runner.run_scope(env.clinic_id, Scope.AGENT)
+    first = await runner.run_scope(Scope.AGENT)
     assert first.counts["history"] == 4
     assert first.capped == ["history"]
     assert seed.count("agent.history", env.clinic_id) == 3
-    second = await runner.run_scope(env.clinic_id, Scope.AGENT)
-    third = await runner.run_scope(env.clinic_id, Scope.AGENT)
+    second = await runner.run_scope(Scope.AGENT)
+    third = await runner.run_scope(Scope.AGENT)
     assert second.counts["history"] == 3
     assert second.capped == []
     assert third.counts["history"] == 0

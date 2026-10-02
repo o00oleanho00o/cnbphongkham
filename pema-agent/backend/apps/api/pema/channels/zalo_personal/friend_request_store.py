@@ -2,7 +2,7 @@
 """Store cho bảng ``agent.friend_requests`` (yêu cầu kết bạn ĐẾN đang chờ).
 
 Forced deviations: SQLite prepared statements at module level become SQLAlchemy ``text`` queries on Postgres,
-asynchronous, one unit of work per call through ``ClinicDatabase.session(clinic_id)`` (row level security by
+asynchronous, one unit of work per call through ``ClinicDatabase.session()`` (no row level security; by
 ``clinic_id``); every method takes the clinic id first. ``received_at`` is an aware ``datetime``
 (``timestamptz``)
 instead of epoch milliseconds. The table is created by Alembic 0002 (``friend-schema.ts`` row of PORT-MAP).
@@ -75,7 +75,7 @@ class FriendRequestStore:
         """Ghi/cập nhật một request. Người gửi lại (trùng PK) chỉ cập nhật, không đẻ dòng 2."""
         if not row.account_id or not row.from_uid:
             return
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 text(
                     "INSERT INTO agent.friend_requests "
@@ -104,7 +104,7 @@ class FriendRequestStore:
         chèn: nếu dòng vừa bị ADD/accept xóa trong lúc enrich thì đây là no-op - tránh dựng lại một dòng
         "ma" cho
         người đã thành bạn."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 text(
                     "UPDATE agent.friend_requests SET sender_name = :sender_name, avatar_url = :avatar_url "
@@ -120,7 +120,7 @@ class FriendRequestStore:
 
     async def xoa_friend_request(self, clinic_id: UUID, account_id: str, from_uid: str) -> bool:
         """Xóa dòng khi ADD/REJECT/UNDO hoặc accept/reject xong. Idempotent (xóa dòng đã mất vô hại)."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             result = await session.execute(
                 text(
                     "DELETE FROM agent.friend_requests "
@@ -132,7 +132,7 @@ class FriendRequestStore:
 
     async def list_friend_requests(self, clinic_id: UUID, account_id: str) -> list[FriendRequestRow]:
         """Mọi request đang chờ của một account, mới nhất trước."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             result = await session.execute(
                 text(
                     f"SELECT {_COLUMNS} FROM agent.friend_requests WHERE account_id = :account_id "  # noqa: S608
@@ -147,7 +147,7 @@ class FriendRequestStore:
     ) -> list[FriendRequestRow]:
         """Request đã chờ quá mốc (``received_at <= truoc_moc``) - cho vòng quét auto-accept.
         ``truoc_moc = now - delay_minutes``."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             result = await session.execute(
                 text(
                     f"SELECT {_COLUMNS} FROM agent.friend_requests "  # noqa: S608

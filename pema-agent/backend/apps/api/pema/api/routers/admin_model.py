@@ -43,7 +43,7 @@ from pema.config.runtime_llm_settings import (
 from pema.config.runtime_llm_settings import (
     LlmSettingsUpdate as StoredLlmUpdate,
 )
-from pema.config.runtime_settings_store import get_runtime_settings, set_settings_clinic
+from pema.config.runtime_settings_store import get_runtime_settings
 from pema.config.runtime_tuning_settings import (
     list_tuning,
     reset_tuning,
@@ -106,12 +106,6 @@ Audit = Annotated[AuditSink, Depends(provide_audit)]
 SIDECAR_KEYS = ("vision_mode", "vision_sidecar_base_url", "vision_sidecar_model", "vision_sidecar_api_key")
 
 
-def _enter(clinic_id: UUID) -> None:
-    """Make the synchronous settings readers belong to this request's clinic (every request has its own task
-    context, so nothing leaks to another request)."""
-    set_settings_clinic(clinic_id)
-
-
 # ----------------------------------------------------------------------------------------------- provider
 
 
@@ -130,13 +124,11 @@ def _llm_out() -> LlmSettingsOut:
 
 @router.get("/provider", response_model=LlmSettingsOut, summary="Effective LLM settings")
 async def get_provider(clinic_id: ClinicId) -> LlmSettingsOut:
-    _enter(clinic_id)
     return _llm_out()
 
 
 @router.patch("/provider", response_model=LlmSettingsOut, summary="Change provider, base URL, model or key")
 async def update_provider(body: LlmSettingsUpdate, clinic_id: ClinicId, audit: Audit) -> LlmSettingsOut:
-    _enter(clinic_id)
     # An EMPTY field from the form means "not entered", NOT "a valid empty value": the page sends the whole
     # form on every save, so a field not filled in arrives as an empty string. Rejecting it would lose what
     # the user JUST typed in another field (the state of a fresh install: paste a base URL and a key, model
@@ -170,7 +162,6 @@ async def update_provider(body: LlmSettingsUpdate, clinic_id: ClinicId, audit: A
 
 @router.delete("/provider", response_model=LlmSettingsOut, summary="Drop the override, back to env config")
 async def clear_provider(clinic_id: ClinicId, audit: Audit) -> LlmSettingsOut:
-    _enter(clinic_id)
     await clear_llm_settings(clinic_id)
     await audit("llm_settings.clear", [])
     return _llm_out()
@@ -185,7 +176,6 @@ async def test_provider(clinic_id: ClinicId) -> LlmTestResult:
     It goes through the STREAMING path the bot uses: testing one way while the bot runs another shows a green
     button while the bot dies of a 524, or the opposite, exactly when someone presses it to find the cause.
     """
-    _enter(clinic_id)
     try:
         result = await chay_stream(
             model=resolve_language_model(None),
@@ -222,13 +212,11 @@ def _vision_out() -> VisionSettingsOut:
 
 @router.get("/vision", response_model=VisionSettingsOut, summary="Vision sidecar settings")
 async def get_vision(clinic_id: ClinicId) -> VisionSettingsOut:
-    _enter(clinic_id)
     return _vision_out()
 
 
 @router.patch("/vision", response_model=VisionSettingsOut, summary="Change vision settings")
 async def update_vision(body: VisionSettingsUpdate, clinic_id: ClinicId, audit: Audit) -> VisionSettingsOut:
-    _enter(clinic_id)
     if body.provider not in (None, LlmProviderKind.OPENAI_COMPATIBLE):
         raise DomainError(
             ErrorCode.VALIDATION_FAILED, "Sidecar đọc ảnh chỉ hỗ trợ endpoint tương thích OpenAI."
@@ -267,7 +255,6 @@ async def update_vision(body: VisionSettingsUpdate, clinic_id: ClinicId, audit: 
 async def clear_vision_sidecar(clinic_id: ClinicId, audit: Audit) -> None:
     """Wipe the sidecar configuration, key included: the PATCH convention is "empty key = keep the old key",
     so there is no way to remove a key through PATCH."""
-    _enter(clinic_id)
     await clear_sidecar_settings(clinic_id)
     clear_vision_detection_cache()
     await audit("vision_sidecar.clear", [])
@@ -314,7 +301,6 @@ def _tuning_out() -> TuningOut:
     summary="Tuning parameters with effective values",
 )
 async def get_tuning_settings(clinic_id: ClinicId) -> TuningOut:
-    _enter(clinic_id)
     return _tuning_out()
 
 
@@ -346,7 +332,6 @@ def _check_value(key: str, value: object) -> str | None:
 
 @router.patch("/tuning", response_model=TuningOut, summary="Override tuning parameters (null removes)")
 async def update_tuning(body: TuningUpdate, clinic_id: ClinicId, audit: Audit) -> TuningOut:
-    _enter(clinic_id)
     values = body.values
     # Stop an unknown key: ``set_tuning`` writes straight to runtime_settings so an invented key would become
     # permanent garbage in the table
@@ -382,7 +367,6 @@ async def update_tuning(body: TuningUpdate, clinic_id: ClinicId, audit: Audit) -
     summary="Remove every tuning override",
 )
 async def reset_tuning_settings(clinic_id: ClinicId, audit: Audit) -> None:
-    _enter(clinic_id)
     await reset_tuning(clinic_id)
     await audit("tuning.reset", [])
 

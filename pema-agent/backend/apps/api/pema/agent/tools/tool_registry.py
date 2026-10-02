@@ -31,7 +31,6 @@ zalo-agent. Nothing is deleted: the tools stay in the catalogue and on the Tools
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from uuid import UUID
 
 from pema.agent.tools.tool_catalog import build_tool_definitions
 from pema.agent.tools.tool_deps import ToolDeps
@@ -91,16 +90,12 @@ class DefaultToolRegistry:
         ``definitions_for_agent`` because they depend on the agent."""
         return tuple(self._definitions)
 
-    def definitions_for_agent(self, agent_id: str, clinic_id: UUID | None = None) -> list[ToolSpec]:
+    def definitions_for_agent(self, agent_id: str) -> list[ToolSpec]:
         """Internal tools (static catalogue) plus the external tools of the MCP servers bound to this
         agent, merged HERE so the external tools inherit the whole filter below, with no shortcut."""
         external: Sequence[ToolSpec] = ()
         if self._mcp_provider is not None and agent_id != "":
-            external = (
-                self._mcp_provider.tools_for_agent_in_clinic(clinic_id, agent_id)
-                if clinic_id is not None
-                else self._mcp_provider.tools_for_agent(agent_id)
-            )
+            external = self._mcp_provider.tools_for_agent(agent_id)
         return [*self._definitions, *external]
 
     def check_availability(self, spec: ToolSpec, scope: ToolScope) -> ToolAvailability:
@@ -135,7 +130,7 @@ class DefaultToolRegistry:
         disabled = {*scope.agent_disabled_tools, *scope.account_disabled_tools}
         return [
             spec
-            for spec in self.definitions_for_agent(scope.agent_id, scope.clinic_id)
+            for spec in self.definitions_for_agent(scope.agent_id)
             if spec.key not in disabled
             and not (isolated and not spec.runs_in_scheduled_turn)
             and self.check_availability(spec, scope).usable

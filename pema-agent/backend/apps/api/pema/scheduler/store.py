@@ -1,8 +1,8 @@
 """``SchedulerPort`` over Postgres (new module, no zalo-agent source).
 
 The seam B2 (CRM rules), D4 (``schedule_task``) and the admin API push jobs through, without editing any code
-of package S. It composes the ported stores; every method sets the clinic context itself from ``clinic_id``
-(the stores open ``db.session(clinic_id)``), so callers never manage RLS.
+of package S. It composes the ported stores; every method opens its own unit of work (the stores open
+``db.session()``) and filters by ``clinic_id``, so callers never manage a context.
 
 ``create_job`` is where ``PolicyHooks.check_job`` is called at creation (CONTRACTS section 3): a ``deny`` is
 raised as ``DomainError(POLICY_DENIED)``; a ``downgrade_to_draft`` is accepted (the job is stored and is

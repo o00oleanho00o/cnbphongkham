@@ -117,7 +117,7 @@ def _is_appointment_proposal(item: dict[str, Any]) -> bool:
 
 
 async def _appointments_at(loop: Loop, local_start: str) -> int:
-    async with loop.api.db.session(loop.clinic_id) as session:
+    async with loop.api.db.session() as session:
         return int(
             (
                 await session.execute(

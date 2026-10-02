@@ -72,7 +72,8 @@ import mode.caddy
 	}
 
 	# The bridge posts its events to the API over the compose network (http://api:8000), never through here. It
-	# authenticates with an HMAC, but there is no reason to leave the route reachable from the internet.
+	# authenticates with an HMAC, but there is no reason to leave the route reachable from the internet. The path
+	# is /api/v1/webhooks/zalo-bridge/<account_id> (one installation = one clinic: no clinic segment).
 	handle /api/v1/webhooks/zalo-bridge/* {
 		respond "Not found" 404
 	}

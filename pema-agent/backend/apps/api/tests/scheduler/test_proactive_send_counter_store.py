@@ -225,20 +225,6 @@ async def test_reset_all_proactive_counters_wipes_every_row_of_the_clinic(make_e
     assert (await store.get_proactive_counter(env.clinic_id, "acc-khac:t-reset-2", "2026-08-01")).count == 0
 
 
-async def test_try_reserve_proactive_slot_cap_is_per_clinic_the_same_scope_key_in_two_clinics(
-    make_env: EnvMaker,
-) -> None:
-    """(clinic) cùng scope_key ở hai phòng khám là hai bộ đếm riêng"""
-    env_a = make_env()
-    env_b = make_env()
-    key = scope("t-chung")
-    assert await env_a.deps.counters.try_reserve_proactive_slot(env_a.clinic_id, key, "2026-08-01", 1) is True
-    assert (
-        await env_a.deps.counters.try_reserve_proactive_slot(env_a.clinic_id, key, "2026-08-01", 1) is False
-    )
-    assert await env_b.deps.counters.try_reserve_proactive_slot(env_b.clinic_id, key, "2026-08-01", 1) is True
-
-
 async def test_try_reserve_proactive_slot_race_of_many_concurrent_reservers_wins_exactly_the_cap(
     make_env: EnvMaker,
 ) -> None:

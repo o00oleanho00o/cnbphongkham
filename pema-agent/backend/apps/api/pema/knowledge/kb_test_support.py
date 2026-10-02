@@ -5,7 +5,8 @@ Replaces ``setupTestEnv`` / ``cleanupTestEnv`` of the original (a temporary data
 SQLite file per test file): here ONE throwaway Postgres with pgvector is reached through
 ``PEMA_TEST_DATABASE_URL`` (a superuser URL, see ``tests/test_database.py`` for how to start one). Every test
 module that uses ``KbTestDatabase.create()`` DROPS every Pema schema first and re-runs the Alembic history, so
-never point the variable at data you care about.
+never point the variable at data you care about. Single tenant: the migration creates the ONE clinic of the
+database; ``clinic_id`` is its id (``ensure_test_clinic``), there is no second clinic.
 
 The two runtime roles are logged in with the passwords set in the environment before the migration:
 ``worker_url`` = ``agent_worker`` (what the ingest worker and the ``kb_search`` tool run as, no privilege on
@@ -28,6 +29,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pema.core.db import ClinicDatabase
+from pema.core.testing import ensure_test_clinic
 
 API_DIR = Path(__file__).resolve().parents[2]
 BE_PASSWORD = "be-app-test-secret"  # noqa: S105 - throwaway test database
@@ -42,8 +44,8 @@ class KbTestDatabase:
     def __init__(self, admin_url: str) -> None:
         self.admin_url = admin_url
         self.admin_engine: Engine = create_engine(admin_url)
-        self.clinic_id = uuid.uuid4()
-        self.other_clinic_id = uuid.uuid4()
+        self.clinic_id: uuid.UUID = uuid.UUID(int=0)
+        """Replaced by the id of the clinic the migration created (see ``create``)."""
 
     @classmethod
     def create(cls, admin_url: str) -> KbTestDatabase:
@@ -57,11 +59,7 @@ class KbTestDatabase:
             conn.execute(text("DROP TABLE IF EXISTS public.alembic_version_pema"))
         command.upgrade(Config(str(API_DIR / "alembic.ini")), "heads")
         with self.admin_engine.begin() as conn:
-            for clinic_id, slug in ((self.clinic_id, "kb-test-a"), (self.other_clinic_id, "kb-test-b")):
-                conn.execute(
-                    text("INSERT INTO clinic.clinic (id, slug, name) VALUES (:id, :slug, :name)"),
-                    {"id": clinic_id, "slug": slug, "name": f"Synthetic {slug}"},
-                )
+            self.clinic_id = ensure_test_clinic(conn)
         return self
 
     def role_url(self, role: str) -> str:
@@ -100,7 +98,6 @@ class KbTestDatabase:
         agent_id: str,
         *,
         policy_profile: str = "staff_assistant",
-        clinic_id: uuid.UUID | None = None,
     ) -> None:
         """``staff_assistant`` by default: the ported tests assume an agent that may read every source; the
         ``patient_channel`` gating has tests of its own."""
@@ -108,7 +105,7 @@ class KbTestDatabase:
             "INSERT INTO agent.agents (clinic_id, id, name, policy_profile) "
             "VALUES (:c, :id, :name, :p) ON CONFLICT DO NOTHING",
             {
-                "c": clinic_id or self.clinic_id,
+                "c": self.clinic_id,
                 "id": agent_id,
                 "name": f"Agent {agent_id}",
                 "p": policy_profile,
@@ -135,11 +132,7 @@ class KbHarness:
     def clinic_id(self) -> uuid.UUID:
         return self.kb_database.clinic_id
 
-    @property
-    def other_clinic_id(self) -> uuid.UUID:
-        return self.kb_database.other_clinic_id
-
     @asynccontextmanager
-    async def session(self, clinic_id: uuid.UUID | None = None) -> AsyncGenerator[AsyncSession]:
-        async with self.db.session(clinic_id or self.clinic_id) as session:
+    async def session(self) -> AsyncGenerator[AsyncSession]:
+        async with self.db.session() as session:
             yield session

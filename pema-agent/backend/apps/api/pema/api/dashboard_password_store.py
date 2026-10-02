@@ -66,7 +66,7 @@ async def change_password(
     """A user changes their OWN password. A borrowed cookie cannot do it without the current password."""
     if ctx.actor_type is not ActorType.USER or ctx.actor_user_id is None:
         raise DomainError(ErrorCode.UNAUTHENTICATED, "Cần đăng nhập.")
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         user = await session.scalar(
             select(UserAccount).where(
                 UserAccount.id == ctx.actor_user_id, UserAccount.clinic_id == ctx.clinic_id
@@ -90,13 +90,13 @@ async def change_password(
 async def set_password(db: ClinicDatabase, ctx: ActionContext, user_id: UUID, new_password: str) -> None:
     """The OWNER resets another account's password (``admin.users``, owner only). Every session of that user
     ends, including one the user is working in right now. Not for one's own account (that is
-    ``change_password``, which asks for the current password). A user of another clinic is a 404, exactly like
-    an unknown id (row level security leaves nothing to find), so ids cannot be probed across clinics."""
+    ``change_password``, which asks for the current password). An unknown id, or an account that is not
+    staff, is a 404."""
     require(ctx, Permission.ADMIN_USERS)
     if ctx.actor_user_id == user_id:
         raise DomainError(ErrorCode.VALIDATION_FAILED, RESET_OWN_MESSAGE)
     _check_new_password(new_password)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         user = await session.scalar(
             select(UserAccount).where(UserAccount.id == user_id, UserAccount.clinic_id == ctx.clinic_id)
         )

@@ -90,7 +90,7 @@ async def deliver_queued_message(
     Idempotent: a message that is no longer ``queued`` is returned untouched, so a retried request does not
     send twice. Returns ``None`` only when the message does not exist.
     """
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row = await session.scalar(
             select(Message).where(Message.id == message_id, Message.clinic_id == ctx.clinic_id)
         )
@@ -122,7 +122,7 @@ async def deliver_queued_message(
         _log.error("outbound delivery raised", err=exc, message_id=str(message_id))
         result = SendResult(status=SendStatus.REJECTED, error_code=ErrorCode.CHANNEL_UNAVAILABLE)
 
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row = await session.scalar(
             select(Message).where(Message.id == message_id, Message.clinic_id == ctx.clinic_id)
         )

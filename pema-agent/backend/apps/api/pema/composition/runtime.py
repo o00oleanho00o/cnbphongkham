@@ -19,6 +19,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Literal
+from uuid import UUID
 
 from redis.asyncio import Redis
 
@@ -59,7 +60,7 @@ from pema.config.runtime_tuning_settings import install_tuning_provider
 from pema.config.runtime_vision_settings import get_vision_settings, is_sidecar_configured
 from pema.conversation.media_store import ImageDownloader, MediaStore
 from pema.conversation.store import PostgresConversationStore
-from pema.core.db import ClinicDatabase
+from pema.core.db import ClinicDatabase, get_installation_clinic_id
 from pema.knowledge.embedding_client import EmbeddingSettings, OllamaEmbeddingClient
 from pema.knowledge.postgres_knowledge_store import PostgresKnowledgeStore
 from pema.mcp.mcp_agent_binding import McpBindingCache, PgMcpPolicyStore
@@ -139,6 +140,10 @@ class Runtime:
     snapshot: RuntimeSettingsSnapshot
     lock_backend: RedisLockBackend
 
+    async def clinic_id(self) -> UUID:
+        """The id of the one clinic of this installation (read once, then cached)."""
+        return await get_installation_clinic_id(self.db)
+
     async def close(self) -> None:
         await self.kb_availability.stop()
         await self.snapshot.stop_refresh_loop()
@@ -204,7 +209,7 @@ def build_runtime(
         embedder=_embedder_from_env() if embedder == "env" else embedder,
         data_dir=settings.data_dir,
     )
-    kb_availability = KbAvailabilitySnapshot(knowledge, database.list_active_clinic_ids)
+    kb_availability = KbAvailabilitySnapshot(knowledge)
 
     mcp_cache = McpBindingCache()
     mcp_servers = PgMcpServerStore(database)
@@ -213,7 +218,6 @@ def build_runtime(
         server_store=mcp_servers,
         binding_store=mcp_bindings,
         bindings=mcp_cache,
-        clinic_ids=database.list_active_clinic_ids,
         wrap=wrap_untrusted_content,
         fail=ket_qua_loi,
     )

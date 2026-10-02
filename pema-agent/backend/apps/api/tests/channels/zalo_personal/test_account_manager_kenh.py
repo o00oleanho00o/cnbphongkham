@@ -147,9 +147,8 @@ async def test_start_account_co_credential_thi_dua_cho_bridge_va_vao_so(rig: Rig
     await rig.seed_credential()
     await rig.manager.start_account(CLINIC, CA_NHAN)
 
-    (account_id, clinic_ref, credential, kill) = rig.bridge.started[0]
+    (account_id, credential, kill) = rig.bridge.started[0]
     assert account_id == CA_NHAN
-    assert clinic_ref == str(CLINIC), "webhook path nhận id phòng khám khi worker không biết slug"
     assert credential["imei"] == "imei-1"
     assert kill.on is False
     assert rig.manager.is_account_running(CLINIC, CA_NHAN)
@@ -197,7 +196,7 @@ async def test_start_account_kill_switch_dang_bat_duoc_day_xuong_bridge_cung_lan
     await rig.seed_credential()
     await rig.manager.start_account(CLINIC, CA_NHAN)
 
-    assert rig.bridge.started[0][3].on is True
+    assert rig.bridge.started[0][2].on is True
 
 
 async def test_start_account_bridge_loi_thi_bao_kenh_khong_kha_dung(rig: Rig) -> None:

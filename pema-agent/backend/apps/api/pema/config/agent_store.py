@@ -5,7 +5,7 @@
 
 Forced deviations:
 
-* SQLite sync -> SQLAlchemy async + Postgres (``clinic_id`` + RLS); the primary key is ``(clinic_id, id)``
+* SQLite sync -> SQLAlchemy async + Postgres (``clinic_id``, no RLS); the primary key is ``(clinic_id, id)``
   and ``accounts`` has a REAL foreign key to the agent, so deleting an agent that an account uses is also
   refused by the database (the explicit check stays for its message);
 * the original deleted the agent's Knowledge-Base and MCP bindings by hand in the same transaction
@@ -120,7 +120,7 @@ class AgentStoreImpl:
 
     async def ensure_default_agent(self, clinic_id: UUID) -> AgentProfile:
         """Agent mặc định luôn tồn tại - account mới/agent bị xóa đều rơi về đây."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(_LOCK, {"key": f"default-agent:{clinic_id}"})
             existing = (await session.execute(_GET_DEFAULT, {"clinic_id": clinic_id})).mappings().first()
             if existing is not None:
@@ -138,7 +138,7 @@ class AgentStoreImpl:
         return to_profile(clinic_id, created)
 
     async def get_agent(self, clinic_id: UUID, agent_id: str) -> AgentProfile | None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (await session.execute(_GET, {"clinic_id": clinic_id, "id": agent_id})).mappings().first()
         return to_profile(clinic_id, row) if row is not None else None
 
@@ -157,7 +157,7 @@ class AgentStoreImpl:
 
     async def list_agents_with_account_counts(self, clinic_id: UUID) -> list[tuple[AgentProfile, int]]:
         """``listAgents``: every agent with the number of accounts that use it (default first, then by id)."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (await session.execute(_LIST, {"clinic_id": clinic_id})).mappings().all()
         return [(to_profile(clinic_id, r), int(r["account_count"])) for r in rows]
 
@@ -171,7 +171,7 @@ class AgentStoreImpl:
         persona: str,
         policy_profile: PolicyProfileKey = PolicyProfileKey.PATIENT_CHANNEL,
     ) -> AgentProfile:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 _INSERT,
                 {
@@ -198,7 +198,7 @@ class AgentStoreImpl:
         if unknown:
             raise ValueError(f"update_agent: không được sửa các trường {sorted(unknown)}")
 
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             current_row = (
                 (await session.execute(_GET, {"clinic_id": clinic_id, "id": agent_id})).mappings().first()
             )
@@ -230,7 +230,7 @@ class AgentStoreImpl:
 
     async def delete_agent(self, clinic_id: UUID, agent_id: str) -> tuple[bool, str | None]:
         """Không xóa được agent mặc định hoặc agent đang có account dùng. ``(ok, reason)``."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (await session.execute(_GET, {"clinic_id": clinic_id, "id": agent_id})).mappings().first()
             if row is None:
                 return False, "Agent không tồn tại"

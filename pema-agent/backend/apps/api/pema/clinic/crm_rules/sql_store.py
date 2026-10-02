@@ -2,8 +2,8 @@
 """``CrmRuleStore`` over Postgres (schemas ``clinic`` and ``agent``) as role ``be_app``.
 
 Forced deviation: localStorage state becomes SQL. Every read is one bulk query per table (no query inside a
-loop), every write is one ``executemany``. ``async with db.session(clinic_id)`` sets the RLS context; each
-statement ALSO filters ``clinic_id`` (defence in depth).
+loop), every write is one ``executemany``. ``async with db.session()`` opens the unit of work; each
+statement filters ``clinic_id`` (the installation id).
 
 What the snapshots are built from:
 
@@ -98,14 +98,14 @@ class SqlCrmRuleStore:
 
     # ------------------------------------------------------------------ rules
     async def ensure_rules(self, clinic_id: UUID) -> None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await seed_default_rules(session, clinic_id)
 
     # ------------------------------------------------------------------- load
     async def load(self, clinic_id: UUID, now: datetime) -> ClinicCrmData:
         today = clinic_today(now)
         day_start = datetime.combine(today, time.min, tzinfo=VN_TZ)
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rules = await self._rules(session, clinic_id)
             patients = await self._patients(session, clinic_id, day_start)
             tasks = await _rows(
@@ -275,7 +275,7 @@ class SqlCrmRuleStore:
     # ------------------------------------------------------------------ apply
     async def apply(self, clinic_id: UUID, changes: StoreChanges) -> int:
         inserted = 0
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             if changes.new_tasks:
                 inserted = await self._insert_tasks(session, clinic_id, changes)
             superseded = 0

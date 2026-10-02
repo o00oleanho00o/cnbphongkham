@@ -44,7 +44,7 @@ async def test_nhanh_terminate_vi_qua_han_a_worker_really_over_the_deadline_keep
     # surely overruns - not a fragile threshold.
     cai_dat = CaiDatIngest(tran_lan_thu=2, co_doan_toi_da=1200, chong_lan=10, han_ms=300, tran_ram_mb=192)
 
-    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=cai_dat).xu_ly_mot_vong(kb.clinic_id)
+    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=cai_dat).xu_ly_mot_vong()
 
     async with kb.session() as s:
         sau = await lay_nguon(s, kb.clinic_id, n.id)

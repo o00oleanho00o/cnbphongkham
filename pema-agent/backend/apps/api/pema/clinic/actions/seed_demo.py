@@ -1,8 +1,9 @@
 # ported from: prototype/shared/crm-data.js (the eight CRM01 cases P025..P032),
 # prototype/shared/staff-context.js
-"""Synthetic demo data for one clinic: users of every role, patients, care, appointments, an Inbox, a review
-queue, consents, message templates and a few CRM tasks. EVERYTHING here is fictional (AGENT.md): the names
-say "mau" (sample), the phones are ``000...`` placeholders, the e-mails end in ``@example.test``.
+"""Synthetic demo data for the clinic of the installation (single tenant): users of every role, patients,
+care, appointments, an Inbox, a review queue, consents, message templates and a few CRM tasks. EVERYTHING
+here is fictional (AGENT.md): the names say "mau" (sample), the phones are ``000...`` placeholders, the
+e-mails end in ``@example.test``.
 
 Run (needs the migrated database and the ``be_app`` URL)::
 
@@ -10,13 +11,15 @@ Run (needs the migrated database and the ``be_app`` URL)::
     PEMA_SEED_PASSWORD='choose-one' uv run python -m pema.clinic.actions.seed_demo
 
 ``PEMA_SEED_PASSWORD`` is the password of every demo account. When it is not set a random one is generated
-and printed ONCE; there is no default password in the repository. The script is idempotent per clinic slug:
-a second run finds the clinic and stops. The demo day is the prototype's 2026-09-20 (``--today`` overrides) so
+and printed ONCE; there is no default password in the repository. The script is idempotent: a second run
+finds the demo owner account and stops. The clinic row itself is not created here: the migration creates it
+(``PEMA_CLINIC_NAME``) and the CLI makes sure it exists through ``pema.core.installation.ensure_clinic`` with
+the owner URL when one is configured. The demo day is the prototype's 2026-09-20 (``--today`` overrides) so
 the eight cases line up with ``crm-data.js``: P025 D+1 after laser, P026 D+3, P027 overdue, P028 missed,
 P029 abandoned plan, P030 dormant 180, P031 dormant 95, P032 birthday in a week.
 
-Creating the clinic row needs the RLS context of the NEW clinic id (``WITH CHECK id = current_clinic_id``),
-which ``ClinicDatabase.session`` provides.
+The ids of the demo rows are derived from the fixed key ``DEMO_SLUG`` (it is a namespace for ``uuid5``, not a
+clinic selector), so a re-run and a test always see the same ids.
 """
 
 from __future__ import annotations
@@ -29,11 +32,12 @@ from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from uuid import UUID, uuid5
 
+from sqlalchemy import select
+
 from pema.clinic import audit
 from pema.clinic.models import (
     Appointment,
     ChannelIdentity,
-    Clinic,
     Consent,
     Conversation,
     CrmTask,
@@ -47,8 +51,9 @@ from pema.clinic.models import (
     UserAccount,
 )
 from pema.clinic.rbac import passwords
-from pema.core.db import ClinicDatabase
+from pema.core.db import ClinicDatabase, get_installation_clinic_id
 from pema.core.event_loop import ensure_selector_event_loop_policy
+from pema.core.installation import ensure_clinic_async
 from pema_contracts.actions import ActionContext, ActionSource
 from pema_contracts.common import VN_TZ
 from pema_contracts.roles import ActorType, Role
@@ -97,26 +102,24 @@ class SeedResult:
     conversation_id: UUID | None = None
 
 
-async def seed_demo(
-    db: ClinicDatabase, *, password: str, today: date = DEMO_DAY, slug: str = DEMO_SLUG
-) -> SeedResult:
-    """Create the demo clinic and its data; do nothing when ``slug`` already exists."""
-    existing = await db.resolve_clinic(slug)
-    clinic_id = existing or _id("clinic", slug)
+async def seed_demo(db: ClinicDatabase, *, password: str, today: date = DEMO_DAY) -> SeedResult:
+    """Add the demo data to the clinic of the installation; do nothing when it is already there."""
+    slug = DEMO_SLUG
+    clinic_id = await get_installation_clinic_id(db)
     users = {key: _id("user", slug, key) for key, _, _ in USERS}
     patient_ids = {code: _id("patient", slug, code) for code, *_ in CASES}
     conversation_id = _id("conversation", slug, "P025")
-    if existing is not None:
-        return SeedResult(existing, False, users, patient_ids, conversation_id)
+    async with db.session() as probe:
+        already = await probe.scalar(select(UserAccount.id).where(UserAccount.id == users["owner"]))
+    if already is not None:
+        return SeedResult(clinic_id, False, users, patient_ids, conversation_id)
 
     ctx = ActionContext(
         clinic_id=clinic_id, actor_type=ActorType.SYSTEM, source=ActionSource.SYSTEM, request_id="seed-demo"
     )
     password_hash = passwords.hash_password(password)
     stamp = _at(today, 9)
-    async with db.session(clinic_id) as session:
-        session.add(Clinic(id=clinic_id, slug=slug, name="Phòng khám Pema (dữ liệu mẫu)"))
-        await session.flush()
+    async with db.session() as session:
         for key, name, role in USERS:
             session.add(
                 UserAccount(
@@ -412,13 +415,29 @@ async def seed_demo(
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Seed synthetic demo data for one clinic.")
-    parser.add_argument("--slug", default=DEMO_SLUG)
+    parser = argparse.ArgumentParser(description="Seed synthetic demo data for this installation's clinic.")
     parser.add_argument("--today", default=DEMO_DAY.isoformat(), help="demo day, YYYY-MM-DD")
     return parser.parse_args(argv)
 
 
-async def _run(slug: str, today: date) -> int:
+async def _ensure_installed() -> None:
+    """Create the clinic row when ``PEMA_MIGRATION_DATABASE_URL`` (the owner URL) is set (idempotent)."""
+    import os
+
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    url = os.environ.get("PEMA_MIGRATION_DATABASE_URL")
+    if not url:
+        return
+    engine = create_async_engine(url)
+    try:
+        async with engine.begin() as conn:
+            await ensure_clinic_async(conn)
+    finally:
+        await engine.dispose()
+
+
+async def _run(today: date) -> int:
     import os
 
     from pema.config.env import get_settings
@@ -427,15 +446,16 @@ async def _run(slug: str, today: date) -> int:
     generated = not password
     if generated:
         password = secrets.token_urlsafe(12)
+    await _ensure_installed()
     db = ClinicDatabase(get_settings().database_url)
     try:
-        result = await seed_demo(db, password=password, today=today, slug=slug)
+        result = await seed_demo(db, password=password, today=today)
     finally:
         await db.dispose()
     if not result.created:
-        sys.stdout.write(f"Clinic '{slug}' already exists; nothing changed.\n")
+        sys.stdout.write("The demo data is already there; nothing changed.\n")
         return 0
-    sys.stdout.write(f"Seeded clinic '{slug}' with {len(USERS)} users and {len(CASES)} patients.\n")
+    sys.stdout.write(f"Seeded the demo clinic with {len(USERS)} users and {len(CASES)} patients.\n")
     if generated:
         sys.stdout.write(f"Generated password for every demo account (shown once): {password}\n")
     return 0
@@ -444,7 +464,7 @@ async def _run(slug: str, today: date) -> int:
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     ensure_selector_event_loop_policy()
-    return asyncio.run(_run(args.slug, date.fromisoformat(args.today)))
+    return asyncio.run(_run(date.fromisoformat(args.today)))
 
 
 if __name__ == "__main__":

@@ -3745,14 +3745,8 @@
       },
       "LoginRequest": {
         "additionalProperties": false,
+        "description": "Sign-in of a staff member. One installation is one clinic (single tenant): no clinic field.",
         "properties": {
-          "clinic_slug": {
-            "maxLength": 64,
-            "minLength": 1,
-            "pattern": "^[a-z0-9][a-z0-9-]*$",
-            "title": "Clinic Slug",
-            "type": "string"
-          },
           "email": {
             "maxLength": 254,
             "minLength": 3,
@@ -3768,7 +3762,6 @@
           }
         },
         "required": [
-          "clinic_slug",
           "email",
           "password"
         ],
@@ -23251,19 +23244,10 @@
         ]
       }
     },
-    "/api/v1/webhooks/zalo-bot/{clinic_slug}/{account_id}": {
+    "/api/v1/webhooks/zalo-bot/{account_id}": {
       "post": {
         "operationId": "webhooks_receive_zalo_bot_update",
         "parameters": [
-          {
-            "in": "path",
-            "name": "clinic_slug",
-            "required": true,
-            "schema": {
-              "title": "Clinic Slug",
-              "type": "string"
-            }
-          },
           {
             "in": "path",
             "name": "account_id",
@@ -23375,19 +23359,10 @@
         ]
       }
     },
-    "/api/v1/webhooks/zalo-bridge/{clinic_slug}/{account_id}": {
+    "/api/v1/webhooks/zalo-bridge/{account_id}": {
       "post": {
         "operationId": "webhooks_receive_zalo_bridge_event",
         "parameters": [
-          {
-            "in": "path",
-            "name": "clinic_slug",
-            "required": true,
-            "schema": {
-              "title": "Clinic Slug",
-              "type": "string"
-            }
-          },
           {
             "in": "path",
             "name": "account_id",

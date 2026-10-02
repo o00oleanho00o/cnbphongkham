@@ -101,17 +101,6 @@ async def test_delete_thread_session_cancels_the_pending_batch_before_deleting_a
     assert "tin" not in str(details), "audit chỉ chứa id và số đếm, không chứa nội dung tin"
 
 
-async def test_delete_thread_session_of_another_clinic_is_not_reachable(h: Harness) -> None:
-    """(thêm) phòng khám khác: cùng account/thread id nhưng khác clinic thì không xóa được"""
-    import uuid
-
-    await _seed(h)
-    other = h.env.add_clinic(uuid.uuid4(), (ACC,))
-    res = await h.client.delete(f"{API}/threads/{ACC}/{TH}", headers=h.headers_for(other))
-    assert res.status_code == 204
-    assert await _threads(h.env, TH) == 1, "dữ liệu của phòng khám A phải còn nguyên"
-
-
 # ----------------------------------------------------------------- DELETE /admin/contacts/{account}/{user}
 
 

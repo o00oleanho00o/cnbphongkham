@@ -1,14 +1,15 @@
 """Zalo Bot API webhook receiver (webhook mode of a bot account).
 
 New module (no TypeScript source: the original only long polled). A delivery is ``POST
-/api/v1/webhooks/zalo-bot/{clinic_slug}/{account_id}`` with the header ``X-Bot-Api-Secret-Token`` (the
+/api/v1/webhooks/zalo-bot/{account_id}`` with the header ``X-Bot-Api-Secret-Token`` (the
 ``secret_token`` given to ``setWebhook``) and a body ``{"ok": true, "result": {event_name, message}}``.
 
 Order of the steps, and why:
 
-1. Resolve the clinic from the slug and find the RUNNING channel of the account. An unknown clinic, an account
-  that is not running, and a wrong secret all answer the SAME 401 (``channel_webhook_rejected``): the endpoint
-  is public, so it must not tell a caller which clinics or accounts exist.
+1. Find the RUNNING channel of the account in the installation clinic (single tenant: one installation is one
+  clinic, so the path carries no clinic). An account that is not running and a wrong secret answer the SAME
+  401 (``channel_webhook_rejected``): the endpoint is public, so it must not tell a caller which accounts
+  exist. The only authentication is the secret token.
 2. ``ZaloBotChannel.verify_webhook`` (constant time, fail closed when no secret is configured) BEFORE any
   parsing.
 3. De-duplicate on ``update_id`` (``agent.channel_update_seen``). Zalo retries a delivery it did not get a 2xx
@@ -24,7 +25,7 @@ Keeping the handler quick matters: Zalo treats a slow answer as a failure and re
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Mapping
 from datetime import timedelta
 from typing import Protocol
 from uuid import UUID
@@ -40,6 +41,7 @@ from pema.shared.logger import create_logger
 from pema_contracts.channel import ChannelKind, ChannelRegistry
 from pema_contracts.conversations import WebhookAck
 from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.installation import installation_clinic_id
 
 _log = create_logger("zalo-bot-webhook")
 
@@ -78,7 +80,7 @@ class PostgresUpdateDedupe:
         self._db = db
 
     async def first_seen(self, clinic_id: UUID, account_id: str, update_id: str) -> bool:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 await session.execute(
                     text(
@@ -92,7 +94,7 @@ class PostgresUpdateDedupe:
         return row is not None
 
     async def forget(self, clinic_id: UUID, account_id: str, update_id: str) -> None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 text(
                     "DELETE FROM agent.channel_update_seen "
@@ -104,7 +106,7 @@ class PostgresUpdateDedupe:
     async def purge(self, clinic_id: UUID, older_than: timedelta = timedelta(days=7)) -> int:
         """Delete the marks older than ``older_than`` (Zalo does not retry after a few hours). To be called
         from a periodic job (open item for package G: no scheduler of C1 owns it)."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             result = await session.execute(
                 text(
                     "DELETE FROM agent.channel_update_seen "
@@ -119,28 +121,28 @@ class ZaloBotWebhookService:
     def __init__(
         self,
         *,
-        resolve_clinic: Callable[[str], Awaitable[UUID | None]],
         registry: ChannelRegistry,
         router: BotMessageRouter,
         dedupe: UpdateDedupe,
+        clinic_id: UUID | None = None,
     ) -> None:
-        self._resolve_clinic = resolve_clinic
+        self._clinic_id = clinic_id
+        """The installation clinic; ``None``: the process-wide installation id, read per delivery."""
         self._registry = registry
         self._router = router
         self._dedupe = dedupe
 
     async def receive(
         self,
-        clinic_slug: str,
         account_id: str,
         headers: Mapping[str, str],
         body: bytes,
         payload: Mapping[str, object],
     ) -> WebhookAck:
-        clinic_id = await self._resolve_clinic(clinic_slug)
-        channel = None if clinic_id is None else self._registry.get_running(clinic_id, account_id)
-        if clinic_id is None or channel is None or channel.kind is not ChannelKind.ZALO_BOT:
-            _log.warning("Webhook cho clinic/account không chạy", account_id=account_id)
+        clinic_id = self._clinic_id if self._clinic_id is not None else installation_clinic_id()
+        channel = self._registry.get_running(clinic_id, account_id)
+        if channel is None or channel.kind is not ChannelKind.ZALO_BOT:
+            _log.warning("Webhook cho account không chạy", account_id=account_id)
             raise DomainError(ErrorCode.CHANNEL_WEBHOOK_REJECTED, _REJECTED)
         if not channel.verify_webhook(headers, body):
             _log.warning("Webhook sai secret", account_id=account_id)

@@ -14,6 +14,7 @@ import pytest
 from sqlalchemy import Engine, text
 from sqlalchemy.exc import IntegrityError
 
+from pema.core.testing import ensure_test_clinic, truncate_installation_data
 from pema.mcp.mcp_schema import STATUS_VALUES, agent_mcp_servers, mcp_servers
 
 pytestmark = pytest.mark.db
@@ -21,12 +22,9 @@ pytestmark = pytest.mark.db
 
 @pytest.fixture
 def clinic(pg_admin: Engine) -> uuid.UUID:
-    clinic_id = uuid.uuid4()
     with pg_admin.begin() as conn:
-        conn.execute(
-            text("INSERT INTO clinic.clinic (id, slug, name) VALUES (:id, :slug, 'Synthetic')"),
-            {"id": clinic_id, "slug": f"s-{clinic_id.hex[:12]}"},
-        )
+        clinic_id = ensure_test_clinic(conn)
+        truncate_installation_data(conn)
         conn.execute(
             text("INSERT INTO agent.agents (clinic_id, id, name) VALUES (:c, 'ag', 'Agent')"),
             {"c": clinic_id},
@@ -115,8 +113,8 @@ def test_mcp_schema_the_sqlalchemy_declaration_matches_the_migration(pg_admin: E
     assert {c.name for c in agent_mcp_servers.c} == _columns(pg_admin, "agent_mcp_servers")
 
 
-def test_mcp_schema_both_tables_are_row_level_secured_per_clinic(pg_admin: Engine) -> None:
-    """cả hai bảng bật RLS theo clinic_id"""
+def test_mcp_schema_both_tables_carry_no_row_level_security_single_tenant(pg_admin: Engine) -> None:
+    """một bản cài đặt là một phòng khám: cả hai bảng không còn RLS (migration st_0009_single_tenant)"""
     with pg_admin.connect() as conn:
         rows = conn.execute(
             text(
@@ -124,7 +122,7 @@ def test_mcp_schema_both_tables_are_row_level_secured_per_clinic(pg_admin: Engin
                 "WHERE n.nspname = 'agent' AND c.relname IN ('mcp_servers', 'agent_mcp_servers')"
             )
         ).all()
-    assert {(r[0], r[1]) for r in rows} == {("mcp_servers", True), ("agent_mcp_servers", True)}
+    assert {(r[0], r[1]) for r in rows} == {("mcp_servers", False), ("agent_mcp_servers", False)}
 
 
 def test_mcp_schema_deleting_an_agent_or_a_server_cascades_to_the_bindings(

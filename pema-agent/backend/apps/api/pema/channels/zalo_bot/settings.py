@@ -56,5 +56,5 @@ def derive_webhook_secret(clinic_id: UUID, account_id: str) -> str:
     return hmac.new(key.get_secret_value().encode("utf-8"), message, hashlib.sha256).hexdigest()
 
 
-def webhook_url_for(base_url: str, clinic_slug: str, account_id: str) -> str:
-    return f"{base_url.rstrip('/')}/api/v1/webhooks/zalo-bot/{clinic_slug}/{account_id}"
+def webhook_url_for(base_url: str, account_id: str) -> str:
+    return f"{base_url.rstrip('/')}/api/v1/webhooks/zalo-bot/{account_id}"

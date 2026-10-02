@@ -186,7 +186,6 @@ class QrLoginManager:
 def bridge_qr_deps(
     bridge: BridgeGateway,
     attach: Callable[[UUID, str, QrLoginResult], Awaitable[None]],
-    clinic_ref: Callable[[UUID], Awaitable[str]],
     *,
     poll_seconds: float = 1.0,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
@@ -197,7 +196,7 @@ def bridge_qr_deps(
     async def login(
         clinic_id: UUID, account_id: str, on_event: Callable[[QrLoginEvent], None]
     ) -> QrLoginResult:
-        status = await bridge.start_qr_login(account_id, clinic_slug=await clinic_ref(clinic_id))
+        status = await bridge.start_qr_login(account_id)
         last_qr: str | None = None
         last_state = ""
         while True:
@@ -227,7 +226,6 @@ def build_qr_manager(
     bridge: BridgeGateway,
     manager: AccountManager,
     accounts: AccountStore,
-    clinic_ref: Callable[[UUID], Awaitable[str]],
     *,
     poll_seconds: float = 1.0,
 ) -> QrLoginManager:
@@ -240,6 +238,6 @@ def build_qr_manager(
             await manager.attach_account(clinic_id, config, result.own_id)
 
     return QrLoginManager(
-        bridge_qr_deps(bridge, attach, clinic_ref, poll_seconds=poll_seconds),
+        bridge_qr_deps(bridge, attach, poll_seconds=poll_seconds),
         stop_account=manager.stop_account,
     )

@@ -72,7 +72,7 @@ async def delete_thread_session(
 
     # Bước 2: xóa CHÍNH dòng session + lịch hẹn trỏ vào nó, trong một giao dịch.
     scope = {"clinic_id": clinic_id, "account_id": account_id, "thread_id": thread_id}
-    async with db.session(clinic_id) as session:
+    async with db.session() as session:
         jobs = affected_rows(await session.execute(_DELETE_THREAD_JOBS, scope))
         had_row = affected_rows(await session.execute(_DELETE_THREAD_ROW, scope)) > 0
 
