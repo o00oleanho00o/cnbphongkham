@@ -181,6 +181,8 @@ async function inboundStep(browser: Browser): Promise<void> {
   // only the owner and the doctors see: so this step uses the owner and a doctor (whose stream carries no ids)
   const owner = await signIn(browser, "owner@example.test", "/review");
   const doctor = await signIn(browser, "doctor.mai@example.test", "/review");
+  await owner.page.waitForTimeout(2_000); // let the first list load before counting
+  await doctor.page.waitForTimeout(2_000);
   const rowCount = (p: Page) => p.locator("ul > li > button").count();
   const ownerBefore = await rowCount(owner.page);
   const doctorBefore = await rowCount(doctor.page);
@@ -224,8 +226,8 @@ async function inboundStep(browser: Browser): Promise<void> {
   const resolved = await a.context.request.post(`${BASE}/api/v1/crm/tasks/${task.id}/resolve`, {
     data: {
       version: task.version,
-      outcome: "not_needed",
-      channel: "phone",
+      outcome: "no_need",
+      channel: "call",
       note: "kiem tra truc tiep (mau)",
       owner_user_id: task.owner_user_id,
     },
@@ -267,6 +269,11 @@ async function redisStep(browser: Browser): Promise<void> {
   );
   const listStillThere = await b.page.getByRole("button").count();
   say(`     page alive while Redis is down (${listStillThere} buttons on the page), no crash`);
+  await timed(
+    "while Redis is down the poll refresh drops the (unreadable) viewer line",
+    45_000,
+    () => PRESENCE_ANY(b.page).waitFor({ state: "detached", timeout: 45_000 }),
+  );
   dockerStep("start");
   say("     redis started");
   await timed("B's polling notice disappears (stream back)", 60_000, () =>
