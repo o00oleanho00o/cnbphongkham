@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import json
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from uuid import uuid4
 
 import pytest
@@ -30,7 +30,7 @@ async def _always_valid() -> StreamAccess | None:
     return EVERYTHING
 
 
-async def _next(stream: AsyncIterator[str], wait_s: float = 2.0) -> str:
+async def _next(stream: AsyncGenerator[str], wait_s: float = 2.0) -> str:
     return await asyncio.wait_for(anext(stream), wait_s)
 
 
@@ -234,7 +234,9 @@ async def test_the_stream_ends_when_the_session_is_no_longer_valid() -> None:
         checks.append(1)
         return None
 
-    stream = event_stream(hub, sub, access=EVERYTHING, refresh_access=session_gone, keepalive_s=0.03, recheck_s=0.03)
+    stream = event_stream(
+        hub, sub, access=EVERYTHING, refresh_access=session_gone, keepalive_s=0.03, recheck_s=0.03
+    )
     await _next(stream)
     with pytest.raises(StopAsyncIteration):
         for _ in range(10):
@@ -252,7 +254,9 @@ async def test_the_session_is_checked_again_every_interval_and_a_role_change_app
     async def now_narrower() -> StreamAccess | None:
         return narrowed
 
-    stream = event_stream(hub, sub, access=EVERYTHING, refresh_access=now_narrower, keepalive_s=0.03, recheck_s=0.03)
+    stream = event_stream(
+        hub, sub, access=EVERYTHING, refresh_access=now_narrower, keepalive_s=0.03, recheck_s=0.03
+    )
     await _next(stream)
     assert await _next(stream) == KEEPALIVE_FRAME  # first idle tick: access re-read, nothing allowed now
     await bus.publish(LiveEvent(type=LiveEventType.INBOX_CHANGED, id=uuid4()))

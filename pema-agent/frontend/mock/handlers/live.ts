@@ -6,13 +6,7 @@
 //   GET    /api/v1/staff/assignable               [{id, name, role}] for EVERY signed-in staff member
 import { USERS } from "../auth";
 import { fail, type Ctx, type Reply, type Router, type Session } from "../core";
-import {
-  emitLive,
-  leavePresence,
-  subscribe,
-  touchPresence,
-  type PresenceState,
-} from "../live-bus";
+import { emitLive, leavePresence, subscribe, touchPresence, type PresenceState } from "../live-bus";
 
 const HEARTBEAT_MS = 15_000;
 
@@ -51,12 +45,16 @@ export function register(r: Router): void {
     return { status: 204 };
   });
 
-  r.delete("/api/v1/conversations/{conversation_id}/presence", "conversation.read", (ctx): Reply => {
-    const s = session(ctx);
-    const conversationId = ctx.params.conversation_id ?? "";
-    if (leavePresence(conversationId, s.userId)) emitLive("presence.changed", conversationId);
-    return { status: 204 };
-  });
+  r.delete(
+    "/api/v1/conversations/{conversation_id}/presence",
+    "conversation.read",
+    (ctx): Reply => {
+      const s = session(ctx);
+      const conversationId = ctx.params.conversation_id ?? "";
+      if (leavePresence(conversationId, s.userId)) emitLive("presence.changed", conversationId);
+      return { status: 204 };
+    },
+  );
 
   r.get("/api/v1/staff/assignable", null, (ctx): Reply => {
     session(ctx);

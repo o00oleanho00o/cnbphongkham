@@ -247,3 +247,21 @@ Hai nhánh cùng tồn tại; **tính năng về sau làm trên `feat/single-ten
 | Phòng khám thứ hai | thêm một dòng `clinic.clinic` | dựng một bộ mới hoàn toàn (`infra/README.md`) |
 
 Lý do chọn một phòng khám mỗi bản cài: yêu cầu bảo mật cao của phòng khám, bệnh viện, ngân hàng (dữ liệu hai tổ chức không chung CSDL, Redis, khóa hay tiến trình; không phải tin vào một chốt phần mềm duy nhất). Cách làm tính năng: viết trên `feat/single-tenant`; nhánh đa phòng khám nhận bản backport chỉ khi có yêu cầu cụ thể, và hai nhánh không được gộp lại với nhau (migration `st_0009` bỏ RLS). Việc mở: ứng dụng bệnh nhân (web/KMP) và mọi client khác gọi đăng nhập theo slug hoặc đường webhook có đoạn phòng khám phải đổi theo (mục SCOPE-AI01 mục 9, việc 12).
+
+
+## 15. Cập nhật trực tiếp và hiện diện (gói ST-R)
+
+Worker (nháp, trả lời của agent) và API (webhook, thao tác của nhân viên) là hai tiến trình, nên một thay đổi ở tiến trình này phải tới luồng SSE do tiến trình kia phục vụ. Hai bên gặp nhau ở Redis pub/sub, MỘT kênh cho mỗi bản cài (`pema:live:<clinic_id>`):
+
+```
+nơi ghi (API hoặc worker) --commit--> emit_live(type, id) --gộp 200 ms--> PUBLISH --> Redis
+                                                                                      |
+ trình duyệt <-- GET /api/v1/events (SSE) <-- LiveHub (MỘT subscribe mỗi tiến trình API) <--+
+```
+
+* Cổng `LiveEventBus` (adapter Redis và adapter bộ nhớ cho test) nằm ở package `pema.live`, không import `pema.clinic`. Mã nghiệp vụ chỉ gọi `emit_live(...)` SAU khi commit; hàm không bao giờ ném lỗi, nên Redis hỏng không làm hỏng thao tác nghiệp vụ (chỉ ghi log không PII, tối đa mỗi 30 giây một dòng).
+* Điểm phát: tin đến (`record_inbound_message`), nháp và cảnh báo (`create_review_item`), tin đi (`record_outbound_message`, `deliver_queued_message`), giao việc hoặc đổi trạng thái hội thoại, quyết định hàng đợi duyệt, giải quyết việc CSKH, lượt chạy luật CRM.
+* Sự kiện chỉ nói "có gì đó đổi, hãy tải lại": `type` + `id`. FE tải lại bằng API thường nên phân quyền vẫn do backend quyết. Mỗi vai chỉ nhận loại sự kiện mà vai đó được đọc; luồng của bác sĩ (chỉ thấy bệnh nhân của mình) không mang id.
+* Hiện diện: Redis, một sorted set mỗi hội thoại (điểm = thời điểm hết hạn), TTL 30 giây, nhịp 15 giây từ FE. Danh sách `viewers` đọc một lượt pipeline cho cả trang hội thoại. Redis hỏng thì `viewers` rỗng và nhịp vẫn trả 204. Không bao giờ chặn gửi.
+* Hạ tầng: Caddy không nén `/api/v1/events` (`encode` có matcher loại trừ), `flush_interval -1` đã có ở `to_api`, header `Cache-Control: no-cache, no-transform` và `X-Accel-Buffering: no`.
+* Giới hạn: 5 luồng mỗi người, 200 mỗi tiến trình API (đếm theo tiến trình; chạy nhiều tiến trình API thì cộng lại).

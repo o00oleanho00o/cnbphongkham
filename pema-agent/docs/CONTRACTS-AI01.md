@@ -365,3 +365,35 @@ the clinic calls `ctx.the_clinic_id()`. Python that needs the id calls `get_inst
 * New closed-loop tests: `tests/integration/test_loop_single_tenant.py` (real login with e-mail and password only, then
   `/me` and refresh; two Zalo bot accounts of the one clinic answer their own customers independently, each with its own
   webhook secret). The harness `pema.composition.testing.open_loop` takes `extra_accounts`.
+
+
+## 11. Live updates and presence (package ST-R)
+
+New package `pema.live` (`apps/api/pema/live/`) and DTOs in `pema_contracts.live`. No change to a table or a migration.
+
+### 11.1 HTTP
+
+| Route | Notes |
+|---|---|
+| `GET /api/v1/events` (tag `live`, operation `live_stream_events`) | `text/event-stream`, staff session cookie required (401 without). Default `message` event, `data` = `LiveEvent` JSON `{"type", "id"}`. First frame `retry: 3000`, then a comment `: keep-alive` every 15 s. Headers `Cache-Control: no-cache, no-transform`, `X-Accel-Buffering: no`. 429 `rate_limited` past 5 streams per person (200 per API process), 503 `channel_unavailable` while the bus is down (the FE then polls). Re-authorised every 15 s; ends with the session. |
+| `POST /api/v1/conversations/{conversation_id}/presence` | body `PresenceBeat` `{"state": "viewing" or "replying"}`, 204. Needs the right to read the conversation (403, 404 for a conversation that does not exist or is outside a doctor's scope). Entry TTL 30 s, FE beats every 15 s. 204 also when Redis is down. |
+| `DELETE /api/v1/conversations/{conversation_id}/presence` | 204, same authorization. |
+| `ConversationSummary.viewers` (list, detail, patch) | `[PresenceViewer {user_id, name, state}]`, the caller excluded, empty when presence is unavailable. |
+
+`LiveEventType`: `inbox.changed`, `tasks.changed`, `review.changed`, `presence.changed`. `id` is the conversation, task or review item, or null. **No payload ever carries message text, names, phones or any other PII.**
+
+Deviation from the first design note (agreed rule: the FE's existing shape wins): the heartbeat is `POST` (not `PUT`) with body key `state` (not `mode`), and `PresenceViewer` has `state`.
+
+### 11.2 Python surface
+
+* `pema.live.bus`: `LiveEventBus` Protocol (`publish`, `listen`), `InMemoryLiveEventBus` (tests, with `fail_publish` / `fail_listen` switches), `channel_name(clinic_id)` = `pema:live:<clinic_id>`, `encode_event` / `decode_event`. `pema.live.redis_bus.RedisLiveEventBus` is the Redis adapter.
+* `pema.live.emit_live(type, id=None)`: the ONE call business code makes, AFTER the commit; synchronous, never raises, no-op when no publisher is installed. `install_live_publisher` is called by `build_runtime` (both processes). Same `(type, id)` within 200 ms is sent once.
+* `pema.live.hub.LiveHub`: one bus subscription per API process, fan-out to the open streams, the per-person and per-process caps. `pema.live.sse.event_stream`: the stream body.
+* `pema.live.presence`: `PresenceStore` Protocol, `RedisPresenceStore`, `InMemoryPresenceStore`, `PresenceService` (never raises for a store failure; announces `presence.changed` when the set of viewers changes and once more after the last heartbeat expired).
+* `Runtime.live` (`LiveServices`) and `app.state.live`; `ApiLifecycle.start` starts the hub.
+* Where events are emitted: `ClinicAgentFacingActions.record_inbound_message` (not for a duplicate), `record_outbound_message`, `create_review_item` (review and conversation), `conversations.update_conversation` / `mark_conversation_read` / `send_message`, `outbound.deliver_queued_message`, `review_items.approve/reject/escalate`, `crm_tasks.resolve_task` / `create_activity`, `appointments.create_appointment` (when it links a task), `CrmRulesRunner.run_clinic` (tasks created or superseded). A new write site of the Inbox, the review queue or the tasks must call `emit_live` after its commit.
+* import-linter: `pema.live` is listed among the packages that may not import `pema.clinic.models`, `domain`, `rbac`, `audit`, `crm_rules` and among those that may not import `pema.api`, `pema.workers`, `pema.bootstrap`.
+
+### 11.3 Tests
+
+`apps/api/tests/live/` (bus, publisher, hub, stream, presence, routes; real Redis in `test_live_redis.py`) and `tests/integration/test_loop_live_events.py` (real API and worker over a real Redis).
