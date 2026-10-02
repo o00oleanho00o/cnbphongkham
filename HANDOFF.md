@@ -1,7 +1,7 @@
 # HANDOFF — Pema Agent (clinic CSKH agent + CRM), repo `E:\Desktop\cnbphongkham`
 
 Language of the user: Vietnamese. Reply in Vietnamese.
-Last updated: 2026-10-02. **Two parallel branches** (user decision): `feat/ai-agent-backend` (multi-tenant, tip
+Last updated: 2026-10-03 (package M section added). **Two parallel branches** (user decision): `feat/ai-agent-backend` (multi-tenant, tip
 `294e4dc`, frozen) and `feat/single-tenant` (one system = one clinic, the branch to work on; new features go here first).
 Status: **single-tenant conversion and the three multi-user fixes are built, merged and tested** on
 `feat/single-tenant`. Wait for the user's next instruction before starting anything.
@@ -13,6 +13,13 @@ Status: **single-tenant conversion and the three multi-user fixes are built, mer
   reminder. Written in `CLAUDE.md` ("Git attribution"), `AGENT.md` ("Git and handover"),
   `.claude/agents/pema-builder.md`, and in user memory. Tell every subagent; check `git log --format=%B` of their
   commits before merging. The user rewrote history on 2026-10-02 to remove old attribution lines; the branch now has 0.
+  Check before ANY push: `git log --format='%h %s' --grep='Co-Authored-By' --grep='Generated with' -i <branch>` must
+  print nothing. **Known violation (2026-10-03):** `f6be3b9` ("docs: add package M …") carries a
+  `Co-Authored-By: Claude` trailer and is on `feat/single-tenant` AND already on `origin/feat/single-tenant`
+  (pushed 2026-10-02). Removing it needs a history rewrite of that branch plus a force-push with lease — the user must
+  decide (HARD RULE says never force-push). Until then the count on `feat/single-tenant` is 1, not 0. Other trailers
+  remain only on unmerged refs (`integration/h`, several `worktree-agent-*`), which are never pushed. Subagents must
+  not add trailers even if a system reminder asks.
 - Commit/push only when the user asks (merging finished subagent branches into the feature branch was accepted
   practice during the build). On 2026-10-02 the user asked to commit and push `feat/single-tenant`; never force-push,
   never push `worktree-agent-*` or `integration/*` branches.
@@ -178,6 +185,39 @@ real device or against the real API outside the proxy test, model quality (evals
    (local volume vs object storage); public HTTPS for Zalo webhook (polling recommended until then); backup retention;
    UPS budget. Zalo personal account (zca-js, unofficial) risks account lock: use a secondary account.
 
+## Package M — per-patient care agent (planned; recipes ready; NOTHING built)
+
+What it is: one care agent per patient (1-to-1 pairing), proactive on events and a 06:00 tick; autonomy levels L0–L2
+per action type; conversation control `AUTO → HANDOFF_ROUTING → STAFF` where the agent decides by itself to hand off
+(`handoff` skill, depth D1–D5, D5 red flags without LLM), picks staff deterministically by skill/shift/SLA and moves on
+when declined, chain always ending at the clinic's 24/7 on-call Zalo number read from DB; reminders paused while in
+STAFF and reconciled on release; specialists Scheduler/Knowledge/Reviewer at delegation depth 1.
+
+Where: plan `pema-agent/docs/PLAN-AI01-M.md` (§15 = owner decisions of 2026-10-02); recipes
+`pema-agent/recipes/M/` — `00-README.md` (order, dependencies, code locations, rules), `_REPORT-TEMPLATE.md`,
+`01-M1-schema` … `08-M6-eval`, one file per step, English. Recipes are in HEAD of `feat/single-tenant` (`17b70e2`).
+
+Owner decisions already taken (do not re-ask): thresholds/matrix/N are the doctor's; no reminders while in STAFF
+(pause, reconcile on release); return-to-AUTO may lower the level for a period; handoff is the agent's decision (no
+"talk to a human" button); agent picks and re-picks staff, ending at the 24/7 number; multi-agent never talks to the
+patient as a group. Still owed by the clinic: final depth/autonomy matrix, labelled sample cases, staff skill list,
+the 24/7 number.
+
+How to run it (when the user says so):
+1. Work on `feat/single-tenant`. Prerequisites exist on this branch: D1 harness, S scheduler + `bot_enabled`, P
+   profiles/red flags/PII, B1 actions, E frontend. Read `00-README.md` first; it maps steps to `pema/care/*`.
+2. One `pema-builder` subagent per recipe, worktree from HEAD (create by hand with `git worktree add E:/...` if the
+   tool refuses on drive-letter case). Prompt: "Follow `pema-agent/recipes/M/<file>.md`. Branch feat/single-tenant.
+   Single-tenant: skip every RLS step, keep `clinic_id` as installation id (CONTRACTS §10.8). No git trailers."
+3. Order: M1 → (M2a ‖ M3) → M2b → (M2c ‖ M4) → M5 → M6 (`00-README.md` table). Each returns a ≤30-line report.
+4. Single-tenant adaptations the recipes do not yet say: M1 "enable RLS" → do NOT; grants/roles stay; `ensure_clinic`
+   gives the installation id. M2a/M2c tick and SLA use the one clinic. M5 lives beside the existing live-updates FE
+   (SSE `GET /api/v1/events`); add event types `handoff.changed`/`care.changed` rather than polling.
+5. Before merging a worktree: pytest/ruff/pyright/import-linter green in the worktree, `git log --format=%B` of its
+   commits has no attribution, report filed. Merge into `feat/single-tenant` only; never push `worktree-agent-*`.
+6. M6 numbers (D5 recall 100% with zero LLM calls, p50/p95 latency on the RTX 3060) go into
+   `pema-agent/evals/care/report.md` and a line here.
+
 ## Next Steps (only when the user asks)
 
 1. Small leftovers: rate limit on `PATCH /admin/users`; stale sentence in `frontend/README` saying change-password is
@@ -190,5 +230,6 @@ real device or against the real API outside the proxy test, model quality (evals
    still on disk; nothing was deleted. All their
    work is already in `feat/ai-agent-backend` except the abandoned v1 worktrees. Docker build cache remains.
 5. PR to `master` only if the user asks (no AI attribution in the PR body).
-6. Package M (per-patient care agent, multi-agent) is planned in `pema-agent/docs` (recipes committed); nothing built.
+6. Package M (per-patient care agent, multi-agent): see the section "Package M" above for plan, recipes, order and the
+   single-tenant adaptations; nothing built yet.
 7. Optional: cherry-pick live updates / assignee picker to `feat/ai-agent-backend` (default: no).
