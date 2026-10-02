@@ -13,6 +13,11 @@ trực tiếp, llama-server, Tailscale/WireGuard, ufw, NUT/UPS, timer systemd. C
 từng sản phẩm; mỗi mục có bước "kiểm tra" để bạn tự xác nhận. Chỗ nào ghi "(roadmap)" là kế hoạch, chưa dùng
 trong vận hành. Mã hóa age/gpg của sao lưu chưa chạy thử (chỉ nhánh bản không mã hóa).
 
+**Một hệ thống, một phòng khám** (nhánh `feat/single-tenant`). Mỗi bản cài phục vụ đúng MỘT phòng khám, có máy chủ,
+Postgres, Redis, tài khoản Zalo và khóa mã hóa riêng (yêu cầu bảo mật của phòng khám/bệnh viện/ngân hàng: dữ liệu của hai
+tổ chức không bao giờ chung một CSDL, một Redis hay một khóa). Muốn phục vụ phòng khám thứ hai, **dựng một bộ mới hoàn
+toàn** (mục 4, đoạn "Phòng khám thứ hai"), không thêm vào bản đang chạy.
+
 Quyết định đã chốt (PLAN-AI01 mục 8): PC chạy Ubuntu cài hẳn; LLM qua Ollama, sau chuyển llama-server; vị trí
 server (phòng khám hay cloud VN) chưa quyết nên tài liệu này viết cho cả hai.
 
@@ -126,17 +131,21 @@ docker run --rm --gpus all ubuntu nvidia-smi      # phải in cùng bảng như 
 ```bash
 sudo mkdir -p /opt/cnbphongkham && sudo chown "$USER" /opt/cnbphongkham
 git clone <địa-chỉ-repo> /opt/cnbphongkham && cd /opt/cnbphongkham/pema-agent
-git switch feat/ai-agent-backend
+git switch feat/single-tenant   # một phòng khám mỗi bản cài; feat/ai-agent-backend là nhánh đa phòng khám cũ (ARCH-AI01 mục 14)
 
 make infra-secrets            # tạo infra/.env với mật khẩu ngẫu nhiên (hex); từ chối ghi đè nếu đã có
-$EDITOR infra/.env            # xem lại; mục 7/8 nói khi nào đổi PEMA_*_BIND
+$EDITOR infra/.env            # đặt PEMA_CLINIC_NAME (tên phòng khám); xem lại; mục 7/8 nói khi nào đổi PEMA_*_BIND
 make up                       # postgres, redis, migrate (một lần), api
 make ps
 curl -fsS http://127.0.0.1:8000/healthz
 ```
 
 `make up` chạy theo thứ tự: Postgres khỏe, rồi dịch vụ một lần `migrate` (tạo role `be_app`/`agent_worker` và đặt
-mật khẩu từ biến môi trường, rồi `alembic upgrade heads`), rồi `api`. Worker, frontend, bridge Zalo cá nhân và
+mật khẩu từ biến môi trường, `alembic upgrade heads` tạo MỘT phòng khám từ `PEMA_CLINIC_NAME`, rồi kiểm tra
+`clinic.clinic` đúng một dòng và in tên), rồi `api`. Xem tên đã tạo: `docker compose -f infra/docker-compose.yml
+--env-file infra/.env logs migrate | grep clinic` (dòng `migrate: clinic '...' (id ...), exactly one row`). Chạy lại
+`make db-migrate` an toàn: không đổi tên và không đổi mã của phòng khám đã có. `PEMA_CLINIC_ID` (UUID, tùy chọn) chỉ cần khi
+muốn cố định mã cài đặt, ví dụ dựng lại hệ thống từ bản sao lưu. Worker, frontend, bridge Zalo cá nhân và
 Ollama nằm trong *profile* và **chỉ bật khi gói tương ứng đã có mã**:
 
 | Profile | Lệnh | Phụ thuộc |
@@ -152,6 +161,17 @@ Ollama nằm trong *profile* và **chỉ bật khi gói tương ứng đã có m
 nhất cho giai đoạn đầu là dùng chế độ **polling** của gói C1 (chỉ gọi ra ngoài, không cần cổng vào). Nếu bắt buộc
 webhook: mô hình C (cloud VN) với reverse proxy HTTPS chỉ chuyển tiếp đường `/api/v1/webhooks/*`, hoặc Tailscale
 Funnel cho đúng đường dẫn đó. Việc chọn là quyết định của chủ phòng khám (xem mục "Việc mở" trong báo cáo).
+
+Đường webhook không còn đoạn tên phòng khám: `/api/v1/webhooks/zalo-bot/<account_id>` (đặt qua `PEMA_ZALO_BOT_WEBHOOK_BASE_URL`;
+nếu trước đây đã đăng ký đường cũ có đoạn phòng khám thì đăng ký lại sau khi nâng cấp).
+
+**Phòng khám thứ hai = một bộ mới hoàn toàn.** Ưu tiên máy chủ khác. Cùng một máy Docker thì mọi thứ dưới đây phải khác bộ
+đầu: một bản sao `infra/.env` mới (`make infra-secrets`, mật khẩu và `PEMA_JWT_SECRET`, `PEMA_SECRET_ENCRYPTION_KEY` mới,
+không dùng lại), `COMPOSE_PROJECT_NAME` khác (container, mạng, volume riêng, nên Postgres và Redis cũng riêng), cổng host
+(`PEMA_PG_PORT`, `PEMA_REDIS_PORT`, `PEMA_API_PORT`, `PEMA_FRONTEND_PORT`, `PEMA_PROXY_*_PORT`) và `PEMA_PROXY_SUBNET`/`_IP_RANGE`/`_IP`
+khác, tên miền riêng, tài khoản Zalo riêng, `PEMA_CLINIC_NAME` riêng, thư mục sao lưu và khóa age riêng. Chi tiết:
+[`infra/README.md`](../README.md) mục "One system, one clinic". Không bao giờ trỏ hai bộ vào cùng một Postgres: role
+`be_app`/`agent_worker` là của cả cụm.
 
 Cập nhật phiên bản: `git pull && make up && make db-migrate` (migrate chạy lại an toàn, chỉ áp bản mới).
 
@@ -318,7 +338,9 @@ sudo ufw enable && sudo ufw status verbose
 4. **Cloud VN:** security group/firewall của nhà cung cấp chỉ cho phép 22 (từ IP quản trị), UDP 41641 nếu dùng
    Tailscale trực tiếp, và 443 nếu có reverse proxy cho webhook; không có luật cho 5432, 6379, 11434, 8000, 3000.
 5. **Redis có mật khẩu** (`PEMA_REDIS_PASSWORD`), **Postgres dùng scram-sha-256** và `be_app`/`agent_worker` không
-   phải superuser; `agent_worker` không có quyền gì trên `clinic.*` (thiết kế ở CONTRACTS-AI01 mục 5).
+   phải superuser; `agent_worker` không có quyền gì trên `clinic.*` (thiết kế ở CONTRACTS-AI01 mục 5). Từ nhánh
+   `feat/single-tenant` không còn RLS (CSDL chỉ có một phòng khám): `be_app` đọc mọi dòng của bảng nó có quyền, nên
+   cách ly nằm ở hạ tầng (CSDL, Redis, khóa riêng cho từng phòng khám) và ở quyền của hai role.
 
 Kiểm tra (làm một lần sau khi dựng, và sau mỗi lần đổi mạng):
 
@@ -361,7 +383,8 @@ sudo ufw status verbose
    đứng trước Caddy thì phải thêm dải của nó vào `PEMA_TRUSTED_PROXIES` **và** cấu hình `trusted_proxies` của Caddy.
    Cookie phiên `Secure` nên đăng nhập chỉ chạy qua https (trừ chế độ `off`).
 6. **Webhook Zalo Bot:** đặt `PEMA_ZALO_BOT_WEBHOOK_BASE_URL=https://clinic.example.com` (không có dấu `/` cuối) nếu dùng chế độ
-   `webhook`; đường `/api/v1/webhooks/*` đi qua, riêng webhook cầu nối Zalo cá nhân bị chặn từ ngoài.
+   `webhook`; đường `/api/v1/webhooks/zalo-bot/<account_id>` đi qua (không có đoạn phòng khám), riêng webhook cầu nối Zalo
+   cá nhân (`/api/v1/webhooks/zalo-bridge/*`) bị chặn từ ngoài.
 
 Chưa kiểm: Let's Encrypt thật (chế độ `auto`) chưa được thử; chế độ `internal` đã chạy thử trên máy dev.
 
@@ -418,7 +441,10 @@ sudo systemctl start pema-backup.service && journalctl -u pema-backup.service -n
 `backup-postgres.sh` làm: `pg_dump -Fc` + `pg_dumpall --globals-only` (role và hash mật khẩu), kiểm tra bằng
 `pg_restore --list` và sự có mặt của các schema `clinic`, `agent`, `clinic_agent`, gói vào một tệp, **mã hóa bằng
 age (hoặc gpg)**, xóa tệp quá `PEMA_BACKUP_KEEP_DAYS`, rồi gọi `PEMA_BACKUP_HOOK` để chép ra nơi khác. Script từ
-chối ghi bản không mã hóa, trừ khi `PEMA_BACKUP_ALLOW_PLAINTEXT=true` (chỉ để thử).
+chối ghi bản không mã hóa, trừ khi `PEMA_BACKUP_ALLOW_PLAINTEXT=true` (chỉ để thử). Vì một CSDL là một phòng khám, một tệp
+sao lưu là TOÀN BỘ dữ liệu phòng khám đó (bệnh nhân, tin nhắn, thông tin đăng nhập Zalo đã mã hóa): thư mục sao lưu và khóa
+riêng age phải được bảo vệ ngang với mật khẩu `be_app`, và phòng khám thứ hai dùng thư mục và khóa age khác.
+Script còn kiểm bản sao có dữ liệu `clinic.clinic`; `restore-verify` kiểm CSDL khôi phục có đúng một phòng khám và in tên.
 
 Quy tắc:
 - **Ba nơi:** ổ đĩa khác máy chủ (không phải chung ổ với Docker), một máy khác (qua Tailscale/rsync), và một nơi
@@ -483,7 +509,8 @@ upsc pema-ups                             # phải in battery.charge, ups.status
 | Chi phí | Mua máy chủ + UPS | Thuê VPS hàng tháng |
 | Việc phải làm thêm | Chống trộm/ cháy cho máy | Khóa SSH, security group, giám sát |
 
-Cả hai dùng cùng `docker-compose.yml` và cùng `.env`; chỉ khác địa chỉ bind và nơi đặt GPU. Chọn xong, ghi quyết định vào
+Cả hai dùng cùng `docker-compose.yml` và cùng cấu trúc `.env`; chỉ khác địa chỉ bind và nơi đặt GPU. Mỗi phòng khám có bộ
+riêng (một server hoặc một VPS riêng, hoặc ít nhất một project compose, `.env`, cổng và khóa riêng). Chọn xong, ghi quyết định vào
 `SPEC`/`ARCH-AI01` (gói F làm sau cùng).
 
 ---
@@ -491,7 +518,7 @@ Cả hai dùng cùng `docker-compose.yml` và cùng `.env`; chỉ khác địa c
 ## 13. Danh sách kiểm tra bàn giao
 
 - [ ] `nvidia-smi` thấy RTX 3060; `ollama ps` báo 100% GPU khi đang trả lời.
-- [ ] `make ps`: postgres, redis, api khỏe; `migrate` đã `Exited (0)`.
+- [ ] `make ps`: postgres, redis, api khỏe; `migrate` đã `Exited (0)` và log của nó có dòng `migrate: clinic '<tên>' ... exactly one row`.
 - [ ] `curl http://127.0.0.1:8000/healthz` trả `{"status":"ok",...}`.
 - [ ] `ss -ltnp` không có cổng 5432/6379 trên `0.0.0.0`; thử từ mạng ngoài thất bại (mục 8).
 - [ ] Nếu công khai qua Caddy (mục 8a): DNS đúng, chỉ 80/443 từ ngoài, `curl https://<tên miền>/healthz` ra 200, đăng nhập được (cookie `Secure`).
