@@ -368,4 +368,7 @@ async def create_activity(
             row.id,
             {"patient_id": str(payload.patient_id), "channel": payload.channel.value},
         )
-        return activity_out(row, await _owner_name(session, ctx, ctx.actor_user_id))
+        created = activity_out(row, await _owner_name(session, ctx, ctx.actor_user_id))
+    if payload.task_id is not None:
+        emit_live(LiveEventType.TASKS_CHANGED, payload.task_id)
+    return created

@@ -20,14 +20,10 @@ const spec = JSON.parse(
 const METHODS = new Set(["get", "post", "put", "patch", "delete"]);
 const EXEMPT = /\/webhooks\//;
 
-// Routes of the "several people at once" package (live events, presence, assignable staff). The contract is
-// agreed but the backend has not put them into openapi.json yet, so the mock serves them as PENDING. When the
-// regenerated openapi.json has one, remove it here: the last test fails on a stale entry.
-const PENDING_CONTRACT = [
-  "GET /api/v1/events",
-  "POST /api/v1/conversations/{conversation_id}/presence",
-  "GET /api/v1/staff/assignable",
-];
+// Routes of the "several people at once" package that the backend has not put into openapi.json yet, so the
+// mock serves them as PENDING (live events and presence are in the contract now). When the regenerated
+// openapi.json has one, remove it here: the last test fails on a stale entry.
+const PENDING_CONTRACT = ["GET /api/v1/staff/assignable"];
 
 function specOperations(): string[] {
   const ops: string[] = [];

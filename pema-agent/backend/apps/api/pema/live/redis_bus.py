@@ -11,6 +11,7 @@ survive pyright strict.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from typing import Any
 
@@ -42,11 +43,19 @@ class _RedisListener:
         self._pubsub = pubsub
 
     async def get(self, wait_s: float) -> LiveEvent | None:
-        message: Any = await self._pubsub.get_message(ignore_subscribe_messages=True, timeout=wait_s)
-        if message is None:
-            return None
-        data: Any = message.get("data")
-        return decode_event(data) if isinstance(data, str) else None
+        """Frames that are not live events (and the subscribe confirmation, which redis-py reports as an
+        empty read) are skipped without using up the wait."""
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + wait_s
+        while (remaining := deadline - loop.time()) > 0:
+            message: Any = await self._pubsub.get_message(ignore_subscribe_messages=True, timeout=remaining)
+            if message is None:
+                continue
+            data: Any = message.get("data")
+            event = decode_event(data) if isinstance(data, str) else None
+            if event is not None:
+                return event
+        return None
 
     async def aclose(self) -> None:
         try:

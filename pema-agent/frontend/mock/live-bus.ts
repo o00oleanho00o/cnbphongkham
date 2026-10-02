@@ -85,6 +85,15 @@ export function touchPresence(
   return changed;
 }
 
+/** Remove "this user is on this conversation" at once. True when they were listed. */
+export function leavePresence(conversationId: string, userId: string): boolean {
+  const people = presence.get(conversationId);
+  const beat = people?.get(userId);
+  if (!people || !beat) return false;
+  people.delete(userId);
+  return beat.expiresAt > Date.now();
+}
+
 /** Everybody else on the conversation (the caller is never listed), replying first. */
 export function viewersFor(conversationId: string, callerId: string): Viewer[] {
   const now = Date.now();
