@@ -207,6 +207,12 @@ async def update_patient(
         changed: list[str] = []
         sent = payload.model_fields_set
         owners_before = {name: getattr(row, name) for name in _ASSIGNEE_FIELDS}
+        # Validate BEFORE touching the row: the lookup autoflushes, and an unknown id would reach the foreign
+        # key (a 500) instead of the 422 below.
+        if "doctor_id" in sent and payload.doctor_id is not None:
+            await _check_assignee(session, ctx, payload.doctor_id, DOCTOR_ROLES, "bác sĩ")
+        if "cs_owner_id" in sent and payload.cs_owner_id is not None:
+            await _check_assignee(session, ctx, payload.cs_owner_id, CS_OWNER_ROLES, "CSKH")
         for name in _NULLABLE_UPDATE_FIELDS:
             if name in sent:
                 setattr(row, name, getattr(payload, name))
@@ -216,10 +222,6 @@ async def update_patient(
             if name in sent and value is not None:
                 setattr(row, name, value.value if name == "gender" else value)
                 changed.append(name)
-        if "doctor_id" in changed and row.doctor_id is not None:
-            await _check_assignee(session, ctx, row.doctor_id, DOCTOR_ROLES, "bác sĩ")
-        if "cs_owner_id" in changed and row.cs_owner_id is not None:
-            await _check_assignee(session, ctx, row.cs_owner_id, CS_OWNER_ROLES, "CSKH")
         with lost_race_is_conflict():
             await session.flush()
         details: dict[str, Any] = {"changed_fields": changed}
