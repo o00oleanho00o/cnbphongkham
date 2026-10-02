@@ -24,7 +24,7 @@ from pema.care.ports import CareAgentSnapshot
 from pema.core.db import ClinicDatabase
 
 
-def _snapshot(row: CareAgent) -> CareAgentSnapshot:
+def snapshot_of(row: CareAgent) -> CareAgentSnapshot:
     return CareAgentSnapshot(
         id=row.id,
         clinic_id=row.clinic_id,
@@ -43,7 +43,7 @@ class SqlCareStore:
     async def get_care_agent(self, care_agent_id: UUID) -> CareAgentSnapshot | None:
         async with self._db.session() as session:
             row = await session.get(CareAgent, care_agent_id)
-            return None if row is None else _snapshot(row)
+            return None if row is None else snapshot_of(row)
 
     async def get_control_state(self, patient_id: UUID) -> ControlState:
         async with self._db.session() as session:
@@ -57,7 +57,7 @@ class SqlCareStore:
         if after is not None:
             statement = statement.where(CareAgent.id > after)
         async with self._db.session() as session:
-            return [_snapshot(row) for row in await session.scalars(statement)]
+            return [snapshot_of(row) for row in await session.scalars(statement)]
 
     async def record_action(
         self,
