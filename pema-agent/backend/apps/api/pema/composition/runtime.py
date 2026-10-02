@@ -63,6 +63,8 @@ from pema.conversation.store import PostgresConversationStore
 from pema.core.db import ClinicDatabase, get_installation_clinic_id
 from pema.knowledge.embedding_client import EmbeddingSettings, OllamaEmbeddingClient
 from pema.knowledge.postgres_knowledge_store import PostgresKnowledgeStore
+from pema.live.publisher import install_live_publisher, installed_live_publisher
+from pema.live.services import LiveServices, build_redis_live_services
 from pema.mcp.mcp_agent_binding import McpBindingCache, PgMcpPolicyStore
 from pema.mcp.mcp_manager import DefaultMcpManager
 from pema.mcp.mcp_server_store import PgMcpServerStore
@@ -79,6 +81,7 @@ from pema.scheduler.store import PgSchedulerStore
 from pema.shared.download_image import download_image_as_base64
 from pema.workers.scheduler_worker import build_send_gate
 from pema_contracts.agent_turn import AgentEngine, AgentTurnRequest, AgentTurnResult, TurnCallbacks
+from pema_contracts.installation import installation_clinic_id
 from pema_contracts.knowledge import EmbeddingClient
 
 
@@ -139,6 +142,8 @@ class Runtime:
     scheduler: PgSchedulerStore
     snapshot: RuntimeSettingsSnapshot
     lock_backend: RedisLockBackend
+    live: LiveServices
+    """Live events and presence (ST-R): the publisher works in both processes, hub and presence the API."""
 
     async def clinic_id(self) -> UUID:
         """The id of the one clinic of this installation (read once, then cached)."""
@@ -146,6 +151,9 @@ class Runtime:
 
     async def close(self) -> None:
         await self.kb_availability.stop()
+        if installed_live_publisher() is self.live.publisher:
+            install_live_publisher(None)
+        await self.live.aclose()
         await self.snapshot.stop_refresh_loop()
         await self.ops.aclose()
         await self.redis_client.aclose()
@@ -279,6 +287,10 @@ def build_runtime(
     )
     lazy_engine.target = engine
 
+    live = build_redis_live_services(redis_client, installation_clinic_id)
+    if install_globals:
+        install_live_publisher(live.publisher)
+
     return Runtime(
         settings=settings,
         role=role,
@@ -308,4 +320,5 @@ def build_runtime(
         scheduler=scheduler,
         snapshot=snapshot,
         lock_backend=lock_backend,
+        live=live,
     )

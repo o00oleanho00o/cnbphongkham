@@ -38,10 +38,12 @@ from pema.clinic.crm_rules.jobs import (
 from pema.clinic.crm_rules.records import PatientSnapshot
 from pema.clinic.crm_rules.store import CrmRuleStore, StoreChanges
 from pema.config.runtime_tuning_settings import get_tuning_int
+from pema.live import emit_live
 from pema.shared.logger import create_logger
 from pema_contracts.common import VN_TZ, now_vn
 from pema_contracts.crm import TaskStatus
 from pema_contracts.errors import DomainError
+from pema_contracts.live import LiveEventType
 from pema_contracts.policy import DEFAULT_PROFILES, ProactiveCapScope
 from pema_contracts.scheduler import JobOrigin, ScheduledJob, SchedulerPort
 
@@ -134,6 +136,8 @@ class CrmRulesRunner:
                 now=moment,
             ),
         )
+        if inserted or outcome.superseded_keys:
+            emit_live(LiveEventType.TASKS_CHANGED)  # after the commit of ``apply``: "Việc hôm nay" reloads
 
         patients = {p.id: p for p in outcome.refreshed}
         jobs = await self._scheduler.list_jobs(clinic_id)

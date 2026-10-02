@@ -33,6 +33,7 @@ from pema.clinic.domain import appointments as rules
 from pema.clinic.models import Appointment, CrmTask, Patient, UserAccount
 from pema.clinic.rbac import is_doctor_scoped, require, require_any
 from pema.core.db import ClinicDatabase
+from pema.live import emit_live
 from pema_contracts.actions import ActionContext
 from pema_contracts.appointments import (
     AppointmentCreate,
@@ -43,6 +44,7 @@ from pema_contracts.appointments import (
 )
 from pema_contracts.common import Page
 from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.live import LiveEventType
 from pema_contracts.roles import Permission, Role
 
 DOCTOR_ROLES = (Role.DOCTOR.value, Role.OWNER.value)
@@ -309,7 +311,10 @@ async def create_appointment(
                 task.id,
                 {"appointment_id": str(row.id)},
             )
-        return appointment_out(row, code)
+        created = appointment_out(row, code)
+    if task is not None:
+        emit_live(LiveEventType.TASKS_CHANGED, task.id)
+    return created
 
 
 async def update_appointment(

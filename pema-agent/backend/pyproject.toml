@@ -106,6 +106,7 @@ source_modules = [
     "pema.images",
     "pema.video",
     "pema.workers",
+    "pema.live",
 ]
 forbidden_modules = [
     "pema.clinic.models",
@@ -129,6 +130,7 @@ source_modules = [
     "pema.documents",
     "pema.images",
     "pema.knowledge",
+    "pema.live",
     "pema.mcp",
     "pema.middleware",
     "pema.policy",

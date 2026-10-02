@@ -81,6 +81,7 @@ def wire_api(app: FastAPI, rt: Runtime, bot: BotStack, personal: PersonalStack) 
     state = app.state
     state.runtime = rt
     state.clinic_db = rt.db
+    state.live = rt.live
     state.outbound_delivery = RegistryOutboundDelivery(rt.accounts, rt.channels, rt.conversation)
     state.admin_stores = AdminStores(
         agents=rt.agents,
@@ -176,6 +177,7 @@ class ApiLifecycle:
         await rt.snapshot.refresh(await get_installation_clinic_id(rt.db, verify=True))
         rt.snapshot.start_refresh_loop()
         rt.kb_availability.start()
+        rt.live.hub.start()
         recovered = await self._bot.batcher.recover()
         log.info("batcher recovered", batches=recovered)
         started = await self._bot.manager.start_all()

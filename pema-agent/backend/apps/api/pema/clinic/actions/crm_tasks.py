@@ -38,6 +38,7 @@ from pema.clinic.actions.patients import CS_OWNER_ROLES, load_patient
 from pema.clinic.models import CrmActivity, CrmTask, Patient, ReviewItem, UserAccount
 from pema.clinic.rbac import is_doctor_scoped, require
 from pema.core.db import ClinicDatabase
+from pema.live import emit_live
 from pema_contracts.actions import ActionContext
 from pema_contracts.common import VN_TZ, Page
 from pema_contracts.crm import (
@@ -51,6 +52,7 @@ from pema_contracts.crm import (
     TaskStatus,
 )
 from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.live import LiveEventType
 from pema_contracts.review import ReviewKind, ReviewOrigin, RiskLevel
 from pema_contracts.roles import Permission, Role
 
@@ -263,7 +265,11 @@ async def resolve_task(
                 "handed_over_to_doctor": handed_over,
             },
         )
-        return task_out(task, code, owner.display_name)
+        resolved = task_out(task, code, owner.display_name)
+    emit_live(LiveEventType.TASKS_CHANGED, task_id)
+    if handed_over:
+        emit_live(LiveEventType.REVIEW_CHANGED)
+    return resolved
 
 
 async def _owner_name(session: AsyncSession, ctx: ActionContext, user_id: UUID | None) -> str | None:
