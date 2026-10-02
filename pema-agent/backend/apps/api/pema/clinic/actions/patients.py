@@ -30,6 +30,7 @@ from pema.clinic.actions._common import (
 )
 from pema.clinic.actions._mappers import patient_out
 from pema.clinic.actions._scope import patient_scope, require_patient_access
+from pema.clinic.actions.assignees import load_assignable_user
 from pema.clinic.models import Patient, UserAccount
 from pema.clinic.rbac import require
 from pema.core.db import ClinicDatabase
@@ -44,7 +45,12 @@ CS_OWNER_ROLES = (Role.CS_STAFF.value, Role.MANAGER.value, Role.OWNER.value)
 CODE_RETRIES = 5
 
 _NULLABLE_UPDATE_FIELDS = ("phone", "birth_date", "doctor_id", "cs_owner_id")
+_ASSIGNEE_FIELDS = ("doctor_id", "cs_owner_id")
 _NON_NULL_UPDATE_FIELDS = ("full_name", "gender", "marketing_opt_out")
+
+
+def _id_or_none(value: UUID | None) -> str | None:
+    return str(value) if value is not None else None
 
 
 async def load_patient(session: AsyncSession, ctx: ActionContext, patient_id: UUID) -> Patient:
@@ -80,16 +86,11 @@ async def patient_to_out(session: AsyncSession, ctx: ActionContext, row: Patient
 async def _check_assignee(
     session: AsyncSession, ctx: ActionContext, user_id: UUID, roles: tuple[str, ...], label: str
 ) -> None:
-    ok = await session.scalar(
-        select(UserAccount.id).where(
-            UserAccount.id == user_id,
-            UserAccount.clinic_id == ctx.clinic_id,
-            UserAccount.active.is_(True),
-            UserAccount.role.in_(roles),
-        )
+    """The treating doctor / the CSKH owner of a patient: active, of this installation, and a role that
+    is both assignable (``ASSIGNABLE_ROLES``) and the one this slot asks for."""
+    await load_assignable_user(
+        session, ctx, user_id, roles=roles, message=f"Người phụ trách ({label}) không hợp lệ."
     )
-    if ok is None:
-        raise DomainError(ErrorCode.VALIDATION_FAILED, f"Người phụ trách ({label}) không hợp lệ.")
 
 
 async def list_patients(
@@ -188,7 +189,11 @@ async def create_patient(db: ClinicDatabase, ctx: ActionContext, payload: Patien
             break
         if row is None:
             raise DomainError(ErrorCode.INTERNAL, "Không tạo được mã bệnh nhân. Vui lòng thử lại.")
-        await audit.record(session, ctx, "patient.create", "patient", row.id, {"code": row.code})
+        details: dict[str, Any] = {"code": row.code}
+        for name in _ASSIGNEE_FIELDS:
+            if getattr(row, name) is not None:
+                details[f"{name}_to"] = _id_or_none(getattr(row, name))
+        await audit.record(session, ctx, "patient.create", "patient", row.id, details)
         return await patient_to_out(session, ctx, row)
 
 
@@ -201,6 +206,7 @@ async def update_patient(
         check_version(row.version, payload.version)
         changed: list[str] = []
         sent = payload.model_fields_set
+        owners_before = {name: getattr(row, name) for name in _ASSIGNEE_FIELDS}
         for name in _NULLABLE_UPDATE_FIELDS:
             if name in sent:
                 setattr(row, name, getattr(payload, name))
@@ -216,7 +222,12 @@ async def update_patient(
             await _check_assignee(session, ctx, row.cs_owner_id, CS_OWNER_ROLES, "CSKH")
         with lost_race_is_conflict():
             await session.flush()
-        await audit.record(session, ctx, "patient.update", "patient", row.id, {"changed_fields": changed})
+        details: dict[str, Any] = {"changed_fields": changed}
+        for name in _ASSIGNEE_FIELDS:  # who now looks after the patient: ids only, never a name
+            if getattr(row, name) != owners_before[name]:
+                details[f"{name}_from"] = _id_or_none(owners_before[name])
+                details[f"{name}_to"] = _id_or_none(getattr(row, name))
+        await audit.record(session, ctx, "patient.update", "patient", row.id, details)
         return await patient_to_out(session, ctx, row)
 
 
