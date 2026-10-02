@@ -3,11 +3,7 @@
 // The integration package replaces them with `http.GET/POST` of the typed client.
 import { unwrap } from "@/lib/api/client";
 
-import {
-  parseAssignableStaff,
-  type AssignableStaff,
-  type PresenceState,
-} from "@/lib/live/live-types";
+import type { PresenceState } from "@/lib/live/live-types";
 
 type RawResult = { data?: unknown; error?: unknown; response: Response };
 
@@ -35,12 +31,6 @@ function safeJson(text: string): unknown {
   } catch {
     return undefined;
   }
-}
-
-/** `GET /api/v1/staff/assignable`: who a task or a conversation can be handed to. */
-export async function fetchAssignableStaff(signal?: AbortSignal): Promise<AssignableStaff[]> {
-  const data = await unwrap(rawRequest("GET", "/api/v1/staff/assignable", undefined, signal));
-  return parseAssignableStaff(data);
 }
 
 /** `POST /api/v1/conversations/{id}/presence`: "I am looking at / answering this". Best effort. */

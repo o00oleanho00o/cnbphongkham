@@ -1,9 +1,8 @@
-// Mock of the three routes for several people working at once (agreed contract; not in openapi.json yet, so
+// Mock of the routes for several people working at once (agreed contract; not in openapi.json yet, so
 // mock/contract.test.ts lists them as pending):
 //   GET  /api/v1/events                           SSE, `data: {"type": "...", "id": "..."}`; no message text
 //   POST /api/v1/conversations/{id}/presence      {state: "viewing" | "replying"} -> 204
-//   GET  /api/v1/staff/assignable                 [{id, name, role}] for EVERY signed-in staff member
-import { USERS } from "../auth";
+// (`GET /api/v1/staff/assignable` is in the contract now: mock/handlers/staff.ts.)
 import { fail, type Ctx, type Reply, type Router, type Session } from "../core";
 import { emitLive, subscribe, touchPresence, type PresenceState } from "../live-bus";
 
@@ -42,15 +41,5 @@ export function register(r: Router): void {
     if (touchPresence(conversationId, s.userId, state))
       emitLive("presence.changed", conversationId);
     return { status: 204 };
-  });
-
-  r.get("/api/v1/staff/assignable", null, (ctx): Reply => {
-    session(ctx);
-    const staff = USERS.filter((u) => u.active).map((u) => ({
-      id: u.id,
-      name: u.display_name,
-      role: u.role,
-    }));
-    return { body: staff };
   });
 }
