@@ -8,9 +8,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PresenceState } from "@/lib/live/live-types";
 import { PRESENCE_INTERVAL_MS, usePresenceHeartbeat } from "@/lib/live/use-presence-heartbeat";
 
-const api = vi.hoisted(() => ({ postPresence: vi.fn() }));
+const api = vi.hoisted(() => ({ postPresence: vi.fn(), leavePresence: vi.fn() }));
 
-vi.mock("@/lib/live/live-api", () => ({ postPresence: api.postPresence }));
+vi.mock("@/lib/live/live-api", () => ({
+  postPresence: api.postPresence,
+  leavePresence: api.leavePresence,
+}));
 
 function setVisibility(state: "visible" | "hidden") {
   Object.defineProperty(document, "visibilityState", { configurable: true, get: () => state });
@@ -28,6 +31,7 @@ function mount(conversationId: string, state: PresenceState) {
 beforeEach(() => {
   vi.useFakeTimers();
   api.postPresence.mockReset().mockResolvedValue(undefined);
+  api.leavePresence.mockReset().mockResolvedValue(undefined);
   setVisibility("visible");
 });
 
@@ -87,6 +91,29 @@ describe("usePresenceHeartbeat", () => {
     mount("c-1", "viewing");
     await vi.advanceTimersByTimeAsync(PRESENCE_INTERVAL_MS * 2);
     expect(api.postPresence).toHaveBeenCalledTimes(3);
+  });
+
+  it("tells the backend it left when the conversation closes or another one opens", () => {
+    const { rerender, unmount } = mount("c-1", "viewing");
+    expect(api.leavePresence).not.toHaveBeenCalled();
+    rerender({ id: "c-2", state: "viewing" });
+    expect(api.leavePresence).toHaveBeenLastCalledWith("c-1");
+    unmount();
+    expect(api.leavePresence).toHaveBeenLastCalledWith("c-2");
+  });
+
+  it("does not leave when the state only changes from viewing to replying", () => {
+    const { rerender } = mount("c-1", "viewing");
+    rerender({ id: "c-1", state: "replying" });
+    expect(api.leavePresence).not.toHaveBeenCalled();
+  });
+
+  it("ignores a failed leave call", async () => {
+    api.leavePresence.mockRejectedValue(new Error("down"));
+    const { unmount } = mount("c-1", "viewing");
+    unmount();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(api.leavePresence).toHaveBeenCalledTimes(1);
   });
 
   it("stops on unmount: no timer, no listener, no more beats", () => {

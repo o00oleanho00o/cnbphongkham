@@ -1510,6 +1510,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/conversations/{conversation_id}/presence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Presence heartbeat: I am looking at or answering this conversation
+         * @description Sent every 15 seconds while the conversation is open; an entry expires after 30 seconds. A WARNING shown to colleagues in `viewers`, never a lock: it does not block sending. Needs the right to read the conversation (403, or 404 when it is not visible). Answers 204 also when the presence store is unavailable.
+         */
+        post: operations["conversations_touch_presence"];
+        /** Presence: I left this conversation */
+        delete: operations["conversations_leave_presence"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/conversations/{conversation_id}/read": {
         parameters: {
             query?: never;
@@ -1590,6 +1611,26 @@ export interface paths {
         put?: never;
         /** Log a contact attempt and close or reschedule the task */
         post: operations["crm_resolve_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Live updates (server-sent events)
+         * @description Each event is the default `message` event whose data is a `LiveEvent` JSON. It says that something changed, never what: refetch the list you show. A comment line every 15 seconds keeps the connection open. The stream ends when the session ends; the browser reconnects by itself. 503 while the live bus is down (the screen then polls), 429 past 5 streams per person.
+         */
+        get: operations["live_stream_events"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2487,6 +2528,11 @@ export interface components {
             unread_count: number;
             /** Version */
             version: number;
+            /**
+             * Viewers
+             * @description Colleagues who have this conversation open now, the caller excluded. A warning, not a lock; empty when presence is unavailable.
+             */
+            viewers?: components["schemas"]["PresenceViewer"][];
         };
         /**
          * ConversationStatus
@@ -2526,6 +2572,11 @@ export interface components {
             unread_count: number;
             /** Version */
             version: number;
+            /**
+             * Viewers
+             * @description Colleagues who have this conversation open now, the caller excluded. A warning, not a lock; empty when presence is unavailable.
+             */
+            viewers?: components["schemas"]["PresenceViewer"][];
         };
         /** ConversationUpdate */
         ConversationUpdate: {
@@ -3191,6 +3242,23 @@ export interface components {
             /** Reason */
             reason?: string | null;
         };
+        /**
+         * LiveEvent
+         * @description The ``data`` of one server-sent event (default ``message`` event type).
+         */
+        LiveEvent: {
+            /**
+             * Id
+             * @description The changed object, or null for 'some of them'.
+             */
+            id?: string | null;
+            type: components["schemas"]["LiveEventType"];
+        };
+        /**
+         * LiveEventType
+         * @enum {string}
+         */
+        LiveEventType: "inbox.changed" | "tasks.changed" | "review.changed" | "presence.changed";
         /**
          * LlmProviderKind
          * @description ``LLM_PROVIDER_KINDS`` of src/config/llm-provider-kind.ts.
@@ -3880,6 +3948,35 @@ export interface components {
         PolicyProfilesOut: {
             /** Profiles */
             profiles: components["schemas"]["PolicyProfile"][];
+        };
+        /**
+         * PresenceBeat
+         * @description Body of the heartbeat the browser sends every 15 seconds while a conversation is open.
+         */
+        PresenceBeat: {
+            state: components["schemas"]["PresenceState"];
+        };
+        /**
+         * PresenceState
+         * @enum {string}
+         */
+        PresenceState: "viewing" | "replying";
+        /**
+         * PresenceViewer
+         * @description A colleague who has the conversation open now (the caller is never in the list).
+         */
+        PresenceViewer: {
+            /**
+             * Name
+             * @description Display name of the staff member; staff-only information.
+             */
+            name: string;
+            state: components["schemas"]["PresenceState"];
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
         };
         /**
          * ProactiveCapScope
@@ -14608,6 +14705,176 @@ export interface operations {
             };
         };
     };
+    conversations_touch_presence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PresenceBeat"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    conversations_leave_presence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     conversations_mark_conversation_read: {
         parameters: {
             query?: never;
@@ -15134,6 +15401,89 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    live_stream_events: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description text/event-stream of LiveEvent. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["LiveEvent"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ErrorResponse"];
                 };
             };
         };

@@ -1,11 +1,18 @@
-// Mock of the three routes for several people working at once (agreed contract; not in openapi.json yet, so
-// mock/contract.test.ts lists them as pending):
-//   GET  /api/v1/events                           SSE, `data: {"type": "...", "id": "..."}`; no message text
-//   POST /api/v1/conversations/{id}/presence      {state: "viewing" | "replying"} -> 204
-//   GET  /api/v1/staff/assignable                 [{id, name, role}] for EVERY signed-in staff member
+// Mock of the routes for several people working at once. Events and presence are in openapi.json (backend
+// package ST-R); `GET /api/v1/staff/assignable` is still pending, so mock/contract.test.ts lists it:
+//   GET    /api/v1/events                         SSE, `data: {"type": "...", "id": "..."}`; no message text
+//   POST   /api/v1/conversations/{id}/presence    {state: "viewing" | "replying"} -> 204
+//   DELETE /api/v1/conversations/{id}/presence    I left the conversation -> 204
+//   GET    /api/v1/staff/assignable               [{id, name, role}] for EVERY signed-in staff member
 import { USERS } from "../auth";
 import { fail, type Ctx, type Reply, type Router, type Session } from "../core";
-import { emitLive, subscribe, touchPresence, type PresenceState } from "../live-bus";
+import {
+  emitLive,
+  leavePresence,
+  subscribe,
+  touchPresence,
+  type PresenceState,
+} from "../live-bus";
 
 const HEARTBEAT_MS = 15_000;
 
@@ -41,6 +48,13 @@ export function register(r: Router): void {
     const conversationId = ctx.params.conversation_id ?? "";
     if (touchPresence(conversationId, s.userId, state))
       emitLive("presence.changed", conversationId);
+    return { status: 204 };
+  });
+
+  r.delete("/api/v1/conversations/{conversation_id}/presence", "conversation.read", (ctx): Reply => {
+    const s = session(ctx);
+    const conversationId = ctx.params.conversation_id ?? "";
+    if (leavePresence(conversationId, s.userId)) emitLive("presence.changed", conversationId);
     return { status: 204 };
   });
 
