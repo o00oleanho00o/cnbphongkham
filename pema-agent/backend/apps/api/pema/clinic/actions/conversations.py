@@ -44,6 +44,7 @@ from pema.clinic.models import (
 )
 from pema.clinic.rbac import require
 from pema.core.db import ClinicDatabase
+from pema.live import emit_live
 from pema_contracts.actions import ActionContext
 from pema_contracts.common import Page
 from pema_contracts.conversations import (
@@ -58,6 +59,7 @@ from pema_contracts.conversations import (
     SenderType,
 )
 from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.live import LiveEventType
 from pema_contracts.patients import ConsentKind
 from pema_contracts.roles import Permission, Role
 
@@ -223,6 +225,33 @@ async def get_conversation(db: ClinicDatabase, ctx: ActionContext, conversation_
         return await _one_out(session, ctx, conversation_id)
 
 
+async def require_conversation_access(db: ClinicDatabase, ctx: ActionContext, conversation_id: UUID) -> None:
+    """The same authorization as reading the conversation (``conversation.read``; a doctor only reaches the
+    conversations of their own patients): 403 without the permission, 404 when it does not exist here or is
+    out of scope. Presence uses it: whoever may read a conversation may say they are looking at it."""
+    require(ctx, Permission.CONVERSATION_READ)
+    async with db.session() as session:
+        await load_conversation(session, ctx, conversation_id)
+
+
+async def staff_display_names(
+    db: ClinicDatabase, ctx: ActionContext, user_ids: list[UUID]
+) -> dict[UUID, str]:
+    """Display names of active staff accounts, one query (the colleagues shown next to a conversation)."""
+    require(ctx, Permission.CONVERSATION_READ)
+    if not user_ids:
+        return {}
+    async with db.session() as session:
+        rows = await session.execute(
+            select(UserAccount.id, UserAccount.display_name).where(
+                UserAccount.clinic_id == ctx.clinic_id,
+                UserAccount.id.in_(user_ids),
+                UserAccount.active.is_(True),
+            )
+        )
+        return {row.id: row.display_name for row in rows.all()}
+
+
 async def update_conversation(
     db: ClinicDatabase, ctx: ActionContext, conversation_id: UUID, payload: ConversationUpdate
 ) -> ConversationOut:
@@ -269,7 +298,9 @@ async def update_conversation(
         await audit.record(
             session, ctx, "conversation.update", "conversation", row.id, {"changed_fields": changed}
         )
-        return await _one_out(session, ctx, conversation_id)
+        result = await _one_out(session, ctx, conversation_id)
+    emit_live(LiveEventType.INBOX_CHANGED, conversation_id)
+    return result
 
 
 async def mark_conversation_read(db: ClinicDatabase, ctx: ActionContext, conversation_id: UUID) -> None:
@@ -283,6 +314,7 @@ async def mark_conversation_read(db: ClinicDatabase, ctx: ActionContext, convers
         await audit.record(
             session, ctx, "conversation.mark_read", "conversation", row.id, {"cleared": cleared}
         )
+    emit_live(LiveEventType.INBOX_CHANGED, conversation_id)
 
 
 async def list_messages(
@@ -388,6 +420,7 @@ async def send_message(
                 {"conversation_id": str(conv.id), "proactive": payload.proactive},
             )
             message_id = row.id
+    emit_live(LiveEventType.INBOX_CHANGED, conversation_id)
     result = await deliver_queued_message(db, ctx, message_id, delivery)
     if result is None:  # pragma: no cover - the row was just written
         raise not_found("tin nhắn")
@@ -400,7 +433,9 @@ __all__ = [
     "list_messages",
     "load_conversation",
     "mark_conversation_read",
+    "require_conversation_access",
     "send_message",
+    "staff_display_names",
     "summaries",
     "update_conversation",
 ]

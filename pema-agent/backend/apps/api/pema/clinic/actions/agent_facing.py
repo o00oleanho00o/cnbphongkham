@@ -42,6 +42,7 @@ from pema.clinic.domain import review as review_rules
 from pema.clinic.domain.profile import ProfileFacts, days_between, lifecycle_stage
 from pema.clinic.rbac import require
 from pema.core.db import ClinicDatabase
+from pema.live import emit_live
 from pema_contracts.actions import ActionContext
 from pema_contracts.appointments import AppointmentCreate, AppointmentOut, AppointmentStatus
 from pema_contracts.channel import ChannelKind, InboundMessage
@@ -58,6 +59,7 @@ from pema_contracts.clinic_actions import (
 from pema_contracts.common import VN_TZ
 from pema_contracts.conversations import MessageStatus
 from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.live import LiveEventType
 from pema_contracts.review import (
     ReviewItemCreate,
     ReviewItemOut,
@@ -370,6 +372,9 @@ class ClinicAgentFacingActions:
                     sql("SELECT * FROM clinic_agent.review_item_summary WHERE id = :id"), {"id": item_id}
                 )
             ).one()
+        emit_live(LiveEventType.REVIEW_CHANGED, row.id)
+        if row.conversation_id is not None:
+            emit_live(LiveEventType.INBOX_CHANGED, row.conversation_id)
         return ReviewItemOut(
             id=row.id,
             kind=ReviewKind(row.kind),
@@ -452,6 +457,8 @@ class ClinicAgentFacingActions:
                     },
                 )
             ).one()
+        if not row.o_duplicate:
+            emit_live(LiveEventType.INBOX_CHANGED, row.o_conversation_id)
         return InboxRef(
             conversation_id=row.o_conversation_id,
             message_id=row.o_message_id,
@@ -496,4 +503,5 @@ class ClinicAgentFacingActions:
             if "conversation not found" in str(exc.orig):
                 raise not_found("hội thoại") from exc
             raise
+        emit_live(LiveEventType.INBOX_CHANGED, row.o_conversation_id)
         return InboxRef(conversation_id=row.o_conversation_id, message_id=row.o_message_id)
