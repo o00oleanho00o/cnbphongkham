@@ -164,6 +164,11 @@ const ALL: Permission[] = [
   "admin.policy",
   // The manager LISTS staff (`GET /admin/users`); changing them is `admin.users`, the owner's alone.
   "admin.users.read",
+  "care.read",
+  "care.act",
+  "care.admin",
+  "care.matrix",
+  "care.approve",
 ];
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
@@ -183,6 +188,10 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "review.decide",
     "review.decide_clinical",
     "kb.read",
+    "care.read",
+    "care.act",
+    "care.matrix",
+    "care.approve",
   ],
   cs_staff: [
     "patient.read",
@@ -199,6 +208,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "review.read",
     "review.decide",
     "kb.read",
+    "care.read",
+    "care.act",
   ],
   reception: [
     "patient.read",
