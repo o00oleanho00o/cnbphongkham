@@ -194,6 +194,7 @@ pyright strict + import-linter run by the director in the step's worktree, 0 att
 |---|---|---|---|---|
 | M1 schema, models, pairing | `care/m1` `d4c6dc5` | `4c7ae84` | pytest 4750 passed / 10 skipped / 0 failed; lint clean | 7 `agent.*` + 3 `clinic.*` tables, migration `m_0001_care_tables`, worker reads staff tables via `clinic_agent.*` views; open: `create_patient` does not call pairing yet; `patient_ownership` vs `patient.doctor_id` not synced |
 | M2a event loop, tick, window, cap | `care/m2a` `7fc0f0f` | `0ee3d17` | pytest 4798 / 10 / 0; lint clean | Protocols in `pema/care/ports.py` for Harness, ChannelSend, Scheduler, ReviewSink…; open: wiring adapters + webhook→`CareEventBus`, `TickRuleSource` impl, product question "night replies wait for 08:00?" |
+| M3 autonomy L0–L2, trust, override, kill switches | `care/m3` `aeb7c1b` | `0901452` | pytest 4827 / 10 / 0; lint clean | Settings in `agent.runtime_settings` keys `care.autonomy`/`care.kill_switch`; all thresholds `pending_doctor_approval`; open: `actions_log` needs `kind`/`initiator` columns (one migration, M2b/M2c/M4 also want it); M1 bug `autonomy_override` JSONB needs `none_as_null=True`; hooks to wire: B1 approve → `ReviewDecidedHook`, M2b `release_to_auto` → `set_override`, M4 → `KillSwitchState.blocks` |
 
 Pushed to `origin/feat/single-tenant` after each merge (user instruction 2026-10-03: push step by step, write HANDOFF
 when done). Running protocol: one `pema-builder` per recipe in a hand-made worktree (`git worktree add E:/... <base>`),
