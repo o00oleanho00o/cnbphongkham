@@ -13,7 +13,7 @@ permissions, and a doctor (who sees only the conversations of their own patients
 from __future__ import annotations
 
 import time
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from dataclasses import dataclass
 
 from pema.live.bus import encode_event
@@ -58,7 +58,7 @@ async def event_stream(
     refresh_access: Callable[[], Awaitable[StreamAccess | None]],
     keepalive_s: float | None = None,
     recheck_s: float | None = None,
-) -> AsyncIterator[str]:
+) -> AsyncGenerator[str]:
     """Yields the SSE frames until the session ends, the bus is lost or the client goes away (the generator
     is then cancelled; ``finally`` releases the subscription either way). ``refresh_access`` returns the
     current access, or ``None`` when the session is over."""

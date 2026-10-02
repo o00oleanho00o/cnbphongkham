@@ -17,9 +17,9 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from pema.api.clinic_testing import ClientFactory, record_inbound
+from pema.api.routers import live as live_router
 from pema.bootstrap import create_app
 from pema.clinic.actions import ClinicAgentFacingActions
-from pema.api.routers import live as live_router
 from pema.clinic.actions.seed_demo import SeedResult
 from pema.core.db import ClinicDatabase
 from pema.live import sse
@@ -52,9 +52,7 @@ async def streams() -> AsyncIterator[list[OpenStream]]:
         await stream.close()
 
 
-async def open_events(
-    app: FastAPI, client: httpx.AsyncClient, streams: list[OpenStream]
-) -> OpenStream:
+async def open_events(app: FastAPI, client: httpx.AsyncClient, streams: list[OpenStream]) -> OpenStream:
     stream = await OpenStream(app, EVENTS, cookie=session_cookie(client)).start()
     streams.append(stream)
     return stream
@@ -85,7 +83,11 @@ async def test_a_tampered_cookie_is_refused(app: FastAPI, live: LiveServices) ->
 
 
 async def test_a_signed_in_member_gets_an_event_stream_that_nobody_may_buffer(
-    app: FastAPI, live: LiveServices, client_factory: ClientFactory, world: SeedResult, streams: list[OpenStream]
+    app: FastAPI,
+    live: LiveServices,
+    client_factory: ClientFactory,
+    world: SeedResult,
+    streams: list[OpenStream],
 ) -> None:
     stream = await open_events(app, await client_factory("cs.maianh"), streams)
     assert stream.status == 200
@@ -302,7 +304,11 @@ async def test_a_closed_connection_releases_the_stream(
 
 
 async def test_a_person_cannot_open_more_streams_than_the_cap(
-    app: FastAPI, live: LiveServices, client_factory: ClientFactory, world: SeedResult, streams: list[OpenStream]
+    app: FastAPI,
+    live: LiveServices,
+    client_factory: ClientFactory,
+    world: SeedResult,
+    streams: list[OpenStream],
 ) -> None:
     cs = await client_factory("cs.maianh")
     for _ in range(2):
