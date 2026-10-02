@@ -110,6 +110,19 @@ Không có profile `worker` thì API nhận webhook và xếp lượt nhưng kh�
 
 Ảnh Docker của cầu nối (`bridge` profile) và của FE đã dựng thật và khởi động thử (không cần Zalo thật); cầu nối chạy bằng tsx, không có bước build, và chỉ lắng nghe trong mạng compose.
 
+## Cập nhật trực tiếp và hiện diện (gói ST-R)
+
+Màn Inbox, "Việc hôm nay" và "Hàng đợi duyệt" tự tải lại khi có thay đổi, và hội thoại cho biết đồng nghiệp nào đang xem hoặc đang trả lời. Chỉ là cảnh báo, không khóa gì.
+
+| Route | Việc |
+|---|---|
+| `GET /api/v1/events` | Server-Sent Events cho nhân viên đã đăng nhập. Mỗi sự kiện là JSON `{"type": "inbox.changed" \| "tasks.changed" \| "review.changed" \| "presence.changed", "id": "<uuid hoặc null>"}`; không bao giờ có nội dung tin, tên hay số điện thoại. Comment `: keep-alive` mỗi 15 giây; 429 quá 5 luồng mỗi người; 503 khi Redis hỏng (FE chuyển sang tải lại định kỳ). |
+| `POST /api/v1/conversations/{id}/presence` | Nhịp 15 giây `{"state": "viewing" \| "replying"}`; mục hết hạn sau 30 giây. 204 cả khi Redis hỏng. |
+| `DELETE /api/v1/conversations/{id}/presence` | Rời hội thoại. |
+| `GET /api/v1/conversations`, `GET/PATCH /api/v1/conversations/{id}` | Có thêm `viewers: [{user_id, name, state}]`, không gồm chính người gọi. |
+
+Worker và API là hai tiến trình; chúng gặp nhau qua kênh Redis pub/sub `pema:live:<clinic_id>` (package `pema.live`). Chi tiết: [CONTRACTS-AI01 mục 11](docs/CONTRACTS-AI01.md), [ARCH-AI01 mục 15](docs/ARCH-AI01.md), [SECURITY-REVIEW-AI01 mục 8](docs/SECURITY-REVIEW-AI01.md).
+
 ## Quy tắc áp dụng khắp nơi
 
 - Phía agent chạm phòng khám **chỉ** qua `pema.clinic.actions` (import-linter); trong DB role `agent_worker` không có quyền gì trên `clinic.*` (chỉ view/hàm của `clinic_agent`).
