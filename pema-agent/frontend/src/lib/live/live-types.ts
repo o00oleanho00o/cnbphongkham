@@ -7,8 +7,7 @@
 //   `viewers: [{user_id, name, state}]` in a conversation (list and detail), the caller excluded
 //
 // The `parse*` helpers below stay: an SSE `data:` line and a `viewers` field are untrusted runtime input.
-// STILL TEMPORARY: `AssignableStaff` and `GET /api/v1/staff/assignable` (another package owns that route; its
-// entry in `PENDING_CONTRACT` of `mock/contract.test.ts` goes when it lands).
+// (`GET /api/v1/staff/assignable` is not here: it is in the generated client, see `lib/staff/`.)
 import type { Schemas } from "@/lib/api";
 
 export type LiveEventType = Schemas["LiveEventType"];
@@ -28,10 +27,7 @@ export type PresenceState = Schemas["PresenceState"];
 
 export type PresenceViewer = Schemas["PresenceViewer"];
 
-export type AssignableStaff = { id: string; name: string; role: Schemas["Role"] };
-
 const PRESENCE_STATES: Record<PresenceState, true> = { viewing: true, replying: true };
-const ROLES: readonly string[] = ["owner", "manager", "doctor", "cs_staff", "reception", "patient"];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -67,20 +63,4 @@ export function viewersOf(conversation: unknown): PresenceViewer[] {
   if (!isRecord(conversation) || !Array.isArray(conversation.viewers)) return [];
   const viewers: unknown[] = conversation.viewers;
   return viewers.filter(isViewer);
-}
-
-function isAssignable(value: unknown): value is AssignableStaff {
-  return (
-    isRecord(value) &&
-    typeof value.id === "string" &&
-    typeof value.name === "string" &&
-    typeof value.role === "string" &&
-    ROLES.includes(value.role)
-  );
-}
-
-export function parseAssignableStaff(value: unknown): AssignableStaff[] {
-  if (!Array.isArray(value)) return [];
-  const rows: unknown[] = value;
-  return rows.filter(isAssignable);
 }

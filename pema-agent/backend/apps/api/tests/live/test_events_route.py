@@ -195,6 +195,49 @@ async def test_a_change_made_through_the_api_reaches_the_other_screens(
     assert data_of(chunk) == {"type": "inbox.changed", "id": str(world.conversation_id)}
 
 
+async def test_handing_a_conversation_to_a_colleague_reaches_the_colleagues_stream(
+    app: FastAPI,
+    live: LiveServices,
+    client_factory: ClientFactory,
+    world: SeedResult,
+    streams: list[OpenStream],
+) -> None:
+    """ST-S assignee check and ST-R emit: the PATCH that assigns still announces `inbox.changed`"""
+    mai_anh = await client_factory("cs.maianh")
+    thu = await client_factory("cs.thu")
+    stream = await open_events(app, thu, streams)
+    await stream.read_until("retry:")
+    url = f"/api/v1/conversations/{world.conversation_id}"
+    version = (await mai_anh.get(url)).json()["version"]
+    response = await mai_anh.patch(
+        url, json={"version": version, "assigned_user_id": str(world.users["cs.thu"])}
+    )
+    assert response.status_code == 200, response.text
+    await flush(live)
+    chunk = await stream.read_until("inbox.changed")
+    assert data_of(chunk) == {"type": "inbox.changed", "id": str(world.conversation_id)}
+
+
+async def test_a_refused_assignee_announces_nothing(
+    app: FastAPI,
+    live: LiveServices,
+    client_factory: ClientFactory,
+    world: SeedResult,
+    streams: list[OpenStream],
+) -> None:
+    """an assignee the server refuses (422) changes nothing, so no screen is told to reload"""
+    mai_anh = await client_factory("cs.maianh")
+    thu = await client_factory("cs.thu")
+    stream = await open_events(app, thu, streams)
+    await stream.read_until("retry:")
+    url = f"/api/v1/conversations/{world.conversation_id}"
+    version = (await mai_anh.get(url)).json()["version"]
+    refused = await mai_anh.patch(url, json={"version": version, "assigned_user_id": str(uuid4())})
+    assert refused.status_code == 422
+    await flush(live)
+    assert "inbox.changed" not in stream.body
+
+
 async def test_a_new_review_item_announces_the_queue_and_the_conversation(
     app: FastAPI,
     bus: InMemoryLiveEventBus,

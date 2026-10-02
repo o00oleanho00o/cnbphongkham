@@ -1048,6 +1048,31 @@
         "title": "AppointmentUpdate",
         "type": "object"
       },
+      "AssignableStaffOut": {
+        "additionalProperties": false,
+        "description": "A colleague a task or a conversation can be handed to (``GET /staff/assignable``, every signed-in staff\nmember may read it). The minimum a picker needs: no e-mail, phone, last sign-in or lock state (locked\naccounts are never listed). ``role`` is only one of the roles that can handle conversations and tasks.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "role"
+        ],
+        "title": "AssignableStaffOut",
+        "type": "object"
+      },
       "AuditLogOut": {
         "additionalProperties": false,
         "properties": {
@@ -23655,6 +23680,107 @@
         ]
       }
     },
+    "/api/v1/staff/assignable": {
+      "get": {
+        "description": "Any signed-in staff member (no admin permission). ACTIVE staff of the clinic whose role can work conversations and CRM tasks (owner, manager, doctor, cs_staff; not reception), A to Z by name. Only `id`, `name` and `role`: never an e-mail, a phone, a hash, the last sign-in or a locked account. Limited to 60 calls per minute per user. The server checks the same rule again when an assignee is saved, so this list is a convenience, not the authority.",
+        "operationId": "staff_list_assignable_staff",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AssignableStaffOut"
+                  },
+                  "title": "Response Staff List Assignable Staff",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Colleagues a task or a conversation can be handed to",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
     "/api/v1/webhooks/zalo-bot/{account_id}": {
       "post": {
         "operationId": "webhooks_receive_zalo_bot_update",
@@ -23935,6 +24061,10 @@
     {
       "description": "Live updates (server-sent events) and presence. (ST-R)",
       "name": "live"
+    },
+    {
+      "description": "Pickers for every signed-in member: who can be assigned work. (ST-S)",
+      "name": "staff"
     },
     {
       "description": "Channel webhooks, not for the FE. (C1 Bot API, C2 bridge)",

@@ -10,6 +10,7 @@ from pema.clinic.rbac.authorize import (
 )
 from pema.clinic.rbac.matrix import (
     AGENT_PERMISSIONS,
+    ASSIGNABLE_ROLES,
     CLINICAL_ROLES,
     ROLE_PERMISSIONS,
     SCHEDULER_PERMISSIONS,
@@ -18,6 +19,7 @@ from pema.clinic.rbac.matrix import (
 
 __all__ = [
     "AGENT_PERMISSIONS",
+    "ASSIGNABLE_ROLES",
     "CLINICAL_ROLES",
     "ROLE_PERMISSIONS",
     "SCHEDULER_PERMISSIONS",

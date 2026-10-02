@@ -6,12 +6,12 @@
 import { useMemo, useRef, useState, type FormEvent } from "react";
 
 import { SelectMenu, type SelectOption } from "@/components/admin/shared/select-menu";
+import { AssigneeStatus } from "@/components/ops/assignee-status";
 import { FilterChip, Field, Notice, PrimaryButton, SecondaryButton } from "@/components/ops/ops-ui";
 import { Sheet } from "@/components/ops/sheet";
 import { useToast } from "@/components/ops/toast";
 import type { Schemas } from "@/lib/api";
 import { ApiError, errorMessage, http, newIdempotencyKey, unwrap } from "@/lib/api/client";
-import { useAssignableStaff } from "@/lib/live/use-assignable-staff";
 import { OWNER_ME, ownerIdFor, ownerOptions } from "@/lib/ops/assignee-options";
 import {
   channelOfTask,
@@ -23,6 +23,7 @@ import {
 import { localInputToIso } from "@/lib/ops/format";
 import { CHANNEL_LABEL, OUTCOME_LABEL, PRIORITY_LABEL, RULE_LABEL } from "@/lib/ops/labels";
 import { useSession } from "@/lib/session/session-context";
+import { useAssignableStaff } from "@/lib/staff/use-assignable-staff";
 
 type CrmTask = Schemas["CrmTaskOut"];
 type CrmChannel = Schemas["CrmChannel"];
@@ -76,7 +77,12 @@ export function ResolveTaskSheet({
     bookingStart: "",
   });
   const [durationMin, setDurationMin] = useState("45");
-  const { staff, error: staffError } = useAssignableStaff();
+  const {
+    staff,
+    loading: staffLoading,
+    error: staffError,
+    reload: reloadStaff,
+  } = useAssignableStaff();
   // "me" (default), "keep" (the current owner stays) or the id of a colleague from `staff/assignable`.
   const [ownerValue, setOwnerValue] = useState(OWNER_ME);
   const [priority, setPriority] = useState<string>(task.priority);
@@ -258,11 +264,7 @@ export function ResolveTaskSheet({
               options={ownerChoices}
               onChange={setOwnerValue}
             />
-            {staffError && (
-              <p className="mt-1 text-[12px] text-ink-soft">
-                Chưa tải được danh sách nhân viên, tạm thời chỉ chọn "Tôi" hoặc giữ nguyên.
-              </p>
-            )}
+            <AssigneeStatus loading={staffLoading} error={staffError} onRetry={reloadStaff} />
           </Field>
           <Field label="Ưu tiên" htmlFor="resolve-priority">
             <SelectMenu

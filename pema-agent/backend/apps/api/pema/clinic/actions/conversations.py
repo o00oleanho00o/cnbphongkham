@@ -32,6 +32,7 @@ from pema.clinic.actions._common import (
 )
 from pema.clinic.actions._mappers import conversation_out, conversation_summary, message_out
 from pema.clinic.actions._scope import patient_scope
+from pema.clinic.actions.assignees import load_assignable_user
 from pema.clinic.actions.outbound import OutboundDelivery, deliver_queued_message
 from pema.clinic.models import (
     ChannelIdentity,
@@ -61,9 +62,8 @@ from pema_contracts.conversations import (
 from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.live import LiveEventType
 from pema_contracts.patients import ConsentKind
-from pema_contracts.roles import Permission, Role
+from pema_contracts.roles import Permission
 
-ASSIGNEE_ROLES = (Role.CS_STAFF.value, Role.DOCTOR.value, Role.MANAGER.value, Role.OWNER.value)
 OPEN_REVIEW_STATUSES = ("pending", "escalated")
 
 
@@ -279,24 +279,25 @@ async def update_conversation(
                     )
             row.status = payload.status.value
             changed.append("status")
+        details: dict[str, Any] = {}
         if "assigned_user_id" in payload.model_fields_set:
             if payload.assigned_user_id is not None:
-                ok = await session.scalar(
-                    select(UserAccount.id).where(
-                        UserAccount.id == payload.assigned_user_id,
-                        UserAccount.clinic_id == ctx.clinic_id,
-                        UserAccount.active.is_(True),
-                        UserAccount.role.in_(ASSIGNEE_ROLES),
-                    )
-                )
-                if ok is None:
-                    raise DomainError(ErrorCode.VALIDATION_FAILED, "Người được giao không hợp lệ.")
+                # active, of this installation and a role that can work conversations; one answer for all
+                await load_assignable_user(session, ctx, payload.assigned_user_id)
+            if payload.assigned_user_id != row.assigned_user_id:
+                details["assignee_from"] = str(row.assigned_user_id) if row.assigned_user_id else None
+                details["assignee_to"] = str(payload.assigned_user_id) if payload.assigned_user_id else None
             row.assigned_user_id = payload.assigned_user_id
             changed.append("assigned_user_id")
         with lost_race_is_conflict():
             await session.flush()
         await audit.record(
-            session, ctx, "conversation.update", "conversation", row.id, {"changed_fields": changed}
+            session,
+            ctx,
+            "conversation.update",
+            "conversation",
+            row.id,
+            {"changed_fields": changed, **details},
         )
         result = await _one_out(session, ctx, conversation_id)
     emit_live(LiveEventType.INBOX_CHANGED, conversation_id)
