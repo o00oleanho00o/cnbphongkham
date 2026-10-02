@@ -4,10 +4,11 @@
 // Handlers live in mock/handlers/*.ts, one file per area, each exporting `register(router)`. They are
 // loaded by directory listing, so adding an area never touches this file.
 import { readdirSync } from "node:fs";
-import { createServer } from "node:http";
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { fileURLToPath } from "node:url";
 
 import { register as registerAuth, sessionFromRequest } from "./auth";
+import { announceChange } from "./live-bus";
 import { HttpError, Router, errorBody, parseJson, readBody, type Ctx, type Reply } from "./core";
 
 export async function buildRouter(): Promise<Router> {
@@ -21,6 +22,28 @@ export async function buildRouter(): Promise<Router> {
     mod.register?.(router);
   }
   return router;
+}
+
+function openEventStream(
+  req: IncomingMessage,
+  res: ServerResponse,
+  start: NonNullable<Reply["sse"]>,
+): void {
+  res.writeHead(200, {
+    "content-type": "text/event-stream; charset=utf-8",
+    "cache-control": "no-cache, no-transform",
+    connection: "keep-alive",
+    "x-accel-buffering": "no",
+  });
+  const write = (data: string | null) => {
+    res.write(data === null ? ": ping\n\n" : `data: ${data}\n\n`);
+  };
+  write(null);
+  const stop = start(write);
+  req.on("close", () => {
+    stop();
+    res.end();
+  });
 }
 
 export async function startMockServer(port: number) {
@@ -73,7 +96,14 @@ export async function startMockServer(port: number) {
             return;
           }
         }
-        send(await found.route.handler(ctx));
+        const reply = await found.route.handler(ctx);
+        if (reply.sse) {
+          openEventStream(req, res, reply.sse);
+          return;
+        }
+        send(reply);
+        if ((reply.status ?? 200) < 300)
+          announceChange(req.method ?? "GET", found.route.template, found.params);
       } catch (e) {
         if (e instanceof HttpError) {
           send({ status: e.status, body: errorBody(e.code, e.message) });
