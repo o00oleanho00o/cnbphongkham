@@ -26,6 +26,7 @@ import {
   type Schemas,
   type Session,
 } from "../core";
+import { assertAssignable } from "../assignable";
 import { viewersFor } from "../live-bus";
 
 type S = Schemas;
@@ -234,6 +235,7 @@ function resolveTask(ctx: Ctx): Reply {
     if (input.outcome === "booked" && !input.booking) {
       fail(422, "validation_failed", "Cần lưu lịch hẹn hợp lệ trước khi hoàn tất việc.");
     }
+    assertAssignable(input.owner_user_id, "Chọn người phụ trách hợp lệ.");
     const appointment = input.booking ? createAppointment(input.booking, user.userId) : null;
     activities.unshift({
       id: uid("act"),
@@ -527,6 +529,7 @@ export function register(r: Router): void {
     const conv = findOr404(conversations, ctx.params.conversation_id ?? "", "hội thoại");
     const { version, assigned_user_id, status } = bodyOf<S["ConversationUpdate"]>(ctx);
     checkVersion(conv.version, version);
+    if (assigned_user_id) assertAssignable(assigned_user_id);
     if (assigned_user_id !== undefined) conv.assigned_user_id = assigned_user_id;
     if (status) conv.status = status;
     conv.version += 1;

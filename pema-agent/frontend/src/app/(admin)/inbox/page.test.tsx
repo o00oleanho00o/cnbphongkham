@@ -46,7 +46,10 @@ vi.mock("@/lib/api/client", async (importActual) => {
 });
 vi.mock("@/lib/live/live-api", () => ({
   postPresence: (...args: unknown[]) => api.presence(...args),
+}));
+vi.mock("@/lib/staff/assignable-staff", () => ({
   fetchAssignableStaff: () => api.staff(),
+  invalidateAssignableStaff: () => undefined,
 }));
 
 class FakeEventSource {
@@ -106,6 +109,7 @@ function ok<T>(data: T) {
 
 let listViewers: Viewer[] = [];
 let detailViewers: Viewer[] = [];
+let detailAssignee: string | null = null;
 
 function route(path: string, options?: { params?: { path?: { conversation_id?: string } } }) {
   if (path === "/api/v1/conversations") {
@@ -114,7 +118,12 @@ function route(path: string, options?: { params?: { path?: { conversation_id?: s
   }
   if (path === "/api/v1/conversations/{conversation_id}") {
     const id = options?.params?.path?.conversation_id ?? C1;
-    return ok({ ...summary(id, "Khách Một", detailViewers), created_at: "x", external_ref: "z" });
+    return ok({
+      ...summary(id, "Khách Một", detailViewers),
+      assigned_user_id: detailAssignee,
+      created_at: "x",
+      external_ref: "z",
+    });
   }
   if (path === "/api/v1/conversations/{conversation_id}/messages") {
     return ok({ items: [], total: 0, limit: 200, offset: 0 });
@@ -160,6 +169,7 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
   listViewers = [];
   detailViewers = [];
+  detailAssignee = null;
   api.search.current = "";
   api.get.mockReset().mockImplementation(route);
   api.post.mockReset().mockImplementation(() => ok(undefined));
@@ -167,7 +177,7 @@ beforeEach(() => {
   api.presence.mockReset().mockResolvedValue(undefined);
   api.staff.mockReset().mockResolvedValue([
     { id: ME, name: "Mai Anh", role: "cs_staff" },
-    { id: LAN, name: "Bùi Ngọc Lan", role: "reception" },
+    { id: LAN, name: "Bùi Ngọc Lan", role: "manager" },
     { id: HA, name: "Nguyễn Thanh Hà", role: "owner" },
   ]);
 });
@@ -326,13 +336,13 @@ describe("Inbox assignment box", () => {
       expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
         "Tôi (Mai Anh)",
         "Giữ nguyên: chưa giao",
-        "Bùi Ngọc Lan (Lễ tân)",
+        "Bùi Ngọc Lan (Quản lý)",
         "Nguyễn Thanh Hà (Chủ phòng khám)",
       ]),
     );
     expect(options.length).toBeGreaterThan(0);
 
-    await user.click(screen.getByRole("option", { name: "Bùi Ngọc Lan (Lễ tân)" }));
+    await user.click(screen.getByRole("option", { name: "Bùi Ngọc Lan (Quản lý)" }));
 
     await waitFor(() => expect(api.patch).toHaveBeenCalled());
     const request = api.patch.mock.calls[0]?.[1] as { body: { assigned_user_id: string } };
@@ -346,6 +356,89 @@ describe("Inbox assignment box", () => {
     await user.click(await screen.findByLabelText("Phụ trách hội thoại"));
     await user.click(await screen.findByRole("option", { name: /Giữ nguyên/ }));
     expect(api.patch).not.toHaveBeenCalled();
+  });
+
+  it("offers Chưa giao once somebody owns the conversation and hands it back to nobody", async () => {
+    api.search.current = `c=${C1}`;
+    detailAssignee = LAN;
+    renderInbox();
+    const user = userEvent.setup();
+    await user.click(await screen.findByLabelText("Phụ trách hội thoại"));
+    await waitFor(() =>
+      expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
+        "Tôi (Mai Anh)",
+        "Giữ nguyên: Bùi Ngọc Lan",
+        "Chưa giao",
+        "Nguyễn Thanh Hà (Chủ phòng khám)",
+      ]),
+    );
+
+    await user.click(screen.getByRole("option", { name: "Chưa giao" }));
+
+    await waitFor(() => expect(api.patch).toHaveBeenCalled());
+    const request = api.patch.mock.calls[0]?.[1] as { body: { assigned_user_id: string | null } };
+    expect(request.body.assigned_user_id).toBeNull();
+  });
+
+  it("can be used with the keyboard alone: Enter opens, arrows move, Enter picks", async () => {
+    api.search.current = `c=${C1}`;
+    renderInbox();
+    const user = userEvent.setup();
+    const box = await screen.findByLabelText("Phụ trách hội thoại");
+    await waitFor(() => expect(api.staff).toHaveBeenCalled());
+    await screen.findByRole("button", { name: "Nhận xử lý" });
+    box.focus();
+
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(screen.getAllByRole("option")).toHaveLength(4));
+    await user.keyboard("{ArrowDown}{Enter}");
+
+    await waitFor(() => expect(api.patch).toHaveBeenCalled());
+    const request = api.patch.mock.calls[0]?.[1] as { body: { assigned_user_id: string } };
+    expect(request.body.assigned_user_id).toBe(LAN);
+    expect(box.getAttribute("aria-haspopup")).toBe("listbox");
+  });
+
+  it("keeps working while the colleagues load and says so", async () => {
+    api.search.current = `c=${C1}`;
+    api.staff.mockReset().mockReturnValue(new Promise(() => undefined));
+    renderInbox();
+    const user = userEvent.setup();
+    expect(await screen.findByText("Đang tải danh sách nhân viên...")).toBeTruthy();
+    await user.click(await screen.findByLabelText("Phụ trách hội thoại"));
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
+      "Tôi (Mai Anh)",
+      "Giữ nguyên: chưa giao",
+    ]);
+  });
+
+  it("says when the colleagues cannot be read and offers Thử lại, which reads them again", async () => {
+    api.search.current = `c=${C1}`;
+    api.staff.mockReset().mockRejectedValueOnce(new Error("Lỗi 500"));
+    api.staff.mockResolvedValue([{ id: LAN, name: "Bùi Ngọc Lan", role: "manager" }]);
+    renderInbox();
+    const user = userEvent.setup();
+    expect(await screen.findByText(/Chưa tải được danh sách nhân viên/)).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: "Thử lại" }));
+
+    await waitFor(() => expect(screen.queryByText(/Chưa tải được danh sách nhân viên/)).toBeNull());
+    await user.click(screen.getByLabelText("Phụ trách hội thoại"));
+    expect(await screen.findByRole("option", { name: "Bùi Ngọc Lan (Quản lý)" })).toBeTruthy();
+    expect(api.staff).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps the Nhận xử lý button working: it assigns the conversation to me", async () => {
+    api.search.current = `c=${C1}`;
+    detailAssignee = LAN;
+    renderInbox();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Nhận xử lý" }));
+
+    await waitFor(() => expect(api.patch).toHaveBeenCalled());
+    const request = api.patch.mock.calls[0]?.[1] as { body: { assigned_user_id: string } };
+    expect(request.body.assigned_user_id).toBe(ME);
   });
 
   it("lives in the thread header next to the status box", async () => {
