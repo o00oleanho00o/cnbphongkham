@@ -14,6 +14,12 @@ code does.
 in ``reason`` after a marker line (``pack_reason`` / ``unpack_reason`` are the only two places that know
 this). A ``summary`` column would make both functions trivial; it is an open item for the next migration.
 
+M2c: a round whose chain ran out ends with ``outcome = exhausted_to_oncall`` (``pema.care.routing``): the
+on-call contact has been told, but the conversation is still ``HANDOFF_ROUTING`` until a staff member
+accepts it in the app. ``_pending_request`` is therefore "the open request, else the exhausted one that has
+no taker yet": ``accept``, ``decline`` and ``get_open_request`` use it; an accept turns it into ``accepted``.
+A new round cannot start meanwhile (the state is not AUTO, ``open_handoff`` returns the existing one).
+
 Works with either runtime role (the grants of ``m_0001_care_tables`` give both ``agent_worker`` and ``be_app``
 read and write on ``agent.*``).
 """
@@ -62,7 +68,7 @@ def unpack_reason(stored: str) -> tuple[str, str]:
     return reason, summary
 
 
-def _request_snapshot(row: HandoffRequest, care_agent_id: UUID) -> HandoffRequestSnapshot:
+def request_snapshot(row: HandoffRequest, care_agent_id: UUID) -> HandoffRequestSnapshot:
     reason, summary = unpack_reason(row.reason)
     return HandoffRequestSnapshot(
         id=row.id,
@@ -79,6 +85,8 @@ def _request_snapshot(row: HandoffRequest, care_agent_id: UUID) -> HandoffReques
         accepted_by=row.accepted_by,
         outcome=row.outcome,
         created_at=row.created_at,
+        clinic_id=row.clinic_id,
+        current_notified_at=row.current_notified_at,
     )
 
 
@@ -113,8 +121,8 @@ class SqlControlStore:
     async def get_open_request(self, patient_id: UUID) -> HandoffRequestSnapshot | None:
         async with self._db.session() as session:
             agent = await _agent_row(session, patient_id)
-            row = await _open_request(session, patient_id)
-            return None if row is None else _request_snapshot(row, agent.id)
+            row = await _pending_request(session, patient_id)
+            return None if row is None else request_snapshot(row, agent.id)
 
     async def record_action(
         self,
@@ -141,7 +149,7 @@ class SqlControlStore:
                 )
                 if existing is None:
                     raise InvalidTransitionError("conversation is not in AUTO and has no handoff request")
-                return OpenedHandoff(_request_snapshot(existing, agent.id), created=False)
+                return OpenedHandoff(request_snapshot(existing, agent.id), created=False)
             request = HandoffRequest(
                 clinic_id=agent.clinic_id,
                 patient_id=agent.patient_id,
@@ -158,7 +166,7 @@ class SqlControlStore:
             control.staff_owner = None
             await session.flush()
             self._log(session, agent.clinic_id, agent.id, log_action, spec.depth, at)
-            return OpenedHandoff(_request_snapshot(request, agent.id), created=True)
+            return OpenedHandoff(request_snapshot(request, agent.id), created=True)
 
     async def accept(
         self, patient_id: UUID, staff_id: UUID, *, log_action: str, at: datetime
@@ -168,7 +176,7 @@ class SqlControlStore:
             control = await _locked_control(session, agent.clinic_id, patient_id)
             if control.state != ControlState.HANDOFF_ROUTING.value:
                 raise InvalidTransitionError(f"cannot accept from {control.state}")
-            request = await _open_request(session, patient_id)
+            request = await _pending_request(session, patient_id)
             if request is None:
                 raise InvalidTransitionError("no open handoff request")
             request.accepted_by = staff_id
@@ -179,7 +187,7 @@ class SqlControlStore:
             control.since = at
             await session.flush()
             self._log(session, agent.clinic_id, agent.id, log_action, request.depth, at)
-            return _request_snapshot(request, agent.id)
+            return request_snapshot(request, agent.id)
 
     async def record_decline(
         self, patient_id: UUID, staff_id: UUID, *, log_action: str, at: datetime
@@ -189,11 +197,11 @@ class SqlControlStore:
             control = await _locked_control(session, agent.clinic_id, patient_id)
             if control.state != ControlState.HANDOFF_ROUTING.value:
                 raise InvalidTransitionError(f"cannot decline from {control.state}")
-            request = await _open_request(session, patient_id)
+            request = await _pending_request(session, patient_id)
             if request is None:
                 raise InvalidTransitionError("no open handoff request")
             self._log(session, agent.clinic_id, agent.id, log_action, request.depth, at)
-            return _request_snapshot(request, agent.id)
+            return request_snapshot(request, agent.id)
 
     async def release(
         self, patient_id: UUID, staff_id: UUID, spec: ReleaseSpec, *, log_action: str, at: datetime
@@ -293,6 +301,24 @@ async def _open_request(session: AsyncSession, patient_id: UUID) -> HandoffReque
     return await session.scalar(
         select(HandoffRequest)
         .where(HandoffRequest.patient_id == patient_id, HandoffRequest.outcome.is_(None))
+        .with_for_update()
+    )
+
+
+async def _pending_request(session: AsyncSession, patient_id: UUID) -> HandoffRequest | None:
+    """The request a staff member can still take: open, or exhausted down to the on-call contact."""
+    found = await _open_request(session, patient_id)
+    if found is not None:
+        return found
+    return await session.scalar(
+        select(HandoffRequest)
+        .where(
+            HandoffRequest.patient_id == patient_id,
+            HandoffRequest.outcome == HandoffOutcome.EXHAUSTED_TO_ONCALL.value,
+            HandoffRequest.accepted_by.is_(None),
+        )
+        .order_by(HandoffRequest.created_at.desc())
+        .limit(1)
         .with_for_update()
     )
 

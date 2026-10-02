@@ -44,6 +44,28 @@ M2b (control state machine and the skill ``handoff``)
   there is; nothing it receives is ever sent to a patient.
 * ``RoutingAdvance``: M2c. Called after a decline; until it exists the request simply stays open.
 
+M2c (staff routing, SLA, on-call, reminder pause and reconcile)
+* ``RoutingStart``: called by ``CareControl`` right after a routing round is opened; builds the chain and
+  asks the first candidate (``pema.care.routing.RoutingService``, which is also the ``RoutingAdvance``).
+* ``RoutingStore``: the routing columns of ``agent.handoff_requests`` (``candidates``, ``current_idx``,
+  ``outcome``) with a compare-and-set on ``current_idx``, so a decline and an SLA expiry that race advance the
+  chain once (``pema.care.routing_store.SqlRoutingStore``).
+* ``RoutingDirectory``: staff profiles with their load, and the owners of a patient (the views
+  ``clinic_agent.staff_profile`` and ``patient_ownership``).
+* ``OnCallSource``: the rows of ``clinic_agent.on_call_contact`` (``pema.care.oncall.OnCallDirectory`` picks
+  the current one on every call).
+* ``RoutingConfigSource``: the row ``agent.skills`` ``routing`` (SLA minutes, templates, reminder rules).
+* ``StaffNotify``: push + in-app notification of a staff member, and the message to the on-call contact. B1/E
+  have no such interface yet, so this is all there is; nothing it receives goes to a patient.
+* ``SlaScheduler``: S. Schedules "look at this request again at T" (a job, never a sleep).
+* ``PatientNoticeComposer``: the text of the ONE message the patient gets when a round opens outside clinic
+  hours (``pema.care.patient_notices.PatientNotices``); ``None`` keeps the holding message of M2b.
+* ``ReminderStore`` / ``DueReminderSource`` / ``EventPublisher``: the ``agent.paused_reminders`` rows, the
+  reminders that are already queued for a patient (S, B2) and the way back into the loop
+  (``CareEventBus``).
+* ``ReminderPauser`` (the loop) and ``ReminderHooks`` (``CareControl``):
+  ``pema.care.reminders.ReminderService``.
+
 M4 (specialists, ``pema.care.specialists``)
 * ``SlotSearch``: B1 has no free-slot query yet (``AgentFacingClinicActions`` can only PROPOSE an
   appointment),
@@ -70,6 +92,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pema.care.events import CareEvent
 from pema.care.handoff_types import DepthLlmOutput, HandoffAction, HandoffConfig, HandoffDecision
 from pema.care.models import ControlState, TaskStatus
+from pema.care.routing_types import (
+    DeclineRecord,
+    DueReminder,
+    HandoffNotice,
+    NewPausedReminder,
+    OnCallInfo,
+    OnCallRow,
+    Ownership,
+    PausedReminder,
+    ReminderStatus,
+    RoutingConfig,
+    SlaCheck,
+    StaffInfo,
+)
 from pema.care.specialists.spec import SpecialistCall, SpecialistRun
 from pema.care.task_result import TaskResult
 from pema.care.window import SendWindow
@@ -211,6 +247,8 @@ class HandoffRequestSnapshot:
     accepted_by: UUID | None = None
     outcome: str | None = None
     created_at: datetime | None = None
+    clinic_id: UUID | None = None
+    current_notified_at: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -408,6 +446,127 @@ class RoutingAdvance(Protocol):
     async def on_declined(
         self, request: HandoffRequestSnapshot, staff_id: UUID, reason: str, suggest_user_id: UUID | None
     ) -> None: ...
+
+
+class RoutingStart(Protocol):
+    async def on_opened(self, request: HandoffRequestSnapshot, now: datetime) -> None:
+        """Build the chain of candidates and ask the first one."""
+        ...
+
+
+class RoutingStore(Protocol):
+    async def get_request(self, request_id: UUID) -> HandoffRequestSnapshot | None: ...
+
+    async def list_unresolved_requests(self, *, limit: int) -> Sequence[HandoffRequestSnapshot]:
+        """Requests with ``outcome`` NULL (waiting for a candidate), oldest first."""
+        ...
+
+    async def save_routing(
+        self,
+        request_id: UUID,
+        *,
+        expected_idx: int,
+        candidates: Sequence[Mapping[str, object]],
+        current_idx: int,
+        notified_at: datetime | None,
+        outcome: str | None,
+        log_action: str,
+        at: datetime,
+    ) -> HandoffRequestSnapshot | None:
+        """Compare-and-set: only while the request is open (``outcome`` NULL) and ``current_idx`` still is
+        ``expected_idx``; ``None`` otherwise (somebody else moved it). The change and its ``actions_log`` line
+        are one unit of work."""
+        ...
+
+    async def record_action(
+        self,
+        care_agent_id: UUID,
+        *,
+        action_type: str,
+        disposition: str,
+        depth: str | None,
+        at: datetime,
+    ) -> None: ...
+
+    async def declines_since(self, since: datetime, *, limit: int) -> Sequence[DeclineRecord]: ...
+
+
+class RoutingDirectory(Protocol):
+    async def list_staff(self, clinic_id: UUID) -> Sequence[StaffInfo]:
+        """Every staff profile with the number of conversations the person handles (one query)."""
+        ...
+
+    async def ownership(self, patient_id: UUID) -> Ownership: ...
+
+
+class OnCallSource(Protocol):
+    async def active_contacts(self, clinic_id: UUID) -> Sequence[OnCallRow]:
+        """Read from the database on every call."""
+        ...
+
+
+class RoutingConfigSource(Protocol):
+    async def get(self, clinic_id: UUID) -> RoutingConfig:
+        """Read on EVERY use (a change applies at once). Defaults when the row is missing."""
+        ...
+
+
+class StaffNotify(Protocol):
+    async def notify_staff(self, user_id: UUID, notice: HandoffNotice) -> bool:
+        """Push and in-app. ``False``: could not be delivered."""
+        ...
+
+    async def notify_on_call(self, contact: OnCallInfo, notice: HandoffNotice) -> bool: ...
+
+
+class SlaScheduler(Protocol):
+    async def schedule_check(self, check: SlaCheck) -> None: ...
+
+
+class PatientNoticeComposer(Protocol):
+    async def compose(self, agent: CareAgentSnapshot, decision: HandoffDecision, now: datetime) -> str | None:
+        """The text of the one message of this round, or ``None`` for the default holding message."""
+        ...
+
+
+class ReminderStore(Protocol):
+    async def add(self, reminder: NewPausedReminder) -> bool:
+        """``False`` when ``(care_agent_id, dedupe_key)`` already exists (a repeat changes nothing)."""
+        ...
+
+    async def list_paused(self, care_agent_id: UUID) -> Sequence[PausedReminder]: ...
+
+    async def list_for_owner(self, owner_user_id: UUID, *, limit: int) -> Sequence[PausedReminder]:
+        """Paused reminders shown on the timeline of the owning staff member."""
+        ...
+
+    async def resolve(self, reminder_id: UUID, status: ReminderStatus, resolution: str, at: datetime) -> bool:
+        """Only while the reminder is ``paused``; ``False`` when it already was resolved."""
+        ...
+
+
+class DueReminderSource(Protocol):
+    async def due_for(self, patient_id: UUID, now: datetime) -> Sequence[DueReminder]: ...
+
+    async def hold(self, patient_id: UUID, dedupe_keys: Sequence[str]) -> None:
+        """Tell S / B2 not to fire these again (a repeat would only be paused a second time)."""
+        ...
+
+
+class EventPublisher(Protocol):
+    async def publish(self, event: CareEvent) -> bool: ...
+
+
+class ReminderPauser(Protocol):
+    async def pause_event(self, agent: CareAgentSnapshot, event: CareEvent, now: datetime) -> bool:
+        """``True`` when ``event`` is a reminder and was recorded as paused."""
+        ...
+
+
+class ReminderHooks(Protocol):
+    async def pause_for(self, agent: CareAgentSnapshot, now: datetime) -> int: ...
+
+    async def reconcile_on_release(self, agent: CareAgentSnapshot, now: datetime) -> None: ...
 
 
 class TickRuleSource(Protocol):

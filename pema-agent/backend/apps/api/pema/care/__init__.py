@@ -7,6 +7,11 @@ M2a: care events (``events``), the 3-level priority queue (``priority``), the se
 turn loop with its event bus and sequential worker (``loop``), the 06:00 tick (``tick``) and the Postgres
 store of the loop (``store``). ``testing`` holds the in-memory fakes of the ports for tests.
 
+M2c: staff routing with the SLA and the chain that always ends at the 24/7 on-call contact (``routing``,
+``routing_types``, ``routing_store``, ``oncall``), the one template message of an out-of-hours handoff
+(``patient_notices``) and the pause and reconcile of scheduled reminders while a person has the conversation
+(``reminders``, ``reminder_store``). ``testing_routing`` holds the fakes and a fully wired rig.
+
 M4: the structured answer of a specialist (``task_result``), the per-turn budget of delegations
 (``budget``) and the three specialist agents with the ``delegate`` tool (``specialists``).
 """
