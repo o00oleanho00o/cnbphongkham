@@ -172,7 +172,11 @@ class CareControl:
         )
         logger.info(
             "handoff requested",
-            extra={"care_agent_id": str(agent.id), "created": opened.created, "depth": decision.depth.value},
+            extra={
+                "care_agent_id": str(agent.id),
+                "round_created": opened.created,
+                "depth": decision.depth.value,
+            },
         )
         if opened.created:
             await self._hold(agent, event, context, decision, at)
