@@ -15,6 +15,12 @@ three states per patient, stored in ``agent.conversation_control``:
 * ``accept`` (staff): ``HANDOFF_ROUTING -> STAFF``, ``staff_owner`` is set.
 * ``decline`` (staff): audited; the state stays ``HANDOFF_ROUTING``. Picking the next candidate is M2c
   (``RoutingAdvance``); until it is wired the request simply stays open.
+* M2c hooks (all optional, none changes a rule above): ``routing_start`` builds the chain and asks the first
+  candidate right after a round opens; ``notices`` may replace the text of the ONE message of the round
+  (outside clinic hours: the D5 emergency template with the on-call number, the D3-D4 holding message with a
+  response-time estimate); ``reminders`` pauses the patient's queued reminders when a round opens and
+  reconciles them after staff release the conversation. A failing hook is logged and never undoes the
+  transition (the sweeper of ``pema.care.routing`` finds a round whose routing did not start).
 * ``release_to_auto`` (staff): the ONLY way back to AUTO. The release note goes to ``care_memory`` (source
   ``staff``, PII-masked); an ``override_level`` writes ``autonomy_override`` (M3 reads it) and may only LOWER
   the level of the agent, never raise it. A patient, the system or the agent calling it gets
@@ -63,8 +69,11 @@ from pema.care.ports import (
     HandoffSpec,
     OpenedHandoff,
     PatientContext,
+    PatientNoticeComposer,
     ReleaseSpec,
+    ReminderHooks,
     RoutingAdvance,
+    RoutingStart,
 )
 from pema.policy.pii import mask_pii
 from pema_contracts.actions import ActionContext
@@ -147,12 +156,18 @@ class CareControl:
         channel: ChannelSend | None,
         clock: Clock,
         routing: RoutingAdvance | None = None,
+        routing_start: RoutingStart | None = None,
+        notices: PatientNoticeComposer | None = None,
+        reminders: ReminderHooks | None = None,
     ) -> None:
         self._store = store
         self._config = config_source
         self._channel = channel
         self._clock = clock
         self._routing = routing
+        self._routing_start = routing_start
+        self._notices = notices
+        self._reminders = reminders
 
     # ------------------------------------------------------------------------- the agent's side
     async def request_handoff(
@@ -175,8 +190,23 @@ class CareControl:
             extra={"care_agent_id": str(agent.id), "created": opened.created, "depth": decision.depth.value},
         )
         if opened.created:
+            await self._on_round_opened(agent, opened, at)
             await self._hold(agent, event, context, decision, at)
         return opened
+
+    async def _on_round_opened(self, agent: CareAgentSnapshot, opened: OpenedHandoff, at: datetime) -> None:
+        """M2c: pause the patient's reminders, then build the chain and ask the first candidate. Each hook
+        is isolated: the round is already open and the patient must still get the holding message."""
+        if self._reminders is not None:
+            try:
+                await self._reminders.pause_for(agent, at)
+            except Exception as exc:
+                logger.error("pausing reminders failed", extra={"error": type(exc).__name__})
+        if self._routing_start is not None:
+            try:
+                await self._routing_start.on_opened(opened.request, at)
+            except Exception as exc:
+                logger.error("routing did not start", extra={"error": type(exc).__name__})
 
     async def _hold(
         self,
@@ -190,12 +220,7 @@ class CareControl:
         failed send is logged and not retried (a second message would break the "exactly one" rule)."""
         if event.kind is not EventKind.PATIENT_MESSAGE or context.channel is None or self._channel is None:
             return
-        settings = await self._config.get(agent.clinic_id)
-        text = (
-            settings.config.holding_message
-            if decision.urgency is Urgency.NORMAL
-            else settings.config.holding_message_urgent
-        )
+        text = await self._notice_text(agent, decision, at)
         try:
             outcome = await self._channel.send(context.channel, text, proactive=False)
             sent = outcome.ok
@@ -208,6 +233,22 @@ class CareControl:
             disposition=(ActionDisposition.AUTO_SENT if sent else ActionDisposition.PAUSED).value,
             depth=decision.depth.value,
             at=at,
+        )
+
+    async def _notice_text(self, agent: CareAgentSnapshot, decision: HandoffDecision, at: datetime) -> str:
+        if self._notices is not None:
+            try:
+                composed = await self._notices.compose(agent, decision, at)
+            except Exception as exc:
+                logger.error("patient notice failed", extra={"error": type(exc).__name__})
+                composed = None
+            if composed:
+                return composed
+        settings = await self._config.get(agent.clinic_id)
+        return (
+            settings.config.holding_message
+            if decision.urgency is Urgency.NORMAL
+            else settings.config.holding_message_urgent
         )
 
     # -------------------------------------------------------------------------- the staff's side
@@ -271,7 +312,19 @@ class CareControl:
             at=now,
         )
         logger.info("conversation released to the agent", extra={"override": override is not None})
+        await self._reconcile(patient_id, now)
         return snapshot
+
+    async def _reconcile(self, patient_id: UUID, now: datetime) -> None:
+        """M2c: judge the reminders that were paused while a person had the conversation."""
+        if self._reminders is None:
+            return
+        try:
+            agent = await self._store.agent_for_patient(patient_id)
+            if agent is not None:
+                await self._reminders.reconcile_on_release(agent, now)
+        except Exception as exc:
+            logger.error("reconciling reminders failed", extra={"error": type(exc).__name__})
 
     async def _override(
         self, patient_id: UUID, level: int | None, until: datetime | None, now: datetime
