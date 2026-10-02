@@ -292,13 +292,22 @@ class InMemoryControlStore:
         return self.care.states.get(patient_id, ControlState.AUTO)
 
     def _open(self, patient_id: UUID) -> HandoffRequestSnapshot | None:
+        """Open, or exhausted down to the on-call contact and not taken yet (like ``SqlControlStore``)."""
         for request in reversed(self.requests):
-            if request.patient_id == patient_id and request.outcome is None:
+            if request.patient_id != patient_id:
+                continue
+            if request.outcome is None or (
+                request.outcome == "exhausted_to_oncall" and request.accepted_by is None
+            ):
                 return request
         return None
 
     def _replace(self, request: HandoffRequestSnapshot) -> None:
         self.requests = [request if r.id == request.id else r for r in self.requests]
+
+    def replace_request(self, request: HandoffRequestSnapshot) -> None:
+        """For ``InMemoryRoutingStore`` (``pema.care.testing_routing``)."""
+        self._replace(request)
 
     def _log(self, agent: CareAgentSnapshot, action: str, depth: str | None, at: datetime) -> None:
         self.care.actions.append(ActionRow(agent.id, action, "paused", depth, at))
@@ -343,6 +352,7 @@ class InMemoryControlStore:
             required_skill=spec.required_skill,
             urgency=spec.urgency,
             created_at=at,
+            clinic_id=agent.clinic_id,
         )
         self.requests.append(request)
         self.care.states[agent.patient_id] = ControlState.HANDOFF_ROUTING

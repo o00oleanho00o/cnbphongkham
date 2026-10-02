@@ -29,9 +29,12 @@ pytestmark = pytest.mark.db
 API_INI = Path(__file__).resolve().parents[2] / "alembic.ini"
 AGENT_TABLES = {
     "care_agents", "care_memory", "conversation_control", "handoff_requests", "tasks", "actions_log", "skills",
+    "paused_reminders",
 }  # fmt: skip
 CLINIC_TABLES = {"staff_profiles", "patient_ownership", "on_call_contacts"}
 COMMON_COLUMNS = {"clinic_id", "created_at", "updated_at", "version"}
+M1_PARENT = "st_0009_single_tenant"
+"""The revision before ``m_0001_care_tables``: M2c's ``m_0002`` sits on top of it, so ``-1`` is no longer M1."""
 
 
 def _columns(engine: Engine, schema: str, table: str) -> set[str]:
@@ -354,9 +357,9 @@ async def test_updated_at_moves_on_update_and_the_version_guards_lost_races(
 
 # ------------------------------------------------------------------------------------ migration
 def test_the_migration_downgrades_one_step_and_upgrades_again(admin: Engine, pg_url: str) -> None:
-    """alembic downgrade -1 rồi upgrade heads đều chạy được trên DB sạch; downgrade gỡ sạch bảng và view"""
+    """alembic downgrade về trước M1 rồi upgrade heads đều chạy được trên DB sạch; downgrade gỡ sạch bảng và view"""
     cfg = Config(str(API_INI))
-    command.downgrade(cfg, "-1")
+    command.downgrade(cfg, M1_PARENT)
     with admin.connect() as conn:
         left = conn.execute(
             text(
@@ -376,7 +379,7 @@ async def test_the_upgrade_pairs_existing_patients_and_copies_their_owners(
 ) -> None:
     """bệnh nhân có sẵn khi nâng cấp được ghép care_agent và chép CSKH phụ trách/bác sĩ sang patient_ownership"""
     cfg = Config(str(API_INI))
-    command.downgrade(cfg, "-1")
+    command.downgrade(cfg, M1_PARENT)
     command.upgrade(cfg, "heads")
     patients = _scalar(admin, "SELECT count(*) FROM clinic.patient")
     assert patients >= len(world.patients)
