@@ -63,7 +63,7 @@ class Loop:
     account_id: str
     """A bot account of its own for every loop, so one test never reads the rows of another."""
     bots: dict[str, FakeBotClient] = field(default_factory=dict[str, FakeBotClient])
-    """The fake Bot API of every account of the loop (the main one and the ``extra_accounts``), by account id."""
+    """The fake Bot API of every account of the loop (the main one and ``extra_accounts``), by id."""
     _updates: int = field(default=0)
     _run: str = field(default_factory=lambda: uuid4().hex[:8])
     """Part of every message id: ``agent.channel_update_seen`` outlives a test, a repeated id is a

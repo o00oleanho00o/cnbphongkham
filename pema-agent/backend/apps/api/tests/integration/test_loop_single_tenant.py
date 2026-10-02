@@ -60,7 +60,9 @@ async def test_two_zalo_accounts_of_the_same_clinic_answer_their_own_customers_i
         assert [chat for chat, _text, _mode in sent_first] == ["uid-khach-mot"]
         assert [chat for chat, _text, _mode in sent_second] == ["uid-khach-hai"]
         assert len(loop.bots[first].sent) == 1, "account two's customer is never answered through account one"
-        assert len(loop.bots[second].sent) == 1, "account one's customer is never answered through account two"
+        assert len(loop.bots[second].sent) == 1, (
+            "account one's customer is never answered through account two"
+        )
 
         wrong_secret = await loop.http.post(
             f"/api/v1/webhooks/zalo-bot/{second}",
