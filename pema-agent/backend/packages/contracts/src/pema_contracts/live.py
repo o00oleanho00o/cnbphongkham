@@ -28,6 +28,12 @@ class LiveEventType(StrEnum):
     """A review item was created or decided."""
     PRESENCE_CHANGED = "presence.changed"
     """Somebody started or stopped looking at a conversation (``id`` is the conversation)."""
+    HANDOFF_CHANGED = "handoff.changed"
+    """A care agent asked for a person, the chain moved on, or somebody accepted or declined (``id`` is the
+    patient). Package M, step M5."""
+    CARE_CHANGED = "care.changed"
+    """The care state of a patient changed: control state, autonomy level, a paused reminder, a note for the
+    agent, an alert (``id`` is the patient). Package M, step M5."""
 
 
 class LiveEvent(ApiModel):
