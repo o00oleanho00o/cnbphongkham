@@ -39,6 +39,8 @@ Contract the screens are written against (backend work comes later; the mock ser
 
 TEMPORARY: these routes and fields are not in `src/lib/api/schema.d.ts` yet, so `src/lib/live/live-types.ts` (types and tolerant parsers) and `live-api.ts` (the two raw calls) stand in. When `openapi.json` has them, regenerate the types, switch to `http.GET/POST` and `Schemas[...]`, delete both files, and remove the three entries of `PENDING_CONTRACT` in `mock/contract.test.ts` (its last test fails on a stale entry). `scripts/presence-check.ts` opens one conversation in two browser contexts against the mock and checks that each sees the other.
 
+`scripts/live-real-check.ts` is the same check against a REAL stack (docker compose behind Caddy, seed demo data, a fake Bot API the worker polls): two staff in two browser contexts, presence both ways, an inbound message, a review item and a resolved task reaching the other screen without a reload, and Redis stopped and started mid-session. Its header lists the environment variables; it stops and starts the Redis container, so use a throwaway stack. Observed timings are in SECURITY-REVIEW-AI01 section 9.
+
 ## Layout
 
 ```
