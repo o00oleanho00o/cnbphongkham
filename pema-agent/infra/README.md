@@ -27,6 +27,8 @@ make ps
 make db-migrate         # re-run roles + alembic upgrade heads inside the compose network
 make infra-config       # validate the compose file with every profile switched on
 make down
+make up-proxy            # the stack behind Caddy (profile proxy + worker + docker-compose.proxy.yml); make down-proxy stops it
+make retention-dry-run  # what the data-retention job WOULD delete (api container: clinic scope, worker container: agent scope)
 ```
 
 Without `make` (Windows): the recipes are plain `docker compose -f infra/docker-compose.yml --env-file infra/.env ...`.

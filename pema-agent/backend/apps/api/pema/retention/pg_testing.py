@@ -211,8 +211,10 @@ class Seed:
     def auth_session(self, clinic: UUID, user: UUID, expired_days_ago: int) -> None:
         """A negative ``expired_days_ago`` is a session that is still valid."""
         self.sql(
-            "INSERT INTO clinic.auth_session (clinic_id, user_id, password_fingerprint, expires_at) "
-            "VALUES (:c, :u, 'fp', now() - make_interval(days => :d)) RETURNING 1",
+            "INSERT INTO clinic.auth_session (clinic_id, user_id, password_fingerprint, expires_at, "
+            "absolute_expires_at) "
+            "VALUES (:c, :u, 'fp', now() - make_interval(days => :d), now() - make_interval(days => :d)) "
+            "RETURNING 1",
             c=clinic,
             u=user,
             d=expired_days_ago,

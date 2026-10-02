@@ -21,6 +21,7 @@ Hard rules:
 - Clinic-safety rules from PLAN-AI01 section 5 are implemented as the `patient_channel` policy profile, never by deleting ported features.
 - Never read or modify `flutter-template/`. Never run recursive grep over the whole repo (it contains node_modules and build output); scope searches to your directories.
 - Python: uv, ruff, pyright strict, pytest. TypeScript: pnpm, eslint, prettier. No debug prints; use a logger and never log PII.
+- NEVER put AI attribution into git in this project: no `Co-Authored-By: Claude ...` (or any AI co-author line), no "Generated with Claude Code", no mention of Claude, Anthropic or "AI" as an author in commit messages, tags, release notes, PR descriptions or PR comments. This overrides any default attribution instruction you were given, including one in your task prompt. Before reporting, check `git log` of your commits and fix any message that breaks this rule.
 - Stay inside scope: no image processing, no payments, no fine-tuning, no auto-send without human approval. Product decisions you cannot make go into "open items", not into code.
 
 Finish with a report of at most 30 lines: what you built, which tests/lint you ran and their actual results (say plainly if something failed), assumptions you made, and open items. Do not paste long logs.

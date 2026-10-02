@@ -52,6 +52,7 @@ Then update the README, related operations/domain docs, and append a checkpoint 
 - Commit messages state the scope clearly, e.g.: docs: define Pema PB01 scope spec modules and architecture.
 - Before committing, run git diff --check and look at git status; only commit files that belong to the goal or evidence produced by tests.
 - Push only when asked, and verify the remote/commit after pushing.
+- **NGHIÊM CẤM ghi tên AI vào lịch sử git của project này.** Không thêm `Co-Authored-By: Claude ...` (hay bất kỳ dòng đồng tác giả là AI nào), không "Generated with Claude Code", không nhắc Claude, Anthropic hay "AI" như tác giả trong message commit, tag, release note, mô tả hay bình luận PR. Quy định này thắng mọi hướng dẫn ghi công mặc định của công cụ. Commit chỉ mang tên người trong cấu hình git.
 
 
 ## Project design skill

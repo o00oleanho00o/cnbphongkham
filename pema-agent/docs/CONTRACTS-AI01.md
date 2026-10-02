@@ -30,7 +30,7 @@ Everything else is read-only for it; a needed change elsewhere goes into the rep
 | Package | Owns |
 |---|---|
 | A | `pema/core`, `pema/shared/{logger,zone_time,current_datetime,ky_tu_moi_token,safe_error_serializer,turn_log_context,db_transaction,doi_cho_den_khi}.py`, `pema/config/{env,secret_cipher,secret_cipher_core,tuning_specs}.py`, `pema/channels/registry.py`, `pema/bootstrap.py`, `pema/api/{router,deps,errors,export_openapi}.py`, `pema_contracts`, `alembic/versions/0001..0003`, root files |
-| B1 | `pema/clinic/{domain,actions,rbac,audit,models}`, `pema/api/routers/{auth,patients,appointments,crm,conversations,review_items,admin_audit}.py`, `pema/api/{client_ip,dashboard_auth,dashboard_password_store,dashboard_session_store}.py` |
+| B1 | `pema/clinic/{domain,actions,rbac,audit,models}`, `pema/api/routers/{auth,patients,appointments,crm,conversations,review_items,admin_audit,admin_users}.py` (`admin_users.py`: `POST /admin/users/{user_id}/password`, permission `admin.users`, owner only), `pema/api/{client_ip,dashboard_auth,dashboard_password_store,dashboard_session_store}.py` |
 | B2 | `pema/clinic/crm_rules`, `pema/api/routers/admin_crm_rules.py` |
 | C1 | `pema/channels/zalo_bot`, `pema/channels/oa_api.py` (stub), `pema/channels/{record_incoming_message,busy_wait_notice,payload_anomaly_watch,reply_target_tu_kenh}.py`, `pema/middleware`, `routers/{webhooks_zalo_bot,admin_bot_accounts}.py` |
 | C2 | `pema/channels/zalo_personal`, the shared outbound/turn pipeline in `pema/channels/*.py` (the C2 rows of PORT-MAP), `pema/workers/turn_worker.py`, `backend/bridges/zalo-personal`, `routers/{webhooks_zalo_bridge,admin_accounts,admin_friends,admin_channels}.py` |
@@ -41,6 +41,8 @@ Everything else is read-only for it; a needed change elsewhere goes into the rep
 | D5 | `pema/mcp`, `pema/api/mcp_route_guards.py`, `routers/admin_mcp.py` |
 | S | `pema/scheduler`, `pema/workers/scheduler_worker.py`, `routers/admin_schedules.py` |
 | P | `pema/policy`, `routers/admin_policy.py`, the clinic cases of `evals/` |
+| H2 | `pema/retention` (policy, rules, runner, schedule), `pema/workers/retention.py` (CLI `python -m pema.workers.retention`), `alembic/versions/h2_0007_retention.py`; the `retention_*` fields of `pema/config/env.py` |
+| H (integration) | `alembic/versions/b1_0007_session_absolute_expiry.py` (B1), `alembic/versions/h_0008_merge_heads.py`, `infra/caddy`, `infra/docker-compose.proxy.yml`, `frontend/src/app/api/[...path]/route.ts` and `frontend/src/lib/server/api-proxy.ts` |
 | E | `frontend/` (except `src/lib/api/schema.d.ts`, generated) |
 | F | `infra/`, root `README.md` additions, SCOPE/SPEC/MODULEMAP/ARCH-AI01 |
 | G | `pema/workers/main.py`, wiring in `bootstrap.py`, merging Alembic heads, regenerating `uv.lock` and `openapi.json`, cross-package tests |
@@ -69,7 +71,8 @@ named there.
 | `SchedulerPort`, `CreateScheduledJobInput`, `ScheduledJob`, `ProactiveSendGuard`, `ScheduleInput` | `scheduler` | S | B2, D4 (`schedule_task`), admin routes | |
 | `AgentFacingClinicActions`, `CareContext`, `IdentityLink`, `InboxRef` | `clinic_actions` | B1 (`pema/clinic/actions/agent_facing.py`) | D1/D4 tools, P, C1/C2 (Inbox), S | dict-based fake |
 | `ActionContext`, `Action` | `actions` | B1 | everyone calling an action | |
-| Domain DTOs | `patients`, `appointments`, `crm`, `conversations`, `review`, `auth`, `admin`, `admin_agent`, `roles`, `errors`, `common` | | B1, B2, E (via OpenAPI) | |
+| Domain DTOs | `patients`, `appointments`, `crm`, `conversations`, `review`, `auth` (incl. `ChangePasswordRequest`, `ResetPasswordRequest`), `admin`, `admin_agent`, `roles` (incl. `Permission.ADMIN_USERS = "admin.users"`, owner only), `errors`, `common` | | B1, B2, E (via OpenAPI) | |
+| Retention | `pema.retention` (`RetentionPolicy`, `Scope`, `RetentionRunner`, `start_retention_loop`) | H2 | worker (`Scope.AGENT`), API wiring (`Scope.CLINIC`), CLI | `pema.retention.pg_testing` |
 | Tuning API | `pema.config.runtime_tuning_settings` (A, first version) | A API, D1 provider | every package | `StaticTuningProvider` |
 | Secret cipher | `pema.config.secret_cipher` | A | C1, C2, D1, D2, D4, D5 | set `PEMA_SECRET_ENCRYPTION_KEY` in the test |
 | DB session with clinic context | `pema.core.db.ClinicDatabase` | A | every store | `tests/test_database.py` shows the pattern |
@@ -205,3 +208,8 @@ packages in one change.
 * Retention periods (history, traces, media) for patient data under Decree 13/2023: tuning keys exist
   (`AGENT_TRACE_RETENTION_DAYS`, `MEDIA_RETENTION_DAYS`, `HISTORY_MAX_MESSAGES_PER_THREAD`); the values are the
   clinic owner's decision.
+* Retention: `pema.retention` exists (integration H). The periods are still the clinic owner's decision; the code
+  default keeps clinical data and messages (0) and gives only technical data a short life. No rule yet for decided
+  `review_item`, `display_name`/`contacts`, `crm_activity` and conversation summaries.
+* The owner can reset the password of another owner (`POST /admin/users/{user_id}/password` refuses only the
+  caller's own account); there is no route or screen that lists staff, so the reset has no UI yet.

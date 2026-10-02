@@ -950,7 +950,7 @@ Bảng "no zalo-agent source" ghi D1 làm `pema/workers/agent_worker.py`. File �
 
 ### Migration
 
-PORT-MAP ghi "Schema = Alembic 0001..0003". Thực tế còn `b1_0004_auth_session_and_inbox`, `b2_0001_crm_protocol_marker`, `s_0004_scheduler_runtime`, `p0001_identity_link`, và `g_0005_merge_heads` gộp các đầu nhánh. Cách chạy là `alembic upgrade heads`.
+PORT-MAP ghi "Schema = Alembic 0001..0003". Thực tế còn `b1_0004_auth_session_and_inbox`, `b2_0001_crm_protocol_marker`, `s_0004_scheduler_runtime`, `p0001_identity_link`, `g_0005_merge_heads` (gộp bốn đầu nhánh), `g_0006_definer_search_path`, rồi `b1_0007_session_absolute_expiry` (hạn tuyệt đối của phiên) và `h2_0007_retention` (tác vụ xóa theo thời hạn lưu; mới, không có TS) cùng nối sau `g_0006` và được `h_0008_merge_heads` gộp lại: chỉ một đầu. Cách chạy là `alembic upgrade heads`.
 
 ### Test được ghi tên nhưng không có dưới tên đó
 
@@ -962,7 +962,7 @@ PORT-MAP ghi "Schema = Alembic 0001..0003". Thực tế còn `b1_0004_auth_sessi
 - `docs/deployment-guide.md` và `docs/vps-setup-checklist.md` → ghi `docs/`; thực tế là `infra/ubuntu/HUONG-DAN-UBUNTU.md` (tiếng Việt) kèm `infra/ubuntu/systemd/`.
 - `docs/system-architecture.md` → `docs/ARCH-AI01.md` (đã viết; cùng SCOPE, SPEC, MODULEMAP-AI01).
 - `docs/ke-toan-token-cua-agent.html`, `docs/mcp-client-architecture.html`: ghi "giữ làm sơ đồ nếu còn đúng"; **chưa chuyển** (không có trong `pema-agent/docs/`).
-- `Caddyfile.site` và `deploy.sh` → ghi `infra/ (reverse proxy)`: **chưa có**. Chưa có reverse proxy trong repo; hướng dẫn Ubuntu dùng Tailscale (webhook công khai cần Tailscale Funnel hoặc reverse proxy do người quản trị tự dựng).
+- `Caddyfile.site` → `infra/caddy/Caddyfile` cùng `infra/caddy/modes/{auto,internal,off}.caddy` và `infra/docker-compose.proxy.yml` (profile `proxy`; không phải bản dịch, viết mới cho repo này). `deploy.sh`: **chưa có**; triển khai bằng `make up-proxy` (xem `infra/README.md`, mục Reverse proxy).
 - `.env.production.example` gộp vào `infra/.env.example`; `config/accounts.example.json` → `infra/accounts.example.json` đúng như ghi.
 
 ### Frontend (các hàng "E")

@@ -144,6 +144,7 @@ Ollama nằm trong *profile* và **chỉ bật khi gói tương ứng đã có m
 | `worker` | `docker compose ... --profile worker up -d` | `pema.workers.main` của gói G |
 | `frontend` | `--profile frontend` | ứng dụng Next.js của gói E (`output: "standalone"`) |
 | `app` | `make up-app` | worker + frontend |
+| `proxy` | `make up-proxy` | Caddy (TLS) đứng trước api và dashboard; xem mục 8a |
 | `bridge` | `--profile bridge` | gói C2 (và chấp nhận rủi ro khóa tài khoản Zalo) |
 | `ollama` | `make up-ollama` | NVIDIA Container Toolkit (mục 3) |
 
@@ -329,6 +330,43 @@ nc -vz -w3 <IP_CONG_CONG> 5432 ; nc -vz -w3 <IP_CONG_CONG> 6379 ; nc -vz -w3 <IP
 
 ---
 
+## 8a. Reverse proxy Caddy khi cho truy cập công khai (profile `proxy`)
+
+Chỉ cần khi nhân viên hoặc Zalo (webhook) phải tới dashboard/API qua internet mà không qua Tailscale. Qua Tailscale thuần
+thì không cần proxy. Hai cách chạy không trộn nhau: bình thường (`make up`, `make up-app`: api và frontend bind loopback,
+không TLS) và sau Caddy (`make up-proxy`: chỉ Caddy publish 80/443, api và frontend chỉ `expose` trong mạng compose).
+
+1. **DNS:** trỏ bản ghi `A` (và `AAAA` nếu có IPv6) của tên miền, ví dụ `clinic.example.com`, về IP công cộng của máy.
+   Chế độ `auto` cần DNS đã đúng *trước* khi khởi động, nếu không Let's Encrypt từ chối và Caddy thử lại chậm dần.
+2. **`infra/.env`:** `PEMA_PROXY_TLS=auto`, `PEMA_PUBLIC_DOMAIN=clinic.example.com`, `PEMA_PROXY_BIND=0.0.0.0` (hoặc đúng
+   IP công cộng). Chưa có tên miền: `PEMA_PROXY_TLS=internal`, `PEMA_PUBLIC_DOMAIN=localhost` hoặc tên LAN (Caddy tự ký, phải
+   cài gốc CA lên thiết bị, lệnh ở `infra/README.md`). Chỉ có Tailscale và muốn HTTP thuần: `PEMA_PROXY_TLS=off`,
+   `PEMA_PUBLIC_DOMAIN=http://100.x.y.z`, `PEMA_PROXY_BIND=<IP Tailscale>`, `PEMA_SESSION_COOKIE_SECURE=false`.
+3. **Mở 80 và 443 trên ufw khi công khai** (80 để Caddy xin và gia hạn chứng chỉ và chuyển hướng sang https; 443 cho
+   khách; UDP 443 cho HTTP/3):
+
+```bash
+sudo ufw allow 80/tcp && sudo ufw allow 443/tcp && sudo ufw allow 443/udp
+sudo ufw status verbose
+```
+
+   **Nhưng nhớ mục 8: Docker publish cổng bằng quy tắc iptables đứng trước ufw, nên ufw không phải kiểm soát chính.**
+   Kiểm soát chính là địa chỉ bind: `PEMA_PROXY_BIND=0.0.0.0` là cố ý mở Caddy ra ngoài, còn Postgres, Redis, api, frontend giữ
+   `127.0.0.1` (`docker-compose.proxy.yml` còn bỏ hẳn cổng của api và frontend). Đừng đặt `0.0.0.0` cho bất kỳ biến `*_BIND`
+   nào khác. Chạy lại phép kiểm ở cuối mục 8 sau khi bật proxy: chỉ 80/443 phản hồi từ ngoài.
+4. **Khởi động:** `make up-proxy` (cần Docker Compose 2.24 trở lên cho `!reset`; kiểm `docker compose version`). Dừng:
+   `make down-proxy`. Kiểm: `curl -fsS https://clinic.example.com/healthz`.
+5. **Địa chỉ client và cookie:** Caddy ghi đè `X-Forwarded-For`; API chỉ tin header đó từ địa chỉ cố định của Caddy
+   (`PEMA_TRUSTED_PROXIES`, mặc định `PEMA_PROXY_IP`), nên giới hạn đăng nhập theo IP không bị giả mạo. Có thêm proxy hay CDN
+   đứng trước Caddy thì phải thêm dải của nó vào `PEMA_TRUSTED_PROXIES` **và** cấu hình `trusted_proxies` của Caddy.
+   Cookie phiên `Secure` nên đăng nhập chỉ chạy qua https (trừ chế độ `off`).
+6. **Webhook Zalo Bot:** đặt `PEMA_ZALO_BOT_WEBHOOK_BASE_URL=https://clinic.example.com` (không có dấu `/` cuối) nếu dùng chế độ
+   `webhook`; đường `/api/v1/webhooks/*` đi qua, riêng webhook cầu nối Zalo cá nhân bị chặn từ ngoài.
+
+Chưa kiểm: Let's Encrypt thật (chế độ `auto`) chưa được thử; chế độ `internal` đã chạy thử trên máy dev.
+
+---
+
 ## 9. Hạ tầng LLM chuyển dần sang llama-server (roadmap)
 
 Ollama dùng trước vì cài một lệnh và quản lý mô hình sẵn. Chuyển sang `llama-server` (llama.cpp) khi cần: kiểm
@@ -456,6 +494,7 @@ Cả hai dùng cùng `docker-compose.yml` và cùng `.env`; chỉ khác địa c
 - [ ] `make ps`: postgres, redis, api khỏe; `migrate` đã `Exited (0)`.
 - [ ] `curl http://127.0.0.1:8000/healthz` trả `{"status":"ok",...}`.
 - [ ] `ss -ltnp` không có cổng 5432/6379 trên `0.0.0.0`; thử từ mạng ngoài thất bại (mục 8).
+- [ ] Nếu công khai qua Caddy (mục 8a): DNS đúng, chỉ 80/443 từ ngoài, `curl https://<tên miền>/healthz` ra 200, đăng nhập được (cookie `Secure`).
 - [ ] `infra/.env` quyền `600`, không nằm trong git (`git status` sạch); khóa mã hóa có bản sao ngoại tuyến.
 - [ ] Một bản sao lưu đã chạy và **một lần `restore-verify` thành công**.
 - [ ] UPS: rút điện thử, máy tắt êm, bật lại tự động.

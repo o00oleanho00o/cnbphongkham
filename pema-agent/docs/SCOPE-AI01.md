@@ -25,7 +25,7 @@ Mục tiêu an toàn đi trước mục tiêu tiện lợi: agent soạn nháp, 
 - **Bộ lập lịch**: job `message` (từ mẫu đã duyệt) và `agent`, trần tin chủ động mỗi ngày, công tắc khẩn (kill switch), cửa sổ giờ gửi, khoảng cách giữa các tin, phục hồi sau lỗi.
 - **Kho tri thức** tài liệu da liễu (tài liệu mẫu hư cấu trong `kb-samples/`) với tìm kiếm lai (từ khóa + vector) và dấu duyệt của bác sĩ.
 - **FE Next.js** (mobile-first, tiếng Việt): Việc hôm nay, Inbox, Hàng đợi duyệt, Hồ sơ bệnh nhân (chỉ đọc), Tin nhắn mẫu; và quản trị AI (accounts/QR, agents/persona, model/tuning, tools, KB, lịch, MCP, usage/trace, log, chính sách).
-- **Hạ tầng**: docker-compose (Postgres + pgvector, Redis, migrate, api, worker, frontend, bridge, Ollama), role DB, sao lưu/khôi phục, hướng dẫn Ubuntu + Ollama + Tailscale.
+- **Hạ tầng**: docker-compose (Postgres + pgvector, Redis, migrate, api, worker, frontend, bridge, Ollama, Caddy reverse proxy ở profile `proxy`), tác vụ xóa dữ liệu theo thời hạn lưu (`pema.retention`), role DB, sao lưu/khôi phục, hướng dẫn Ubuntu + Ollama + Tailscale.
 
 ## 3. Hai hồ sơ chính sách
 
@@ -85,6 +85,9 @@ Nguồn: PLAN-AI01 mục 8 (2026-10-01), CONTRACTS-AI01 mục 7, và ghi chú tr
 9. Mẫu tin (`clinic.message_template`) phải có dấu duyệt của bác sĩ mới dùng được cho job `message`.
 10. Đặt lịch của agent là **đề xuất**; nhân viên xác nhận thì lịch mới được tạo (ghi trong `clinic_tools.py`: quyết định sản phẩm 2026-10-01).
 11. Giữ nguyên giá trị Việt của enum lưu và hiển thị (`cho_xu_ly`, `da_ket_noi`, ...); thời gian ISO 8601 với `+07:00`.
+12. **Phiên đăng nhập có hạn tuyệt đối** (`PEMA_SESSION_ABSOLUTE_DAYS`, mặc định 7, 1 đến 30) bên cạnh hạn trượt 480 phút; chủ phòng khám đặt lại mật khẩu nhân viên qua `POST /api/v1/admin/users/{user_id}/password` (quyền `admin.users`, chỉ chủ). Vòng tích hợp H, 2026-10-02.
+13. **Có tác vụ xóa theo thời hạn lưu** (`pema.retention`; worker chạy scope `agent`, API chạy scope `clinic`), nhưng mặc định giữ dữ liệu lâm sàng và tin nhắn vô thời hạn; chỉ dữ liệu thuần kỹ thuật có đời ngắn. Không bao giờ xóa `clinic.audit_log`, bệnh nhân, lịch hẹn, đồng ý, mục duyệt đang mở.
+14. **Truy cập công khai qua Caddy** (profile `proxy`, ba chế độ TLS `auto`/`internal`/`off`); chỉ Caddy publish 80/443, API chỉ tin `X-Forwarded-For` từ `PEMA_TRUSTED_PROXIES`, cookie phiên `Secure`; FE đọc địa chỉ API lúc chạy (`PEMA_API_INTERNAL_URL`).
 
 ## 8. Điều chưa kiểm chứng
 
@@ -95,6 +98,7 @@ Tài liệu không coi các mục dưới đây là đã xong. Mỗi mục ghi r
 | Zalo thật | Test với client giả (Bot API) và cầu nối giả cho `zca-js`; kịch bản vòng khép kín trên Postgres + Redis tạm | Chưa chạy với bot Zalo thật (polling, webhook, `setWebhook`), chưa quét QR với tài khoản thật, chưa đo giới hạn của Zalo |
 | LLM thật | Vòng lặp chạy với mô hình giả có kịch bản; bộ eval có hướng dẫn chạy | Chưa có lần chạy eval với mô hình thật (D1 ghi rõ); chưa đo chất lượng gọi tool của Qwen3-8B với engine này |
 | Ollama | F đã nạp Qwen3-8B Q5_K_M và bge-m3 trong container Docker trên RTX 3060 12 GB (Windows) và đo VRAM | Chưa chạy Ollama cài trực tiếp trên Ubuntu; chưa chạy engine + eval qua Ollama; Q6_K chưa đo; llama-server chỉ là roadmap |
+| Reverse proxy | Dựng thật stack `postgres redis migrate api frontend caddy` ở chế độ `internal` (Docker Desktop trên Windows): đăng nhập thật qua Caddy bằng curl, refresh, chủ đặt lại mật khẩu nhân viên và phiên của người đó bị thu hồi | Chưa thử Let's Encrypt thật (chế độ `auto`), chưa có tên miền thật, chưa chạy trên Ubuntu có IP công cộng; chưa thử trình duyệt thật với gốc CA nội bộ |
 | Ubuntu thật | Docker, Postgres + pgvector, Redis, role, migration, sao lưu bản không mã hóa đã chạy (Docker Desktop trên Windows) | Driver NVIDIA, NVIDIA Container Toolkit, Tailscale/WireGuard, ufw, NUT/UPS, timer systemd chưa chạy trên máy Ubuntu thật |
 | Sao lưu mã hóa | Script, đường không mã hóa | Mã hóa age/gpg chưa chạy thử; diễn tập khôi phục có mã hóa chưa làm |
 | FE | Chạy với backend mock (`pnpm dev:mock`); test hợp đồng mock với OpenAPI; script chụp 5 viewport | Chưa kiểm trên thiết bị thật; chưa có bằng chứng chạy FE nối API thật trong một phiên thủ công |
@@ -113,10 +117,10 @@ Mã đã giữ một giá trị mặc định cho từng mục để chạy đư
 4. **Trấn an tự động.** Khi gặp cờ đỏ hôm nay **không có tin nào tự đến bệnh nhân**: chỉ có `triage_alert` cho bác sĩ và một nháp để người gửi. Có nên gửi ngay một câu trấn an cố định không cần duyệt không?
 5. **Nhắc tự động trước khi duyệt mẫu.** Luật CRM mặc định chỉ tạo việc nhân viên (`staff_task`). `auto_reminder` yêu cầu mẫu đã được bác sĩ duyệt. Có cho nhắc tự động trong lúc mẫu chưa được duyệt không (mã hiện từ chối).
 6. **Trần tin chủ động 10 mỗi ngày.** Số này (mỗi bệnh nhân mỗi account mỗi ngày trong `patient_channel`) và cửa sổ giờ gửi, khoảng cách giữa tin là mặc định kế thừa từ zalo-agent, chưa đối chiếu với thực tế phòng khám hay mức Zalo chịu được.
-7. **Thời hạn lưu dữ liệu theo Nghị định 13/2023.** Lịch sử hội thoại, trace, ảnh, bản sao lưu. Mã có khóa chỉnh (`HISTORY_MAX_MESSAGES_PER_THREAD` mặc định 500, `AGENT_TRACE_RETENTION_DAYS` 7, `MEDIA_RETENTION_DAYS` 7, bản sao lưu 14 ngày) và **chưa có tác vụ xóa dữ liệu `clinic.*`**; giá trị do chủ phòng khám quyết định.
+7. **Thời hạn lưu dữ liệu theo Nghị định 13/2023.** Lịch sử hội thoại, trace, ảnh, bản sao lưu. Mã có khóa chỉnh (`HISTORY_MAX_MESSAGES_PER_THREAD` mặc định 500, `AGENT_TRACE_RETENTION_DAYS` 7, `MEDIA_RETENTION_DAYS` 7, bản sao lưu 14 ngày) và, từ vòng H, tác vụ `pema.retention` với một biến ngày cho mỗi nhóm (`PEMA_RETENTION_*`, 0 = giữ mãi; mặc định 0 cho lịch sử, bộ nhớ, tin nhắn, usage). **Các con số thật do chủ phòng khám quyết định**; mã chỉ cho đời ngắn với dữ liệu thuần kỹ thuật (trace 7, ảnh 7, `job_runs` 30, phiên hết hạn 1, mã liên kết 7, lần liên kết sai 30 ngày). **Chưa có quy tắc xóa** cho `review_item` đã quyết, `display_name` và `contacts`, `crm_activity`, tóm tắt hội thoại.
 8. **Vị trí server.** Tại phòng khám hay cloud Việt Nam; sao lưu ngoài phòng khám; UPS. Hướng dẫn Ubuntu viết cho cả hai.
 9. **Nơi lưu tệp** (ảnh khách gửi, tệp KB tải lên, tài liệu sinh ra): hiện là volume cục bộ `pema-data` (`PEMA_DATA_DIR`); object storage chưa làm.
-10. **Webhook HTTPS.** Chế độ webhook cần địa chỉ HTTPS công khai Zalo gọi tới được (Tailscale Funnel, reverse proxy, hay cloud). Mặc định đang là polling để khỏi cần địa chỉ công khai.
+10. **Webhook HTTPS.** Chế độ webhook cần địa chỉ HTTPS công khai Zalo gọi tới được (Tailscale Funnel, reverse proxy, hay cloud). Profile `proxy` (Caddy, chế độ `auto`) cho đường `/api/v1/webhooks/*` đi qua, trừ webhook cầu nối bị chặn từ ngoài. Mặc định đang là polling để khỏi cần địa chỉ công khai.
 11. **MCP cho bệnh nhân.** `patient_channel` chặn mọi tool MCP. Có cho một MCP nào đó (ví dụ tra lịch) cho kênh bệnh nhân không, và ai duyệt.
 
 Việc mở khác (kỹ thuật, chưa cần chủ phòng khám) ở ARCH-AI01 mục 13: chọn account khi nhiều account cùng loại, một worker mỗi phòng khám hay chung, liên kết vai trò bệnh nhân với hồ sơ, và các sửa tài liệu hạ tầng còn lại.
