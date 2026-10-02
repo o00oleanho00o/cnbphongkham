@@ -30,7 +30,7 @@ Everything else is read-only for it; a needed change elsewhere goes into the rep
 | Package | Owns |
 |---|---|
 | A | `pema/core`, `pema/shared/{logger,zone_time,current_datetime,ky_tu_moi_token,safe_error_serializer,turn_log_context,db_transaction,doi_cho_den_khi}.py`, `pema/config/{env,secret_cipher,secret_cipher_core,tuning_specs}.py`, `pema/channels/registry.py`, `pema/bootstrap.py`, `pema/api/{router,deps,errors,export_openapi}.py`, `pema_contracts`, `alembic/versions/0001..0003`, root files |
-| B1 | `pema/clinic/{domain,actions,rbac,audit,models}`, `pema/api/routers/{auth,patients,appointments,crm,conversations,review_items,admin_audit,admin_users}.py` (`admin_users.py`: `GET /admin/users` with `admin.users.read` for owner and manager; `POST /admin/users`, `PATCH /admin/users/{user_id}` and `POST /admin/users/{user_id}/password` with `admin.users`, owner only), `pema/api/{client_ip,dashboard_auth,dashboard_password_store,dashboard_session_store,dashboard_staff_store}.py` |
+| B1 | `pema/clinic/{domain,actions,rbac,audit,models}`, `pema/api/routers/{auth,patients,appointments,crm,conversations,review_items,staff,admin_audit,admin_users}.py` (`staff.py`, ST-S: `GET /staff/assignable` for every signed-in staff member) (`admin_users.py`: `GET /admin/users` with `admin.users.read` for owner and manager; `POST /admin/users`, `PATCH /admin/users/{user_id}` and `POST /admin/users/{user_id}/password` with `admin.users`, owner only), `pema/api/{client_ip,dashboard_auth,dashboard_password_store,dashboard_session_store,dashboard_staff_store}.py` |
 | B2 | `pema/clinic/crm_rules`, `pema/api/routers/admin_crm_rules.py` |
 | C1 | `pema/channels/zalo_bot`, `pema/channels/oa_api.py` (stub), `pema/channels/{record_incoming_message,busy_wait_notice,payload_anomaly_watch,reply_target_tu_kenh}.py`, `pema/middleware`, `routers/{webhooks_zalo_bot,admin_bot_accounts}.py` |
 | C2 | `pema/channels/zalo_personal`, the shared outbound/turn pipeline in `pema/channels/*.py` (the C2 rows of PORT-MAP), `pema/workers/turn_worker.py`, `backend/bridges/zalo-personal`, `routers/{webhooks_zalo_bridge,admin_accounts,admin_friends,admin_channels}.py` |
@@ -71,7 +71,7 @@ named there.
 | `SchedulerPort`, `CreateScheduledJobInput`, `ScheduledJob`, `ProactiveSendGuard`, `ScheduleInput` | `scheduler` | S | B2, D4 (`schedule_task`), admin routes | |
 | `AgentFacingClinicActions`, `CareContext`, `IdentityLink`, `InboxRef` | `clinic_actions` | B1 (`pema/clinic/actions/agent_facing.py`) | D1/D4 tools, P, C1/C2 (Inbox), S | dict-based fake |
 | `ActionContext`, `Action` | `actions` | B1 | everyone calling an action | |
-| Domain DTOs | `patients`, `appointments`, `crm`, `conversations`, `review`, `auth` (incl. `ChangePasswordRequest`, `ResetPasswordRequest`, `StaffUserOut`, `StaffUserCreate`, `StaffUserUpdate`), `admin`, `admin_agent`, `roles` (incl. `Permission.ADMIN_USERS = "admin.users"`, owner only, and `Permission.ADMIN_USERS_READ = "admin.users.read"`, owner and manager), `errors`, `common` | | B1, B2, E (via OpenAPI) | |
+| Domain DTOs | `patients`, `appointments`, `crm`, `conversations`, `review`, `auth` (incl. `ChangePasswordRequest`, `ResetPasswordRequest`, `StaffUserOut`, `StaffUserCreate`, `StaffUserUpdate`, `AssignableStaffOut`), `admin`, `admin_agent`, `roles` (incl. `Permission.ADMIN_USERS = "admin.users"`, owner only, and `Permission.ADMIN_USERS_READ = "admin.users.read"`, owner and manager), `errors`, `common` | | B1, B2, E (via OpenAPI) | |
 | Retention | `pema.retention` (`RetentionPolicy`, `Scope`, `RetentionRunner`, `start_retention_loop`) | H2 | worker (`Scope.AGENT`), API wiring (`Scope.CLINIC`), CLI | `pema.retention.pg_testing` |
 | Tuning API | `pema.config.runtime_tuning_settings` (A, first version) | A API, D1 provider | every package | `StaticTuningProvider` |
 | Secret cipher | `pema.config.secret_cipher` | A | C1, C2, D1, D2, D4, D5 | set `PEMA_SECRET_ENCRYPTION_KEY` in the test |
@@ -216,8 +216,8 @@ packages in one change.
   password of another owner (refused only for the caller's own account for lock and role, for the caller's own
   password reset, and when it would leave the clinic without an active owner); whether the clinic wants that is
   the clinic owner's decision. `StaffUserOut` carries no password or hash; the list is for the owner and the manager
-  only, so the "Phụ trách" box of "Việc hôm nay" (used by `cs_staff`) does not use it: opening `admin.users.read` to
-  `cs_staff` and `reception` is an open product decision, not done.
+  only, so the "Phụ trách" box of "Việc hôm nay" and the Inbox header (used by `cs_staff`) use `GET /staff/assignable`
+  instead (section 10.9, ST-S); `admin.users.read` stays owner and manager.
 
 ## 10. Single-tenant (package ST-A, branch `feat/single-tenant`)
 
@@ -361,7 +361,37 @@ the clinic calls `ctx.the_clinic_id()`. Python that needs the id calls `get_inst
   bridge `.env.example`, Caddyfile, `infra/README.md` and the Ubuntu guide use the same paths. `openapi.json` and
   `frontend/src/lib/api/schema.d.ts` are regenerated (`make openapi types`); `LoginRequest` is e-mail + password.
 * Not yet in the backend (wave 4, the frontend mock serves them as `PENDING_CONTRACT`): `GET /api/v1/events` (SSE),
-  `POST /api/v1/conversations/{conversation_id}/presence`, `GET /api/v1/staff/assignable`.
+  `POST /api/v1/conversations/{conversation_id}/presence`. `GET /api/v1/staff/assignable` is in the backend since
+  ST-S (section 10.9).
 * New closed-loop tests: `tests/integration/test_loop_single_tenant.py` (real login with e-mail and password only, then
   `/me` and refresh; two Zalo bot accounts of the one clinic answer their own customers independently, each with its own
   webhook secret). The harness `pema.composition.testing.open_loop` takes `extra_accounts`.
+
+### 10.9 Assignable staff and the one assignee check (ST-S)
+
+Route, `openapi.json` and `schema.d.ts` regenerated (`make openapi types`); the contract change is additive (one new
+route, one new DTO), so it did not need package G.
+
+| Route | Who | Answer |
+|---|---|---|
+| `GET /api/v1/staff/assignable` (tag `staff`, operation `staff_list_assignable_staff`) | ANY signed-in staff member (a session is the only requirement; no permission code, so reception and `cs_staff` may call it; anonymous 401, agent/scheduler/patient actor 403) | `AssignableStaffOut[]` = `{id, name, role}`: ACTIVE staff of the installation with an assignable role, A to Z by name (case-insensitive), ties by id. Never an e-mail, phone, hash, last sign-in or locked account. 60 calls per minute per user (429 `rate_limited`) |
+
+Decisions:
+
+* **Assignable roles** (`pema.clinic.rbac.ASSIGNABLE_ROLES`, derived from the permission matrix, not a second list): the
+  staff roles that hold `conversation.reply` or `crm_task.resolve` = owner, manager, doctor, cs_staff. Reception is out
+  (no Inbox, no CRM queue: an item handed to them would sit unseen) and so is `patient`. A role that gains or loses
+  those permissions follows automatically.
+* **Who may assign** stays the permission of each action: `conversation.reply` (conversation `assigned_user_id`),
+  `crm_task.resolve` (`owner_user_id`), `patient.write` (`doctor_id`, `cs_owner_id`). Since ST-S a staff member may hand
+  work to a colleague, not only to themselves; no role may assign to a locked user, to reception or from another clinic.
+* **One check on write** (`pema.clinic.actions.assignees.load_assignable_user`): the target must exist in the
+  installation, be active and hold an assignable role; a caller may only NARROW the roles (treating doctor: doctor or
+  owner; CSKH owner: cs_staff, manager or owner). Every refusal is a 422 `validation_failed` with the same message for
+  an unknown id, a locked user and a wrong role, so the answer cannot be used to probe accounts.
+* **Audit** (same transaction, ids only): `conversation.update` adds `assignee_from`/`assignee_to`, `crm_task.resolve`
+  adds `owner_from`/`owner_to`, `patient.create`/`patient.update` add `doctor_id_from/_to`, `cs_owner_id_from/_to`. The
+  actor (id, role) and the entity are the existing columns.
+* No live event is published by these writes (ST-R owns events and presence); the existing `tasks.changed`-like hooks, if
+  any, are untouched.
+* Security entries: `SECURITY-REVIEW-AI01` SEC-60 to SEC-63.
