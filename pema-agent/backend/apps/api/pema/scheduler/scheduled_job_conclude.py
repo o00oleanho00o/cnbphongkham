@@ -33,7 +33,7 @@ async def conclude_blocked_not_run(
     restored to EXACTLY the old ``scheduled_for`` (retry at the very next tick - unlike the DAILY CAP reason,
     see ``scheduled_job_cap_guard``). Resets ``delivery_attempts``: this run did NOT end because of a failed
     send."""
-    async with deps.db.session(job.clinic_id) as s:
+    async with deps.db.session() as s:
         if job.schedule_kind is ScheduleKind.ONCE:
             await deps.jobs.set_next_run(job.clinic_id, job.id, scheduled_for, session=s)
         await deps.runs.finish_run(
@@ -64,7 +64,7 @@ async def conclude(deps: SchedulerDeps, job: ScheduledJob, run_id: int, params: 
     """Close BOTH places: the run ledger (``job_runs``) and the summary on the job. Resets
     ``delivery_attempts``: this run REALLY ended, it cuts the chain of consecutive failed sends - it does not
     accumulate across the successful/silent runs in between (Item 4, round 3)."""
-    async with deps.db.session(job.clinic_id) as s:
+    async with deps.db.session() as s:
         await conclude_in(deps, s, job, run_id, params)
 
 
@@ -81,7 +81,7 @@ async def conclude_delivery_failed(
     1). Counted into ``delivery_attempts`` instead of ``mark_run`` at once: one dropped connection must not
     kill the job, but it must not be retried FOREVER either. Only reaching ``MAX_DELIVERY_ATTEMPTS`` really
     spends the run slot."""
-    async with deps.db.session(job.clinic_id) as s:
+    async with deps.db.session() as s:
         attempts = await deps.attempts.increment_delivery_attempts(job.clinic_id, job.id, session=s)
 
         if attempts < MAX_DELIVERY_ATTEMPTS:

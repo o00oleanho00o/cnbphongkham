@@ -6,8 +6,8 @@ user input; the only values are bound parameters), which is why the f-strings be
 Shape of a batch: pick up to ``:batch`` expired rows of ONE clinic with ``FOR UPDATE SKIP LOCKED`` (a second
 runner or a writer holding a row is skipped, not waited for) and delete exactly those rows by ``ctid`` in the
 same statement. One statement is one small transaction, so a run never holds a long lock and a crash loses at
-most the batch in flight. Row level security applies as everywhere (the caller opens
-``db.session(clinic_id)``) and the explicit ``clinic_id = :clinic_id`` keeps the planner on the index prefix
+most the batch in flight. The explicit ``clinic_id = :clinic_id`` (the installation id, the caller opens
+``db.session()``) keeps the planner on the index prefix
 of the clinic.
 
 NOT touched, on purpose (each is a decision, not an omission):

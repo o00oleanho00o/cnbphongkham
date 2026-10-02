@@ -2,8 +2,9 @@
 
 New module. Actions are plain ``async`` functions ``(db, ctx, ...) -> DTO``. ``db`` is a
 ``pema.core.db.ClinicDatabase`` (role ``be_app``); each action opens its own unit of work with
-``db.session(ctx.clinic_id)`` so RLS is always set. Actions that must compose into one transaction (CRM task
-resolve + booking, review approve + booking) share private ``_*`` helpers that take a session.
+``db.session()`` (single tenant: no clinic context, no RLS). Actions that must compose into one
+transaction (CRM task resolve + booking, review approve + booking) share private ``_*`` helpers that take
+a session.
 """
 
 from __future__ import annotations

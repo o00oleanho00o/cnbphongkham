@@ -95,7 +95,7 @@ async def _audit_actions(admin: Engine, request_id: str) -> set[str]:
 
 
 async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_id(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase, admin: Engine, app: FastAPI
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase, admin: Engine, app: FastAPI
 ) -> None:
     app.state.outbound_delivery = FakeOutboundDelivery()
     seen: dict[str, str] = {}
@@ -110,18 +110,18 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
         seen[op] = wanted
         return response
 
-    reception = await client_factory("clinic-a", "reception.lan")
-    cs = await client_factory("clinic-a", "cs.maianh")
-    mai = await client_factory("clinic-a", "doctor.mai")
-    manager = await client_factory("clinic-a", "manager")
-    P027, P029 = (str(world_a.patients[c]) for c in ("P027", "P029"))
+    reception = await client_factory("reception.lan")
+    cs = await client_factory("cs.maianh")
+    mai = await client_factory("doctor.mai")
+    manager = await client_factory("manager")
+    P027, P029 = (str(world.patients[c]) for c in ("P027", "P029"))
 
     # auth: login is audited under the id sent with the login request itself
     request_id = f"audit-{uuid4().hex}"
     login = await reception.post(
         "/api/v1/auth/login",
         headers={"X-Request-Id": request_id},
-        json={"clinic_slug": "clinic-a", "email": "reception.lan@example.test", "password": ACCOUNT_PASSWORD},
+        json={"email": "reception.lan@example.test", "password": ACCOUNT_PASSWORD},
     )
     assert login.status_code == 200
     assert "auth.login" in await _audit_actions(admin, request_id)
@@ -148,7 +148,7 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
         json={"kind": "media", "granted": True},
     )
 
-    doctor = str(world_a.users["doctor.mai"])
+    doctor = str(world.users["doctor.mai"])
     appts: list[dict[str, Any]] = []
     for _ in range(3):
         created = await call(
@@ -209,7 +209,7 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
                 "INSERT INTO clinic.crm_task (id, clinic_id, task_key, patient_id, rule_key, reason, due_at, suggested_action) "
                 "VALUES (:i, :c, :k, :p, 'd1', 'r', now(), 'a')"
             ),
-            {"i": task_id, "c": world_a.clinic_id, "k": f"audit:{task_id}", "p": world_a.patients["P029"]},
+            {"i": task_id, "c": world.clinic_id, "k": f"audit:{task_id}", "p": world.patients["P029"]},
         )
     await call(
         "crm_resolve_task",
@@ -221,7 +221,7 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
             "outcome": "no_need",
             "channel": "call",
             "note": "ghi chú",
-            "owner_user_id": str(world_a.users["cs.maianh"]),
+            "owner_user_id": str(world.users["cs.maianh"]),
         },
     )
     await call(
@@ -232,7 +232,7 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
         json={"patient_id": P029, "channel": "internal_note", "note": "n"},
     )
 
-    ref = await record_inbound(db, world_a)
+    ref = await record_inbound(db, world)
     conv = f"/conversations/{ref.conversation_id}"
     await call("conversations_mark_conversation_read", cs, "POST", f"{conv}/read")
     await call("conversations_send_message", cs, "POST", f"{conv}/messages", json={"text": "Chào bạn."})
@@ -242,13 +242,13 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
         cs,
         "PATCH",
         conv,
-        json={"version": version, "assigned_user_id": str(world_a.users["cs.thu"])},
+        json={"version": version, "assigned_user_id": str(world.users["cs.thu"])},
     )
 
     from pema.clinic.actions import ClinicAgentFacingActions
     from pema_contracts.review import ReviewItemCreate, ReviewItemOut, ReviewKind
 
-    agent = ActionContext(clinic_id=world_a.clinic_id, actor_type=ActorType.AGENT)
+    agent = ActionContext(clinic_id=world.clinic_id, actor_type=ActorType.AGENT)
     items: list[ReviewItemOut] = []
     for n in range(3):
         items.append(
@@ -256,7 +256,7 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
                 agent,
                 ReviewItemCreate(
                     job_id=f"audit-job-{uuid4().hex}",
-                    clinic_id=world_a.clinic_id,
+                    clinic_id=world.clinic_id,
                     patient_ref="P025",
                     conversation_ref=str(ref.conversation_id),
                     kind=ReviewKind.REPLY_DRAFT,
@@ -311,7 +311,7 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
     )
 
     # a throw-away account: changing the password of a seeded one would break every later test
-    changer = await sign_in(app, "clinic-a", await add_staff_account(db, world_a))
+    changer = await sign_in(app, await add_staff_account(db, world))
     await call(
         "auth_change_password",
         changer,
@@ -322,12 +322,12 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
     await changer.aclose()
 
     # the owner resets the password of another throw-away account (never the seeded ones)
-    victim_email = await add_staff_account(db, world_a)
+    victim_email = await add_staff_account(db, world)
     with admin.connect() as conn:
         victim_id = conn.execute(
             text("SELECT id FROM clinic.user_account WHERE email = :e"), {"e": victim_email}
         ).scalar_one()
-    owner = await client_factory("clinic-a", "owner")
+    owner = await client_factory("owner")
     await call(
         "admin_users_reset_user_password",
         owner,
@@ -360,9 +360,9 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
 
 
 async def test_an_audit_row_records_who_did_it_and_never_pii(
-    client_factory: ClientFactory, world_a: SeedResult, admin: Engine
+    client_factory: ClientFactory, world: SeedResult, admin: Engine
 ) -> None:
-    reception = await client_factory("clinic-a", "reception.lan")
+    reception = await client_factory("reception.lan")
     request_id = f"audit-{uuid4().hex}"
     secret_name, secret_phone = "Tên Riêng Kiểm Thử", "0000000777"
     created = await reception.post(
@@ -382,12 +382,12 @@ async def test_an_audit_row_records_who_did_it_and_never_pii(
             str(v)
             for r in conn.execute(
                 text("SELECT details::text, entity_id FROM clinic.audit_log WHERE clinic_id = :c"),
-                {"c": world_a.clinic_id},
+                {"c": world.clinic_id},
             )
             for v in r
         )
     assert row.actor_type == "user"
-    assert row.actor_user_id == world_a.users["reception.lan"]
+    assert row.actor_user_id == world.users["reception.lan"]
     assert row.actor_role == "reception"
     assert row.entity_type == "patient"
     assert secret_name not in everything and secret_phone not in everything
@@ -395,9 +395,9 @@ async def test_an_audit_row_records_who_did_it_and_never_pii(
 
 
 async def test_the_audit_log_is_append_only_even_for_the_application_role(
-    db: ClinicDatabase, world_a: SeedResult
+    db: ClinicDatabase, world: SeedResult
 ) -> None:
-    async with db.session(world_a.clinic_id) as session:
+    async with db.session() as session:
         assert (await session.scalar(text("SELECT count(*) FROM clinic.audit_log"))) > 0
     for statement in (
         "UPDATE clinic.audit_log SET action = 'x'",
@@ -405,25 +405,25 @@ async def test_the_audit_log_is_append_only_even_for_the_application_role(
         "TRUNCATE clinic.audit_log",
     ):
         with pytest.raises(DBAPIError):
-            async with db.session(world_a.clinic_id) as session:
+            async with db.session() as session:
                 await session.execute(text(statement))
 
 
 async def test_the_guard_refuses_to_commit_a_clinic_change_without_an_audit_row(
-    db: ClinicDatabase, world_a: SeedResult, admin: Engine
+    db: ClinicDatabase, world: SeedResult, admin: Engine
 ) -> None:
     code = f"G{uuid4().hex[:6]}"
     with pytest.raises(audit.AuditMissingError):
-        async with db.session(world_a.clinic_id) as session:
-            session.add(Patient(clinic_id=world_a.clinic_id, code=code, full_name="Không audit (mẫu)"))
+        async with db.session() as session:
+            session.add(Patient(clinic_id=world.clinic_id, code=code, full_name="Không audit (mẫu)"))
     with admin.connect() as conn:
         found = conn.execute(
             text("SELECT count(*) FROM clinic.patient WHERE code = :c"), {"c": code}
         ).scalar_one()
     assert found == 0, "the refused transaction must have rolled back"
-    ctx = ActionContext(clinic_id=world_a.clinic_id, actor_type=ActorType.SYSTEM)
-    async with db.session(world_a.clinic_id) as session:
-        session.add(Patient(clinic_id=world_a.clinic_id, code=code, full_name="Có audit (mẫu)"))
+    ctx = ActionContext(clinic_id=world.clinic_id, actor_type=ActorType.SYSTEM)
+    async with db.session() as session:
+        session.add(Patient(clinic_id=world.clinic_id, code=code, full_name="Có audit (mẫu)"))
         await session.flush()
         await audit.record(session, ctx, "test.patient_create", "patient", code)
     with admin.connect() as conn:
@@ -435,8 +435,8 @@ async def test_the_guard_refuses_to_commit_a_clinic_change_without_an_audit_row(
         )
 
 
-async def test_a_read_only_transaction_needs_no_audit_row(db: ClinicDatabase, world_a: SeedResult) -> None:
-    async with db.session(world_a.clinic_id) as session:
+async def test_a_read_only_transaction_needs_no_audit_row(db: ClinicDatabase, world: SeedResult) -> None:
+    async with db.session() as session:
         assert (await session.execute(text("SELECT 1"))).scalar_one() == 1
 
 

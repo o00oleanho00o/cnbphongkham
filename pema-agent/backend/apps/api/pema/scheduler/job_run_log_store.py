@@ -163,7 +163,7 @@ class JobRunLogStore:
 
     async def heartbeat(self, clinic_id: UUID, run_id: int) -> None:
         """Prove the worker of a ``running`` row is still alive (see ``interrupt_stale_runs``)."""
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             await s.execute(
                 text(
                     "UPDATE agent.job_runs SET heartbeat_at = now() "
@@ -196,7 +196,7 @@ class JobRunLogStore:
 
     async def last_started_at(self, clinic_id: UUID, job_id: str) -> datetime | None:
         """Start of the most recent run of the job, or ``None`` (diagnostics for the admin API)."""
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             value = (
                 await s.execute(
                     text(

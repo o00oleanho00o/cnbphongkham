@@ -122,7 +122,7 @@ async def list_patients(
                 Patient.phone.like(f"%{escape_like(q)}%", escape="\\"),
             )
         )
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         total = await session.scalar(select(func.count()).select_from(Patient).where(*conditions)) or 0
         rows = await session.execute(
             select(Patient, doctor.display_name, cs.display_name)
@@ -139,7 +139,7 @@ async def list_patients(
 
 async def get_patient(db: ClinicDatabase, ctx: ActionContext, patient_id: UUID) -> PatientOut:
     require(ctx, Permission.PATIENT_READ)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row = await load_patient(session, ctx, patient_id)
         await require_patient_access(session, ctx, patient_id)
         return await patient_to_out(session, ctx, row)
@@ -157,7 +157,7 @@ async def _next_code(session: AsyncSession, ctx: ActionContext) -> str:
 async def create_patient(db: ClinicDatabase, ctx: ActionContext, payload: PatientCreate) -> PatientOut:
     require(ctx, Permission.PATIENT_WRITE)
     today = now().astimezone(VN_TZ).date()
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         if payload.doctor_id is not None:
             await _check_assignee(session, ctx, payload.doctor_id, DOCTOR_ROLES, "bác sĩ")
         if payload.cs_owner_id is not None:
@@ -196,7 +196,7 @@ async def update_patient(
     db: ClinicDatabase, ctx: ActionContext, patient_id: UUID, payload: PatientUpdate
 ) -> PatientOut:
     require(ctx, Permission.PATIENT_WRITE)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row = await load_patient(session, ctx, patient_id)
         check_version(row.version, payload.version)
         changed: list[str] = []

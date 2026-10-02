@@ -21,8 +21,7 @@ from pema.api.clinic_testing import (
     jwt_env,
     pg_url,
     worker_db,
-    world_a,
-    world_b,
+    world,
 )
 from pema.channels.zalo_bot.settings import get_zalo_bot_settings
 from pema.clinic.actions.seed_demo import SeedResult
@@ -41,8 +40,7 @@ __all__ = [
     "pg_url",
     "redis_url",
     "worker_db",
-    "world_a",
-    "world_b",
+    "world",
 ]
 
 
@@ -81,11 +79,11 @@ def make_loop(
     loop_env: None,
     db: ClinicDatabase,
     worker_db: ClinicDatabase,
-    world_a: SeedResult,
+    world: SeedResult,
     redis_url: str,
     tmp_path: Path,
 ) -> LoopFactory:
-    return LoopFactory(db, worker_db, world_a, redis_url, tmp_path)
+    return LoopFactory(db, worker_db, world, redis_url, tmp_path)
 
 
 __all__ += ["Loop"]

@@ -4,7 +4,7 @@ scheduler and agent tools all call these. ``agent_facing`` implements
 
 Conventions: every public action is ``async def name(db, ctx, ...)``; ``db`` is a
 ``pema.core.db.ClinicDatabase`` and ``ctx`` an ``ActionContext``. Each action checks the permission FIRST
-(``pema.clinic.rbac``), opens ``db.session(ctx.clinic_id)`` so row level security is always set, and writes
+(``pema.clinic.rbac``), opens ``db.session()`` (one installation is one clinic: no RLS), and writes
 its audit row in the same transaction (``pema.clinic.audit``; a structural guard rejects a commit that
 changed clinic data without one).
 """

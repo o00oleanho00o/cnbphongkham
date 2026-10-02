@@ -201,7 +201,7 @@ async def test_a_bare_app_never_serves_a_staff_route_to_an_anonymous_caller(
 async def test_validation_errors_use_the_error_envelope_without_echoing_input(
     client: httpx.AsyncClient,
 ) -> None:
-    resp = await client.post("/api/v1/auth/login", json={"clinic_slug": "demo", "email": "a@example.test"})
+    resp = await client.post("/api/v1/auth/login", json={"email": "a@example.test"})
     assert resp.status_code == 422
     body = resp.json()["error"]
     assert body["code"] == "validation_failed"

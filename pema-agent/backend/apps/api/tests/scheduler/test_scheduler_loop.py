@@ -15,7 +15,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime, timedelta
-from uuid import UUID
 
 import pytest
 
@@ -48,10 +47,7 @@ def once_due(seconds_ago: int = 5) -> OnceSchedule:
 
 
 def loop_of(env: Env, **kwargs: object) -> SchedulerLoop:
-    async def ids() -> list[UUID]:
-        return [env.clinic_id]
-
-    return SchedulerLoop(env.deps, clinic_ids=ids, **kwargs)  # type: ignore[arg-type]
+    return SchedulerLoop(env.deps, **kwargs)  # type: ignore[arg-type]
 
 
 async def last_run(env: Env, job_id: str):

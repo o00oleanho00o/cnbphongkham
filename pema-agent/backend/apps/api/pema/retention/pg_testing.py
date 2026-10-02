@@ -1,8 +1,10 @@
 """Test support of the retention job: synthetic rows with an explicit age (not imported by production code).
 
-Same pattern as ``pema.conversation.pg_testing``. ``Seed`` inserts as the SUPERUSER of the throwaway database
-(bypassing RLS) so a test can place rows of any age in any clinic; the code under test always runs as a runtime
-role (``be_app`` or ``agent_worker``).
+Same pattern as ``pema.conversation.pg_testing`` (it reuses its ``PgTestServer``: a throwaway database with the
+real Alembic history). Single tenant: that database holds exactly ONE clinic, created by the migration.
+``RetentionEnv`` takes it (``ensure_test_clinic``), empties the data (``truncate_installation_data``) and adds the
+default agent and two bot accounts; ``Seed`` inserts as the SUPERUSER of the database so a test can place rows of any
+age; the code under test always runs as a runtime role (``be_app`` or ``agent_worker``).
 """
 
 # ruff: noqa: E501  (long SQL literals of synthetic rows)
@@ -11,18 +13,70 @@ from __future__ import annotations
 
 import json
 import uuid
+from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
 from sqlalchemy import text
 
-from pema.conversation.pg_testing import ClinicEnv
+from pema.conversation.pg_testing import BE_PASSWORD, DEFAULT_AGENT_ID, WORKER_PASSWORD, PgTestServer
+from pema.core.db import ClinicDatabase
+from pema.core.testing import ensure_test_clinic, truncate_installation_data
+
+
+@dataclass
+class RetentionEnv:
+    """The one clinic of the throwaway database, empty, with its runtime-role handles: ``db`` is the API role,
+    ``worker_db`` the worker role."""
+
+    server: PgTestServer
+    clinic_id: UUID
+    db: ClinicDatabase
+    worker_db: ClinicDatabase
+
+    @classmethod
+    def create(cls, server: PgTestServer, account_ids: tuple[str, ...] = ("acc-1", "acc-2")) -> RetentionEnv:
+        with server.admin_engine.begin() as conn:
+            clinic_id = ensure_test_clinic(conn)
+            truncate_installation_data(conn)
+            conn.execute(
+                text(
+                    "INSERT INTO agent.agents (clinic_id, id, name, is_default, policy_profile) "
+                    "VALUES (:c, :id, 'Trợ lý mặc định', true, 'patient_channel')"
+                ),
+                {"c": clinic_id, "id": DEFAULT_AGENT_ID},
+            )
+            for account_id in account_ids:
+                conn.execute(
+                    text(
+                        "INSERT INTO agent.accounts (clinic_id, id, label, agent_id) "
+                        "VALUES (:c, :id, :label, :agent)"
+                    ),
+                    {"c": clinic_id, "id": account_id, "label": account_id, "agent": DEFAULT_AGENT_ID},
+                )
+        return cls(
+            server=server,
+            clinic_id=clinic_id,
+            db=ClinicDatabase(server.role_url("be_app", BE_PASSWORD), pool_size=3),
+            worker_db=ClinicDatabase(server.role_url("agent_worker", WORKER_PASSWORD), pool_size=2),
+        )
+
+    async def fetch(self, sql: str, **params: Any) -> list[Mapping[str, Any]]:
+        """Run a SELECT as the API role and return rows as mappings."""
+        async with self.db.session() as session:
+            result = await session.execute(text(sql), params)
+            return [dict(row) for row in result.mappings().all()]
+
+    async def dispose(self) -> None:
+        await self.db.dispose()
+        await self.worker_db.dispose()
 
 
 class Seed:
     """Synthetic rows with an explicit age in days (``age=40`` = created 40 days ago), inserted as superuser."""
 
-    def __init__(self, env: ClinicEnv) -> None:
+    def __init__(self, env: RetentionEnv) -> None:
         self._env = env
 
     def sql(self, statement: str, **params: Any) -> Any:
@@ -34,9 +88,6 @@ class Seed:
         return int(
             self.sql(f"SELECT count(*) FROM {table} WHERE clinic_id = :c AND ({where})", c=clinic)  # noqa: S608
         )
-
-    def new_clinic(self) -> UUID:
-        return self._env.add_clinic(uuid.uuid4(), ("acc-1",))
 
     # ----------------------------------------------------------------------------------------------- agent
     def history(

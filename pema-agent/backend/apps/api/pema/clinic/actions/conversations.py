@@ -204,7 +204,7 @@ async def list_conversations(
                 func.lower(ChannelIdentity.display_name).like(pattern, escape="\\"),
             )
         )
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         items, total, _ = await summaries(session, ctx, conditions, limit=limit, offset=offset)
     return Page[ConversationSummary](items=items, total=total, limit=limit, offset=offset)
 
@@ -218,7 +218,7 @@ async def _one_out(session: AsyncSession, ctx: ActionContext, conversation_id: U
 
 async def get_conversation(db: ClinicDatabase, ctx: ActionContext, conversation_id: UUID) -> ConversationOut:
     require(ctx, Permission.CONVERSATION_READ)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         await load_conversation(session, ctx, conversation_id)
         return await _one_out(session, ctx, conversation_id)
 
@@ -227,7 +227,7 @@ async def update_conversation(
     db: ClinicDatabase, ctx: ActionContext, conversation_id: UUID, payload: ConversationUpdate
 ) -> ConversationOut:
     require(ctx, Permission.CONVERSATION_REPLY)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row = await load_conversation(session, ctx, conversation_id)
         check_version(row.version, payload.version)
         changed: list[str] = []
@@ -274,7 +274,7 @@ async def update_conversation(
 
 async def mark_conversation_read(db: ClinicDatabase, ctx: ActionContext, conversation_id: UUID) -> None:
     require(ctx, Permission.CONVERSATION_READ)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row = await load_conversation(session, ctx, conversation_id)
         cleared = row.unread_count
         row.unread_count = 0
@@ -289,7 +289,7 @@ async def list_messages(
     db: ClinicDatabase, ctx: ActionContext, conversation_id: UUID, *, limit: int = 50, offset: int = 0
 ) -> Page[MessageOut]:
     require(ctx, Permission.CONVERSATION_READ)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         await load_conversation(session, ctx, conversation_id)
         base = (Message.clinic_id == ctx.clinic_id, Message.conversation_id == conversation_id)
         total = await session.scalar(select(func.count()).select_from(Message).where(*base)) or 0
@@ -335,7 +335,7 @@ async def send_message(
     transaction 2 records sent/rejected (``outbound.deliver_queued_message``)."""
     require(ctx, Permission.CONVERSATION_REPLY)
     update_id = f"staff:{ctx.idempotency_key}" if ctx.idempotency_key else None
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         conv = await load_conversation(session, ctx, conversation_id)
         existing = None
         if update_id is not None:

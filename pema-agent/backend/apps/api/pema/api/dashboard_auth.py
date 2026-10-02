@@ -4,10 +4,12 @@
 Forced deviations from the original (one password in ``.env``, a random ``<id>.<secret>`` cookie, SQLite
 session table):
 
-* accounts: ``clinic_slug`` + ``email`` + argon2id password of ``clinic.user_account``
-  (``dashboard_password_store``);
-* the cookie is a signed JWT (HS256, ``PEMA_JWT_SECRET``) carrying only ``sub`` (user), ``cid`` (clinic) and
-  ``sid`` (session id); every request ALSO loads the session row (``dashboard_session_store``), so logout
+* accounts: ``email`` + argon2id password of ``clinic.user_account`` (``dashboard_password_store``). One
+  installation is one clinic (single tenant), so login takes no clinic slug and the clinic is the installation
+  clinic (``get_installation_clinic_id``);
+* the cookie is a signed JWT (HS256, ``PEMA_JWT_SECRET``) carrying only ``sub`` (user) and ``sid`` (session
+  id); a ``cid`` claim of a cookie issued before single tenant is ignored when read. Every request ALSO loads
+  the session row (``dashboard_session_store``), so logout
   revokes for real, a password change evicts older sessions, and a role change or a deactivation applies at
   once (the role is read from the user row, never from the token);
 * (SEC-24) a session has two clocks: ``expires_at`` slides (``Settings.session_ttl_minutes`` after the last
@@ -16,7 +18,7 @@ session table):
   it is a 401, and the cookie ``Max-Age`` and the JWT ``exp`` are capped by it, so a stolen cookie cannot
   be kept alive by refreshing it;
 * the rate limit is kept as is (5 attempts per minute per key, buckets pruned past 500) and keyed twice:
-  by client IP and by ``clinic:email``, so one account cannot be ground down from many addresses.
+  by client IP and by ``email``, so one account cannot be ground down from many addresses.
 
 Session transport: cookie ``pema_session`` (``Settings.session_cookie_name``), ``HttpOnly``, ``SameSite=Lax``,
 ``Secure`` outside the ``dev`` environment. There is no service-token path here: the agent worker does not
@@ -51,7 +53,7 @@ from pema.clinic.actions.outbound import OutboundDelivery
 from pema.clinic.models import Clinic, UserAccount
 from pema.clinic.rbac import passwords
 from pema.config.env import get_settings
-from pema.core.db import ClinicDatabase
+from pema.core.db import ClinicDatabase, get_installation_clinic_id
 from pema.shared.logger import create_logger
 from pema_contracts.actions import ActionContext, ActionSource
 from pema_contracts.auth import LoginRequest, SessionInfo, UserSummary
@@ -162,7 +164,6 @@ def _cookie_secure() -> bool:
 @dataclass(frozen=True)
 class TokenClaims:
     user_id: UUID
-    clinic_id: UUID
     session_id: UUID
 
 
@@ -180,7 +181,6 @@ def create_session_token(claims: TokenClaims, issued_at: datetime, expires_at: d
     return jwt.encode(
         {
             "sub": str(claims.user_id),
-            "cid": str(claims.clinic_id),
             "sid": str(claims.session_id),
             "iat": int(issued_at.timestamp()),
             "exp": int(expires_at.timestamp()),
@@ -199,11 +199,11 @@ def parse_session_token(token: str | None, at: datetime | None = None) -> TokenC
             token,
             _secret(),
             algorithms=[JWT_ALGORITHM],
-            options={"require": ["exp", "sub", "cid", "sid"], "verify_exp": False},
+            options={"require": ["exp", "sub", "sid"], "verify_exp": False},
         )
         if int(claims["exp"]) <= int((at or now()).timestamp()):
             return None
-        return TokenClaims(UUID(claims["sub"]), UUID(claims["cid"]), UUID(claims["sid"]))
+        return TokenClaims(UUID(claims["sub"]), UUID(claims["sid"]))
     except (jwt.PyJWTError, ValueError, KeyError, TypeError):
         return None
 
@@ -273,9 +273,9 @@ async def verify_session_token(db: ClinicDatabase, token: str | None) -> Authent
     claims = parse_session_token(token, at)
     if claims is None:
         return None
-    async with db.session(claims.clinic_id) as session:
+    async with db.session() as session:
         principal = await session_store.find_principal(session, claims.session_id, at)
-    if principal is None or principal.user_id != claims.user_id or principal.clinic_id != claims.clinic_id:
+    if principal is None or principal.user_id != claims.user_id:
         return None
     # The password changed after this session was created.
     if passwords.fingerprint(principal.password_hash) != principal.password_fingerprint:
@@ -318,23 +318,19 @@ async def login(
     client_ip: str,
     request_id: str | None = None,
 ) -> LoginResult:
-    """Email + password for a clinic. Every failure is the same 401 (no account enumeration); every success
-    and every failure with a known clinic is audited."""
+    """Email + password. Every failure is the same 401 (no account enumeration); every success and every
+    failure is audited."""
     email = body.email.strip().lower()
-    account_key = f"acct:{body.clinic_slug}:{email}"
+    account_key = f"acct:{email}"
     if not allow_login_attempt(f"ip:{client_ip}") or not allow_login_attempt(account_key):
         raise DomainError(ErrorCode.RATE_LIMITED, "Thử đăng nhập quá nhiều lần. Vui lòng đợi một phút.")
 
-    clinic_id = await db.resolve_clinic(body.clinic_slug)
-    if clinic_id is None:
-        passwords.burn_verification_time(body.password.get_secret_value())
-        raise DomainError(ErrorCode.UNAUTHENTICATED, BAD_CREDENTIALS_MESSAGE)
-
+    clinic_id = await get_installation_clinic_id(db)
     plain = body.password.get_secret_value()
     stamp = now()
     absolute_expires_at = stamp + _session_absolute_lifetime()
     expires_at = min(stamp + _session_ttl(), absolute_expires_at)
-    async with db.session(clinic_id) as session:
+    async with db.session() as session:
         user = await session.scalar(
             select(UserAccount).where(
                 UserAccount.clinic_id == clinic_id, UserAccount.email == email, UserAccount.active.is_(True)
@@ -393,18 +389,18 @@ async def login(
             authed = None
     if authed is None:
         # The failing transaction above rolled back nothing worth keeping; the failure gets its own audit row.
-        async with db.session(clinic_id) as session:
+        async with db.session() as session:
             await audit.record(
                 session, _system_context(clinic_id, request_id), "auth.login_failed", "user_account", None
             )
         raise DomainError(ErrorCode.UNAUTHENTICATED, BAD_CREDENTIALS_MESSAGE)
     clear_login_attempts(account_key)
-    token = create_session_token(TokenClaims(authed.user_id, clinic_id, authed.session_id), stamp, expires_at)
+    token = create_session_token(TokenClaims(authed.user_id, authed.session_id), stamp, expires_at)
     return LoginResult(token=token, user=authed, max_age_seconds=_max_age_seconds(stamp, expires_at))
 
 
 async def _clinic_name(session: AsyncSession) -> str:
-    """Name of the clinic of the current context (RLS leaves exactly one row)."""
+    """Name of the clinic (``clinic.clinic`` holds exactly one row)."""
     return await session.scalar(select(Clinic.name)) or ""
 
 
@@ -415,7 +411,7 @@ async def refresh(db: ClinicDatabase, user: AuthenticatedUser, request_id: str |
     if user.absolute_expires_at <= stamp:
         raise DomainError(ErrorCode.UNAUTHENTICATED, SESSION_ENDED_MESSAGE)
     wanted = min(stamp + _session_ttl(), user.absolute_expires_at)
-    async with db.session(user.clinic_id) as session:
+    async with db.session() as session:
         expires_at = await session_store.extend_session(session, user.session_id, wanted, stamp)
         if expires_at is None:
             # The row went away or crossed its ceiling between the request check and now.
@@ -433,15 +429,13 @@ async def refresh(db: ClinicDatabase, user: AuthenticatedUser, request_id: str |
         expires_at=expires_at,
         absolute_expires_at=user.absolute_expires_at,
     )
-    token = create_session_token(
-        TokenClaims(user.user_id, user.clinic_id, user.session_id), stamp, expires_at
-    )
+    token = create_session_token(TokenClaims(user.user_id, user.session_id), stamp, expires_at)
     return LoginResult(token=token, user=renewed, max_age_seconds=_max_age_seconds(stamp, expires_at))
 
 
 async def revoke_session(db: ClinicDatabase, user: AuthenticatedUser, request_id: str | None = None) -> None:
     """Logout: delete the row; the old cookie never works again."""
-    async with db.session(user.clinic_id) as session:
+    async with db.session() as session:
         await session_store.delete_session(session, user.session_id)
         await audit.record(
             session, user.action_context(request_id), "auth.logout", "user_account", user.user_id

@@ -9,8 +9,10 @@ shares, so the conftest files only import them:
   once per session; the test is SKIPPED when the variable is not set. The first use DROPS every Pema schema
   of that database, so never point it at data you care about;
 * ``db`` / ``worker_db``: a ``ClinicDatabase`` as role ``be_app`` (API process) or ``agent_worker`` (worker),
-  both subject to row level security;
-* ``world_a`` / ``world_b``: two clinics seeded with ``seed_demo`` (all synthetic), one set of users per role;
+  the roles of production (there is no row level security any more);
+* ``world``: THE clinic of the database (single tenant: one installation is one clinic) emptied with
+  ``truncate_installation_data`` and seeded with ``seed_demo`` (all synthetic), one set of users per role.
+  Every test that uses it starts from the same data; a test never inserts a second clinic;
 * ``demo_clock``: freezes the action clock at the demo day 2026-09-20 09:00 (+07:00);
 * ``app``, ``client_factory``: the FastAPI app wired to ``db`` and an async HTTP client per signed-in user.
 
@@ -39,6 +41,7 @@ from pema.clinic.actions import _common
 from pema.clinic.actions.seed_demo import DEMO_DAY, SeedResult, seed_demo
 from pema.config.env import get_settings
 from pema.core.db import ClinicDatabase
+from pema.core.testing import ensure_test_clinic, truncate_installation_data
 from pema_contracts.clinic_actions import InboxRef
 from pema_contracts.common import VN_TZ
 
@@ -51,7 +54,7 @@ API_INI = Path(__file__).resolve().parents[2] / "alembic.ini"
 HEAD_TABLE = "alembic_version_pema"
 DEMO_NOW = datetime(DEMO_DAY.year, DEMO_DAY.month, DEMO_DAY.day, 9, 0, tzinfo=VN_TZ)
 
-ClientFactory = Callable[[str, str], Awaitable[httpx.AsyncClient]]
+ClientFactory = Callable[[str], Awaitable[httpx.AsyncClient]]
 
 
 def _role_url(admin: str, role: str, password: str) -> str:
@@ -155,13 +158,16 @@ async def worker_db(pg_url: str) -> AsyncIterator[ClinicDatabase]:
 
 
 @pytest_asyncio.fixture
-async def world_a(db: ClinicDatabase) -> SeedResult:
-    return await seed_demo(db, password=ACCOUNT_PASSWORD, slug="clinic-a")
-
-
-@pytest_asyncio.fixture
-async def world_b(db: ClinicDatabase) -> SeedResult:
-    return await seed_demo(db, password=ACCOUNT_PASSWORD, slug="clinic-b")
+async def world(pg_url: str, db: ClinicDatabase) -> SeedResult:
+    """The one clinic, emptied, then seeded with the demo data (see the module docstring)."""
+    engine = create_engine(pg_url)
+    try:
+        with engine.begin() as conn:
+            ensure_test_clinic(conn)
+            truncate_installation_data(conn)
+    finally:
+        engine.dispose()
+    return await seed_demo(db, password=ACCOUNT_PASSWORD)
 
 
 @pytest.fixture
@@ -175,20 +181,16 @@ def app(db: ClinicDatabase, jwt_env: None) -> FastAPI:
 
 @pytest_asyncio.fixture
 async def client_factory(app: FastAPI) -> AsyncIterator[ClientFactory]:
-    """``await make("clinic-a", "doctor.mai")`` returns an HTTP client that is signed in as that user."""
+    """``await make("doctor.mai")`` returns an HTTP client that is signed in as that user."""
     clients: list[httpx.AsyncClient] = []
 
-    async def make(clinic_slug: str, user_key: str) -> httpx.AsyncClient:
+    async def make(user_key: str) -> httpx.AsyncClient:
         transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
         http = httpx.AsyncClient(transport=transport, base_url="http://test")
         clients.append(http)
         response = await http.post(
             "/api/v1/auth/login",
-            json={
-                "clinic_slug": clinic_slug,
-                "email": f"{user_key}@example.test",
-                "password": ACCOUNT_PASSWORD,
-            },
+            json={"email": f"{user_key}@example.test", "password": ACCOUNT_PASSWORD},
         )
         dashboard_auth.reset_login_rate_limit()  # frozen clock: a whole test shares one rate-limit minute
         assert response.status_code == 200, response.text  # noqa: S101
@@ -212,7 +214,7 @@ async def add_staff_account(db: ClinicDatabase, world: SeedResult, *, role: str 
 
     user_id = uuid4()
     email = f"account.{user_id.hex[:10]}@example.test"
-    async with db.session(world.clinic_id) as session:
+    async with db.session() as session:
         session.add(
             UserAccount(
                 id=user_id,
@@ -234,15 +236,11 @@ async def add_staff_account(db: ClinicDatabase, world: SeedResult, *, role: str 
     return email
 
 
-async def sign_in(
-    app: FastAPI, clinic_slug: str, email: str, password: str = ACCOUNT_PASSWORD
-) -> httpx.AsyncClient:
+async def sign_in(app: FastAPI, email: str, password: str = ACCOUNT_PASSWORD) -> httpx.AsyncClient:
     """An HTTP client signed in as ``email`` (the caller closes it). Fails the test when the login fails."""
     transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
     http = httpx.AsyncClient(transport=transport, base_url="http://test")
-    response = await http.post(
-        "/api/v1/auth/login", json={"clinic_slug": clinic_slug, "email": email, "password": password}
-    )
+    response = await http.post("/api/v1/auth/login", json={"email": email, "password": password})
     dashboard_auth.reset_login_rate_limit()
     assert response.status_code == 200, response.text  # noqa: S101
     return http

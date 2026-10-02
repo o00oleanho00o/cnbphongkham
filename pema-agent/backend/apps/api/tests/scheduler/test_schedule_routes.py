@@ -3,7 +3,7 @@
 
 Two groups carry the weight: (1) ISOLATION - the original proved that a job of thread B cannot be touched with the
 (accountId, threadId) of thread A even when its 12-hex id is known; the contract here addresses a job by ``job_id``
-inside ONE clinic, so the isolation that is proved is the clinic boundary (a job of another clinic is "not found");
+inside the ONE clinic of the installation (single tenant), so what is proved is that an unknown id is "not found";
 (2) "Run now" must NOT shift the real schedule - ``next_run_at`` / ``enabled`` / ``run_count`` measured BEFORE and
 AFTER, even when the send succeeds.
 
@@ -262,24 +262,6 @@ async def test_patch_schedules_unknown_job_is_404(api: tuple[httpx.AsyncClient, 
     assert response.status_code == 404
 
 
-async def test_patch_schedules_a_job_of_another_clinic_is_404_and_untouched(
-    api: tuple[httpx.AsyncClient, Env, FastAPI], make_env: EnvMaker
-) -> None:
-    """job của PHÒNG KHÁM KHÁC -> 404, không sửa được (thay cho IDOR theo thread của bản gốc)"""
-    client, env, app = api
-    other = make_env()
-    other_job = await other.make_job(thread_id="t-clinic-khac")
-
-    response = await client.patch(f"{BASE_URL}/{other_job.id}", json={"name": "Bị đổi trộm"})
-
-    assert response.status_code == 404, "job của phòng khám khác phải coi như không tồn tại"
-    still = await other.deps.jobs.get_job_unscoped(other.clinic_id, other_job.id)
-    assert still is not None
-    assert still.name == other_job.name, "tên KHÔNG được đổi qua đường vượt phòng khám"
-    assert app is not None
-    assert env.clinic_id != other.clinic_id
-
-
 async def test_patch_schedules_a_new_schedule_is_parsed_with_the_same_rules_as_creation(
     api: tuple[httpx.AsyncClient, Env, FastAPI],
 ) -> None:
@@ -311,30 +293,20 @@ async def test_delete_schedules_removes_the_job(api: tuple[httpx.AsyncClient, En
     assert (await client.delete(f"{BASE_URL}/{job['id']}")).status_code == 404
 
 
-async def test_delete_schedules_a_job_of_another_clinic_is_404_and_stays(
-    api: tuple[httpx.AsyncClient, Env, FastAPI], make_env: EnvMaker
-) -> None:
-    """job của PHÒNG KHÁM KHÁC -> 404, job vẫn còn nguyên"""
+async def test_delete_schedules_unknown_job_is_404(api: tuple[httpx.AsyncClient, Env, FastAPI]) -> None:
+    """job không tồn tại -> 404"""
     client, _, _ = api
-    other = make_env()
-    other_job = await other.make_job(thread_id="t-clinic-khac")
-    response = await client.delete(f"{BASE_URL}/{other_job.id}")
-    assert response.status_code == 404
-    assert await other.deps.jobs.get_job_unscoped(other.clinic_id, other_job.id) is not None
+    assert (await client.delete(f"{BASE_URL}/khong-ton-tai")).status_code == 404
 
 
 # ---------------------------------------------------------------------------- POST /{id}/run
 
 
-async def test_run_schedule_a_job_of_another_clinic_is_404(
-    api: tuple[httpx.AsyncClient, Env, FastAPI], make_env: EnvMaker
-) -> None:
-    """job của PHÒNG KHÁM KHÁC -> 404, không chạy thử được"""
-    client, _, _ = api
-    other = make_env()
-    other_job = await other.make_job(thread_id="t-clinic-khac")
-    assert (await client.post(f"{BASE_URL}/{other_job.id}/run")).status_code == 404
-    assert other.channel.sent == []
+async def test_run_schedule_unknown_job_is_404(api: tuple[httpx.AsyncClient, Env, FastAPI]) -> None:
+    """job không tồn tại -> 404, không chạy thử được"""
+    client, env, _ = api
+    assert (await client.post(f"{BASE_URL}/khong-ton-tai/run")).status_code == 404
+    assert env.channel.sent == []
 
 
 async def test_run_schedule_really_sends_but_next_run_at_enabled_run_count_do_not_change_even_twice(
@@ -381,14 +353,10 @@ async def test_run_schedule_a_job_with_a_run_still_running_is_409_no_trial_on_to
 # --------------------------------------------------------------------------- GET /{id}/runs
 
 
-async def test_list_schedule_runs_a_job_of_another_clinic_is_404(
-    api: tuple[httpx.AsyncClient, Env, FastAPI], make_env: EnvMaker
-) -> None:
-    """job của PHÒNG KHÁM KHÁC -> 404"""
+async def test_list_schedule_runs_unknown_job_is_404(api: tuple[httpx.AsyncClient, Env, FastAPI]) -> None:
+    """job không tồn tại -> 404"""
     client, _, _ = api
-    other = make_env()
-    other_job = await other.make_job(thread_id="t-clinic-khac")
-    assert (await client.get(f"{BASE_URL}/{other_job.id}/runs")).status_code == 404
+    assert (await client.get(f"{BASE_URL}/khong-ton-tai/runs")).status_code == 404
 
 
 async def test_list_schedule_runs_returns_the_history_after_a_trial_with_a_null_turn_id_for_a_message_job(

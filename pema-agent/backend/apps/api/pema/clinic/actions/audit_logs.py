@@ -44,7 +44,7 @@ async def list_audit_logs(
         conditions.append(AuditLog.occurred_at >= occurred_from)
     if occurred_to is not None:
         conditions.append(AuditLog.occurred_at < occurred_to)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         total = await session.scalar(select(func.count()).select_from(AuditLog).where(*conditions)) or 0
         rows = (
             await session.scalars(

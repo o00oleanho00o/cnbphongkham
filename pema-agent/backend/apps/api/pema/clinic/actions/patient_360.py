@@ -223,7 +223,7 @@ def _timeline(
 async def get_patient_360(db: ClinicDatabase, ctx: ActionContext, patient_id: UUID) -> Patient360:
     require(ctx, Permission.PATIENT_READ_360)
     cid = ctx.clinic_id
-    async with db.session(cid) as session:
+    async with db.session() as session:
         patient = await load_patient(session, ctx, patient_id)
         await require_patient_access(session, ctx, patient_id)
         patient_dto = await patient_to_out(session, ctx, patient)
