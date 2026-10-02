@@ -1,12 +1,12 @@
 # Care agent evaluation: package M, step M6
 
-Generated 2026-10-02 19:57 UTC by `evals.care.run_eval`. Python 3.12.0 on Windows; model: none; Postgres: throwaway database.
+Generated 2026-10-02 20:03 UTC by `evals.care.run_eval`. Python 3.12.0 on Windows; model: none; Postgres: throwaway database.
 
 Commands used for this report:
 
 ```bash
 cd pema-agent/backend
-PEMA_EVAL_CARE_DATABASE_URL=<throwaway postgres> uv run python -m evals.care.run_eval
+PYTHONPATH=.. PEMA_EVAL_CARE_DATABASE_URL=<throwaway postgres> uv run python -m evals.care.run_eval
 ```
 
 ## 0. Read this first
@@ -73,7 +73,6 @@ Confusion (rows label, columns predicted):
 | D5 | 0 | 0 | 0 | 0 | 19 |
 
 - decided by: fallback 47, no_text 1, red_flag 20, rules 15; cases that needed no model call: 83/83
-- accuracy with diacritics 47.0% (n=66), without 88.2% (n=17)
 
 ### D5 (red flag): the safety numbers
 
@@ -195,20 +194,20 @@ Time until the on-call contact is asked when every staff member stays silent (fa
 
 | patient message to reply draft | p50 ms | p95 ms | max ms | depth-model calls | reply-model calls | specialist model steps | outcome |
 |---|---|---|---|---|---|---|---|
-| D1 by rules (booking), reply model only | 0.08 | 0.10 | 0.20 | 0 | 1 | 0 | drafted |
-| D2: depth model + reply model | 0.12 | 0.18 | 0.58 | 1 | 1 | 0 | drafted |
-| D2 + Reviewer delegation (checklist, no model) | 0.25 | 0.42 | 0.67 | 1 | 1 | 0 | drafted |
-| D2 + Knowledge + Scheduler delegation (2 specialists, 2 scripted steps each) | 2.71 | 3.58 | 5.60 | 1 | 1 | 4 | drafted |
-| D4: depth model, then handoff round + routing | 0.35 | 0.47 | 0.84 | 1 | 0 | 0 | handoff |
-| D5 red flag: no model, handoff round + routing | 0.29 | 0.43 | 0.68 | 0 | 0 | 0 | handoff |
+| D1 by rules (booking), reply model only | 0.08 | 0.13 | 0.29 | 0 | 1 | 0 | drafted |
+| D2: depth model + reply model | 0.12 | 0.18 | 0.46 | 1 | 1 | 0 | drafted |
+| D2 + Reviewer delegation (checklist, no model) | 0.24 | 0.33 | 0.66 | 1 | 1 | 0 | drafted |
+| D2 + Knowledge + Scheduler delegation (2 specialists, 2 scripted steps each) | 2.67 | 3.54 | 4.36 | 1 | 1 | 4 | drafted |
+| D4: depth model, then handoff round + routing | 0.35 | 0.47 | 0.67 | 1 | 0 | 0 | handoff |
+| D5 red flag: no model, handoff round + routing | 0.28 | 0.46 | 0.65 | 0 | 0 | 0 | handoff |
 
 Daily tick over 500 fake patients (the share of patients whose rules say a text must be drafted is varied):
 
 | patients needing a draft | batches | tick wall ms | drafts queued | drain wall ms (fake reply model) | reply-model calls | depth-model calls |
 |---|---|---|---|---|---|---|
-| 0.0% | 5 | 2.41 | 0 | 0.00 | 0 | 0 |
-| 10.0% | 5 | 2.55 | 50 | 0.54 | 50 | 0 |
-| 100.0% | 5 | 4.30 | 500 | 5.41 | 500 | 0 |
+| 0.0% | 5 | 2.30 | 0 | 0.00 | 0 | 0 |
+| 10.0% | 5 | 4.02 | 50 | 0.97 | 50 | 0 |
+| 100.0% | 5 | 3.93 | 500 | 6.95 | 500 | 0 |
 
 The tick itself makes no model call: the number of calls equals the number of patients that need a draft, and the depth classifier is never used for a tick draft. Rules run once per batch of 100, not per patient.
 
@@ -257,7 +256,7 @@ cd pema-agent/backend
 ollama pull qwen3:8b
 export LLM_PROVIDER=openai-compatible LLM_BASE_URL=http://localhost:11434/v1 LLM_MODEL=qwen3:8b LLM_API_KEY=ollama
 export PEMA_EVAL_CARE_DATABASE_URL=postgresql+psycopg://postgres:<pw>@127.0.0.1:55432/pema   # THROWAWAY database
-uv run python -m evals.care.run_eval --real --out ../evals/care/report-real.md
+PYTHONPATH=.. uv run python -m evals.care.run_eval --real --out ../evals/care/report-real.md
 ```
 
 Read the first line it prints (`Model: ...`) before the numbers. Run it three times before judging a single red case: a small local model varies between runs.
