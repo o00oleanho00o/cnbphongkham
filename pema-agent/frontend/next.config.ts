@@ -3,16 +3,14 @@ import { readFileSync } from "node:fs";
 import type { NextConfig } from "next";
 
 /**
- * The browser only ever talks to this origin; Next forwards `/api/*` to the backend so the session
- * cookie stays first-party (no CORS). Point PEMA_API_URL at the real API, or at `pnpm mock`
- * (http://127.0.0.1:4010) while the backend packages are still being built.
- *
- * `PEMA_API_INTERNAL_URL` (the compose network address of the api service, e.g. http://api:8000) wins over
- * `PEMA_API_URL`. Next.js evaluates `rewrites()` at BUILD time and bakes the result into the standalone
- * server, so this variable must be present when `next build` runs (a Docker build argument), not at runtime.
+ * The browser only ever talks to this origin. `/api/v1/**` and `/healthz` are forwarded to the backend by the
+ * route handlers `src/app/api/[...path]/route.ts` and `src/app/healthz/route.ts` (logic in
+ * `src/lib/server/api-proxy.ts`), which read `PEMA_API_INTERNAL_URL` (or `PEMA_API_URL`, for `pnpm dev` and
+ * `pnpm dev:mock`) on EVERY request. This replaces `rewrites()`: Next.js evaluates `rewrites()` at build time
+ * and bakes the result into the standalone server, which made the API address a Docker build argument. Now
+ * one image runs against any API address, set when the container starts. The session cookie stays
+ * first-party (no CORS).
  */
-const API_URL =
-  process.env.PEMA_API_INTERNAL_URL ?? process.env.PEMA_API_URL ?? "http://127.0.0.1:8000";
 
 /**
  * Version LẤY TỪ package.json, không gõ tay trong JSX (bản gốc làm vậy qua `__APP_VERSION__` của
@@ -31,12 +29,6 @@ const config: NextConfig = {
   agentRules: false,
   devIndicators: false,
   env: { NEXT_PUBLIC_APP_VERSION: version },
-  async rewrites() {
-    return [
-      { source: "/api/:path*", destination: `${API_URL}/api/:path*` },
-      { source: "/healthz", destination: `${API_URL}/healthz` },
-    ];
-  },
 };
 
 export default config;

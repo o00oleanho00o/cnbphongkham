@@ -2,8 +2,10 @@
 # Next.js dashboard (package E). Build context: pema-agent/. Ignore rules: frontend.Dockerfile.dockerignore.
 #
 # next.config.ts sets `output: "standalone"`, which the runtime stage copies (.next/standalone). The browser talks
-# only to this server; it forwards /api/* to the API. Next.js bakes those rewrites at BUILD time, so the API
-# address is the build argument PEMA_API_INTERNAL_URL (compose passes http://api:8000); changing it needs a rebuild.
+# only to this server; its route handlers (src/app/api/[...path], src/app/healthz) forward /api/v1 and /healthz to
+# the API. The API address is NOT part of the image: the handlers read the environment variable
+# PEMA_API_INTERNAL_URL on every request (compose passes http://api:8000), so the same image runs against any
+# address, set with `docker run -e` or `environment:`. Unset, it falls back to PEMA_API_URL, then 127.0.0.1:8000.
 FROM node:22-alpine AS deps
 WORKDIR /app
 ENV CI=true
@@ -15,8 +17,7 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
 
 FROM node:22-alpine AS builder
 WORKDIR /app
-ARG PEMA_API_INTERNAL_URL=http://api:8000
-ENV CI=true NEXT_TELEMETRY_DISABLED=1 PEMA_API_INTERNAL_URL=${PEMA_API_INTERNAL_URL}
+ENV CI=true NEXT_TELEMETRY_DISABLED=1
 RUN corepack enable
 COPY --from=deps /app/node_modules ./node_modules
 # the OpenAPI file is the input of `pnpm run gen:types` (kept committed, so a build does not regenerate it)

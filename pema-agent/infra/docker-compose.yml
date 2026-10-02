@@ -4,7 +4,11 @@
 #   default (no profile)  postgres, redis, migrate (one-shot), api
 #   profile worker        agent turns + scheduler + KB ingest (`python -m pema.workers.main`). Without it the
 #                         API answers webhooks and queues turns, but nobody runs them.
-#   profile frontend      Next.js dashboard (output: "standalone"; the API address is a build argument).
+#   profile frontend      Next.js dashboard (output: "standalone"; it forwards /api/v1 to PEMA_API_INTERNAL_URL, read at
+#                         RUNTIME, so one image serves any API address).
+#   profile proxy         Caddy reverse proxy (TLS, security headers) plus the dashboard behind it. The only service
+#                         that publishes 80/443. Run it with the override file docker-compose.proxy.yml, which turns
+#                         the loopback ports of api and frontend into `expose` (see infra/README.md, "Reverse proxy").
 #   profile bridge        Node zca-js bridge (personal Zalo account, risk of account lock). Internal only.
 #   profile ollama        TẠM TẮT LLM LOCAL (2026-10-02): the `ollama` and `ollama-pull` services are commented out
 #                         at the end of this file. Ollama with an NVIDIA GPU, or natively on the GPU PC
@@ -57,6 +61,28 @@ x-backend-env: &backend-env
   # PEMA_EMBEDDING_BASE_URL: ${PEMA_EMBEDDING_BASE_URL:-http://ollama:11434/v1}
   # PEMA_EMBEDDING_MODEL: ${PEMA_EMBEDDING_MODEL:-bge-m3}
   PEMA_CRM_RUNNER_INTERVAL_SECONDS: ${PEMA_CRM_RUNNER_INTERVAL_SECONDS:-900}
+
+# Data retention (pema.retention; the periods are the clinic owner's decision, defaults as in the code: 0 keeps
+# the group forever). Each process gets the groups of ITS scope: the API (role be_app) runs `clinic`, the worker
+# (role agent_worker) runs `agent`. Both get the cadence. TRACE_DAYS / MEDIA_DAYS empty = follow the dashboard
+# tuning keys AGENT_TRACE_RETENTION_DAYS / MEDIA_RETENTION_DAYS.
+x-retention-common-env: &retention-common-env
+  PEMA_RETENTION_INTERVAL_SECONDS: ${PEMA_RETENTION_INTERVAL_SECONDS:-86400}
+  PEMA_RETENTION_BATCH_SIZE: ${PEMA_RETENTION_BATCH_SIZE:-500}
+
+x-retention-clinic-env: &retention-clinic-env
+  PEMA_RETENTION_MESSAGE_DAYS: ${PEMA_RETENTION_MESSAGE_DAYS:-0}
+  PEMA_RETENTION_AUTH_SESSION_DAYS: ${PEMA_RETENTION_AUTH_SESSION_DAYS:-1}
+  PEMA_RETENTION_LINK_CODE_DAYS: ${PEMA_RETENTION_LINK_CODE_DAYS:-7}
+  PEMA_RETENTION_LINK_ATTEMPT_DAYS: ${PEMA_RETENTION_LINK_ATTEMPT_DAYS:-30}
+
+x-retention-agent-env: &retention-agent-env
+  PEMA_RETENTION_HISTORY_DAYS: ${PEMA_RETENTION_HISTORY_DAYS:-0}
+  PEMA_RETENTION_MEMORY_DAYS: ${PEMA_RETENTION_MEMORY_DAYS:-0}
+  PEMA_RETENTION_USAGE_DAYS: ${PEMA_RETENTION_USAGE_DAYS:-0}
+  PEMA_RETENTION_TRACE_DAYS: ${PEMA_RETENTION_TRACE_DAYS:-}
+  PEMA_RETENTION_MEDIA_DAYS: ${PEMA_RETENTION_MEDIA_DAYS:-}
+  PEMA_RETENTION_JOB_RUN_DAYS: ${PEMA_RETENTION_JOB_RUN_DAYS:-30}
 
 x-api-database: &api-database
   PEMA_DATABASE_URL: postgresql+psycopg://be_app:${PEMA_BE_APP_PASSWORD:?set it in infra/.env}@postgres:5432/pema
@@ -143,7 +169,20 @@ services:
       redis:
         condition: service_healthy
     environment:
-      <<: [*backend-env, *api-database]
+      <<: [*backend-env, *api-database, *retention-common-env, *retention-clinic-env]
+      # Hard ceiling of a dashboard session counted from the login (1-30 days; out of range refuses to start).
+      PEMA_SESSION_ABSOLUTE_DAYS: ${PEMA_SESSION_ABSOLUTE_DAYS:-7}
+      # Client address for the login rate limit. X-Forwarded-For is believed ONLY when the TCP peer is one of
+      # PEMA_TRUSTED_PROXIES: by default the fixed address of the Caddy container on the `edge` network (below).
+      # Anyone else, including the frontend and the bridge, is taken at its socket address. See client_ip.py.
+      PEMA_DASHBOARD_BEHIND_PROXY: ${PEMA_DASHBOARD_BEHIND_PROXY:-true}
+      PEMA_TRUSTED_PROXIES: ${PEMA_TRUSTED_PROXIES:-${PEMA_PROXY_IP:-172.29.80.2}}
+      # The session cookie is Secure (browsers send it only over https; localhost counts as secure). Set false
+      # ONLY for the plain-HTTP-over-Tailscale mode (PEMA_PROXY_TLS=off), or the login loops.
+      PEMA_SESSION_COOKIE_SECURE: ${PEMA_SESSION_COOKIE_SECURE:-true}
+    networks:
+      - default
+      - edge
     command:
       - uvicorn
       - --factory
@@ -180,19 +219,16 @@ services:
       redis:
         condition: service_healthy
     environment:
-      <<: [*backend-env, *worker-database]
+      <<: [*backend-env, *worker-database, *retention-common-env, *retention-agent-env]
     command: ["python", "-m", "pema.workers.main"]
     volumes:
       - pema-data:/var/lib/pema
 
   frontend:
-    profiles: ["frontend", "app"]
+    profiles: ["frontend", "app", "proxy"]
     build:
       context: ..
       dockerfile: infra/docker/frontend.Dockerfile
-      # baked into the Next.js rewrites at build time (see next.config.ts)
-      args:
-        PEMA_API_INTERNAL_URL: http://api:8000
     image: pema-agent-frontend:${PEMA_IMAGE_TAG:-local}
     restart: unless-stopped
     depends_on:
@@ -201,10 +237,52 @@ services:
     environment:
       HOSTNAME: 0.0.0.0
       PORT: "3000"
+      # Where the dashboard server forwards /api/v1 and /healthz. Read on every request (route handler), not at
+      # build time: change it here and `docker compose up -d frontend`, no rebuild.
+      PEMA_API_INTERNAL_URL: ${PEMA_API_INTERNAL_URL:-http://api:8000}
+    networks:
+      - default
+      - edge
     ports:
       - "${PEMA_FRONTEND_BIND:-127.0.0.1}:${PEMA_FRONTEND_PORT:-3000}:3000"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  # The one public door (TLS, security headers, body ceiling). Attached ONLY to `edge`, where only api and frontend
+  # are, so it cannot reach Postgres, Redis or the Zalo bridge even by mistake. Config: infra/caddy/ (the TLS mode
+  # file is chosen by PEMA_PROXY_TLS: auto | internal | off).
+  caddy:
+    profiles: ["proxy"]
+    image: caddy:${PEMA_CADDY_TAG:-2-alpine}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    environment:
+      PEMA_PUBLIC_DOMAIN: ${PEMA_PUBLIC_DOMAIN:-localhost}
+    networks:
+      edge:
+        ipv4_address: ${PEMA_PROXY_IP:-172.29.80.2}
+    # Loopback by default, like every other port. A public site needs PEMA_PROXY_BIND=0.0.0.0 (or the public IP):
+    # the certificate challenge and the visitors must reach 80 and 443.
+    ports:
+      - "${PEMA_PROXY_BIND:-127.0.0.1}:${PEMA_PROXY_HTTP_PORT:-80}:80"
+      - "${PEMA_PROXY_BIND:-127.0.0.1}:${PEMA_PROXY_HTTPS_PORT:-443}:443"
+      - "${PEMA_PROXY_BIND:-127.0.0.1}:${PEMA_PROXY_HTTPS_PORT:-443}:443/udp"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/modes/${PEMA_PROXY_TLS:-auto}.caddy:/etc/caddy/mode.caddy:ro
+      # certificates and the local CA: losing them means a new certificate request (rate limited by the CA)
+      - caddy-data:/data
+      - caddy-config:/config
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/ready"]
       interval: 10s
       timeout: 5s
       retries: 6
@@ -298,8 +376,23 @@ services:
   #       { echo "FROM $$PEMA_LLM_MODEL_PULL"; echo "PARAMETER num_ctx $$OLLAMA_CONTEXT_LENGTH"; } > /tmp/Modelfile
   #       ollama create pema-chat -f /tmp/Modelfile
 
+# `default` joins postgres, redis, migrate, worker, the bridge and everything else (unchanged). `edge` is the only
+# network Caddy is on: api and frontend are on both, nothing else is on it. Its fixed subnet lets the API name the
+# proxy by address (PEMA_TRUSTED_PROXIES). Docker hands out the other containers' addresses only from `ip_range`
+# (the upper half), so the fixed address of Caddy (`.2`) can never be taken by api or frontend, whatever order they
+# start in. Change PEMA_PROXY_SUBNET, PEMA_PROXY_IP_RANGE and PEMA_PROXY_IP together if it collides with a network
+# of yours; the IP must be inside the subnet and outside the range.
+networks:
+  edge:
+    ipam:
+      config:
+        - subnet: ${PEMA_PROXY_SUBNET:-172.29.80.0/24}
+          ip_range: ${PEMA_PROXY_IP_RANGE:-172.29.80.128/25}
+
 volumes:
   pg-data:
   redis-data:
   pema-data:
+  caddy-data:
+  caddy-config:
   # ollama-models:  # TẠM TẮT LLM LOCAL (2026-10-02)

@@ -9,7 +9,8 @@ to a SaaS pushes their conversations out of the machine. That is a privacy decis
 For a clinic it is a legal one: patient text never leaves the infrastructure. The dashboard already has room
 to read it. (Access to it is the ``admin.usage`` permission, staff only.)
 
-This table grows faster than any other, so ``prune_old_traces`` runs on the same rhythm as the media cleanup.
+This table grows faster than any other. In production ``pema.retention`` prunes it (the ``trace_steps``
+rule of the worker's agent scope); ``prune_old_traces`` is kept for its ported tests and for a one-off call.
 
 Forced deviations: SQLite sync -> SQLAlchemy async + Postgres; the JSON columns are ``jsonb`` (no
 ``JSON.parse`` guard needed for the list columns, a corrupt value cannot exist); the per-step INSERT loop of

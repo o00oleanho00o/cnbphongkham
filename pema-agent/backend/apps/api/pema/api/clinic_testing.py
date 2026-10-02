@@ -127,10 +127,12 @@ def jwt_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     monkeypatch.setenv("PEMA_ENVIRONMENT", "dev")
     get_settings.cache_clear()
     dashboard_auth.get_auth_settings.cache_clear()
+    dashboard_auth.get_trusted_proxies.cache_clear()
     dashboard_auth.reset_login_rate_limit()
     yield
     get_settings.cache_clear()
     dashboard_auth.get_auth_settings.cache_clear()
+    dashboard_auth.get_trusted_proxies.cache_clear()
     dashboard_auth.reset_login_rate_limit()
 
 

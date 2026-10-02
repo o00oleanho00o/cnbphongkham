@@ -43,7 +43,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from pema.api import dashboard_password_store as password_store
 from pema.api import dashboard_session_store as session_store
-from pema.api.client_ip import resolve_client_ip
+from pema.api.client_ip import ProxyNetwork, parse_trusted_proxies, resolve_client_ip
 from pema.api.request_id import clean_request_id
 from pema.clinic import audit
 from pema.clinic.actions._common import now
@@ -128,6 +128,9 @@ class DashboardAuthSettings(BaseSettings):
 
     dashboard_behind_proxy: bool = False
     """``DASHBOARD_BEHIND_PROXY``: trust the rightmost ``X-Forwarded-For`` entry (a proxy appends it)."""
+    trusted_proxies: str = ""
+    """``PEMA_TRUSTED_PROXIES``: IPs or CIDRs (comma separated) of the proxies whose ``X-Forwarded-For`` is
+    believed. Empty = nobody, even with ``dashboard_behind_proxy`` on (see ``client_ip.py``)."""
     session_cookie_secure: bool | None = None
     """``None`` = secure unless ``PEMA_ENVIRONMENT`` is ``dev``."""
     session_absolute_days: int = Field(
@@ -140,6 +143,12 @@ class DashboardAuthSettings(BaseSettings):
 @lru_cache
 def get_auth_settings() -> DashboardAuthSettings:
     return DashboardAuthSettings()
+
+
+@lru_cache
+def get_trusted_proxies() -> tuple[ProxyNetwork, ...]:
+    """Parsed once; a malformed ``PEMA_TRUSTED_PROXIES`` raises at the first login, it is never ignored."""
+    return parse_trusted_proxies(get_auth_settings().trusted_proxies)
 
 
 def _cookie_secure() -> bool:
@@ -485,7 +494,11 @@ Delivery = Annotated[OutboundDelivery | None, Depends(get_delivery)]
 
 
 def client_ip(request: Request) -> str:
-    return resolve_client_ip(request, behind_proxy=get_auth_settings().dashboard_behind_proxy)
+    return resolve_client_ip(
+        request,
+        behind_proxy=get_auth_settings().dashboard_behind_proxy,
+        trusted_proxies=get_trusted_proxies(),
+    )
 
 
 async def current_user(request: Request, db: Database) -> AuthenticatedUser:

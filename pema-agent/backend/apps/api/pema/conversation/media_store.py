@@ -38,7 +38,6 @@ from uuid import UUID
 
 from pema.config.env import get_settings
 from pema.config.runtime_tuning_settings import get_tuning_int
-from pema.shared.daily_task_schedule import start_daily_task
 from pema.shared.logger import create_logger
 
 _log = create_logger("media-store")
@@ -310,53 +309,3 @@ def _remove_expired_in(directory: Path, cutoff: float, dry_run: bool = False) ->
         except OSError as err:
             _log.debug("Không dọn được file media - bỏ qua", err=err)
     return removed
-
-
-async def _cleanup_everything(
-    *,
-    media: MediaStore,
-    list_clinic_ids: Callable[[], Awaitable[list[UUID]]],
-    prune_image_descriptions: Callable[[UUID, int], Awaitable[int]],
-    prune_traces: Callable[[UUID], Awaitable[int]],
-) -> None:
-    removed = await media.cleanup_expired_media()
-    pruned_descriptions = 0
-    pruned_traces = 0
-    for clinic_id in await list_clinic_ids():
-        # Mô tả ảnh của sidecar dọn cùng nhịp: quá hạn thì cả pixel lẫn mô tả cùng đi.
-        pruned_descriptions += await prune_image_descriptions(
-            clinic_id, get_tuning_int("MEDIA_RETENTION_DAYS")
-        )
-        # Trace step agent dọn cùng nhịp - bảng phình nhanh nhất trong DB.
-        pruned_traces += await prune_traces(clinic_id)
-    if removed > 0 or pruned_descriptions > 0 or pruned_traces > 0:
-        _log.info(
-            "Đã dọn file media + mô tả ảnh + trace hết hạn",
-            removed=removed,
-            pruned_descriptions=pruned_descriptions,
-            pruned_traces=pruned_traces,
-        )
-
-
-def start_media_cleanup_schedule(
-    *,
-    media: MediaStore,
-    list_clinic_ids: Callable[[], Awaitable[list[UUID]]],
-    prune_image_descriptions: Callable[[UUID, int], Awaitable[int]],
-    prune_traces: Callable[[UUID], Awaitable[int]],
-    interval_seconds: float = 24 * 60 * 60.0,
-) -> asyncio.Task[None]:
-    """Dọn ngay lúc gọi + lặp lại mỗi 24h. The per-clinic work is injected
-    (``ClinicDatabase.list_active_clinic_ids``,
-    ``ImageDescriptionStoreImpl.prune_expired_image_descriptions``, ``AgentTraceStore.prune_old_traces``)
-    so this module needs no database import."""
-
-    async def task() -> None:
-        await _cleanup_everything(
-            media=media,
-            list_clinic_ids=list_clinic_ids,
-            prune_image_descriptions=prune_image_descriptions,
-            prune_traces=prune_traces,
-        )
-
-    return start_daily_task("media-cleanup", task, interval_seconds=interval_seconds)

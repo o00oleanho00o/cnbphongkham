@@ -20,7 +20,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -89,6 +89,14 @@ class Settings(BaseSettings):
     zalo_personal_enabled: bool = False
     zalo_bridge_url: str = "http://localhost:8200"
     zalo_bridge_secret: SecretStr | None = None
+
+    @field_validator("retention_trace_days", "retention_media_days", mode="before")
+    @classmethod
+    def _empty_means_unset(cls, value: object) -> object:
+        """docker-compose passes an unset variable as an empty string: that means "follow the tuning key"."""
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
     @property
     def log_dir(self) -> Path:

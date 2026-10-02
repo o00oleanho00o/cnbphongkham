@@ -4,13 +4,16 @@
 BACKEND := backend
 FRONTEND := frontend
 COMPOSE := docker compose -f infra/docker-compose.yml --env-file infra/.env
+# Behind the Caddy reverse proxy: the override stops api and frontend from publishing ports (infra/README.md).
+COMPOSE_PROXY := docker compose -f infra/docker-compose.yml -f infra/docker-compose.proxy.yml --env-file infra/.env
 OPENAPI := $(BACKEND)/apps/api/openapi.json
 # Load infra/.env (if present) into the environment of one recipe line.
 LOAD_ENV_ROOT := set -a; if [ -f infra/.env ]; then . infra/.env; fi; set +a;
 LOAD_ENV := set -a; if [ -f ../infra/.env ]; then . ../infra/.env; fi; set +a;
 
 .PHONY: help setup lint format typecheck test test-db openapi types db-upgrade db-downgrade clean \
-        infra-secrets infra-config up up-app down logs ps db-migrate db-bootstrap backup restore-verify
+        infra-secrets infra-config up up-app up-proxy down down-proxy logs ps db-migrate db-bootstrap \
+        retention-dry-run backup restore-verify
 
 help:
 	@echo "setup       install Python (uv) and frontend (pnpm) dependencies"
@@ -23,10 +26,12 @@ help:
 	@echo "types       regenerate frontend TypeScript types from the OpenAPI file"
 	@echo "db-upgrade  alembic upgrade heads for ctx, clinic, clinic_agent, agent (reads infra/.env)"
 	@echo "infra-secrets  create infra/.env with random secrets (refuses to overwrite)"
-	@echo "infra-config   docker compose config (validates the compose file; uses infra/.env or .env.example)"
+	@echo "infra-config   docker compose config (every profile, also proxy with the override; uses infra/.env or a throwaway one)"
 	@echo "up / down      start / stop postgres, redis, migrate, api (profiles: worker, frontend, bridge)"
 	@echo "up-app         up + worker + frontend"
+	@echo "up-proxy       stack behind Caddy (profile proxy + worker + docker-compose.proxy.yml); down-proxy stops it"
 	@echo "               LLM = third-party API (LLM_* in infra/.env); local Ollama is paused"
+	@echo "retention-dry-run  python -m pema.workers.retention --dry-run in the api and worker containers (counts, deletes nothing)"
 	@echo "db-migrate     roles + alembic upgrade heads inside the compose network (one-shot migrate service)"
 	@echo "db-bootstrap   only the role/password bootstrap, from the host (needs psql); rotates passwords"
 	@echo "backup / restore-verify   infra/scripts/backup-postgres.sh, restore into a scratch DB (FILE=...)"
@@ -76,7 +81,9 @@ infra-secrets:
 infra-config:
 	@f=infra/.env; \
 	if [ ! -f "$$f" ]; then d=$$(mktemp -d); f="$$d/env"; infra/scripts/gen-secrets.sh "$$f" >/dev/null; fi; \
-	docker compose -f infra/docker-compose.yml --env-file "$$f" --profile app --profile bridge config --quiet && echo "compose file valid"
+	docker compose -f infra/docker-compose.yml --env-file "$$f" --profile app --profile bridge config --quiet && \
+	docker compose -f infra/docker-compose.yml -f infra/docker-compose.proxy.yml --env-file "$$f" --profile proxy --profile worker --profile bridge config --quiet && \
+	echo "compose file valid (default+app+bridge, and proxy with the override)"
 
 up:
 	$(COMPOSE) up -d --build
@@ -89,8 +96,15 @@ up-app:
 # up-ollama:
 # 	$(COMPOSE) --profile ollama up -d
 
+# The stack behind Caddy (infra/README.md "Reverse proxy"). Needs infra/.env with PEMA_PROXY_TLS and PEMA_PUBLIC_DOMAIN.
+up-proxy:
+	$(COMPOSE_PROXY) --profile proxy --profile worker up -d --build
+
 down:
 	$(COMPOSE) down
+
+down-proxy:
+	$(COMPOSE_PROXY) --profile proxy --profile worker down
 
 logs:
 	$(COMPOSE) logs -f --tail=100
@@ -100,6 +114,12 @@ ps:
 
 db-migrate:
 	$(COMPOSE) run --rm migrate
+
+# Counts what the retention job WOULD delete, deletes nothing. The API container runs the `clinic` scope, the
+# worker container the `agent` scope (the worker has no privilege on clinic.*). Needs the stack running.
+retention-dry-run:
+	$(COMPOSE) exec api python -m pema.workers.retention --dry-run
+	$(COMPOSE) --profile worker exec worker python -m pema.workers.retention --scope agent --dry-run
 
 db-bootstrap:
 	$(LOAD_ENV_ROOT) infra/scripts/bootstrap-roles.sh

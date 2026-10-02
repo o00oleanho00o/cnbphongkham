@@ -60,6 +60,42 @@ def test_trace_and_media_follow_the_tuning_keys_until_a_retention_setting_overri
     assert (overridden.trace_days, overridden.media_days) == (0, 3), "0 keeps forever, also for these two"
 
 
+def test_an_empty_trace_or_media_variable_from_compose_means_unset(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("PEMA_RETENTION_TRACE_DAYS", "")
+    monkeypatch.setenv("PEMA_RETENTION_MEDIA_DAYS", "  ")
+    settings = Settings()
+    assert settings.retention_trace_days is None
+    assert settings.retention_media_days is None
+    monkeypatch.setenv("PEMA_RETENTION_TRACE_DAYS", "0")
+    assert Settings().retention_trace_days == 0, "an explicit 0 still keeps the group forever"
+
+
+def test_compose_passes_every_retention_setting_to_the_process_that_reads_it() -> None:
+    compose = (ENV_EXAMPLE.parent / "docker-compose.yml").read_text(encoding="utf-8")
+    declared: dict[str, str] = {}
+    current = ""
+    for line in compose.splitlines():
+        if line.startswith("x-retention-"):
+            current = line.split(":", 1)[0]
+        elif line and not line.startswith(" "):
+            current = ""
+        match = re.match(r"\s+(PEMA_RETENTION_[A-Z_]+):", line)
+        if match and current:
+            declared[match.group(1)] = current
+    wanted = {f"PEMA_{name.upper()}" for name in Settings.model_fields if name.startswith("retention_")}
+    assert set(declared) == wanted, "compose must carry every PEMA_RETENTION_* setting, by name"
+    clinic = {"MESSAGE_DAYS", "AUTH_SESSION_DAYS", "LINK_CODE_DAYS", "LINK_ATTEMPT_DAYS"}
+    for name, block in declared.items():
+        if name.removeprefix("PEMA_RETENTION_") in clinic:
+            assert block == "x-retention-clinic-env"
+        elif name.removeprefix("PEMA_RETENTION_") in {"INTERVAL_SECONDS", "BATCH_SIZE"}:
+            assert block == "x-retention-common-env"
+        else:
+            assert block == "x-retention-agent-env"
+    assert "<<: [*backend-env, *api-database, *retention-common-env, *retention-clinic-env]" in compose
+    assert "<<: [*backend-env, *worker-database, *retention-common-env, *retention-agent-env]" in compose
+
+
 def test_a_negative_number_of_days_is_refused_by_the_settings_and_by_the_policy() -> None:
     with pytest.raises(ValidationError):
         Settings(retention_history_days=-1)
@@ -122,7 +158,7 @@ def test_the_worker_runs_the_agent_scope_and_the_api_process_the_clinic_scope() 
 
 def test_the_migration_chain_has_one_head() -> None:
     heads = ScriptDirectory.from_config(Config(str(API_DIR / "alembic.ini"))).get_heads()
-    assert heads == ["h2_0007_retention"]
+    assert heads == ["h_0008_merge_heads"]
 
 
 def test_no_retention_sql_names_the_audit_log_in_a_delete() -> None:
