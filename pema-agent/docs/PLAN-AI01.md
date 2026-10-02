@@ -2,6 +2,8 @@
 
 Trạng thái: kế hoạch, chưa có code. Nhánh: `feat/ai-agent-backend`. Phiên bản 2 (2026-10-01), thay thế bản 1 "chỉ lấy phần kênh".
 
+> Nhánh `feat/single-tenant`: kế hoạch này viết cho mô hình đa phòng khám có RLS. Từ migration `st_0009` mỗi bản cài là MỘT phòng khám, không còn RLS; đọc các chỗ nhắc RLS hoặc "theo phòng khám" theo CONTRACTS-AI01 mục 10 và ARCH-AI01 mục 14.
+
 **Mọi thứ mới nằm trong một thư mục duy nhất `pema-agent/`.** Code cũ (`prototype/`, `pema-kmp/`, `finance_server.py`, `docs/` PB01/PB02) chỉ được đọc. Ngoại lệ: một dòng trỏ trong `README.md` gốc và một checkpoint trong `SECTION_PROGRESS.md`, do gói F làm sau cùng.
 
 Cách chạy: sau một lệnh "go" duy nhất, làm **toàn bộ** các gói theo mục 6, không dừng chờ duyệt giữa các stage. Người nhận một báo cáo tổng hợp cuối và danh sách việc mở.

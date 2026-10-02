@@ -351,3 +351,18 @@ tests and `tests/test_openapi_skeleton.py` pass. Files, with the number of faile
 No `set_config('app.clinic_id')`, no `ctx.current_clinic_id()`, no policy, no `ENABLE ROW LEVEL SECURITY`. SQL that needs
 the clinic calls `ctx.the_clinic_id()`. Python that needs the id calls `get_installation_clinic_id(db)` once at start-up
 (or lets the DTO default fill it). A new test never inserts a second clinic.
+
+### 10.7 Infrastructure done in ST-F (`infra/`)
+
+* `infra/.env.example` documents `PEMA_CLINIC_NAME` (default `Pema Clinic`) and the optional `PEMA_CLINIC_ID` (UUID,
+  empty = generated once). `docker-compose.yml` passes both to `migrate` and (through `x-backend-env`) to `api` and
+  `worker`; an empty `PEMA_CLINIC_ID` means "unset" (the migration and `Settings` both read empty as unset).
+* `infra/scripts/migrate.sh`, after `alembic upgrade heads`, checks that `clinic.clinic` holds exactly one row, prints
+  `migrate: clinic '<name>' (id <uuid>), exactly one row in clinic.clinic`, and fails when the row count is not one or
+  `PEMA_CLINIC_ID` differs from the stored id. `restore-postgres.sh` makes the same count check; `backup-postgres.sh`
+  checks that `clinic.clinic` data is in the archive.
+* No Makefile target or script takes a clinic slug or `--clinic`. Webhook paths in infra docs are
+  `/api/v1/webhooks/zalo-bot/<account_id>` and `/api/v1/webhooks/zalo-bridge/<account_id>` (the new paths owned by
+  ST-C; the Caddy block on `zalo-bridge/*` is unchanged).
+* A second clinic is a second stack (own `.env`, secrets, compose project, ports, database, Redis, domain, backups):
+  `infra/README.md`, "One system, one clinic".

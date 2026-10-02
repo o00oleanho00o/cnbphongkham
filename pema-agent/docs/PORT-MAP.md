@@ -86,7 +86,7 @@ Each package runs in its own worktree and sees only the contracts of A. The seam
 | D4 `schedule_task`, B2 | create/list/cancel jobs | `SchedulerPort`; S implements. |
 | S (job kind agent) | run an isolated turn | `AgentEngine` with `isolated=True` (injected, `pema.scheduler` never imports `pema.agent`). |
 | D1, D4, P, C1, C2 | clinic data (care context, appointments, review items, identity, inbox) | `AgentFacingClinicActions`; B1 implements. In SQL: `clinic_agent` views and functions (migration 0003). |
-| D2 stores, S, D3, D5 | Postgres tables | `agent.*` (migration 0002), RLS on `clinic_id`. |
+| D2 stores, S, D3, D5 | Postgres tables | `agent.*` (migration 0002), `clinic_id` column = fixed installation id (no RLS since `st_0009`, single tenant). |
 
 ## `src (root)`
 
@@ -261,7 +261,7 @@ Each package runs in its own worktree and sees only the contracts of A. The seam
 | `src/conversation/contact-store.test.ts` | 89 | `tests/conversation/test_contact_store.py` | D2 |  |
 | `src/conversation/contact-store.ts` | 103 | `pema/conversation/contact_store.py` | D2 |  |
 | `src/conversation/database-pragma.test.ts` | 60 | no port | - | SQLite PRAGMA (WAL, synchronous); no Postgres equivalent |
-| `src/conversation/database.ts` | 346 | `pema/core/db.py + alembic 0001..0003` | A | SQLite -> Postgres: schema is the Alembic revisions, access is ClinicDatabase (RLS) |
+| `src/conversation/database.ts` | 346 | `pema/core/db.py + alembic 0001..0003` | A | SQLite -> Postgres: schema is the Alembic revisions, access is ClinicDatabase (single tenant: no RLS, no clinic context since `st_0009`) |
 | `src/conversation/friend-request-store.test.ts` | 103 | `tests/channels/zalo_personal/test_friend_request_store.py` | C2 | table agent.friend_requests; feature of the personal account |
 | `src/conversation/friend-request-store.ts` | 108 | `pema/channels/zalo_personal/friend_request_store.py` | C2 | table agent.friend_requests; feature of the personal account |
 | `src/conversation/friend-schema.ts` | 31 | `alembic 0002 (agent.friend_requests)` | A | done |
@@ -705,7 +705,7 @@ Each package also builds the parts below; they have no upstream file, so they ar
 | D1 | `pema/agent/providers/*` (OpenAI-compatible / Anthropic / Gemini adapters), `pema/workers/agent_worker.py` hook, fake LLM for tests | PLAN-AI01 section 3 |
 | D2 | Postgres implementations of every Protocol in `pema_contracts.conversation` | migration 0002 |
 | D3 | `pema/knowledge/embedding_client.py` (bge-m3, OpenAI-compatible `/embeddings`), hybrid search SQL, `pema/workers/kb_ingest_worker.py` | `KnowledgeStore`, `EmbeddingClient` |
-| S | `pema/workers/scheduler_worker.py` (loop over `ctx.list_active_clinic_ids`), Redis lock integration | `SchedulerPort`, `ProactiveSendGuard` |
+| S | `pema/workers/scheduler_worker.py` (one pass for the one clinic; the former loop over `ctx.list_active_clinic_ids` is gone, ST-B), Redis lock integration | `SchedulerPort`, `ProactiveSendGuard` |
 | P | `pema/policy/{profiles,redflags,pii,identity}.py`, router `admin_policy`; evals of the dermatology CSKH set | PLAN-AI01 section 5, `AGENT.md` |
 | E | screens Today's tasks, Inbox, Review queue, Patient 360 (+ the admin screens translated from `web/` above) | `pema_contracts` OpenAPI, Pema design tokens |
 | F | `infra/*` (compose, Ubuntu + Ollama/llama-server, Tailscale), docs SCOPE/SPEC/MODULEMAP/ARCH-AI01, README, pointer in root README + SECTION_PROGRESS | PLAN-AI01 section 6 |
@@ -950,7 +950,7 @@ Bảng "no zalo-agent source" ghi D1 làm `pema/workers/agent_worker.py`. File �
 
 ### Migration
 
-PORT-MAP ghi "Schema = Alembic 0001..0003". Thực tế còn `b1_0004_auth_session_and_inbox`, `b2_0001_crm_protocol_marker`, `s_0004_scheduler_runtime`, `p0001_identity_link`, `g_0005_merge_heads` (gộp bốn đầu nhánh), `g_0006_definer_search_path`, rồi `b1_0007_session_absolute_expiry` (hạn tuyệt đối của phiên) và `h2_0007_retention` (tác vụ xóa theo thời hạn lưu; mới, không có TS) cùng nối sau `g_0006` và được `h_0008_merge_heads` gộp lại: chỉ một đầu. Cách chạy là `alembic upgrade heads`.
+PORT-MAP ghi "Schema = Alembic 0001..0003". Thực tế còn `b1_0004_auth_session_and_inbox`, `b2_0001_crm_protocol_marker`, `s_0004_scheduler_runtime`, `p0001_identity_link`, `g_0005_merge_heads` (gộp bốn đầu nhánh), `g_0006_definer_search_path`, rồi `b1_0007_session_absolute_expiry` (hạn tuyệt đối của phiên) và `h2_0007_retention` (tác vụ xóa theo thời hạn lưu; mới, không có TS) cùng nối sau `g_0006` và được `h_0008_merge_heads` gộp lại. Trên nhánh `feat/single-tenant` còn `st_0009_single_tenant` (một phòng khám, bỏ RLS; mới, không có TS): đó là đầu duy nhất. Cách chạy là `alembic upgrade heads`.
 
 ### Test được ghi tên nhưng không có dưới tên đó
 
@@ -972,3 +972,7 @@ Hàng ghi một `page.tsx` cho nhiều trang gốc, nhưng thực tế mỗi tra
 ### Eval
 
 `evals/` có thêm `eval_cases_clinic.py`, `clinic_cases.json`, `eval_wiring.py`, `eval_canned_tools.py` (gói P và D1) ngoài các file được ánh xạ. `evals/` nằm trong `testpaths` của `backend/pyproject.toml` (`../evals`), nên `make test` chạy cả 78 test của nó; `make lint` kiểm cả `../evals` bằng ruff.
+
+### Single-tenant (nhánh `feat/single-tenant`)
+
+Một bản cài là MỘT phòng khám (ARCH-AI01 mục 14, CONTRACTS-AI01 mục 10). Ảnh hưởng tới bảng này: các hàng dịch từ zalo-agent **không đổi** (zalo-agent gốc vốn là một tổ chức một CSDL, nên mô hình mới gần gốc hơn); chỉ các ghi chú về RLS và vòng lặp theo phòng khám ở trên là chỗ lệch cũ của bản đa phòng khám và đã sửa. Hàng nào còn nhắc `clinic_id` hay `ClinicDatabase.session(clinic_id)` đọc theo hợp đồng mới: `clinic_id` là mã cài đặt, đối số `clinic_id` của `session()` bị bỏ qua. Đường webhook của `src/zalo-bot/*` và cầu nối Zalo cá nhân không còn đoạn phòng khám (gói ST-C). Test `test_port_map*.py` không đổi.
