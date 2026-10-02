@@ -1,5 +1,7 @@
 # Pema Agent: common commands. Run from pema-agent/. Needs uv, pnpm, and docker for the db targets.
 # Windows without make: run the commands of each recipe by hand (they are plain uv/pnpm/docker calls).
+# One checkout + one infra/.env = ONE clinic (single tenant): no target takes a clinic slug or id. A second clinic is
+# a second stack with its own infra/.env (infra/README.md "One system, one clinic").
 
 BACKEND := backend
 FRONTEND := frontend
@@ -32,7 +34,7 @@ help:
 	@echo "up-proxy       stack behind Caddy (profile proxy + worker + docker-compose.proxy.yml); down-proxy stops it"
 	@echo "               LLM = third-party API (LLM_* in infra/.env); local Ollama is paused"
 	@echo "retention-dry-run  python -m pema.workers.retention --dry-run in the api and worker containers (counts, deletes nothing)"
-	@echo "db-migrate     roles + alembic upgrade heads inside the compose network (one-shot migrate service)"
+	@echo "db-migrate     roles + alembic upgrade heads inside the compose network (one-shot migrate service); checks and prints the one clinic"
 	@echo "db-bootstrap   only the role/password bootstrap, from the host (needs psql); rotates passwords"
 	@echo "backup / restore-verify   infra/scripts/backup-postgres.sh, restore into a scratch DB (FILE=...)"
 

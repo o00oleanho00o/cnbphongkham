@@ -1,4 +1,7 @@
 # Pema Agent stack: postgres, redis, migrate, api, worker, frontend and the Node bridge.
+# ONE STACK = ONE CLINIC (single tenant, branch feat/single-tenant): its own postgres, redis, secrets, Zalo accounts and
+# domain. A second clinic is a second, completely separate stack (other `name:`/-p project, other .env, other host
+# ports, other volumes); see infra/README.md "One system, one clinic".
 # The LLM is a third-party API (LLM_PROVIDER / LLM_BASE_URL / LLM_API_KEY), as in zalo-agent.
 #
 #   default (no profile)  postgres, redis, migrate (one-shot), api
@@ -38,6 +41,11 @@ x-backend-env: &backend-env
   PEMA_LOG_FILE_ENABLED: ${PEMA_LOG_FILE_ENABLED:-false}
   PEMA_LOG_FILE_KEEP_DAYS: ${PEMA_LOG_FILE_KEEP_DAYS:-14}
   PEMA_DATA_DIR: /var/lib/pema
+  # The one clinic of this installation (single tenant). Name: shown in the dashboard, used only when the database has
+  # no clinic yet (the migration creates it once, never renames). Id: optional fixed installation id (UUID); empty =
+  # generated once by the migration and read from clinic.clinic afterwards.
+  PEMA_CLINIC_NAME: ${PEMA_CLINIC_NAME:-Pema Clinic}
+  PEMA_CLINIC_ID: ${PEMA_CLINIC_ID:-}
   PEMA_BOT_TIMEZONE: ${PEMA_BOT_TIMEZONE:-Asia/Ho_Chi_Minh}
   PEMA_REDIS_URL: redis://:${PEMA_REDIS_PASSWORD:?set it in infra/.env}@redis:6379/0
   PEMA_JWT_SECRET: ${PEMA_JWT_SECRET:?set it in infra/.env}
@@ -145,7 +153,9 @@ services:
       timeout: 3s
       retries: 20
 
-  # One-shot: create/refresh roles and passwords, then `alembic upgrade heads` as the owner role.
+  # One-shot: create/refresh roles and passwords, then `alembic upgrade heads` as the owner role. The migration
+  # `st_0009_single_tenant` creates the ONE clinic row from PEMA_CLINIC_NAME / PEMA_CLINIC_ID on an empty database;
+  # the script then checks that clinic.clinic holds exactly one row and prints its name.
   migrate:
     build: *backend-build
     image: pema-agent-api:${PEMA_IMAGE_TAG:-local}
@@ -157,6 +167,8 @@ services:
       PEMA_MIGRATION_DATABASE_URL: postgresql+psycopg://postgres:${PEMA_PG_SUPERUSER_PASSWORD:?set it in infra/.env}@postgres:5432/pema
       PEMA_BE_APP_PASSWORD: ${PEMA_BE_APP_PASSWORD:?set it in infra/.env}
       PEMA_AGENT_WORKER_PASSWORD: ${PEMA_AGENT_WORKER_PASSWORD:?set it in infra/.env}
+      PEMA_CLINIC_NAME: ${PEMA_CLINIC_NAME:-Pema Clinic}
+      PEMA_CLINIC_ID: ${PEMA_CLINIC_ID:-}
     command: ["/opt/pema/scripts/migrate.sh"]
 
   api:
@@ -304,7 +316,7 @@ services:
       # This is not exposure: the port is only `expose`d below, never published to the host.
       PEMA_ZALO_BRIDGE_HOST: 0.0.0.0
       PEMA_ZALO_BRIDGE_PORT: "8200"
-      # Events go to {base}/webhooks/zalo-bridge/{clinic_slug}/{account_id}
+      # Events go to {base}/webhooks/zalo-bridge/{account_id} (no clinic segment: one installation = one clinic)
       PEMA_API_BASE_URL: http://api:8000/api/v1
       PEMA_BOT_TIMEZONE: ${PEMA_BOT_TIMEZONE:-Asia/Ho_Chi_Minh}
       ZALO_BRIDGE_LOG_LEVEL: ${ZALO_BRIDGE_LOG_LEVEL:-info}
