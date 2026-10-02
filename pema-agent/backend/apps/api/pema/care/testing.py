@@ -7,33 +7,54 @@ account and thread ids are made up. The fakes count their calls so a test can as
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
+from types import SimpleNamespace
+from typing import Any, cast
 from uuid import UUID, uuid4
 
+from pema.agent.model_types import ChatModel
+from pema.care.autonomy import KillSwitchState
+from pema.care.budget import TurnBudget, TurnMode
 from pema.care.events import CareEvent
 from pema.care.handoff_types import DepthLlmOutput, HandoffConfig, InvalidTransitionError, level_code
-from pema.care.models import ControlState
+from pema.care.models import ControlState, TaskStatus
 from pema.care.ports import (
     AutonomyOverride,
     CareAgentSnapshot,
     ChannelTarget,
     ControlSnapshot,
     DeferredSend,
+    DepthError,
+    FreeSlot,
     HandoffRequestSnapshot,
     HandoffSettings,
     HandoffSpec,
     HarnessDecision,
     HarnessRequest,
+    KbSourceBrief,
     OpenedHandoff,
     PatientContext,
     ReleaseSpec,
     SendOutcome,
+    SlotQuery,
     TickFinding,
 )
+from pema.care.specialists.delegate import DelegationService
+from pema.care.specialists.reviewer import ChecklistRunner, ReviewChecklist, StaticChecklist
+from pema.care.specialists.runner import LlmSpecialistRunner
+from pema.care.specialists.scope import CareTurnScope
+from pema.care.specialists.spec import REVIEWER_ID
+from pema.care.specialists.store import all_specs
+from pema.care.specialists.toolkit import SpecialistToolkit
+from pema.care.task_result import TaskResult
 from pema.care.window import SendWindow
+from pema_contracts.clinic_actions import AgentFacingClinicActions
+from pema_contracts.common import JsonObject
 from pema_contracts.installation import installation_clinic_id_or_none
+from pema_contracts.knowledge import KbHit
 from pema_contracts.scheduler import ProactiveSlotResult
 
 FIXTURE_CLINIC_ID = UUID("00000000-0000-4000-8000-0000000000c1")
@@ -440,3 +461,205 @@ class StaticHandoffConfig:
     async def get(self, clinic_id: UUID) -> HandoffSettings:
         self.reads += 1
         return HandoffSettings("instruction (fixture)", self.config)
+
+
+# ------------------------------------------------------------------------------------------ M4
+@dataclass
+class TaskRow:
+    id: UUID
+    parent_id: UUID | None
+    care_agent_id: UUID
+    agent_id: str
+    status: str = TaskStatus.RUNNING.value
+    input: JsonObject = field(default_factory=dict[str, Any])
+    result: TaskResult | None = None
+    tokens: int = 0
+    cost: Decimal = Decimal(0)
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    deadline_at: datetime | None = None
+    error: str | None = None
+
+
+class InMemoryTaskStore:
+    """``TaskStore`` over a list, with the same depth rule as ``SqlTaskStore``."""
+
+    def __init__(self) -> None:
+        self.rows: dict[UUID, TaskRow] = {}
+
+    async def create_root(self, care_agent_id: UUID, *, started_at: datetime, deadline_at: datetime) -> UUID:
+        row = TaskRow(
+            uuid4(), None, care_agent_id, "care-turn", started_at=started_at, deadline_at=deadline_at
+        )
+        self.rows[row.id] = row
+        return row.id
+
+    async def create_child(
+        self,
+        parent_id: UUID,
+        *,
+        agent_id: str,
+        input: JsonObject,
+        started_at: datetime,
+        deadline_at: datetime,
+    ) -> UUID:
+        parent = self.rows[parent_id]
+        if parent.parent_id is not None:
+            raise DepthError("a delegation cannot delegate (depth 1)")
+        row = TaskRow(
+            uuid4(), parent.id, parent.care_agent_id, agent_id, input=input, started_at=started_at,
+            deadline_at=deadline_at,
+        )  # fmt: skip
+        self.rows[row.id] = row
+        return row.id
+
+    async def finish(
+        self,
+        task_id: UUID,
+        *,
+        status: TaskStatus,
+        result: TaskResult | None,
+        tokens: int,
+        cost: Decimal,
+        finished_at: datetime,
+        error: str | None = None,
+    ) -> None:
+        row = self.rows[task_id]
+        row.status, row.result, row.tokens, row.cost = status.value, result, tokens, cost
+        row.finished_at, row.error = finished_at, error
+
+    def depth(self, task_id: UUID) -> int:
+        depth, parent = 0, self.rows[task_id].parent_id
+        while parent is not None:
+            depth, parent = depth + 1, self.rows[parent].parent_id
+        return depth
+
+    def children(self) -> list[TaskRow]:
+        return [r for r in self.rows.values() if r.parent_id is not None]
+
+
+class FakeSlots:
+    """``SlotSearch``: the same slots for every query; counts calls."""
+
+    def __init__(self, slots: Sequence[FreeSlot] = ()) -> None:
+        self.slots = list(slots)
+        self.queries: list[SlotQuery] = []
+
+    async def search(self, query: SlotQuery) -> Sequence[FreeSlot]:
+        self.queries.append(query)
+        return self.slots
+
+
+class FakeKnowledge:
+    """``KnowledgeAccess``: hits by exact question; everything else is empty."""
+
+    def __init__(self, hits: Mapping[str, Sequence[KbHit]] | None = None) -> None:
+        self.hits = dict(hits or {})
+        self.searches: list[tuple[str, bool]] = []
+        self.ingested: list[str] = []
+
+    async def search(self, question: str, *, only_approved: bool, limit: int = 5) -> list[KbHit]:
+        self.searches.append((question, only_approved))
+        return list(self.hits.get(question, []))
+
+    async def ingest_text(self, name: str, text: str) -> KbSourceBrief:
+        self.ingested.append(name)
+        return KbSourceBrief("src-fake", name, "cho_xu_ly", False)
+
+    async def list_sources(self) -> list[KbSourceBrief]:
+        return [KbSourceBrief("src-fake", "Hướng dẫn mẫu", "san_sang", True)]
+
+
+class FakeConfirmPolicy:
+    def __init__(self, *, l1: bool = False) -> None:
+        self.l1 = l1
+
+    async def l1_applies(self, care_agent_id: UUID, now: datetime) -> bool:
+        return self.l1
+
+
+class FakeActions:
+    """The one method of ``AgentFacingClinicActions`` the Scheduler calls; records the proposals."""
+
+    def __init__(self) -> None:
+        self.proposals: list[Any] = []
+
+    async def propose_appointment(self, ctx: object, request: Any) -> Any:
+        self.proposals.append(request)
+        return SimpleNamespace(id=uuid4())
+
+
+@dataclass
+class DelegationRig:
+    """A ``DelegationService`` over in-memory fakes, with one care turn ready to delegate from."""
+
+    service: DelegationService
+    scope: CareTurnScope
+    tasks: InMemoryTaskStore
+    store: InMemoryCareStore
+    clock: FakeClock
+    slots: FakeSlots
+    knowledge: FakeKnowledge
+    actions: FakeActions
+    toolkit: SpecialistToolkit
+
+
+def make_rig(
+    *,
+    models: Mapping[str, ChatModel] | None = None,
+    slots: Sequence[FreeSlot] = (),
+    hits: Mapping[str, Sequence[KbHit]] | None = None,
+    checklist: ReviewChecklist | None = None,
+    l1_confirm: bool = False,
+    kill_switch: KillSwitchState | None = None,
+    mode: TurnMode = TurnMode.INTERACTIVE,
+    token_ceiling: int | None = None,
+    max_specialists: int | None = None,
+    max_tool_steps: int | None = None,
+    deadline: timedelta | None = None,
+    contexts: Mapping[str, JsonObject] | None = None,
+    classify_depth: Callable[[str], Any] | None = None,
+) -> DelegationRig:
+    """``models`` maps a specialist id to the scripted model that plays it (the Reviewer has no model)."""
+    clock = FakeClock(vn(2026, 10, 3, 10, 0))
+    store = InMemoryCareStore()
+    agent = store.add_patient("P900")
+    tasks = InMemoryTaskStore()
+    fake_slots, fake_knowledge, actions = FakeSlots(slots), FakeKnowledge(hits), FakeActions()
+    toolkit = SpecialistToolkit(
+        slots=fake_slots,
+        actions=cast("AgentFacingClinicActions", actions),
+        knowledge=fake_knowledge,
+        confirm_policy=FakeConfirmPolicy(l1=l1_confirm),
+        clock=clock,
+    )
+    runners: dict[str, Any] = {
+        spec_id: LlmSpecialistRunner(model) for spec_id, model in (models or {}).items()
+    }
+    runners[REVIEWER_ID] = ChecklistRunner(StaticChecklist(checklist or ReviewChecklist()), classify_depth)
+    budget_args: dict[str, Any] = {"mode": mode, "clock": clock, "deadline": deadline}
+    for key, value in (
+        ("token_ceiling", token_ceiling),
+        ("max_specialists", max_specialists),
+        ("max_tool_steps", max_tool_steps),
+    ):
+        if value is not None:
+            budget_args[key] = value
+    scope = CareTurnScope(
+        care_agent=agent,
+        patient_ref="P900",
+        budget=TurnBudget(**budget_args),
+        turn_key="turn-fake-1",
+        contexts=dict(contexts or {}),
+    )
+    switches = kill_switch or KillSwitchState()
+    service = DelegationService(
+        specs={spec.agent_id: spec for spec in all_specs()},
+        runners=runners,
+        toolkit=toolkit,
+        tasks=tasks,
+        store=store,
+        kill_switch=lambda: switches,
+        clock=clock,
+    )
+    return DelegationRig(service, scope, tasks, store, clock, fake_slots, fake_knowledge, actions, toolkit)

@@ -11,4 +11,7 @@ M2c: staff routing with the SLA and the chain that always ends at the 24/7 on-ca
 ``routing_types``, ``routing_store``, ``oncall``), the one template message of an out-of-hours handoff
 (``patient_notices``) and the pause and reconcile of scheduled reminders while a person has the conversation
 (``reminders``, ``reminder_store``). ``testing_routing`` holds the fakes and a fully wired rig.
+
+M4: the structured answer of a specialist (``task_result``), the per-turn budget of delegations
+(``budget``) and the three specialist agents with the ``delegate`` tool (``specialists``).
 """
