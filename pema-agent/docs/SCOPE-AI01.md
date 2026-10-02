@@ -1,6 +1,6 @@
 # Pema Agent — Scope AI01
 
-Trạng thái: mô tả hiện trạng mã trên nhánh `feat/ai-agent-backend` (commit tích hợp `1ce6cca`), viết ngày 2026-10-02 bởi gói F. Luồng tài liệu: **SCOPE-AI01 → [SPEC-AI01](SPEC-AI01.md) → [MODULEMAP-AI01](MODULEMAP-AI01.md) → [ARCH-AI01](ARCH-AI01.md)**. Kế hoạch gốc là [PLAN-AI01](PLAN-AI01.md); hợp đồng giữa các gói là [CONTRACTS-AI01](CONTRACTS-AI01.md); bảng dịch file là [PORT-MAP](PORT-MAP.md).
+Trạng thái: mô tả hiện trạng mã trên nhánh `feat/ai-agent-backend` (commit tích hợp `1ce6cca`), viết ngày 2026-10-02 bởi gói F; **cập nhật cho nhánh `feat/single-tenant`: phạm vi là MỘT phòng khám mỗi bản cài** (mục 2, mục 7 quyết định 16, ARCH-AI01 mục 14 về hai nhánh song song). Luồng tài liệu: **SCOPE-AI01 → [SPEC-AI01](SPEC-AI01.md) → [MODULEMAP-AI01](MODULEMAP-AI01.md) → [ARCH-AI01](ARCH-AI01.md)**. Kế hoạch gốc là [PLAN-AI01](PLAN-AI01.md); hợp đồng giữa các gói là [CONTRACTS-AI01](CONTRACTS-AI01.md); bảng dịch file là [PORT-MAP](PORT-MAP.md).
 
 Bộ tài liệu này cùng cấp với bộ PB01/PB02 trong `docs/` và theo cùng quy tắc của `AGENT.md`: chỉ ghi điều mã làm được, tách rõ "đã có test với đồ giả" khỏi "đã chạy thật", và mọi dữ liệu trong repo là hư cấu. Nơi nào chưa kiểm chứng, tài liệu nói thẳng là chưa kiểm chứng; danh sách đầy đủ ở mục 8.
 
@@ -20,7 +20,8 @@ Mục tiêu an toàn đi trước mục tiêu tiện lợi: agent soạn nháp, 
 - **CSKH bằng chữ** với bệnh nhân qua Zalo. Tool ảnh, video, tài liệu, web vẫn được dịch đủ nhưng **tắt trong hồ sơ `patient_channel`**.
 - **Hai hồ sơ chính sách** gắn với từng account và từng agent (mục 3). An toàn lâm sàng là hồ sơ, không phải việc xóa tính năng đã dịch.
 - **Kênh Zalo**: Zalo Bot API (chính thức; polling hoặc webhook) và tài khoản Zalo cá nhân qua cầu nối Node dùng `zca-js` (không chính thức, có rủi ro bị khóa tài khoản, mặc định tắt). Zalo OA/ZNS chỉ là stub (mục 5).
-- **CRM server**: đăng nhập JWT, phân quyền theo ma trận ARCH-PB01 (deny by default), audit mọi thay đổi, cách ly theo phòng khám bằng RLS; bệnh nhân/Patient 360, lịch hẹn, hội thoại và Inbox, hàng chờ duyệt (`review_item`), đồng ý (consent), tin nhắn mẫu đã duyệt.
+- **Một phòng khám mỗi bản cài** (single-tenant): một bản cài phục vụ đúng MỘT phòng khám, có server, CSDL, Redis, khóa mã hóa và tài khoản Zalo riêng; một phòng khám có thể có nhiều tài khoản Zalo. Không còn nhiều phòng khám trên cùng hệ thống, không còn RLS, đăng nhập chỉ email và mật khẩu, webhook Zalo không có đoạn phòng khám.
+- **CRM server**: đăng nhập JWT (email + mật khẩu), phân quyền theo ma trận ARCH-PB01 (deny by default), audit mọi thay đổi, role `be_app`/`agent_worker` với grant tối thiểu (không còn RLS, xem quyết định 16); bệnh nhân/Patient 360, lịch hẹn, hội thoại và Inbox, hàng chờ duyệt (`review_item`), đồng ý (consent), tin nhắn mẫu đã duyệt.
 - **Luật CRM tự động**: mười luật của `crm-automation.js` thành engine Python sinh việc cho nhân viên và (khi cấu hình) job vào bộ lập lịch; `marketingOptOut` chặn tiếp thị; sinh nhật không bao giờ tự gửi.
 - **Bộ lập lịch**: job `message` (từ mẫu đã duyệt) và `agent`, trần tin chủ động mỗi ngày, công tắc khẩn (kill switch), cửa sổ giờ gửi, khoảng cách giữa các tin, phục hồi sau lỗi.
 - **Kho tri thức** tài liệu da liễu (tài liệu mẫu hư cấu trong `kb-samples/`) với tìm kiếm lai (từ khóa + vector) và dấu duyệt của bác sĩ.
@@ -67,8 +68,9 @@ Vai trò nhân viên theo `pema_contracts.roles`: chủ phòng khám (`owner`), 
 - Tinh chỉnh (fine-tuning) mô hình.
 - **Tự gửi không có người duyệt** trong `patient_channel`; chẩn đoán tự động; tự đổi phác đồ; tự đặt lịch (agent chỉ *đề xuất*, nhân viên xác nhận).
 - Nhắn tin sinh nhật tự động.
+- **Nhiều phòng khám trên một hệ thống** (đa tenant) trên nhánh `feat/single-tenant`: ngoài phạm vi; phòng khám thứ hai là một bản cài khác hẳn (nhánh `feat/ai-agent-backend` còn mô hình đa phòng khám cũ, ARCH-AI01 mục 14).
 - Ứng dụng bệnh nhân gọi API này; đồng bộ ngược sang prototype web/KMP của PB01.
-- Chuyển nghiệp vụ pháp lý (Nghị định 13/2023) vào mã: mã giữ che PII, consent, audit, RLS; trách nhiệm pháp lý là của chủ phòng khám.
+- Chuyển nghiệp vụ pháp lý (Nghị định 13/2023) vào mã: mã giữ che PII, consent, audit, grant tối thiểu; trách nhiệm pháp lý là của chủ phòng khám.
 
 ## 7. Quyết định đã chốt
 
@@ -89,6 +91,7 @@ Nguồn: PLAN-AI01 mục 8 (2026-10-01), CONTRACTS-AI01 mục 7, và ghi chú tr
 13. **Có tác vụ xóa theo thời hạn lưu** (`pema.retention`; worker chạy scope `agent`, API chạy scope `clinic`), nhưng mặc định giữ dữ liệu lâm sàng và tin nhắn vô thời hạn; chỉ dữ liệu thuần kỹ thuật có đời ngắn. Không bao giờ xóa `clinic.audit_log`, bệnh nhân, lịch hẹn, đồng ý, mục duyệt đang mở.
 14. **Truy cập công khai qua Caddy** (profile `proxy`, ba chế độ TLS `auto`/`internal`/`off`); chỉ Caddy publish 80/443, API chỉ tin `X-Forwarded-For` từ `PEMA_TRUSTED_PROXIES`, cookie phiên `Secure`; FE đọc địa chỉ API lúc chạy (`PEMA_API_INTERNAL_URL`).
 15. **Màn Nhân viên** (`/admin/users`, vòng H4, 2026-10-02): chủ và quản lý xem danh sách nhân viên (`admin.users.read`); chỉ chủ thêm, sửa họ tên và vai trò, khóa hoặc mở khóa, đặt lại mật khẩu (`admin.users`). Không xóa hẳn nhân viên. Chủ không tự khóa hay tự đổi vai trò của mình, phòng khám luôn còn một chủ đang hoạt động, khóa hoặc đổi vai trò thì người đó bị đăng xuất khỏi mọi thiết bị. Chưa quyết: owner có được khóa hay đặt lại mật khẩu owner khác không (hiện được); có mở quyền xem danh sách cho CSKH và lễ tân (để ô "Phụ trách" dùng danh sách) không (chưa mở).
+16. **Một hệ thống một phòng khám** (single-tenant, nhánh `feat/single-tenant`, migration `st_0009_single_tenant`). Lý do: yêu cầu bảo mật cao của phòng khám, bệnh viện, ngân hàng: dữ liệu của hai tổ chức không chung CSDL, Redis, khóa hay tiến trình, thay vì tin vào một chốt phần mềm (RLS). Giữ cột `clinic_id` làm mã cài đặt cố định; `clinic.clinic` đúng một dòng (CSDL bảo đảm), tạo bởi migration từ `PEMA_CLINIC_NAME` (mặc định `Pema Clinic`, slug cố định `clinic`, mã từ `PEMA_CLINIC_ID` nếu đặt); gỡ RLS và các hàm chọn phòng khám; đăng nhập chỉ email và mật khẩu; đường webhook Zalo không có đoạn phòng khám; vẫn nhiều tài khoản Zalo trong một phòng khám; giữ role `be_app`/`agent_worker` và view `clinic_agent`. Hai nhánh song song (đa phòng khám và một phòng khám) được giữ; tính năng về sau làm trên single-tenant trước (ARCH-AI01 mục 14). Hệ quả bảo mật: SECURITY-REVIEW-AI01 mục 7.
 
 ## 8. Điều chưa kiểm chứng
 
@@ -106,7 +109,7 @@ Tài liệu không coi các mục dưới đây là đã xong. Mỗi mục ghi r
 | Hiệu năng | Thiết kế api 1 worker, worker tách riêng | Chưa đo tải, độ trễ p95, hay số cuộc trò chuyện đồng thời |
 | Cờ đỏ, PII | Test với dữ liệu hư cấu, có/không dấu, sai dấu, kéo dài chữ | Chưa kiểm với tin thật của bệnh nhân; danh sách và chữ chưa được bác sĩ duyệt |
 
-Các test cần dịch vụ ngoài (Postgres + pgvector, Redis) được đánh dấu `db` / `redis` và bị bỏ qua khi thiếu `PEMA_TEST_DATABASE_URL` / `PEMA_TEST_REDIS_URL`. Một lần `make test` không đặt biến đó **không** chứng minh phần DB, RLS và vòng khép kín. Tài liệu này không ghi số test đã chạy; số liệu phải lấy từ lần chạy lại tại thời điểm cần.
+Các test cần dịch vụ ngoài (Postgres + pgvector, Redis) được đánh dấu `db` / `redis` và bị bỏ qua khi thiếu `PEMA_TEST_DATABASE_URL` / `PEMA_TEST_REDIS_URL`. Một lần `make test` không đặt biến đó **không** chứng minh phần DB, role/grant và vòng khép kín. Tài liệu này không ghi số test đã chạy; số liệu phải lấy từ lần chạy lại tại thời điểm cần.
 
 ## 9. Việc mở cần chủ phòng khám hoặc bác sĩ quyết định
 
@@ -124,4 +127,7 @@ Mã đã giữ một giá trị mặc định cho từng mục để chạy đư
 10. **Webhook HTTPS.** Chế độ webhook cần địa chỉ HTTPS công khai Zalo gọi tới được (Tailscale Funnel, reverse proxy, hay cloud). Profile `proxy` (Caddy, chế độ `auto`) cho đường `/api/v1/webhooks/*` đi qua, trừ webhook cầu nối bị chặn từ ngoài. Mặc định đang là polling để khỏi cần địa chỉ công khai.
 11. **MCP cho bệnh nhân.** `patient_channel` chặn mọi tool MCP. Có cho một MCP nào đó (ví dụ tra lịch) cho kênh bệnh nhân không, và ai duyệt.
 
-Việc mở khác (kỹ thuật, chưa cần chủ phòng khám) ở ARCH-AI01 mục 13: chọn account khi nhiều account cùng loại, một worker mỗi phòng khám hay chung, liên kết vai trò bệnh nhân với hồ sơ, và các sửa tài liệu hạ tầng còn lại.
+12. **Client gọi API theo kiểu cũ (single-tenant).** Ứng dụng bệnh nhân (web, KMP) và mọi client hay script khác gọi đăng nhập có trường phòng khám (slug) hoặc đường webhook `/api/v1/webhooks/zalo-bot/<clinic>/<account>` / `.../zalo-bridge/<clinic>/<account>` phải đổi theo hợp đồng mới (đăng nhập chỉ email và mật khẩu; webhook không có đoạn phòng khám). Chưa kiểm client nào ngoài `pema-agent/`; việc rà từng client là của chủ sản phẩm. Webhook đã đăng ký ở Zalo bằng đường cũ phải đăng ký lại.
+13. **Phòng khám thứ hai.** Mỗi phòng khám là một bản cài riêng (`infra/README.md`, "One system, one clinic"); chủ sản phẩm quyết định cách vận hành nhiều bản cài (ai giữ khóa, ai sao lưu, cập nhật phiên bản đồng loạt thế nào). Không có công cụ quản lý nhiều bản cài trong repo này.
+
+Việc mở khác (kỹ thuật, chưa cần chủ phòng khám) ở ARCH-AI01 mục 13: chọn account khi nhiều account cùng loại, liên kết vai trò bệnh nhân với hồ sơ, và các sửa tài liệu hạ tầng còn lại.
