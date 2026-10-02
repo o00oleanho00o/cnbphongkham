@@ -76,7 +76,7 @@ async def run_scheduled_job_trial(deps: SchedulerDeps, job: ScheduledJob) -> Job
     now = datetime.now(UTC)
     scheduled_for = job.next_run_at or to_iso_z(now)
 
-    async with deps.db.session(clinic_id) as s:
+    async with deps.db.session() as s:
         row = (
             await s.execute(
                 text(
@@ -138,7 +138,7 @@ async def run_scheduled_job_trial(deps: SchedulerDeps, job: ScheduledJob) -> Job
         # ``finally``, not after the await: ``run_scheduled_job`` promises never to raise (it catches
         # internally), but if there is a surprise the job must still be GIVEN BACK, not stuck forever at
         # next_run_at=NULL.
-        async with deps.db.session(clinic_id) as s:
+        async with deps.db.session() as s:
             await s.execute(
                 text(
                     """

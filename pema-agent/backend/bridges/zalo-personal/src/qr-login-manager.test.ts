@@ -47,7 +47,7 @@ describe("qr-login-manager", () => {
   it("luồng chuẩn: starting -> waiting_scan (có QR) -> scanned -> success + attach", async () => {
     const fake = fakeLogin();
     const m = new QrLoginManager(fake.deps);
-    m.startQrLogin("acc-qr-1", "clinic-a");
+    m.startQrLogin("acc-qr-1");
     assert.equal(m.getQrLoginStatus("acc-qr-1").state, "starting");
 
     fake.emit({ type: "qr", qrBase64: "QR_BASE64_DATA" });
@@ -71,7 +71,7 @@ describe("qr-login-manager", () => {
   it("QR hết hạn: zca-js bắn lại QR mới, UI nhận ảnh mới", () => {
     const fake = fakeLogin();
     const m = new QrLoginManager(fake.deps);
-    m.startQrLogin("acc-qr-2", "clinic-a");
+    m.startQrLogin("acc-qr-2");
     fake.emit({ type: "qr", qrBase64: "QR_CU" });
     fake.emit({ type: "expired" });
     fake.emit({ type: "qr", qrBase64: "QR_MOI" });
@@ -84,13 +84,13 @@ describe("qr-login-manager", () => {
   it("từ chối trên điện thoại -> declined; login lỗi -> error kèm message", async () => {
     const fake1 = fakeLogin();
     const m = new QrLoginManager(fake1.deps);
-    m.startQrLogin("acc-qr-3", "clinic-a");
+    m.startQrLogin("acc-qr-3");
     fake1.emit({ type: "declined" });
     assert.equal(m.getQrLoginStatus("acc-qr-3").state, "declined");
 
     const fake2 = fakeLogin();
     const m2 = new QrLoginManager(fake2.deps);
-    m2.startQrLogin("acc-qr-4", "clinic-a");
+    m2.startQrLogin("acc-qr-4");
     fake2.fail("mạng rớt");
     await doiChoDenKhi(() => m2.getQrLoginStatus("acc-qr-4").state === "error", {
       moTa: "trạng thái chuyển sang error",
@@ -103,10 +103,10 @@ describe("qr-login-manager", () => {
   it("phiên đang sống thì start lần 2 là idempotent (không tạo QR mới)", () => {
     const fake = fakeLogin();
     const m = new QrLoginManager(fake.deps);
-    const first = m.startQrLogin("acc-qr-5", "clinic-a");
+    const first = m.startQrLogin("acc-qr-5");
     fake.emit({ type: "qr", qrBase64: "QR_A" });
 
-    const second = m.startQrLogin("acc-qr-5", "clinic-a");
+    const second = m.startQrLogin("acc-qr-5");
     assert.equal(second.seq, first.seq, "phải trả về đúng phiên đang chạy");
   });
 
@@ -117,14 +117,14 @@ describe("qr-login-manager", () => {
     let current = fake1;
     const routed = new QrLoginManager({
       login: (id, onEvent, signal) => current.deps.login(id, onEvent, signal),
-      attach: (id, slug, session) => current.deps.attach(id, slug, session),
+      attach: (id, session) => current.deps.attach(id, session),
       stopAccount: () => undefined,
     });
-    routed.startQrLogin("acc-qr-6", "clinic-a");
+    routed.startQrLogin("acc-qr-6");
     fake1.emit({ type: "declined" }); // phiên 1 chết
 
     current = fake2;
-    routed.startQrLogin("acc-qr-6", "clinic-a");
+    routed.startQrLogin("acc-qr-6");
     fake2.emit({ type: "qr", qrBase64: "QR_PHIEN_2" });
 
     // Phiên 1 resolve muộn - không được đè trạng thái phiên 2
@@ -146,7 +146,7 @@ describe("QrLoginManager: session lifetime (new)", () => {
     const clock = { now: 1_000_000 };
     const fake = fakeLogin();
     const manager = new QrLoginManager({ ...fake.deps, now: () => clock.now });
-    manager.startQrLogin("acc-ttl", "clinic-a");
+    manager.startQrLogin("acc-ttl");
     fake.emit({ type: "qr", qrBase64: "QR" });
 
     clock.now += SESSION_TTL_MS - 1;
@@ -162,7 +162,7 @@ describe("QrLoginManager: session lifetime (new)", () => {
     const clock = { now: 0 };
     const fake = fakeLogin();
     const manager = new QrLoginManager({ ...fake.deps, now: () => clock.now });
-    manager.startQrLogin("acc-ttl-2", "clinic-a");
+    manager.startQrLogin("acc-ttl-2");
     fake.emit({ type: "scanned" });
 
     clock.now += SESSION_TTL_MS;
@@ -173,10 +173,10 @@ describe("QrLoginManager: session lifetime (new)", () => {
   it("starting_again_after_the_timeout_begins_a_new_session", () => {
     const clock = { now: 0 };
     const manager = new QrLoginManager({ ...fakeLogin().deps, now: () => clock.now });
-    const first = manager.startQrLogin("acc-ttl-3", "clinic-a");
+    const first = manager.startQrLogin("acc-ttl-3");
     clock.now += SESSION_TTL_MS;
 
-    const second = manager.startQrLogin("acc-ttl-3", "clinic-a");
+    const second = manager.startQrLogin("acc-ttl-3");
 
     assert.notEqual(second.seq, first.seq);
   });
@@ -189,12 +189,12 @@ describe("QrLoginManager: session lifetime (new)", () => {
       attach: () => undefined,
       stopAccount: () => undefined,
     });
-    const oldSession = manager.startQrLogin("acc-seq", "clinic-a");
+    const oldSession = manager.startQrLogin("acc-seq");
     first.emit({ type: "declined" });
 
     const second = fakeLogin();
     route = second;
-    const newSession = manager.startQrLogin("acc-seq", "clinic-a");
+    const newSession = manager.startQrLogin("acc-seq");
 
     assert.equal(newSession.seq, oldSession.seq + 1);
     assert.equal(first.signal.aborted, true);
@@ -209,7 +209,7 @@ describe("QrLoginManager: session lifetime (new)", () => {
   it("a_declined_session_stays_declined_when_the_aborted_login_rejects", async () => {
     const fake = fakeLogin();
     const manager = new QrLoginManager(fake.deps);
-    manager.startQrLogin("acc-declined", "clinic-a");
+    manager.startQrLogin("acc-declined");
     fake.emit({ type: "declined" });
 
     fake.fail("QR login aborted");
@@ -224,22 +224,22 @@ describe("QrLoginManager: session lifetime (new)", () => {
       ...fakeLogin().deps,
       stopAccount: (id) => void stopped.push(id),
     });
-    manager.startQrLogin("acc-relogin", "clinic-a");
+    manager.startQrLogin("acc-relogin");
     assert.deepEqual(stopped, ["acc-relogin"]);
   });
 
-  it("the_clinic_slug_of_the_session_is_what_attach_receives", async () => {
-    const attachedTo: string[] = [];
+  it("attach_receives_the_account_id_and_the_session_only", async () => {
+    const attached: string[] = [];
     const fake = fakeLogin();
     const manager = new QrLoginManager({
       ...fake.deps,
-      attach: (_id, slug) => void attachedTo.push(slug),
+      attach: (id) => void attached.push(id),
     });
-    manager.startQrLogin("acc-slug", "clinic-b");
+    manager.startQrLogin("acc-attach");
 
     fake.finish();
-    await doiChoDenKhi(() => attachedTo.length === 1, { moTa: "attach called" });
+    await doiChoDenKhi(() => attached.length === 1, { moTa: "attach called" });
 
-    assert.deepEqual(attachedTo, ["clinic-b"]);
+    assert.deepEqual(attached, ["acc-attach"]);
   });
 });

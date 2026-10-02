@@ -127,7 +127,7 @@ class PgMcpPolicyStore:
         )
 
     async def servers_of_agent(self, clinic_id: UUID, agent_id: str) -> list[str]:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 await session.execute(
                     select(agent_mcp_servers.c.server_id)
@@ -139,7 +139,7 @@ class PgMcpPolicyStore:
 
     async def agents_of_server(self, clinic_id: UUID, server_id: str) -> list[str]:
         """The REVERSE direction: which agents a server is bound to (the dashboard asks before deleting)."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 await session.execute(
                     select(agent_mcp_servers.c.agent_id)
@@ -150,7 +150,7 @@ class PgMcpPolicyStore:
             return list(rows)
 
     async def is_bound(self, clinic_id: UUID, agent_id: str, server_id: str) -> bool:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = await session.execute(
                 select(agent_mcp_servers.c.server_id).where(
                     agent_mcp_servers.c.agent_id == agent_id, agent_mcp_servers.c.server_id == server_id
@@ -162,7 +162,7 @@ class PgMcpPolicyStore:
         """REPLACES the whole list of the agent, never accumulates. One transaction."""
         unique = _unique(server_ids)
         try:
-            async with self._db.session(clinic_id) as session:
+            async with self._db.session() as session:
                 await session.execute(
                     delete(agent_mcp_servers).where(agent_mcp_servers.c.agent_id == agent_id)
                 )
@@ -179,7 +179,7 @@ class PgMcpPolicyStore:
         """Reverse of ``set_servers_for_agent``: bind one server to a list of agents (replaces)."""
         unique = _unique(agent_ids)
         try:
-            async with self._db.session(clinic_id) as session:
+            async with self._db.session() as session:
                 await session.execute(
                     delete(agent_mcp_servers).where(agent_mcp_servers.c.server_id == server_id)
                 )
@@ -193,7 +193,7 @@ class PgMcpPolicyStore:
         await self._refresh_cache(clinic_id)
 
     async def count_agents_by_server(self, clinic_id: UUID) -> dict[str, int]:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 await session.execute(
                     select(agent_mcp_servers.c.server_id, func.count().label("n")).group_by(
@@ -204,7 +204,7 @@ class PgMcpPolicyStore:
         return {str(r[0]): int(r[1]) for r in rows}
 
     async def list_all_bindings(self, clinic_id: UUID) -> dict[str, list[str]]:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 await session.execute(
                     select(agent_mcp_servers.c.agent_id, agent_mcp_servers.c.server_id).order_by(
@@ -220,6 +220,6 @@ class PgMcpPolicyStore:
     async def clear_for_agent(self, clinic_id: UUID, agent_id: str) -> None:
         """Clean all bindings of an agent: call when the agent is DELETED (anti-resurrection of orphan
         rows)."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(delete(agent_mcp_servers).where(agent_mcp_servers.c.agent_id == agent_id))
         await self._refresh_cache(clinic_id)

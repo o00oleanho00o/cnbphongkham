@@ -33,20 +33,20 @@ def req(**over: object) -> FriendRequestRow:
 
 
 async def test_friend_request_store_upsert_roi_list_tra_dung_field(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     """upsert rồi list trả đúng field"""
-    store, clinic = FriendRequestStore(be_db), clinic_ids[0]
+    store, clinic = FriendRequestStore(be_db), clinic_id
     await store.upsert_friend_request(clinic, req(from_uid="u-list"))
     rows = [r for r in await store.list_friend_requests(clinic, "zp-1") if r.from_uid == "u-list"]
     assert rows == [req(from_uid="u-list")]
 
 
 async def test_friend_request_store_upsert_trung_chi_cap_nhat_khong_de_dong_thu_hai(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     """upsert TRÙNG (account, from_uid) chỉ cập nhật, KHÔNG đẻ dòng thứ hai"""
-    store, clinic = FriendRequestStore(be_db), clinic_ids[0]
+    store, clinic = FriendRequestStore(be_db), clinic_id
     await store.upsert_friend_request(clinic, req(from_uid="u-trung", message="lần 1", received_at=T0))
     later = T0 + timedelta(seconds=1)
     await store.upsert_friend_request(clinic, req(from_uid="u-trung", message="lần 2", received_at=later))
@@ -57,10 +57,10 @@ async def test_friend_request_store_upsert_trung_chi_cap_nhat_khong_de_dong_thu_
 
 
 async def test_friend_request_store_xoa_dong_roi_list_khong_con(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     """xóa dòng rồi list không còn"""
-    store, clinic = FriendRequestStore(be_db), clinic_ids[0]
+    store, clinic = FriendRequestStore(be_db), clinic_id
     await store.upsert_friend_request(clinic, req(from_uid="u-xoa"))
     assert await store.xoa_friend_request(clinic, "zp-1", "u-xoa") is True
     assert not [r for r in await store.list_friend_requests(clinic, "zp-1") if r.from_uid == "u-xoa"]
@@ -70,10 +70,10 @@ async def test_friend_request_store_xoa_dong_roi_list_khong_con(
 
 
 async def test_friend_request_store_list_loc_dung_theo_account_id_hai_account_khong_lan(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     """list lọc đúng theo accountId - hai account không lẫn"""
-    store, clinic = FriendRequestStore(be_db), clinic_ids[0]
+    store, clinic = FriendRequestStore(be_db), clinic_id
     await store.upsert_friend_request(clinic, req(account_id="acc-A", from_uid="x"))
     await store.upsert_friend_request(clinic, req(account_id="acc-B", from_uid="y"))
     rows_a = await store.list_friend_requests(clinic, "acc-A")
@@ -83,10 +83,10 @@ async def test_friend_request_store_list_loc_dung_theo_account_id_hai_account_kh
 
 
 async def test_friend_request_store_lay_friend_request_qua_han_tra_dong_received_at_nho_hon_hoac_bang_moc(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     """layFriendRequestQuaHan: trả dòng received_at <= mốc (BAO GỒM đúng bằng mốc)"""
-    store, clinic = FriendRequestStore(be_db), clinic_ids[0]
+    store, clinic = FriendRequestStore(be_db), clinic_id
     await store.upsert_friend_request(
         clinic, req(account_id="acc-qh", from_uid="cu", received_at=T0 + timedelta(seconds=100))
     )
@@ -104,10 +104,10 @@ async def test_friend_request_store_lay_friend_request_qua_han_tra_dong_received
 
 
 async def test_friend_request_store_enrich_hong_sender_name_avatar_url_null_van_luu_duoc(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     """enrich hỏng -> senderName/avatarUrl null vẫn lưu được"""
-    store, clinic = FriendRequestStore(be_db), clinic_ids[0]
+    store, clinic = FriendRequestStore(be_db), clinic_id
     await store.upsert_friend_request(clinic, req(from_uid="u-null", sender_name=None, avatar_url=None))
     row = next(r for r in await store.list_friend_requests(clinic, "zp-1") if r.from_uid == "u-null")
     assert row.sender_name is None
@@ -115,10 +115,10 @@ async def test_friend_request_store_enrich_hong_sender_name_avatar_url_null_van_
 
 
 async def test_friend_request_store_cap_nhat_ho_so_cap_nhat_ten_avatar_cua_dong_da_co(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     """capNhatHoSo cập nhật tên/avatar của dòng đã có"""
-    store, clinic = FriendRequestStore(be_db), clinic_ids[0]
+    store, clinic = FriendRequestStore(be_db), clinic_id
     await store.upsert_friend_request(
         clinic, req(account_id="acc-cap", from_uid="u", sender_name=None, avatar_url=None)
     )
@@ -129,21 +129,9 @@ async def test_friend_request_store_cap_nhat_ho_so_cap_nhat_ten_avatar_cua_dong_
 
 
 async def test_friend_request_store_cap_nhat_ho_so_la_update_only_dong_khong_ton_tai_khong_tao_dong_ma(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
+    be_db: ClinicDatabase, clinic_id: uuid.UUID
 ) -> None:
     """capNhatHoSo là UPDATE-only: dòng không tồn tại -> KHÔNG tạo dòng ma"""
-    store, clinic = FriendRequestStore(be_db), clinic_ids[0]
+    store, clinic = FriendRequestStore(be_db), clinic_id
     await store.cap_nhat_ho_so_friend_request(clinic, "acc-ma", "u-ma", "X", "y")
     assert len(await store.list_friend_requests(clinic, "acc-ma")) == 0, "update dòng đã mất phải là no-op"
-
-
-async def test_friend_request_store_hai_phong_kham_khong_thay_dong_cua_nhau(
-    be_db: ClinicDatabase, clinic_ids: tuple[uuid.UUID, uuid.UUID]
-) -> None:
-    """row level security: mỗi phòng khám chỉ thấy yêu cầu kết bạn của mình"""
-    store = FriendRequestStore(be_db)
-    first, second = clinic_ids
-    await store.upsert_friend_request(first, req(account_id="zp-1", from_uid="u-rls"))
-    assert not [r for r in await store.list_friend_requests(second, "zp-1") if r.from_uid == "u-rls"]
-    assert await store.xoa_friend_request(second, "zp-1", "u-rls") is False
-    assert [r for r in await store.list_friend_requests(first, "zp-1") if r.from_uid == "u-rls"]

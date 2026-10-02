@@ -75,7 +75,7 @@ async def test_store_file_source_is_stored_then_processed_by_the_worker_and_dele
     assert nguon.status is KbSourceStatus.PENDING
     assert (tmp_path / nguon.path).exists()
 
-    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=CAI_DAT).xu_ly_mot_vong(kb.clinic_id)
+    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=CAI_DAT).xu_ly_mot_vong()
     sau = await store.get_source(kb.clinic_id, nguon.id)
     assert sau is not None
     assert sau.status is KbSourceStatus.READY
@@ -153,7 +153,7 @@ async def test_store_patient_channel_agent_cites_only_doctor_approved_sources(
     nguon = await store.create_text_source(
         kb.clinic_id, name="Chăm sóc sau laser", text="Tránh nắng và không bôi acid trong một tuần."
     )
-    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=CAI_DAT).xu_ly_mot_vong(kb.clinic_id)
+    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=CAI_DAT).xu_ly_mot_vong()
     kb.kb_database.add_agent("bot-benh-nhan", policy_profile="patient_channel")
     kb.kb_database.add_agent("tro-ly-nhan-vien", policy_profile="staff_assistant")
     await store.set_sources_for_agent(kb.clinic_id, "bot-benh-nhan", [nguon.id])
@@ -189,22 +189,3 @@ async def test_store_patient_channel_agent_cites_only_doctor_approved_sources(
         kb.kb_database.scalar("SELECT approved_by FROM agent.kb_document WHERE id = :id", {"id": nguon.id})
         is None
     )
-
-
-async def test_store_clinic_boundary_another_clinic_sees_nothing_and_cannot_search(
-    kb: KbHarness, tmp_path: Path
-) -> None:
-    """ranh giới phòng khám (RLS): phòng khác không thấy, không tìm ra, không sửa được"""
-    store = tao_store(kb, tmp_path)
-    nguon = await store.create_text_source(kb.clinic_id, name="Của phòng khám A", text="Tránh nắng.")
-    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=CAI_DAT).xu_ly_mot_vong(kb.clinic_id)
-    kb.kb_database.add_agent("a1")
-    await store.set_sources_for_agent(kb.clinic_id, "a1", [nguon.id])
-
-    assert await store.get_source(kb.other_clinic_id, nguon.id) is None
-    assert await store.list_sources(kb.other_clinic_id) == []
-    assert await store.search(kb.other_clinic_id, question="tránh nắng", agent_id="a1") == []
-    with pytest.raises(DomainError):
-        await store.set_approved(kb.other_clinic_id, nguon.id, True, by_user=uuid.uuid4())
-    with pytest.raises(DomainError):
-        await store.reindex_source(kb.other_clinic_id, nguon.id)

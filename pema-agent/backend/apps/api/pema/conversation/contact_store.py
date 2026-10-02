@@ -1,7 +1,7 @@
 # ported from: src/conversation/contact-store.ts
 """Contacts ("auto-collected" address book, table ``agent.contacts``).
 
-Forced deviations: SQLite sync -> SQLAlchemy async + Postgres with ``clinic_id`` + RLS; ``strftime`` default
+Forced deviations: SQLite sync -> SQLAlchemy async + Postgres with ``clinic_id``, no RLS; ``strftime`` default
 and ``LIKE`` become ``now()`` and ``ILIKE`` (with the wildcards of the search text escaped, the original let
 a ``%`` typed by the user act as a wildcard).
 
@@ -63,7 +63,7 @@ class ContactStoreImpl:
         thấy ai đã từng nhắn tới bot)."""
         if not user_id:
             return  # payload thiếu uidFrom - không có gì để ghi
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 _UPSERT,
                 {
@@ -81,7 +81,7 @@ class ContactStoreImpl:
         lại thì dòng tự hiện lại (đếm lại từ đầu; tin nhắn cũ trong DB vẫn nguyên). Đó là hành vi đúng của
         một danh bạ tự thu thập, không phải bug.
         """
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             result = await session.execute(
                 _DELETE, {"clinic_id": clinic_id, "account_id": account_id, "user_id": user_id}
             )
@@ -97,7 +97,7 @@ class ContactStoreImpl:
         offset: int = 0,
     ) -> list[ContactRow]:
         """``account_id`` bỏ trống = mọi account."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 (
                     await session.execute(

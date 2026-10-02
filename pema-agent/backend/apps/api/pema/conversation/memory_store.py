@@ -3,7 +3,7 @@
 
 Forced deviations:
 
-* ``node:sqlite`` sync -> SQLAlchemy async + Postgres (``clinic_id`` + RLS, ``LIKE`` -> escaped ``ILIKE``);
+* ``node:sqlite`` sync -> SQLAlchemy async + Postgres (``clinic_id``, no RLS, ``LIKE`` -> escaped ``ILIKE``);
 * the "check duplicate, then insert, then cap" sequence of ``saveMemoryFact`` ran inside ONE synchronous
   process, so no other writer could slip in between. With several workers that no longer holds, and there is
   no unique constraint on ``content`` (a fact may be edited into a duplicate on purpose, see
@@ -115,7 +115,7 @@ class MemoryStoreImpl:
         nghĩa là người dùng dặn một điều mới và bot im lặng không nhớ."""
         trimmed = content.strip()
         scope = {"clinic_id": clinic_id, "account_id": account_id, "subject_id": subject_id}
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(_LOCK, {"key": f"memory:{clinic_id}:{account_id}:{subject_id}"})
             duplicate = (await session.execute(_DUPLICATE, {**scope, "content": trimmed})).first()
             if duplicate is not None:
@@ -143,7 +143,7 @@ class MemoryStoreImpl:
             "thread_id": thread_id,
             "sender_id": sender_id,
         }
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (await session.execute(_GROUP if is_group else _DIRECT, params)).mappings().all()
 
         # DM: senderId và threadId trùng nhau -> dedupe theo id (the SQL ``OR`` already returns a row once,
@@ -167,7 +167,7 @@ class MemoryStoreImpl:
         offset: int = 0,
     ) -> list[MemoryFact]:
         """``account_id`` bỏ trống = mọi account."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 (
                     await session.execute(
@@ -187,7 +187,7 @@ class MemoryStoreImpl:
         return [MemoryFact.model_validate(dict(r)) for r in rows]
 
     async def delete_memory_fact(self, clinic_id: UUID, account_id: str, fact_id: int) -> bool:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             result = await session.execute(
                 _DELETE, {"clinic_id": clinic_id, "account_id": account_id, "id": fact_id}
             )

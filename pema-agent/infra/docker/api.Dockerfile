@@ -32,8 +32,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # besides the Alembic files.
 COPY backend/packages/contracts packages/contracts
 COPY backend/apps/api/pema apps/api/pema
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync ${UV_SYNC_FLAGS} --no-dev --no-editable --package pema-api
+# --no-cache: uv keys the cached wheel of a local directory by its pyproject.toml, not by the sources, so a shared
+# cache mount can hand back the wheel of an OLDER checkout (stale code in a fresh image). The third-party packages
+# are already in /opt/venv from layer 1; only the two workspace members are built here.
+RUN uv sync ${UV_SYNC_FLAGS} --no-cache --no-dev --no-editable --package pema-api
 
 
 FROM python:3.12-slim-bookworm AS runtime

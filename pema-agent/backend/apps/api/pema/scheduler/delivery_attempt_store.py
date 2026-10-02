@@ -60,7 +60,7 @@ class DeliveryAttemptStore:
 
     async def get_delivery_attempts(self, clinic_id: UUID, job_id: str) -> int:
         """Current value (diagnostics and tests)."""
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             value = (
                 await s.execute(
                     text(

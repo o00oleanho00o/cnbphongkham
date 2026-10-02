@@ -149,7 +149,7 @@ class ThreadContextWiper:
         opts = options or WipeOptions()
         scope = {"clinic_id": clinic_id, "account_id": account_id, "thread_id": thread_id}
 
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             agent_steps = affected_rows(await session.execute(_DELETE_STEPS, scope))
             messages = affected_rows(await session.execute(_DELETE_MESSAGES, scope))
             counters = affected_rows(

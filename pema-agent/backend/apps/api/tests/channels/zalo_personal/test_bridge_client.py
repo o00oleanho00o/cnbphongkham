@@ -111,14 +111,13 @@ async def test_start_account_gui_credential_trong_body_da_ky_va_nhan_own_id() ->
 
     own = await client.start_account(
         "acc-1",
-        clinic_slug="clinic-1",
         credential={"cookie": [], "imei": "i", "userAgent": "u"},
         kill_switch=KillSwitchState(on=True, scope="proactive", reason="r"),
     )
 
     assert own == "self-9"
     body = json.loads(seen[0].content)
-    assert body["clinic_slug"] == "clinic-1"
+    assert "clinic_slug" not in body
     assert body["credential"]["imei"] == "i"
     assert body["kill_switch"] == {"on": True, "scope": "proactive", "reason": "r"}
     assert verify_signature(SECRET, dict(seen[0].headers), seen[0].content)
@@ -140,7 +139,7 @@ async def test_qr_va_kill_switch_dung_duong_dan() -> None:
     seen: list[httpx.Request] = []
     client = make_client(lambda r: ok(state="waiting_scan", qr_png_base64="QR"), seen)
 
-    status = await client.start_qr_login("acc-1", clinic_slug="c")
+    status = await client.start_qr_login("acc-1")
     again = await client.get_qr_login("acc-1")
     await client.set_kill_switch(KillSwitchState(on=True, scope="all", reason=None))
 

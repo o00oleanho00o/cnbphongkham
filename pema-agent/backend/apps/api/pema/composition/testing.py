@@ -29,7 +29,7 @@ from pema.agent.streaming_model_test_helper import ScriptedModel, tra_loi
 from pema.bootstrap import create_app
 from pema.channels.zalo_bot.settings import derive_webhook_secret
 from pema.channels.zalo_bot.testing import SYNTHETIC_TOKEN, FakeBotClient
-from pema.clinic.actions.seed_demo import SeedResult, seed_demo
+from pema.clinic.actions.seed_demo import SeedResult
 from pema.composition.runtime import ProcessRole, Runtime, build_runtime
 from pema.config.account_store import AccountStoreImpl
 from pema.config.agent_store import AgentStoreImpl
@@ -50,7 +50,6 @@ TEST_ENCRYPTION_KEY = "0123456789abcdef" * 4
 class Loop:
     settings: Settings
     world: SeedResult
-    slug: str
     app: FastAPI
     api: Runtime
     worker_rt: Runtime
@@ -63,6 +62,8 @@ class Loop:
     """URLs the media store was asked to fetch (never fetched: the downloader of the harness returns None)."""
     account_id: str
     """A bot account of its own for every loop, so one test never reads the rows of another."""
+    bots: dict[str, FakeBotClient] = field(default_factory=dict[str, FakeBotClient])
+    """The fake Bot API of every account of the loop (the main one and ``extra_accounts``), by id."""
     _updates: int = field(default=0)
     _run: str = field(default_factory=lambda: uuid4().hex[:8])
     """Part of every message id: ``agent.channel_update_seen`` outlives a test, a repeated id is a
@@ -74,8 +75,18 @@ class Loop:
     def clinic_id(self) -> UUID:
         return self.world.clinic_id
 
+    @property
+    def extra_account_ids(self) -> list[str]:
+        """The accounts opened with ``extra_accounts`` (same clinic, same agent), in creation order."""
+        return [account for account in self.bots if account != self.account_id]
+
     async def send_zalo_text(
-        self, text: str, *, uid: str = "demo-uid-025", thread: str | None = None
+        self,
+        text: str,
+        *,
+        uid: str = "demo-uid-025",
+        thread: str | None = None,
+        account_id: str | None = None,
     ) -> httpx.Response:
         """One synthetic text update from a customer, delivered to the real webhook route."""
         self._updates += 1
@@ -93,7 +104,7 @@ class Loop:
                 },
             },
         }
-        return await self._deliver(payload)
+        return await self._deliver(payload, account_id)
 
     async def send_zalo_image(
         self, *, uid: str = "demo-uid-025", url: str = "https://img.example.test/a.jpg"
@@ -115,10 +126,11 @@ class Loop:
         }
         return await self._deliver(payload)
 
-    async def _deliver(self, payload: dict[str, Any]) -> httpx.Response:
-        secret = derive_webhook_secret(self.clinic_id, self.account_id)
+    async def _deliver(self, payload: dict[str, Any], account_id: str | None = None) -> httpx.Response:
+        account = account_id or self.account_id
+        secret = derive_webhook_secret(self.clinic_id, account)
         return await self.http.post(
-            f"/api/v1/webhooks/zalo-bot/{self.slug}/{self.account_id}",
+            f"/api/v1/webhooks/zalo-bot/{account}",
             content=json.dumps(payload),
             headers={"content-type": "application/json", "X-Bot-Api-Secret-Token": secret},
         )
@@ -131,6 +143,12 @@ class Loop:
     async def wait_sent(self, count: int = 1) -> list[tuple[str, str, str | None]]:
         await self.wait_for(lambda: len(self.bot.sent) >= count, f"{count} message(s) sent to Zalo")
         return list(self.bot.sent)
+
+    async def wait_sent_by(self, account_id: str, count: int = 1) -> list[tuple[str, str, str | None]]:
+        """Messages the system sent through ONE account (its own fake Bot API)."""
+        bot = self.bots[account_id]
+        await self.wait_for(lambda: len(bot.sent) >= count, f"{count} message(s) sent through {account_id}")
+        return list(bot.sent)
 
     async def close_clients(self) -> None:
         for client in self._clients:
@@ -147,11 +165,7 @@ class Loop:
         self._clients.append(client)
         response = await client.post(
             "/api/v1/auth/login",
-            json={
-                "clinic_slug": self.slug,
-                "email": f"{user_key}@example.test",
-                "password": ACCOUNT_PASSWORD,
-            },
+            json={"email": f"{user_key}@example.test", "password": ACCOUNT_PASSWORD},
         )
         dashboard_auth.reset_login_rate_limit()
         if response.status_code != 200:
@@ -162,7 +176,7 @@ class Loop:
         """Review items created since the loop opened (the seeded demo items are left out)."""
         from sqlalchemy import text
 
-        async with self.api.db.session(self.clinic_id) as session:
+        async with self.api.db.session() as session:
             rows = (
                 (
                     await session.execute(
@@ -191,17 +205,19 @@ async def open_loop(
     db: ClinicDatabase,
     worker_db: ClinicDatabase,
     world: SeedResult,
-    slug: str,
     redis_url: str,
     model: ScriptedModel,
     profile: PolicyProfileKey,
     data_dir: Path,
     scheduler: bool = False,
+    extra_accounts: int = 0,
 ) -> AsyncGenerator[Loop]:
     """Start the API and the worker over ``db`` / ``worker_db`` and one Redis. ``profile`` is the policy
     profile of the account AND of the default agent (``staff_assistant`` = send directly,
     ``patient_channel`` =
-    every outbound text is held for a person)."""
+    every outbound text is held for a person). ``extra_accounts`` opens that many more bot accounts of the
+    same clinic and agent, each with its own fake Bot API (several accounts of one clinic work side by
+    side)."""
     settings = Settings(
         redis_url=redis_url,
         data_dir=data_dir,
@@ -226,14 +242,30 @@ async def open_loop(
         )
     await accounts.update_account(world.clinic_id, account_id, {"policy_profile": profile, "enabled": True})
     await accounts.set_bot_token(world.clinic_id, account_id, SYNTHETIC_TOKEN)
+    bot = FakeBotClient()
+    bots: dict[str, FakeBotClient] = {account_id: bot}
+    bot_of_token: dict[str, FakeBotClient] = {SYNTHETIC_TOKEN: bot}
+    for number in range(extra_accounts):
+        extra_id = f"bot-{uuid4().hex[:8]}"
+        extra_token = f"{SYNTHETIC_TOKEN}-{number + 2}"
+        await accounts.create_account(
+            world.clinic_id,
+            account_id=extra_id,
+            label=f"Bot thử vòng khép kín {number + 2}",
+            channel=ChannelKind.ZALO_BOT,
+            agent_id=default_agent.id,
+            policy_profile=profile,
+        )
+        await accounts.update_account(world.clinic_id, extra_id, {"policy_profile": profile, "enabled": True})
+        await accounts.set_bot_token(world.clinic_id, extra_id, extra_token)
+        bots[extra_id] = FakeBotClient()
+        bot_of_token[extra_token] = bots[extra_id]
     for other in await accounts.list_accounts(world.clinic_id):
-        if other.id != account_id and other.enabled:
+        if other.id not in bots and other.enabled:
             await accounts.update_account(world.clinic_id, other.id, {"enabled": False})
 
-    bot = FakeBotClient()
-
-    def client_factory(_token: str) -> FakeBotClient:
-        return bot
+    def client_factory(token: str) -> FakeBotClient:
+        return bot_of_token[token]
 
     def resolve_model(*_args: object) -> ChatModel:
         return model
@@ -273,12 +305,12 @@ async def open_loop(
         loop = Loop(
             settings=settings,
             world=world,
-            slug=slug,
             app=app,
             api=api_rt,
             worker_rt=worker_rt,
             worker=worker,
             bot=bot,
+            bots=bots,
             model=model,
             http=http,
             redis_url=redis_url,
@@ -318,33 +350,32 @@ class LoopFactory:
         self._tmp = tmp
 
     def open(
-        self, model: ScriptedModel, profile: PolicyProfileKey, *, scheduler: bool = False
+        self,
+        model: ScriptedModel,
+        profile: PolicyProfileKey,
+        *,
+        scheduler: bool = False,
+        extra_accounts: int = 0,
     ) -> contextlib.AbstractAsyncContextManager[Loop]:
-        """The shared demo clinic ``clinic-a``."""
-        return self._open(self._world, "clinic-a", model, profile, scheduler)
-
-    async def open_fresh(
-        self, model: ScriptedModel, profile: PolicyProfileKey, *, scheduler: bool = False
-    ) -> contextlib.AbstractAsyncContextManager[Loop]:
-        """A demo clinic of its own: the tasks, jobs and review items of other tests stay out of the way."""
-        slug = f"loop-{uuid4().hex[:8]}"
-        world = await seed_demo(self._db, password=ACCOUNT_PASSWORD, slug=slug)
-        return self._open(world, slug, model, profile, scheduler)
-
-    def _open(
-        self, world: SeedResult, slug: str, model: ScriptedModel, profile: PolicyProfileKey, scheduler: bool
-    ) -> contextlib.AbstractAsyncContextManager[Loop]:
+        """The demo clinic (the one clinic of the installation, emptied and seeded for this test)."""
         return open_loop(
             db=self._db,
             worker_db=self._worker_db,
-            world=world,
-            slug=slug,
+            world=self._world,
             redis_url=self._redis_url,
             model=model,
             profile=profile,
             data_dir=self._tmp,
             scheduler=scheduler,
+            extra_accounts=extra_accounts,
         )
+
+    async def open_fresh(
+        self, model: ScriptedModel, profile: PolicyProfileKey, *, scheduler: bool = False
+    ) -> contextlib.AbstractAsyncContextManager[Loop]:
+        """Same as ``open``: the clinic is already emptied for every test (single tenant), so the tasks, jobs
+        and review items of other tests are gone."""
+        return self.open(model, profile, scheduler=scheduler)
 
 
 async def _has_reviews(loop: Loop, count: int) -> bool:
@@ -354,6 +385,6 @@ async def _has_reviews(loop: Loop, count: int) -> bool:
 async def _all_review_ids(db: ClinicDatabase, clinic_id: UUID) -> list[dict[str, Any]]:
     from sqlalchemy import text
 
-    async with db.session(clinic_id) as session:
+    async with db.session() as session:
         rows = (await session.execute(text("SELECT id FROM clinic.review_item"))).mappings().all()
     return [dict(r) for r in rows]

@@ -4,6 +4,8 @@ Everything needed to run Pema Agent: compose stack, Dockerfiles, environment tem
 migration scripts, backup/restore, and the Ubuntu-native guide (NVIDIA driver, Docker, Ollama, llama-server
 roadmap, Tailscale/WireGuard, firewall, backups, UPS). Owner: package F (infrastructure part).
 
+Branch `feat/single-tenant`: **one system = one clinic** (section below).
+
 ```
 infra/
   docker-compose.yml        postgres+pgvector, redis, migrate, api  | profiles: worker, frontend, proxy, bridge, app (ollama paused)
@@ -18,13 +20,46 @@ infra/
   ubuntu/systemd/           Ollama drop-in, llama-server units (roadmap), backup timer, docker-after-tailscale
 ```
 
+## One system, one clinic
+
+An installation serves exactly ONE clinic, with its own server, Postgres, Redis, Zalo accounts and encryption keys.
+The reason is the security bar of clinics, hospitals and banks: patient data of two organisations never shares a
+database, a Redis, a key or a process, so there is nothing for a bug to leak across. Nothing in this stack selects a
+clinic: no clinic slug at login, no clinic segment in the webhook paths, no `--clinic` option, no row level security.
+
+* `PEMA_CLINIC_NAME` (default `Pema Clinic`) and the optional `PEMA_CLINIC_ID` (UUID) in `infra/.env` are read by the
+  migration (`st_0009_single_tenant`), which creates the one row of `clinic.clinic` on an empty database. Afterwards
+  the installed clinic is never renamed and never gets another id; the variables only matter on the first run (and
+  `PEMA_CLINIC_ID`, when set, must match the database or `migrate.sh` stops).
+* The database enforces it: `clinic.clinic` cannot hold a second row and the row cannot be deleted. `migrate.sh` checks
+  the count after the upgrade and prints the clinic, for example
+  `migrate: clinic 'Pema Clinic' (id ...), exactly one row in clinic.clinic`.
+* One clinic can still have several Zalo accounts (bot or personal); they are set up in the dashboard.
+* Compose passes the two variables to `migrate`, `api` and `worker` (anchor `x-backend-env`).
+
+**A second clinic is a second, completely separate stack.** Never a second row in the same database. Preferably on
+another machine; on the same Docker host only with everything below different:
+
+| What | Why it must differ |
+|---|---|
+| a new copy of `infra/.env` (`make infra-secrets` writes fresh random values) | no secret is shared |
+| `PEMA_JWT_SECRET`, `PEMA_SECRET_ENCRYPTION_KEY`, the DB/Redis/bridge passwords | tokens, stored Zalo credentials and API keys of clinic A must not open with clinic B's key |
+| `COMPOSE_PROJECT_NAME=pema-clinic-b` in that `.env` (or `docker compose -p`) | own containers, networks and volumes (`pg-data`, `redis-data`, `pema-data`, `caddy-data`) |
+| its own Postgres and Redis (the same project name gives them) | Postgres roles `be_app`/`agent_worker` are cluster-wide: never point two stacks at one cluster |
+| host ports `PEMA_PG_PORT`, `PEMA_REDIS_PORT`, `PEMA_API_PORT`, `PEMA_FRONTEND_PORT`, `PEMA_PROXY_*_PORT` (or other bind IPs) | two stacks cannot publish the same port on one host |
+| `PEMA_PROXY_SUBNET`, `PEMA_PROXY_IP_RANGE`, `PEMA_PROXY_IP` | the `edge` network has a fixed subnet |
+| its own domain (`PEMA_PUBLIC_DOMAIN`) and certificate | one clinic, one address |
+| its own Zalo accounts and webhook base URL | the account belongs to one clinic |
+| its own `PEMA_CLINIC_NAME` (and `PEMA_CLINIC_ID` if you fix it) | |
+| its own `PEMA_BACKUP_DIR` and age key | a dump is the whole clinic |
+
 ## Quick start (from `pema-agent/`)
 
 ```
 make infra-secrets      # infra/.env with random hex secrets; refuses to overwrite an existing file
 make up                 # postgres, redis, migrate (one-shot), api   -> http://127.0.0.1:8000/healthz
 make ps
-make db-migrate         # re-run roles + alembic upgrade heads inside the compose network
+make db-migrate         # re-run roles + alembic upgrade heads inside the compose network; prints the one clinic
 make infra-config       # validate the compose file with every profile switched on
 make down
 make up-proxy            # the stack behind Caddy (profile proxy + worker + docker-compose.proxy.yml); make down-proxy stops it
@@ -39,7 +74,7 @@ Without `make` (Windows): the recipes are plain `docker compose -f infra/docker-
 |---|---|---|---|
 | `postgres` | default | `pgvector/pgvector:pg17`, scram, data checksums, port bound to `PEMA_PG_BIND` (default 127.0.0.1) | |
 | `redis` | default | password (`PEMA_REDIS_PASSWORD`), AOF, `noeviction` (queue and locks must not be evicted) | |
-| `migrate` | default | one-shot: `bootstrap-roles.sh` then `alembic upgrade heads`; safe to rerun | postgres |
+| `migrate` | default | one-shot: `bootstrap-roles.sh`, `alembic upgrade heads` (creates the clinic on an empty database), then checks that `clinic.clinic` holds exactly one row and prints its name; safe to rerun | postgres |
 | `api` | default | FastAPI via uvicorn `--factory pema.bootstrap:create_app`, healthcheck `/healthz` | migrate, redis |
 | `worker` | `worker`, `app` | `python -m pema.workers.main`; same image as the API | |
 | `frontend` | `frontend`, `app`, `proxy` | Next.js standalone server; route handlers forward `/api/v1` and `/healthz` to `PEMA_API_INTERNAL_URL`, an ordinary runtime variable read on every request (no build argument, no rebuild to change it), healthcheck `/login` | api |
@@ -79,7 +114,7 @@ it); add `--profile worker` for the agent worker.
 | `off` | plain HTTP **only** over Tailscale/WireGuard | `http://100.x.y.z` | also `PEMA_PROXY_BIND=<tailscale ip>` and `PEMA_SESSION_COOKIE_SECURE=false` (a Secure cookie is not sent over http, so login would loop); never on the public internet |
 
 Routing: `/api/v1/*` and `/healthz` go to `api:8000`, everything else to `frontend:3000`. The Zalo bridge webhook
-(`/api/v1/webhooks/zalo-bridge/*`) is answered 404 from outside: the bridge talks to the API over the compose network.
+(`/api/v1/webhooks/zalo-bridge/<account_id>`, matched as `/api/v1/webhooks/zalo-bridge/*`) is answered 404 from outside: the bridge talks to the API over the compose network.
 `/docs`, `/openapi.json` and every other path never reach the API. Postgres, Redis and the bridge cannot be routed:
 Caddy is attached only to the `edge` network (fixed subnet `PEMA_PROXY_SUBNET`, default `172.29.80.0/24`; Caddy is
 `PEMA_PROXY_IP`, default `.2`), where only `api` and `frontend` live. Change the subnet and the IP together if the
@@ -108,22 +143,31 @@ stays in the `caddy-data` volume). Volumes `caddy-data` (certificates, CA, ACME 
 across restarts; back up `caddy-data` or accept a new certificate request after a loss.
 
 **Webhook.** In mode `auto`, set `PEMA_ZALO_BOT_WEBHOOK_BASE_URL=https://<PEMA_PUBLIC_DOMAIN>` (no trailing slash) if the
-Zalo Bot runs in `webhook` mode; the Bot webhook route is under `/api/v1/webhooks/` and passes through.
+Zalo Bot runs in `webhook` mode; the Bot webhook route is `/api/v1/webhooks/zalo-bot/<account_id>` (no clinic segment
+since `feat/single-tenant`; the path is owned by the Zalo channel package) and passes through. If a webhook was registered
+at Zalo with the old path (`.../zalo-bot/<clinic>/<account_id>`), re-register it (restart the account) after the upgrade.
 
 **Changing the API address of the dashboard** (it is a runtime variable): set `PEMA_API_INTERNAL_URL` in `.env`, then
 `docker compose ... up -d frontend`. No rebuild. Without a proxy it is the only place the dashboard learns where the API is.
 
 ## Database roles and migrations
 
-* Schemas, tables, RLS and grants are Alembic revisions `0001..0003` (package A). Infra never creates tables.
+* Schemas, tables and grants are Alembic revisions (package A, then each package; `st_0009_single_tenant` is the head).
+  Infra never creates tables. There is **no row level security** any more: the database holds one clinic, so the
+  isolation surface is the infrastructure (this stack, its own database and Redis) plus the role grants below. `be_app`
+  reads and writes every row of the tables it holds a grant on; `agent_worker` has no privilege on `clinic.*` and
+  reaches the clinic only through the `clinic_agent` views and functions.
 * `scripts/bootstrap-roles.sh` creates `be_app` and `agent_worker` (NOLOGIN, no superuser, no BYPASSRLS),
   sets their passwords from `PEMA_BE_APP_PASSWORD` / `PEMA_AGENT_WORKER_PASSWORD` (empty means the role stays
   NOLOGIN), creates the `vector` extension and, by default, revokes `CONNECT` from PUBLIC. Passwords are read by
   psql from the environment (`\getenv`), never from argv, and `log_statement` is switched off for the session so
   the `ALTER ROLE ... PASSWORD` text cannot reach the server log. Rerun it to rotate a password.
-* `scripts/migrate.sh` waits for Postgres, runs the bootstrap, then `alembic upgrade heads` (all heads, merged by
-  `g_0005_merge_heads` and its successors) and prints the head count and `alembic current`. `PEMA_SKIP_ROLE_BOOTSTRAP=true` skips the first step
-  when a DBA manages roles.
+* `scripts/migrate.sh` waits for Postgres, runs the bootstrap, then `alembic upgrade heads` (one head since
+  `h_0008_merge_heads`; `st_0009_single_tenant` on top), prints the head count and `alembic current`, and finally checks
+  that `clinic.clinic` holds exactly one row (fails otherwise, also when `PEMA_CLINIC_ID` differs from the database) and
+  prints the clinic name and id. `PEMA_SKIP_ROLE_BOOTSTRAP=true` skips the first step when a DBA manages roles.
+* Upgrading a database that came from `feat/ai-agent-backend` (multi-tenant): `st_0009` refuses to run when it holds two
+  or more clinics (split or merge it first); with exactly one clinic it keeps that row, its id and its name.
 * The owner role is the Postgres superuser in compose. For a managed database give `PEMA_MIGRATION_DATABASE_URL`
   an owner role that may `CREATE EXTENSION vector` (or let a superuser run `bootstrap-roles.sh` once).
 
@@ -140,5 +184,8 @@ Zalo Bot runs in `webhook` mode; the Bot webhook route is under `/api/v1/webhook
 ## Backups
 
 `scripts/backup-postgres.sh` (verified dump + globals, encrypted with age or gpg, retention, off-site hook) and
-`scripts/restore-postgres.sh --verify|--restore` (never overwrites the live database). Plaintext is refused unless
+`scripts/restore-postgres.sh --verify|--restore` (never overwrites the live database; it also checks that the restored
+database holds exactly one clinic and prints its name). With one clinic per database a dump is the whole clinic: every
+patient, message and stored credential. Because there is no row level security to fall back on, who may read the backup
+directory and the age private key is as important as who holds the `be_app` password. Plaintext is refused unless
 `PEMA_BACKUP_ALLOW_PLAINTEXT=true`. Nightly timer: `ubuntu/systemd/pema-backup.{service,timer}`. Details in the guide.

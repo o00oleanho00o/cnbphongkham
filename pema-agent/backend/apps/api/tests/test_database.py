@@ -599,17 +599,13 @@ def test_default_binding_is_closed(worker_engine: Engine, clinic: uuid.UUID) -> 
 
 # ------------------------------------------------------------------ pema.core.db
 async def test_clinic_database_session_needs_no_clinic_for_both_roles(clinic: uuid.UUID) -> None:
-    """``pema.core.db.ClinicDatabase``: ``session()`` without argument; the old argument is accepted and ignored"""
+    """``pema.core.db.ClinicDatabase``: ``session()`` takes no clinic for either role"""
     be_db = ClinicDatabase(_role_url("be_app", BE_PASSWORD))
     worker_db = ClinicDatabase(_role_url("agent_worker", WORKER_PASSWORD))
     try:
         async with be_db.session() as session:
             rows = (await session.execute(text("SELECT code FROM clinic.patient"))).scalars().all()
             assert rows == ["P001"]
-        async with be_db.session(uuid.uuid4()) as session:  # deprecated argument: ignored
-            assert (await session.execute(text("SELECT count(*) FROM clinic.patient"))).scalar() == 1
-        async with be_db.system_session() as session:  # deprecated alias
-            assert (await session.execute(text("SELECT count(*) FROM clinic.patient"))).scalar() == 1
         async with worker_db.session() as session:
             assert (await session.execute(text("SELECT count(*) FROM agent.accounts"))).scalar() == 1
             assert (
@@ -631,9 +627,6 @@ async def test_get_installation_clinic_id_reads_the_database_once_and_caches(
         assert be_db.installation_clinic_id == clinic
         assert installation_clinic_id() == clinic
         assert await get_installation_clinic_id(worker_db) == clinic  # the worker role may call it too
-        # deprecated shims of the multi-clinic version
-        assert await be_db.resolve_clinic("anything") == clinic
-        assert await worker_db.list_active_clinic_ids() == [clinic]
         # cached: a closed engine no longer matters
         await be_db.dispose()
         assert await get_installation_clinic_id(be_db) == clinic

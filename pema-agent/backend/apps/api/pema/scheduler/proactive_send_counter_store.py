@@ -67,7 +67,7 @@ class ProactiveSendCounterStore:
         than ``keep_since_day_key`` so the table does not bloat - the cap only needs to know TODAY."""
         if amount <= 0:
             return
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             await s.execute(
                 text(
                     """
@@ -90,7 +90,7 @@ class ProactiveSendCounterStore:
     async def mark_proactive_cap_notice_sent(self, clinic_id: UUID, scope_key: str, day_key: str) -> None:
         """Mark the cap as ALREADY announced, once per day per scope - call only AFTER the notice was really
         sent."""
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             await s.execute(
                 text(
                     """
@@ -120,7 +120,7 @@ class ProactiveSendCounterStore:
         ``refund_proactive_slot`` if in the end nothing could be sent."""
         if max_per_day <= 0:
             return False
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             row = (
                 await s.execute(
                     text(
@@ -140,7 +140,7 @@ class ProactiveSendCounterStore:
     async def refund_proactive_slot(self, clinic_id: UUID, scope_key: str, day_key: str) -> None:
         """Give back EXACTLY 1 slot taken by ``try_reserve_proactive_slot`` that in the end could not send
         anything. Floored at 0 - never negative."""
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             await s.execute(
                 text(
                     """
@@ -161,7 +161,7 @@ class ProactiveSendCounterStore:
         Returns ``True`` if won (``notice_sent=true`` written NOW, BEFORE the real send), ``False`` if someone
         won first (or it was really sent earlier). On a failed send call ``revert_cap_notice`` to hand the
         right back to a later job/tick."""
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             row = (
                 await s.execute(
                     text(
@@ -182,7 +182,7 @@ class ProactiveSendCounterStore:
     async def revert_cap_notice(self, clinic_id: UUID, scope_key: str, day_key: str) -> None:
         """Hand back the right to announce the cap, taken by ``try_reserve_cap_notice`` but the send failed -
         a later job/tick still has a chance to retry."""
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             await s.execute(
                 text(
                     """
@@ -194,7 +194,7 @@ class ProactiveSendCounterStore:
 
     async def reset_all_proactive_counters(self, clinic_id: UUID) -> None:
         """Tests only - wipe the clinic's counters so each case starts from 0."""
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             await s.execute(
                 text("DELETE FROM agent.proactive_send_counters WHERE clinic_id = :clinic_id"),
                 {"clinic_id": clinic_id},

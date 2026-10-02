@@ -22,17 +22,28 @@ pnpm shots           # Playwright: every screen at the 5 project viewports into 
                      # horizontal document overflow, page errors and 5xx answers.
 ```
 
-The browser talks only to its own origin. `/api/v1/**` and `/healthz` are forwarded to the backend by two route handlers (`src/app/api/[...path]/route.ts`, `src/app/healthz/route.ts`; logic and tests in `src/lib/server/api-proxy.ts`), so the session cookie is first-party and there is no CORS. The handlers read the API address on **every request** from `PEMA_API_INTERNAL_URL` (then `PEMA_API_URL`, then `http://127.0.0.1:8000`): it is a runtime environment variable, not a build argument, so one built image runs against any API (`docker run -e PEMA_API_INTERNAL_URL=http://api:8000 ...`; changing it needs a container restart, not a rebuild). Only `/api/v1/` and `/healthz` are forwarded (a `..` or encoded slash in the path is refused with 400, anything else is 404); hop-by-hop headers and client-supplied `x-forwarded-*`/`forwarded`/`x-real-ip` are dropped; the body and the answer are streamed, never cached, every `Set-Cookie` is kept. Behind the Caddy reverse proxy (`infra/README.md`) `/api/v1` does not even reach this server: Caddy sends it straight to the API. Mock sign-in (fictional users, all with password `demo1234`, clinic `pema-demo`): `owner@pema.test`, `manager@pema.test`, `doctor@pema.test`, `cs@pema.test`, `reception@pema.test`.
+The browser talks only to its own origin. `/api/v1/**` and `/healthz` are forwarded to the backend by two route handlers (`src/app/api/[...path]/route.ts`, `src/app/healthz/route.ts`; logic and tests in `src/lib/server/api-proxy.ts`), so the session cookie is first-party and there is no CORS. The handlers read the API address on **every request** from `PEMA_API_INTERNAL_URL` (then `PEMA_API_URL`, then `http://127.0.0.1:8000`): it is a runtime environment variable, not a build argument, so one built image runs against any API (`docker run -e PEMA_API_INTERNAL_URL=http://api:8000 ...`; changing it needs a container restart, not a rebuild). Only `/api/v1/` and `/healthz` are forwarded (a `..` or encoded slash in the path is refused with 400, anything else is 404); hop-by-hop headers and client-supplied `x-forwarded-*`/`forwarded`/`x-real-ip` are dropped; the body and the answer are streamed, never cached, every `Set-Cookie` is kept. Behind the Caddy reverse proxy (`infra/README.md`) `/api/v1` does not even reach this server: Caddy sends it straight to the API. Mock sign-in (fictional users, all with password `demo1234`): `owner@pema.test`, `manager@pema.test`, `doctor@pema.test`, `cs@pema.test`, `reception@pema.test`.
 
 ## Mock backend (`mock/`)
 
 `mock/server.ts` serves the paths of `openapi.json` from memory with fictional data. One file per area in `mock/handlers/*.ts`, each exporting `register(router)`; they are discovered by directory listing. `mock/contract.test.ts` fails if the mock does not serve an operation of the contract, or serves one that is not in it, so the mock cannot drift from the typed client. The role to permission table in `mock/auth.ts` is a simulation of ARCH-PB01 (the real one is package B1's).
 
+## Several people at once (live events, presence, assignable staff)
+
+Contract the screens are written against (backend work comes later; the mock serves it now, see `mock/handlers/live.ts` and `mock/live-bus.ts`):
+
+- `GET /api/v1/events` is server-sent events. Each `data:` is JSON `{type, id}`: `type` is `inbox.changed`, `tasks.changed`, `review.changed` or `presence.changed`, `id` the conversation, task or review item (null: "some"). No message text ever travels on it; a screen reloads its own list through the normal API, so permissions and filters stay the backend's.
+- `useLiveEvents` (`src/lib/live/use-live-events.ts`, logic in `live-connection.ts`) opens it with `EventSource`, reconnects by itself, coalesces a burst into one call, and when the stream has been down for more than 10 seconds falls back to a refresh every 30 seconds (a small notice says so) until it is back, then refreshes once for what it missed. Listener and timers are released on unmount. Inbox (`inbox.changed`, `presence.changed`), Việc hôm nay (`tasks.changed`) and Hàng đợi duyệt (`review.changed`) use it through `useLoad().refresh`, the quiet reload: no loading state, selection, scroll and a draft being typed stay; an open review edit is flagged "dựa trên nháp cũ" and cannot be approved if the item changed meanwhile.
+- `POST /api/v1/conversations/{id}/presence` body `{state: "viewing" | "replying"}` every 15 seconds while a conversation is open (at once when the state changes; "replying" while a draft is non-empty; nothing while the tab is hidden), `viewers: [{user_id, name, state}]` (the caller excluded) in the conversation list and detail. Shown as "Lan đang xem / đang trả lời" in the list and the thread. A warning only, never a lock.
+- `GET /api/v1/staff/assignable` returns `[{id, name, role}]` for every signed-in staff member. The "Phụ trách" box of the contact form (Việc hôm nay) and of the conversation header (Inbox) lists "Tôi", "Giữ nguyên" and these people (`lib/ops/assignee-options.ts`); if the list cannot be read the box still offers "Tôi" and "Giữ nguyên".
+
+TEMPORARY: these routes and fields are not in `src/lib/api/schema.d.ts` yet, so `src/lib/live/live-types.ts` (types and tolerant parsers) and `live-api.ts` (the two raw calls) stand in. When `openapi.json` has them, regenerate the types, switch to `http.GET/POST` and `Schemas[...]`, delete both files, and remove the three entries of `PENDING_CONTRACT` in `mock/contract.test.ts` (its last test fails on a stale entry). `scripts/presence-check.ts` opens one conversation in two browser contexts against the mock and checks that each sees the other.
+
 ## Layout
 
 ```
 src/app/layout.tsx, globals.css       root document, Be Vietnam Pro (local, OFL), Pema tokens, theme bootstrap
-src/app/login/                        sign-in (clinic + email + password, cookie session)
+src/app/login/                        sign-in (email + password, cookie session; one installation is one clinic)
 src/app/(admin)/layout.tsx            AppShell: /me, permission-filtered menu, phone tab bar
 src/app/(admin)/{today,inbox,review,patients,templates}/    clinic operations
 src/app/(admin)/admin/<area>/page.tsx  AI administration, one route per page of the original dashboard
@@ -63,7 +74,7 @@ Reference clone (read only): `E:\Desktop\zalo-agent-ref\web\src`. Target paths o
 ## Port notes (what differs from `web/` of zalo-agent, and why)
 
 - **One route per page of the original**, under `/admin/*` (PORT-MAP lists a single `page.tsx` for several originals). Sign-in is `/login`
-  (clinic + email + password, session cookie), `/admin/auth` is "Tài khoản của tôi" with the change-password form, which is disabled
+  (email + password, session cookie; there is no clinic field, the one clinic comes back in `UserSummary.clinic_name` and is shown in the menu), `/admin/auth` is "Tài khoản của tôi" with the change-password form, which is disabled
   because the contract has no such operation.
 - **Typed OpenAPI client** replaces `dashboard-api-client.ts`. The DTOs are snake_case and English; where a component was written against
   the original shape a small pure adapter rebuilds it (`tuning-types.ts`, `trace-types.ts`) so the ported component and its tests stay as written.
@@ -73,4 +84,4 @@ Reference clone (read only): `E:\Desktop\zalo-agent-ref\web\src`. Target paths o
   (their Python twins belong to packages D1 and A). Keep the constants identical.
 - Removed because the contract has no data for them (open items for the backend packages): token usage per thread and the thread summary,
   contact/memory counts and total messages on the overview, vision `mode` and sidecar test, image-generation test, "also delete memory" when
-  clearing a thread, change password, a staff list for "Phụ trách" (the list now exists, but only owner and manager may read it; opening it to CSKH is an open product decision), `channel`/`send_mode`/message body on a CRM task.
+  clearing a thread, change password, `channel`/`send_mode`/message body on a CRM task.

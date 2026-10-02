@@ -28,11 +28,7 @@ from pema.channels.zalo_bot.nang_luc_kenh_bot import ZALO_BOT_CAPABILITIES
 from pema.channels.zalo_personal.bridge_client import ZaloApi, ZaloBridgeError
 from pema.channels.zalo_personal.kenh_ca_nhan import ZaloPersonalChannel
 from pema.channels.zalo_personal.zalo_image_variant import estimate_image_tokens, read_image_size
-from pema.config.runtime_settings_store import (
-    RuntimeSettingsSnapshot,
-    current_settings_clinic,
-    get_runtime_settings,
-)
+from pema.config.runtime_settings_store import RuntimeSettingsSnapshot, get_runtime_settings
 from pema.config.runtime_tuning_settings import get_tuning_int
 from pema.conversation.media_store import (
     DownloadedImage,
@@ -60,6 +56,7 @@ from pema_contracts.channel import (
     TextStyle,
     ThreadKind,
 )
+from pema_contracts.installation import installation_clinic_id, installation_clinic_id_or_none
 from pema_contracts.knowledge import KnowledgeStore
 from pema_contracts.scheduler import ScheduleInput
 from pema_contracts.tools import ToolContext
@@ -125,11 +122,11 @@ class SchedulerOutboundPipeline:
 
 
 class SnapshotRuntimeSettingsKv:
-    """``RuntimeSettingsKv`` (D4 settings readers) over the per-clinic ``RuntimeSettingsSnapshot`` (D1).
+    """``RuntimeSettingsKv`` (D4 settings readers) over the ``RuntimeSettingsSnapshot`` (D1) of the
+    installation clinic.
 
-    The synchronous ``get`` reads the clinic of the current task (``use_settings_clinic``: the engine sets it
-    for a turn, the request middleware for an admin request); with no clinic nothing is overridden, so the
-    environment and the defaults apply. A write needs that clinic too and is refused without it."""
+    The synchronous ``get`` reads the snapshot (empty until its first refresh, so the environment and the
+    defaults apply). A write goes to the installation clinic and is refused while its id is not loaded."""
 
     def __init__(self, snapshot: RuntimeSettingsSnapshot | None = None) -> None:
         self._snapshot = snapshot
@@ -141,16 +138,10 @@ class SnapshotRuntimeSettingsKv:
         return self._current().read(key)
 
     async def aset(self, key: str, value: str) -> None:
-        clinic_id = current_settings_clinic()
-        if clinic_id is None:
-            raise RuntimeError("a runtime setting is written for a clinic: none is set for this request")
-        await self._current().set(clinic_id, key, value)
+        await self._current().set(installation_clinic_id(), key, value)
 
     async def adelete(self, key: str) -> None:
-        clinic_id = current_settings_clinic()
-        if clinic_id is None:
-            raise RuntimeError("a runtime setting is removed for a clinic: none is set for this request")
-        await self._current().delete(clinic_id, key)
+        await self._current().delete(installation_clinic_id(), key)
 
 
 # ------------------------------------------------------------------------------------------ images
@@ -160,8 +151,8 @@ class MediaImages:
     """Images on the media volume for the three consumers that name them differently.
 
     * the engine reads a stored image SYNCHRONOUSLY and with no clinic argument (``StoredImageLoader`` of
-      ``history_to_model_messages``): the clinic is the one of the current task, which ``run_turn`` sets;
-    * the tools read it asynchronously (``StoredImageLoader`` of ``ToolDeps``) with the same clinic rule;
+      ``history_to_model_messages``): the clinic is the installation clinic;
+    * the tools read it asynchronously (``StoredImageLoader`` of ``ToolDeps``) with the same rule;
     * the channel pipeline persists the images of ``InboundMessage`` s.
     """
 
@@ -169,13 +160,13 @@ class MediaImages:
         self._media = media
 
     def load_sync(self, rel_path: str) -> Any:
-        clinic_id = current_settings_clinic()
+        clinic_id = installation_clinic_id_or_none()
         if clinic_id is None:
             return None
         return self._media.load_stored_image_sync(clinic_id, rel_path)
 
     async def load_stored_image(self, rel_path: str) -> StoredImage | None:
-        clinic_id = current_settings_clinic()
+        clinic_id = installation_clinic_id_or_none()
         if clinic_id is None:
             return None
         image = await self._media.load_stored_image(clinic_id, rel_path)
@@ -240,13 +231,12 @@ class ScheduleParserAdapter:
 
 class KbAvailabilitySnapshot:
     """``KbAvailability`` of ``ToolDeps``: synchronous probes (they run on every turn and on the Tools page)
-    over a snapshot that ``refresh`` rebuilds from the store. Agent ids repeat across clinics, so the
-    snapshot is the UNION: it only decides whether the tool is OFFERED; ``kb_search`` itself is scoped by
-    clinic and agent binding (default-deny), so a union can never widen what a turn may read."""
+    over a snapshot that ``refresh`` rebuilds from the store for the installation clinic. It only decides
+    whether the tool is OFFERED; ``kb_search`` itself is scoped by agent binding (default-deny), so the
+    snapshot can never widen what a turn may read."""
 
-    def __init__(self, store: KnowledgeStore, clinic_ids: Callable[[], Awaitable[list[UUID]]]) -> None:
+    def __init__(self, store: KnowledgeStore) -> None:
         self._store = store
-        self._clinic_ids = clinic_ids
         self._agents_with_sources: set[str] = set()
         self._any_source = False
         self._task: asyncio.Task[None] | None = None
@@ -260,12 +250,12 @@ class KbAvailabilitySnapshot:
     async def refresh(self) -> None:
         agents: set[str] = set()
         any_source = False
-        for clinic_id in await self._clinic_ids():
-            sources = await self._store.list_sources(clinic_id)
-            if sources:
-                any_source = True
-            for source in sources:
-                agents.update(await self._store.agents_of_source(clinic_id, source.id))
+        clinic_id = installation_clinic_id()
+        sources = await self._store.list_sources(clinic_id)
+        if sources:
+            any_source = True
+        for source in sources:
+            agents.update(await self._store.agents_of_source(clinic_id, source.id))
         self._agents_with_sources = agents
         self._any_source = any_source
 

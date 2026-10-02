@@ -60,10 +60,10 @@ async def make_item(
 
 
 async def test_the_inbox_lists_conversations_with_label_preview_and_pending_review_flag(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase
 ) -> None:
-    cs = await client_factory("clinic-a", "cs.maianh")
-    ref = await record_inbound(db, world_a, text="Em muốn hỏi về lịch tái khám (tin mẫu)")
+    cs = await client_factory("cs.maianh")
+    ref = await record_inbound(db, world, text="Em muốn hỏi về lịch tái khám (tin mẫu)")
     page = (await cs.get("/api/v1/conversations", params={"limit": 200})).json()
     row = next(c for c in page["items"] if c["id"] == str(ref.conversation_id))
     assert row["patient_code"] == "P025"
@@ -71,20 +71,20 @@ async def test_the_inbox_lists_conversations_with_label_preview_and_pending_revi
     assert row["last_message_preview"].startswith("Em muốn hỏi")
     assert row["unread_count"] == 1
     assert row["has_pending_review"] is False
-    seeded = next(c for c in page["items"] if c["id"] == str(world_a.conversation_id))
+    seeded = next(c for c in page["items"] if c["id"] == str(world.conversation_id))
     assert seeded["has_pending_review"] is True
     pending = (
         await cs.get("/api/v1/conversations", params={"has_pending_review": "true", "limit": 200})
     ).json()
-    assert str(world_a.conversation_id) in [c["id"] for c in pending["items"]]
+    assert str(world.conversation_id) in [c["id"] for c in pending["items"]]
     assert str(ref.conversation_id) not in [c["id"] for c in pending["items"]]
 
 
 async def test_an_unlinked_zalo_user_is_a_conversation_without_a_patient(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase
 ) -> None:
-    cs = await client_factory("clinic-a", "cs.maianh")
-    ref = await record_inbound(db, world_a, uid=f"stranger-{uuid4().hex[:8]}")
+    cs = await client_factory("cs.maianh")
+    ref = await record_inbound(db, world, uid=f"stranger-{uuid4().hex[:8]}")
     one = (await cs.get(f"/api/v1/conversations/{ref.conversation_id}")).json()
     assert one["patient_id"] is None
     assert one["patient_display_name"] == "Khách mẫu"  # the channel display name, staff-only
@@ -92,12 +92,12 @@ async def test_an_unlinked_zalo_user_is_a_conversation_without_a_patient(
 
 
 async def test_mark_read_clears_unread_and_message_listing_is_newest_first_and_audited(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase, admin: Engine
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase, admin: Engine
 ) -> None:
-    cs = await client_factory("clinic-a", "cs.maianh")
+    cs = await client_factory("cs.maianh")
     thread = uuid4().hex
-    first = await record_inbound(db, world_a, thread=thread, text="tin 1")
-    await record_inbound(db, world_a, thread=thread, text="tin 2")
+    first = await record_inbound(db, world, thread=thread, text="tin 1")
+    await record_inbound(db, world, thread=thread, text="tin 2")
     base = f"/api/v1/conversations/{first.conversation_id}"
     assert (await cs.get(base)).json()["unread_count"] == 2
     assert (await cs.post(f"{base}/read")).status_code == 204
@@ -115,12 +115,12 @@ async def test_mark_read_clears_unread_and_message_listing_is_newest_first_and_a
 
 
 async def test_a_manual_reply_is_queued_then_sent_and_a_retry_with_the_key_sends_once(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase, app: Any
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase, app: Any
 ) -> None:
     fake = FakeOutboundDelivery()
     app.state.outbound_delivery = fake
-    cs = await client_factory("clinic-a", "cs.maianh")
-    ref = await record_inbound(db, world_a)
+    cs = await client_factory("cs.maianh")
+    ref = await record_inbound(db, world)
     url = f"/api/v1/conversations/{ref.conversation_id}/messages"
     headers = {"Idempotency-Key": f"reply-{uuid4().hex}"}
     first = await cs.post(url, json={"text": "Chào bạn, chúng tôi đã nhận tin."}, headers=headers)
@@ -138,10 +138,10 @@ async def test_a_manual_reply_is_queued_then_sent_and_a_retry_with_the_key_sends
 
 
 async def test_without_a_wired_channel_the_reply_stays_queued_and_a_rejection_is_recorded(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase, app: Any
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase, app: Any
 ) -> None:
-    cs = await client_factory("clinic-a", "cs.maianh")
-    ref = await record_inbound(db, world_a)
+    cs = await client_factory("cs.maianh")
+    ref = await record_inbound(db, world)
     url = f"/api/v1/conversations/{ref.conversation_id}/messages"
     queued = await cs.post(url, json={"text": "Chưa có kênh nào được nối."})
     assert queued.json()["status"] == "queued"
@@ -161,17 +161,17 @@ async def test_without_a_wired_channel_the_reply_stays_queued_and_a_rejection_is
 
 
 async def test_a_proactive_reply_needs_a_linked_patient_with_messaging_consent(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase, app: Any
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase, app: Any
 ) -> None:
     app.state.outbound_delivery = FakeOutboundDelivery()
-    cs = await client_factory("clinic-a", "cs.maianh")
-    stranger = await record_inbound(db, world_a, uid=f"stranger-{uuid4().hex[:8]}")
+    cs = await client_factory("cs.maianh")
+    stranger = await record_inbound(db, world, uid=f"stranger-{uuid4().hex[:8]}")
     refused = await cs.post(
         f"/api/v1/conversations/{stranger.conversation_id}/messages", json={"text": "x", "proactive": True}
     )
     assert refused.status_code == 409
     assert refused.json()["error"]["code"] == "identity_not_verified"
-    linked = await record_inbound(db, world_a)  # P025 has a messaging consent in the seed
+    linked = await record_inbound(db, world)  # P025 has a messaging consent in the seed
     ok = await cs.post(
         f"/api/v1/conversations/{linked.conversation_id}/messages",
         json={"text": "Nhắc lịch.", "proactive": True},
@@ -179,9 +179,9 @@ async def test_a_proactive_reply_needs_a_linked_patient_with_messaging_consent(
     assert ok.status_code == 201
     assert ok.json()["proactive"] is True
     # revoke the consent: the same request is now refused
-    reception = await client_factory("clinic-a", "reception.lan")
+    reception = await client_factory("reception.lan")
     await reception.post(
-        f"/api/v1/patients/{world_a.patients['P025']}/consents", json={"kind": "messaging", "granted": False}
+        f"/api/v1/patients/{world.patients['P025']}/consents", json={"kind": "messaging", "granted": False}
     )
     again = await cs.post(
         f"/api/v1/conversations/{linked.conversation_id}/messages",
@@ -190,22 +190,22 @@ async def test_a_proactive_reply_needs_a_linked_patient_with_messaging_consent(
     assert again.status_code == 422
     assert again.json()["error"]["code"] == "consent_required"
     await reception.post(
-        f"/api/v1/patients/{world_a.patients['P025']}/consents", json={"kind": "messaging", "granted": True}
+        f"/api/v1/patients/{world.patients['P025']}/consents", json={"kind": "messaging", "granted": True}
     )
 
 
 async def test_assign_and_close_a_conversation_respecting_pending_reviews(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase
 ) -> None:
-    cs = await client_factory("clinic-a", "cs.maianh")
-    ref = await record_inbound(db, world_a)
+    cs = await client_factory("cs.maianh")
+    ref = await record_inbound(db, world)
     url = f"/api/v1/conversations/{ref.conversation_id}"
-    assigned = await cs.patch(url, json={"version": 2, "assigned_user_id": str(world_a.users["cs.thu"])})
+    assigned = await cs.patch(url, json={"version": 2, "assigned_user_id": str(world.users["cs.thu"])})
     assert assigned.status_code == 200, assigned.text
-    assert assigned.json()["assigned_user_id"] == str(world_a.users["cs.thu"])
+    assert assigned.json()["assigned_user_id"] == str(world.users["cs.thu"])
     bad_assignee = await cs.patch(
         url,
-        json={"version": assigned.json()["version"], "assigned_user_id": str(world_a.users["reception.lan"])},
+        json={"version": assigned.json()["version"], "assigned_user_id": str(world.users["reception.lan"])},
     )
     assert bad_assignee.status_code == 422
     manual_pending = await cs.patch(
@@ -214,7 +214,7 @@ async def test_assign_and_close_a_conversation_respecting_pending_reviews(
     assert manual_pending.status_code == 422
     stale = await cs.patch(url, json={"version": 1, "status": "closed"})
     assert stale.status_code == 409
-    item = await make_item(db, world_a, ref.conversation_id)
+    item = await make_item(db, world, ref.conversation_id)
     current = (await cs.get(url)).json()
     assert current["status"] == "pending_review"
     blocked = await cs.patch(url, json={"version": current["version"], "status": "closed"})
@@ -231,20 +231,20 @@ async def test_assign_and_close_a_conversation_respecting_pending_reviews(
 
 
 async def test_a_doctor_sees_only_conversations_of_patients_in_scope(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase
 ) -> None:
-    mai = await client_factory("clinic-a", "doctor.mai")
-    stranger = await record_inbound(db, world_a, uid=f"stranger-{uuid4().hex[:8]}")
+    mai = await client_factory("doctor.mai")
+    stranger = await record_inbound(db, world, uid=f"stranger-{uuid4().hex[:8]}")
     assert (await mai.get(f"/api/v1/conversations/{stranger.conversation_id}")).status_code == 404
-    mine = await record_inbound(db, world_a)
+    mine = await record_inbound(db, world)
     assert (await mai.get(f"/api/v1/conversations/{mine.conversation_id}")).status_code == 200
 
 
-async def test_reception_has_no_inbox(client_factory: ClientFactory, world_a: SeedResult) -> None:
-    reception = await client_factory("clinic-a", "reception.lan")
+async def test_reception_has_no_inbox(client_factory: ClientFactory, world: SeedResult) -> None:
+    reception = await client_factory("reception.lan")
     assert (await reception.get("/api/v1/conversations")).status_code == 403
     assert (
-        await reception.post(f"/api/v1/conversations/{world_a.conversation_id}/messages", json={"text": "x"})
+        await reception.post(f"/api/v1/conversations/{world.conversation_id}/messages", json={"text": "x"})
     ).status_code == 403
 
 
@@ -252,14 +252,14 @@ async def test_reception_has_no_inbox(client_factory: ClientFactory, world_a: Se
 
 
 async def test_approving_with_an_edit_sends_the_edited_text_once_and_marks_the_message_sent(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase, app: Any
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase, app: Any
 ) -> None:
     """duyệt (có sửa) rồi gửi, đánh dấu đã gửi, idempotent"""
     fake = FakeOutboundDelivery()
     app.state.outbound_delivery = fake
-    cs = await client_factory("clinic-a", "cs.maianh")
-    ref = await record_inbound(db, world_a)
-    item = await make_item(db, world_a, ref.conversation_id)
+    cs = await client_factory("cs.maianh")
+    ref = await record_inbound(db, world)
+    item = await make_item(db, world, ref.conversation_id)
     url = f"/api/v1/review-items/{item['id']}/approve"
     headers = {"Idempotency-Key": f"approve-{item['id']}"}
     approved = await cs.post(
@@ -272,7 +272,7 @@ async def test_approving_with_an_edit_sends_the_edited_text_once_and_marks_the_m
     assert body["status"] == "approved"
     assert body["final_text"] == "Bản đã sửa bởi nhân viên."
     assert body["draft_text"].startswith("Chào bạn")
-    assert body["decided_by"] == str(world_a.users["cs.maianh"])
+    assert body["decided_by"] == str(world.users["cs.maianh"])
     assert body["decided_at"] is not None
     assert [r.text for r in fake.requests] == ["Bản đã sửa bởi nhân viên."]
     assert fake.requests[0].proactive is False
@@ -295,13 +295,13 @@ async def test_approving_with_an_edit_sends_the_edited_text_once_and_marks_the_m
 
 
 async def test_approve_without_send_records_the_decision_and_sends_nothing(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase, app: Any
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase, app: Any
 ) -> None:
     fake = FakeOutboundDelivery()
     app.state.outbound_delivery = fake
-    cs = await client_factory("clinic-a", "cs.maianh")
-    ref = await record_inbound(db, world_a)
-    item = await make_item(db, world_a, ref.conversation_id)
+    cs = await client_factory("cs.maianh")
+    ref = await record_inbound(db, world)
+    item = await make_item(db, world, ref.conversation_id)
     approved = await cs.post(f"/api/v1/review-items/{item['id']}/approve", json={"version": 1, "send": False})
     assert approved.status_code == 200
     assert fake.requests == []
@@ -311,28 +311,28 @@ async def test_approve_without_send_records_the_decision_and_sends_nothing(
 
 
 async def test_approve_refuses_empty_oversized_or_unsendable_text(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase
 ) -> None:
-    cs = await client_factory("clinic-a", "cs.maianh")
-    ref = await record_inbound(db, world_a)
-    long_item = await make_item(db, world_a, ref.conversation_id, draft="x" * 2500)
+    cs = await client_factory("cs.maianh")
+    ref = await record_inbound(db, world)
+    long_item = await make_item(db, world, ref.conversation_id, draft="x" * 2500)
     too_long = await cs.post(f"/api/v1/review-items/{long_item['id']}/approve", json={"version": 1})
     assert too_long.status_code == 422
     shortened = await cs.post(
         f"/api/v1/review-items/{long_item['id']}/approve", json={"version": 1, "final_text": "Bản rút gọn."}
     )
     assert shortened.status_code == 200
-    no_conversation = await make_item(db, world_a, None)
+    no_conversation = await make_item(db, world, None)
     refused = await cs.post(f"/api/v1/review-items/{no_conversation['id']}/approve", json={"version": 1})
     assert refused.status_code == 422
 
 
 async def test_rejecting_needs_a_reason_and_a_decision_is_final(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase
 ) -> None:
-    cs = await client_factory("clinic-a", "cs.maianh")
-    ref = await record_inbound(db, world_a)
-    item = await make_item(db, world_a, ref.conversation_id)
+    cs = await client_factory("cs.maianh")
+    ref = await record_inbound(db, world)
+    item = await make_item(db, world, ref.conversation_id)
     base = f"/api/v1/review-items/{item['id']}"
     assert (await cs.post(f"{base}/reject", json={"version": 1})).status_code == 422
     rejected = await cs.post(f"{base}/reject", json={"version": 1, "reason": "Nội dung không chính xác"})
@@ -343,14 +343,14 @@ async def test_rejecting_needs_a_reason_and_a_decision_is_final(
 
 
 async def test_two_people_deciding_at_once_one_wins(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase
 ) -> None:
     import asyncio
 
-    cs = await client_factory("clinic-a", "cs.maianh")
-    manager = await client_factory("clinic-a", "manager")
-    ref = await record_inbound(db, world_a)
-    item = await make_item(db, world_a, ref.conversation_id)
+    cs = await client_factory("cs.maianh")
+    manager = await client_factory("manager")
+    ref = await record_inbound(db, world)
+    item = await make_item(db, world, ref.conversation_id)
     base = f"/api/v1/review-items/{item['id']}"
     results = await asyncio.gather(
         cs.post(f"{base}/reject", json={"version": 1, "reason": "a"}),
@@ -360,16 +360,16 @@ async def test_two_people_deciding_at_once_one_wins(
 
 
 async def test_a_red_flag_item_is_for_doctors_only_and_escalating_hands_an_item_over(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase
 ) -> None:
     """CSKH không duyệt y khoa; cờ đỏ không tự giải quyết"""
-    cs = await client_factory("clinic-a", "cs.maianh")
-    mai = await client_factory("clinic-a", "doctor.mai")
-    reception = await client_factory("clinic-a", "reception.lan")
-    ref = await record_inbound(db, world_a)
+    cs = await client_factory("cs.maianh")
+    mai = await client_factory("doctor.mai")
+    reception = await client_factory("reception.lan")
+    ref = await record_inbound(db, world)
     alert = await make_item(
         db,
-        world_a,
+        world,
         ref.conversation_id,
         kind=ReviewKind.TRIAGE_ALERT,
         risk=RiskLevel.RED_FLAG,
@@ -387,7 +387,7 @@ async def test_a_red_flag_item_is_for_doctors_only_and_escalating_hands_an_item_
     assert (await cs.get(f"/api/v1/conversations/{ref.conversation_id}")).json()["status"] == "handoff"
     assert (await mai.get(f"/api/v1/review-items/{alert['id']}")).json()["risk_level"] == "red_flag"
 
-    normal = await make_item(db, world_a, ref.conversation_id)
+    normal = await make_item(db, world, ref.conversation_id)
     escalated = await cs.post(
         f"/api/v1/review-items/{normal['id']}/escalate", json={"version": 1, "note": "cần bác sĩ xem"}
     )
@@ -409,11 +409,11 @@ async def test_a_red_flag_item_is_for_doctors_only_and_escalating_hands_an_item_
 
 
 async def test_the_queue_orders_pending_first_and_filters(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase
 ) -> None:
-    mai = await client_factory("clinic-a", "doctor.mai")
-    ref = await record_inbound(db, world_a)
-    item = await make_item(db, world_a, ref.conversation_id)
+    mai = await client_factory("doctor.mai")
+    ref = await record_inbound(db, world)
+    item = await make_item(db, world, ref.conversation_id)
     await mai.post(f"/api/v1/review-items/{item['id']}/reject", json={"version": 1, "reason": "đóng"})
     page = (await mai.get("/api/v1/review-items", params={"limit": 200})).json()
     statuses = [i["status"] for i in page["items"]]
@@ -432,28 +432,28 @@ async def test_the_queue_orders_pending_first_and_filters(
 
 
 async def test_an_agent_appointment_proposal_becomes_an_appointment_only_when_staff_approve(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase, app: Any
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase, app: Any
 ) -> None:
     """đề xuất lịch của agent chờ nhân viên xác nhận, không tự đặt"""
     fake = FakeOutboundDelivery()
     app.state.outbound_delivery = fake
-    cs = await client_factory("clinic-a", "cs.maianh")
-    reception = await client_factory("clinic-a", "reception.lan")
-    ref = await record_inbound(db, world_a)
+    cs = await client_factory("cs.maianh")
+    reception = await client_factory("reception.lan")
+    ref = await record_inbound(db, world)
     start = fresh_start(9)
     proposal = await ClinicAgentFacingActions(db).propose_appointment(
-        agent_ctx(world_a),
+        agent_ctx(world),
         AppointmentProposalRequest(
             job_id=f"job-{uuid4().hex}",
             patient_ref="P025",
             conversation_ref=str(ref.conversation_id),
             starts_at=datetime.fromisoformat(start),
-            doctor_id=world_a.users["doctor.mai"],
+            doctor_id=world.users["doctor.mai"],
         ),
     )
     # nothing is booked yet
     before = (
-        await reception.get("/api/v1/appointments", params={"patient_id": str(world_a.patients["P025"])})
+        await reception.get("/api/v1/appointments", params={"patient_id": str(world.patients["P025"])})
     ).json()
     assert all(a["starts_at"] != start for a in before["items"]) or True
     assert proposal.status.value == "pending"
@@ -461,13 +461,13 @@ async def test_an_agent_appointment_proposal_becomes_an_appointment_only_when_st
     approved = await cs.post(f"/api/v1/review-items/{proposal.id}/approve", json={"version": 1})
     assert approved.status_code == 200, approved.text
     after = (
-        await reception.get("/api/v1/appointments", params={"patient_id": str(world_a.patients["P025"])})
+        await reception.get("/api/v1/appointments", params={"patient_id": str(world.patients["P025"])})
     ).json()
     booked = [
         a
         for a in after["items"]
         if a["note"] is None
-        and a["doctor_id"] == str(world_a.users["doctor.mai"])
+        and a["doctor_id"] == str(world.users["doctor.mai"])
         and a["starts_at"][:10] == start[:10]
     ]
     assert len(booked) == 1
@@ -476,28 +476,28 @@ async def test_an_agent_appointment_proposal_becomes_an_appointment_only_when_st
 
 
 async def test_a_proposal_that_now_conflicts_stays_pending_and_books_nothing(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase
 ) -> None:
-    cs = await client_factory("clinic-a", "cs.maianh")
-    reception = await client_factory("clinic-a", "reception.lan")
-    ref = await record_inbound(db, world_a)
+    cs = await client_factory("cs.maianh")
+    reception = await client_factory("reception.lan")
+    ref = await record_inbound(db, world)
     start = fresh_start(10)
     proposal = await ClinicAgentFacingActions(db).propose_appointment(
-        agent_ctx(world_a),
+        agent_ctx(world),
         AppointmentProposalRequest(
             job_id=f"job-{uuid4().hex}",
             patient_ref="P025",
             conversation_ref=str(ref.conversation_id),
             starts_at=datetime.fromisoformat(start),
-            doctor_id=world_a.users["doctor.mai"],
+            doctor_id=world.users["doctor.mai"],
         ),
     )
     # meanwhile reception books the doctor for someone else at that time
     taken = await reception.post(
         "/api/v1/appointments",
         json={
-            "patient_id": str(world_a.patients["P029"]),
-            "doctor_id": str(world_a.users["doctor.mai"]),
+            "patient_id": str(world.patients["P029"]),
+            "doctor_id": str(world.users["doctor.mai"]),
             "starts_at": start,
         },
     )
@@ -509,19 +509,19 @@ async def test_a_proposal_that_now_conflicts_stays_pending_and_books_nothing(
 
 
 async def test_reception_cannot_confirm_a_proposal_a_doctor_confirms_only_their_own(
-    client_factory: ClientFactory, world_a: SeedResult, db: ClinicDatabase
+    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase
 ) -> None:
-    reception = await client_factory("clinic-a", "reception.lan")
-    an = await client_factory("clinic-a", "doctor.an")
-    ref = await record_inbound(db, world_a)
+    reception = await client_factory("reception.lan")
+    an = await client_factory("doctor.an")
+    ref = await record_inbound(db, world)
     proposal = await ClinicAgentFacingActions(db).propose_appointment(
-        agent_ctx(world_a),
+        agent_ctx(world),
         AppointmentProposalRequest(
             job_id=f"job-{uuid4().hex}",
             patient_ref="P025",
             conversation_ref=str(ref.conversation_id),
             starts_at=datetime.fromisoformat(fresh_start(11)),
-            doctor_id=world_a.users["doctor.mai"],
+            doctor_id=world.users["doctor.mai"],
         ),
     )
     assert (

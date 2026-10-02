@@ -6,7 +6,7 @@
 // draft is never presented as a diagnosis. The BE enforces every one of them (`review_required`,
 // `forbidden`); this component makes the right choice the easy one.
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { Badge } from "@/components/admin/shared/ui-bits";
@@ -54,16 +54,21 @@ export function ReviewDetail({
   itemId,
   patientName,
   onChanged,
+  liveTick = 0,
 }: {
   itemId: string;
   patientName: string;
   onChanged: () => void;
+  /** Changes whenever the page learned (event or polling) that this item may have changed. */
+  liveTick?: number;
 }) {
   const { can } = useSession();
   const toast = useToast();
   const { confirm, confirmDialog } = useConfirmDialog();
   const [mode, setMode] = useState<Mode>("view");
   const [editedText, setEditedText] = useState("");
+  // Version of the item when the edit began: if a live update brings another one, the edit is stale.
+  const [editBaseVersion, setEditBaseVersion] = useState<number | null>(null);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
@@ -79,7 +84,15 @@ export function ReviewDetail({
       ),
     [itemId],
   );
-  const { data: item, error, loading, reload } = useLoad(load);
+  const { data: item, error, loading, reload, refresh } = useLoad(load);
+
+  // Quiet reload: only `item` changes, so a text being edited (`editedText`, `note`) is never replaced.
+  const seenTick = useRef(liveTick);
+  useEffect(() => {
+    if (liveTick === seenTick.current) return;
+    seenTick.current = liveTick;
+    refresh();
+  }, [liveTick, refresh]);
 
   const finish = useCallback(
     (message: string) => {
@@ -124,6 +137,8 @@ export function ReviewDetail({
   const doctorBlocked = item.requires_doctor && !can("review.decide_clinical");
   const canDecide = can("review.decide") && open;
   const text = (mode === "edit" ? editedText : (item.draft_text ?? "")).trim();
+  const editIsStale =
+    mode === "edit" && editBaseVersion !== null && editBaseVersion !== item.version;
 
   async function approve() {
     if (!item) return;
@@ -345,6 +360,15 @@ export function ReviewDetail({
             </div>
           )}
 
+          {editIsStale && (
+            <div className="mb-3">
+              <Notice tone="warn">
+                Mục này vừa được người khác cập nhật nên bản sửa của bạn dựa trên nháp cũ. Bấm "Hủy
+                sửa" rồi sửa lại từ bản mới.
+              </Notice>
+            </div>
+          )}
+
           {actionError && (
             <div className="mb-3">
               <Notice tone="error">{actionError}</Notice>
@@ -364,6 +388,7 @@ export function ReviewDetail({
                   <SecondaryButton
                     onClick={() => {
                       setEditedText(item.draft_text ?? "");
+                      setEditBaseVersion(item.version);
                       setMode("edit");
                     }}
                   >
@@ -387,7 +412,10 @@ export function ReviewDetail({
             )}
             {mode === "edit" && (
               <>
-                <PrimaryButton disabled={busy || !editedText.trim()} onClick={() => void approve()}>
+                <PrimaryButton
+                  disabled={busy || editIsStale || !editedText.trim()}
+                  onClick={() => void approve()}
+                >
                   Duyệt bản đã sửa và gửi
                 </PrimaryButton>
                 <SecondaryButton onClick={() => setMode("view")}>Hủy sửa</SecondaryButton>

@@ -44,7 +44,7 @@ class Account:
         return self
 
     async def client(self) -> httpx.AsyncClient:
-        http = await sign_in(self.app, "clinic-a", self.email)
+        http = await sign_in(self.app, self.email)
         self.clients.append(http)
         return http
 
@@ -53,15 +53,15 @@ class Account:
         async with httpx.AsyncClient(transport=transport, base_url="http://test") as http:
             response = await http.post(
                 "/api/v1/auth/login",
-                json={"clinic_slug": "clinic-a", "email": self.email, "password": password},
+                json={"email": self.email, "password": password},
             )
         auth.reset_login_rate_limit()
         return response
 
 
 @pytest_asyncio.fixture
-async def account(app: Any, db: ClinicDatabase, world_a: SeedResult) -> AsyncIterator[Account]:
-    made = await Account(app, db, world_a).create()
+async def account(app: Any, db: ClinicDatabase, world: SeedResult) -> AsyncIterator[Account]:
+    made = await Account(app, db, world).create()
     yield made
     for http in made.clients:
         await http.aclose()
@@ -97,7 +97,7 @@ async def test_a_wrong_current_password_is_refused_so_a_borrowed_cookie_cannot_c
     assert (await account.login(ACCOUNT_PASSWORD)).status_code == 200, "the old password must stay as it was"
 
 
-async def test_it_cannot_be_called_without_signing_in(app: Any, world_a: SeedResult) -> None:
+async def test_it_cannot_be_called_without_signing_in(app: Any, world: SeedResult) -> None:
     """chưa đăng nhập thì không gọi được"""
     transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as http:

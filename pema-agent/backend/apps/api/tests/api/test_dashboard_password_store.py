@@ -80,12 +80,12 @@ pytestmark_db = pytest.mark.db
 
 
 def _req(email: str, password: str) -> LoginRequest:
-    return LoginRequest(clinic_slug="clinic-a", email=email, password=SecretStr(password))
+    return LoginRequest(email=email, password=SecretStr(password))
 
 
 @pytest.mark.db
 async def test_password_in_the_database_is_a_hash_not_the_clear_text(
-    db: ClinicDatabase, world_a: SeedResult, pg_url: str
+    db: ClinicDatabase, world: SeedResult, pg_url: str
 ) -> None:
     """KHÔNG lưu bản rõ trong DB"""
     engine = create_engine(pg_url)
@@ -95,7 +95,7 @@ async def test_password_in_the_database_is_a_hash_not_the_clear_text(
                 text(
                     "SELECT password_hash FROM clinic.user_account WHERE clinic_id = :c AND email = 'owner@example.test'"
                 ),
-                {"c": world_a.clinic_id},
+                {"c": world.clinic_id},
             ).scalar_one()
     finally:
         engine.dispose()
@@ -105,11 +105,11 @@ async def test_password_in_the_database_is_a_hash_not_the_clear_text(
 
 @pytest.mark.db
 async def test_changing_the_password_kills_every_other_session_at_once_and_the_changer_keeps_working(
-    jwt_env: None, db: ClinicDatabase, world_a: SeedResult
+    jwt_env: None, db: ClinicDatabase, world: SeedResult
 ) -> None:
     """đổi mật khẩu là mọi phiên cũ hết hiệu lực NGAY, phiên vừa đổi dùng tiếp được"""
     email = f"change.{uuid4().hex[:8]}@example.test"
-    await _add_user(db, world_a, email)
+    await _add_user(db, world, email)
     mine = await auth.login(db, _req(email, ACCOUNT_PASSWORD), client_ip="198.51.100.10")
     other_device = await auth.login(db, _req(email, ACCOUNT_PASSWORD), client_ip="198.51.100.11")
     me = await auth.verify_session_token(db, mine.token)
@@ -138,11 +138,11 @@ async def test_changing_the_password_kills_every_other_session_at_once_and_the_c
 
 @pytest.mark.db
 async def test_a_borrowed_cookie_cannot_change_the_password_without_the_current_one(
-    jwt_env: None, db: ClinicDatabase, world_a: SeedResult
+    jwt_env: None, db: ClinicDatabase, world: SeedResult
 ) -> None:
     """SAI mật khẩu hiện tại thì bị từ chối - cookie bị mượn không đổi được mật khẩu"""
     email = f"borrow.{uuid4().hex[:8]}@example.test"
-    await _add_user(db, world_a, email)
+    await _add_user(db, world, email)
     session = await auth.login(db, _req(email, ACCOUNT_PASSWORD), client_ip="198.51.100.20")
     me = await auth.verify_session_token(db, session.token)
     assert me is not None
@@ -162,11 +162,11 @@ async def test_a_borrowed_cookie_cannot_change_the_password_without_the_current_
 
 @pytest.mark.db
 async def test_a_short_or_unchanged_new_password_is_refused(
-    jwt_env: None, db: ClinicDatabase, world_a: SeedResult
+    jwt_env: None, db: ClinicDatabase, world: SeedResult
 ) -> None:
     """mật khẩu mới dưới 8 ký tự hoặc trùng mật khẩu cũ bị chặn"""
     email = f"short.{uuid4().hex[:8]}@example.test"
-    await _add_user(db, world_a, email)
+    await _add_user(db, world, email)
     session = await auth.login(db, _req(email, ACCOUNT_PASSWORD), client_ip="198.51.100.30")
     me = await auth.verify_session_token(db, session.token)
     assert me is not None
@@ -184,11 +184,11 @@ async def test_a_short_or_unchanged_new_password_is_refused(
 
 @pytest.mark.db
 async def test_an_owner_resets_another_account_and_every_session_of_it_ends(
-    jwt_env: None, db: ClinicDatabase, world_a: SeedResult
+    jwt_env: None, db: ClinicDatabase, world: SeedResult
 ) -> None:
     """chủ phòng khám đặt lại mật khẩu tài khoản khác, mọi phiên của tài khoản đó kết thúc"""
     email = f"reset.{uuid4().hex[:8]}@example.test"
-    user_id = await _add_user(db, world_a, email)
+    user_id = await _add_user(db, world, email)
     victim = await auth.login(db, _req(email, ACCOUNT_PASSWORD), client_ip="198.51.100.40")
     owner_session = await auth.login(
         db, _req("owner@example.test", ACCOUNT_PASSWORD), client_ip="198.51.100.41"
@@ -221,7 +221,7 @@ async def _add_user(db: ClinicDatabase, world: SeedResult, email: str) -> UUID:
     from pema.clinic import audit
 
     user_id = uuid4()
-    async with db.session(world.clinic_id) as session:
+    async with db.session() as session:
         session.add(
             UserAccount(
                 id=user_id,

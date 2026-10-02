@@ -18,7 +18,7 @@ Forced deviations:
 * the default generator (``resolveLanguageModel`` imported lazily to dodge an import cycle) becomes the
   ``text_generator`` given to ``ThreadSummarizer``; without one and without an explicit ``generate`` the
   summariser logs once and does nothing;
-* SQLite sync -> SQLAlchemy async + Postgres (``clinic_id`` + RLS).
+* SQLite sync -> SQLAlchemy async + Postgres (``clinic_id``, no RLS).
 
 Clinic note: the summary is built from the history of the thread, which holds patient text; the generator is
 the configured model of the clinic (a local model or the provider the owner chose), the same as the turn
@@ -167,7 +167,7 @@ class ThreadSummarizer:
         old_summary, covers_to = stored.summary, stored.covers_to_message_id
 
         scope = {"clinic_id": clinic_id, "account_id": account_id, "thread_id": thread_id}
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             window_start = (
                 await session.execute(
                     _WINDOW_START, {**scope, "offset": get_tuning_int("HISTORY_CONTEXT_LIMIT") - 1}

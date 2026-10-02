@@ -3,12 +3,16 @@
 // Hàng đợi duyệt AI: every text the AI wants to send to a patient (patient_channel) waits here until a
 // person approves it, plus red-flag alerts, patient photos flagged for staff and identity checks.
 // `GET /api/v1/review-items`; detail on `?i=<id>` (child screen on a phone, side pane on desktop).
+// Several people decide here at once: a `review.changed` event (GET /api/v1/events) reloads the list quietly and,
+// when it is the open item, the item too; an edit in progress is never replaced. Without the stream the list
+// refreshes every 30 seconds.
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { SelectMenu, type SelectOption } from "@/components/admin/shared/select-menu";
 import { IconShieldCheck } from "@/components/admin/shared/ops-icons";
+import { LiveStatus } from "@/components/ops/live-status";
 import { MasterDetail } from "@/components/ops/master-detail";
 import {
   ChipRow,
@@ -21,6 +25,8 @@ import { ReviewDetail } from "@/components/ops/review/review-detail";
 import { ReviewList } from "@/components/ops/review/review-list";
 import type { Schemas } from "@/lib/api";
 import { http, unwrap } from "@/lib/api/client";
+import type { LiveEvent, LiveEventType } from "@/lib/live/live-types";
+import { useLiveEvents } from "@/lib/live/use-live-events";
 import { REVIEW_KIND_LABEL, REVIEW_STATUS_LABEL } from "@/lib/ops/labels";
 import { displayName, usePatientIndex } from "@/lib/ops/use-patient-names";
 import { useLoad } from "@/lib/use-load";
@@ -30,6 +36,7 @@ type StatusTab = Extract<
   "pending" | "escalated" | "approved" | "rejected"
 >;
 
+const LIVE_TYPES: readonly LiveEventType[] = ["review.changed"];
 const TABS: StatusTab[] = ["pending", "escalated", "approved", "rejected"];
 
 const KIND_OPTIONS: SelectOption[] = [
@@ -66,8 +73,27 @@ function ReviewContent() {
       ),
     [tab, kind, doctorOnly],
   );
-  const { data, error, loading, reload } = useLoad(load);
+  const { data, error, loading, reload, refresh } = useLoad(load);
   const items = useMemo(() => data?.items ?? [], [data]);
+
+  // Bumped when the open item itself changed; ReviewDetail reloads on it (see its `liveTick`).
+  const [detailTick, setDetailTick] = useState(0);
+  const onLiveEvent = useCallback(
+    (event: LiveEvent) => {
+      refresh();
+      if (event.id === null || event.id === selectedId) setDetailTick((n) => n + 1);
+    },
+    [refresh, selectedId],
+  );
+  const onLiveRefresh = useCallback(() => {
+    refresh();
+    setDetailTick((n) => n + 1);
+  }, [refresh]);
+  const liveMode = useLiveEvents({
+    types: LIVE_TYPES,
+    onEvent: onLiveEvent,
+    onRefresh: onLiveRefresh,
+  });
 
   const open = useCallback((id: string) => router.push(`/review?i=${id}`), [router]);
   const back = useCallback(() => router.push("/review"), [router]);
@@ -125,6 +151,7 @@ function ReviewContent() {
         title="Hàng đợi duyệt AI"
         subtitle="Không tin nào của trợ lý AI tới khách khi chưa có người duyệt"
       />
+      <LiveStatus mode={liveMode} />
       <MasterDetail
         list={list}
         detailOpen={selectedId !== null}
@@ -137,6 +164,7 @@ function ReviewContent() {
               itemId={selectedId}
               patientName={selectedName}
               onChanged={reload}
+              liveTick={detailTick}
             />
           ) : null
         }

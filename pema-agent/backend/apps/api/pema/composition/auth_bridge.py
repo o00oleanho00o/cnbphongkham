@@ -47,7 +47,6 @@ from pema.api.request_id import clean_request_id
 from pema.clinic import audit
 from pema.clinic.rbac.matrix import permissions_for
 from pema.config.env import get_settings
-from pema.config.runtime_settings_store import use_settings_clinic
 from pema.core.db import ClinicDatabase
 from pema.shared.logger import create_logger
 from pema_contracts.actions import ActionContext
@@ -190,8 +189,7 @@ class StaffSessionMiddleware:
             await send(message)
 
         try:
-            with use_settings_clinic(user.clinic_id):
-                await self.app(scope, receive, watch_status)
+            await self.app(scope, receive, watch_status)
         finally:
             _current_staff.reset(token_ctx)
         method = str(scope.get("method", "")).upper()
@@ -202,7 +200,7 @@ class StaffSessionMiddleware:
         """One row per successful change (the response is already on its way: a failure here is logged, it
         cannot undo the change)."""
         try:
-            async with self._db().session(ctx.clinic_id) as session:
+            async with self._db().session() as session:
                 await audit.record(
                     session,
                     ctx,

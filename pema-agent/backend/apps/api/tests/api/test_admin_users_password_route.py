@@ -45,7 +45,7 @@ class Target:
         return self
 
     async def client(self, password: str = ACCOUNT_PASSWORD) -> httpx.AsyncClient:
-        http = await sign_in(self.app, "clinic-a", self.email, password)
+        http = await sign_in(self.app, self.email, password)
         self.clients.append(http)
         return http
 
@@ -54,15 +54,15 @@ class Target:
         async with httpx.AsyncClient(transport=transport, base_url="http://test") as http:
             response = await http.post(
                 "/api/v1/auth/login",
-                json={"clinic_slug": "clinic-a", "email": self.email, "password": password},
+                json={"email": self.email, "password": password},
             )
         auth.reset_login_rate_limit()
         return response.status_code
 
 
 @pytest_asyncio.fixture
-async def target(app: Any, db: ClinicDatabase, world_a: SeedResult, admin: Engine) -> AsyncIterator[Target]:
-    made = await Target(app, db, world_a, admin).create()
+async def target(app: Any, db: ClinicDatabase, world: SeedResult, admin: Engine) -> AsyncIterator[Target]:
+    made = await Target(app, db, world, admin).create()
     yield made
     for http in made.clients:
         await http.aclose()
@@ -76,7 +76,7 @@ async def test_the_owner_resets_a_password_and_login_uses_the_new_one(
     client_factory: Any, target: Target
 ) -> None:
     """chủ phòng khám đặt lại mật khẩu: đăng nhập bằng mật khẩu MỚI được, mật khẩu cũ hết dùng"""
-    owner = await client_factory("clinic-a", "owner")
+    owner = await client_factory("owner")
 
     response = await _reset(owner, target.user_id)
 
@@ -90,7 +90,7 @@ async def test_every_session_of_the_reset_user_ends_and_the_owner_keeps_theirs(
     client_factory: Any, target: Target
 ) -> None:
     """MỌI phiên của người bị đặt lại đều bị thu hồi, phiên của chủ không bị ảnh hưởng"""
-    owner = await client_factory("clinic-a", "owner")
+    owner = await client_factory("owner")
     laptop = await target.client()
     phone = await target.client()
     assert (await laptop.get("/api/v1/me")).status_code == 200
@@ -108,7 +108,7 @@ async def test_only_the_owner_may_reset_everyone_else_gets_403_and_nothing_chang
     client_factory: Any, target: Target, key: str
 ) -> None:
     """chỉ vai trò chủ được đặt lại; vai trò khác bị 403 và mật khẩu không đổi"""
-    caller = await client_factory("clinic-a", key)
+    caller = await client_factory(key)
 
     response = await _reset(caller, target.user_id)
 
@@ -127,29 +127,23 @@ async def test_it_cannot_be_called_without_signing_in(app: Any, target: Target) 
     assert await target.login_status(ACCOUNT_PASSWORD) == 200
 
 
-async def test_a_user_of_another_clinic_is_a_404_exactly_like_an_unknown_id(
-    app: Any, client_factory: Any, world_b: SeedResult, target: Target
-) -> None:
-    """người dùng phòng khám khác trả 404 như id không tồn tại (không dò được id chéo phòng khám)"""
-    owner = await client_factory("clinic-a", "owner")
-    foreign = world_b.users["doctor.mai"]
+async def test_an_unknown_id_is_a_404(client_factory: Any, world: SeedResult) -> None:
+    """id không tồn tại trả 404 (không lộ gì về tài khoản)"""
+    owner = await client_factory("owner")
 
-    cross = await _reset(owner, foreign)
     unknown = await _reset(owner, uuid4())
 
-    assert cross.status_code == unknown.status_code == 404
-    assert cross.json()["error"] == unknown.json()["error"]
-    # the other clinic's doctor still signs in with the password they had (sign_in asserts a 200)
-    await (await sign_in(app, "clinic-b", "doctor.mai@example.test")).aclose()
+    assert unknown.status_code == 404
+    assert unknown.json()["error"]["code"] == "not_found"
 
 
 async def test_the_owner_cannot_reset_their_own_password_through_this_route(
-    client_factory: Any, world_a: SeedResult
+    client_factory: Any, world: SeedResult
 ) -> None:
     """không đặt lại cho chính mình qua route này (dùng POST /auth/password)"""
-    owner = await client_factory("clinic-a", "owner")
+    owner = await client_factory("owner")
 
-    response = await _reset(owner, world_a.users["owner"])
+    response = await _reset(owner, world.users["owner"])
 
     assert response.status_code == 422
     assert "đổi mật khẩu" in response.json()["error"]["message"]
@@ -160,7 +154,7 @@ async def test_the_new_password_follows_the_same_8_character_floor(
     client_factory: Any, target: Target
 ) -> None:
     """mật khẩu mới dưới 8 ký tự bị chặn - cùng luật với đổi mật khẩu"""
-    owner = await client_factory("clinic-a", "owner")
+    owner = await client_factory("owner")
 
     response = await _reset(owner, target.user_id, "ngan")
 
@@ -173,16 +167,16 @@ async def test_the_new_password_follows_the_same_8_character_floor(
 
 async def test_a_malformed_user_id_is_a_validation_error(client_factory: Any) -> None:
     """id không phải UUID thì 422"""
-    owner = await client_factory("clinic-a", "owner")
+    owner = await client_factory("owner")
     response = await owner.post(
         "/api/v1/admin/users/not-a-uuid/password", json={"new_password": NEW_PASSWORD}
     )
     assert response.status_code == 422
 
 
-async def test_resets_are_rate_limited_per_owner(client_factory: Any, world_a: SeedResult) -> None:
+async def test_resets_are_rate_limited_per_owner(client_factory: Any, world: SeedResult) -> None:
     """giới hạn tốc độ: 5 lần mỗi phút cho mỗi chủ, lần thứ 6 bị 429"""
-    owner = await client_factory("clinic-a", "owner")
+    owner = await client_factory("owner")
     for _ in range(auth.LOGIN_MAX_ATTEMPTS):
         assert (await _reset(owner, uuid4())).status_code == 404
 
@@ -198,7 +192,7 @@ async def test_a_refused_caller_does_not_spend_the_owners_rate_limit(
     client_factory: Any, target: Target
 ) -> None:
     """người không phải chủ bị 403 trước khi tính giới hạn tốc độ"""
-    manager = await client_factory("clinic-a", "manager")
+    manager = await client_factory("manager")
     for _ in range(auth.LOGIN_MAX_ATTEMPTS + 2):
         assert (await _reset(manager, target.user_id)).status_code == 403
 
@@ -206,12 +200,12 @@ async def test_a_refused_caller_does_not_spend_the_owners_rate_limit(
 async def test_the_audit_row_names_who_reset_whom_and_never_holds_the_password(
     client_factory: Any,
     target: Target,
-    world_a: SeedResult,
+    world: SeedResult,
     admin: Engine,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """nhật ký audit ghi AI đặt lại cho AI, không ghi mật khẩu; log cũng không chứa mật khẩu"""
-    owner = await client_factory("clinic-a", "owner")
+    owner = await client_factory("owner")
     request_id = f"reset-{uuid4().hex}"
 
     with caplog.at_level(logging.DEBUG):
@@ -233,7 +227,7 @@ async def test_the_audit_row_names_who_reset_whom_and_never_holds_the_password(
     assert [r.action for r in rows] == ["auth.reset_password"]
     row = rows[0]
     assert row.actor_type == "user"
-    assert row.actor_user_id == world_a.users["owner"]
+    assert row.actor_user_id == world.users["owner"]
     assert row.actor_role == "owner"
     assert row.entity_type == "user_account"
     assert row.entity_id == str(target.user_id)

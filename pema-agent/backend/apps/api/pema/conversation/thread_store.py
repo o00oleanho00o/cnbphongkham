@@ -1,7 +1,7 @@
 # ported from: src/conversation/thread-store.ts
 """Threads: one row per (account, thread), the unit of the Sessions page (table ``agent.threads``).
 
-Forced deviations: SQLite sync -> SQLAlchemy async + Postgres (``clinic_id`` + RLS; ``strftime`` becomes
+Forced deviations: SQLite sync -> SQLAlchemy async + Postgres (``clinic_id``, no RLS; ``strftime`` becomes
 ``now()``; ``LIKE`` becomes an escaped ``ILIKE``; ``ORDER BY last_message_at DESC`` gets ``NULLS LAST``
 because SQLite sorts NULL last on DESC and Postgres first).
 
@@ -116,7 +116,7 @@ class ThreadStoreImpl:
         sender_name: str,
     ) -> None:
         """Ghi nhận 1 tin đến cho thread (tạo mới nếu chưa có). ``display_name`` rỗng = giữ tên cũ."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 _UPSERT,
                 {
@@ -150,7 +150,7 @@ class ThreadStoreImpl:
         return row is not None and row["display_name"] != ""
 
     async def set_bot_enabled(self, clinic_id: UUID, account_id: str, thread_id: str, enabled: bool) -> bool:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             result = await session.execute(
                 _SET_ENABLED,
                 {
@@ -165,7 +165,7 @@ class ThreadStoreImpl:
     async def set_thread_display_name(
         self, clinic_id: UUID, account_id: str, thread_id: str, name: str
     ) -> None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 _SET_NAME,
                 {"clinic_id": clinic_id, "account_id": account_id, "thread_id": thread_id, "name": name},
@@ -174,7 +174,7 @@ class ThreadStoreImpl:
     # ===== Memory lớp 2: rolling summary =====
 
     async def get_thread_summary(self, clinic_id: UUID, account_id: str, thread_id: str) -> ThreadSummary:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 (
                     await session.execute(
@@ -194,7 +194,7 @@ class ThreadStoreImpl:
     async def set_thread_summary(
         self, clinic_id: UUID, account_id: str, thread_id: str, summary: str, covers_to: int
     ) -> None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 _SET_SUMMARY,
                 {
@@ -213,7 +213,7 @@ class ThreadStoreImpl:
         Thread chưa có dòng nào (tin đầu tiên chưa ghi xong) trả 0, cùng giá trị với thread chưa từng bị xóa -
         đúng ý, vì cả hai đều là "chưa có gì để bỏ đi".
         """
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             value = (
                 await session.execute(
                     _GET_EPOCH, {"clinic_id": clinic_id, "account_id": account_id, "thread_id": thread_id}
@@ -223,7 +223,7 @@ class ThreadStoreImpl:
 
     async def get_thread(self, clinic_id: UUID, account_id: str, thread_id: str) -> ThreadRow | None:
         """One row of the Sessions list (no equivalent in the original: the dashboard re-listed)."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 (
                     await session.execute(
@@ -245,7 +245,7 @@ class ThreadStoreImpl:
         offset: int = 0,
     ) -> list[ThreadRow]:
         """``account_id`` bỏ trống = mọi account (dashboard mặc định xem trộn chung)."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 (
                     await session.execute(
@@ -265,7 +265,7 @@ class ThreadStoreImpl:
         return [ThreadRow.model_validate(dict(r)) for r in rows]
 
     async def _get(self, clinic_id: UUID, account_id: str, thread_id: str) -> dict[str, object] | None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 (
                     await session.execute(

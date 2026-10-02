@@ -5,7 +5,8 @@ Forced deviation (SQLite -> Postgres): the original created the tables from ``ta
 the DDL is in ``alembic/versions/0002_agent_schema.py`` (package A), so this module only DECLARES the two
 tables for SQLAlchemy Core. What the migration changes, all in favour of the original's intent:
 
-* ``clinic_id`` on both tables and in every key; RLS (``clinic_id = ctx.current_clinic_id()``);
+* ``clinic_id`` on both tables and in every key (the fixed installation id; the RLS the migration added was
+  dropped by ``st_0009_single_tenant``: one database is one clinic);
 * REAL foreign keys. The original said "NO FOREIGN KEY: ``database.ts`` does not enable
   ``PRAGMA foreign_keys``, so ``REFERENCES`` is an empty promise, every delete path must clean both tables
   explicitly in one transaction". Postgres enforces them with ``ON DELETE CASCADE`` (deleting an agent or a

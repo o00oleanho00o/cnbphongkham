@@ -29,7 +29,7 @@ upgrades, no port: Postgres starts clean).
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -79,7 +79,6 @@ class AccountManager:
         bridge_secret: Callable[[], str | None],
         counter: ProactiveSendGuard | None = None,
         counter_for: Callable[[UUID], ProactiveSendGuard] | None = None,
-        clinic_ref: Callable[[UUID], Awaitable[str]] | None = None,
     ) -> None:
         self._accounts = accounts
         self._vault = vault
@@ -93,7 +92,6 @@ class AccountManager:
         """Per-clinic counter (the Postgres ``PgProactiveSendGuard``): the daily cap of the channel gate must
         survive a restart and be shared by the API and the worker process, which an in-process counter is not
         (SECURITY-REVIEW-AI01 SEC-21). ``counter`` is the single-process fallback of tests."""
-        self._clinic_ref = clinic_ref or _clinic_id_as_ref
         self._running: dict[tuple[UUID, str], RunningAccount] = {}
 
     # ----------------------------------------------------------------------------- read
@@ -199,7 +197,6 @@ class AccountManager:
         try:
             own_id = await self._bridge.start_account(
                 account_id,
-                clinic_slug=await self._clinic_ref(clinic_id),
                 credential=credential,
                 kill_switch=kill,
             )
@@ -286,9 +283,3 @@ class AccountManager:
         except ZaloBridgeError as err:
             # The bridge may be down or not know the account: the local state is already clean.
             log.warning("bridge stop failed", account_id=account_id, kind=err.kind)
-
-
-async def _clinic_id_as_ref(clinic_id: UUID) -> str:
-    """The webhook route accepts the clinic id in place of the slug, so the worker (no access to ``clinic.*``)
-    can start accounts without knowing the slug."""
-    return str(clinic_id)

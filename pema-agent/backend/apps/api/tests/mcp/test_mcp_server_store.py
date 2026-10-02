@@ -7,7 +7,6 @@ the headers need the real table and run on Postgres only.
 
 from __future__ import annotations
 
-import uuid
 from typing import TYPE_CHECKING
 
 import pytest
@@ -128,22 +127,6 @@ async def test_mcp_server_store_status_snapshot_and_fingerprint_round_trip(bundl
     assert read.error == "chết"
     assert read.tools_snapshot == [McpToolInfo(name="t", description="d")]
     assert await bundle.servers.get_fingerprint(bundle.clinic_id, server.id) == '{"t":"h"}'
-
-
-async def test_mcp_server_store_a_clinic_never_sees_the_servers_of_another(bundle: StoreBundle) -> None:
-    """phòng khám khác không thấy server của phòng khám này"""
-    server = await bundle.servers.create_server(bundle.clinic_id, name="a", url="https://x/mcp")
-    other = uuid.uuid4()
-    if bundle.admin is not None:
-        with bundle.admin.begin() as conn:
-            conn.execute(
-                text("INSERT INTO clinic.clinic (id, slug, name) VALUES (:id, :slug, 'Other')"),
-                {"id": other, "slug": f"o-{other.hex[:12]}"},
-            )
-    assert await bundle.servers.list_servers(other) == []
-    assert await bundle.servers.get_server(other, server.id) is None
-    assert await bundle.servers.delete_server(other, server.id) is False
-    assert await bundle.servers.get_server(bundle.clinic_id, server.id) is not None
 
 
 async def test_mcp_server_store_a_headers_blob_that_cannot_be_decrypted_falls_back_to_empty(
