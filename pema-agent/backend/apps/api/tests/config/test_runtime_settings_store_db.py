@@ -22,7 +22,6 @@ from sqlalchemy.engine import make_url
 from pema.config.runtime_settings_store import (
     RuntimeSettingsSnapshot,
     SqlRuntimeSettingsStore,
-    use_settings_clinic,
 )
 from pema.config.runtime_tuning_settings import (
     get_tuning,
@@ -102,17 +101,13 @@ async def test_synchronous_reads_after_a_refresh_use_the_database(
     store: SqlRuntimeSettingsStore, clinic: uuid.UUID
 ) -> None:
     """đọc đồng bộ sau refresh thấy giá trị trong Postgres (tuning qua snapshot)"""
-    a, b = clinic, uuid.uuid4()
+    a = clinic
     writer = RuntimeSettingsSnapshot(store)
     reader = RuntimeSettingsSnapshot(store)
     install_tuning_provider(reader)
     try:
         await set_tuning(a, "LLM_MAX_STEPS", 7, snapshot=writer)
         await reader.refresh(a)
-        await reader.refresh(b)
-        with use_settings_clinic(a):
-            assert get_tuning("LLM_MAX_STEPS") == 7
-        with use_settings_clinic(b):
-            assert get_tuning("LLM_MAX_STEPS") == 10
+        assert get_tuning("LLM_MAX_STEPS") == 7
     finally:
         reset_tuning_provider()

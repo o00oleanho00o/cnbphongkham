@@ -34,7 +34,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from collections.abc import Awaitable, Callable, Collection, Sequence
+from collections.abc import Awaitable, Collection, Sequence
 from uuid import UUID
 
 from pema.agent.tools.tool_failure_result import ket_qua_loi as tool_failure_result
@@ -55,13 +55,6 @@ from pema_contracts.tools import ToolSpec
 
 _log = create_logger("mcp.manager")
 
-type ClinicIdsProvider = Callable[[], Awaitable[Sequence[UUID]]]
-"""The clinics of the installation (single tenant: one). Optional: by default the installation clinic id."""
-
-
-async def _installation_clinic_ids() -> Sequence[UUID]:
-    return [installation_clinic_id()]
-
 
 class DefaultMcpManager:
     def __init__(
@@ -70,7 +63,6 @@ class DefaultMcpManager:
         server_store: McpServerStore,
         binding_store: McpBindingStore,
         bindings: McpBindingCache,
-        clinic_ids: ClinicIdsProvider = _installation_clinic_ids,
         connect: ConnectFn = connect_server,
         wrap: WrapFn = wrap_untrusted_content,
         fail: FailFn = tool_failure_result,
@@ -80,7 +72,6 @@ class DefaultMcpManager:
         self._servers = server_store
         self._binding_store = binding_store
         self._bindings = bindings
-        self._clinic_ids = clinic_ids
         self._provider = provider
         self._pool = McpConnectionPool(
             server_store=server_store,
@@ -174,12 +165,10 @@ class DefaultMcpManager:
     async def boot(self) -> None:
         """Connect every ``enabled`` server of the installation. One broken server blocks neither another nor
         the boot, because each call catches its own error."""
-        results = await asyncio.gather(
-            *(self._boot_clinic(clinic_id) for clinic_id in await self._clinic_ids()), return_exceptions=True
-        )
-        for result in results:
-            if isinstance(result, BaseException):
-                _log.error("mcp boot of a clinic failed", err=result)
+        try:
+            await self._boot_clinic(installation_clinic_id())
+        except Exception as exc:
+            _log.error("mcp boot of the clinic failed", err=exc)
 
     async def _boot_clinic(self, clinic_id: UUID) -> None:
         await self.refresh_bindings(clinic_id)
@@ -189,11 +178,10 @@ class DefaultMcpManager:
     async def sync_once(self) -> None:
         """One health tick (see the module docstring for why it does more than the original's ``loi``
         retry)."""
-        for clinic_id in await self._clinic_ids():
-            try:
-                await self._sync_clinic(clinic_id)
-            except Exception as exc:
-                _log.error("mcp health sync of a clinic failed", err=exc)
+        try:
+            await self._sync_clinic(installation_clinic_id())
+        except Exception as exc:
+            _log.error("mcp health sync of the clinic failed", err=exc)
 
     async def _sync_clinic(self, clinic_id: UUID) -> None:
         await self.refresh_bindings(clinic_id)

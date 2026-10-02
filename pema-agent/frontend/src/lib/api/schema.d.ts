@@ -1786,7 +1786,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/webhooks/zalo-bot/{clinic_slug}/{account_id}": {
+    "/api/v1/webhooks/zalo-bot/{account_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1803,7 +1803,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/webhooks/zalo-bridge/{clinic_slug}/{account_id}": {
+    "/api/v1/webhooks/zalo-bridge/{account_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -3286,7 +3286,10 @@ export interface components {
             /** Scopes */
             scopes?: string[];
         };
-        /** LoginRequest */
+        /**
+         * LoginRequest
+         * @description Sign-in of a staff member. One installation is one clinic (single tenant): no clinic field.
+         */
         LoginRequest: {
             /** Email */
             email: string;
@@ -16366,7 +16369,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                clinic_slug: string;
                 account_id: string;
             };
             cookie?: never;
@@ -16458,7 +16460,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                clinic_slug: string;
                 account_id: string;
             };
             cookie?: never;

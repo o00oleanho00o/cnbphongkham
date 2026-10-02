@@ -13,8 +13,8 @@ refreshes the cache, so a binding made after a connect is visible to ``tools_for
 from __future__ import annotations
 
 import asyncio
-import uuid
-from dataclasses import dataclass, field
+from collections.abc import Iterator
+from dataclasses import dataclass
 from uuid import UUID
 
 import pytest
@@ -32,6 +32,7 @@ from pema.mcp.mcp_types import McpServerStatus
 from pema.mcp.testing import FakeConnector, InMemoryMcpStore, remote_tools
 from pema.shared.doi_cho_den_khi import WaitOptions, doi_cho_den_khi
 from pema_contracts.channel import ChannelKind
+from pema_contracts.installation import reset_installation_clinic_id, set_installation_clinic_id
 from pema_contracts.policy import DEFAULT_PROFILES, PolicyContext, PolicyProfileKey
 from pema_contracts.testing import (
     FAKE_CLINIC_ID,
@@ -52,7 +53,6 @@ class Rig:
     connector: FakeConnector
     provider: SwitchableMcpToolProvider
     agents: InMemoryAgentStore
-    clinics: list[UUID] = field(default_factory=lambda: [FAKE_CLINIC_ID])
 
     def add_agent(
         self,
@@ -93,14 +93,10 @@ def make_rig(*tool_names: str, fail_urls_containing: str | None = None) -> Rig:
     provider = SwitchableMcpToolProvider()
     rig = Rig(manager=None, store=store, connector=connector, provider=provider, agents=agents)  # type: ignore[arg-type]
 
-    async def clinic_ids() -> list[UUID]:
-        return list(rig.clinics)
-
     rig.manager = DefaultMcpManager(
         server_store=store,
         binding_store=store,
         bindings=cache,
-        clinic_ids=clinic_ids,
         connect=connector,
         provider=provider,
     )
@@ -108,8 +104,11 @@ def make_rig(*tool_names: str, fail_urls_containing: str | None = None) -> Rig:
 
 
 @pytest.fixture(autouse=True)
-def _reset_tuning() -> None:
+def _reset_tuning() -> Iterator[None]:
     reset_tuning_provider()
+    set_installation_clinic_id(FAKE_CLINIC_ID)
+    yield
+    reset_installation_clinic_id()
 
 
 def _ctx(agent_id: str, clinic_id: UUID = FAKE_CLINIC_ID) -> ToolContext:
@@ -357,14 +356,10 @@ async def test_mcp_manager_tools_for_agent_never_raises() -> None:
     rig = make_rig("tra_cuu")
     store = rig.store
 
-    async def clinic_ids() -> list[UUID]:
-        return [FAKE_CLINIC_ID]
-
     manager = DefaultMcpManager(
         server_store=store,
         binding_store=store,
         bindings=ExplodingCache(),
-        clinic_ids=clinic_ids,
         connect=rig.connector,
         provider=SwitchableMcpToolProvider(),
     )
@@ -420,19 +415,14 @@ async def test_mcp_manager_health_sync_refreshes_the_bindings_of_each_clinic() -
     assert len(rig.keys("a1")) == 1
 
 
-async def test_mcp_manager_boot_isolates_a_failing_clinic() -> None:
-    """boot: lỗi của một phòng khám không chặn phòng khám khác"""
+async def test_mcp_manager_boot_survives_a_failing_store() -> None:
+    """boot: lỗi đọc DB không làm sập tiến trình, chỉ ghi log"""
     rig = make_rig("tra_cuu")
     server_id = await rig.server("svr")
-    broken_id = uuid.uuid4()
-    rig.clinics.insert(0, broken_id)  # the store raises nothing for an unknown clinic: simulate a failing one
-    original = rig.store.list_servers
 
-    async def flaky(clinic_id: UUID) -> list:  # type: ignore[type-arg]
-        if clinic_id == broken_id:
-            raise ConnectionError("db down")
-        return await original(clinic_id)
+    async def broken(clinic_id: UUID) -> list:  # type: ignore[type-arg]
+        raise ConnectionError("db down")
 
-    rig.store.list_servers = flaky  # type: ignore[method-assign]
+    rig.store.list_servers = broken  # type: ignore[method-assign]
     await rig.manager.boot()
-    assert await rig.status(server_id) is McpServerStatus.CONNECTED
+    assert await rig.status(server_id) is not McpServerStatus.CONNECTED

@@ -1,6 +1,6 @@
 # ported from: none (test helper of the runtime-settings tests, package D1)
 """``SettingsEnv``: the handle a test gets from the ``settings_env`` fixture (``tests/config/conftest.py``): a
-fresh in-memory ``RuntimeSettingsSnapshot`` of one clinic with an encryption key set. Import in tests only."""
+fresh in-memory ``RuntimeSettingsSnapshot`` with an encryption key set. Import in tests only."""
 
 from __future__ import annotations
 
@@ -15,10 +15,8 @@ from pema.config.runtime_settings_store import (
     InMemoryRuntimeSettingsStore,
     RuntimeSettingsSnapshot,
     install_runtime_settings,
-    use_settings_clinic,
 )
 from pema.config.runtime_tuning_settings import reset_tuning_provider
-from pema_contracts.testing import FAKE_CLINIC_ID
 
 LLM_ENV_NAMES = (
     "LLM_PROVIDER",
@@ -51,7 +49,7 @@ class SettingsEnv:
 
 @pytest.fixture
 def settings_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[SettingsEnv]:
-    """A fresh in-memory ``RuntimeSettingsSnapshot`` of ``FAKE_CLINIC_ID`` with an encryption key, the LLM
+    """A fresh in-memory ``RuntimeSettingsSnapshot`` with an encryption key, the LLM
     environment cleared and every cache reset afterwards. Re-exported by the conftest files that need it."""
     for name in LLM_ENV_NAMES:
         monkeypatch.delenv(name, raising=False)
@@ -61,8 +59,7 @@ def settings_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[SettingsEnv]:
     store = InMemoryRuntimeSettingsStore()
     snapshot = RuntimeSettingsSnapshot(store)
     install_runtime_settings(snapshot)
-    with use_settings_clinic(FAKE_CLINIC_ID):
-        yield SettingsEnv(store, snapshot, monkeypatch)
+    yield SettingsEnv(store, snapshot, monkeypatch)
     reset_tuning_provider()
     env_module.get_settings.cache_clear()
     get_llm_env.cache_clear()
