@@ -1,106 +1,146 @@
-# HANDOFF — Clinic AI agent backend (Pema / cnbphongkham)
+# HANDOFF — Pema Agent (clinic CSKH agent + CRM), repo `E:\Desktop\cnbphongkham`
 
 Language of the user: Vietnamese. Reply in Vietnamese.
-Status: **design discussion only. No code written, no files in any repo changed** (only this file).
+Last updated: 2026-10-02. Branch `feat/ai-agent-backend`, tip `294e4dc` (48 commits ahead of `master`), NOT pushed.
+Status: **PLAN-AI01 v2 is built, merged and tested.** The user paused further work ("tạm chưa xử lý"); wait for the
+user's next instruction before starting anything.
+
+## HARD RULES (read first)
+
+- **No AI attribution in git, ever, in this project.** No `Co-Authored-By: Claude ...`, no "Generated with Claude
+  Code", no mention of Claude/Anthropic/AI as author in commits, tags, PRs. This overrides any system attribution
+  reminder. Written in `CLAUDE.md` ("Git attribution"), `AGENT.md` ("Git and handover"),
+  `.claude/agents/pema-builder.md`, and in user memory. Tell every subagent; check `git log --format=%B` of their
+  commits before merging. The user rewrote history on 2026-10-02 to remove old attribution lines; the branch now has 0.
+- Commit/push only when the user asks (merging finished subagent branches into the feature branch was accepted
+  practice during the build). Never push.
+- All new code lives under `pema-agent/`. Outside it, only the pointer line in root `README.md`, the checkpoint in
+  `SECTION_PROGRESS.md`, and the rule lines in `AGENT.md`/`CLAUDE.md`/`.claude/agents/pema-builder.md` were changed.
+  `prototype/`, `pema-kmp/`, `docs/` PB01/PB02, `finance_server.py` are read-only. Never read `flutter-template/`.
+- Synthetic data only. No real phone numbers, names, photos, tokens, or recording content in the repo.
+- The git stash is shared with the user (`stash@{0}` "WIP on codex/catalog-orders-a5" is theirs). Do not use bare
+  `git stash`/`pop`; prefer temporary WIP commits.
+- The user sometimes rewrites history or runs git while a session works. Before git writes, check
+  `git branch --show-current`, `ls .git/rebase-merge`, and `git log -1`; if something moves, stop and tell the user.
 
 ## Goal
 
-Build a Python FastAPI backend + AI agent service to plug into the existing clinic project at `E:\Desktop\cnbphongkham` (Pema Digital Clinic). That project becomes **one unified app: CRM + agent dashboard** for staff, with **Zalo** as the customer-facing channel for CSKH (customer care).
+`cnbphongkham` (Pema Digital Clinic) becomes one staff app: clinic CRM + AI agent dashboard, with Zalo as the patient
+channel for customer care (CSKH). Scope: CSKH by text toward patients (intake, post-treatment follow-up by milestone,
+symptom reports with red-flag escalation, booking/reminders). The agent engine is a full Python port of
+`vuhai2002/zalo-agent` (MIT; notice in `pema-agent/THIRD_PARTY_NOTICES.md`) plus clinic CRM and one Next.js FE.
 
-Client requirements (from the recorded conversation between clinic owner "A" and tech advisor "B"):
+## Current Progress (what exists, all on `feat/ai-agent-backend`)
 
-1. Intake questions (age, location, duration, itching, prior treatment, prior drugs, effect).
-2. Post-treatment follow-up at fixed milestones (e.g. 2 days after laser: pain/itch, medication used correctly, running out).
-3. Handle patient reports ("red, itchy" -> ask for a photo; later: personalised replies from a reaction-photo library, escalate to doctor; bot "learns").
-4. Booking and reminders (appointments, re-visit, birthdays, holidays).
-5. Patient data and analytics (phone, before/after photos, meds; auto before/after collage after 3-4 months).
-6. Vision: replicate to many private clinics, then Vietnam, then abroad. Priority: customer care first; advanced AI is "still far". A fears data leaks (declined a vendor's chatbot trial for that reason).
+Docs to read first: `pema-agent/docs/PLAN-AI01.md` (v2, §8 decisions), `CONTRACTS-AI01.md`, `PORT-MAP.md`,
+`SCOPE-AI01.md`, `SPEC-AI01.md`, `MODULEMAP-AI01.md`, `ARCH-AI01.md` (§13 open items), `SECURITY-REVIEW-AI01.md`
+(44 findings SEC-01..44), `pema-agent/README.md`, `pema-agent/infra/README.md`, `infra/ubuntu/HUONG-DAN-UBUNTU.md`.
 
-## Current Progress (conclusions only, nothing implemented)
+- **Backend** `pema-agent/backend/apps/api/pema/` (FastAPI, Python 3.12, uv workspace, SQLAlchemy async, Postgres +
+  pgvector, Redis): ported channels (Zalo Bot API; Zalo personal account via Node bridge `backend/bridges/zalo-personal`
+  using zca-js), middleware, agent loop (own tool loop on `openai` SDK + Anthropic + Gemini adapters), 15 tools,
+  conversation/memory, knowledge base, scheduler, MCP client; plus `clinic/` (CRM, RBAC, audit, RLS), `policy/`
+  (profiles `staff_assistant` / `patient_channel`, red flags before LLM, PII masking, zalo_uid identity),
+  `composition/` (wiring), `retention/`, `workers/main.py`. DB schemas `clinic.*`, `agent.*`, `clinic_agent`
+  (views/SECURITY DEFINER functions); roles `be_app` (API) and `agent_worker` (worker, no raw `clinic.*`).
+  Alembic single head `h_0008_merge_heads`.
+- **Frontend** `pema-agent/frontend/` (Next.js 16 App Router, TS, Tailwind v4): ops screens (today, inbox, review
+  queue, patient 360, templates), AI admin (accounts/QR, agents, model, tools, KB, schedules, MCP, usage, logs,
+  policy, audit), **staff management `/admin/users`** (newest). Mock backend `frontend/mock` covers every OpenAPI
+  operation. API address is read at runtime (`PEMA_API_INTERNAL_URL`, route handler proxy).
+- **Infra** `pema-agent/infra/`: docker-compose (postgres, redis, migrate, api, worker, frontend, bridge, caddy
+  profile `proxy` with `docker-compose.proxy.yml`), Dockerfiles, `.env.example`, scripts (secrets, roles, migrate,
+  backup/restore), Ubuntu-native guide, Caddy (`infra/caddy`, TLS auto/internal/off). Makefile targets include
+  `up-proxy`, `down-proxy`, `retention-dry-run`.
+- **LLM: third-party API** (2026-10-02, user decision, like zalo-agent): `LLM_PROVIDER`/`LLM_BASE_URL`/`LLM_API_KEY`/
+  `LLM_MODEL` or the admin Model screen; seed `LLM_BASE_URL=https://openrouter.ai/api/v1`, model/key empty. Local
+  Ollama is paused: commented blocks labelled `TẠM TẮT LLM LOCAL (2026-10-02)` in compose, Makefile (`up-ollama`),
+  `.env.example`, FE preset; `PEMA_EMBEDDING_ENABLED` defaults to false (KB = keyword search, as in zalo-agent).
+  Re-enable by searching that label. Consequence documented: conversation text leaves the clinic; `patient_channel`
+  still masks PII; `staff_assistant` does not force masking.
+- **Done after the main build (2026-10-02):** absolute session lifetime (`PEMA_SESSION_ABSOLUTE_DAYS`, default 7);
+  owner password reset `POST /api/v1/admin/users/{id}/password`; staff list/create/edit/lock
+  `GET/POST/PATCH /api/v1/admin/users` (perm `admin.users.read` owner+manager, `admin.users` owner only; no self-lock,
+  keep ≥1 active owner, lock/role change revokes sessions, no hard delete); retention purge (`pema/retention`,
+  `python -m pema.workers.retention [--dry-run]`, `PEMA_RETENTION_*_DAYS`, 0 = keep; clinical/messages default keep);
+  Caddy reverse proxy; `PEMA_TRUSTED_PROXIES`; runtime FE API URL.
 
-### `E:\500-AI-Agents-Projects` (open-source catalog repo)
+### Last verified results (staff-screen run, real Postgres pgvector pg17 + Redis 7)
 
-- 21 sample agents. Convention: exactly 5 files per agent (README.md, agent.py, requirements.txt, .env.example, metadata.yaml). CONTRIBUTION.md, DCO sign-off CI.
-- `13-customer-support-agent`: LangGraph + FAISS RAG demo. English escalation keywords, `route_after_escalation_check` is a no-op, pins old `langgraph==0.2.0`, no `.env.example`.
-- `21-pii-sanitization-agent`: calls the external TrustBoost API (itself a data exit) and strips phone numbers, which we need as an identifier.
-- No existing agent covers the requirement.
-
-### `E:\Desktop\cnbphongkham` (read-only exploration)
-
-- A **localStorage prototype**: vanilla HTML/JS, key `pema-demo-v2`, static `python -m http.server 4173`. Plus the KMP mobile app `pema-kmp/`, plus `prototype/finance_server.py` (stdlib `http.server` + SQLite, port 4174; the `X-Pema-Role` header is only a simulation). **There is no FastAPI anywhere** (grep confirmed).
-- `prototype/shared/crm-automation.js` and `crm-data.js` already hold the follow-up rule engine: d1/d3/d7 after laser, due, overdue, no_show, abandoned (45 days), dormant90/180, birthday (manual, "không gửi tự động"), `marketingOptOut`, channels `Gọi điện | Zalo | SMS | Ghi chú nội bộ`, entities `crmTasks / crmActivities / crmAutomationRules`. Demo clock fixed at 2026-09-20.
-- `docs/ARCH-PB01.md` already targets a pilot "modular monolith": API gateway, Identity/RBAC, Postgres, job queue, Zalo/SMS adapters, AI orchestration with a doctor-approval gate, plus an authorization matrix.
-- `AGENT.md` rules to respect: synthetic data only in the repo; AI drafts carry sources and are doctor-reviewed; no autonomous diagnosis, efficacy score or protocol change; docs flow SCOPE -> SPEC -> MODULEMAP -> ARCH; run the listed test suites; the role switch is not RBAC.
-
-### External projects evaluated (README level only, no code read)
-
-| Project | Verdict |
+| Suite | Result |
 |---|---|
-| Hermes Agent (Nous, Python, MIT) | Personal assistant, cron + chat channels, no Zalo, no RAG index, "not secured by default for multi-user". Not a core. |
-| OpenClaw (Node/TS, MIT) | Personal gateway, 20+ channels, Zalo plugin `@openclaw/zalo`. Heavy 2026 security history (CVE-2026-25253, ClawHavoc malicious skills, exposed instances). Not a core. |
-| `vuhai2002/zalo-agent` (TS/Node, SQLite FTS5, MIT, 6 stars) | Zalo-specific, KB + cron + MCP client (default-deny), good security design. Personal-account mode uses unofficial `zca-js` (ban risk). Bot API mode has only 7/15 tools, text only. Keyword-only search, single author. Usable as demo or channel layer, not as core. |
-| `BuilderIO/agent-native` (TS/React/Nitro) | Adopted only the principle "agent works through the same action layer as the UI", not the stack. |
+| pytest backend + evals | 4579 passed, 10 skipped, 0 failed |
+| ruff check/format, pyright strict, import-linter | clean (4 contracts kept) |
+| FE eslint/tsc/prettier, vitest | clean, 294 tests passed, `next build` OK |
+| Bridge (Node) | 296 tests passed (earlier run) |
+| Playwright 5 viewports (mock) | no overflow, no console errors |
+| Login through Caddy (internal TLS, seeded demo) | worked, cookie HttpOnly+Secure; owner reset revokes target session |
 
-### Machine (this PC)
+DB tests need `PEMA_TEST_DATABASE_URL` (superuser URL, image `pgvector/pgvector:pg17`) and `PEMA_TEST_REDIS_URL`;
+without them ~880 tests skip. On this Windows box: no `make` (run recipe commands by hand), set `UV_LINK_MODE=copy`,
+run `uv sync --all-packages` first.
 
-RTX 3060 12 GB, i5-12400F (6c/12t), 32 GB RAM, C: only 26 GB free, E: 1.1 TB free. User will run **Linux** and run the LLM on this PC. Linux mode (dual-boot/native vs WSL2) is NOT decided yet.
+### NOT verified yet
 
-## Decisions (confirmed by user unless marked "proposed")
-
-- Python **FastAPI** as BE and AI service. `cnbphongkham` = CRM + agent dashboard in one app. Zalo = CSKH channel to customers. (confirmed)
-- Language decision (confirmed by user): **Python (latest stable, 3.14 / 3.12+) for BE and AI service; FE later = Next.js (TypeScript)**. Rust/Julia/Mojo/C++ rejected for BE/orchestration (no ecosystem benefit; time is spent in GPU inference, which is already C++ via llama.cpp). A TypeScript BE was considered and dropped (my earlier "shared types with the dashboard" argument was wrong: the current dashboard is vanilla JS).
-- Because the FE will be Next.js: keep ALL business logic and permissions in the FastAPI `actions/` layer; Next.js is UI only (plus thin session-cookie/BFF handling if needed), never a second source of business rules. Generate TypeScript types/client from FastAPI's OpenAPI schema so FE and BE share contracts.
-- Concurrency (confirmed): BE uses **1 CPU core** (1 API process + scheduler); remaining CPU/GPU is reserved for the AI side. Multi-core comes from separate processes, not threads; free-threaded Python only as an optional experiment for `ai-worker`.
-- Inference engine: start with Ollama; move to `llama-server` (llama.cpp) if finer control is needed (parallel slots, JSON-schema/grammar-constrained output, KV-cache options, bge-m3 GGUF embeddings). `ai-worker` stays thin Python and talks to it over an OpenAI-compatible API.
-- Note: the existing prototype dashboard stays vanilla JS until the Next.js FE exists; during the transition it should call the FastAPI API instead of localStorage.
-- **PIVOT v2 (confirmed 2026-10-01, supersedes "channel layer only"):** build a **full Python derivative of `vuhai2002/zalo-agent`** — channels (Bot API + personal via Node bridge zca-js), agent loop, persona, all 15 tools (incl. images/video/documents/web), conversation memory (`save_memory`, rolling summary), knowledge base, scheduler, MCP client, token accounting — translated module-by-module with `# ported from:` headers and the original tests ported to pytest, PLUS clinic CRM, PLUS one Next.js FE for both CRM and AI configuration. Clinic-safety rules are applied via **policy profiles** (`staff_assistant` = original behaviour; `patient_channel` = draft→approval, red flags before LLM, PII masking, no `save_memory` from patient text, media/web tools off, identity verification), never by deleting ported features. Because this is a derivative work, `pema-agent/THIRD_PARTY_NOTICES.md` with the zalo-agent (and zca-js) MIT notice is required; user was told plainly. Plan v2 = `pema-agent/docs/PLAN-AI01.md`; package A must produce `PORT-MAP.md` (every `src/` TS file → Python module → owning package) and clone zalo-agent to a fixed path outside the repo.
-- Personal-account mode (`zca-js`, unofficial) is KEPT per user decision, as an optional adapter behind the same `ChannelPort`: feature-flagged and off by default, use a secondary Zalo account (never the clinic's main one), daily proactive cap, kill switch, encrypted credentials, risk documented (account suspension / ToS). Official Bot API / OA remain the default path.
-- Execution mode (confirmed): write the plan first, then fan out to **subagents (Sonnet 5.5, high effort)** working in separate worktrees; the user wants to be told BEFORE any subagent is started. Plan = `pema-agent/docs/PLAN-AI01.md` (goal, scope, architecture, repo layout, shared contracts, work packages A–G, conventions). **All new code/docs/infra live under one new folder `pema-agent/`** so the old prototype, KMP app and finance server are untouched. Subagent definition lives in the project at `.claude/agents/pema-builder.md` (model sonnet, effort high); note it is only loaded when a session starts with cwd = cnbphongkham. User asked to run ALL packages (A → B/C/D/E in parallel → F → G) in one go after a single "go", not stage by stage. **Next.js FE is now in scope** (package E). zalo-agent clone (depth 1) currently at the session scratchpad (`.../scratchpad/zalo-agent`); package A re-clones it to a fixed path outside the repo. (v1 said "no license file"; v2 is a derivative, so the notice file IS required — see PIVOT v2.)
-- Scope for now (confirmed): **CSKH only, text only toward patients**. No before/after collage. v2: image/video/document/web tools ARE ported (staff_assistant may use them) but are OFF in the `patient_channel` profile; a patient-sent image is flagged in the Inbox and handed to staff, not analysed.
-- **Separate the AI service from the BE** (LLM runs on this PC). Share one Postgres *server* but **not tables**: schemas `clinic.*` (BE-owned) and `ai.*` (AI-owned), separate DB roles; the AI role has no grant on `clinic.*`. (proposed; user said "tách riêng nhưng chung DB" and was told to share the server, not the tables)
-- AI reaches patient data only through BE **actions** (HTTP/MCP, service token) that return minimal, PII-masked context. AI writes drafts via action `review_item.create`; doctor/CSKH approves in the dashboard; BE sends. PII is masked before any LLM call; embeddings are computed locally.
-- BE layout (v2): one FastAPI app `pema-agent/backend/apps/api/pema/` with ported packages (`channels/`, `middleware/`, `agent/`, `conversation/`, `knowledge/`, `scheduler/`, `mcp/`, `documents/ images/ video/`, `config/`) plus new `clinic/` (domain, actions, crm_rules, rbac, audit) and `policy/` (profiles, redflags, pii). Processes: `api` (1 CPU core), `worker` (agent turns + scheduler), optional Node `zalo-personal-bridge`. Postgres replaces SQLite: schemas `clinic.*` and `agent.*`; worker role reads `clinic.*` only via granted views/functions. The agent's CRM tools are the same functions the REST routes call.
-- Frameworks (v2): **no LangGraph** for the agent loop — port zalo-agent's Vercel-AI-SDK loop as a hand-written tool loop on the `openai` SDK (OpenAI-compatible) with Anthropic/Gemini adapters, keeping step/tool-loop-guard/maxRetries semantics 1-1. FTS5+BM25+RRF → Postgres FTS + pgvector + RRF (vector is the only extension). SQLAlchemy async; atomic SQL + Redis locks replace the single-process-sync invariants. Tenant by `clinic_id` + RLS.
-- LLM on this PC (proposed): start with Qwen3-8B (Q5/Q6) + `bge-m3` embeddings on CPU, 1-2 concurrent requests, context 4-8k. Upgrade to a 14B Q4 only after an eval set shows 8B is insufficient. A VLM (Qwen2.5-VL-7B) only in a later phase, not concurrent with 14B. Ollama first, vLLM later (needs WSL2 on Windows). Link PC and server via Tailscale/WireGuard; never expose Ollama/Postgres/Redis to the internet. Queue job timeout (~2 min) falls back to human CSKH.
-- Dashboard has two layers: **Operations** (today's tasks from `crmTasks`, conversation Inbox, AI-draft review queue, Patient 360) and **Agent admin** (KB documents, ZNS templates, milestone rules, flow toggles, logs, eval). Admin only for owner/manager.
-- Zalo: official **OA + ZNS** for the patient channel. Staff never answer from Zalo directly; messages land in Patient 360/Inbox and replies are sent by BE. A **zalo_uid <-> patient verification flow** (phone share or code from reception, match `phone_hash`) is required before revealing any personal data.
-- Zalo vs Patient app (web + KMP): proposed split, not yet confirmed. Zalo = conversation and reminders; Patient app = history, prescriptions, consented photos, before/after.
-- Keep existing rules: birthday = no auto-send; `marketingOptOut` blocks marketing; doctor approval for AI drafts; red-flag keywords (bleeding, fever, pus, shortness of breath, also typed without diacritics) escalate to a doctor WITHOUT calling the LLM.
-- Legal: health data is sensitive personal data under Vietnam Decree 13/2023/NĐ-CP. The user was told to confirm with a lawyer (not verified by me).
+Real Zalo (Bot API token, QR login via bridge), any real LLM call (no API key on this machine), real Ollama on
+Ubuntu, NVIDIA driver/Tailscale/ufw/UPS on Ubuntu, Let's Encrypt (`auto` TLS), encrypted backups (age/gpg), FE on a
+real device or against the real API outside the proxy test, model quality (evals never run on a real model).
 
 ## What Worked
 
-- Reading `ARCH-PB01.md`, `AGENT.md` and `crm-automation.js` showed that the project already encodes the target architecture and the rule set. Reuse them.
-- WebFetch of each GitHub README plus targeted WebSearch (Zalo plugin, OpenClaw security, Hermes multi-user) was enough to rank candidates.
-- Hardware probe: `nvidia-smi` and `powershell.exe Get-CimInstance` from Git Bash.
+- Plan first, then one stage A (contracts, skeleton, PORT-MAP) alone, then parallel `pema-builder` subagents
+  (`.claude/agents/pema-builder.md`, Sonnet, `isolation: "worktree"`), then one integration subagent on a
+  temporary `integration/*` branch, then fast-forward `feat/ai-agent-backend`. Each subagent prompt names its owned
+  paths, forbids touching shared docs during parallel work, and requires a ≤30-line report with real test output.
+- Every worktree starts on old `master`: prompts must begin with `git reset --hard feat/ai-agent-backend`.
+- Per-package Postgres/Redis containers with unique names and random host ports avoid clashes in parallel runs.
+- After a rate-limit stop (HTTP 429, "session limit"), resuming each subagent with SendMessage from its uncommitted
+  worktree state lost no work; resume in small waves and tell them to commit often and not spawn sub-subagents.
+- Independent spot checks before merging: `git merge-base --is-ancestor` for every branch, grep for tracked `.env`/keys,
+  grep commit messages for attribution.
 
 ## What Didn't Work / Pitfalls
 
-- A large parallel batch of reads against `E:\Desktop\cnbphongkham` was rejected by the user (too broad). The user then asked to look only at the "web fastapi" part, which does not exist. Keep reads small and targeted.
-- A recursive `grep -r` over the whole `cnbphongkham` tree timed out (>120 s, moved to background). The tree contains `flutter-template/` (legacy; do not read/build), `node_modules`, `build`. Use Grep/Glob scoped to `prototype/`, `docs/`, `pema-kmp/`.
-- The user interrupted when I started scaffolding `agents/22-enterprise-rag-agent` ("chỉ lên ý tưởng trước"). Do not write code until the user asks.
-- Python 3.14.4 on the Windows box has no langchain installed, and the repo-pinned versions likely do not support 3.14; no `OPENAI_API_KEY` set. Use Python 3.11/3.12 on Linux.
-- A long Bash heredoc failed in this environment; use the Write tool for big files.
+- Launching 13 subagents at once hit the API session limit; all stopped mid-work. Launch in waves.
+- A subagent stopped by the user cannot be resumed; move its WIP via a temporary commit on its branch and start a new
+  subagent that resets onto that branch.
+- The user's history rewrite flattened merge commits and dropped fixtures from two conftest files
+  (`tests/api/routers/conftest.py`, `tests/config/conftest.py`); fixed forward in `2b8be9b`. After any rewrite,
+  compare `git diff <old-tip> HEAD -- pema-agent` before trusting the tree.
+- A full pytest run once failed `test_port_map_targets.py::test_every_src_file_has_an_existing_python_target` while
+  the repo was being rewritten; it passed alone and in the next full run. Treat as environment, re-check if it recurs.
+- `test_scheduler_loop` slow-job test used ms thresholds and flaked; now gated by an event.
+- Compose passes unset vars as empty strings: integer settings need empty-to-None validators (done for retention).
+- Next.js `rewrites()` are fixed at build time; hence the runtime route-handler proxy.
+- Long Bash heredocs sometimes fail here; use the Write tool or small Python scripts for big edits. Preserve CRLF/LF
+  of the existing file when editing on Windows.
+- Early in the project the user rejected broad reads of the repo and a recursive grep timed out (node_modules, build,
+  flutter-template). Scope searches to `pema-agent/`.
 
-## Decisions confirmed 2026-10-01 (recorded in PLAN-AI01 §8)
+## Open decisions for the clinic owner / doctors (do not decide in code)
 
-- No Zalo OA/ZNS yet → AI01 does Bot API only; `oa_api.py` is a stub. Reminders go via Bot API to patients who already messaged the bot, otherwise CSKH sends manually from the dashboard.
-- PC runs **native Ubuntu**, not WSL2 → package F writes Ubuntu-only install docs.
-- Vitech/MISA: not touched in AI01.
-- Keep **both** Zalo and the Patient app (web + KMP); Zalo = conversation + reminders, Patient app = history/prescriptions/photos.
-- Clinical review: doctors are on the team and will review templates/KB/AI drafts. Legal compliance (Decree 13/2023) is the owner's responsibility; code keeps PII masking, consent, audit, RLS.
-- Still undecided (not blocking): server location (clinic premises vs VN cloud), backup, UPS.
+1. May an owner lock / change role / reset password of another owner? (allowed now, except self and last active owner)
+2. Open `admin.users.read` to cs_staff/reception so the "Phụ trách" picker on Today can list staff? (not opened)
+3. Real retention periods per Decree 13/2023; deletion rules for decided review items, Zalo display names/contacts,
+   CRM activity notes, conversation summaries.
+4. SEC-22: staff manual sends carry a client-declared `proactive` flag (false bypasses kill switch, window, cap,
+   consent); choose a server-side rule and whether the kill switch also blocks replies.
+5. Drafts made by `review_item.create` carry no KB citations while AGENT.md wants sources on AI drafts.
+6. Doctor review: red-flag list (two provisional groups `severe_allergy`, `vascular_vision`), holding message, 46 eval
+   cases, RBAC matrix, persona sentence asking phone/receptionist code, auto reassurance, auto reminders before
+   template approval, proactive cap 10/day, MCP for patients.
+7. Data processing agreement with the third-party LLM vendor before real data; server location; file storage
+   (local volume vs object storage); public HTTPS for Zalo webhook (polling recommended until then); backup retention;
+   UPS budget. Zalo personal account (zca-js, unofficial) risks account lock: use a secondary account.
 
-## Next Steps
+## Next Steps (only when the user asks)
 
-**For the orchestrating agent in a session opened at `E:\Desktop\cnbphongkham` (branch `feat/ai-agent-backend`). When the user says "go", execute everything below without pausing for approval; the user wants ONE consolidated report at the end.**
-
-1. Read `pema-agent/docs/PLAN-AI01.md` (v2) fully. It is the single source of truth for scope, architecture, policy profiles, package list (section 6) and subagent conventions (section 7).
-2. Spawn subagents with `subagent_type: "pema-builder"` (defined in `.claude/agents/pema-builder.md`: model Sonnet 5.5, effort high), `isolation: "worktree"`, one per package. If `pema-builder` is not in the available agent list, fall back to `general-purpose` with `model: "sonnet"` and paste the contents of `pema-builder.md` into the prompt; tell the user effort could not be forced.
-3. **Stage A (alone):** package A — skeleton under `pema-agent/`, `pyproject` (uv), lint/pyright/ruff/import-linter, OpenAPI skeleton, DDL for `clinic.*` + `agent.*` + roles, `ChannelPort`, `THIRD_PARTY_NOTICES.md` (MIT notices for zalo-agent and zca-js), and **`pema-agent/docs/PORT-MAP.md`** mapping every file in zalo-agent `src/` to a Python module and an owning package. Package A also clones `https://github.com/vuhai2002/zalo-agent` (depth 1) to a fixed path OUTSIDE the repo (suggested `E:\Desktop\zalo-agent-ref`) and records that path in PORT-MAP. Review A's output before fan-out (contracts must be stable).
-4. **Stage B (parallel, 12 subagents):** B1 clinic core · B2 CRM rules→scheduler · C1 Zalo Bot API · C2 Zalo personal (Node bridge zca-js) · D1 agent engine · D2 conversation/memory · D3 knowledge (+pgvector) · D4 tools · D5 MCP client · S scheduler · P policy profiles/red flags/PII/identity · E Next.js FE (CRM ops + AI admin). F may start its infra part in parallel. Each prompt: name the package, point to PLAN-AI01 §6 row + §7 + PORT-MAP rows it owns, require the ≤30-line report.
-5. **Stage F:** docs (SCOPE/SPEC/MODULEMAP/ARCH-AI01 under `pema-agent/docs/`, `pema-agent/README.md`, one pointer line in root `README.md`, checkpoint in `SECTION_PROGRESS.md`).
-6. **Stage G:** merge all worktrees into `feat/ai-agent-backend`, run every test suite, closed-loop check for both policy profiles, security review (PII in logs, DB grants, tokens, SSRF), verify PORT-MAP has no unported file. Report failures plainly; do not claim green without output.
-7. Final report to the user (Vietnamese): what exists, what passed/failed, assumptions, open items. Do not commit or push unless the user asks; if asked, follow `AGENT.md` and the attribution line from the session reminder.
-8. Standing rules: never commit real patient data, phone numbers, photos or tokens; never copy recording content (names/companies) into any repo; code outside `pema-agent/` is read-only except the two pointer edits in step 5.
-9. Optional, only on request: a trimmed 5-file `agents/22-...` demo in `500-AI-Agents-Projects` (needs DCO sign-off there).
+1. Small leftovers: rate limit on `PATCH /admin/users`; stale sentence in `frontend/README` saying change-password is
+   disabled (`POST /auth/password` exists); `TableShell` missing space when `ghimCotCuoi` is on.
+2. Apply the owner's answers to the open decisions above (each is a small, isolated change).
+3. Real-environment acceptance: Ubuntu box, real LLM key, Zalo Bot API test bot, then QR login on a secondary
+   personal account, then `evals` against the chosen model.
+4. Housekeeping when the user agrees: 24 `.claude/worktrees/agent-*` worktrees, 24 `worktree-agent-*` branches and
+   the temporary branches `integration/ai01` and `integration/h` are still on disk; nothing was deleted. All their
+   work is already in `feat/ai-agent-backend` except the abandoned v1 worktrees. Docker build cache remains.
+5. PR to `master` only if the user asks (no AI attribution in the PR body).
