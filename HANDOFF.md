@@ -185,7 +185,7 @@ real device or against the real API outside the proxy test, model quality (evals
    (local volume vs object storage); public HTTPS for Zalo webhook (polling recommended until then); backup retention;
    UPS budget. Zalo personal account (zca-js, unofficial) risks account lock: use a secondary account.
 
-## Package M — per-patient care agent (IN PROGRESS on `feat/single-tenant`, 2026-10-03)
+## Package M — per-patient care agent (BUILT on `feat/single-tenant`, 2026-10-03; wiring and real-model run still open)
 
 ### Progress log (one line per step; merge commit on `feat/single-tenant`; gate = full backend pytest + ruff +
 pyright strict + import-linter run by the director in the step's worktree, 0 attribution lines, report received)
@@ -199,10 +199,40 @@ pyright strict + import-linter run by the director in the step's worktree, 0 att
 | M2b control state machine, handoff skill, depth D1–D5 | `care/m2b` `c176c0b`+`e820fae`, retry 1 `care/m2b-fix` `dcd2adb` | `f457314` | attempt 1 FAILED gate (47 failed: `extra={"created": …}` reserved LogRecord key in `control.py`, hidden in care-only runs); retry 1: pytest 5100 / 10 / 0; lint clean; guard test `test_log_extra_keys.py` | Red flags → D5 with no model call; failed model → D4 conf 0; all thresholds `pending_doctor_approval`; open: `ReviewKind` has no `suggestion`; `handoff_requests` needs a `summary` column; wiring for `MessageTextSource`/`DepthLlm` |
 | M2c staff routing, SLA, 24/7 on-call, reminder pause/reconcile | `care/m2c` `fca8103`+`0f7cbff`+`eb563dd` | `eac431e` | pytest 5206 / 10 / 0; lint clean (pre-fix run had 121 failures, all the M2b LogRecord bug) | Migration `m_0002_paused_reminders`; chain state in `handoff_requests.candidates`; on-call read from DB each call; SLA 5/30 min and `max_late_hours` all `pending_doctor_approval`; open: real `StaffNotify`/`SlaScheduler`/`DueReminderSource` adapters + periodic `sweep_overdue`; no re-alert after chain ends at on-call (product decision); disabled users stay in chain (`staff_profile` has no active flag) |
 | M5 supervision + admin screens, care API contract | `care/m5` `e6cbf1b`+`efa5be9`+`f5c4bff` | `f829a70` | pytest 5223 / 10 / 0; lint clean; FE eslint/tsc/prettier clean, vitest 56 files / 459, `gen:types` no diff, `next build` OK | Status partial: 15 routes `/api/v1/care/**` + perms `care.read/act/admin/matrix/approve` + events `handoff.changed`/`care.changed`; routes answer 503 until a `CareSupervision` impl is installed as `app.state.care` (NOT built — needs a wiring package: SQL impl over `SqlControlStore`/`CareControl`/`RoutingService`/`autonomy`, audit rows, worker-side event publish, doctor scope); screens live under `(admin)/care` and `(admin)/admin/care` (no `(ops)` group); screenshots `pema-agent/demo-assets/m5/` |
+| M6 evaluation, labelled cases, report | `care/m6` `fa34e4d`+`71aaf97` | `1c5994c` | pytest 5256 / 10 / 0 (incl. evals); lint clean | `evals/care/`: 83 synthetic cases, `run_eval.py`, generated `report.md`; everything model-free measured, model numbers NOT MEASURED (no Ollama here; commands in report §9); defects found, not fixed: D1 rule misses "mở cửa mấy giờ" (M2b), serious-edit recall 10/12 (M3 negation list), `d4-10` over-triaged to D5 (doctor decides); PyYAML absent → `yaml_subset.py` stopgap |
 
 Pushed to `origin/feat/single-tenant` after each merge (user instruction 2026-10-03: push step by step, write HANDOFF
 when done). Running protocol: one `pema-builder` per recipe in a hand-made worktree (`git worktree add E:/... <base>`),
 rolling start (next step starts from the previous step's first commit, before its gate), ≤4 agents at once.
+
+### Result of package M (2026-10-03, all 8 steps merged, tip pushed)
+
+M6 numbers (`pema-agent/evals/care/report.md`, run `PYTHONPATH=.. uv run python -m evals.care.run_eval` in
+`pema-agent/backend`; tests `uv run pytest -c pyproject.toml ../evals/care`): D5 recall 19/19 = 100% with 0 model calls
+(95/95 after 5 rewrites each, 0/66 changed without diacritics); oracle depth accuracy 98.8%, handoff precision/recall
+100%, 0 false negatives; rules-only 0 false negatives, 21 safe false positives; auto-send gate 0 hard-rule violations in
+36,288 combinations; routing chain ends at on-call 220/220, SLA correct 330/330, no model; reminders 0 sent / 0 model
+calls while a person holds the conversation (97 scenarios); orchestration-only p50/p95: 0.08/0.13 ms (D1), 0.12/0.18 ms
+(D2), 2.67/3.54 ms (D2 + two specialists), 0.28/0.46 ms (D5 handoff); tick over 500 patients 2–4 ms, 0 depth calls,
+reply calls = drafts queued. NOT MEASURED (needs Ubuntu + RTX 3060 + Qwen3-8B, commands in report §9): real D2–D4
+accuracy, per-call latency/tokens, tokens per patient per month.
+
+What is NOT wired (package M has no live path yet; nothing talks to a patient): a `CareSupervision` SQL implementation
+installed as `app.state.care` (M5 routes answer 503 until then); adapters for `Harness`, `PatientContextLoader`,
+`ChannelSend`, `Scheduler`, `ReviewSink`, `MessageTextSource`, `DepthLlm`, `StaffNotify`, `SlaScheduler`,
+`DueReminderSource`, `SlotSearch`; `build_delegate_spec` into `DefaultToolRegistry` + `CareTurnScope` in
+`ToolContext.extras` + `seed_specialists`; webhook/B2 → `CareEventBus.publish`; a `TickRuleSource`; `create_patient` →
+`CareAgentPairing.on_patient_created`; B1 approve → `ReviewDecidedHook`; periodic `sweep_overdue`; worker-side publish of
+`handoff.changed`/`care.changed`. Suggested next package "M7 wiring" (one recipe, after the owner agrees).
+
+Schema follow-ups (one migration): `actions_log.kind`/`initiator`/`reason`, `handoff_requests.summary`,
+`care_agents.autonomy_override` with `none_as_null=True`, `ReviewKind.suggestion`; `patient_ownership` vs
+`patient.doctor_id` sync; `staff_profile` active flag.
+
+Doctor/owner decisions (all defaults flagged `pending_doctor_approval`): depth/autonomy matrix, N and confidence
+threshold, serious-edit rule, holding-message wording, SLA minutes, `max_late_hours`, red-flag list (`d4-10`), re-alert
+after the chain ends at on-call, whether night replies wait for 08:00, whether a rejected draft demotes, staff skill
+list and the real 24/7 number.
 
 
 What it is: one care agent per patient (1-to-1 pairing), proactive on events and a 06:00 tick; autonomy levels L0–L2
@@ -243,11 +273,12 @@ How to run it (when the user says so):
 2. Apply the owner's answers to the open decisions above (each is a small, isolated change).
 3. Real-environment acceptance: Ubuntu box, real LLM key, Zalo Bot API test bot, then QR login on a secondary
    personal account, then `evals` against the chosen model.
-4. Housekeeping when the user agrees: about 35 `.claude/worktrees/*` worktrees (incl. `st-g2a`), the `worktree-agent-*`
+4. Housekeeping when the user agrees: about 45 `.claude/worktrees/*` worktrees (incl. `st-g2a`, `care-m1`…`care-m6`,
+   `care-m2b-fix`) and the `care/*` branches, the `worktree-agent-*`
    branches and the temporary branches `integration/ai01`, `integration/h`, `integration/st`, `integration/st-live` are
    still on disk; nothing was deleted. All their
    work is already in `feat/ai-agent-backend` except the abandoned v1 worktrees. Docker build cache remains.
 5. PR to `master` only if the user asks (no AI attribution in the PR body).
-6. Package M (per-patient care agent, multi-agent): see the section "Package M" above for plan, recipes, order and the
-   single-tenant adaptations; nothing built yet.
+6. Package M is built (see "Result of package M" above). Next: the owner's answers to the decisions listed there, then
+   an "M7 wiring" recipe, then the real-model run on the Ubuntu box.
 7. Optional: cherry-pick live updates / assignee picker to `feat/ai-agent-backend` (default: no).
