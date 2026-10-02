@@ -37,11 +37,13 @@ from pema.clinic.domain import review as rules
 from pema.clinic.models import Conversation, Message, Patient, ReviewItem
 from pema.clinic.rbac import is_clinical, is_doctor_scoped, require, require_any
 from pema.core.db import ClinicDatabase
+from pema.live import emit_live
 from pema_contracts.actions import ActionContext
 from pema_contracts.appointments import AppointmentCreate
 from pema_contracts.common import Page
 from pema_contracts.conversations import ConversationStatus, MessageDirection, MessageStatus, SenderType
 from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.live import LiveEventType
 from pema_contracts.review import (
     ReviewApprove,
     ReviewEscalate,
@@ -56,6 +58,14 @@ from pema_contracts.roles import Permission
 MAX_SEND_CHARS = 2000
 """Zalo text limit (``ZALO_BOT_MAX_TEXT_CHARS``); a longer approved text is refused, not silently cut."""
 OPEN_STATUSES = (ReviewStatus.PENDING.value, ReviewStatus.ESCALATED.value)
+
+
+def _announce(item: ReviewItemOut) -> None:
+    """After the commit: the review queue changed, and so did the conversation it belongs to (its status,
+    its pending-review flag)."""
+    emit_live(LiveEventType.REVIEW_CHANGED, item.id)
+    if item.conversation_id is not None:
+        emit_live(LiveEventType.INBOX_CHANGED, item.conversation_id)
 
 
 def _visible_to(ctx: ActionContext) -> list[Any]:
@@ -288,6 +298,7 @@ async def approve_review_item(
             },
         )
         result = review_out(item, code)
+    _announce(result)
     if message_id is not None:
         await deliver_queued_message(db, ctx, message_id, delivery)
     return result
@@ -315,7 +326,9 @@ async def reject_review_item(
         with lost_race_is_conflict():
             await session.flush()
         await audit.record(session, ctx, "review_item.reject", "review_item", item.id, {"kind": item.kind})
-        return review_out(item, code)
+        rejected = review_out(item, code)
+    _announce(rejected)
+    return rejected
 
 
 async def escalate_review_item(
@@ -338,4 +351,6 @@ async def escalate_review_item(
         with lost_race_is_conflict():
             await session.flush()
         await audit.record(session, ctx, "review_item.escalate", "review_item", item.id, {"kind": item.kind})
-        return review_out(item, code)
+        escalated = review_out(item, code)
+    _announce(escalated)
+    return escalated

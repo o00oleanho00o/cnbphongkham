@@ -8,6 +8,7 @@ from fastapi import APIRouter, Security, status
 
 from pema.api.dashboard_auth import Ctx, Database, Delivery
 from pema.api.deps import ERROR_RESPONSES, IdempotencyKey, Limit, Offset, cookie_scheme
+from pema.api.live_access import LiveDep, actor_id, with_viewers
 from pema.clinic.actions import conversations
 from pema_contracts.common import Page
 from pema_contracts.conversations import (
@@ -18,6 +19,7 @@ from pema_contracts.conversations import (
     MessageCreate,
     MessageOut,
 )
+from pema_contracts.live import PresenceBeat
 
 router = APIRouter(tags=["conversations"], responses=ERROR_RESPONSES)
 staff = [Security(cookie_scheme)]
@@ -32,6 +34,7 @@ staff = [Security(cookie_scheme)]
 async def list_conversations(
     db: Database,
     ctx: Ctx,
+    live: LiveDep,
     conversation_status: ConversationStatus | None = None,
     assigned_user_id: UUID | None = None,
     patient_id: UUID | None = None,
@@ -40,7 +43,7 @@ async def list_conversations(
     limit: Limit = 50,
     offset: Offset = 0,
 ) -> Page[ConversationSummary]:
-    return await conversations.list_conversations(
+    page = await conversations.list_conversations(
         db,
         ctx,
         status=conversation_status,
@@ -51,6 +54,7 @@ async def list_conversations(
         limit=limit,
         offset=offset,
     )
+    return page.model_copy(update={"items": await with_viewers(db, ctx, live, page.items)})
 
 
 @router.get(
@@ -59,8 +63,9 @@ async def list_conversations(
     dependencies=staff,
     summary="One conversation",
 )
-async def get_conversation(conversation_id: UUID, db: Database, ctx: Ctx) -> ConversationOut:
-    return await conversations.get_conversation(db, ctx, conversation_id)
+async def get_conversation(conversation_id: UUID, db: Database, ctx: Ctx, live: LiveDep) -> ConversationOut:
+    conversation = await conversations.get_conversation(db, ctx, conversation_id)
+    return (await with_viewers(db, ctx, live, [conversation]))[0]
 
 
 @router.patch(
@@ -70,9 +75,10 @@ async def get_conversation(conversation_id: UUID, db: Database, ctx: Ctx) -> Con
     summary="Assign or change status",
 )
 async def update_conversation(
-    conversation_id: UUID, body: ConversationUpdate, db: Database, ctx: Ctx
+    conversation_id: UUID, body: ConversationUpdate, db: Database, ctx: Ctx, live: LiveDep
 ) -> ConversationOut:
-    return await conversations.update_conversation(db, ctx, conversation_id, body)
+    conversation = await conversations.update_conversation(db, ctx, conversation_id, body)
+    return (await with_viewers(db, ctx, live, [conversation]))[0]
 
 
 @router.post(
@@ -117,3 +123,35 @@ async def send_message(
     idempotency_key: IdempotencyKey = None,
 ) -> MessageOut:
     return await conversations.send_message(db, ctx, conversation_id, body, delivery=delivery)
+
+
+@router.post(
+    "/conversations/{conversation_id}/presence",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=staff,
+    summary="Presence heartbeat: I am looking at or answering this conversation",
+    description=(
+        "Sent every 15 seconds while the conversation is open; an entry expires after 30 seconds. A WARNING "
+        "shown to colleagues in `viewers`, never a lock: it does not block sending. Needs the right to read "
+        "the conversation (403, or 404 when it is not visible). Answers 204 also when the presence store is "
+        "unavailable."
+    ),
+)
+async def touch_presence(
+    conversation_id: UUID, body: PresenceBeat, db: Database, ctx: Ctx, live: LiveDep
+) -> None:
+    await conversations.require_conversation_access(db, ctx, conversation_id)
+    if live is not None:
+        await live.presence.beat(conversation_id, actor_id(ctx), body.state)
+
+
+@router.delete(
+    "/conversations/{conversation_id}/presence",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=staff,
+    summary="Presence: I left this conversation",
+)
+async def leave_presence(conversation_id: UUID, db: Database, ctx: Ctx, live: LiveDep) -> None:
+    await conversations.require_conversation_access(db, ctx, conversation_id)
+    if live is not None:
+        await live.presence.leave(conversation_id, actor_id(ctx))

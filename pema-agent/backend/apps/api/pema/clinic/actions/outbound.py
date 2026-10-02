@@ -24,12 +24,14 @@ from pema.clinic.actions._common import now
 from pema.clinic.actions._mappers import message_out
 from pema.clinic.models import Conversation, Message
 from pema.core.db import ClinicDatabase
+from pema.live import emit_live
 from pema.shared.logger import create_logger
 from pema_contracts.actions import ActionContext
 from pema_contracts.channel import ChannelKind, SendResult, SendStatus
 from pema_contracts.common import ApiModel
 from pema_contracts.conversations import MessageOut, MessageStatus
 from pema_contracts.errors import ErrorCode
+from pema_contracts.live import LiveEventType
 
 _log = create_logger("clinic.outbound")
 
@@ -144,4 +146,6 @@ async def deliver_queued_message(
                 row.id,
                 {"status": row.status, "error_code": row.error_code},
             )
-        return message_out(row)
+        delivered = message_out(row)
+    emit_live(LiveEventType.INBOX_CHANGED, delivered.conversation_id)
+    return delivered
