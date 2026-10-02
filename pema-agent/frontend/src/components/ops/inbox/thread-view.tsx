@@ -4,6 +4,9 @@
 // Safety (PLAN-AI01 section 5, patient_channel): a patient photo is NEVER analysed here. The backend flags
 // the conversation and hands it to a person (review item `media_flag`); the UI only shows that flag and a
 // placeholder where a message had no text. The AI draft shown in the thread is a draft, not a sent message.
+// Several people at once: the thread reloads quietly when the page says it changed (`liveTick`), keeping the
+// scroll position (it only follows new messages when you were already at the bottom) and the draft being typed;
+// a presence beat tells colleagues you are viewing or replying, and theirs is shown as a warning, never a lock.
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
@@ -11,6 +14,7 @@ import { SelectMenu, type SelectOption } from "@/components/admin/shared/select-
 import { Badge } from "@/components/admin/shared/ui-bits";
 import { IconImageOff } from "@/components/admin/shared/ops-icons";
 import { conversationTitle } from "@/components/ops/inbox/conversation-list";
+import { PresenceLine } from "@/components/ops/inbox/presence-line";
 import {
   ListSkeleton,
   Notice,
@@ -21,8 +25,18 @@ import {
 import { useToast } from "@/components/ops/toast";
 import type { Schemas } from "@/lib/api";
 import { ApiError, errorMessage, http, newIdempotencyKey, unwrap } from "@/lib/api/client";
+import { viewersOf, type PresenceViewer } from "@/lib/live/live-types";
+import { useAssignableStaff } from "@/lib/live/use-assignable-staff";
+import { usePresenceHeartbeat } from "@/lib/live/use-presence-heartbeat";
+import {
+  OWNER_KEEP,
+  initialOwnerValue,
+  ownerIdFor,
+  ownerOptions,
+} from "@/lib/ops/assignee-options";
 import { formatDateTime } from "@/lib/ops/format";
 import { CONVERSATION_STATUS_LABEL, MESSAGE_STATUS_LABEL, SENDER_LABEL } from "@/lib/ops/labels";
+import { presenceStateFor, presenceText, someoneReplying } from "@/lib/ops/presence-view";
 import { useSession } from "@/lib/session/session-context";
 import { useLoad } from "@/lib/use-load";
 
@@ -34,6 +48,8 @@ const STATUS_OPTIONS: SelectOption[] = (
 ).map((value) => ({ value, label: CONVERSATION_STATUS_LABEL[value] }));
 
 const MAX_REPLY = 2000;
+/** Closer than this to the bottom counts as "reading the latest": new messages scroll into view. */
+const NEAR_BOTTOM_PX = 80;
 
 type Loaded = {
   conversation: Conversation;
@@ -90,10 +106,16 @@ function MessageBubble({ message }: { message: Message }) {
 export function ThreadView({
   conversationId,
   onChanged,
+  liveTick = 0,
+  listViewers,
 }: {
   conversationId: string;
   /** The list should reload (status, unread or last message changed). */
   onChanged: () => void;
+  /** Changes whenever the page learned (event or polling) that this conversation may have changed. */
+  liveTick?: number;
+  /** Presence as the list last saw it; preferred over the detail's own because the list refreshes on events. */
+  listViewers?: readonly PresenceViewer[];
 }) {
   const { user, can } = useSession();
   const toast = useToast();
@@ -102,6 +124,9 @@ export function ThreadView({
   const [sending, setSending] = useState(false);
   const sendKey = useRef(newIdempotencyKey());
   const endRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLOListElement>(null);
+  const atBottom = useRef(true);
+  const { staff, error: staffError } = useAssignableStaff();
 
   const load = useCallback(
     async (signal: AbortSignal): Promise<Loaded> => {
@@ -129,7 +154,16 @@ export function ThreadView({
     },
     [conversationId, can],
   );
-  const { data, error, loading, reload, setData } = useLoad(load);
+  const { data, error, loading, reload, refresh, setData } = useLoad(load);
+
+  const seenTick = useRef(liveTick);
+  useEffect(() => {
+    if (liveTick === seenTick.current) return;
+    seenTick.current = liveTick;
+    refresh();
+  }, [liveTick, refresh]);
+
+  usePresenceHeartbeat(conversationId, presenceStateFor(text));
 
   const unread = data?.conversation.unread_count ?? 0;
   useEffect(() => {
@@ -145,8 +179,16 @@ export function ThreadView({
 
   const messageCount = data?.messages.length ?? 0;
   useEffect(() => {
+    // A new message only pulls the view down when the person was already reading the latest one.
+    if (!atBottom.current) return;
     endRef.current?.scrollIntoView({ block: "end" });
   }, [messageCount, conversationId]);
+
+  const trackScroll = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    atBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight <= NEAR_BOTTOM_PX;
+  }, []);
 
   const mediaFlags = useMemo(
     () => data?.flags.filter((f) => f.kind === "media_flag") ?? [],
@@ -215,6 +257,20 @@ export function ThreadView({
   const closed = conversation.status === "closed";
   const canReply = can("conversation.reply");
   const mine = conversation.assigned_user_id === user.id;
+  const viewers = listViewers ?? viewersOf(conversation);
+  const ownerInput = {
+    me: user,
+    currentId: conversation.assigned_user_id,
+    staff,
+    keepWhenUnassigned: true,
+  };
+
+  function changeOwner(value: string) {
+    if (value === OWNER_KEEP) return;
+    void patchConversation({
+      assigned_user_id: ownerIdFor(value, user, conversation.assigned_user_id),
+    });
+  }
 
   return (
     <section className="gc-card flex min-h-[60dvh] flex-col lg:max-h-[calc(100dvh-9rem)]">
@@ -235,9 +291,10 @@ export function ThreadView({
               "Chưa gắn hồ sơ bệnh nhân"
             )}
           </p>
+          <PresenceLine viewers={viewers} className="mt-1" />
         </div>
         {canReply && (
-          <div className="flex items-center gap-2">
+          <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
             {!mine && (
               <SecondaryButton
                 onClick={() => void patchConversation({ assigned_user_id: user.id })}
@@ -245,7 +302,20 @@ export function ThreadView({
                 Nhận xử lý
               </SecondaryButton>
             )}
-            <div className="w-44">
+            <div
+              className="sm:w-64"
+              title={staffError ? "Không tải được danh sách nhân viên" : undefined}
+            >
+              <SelectMenu
+                size="md"
+                ariaLabel="Phụ trách hội thoại"
+                prefix="Phụ trách:"
+                value={initialOwnerValue(ownerInput)}
+                options={ownerOptions(ownerInput)}
+                onChange={changeOwner}
+              />
+            </div>
+            <div className="sm:w-44">
               <SelectMenu
                 size="md"
                 ariaLabel="Trạng thái hội thoại"
@@ -301,7 +371,12 @@ export function ThreadView({
         )}
       </div>
 
-      <ol className="flex-1 space-y-3 overflow-y-auto px-4 py-4" aria-label="Tin nhắn">
+      <ol
+        ref={listRef}
+        onScroll={trackScroll}
+        className="flex-1 space-y-3 overflow-y-auto px-4 py-4"
+        aria-label="Tin nhắn"
+      >
         {data.messages.map((m) => (
           <MessageBubble key={m.id} message={m} />
         ))}
@@ -310,6 +385,14 @@ export function ThreadView({
 
       {canReply && (
         <form onSubmit={(e) => void send(e)} className="border-t border-line p-3">
+          {someoneReplying(viewers) && (
+            <div className="mb-2">
+              <Notice tone="warn">
+                {presenceText(viewers.filter((v) => v.state === "replying"))}. Bạn vẫn nhắn được,
+                nhưng hãy hỏi đồng nghiệp trước để khách không nhận hai tin trùng nhau.
+              </Notice>
+            </div>
+          )}
           {sendError && (
             <div className="mb-2">
               <Notice tone="error">{sendError}</Notice>

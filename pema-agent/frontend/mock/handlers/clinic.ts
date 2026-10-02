@@ -26,6 +26,7 @@ import {
   type Schemas,
   type Session,
 } from "../core";
+import { viewersFor } from "../live-bus";
 
 type S = Schemas;
 
@@ -515,12 +516,13 @@ export function register(r: Router): void {
           ).includes(foldForSearch(q)),
       )
       .toSorted((a, b) => (b.last_message_at ?? "").localeCompare(a.last_message_at ?? ""))
-      .map(conversationSummary);
+      .map((c) => ({ ...conversationSummary(c), viewers: viewersFor(c.id, session(ctx).userId) }));
     return { body: paginate(found, ctx.query) };
   });
-  r.get("/api/v1/conversations/{conversation_id}", "conversation.read", (ctx): Reply => ({
-    body: findOr404(conversations, ctx.params.conversation_id ?? "", "hội thoại"),
-  }));
+  r.get("/api/v1/conversations/{conversation_id}", "conversation.read", (ctx): Reply => {
+    const conv = findOr404(conversations, ctx.params.conversation_id ?? "", "hội thoại");
+    return { body: { ...conv, viewers: viewersFor(conv.id, session(ctx).userId) } };
+  });
   r.patch("/api/v1/conversations/{conversation_id}", "conversation.reply", (ctx): Reply => {
     const conv = findOr404(conversations, ctx.params.conversation_id ?? "", "hội thoại");
     const { version, assigned_user_id, status } = bodyOf<S["ConversationUpdate"]>(ctx);

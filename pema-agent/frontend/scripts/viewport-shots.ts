@@ -3,6 +3,7 @@
 // page errors, console errors, failed requests, and any document-level horizontal overflow.
 //
 //   SHOTS_BASE_URL=http://localhost:3000 SHOTS_ROLE=owner SHOTS_ROUTES=/today,/review pnpm shots
+//   (SHOTS_VIEWPORTS=390x844,1440x900 limits the viewports)
 import { mkdirSync } from "node:fs";
 
 import { chromium, type Page } from "playwright";
@@ -59,7 +60,6 @@ const EMAIL: Record<string, string> = {
 
 async function signIn(page: Page): Promise<void> {
   await page.goto(`${BASE}/login`);
-  await page.fill("#clinic", "pema-demo");
   await page.fill("#email", EMAIL[ROLE] ?? EMAIL.owner ?? "");
   await page.fill("#password", "demo1234");
   await Promise.all([
@@ -78,7 +78,13 @@ async function main(): Promise<void> {
   const browser = await chromium.launch();
   const problems: string[] = [];
 
-  for (const vp of VIEWPORTS) {
+  // optional, e.g. SHOTS_VIEWPORTS=390x844,1440x900
+  const onlyViewports = process.env.SHOTS_VIEWPORTS?.split(",").filter(Boolean) ?? [];
+  const viewports = VIEWPORTS.filter(
+    (v) => onlyViewports.length === 0 || onlyViewports.includes(v.name),
+  );
+
+  for (const vp of viewports) {
     const context = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
     const page = await context.newPage();
     const errors: string[] = [];
@@ -94,8 +100,9 @@ async function main(): Promise<void> {
 
     for (const route of routes) {
       errors.length = 0;
-      await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
-      await page.waitForTimeout(400);
+      // "load", not "networkidle": the live event stream (SSE) is a request that never ends.
+      await page.goto(`${BASE}${route}`, { waitUntil: "load" });
+      await page.waitForTimeout(1200);
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
