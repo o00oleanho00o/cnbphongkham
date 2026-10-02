@@ -11,8 +11,11 @@ the priority queue. ``CareTurnWorker`` takes them one at a time (one GPU) and ca
 2. ``conversation_control.state`` is not ``AUTO`` (``HANDOFF_ROUTING`` or ``STAFF``, PLAN-M section 5) -> the
    agent is silent to the patient: the history is kept by the channel pipeline and, when a ``SuggestionSink``
    is wired (M2b), a PATIENT message gets a suggestion for the staff (``review_item`` kind
-   ``suggestion``, never sent); everything else only writes a ``paused`` row. What M2c adds for ``STAFF``
-   (reminders) is not here;
+   ``suggestion``, never sent); everything else only writes a ``paused`` row. M2c: a scheduled REMINDER
+   (milestone due, overdue, no-show, dormant, birthday, session completed) is recorded as paused with its
+   prepared text for the owning staff member when a ``ReminderPauser`` is wired (``pema.care.reminders``);
+   nothing is sent and no staff task is made. A reminder that comes back after the release (payload
+   ``late_original_at``) carries S's label "(nhắc trễ, lịch gốc HH:MM)" in front of the text, draft or send;
 3. the PII-masked context is loaded (``PatientContextLoader``), the skill ``handoff`` is asked (M2b). A
    ``handoff`` verdict stops the turn here: when a ``HandoffRequester`` is wired (``CareControl``) it
    moves the conversation to ``HANDOFF_ROUTING`` and sends the one holding message; without one (the stand-in
@@ -71,6 +74,7 @@ from pema.care.ports import (
     PatientContext,
     PatientContextLoader,
     PatientDirectory,
+    ReminderPauser,
     ReviewSink,
     Scheduler,
     SendOutcome,
@@ -78,7 +82,9 @@ from pema.care.ports import (
     SuggestionSink,
 )
 from pema.care.priority import CarePriorityQueue
+from pema.care.reminders import LATE_ORIGINAL_AT
 from pema.config.runtime_tuning_settings import bot_time_zone, get_tuning_int
+from pema.scheduler.scheduled_job_prompt import with_late_label
 from pema.shared.zone_time import today_key
 from pema_contracts.scheduler import ProactiveSendGuard
 
@@ -114,6 +120,7 @@ class TurnStatus(StrEnum):
     SKIPPED_STATE = "skipped_state"
     HANDOFF = "handoff"
     SUGGESTED = "suggested"
+    REMINDER_PAUSED = "reminder_paused"
     NO_ACTION = "no_action"
     FAILED = "failed"
     DRAFTED = "drafted"
@@ -151,6 +158,7 @@ class CareTurnRunner:
         cap_per_day: int | None = None,
         requester: HandoffRequester | None = None,
         suggestions: SuggestionSink | None = None,
+        reminders: ReminderPauser | None = None,
     ) -> None:
         self._store = store
         self._context_loader = context_loader
@@ -166,6 +174,7 @@ class CareTurnRunner:
         self._cap_per_day = cap_per_day
         self._requester = requester
         self._suggestions = suggestions
+        self._reminders = reminders
 
     async def run_turn(self, care_agent_id: UUID, event: CareEvent) -> TurnOutcome:
         now = self._clock()
@@ -205,6 +214,8 @@ class CareTurnRunner:
 
         state = await self._store.get_control_state(agent.patient_id)
         if state is not ControlState.AUTO:
+            if self._reminders is not None and await self._reminders.pause_event(agent, event, now):
+                return TurnOutcome(TurnStatus.REMINDER_PAUSED)
             if self._suggestions is not None and event.kind is EventKind.PATIENT_MESSAGE:
                 return await self._suggest(agent, event, state, now)
             await self._log(agent, SKIPPED_STATE_PREFIX + state.value.lower(), ActionDisposition.PAUSED, now)
@@ -244,6 +255,9 @@ class CareTurnRunner:
         if not text:
             await self._log(agent, NO_ACTION, ActionDisposition.PAUSED, now, decision.depth)
             return TurnOutcome(TurnStatus.NO_ACTION)
+        late_from = event.payload.get(LATE_ORIGINAL_AT)
+        if isinstance(late_from, str):
+            text = with_late_label(text, late_from, bot_time_zone())
         return await self._act(agent, event, context, decision, text, now)
 
     async def _hand_off(

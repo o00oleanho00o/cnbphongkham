@@ -310,3 +310,32 @@ class OnCallContact(CareBase):
     updated_at: Mapped[datetime] = _updated_at()
 
     __mapper_args__ = {"version_id_col": version, "eager_defaults": True}  # noqa: RUF012
+
+
+class PausedReminderRow(CareBase):
+    """A reminder that came due while a person had the conversation (``m_0002_paused_reminders``)."""
+
+    __tablename__ = "paused_reminders"
+    __table_args__ = {"schema": AGENT_SCHEMA}  # noqa: RUF012
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    clinic_id: Mapped[UUID]
+    care_agent_id: Mapped[UUID]
+    patient_id: Mapped[UUID]
+    patient_ref: Mapped[str] = mapped_column(Text)
+    event_kind: Mapped[str] = mapped_column(Text)
+    rule: Mapped[str | None] = mapped_column(Text, default=None)
+    due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    dedupe_key: Mapped[str] = mapped_column(Text)
+    prepared_text: Mapped[str | None] = mapped_column(Text, default=None)
+    owner_user_id: Mapped[UUID | None] = mapped_column(default=None)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    status: Mapped[str] = mapped_column(Text, default="paused")
+    resolution: Mapped[str | None] = mapped_column(Text, default=None)
+    paused_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = _created_at()
+    updated_at: Mapped[datetime] = _updated_at()
+
+    __mapper_args__ = {"version_id_col": version, "eager_defaults": True}  # noqa: RUF012
