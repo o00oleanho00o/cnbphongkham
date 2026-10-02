@@ -309,3 +309,35 @@ async def test_the_stream_ends_when_the_bus_is_lost() -> None:
     with pytest.raises(StopAsyncIteration):
         await _next(stream)
     await hub.aclose()
+
+
+async def test_an_event_a_person_may_not_read_writes_nothing_not_even_a_comment_line() -> None:
+    """SEC-55: a keep-alive right after a filtered event would tell reception WHEN a message arrived."""
+    bus = InMemoryLiveEventBus()
+    hub = await _started_hub(bus)
+    sub = hub.subscribe(uuid4())
+    nothing = StreamAccess(types=frozenset(), with_ids=False)
+    stream = event_stream(hub, sub, access=nothing, refresh_access=_always_valid, keepalive_s=0.5)
+    await _next(stream)
+    await bus.publish(LiveEvent(type=LiveEventType.INBOX_CHANGED, id=uuid4()))
+    with pytest.raises(TimeoutError):
+        await _next(stream, wait_s=0.3)
+    await stream.aclose()
+    await hub.aclose()
+
+
+async def test_the_keep_alive_still_comes_when_only_filtered_events_arrive() -> None:
+    """The interval counts from the last write, so a stream that only hears events it may not read is still
+    kept open by the comment line."""
+    bus = InMemoryLiveEventBus()
+    hub = await _started_hub(bus)
+    sub = hub.subscribe(uuid4())
+    nothing = StreamAccess(types=frozenset(), with_ids=False)
+    stream = event_stream(hub, sub, access=nothing, refresh_access=_always_valid, keepalive_s=0.2)
+    await _next(stream)
+    for _ in range(3):
+        await bus.publish(LiveEvent(type=LiveEventType.INBOX_CHANGED, id=uuid4()))
+        await asyncio.sleep(0.05)
+    assert await _next(stream, wait_s=1.0) == KEEPALIVE_FRAME
+    await stream.aclose()
+    await hub.aclose()
