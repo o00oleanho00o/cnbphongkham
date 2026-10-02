@@ -17,7 +17,8 @@ M2a (the turn loop, ``pema.care.loop``)
 * ``ChannelSend``: package C1/C2. The care loop never calls a Zalo client directly.
 * ``Scheduler``: S. Queues a send for the start of the next send window (adapter over ``SchedulerPort``).
 * ``ReviewSink``: creates the ``review_item`` that holds a draft for a person (autonomy L0, no channel).
-* ``HandoffDecider``: M2b's skill ``handoff``; until it exists ``AlwaysAnswer`` stands in.
+* ``HandoffDecider``: M2b's skill ``handoff`` (``pema.care.handoff_skill.HandoffSkill``); ``AlwaysAnswer`` is
+  the stand-in of a wiring that has not got it.
 * ``AutonomyPolicy``: M3. Until it exists ``L0Autonomy`` stands in: nothing is sent without approval.
 * ``SendWindowProvider``: the clinic's send window (``pema.care.window.ChannelPolicySendWindow``).
 * ``PatientDirectory``: pseudonym patient code -> care agent id (``pema.care.store.SqlCareStore``).
@@ -25,6 +26,23 @@ M2a (the turn loop, ``pema.care.loop``)
 * ``TickRuleSource``: the rules of the daily tick that need no LLM (missed milestone, stale pending work).
 
 S's ``ProactiveSendGuard`` (``pema_contracts.scheduler``) is used as it is for the per-patient daily cap.
+
+M2b (control state machine and the skill ``handoff``)
+* ``ControlStore``: the rows of the state machine (``conversation_control``, ``handoff_requests``, the staff
+  release note in ``care_memory``, ``autonomy_override``) and the audit line of each transition, written in
+  the SAME transaction (``pema.care.control_store.SqlControlStore``).
+* ``HandoffRequester``: what the loop calls when the skill says ``handoff``
+  (``pema.care.control.CareControl``).
+* ``HandoffConfigSource``: the skill row ``agent.skills`` ``handoff`` (instruction + ``classifier_config``).
+* ``MessageTextSource``: the text of what the patient just wrote. A ``CareEvent`` carries ids only, the
+  text is in the history store of the channel pipeline (C1/C2, D1); this port is read-only and the depth
+  classifier
+  runs the red-flag rules on it before anything else.
+* ``DepthLlm``: the schema-constrained model call of the classifier (D2-D4 only; a red flag never reaches it).
+* ``SuggestionSink``: a ``review_item`` of kind ``suggestion`` for staff while the conversation is not in
+  AUTO. ``pema_contracts.review.ReviewKind`` has no such kind yet (open item for B1/A), so the port is all
+  there is; nothing it receives is ever sent to a patient.
+* ``RoutingAdvance``: M2c. Called after a decline; until it exists the request simply stays open.
 
 M4 (specialists, ``pema.care.specialists``)
 * ``SlotSearch``: B1 has no free-slot query yet (``AgentFacingClinicActions`` can only PROPOSE an
@@ -42,15 +60,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
-from enum import StrEnum
 from typing import Any, Protocol, runtime_checkable
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pema.care.events import CareEvent
+from pema.care.handoff_types import DepthLlmOutput, HandoffAction, HandoffConfig, HandoffDecision
 from pema.care.models import ControlState, TaskStatus
 from pema.care.specialists.spec import SpecialistCall, SpecialistRun
 from pema.care.task_result import TaskResult
@@ -135,15 +153,12 @@ class DeferredSend:
     dedupe_key: str
 
 
-class HandoffAction(StrEnum):
-    ANSWER = "answer"
-    HANDOFF = "handoff"
-
-
 @dataclass(frozen=True)
 class HandoffVerdict:
     action: HandoffAction
     reason: str = ""
+    decision: HandoffDecision | None = None
+    """The full structured output of the skill (M2b); ``None`` for a stand-in that has none."""
 
 
 @dataclass(frozen=True)
@@ -155,6 +170,80 @@ class TickFinding:
     kind: str
     needs_draft: bool
     payload: JsonObject = field(default_factory=dict[str, Any])
+
+
+# ------------------------------------------------------------------------------- data (M2b)
+@dataclass(frozen=True)
+class ControlSnapshot:
+    state: ControlState
+    since: datetime | None = None
+    staff_owner: UUID | None = None
+    release_note: str | None = None
+    auto_release_after: timedelta | None = None
+
+
+@dataclass(frozen=True)
+class HandoffSpec:
+    """What a new routing round is opened with (``depth``/``urgency`` as the table stores them)."""
+
+    reason: str
+    summary: str
+    """PII-masked summary of the context for the staff who is asked."""
+    depth: str
+    confidence: float
+    required_skill: str | None
+    urgency: str
+
+
+@dataclass(frozen=True)
+class HandoffRequestSnapshot:
+    id: UUID
+    patient_id: UUID
+    care_agent_id: UUID
+    reason: str
+    summary: str
+    depth: str
+    confidence: float
+    required_skill: str | None
+    urgency: str
+    candidates: tuple[object, ...] = ()
+    current_idx: int = 0
+    accepted_by: UUID | None = None
+    outcome: str | None = None
+    created_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class OpenedHandoff:
+    request: HandoffRequestSnapshot
+    created: bool
+    """``False``: a round was already open (or the conversation was not in AUTO) and nothing was changed."""
+
+
+@dataclass(frozen=True)
+class AutonomyOverride:
+    """``agent.care_agents.autonomy_override``: ``{level, until}``.
+
+    ``until`` ``None``: until changed. ``level`` is the number 0..2; the column stores ``"L0"``..``"L2"``."""
+
+    level: int
+    until: datetime | None = None
+
+
+@dataclass(frozen=True)
+class ReleaseSpec:
+    memory_fact: str | None = None
+    """PII-masked release note, stored in ``care_memory`` with source ``staff``."""
+    release_note: str | None = None
+    override: AutonomyOverride | None = None
+
+
+@dataclass(frozen=True)
+class HandoffSettings:
+    """The row of the skill ``handoff``: its instruction text and its ``classifier_config``."""
+
+    instruction: str
+    config: HandoffConfig
 
 
 # ----------------------------------------------------------------------------------------- ports
@@ -224,6 +313,101 @@ class CareStore(Protocol):
     ) -> None: ...
 
     async def touch_last_tick(self, care_agent_ids: Sequence[UUID], at: datetime) -> None: ...
+
+
+class ControlStore(Protocol):
+    """Every method is one unit of work: the state change AND its ``actions_log`` line (``log_action``)."""
+
+    async def get_control(self, patient_id: UUID) -> ControlSnapshot: ...
+
+    async def agent_for_patient(self, patient_id: UUID) -> CareAgentSnapshot | None: ...
+
+    async def record_action(
+        self,
+        care_agent_id: UUID,
+        *,
+        action_type: str,
+        disposition: str,
+        depth: str | None,
+        at: datetime,
+    ) -> None:
+        """A line of ``actions_log`` that is not part of a transition (the holding message)."""
+        ...
+
+    async def get_open_request(self, patient_id: UUID) -> HandoffRequestSnapshot | None: ...
+
+    async def open_handoff(
+        self, agent: CareAgentSnapshot, spec: HandoffSpec, *, log_action: str, at: datetime
+    ) -> OpenedHandoff:
+        """``AUTO -> HANDOFF_ROUTING`` and the new request, atomically. Not in AUTO: nothing changes and the
+        open request comes back with ``created=False`` (two events racing open ONE round)."""
+        ...
+
+    async def accept(
+        self, patient_id: UUID, staff_id: UUID, *, log_action: str, at: datetime
+    ) -> HandoffRequestSnapshot:
+        """``HANDOFF_ROUTING -> STAFF``; ``InvalidTransitionError`` in any other state."""
+        ...
+
+    async def record_decline(
+        self, patient_id: UUID, staff_id: UUID, *, log_action: str, at: datetime
+    ) -> HandoffRequestSnapshot:
+        """Only audited here; the state stays ``HANDOFF_ROUTING``. ``InvalidTransitionError`` otherwise."""
+        ...
+
+    async def release(
+        self, patient_id: UUID, staff_id: UUID, spec: ReleaseSpec, *, log_action: str, at: datetime
+    ) -> ControlSnapshot:
+        """``STAFF -> AUTO``, release note into ``care_memory``, optional ``autonomy_override``, together.
+        ``InvalidTransitionError`` in any other state."""
+        ...
+
+    async def set_auto_release_after(
+        self, patient_id: UUID, after: timedelta | None, *, log_action: str, at: datetime
+    ) -> None: ...
+
+
+class HandoffRequester(Protocol):
+    async def request_handoff(
+        self,
+        agent: CareAgentSnapshot,
+        event: CareEvent,
+        context: PatientContext,
+        decision: HandoffDecision,
+        now: datetime,
+    ) -> OpenedHandoff: ...
+
+
+class HandoffConfigSource(Protocol):
+    async def get(self, clinic_id: UUID) -> HandoffSettings:
+        """Read on EVERY turn (a change of the matrix applies at once). Defaults when the row is missing."""
+        ...
+
+
+class MessageTextSource(Protocol):
+    async def patient_texts(self, agent: CareAgentSnapshot, event: CareEvent) -> Sequence[str]:
+        """The texts of the patient's messages that woke the agent (empty for any other event)."""
+        ...
+
+
+class DepthLlm(Protocol):
+    async def classify(self, masked_text: str, *, instruction: str) -> DepthLlmOutput | None:
+        """``masked_text`` has been through the PII mask. ``None``: no usable answer (error, invalid JSON)."""
+        ...
+
+
+class SuggestionSink(Protocol):
+    async def create_suggestion(
+        self, agent: CareAgentSnapshot, patient_ref: str, text: str, state: ControlState
+    ) -> str | None:
+        """A suggestion for the staff who handle the patient; NEVER sent. ``None``: could not be created."""
+        ...
+
+
+class RoutingAdvance(Protocol):
+    async def on_declined(
+        self, request: HandoffRequestSnapshot, staff_id: UUID, reason: str, suggest_user_id: UUID | None
+    ) -> None: ...
 
 
 class TickRuleSource(Protocol):
