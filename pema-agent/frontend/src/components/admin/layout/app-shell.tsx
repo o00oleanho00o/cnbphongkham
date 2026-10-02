@@ -228,7 +228,10 @@ function ShellFrame({
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- fixed brand asset */}
             <img src="/pema-logo.png" alt="Pema" width={294} height={156} className="h-7 w-auto" />
-            <span className="truncate text-[15px] font-semibold text-ink">CSKH</span>
+            {/* The one clinic of this installation (UserSummary), not a choice. */}
+            <span className="truncate text-[15px] font-semibold text-ink">
+              {user.clinic_name.trim() || "CSKH"}
+            </span>
           </Link>
         </header>
 

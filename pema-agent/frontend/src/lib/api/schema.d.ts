@@ -3288,8 +3288,6 @@ export interface components {
         };
         /** LoginRequest */
         LoginRequest: {
-            /** Clinic Slug */
-            clinic_slug: string;
             /** Email */
             email: string;
             /**
