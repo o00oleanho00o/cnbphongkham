@@ -66,10 +66,14 @@ async def event_stream(
     recheck = RECHECK_S if recheck_s is None else recheck_s
     current = access
     last_check = time.monotonic()
+    last_write = last_check
     try:
         yield f"retry: {RETRY_MS}\n\n"
         while not sub.closed:
-            batch = await sub.next_batch(keepalive)
+            # SEC-55: the wait is what is left of the keep-alive interval, and an event this person may not
+            # read writes nothing: a comment line right after it would tell a role without the right
+            # (reception) WHEN the clinic receives a message or a draft.
+            batch = await sub.next_batch(max(0.05, keepalive - (time.monotonic() - last_write)))
             if sub.closed:
                 return
             if time.monotonic() - last_check >= recheck * 0.9:
@@ -78,13 +82,13 @@ async def event_stream(
                 if refreshed is None:
                     return
                 current = refreshed
-            sent = False
             for event in batch:
                 visible = _visible(event, current)
                 if visible is not None:
-                    sent = True
+                    last_write = time.monotonic()
                     yield frame(visible)
-            if not sent:
+            if time.monotonic() - last_write >= keepalive - 0.01:
+                last_write = time.monotonic()
                 yield KEEPALIVE_FRAME
     finally:
         hub.unsubscribe(sub)
