@@ -12,6 +12,7 @@ from collections.abc import AsyncIterator, Iterator
 
 import pytest
 
+from pema.config.testing_settings import settings_env
 from pema.conversation.pg_testing import ClinicEnv, PgTestServer
 
 
@@ -31,3 +32,6 @@ async def env(pg_server: PgTestServer) -> AsyncIterator[ClinicEnv]:
     clinic = ClinicEnv.create(pg_server, account_ids=(), default_agent=False)
     yield clinic
     await clinic.dispose()
+
+
+__all__ = ["settings_env"]
