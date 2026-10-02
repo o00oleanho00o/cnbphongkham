@@ -146,6 +146,8 @@ Ngữ cảnh lâm sàng vẫn ở `clinic.*`, agent đọc qua `actions/`.
 
 ## 13. Các bước
 
+Mỗi bước có một recipe riêng cho subagent trong `pema-agent/recipes/M/` (`00-README.md` nêu thứ tự, phụ thuộc, vị trí code; `_REPORT-TEMPLATE.md` là mẫu báo cáo). Prompt spawn chỉ cần: "Follow `pema-agent/recipes/M/<file>.md`".
+
 | Bước | Nội dung | Nghiệm thu |
 |---|---|---|
 | M1 | Schema mục 10; pairing tự động khi tạo hồ sơ; migration | pytest; RLS theo clinic_id |
