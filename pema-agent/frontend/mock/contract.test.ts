@@ -21,9 +21,10 @@ const METHODS = new Set(["get", "post", "put", "patch", "delete"]);
 const EXEMPT = /\/webhooks\//;
 
 // Routes of the "several people at once" package that the backend has not put into openapi.json yet, so the
-// mock serves them as PENDING (live events and presence are in the contract now). When the regenerated
-// openapi.json has one, remove it here: the last test fails on a stale entry.
-const PENDING_CONTRACT = ["GET /api/v1/staff/assignable"];
+// mock serves them as PENDING. Live events, presence and `GET /api/v1/staff/assignable` are in the contract
+// now. When the mock serves a route the regenerated openapi.json lacks, add it here: the last test fails on
+// a stale entry.
+const PENDING_CONTRACT: string[] = [];
 
 function specOperations(): string[] {
   const ops: string[] = [];

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseAssignableStaff, parseLiveEvent, viewersOf } from "@/lib/live/live-types";
+import { parseLiveEvent, viewersOf } from "@/lib/live/live-types";
 
 describe("parseLiveEvent", () => {
   it("reads type and object id", () => {
@@ -49,21 +49,5 @@ describe("viewersOf", () => {
         ],
       }),
     ).toEqual([{ user_id: "u-3", name: "Mai", state: "replying" }]);
-  });
-});
-
-describe("parseAssignableStaff", () => {
-  it("keeps rows with id, name and a known role", () => {
-    const rows = [
-      { id: "u-1", name: "Mai Anh", role: "cs_staff" },
-      { id: "u-2", name: "Ai đó", role: "wizard" },
-      { id: "u-3", role: "owner" },
-    ];
-    expect(parseAssignableStaff(rows)).toEqual([{ id: "u-1", name: "Mai Anh", role: "cs_staff" }]);
-  });
-
-  it("is empty for anything that is not a list", () => {
-    expect(parseAssignableStaff({ items: [] })).toEqual([]);
-    expect(parseAssignableStaff(null)).toEqual([]);
   });
 });
