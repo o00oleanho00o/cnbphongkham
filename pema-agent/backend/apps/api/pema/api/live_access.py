@@ -30,6 +30,8 @@ EVENT_PERMISSION: dict[LiveEventType, Permission] = {
     LiveEventType.PRESENCE_CHANGED: Permission.CONVERSATION_READ,
     LiveEventType.REVIEW_CHANGED: Permission.REVIEW_READ,
     LiveEventType.TASKS_CHANGED: Permission.CRM_TASK_READ,
+    LiveEventType.HANDOFF_CHANGED: Permission.CARE_READ,
+    LiveEventType.CARE_CHANGED: Permission.CARE_READ,
 }
 """A person receives an event type only when they may read what it announces."""
 
