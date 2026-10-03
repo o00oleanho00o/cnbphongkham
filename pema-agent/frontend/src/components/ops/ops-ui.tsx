@@ -97,23 +97,8 @@ export function ListSkeleton({ rows = 4 }: { rows?: number }) {
   );
 }
 
-export function EmptyState({
-  title,
-  hint,
-  action,
-}: {
-  title: string;
-  hint?: string;
-  action?: ReactNode;
-}) {
-  return (
-    <div className="gc-card px-6 py-12 text-center">
-      <p className="text-[15px] font-semibold text-ink">{title}</p>
-      {hint && <p className="mx-auto mt-1 max-w-md text-[13px] text-ink-soft">{hint}</p>}
-      {action && <div className="mt-4 flex justify-center">{action}</div>}
-    </div>
-  );
-}
+// EmptyState moved to the design kit (src/ui/empty-state.tsx); same props, so screens keep their import.
+export { EmptyState } from "@/ui/empty-state";
 
 const NOTICE_TONE: Record<"info" | "warn" | "error" | "success", string> = {
   info: "border-brand-100 bg-brand-50 text-brand-700",

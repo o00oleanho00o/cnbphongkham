@@ -249,7 +249,7 @@ export function TableShell({
             {headers.map((h, i) => (
               <th
                 key={i}
-                className={`px-4 py-3 whitespace-nowrap font-semibold${
+                className={`px-4 py-3 font-semibold whitespace-nowrap ${
                   ghimCotCuoi && i === headers.length - 1 ? "sticky right-0 z-10 bg-surface" : ""
                 }`}
               >
