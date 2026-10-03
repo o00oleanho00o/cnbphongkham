@@ -50,3 +50,8 @@ export function concreteRoute(route: string): string {
   if (sample === undefined) throw new Error(`no sample ids for ${route}: add it to SAMPLE_PARAMS`);
   return sample;
 }
+
+/** Screens that are a state of one route, not a route of their own (a tab kept in `?tab=`): the visual harness opens them too. */
+export const EXTRA_VISUAL_ROUTES: readonly string[] = ["consult", "plan", "session", "photos"].map(
+  (tab) => `/patients/00000000-0000-4000-8002-000000000001?tab=${tab}`,
+);
