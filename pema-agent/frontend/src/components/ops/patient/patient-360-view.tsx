@@ -90,7 +90,7 @@ export function Patient360View({ data }: { data: P360 }) {
     <div className="space-y-4">
       <header className="flex flex-wrap items-center gap-4 rounded-hero border border-brand-100 bg-brand-50 p-4 sm:p-5">
         <InitialAvatar name={patient.full_name} />
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 basis-48">
           <h1 className="text-title font-bold text-heading">{patient.full_name}</h1>
           <p className="text-small text-ink-soft">
             {patient.code} · {GENDER_LABEL[patient.gender ?? "unknown"]}
@@ -98,7 +98,7 @@ export function Patient360View({ data }: { data: P360 }) {
             {patient.doctor_name ? ` · ${patient.doctor_name}` : ""}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto">
           <Badge tone="blue" dot={false}>
             {stage}
           </Badge>
