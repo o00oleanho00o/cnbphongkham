@@ -31,6 +31,9 @@ class LiveEventType(StrEnum):
     HANDOFF_CHANGED = "handoff.changed"
     """A care agent asked for a person, the chain moved on, or somebody accepted or declined (``id`` is the
     patient). Package M, step M5."""
+    APPOINTMENTS_CHANGED = "appointments.changed"
+    """An appointment was booked, moved or went through a reception transition (``id`` is the appointment).
+    Package U, step U2: the schedule and the dashboard reload."""
     CARE_CHANGED = "care.changed"
     """The care state of a patient changed: control state, autonomy level, a paused reminder, a note for the
     agent, an alert (``id`` is the patient). Package M, step M5."""
