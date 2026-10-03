@@ -149,8 +149,10 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Phân tích",
     items: [
-      { to: "/ask", label: "Ask Pema", icon: IconSparkles, needs: ["patient.read"], planned: true },
-      { to: "/guide", label: "Hướng dẫn", icon: IconBook, needs: ["kb.read"], planned: true },
+      { to: "/ask", label: "Hỏi Pema", icon: IconSparkles, needs: ["kb.read"] },
+      { to: "/guide", label: "Hướng dẫn", icon: IconBook, needs: ["kb.read"] },
+      // Not an old sidebar entry: the CRM01 groups and rules that /today, /dashboard and Patient 360 do not show.
+      { to: "/crm", label: "Vòng đời khách hàng", icon: IconUsers, needs: ["crm.task.read"] },
     ],
   },
   {

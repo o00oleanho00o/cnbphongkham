@@ -54,7 +54,8 @@ describe("menu order of the old Pema Clinic Web", () => {
       "Dịch vụ",
       "Thu ngân",
       "Tài chính & tiền thủ thuật",
-      "Ask Pema",
+      // The old web says "Ask Pema" (clinic.js); recipe U7 names the entry "Hỏi Pema" (Vietnamese UI copy).
+      "Hỏi Pema",
       "Hướng dẫn",
     ]);
   });

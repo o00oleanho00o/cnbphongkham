@@ -217,3 +217,47 @@ class MessageTemplateApprove(ApiModel):
     """Doctor sign-off. Editing the body afterwards clears the approval (version bump)."""
 
     version: int
+
+
+class CrmSegmentKey(StrEnum):
+    """Customer groups of the old CRM01 ``segment`` card: the five lifecycle stages (``stageLabels`` of
+    ``crm-automation.js``) and ``at_risk``, which cuts across them (no new booking and overdue by more than
+    7 days, or sessions left and more than 45 days idle)."""
+
+    NEW = "new"
+    RETURNING = "returning"
+    TREATING = "treating"
+    DORMANT = "dormant"
+    REACTIVATED = "reactivated"
+    AT_RISK = "at_risk"
+
+
+class CrmSegmentCount(ApiModel):
+    key: CrmSegmentKey
+    count: int = Field(ge=0)
+
+
+class CrmSegmentsOut(ApiModel):
+    """One number per group, computed from the same read model as Patient 360 (``compute_profile``)."""
+
+    total_patients: int = Field(ge=0)
+    segments: list[CrmSegmentCount]
+    marketing_opt_out: int = Field(ge=0, description="Patients who asked not to receive marketing.")
+
+
+class CrmSegmentPatientOut(ApiModel):
+    """A row of the list behind one segment card. ``version`` is the lock of ``PATCH /patients/{id}``, which
+    the opt-out switch uses (audited there)."""
+
+    patient_id: UUID
+    patient_code: str
+    full_name: str
+    version: int
+    lifecycle_stage: CrmSegmentKey
+    last_visit_at: date | None = None
+    expected_next_visit_at: date | None = None
+    overdue_days: int = Field(ge=0)
+    remaining_sessions: int = Field(ge=0)
+    risk_level: str
+    marketing_opt_out: bool
+    cs_owner_name: str | None = None

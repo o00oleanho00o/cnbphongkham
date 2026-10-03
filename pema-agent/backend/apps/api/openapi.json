@@ -3197,6 +3197,161 @@
         "title": "CrmRuleUpdate",
         "type": "object"
       },
+      "CrmSegmentCount": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "minimum": 0.0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "key": {
+            "$ref": "#/components/schemas/CrmSegmentKey"
+          }
+        },
+        "required": [
+          "key",
+          "count"
+        ],
+        "title": "CrmSegmentCount",
+        "type": "object"
+      },
+      "CrmSegmentKey": {
+        "description": "Customer groups of the old CRM01 ``segment`` card: the five lifecycle stages (``stageLabels`` of\n``crm-automation.js``) and ``at_risk``, which cuts across them (no new booking and overdue by more than\n7 days, or sessions left and more than 45 days idle).",
+        "enum": [
+          "new",
+          "returning",
+          "treating",
+          "dormant",
+          "reactivated",
+          "at_risk"
+        ],
+        "title": "CrmSegmentKey",
+        "type": "string"
+      },
+      "CrmSegmentPatientOut": {
+        "additionalProperties": false,
+        "description": "A row of the list behind one segment card. ``version`` is the lock of ``PATCH /patients/{id}``, which\nthe opt-out switch uses (audited there).",
+        "properties": {
+          "cs_owner_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cs Owner Name"
+          },
+          "expected_next_visit_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Next Visit At"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "last_visit_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Visit At"
+          },
+          "lifecycle_stage": {
+            "$ref": "#/components/schemas/CrmSegmentKey"
+          },
+          "marketing_opt_out": {
+            "title": "Marketing Opt Out",
+            "type": "boolean"
+          },
+          "overdue_days": {
+            "minimum": 0.0,
+            "title": "Overdue Days",
+            "type": "integer"
+          },
+          "patient_code": {
+            "title": "Patient Code",
+            "type": "string"
+          },
+          "patient_id": {
+            "format": "uuid",
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "remaining_sessions": {
+            "minimum": 0.0,
+            "title": "Remaining Sessions",
+            "type": "integer"
+          },
+          "risk_level": {
+            "title": "Risk Level",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "patient_id",
+          "patient_code",
+          "full_name",
+          "version",
+          "lifecycle_stage",
+          "overdue_days",
+          "remaining_sessions",
+          "risk_level",
+          "marketing_opt_out"
+        ],
+        "title": "CrmSegmentPatientOut",
+        "type": "object"
+      },
+      "CrmSegmentsOut": {
+        "additionalProperties": false,
+        "description": "One number per group, computed from the same read model as Patient 360 (``compute_profile``).",
+        "properties": {
+          "marketing_opt_out": {
+            "description": "Patients who asked not to receive marketing.",
+            "minimum": 0.0,
+            "title": "Marketing Opt Out",
+            "type": "integer"
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/CrmSegmentCount"
+            },
+            "title": "Segments",
+            "type": "array"
+          },
+          "total_patients": {
+            "minimum": 0.0,
+            "title": "Total Patients",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_patients",
+          "segments",
+          "marketing_opt_out"
+        ],
+        "title": "CrmSegmentsOut",
+        "type": "object"
+      },
       "CrmTaskOut": {
         "additionalProperties": false,
         "properties": {
@@ -3872,6 +4027,212 @@
         ],
         "title": "Gender",
         "type": "string"
+      },
+      "GuideArticle": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "description": "Markdown. Headings, paragraphs, lists, bold and links only.",
+            "title": "Body",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/KbSourceStatus"
+          },
+          "summary": {
+            "description": "First paragraph of the article, at most 240 characters.",
+            "title": "Summary",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "topic": {
+            "description": "First tag other than 'guide' (the old 'role' eyebrow); '' when none.",
+            "title": "Topic",
+            "type": "string"
+          },
+          "updated_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "topic",
+          "tags",
+          "summary",
+          "status",
+          "updated_at",
+          "body"
+        ],
+        "title": "GuideArticle",
+        "type": "object"
+      },
+      "GuideArticleSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/KbSourceStatus"
+          },
+          "summary": {
+            "description": "First paragraph of the article, at most 240 characters.",
+            "title": "Summary",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "topic": {
+            "description": "First tag other than 'guide' (the old 'role' eyebrow); '' when none.",
+            "title": "Topic",
+            "type": "string"
+          },
+          "updated_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "topic",
+          "tags",
+          "summary",
+          "status",
+          "updated_at"
+        ],
+        "title": "GuideArticleSummary",
+        "type": "object"
+      },
+      "GuideAskHit": {
+        "additionalProperties": false,
+        "description": "One passage of an article that matches the question, with where it came from.",
+        "properties": {
+          "article_id": {
+            "title": "Article Id",
+            "type": "string"
+          },
+          "article_title": {
+            "title": "Article Title",
+            "type": "string"
+          },
+          "heading": {
+            "description": "Heading of the section the passage is in; '' for the lead.",
+            "title": "Heading",
+            "type": "string"
+          },
+          "passage": {
+            "title": "Passage",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "article_id",
+          "article_title",
+          "heading",
+          "passage",
+          "score"
+        ],
+        "title": "GuideAskHit",
+        "type": "object"
+      },
+      "GuideAskRequest": {
+        "additionalProperties": false,
+        "description": "The question is sent in the body, not the URL: it may name a customer and urls reach access logs.",
+        "properties": {
+          "question": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "GuideAskRequest",
+        "type": "object"
+      },
+      "GuideAskResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/GuideAskHit"
+            },
+            "title": "Hits",
+            "type": "array"
+          }
+        },
+        "required": [
+          "hits"
+        ],
+        "title": "GuideAskResponse",
+        "type": "object"
+      },
+      "GuideTag": {
+        "maxLength": 40,
+        "minLength": 1,
+        "type": "string"
+      },
+      "GuideTagsUpdate": {
+        "additionalProperties": false,
+        "description": "Replace the tags of a source. ``guide`` in the list makes it an article; removing it hides it.",
+        "properties": {
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/GuideTag"
+            },
+            "maxItems": 10,
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "tags"
+        ],
+        "title": "GuideTagsUpdate",
+        "type": "object"
       },
       "HandoffDeclineIn": {
         "additionalProperties": false,
@@ -6522,6 +6883,42 @@
           "offset"
         ],
         "title": "Page[CrmActivityOut]",
+        "type": "object"
+      },
+      "Page_CrmSegmentPatientOut_": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CrmSegmentPatientOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Page[CrmSegmentPatientOut]",
         "type": "object"
       },
       "Page_CrmTaskOut_": {
@@ -27167,6 +27564,335 @@
         ]
       }
     },
+    "/api/v1/crm/rules": {
+      "get": {
+        "operationId": "crm_list_crm_rules",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CrmRuleOut"
+                  },
+                  "title": "Response Crm List Crm Rules",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "The automation rules, read only (tuning is /admin/rules)",
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/api/v1/crm/segments": {
+      "get": {
+        "operationId": "crm_get_segments",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrmSegmentsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Customer groups: lifecycle stages and at-risk, with counts",
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/api/v1/crm/segments/{segment}/patients": {
+      "get": {
+        "operationId": "crm_list_segment_patients",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "segment",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CrmSegmentKey"
+            }
+          },
+          {
+            "description": "Page size.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "description": "Page size.",
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Rows to skip.",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Rows to skip.",
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_CrmSegmentPatientOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Patients of one group, most overdue first",
+        "tags": [
+          "crm"
+        ]
+      }
+    },
     "/api/v1/crm/tasks": {
       "get": {
         "operationId": "crm_list_tasks",
@@ -27823,6 +28549,436 @@
         "summary": "Live updates (server-sent events)",
         "tags": [
           "live"
+        ]
+      }
+    },
+    "/api/v1/guide/articles": {
+      "get": {
+        "operationId": "guide_list_articles",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GuideArticleSummary"
+                  },
+                  "title": "Response Guide List Articles",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Guide articles (KB tag 'guide')",
+        "tags": [
+          "guide"
+        ]
+      }
+    },
+    "/api/v1/guide/articles/{article_id}": {
+      "get": {
+        "operationId": "guide_get_article",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "article_id",
+            "required": true,
+            "schema": {
+              "title": "Article Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuideArticle"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "One article with its Markdown body",
+        "tags": [
+          "guide"
+        ]
+      }
+    },
+    "/api/v1/guide/articles/{article_id}/tags": {
+      "put": {
+        "operationId": "guide_set_article_tags",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "article_id",
+            "required": true,
+            "schema": {
+              "title": "Article Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuideTagsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuideArticleSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Replace the tags of a knowledge-base source (audited)",
+        "tags": [
+          "guide"
+        ]
+      }
+    },
+    "/api/v1/guide/ask": {
+      "post": {
+        "operationId": "guide_ask",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuideAskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuideAskResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Passages of the guide that answer a question (retrieval, nothing is generated)",
+        "tags": [
+          "guide"
         ]
       }
     },
@@ -31576,6 +32732,10 @@
     {
       "description": "CSKH tasks and contact log. (B1)",
       "name": "crm"
+    },
+    {
+      "description": "Staff guide and Hoi Pema, backed by the knowledge base. (U7)",
+      "name": "guide"
     },
     {
       "description": "Inbox and messages. (B1)",

@@ -35,6 +35,7 @@ from uuid import UUID, uuid5
 from sqlalchemy import select
 
 from pema.clinic import audit
+from pema.clinic.actions.seed_guide import seed_guide_articles
 from pema.clinic.models import (
     Appointment,
     ChannelIdentity,
@@ -450,10 +451,11 @@ async def _run(today: date) -> int:
     db = ClinicDatabase(get_settings().database_url)
     try:
         result = await seed_demo(db, password=password, today=today)
+        guide_added = await seed_guide_articles(db)  # idempotent, also on a clinic seeded before U7
     finally:
         await db.dispose()
     if not result.created:
-        sys.stdout.write("The demo data is already there; nothing changed.\n")
+        sys.stdout.write(f"The demo data is already there; guide articles added: {guide_added}.\n")
         return 0
     sys.stdout.write(f"Seeded the demo clinic with {len(USERS)} users and {len(CASES)} patients.\n")
     if generated:
