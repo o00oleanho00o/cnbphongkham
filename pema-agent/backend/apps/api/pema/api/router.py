@@ -35,6 +35,7 @@ from pema.api.routers import (
     conversations,
     crm,
     live,
+    patient_care,
     patients,
     review_items,
     staff,
@@ -46,6 +47,10 @@ from pema.api.routers import (
 TAGS_METADATA: list[dict[str, str]] = [
     {"name": "auth", "description": "Session, current user, permissions. (B1)"},
     {"name": "patients", "description": "Patients, Patient 360, consent. (B1)"},
+    {
+        "name": "patient-care",
+        "description": "Plans, sessions, consult notes and clinical photos of a patient. (U3)",
+    },
     {"name": "appointments", "description": "Scheduling and reception transitions. (B1)"},
     {"name": "crm", "description": "CSKH tasks and contact log. (B1)"},
     {"name": "conversations", "description": "Inbox and messages. (B1)"},
@@ -85,6 +90,7 @@ def build_api_router() -> APIRouter:
     for router in (
         auth.router,
         patients.router,
+        patient_care.router,
         appointments.router,
         crm.router,
         conversations.router,

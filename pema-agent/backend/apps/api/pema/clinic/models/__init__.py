@@ -3,6 +3,7 @@
 from pema.clinic.models.audit import AuditLog
 from pema.clinic.models.base import CLINIC_SCHEMA, Base
 from pema.clinic.models.care import Consent, Episode, Patient, TreatmentPlan, TreatmentSession
+from pema.clinic.models.clinical import ConsultNote, Media
 from pema.clinic.models.crm import CrmActivity, CrmRule, CrmTask, MessageTemplate
 from pema.clinic.models.inbox import ChannelIdentity, Conversation, Message, ReviewItem
 from pema.clinic.models.scheduling import Appointment
@@ -17,11 +18,13 @@ __all__ = [
     "ChannelIdentity",
     "Clinic",
     "Consent",
+    "ConsultNote",
     "Conversation",
     "CrmActivity",
     "CrmRule",
     "CrmTask",
     "Episode",
+    "Media",
     "Message",
     "MessageTemplate",
     "Patient",

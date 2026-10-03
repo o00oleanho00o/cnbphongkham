@@ -22,6 +22,14 @@ MAX_BODY_BYTES: Final = 4 * 1024 * 1024
 EXEMPT_SUFFIXES: Final = ("/admin/kb/sources/file", "/admin/kb/sources/text")
 
 
+def is_exempt(path: str) -> bool:
+    """KB uploads, and the photo upload ``PUT /media/<id>/content`` (it cuts the stream itself at
+    ``MEDIA_MAX_BYTES``, see ``routers/patient_care.py``)."""
+    if path.endswith(EXEMPT_SUFFIXES):
+        return True
+    return "/media/" in path and path.endswith("/content")
+
+
 class _BodyTooLargeError(BaseException):
     """A BaseException on purpose: FastAPI turns an ``Exception`` raised while reading the body into a 400."""
 
@@ -32,7 +40,7 @@ class BodyLimitMiddleware:
         self._max = max_bytes
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] != "http" or str(scope["path"]).endswith(EXEMPT_SUFFIXES):
+        if scope["type"] != "http" or is_exempt(str(scope["path"])):
             await self.app(scope, receive, send)
             return
         for key, value in scope.get("headers", []):

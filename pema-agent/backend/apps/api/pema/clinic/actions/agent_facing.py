@@ -137,7 +137,8 @@ class ClinicAgentFacingActions:
             plans = (
                 await session.execute(
                     sql(
-                        "SELECT total_sessions, completed_sessions FROM clinic_agent.patient_care_plan "
+                        "SELECT service_code, total_sessions, completed_sessions "
+                        "FROM clinic_agent.patient_care_plan "
                         "WHERE patient_id = :p AND status IN ('planned', 'active')"
                     ),
                     {"p": pid},
@@ -184,6 +185,10 @@ class ClinicAgentFacingActions:
         next_day = upcoming[0] if upcoming else None
         total = sum(p.total_sessions for p in plans)
         done = sum(p.completed_sessions for p in plans)
+        # the plan the agent can speak about: the live one with most sessions left (codes and numbers only)
+        lead = max(
+            plans, key=lambda p: (p.total_sessions - p.completed_sessions, p.service_code), default=None
+        )
         facts = ProfileFacts(
             today=today,
             last_visit=last_session_day,
@@ -206,6 +211,9 @@ class ClinicAgentFacingActions:
             last_protocol_id=last.protocol_id if last else None,
             days_since_last_session=days_between(last_session_day, today) if last_session_day else None,
             remaining_sessions=max(0, total - done) if plans else None,
+            plan_service_code=lead.service_code if lead else None,
+            plan_completed_sessions=lead.completed_sessions if lead else None,
+            plan_total_sessions=lead.total_sessions if lead else None,
             days_to_next_appointment=days_between(today, next_day) if next_day else None,
             followup_milestone=FollowupMilestone(milestone.rule_key) if milestone else None,
             marketing_opt_out=ref.marketing_opt_out,
