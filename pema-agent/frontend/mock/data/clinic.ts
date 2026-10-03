@@ -332,12 +332,52 @@ const appointment = (
   version: 1,
 });
 
+/** `YYYY-MM-DD` of the clinic's today (+07:00), whatever the zone of the machine. */
+export function clinicToday(offsetDays = 0): string {
+  return isoFromNow(offsetDays * DAY).slice(0, 10);
+}
+
+/** An appointment on a clinic day at a clock time ("08:30"); the doctor is the one given, not the patient's. */
+const onDay = (
+  n: number,
+  patient: number,
+  dayOffset: number,
+  clock: string,
+  doctor: string,
+  status: S["AppointmentStatus"],
+  note: string,
+  duration = 30,
+): S["AppointmentOut"] => {
+  const at = `${clinicToday(dayOffset)}T${clock}:00+07:00`;
+  return {
+    ...appointment(n, patient, 0, status, note),
+    doctor_id: doctor,
+    starts_at: at,
+    duration_min: duration,
+    missed_at: status === "missed" ? at : null,
+    cancel_reason: status === "cancelled" ? "Bệnh nhân bận việc đột xuất" : null,
+    cancelled_at: status === "cancelled" ? at : null,
+  };
+};
+
 export const appointments: S["AppointmentOut"][] = [
   appointment(1, 1, 26 * DAY, "booked", "Buổi 3/4 Laser CO2"),
   appointment(2, 1, -2 * DAY, "completed", "Buổi 2/4 Laser CO2"),
   appointment(3, 4, 5 * HOUR, "confirmed", "Tái khám"),
   appointment(4, 6, -1 * DAY, "missed", "Tái khám"),
   appointment(5, 2, -3 * DAY, "completed", "Peel da nhẹ"),
+  // A full clinic day for the schedule board (every reception status once) and a few on the next days.
+  onDay(6, 2, 0, "08:00", DOCTOR_AN, "completed", "Tái khám sau peel"),
+  onDay(7, 3, 0, "08:30", DOCTOR_TAM, "in_progress", "Laser CO2 buổi 2/4", 45),
+  onDay(8, 5, 0, "09:00", DOCTOR_AN, "arrived", "Tư vấn da liễu"),
+  onDay(9, 7, 0, "09:30", DOCTOR_MAI, "confirmed", "Chăm sóc theo chỉ định", 45),
+  onDay(10, 8, 0, "10:00", DOCTOR_TAM, "booked", "Tái khám"),
+  onDay(11, 9, 0, "10:30", DOCTOR_AN, "missed", "Tái khám"),
+  onDay(12, 10, 0, "14:00", DOCTOR_MAI, "booked", "Tư vấn chuyên sâu", 45),
+  onDay(13, 6, 0, "15:00", DOCTOR_TAM, "cancelled", "Laser theo chỉ định", 45),
+  onDay(14, 1, 1, "09:00", DOCTOR_TAM, "confirmed", "Buổi 3/4 Laser CO2", 45),
+  onDay(15, 4, 2, "10:30", DOCTOR_MAI, "booked", "Tái khám"),
+  onDay(16, 2, 4, "14:30", DOCTOR_AN, "booked", "Peel da nhẹ"),
 ];
 
 // ----------------------------------------------------------------- Consents

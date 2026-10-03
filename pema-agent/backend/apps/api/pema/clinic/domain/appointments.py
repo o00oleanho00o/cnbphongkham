@@ -37,6 +37,8 @@ FREE_STATUSES: frozenset[AppointmentStatus] = frozenset(
 )
 """JS ``active``: a cancelled or missed appointment no longer occupies its slot."""
 
+CONFIRM_FROM: frozenset[AppointmentStatus] = frozenset({AppointmentStatus.BOOKED})
+"""JS ``setStatus(id, 'confirmed')``: the desk phoned the patient and they said yes."""
 CHECK_IN_FROM: frozenset[AppointmentStatus] = frozenset(
     {AppointmentStatus.BOOKED, AppointmentStatus.CONFIRMED}
 )

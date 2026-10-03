@@ -56,6 +56,7 @@ MUTATIONS: dict[str, str] = {
     "patients_record_consent": "consent.record",
     "appointments_create_appointment": "appointment.create",
     "appointments_update_appointment": "appointment.update",
+    "appointments_confirm_appointment": "appointment.confirm",
     "appointments_check_in_appointment": "appointment.check_in",
     "appointments_start_appointment": "appointment.start",
     "appointments_complete_appointment": "appointment.complete",
@@ -200,11 +201,18 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
         json={"version": 1, "reason": "đổi ý"},
     )
     await call(
+        "appointments_confirm_appointment",
+        reception,
+        "POST",
+        f"/appointments/{appts[2]['id']}/confirm",
+        json={"version": 1},
+    )
+    await call(
         "appointments_miss_appointment",
         reception,
         "POST",
         f"/appointments/{appts[2]['id']}/miss",
-        json={"version": 1},
+        json={"version": 2},
     )
 
     task_id = str(uuid4())
