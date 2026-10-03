@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from pema.clinic import audit
+from pema.clinic.actions._care_mappers import plan_out, session_out
 from pema.clinic.actions._common import now
 from pema.clinic.actions._mappers import (
     activity_out,
@@ -33,6 +34,7 @@ from pema.clinic.domain.profile import ProfileFacts, compute_profile
 from pema.clinic.models import (
     Appointment,
     Consent,
+    ConsultNote,
     Conversation,
     CrmActivity,
     CrmTask,
@@ -55,8 +57,6 @@ from pema_contracts.patients import (
     EpisodeOut,
     Patient360,
     TimelineEvent,
-    TreatmentPlanOut,
-    TreatmentSessionOut,
 )
 from pema_contracts.roles import Permission
 
@@ -149,6 +149,7 @@ def _timeline(
     messages: list[Message],
     reviews: list[ReviewItem],
     consents: list[Consent],
+    notes: list[ConsultNote],
     names: dict[UUID, str],
 ) -> list[TimelineEvent]:
     rows: list[TimelineEvent] = []
@@ -214,6 +215,19 @@ def _timeline(
                 kind="consent",
                 title=f"Đồng ý {k.kind} · {'có' if k.granted else 'rút'}",
                 source_id=str(k.id),
+            )
+        )
+    for n in notes:
+        if n.approved_at is None:
+            continue
+        rows.append(
+            TimelineEvent(
+                id=f"consult:{n.id}",
+                at=n.approved_at,
+                kind="consult",
+                title="Ghi chú tư vấn đã được duyệt",
+                by=names.get(n.approved_by) if n.approved_by else None,
+                source_id=str(n.id),
             )
         )
     rows.sort(key=lambda e: e.at, reverse=True)
@@ -334,8 +348,23 @@ async def get_patient_360(db: ClinicDatabase, ctx: ActionContext, patient_id: UU
                 )
             ).all()
         )
+        notes = list(
+            (
+                await session.scalars(
+                    select(ConsultNote)
+                    .where(
+                        ConsultNote.clinic_id == cid,
+                        ConsultNote.patient_id == patient_id,
+                        ConsultNote.status == "approved",
+                    )
+                    .order_by(ConsultNote.approved_at.desc())
+                    .limit(10)
+                )
+            ).all()
+        )
         user_ids = {
             *(s.doctor_id for s in sessions if s.doctor_id),
+            *(n.approved_by for n in notes if n.approved_by),
             *(a.created_by for a in appointments if a.created_by),
             *(a.actor_user_id for a, _ in activity_rows if a.actor_user_id),
         }
@@ -350,7 +379,14 @@ async def get_patient_360(db: ClinicDatabase, ctx: ActionContext, patient_id: UU
 
         facts = await _profile_facts(session, ctx, patient, plans)
         timeline = _timeline(
-            sessions, appointments, [a for a, _ in activity_rows], messages, reviews, consent_history, names
+            sessions,
+            appointments,
+            [a for a, _ in activity_rows],
+            messages,
+            reviews,
+            consent_history,
+            notes,
+            names,
         )
         code_by_patient = {patient.id: patient.code}
         dto = Patient360(
@@ -362,30 +398,8 @@ async def get_patient_360(db: ClinicDatabase, ctx: ActionContext, patient_id: UU
                 )
                 for e in episodes
             ],
-            plans=[
-                TreatmentPlanOut(
-                    id=p.id,
-                    episode_id=p.episode_id,
-                    service_code=p.service_code,
-                    title=p.title,
-                    total_sessions=p.total_sessions,
-                    completed_sessions=p.completed_sessions,
-                    status=p.status,
-                )
-                for p in plans
-            ],
-            recent_sessions=[
-                TreatmentSessionOut(
-                    id=s.id,
-                    plan_id=s.plan_id,
-                    performed_at=s.performed_at,
-                    doctor_id=s.doctor_id,
-                    protocol_id=s.protocol_id,
-                    title=s.title,
-                    status=s.status,
-                )
-                for s in sessions
-            ],
+            plans=[plan_out(p) for p in plans],
+            recent_sessions=[session_out(s) for s in sessions],
             appointments=[appointment_out(a, code_by_patient[a.patient_id]) for a in appointments],
             open_tasks=[task_out(t, patient.code, name) for t, name in task_rows],
             recent_activities=[activity_out(a, name) for a, name in activity_rows],

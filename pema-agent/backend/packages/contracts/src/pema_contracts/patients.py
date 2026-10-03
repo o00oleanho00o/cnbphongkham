@@ -84,6 +84,9 @@ class TreatmentPlanOut(ApiModel):
     total_sessions: int
     completed_sessions: int
     status: str
+    goal: str | None = None
+    doctor_id: UUID | None = None
+    version: int = 1
 
 
 class TreatmentSessionOut(ApiModel):
@@ -94,6 +97,12 @@ class TreatmentSessionOut(ApiModel):
     protocol_id: str | None = Field(default=None, description="E.g. 'laser-co2'; drives D+1/3/7 rules.")
     title: str
     status: str
+    session_type: str | None = None
+    region: str | None = None
+    view: str | None = None
+    next_visit_on: date | None = None
+    reviewed: bool = False
+    version: int = 1
 
 
 class ConsentOut(ApiModel):
@@ -116,7 +125,7 @@ class TimelineEvent(ApiModel):
 
     id: str
     at: VnDatetime
-    kind: str = Field(description="session, appointment, crm_activity, message, review, consent")
+    kind: str = Field(description="session, appointment, crm_activity, message, review, consent, consult")
     title: str
     detail: str | None = None
     by: str | None = None

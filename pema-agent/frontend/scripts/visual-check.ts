@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 
 import { chromium, type Page } from "playwright";
 
-import { concreteRoute, listPageRoutes } from "./app-routes";
+import { EXTRA_VISUAL_ROUTES, concreteRoute, listPageRoutes } from "./app-routes";
 
 const BASE = process.env.VISUAL_BASE_URL ?? "http://localhost:3000";
 const ROLE = process.env.VISUAL_ROLE ?? "owner";
@@ -60,7 +60,8 @@ function selectedRoutes(): string[] {
   return listPageRoutes(APP_DIR)
     .filter((route) => !route.startsWith("/dev"))
     .filter((route) => route !== "/login")
-    .map(concreteRoute);
+    .map(concreteRoute)
+    .concat(EXTRA_VISUAL_ROUTES);
 }
 
 async function signIn(page: Page): Promise<void> {

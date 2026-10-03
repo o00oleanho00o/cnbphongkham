@@ -10,13 +10,14 @@ describe("parseLiveEvent", () => {
     });
   });
 
-  it("accepts the six agreed types and keeps a missing id as null", () => {
+  it("accepts the seven agreed types and keeps a missing id as null", () => {
     const types = [
       "inbox.changed",
       "tasks.changed",
       "review.changed",
       "presence.changed",
       "handoff.changed",
+      "appointments.changed",
       "care.changed",
     ];
     types.forEach((type) => {
