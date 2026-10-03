@@ -20,7 +20,9 @@
     "shots": "tsx scripts/viewport-shots.ts",
     "tokens": "tsx scripts/export-tokens.ts",
     "visual": "tsx scripts/visual-check.ts",
-    "inventory": "tsx scripts/inventory-check.ts"
+    "inventory": "tsx scripts/inventory-check.ts",
+    "check": "node scripts/check.mjs",
+    "smoke": "tsx scripts/route-smoke.ts"
   },
   "dependencies": {
     "next": "^16.3.7",
