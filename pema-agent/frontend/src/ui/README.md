@@ -21,7 +21,7 @@ One token source and one small component kit for the staff web, shaped to be por
 ## Kit
 
 `AppShell` (frame), `Sidebar`, `TopBar`, `Workspace` + `PageHeading`, `Card`, `Tile`, `TableShell` (re-export of the
-dashboard table), `Tabs` + `TabPanel`, `Badge`, `Button` + `buttonClass` (primary, secondary, danger, danger-solid,
+dashboard table), `Tabs` (+ `segmentedOnPhone`: equal pills with `shortLabel` below `lg`, used by Patient 360) + `TabPanel`, `Badge`, `Button` + `buttonClass` (primary, secondary, danger, danger-solid,
 quiet), `Field` + `FIELD_CONTROL_CLASS` / `FIELD_BASE_CLASS`, `Dialog`, `Sheet`, `EmptyState`,
 `GuardedLink` (asks before leaving unsaved changes). Examples of all of them: `/dev/kit` (development only; a
 production build answers 404). The data-bound shell that fills the slots is

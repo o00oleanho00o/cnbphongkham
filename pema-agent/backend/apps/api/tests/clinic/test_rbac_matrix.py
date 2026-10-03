@@ -60,6 +60,23 @@ def test_every_permission_code_is_granted_to_someone() -> None:
         (P.APPOINTMENT_CHECK_IN, {Role.RECEPTION, Role.DOCTOR}, {Role.CS_STAFF, Role.PATIENT}),
         # "Ghi session": doctor; reception no
         (P.SESSION_WRITE, {Role.DOCTOR}, {Role.RECEPTION, Role.CS_STAFF, Role.MANAGER, Role.PATIENT}),
+        # package U3: clinical text of sessions and notes, and clinical photos. Care staff read and upload for their
+        # own patients (the action narrows it), never write a session; reception and manager see none of it.
+        (
+            P.SESSION_READ,
+            {Role.DOCTOR, Role.CS_STAFF, Role.OWNER},
+            {Role.RECEPTION, Role.MANAGER, Role.PATIENT},
+        ),
+        (
+            P.MEDIA_READ,
+            {Role.DOCTOR, Role.CS_STAFF, Role.OWNER},
+            {Role.RECEPTION, Role.MANAGER, Role.PATIENT},
+        ),
+        (
+            P.MEDIA_WRITE,
+            {Role.DOCTOR, Role.CS_STAFF, Role.OWNER},
+            {Role.RECEPTION, Role.MANAGER, Role.PATIENT},
+        ),
         # "Duyet prescription/AI draft": doctor only (the owner is the clinic's doctor)
         (
             P.REVIEW_DECIDE_CLINICAL,

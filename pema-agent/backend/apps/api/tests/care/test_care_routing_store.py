@@ -531,11 +531,15 @@ async def test_reminders_are_paused_in_staff_and_judged_on_release_over_postgres
 
 
 # ------------------------------------------------------------------------------------- migration
+PAUSED_REMINDERS_PARENT = "m_0001_care_tables"
+"""The revision before ``m_0002_paused_reminders``: later revisions (U3's ``u3_0010``) sit on top, so ``-1`` is no longer it."""
+
+
 def test_the_paused_reminders_migration_downgrades_one_step_and_upgrades_again(
     admin: Engine, pg_url: str
 ) -> None:
     cfg = Config(str(API_INI))
-    command.downgrade(cfg, "-1")
+    command.downgrade(cfg, PAUSED_REMINDERS_PARENT)
     left = _rows(admin, "SELECT to_regclass('agent.paused_reminders') IS NOT NULL")[0][0]
     care_agents = _rows(admin, "SELECT to_regclass('agent.care_agents') IS NOT NULL")[0][0]
     command.upgrade(cfg, "heads")

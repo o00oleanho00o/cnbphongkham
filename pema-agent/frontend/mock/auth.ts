@@ -173,16 +173,22 @@ const ALL: Permission[] = [
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   // `admin.users` (reset another user's password) is the owner's alone; the manager does not get it.
-  owner: [...ALL, "admin.users"],
-  manager: ALL,
+  // Clinical reads and photos (package U3): owner, doctor and care staff; a manager is not a clinician and holds no
+  // `session.write` either (the BE matrix), so the mock takes it out of the shared list.
+  owner: [...ALL, "admin.users", "session.read", "media.read", "media.write"],
+  manager: ALL.filter((permission) => permission !== "session.write"),
   doctor: [
     "patient.read",
     "patient.read_360",
     "consent.read",
+    "consent.write",
     "appointment.read",
     "appointment.write",
     "appointment.check_in",
     "session.write",
+    "session.read",
+    "media.read",
+    "media.write",
     "crm.task.read",
     "conversation.read",
     "review.read",
@@ -197,6 +203,9 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   cs_staff: [
     "patient.read",
     "patient.read_360",
+    "session.read",
+    "media.read",
+    "media.write",
     "consent.read",
     "consent.write",
     "appointment.read",
