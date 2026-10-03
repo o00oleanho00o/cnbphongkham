@@ -17,6 +17,7 @@ import { EmptyRow, ListToolbar, TableShell } from "@/components/admin/shared/ui-
 import { KbAddSourceModal } from "@/components/admin/kb/kb-add-source-modal";
 import { KbAssignAgentsModal } from "@/components/admin/kb/kb-assign-agents-modal";
 import { KbChunksModal } from "@/components/admin/kb/kb-chunks-modal";
+import { KbGuideTagsModal } from "@/components/admin/kb/kb-guide-tags-modal";
 import { KbGuideModal } from "@/components/admin/kb/kb-guide-modal";
 import { KbSearchModal } from "@/components/admin/kb/kb-search-modal";
 import { xayThongDiepXoaNguon } from "@/lib/admin/kb/kb-delete-warning-message";
@@ -88,6 +89,11 @@ export default function KnowledgePage() {
   const [xemDoanCua, setXemDoanCua] = useState<KbSourceListItem | null>(null);
   const [ganAgentCho, setGanAgentCho] = useState<KbSourceListItem | null>(null);
   const [xemHuongDan, setXemHuongDan] = useState(false);
+  // Package U7: which sources are articles of the staff guide (`GET /guide/articles`), and the one being tagged.
+  const [baiHuongDan, setBaiHuongDan] = useState<Map<string, Schemas["GuideArticleSummary"]>>(
+    () => new Map(),
+  );
+  const [ganNhanCho, setGanNhanCho] = useState<KbSourceListItem | null>(null);
   const [thuTim, setThuTim] = useState(false);
   const [fileTha, setFileTha] = useState<File | null>(null);
   const { confirm, confirmDialog } = useConfirmDialog();
@@ -118,15 +124,23 @@ export default function KnowledgePage() {
     void demAgentMoiNguon().then(setDemAgent);
   }, []);
 
+  // Not on the 4 s poll: the tags only change when someone saves them here (or in another tab, on the next visit).
+  const taiLaiBaiHuongDan = useCallback(() => {
+    unwrap(http.GET("/api/v1/guide/articles"))
+      .then((bai) => setBaiHuongDan(new Map(bai.map((b) => [b.id, b]))))
+      .catch(() => setBaiHuongDan(new Map()));
+  }, []);
+
   useEffect(() => {
     reload();
     tinhLaiAgent();
+    taiLaiBaiHuongDan();
     // Việc cắt đoạn chạy ở worker nền (kb-ingest-worker.ts, quét mỗi 5s) - tự
     // làm mới để trạng thái cho_xu_ly/dang_xu_ly chuyển sang san_sang/hong mà
     // người dùng không phải tự bấm F5.
     const timer = window.setInterval(reload, 4000);
     return () => window.clearInterval(timer);
-  }, [reload, tinhLaiAgent]);
+  }, [reload, tinhLaiAgent, taiLaiBaiHuongDan]);
 
   const daLoc = (sources ?? []).filter((s) => nhanKhopTuKhoa(s.name, query));
 
@@ -284,6 +298,8 @@ export default function KnowledgePage() {
                 onDelete={() => void remove(s)}
                 onViewChunks={() => setXemDoanCua(s)}
                 onAssignAgents={() => setGanAgentCho(s)}
+                guideTopic={baiHuongDan.get(s.id)?.topic ?? null}
+                onEditGuide={can("kb.manage") ? () => setGanNhanCho(s) : undefined}
               />
             ))
           )}
@@ -326,6 +342,16 @@ export default function KnowledgePage() {
       )}
 
       {xemHuongDan && <KbGuideModal onClose={() => setXemHuongDan(false)} />}
+
+      {ganNhanCho && (
+        <KbGuideTagsModal
+          sourceId={ganNhanCho.id}
+          sourceName={ganNhanCho.name}
+          tags={baiHuongDan.get(ganNhanCho.id)?.tags ?? []}
+          onClose={() => setGanNhanCho(null)}
+          onSaved={taiLaiBaiHuongDan}
+        />
+      )}
 
       {thuTim && <KbSearchModal onClose={() => setThuTim(false)} />}
 
