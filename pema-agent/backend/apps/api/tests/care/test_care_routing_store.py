@@ -54,6 +54,7 @@ from pema.core.db import ClinicDatabase
 pytestmark = pytest.mark.db
 
 API_INI = Path(__file__).resolve().parents[2] / "alembic.ini"
+M2_PARENT = "m_0001_care_tables"  # the revision the paused-reminders migration sits on
 NOW = datetime(2026, 10, 5, 3, 0, tzinfo=UTC)  # Monday 10:00 clinic time
 DAY = timedelta(days=1)
 
@@ -535,7 +536,7 @@ def test_the_paused_reminders_migration_downgrades_one_step_and_upgrades_again(
     admin: Engine, pg_url: str
 ) -> None:
     cfg = Config(str(API_INI))
-    command.downgrade(cfg, "-1")
+    command.downgrade(cfg, M2_PARENT)  # a later package may stack its own migration on top of this one
     left = _rows(admin, "SELECT to_regclass('agent.paused_reminders') IS NOT NULL")[0][0]
     care_agents = _rows(admin, "SELECT to_regclass('agent.care_agents') IS NOT NULL")[0][0]
     command.upgrade(cfg, "heads")
