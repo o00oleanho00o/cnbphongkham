@@ -39,6 +39,8 @@ const REDIRECTS: Readonly<Record<string, string>> = {
 
 const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
   "/today": { heading: "Việc hôm nay", action: { role: "button", name: "Việc của tôi" } },
+  "/dashboard": { heading: "Tổng quan", action: { role: "button", name: "Tuần này" } },
+  "/schedule": { heading: "Điều phối lịch", action: { role: "button", name: "7 ngày" } },
   "/inbox": { heading: "Inbox", action: { role: "textbox", name: "Tìm hội thoại" } },
   "/review": { heading: "Hàng đợi duyệt AI", action: { role: "button", name: "Cần bác sĩ" } },
   "/patients": { heading: "Hồ sơ bệnh nhân", action: { role: "textbox", name: "Tìm bệnh nhân" } },

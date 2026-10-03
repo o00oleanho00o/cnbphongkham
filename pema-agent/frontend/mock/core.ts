@@ -35,6 +35,8 @@ export type Reply = {
   status?: number;
   body?: unknown;
   headers?: Record<string, string>;
+  /** Raw bytes instead of JSON (photos); `headers` carries the content type. */
+  raw?: Buffer;
   /**
    * Server-sent events: the handler gets `write(data)` (a `data:` line; null is a keep-alive comment) and
    * returns what to run when the client goes away. The server keeps the connection open until then.

@@ -121,17 +121,30 @@ describe("visibleSections", () => {
   it("shows_a_planned_item_in_its_place_when_the_role_has_the_permission", () => {
     const sections = visibleSections((needs) => needs.includes("appointment.read"));
 
+    expect(
+      sections
+        .flatMap((s) => s.items)
+        .filter((i) => i.planned)
+        .map((i) => i.to),
+    ).toContain("/resources");
     expect(sections[0]?.items.map((i) => i.to)).toContain("/schedule");
   });
 });
 
 describe("homeFor", () => {
   it("opens_the_first_screen_that_exists_and_is_allowed", () => {
-    expect(homeFor((needs) => needs.includes("crm.task.read"))).toBe("/today");
+    expect(homeFor((needs) => needs.includes("crm.task.read"))).toBe("/dashboard");
+    expect(homeFor((needs) => needs.includes("appointment.read"))).toBe("/dashboard");
+  });
+
+  it("sends_the_care_role_to_the_cskh_queue_like_the_old_web", () => {
+    const care = new Set(["crm.task.read", "crm.task.resolve", "appointment.read"]);
+
+    expect(homeFor((needs) => needs.some((p) => care.has(p)))).toBe("/today");
   });
 
   it("skips_planned_screens_even_when_they_come_first", () => {
-    expect(homeFor((needs) => needs.includes("appointment.read"))).toBe("/login");
+    expect(homeFor((needs) => needs.includes("patient.read"))).toBe("/patients");
   });
 
   it("goes_to_login_when_nothing_is_allowed", () => {

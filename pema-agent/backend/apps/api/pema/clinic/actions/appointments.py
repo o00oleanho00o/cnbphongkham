@@ -8,13 +8,18 @@ concurrent bookings of the same doctor or patient cannot both pass), no rooms/se
 ``domain.appointments``).
 
 Authorization (ARCH-PB01): ``appointment.read`` lists; ``appointment.write`` books, edits and cancels;
-``appointment.check_in`` drives arrived/in-progress/completed/missed. A doctor edits only their own
+``appointment.check_in`` drives arrived/in-progress/completed/missed; confirming (booked to confirmed) is
+``appointment.write``. A doctor edits only their own
 appointments ("gioi han"); a CS member books only through a CRM task (``crm.task.resolve`` + ``crm_task_id``).
+
+Package U, step U2 adds the day/week board (``list_schedule``), the first free slot (``find_free_slot``), the
+``confirm`` transition and the announcement after a commit: ``appointments.changed`` for the open schedules
+and the dashboard, and ``appointment_events.notify`` so the CRM rules run soon (no_show, due, reactivation).
 """
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import Any
 from uuid import UUID
 
@@ -22,6 +27,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pema.clinic import audit
+from pema.clinic.actions import appointment_events
 from pema.clinic.actions._common import (
     check_version,
     lost_race_is_conflict,
@@ -29,9 +35,10 @@ from pema.clinic.actions._common import (
     now,
 )
 from pema.clinic.actions._mappers import appointment_out
+from pema.clinic.actions.appointment_events import AppointmentChange
 from pema.clinic.domain import appointments as rules
 from pema.clinic.models import Appointment, CrmTask, Patient, UserAccount
-from pema.clinic.rbac import is_doctor_scoped, require, require_any
+from pema.clinic.rbac import has_permission, is_doctor_scoped, require, require_any
 from pema.core.db import ClinicDatabase
 from pema.live import emit_live
 from pema_contracts.actions import ActionContext
@@ -41,8 +48,13 @@ from pema_contracts.appointments import (
     AppointmentStatus,
     AppointmentTransition,
     AppointmentUpdate,
+    FreeSlotOut,
+    ScheduleDoctor,
+    ScheduleItem,
+    ScheduleOut,
+    ScheduleView,
 )
-from pema_contracts.common import Page
+from pema_contracts.common import VN_TZ, Page
 from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.live import LiveEventType
 from pema_contracts.roles import Permission, Role
@@ -51,6 +63,20 @@ DOCTOR_ROLES = (Role.DOCTOR.value, Role.OWNER.value)
 _MAX_DURATION = timedelta(minutes=480)
 _FREE = [s.value for s in rules.FREE_STATUSES]
 OPEN_TASK_STATUSES = ("open", "rescheduled")
+SCHEDULE_LIMIT = 500
+"""Most rows one board call returns: a clinic day holds a few dozen, a week a few hundred."""
+SLOT_STEP_MIN = 15
+"""JS ``suggest``: the search walks the day in steps of 15 minutes from the opening time."""
+
+
+def announce(appointment_id: UUID, patient_id: UUID, kind: str, status: AppointmentStatus) -> None:
+    """After the commit: the schedules and the dashboard reload, and the CRM rules run soon. Never raises."""
+    emit_live(LiveEventType.APPOINTMENTS_CHANGED, appointment_id)
+    appointment_events.notify(
+        AppointmentChange(
+            appointment_id=appointment_id, patient_id=patient_id, kind=kind, status=status.value
+        )
+    )
 
 
 def _own_only(ctx: ActionContext, doctor_id: UUID | None) -> None:
@@ -312,6 +338,7 @@ async def create_appointment(
                 {"appointment_id": str(row.id)},
             )
         created = appointment_out(row, code)
+    announce(created.id, created.patient_id, "create", created.status)
     if task is not None:
         emit_live(LiveEventType.TASKS_CHANGED, task.id)
     return created
@@ -357,7 +384,9 @@ async def update_appointment(
         await audit.record(
             session, ctx, "appointment.update", "appointment", row.id, {"changed_fields": changed}
         )
-        return appointment_out(row, code)
+        updated = appointment_out(row, code)
+    announce(updated.id, updated.patient_id, "update", updated.status)
+    return updated
 
 
 def _is_set(payload: AppointmentUpdate, name: str) -> bool:
@@ -411,7 +440,25 @@ async def _transition(
             row.id,
             {"from": current.value, "to": target.value, "has_reason": bool(reason)},
         )
-        return appointment_out(row, code)
+        changed = appointment_out(row, code)
+    announce(changed.id, changed.patient_id, verb, target)
+    return changed
+
+
+async def confirm_appointment(
+    db: ClinicDatabase, ctx: ActionContext, appointment_id: UUID, payload: AppointmentTransition
+) -> AppointmentOut:
+    """JS ``setStatus(id, 'confirmed')``: the desk confirmed the visit with the patient."""
+    return await _transition(
+        db,
+        ctx,
+        appointment_id,
+        payload,
+        verb="confirm",
+        permission=Permission.APPOINTMENT_WRITE,
+        allowed_from=rules.CONFIRM_FROM,
+        target=AppointmentStatus.CONFIRMED,
+    )
 
 
 async def check_in_appointment(
@@ -490,14 +537,154 @@ async def miss_appointment(
     )
 
 
+def _day_start(day: date) -> datetime:
+    return datetime.combine(day, time(0, 0), tzinfo=VN_TZ)
+
+
+async def list_schedule(
+    db: ClinicDatabase,
+    ctx: ActionContext,
+    *,
+    day: date,
+    view: ScheduleView = ScheduleView.DAY,
+    doctor_id: UUID | None = None,
+) -> ScheduleOut:
+    """JS ``schedule()``: the appointments of ``day`` (or the 7 days from it), optionally of one doctor. Every
+    status is returned (the page hides cancelled and missed by default, as ``filtered`` did with
+    ``O.active``). A doctor gets only their own appointments whatever ``doctor_id`` says (JS ``filtered``
+    forces ``doctor`` to the signed-in doctor), so no patient of a colleague is named to them."""
+    require(ctx, Permission.APPOINTMENT_READ)
+    if is_doctor_scoped(ctx):
+        doctor_id = ctx.actor_user_id
+    days = 7 if view is ScheduleView.WEEK else 1
+    starts = _day_start(day)
+    ends = starts + timedelta(days=days)
+    show_names = has_permission(ctx, Permission.PATIENT_READ)
+    conditions: list[Any] = [
+        Appointment.clinic_id == ctx.clinic_id,
+        Appointment.starts_at >= starts,
+        Appointment.starts_at < ends,
+    ]
+    if doctor_id is not None:
+        conditions.append(Appointment.doctor_id == doctor_id)
+    async with db.session() as session:
+        rows = await session.execute(
+            select(Appointment, Patient.code, Patient.full_name, UserAccount.display_name)
+            .join(
+                Patient, (Patient.id == Appointment.patient_id) & (Patient.clinic_id == Appointment.clinic_id)
+            )
+            .outerjoin(
+                UserAccount,
+                (UserAccount.id == Appointment.doctor_id) & (UserAccount.clinic_id == Appointment.clinic_id),
+            )
+            .where(*conditions)
+            .order_by(Appointment.starts_at, Appointment.id)
+            .limit(SCHEDULE_LIMIT)
+        )
+        items = [
+            ScheduleItem(
+                **appointment_out(a, code).model_dump(),
+                patient_name=full_name if show_names else None,
+                doctor_name=doctor_name,
+            )
+            for a, code, full_name, doctor_name in rows.all()
+        ]
+        doctor_query = select(UserAccount.id, UserAccount.display_name).where(
+            UserAccount.clinic_id == ctx.clinic_id,
+            UserAccount.active.is_(True),
+            UserAccount.role.in_(DOCTOR_ROLES),
+        )
+        if is_doctor_scoped(ctx):
+            doctor_query = doctor_query.where(UserAccount.id == ctx.actor_user_id)
+        doctors = [
+            ScheduleDoctor(id=uid, name=name)
+            for uid, name in (await session.execute(doctor_query.order_by(UserAccount.display_name))).all()
+        ]
+    return ScheduleOut(
+        view=view,
+        from_day=day,
+        to_day=day + timedelta(days=days - 1),
+        doctor_id=doctor_id,
+        items=items,
+        doctors=doctors,
+    )
+
+
+async def find_free_slot(
+    db: ClinicDatabase,
+    ctx: ActionContext,
+    *,
+    patient_id: UUID,
+    doctor_id: UUID | None,
+    day: date,
+    duration_min: int = 30,
+) -> FreeSlotOut:
+    """JS ``suggest`` ("Tim gio trong"): the first start on ``day`` (steps of 15 minutes from 08:00) that the
+    one validator accepts. One query loads the day's appointments of the doctor and the patient; the walk
+    is in memory. A time that has already passed today is skipped."""
+    require_any(ctx, (Permission.APPOINTMENT_WRITE, Permission.CRM_TASK_RESOLVE))
+    if is_doctor_scoped(ctx):
+        doctor_id = doctor_id or ctx.actor_user_id  # a doctor looks for a slot of their own
+        _own_only(ctx, doctor_id)
+    if duration_min < 5 or duration_min > 480:
+        raise DomainError(ErrorCode.VALIDATION_FAILED, "Thời lượng không hợp lệ.")
+    opens = datetime.combine(day, rules.WORK_START, tzinfo=VN_TZ)
+    closes = datetime.combine(day, rules.WORK_END, tzinfo=VN_TZ)
+    owner = Appointment.patient_id == patient_id
+    if doctor_id is not None:
+        owner = owner | (Appointment.doctor_id == doctor_id)
+    async with db.session() as session:
+        await _patient_code(session, ctx, patient_id)
+        await _check_doctor(session, ctx, doctor_id)
+        found = await session.scalars(
+            select(Appointment).where(
+                Appointment.clinic_id == ctx.clinic_id,
+                Appointment.status.notin_(_FREE),
+                Appointment.starts_at < closes,
+                Appointment.starts_at > opens - _MAX_DURATION,
+                owner,
+            )
+        )
+        existing = [
+            rules.Slot(
+                patient_id=a.patient_id,
+                doctor_id=a.doctor_id,
+                starts_at=a.starts_at,
+                duration_min=a.duration_min,
+                appointment_id=a.id,
+                status=AppointmentStatus(a.status),
+            )
+            for a in found
+        ]
+    clock = now()
+    start = opens
+    while start + timedelta(minutes=duration_min) <= closes:
+        candidate = rules.Slot(
+            patient_id=patient_id, doctor_id=doctor_id, starts_at=start, duration_min=duration_min
+        )
+        try:
+            rules.validate_slot(start, duration_min, clock)
+        except DomainError:
+            start += timedelta(minutes=SLOT_STEP_MIN)
+            continue
+        if start > clock and rules.find_conflict(candidate, existing) is None:
+            return FreeSlotOut(starts_at=start)
+        start += timedelta(minutes=SLOT_STEP_MIN)
+    return FreeSlotOut(starts_at=None)
+
+
 __all__ = [
+    "announce",
     "book_in_session",
     "cancel_appointment",
     "check_in_appointment",
     "complete_appointment",
+    "confirm_appointment",
     "create_appointment",
+    "find_free_slot",
     "get_appointment",
     "list_appointments",
+    "list_schedule",
     "miss_appointment",
     "start_appointment",
     "update_appointment",

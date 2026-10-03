@@ -14,6 +14,7 @@ export type LiveEventType =
   | "review.changed"
   | "presence.changed"
   | "handoff.changed"
+  | "appointments.changed"
   | "care.changed";
 export type LiveMessage = { type: LiveEventType; id: string | null };
 export type PresenceState = "viewing" | "replying";
@@ -23,6 +24,7 @@ export const PRESENCE_TTL_MS = 40_000;
 const SIMULATE_ROTATION: readonly LiveEventType[] = [
   "inbox.changed",
   "tasks.changed",
+  "appointments.changed",
   "review.changed",
   "handoff.changed",
 ];
@@ -117,6 +119,10 @@ export function resetPresence(): void {
 
 type Announce = { type: LiveEventType; idParam?: string };
 
+const APPOINTMENT_ID: readonly Announce[] = [
+  { type: "appointments.changed", idParam: "appointment_id" },
+];
+
 const CARE_PATIENT: readonly Announce[] = [
   { type: "handoff.changed", idParam: "patient_id" },
   { type: "care.changed", idParam: "patient_id" },
@@ -133,6 +139,14 @@ const ANNOUNCE: Record<string, readonly Announce[]> = {
   "POST /api/v1/conversations/{conversation_id}/read": [
     { type: "inbox.changed", idParam: "conversation_id" },
   ],
+  "POST /api/v1/appointments": [{ type: "appointments.changed" }],
+  "PATCH /api/v1/appointments/{appointment_id}": APPOINTMENT_ID,
+  "POST /api/v1/appointments/{appointment_id}/confirm": APPOINTMENT_ID,
+  "POST /api/v1/appointments/{appointment_id}/check-in": APPOINTMENT_ID,
+  "POST /api/v1/appointments/{appointment_id}/start": APPOINTMENT_ID,
+  "POST /api/v1/appointments/{appointment_id}/complete": APPOINTMENT_ID,
+  "POST /api/v1/appointments/{appointment_id}/cancel": APPOINTMENT_ID,
+  "POST /api/v1/appointments/{appointment_id}/miss": APPOINTMENT_ID,
   "POST /api/v1/crm/tasks/{task_id}/resolve": [{ type: "tasks.changed", idParam: "task_id" }],
   "POST /api/v1/crm/activities": [{ type: "tasks.changed" }],
   "POST /api/v1/review-items/{item_id}/approve": [

@@ -4,7 +4,13 @@ import { useRef, type KeyboardEvent, type ReactNode } from "react";
 
 import { cx } from "./classnames";
 
-export type TabItem = { id: string; label: string; count?: number };
+export type TabItem = {
+  id: string;
+  label: string;
+  /** Shorter label for the segmented control of a phone (`segmentedOnPhone`); defaults to `label`. */
+  shortLabel?: string;
+  count?: number;
+};
 
 const tabId = (idPrefix: string, id: string): string => `${idPrefix}-tab-${id}`;
 const panelId = (idPrefix: string, id: string): string => `${idPrefix}-panel-${id}`;
@@ -23,6 +29,9 @@ export function targetTabIndex(key: string, current: number, count: number): num
 /**
  * Tab bar of the old web (`.tabbar`, the Patient 360 tabs): underline on the active tab, scrolls sideways
  * inside itself on a phone. Arrow keys, Home and End move between tabs (roving tabindex).
+ *
+ * `segmentedOnPhone`: below `lg` the same tabs become a segmented control (one row of equal pills that never
+ * scrolls, `shortLabel` shown), from `lg` the underline bar. One set of ids either way.
  */
 export function Tabs({
   label,
@@ -30,6 +39,7 @@ export function Tabs({
   items,
   value,
   onChange,
+  segmentedOnPhone = false,
 }: {
   label: string;
   /** Unique per page; ties each tab to its panel (`TabPanel`). */
@@ -37,6 +47,7 @@ export function Tabs({
   items: readonly TabItem[];
   value: string;
   onChange: (id: string) => void;
+  segmentedOnPhone?: boolean;
 }) {
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
 
@@ -55,7 +66,16 @@ export function Tabs({
       role="tablist"
       aria-label={label}
       onKeyDown={onKeyDown}
-      className="mb-5 flex gap-1 overflow-x-auto border-b border-line"
+      className={cx(
+        "mb-5 flex gap-1 overflow-x-auto border-b border-line",
+        segmentedOnPhone &&
+          "grid gap-0.5 overflow-visible rounded-control border bg-tile p-0.5 lg:flex lg:gap-1 lg:overflow-x-auto lg:rounded-none lg:border-0 lg:border-b lg:bg-transparent lg:p-0",
+      )}
+      style={
+        segmentedOnPhone
+          ? { gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }
+          : undefined
+      }
     >
       {items.map((item) => {
         const selected = item.id === value;
@@ -77,9 +97,21 @@ export function Tabs({
               selected
                 ? "border-link font-bold text-link"
                 : "border-transparent text-ink-soft hover:text-ink",
+              segmentedOnPhone &&
+                "mb-0 min-w-0 rounded-tile px-1 text-small lg:-mb-px lg:rounded-none lg:px-3.5 lg:text-body",
+              segmentedOnPhone &&
+                selected &&
+                "border-transparent bg-surface shadow-card lg:border-link lg:bg-transparent lg:shadow-none",
             )}
           >
-            {item.label}
+            {segmentedOnPhone && item.shortLabel !== undefined ? (
+              <>
+                <span className="truncate lg:hidden">{item.shortLabel}</span>
+                <span className="hidden lg:inline">{item.label}</span>
+              </>
+            ) : (
+              item.label
+            )}
             {item.count !== undefined && (
               <span className="ml-1.5 rounded-pill bg-tile px-1.5 text-eyebrow text-ink-soft">
                 {item.count}

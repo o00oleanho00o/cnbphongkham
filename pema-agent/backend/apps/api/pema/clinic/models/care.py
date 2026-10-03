@@ -64,10 +64,12 @@ class TreatmentPlan(Base):
     doctor_id: Mapped[UUID | None] = mapped_column(default=None)
     service_code: Mapped[str] = mapped_column(Text)
     title: Mapped[str] = mapped_column(Text)
+    goal: Mapped[str | None] = mapped_column(Text, default=None)
     total_sessions: Mapped[int] = mapped_column(Integer, default=1)
     completed_sessions: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[str] = mapped_column(Text, default="active")
     version: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __mapper_args__ = {"version_id_col": version}  # noqa: RUF012
 
@@ -85,6 +87,19 @@ class TreatmentSession(Base):
     title: Mapped[str] = mapped_column(Text)
     note: Mapped[str | None] = mapped_column(Text, default=None)
     status: Mapped[str] = mapped_column(Text, default="completed")
+    session_type: Mapped[str | None] = mapped_column(Text, default=None)
+    region: Mapped[str | None] = mapped_column(Text, default=None)
+    view: Mapped[str | None] = mapped_column(Text, default=None)
+    next_visit_on: Mapped[date | None] = mapped_column(Date, default=None)
+    aftercare: Mapped[str | None] = mapped_column(Text, default=None)
+    consent_id: Mapped[UUID | None] = mapped_column(default=None)
+    reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
+    reviewed_by: Mapped[UUID | None] = mapped_column(default=None)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    created_by: Mapped[UUID | None] = mapped_column(default=None)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+
+    __mapper_args__ = {"version_id_col": version}  # noqa: RUF012
 
 
 class Consent(Base):
