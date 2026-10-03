@@ -278,8 +278,8 @@ Where: plan `pema-agent/docs/PLAN-AI01-U.md`; recipes `pema-agent/recipes/U/` (`
 `_REPORT-TEMPLATE.md`, `01-U0` … `09-U8`). Old web is reference only (`prototype/`, `design-specs/`,
 `.agents/skills/design-system/`), read-only.
 
-How to run (when the user says so): branch `feat/single-tenant`; one `pema-builder` per recipe in its own worktree;
-prompt "Follow pema-agent/recipes/U/<file>.md on branch feat/single-tenant. Single-tenant: no RLS, clinic_id =
+How to run (when the user says so): branch `feat/ui-parity` (from `feat/single-tenant` at `bc094c8`; merge back to `feat/single-tenant` only when the user accepts the package); one `pema-builder` per recipe in its own worktree;
+prompt "Follow pema-agent/recipes/U/<file>.md on branch feat/ui-parity. Single-tenant: no RLS, clinic_id =
 installation id. Return the report in _REPORT-TEMPLATE.md format." Order U0 → U1 → (U2 ‖ U3 ‖ U4 ‖ U7) → U5 → U6 → U8.
 Gates before merging a worktree: FE vitest ≥ 407 and `pnpm inventory`/`pnpm visual` green (from U1 on), lint/tsc/build,
 BE pytest/ruff/pyright/import-linter, no attribution in `git log --format=%B`, report filed. Migrations use prefix
