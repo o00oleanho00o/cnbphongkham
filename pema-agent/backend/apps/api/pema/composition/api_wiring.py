@@ -28,6 +28,7 @@ from pema.api.routers import admin_crm_rules, admin_model, admin_usage
 from pema.api.routers.admin_stores import AdminStores
 from pema.api.routers.admin_tools import ToolsAdminServices, install_tools_admin_services
 from pema.channels.zalo_personal.audit_writer import SqlAuditSink
+from pema.clinic.actions import appointment_events
 from pema.clinic.crm_rules.admin import SqlCrmRuleAdminService
 from pema.clinic.crm_rules.runner import CrmRulesRunner
 from pema.clinic.crm_rules.sql_store import SqlCrmRuleStore
@@ -57,6 +58,10 @@ from pema_contracts.installation import installation_clinic_id
 from pema_contracts.roles import ActorType, Permission
 
 log = create_logger("composition.api")
+
+CRM_NUDGE_SETTLE_S = 2.0
+"""After an appointment changed, wait this long before the rules run, so a burst (a morning of check-ins)
+becomes one run."""
 
 
 def _audit_context(clinic_id: UUID) -> ActionContext:
@@ -167,6 +172,7 @@ class ApiLifecycle:
         self._bot = bot
         self._personal = personal
         self._crm_task: asyncio.Task[None] | None = None
+        self._crm_wake = asyncio.Event()
         self._retention_task: asyncio.Task[None] | None = None
 
     async def start(self) -> None:
@@ -186,6 +192,7 @@ class ApiLifecycle:
             await self._personal.manager.start_all_accounts()
         interval = rt.settings.crm_runner_interval_seconds
         if interval > 0:
+            appointment_events.install_listener(lambda _change: self._crm_wake.set())
             self._crm_task = asyncio.get_running_loop().create_task(self._crm_loop(interval))
         self._retention_task = start_retention_loop(
             RetentionRunner(
@@ -204,9 +211,15 @@ class ApiLifecycle:
                 log.info("crm rules ran", tasks=report.tasks_created, jobs=report.jobs_created)
             except Exception as err:
                 log.error("crm rules run failed", err=err)
-            await asyncio.sleep(interval_s)
+            # Package U, step U2: a changed appointment (missed, arrived, cancelled) wakes the loop early.
+            with contextlib.suppress(TimeoutError):
+                await asyncio.wait_for(self._crm_wake.wait(), timeout=interval_s)
+            if self._crm_wake.is_set():
+                await asyncio.sleep(CRM_NUDGE_SETTLE_S)
+                self._crm_wake.clear()
 
     async def stop(self) -> None:
+        appointment_events.install_listener(None)
         crm, self._crm_task = self._crm_task, None
         if crm is not None:
             crm.cancel()

@@ -300,7 +300,7 @@ async def test_a_doctor_stream_carries_no_ids_because_a_doctor_sees_only_their_o
     assert data_of(await stream.read_until("inbox.changed")) == {"type": "inbox.changed", "id": None}
 
 
-async def test_reception_receives_no_inbox_review_or_task_events(
+async def test_reception_receives_no_inbox_review_or_task_events_only_the_schedule(
     app: FastAPI,
     live: LiveServices,
     client_factory: ClientFactory,
@@ -315,7 +315,10 @@ async def test_reception_receives_no_inbox_review_or_task_events(
         live.publisher.emit(event_type, uuid4())
     await flush(live)
     await stream.read_until(": keep-alive")
-    assert "data:" not in stream.body
+    # the desk reads appointments (package U, step U2), nothing else
+    data_lines = [line for line in stream.body.splitlines() if line.startswith("data:")]
+    assert len(data_lines) == 1
+    assert json.loads(data_lines[0].removeprefix("data:"))["type"] == "appointments.changed"
 
 
 # ------------------------------------------------------------------------------------- keep-alive, end
