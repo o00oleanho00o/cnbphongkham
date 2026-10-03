@@ -25,6 +25,8 @@ import { formatDateTime } from "@/lib/ops/format";
 import { REVIEW_KIND_LABEL, REVIEW_ORIGIN_LABEL, REVIEW_STATUS_LABEL } from "@/lib/ops/labels";
 import { useSession } from "@/lib/session/session-context";
 import { useLoad } from "@/lib/use-load";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 const TEXT_KINDS: readonly Schemas["ReviewKind"][] = ["reply_draft", "followup_draft"];
 
@@ -40,7 +42,7 @@ const KIND_EXPLANATION: Partial<Record<Schemas["ReviewKind"], string>> = {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-4">
-      <h3 className="mb-1.5 text-[11px] font-semibold tracking-wide text-ink-soft uppercase">
+      <h3 className="mb-1.5 text-micro font-semibold tracking-wide text-ink-soft uppercase">
         {title}
       </h3>
       {children}
@@ -202,11 +204,11 @@ export function ReviewDetail({
   }
 
   return (
-    <article className="gc-card p-4 sm:p-5">
+    <article className="rounded-card border border-line bg-surface p-4 shadow-card sm:p-5">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-[16px] font-semibold text-ink">{REVIEW_KIND_LABEL[item.kind]}</h2>
-          <p className="mt-0.5 text-[13px] text-ink-soft">
+          <h2 className="text-section font-semibold text-ink">{REVIEW_KIND_LABEL[item.kind]}</h2>
+          <p className="mt-0.5 text-small text-ink-soft">
             {item.patient_id ? (
               <Link href={`/patients/${item.patient_id}`} className="text-brand-500 underline">
                 {patientName}
@@ -263,18 +265,18 @@ export function ReviewDetail({
                 onChange={(e) => setEditedText(e.target.value)}
                 rows={6}
                 maxLength={2000}
-                className="gc-input w-full"
+                className={cx(FIELD_BASE_CLASS, "w-full")}
               />
-              <p className="mt-1 text-[12px] text-ink-soft">
+              <p className="mt-1 text-label text-ink-soft">
                 Bản sửa được lưu cùng bản nháp gốc để đối chiếu.
               </p>
             </>
           ) : (
-            <p className="rounded-lg bg-tile/60 px-3.5 py-3 text-[14px] leading-relaxed whitespace-pre-wrap text-ink">
+            <p className="rounded-control bg-tile/60 px-3.5 py-3 text-body leading-relaxed whitespace-pre-wrap text-ink">
               {item.final_text ?? item.draft_text}
             </p>
           )}
-          <p className="mt-1.5 text-[12px] text-ink-soft">
+          <p className="mt-1.5 text-label text-ink-soft">
             Nháp này không phải chẩn đoán hay chỉ định điều trị.
           </p>
         </Section>
@@ -289,16 +291,16 @@ export function ReviewDetail({
           ) : (
             <ul className="space-y-2">
               {sources.map((s) => (
-                <li key={s.source_id} className="rounded-lg border border-line px-3 py-2.5">
+                <li key={s.source_id} className="rounded-control border border-line px-3 py-2.5">
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-[13px] font-semibold text-ink">{s.title}</span>
+                    <span className="text-small font-semibold text-ink">{s.title}</span>
                     {typeof s.score === "number" && (
-                      <span className="shrink-0 text-[11px] text-ink-soft">
+                      <span className="shrink-0 text-micro text-ink-soft">
                         độ khớp {Math.round(s.score * 100)}%
                       </span>
                     )}
                   </div>
-                  <p className="mt-0.5 text-[13px] text-ink-soft">{s.snippet}</p>
+                  <p className="mt-0.5 text-small text-ink-soft">{s.snippet}</p>
                 </li>
               ))}
             </ul>
@@ -307,14 +309,14 @@ export function ReviewDetail({
       )}
 
       {item.model && (
-        <p className="mt-3 text-[11px] text-ink-soft">
+        <p className="mt-3 text-micro text-ink-soft">
           Mô hình {item.model}
           {item.prompt_version ? ` · prompt ${item.prompt_version}` : ""}
         </p>
       )}
 
       {item.conversation_id && (
-        <p className="mt-3 text-[13px]">
+        <p className="mt-3 text-small">
           <Link href={`/inbox?c=${item.conversation_id}`} className="text-brand-500 underline">
             Mở hội thoại với khách
           </Link>
@@ -323,11 +325,11 @@ export function ReviewDetail({
 
       {!open && (
         <Section title="Quyết định">
-          <p className="text-[13px] text-ink">
+          <p className="text-small text-ink">
             {REVIEW_STATUS_LABEL[item.status]} · {formatDateTime(item.decided_at)}
           </p>
           {item.decision_note && (
-            <p className="mt-0.5 text-[13px] text-ink-soft">{item.decision_note}</p>
+            <p className="mt-0.5 text-small text-ink-soft">{item.decision_note}</p>
           )}
         </Section>
       )}
@@ -344,10 +346,7 @@ export function ReviewDetail({
 
           {(mode === "reject" || mode === "escalate") && (
             <div className="mb-3">
-              <label
-                htmlFor="review-note"
-                className="mb-1.5 block text-[13px] font-medium text-ink"
-              >
+              <label htmlFor="review-note" className="mb-1.5 block text-small font-medium text-ink">
                 {mode === "reject" ? "Lý do từ chối (bắt buộc)" : "Ghi chú cho bác sĩ (nếu cần)"}
               </label>
               <textarea
@@ -355,7 +354,7 @@ export function ReviewDetail({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={2}
-                className="gc-input w-full"
+                className={cx(FIELD_BASE_CLASS, "w-full")}
               />
             </div>
           )}

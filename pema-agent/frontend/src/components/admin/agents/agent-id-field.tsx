@@ -61,7 +61,7 @@ export function AgentIdField({
   return (
     <div className="mt-2">
       {!hienONhap ? (
-        <p className="text-[12px] text-ink-soft">
+        <p className="text-label text-ink-soft">
           ID:{" "}
           <span className="font-mono">
             {idTrong ? <span className="italic">chưa tạo được từ tên</span> : id}
@@ -72,7 +72,7 @@ export function AgentIdField({
         </p>
       ) : (
         <>
-          <label htmlFor="ag-id" className="mb-2 block text-[13px] font-medium text-ink">
+          <label htmlFor="ag-id" className="mb-2 block text-small font-medium text-ink">
             ID <span className="font-normal text-ink-soft">(không đổi được sau khi tạo)</span>
           </label>
           <input
@@ -85,17 +85,15 @@ export function AgentIdField({
             placeholder="cham-soc-khach-hang"
             autoFocus
           />
-          {loiDinhDang && (
-            <p className="mt-1.5 text-[12px] text-red-600 dark:text-red-400">{loiDinhDang}</p>
-          )}
+          {loiDinhDang && <p className="mt-1.5 text-label text-danger">{loiDinhDang}</p>}
         </>
       )}
 
-      {loi && <p className="mt-1.5 text-[12px] text-red-600 dark:text-red-400">{loi}</p>}
+      {loi && <p className="mt-1.5 text-label text-danger">{loi}</p>}
 
       {/* Tên toàn ký tự lạ (vd "日本語") cho ra slug rỗng - phải nói rõ cách thoát */}
       {idTrong && idTuGo === null && !tenTrong && (
-        <p className="mt-1.5 text-[12px] text-amber-600 dark:text-amber-400">
+        <p className="mt-1.5 text-label text-warning">
           Tên không tạo được ID chữ thường - bấm &quot;sửa&quot; để tự đặt.
         </p>
       )}

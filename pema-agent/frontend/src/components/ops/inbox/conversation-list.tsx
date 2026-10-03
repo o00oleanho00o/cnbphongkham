@@ -35,19 +35,19 @@ function ConversationRowView({ conversation: c, selected, onOpen }: RowProps) {
         type="button"
         onClick={() => onOpen(c.id)}
         aria-current={selected ? "true" : undefined}
-        className={`flex min-h-[72px] w-full items-start gap-3 rounded-xl border px-3 py-3 text-left transition-colors ${
+        className={`flex min-h-[72px] w-full items-start gap-3 rounded-tile border px-3 py-3 text-left transition-colors ${
           selected ? "border-brand-500 bg-brand-50" : "border-line bg-surface hover:bg-tile/60"
         }`}
       >
         <InitialAvatar name={title} />
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline justify-between gap-2">
-            <span className="truncate text-[14px] font-semibold text-ink">{title}</span>
-            <span className="shrink-0 text-[11px] text-ink-soft">
+            <span className="truncate text-body font-semibold text-ink">{title}</span>
+            <span className="shrink-0 text-micro text-ink-soft">
               {formatDateTime(c.last_message_at)}
             </span>
           </span>
-          <span className="mt-0.5 line-clamp-2 block text-[13px] text-ink-soft">
+          <span className="mt-0.5 line-clamp-2 block text-small text-ink-soft">
             {c.last_message_preview ?? "Chưa có tin nhắn"}
           </span>
           <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -59,14 +59,14 @@ function ConversationRowView({ conversation: c, selected, onOpen }: RowProps) {
                 Có nháp chờ duyệt
               </Badge>
             )}
-            <span className="text-[11px] text-ink-soft">{CHANNEL_KIND_LABEL[c.channel]}</span>
+            <span className="text-micro text-ink-soft">{CHANNEL_KIND_LABEL[c.channel]}</span>
           </span>
           <PresenceLine viewers={viewersOf(c)} className="mt-1 max-w-full" />
         </span>
         {(c.unread_count ?? 0) > 0 && (
           <span
             aria-label={`${c.unread_count} tin chưa đọc`}
-            className="mt-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-[11px] font-semibold text-white"
+            className="mt-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-micro font-semibold text-white"
           >
             {c.unread_count}
           </span>

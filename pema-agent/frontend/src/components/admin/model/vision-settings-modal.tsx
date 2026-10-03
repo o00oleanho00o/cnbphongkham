@@ -184,17 +184,17 @@ export function VisionSettingsModal({
           </ModalField>
         </ChainStep>
 
-        <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-2.5 text-[12px] leading-[1.6] text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
+        <div className="rounded-tile border border-warning-line bg-warning-soft px-4 py-2.5 text-label leading-[1.6] text-warning">
           Với hồ sơ chính sách Kênh bệnh nhân, công cụ đọc ảnh bị tắt và ảnh khách gửi được chuyển
           cho nhân viên xem: sidecar không đọc ảnh của bệnh nhân ở đó.
         </div>
 
         {status && (
           <div
-            className={`rounded-xl border px-4 py-2.5 text-[13px] ${
+            className={`rounded-tile border px-4 py-2.5 text-small ${
               status.tone === "green"
-                ? "border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300"
-                : "border-red-100 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300"
+                ? "border-success-line bg-success-soft text-success"
+                : "border-danger-line bg-danger-soft text-danger"
             }`}
           >
             {status.text}

@@ -57,7 +57,7 @@ export function locAgent(ds: ManagedAgent[], tuKhoa: string): ManagedAgent[] {
 
 export function DaiSoLieu({ soAgent, soAccount }: { soAgent: number; soAccount: number }) {
   return (
-    <div className="mb-5 grid grid-cols-1 divide-y divide-line rounded-2xl border border-line bg-surface sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+    <div className="mb-5 grid grid-cols-1 divide-y divide-line rounded-card border border-line bg-surface sm:grid-cols-2 sm:divide-x sm:divide-y-0">
       <O
         icon={IconBot}
         nhan="Tổng số agent"
@@ -68,7 +68,7 @@ export function DaiSoLieu({ soAgent, soAccount }: { soAgent: number; soAccount: 
         icon={IconUsers}
         nhan="Tổng account đang dùng"
         so={soAccount}
-        mau="bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-300"
+        mau="bg-success-soft text-success"
       />
     </div>
   );
@@ -87,12 +87,12 @@ function O({
 }) {
   return (
     <div className="flex items-center gap-4 px-5 py-4">
-      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${mau}`}>
+      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-tile ${mau}`}>
         <Icon size={20} />
       </span>
       <div className="min-w-0">
-        <div className="text-[13px] text-ink-soft">{nhan}</div>
-        <div className="text-[20px] font-semibold text-ink">{so}</div>
+        <div className="text-small text-ink-soft">{nhan}</div>
+        <div className="text-subtitle font-semibold text-ink">{so}</div>
       </div>
     </div>
   );
@@ -145,7 +145,7 @@ export function ThanhCongCu({
 
         {/* `h-10` khớp đúng chiều cao `.gc-input` của ô tìm bên trái - hai nút
             bên trong cao hết khung để icon nhìn đầy đặn chứ không lọt thỏm */}
-        <div className="flex h-10 shrink-0 items-center gap-1 rounded-lg border border-line bg-surface p-1">
+        <div className="flex h-10 shrink-0 items-center gap-1 rounded-control border border-line bg-surface p-1">
           <NutKieuXem
             dang="luoi"
             hienTai={kieuXem}

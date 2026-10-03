@@ -10,6 +10,7 @@ import { Badge } from "@/components/admin/shared/ui-bits";
 import { Notice } from "@/components/ops/ops-ui";
 import type { CareControlState, CareDepth, CareLevel, CareUrgency } from "@/lib/care/care-types";
 import { CONTROL_LABEL, DEPTH_LABEL, LEVEL_LABEL, URGENCY_LABEL } from "@/lib/care/labels";
+import { cx } from "@/ui/classnames";
 
 const DEPTH_TONE: Record<CareDepth, "gray" | "blue" | "amber" | "red"> = {
   D1: "gray",
@@ -75,11 +76,12 @@ export function SubNav({ label, items }: { label: string; items: readonly SubNav
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`-mb-px inline-flex min-h-11 items-center border-b-2 px-3 text-[14px] font-medium whitespace-nowrap ${
+            className={cx(
+              "-mb-px inline-flex min-h-11 items-center border-b-2 px-3.5 text-body whitespace-nowrap lg:min-h-10",
               active
-                ? "border-brand-500 text-brand-500"
-                : "border-transparent text-ink-soft hover:text-ink"
-            }`}
+                ? "border-link font-bold text-link"
+                : "border-transparent text-ink-soft hover:text-ink",
+            )}
           >
             {item.label}
           </Link>
@@ -109,8 +111,8 @@ export const ADMIN_CARE_ITEMS: readonly SubNavItem[] = [
 export function Labelled({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <dt className="text-[12px] text-ink-soft">{label}</dt>
-      <dd className="mt-0.5 text-[14px] text-ink">{children}</dd>
+      <dt className="text-label text-ink-soft">{label}</dt>
+      <dd className="mt-0.5 text-body text-ink">{children}</dd>
     </div>
   );
 }

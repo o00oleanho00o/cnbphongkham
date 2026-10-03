@@ -15,7 +15,7 @@ import {
   type TuningValue,
 } from "@/lib/admin/tuning/tuning-types";
 import { PageHeader } from "@/components/admin/layout/page-header";
-import { IconGear, IconSearch } from "@/components/admin/shared/dashboard-icons";
+import { IconSearch } from "@/components/admin/shared/dashboard-icons";
 import { ChangePasswordSection } from "@/components/admin/auth/change-password-section";
 import { ProvidersSection } from "@/components/admin/model/providers-section";
 import { ResetAllSettingsSection } from "@/components/admin/tuning/reset-all-settings-section";
@@ -158,7 +158,6 @@ export default function TuningPage() {
       {/* Dùng PageHeader chung như mọi trang khác - trước đây trang này tự dựng
           header riêng, nên sửa kiểu dáng ở một nơi là hai bên lệch nhau ngay */}
       <PageHeader
-        icon={IconGear}
         title="Cấu hình"
         subtitle="Thiết lập và tùy chỉnh bot để phù hợp với nhu cầu sử dụng của bạn."
         aside={
@@ -179,7 +178,7 @@ export default function TuningPage() {
       />
 
       {loi && (
-        <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-[13px] leading-[1.6] whitespace-pre-line text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+        <div className="mb-4 rounded-tile border border-danger-line bg-danger-soft px-4 py-2.5 text-small leading-[1.6] whitespace-pre-line text-danger">
           {loi}
         </div>
       )}

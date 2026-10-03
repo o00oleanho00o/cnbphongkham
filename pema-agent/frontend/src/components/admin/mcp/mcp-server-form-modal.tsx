@@ -98,14 +98,14 @@ export function McpServerFormModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4 backdrop-blur-[2px]"
       {...nen}
     >
-      <div className="flex max-h-[85dvh] w-full max-w-lg flex-col rounded-2xl bg-surface shadow-xl">
+      <div className="flex max-h-[85dvh] w-full max-w-lg flex-col rounded-card bg-surface shadow-xl">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <div className="font-semibold text-ink">
             {server ? `Sửa: ${server.name}` : "Thêm server MCP"}
           </div>
           <button
             onClick={onClose}
-            className="cursor-pointer rounded-lg border border-line px-3 py-1 text-[13px] text-ink-soft hover:bg-tile"
+            className="cursor-pointer rounded-control border border-line px-3 py-1 text-small text-ink-soft hover:bg-tile"
           >
             Đóng
           </button>
@@ -113,7 +113,7 @@ export function McpServerFormModal({
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           <div>
-            <label htmlFor="mcp-ten" className="mb-1.5 block text-[13px] font-medium text-ink">
+            <label htmlFor="mcp-ten" className="mb-1.5 block text-small font-medium text-ink">
               Tên
             </label>
             <input
@@ -127,7 +127,7 @@ export function McpServerFormModal({
           </div>
 
           <div>
-            <label htmlFor="mcp-url" className="mb-1.5 block text-[13px] font-medium text-ink">
+            <label htmlFor="mcp-url" className="mb-1.5 block text-small font-medium text-ink">
               URL (Streamable HTTP)
             </label>
             <input
@@ -142,8 +142,8 @@ export function McpServerFormModal({
 
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-[13px] font-medium text-ink">Bật server này</div>
-              <div className="text-[12px] text-ink-soft">
+              <div className="text-small font-medium text-ink">Bật server này</div>
+              <div className="text-label text-ink-soft">
                 Tắt thì bot không nối và không dùng được tool của nó
               </div>
             </div>
@@ -165,14 +165,14 @@ export function McpServerFormModal({
             busy={busy}
           />
 
-          {error && <p className="text-[13px] text-red-600 dark:text-red-400">{error}</p>}
+          {error && <p className="text-small text-danger">{error}</p>}
         </div>
 
         <div className="border-t border-line px-5 py-4">
           <button
             onClick={() => void luu()}
             disabled={busy || !hopLe}
-            className="w-full cursor-pointer rounded-lg bg-brand-500 py-2.5 text-[14px] font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full cursor-pointer rounded-control bg-brand-500 py-2.5 text-body font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy ? "Đang lưu..." : server ? "Lưu thay đổi" : "Thêm server"}
           </button>

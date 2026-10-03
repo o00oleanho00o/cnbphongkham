@@ -46,20 +46,17 @@ export function McpServerRow({
       <td className="max-w-xs px-4 py-3 text-ink">
         <div className="truncate font-medium">{server.name}</div>
         {server.status === "loi" && server.error && (
-          <div
-            className="mt-0.5 truncate text-[12px] text-red-600 dark:text-red-400"
-            title={server.error}
-          >
+          <div className="mt-0.5 truncate text-label text-danger" title={server.error}>
             {server.error}
           </div>
         )}
         {server.status === "can_duyet_lai" && (
-          <div className="mt-0.5 text-[12px] text-amber-600 dark:text-amber-400">
+          <div className="mt-0.5 text-label text-warning">
             Bộ tool của server đã đổi so với lần duyệt trước
           </div>
         )}
         {server.enabled === false && (
-          <div className="mt-0.5 text-[11px] text-ink-soft">Đang tắt</div>
+          <div className="mt-0.5 text-micro text-ink-soft">Đang tắt</div>
         )}
       </td>
       <td className="max-w-xs truncate px-4 py-3 text-ink-soft" title={server.url}>
@@ -82,10 +79,8 @@ export function McpServerRow({
               ? "Chưa agent nào dùng được - bấm để gán"
               : "Đổi agent dùng được server này"
           }
-          className={`flex cursor-pointer items-center gap-1.5 text-[13px] hover:underline ${
-            (server.bound_agent_count ?? 0) === 0
-              ? "text-amber-700 dark:text-amber-400"
-              : "text-ink-soft hover:text-ink"
+          className={`flex cursor-pointer items-center gap-1.5 text-small hover:underline ${
+            (server.bound_agent_count ?? 0) === 0 ? "text-warning" : "text-ink-soft hover:text-ink"
           }`}
         >
           {(server.bound_agent_count ?? 0) === 0 ? (
@@ -108,7 +103,7 @@ export function McpServerRow({
             <button
               onClick={onReapprove}
               title="Xem bộ tool hiện tại là đúng ý, lấy làm mốc mới"
-              className="flex cursor-pointer items-center gap-1 text-[13px] text-amber-600 hover:underline dark:text-amber-400"
+              className="flex cursor-pointer items-center gap-1 text-small text-warning hover:underline"
             >
               <IconUndo size={14} />
               Duyệt lại
@@ -116,14 +111,14 @@ export function McpServerRow({
           )}
           <button
             onClick={onEdit}
-            className="flex cursor-pointer items-center gap-1 text-[13px] text-ink-soft hover:text-ink hover:underline"
+            className="flex cursor-pointer items-center gap-1 text-small text-ink-soft hover:text-ink hover:underline"
           >
             <IconPencil size={14} />
             Sửa
           </button>
           <button
             onClick={onDelete}
-            className="cursor-pointer text-[13px] text-red-600 hover:underline dark:text-red-400"
+            className="cursor-pointer text-small text-danger hover:underline"
           >
             Xóa
           </button>

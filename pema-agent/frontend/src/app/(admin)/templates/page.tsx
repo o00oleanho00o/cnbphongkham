@@ -7,7 +7,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
-import { IconFileText, IconPlus } from "@/components/admin/shared/dashboard-icons";
+import { IconPlus } from "@/components/admin/shared/dashboard-icons";
 import { Badge } from "@/components/admin/shared/ui-bits";
 import {
   EmptyState,
@@ -92,9 +92,8 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div>
       <PageHeader
-        icon={IconFileText}
         title="Tin nhắn mẫu đã duyệt"
         subtitle="Văn bản bác sĩ đã duyệt, được dùng cho tin chăm sóc chủ động"
         aside={
@@ -120,13 +119,16 @@ export default function TemplatesPage() {
         <EmptyState title="Chưa có mẫu nào" hint="Soạn mẫu đầu tiên và nhờ bác sĩ duyệt." />
       )}
 
-      <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
         {items.map((t) => (
-          <li key={t.id} className="gc-card flex flex-col p-4">
+          <li
+            key={t.id}
+            className="flex flex-col rounded-card border border-line bg-surface p-4 shadow-card"
+          >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <h2 className="text-[15px] font-semibold text-ink">{t.title}</h2>
-                <p className="font-mono text-[11px] text-ink-soft">{t.template_key}</p>
+                <h2 className="text-body-lg font-semibold text-ink">{t.title}</h2>
+                <p className="font-mono text-micro text-ink-soft">{t.template_key}</p>
               </div>
               <div className="flex flex-wrap justify-end gap-1.5">
                 {t.approved_at ? (
@@ -145,11 +147,11 @@ export default function TemplatesPage() {
                 )}
               </div>
             </div>
-            <p className="mt-3 flex-1 rounded-lg bg-tile/60 px-3 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap text-ink">
+            <p className="mt-3 flex-1 rounded-control bg-tile/60 px-3 py-2.5 text-small leading-relaxed whitespace-pre-wrap text-ink">
               {t.body}
             </p>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-              <span className="text-[12px] text-ink-soft">
+              <span className="text-label text-ink-soft">
                 {t.approved_at ? `Duyệt ${formatDate(t.approved_at)}` : "Chưa duyệt"} ·{" "}
                 {t.active ? "Đang bật" : "Đang tắt"}
               </span>

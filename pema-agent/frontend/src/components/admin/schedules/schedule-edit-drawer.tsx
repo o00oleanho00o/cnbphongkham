@@ -113,7 +113,7 @@ export function ScheduleEditDrawer({
           <div className="font-semibold text-ink">{job ? `Sửa: ${job.name}` : "Thêm lịch hẹn"}</div>
           <button
             onClick={onClose}
-            className="rounded-lg border border-line px-3 py-1 text-[13px] text-ink-soft hover:bg-tile"
+            className="rounded-control border border-line px-3 py-1 text-small text-ink-soft hover:bg-tile"
           >
             Đóng
           </button>
@@ -131,7 +131,7 @@ export function ScheduleEditDrawer({
           )}
 
           <div>
-            <label htmlFor="sch-name" className="mb-1.5 block text-[13px] font-medium text-ink">
+            <label htmlFor="sch-name" className="mb-1.5 block text-small font-medium text-ink">
               Tên
             </label>
             <input
@@ -144,7 +144,7 @@ export function ScheduleEditDrawer({
           </div>
 
           <div>
-            <label htmlFor="sch-payload" className="mb-1.5 block text-[13px] font-medium text-ink">
+            <label htmlFor="sch-payload" className="mb-1.5 block text-small font-medium text-ink">
               {form.kind === "agent" ? "Prompt cho agent" : "Nội dung gửi"}
             </label>
             <textarea
@@ -171,14 +171,14 @@ export function ScheduleEditDrawer({
             onChange={(patch) => setForm({ ...form, ...patch })}
           />
 
-          {error && <p className="text-[13px] text-red-600 dark:text-red-400">{error}</p>}
+          {error && <p className="text-small text-danger">{error}</p>}
         </div>
 
         <div className="border-t border-line px-5 py-4">
           <button
             onClick={save}
             disabled={busy || !form.name || !form.payload}
-            className="w-full rounded-lg bg-brand-500 py-2.5 text-[14px] font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+            className="w-full rounded-control bg-brand-500 py-2.5 text-body font-medium text-white hover:bg-brand-600 disabled:opacity-50"
           >
             {busy ? "Đang lưu..." : job ? "Lưu thay đổi" : "Tạo lịch hẹn"}
           </button>

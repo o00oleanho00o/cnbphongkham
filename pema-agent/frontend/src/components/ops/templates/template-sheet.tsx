@@ -9,6 +9,8 @@ import { Sheet } from "@/components/ops/sheet";
 import { useToast } from "@/components/ops/toast";
 import type { Schemas } from "@/lib/api";
 import { ApiError, errorMessage, http, unwrap } from "@/lib/api/client";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 type Template = Schemas["MessageTemplateOut"];
 
@@ -117,7 +119,7 @@ export function TemplateSheet({
             onChange={(e) => setKey(e.target.value)}
             disabled={template !== null}
             maxLength={64}
-            className="gc-input w-full font-mono disabled:opacity-60"
+            className={cx(FIELD_BASE_CLASS, "w-full font-mono disabled:opacity-60")}
           />
         </Field>
         <Field label="Tiêu đề" htmlFor="tpl-title">
@@ -126,7 +128,7 @@ export function TemplateSheet({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={200}
-            className="gc-input w-full"
+            className={cx(FIELD_BASE_CLASS, "w-full")}
           />
         </Field>
         <Field label="Nội dung" htmlFor="tpl-body" hint={`${body.length}/${MAX_BODY} ký tự`}>
@@ -136,10 +138,10 @@ export function TemplateSheet({
             onChange={(e) => setBody(e.target.value)}
             rows={6}
             maxLength={MAX_BODY}
-            className="gc-input w-full"
+            className={cx(FIELD_BASE_CLASS, "w-full")}
           />
         </Field>
-        <label className="flex min-h-11 items-start gap-3 text-[13px]">
+        <label className="flex min-h-11 items-start gap-3 text-small">
           <input
             type="checkbox"
             checked={marketing}

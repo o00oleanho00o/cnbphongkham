@@ -50,7 +50,7 @@ export function UsageBarChart({
       <div className="flex gap-3">
         {/* Trục Y: nhãn số căn phải, cao bằng vùng cột để từng nhãn nằm đúng
             đường lưới tương ứng */}
-        <div className="flex h-52 w-10 shrink-0 flex-col justify-between text-right text-[11px] text-ink-soft tabular-nums">
+        <div className="flex h-52 w-10 shrink-0 flex-col justify-between text-right text-micro text-ink-soft tabular-nums">
           {vach.map((v) => (
             <span key={v} className="leading-none">
               {formatNumber(v)}
@@ -83,7 +83,7 @@ export function UsageBarChart({
                       được. `title` trên cột vẫn mang đủ số khi rê chuột. */}
                   {data.length <= NGUONG_HIEN_SO && (
                     <span
-                      className={`mb-1.5 text-[12px] font-semibold tabular-nums ${
+                      className={`mb-1.5 text-label font-semibold tabular-nums ${
                         noiBat ? "text-brand-600" : "text-ink-soft"
                       }`}
                     >
@@ -120,7 +120,7 @@ export function UsageBarChart({
           {data.map((d, i) => (
             <div
               key={d.day}
-              className="min-w-0 flex-1 text-center text-[12px] text-ink-soft tabular-nums"
+              className="min-w-0 flex-1 text-center text-label text-ink-soft tabular-nums"
             >
               {/* Thưa nhãn ngày thay vì vẽ hết: "08-01" cần ~33px mà 30 cột
                   trên laptop chỉ được ~17px mỗi cột. Luôn giữ nhãn CUỐI (ngày

@@ -29,16 +29,16 @@ export default function Patient360Page() {
   const { data, error, loading, reload } = useLoad(load);
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div>
       <Link
         href="/patients"
-        className="mb-3 inline-flex min-h-11 items-center gap-1 text-[14px] font-medium text-brand-500 hover:text-brand-600"
+        className="mb-3 inline-flex min-h-11 items-center gap-1 text-body font-medium text-brand-500 hover:text-brand-600"
       >
         <IconChevronLeft size={18} />
         Danh sách hồ sơ
       </Link>
       {!allowed && (
-        <p className="text-[14px] text-ink-soft">Vai trò của bạn không được xem Patient 360.</p>
+        <p className="text-body text-ink-soft">Vai trò của bạn không được xem Patient 360.</p>
       )}
       {allowed && error && <RetryNotice message={error} onRetry={reload} />}
       {allowed && loading && !data && <ListSkeleton rows={3} />}

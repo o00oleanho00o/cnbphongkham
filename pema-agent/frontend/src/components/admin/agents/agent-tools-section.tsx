@@ -93,7 +93,7 @@ export function AgentToolsSection({
   if (tools === null) {
     return (
       <AgentFormSection title="Công cụ">
-        <div className="py-5 text-[13px] text-ink-soft first:pt-0">
+        <div className="py-5 text-small text-ink-soft first:pt-0">
           Đang tải danh sách công cụ...
         </div>
       </AgentFormSection>
@@ -103,7 +103,7 @@ export function AgentToolsSection({
   if (loi) {
     return (
       <AgentFormSection title="Công cụ">
-        <div className="py-5 text-[13px] text-red-600 first:pt-0 dark:text-red-400">
+        <div className="py-5 text-small text-danger first:pt-0">
           Chưa tải được danh sách công cụ: {loi}. Tải lại trang để thử lại - phần công cụ đang lưu
           của agent KHÔNG bị đụng tới.
         </div>
@@ -135,8 +135,8 @@ export function AgentToolsSection({
         if (cua.length === 0) return null;
         return (
           <div key={nhom} className="py-4 first:pt-0">
-            <div className="mb-0.5 text-[14px] font-medium text-ink">{NHAN_NHOM[nhom]?.title}</div>
-            <p className="mb-2 text-[12px] leading-[1.6] text-ink-soft">{NHAN_NHOM[nhom]?.hint}</p>
+            <div className="mb-0.5 text-body font-medium text-ink">{NHAN_NHOM[nhom]?.title}</div>
+            <p className="mb-2 text-label leading-[1.6] text-ink-soft">{NHAN_NHOM[nhom]?.hint}</p>
             {/* Đường kẻ mảnh giữa các công cụ, y hệt trang Tools - đây là danh
                 sách công tắc liền mạch chứ không phải các khối rời */}
             <div className="divide-y divide-line">
@@ -173,26 +173,24 @@ function DongTool({
     <div className="flex w-full items-center justify-between gap-4 py-3">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[14px] font-medium text-ink">{tool.label}</span>
-          <code className="rounded bg-tile px-1.5 py-0.5 text-[11px] text-ink-soft">
-            {tool.key}
-          </code>
+          <span className="text-body font-medium text-ink">{tool.label}</span>
+          <code className="rounded bg-tile px-1.5 py-0.5 text-micro text-ink-soft">{tool.key}</code>
           {/* Tool thiếu hạ tầng vẫn bật được: đây là khai báo năng lực, còn
               chuyện có chạy được hay không do `available()` quyết mỗi lượt.
               Nhưng phải nói ra, kẻo bật xong tưởng bot làm được ngay. */}
           {tool.blocked_by_policy ? (
-            <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300">
+            <span className="rounded-full bg-danger-soft px-2 py-0.5 text-micro font-medium text-danger">
               Bị chặn bởi hồ sơ chính sách
             </span>
           ) : (
             !tool.usable && (
-              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+              <span className="rounded-full bg-warning-soft px-2 py-0.5 text-micro font-medium text-warning">
                 chưa cấu hình
               </span>
             )
           )}
         </div>
-        <p className="mt-0.5 text-[12px] leading-[1.6] text-ink-soft">
+        <p className="mt-0.5 text-label leading-[1.6] text-ink-soft">
           {tool.description}
           {!tool.usable && tool.hint ? ` (${tool.hint})` : ""}
         </p>

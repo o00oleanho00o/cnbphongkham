@@ -33,7 +33,7 @@ export function AppShell({
           id="main"
           className="min-w-0 flex-1 px-4 py-5 pb-24 sm:px-6 lg:overflow-y-auto lg:px-(--layout-content-pad-x) lg:py-(--layout-content-pad-y) lg:pb-7"
         >
-          {children}
+          <div className="mx-auto w-full max-w-(--layout-content-max)">{children}</div>
         </main>
       </div>
       {tabBar}

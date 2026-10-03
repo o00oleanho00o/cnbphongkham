@@ -19,13 +19,13 @@ export function PresenceLine({
     <span
       role="status"
       data-testid="presence-line"
-      className={`inline-flex items-center gap-1.5 text-[12px] font-medium ${
-        replying ? "text-amber-700 dark:text-amber-400" : "text-ink-soft"
+      className={`inline-flex items-center gap-1.5 text-label font-medium ${
+        replying ? "text-warning" : "text-ink-soft"
       } ${className}`}
     >
       <span
         aria-hidden="true"
-        className={`h-2 w-2 shrink-0 rounded-full ${replying ? "bg-amber-500" : "bg-brand-400"}`}
+        className={`h-2 w-2 shrink-0 rounded-full ${replying ? "bg-warning" : "bg-brand-400"}`}
       />
       <span className="min-w-0 truncate">{text}</span>
     </span>

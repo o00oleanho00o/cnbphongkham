@@ -59,17 +59,17 @@ export function KbSearchModal({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-50 flex items-end justify-center bg-ink/30 p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
       {...nen}
     >
-      <div className="flex max-h-[90dvh] w-full max-w-2xl flex-col rounded-t-2xl bg-surface shadow-xl sm:rounded-2xl">
+      <div className="flex max-h-[90dvh] w-full max-w-2xl flex-col rounded-t-2xl bg-surface shadow-xl sm:rounded-card">
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
           <div>
             <div className="font-semibold text-ink">Thử tìm trong kho</div>
-            <div className="text-[12px] text-ink-soft">
+            <div className="text-label text-ink-soft">
               Xem agent sẽ trích đoạn nào cho một câu hỏi. Chỉ nguồn đã gán cho agent mới hiện.
             </div>
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 rounded-lg border border-line px-3 py-1 text-[13px] text-ink-soft hover:bg-tile"
+            className="shrink-0 rounded-control border border-line px-3 py-1 text-small text-ink-soft hover:bg-tile"
           >
             Đóng
           </button>
@@ -79,7 +79,7 @@ export function KbSearchModal({ onClose }: { onClose: () => void }) {
           <div>
             <label
               htmlFor="kb-search-agent"
-              className="mb-1.5 block text-[13px] font-medium text-ink"
+              className="mb-1.5 block text-small font-medium text-ink"
             >
               Agent
             </label>
@@ -95,7 +95,7 @@ export function KbSearchModal({ onClose }: { onClose: () => void }) {
           <div>
             <label
               htmlFor="kb-search-query"
-              className="mb-1.5 block text-[13px] font-medium text-ink"
+              className="mb-1.5 block text-small font-medium text-ink"
             >
               Câu hỏi
             </label>
@@ -110,29 +110,29 @@ export function KbSearchModal({ onClose }: { onClose: () => void }) {
           <button
             type="submit"
             disabled={busy || !agentId || !query.trim()}
-            className="min-h-11 w-full rounded-lg bg-brand-500 px-4 text-[14px] font-medium text-white hover:bg-brand-600 disabled:opacity-50 sm:w-auto"
+            className="min-h-11 w-full rounded-control bg-brand-500 px-4 text-body font-medium text-white hover:bg-brand-600 disabled:opacity-50 sm:w-auto"
           >
             {busy ? "Đang tìm..." : "Tìm"}
           </button>
         </form>
 
         <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
-          {loi && <p className="text-[13px] text-red-600 dark:text-red-400">{loi}</p>}
+          {loi && <p className="text-small text-danger">{loi}</p>}
           {hits !== null && hits.length === 0 && !loi && (
-            <p className="py-6 text-center text-[13px] text-ink-soft">
+            <p className="py-6 text-center text-small text-ink-soft">
               Không có đoạn nào khớp. Agent sẽ không có nguồn để trích dẫn cho câu hỏi này.
             </p>
           )}
           {hits?.map((h, i) => (
             <div key={`${h.source_id}-${i}`} className="gc-tile space-y-1">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[13px] font-semibold text-ink">{h.source_name}</span>
-                <span className="shrink-0 text-[11px] text-ink-soft">
+                <span className="text-small font-semibold text-ink">{h.source_name}</span>
+                <span className="shrink-0 text-micro text-ink-soft">
                   độ khớp {Math.round(h.score * 100)}%
                 </span>
               </div>
-              {h.title && <div className="text-[12px] font-medium text-brand-600">{h.title}</div>}
-              <p className="text-[13px] leading-[1.6] whitespace-pre-wrap text-ink">{h.content}</p>
+              {h.title && <div className="text-label font-medium text-brand-600">{h.title}</div>}
+              <p className="text-small leading-[1.6] whitespace-pre-wrap text-ink">{h.content}</p>
             </div>
           ))}
         </div>

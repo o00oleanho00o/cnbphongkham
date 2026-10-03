@@ -102,7 +102,7 @@ const POLICY_OPTIONS: SelectOption[] = POLICY_KEYS.map((key) => ({
   hint: key === HO_SO_MAC_DINH ? "mặc định" : undefined,
 }));
 
-const SECTION_TITLE = "text-[11px] font-semibold uppercase tracking-wider text-ink-soft";
+const SECTION_TITLE = "text-micro font-semibold uppercase tracking-wider text-ink-soft";
 const INPUT_CLASS = "gc-input w-full max-sm:min-h-11";
 
 function Toggle({
@@ -127,8 +127,8 @@ function Toggle({
       className="flex w-full items-center justify-between gap-3 py-1 text-left max-sm:min-h-11"
     >
       <span>
-        <span className="block text-[13px] font-medium text-ink">{label}</span>
-        {hint && <span className="block text-[12px] leading-[1.6] text-ink-soft">{hint}</span>}
+        <span className="block text-small font-medium text-ink">{label}</span>
+        {hint && <span className="block text-label leading-[1.6] text-ink-soft">{hint}</span>}
       </span>
       <ToggleKnob on={value} />
     </button>
@@ -175,7 +175,7 @@ function ReactionSection({
      từng hiện "Gửi file" xanh cho tài khoản bot. */
   if (form.channel === "zalo_bot") {
     return (
-      <p className="py-1 text-[13px] leading-[1.6] text-ink-soft">
+      <p className="py-1 text-small leading-[1.6] text-ink-soft">
         <span className="font-medium text-ink">Thả cảm xúc khi nhận tin</span> - Zalo Bot API không
         có method thả cảm xúc nên tài khoản bot không dùng được mục này.
       </p>
@@ -200,7 +200,7 @@ function ReactionSection({
               aria-label={icon.key}
               aria-pressed={form.autoReactIcon === icon.key}
               onClick={() => onPickIcon(icon.key)}
-              className={`flex h-11 w-11 items-center justify-center rounded-lg border text-lg transition-colors sm:h-9 sm:w-9 ${
+              className={`flex h-11 w-11 items-center justify-center rounded-control border text-section transition-colors sm:h-9 sm:w-9 ${
                 form.autoReactIcon === icon.key
                   ? "border-brand-500 bg-brand-50 ring-2 ring-brand-100"
                   : "border-line hover:bg-tile"
@@ -228,7 +228,7 @@ function PolicyProfileSection({
   const [first, second] = MO_TA_HO_SO[value];
   const goingDirect = value === "staff_assistant" && initial !== "staff_assistant";
   return (
-    <div className="space-y-2 rounded-xl border border-line p-4">
+    <div className="space-y-2 rounded-tile border border-line p-4">
       <div className={SECTION_TITLE}>Hồ sơ chính sách</div>
       <SelectMenu
         size="md"
@@ -237,13 +237,13 @@ function PolicyProfileSection({
         onChange={onChange}
         ariaLabel="Hồ sơ chính sách"
       />
-      <p className="text-[12px] leading-[1.6] text-ink-soft">{first}</p>
-      <p className="text-[12px] leading-[1.6] text-ink-soft">{second}</p>
-      <p className="rounded-lg bg-amber-50 px-3 py-2 text-[12px] leading-[1.6] text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+      <p className="text-label leading-[1.6] text-ink-soft">{first}</p>
+      <p className="text-label leading-[1.6] text-ink-soft">{second}</p>
+      <p className="rounded-control bg-warning-soft px-3 py-2 text-label leading-[1.6] text-warning">
         {CANH_BAO_HO_SO}
       </p>
       {goingDirect && (
-        <p className="text-[12px] leading-[1.6] font-medium text-red-600 dark:text-red-400">
+        <p className="text-label leading-[1.6] font-medium text-danger">
           {CANH_BAO_CHUYEN_SANG_TRO_LY}
         </p>
       )}
@@ -435,7 +435,7 @@ export function AccountEditDrawer({
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 rounded-lg border border-line px-3 py-1 text-[13px] text-ink-soft hover:bg-tile max-sm:min-h-11"
+            className="shrink-0 rounded-control border border-line px-3 py-1 text-small text-ink-soft hover:bg-tile max-sm:min-h-11"
           >
             Đóng
           </button>
@@ -444,7 +444,7 @@ export function AccountEditDrawer({
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           {!account && (
             <div>
-              <label className="mb-1.5 block text-[13px] font-medium text-ink">
+              <label className="mb-1.5 block text-small font-medium text-ink">
                 ID{" "}
                 <span className="font-normal text-ink-soft">
                   (kebab-case, dùng làm thư mục data)
@@ -461,7 +461,7 @@ export function AccountEditDrawer({
 
           {!account && (
             <div>
-              <label className="mb-1.5 block text-[13px] font-medium text-ink">Loại kênh</label>
+              <label className="mb-1.5 block text-small font-medium text-ink">Loại kênh</label>
               <SelectMenu
                 size="md"
                 value={form.channel}
@@ -469,15 +469,15 @@ export function AccountEditDrawer({
                 onChange={doiLoai}
                 ariaLabel="Loại kênh"
               />
-              <p className="mt-1.5 text-[12px] leading-[1.6] text-ink-soft">
+              <p className="mt-1.5 text-label leading-[1.6] text-ink-soft">
                 {MO_TA_KENH[form.channel]}
               </p>
-              <p className="mt-1 text-[12px] text-ink-soft">Chốt lúc tạo, không đổi được sau đó.</p>
+              <p className="mt-1 text-label text-ink-soft">Chốt lúc tạo, không đổi được sau đó.</p>
             </div>
           )}
 
           <div>
-            <label className="mb-1.5 block text-[13px] font-medium text-ink">Tên hiển thị</label>
+            <label className="mb-1.5 block text-small font-medium text-ink">Tên hiển thị</label>
             <input
               className={INPUT_CLASS}
               value={form.label}
@@ -488,7 +488,7 @@ export function AccountEditDrawer({
 
           {isBot && (
             <div>
-              <label className="mb-1.5 block text-[13px] font-medium text-ink">
+              <label className="mb-1.5 block text-small font-medium text-ink">
                 Token bot{" "}
                 {account?.has_bot_token && (
                   <span className="font-normal text-ink-soft">(đã có - nhập mới để thay)</span>
@@ -502,7 +502,7 @@ export function AccountEditDrawer({
                 onChange={(e) => setBotToken(e.target.value)}
                 placeholder={account?.has_bot_token ? "Để trống nếu không đổi" : "123456789:..."}
               />
-              <p className="mt-1.5 text-[12px] leading-[1.6] text-ink-soft">
+              <p className="mt-1.5 text-label leading-[1.6] text-ink-soft">
                 Lấy token: mở Zalo, tìm OA &quot;Zalo Bot Manager&quot;, chọn &quot;Tạo bot&quot;
                 (tên phải bắt đầu bằng &quot;Bot&quot;). Token được gửi vào tin nhắn Zalo cho bạn.
                 Hệ thống sẽ kiểm token với Zalo trước khi lưu.
@@ -511,7 +511,7 @@ export function AccountEditDrawer({
           )}
 
           <div>
-            <label className="mb-1.5 block text-[13px] font-medium text-ink">Agent (não)</label>
+            <label className="mb-1.5 block text-small font-medium text-ink">Agent (não)</label>
             <SelectMenu
               size="md"
               value={form.agentId}
@@ -529,7 +529,7 @@ export function AccountEditDrawer({
             />
           )}
 
-          <div className="space-y-2 rounded-xl border border-line p-4">
+          <div className="space-y-2 rounded-tile border border-line p-4">
             <div className={SECTION_TITLE}>Policies</div>
             <Toggle
               field="respondToGroups"
@@ -552,7 +552,7 @@ export function AccountEditDrawer({
             />
           </div>
 
-          <div className="space-y-2 rounded-xl border border-line p-4">
+          <div className="space-y-2 rounded-tile border border-line p-4">
             <div className={SECTION_TITLE}>Phản hồi tức thì</div>
             <Toggle
               field="typingIndicatorEnabled"
@@ -570,7 +570,7 @@ export function AccountEditDrawer({
           </div>
 
           {form.channel === "zalo_personal" && (
-            <div className="space-y-2 rounded-xl border border-line p-4">
+            <div className="space-y-2 rounded-tile border border-line p-4">
               <div className={SECTION_TITLE}>Kết bạn</div>
               <Toggle
                 field="autoAcceptFriends"
@@ -580,7 +580,7 @@ export function AccountEditDrawer({
                 hint="Bot tự accept sau khoảng chờ dưới đây. Tắt thì bạn tự duyệt ở tab Bạn bè."
               />
               {form.autoAcceptFriends && (
-                <label className="flex items-center gap-2 pt-1 text-[13px] text-ink-soft">
+                <label className="flex items-center gap-2 pt-1 text-small text-ink-soft">
                   Chờ
                   <input
                     type="number"
@@ -595,7 +595,7 @@ export function AccountEditDrawer({
                         Math.max(0, Math.min(1440, Math.round(Number(e.target.value) || 0))),
                       )
                     }
-                    className="w-20 rounded-lg border border-line bg-surface px-2 py-1 text-ink max-sm:min-h-11"
+                    className="w-20 rounded-control border border-line bg-surface px-2 py-1 text-ink max-sm:min-h-11"
                   />
                   phút rồi mới accept
                 </label>
@@ -603,7 +603,7 @@ export function AccountEditDrawer({
             </div>
           )}
 
-          <div className="space-y-2 rounded-xl border border-line p-4">
+          <div className="space-y-2 rounded-tile border border-line p-4">
             <div className={SECTION_TITLE}>Allowlist</div>
             <SelectMenu
               size="md"
@@ -623,16 +623,16 @@ export function AccountEditDrawer({
           </div>
 
           {form.channel === "zalo_oa" && (
-            <p className="text-[12px] leading-[1.6] text-ink-soft">{MO_TA_KENH_OA}</p>
+            <p className="text-label leading-[1.6] text-ink-soft">{MO_TA_KENH_OA}</p>
           )}
-          {error && <p className="text-[13px] text-red-600 dark:text-red-400">{error}</p>}
+          {error && <p className="text-small text-danger">{error}</p>}
         </div>
 
         <div className="border-t border-line px-5 py-4">
           <button
             onClick={save}
             disabled={busy || !form.label || (!account && !form.id)}
-            className="min-h-11 w-full rounded-lg bg-brand-500 py-2.5 text-[14px] font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+            className="min-h-11 w-full rounded-control bg-brand-500 py-2.5 text-body font-medium text-white hover:bg-brand-600 disabled:opacity-50"
           >
             {busy ? "Đang lưu..." : account ? "Lưu thay đổi" : "Tạo account"}
           </button>

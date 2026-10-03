@@ -87,9 +87,9 @@ export function TimelineView({ data, now }: { data: PatientCareTimeline; now: Da
               <Badge tone="gray">Cần: {skillLabel(open.required_skill)}</Badge>
             )}
           </div>
-          <p className="mt-3 text-[14px] font-medium text-ink">{reasonLabel(open.reason)}</p>
-          <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">{open.summary}</p>
-          <p className="mt-3 text-[12px] text-ink-soft">
+          <p className="mt-3 text-body font-medium text-ink">{reasonLabel(open.reason)}</p>
+          <p className="mt-1 text-small leading-relaxed text-ink-soft">{open.summary}</p>
+          <p className="mt-3 text-label text-ink-soft">
             Mở lúc {formatDateTime(open.opened_at)} · Đang hỏi{" "}
             {open.current_candidate_name ?? "số trực 24/24"}
             {sla ? ` · ${sla.text}` : ""} · Độ tin cậy {Math.round(open.confidence * 100)}%
@@ -102,17 +102,17 @@ export function TimelineView({ data, now }: { data: PatientCareTimeline; now: Da
         subtitle="Agent không gửi những tin này khi chưa có người duyệt"
       >
         {data.pending_drafts.length === 0 ? (
-          <p className="text-[13px] text-ink-soft">Không có nháp nào đang chờ.</p>
+          <p className="text-small text-ink-soft">Không có nháp nào đang chờ.</p>
         ) : (
           <ul className="space-y-2">
             {data.pending_drafts.map((draft) => (
               <li key={draft.review_item_id}>
                 <Link
                   href={`/review?i=${draft.review_item_id}`}
-                  className="flex min-h-11 flex-wrap items-center justify-between gap-2 rounded-lg border border-line px-3 py-2 hover:bg-tile/50"
+                  className="flex min-h-11 flex-wrap items-center justify-between gap-2 rounded-control border border-line px-3 py-2 hover:bg-tile/50"
                 >
-                  <span className="text-[14px] text-ink">{REVIEW_KIND_SHORT[draft.kind]}</span>
-                  <span className="flex items-center gap-2 text-[12px] text-ink-soft">
+                  <span className="text-body text-ink">{REVIEW_KIND_SHORT[draft.kind]}</span>
+                  <span className="flex items-center gap-2 text-label text-ink-soft">
                     {draft.requires_doctor && <Badge tone="red">Cần bác sĩ</Badge>}
                     {formatDateTime(draft.created_at)}
                   </span>
@@ -128,20 +128,20 @@ export function TimelineView({ data, now }: { data: PatientCareTimeline; now: Da
         subtitle="Khi nhân viên giữ cuộc trò chuyện, agent không gửi nhắc theo lịch; khi trả lại, agent rà soát lại"
       >
         {data.paused_reminders.length === 0 ? (
-          <p className="text-[13px] text-ink-soft">Không có nhắc nào bị tạm dừng.</p>
+          <p className="text-small text-ink-soft">Không có nhắc nào bị tạm dừng.</p>
         ) : (
           <ul className="space-y-3">
             {data.paused_reminders.map((reminder) => (
-              <li key={reminder.id} className="gc-tile">
+              <li key={reminder.id} className="rounded-tile border border-line bg-tile/40 p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Badge tone="amber">Đã tạm dừng</Badge>
-                  <span className="text-[12px] text-ink-soft">
+                  <span className="text-label text-ink-soft">
                     Đến hạn {formatDateTime(reminder.due_at)}
                   </span>
                 </div>
                 {reminder.prepared_text && (
                   <>
-                    <p className="mt-2 text-[13px] leading-relaxed text-ink">
+                    <p className="mt-2 text-small leading-relaxed text-ink">
                       {reminder.prepared_text}
                     </p>
                     <div className="mt-2">
@@ -162,12 +162,12 @@ export function TimelineView({ data, now }: { data: PatientCareTimeline; now: Da
 
       <SectionCard title="Agent đã làm gì" subtitle="Mới nhất ở trên">
         {data.entries.length === 0 ? (
-          <p className="text-[13px] text-ink-soft">Chưa có hoạt động nào.</p>
+          <p className="text-small text-ink-soft">Chưa có hoạt động nào.</p>
         ) : (
           <ol className="space-y-3">
             {data.entries.map((entry) => (
               <li key={entry.id} className="flex gap-3">
-                <span className="w-24 shrink-0 pt-0.5 text-[12px] text-ink-soft">
+                <span className="w-24 shrink-0 pt-0.5 text-label text-ink-soft">
                   {formatDateTime(entry.at)}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -175,9 +175,9 @@ export function TimelineView({ data, now }: { data: PatientCareTimeline; now: Da
                     <Badge tone={ENTRY_TONE[entry.kind]}>{ENTRY_KIND_LABEL[entry.kind]}</Badge>
                     {entry.depth && <DepthBadge depth={entry.depth} />}
                   </div>
-                  <p className="mt-1 text-[14px] text-ink">{codeLabel(entry.code)}</p>
+                  <p className="mt-1 text-body text-ink">{codeLabel(entry.code)}</p>
                   {(entry.actor_name || entry.detail) && (
-                    <p className="text-[12px] text-ink-soft">
+                    <p className="text-label text-ink-soft">
                       {[entry.actor_name, entry.detail].filter(Boolean).join(" · ")}
                     </p>
                   )}
@@ -193,12 +193,12 @@ export function TimelineView({ data, now }: { data: PatientCareTimeline; now: Da
         subtitle="Chỉ là thói quen và dặn dò, không có hồ sơ y khoa"
       >
         {data.memory.length === 0 ? (
-          <p className="text-[13px] text-ink-soft">Chưa có ghi nhớ nào.</p>
+          <p className="text-small text-ink-soft">Chưa có ghi nhớ nào.</p>
         ) : (
           <ul className="space-y-2">
             {data.memory.map((fact) => (
               <li key={fact.id} className="flex flex-wrap items-start justify-between gap-2">
-                <span className="min-w-0 flex-1 text-[14px] text-ink">{fact.fact}</span>
+                <span className="min-w-0 flex-1 text-body text-ink">{fact.fact}</span>
                 <Badge tone="gray" dot={false}>
                   {MEMORY_SOURCE_LABEL[fact.source]}
                 </Badge>

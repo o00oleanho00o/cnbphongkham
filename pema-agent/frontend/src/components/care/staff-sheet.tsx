@@ -20,6 +20,8 @@ import {
   shiftError,
 } from "@/lib/care/forms";
 import { WEEKDAY_LABEL, skillLabel } from "@/lib/care/labels";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 export function StaffSheet({
   profile,
@@ -96,12 +98,12 @@ export function StaffSheet({
     >
       <div className="space-y-5">
         <fieldset>
-          <legend className="mb-1.5 text-[13px] font-medium text-ink">Kỹ năng</legend>
+          <legend className="mb-1.5 text-small font-medium text-ink">Kỹ năng</legend>
           <div className="flex flex-wrap gap-2">
             {options.map((skill) => (
               <label
                 key={skill}
-                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-line px-3 text-[13px] has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 lg:min-h-9"
+                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-line px-3 text-small has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 lg:min-h-9"
               >
                 <input
                   type="checkbox"
@@ -120,7 +122,7 @@ export function StaffSheet({
             >
               <input
                 id={extraId}
-                className="gc-input w-full"
+                className={cx(FIELD_BASE_CLASS, "w-full")}
                 value={extra}
                 onChange={(e) => setExtra(e.target.value)}
               />
@@ -133,7 +135,7 @@ export function StaffSheet({
             <input
               id={capacityId}
               inputMode="numeric"
-              className="gc-input w-28"
+              className={cx(FIELD_BASE_CLASS, "w-28")}
               value={capacity}
               onChange={(e) => setCapacity(e.target.value)}
             />
@@ -141,7 +143,7 @@ export function StaffSheet({
           <Field label="Ngôn ngữ" htmlFor={langId} hint="Mã ngôn ngữ, ví dụ: vi, en">
             <input
               id={langId}
-              className="gc-input w-full"
+              className={cx(FIELD_BASE_CLASS, "w-full")}
               value={languages}
               onChange={(e) => setLanguages(e.target.value)}
             />
@@ -149,8 +151,8 @@ export function StaffSheet({
         </div>
 
         <fieldset>
-          <legend className="mb-1.5 text-[13px] font-medium text-ink">Ca trực trong tuần</legend>
-          <p className="mb-2 text-[12px] text-ink-soft">
+          <legend className="mb-1.5 text-small font-medium text-ink">Ca trực trong tuần</legend>
+          <p className="mb-2 text-label text-ink-soft">
             Giờ theo múi giờ phòng khám. Giờ kết thúc sớm hơn giờ bắt đầu nghĩa là ca kéo sang sáng
             hôm sau.
           </p>
@@ -190,25 +192,25 @@ function DayRow({
 }) {
   const intervals = shift[day];
   return (
-    <div className="gc-tile">
+    <div className="rounded-tile border border-line bg-tile/40 p-3">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[14px] font-medium text-ink">{WEEKDAY_LABEL[day]}</span>
+        <span className="text-body font-medium text-ink">{WEEKDAY_LABEL[day]}</span>
         <button
           type="button"
           onClick={onAdd}
-          className="min-h-11 px-2 text-[13px] font-medium text-brand-500 hover:text-brand-600 lg:min-h-9"
+          className="min-h-11 px-2 text-small font-medium text-brand-500 hover:text-brand-600 lg:min-h-9"
         >
           Thêm ca
         </button>
       </div>
-      {intervals.length === 0 && <p className="text-[12px] text-ink-soft">Nghỉ</p>}
+      {intervals.length === 0 && <p className="text-label text-ink-soft">Nghỉ</p>}
       <ul className="space-y-2">
         {intervals.map((interval, index) => (
           <li key={index} className="flex flex-wrap items-center gap-2">
             <input
               type="time"
               aria-label={`${WEEKDAY_LABEL[day]}, ca ${index + 1}, bắt đầu`}
-              className="gc-input"
+              className={FIELD_BASE_CLASS}
               value={interval.start}
               onChange={(e) => onChange(index, { start: e.target.value })}
             />
@@ -216,14 +218,14 @@ function DayRow({
             <input
               type="time"
               aria-label={`${WEEKDAY_LABEL[day]}, ca ${index + 1}, kết thúc`}
-              className="gc-input"
+              className={FIELD_BASE_CLASS}
               value={interval.end}
               onChange={(e) => onChange(index, { end: e.target.value })}
             />
             <button
               type="button"
               onClick={() => onRemove(index)}
-              className="min-h-11 px-2 text-[13px] text-red-700 hover:underline lg:min-h-9"
+              className="min-h-11 px-2 text-small text-danger hover:underline lg:min-h-9"
             >
               Xóa
             </button>

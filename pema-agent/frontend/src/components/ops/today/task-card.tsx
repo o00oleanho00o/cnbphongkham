@@ -38,18 +38,21 @@ function TaskCardView({
   const overdue = open && isOverdue(task.due_at);
 
   return (
-    <article className="gc-card p-4" aria-label={`${patientName}, ${RULE_LABEL[task.rule_key]}`}>
+    <article
+      className="rounded-card border border-line bg-surface p-4 shadow-card"
+      aria-label={`${patientName}, ${RULE_LABEL[task.rule_key]}`}
+    >
       <div className="flex items-start gap-3">
         <InitialAvatar name={patientName} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <Link
               href={`/patients/${task.patient_id}`}
-              className="text-[15px] font-semibold text-ink hover:text-brand-500"
+              className="text-body-lg font-semibold text-ink hover:text-brand-500"
             >
               {patientName}
             </Link>
-            <span className="text-[12px] text-ink-soft">{task.patient_code}</span>
+            <span className="text-label text-ink-soft">{task.patient_code}</span>
             {marketingOptOut && <Badge tone="amber">Từ chối tin quảng bá</Badge>}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -65,22 +68,20 @@ function TaskCardView({
           </div>
         </div>
         <div className="shrink-0 text-right">
-          <div
-            className={`text-[13px] font-semibold ${overdue ? "text-red-600 dark:text-red-400" : "text-ink"}`}
-          >
+          <div className={`text-small font-semibold ${overdue ? "text-danger" : "text-ink"}`}>
             {dueLabel(task.due_at)}
           </div>
-          {task.owner_name && <div className="text-[11px] text-ink-soft">{task.owner_name}</div>}
+          {task.owner_name && <div className="text-micro text-ink-soft">{task.owner_name}</div>}
         </div>
       </div>
 
-      <p className="mt-3 text-[13px] text-ink-soft">{task.reason}</p>
+      <p className="mt-3 text-small text-ink-soft">{task.reason}</p>
 
-      <div className="mt-2 rounded-lg bg-tile/60 px-3 py-2.5">
-        <div className="mb-0.5 text-[11px] font-semibold tracking-wide text-ink-soft uppercase">
+      <div className="mt-2 rounded-control bg-tile/60 px-3 py-2.5">
+        <div className="mb-0.5 text-micro font-semibold tracking-wide text-ink-soft uppercase">
           Nội dung gợi ý
         </div>
-        <p className="text-[13px] leading-relaxed text-ink">{task.suggested_action}</p>
+        <p className="text-small leading-relaxed text-ink">{task.suggested_action}</p>
       </div>
 
       {open ? (
@@ -102,7 +103,7 @@ function TaskCardView({
           )}
         </div>
       ) : (
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-[12px]">
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-label">
           <Badge tone="green">{TASK_STATUS_LABEL[task.status]}</Badge>
           {task.resolution && (
             <span className="text-ink-soft">

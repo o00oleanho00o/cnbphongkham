@@ -10,7 +10,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/admin/layout/page-header";
-import { IconSignal } from "@/components/admin/shared/dashboard-icons";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { Badge, InitialAvatar } from "@/components/admin/shared/ui-bits";
 import { AccountEditDrawer } from "@/components/admin/accounts/account-edit-drawer";
@@ -25,8 +24,8 @@ import { errorMessage, http, unwrap } from "@/lib/api/client";
 type BadgeTone = "blue" | "gray" | "green" | "red" | "amber";
 
 const NOTICE_CLASS: Record<"red" | "amber", string> = {
-  red: "text-red-600 dark:text-red-400",
-  amber: "text-amber-600 dark:text-amber-400",
+  red: "text-danger",
+  amber: "text-warning",
 };
 
 /**
@@ -127,13 +126,12 @@ export default function AccountsPage() {
   return (
     <div>
       <PageHeader
-        icon={IconSignal}
         title="Tài khoản Zalo"
         subtitle="Tài khoản Zalo của bot - mỗi account gắn một agent (não) và có policies riêng"
         aside={
           <button
             onClick={() => setCreating(true)}
-            className="min-h-11 rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600 sm:min-h-0"
+            className="min-h-11 rounded-control bg-brand-500 px-4 py-2 text-body font-medium text-white hover:bg-brand-600 sm:min-h-0"
           >
             Thêm account
           </button>
@@ -142,7 +140,7 @@ export default function AccountsPage() {
 
       <ChannelSettingsPanel />
 
-      {notice && <p className={`mb-4 text-[13px] ${NOTICE_CLASS[notice.tone]}`}>{notice.text}</p>}
+      {notice && <p className={`mb-4 text-small ${NOTICE_CLASS[notice.tone]}`}>{notice.text}</p>}
 
       <div className="grid gap-3 2xl:grid-cols-2">
         {accounts.length === 0 && (
@@ -164,7 +162,7 @@ export default function AccountsPage() {
                   <PolicyProfileBadge profile={acc.policy_profile} />
                   <Badge tone={status.tone}>{status.text}</Badge>
                 </div>
-                <div className="mt-0.5 text-[12px] break-words text-ink-soft">
+                <div className="mt-0.5 text-label break-words text-ink-soft">
                   {acc.id} · não: {agent ? `${agent.icon} ${agent.name}` : acc.agent_id}
                 </div>
               </div>
@@ -176,23 +174,23 @@ export default function AccountsPage() {
                   aria-label={`Bật account ${acc.label}`}
                   onClick={() => void toggleEnabled(acc)}
                   className={`relative h-11 w-11 shrink-0 rounded-full sm:h-5 sm:w-9 sm:transition-colors ${
-                    acc.enabled ? "sm:bg-brand-500" : "sm:bg-slate-300 sm:dark:bg-slate-600"
+                    acc.enabled ? "sm:bg-brand-500" : "sm:bg-ink-soft/40"
                   }`}
                   title={acc.enabled ? "Đang bật - bấm để tắt" : "Đang tắt - bấm để bật"}
                 >
                   <span
                     className={`absolute top-1/2 left-1/2 h-5 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full transition-colors sm:hidden ${
-                      acc.enabled ? "bg-brand-500" : "bg-slate-300 dark:bg-slate-600"
+                      acc.enabled ? "bg-brand-500" : "bg-ink-soft/40"
                     }`}
                   >
                     <span
-                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all ${
+                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow-sm transition-all ${
                         acc.enabled ? "left-[18px]" : "left-0.5"
                       }`}
                     />
                   </span>
                   <span
-                    className={`absolute top-0.5 hidden h-4 w-4 rounded-full bg-white shadow-sm transition-all sm:block ${
+                    className={`absolute top-0.5 hidden h-4 w-4 rounded-full bg-surface shadow-sm transition-all sm:block ${
                       acc.enabled ? "left-[18px]" : "left-0.5"
                     }`}
                   />
@@ -202,20 +200,20 @@ export default function AccountsPage() {
                 {acc.channel === "zalo_personal" && (
                   <button
                     onClick={() => setQrAccount(acc)}
-                    className="min-h-11 rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-brand-600 hover:bg-brand-50 sm:min-h-0"
+                    className="min-h-11 rounded-control border border-line px-3 py-1.5 text-small font-medium text-brand-600 hover:bg-brand-50 sm:min-h-0"
                   >
                     Login QR
                   </button>
                 )}
                 <button
                   onClick={() => setEditing(acc)}
-                  className="min-h-11 rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-ink hover:bg-tile sm:min-h-0"
+                  className="min-h-11 rounded-control border border-line px-3 py-1.5 text-small font-medium text-ink hover:bg-tile sm:min-h-0"
                 >
                   Sửa
                 </button>
                 <button
                   onClick={() => void remove(acc)}
-                  className="min-h-11 rounded-lg px-3 py-1.5 text-[13px] text-red-600 hover:bg-red-50 sm:min-h-0 dark:text-red-400 dark:hover:bg-red-950/40"
+                  className="min-h-11 rounded-control px-3 py-1.5 text-small text-danger hover:bg-danger-soft sm:min-h-0"
                 >
                   Xóa
                 </button>

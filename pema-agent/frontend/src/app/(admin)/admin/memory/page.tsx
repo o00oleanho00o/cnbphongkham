@@ -13,7 +13,6 @@ type MemoryFactItem = Schemas["MemoryFact"];
 
 const PAGE_SIZE = 50;
 import { PageHeader } from "@/components/admin/layout/page-header";
-import { IconBrain } from "@/components/admin/shared/dashboard-icons";
 import { AccountFilter, accountLabel } from "@/components/admin/shared/account-filter";
 import {
   Badge,
@@ -73,13 +72,12 @@ export default function MemoryPage() {
   return (
     <div>
       <PageHeader
-        icon={IconBrain}
         title="Trí nhớ"
         subtitle="Điều trợ lý AI ghi nhớ qua công cụ save_memory - điều học ở chat riêng không bao giờ dùng trong nhóm. Với hồ sơ Kênh bệnh nhân, nội dung từ bệnh nhân không được tự ghi nhớ."
       />
 
       {error && (
-        <p role="alert" className="mb-3 text-[13px] text-red-600 dark:text-red-400">
+        <p role="alert" className="mb-3 text-small text-danger">
           {error}
         </p>
       )}
@@ -125,10 +123,7 @@ export default function MemoryPage() {
             </td>
             <td className="px-4 py-3 text-ink-soft">{formatTime(m.created_at)}</td>
             <td className="px-4 py-3">
-              <button
-                onClick={() => remove(m)}
-                className="text-[13px] text-red-600 hover:underline dark:text-red-400"
-              >
+              <button onClick={() => remove(m)} className="text-small text-danger hover:underline">
                 Xóa
               </button>
             </td>

@@ -166,11 +166,11 @@ export function SessionDetailDrawer({
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <div>
             <div className="font-semibold text-ink">{thread.display_name || thread.thread_id}</div>
-            <div className="text-[12px] text-ink-soft">{thread.message_count} tin</div>
+            <div className="text-label text-ink-soft">{thread.message_count} tin</div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg border border-line px-3 py-1 text-[13px] text-ink-soft hover:bg-tile"
+            className="rounded-control border border-line px-3 py-1 text-small text-ink-soft hover:bg-tile"
           >
             Đóng
           </button>
@@ -187,7 +187,7 @@ export function SessionDetailDrawer({
               key={key}
               type="button"
               onClick={() => setTab(key)}
-              className={`rounded-t-lg px-3 py-2 text-[13px] font-medium transition-colors ${
+              className={`rounded-t-lg px-3 py-2 text-small font-medium transition-colors ${
                 tab === key
                   ? "border-b-2 border-brand-500 text-brand-700"
                   : "text-ink-soft hover:text-ink"
@@ -211,7 +211,7 @@ export function SessionDetailDrawer({
           {hasOlder && (
             <button
               onClick={loadOlder}
-              className="mx-auto block rounded-full border border-line bg-surface px-4 py-1 text-[12px] text-ink-soft hover:bg-tile"
+              className="mx-auto block rounded-full border border-line bg-surface px-4 py-1 text-label text-ink-soft hover:bg-tile"
             >
               Tải tin cũ hơn
             </button>
@@ -222,25 +222,25 @@ export function SessionDetailDrawer({
               className={m.role === "assistant" ? "flex justify-end" : "flex"}
             >
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-2 text-[14px] ${
+                className={`max-w-[80%] rounded-card px-4 py-2 text-body ${
                   m.role === "assistant"
                     ? "rounded-br-md bg-brand-500 text-white"
                     : "rounded-bl-md border border-line bg-surface text-ink"
                 }`}
               >
                 {m.role === "user" && m.sender_name && (
-                  <div className="mb-0.5 text-[12px] font-medium text-brand-600">
+                  <div className="mb-0.5 text-label font-medium text-brand-600">
                     {m.sender_name}
                   </div>
                 )}
                 <div className="break-words whitespace-pre-wrap">{m.content}</div>
                 {(m.images?.length ?? 0) > 0 && (
-                  <div className="mt-1 text-[12px] italic opacity-80">
+                  <div className="mt-1 text-label italic opacity-80">
                     [{m.images?.length} ảnh đính kèm - không hiển thị ở màn này]
                   </div>
                 )}
                 <div
-                  className={`mt-1 text-right text-[10px] ${
+                  className={`mt-1 text-right text-eyebrow ${
                     m.role === "assistant" ? "text-white/70" : "text-ink-soft/60"
                   }`}
                 >
@@ -250,7 +250,7 @@ export function SessionDetailDrawer({
             </div>
           ))}
           {messages.length === 0 && (
-            <p className="py-10 text-center text-[14px] text-ink-soft/60">Chưa có tin nhắn</p>
+            <p className="py-10 text-center text-body text-ink-soft/60">Chưa có tin nhắn</p>
           )}
         </div>
 
@@ -260,7 +260,7 @@ export function SessionDetailDrawer({
         {tab === "chat" && (
           <div className="border-t border-line bg-surface px-5 py-3">
             {loi && (
-              <p role="alert" className="mb-2 text-[12px] text-red-600 dark:text-red-400">
+              <p role="alert" className="mb-2 text-label text-danger">
                 {loi}
               </p>
             )}
@@ -268,7 +268,7 @@ export function SessionDetailDrawer({
               type="button"
               onClick={xoaTomTat}
               disabled={dangXoa}
-              className="mr-2 rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-ink-soft hover:bg-tile disabled:opacity-50"
+              className="mr-2 rounded-control border border-line px-3 py-1.5 text-small font-medium text-ink-soft hover:bg-tile disabled:opacity-50"
             >
               {dangXoa ? "Đang xóa..." : "Xóa bản tóm tắt"}
             </button>
@@ -276,11 +276,11 @@ export function SessionDetailDrawer({
               type="button"
               onClick={xoaNguCanh}
               disabled={dangXoaNguCanh}
-              className="rounded-lg border border-rose-200 px-3 py-1.5 text-[13px] font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-950/40"
+              className="rounded-control border border-danger-line px-3 py-1.5 text-small font-medium text-danger hover:bg-danger-soft disabled:opacity-50"
             >
               {dangXoaNguCanh ? "Đang xóa..." : "Xóa sạch ngữ cảnh"}
             </button>
-            <p className="mt-1.5 text-[11px] leading-relaxed text-ink-soft/70">
+            <p className="mt-1.5 text-micro leading-relaxed text-ink-soft/70">
               Bot quên hẳn cuộc trò chuyện này và bắt đầu lại từ đầu. Lịch hẹn đang chờ vẫn giữ.
             </p>
           </div>
