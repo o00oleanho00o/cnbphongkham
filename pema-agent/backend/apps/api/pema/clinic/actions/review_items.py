@@ -31,6 +31,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pema.clinic import audit
 from pema.clinic.actions._common import check_version, lost_race_is_conflict, not_found, now
 from pema.clinic.actions._mappers import review_out
+from pema.clinic.actions.appointments import announce as announce_appointment
 from pema.clinic.actions.appointments import book_in_session
 from pema.clinic.actions.outbound import OutboundDelivery, deliver_queued_message
 from pema.clinic.domain import review as rules
@@ -39,7 +40,7 @@ from pema.clinic.rbac import is_clinical, is_doctor_scoped, require, require_any
 from pema.core.db import ClinicDatabase
 from pema.live import emit_live
 from pema_contracts.actions import ActionContext
-from pema_contracts.appointments import AppointmentCreate
+from pema_contracts.appointments import AppointmentCreate, AppointmentStatus
 from pema_contracts.common import Page
 from pema_contracts.conversations import ConversationStatus, MessageDirection, MessageStatus, SenderType
 from pema_contracts.errors import DomainError, ErrorCode
@@ -233,6 +234,7 @@ async def approve_review_item(
                 )
 
         appointment_id: UUID | None = None
+        booked_patient_id: UUID | None = None
         proposal = rules.appointment_proposal(item.payload)
         if proposal is not None:
             require_any(ctx, (Permission.APPOINTMENT_WRITE, Permission.CRM_TASK_RESOLVE))
@@ -245,6 +247,7 @@ async def approve_review_item(
                 )
             appointment, _ = await book_in_session(session, ctx, booking)
             appointment_id = appointment.id
+            booked_patient_id = appointment.patient_id
             item.payload = {**(item.payload or {}), "appointment_id": str(appointment.id)}
 
         stamp = now()
@@ -299,6 +302,8 @@ async def approve_review_item(
         )
         result = review_out(item, code)
     _announce(result)
+    if appointment_id is not None and booked_patient_id is not None:
+        announce_appointment(appointment_id, booked_patient_id, "create", AppointmentStatus.BOOKED)
     if message_id is not None:
         await deliver_queued_message(db, ctx, message_id, delivery)
     return result
