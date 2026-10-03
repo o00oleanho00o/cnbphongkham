@@ -9,11 +9,15 @@ from fastapi import APIRouter, Security, status
 
 from pema.api.dashboard_auth import Ctx, Database
 from pema.api.deps import ERROR_RESPONSES, IdempotencyKey, Limit, Offset, cookie_scheme
-from pema.clinic.actions import crm_tasks
+from pema.clinic.actions import crm_overview, crm_tasks
 from pema_contracts.common import Page
 from pema_contracts.crm import (
     CrmActivityCreate,
     CrmActivityOut,
+    CrmRuleOut,
+    CrmSegmentKey,
+    CrmSegmentPatientOut,
+    CrmSegmentsOut,
     CrmTaskOut,
     CrmTaskResolve,
     RuleKey,
@@ -99,3 +103,32 @@ async def list_activities(
 )
 async def create_activity(body: CrmActivityCreate, db: Database, ctx: Ctx) -> CrmActivityOut:
     return await crm_tasks.create_activity(db, ctx, body)
+
+
+@router.get(
+    "/crm/segments",
+    response_model=CrmSegmentsOut,
+    summary="Customer groups: lifecycle stages and at-risk, with counts",
+)
+async def get_segments(db: Database, ctx: Ctx) -> CrmSegmentsOut:
+    return await crm_overview.segments(db, ctx)
+
+
+@router.get(
+    "/crm/segments/{segment}/patients",
+    response_model=Page[CrmSegmentPatientOut],
+    summary="Patients of one group, most overdue first",
+)
+async def list_segment_patients(
+    segment: CrmSegmentKey, db: Database, ctx: Ctx, limit: Limit = 50, offset: Offset = 0
+) -> Page[CrmSegmentPatientOut]:
+    return await crm_overview.segment_patients(db, ctx, segment, limit=limit, offset=offset)
+
+
+@router.get(
+    "/crm/rules",
+    response_model=list[CrmRuleOut],
+    summary="The automation rules, read only (tuning is /admin/rules)",
+)
+async def list_crm_rules(db: Database, ctx: Ctx) -> list[CrmRuleOut]:
+    return await crm_overview.list_rules(db, ctx)
