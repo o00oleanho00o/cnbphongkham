@@ -2,8 +2,10 @@
 // conversations (Inbox) and the review queue. State lives in module variables (see mock/data/clinic.ts).
 import { foldForSearch } from "../../src/lib/admin/shared/fold-for-search";
 import {
+  DOCTOR_NAMES,
   activities,
   appointments,
+  clinicToday,
   consents,
   conversations,
   messages,
@@ -42,6 +44,8 @@ function session(ctx: Ctx): Session {
 function checkVersion(current: number, sent: number): void {
   if (current !== sent) fail(409, "version_conflict", VERSION_CONFLICT);
 }
+
+const MINUTE_MS = 60_000;
 
 const idempotent = new Map<string, unknown>();
 
@@ -153,6 +157,7 @@ function patient360(p: S["PatientOut"]): S["Patient360"] {
 
 const TRANSITIONS: Record<string, { from: S["AppointmentStatus"][]; to: S["AppointmentStatus"] }> =
   {
+    confirm: { from: ["booked"], to: "confirmed" },
     "check-in": { from: ["booked", "confirmed"], to: "arrived" },
     start: { from: ["arrived"], to: "in_progress" },
     complete: { from: ["in_progress"], to: "completed" },
@@ -179,16 +184,67 @@ function transitionRoute(name: string) {
   };
 }
 
+const WORK_START = 8 * 60;
+const WORK_END = 18 * 60;
+const BREAK_START = 12 * 60;
+const BREAK_END = 13 * 60;
+const FREE: readonly S["AppointmentStatus"][] = ["cancelled", "missed"];
+
+/** Minutes after midnight, clinic time, of an ISO string with the +07:00 offset. */
+function clinicMinutes(iso: string): number {
+  const hh = Number.parseInt(iso.slice(11, 13), 10);
+  const mm = Number.parseInt(iso.slice(14, 16), 10);
+  return hh * 60 + mm;
+}
+
+/** The BE's hours rule (08:00-18:00, break 12:00-13:00), same sentences. */
+function slotProblem(startsAt: string, duration: number): string | null {
+  const start = clinicMinutes(startsAt);
+  const end = start + duration;
+  if (startsAt.slice(0, 10) < clinicToday()) return "Ngày giờ hẹn phải từ hiện tại trở đi.";
+  if (end > 24 * 60) return "Lịch hẹn không được kéo dài sang ngày khác.";
+  if (start < WORK_START || end > WORK_END) return "Ngoài ca làm việc 08:00–18:00 của phòng khám.";
+  if (start < BREAK_END && end > BREAK_START) return "Trùng giờ nghỉ 12:00–13:00.";
+  return null;
+}
+
+/** Who the candidate collides with on this appointment (patient first, like the BE), or null. */
+function clashWith(a: S["AppointmentOut"], patientId: string, doctorId: string | null) {
+  if (a.patient_id === patientId) return "bệnh nhân";
+  return doctorId !== null && a.doctor_id === doctorId ? "bác sĩ" : null;
+}
+
+/** The BE's double-booking sentence, or null: same doctor or same patient on an overlapping slot. */
+function findClash(
+  patientId: string,
+  doctorId: string | null,
+  startMs: number,
+  duration: number,
+  ignoreId: string | null,
+): string | null {
+  const endMs = startMs + duration * MINUTE_MS;
+  const overlapping = appointments.filter((a) => {
+    if (a.id === ignoreId || FREE.includes(a.status)) return false;
+    const aStart = Date.parse(a.starts_at);
+    return startMs < aStart + a.duration_min * MINUTE_MS && endMs > aStart;
+  });
+  const hit = overlapping
+    .map((a) => ({ a, who: clashWith(a, patientId, doctorId) }))
+    .find((candidate) => candidate.who !== null);
+  if (!hit) return null;
+  const at = hit.a.starts_at;
+  return `Trùng lịch của ${hit.who} lúc ${at.slice(8, 10)}/${at.slice(5, 7)} ${at.slice(11, 16)}.`;
+}
+
 function createAppointment(input: S["AppointmentCreate"], by: string): S["AppointmentOut"] {
   const p = patientById(input.patient_id);
   if (!p) fail(404, "not_found", "Không tìm thấy bệnh nhân.");
-  const clash = appointments.some(
-    (a) =>
-      a.doctor_id === (input.doctor_id ?? p.doctor_id ?? null) &&
-      a.starts_at === input.starts_at &&
-      a.status !== "cancelled",
-  );
-  if (clash) fail(409, "appointment_conflict", "Bác sĩ đã có lịch vào giờ này. Chọn giờ khác.");
+  const doctorId = input.doctor_id ?? p.doctor_id ?? null;
+  const duration = input.duration_min ?? 45;
+  const problem = slotProblem(input.starts_at, duration);
+  if (problem) fail(422, "validation_failed", problem);
+  const clash = findClash(p.id, doctorId, Date.parse(input.starts_at), duration, null);
+  if (clash) fail(409, "appointment_conflict", clash);
   const created: S["AppointmentOut"] = {
     id: uid("appt"),
     patient_id: p.id,
@@ -206,6 +262,187 @@ function createAppointment(input: S["AppointmentCreate"], by: string): S["Appoin
   };
   appointments.push(created);
   return created;
+}
+
+// ---------------------------------------------------------- board and KPIs
+
+const DAY_MS = 86_400_000;
+const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/;
+
+function dayStartMs(day: string): number {
+  return Date.parse(`${day}T00:00:00+07:00`);
+}
+
+function addDaysKey(day: string, n: number): string {
+  return new Date(dayStartMs(day) + n * DAY_MS + 7 * 3_600_000).toISOString().slice(0, 10);
+}
+
+function validDay(value: string | null): string {
+  if (value === null || !DAY_KEY.test(value) || Number.isNaN(dayStartMs(value))) {
+    fail(422, "validation_failed", "Dữ liệu gửi lên không hợp lệ.");
+  }
+  return value;
+}
+
+/** `GET /appointments/schedule`: the day or the 7 days, a doctor only their own (like the BE). */
+function scheduleRoute(ctx: Ctx): Reply {
+  const user = session(ctx);
+  const day = validDay(ctx.query.get("day"));
+  const view: S["ScheduleView"] = ctx.query.get("view") === "week" ? "week" : "day";
+  const days = view === "week" ? 7 : 1;
+  const own = user.role === "doctor";
+  const wanted = own ? user.userId : ctx.query.get("doctor_id");
+  const from = dayStartMs(day);
+  const to = from + days * DAY_MS;
+  const names = user.permissions.includes("patient.read");
+  const items: S["ScheduleItem"][] = appointments
+    .filter((a) => {
+      const at = Date.parse(a.starts_at);
+      return at >= from && at < to && (!wanted || a.doctor_id === wanted);
+    })
+    .toSorted((a, b) => a.starts_at.localeCompare(b.starts_at))
+    .map((a) => ({
+      ...a,
+      patient_name: names ? (patientById(a.patient_id)?.full_name ?? null) : null,
+      doctor_name: a.doctor_id ? (DOCTOR_NAMES[a.doctor_id] ?? null) : null,
+    }));
+  const doctors = Object.entries(DOCTOR_NAMES)
+    .filter(([id]) => !own || id === user.userId)
+    .map(([id, name]) => ({ id, name }))
+    .toSorted((a, b) => a.name.localeCompare(b.name, "vi"));
+  return {
+    body: {
+      view,
+      from_day: day,
+      to_day: addDaysKey(day, days - 1),
+      doctor_id: wanted ?? null,
+      items,
+      doctors,
+    } satisfies S["ScheduleOut"],
+  };
+}
+
+/** `GET /appointments/free-slot`: first start (steps of 15 minutes from 08:00) the rules accept. */
+function freeSlotRoute(ctx: Ctx): Reply {
+  const day = validDay(ctx.query.get("day"));
+  const patientId = ctx.query.get("patient_id") ?? "";
+  if (!patientById(patientId)) fail(404, "not_found", "Không tìm thấy bệnh nhân.");
+  const doctorId = ctx.query.get("doctor_id");
+  const duration = Number.parseInt(ctx.query.get("duration_min") ?? "30", 10);
+  const steps = Math.max(0, Math.floor((WORK_END - WORK_START - duration) / 15) + 1);
+  const free = Array.from({ length: steps }, (_, i) => WORK_START + i * 15)
+    .map((minute) => {
+      const hh = String(Math.floor(minute / 60)).padStart(2, "0");
+      const mm = String(minute % 60).padStart(2, "0");
+      return `${day}T${hh}:${mm}:00+07:00`;
+    })
+    .find(
+      (startsAt) =>
+        slotProblem(startsAt, duration) === null &&
+        Date.parse(startsAt) > Date.now() &&
+        findClash(patientId, doctorId, Date.parse(startsAt), duration, null) === null,
+    );
+  return { body: { starts_at: free ?? null } satisfies S["FreeSlotOut"] };
+}
+
+function rangeOf(range: S["DashboardRange"]): [string, string] {
+  const today = clinicToday();
+  if (range === "today") return [today, today];
+  const weekday = (new Date(dayStartMs(today) + 7 * 3_600_000).getUTCDay() + 6) % 7;
+  if (range === "week") return [addDaysKey(today, -weekday), addDaysKey(today, 6 - weekday)];
+  const first = `${today.slice(0, 8)}01`;
+  const next = addDaysKey(`${today.slice(0, 8)}28`, 4);
+  return [first, addDaysKey(`${next.slice(0, 8)}01`, -1)];
+}
+
+const pct = (part: number, whole: number): number | null =>
+  whole === 0 ? null : Math.round((part * 100) / whole);
+
+type Window = { from: number; to: number };
+
+function appointmentKpis(
+  user: Session,
+  window: Window,
+): { appointments: S["AppointmentKpis"]; patients: S["PatientKpis"] } {
+  const inRange = appointments.filter((a) => {
+    const at = Date.parse(a.starts_at);
+    return (
+      at >= window.from && at < window.to && (user.role !== "doctor" || a.doctor_id === user.userId)
+    );
+  });
+  const count = (...statuses: S["AppointmentStatus"][]) =>
+    inRange.filter((a) => statuses.includes(a.status)).length;
+  const visited = inRange.filter((a) => ["arrived", "in_progress", "completed"].includes(a.status));
+  const seen = new Set(visited.map((a) => a.patient_id)).size;
+  return {
+    appointments: {
+      total: inRange.length,
+      upcoming: count("booked", "confirmed"),
+      waiting: count("arrived"),
+      in_progress: count("in_progress"),
+      completed: count("completed"),
+      missed: count("missed"),
+      cancelled: count("cancelled"),
+      visits: visited.length,
+    },
+    // the mock patients carry no first-contact date: every patient seen counts as returning
+    patients: { seen, new: 0, returning: seen },
+  };
+}
+
+function careKpis(window: Window): S["CareKpis"] {
+  const today = dayStartMs(clinicToday());
+  const isOpen = (t: S["CrmTaskOut"]) => t.status === "open" || t.status === "rescheduled";
+  const due = tasks.filter((t) => {
+    const at = Date.parse(t.due_at);
+    return at >= window.from && at < window.to && (isOpen(t) || t.status === "resolved");
+  });
+  const resolved = due.filter((t) => t.status === "resolved").length;
+  const overdue = tasks.filter((t) => isOpen(t) && Date.parse(t.due_at) < today);
+  const contacts = activities.filter((a) => {
+    const at = Date.parse(a.occurred_at);
+    return at >= window.from && at < window.to && a.channel !== "internal_note";
+  });
+  const reached = contacts.filter((a) => a.outcome !== "unanswered" && a.outcome !== "invalid");
+  return {
+    tasks_due: due.length,
+    tasks_resolved: resolved,
+    followup_completion_pct: pct(resolved, due.length),
+    overdue_tasks: overdue.length,
+    overdue_patients: new Set(overdue.map((t) => t.patient_id)).size,
+    contact_attempts: contacts.length,
+    contacts_reached: reached.length,
+    contact_rate_pct: pct(reached.length, contacts.length),
+    booked_after_care: contacts.filter((a) => a.related_appointment_id !== null).length,
+  };
+}
+
+/** `GET /dashboard/kpis`: the same numbers the BE computes, from the mock rows. No money. */
+function kpisRoute(ctx: Ctx): Reply {
+  const user = session(ctx);
+  const raw = ctx.query.get("range") ?? "today";
+  if (raw !== "today" && raw !== "week" && raw !== "month") {
+    fail(422, "validation_failed", "Dữ liệu gửi lên không hợp lệ.");
+  }
+  const range: S["DashboardRange"] = raw;
+  const [first, last] = rangeOf(range);
+  const window: Window = { from: dayStartMs(first), to: dayStartMs(last) + DAY_MS };
+  const canAppointments = user.permissions.includes("appointment.read");
+  const canCare = user.permissions.includes("crm.task.read");
+  if (!canAppointments && !canCare) fail(403, "forbidden", "Bạn không có quyền xem tổng quan.");
+
+  const operating = canAppointments ? appointmentKpis(user, window) : null;
+  return {
+    body: {
+      range,
+      scope: user.role === "doctor" ? "doctor" : "clinic",
+      starts_on: first,
+      ends_on: last,
+      appointments: operating?.appointments ?? null,
+      patients: operating?.patients ?? null,
+      care: canCare ? careKpis(window) : null,
+    } satisfies S["DashboardKpisOut"],
+  };
 }
 
 // ------------------------------------------------------------------- tasks
@@ -399,6 +636,8 @@ export function register(r: Router): void {
       .toSorted((a, b) => a.starts_at.localeCompare(b.starts_at));
     return { body: paginate(found, ctx.query) };
   });
+  r.get("/api/v1/appointments/schedule", "appointment.read", scheduleRoute);
+  r.get("/api/v1/appointments/free-slot", "appointment.write", freeSlotRoute);
   r.post("/api/v1/appointments", "appointment.write", (ctx): Reply => ({
     status: 201,
     body: createAppointment(bodyOf<S["AppointmentCreate"]>(ctx), session(ctx).userId),
@@ -410,12 +649,27 @@ export function register(r: Router): void {
     const appt = findOr404(appointments, ctx.params.appointment_id ?? "", "lịch hẹn");
     const { version, ...patch } = bodyOf<S["AppointmentUpdate"]>(ctx);
     checkVersion(appt.version, version);
+    if (appt.status !== "booked" && appt.status !== "confirmed") {
+      fail(409, "invalid_state", "Lịch đã bắt đầu, hoàn tất, hủy hoặc vắng; hãy tạo lịch mới.");
+    }
     const cleaned = Object.fromEntries(
       Object.entries(patch).filter(([, v]) => v !== undefined && v !== null),
-    );
-    Object.assign(appt, cleaned, { version: appt.version + 1 });
+    ) as Partial<S["AppointmentOut"]>;
+    const startsAt = cleaned.starts_at ?? appt.starts_at;
+    const duration = cleaned.duration_min ?? appt.duration_min;
+    const doctorId = "doctor_id" in patch ? (patch.doctor_id ?? null) : appt.doctor_id;
+    const problem = slotProblem(startsAt, duration);
+    if (problem) fail(422, "validation_failed", problem);
+    const clash = findClash(appt.patient_id, doctorId, Date.parse(startsAt), duration, appt.id);
+    if (clash) fail(409, "appointment_conflict", clash);
+    Object.assign(appt, cleaned, { doctor_id: doctorId, version: appt.version + 1 });
     return { body: appt };
   });
+  r.post(
+    "/api/v1/appointments/{appointment_id}/confirm",
+    "appointment.write",
+    transitionRoute("confirm"),
+  );
   r.post(
     "/api/v1/appointments/{appointment_id}/cancel",
     "appointment.write",
@@ -428,15 +682,21 @@ export function register(r: Router): void {
   );
   r.post(
     "/api/v1/appointments/{appointment_id}/complete",
-    "session.write",
+    "appointment.check_in",
     transitionRoute("complete"),
   );
   r.post(
     "/api/v1/appointments/{appointment_id}/miss",
-    "appointment.write",
+    "appointment.check_in",
     transitionRoute("miss"),
   );
-  r.post("/api/v1/appointments/{appointment_id}/start", "session.write", transitionRoute("start"));
+  r.post(
+    "/api/v1/appointments/{appointment_id}/start",
+    "appointment.check_in",
+    transitionRoute("start"),
+  );
+
+  r.get("/api/v1/dashboard/kpis", null, kpisRoute);
 
   // CRM
   r.get("/api/v1/crm/tasks", "crm.task.read", (ctx): Reply => {

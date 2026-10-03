@@ -33,6 +33,7 @@ from pema.clinic import audit
 from pema.clinic.actions._common import check_version, lost_race_is_conflict, not_found, now
 from pema.clinic.actions._mappers import activity_out, task_out
 from pema.clinic.actions._scope import patient_scope, require_patient_access
+from pema.clinic.actions.appointments import announce as announce_appointment
 from pema.clinic.actions.appointments import book_in_session
 from pema.clinic.actions.assignees import load_assignable_user
 from pema.clinic.actions.patients import CS_OWNER_ROLES, load_patient
@@ -41,6 +42,7 @@ from pema.clinic.rbac import is_doctor_scoped, require
 from pema.core.db import ClinicDatabase
 from pema.live import emit_live
 from pema_contracts.actions import ActionContext
+from pema_contracts.appointments import AppointmentStatus
 from pema_contracts.common import VN_TZ, Page
 from pema_contracts.crm import (
     CrmActivityCreate,
@@ -64,7 +66,7 @@ DOCTOR_TASK_RULE = RuleKey.D7.value
 """JS: ``Tai khoan bac si chi xu ly review D+7 cua ho so phu trach``."""
 
 
-def _doctor_task_condition(ctx: ActionContext) -> list[Any]:
+def doctor_task_condition(ctx: ActionContext) -> list[Any]:
     """Extra conditions on ``CrmTask`` for a doctor: D+7 reviews of patients in their scope."""
     scope = patient_scope(ctx)
     if scope is None:
@@ -84,7 +86,7 @@ async def _load_task(
             select(CrmTask, Patient.code, owner.display_name)
             .join(Patient, (Patient.id == CrmTask.patient_id) & (Patient.clinic_id == CrmTask.clinic_id))
             .outerjoin(owner, (owner.id == CrmTask.owner_user_id) & (owner.clinic_id == CrmTask.clinic_id))
-            .where(CrmTask.id == task_id, CrmTask.clinic_id == ctx.clinic_id, *_doctor_task_condition(ctx))
+            .where(CrmTask.id == task_id, CrmTask.clinic_id == ctx.clinic_id, *doctor_task_condition(ctx))
         )
     ).first()
     if row is None:
@@ -106,7 +108,7 @@ async def list_tasks(
 ) -> Page[CrmTaskOut]:
     """Queue ordered as the JS ``queue``: D+1/3/7 first, then priority, then due time."""
     require(ctx, Permission.CRM_TASK_READ)
-    conditions: list[Any] = [CrmTask.clinic_id == ctx.clinic_id, *_doctor_task_condition(ctx)]
+    conditions: list[Any] = [CrmTask.clinic_id == ctx.clinic_id, *doctor_task_condition(ctx)]
     if status is not None:
         conditions.append(CrmTask.status == status.value)
     if rule_key is not None:
@@ -264,6 +266,8 @@ async def resolve_task(
         )
         resolved = task_out(task, code, owner.display_name)
     emit_live(LiveEventType.TASKS_CHANGED, task_id)
+    if appointment_id is not None:
+        announce_appointment(appointment_id, resolved.patient_id, "create", AppointmentStatus.BOOKED)
     if handed_over:
         emit_live(LiveEventType.REVIEW_CHANGED)
     return resolved
