@@ -9,7 +9,7 @@ code reads it: an article stays an ordinary source for the agents (default-deny 
 Single tenant: no row level security; both runtime roles keep the table-level grants they already have.
 
 Revision ID: u7_0001_guide_tags
-Revises: m_0002_paused_reminders
+Revises: u3_0010_sessions_plans_media
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision = "u7_0001_guide_tags"
-down_revision = "m_0002_paused_reminders"
+down_revision = "u3_0010_sessions_plans_media"
 branch_labels = None
 depends_on = None
 
