@@ -72,8 +72,7 @@ export const NAV_SECTIONS: NavSection[] = [
         to: "/dashboard",
         label: "Tổng quan",
         icon: IconGrid,
-        needs: ["appointment.read", "crm.task.read", "admin.usage"],
-        planned: true,
+        needs: ["appointment.read", "crm.task.read"],
       },
       {
         to: "/today",
@@ -88,7 +87,6 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Điều phối lịch",
         icon: IconClipboardCheck,
         needs: ["appointment.read"],
-        planned: true,
       },
       {
         to: "/patients",
@@ -248,8 +246,15 @@ export function visibleSections(can: (needs: readonly Permission[]) => boolean):
   );
 }
 
-/** First screen a role can open, used after sign-in and for `/`. Planned screens have no page yet. */
+/**
+ * First screen a role can open, used after sign-in and for `/`. Planned screens have no page yet. The old Clinic
+ * Web opened the dashboard for everybody except the care role, whose home was the CSKH queue
+ * (`staff-context.js` `home()`); the care role is the one that resolves tasks but may not edit the schedule.
+ */
 export function homeFor(can: (needs: readonly Permission[]) => boolean): string {
+  if (can(["crm.task.resolve"]) && !can(["appointment.write"]) && can(["crm.task.read"])) {
+    return "/today";
+  }
   const first = NAV_SECTIONS.flatMap((s) => s.items).find((i) => !i.planned && can(i.needs));
   return first?.to ?? "/login";
 }
