@@ -1,6 +1,6 @@
 # PLAN-AI01-U — Package U: UI parity with the old Pema web + port of the missing screens
 
-Status: planned 2026-10-03, nothing built. Branch: `feat/single-tenant`. Recipes: `pema-agent/recipes/U/`.
+Status: planned 2026-10-03, nothing built. Branch: `feat/ui-parity` (created 2026-10-03 from `feat/single-tenant` at `bc094c8`; merge back when the package is accepted). Recipes: `pema-agent/recipes/U/`.
 Owner decision (2026-10-03): (1) port the missing old Clinic Web features into the existing Next.js FE, (2) rewrite in
 Next.js, never wire the old localStorage web to the API, (3) restyle the whole existing FE to look like the old Pema web
 **without losing any current feature** (CSKH, agent admin, care supervision). Reason: the same design will be ported to
