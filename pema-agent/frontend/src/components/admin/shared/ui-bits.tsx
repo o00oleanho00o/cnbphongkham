@@ -3,6 +3,9 @@
 
 import type { ReactNode, SVGProps } from "react";
 import { IconSearch } from "@/components/admin/shared/dashboard-icons";
+import { Badge as KitBadge, type BadgeTone as KitBadgeTone } from "@/ui/badge";
+import { Card } from "@/ui/card";
+import { FIELD_CONTROL_CLASS } from "@/ui/field";
 
 /** Mảnh UI dùng chung theo mẫu GoClaw: badge chấm màu, stat card + sparkline, tile, bảng */
 
@@ -16,14 +19,23 @@ import { IconSearch } from "@/components/admin/shared/dashboard-icons";
 export function ToggleKnob({ on }: { on: boolean }) {
   return (
     <span
-      className={`relative inline-block h-5 w-9 shrink-0 rounded-full transition-colors ${on ? "bg-brand-500" : "bg-slate-300 dark:bg-slate-600"}`}
+      className={`relative inline-block h-5 w-9 shrink-0 rounded-full transition-colors ${on ? "bg-brand-500" : "bg-ink-soft/40"}`}
     >
       <span
-        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all ${on ? "left-[18px]" : "left-0.5"}`}
+        className={`absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow-sm transition-all ${on ? "left-[18px]" : "left-0.5"}`}
       />
     </span>
   );
 }
+
+/** Tones of the ported dashboard, kept as names; the chip itself is the kit's `Badge` (status tokens). */
+const BADGE_TONE: Record<"blue" | "gray" | "green" | "red" | "amber", KitBadgeTone> = {
+  blue: "brand",
+  gray: "neutral",
+  green: "success",
+  red: "danger",
+  amber: "warning",
+};
 
 export function Badge({
   tone,
@@ -34,29 +46,10 @@ export function Badge({
   dot?: boolean;
   children: ReactNode;
 }) {
-  const tones = {
-    blue: { chip: "bg-brand-50 text-brand-700 border-brand-100", dot: "bg-brand-500" },
-    gray: { chip: "bg-tile text-ink-soft border-line", dot: "bg-slate-400 dark:bg-slate-500" },
-    green: {
-      chip: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/50",
-      dot: "bg-emerald-500",
-    },
-    red: {
-      chip: "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-100 dark:border-red-900/50",
-      dot: "bg-red-500",
-    },
-    amber: {
-      chip: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-100 dark:border-amber-900/50",
-      dot: "bg-amber-500",
-    },
-  }[tone];
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[12px] font-medium ${tones.chip}`}
-    >
-      {dot && <span className={`h-1.5 w-1.5 rounded-full ${tones.dot}`} />}
+    <KitBadge tone={BADGE_TONE[tone]} dot={dot}>
       {children}
-    </span>
+    </KitBadge>
   );
 }
 
@@ -107,15 +100,15 @@ export function StatCard({
   series?: number[];
 }) {
   return (
-    <div className="gc-card flex flex-col p-5">
+    <div className="flex min-w-0 flex-col rounded-card border border-line bg-surface p-4 shadow-card sm:p-5">
       <div className="flex items-start gap-3">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-tile text-ink">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-tile text-ink">
           <Icon size={17} />
         </span>
         <div className="min-w-0">
-          <div className="text-[13px] leading-tight text-ink-soft">{label}</div>
+          <div className="text-small leading-tight text-ink-soft">{label}</div>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-[26px] leading-none font-semibold text-ink">{value}</span>
+            <span className="text-metric leading-none font-semibold text-ink">{value}</span>
             {sub}
           </div>
         </div>
@@ -125,15 +118,13 @@ export function StatCard({
   );
 }
 
-/** Panel lớn có header icon + title (+ subtitle) + slot phải */
+/** Panel lớn có header title (+ subtitle) + slot phải: the kit's `Card` (old `.panel`). */
 export function SectionCard({
-  icon: Icon,
   title,
   subtitle,
   aside,
   children,
 }: {
-  icon?: (p: SVGProps<SVGSVGElement> & { size?: number }) => ReactNode;
   title: string;
   /** Câu phụ dưới tiêu đề - nói panel này đang cho xem cái gì */
   subtitle?: string;
@@ -141,23 +132,9 @@ export function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <section className="gc-card p-5">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          {Icon && (
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-500">
-              <Icon size={19} />
-            </span>
-          )}
-          <div className="min-w-0">
-            <h2 className="text-[16px] font-semibold text-ink">{title}</h2>
-            {subtitle && <p className="mt-0.5 text-[13px] text-ink-soft">{subtitle}</p>}
-          </div>
-        </div>
-        {aside}
-      </div>
+    <Card title={title} subtitle={subtitle} aside={aside}>
       {children}
-    </section>
+    </Card>
   );
 }
 
@@ -179,14 +156,14 @@ export function InfoTile({
   hint?: string;
 }) {
   return (
-    <div className="gc-tile flex items-center gap-3">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface text-brand-500">
+    <div className="flex items-center gap-3 rounded-tile border border-line bg-tile/40 p-3">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-tile bg-surface text-brand-500">
         <Icon size={17} />
       </span>
       <div className="min-w-0">
-        <div className="text-[12px] text-ink-soft">{label}</div>
-        <div className="truncate text-[15px] font-semibold text-ink">{value}</div>
-        {hint && <div className="truncate text-[11px] text-ink-soft/80">{hint}</div>}
+        <div className="text-label text-ink-soft">{label}</div>
+        <div className="truncate text-body-lg font-semibold text-ink">{value}</div>
+        {hint && <div className="truncate text-micro text-ink-soft/80">{hint}</div>}
       </div>
     </div>
   );
@@ -202,13 +179,13 @@ export function Pager({
   onPage: (p: number) => void;
 }) {
   const btn =
-    "rounded-lg border border-line bg-surface px-3 py-1.5 text-[13px] font-medium text-ink disabled:opacity-40 hover:bg-tile";
+    "rounded-control border border-line bg-surface px-3 py-1.5 text-small font-medium text-ink disabled:opacity-40 hover:bg-tile";
   return (
     <div className="flex items-center gap-2">
       <button className={btn} disabled={page === 0} onClick={() => onPage(page - 1)}>
         Trước
       </button>
-      <span className="text-[13px] text-ink-soft">Trang {page + 1}</span>
+      <span className="text-small text-ink-soft">Trang {page + 1}</span>
       <button className={btn} disabled={!hasMore} onClick={() => onPage(page + 1)}>
         Sau
       </button>
@@ -242,10 +219,10 @@ export function TableShell({
   children: ReactNode;
 }) {
   return (
-    <div className="gc-card overflow-x-auto">
-      <table className="w-full text-left text-[14px]" style={{ minWidth }}>
+    <div className="overflow-x-auto rounded-card border border-line bg-surface shadow-card">
+      <table className="w-full text-left text-body" style={{ minWidth }}>
         <thead>
-          <tr className="border-b border-line text-[11px] tracking-wider text-ink-soft uppercase">
+          <tr className="border-b border-line bg-table-head text-micro tracking-wider text-ink-soft uppercase">
             {headers.map((h, i) => (
               <th
                 key={i}
@@ -302,7 +279,7 @@ export function ListToolbar({
             value={query}
             onChange={(e) => onQuery(e.target.value)}
             placeholder={placeholder}
-            className="gc-input w-full pl-9"
+            className={`${FIELD_CONTROL_CLASS} pl-9`}
           />
         </div>
         {filter && <div className="w-full sm:w-56">{filter}</div>}
@@ -315,7 +292,7 @@ export function ListToolbar({
 export function EmptyRow({ colSpan, text }: { colSpan: number; text: string }) {
   return (
     <tr>
-      <td colSpan={colSpan} className="px-4 py-12 text-center text-[14px] text-ink-soft/60">
+      <td colSpan={colSpan} className="px-4 py-12 text-center text-body text-ink-soft/60">
         {text}
       </td>
     </tr>
@@ -326,17 +303,17 @@ export function EmptyRow({ colSpan, text }: { colSpan: number; text: string }) {
 export function InitialAvatar({ name }: { name: string }) {
   const palette = [
     "bg-brand-500",
-    "bg-sky-500",
-    "bg-indigo-500",
-    "bg-teal-500",
-    "bg-rose-500",
-    "bg-amber-500",
+    "bg-info",
+    "bg-success",
+    "bg-accent-strong",
+    "bg-danger",
+    "bg-warning",
   ];
   const hash = [...name].reduce((a, ch) => a + ch.charCodeAt(0), 0);
   const initial = (name.trim()[0] ?? "?").toUpperCase();
   return (
     <span
-      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold text-white ${palette[hash % palette.length]}`}
+      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-small font-semibold text-surface ${palette[hash % palette.length]}`}
     >
       {initial}
     </span>
