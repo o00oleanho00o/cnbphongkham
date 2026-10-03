@@ -28,6 +28,7 @@ import {
   type Schemas,
   type Session,
 } from "../core";
+import { lightSession, notes, plansOf, sessionsOf } from "../data/patient-care";
 import { assertAssignable } from "../assignable";
 import { viewersFor } from "../live-bus";
 
@@ -113,32 +114,8 @@ function patient360(p: S["PatientOut"]): S["Patient360"] {
           },
         ]
       : [],
-    plans: isTreating
-      ? [
-          {
-            id: uuid(1, 13),
-            episode_id: uuid(1, 12),
-            service_code: "laser-co2",
-            title: "Laser CO2 phục hồi da (4 buổi)",
-            status: "active",
-            total_sessions: 4,
-            completed_sessions: 2,
-          },
-        ]
-      : [],
-    recent_sessions: isTreating
-      ? [
-          {
-            id: uuid(1, 14),
-            plan_id: uuid(1, 13),
-            doctor_id: p.doctor_id ?? null,
-            performed_at: isoFromNow(-2 * 86_400_000),
-            title: "Buổi 2/4 Laser CO2",
-            status: "completed",
-            protocol_id: "laser-co2",
-          },
-        ]
-      : [],
+    plans: plansOf(p.id),
+    recent_sessions: sessionsOf(p.id).slice(0, 10).map(lightSession),
     recent_activities: activities.filter((a) => a.patient_id === p.id),
     timeline: [
       ...patientAppointments.map((a) => ({
@@ -160,6 +137,17 @@ function patient360(p: S["PatientOut"]): S["Patient360"] {
           detail: a.note,
           by: a.actor_name ?? null,
           source_id: a.id,
+        })),
+      ...notes
+        .filter((n) => n.patient_id === p.id && n.status === "approved" && n.approved_at)
+        .map((n) => ({
+          id: `consult-${n.id}`,
+          at: n.approved_at ?? n.created_at,
+          kind: "consult",
+          title: "Ghi chú tư vấn đã được duyệt",
+          detail: null,
+          by: n.approved_by_name ?? null,
+          source_id: n.id,
         })),
     ].toSorted((a, b) => b.at.localeCompare(a.at)),
   };

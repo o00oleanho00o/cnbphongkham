@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback } from "react";
+import { Suspense, useCallback } from "react";
 
 import { IconChevronLeft } from "@/components/admin/shared/ops-icons";
 import { ListSkeleton, RetryNotice } from "@/components/ops/ops-ui";
@@ -26,7 +26,7 @@ export default function Patient360Page() {
       ),
     [id],
   );
-  const { data, error, loading, reload } = useLoad(load);
+  const { data, error, loading, reload, refresh } = useLoad(load);
 
   return (
     <div>
@@ -42,7 +42,11 @@ export default function Patient360Page() {
       )}
       {allowed && error && <RetryNotice message={error} onRetry={reload} />}
       {allowed && loading && !data && <ListSkeleton rows={3} />}
-      {allowed && data && <Patient360View data={data} />}
+      {allowed && data && (
+        <Suspense fallback={<ListSkeleton rows={3} />}>
+          <Patient360View data={data} onChanged={refresh} />
+        </Suspense>
+      )}
     </div>
   );
 }

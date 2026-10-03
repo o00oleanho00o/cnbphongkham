@@ -81,6 +81,54 @@ describe("Tabs", () => {
   });
 });
 
+describe("Tabs segmentedOnPhone", () => {
+  const WITH_SHORT = [
+    { id: "overview", label: "Tổng quan", shortLabel: "Tổng quan" },
+    { id: "session", label: "Buổi điều trị", shortLabel: "Buổi" },
+  ];
+
+  it("shows_the_short_label_for_the_phone_and_the_full_one_from_lg", () => {
+    render(
+      <Tabs
+        label="Hồ sơ"
+        idPrefix="s"
+        items={WITH_SHORT}
+        value="overview"
+        onChange={() => undefined}
+        segmentedOnPhone
+      />,
+    );
+
+    const tab = screen.getByRole("tab", { name: /Buổi/ });
+    const spans = tab.querySelectorAll("span");
+    expect(spans[0]?.textContent).toBe("Buổi");
+    expect(spans[0]?.className).toContain("lg:hidden");
+    expect(spans[1]?.textContent).toBe("Buổi điều trị");
+    expect(spans[1]?.className).toContain("hidden");
+  });
+
+  it("keeps_one_equal_column_per_tab", () => {
+    render(
+      <Tabs
+        label="Hồ sơ"
+        idPrefix="s"
+        items={WITH_SHORT}
+        value="overview"
+        onChange={() => undefined}
+        segmentedOnPhone
+      />,
+    );
+
+    expect(screen.getByRole("tablist").style.gridTemplateColumns).toBe("repeat(2, minmax(0, 1fr))");
+  });
+
+  it("leaves_the_default_bar_without_a_grid", () => {
+    render(<Harness />);
+
+    expect(screen.getByRole("tablist").style.gridTemplateColumns).toBe("");
+  });
+});
+
 describe("targetTabIndex", () => {
   it.each([
     ["Home", 2, 0],

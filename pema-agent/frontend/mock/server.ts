@@ -55,6 +55,11 @@ export async function startMockServer(port: number) {
       const send = (reply: Reply) => {
         const status = reply.status ?? 200;
         const headers: Record<string, string> = { ...reply.headers };
+        if (reply.raw !== undefined) {
+          res.writeHead(status, headers);
+          res.end(reply.raw);
+          return;
+        }
         if (reply.body === undefined || status === 204) {
           res.writeHead(status, headers);
           res.end();

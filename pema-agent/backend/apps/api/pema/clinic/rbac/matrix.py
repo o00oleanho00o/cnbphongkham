@@ -86,6 +86,9 @@ DOCTOR_PERMISSIONS: frozenset[Permission] = frozenset(
         P.APPOINTMENT_WRITE,  # "gioi han": own appointments only (action)
         P.APPOINTMENT_CHECK_IN,  # "gioi han": own appointments only (action)
         P.SESSION_WRITE,
+        P.SESSION_READ,
+        P.MEDIA_READ,  # narrowed to own / scheduled patients by the action
+        P.MEDIA_WRITE,
         P.CRM_TASK_READ,  # D+7 review of own patients only (action)
         P.CRM_TASK_RESOLVE,  # idem
         P.CRM_ACTIVITY_WRITE,  # own patients only (action)
@@ -113,6 +116,11 @@ CS_STAFF_PERMISSIONS: frozenset[Permission] = frozenset(
         P.APPOINTMENT_READ,
         # no APPOINTMENT_WRITE / CHECK_IN: "Sua lich/check-in: cham soc X". Booking from a CRM task goes
         # through CRM_TASK_RESOLVE (the prototype gives the care role the 'booking' capability only there).
+        # "Ghi session: cham soc theo phan cong": care staff read (and upload photos for) the patients they
+        # look after only; they never write a session or a note (SESSION_WRITE stays clinical)
+        P.SESSION_READ,
+        P.MEDIA_READ,
+        P.MEDIA_WRITE,
         P.CRM_TASK_READ,
         P.CRM_TASK_RESOLVE,
         P.CRM_ACTIVITY_WRITE,

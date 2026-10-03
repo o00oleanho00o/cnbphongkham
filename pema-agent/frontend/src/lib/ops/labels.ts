@@ -154,3 +154,37 @@ export const POLICY_PROFILE_LABEL: Record<S["PolicyProfileKey"], string> = {
   staff_assistant: "Trợ lý nội bộ",
   patient_channel: "Kênh bệnh nhân",
 };
+
+// ---------------------------------------------------------------- Patient 360 tabs (package U, step U3)
+
+export const PLAN_STATUS_LABEL: Record<S["PlanStatus"], string> = {
+  planned: "Dự kiến",
+  active: "Đang thực hiện",
+  completed: "Đã đủ buổi",
+  abandoned: "Bỏ dở",
+  cancelled: "Đã hủy",
+};
+
+export const SESSION_STATUS_LABEL: Record<string, string> = {
+  scheduled: "Đã ghi, chưa hoàn tất",
+  completed: "Đã hoàn tất",
+  cancelled: "Đã hủy",
+};
+
+export const MEDIA_STAGE_LABEL: Record<S["MediaStage"], string> = {
+  before: "Trước điều trị",
+  after: "Sau điều trị",
+};
+
+/** `session-type` options of the old form: the plan's own procedure first, then these two. */
+export const EXTRA_SESSION_TYPES = ["Tái khám đánh giá", "Chăm sóc phục hồi"] as const;
+/** `session-region` and `session-view` options of the old form. */
+export const PHOTO_REGIONS = ["Mặt", "Cổ", "Vùng khác"] as const;
+export const PHOTO_VIEWS = ["Chính diện", "Má trái", "Má phải"] as const;
+
+export const LASER_PROTOCOL_ID = "laser-co2";
+/** `session-protocol` options of the old form: "" = as the doctor recommends. */
+export const PROTOCOL_OPTIONS: readonly { value: string; label: string }[] = [
+  { value: "", label: "Theo khuyến nghị bác sĩ" },
+  { value: LASER_PROTOCOL_ID, label: "Laser CO2 · D+1 / D+3 / D+7 / D+30" },
+];

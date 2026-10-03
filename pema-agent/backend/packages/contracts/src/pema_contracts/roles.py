@@ -44,6 +44,14 @@ class Permission(StrEnum):
     APPOINTMENT_WRITE = "appointment.write"
     APPOINTMENT_CHECK_IN = "appointment.check_in"
     SESSION_WRITE = "session.write"
+    SESSION_READ = "session.read"
+    """Read the clinical text of sessions and consult notes (doctor, owner; care staff only for the patients
+    they look after: narrowed by the action)."""
+    MEDIA_READ = "media.read"
+    """See clinical photos of a patient (doctor, owner; care staff only for their patients, and only while the
+    patient's media consent is granted)."""
+    MEDIA_WRITE = "media.write"
+    """Upload clinical photos. Needs the patient's media consent (the action refuses without it)."""
     CRM_TASK_READ = "crm.task.read"
     CRM_TASK_RESOLVE = "crm.task.resolve"
     CRM_ACTIVITY_WRITE = "crm.activity.write"
