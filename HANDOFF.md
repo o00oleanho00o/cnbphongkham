@@ -266,6 +266,25 @@ How to run it (when the user says so):
 6. M6 numbers (D5 recall 100% with zero LLM calls, p50/p95 latency on the RTX 3060) go into
    `pema-agent/evals/care/report.md` and a line here.
 
+## Package U — UI parity with the old Pema web + port of the missing screens (planned; recipes ready; NOTHING built)
+
+Owner decision 2026-10-03: port the old Clinic Web features that the Next.js FE lacks (dashboard, schedule, Patient 360
+tabs consult/plan/session/photos, studio/resources/services, cashier/orders/catalog/A5 print, finance PB02, guide/ask,
+CRM01 leftovers) by **rewriting them in Next.js + BE actions**; never wire the old localStorage web to the API; and
+restyle the **whole** existing FE to the old web's design (tokens, sidebar, layout) **without losing any current feature**
+(CSKH, agent admin, care supervision). Same design will be ported to the KMP app later, so tokens are exported as JSON.
+
+Where: plan `pema-agent/docs/PLAN-AI01-U.md`; recipes `pema-agent/recipes/U/` (`00-README.md` order/locations/rules,
+`_REPORT-TEMPLATE.md`, `01-U0` … `09-U8`). Old web is reference only (`prototype/`, `design-specs/`,
+`.agents/skills/design-system/`), read-only.
+
+How to run (when the user says so): branch `feat/single-tenant`; one `pema-builder` per recipe in its own worktree;
+prompt "Follow pema-agent/recipes/U/<file>.md on branch feat/single-tenant. Single-tenant: no RLS, clinic_id =
+installation id. Return the report in _REPORT-TEMPLATE.md format." Order U0 → U1 → (U2 ‖ U3 ‖ U4 ‖ U7) → U5 → U6 → U8.
+Gates before merging a worktree: FE vitest ≥ 407 and `pnpm inventory`/`pnpm visual` green (from U1 on), lint/tsc/build,
+BE pytest/ruff/pyright/import-linter, no attribution in `git log --format=%B`, report filed. Migrations use prefix
+`u<step>_`; U8 adds the merge head. Photos: upload/view with consent only, no image analysis (scope unchanged).
+
 ## Next Steps (only when the user asks)
 
 1. Small leftovers: rate limit on `PATCH /admin/users`; stale sentence in `frontend/README` saying change-password is
