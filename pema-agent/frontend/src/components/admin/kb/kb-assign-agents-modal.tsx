@@ -104,24 +104,24 @@ export function KbAssignAgentsModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4 backdrop-blur-[2px]"
       {...nen}
     >
-      <div className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-2xl bg-surface shadow-xl">
+      <div className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-card bg-surface shadow-xl">
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
           <div className="min-w-0">
             <div className="truncate font-semibold text-ink">Agent nào đọc được nguồn này</div>
-            <div className="truncate text-[12px] text-ink-soft">{source.name}</div>
+            <div className="truncate text-label text-ink-soft">{source.name}</div>
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 cursor-pointer rounded-lg border border-line px-3 py-1 text-[13px] text-ink-soft hover:bg-tile"
+            className="shrink-0 cursor-pointer rounded-control border border-line px-3 py-1 text-small text-ink-soft hover:bg-tile"
           >
             Đóng
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
-          {agents === null && !loi && <p className="text-[13px] text-ink-soft">Đang tải...</p>}
+          {agents === null && !loi && <p className="text-small text-ink-soft">Đang tải...</p>}
           {agents !== null && agents.length === 0 && !loi && (
-            <p className="py-10 text-center text-[13px] leading-relaxed text-ink-soft/60">
+            <p className="py-10 text-center text-small leading-relaxed text-ink-soft/60">
               Chưa có agent nào - tạo agent ở trang Agents trước, rồi quay lại gán nguồn
             </p>
           )}
@@ -133,8 +133,8 @@ export function KbAssignAgentsModal({
                   className="flex w-full items-center justify-between gap-4 py-3 first:pt-0"
                 >
                   <div className="flex min-w-0 items-center gap-2">
-                    <span className="shrink-0 text-[16px]">{a.icon}</span>
-                    <span className="truncate text-[14px] font-medium text-ink">{a.name}</span>
+                    <span className="shrink-0 text-section">{a.icon}</span>
+                    <span className="truncate text-body font-medium text-ink">{a.name}</span>
                   </div>
                   <button
                     type="button"
@@ -149,13 +149,13 @@ export function KbAssignAgentsModal({
               ))}
             </div>
           )}
-          {loi && <p className="mt-3 text-[13px] text-red-600 dark:text-red-400">{loi}</p>}
+          {loi && <p className="mt-3 text-small text-danger">{loi}</p>}
         </div>
 
         <div className="flex items-center justify-between gap-3 border-t border-line px-5 py-3">
           {/* Nói thẳng hệ quả của việc bỏ tick hết: người dùng vừa mới lạc đúng
               vì "Sẵn sàng" nghe như đã dùng được. */}
-          <span className="text-[12px] text-ink-soft">
+          <span className="text-label text-ink-soft">
             {ticked && ticked.size === 0
               ? "Không agent nào đọc được nguồn này"
               : `${ticked?.size ?? 0} agent đọc được`}
@@ -163,7 +163,7 @@ export function KbAssignAgentsModal({
           <button
             onClick={() => void luu()}
             disabled={dangLuu || ticked === null}
-            className="cursor-pointer rounded-lg bg-brand-600 px-4 py-1.5 text-[13px] font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="cursor-pointer rounded-control bg-brand-600 px-4 py-1.5 text-small font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {dangLuu ? "Đang lưu..." : "Lưu"}
           </button>

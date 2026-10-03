@@ -34,7 +34,7 @@ export function MobileTabBar({ tabs, onOpenMenu }: { tabs: NavItem[]; onOpenMenu
             href={item.to}
             aria-current={active ? "page" : undefined}
             onClick={(e) => guard(e, item.to)}
-            className={`flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${
+            className={`flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-micro font-medium ${
               active ? "text-brand-500" : "text-ink-soft"
             }`}
           >
@@ -46,7 +46,7 @@ export function MobileTabBar({ tabs, onOpenMenu }: { tabs: NavItem[]; onOpenMenu
       <button
         type="button"
         onClick={onOpenMenu}
-        className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-ink-soft"
+        className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-micro font-medium text-ink-soft"
       >
         <IconMenu size={21} />
         Menu

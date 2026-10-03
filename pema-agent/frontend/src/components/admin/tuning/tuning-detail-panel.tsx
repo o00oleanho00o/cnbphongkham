@@ -45,19 +45,19 @@ export function TuningDetailPanel({
       {/* Hơi trong (95%) để thấy được ảnh nền phía sau, kèm blur nhẹ cho chữ
           không bị hoa văn nền làm khó đọc - card đục hoàn toàn thì ảnh nền chỉ
           còn thấy ở mép trang, phí công đặt nền */}
-      <div className="rounded-2xl border border-line bg-surface/95 p-6">
+      <div className="rounded-card border border-line bg-surface/95 p-6">
         {/* Tiêu đề KHÔNG lặp lại icon của nhóm: icon đã có ngay bên trái ở nav,
             lặp lần nữa cách đó vài chục pixel chỉ thêm nhiễu chứ không thêm tin */}
         <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="text-[19px] font-semibold text-ink">{group.title}</h2>
-            <p className="mt-1.5 max-w-3xl text-[13px] leading-[1.7] text-ink-soft">{group.hint}</p>
+            <h2 className="text-subtitle font-semibold text-ink">{group.title}</h2>
+            <p className="mt-1.5 max-w-3xl text-small leading-[1.7] text-ink-soft">{group.hint}</p>
           </div>
           {coDoiKhoiEnv && (
             <button
               type="button"
               onClick={onResetGroup}
-              className="shrink-0 rounded-lg border border-line bg-surface px-3 py-1.5 text-[13px] text-ink-soft hover:bg-tile"
+              className="shrink-0 rounded-control border border-line bg-surface px-3 py-1.5 text-small text-ink-soft hover:bg-tile"
             >
               Đặt lại nhóm này
             </button>
@@ -65,7 +65,7 @@ export function TuningDetailPanel({
         </div>
 
         {keys.length === 0 && (extra?.length ?? 0) === 0 ? (
-          <p className="py-6 text-center text-[13px] text-ink-soft">
+          <p className="py-6 text-center text-small text-ink-soft">
             Không có tham số nào khớp từ khóa đang tìm.
           </p>
         ) : (

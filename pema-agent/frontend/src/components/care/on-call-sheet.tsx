@@ -12,6 +12,8 @@ import { careApi } from "@/lib/care/care-api";
 import type { OnCallContact } from "@/lib/care/care-types";
 import { onCallErrors } from "@/lib/care/forms";
 import { localInputToIso } from "@/lib/ops/format";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 /** ISO with offset to the `datetime-local` value ("2026-10-02T09:00"), in clinic time. */
 function toLocalInput(iso: string | null): string {
@@ -101,13 +103,13 @@ export function OnCallSheet({
             id={numberId}
             inputMode="tel"
             autoComplete="off"
-            className="gc-input w-full"
+            className={cx(FIELD_BASE_CLASS, "w-full")}
             value={number}
             onChange={(e) => setNumber(e.target.value)}
             aria-invalid={shown.number !== ""}
           />
           {shown.number && (
-            <p role="alert" className="mt-1 text-[12px] text-red-700">
+            <p role="alert" className="mt-1 text-label text-danger">
               {shown.number}
             </p>
           )}
@@ -115,13 +117,13 @@ export function OnCallSheet({
         <Field label="Người phụ trách" htmlFor={ownerId}>
           <input
             id={ownerId}
-            className="gc-input w-full"
+            className={cx(FIELD_BASE_CLASS, "w-full")}
             value={owner}
             onChange={(e) => setOwner(e.target.value)}
             aria-invalid={shown.owner !== ""}
           />
           {shown.owner && (
-            <p role="alert" className="mt-1 text-[12px] text-red-700">
+            <p role="alert" className="mt-1 text-label text-danger">
               {shown.owner}
             </p>
           )}
@@ -131,7 +133,7 @@ export function OnCallSheet({
             <input
               id={fromId}
               type="datetime-local"
-              className="gc-input w-full"
+              className={cx(FIELD_BASE_CLASS, "w-full")}
               value={validFrom}
               onChange={(e) => setValidFrom(e.target.value)}
             />
@@ -140,7 +142,7 @@ export function OnCallSheet({
             <input
               id={toId}
               type="datetime-local"
-              className="gc-input w-full"
+              className={cx(FIELD_BASE_CLASS, "w-full")}
               value={validTo}
               onChange={(e) => setValidTo(e.target.value)}
             />
@@ -148,7 +150,7 @@ export function OnCallSheet({
         </div>
         <label className="flex min-h-11 cursor-pointer items-center gap-3">
           <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
-          <span className="text-[14px] text-ink">Đang bật</span>
+          <span className="text-body text-ink">Đang bật</span>
         </label>
         {error && <Notice tone="error">{error}</Notice>}
       </div>

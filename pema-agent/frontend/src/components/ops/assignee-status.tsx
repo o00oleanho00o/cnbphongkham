@@ -14,7 +14,7 @@ export function AssigneeStatus({
 }) {
   if (error) {
     return (
-      <p role="status" className="mt-1 text-[12px] text-ink-soft">
+      <p role="status" className="mt-1 text-label text-ink-soft">
         Chưa tải được danh sách nhân viên, tạm thời chỉ chọn &quot;Tôi&quot; hoặc giữ nguyên.{" "}
         <button type="button" onClick={onRetry} className="font-medium text-brand-500 underline">
           Thử lại
@@ -24,7 +24,7 @@ export function AssigneeStatus({
   }
   if (loading) {
     return (
-      <p role="status" className="mt-1 text-[12px] text-ink-soft">
+      <p role="status" className="mt-1 text-label text-ink-soft">
         Đang tải danh sách nhân viên...
       </p>
     );

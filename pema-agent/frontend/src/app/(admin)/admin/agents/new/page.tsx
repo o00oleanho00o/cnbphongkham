@@ -11,7 +11,6 @@ import { useCallback, useEffect, useState } from "react";
 import { errorMessage, http, unwrap } from "@/lib/api/client";
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
-import { IconBot } from "@/components/admin/shared/dashboard-icons";
 import { useUnsavedChangesPrompt } from "@/lib/admin/shared/use-unsaved-changes-prompt";
 import { kiemForm, thanhPatch, type AgentDetailForm } from "@/lib/admin/agents/agent-detail-form";
 import {
@@ -155,7 +154,6 @@ function ManTao({ banNhap, onXong }: { banNhap: BanNhapAgent; onXong: () => void
   return (
     <div>
       <PageHeader
-        icon={IconBot}
         title={form.name || "Agent mới"}
         subtitle="Chưa tạo - bấm Tạo agent để ghi lại, bấm Hủy là bỏ hẳn"
         aside={
@@ -163,7 +161,7 @@ function ManTao({ banNhap, onXong }: { banNhap: BanNhapAgent; onXong: () => void
             <button
               type="button"
               onClick={huy}
-              className="rounded-lg border border-line px-4 py-2 text-[14px] font-medium text-ink-soft hover:bg-tile"
+              className="rounded-control border border-line px-4 py-2 text-body font-medium text-ink-soft hover:bg-tile"
             >
               Hủy
             </button>
@@ -171,7 +169,7 @@ function ManTao({ banNhap, onXong }: { banNhap: BanNhapAgent; onXong: () => void
               type="button"
               onClick={tao}
               disabled={chuaDuDe}
-              className="rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+              className="rounded-control bg-brand-500 px-4 py-2 text-body font-medium text-white hover:bg-brand-600 disabled:opacity-50"
             >
               {busy ? "Đang tạo..." : "Tạo agent"}
             </button>
@@ -179,7 +177,7 @@ function ManTao({ banNhap, onXong }: { banNhap: BanNhapAgent; onXong: () => void
         }
       />
 
-      {loi && <p className="mb-4 text-[13px] text-red-600 dark:text-red-400">{loi}</p>}
+      {loi && <p className="mb-4 text-small text-danger">{loi}</p>}
 
       <AgentFormLayout
         form={form}

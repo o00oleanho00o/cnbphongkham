@@ -55,20 +55,20 @@ export function ScheduleRunHistoryDrawer({
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <div>
             <div className="font-semibold text-ink">Lịch sử chạy - {job.name}</div>
-            <div className="text-[12px] text-ink-soft">{runs.length} lần gần nhất</div>
+            <div className="text-label text-ink-soft">{runs.length} lần gần nhất</div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg border border-line px-3 py-1 text-[13px] text-ink-soft hover:bg-tile"
+            className="rounded-control border border-line px-3 py-1 text-small text-ink-soft hover:bg-tile"
           >
             Đóng
           </button>
         </div>
 
         <div className="flex-1 space-y-2 overflow-y-auto bg-canvas px-5 py-4">
-          {loading && <p className="text-[13px] text-ink-soft">Đang tải...</p>}
+          {loading && <p className="text-small text-ink-soft">Đang tải...</p>}
           {!loading && runs.length === 0 && (
-            <p className="py-10 text-center text-[13px] leading-relaxed text-ink-soft/60">
+            <p className="py-10 text-center text-small leading-relaxed text-ink-soft/60">
               Chưa có lần chạy nào
             </p>
           )}
@@ -76,21 +76,19 @@ export function ScheduleRunHistoryDrawer({
             <div key={run.id} className="gc-tile space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone={runTone(run.status)}>{run.status}</Badge>
-                <span className="text-[12px] text-ink-soft">
+                <span className="text-label text-ink-soft">
                   {formatBotTime(run.started_at, timezone)}
                 </span>
                 {job.kind === "agent" && run.turn_id && (
                   <Link
                     href={`/admin/traces?turnId=${run.turn_id}`}
-                    className="text-[12px] font-medium text-brand-600 hover:underline"
+                    className="text-label font-medium text-brand-600 hover:underline"
                   >
                     Xem trace
                   </Link>
                 )}
               </div>
-              {run.detail && (
-                <p className="text-[12px] leading-[1.6] text-ink-soft">{run.detail}</p>
-              )}
+              {run.detail && <p className="text-label leading-[1.6] text-ink-soft">{run.detail}</p>}
             </div>
           ))}
         </div>

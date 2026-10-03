@@ -105,12 +105,10 @@ export function AgentModelSection({
               placeholder="theo Cấu hình"
               aria-invalid={loiSoBuoc !== ""}
             />
-            <span className="text-[13px] whitespace-nowrap text-ink-soft">bước</span>
+            <span className="text-small whitespace-nowrap text-ink-soft">bước</span>
           </div>
-          <div className="mt-1 text-[11px] whitespace-nowrap text-ink-soft/70">(1 - 30)</div>
-          {loiSoBuoc && (
-            <p className="mt-2 text-[12px] text-red-600 dark:text-red-400">{loiSoBuoc}</p>
-          )}
+          <div className="mt-1 text-micro whitespace-nowrap text-ink-soft/70">(1 - 30)</div>
+          {loiSoBuoc && <p className="mt-2 text-label text-danger">{loiSoBuoc}</p>}
         </AgentFormField>
       </AgentFormRow>
 
@@ -162,14 +160,14 @@ export function AgentModelSection({
                   placeholder="theo Cấu hình"
                   aria-invalid={loiTran !== ""}
                 />
-                <span className="text-[13px] whitespace-nowrap text-ink-soft">token</span>
+                <span className="text-small whitespace-nowrap text-ink-soft">token</span>
               </div>
-              <div className="mt-1 text-[11px] whitespace-nowrap text-ink-soft/70">
+              <div className="mt-1 text-micro whitespace-nowrap text-ink-soft/70">
                 (4.000 - 2.000.000)
               </div>
             </>
           )}
-          {loiTran && <p className="mt-2 text-[12px] text-red-600 dark:text-red-400">{loiTran}</p>}
+          {loiTran && <p className="mt-2 text-label text-danger">{loiTran}</p>}
         </AgentFormField>
       </AgentFormRow>
 

@@ -19,7 +19,6 @@ const loadSteps = (turnId: number) =>
     http.GET("/api/v1/admin/traces/turn/{turn_id}", { params: { path: { turn_id: turnId } } }),
   ).then((rows) => rows.map(traceStepTuApi));
 import { PageHeader } from "@/components/admin/layout/page-header";
-import { IconCpu } from "@/components/admin/shared/dashboard-icons";
 import { formatTime } from "@/components/admin/shared/ui-bits";
 import { TraceRong, TraceStepCard } from "@/components/admin/traces/trace-step-card";
 
@@ -113,26 +112,25 @@ function TracePage() {
   return (
     <>
       <PageHeader
-        icon={IconCpu}
         title="Trace agent"
         subtitle="Mỗi lượt bot trả lời đã chạy qua những step nào: model nói gì, gọi tool nào với tham số gì"
       />
 
       {loi && (
-        <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-[13px] text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+        <div className="mb-4 rounded-tile border border-danger-line bg-danger-soft px-4 py-2.5 text-small text-danger">
           {loi}
         </div>
       )}
 
       {Number.isInteger(openTurnId) && openTurnId > 0 && (
-        <div className="mb-5 rounded-xl border border-brand-100 bg-brand-50/40 p-4">
-          <div className="mb-2 text-[13px] font-semibold text-brand-700">
+        <div className="mb-5 rounded-tile border border-brand-100 bg-brand-50/40 p-4">
+          <div className="mb-2 text-small font-semibold text-brand-700">
             Lượt #{openTurnId} (mở từ Lịch hẹn)
           </div>
-          {openLoading && <p className="text-[12px] text-ink-soft">Đang tải...</p>}
+          {openLoading && <p className="text-label text-ink-soft">Đang tải...</p>}
           {!openLoading && openSteps.map((s, i) => <TraceStepCard key={i} step={s} />)}
           {!openLoading && openSteps.length === 0 && (
-            <p className="text-[12px] text-ink-soft">Lượt này không có step nào được ghi.</p>
+            <p className="text-label text-ink-soft">Lượt này không có step nào được ghi.</p>
           )}
         </div>
       )}
@@ -145,28 +143,28 @@ function TracePage() {
             <button
               type="button"
               onClick={() => moLuot(t.id)}
-              className="flex w-full items-center justify-between rounded-xl border border-line bg-surface px-5 py-3 text-left hover:bg-tile"
+              className="flex w-full items-center justify-between rounded-tile border border-line bg-surface px-5 py-3 text-left hover:bg-tile"
             >
               <div className="min-w-0">
-                <div className="truncate text-[14px] font-medium text-ink">
+                <div className="truncate text-body font-medium text-ink">
                   {t.thread_name || t.thread_id}
                 </div>
-                <div className="text-[11px] text-ink-soft/60">
+                <div className="text-micro text-ink-soft/60">
                   {formatTime(t.created_at)} - {t.steps} step -{" "}
                   {t.total_tokens.toLocaleString("vi-VN")} token
                 </div>
               </div>
-              <span className="shrink-0 text-[12px] text-ink-soft">
+              <span className="shrink-0 text-label text-ink-soft">
                 {dangMo === t.id ? "Thu gọn" : "Xem"}
               </span>
             </button>
 
             {dangMo === t.id && (
               <div className="mt-2 space-y-2 pl-3">
-                {dangTai && <p className="text-[12px] text-ink-soft">Đang tải...</p>}
+                {dangTai && <p className="text-label text-ink-soft">Đang tải...</p>}
                 {!dangTai && steps.map((s, i) => <TraceStepCard key={i} step={s} />)}
                 {!dangTai && steps.length === 0 && (
-                  <p className="text-[12px] text-ink-soft">Lượt này không có step nào được ghi.</p>
+                  <p className="text-label text-ink-soft">Lượt này không có step nào được ghi.</p>
                 )}
               </div>
             )}
@@ -182,7 +180,7 @@ function TracePage() {
             type="button"
             onClick={() => void xemThem()}
             disabled={dangTaiThem}
-            className="rounded-lg border border-line bg-surface px-4 py-2 text-[13px] font-medium text-ink hover:bg-tile disabled:opacity-50"
+            className="rounded-control border border-line bg-surface px-4 py-2 text-small font-medium text-ink hover:bg-tile disabled:opacity-50"
           >
             {dangTaiThem ? "Đang tải..." : "Xem thêm lượt cũ hơn"}
           </button>
@@ -190,7 +188,7 @@ function TracePage() {
       )}
 
       {conTro === null && turns.length > 0 && (
-        <p className="mt-4 text-center text-[12px] text-ink-soft/60">
+        <p className="mt-4 text-center text-label text-ink-soft/60">
           Đã hết lượt có trace. Trace cũ hơn bị dọn theo "Giữ trace" ở trang Cấu hình.
         </p>
       )}

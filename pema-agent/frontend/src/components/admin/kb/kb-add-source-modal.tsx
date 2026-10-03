@@ -130,12 +130,12 @@ export function KbAddSourceModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4 backdrop-blur-[2px]"
       {...nen}
     >
-      <div className="flex max-h-[85dvh] w-full max-w-lg flex-col rounded-2xl bg-surface shadow-xl">
+      <div className="flex max-h-[85dvh] w-full max-w-lg flex-col rounded-card bg-surface shadow-xl">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <div className="font-semibold text-ink">Thêm nguồn</div>
           <button
             onClick={onClose}
-            className="cursor-pointer rounded-lg border border-line px-3 py-1 text-[13px] text-ink-soft hover:bg-tile"
+            className="cursor-pointer rounded-control border border-line px-3 py-1 text-small text-ink-soft hover:bg-tile"
           >
             Đóng
           </button>
@@ -152,7 +152,7 @@ export function KbAddSourceModal({
             <button
               key={key}
               onClick={() => setTab(key)}
-              className={`cursor-pointer rounded-t-lg px-3 py-2 text-[13px] font-medium transition-colors ${
+              className={`cursor-pointer rounded-t-lg px-3 py-2 text-small font-medium transition-colors ${
                 tab === key
                   ? "border-b-2 border-brand-500 text-brand-600"
                   : "text-ink-soft hover:text-ink"
@@ -165,7 +165,7 @@ export function KbAddSourceModal({
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
           <div>
-            <label htmlFor="kb-ten" className="mb-1.5 block text-[13px] font-medium text-ink">
+            <label htmlFor="kb-ten" className="mb-1.5 block text-small font-medium text-ink">
               Tên nguồn
             </label>
             <input
@@ -181,9 +181,9 @@ export function KbAddSourceModal({
           {tab === "file" ? (
             <div>
               <div className="mb-1.5 flex items-center justify-between gap-2">
-                <span className="text-[13px] font-medium text-ink">File</span>
+                <span className="text-small font-medium text-ink">File</span>
                 {tranMB !== null && (
-                  <span className="text-[12px] text-ink-soft">{layNhanTranDungLuong(tranMB)}</span>
+                  <span className="text-label text-ink-soft">{layNhanTranDungLuong(tranMB)}</span>
                 )}
               </div>
               <FileDropZone
@@ -195,7 +195,7 @@ export function KbAddSourceModal({
             </div>
           ) : (
             <div>
-              <label htmlFor="kb-noidung" className="mb-1.5 block text-[13px] font-medium text-ink">
+              <label htmlFor="kb-noidung" className="mb-1.5 block text-small font-medium text-ink">
                 Nội dung
               </label>
               <textarea
@@ -208,14 +208,14 @@ export function KbAddSourceModal({
             </div>
           )}
 
-          {error && <p className="text-[13px] text-red-600 dark:text-red-400">{error}</p>}
+          {error && <p className="text-small text-danger">{error}</p>}
         </div>
 
         <div className="border-t border-line px-5 py-4">
           <button
             onClick={() => void luu()}
             disabled={busy || !hopLe}
-            className="w-full cursor-pointer rounded-lg bg-brand-500 py-2.5 text-[14px] font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full cursor-pointer rounded-control bg-brand-500 py-2.5 text-body font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy ? "Đang thêm..." : "Thêm nguồn"}
           </button>

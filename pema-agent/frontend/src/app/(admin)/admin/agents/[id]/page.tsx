@@ -12,7 +12,6 @@ import type { Schemas } from "@/lib/api";
 import { errorMessage, http, unwrap } from "@/lib/api/client";
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
-import { IconBot } from "@/components/admin/shared/dashboard-icons";
 import { useUnsavedChangesPrompt } from "@/lib/admin/shared/use-unsaved-changes-prompt";
 import {
   kiemForm,
@@ -156,12 +155,8 @@ export default function AgentDetailPage() {
   if (!agent || !form) {
     return (
       <div>
-        <PageHeader
-          icon={IconBot}
-          title="Không tìm thấy agent"
-          subtitle={`Không có agent nào mang id "${id}"`}
-        />
-        <Link href="/admin/agents" className="text-[14px] text-brand-600 hover:underline">
+        <PageHeader title="Không tìm thấy agent" subtitle={`Không có agent nào mang id "${id}"`} />
+        <Link href="/admin/agents" className="text-body text-brand-600 hover:underline">
           Quay lại danh sách agent
         </Link>
       </div>
@@ -171,7 +166,6 @@ export default function AgentDetailPage() {
   return (
     <div>
       <PageHeader
-        icon={IconBot}
         title={form.name || agent.id}
         subtitle={
           (agent.account_count ?? 0) > 0
@@ -183,7 +177,7 @@ export default function AgentDetailPage() {
             <button
               type="button"
               onClick={roiTrang}
-              className="cursor-pointer rounded-lg border border-line px-4 py-2 text-[14px] font-medium text-ink-soft hover:bg-tile"
+              className="cursor-pointer rounded-control border border-line px-4 py-2 text-body font-medium text-ink-soft hover:bg-tile"
             >
               Quay lại
             </button>
@@ -191,7 +185,7 @@ export default function AgentDetailPage() {
               type="button"
               onClick={luu}
               disabled={busy || !coDoiForm || form.name.trim() === ""}
-              className="cursor-pointer rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="cursor-pointer rounded-control bg-brand-500 px-4 py-2 text-body font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {busy ? "Đang lưu..." : "Lưu thay đổi"}
             </button>
@@ -199,10 +193,8 @@ export default function AgentDetailPage() {
         }
       />
 
-      {loi && <p className="mb-4 text-[13px] text-red-600 dark:text-red-400">{loi}</p>}
-      {daLuu && !coDoiForm && (
-        <p className="mb-4 text-[13px] text-emerald-600 dark:text-emerald-400">Đã lưu thay đổi.</p>
-      )}
+      {loi && <p className="mb-4 text-small text-danger">{loi}</p>}
+      {daLuu && !coDoiForm && <p className="mb-4 text-small text-success">Đã lưu thay đổi.</p>}
 
       <AgentFormLayout
         form={form}

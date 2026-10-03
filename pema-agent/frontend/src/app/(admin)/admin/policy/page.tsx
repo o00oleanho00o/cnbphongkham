@@ -8,7 +8,6 @@ import { useCallback, useState } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
-import { IconShieldCheck } from "@/components/admin/shared/ops-icons";
 import { SelectMenu, type SelectOption } from "@/components/admin/shared/select-menu";
 import { Badge } from "@/components/admin/shared/ui-bits";
 import {
@@ -47,30 +46,33 @@ function ProfileTable({ profiles }: { profiles: Schemas["PolicyProfile"][] }) {
       {/* Phone: one card per rule, the two profiles stacked (no wide table to scroll sideways) */}
       <ul className="space-y-2 md:hidden">
         {POLICY_ROWS.map((row) => (
-          <li key={row.key} className="gc-card p-3.5">
-            <div className="text-[13px] font-semibold text-ink">{row.label}</div>
+          <li
+            key={row.key}
+            className="rounded-card border border-line bg-surface p-3.5 shadow-card"
+          >
+            <div className="text-small font-semibold text-ink">{row.label}</div>
             <dl className="mt-2 space-y-2">
               {ordered.map((p) => (
                 <div key={p.key}>
-                  <dt className="text-[11px] font-semibold tracking-wide text-ink-soft uppercase">
+                  <dt className="text-micro font-semibold tracking-wide text-ink-soft uppercase">
                     {POLICY_PROFILE_LABEL[p.key]}
                   </dt>
-                  <dd className="text-[13px] text-ink">{row.text(p)}</dd>
+                  <dd className="text-small text-ink">{row.text(p)}</dd>
                 </div>
               ))}
             </dl>
           </li>
         ))}
       </ul>
-      <div className="gc-card hidden overflow-x-auto md:block">
-        <table className="w-full text-left text-[13px]">
+      <div className="hidden overflow-x-auto rounded-card border border-line bg-surface shadow-card md:block">
+        <table className="w-full text-left text-small">
           <thead>
-            <tr className="border-b border-line text-[11px] tracking-wider text-ink-soft uppercase">
+            <tr className="border-b border-line text-micro tracking-wider text-ink-soft uppercase">
               <th className="px-4 py-3 font-semibold">Quy tắc</th>
               {ordered.map((p) => (
                 <th key={p.key} className="px-4 py-3 font-semibold">
                   {POLICY_PROFILE_LABEL[p.key]}
-                  <span className="ml-1.5 font-mono text-[10px] text-ink-soft/70 normal-case">
+                  <span className="ml-1.5 font-mono text-eyebrow text-ink-soft/70 normal-case">
                     {p.key}
                   </span>
                 </th>
@@ -206,9 +208,8 @@ export default function PolicyPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div>
       <PageHeader
-        icon={IconShieldCheck}
         title="Hồ sơ chính sách"
         subtitle="An toàn bệnh nhân là cài đặt, không phải tính năng bị xóa: cùng một trợ lý chạy với hồ sơ khác nhau"
       />
@@ -219,18 +220,18 @@ export default function PolicyPage() {
       {data && (
         <div className="space-y-8">
           <section aria-labelledby="pp-compare">
-            <h2 id="pp-compare" className="mb-2 text-[16px] font-semibold text-ink">
+            <h2 id="pp-compare" className="mb-2 text-section font-semibold text-ink">
               Hai hồ sơ
             </h2>
             <ProfileTable profiles={data.profiles} />
-            <p className="mt-2 text-[12px] text-ink-soft">
+            <p className="mt-2 text-label text-ink-soft">
               Khi một agent chạy trong một tài khoản, hồ sơ nghiêm hơn của hai bên được áp dụng. Mặc
               định của cả hai là Kênh bệnh nhân.
             </p>
           </section>
 
           <section aria-labelledby="pp-assign">
-            <h2 id="pp-assign" className="mb-2 text-[16px] font-semibold text-ink">
+            <h2 id="pp-assign" className="mb-2 text-section font-semibold text-ink">
               Hồ sơ của từng tài khoản và agent
             </h2>
             {assignments.length === 0 ? (
@@ -240,13 +241,11 @@ export default function PolicyPage() {
                 {assignments.map((item) => (
                   <li
                     key={`${item.kind}:${item.id}`}
-                    className="gc-card flex items-center gap-3 p-3.5"
+                    className="flex items-center gap-3 rounded-card border border-line bg-surface p-3.5 shadow-card"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-[14px] font-semibold text-ink">
-                        {item.label}
-                      </div>
-                      <div className="text-[12px] text-ink-soft">{item.detail}</div>
+                      <div className="truncate text-body font-semibold text-ink">{item.label}</div>
+                      <div className="text-label text-ink-soft">{item.detail}</div>
                     </div>
                     <div className="w-44 shrink-0">
                       <SelectMenu
@@ -265,7 +264,7 @@ export default function PolicyPage() {
           </section>
 
           <section aria-labelledby="pp-identity">
-            <h2 id="pp-identity" className="mb-2 text-[16px] font-semibold text-ink">
+            <h2 id="pp-identity" className="mb-2 text-section font-semibold text-ink">
               Liên kết danh tính Zalo chờ xác nhận ({data.pending.length})
             </h2>
             <div className="mb-3">
@@ -282,13 +281,13 @@ export default function PolicyPage() {
                 {data.pending.map((link) => (
                   <li
                     key={`${link.channel}:${link.external_user_id}`}
-                    className="gc-card flex flex-wrap items-center gap-3 p-3.5"
+                    className="flex flex-wrap items-center gap-3 rounded-card border border-line bg-surface p-3.5 shadow-card"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="text-[14px] font-semibold text-ink">
+                      <div className="text-body font-semibold text-ink">
                         {link.patient_code ? `Hồ sơ ${link.patient_code}` : "Chưa có hồ sơ gợi ý"}
                       </div>
-                      <div className="text-[12px] text-ink-soft">
+                      <div className="text-label text-ink-soft">
                         {CHANNEL_KIND_LABEL[link.channel]} · {link.external_user_id}
                       </div>
                       <Badge tone="amber" dot={false}>

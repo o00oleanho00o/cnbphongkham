@@ -114,9 +114,9 @@ export function ScheduleJobRow({
     // KHÔNG đè `bg-tile/30` lên `.gc-card` như trước: lớp xám mờ đó cộng với
     // nền trắng 95% của card làm cả thẻ chìm hẳn vào ảnh nền, đọc rất mệt.
     // Để card giữ đúng nền của design system, giống hệt trang Cấu hình.
-    <div className="gc-card space-y-2.5 rounded-2xl px-5 py-4">
+    <div className="gc-card space-y-2.5 rounded-card px-5 py-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[15px] font-semibold text-ink">{job.name}</span>
+        <span className="text-body-lg font-semibold text-ink">{job.name}</span>
         <Badge tone={job.kind === "agent" ? "blue" : "gray"} dot={false}>
           {job.kind === "agent" ? "Agent" : "Nhắn tin"}
         </Badge>
@@ -141,7 +141,7 @@ export function ScheduleJobRow({
           ))}
       </div>
 
-      <div className="text-[13px] leading-[1.6] text-ink-soft">
+      <div className="text-small leading-[1.6] text-ink-soft">
         {accountName && <>{accountName} · </>}
         {threadName} · Lần kế tiếp:{" "}
         {job.enabled
@@ -153,13 +153,13 @@ export function ScheduleJobRow({
       </div>
 
       {canShowError && (
-        <div className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-[12px] leading-[1.6] text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+        <div className="rounded-control border border-danger-line bg-danger-soft px-3 py-2 text-label leading-[1.6] text-danger">
           {job.last_error}
         </div>
       )}
 
       {runResult && (
-        <div className="rounded-lg border border-line bg-surface px-3 py-2 text-[12px] leading-[1.6] text-ink-soft">
+        <div className="rounded-control border border-line bg-surface px-3 py-2 text-label leading-[1.6] text-ink-soft">
           {runResult}
         </div>
       )}
@@ -168,7 +168,7 @@ export function ScheduleJobRow({
         <button
           onClick={onToggle}
           disabled={toggleDisabled}
-          className={`relative h-5 w-9 rounded-full transition-colors ${job.enabled ? "bg-brand-500" : "bg-slate-300 dark:bg-slate-600"} ${toggleDisabled ? "cursor-not-allowed opacity-50" : ""}`}
+          className={`relative h-5 w-9 rounded-full transition-colors ${job.enabled ? "bg-brand-500" : "bg-ink-soft/40"} ${toggleDisabled ? "cursor-not-allowed opacity-50" : ""}`}
           title={
             toggleDisabled
               ? "Lịch này không còn mốc chạy nào - bật lại cũng không chạy nữa. Bấm Sửa để đặt lịch mới."
@@ -178,31 +178,31 @@ export function ScheduleJobRow({
           }
         >
           <span
-            className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all ${job.enabled ? "left-[18px]" : "left-0.5"}`}
+            className={`absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow-sm transition-all ${job.enabled ? "left-[18px]" : "left-0.5"}`}
           />
         </button>
         <button
           onClick={handleRun}
           disabled={running}
-          className="rounded-lg border border-line bg-surface px-3 py-1.5 text-[13px] font-medium text-brand-600 hover:bg-brand-50 disabled:opacity-50"
+          className="rounded-control border border-line bg-surface px-3 py-1.5 text-small font-medium text-brand-600 hover:bg-brand-50 disabled:opacity-50"
         >
           {running ? "Đang chạy..." : "Chạy thử ngay"}
         </button>
         <button
           onClick={onHistory}
-          className="rounded-lg border border-line bg-surface px-3 py-1.5 text-[13px] font-medium text-ink hover:bg-tile"
+          className="rounded-control border border-line bg-surface px-3 py-1.5 text-small font-medium text-ink hover:bg-tile"
         >
           Lịch sử
         </button>
         <button
           onClick={onEdit}
-          className="rounded-lg border border-line bg-surface px-3 py-1.5 text-[13px] font-medium text-ink hover:bg-tile"
+          className="rounded-control border border-line bg-surface px-3 py-1.5 text-small font-medium text-ink hover:bg-tile"
         >
           Sửa
         </button>
         <button
           onClick={onDelete}
-          className="rounded-lg px-3 py-1.5 text-[13px] text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+          className="rounded-control px-3 py-1.5 text-small text-danger hover:bg-danger-soft"
         >
           Xóa
         </button>

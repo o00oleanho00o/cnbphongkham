@@ -60,26 +60,24 @@ export function ResetAllSettingsSection({
           lúc đang lướt qua trang */}
       {/* items-center: nút cao hơn 40px trong khi phần chữ cao 3 dòng, canh
           theo đầu khối làm nút dính sát mép trên trông như bị đẩy lệch */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-100 bg-brand-50/40 px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-brand-100 bg-brand-50/40 px-5 py-4">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 text-[14px] font-semibold text-ink">
-            <IconWarning size={16} className="text-amber-500" />
+          <div className="flex items-center gap-2 text-body font-semibold text-ink">
+            <IconWarning size={16} className="text-warning" />
             Đặt lại toàn bộ cấu hình
           </div>
-          <p className="mt-2 max-w-3xl text-[13px] leading-[1.7] text-ink-soft">
+          <p className="mt-2 max-w-3xl text-small leading-[1.7] text-ink-soft">
             Trả mọi tham số ở tất cả các nhóm về mặc định. Mật khẩu dashboard không bị ảnh hưởng.
             Hành động này không thể hoàn tác.
             {soODaDoi === 0 && " Hiện chưa có tham số nào được chỉnh."}
           </p>
-          {xong && (
-            <p className="mt-2 text-[13px] text-emerald-600 dark:text-emerald-400">{xong}</p>
-          )}
+          {xong && <p className="mt-2 text-small text-success">{xong}</p>}
         </div>
         <button
           type="button"
           onClick={() => void datLai()}
           disabled={dangChay || soODaDoi === 0}
-          className="shrink-0 rounded-xl border border-line bg-surface px-4 py-2.5 text-[13px] font-semibold text-ink hover:bg-tile disabled:opacity-50"
+          className="shrink-0 rounded-tile border border-line bg-surface px-4 py-2.5 text-small font-semibold text-ink hover:bg-tile disabled:opacity-50"
         >
           {dangChay ? "Đang đặt lại..." : soODaDoi > 0 ? `Đặt lại (${soODaDoi})` : "Đặt lại"}
         </button>

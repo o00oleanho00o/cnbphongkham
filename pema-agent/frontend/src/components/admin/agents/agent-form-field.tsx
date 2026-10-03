@@ -34,11 +34,11 @@ export function AgentFormField({
   children: React.ReactNode;
 }) {
   const nhan = htmlFor ? (
-    <label htmlFor={htmlFor} className="text-[14px] font-medium text-ink">
+    <label htmlFor={htmlFor} className="text-body font-medium text-ink">
       {label}
     </label>
   ) : (
-    <span className="text-[14px] font-medium text-ink">{label}</span>
+    <span className="text-body font-medium text-ink">{label}</span>
   );
 
   if (ngang) {
@@ -46,7 +46,7 @@ export function AgentFormField({
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between xl:gap-6">
         <div className="min-w-0">
           {nhan}
-          {hint && <p className="mt-0.5 text-[12px] leading-[1.6] text-ink-soft">{hint}</p>}
+          {hint && <p className="mt-0.5 text-label leading-[1.6] text-ink-soft">{hint}</p>}
         </div>
         {/* 208px vừa cho menu "Theo Cấu hình chung" - ô rộng nhất trong nhóm.
             Cùng một bề rộng cho cả ba dòng nên ô nhập thẳng cột, đúng lý do đã
@@ -59,7 +59,7 @@ export function AgentFormField({
   return (
     <div>
       {nhan}
-      {hint && <p className="mt-0.5 mb-3 text-[12px] leading-[1.6] text-ink-soft">{hint}</p>}
+      {hint && <p className="mt-0.5 mb-3 text-label leading-[1.6] text-ink-soft">{hint}</p>}
       {children}
     </div>
   );
@@ -81,10 +81,10 @@ export function AgentFormSection({
     // ("Công cụ") vẽ đè lên và menu bị cắt ngang. Đo thật: chỗ ngay dưới popup
     // trả về phần tử của thẻ kia. Nền đã `bg-surface/95` nên bỏ blur không đổi
     // gì về mặt nhìn, chỉ còn 5% trong suốt.
-    <div className="flex h-full flex-col rounded-2xl border border-line bg-surface/95 p-6">
+    <div className="flex h-full flex-col rounded-card border border-line bg-surface/95 p-6">
       <div className="mb-6">
-        <h2 className="text-[19px] font-semibold text-ink">{title}</h2>
-        {hint && <p className="mt-1.5 max-w-3xl text-[13px] leading-[1.7] text-ink-soft">{hint}</p>}
+        <h2 className="text-subtitle font-semibold text-ink">{title}</h2>
+        {hint && <p className="mt-1.5 max-w-3xl text-small leading-[1.7] text-ink-soft">{hint}</p>}
       </div>
       <div className="divide-y divide-line">{children}</div>
     </div>

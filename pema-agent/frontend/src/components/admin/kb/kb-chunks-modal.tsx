@@ -73,25 +73,25 @@ export function KbChunksModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4 backdrop-blur-[2px]"
       {...nen}
     >
-      <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl bg-surface shadow-xl">
+      <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-card bg-surface shadow-xl">
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
           <div className="min-w-0">
             <div className="truncate font-semibold text-ink">Đoạn đã cắt - {source.name}</div>
-            <div className="text-[12px] text-ink-soft">{total} đoạn</div>
+            <div className="text-label text-ink-soft">{total} đoạn</div>
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 cursor-pointer rounded-lg border border-line px-3 py-1 text-[13px] text-ink-soft hover:bg-tile"
+            className="shrink-0 cursor-pointer rounded-control border border-line px-3 py-1 text-small text-ink-soft hover:bg-tile"
           >
             Đóng
           </button>
         </div>
 
         <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
-          {items === null && !loi && <p className="text-[13px] text-ink-soft">Đang tải...</p>}
-          {loi && <p className="text-[13px] text-red-600 dark:text-red-400">{loi}</p>}
+          {items === null && !loi && <p className="text-small text-ink-soft">Đang tải...</p>}
+          {loi && <p className="text-small text-danger">{loi}</p>}
           {items !== null && items.length === 0 && !loi && (
-            <p className="py-10 text-center text-[13px] leading-relaxed text-ink-soft/60">
+            <p className="py-10 text-center text-small leading-relaxed text-ink-soft/60">
               Chưa có đoạn nào - nguồn có thể đang chờ xử lý, hoặc chưa cắt được đoạn nào
             </p>
           )}
@@ -100,11 +100,11 @@ export function KbChunksModal({
               {/* break-words như `noiDung`: tiêu đề là breadcrumb ghép nhiều
                   cấp ("H1 > H2 > H3") nên dài hơn ô là chuyện thường */}
               {d.title && (
-                <div className="text-[12px] font-medium break-words text-brand-600 dark:text-brand-400">
+                <div className="text-label font-medium break-words text-brand-600 dark:text-brand-400">
                   {d.title}
                 </div>
               )}
-              <p className="text-[13px] leading-[1.6] break-words whitespace-pre-wrap text-ink">
+              <p className="text-small leading-[1.6] break-words whitespace-pre-wrap text-ink">
                 {d.content}
               </p>
             </div>

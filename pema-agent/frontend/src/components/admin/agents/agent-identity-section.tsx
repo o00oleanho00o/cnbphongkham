@@ -55,7 +55,7 @@ export function AgentIdentitySection({
           <div className="flex gap-2">
             <input
               aria-label="Icon"
-              className="gc-input w-16 shrink-0 text-center text-lg"
+              className="gc-input w-16 shrink-0 text-center text-section"
               value={form.icon}
               onChange={(e) => onChange({ icon: e.target.value })}
               maxLength={8}
@@ -91,18 +91,16 @@ export function AgentIdentitySection({
                 placeholder="cham-soc-khach-hang"
               />
               {(loiId || kiemDinhDangId(id)) && (
-                <p className="mt-1.5 text-[12px] text-red-600 dark:text-red-400">
-                  {loiId || kiemDinhDangId(id)}
-                </p>
+                <p className="mt-1.5 text-label text-danger">{loiId || kiemDinhDangId(id)}</p>
               )}
             </>
           ) : (
             <div className="flex flex-wrap items-center gap-2">
-              <code className="rounded-lg border border-line bg-tile px-3 py-2 font-mono text-[13px] text-ink-soft">
+              <code className="rounded-control border border-line bg-tile px-3 py-2 font-mono text-small text-ink-soft">
                 {id}
               </code>
               {isDefault && (
-                <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-600">
+                <span className="rounded-full bg-brand-50 px-2 py-0.5 text-micro font-medium text-brand-600">
                   agent mặc định
                 </span>
               )}
@@ -132,7 +130,7 @@ export function AgentIdentitySection({
             placeholder="Bạn là trợ lý chăm sóc khách hàng, xưng 'em' với khách..."
             maxLength={8000}
           />
-          <p className="mt-2 text-[12px] text-ink-soft">
+          <p className="mt-2 text-label text-ink-soft">
             {form.persona.length.toLocaleString("vi-VN")} / 8.000 ký tự
           </p>
         </AgentFormField>

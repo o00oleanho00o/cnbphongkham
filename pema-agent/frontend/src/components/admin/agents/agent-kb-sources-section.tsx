@@ -119,7 +119,7 @@ export function AgentKbSourcesSection({
   if (sources === null) {
     return (
       <AgentFormSection title="Kho tri thức">
-        <div className="py-5 text-[13px] text-ink-soft first:pt-0">Đang tải danh sách nguồn...</div>
+        <div className="py-5 text-small text-ink-soft first:pt-0">Đang tải danh sách nguồn...</div>
       </AgentFormSection>
     );
   }
@@ -129,10 +129,10 @@ export function AgentKbSourcesSection({
       title="Kho tri thức"
       hint='Agent chỉ đọc được nguồn đã tick - mặc định KHÔNG tick nguồn nào. Nạp tài liệu và xem trạng thái xử lý ở trang "Kho tri thức".'
     >
-      {loi && <p className="mb-3 text-[13px] text-red-600 dark:text-red-400">{loi}</p>}
+      {loi && <p className="mb-3 text-small text-danger">{loi}</p>}
 
       {sources.length === 0 ? (
-        <p className="py-5 text-[13px] text-ink-soft first:pt-0">
+        <p className="py-5 text-small text-ink-soft first:pt-0">
           Chưa có nguồn nào trong Kho tri thức - nạp tài liệu ở trang Kho tri thức trước.
         </p>
       ) : (
@@ -145,14 +145,14 @@ export function AgentKbSourcesSection({
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="truncate text-[14px] font-medium text-ink">{s.name}</span>
+                    <span className="truncate text-body font-medium text-ink">{s.name}</span>
                     {s.status !== "san_sang" && (
-                      <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+                      <span className="rounded-full bg-warning-soft px-2 py-0.5 text-micro font-medium text-warning">
                         {TRANG_THAI_NGAN[s.status]}
                       </span>
                     )}
                     {!s.approved_by_clinical_owner && (
-                      <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+                      <span className="rounded-full bg-warning-soft px-2 py-0.5 text-micro font-medium text-warning">
                         chưa được bác sĩ duyệt
                       </span>
                     )}
@@ -176,13 +176,11 @@ export function AgentKbSourcesSection({
               type="button"
               onClick={() => void luu()}
               disabled={busy || !coDoi}
-              className="cursor-pointer rounded-lg bg-brand-500 px-4 py-2 text-[13px] font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="cursor-pointer rounded-control bg-brand-500 px-4 py-2 text-small font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {busy ? "Đang lưu..." : "Lưu nguồn đã chọn"}
             </button>
-            {daLuu && !coDoi && (
-              <span className="text-[13px] text-emerald-600 dark:text-emerald-400">Đã lưu</span>
-            )}
+            {daLuu && !coDoi && <span className="text-small text-success">Đã lưu</span>}
           </div>
         </>
       )}

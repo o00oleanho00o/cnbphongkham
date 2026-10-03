@@ -13,7 +13,6 @@ import { CLINIC_TIME_ZONE } from "@/lib/ops/format";
 
 type ScheduledJobItem = Schemas["ScheduledJob"];
 import { PageHeader } from "@/components/admin/layout/page-header";
-import { IconClock } from "@/components/admin/shared/dashboard-icons";
 import { AccountFilter, accountLabel } from "@/components/admin/shared/account-filter";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { ScheduleEditDrawer } from "@/components/admin/schedules/schedule-edit-drawer";
@@ -98,13 +97,12 @@ export default function SchedulePage() {
   return (
     <div>
       <PageHeader
-        icon={IconClock}
         title="Lịch hẹn"
         subtitle="Bot tự nhắn theo lịch: nhắc hẹn hoặc chạy 1 lượt agent - xem, sửa, chạy thử ngay không cần chat"
         aside={
           <button
             onClick={() => setCreating(true)}
-            className="rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600"
+            className="rounded-control bg-brand-500 px-4 py-2 text-body font-medium text-white hover:bg-brand-600"
           >
             Thêm lịch hẹn
           </button>
@@ -118,9 +116,7 @@ export default function SchedulePage() {
       )}
 
       {notice && (
-        <p
-          className={`mb-4 text-[13px] ${notice.tone === "red" ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400"}`}
-        >
+        <p className={`mb-4 text-small ${notice.tone === "red" ? "text-danger" : "text-warning"}`}>
           {notice.text}
         </p>
       )}

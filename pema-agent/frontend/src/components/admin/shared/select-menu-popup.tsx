@@ -120,7 +120,7 @@ export function SelectMenuPopup({
        * ngoài và đẻ thanh cuộn ngang cho cả drawer. `max-w-full` chặn trần đó
        * lại; phần thừa do `truncate` của từng dòng lo.
        */
-      className={`absolute right-0 left-0 z-30 max-w-full min-w-max overflow-hidden rounded-xl border border-line bg-surface py-1 shadow-lg shadow-ink/10 outline-none ${
+      className={`absolute right-0 left-0 z-30 max-w-full min-w-max overflow-hidden rounded-tile border border-line bg-surface py-1 shadow-lg shadow-ink/10 outline-none ${
         moLen ? "bottom-[calc(100%+4px)]" : "top-[calc(100%+4px)]"
       }`}
     >
@@ -137,14 +137,14 @@ export function SelectMenuPopup({
             placeholder="Tìm..."
             aria-label="Tìm trong danh sách"
             aria-activedescendant={troToi >= 0 ? `${idPopup}-${troToi}` : undefined}
-            className="w-full rounded-lg bg-tile/60 py-1.5 pr-2 pl-7 text-[13px] text-ink outline-none placeholder:text-ink-soft/60"
+            className="w-full rounded-control bg-tile/60 py-1.5 pr-2 pl-7 text-small text-ink outline-none placeholder:text-ink-soft/60"
           />
         </div>
       )}
 
       <div ref={dsRef} role="listbox" className="max-h-64 overflow-y-auto py-1">
         {loc.length === 0 && (
-          <p className="px-3 py-2 text-[13px] text-ink-soft">Không có mục nào khớp.</p>
+          <p className="px-3 py-2 text-small text-ink-soft">Không có mục nào khớp.</p>
         )}
         {loc.map((opt, i) => (
           <DongOption
@@ -189,7 +189,7 @@ function DongOption({
       aria-disabled={opt.disabled || undefined}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onPick}
-      className={`flex items-center gap-2 px-2.5 py-2 text-[13px] transition-colors ${
+      className={`flex items-center gap-2 px-2.5 py-2 text-small transition-colors ${
         opt.disabled
           ? "cursor-not-allowed text-ink-soft/50"
           : daChon
@@ -203,7 +203,7 @@ function DongOption({
           được đẩy cả popup rộng ra. `shrink` (mặc định) thay cho `shrink-0`,
           và nhãn vẫn giữ ưu tiên vì nó có `flex-1`. */}
       {opt.hint && (
-        <span className="min-w-0 truncate text-[11px] text-ink-soft" title={opt.hint}>
+        <span className="min-w-0 truncate text-micro text-ink-soft" title={opt.hint}>
           {opt.hint}
         </span>
       )}
