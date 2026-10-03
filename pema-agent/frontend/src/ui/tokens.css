@@ -69,9 +69,13 @@
 
   /* ---- Type scale (px). Be Vietnam Pro is loaded in layout.tsx; see `--font-sans` in globals.css ---- */
   --text-eyebrow: 10px;
+  --text-micro: 11px; /* counters, chips inside dense rows */
   --text-label: 12px;
+  --text-small: 13px; /* secondary lines, form labels, dense tables */
   --text-body: 14px;
   --text-body-lg: 15px;
+  --text-section: 16px; /* card and section titles */
+  --text-subtitle: 20px;
   --text-title: 25px;
   --text-metric: 27px;
   --text-page: 30px;
@@ -91,6 +95,7 @@
   --layout-topbar-h-wide: 64px; /* from 1600px */
   --layout-content-pad-x: 28px;
   --layout-content-pad-y: 24px;
+  --layout-content-max: 1640px; /* widest the page content grows on a big screen (old `.content`) */
   --layout-aside-w: 360px; /* second column of a split workspace */
   --layout-touch-min: 44px;
 

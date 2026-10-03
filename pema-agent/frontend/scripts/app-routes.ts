@@ -30,3 +30,23 @@ export function listPageRoutes(appDir: string): string[] {
 }
 
 export const isDynamicRoute = (route: string): boolean => route.includes("[");
+
+/** Sample values (ids of the mock backend data) for the dynamic segments of the routes. */
+export const SAMPLE_PARAMS: Readonly<Record<string, string>> = {
+  "/patients/[id]": "/patients/00000000-0000-4000-8002-000000000001",
+  "/care/patients/[id]": "/care/patients/00000000-0000-4000-8002-000000000007",
+  "/care/patients/[id]/release": "/care/patients/00000000-0000-4000-8002-000000000007/release",
+  "/care/patients/[id]/tell-agent":
+    "/care/patients/00000000-0000-4000-8002-000000000007/tell-agent",
+  "/care/patients/[id]/timeline": "/care/patients/00000000-0000-4000-8002-000000000007/timeline",
+  "/admin/agents/[id]": "/admin/agents/cskh-da-lieu",
+  "/admin/tuning/[group]": "/admin/tuning/agent",
+};
+
+/** The URL to open for a route: itself, or the sample of its dynamic segments. */
+export function concreteRoute(route: string): string {
+  if (!isDynamicRoute(route)) return route;
+  const sample = SAMPLE_PARAMS[route];
+  if (sample === undefined) throw new Error(`no sample ids for ${route}: add it to SAMPLE_PARAMS`);
+  return sample;
+}

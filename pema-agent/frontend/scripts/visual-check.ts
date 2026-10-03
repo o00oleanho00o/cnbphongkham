@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 
 import { chromium, type Page } from "playwright";
 
-import { isDynamicRoute, listPageRoutes } from "./app-routes";
+import { concreteRoute, listPageRoutes } from "./app-routes";
 
 const BASE = process.env.VISUAL_BASE_URL ?? "http://localhost:3000";
 const ROLE = process.env.VISUAL_ROLE ?? "owner";
@@ -42,18 +42,6 @@ const EMAIL: Record<string, string> = {
   reception: "reception@pema.test",
 };
 
-/** Sample values (ids of the mock backend data) for the dynamic segments of the routes. */
-const SAMPLE_PARAMS: Record<string, string> = {
-  "/patients/[id]": "/patients/00000000-0000-4000-8002-000000000001",
-  "/care/patients/[id]": "/care/patients/00000000-0000-4000-8002-000000000007",
-  "/care/patients/[id]/release": "/care/patients/00000000-0000-4000-8002-000000000007/release",
-  "/care/patients/[id]/tell-agent":
-    "/care/patients/00000000-0000-4000-8002-000000000007/tell-agent",
-  "/care/patients/[id]/timeline": "/care/patients/00000000-0000-4000-8002-000000000007/timeline",
-  "/admin/agents/[id]": "/admin/agents/cskh-da-lieu",
-  "/admin/tuning/[group]": "/admin/tuning/agent",
-};
-
 type Row = {
   viewport: string;
   route: string;
@@ -65,13 +53,6 @@ type Row = {
 
 const fileSlug = (route: string): string =>
   route.replace(/[^a-z0-9]+/gi, "_").replace(/^_|_$/g, "") || "root";
-
-function concreteRoute(route: string): string {
-  if (!isDynamicRoute(route)) return route;
-  const sample = SAMPLE_PARAMS[route];
-  if (sample === undefined) throw new Error(`no sample ids for ${route}: add it to SAMPLE_PARAMS`);
-  return sample;
-}
 
 function selectedRoutes(): string[] {
   const only = process.env.VISUAL_ROUTES?.split(",").filter(Boolean) ?? [];
