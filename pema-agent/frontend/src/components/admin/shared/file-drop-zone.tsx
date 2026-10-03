@@ -90,7 +90,7 @@ export function FileDropZone({
           oNhap.current?.click();
         }
       }}
-      className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors ${
+      className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-tile border-2 border-dashed px-4 py-6 text-center transition-colors ${
         dangKeo
           ? "border-brand-500 bg-brand-50/60 dark:bg-brand-50/30"
           : "border-line bg-tile/40 hover:border-brand-400 hover:bg-tile"
@@ -112,20 +112,20 @@ export function FileDropZone({
       />
       {tenFileDaChon ? (
         <>
-          <span className="max-w-full truncate text-[14px] font-medium text-ink">
+          <span className="max-w-full truncate text-body font-medium text-ink">
             {tenFileDaChon}
           </span>
-          <span className="text-[12px] text-ink-soft">Bấm hoặc thả file khác để đổi</span>
+          <span className="text-label text-ink-soft">Bấm hoặc thả file khác để đổi</span>
         </>
       ) : (
         <>
-          <span className="text-[14px] font-medium text-ink">
+          <span className="text-body font-medium text-ink">
             {dangKeo ? "Thả file vào đây" : "Kéo thả file vào đây"}
           </span>
-          <span className="text-[12px] text-ink-soft">hoặc bấm để chọn file</span>
+          <span className="text-label text-ink-soft">hoặc bấm để chọn file</span>
         </>
       )}
-      <span className="mt-0.5 text-[11px] text-ink-soft/70">{moTa}</span>
+      <span className="mt-0.5 text-micro text-ink-soft/70">{moTa}</span>
     </div>
   );
 }

@@ -41,7 +41,7 @@ export function ChainStep({
     // kẻ mảnh border-t (quá mờ, user vẫn "chưa thấy phân cách giữa các phần").
     // Tương phản NỀN tách vùng rõ nhất mà không thêm nét nào, và ô nhập trắng
     // tự nổi hẳn lên trên nền xám.
-    <div className="rounded-xl bg-tile p-4">
+    <div className="rounded-tile bg-tile p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           {/*
@@ -50,15 +50,15 @@ export function ChainStep({
            * cỡ - bản cũ để 14px/500 cạnh nhãn ô 13px/500, chênh 1px cùng độ
            * đậm nên mắt không biết cái nào chứa cái nào.
            */}
-          <div className="text-[11px] font-semibold tracking-[0.08em] text-ink-soft uppercase">
+          <div className="text-micro font-semibold tracking-[0.08em] text-ink-soft uppercase">
             {index}. {title}
           </div>
           {description && (
-            <p className="mt-1.5 text-[12px] leading-[1.6] text-ink-soft">{description}</p>
+            <p className="mt-1.5 text-label leading-[1.6] text-ink-soft">{description}</p>
           )}
         </div>
         {locked ? (
-          <span className="shrink-0 text-[11px] font-medium whitespace-nowrap text-ink-soft/60">
+          <span className="shrink-0 text-micro font-medium whitespace-nowrap text-ink-soft/60">
             Luôn bật
           </span>
         ) : onToggle ? (
@@ -99,9 +99,9 @@ export function ToolModalShell({
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/25 p-4 backdrop-blur-[2px]"
       {...nen}
     >
-      <div className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
-        <h2 className="text-[17px] font-semibold text-ink">{title}</h2>
-        <p className="mt-1 text-[13px] leading-[1.6] text-ink-soft">{subtitle}</p>
+      <div className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-card bg-surface p-5 shadow-xl">
+        <h2 className="text-section font-semibold text-ink">{title}</h2>
+        <p className="mt-1 text-small leading-[1.6] text-ink-soft">{subtitle}</p>
         {/* Khoảng trắng giữa các vùng xám chính là phân cách - không cần kẻ */}
         <div className="mt-5 space-y-3">{children}</div>
         <div className="mt-5 flex flex-wrap items-center justify-end gap-2">{footer}</div>
@@ -136,22 +136,22 @@ export function ModalField({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-[13px] font-medium text-ink" htmlFor={id}>
+      <label className="mb-1.5 block text-small font-medium text-ink" htmlFor={id}>
         {label}
       </label>
       {children}
-      {hint && <p className="mt-1.5 text-[12px] leading-[1.6] text-ink-soft">{hint}</p>}
+      {hint && <p className="mt-1.5 text-label leading-[1.6] text-ink-soft">{hint}</p>}
     </div>
   );
 }
 
 export const modalButton = {
   cancel:
-    "rounded-lg border border-line px-4 py-2 text-[14px] font-medium text-ink-soft hover:bg-tile",
+    "rounded-control border border-line px-4 py-2 text-body font-medium text-ink-soft hover:bg-tile",
   primary:
-    "rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50",
+    "rounded-control bg-brand-500 px-4 py-2 text-body font-medium text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50",
   secondary:
-    "rounded-lg border border-line bg-surface px-4 py-2 text-[14px] font-medium text-ink hover:bg-tile disabled:cursor-not-allowed disabled:opacity-50",
+    "rounded-control border border-line bg-surface px-4 py-2 text-body font-medium text-ink hover:bg-tile disabled:cursor-not-allowed disabled:opacity-50",
   danger:
-    "rounded-lg px-4 py-2 text-[14px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 disabled:opacity-50",
+    "rounded-control px-4 py-2 text-body text-danger hover:bg-danger-soft disabled:opacity-50",
 };

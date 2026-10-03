@@ -31,17 +31,17 @@ function ReviewRowView({ item, patientName, selected, onOpen }: RowProps) {
         type="button"
         onClick={() => onOpen(item.id)}
         aria-current={selected ? "true" : undefined}
-        className={`w-full rounded-xl border px-3.5 py-3 text-left transition-colors ${
+        className={`w-full rounded-tile border px-3.5 py-3 text-left transition-colors ${
           selected ? "border-brand-500 bg-brand-50" : "border-line bg-surface hover:bg-tile/60"
-        } ${item.risk_level === "red_flag" ? "border-l-4 border-l-red-500" : ""}`}
+        } ${item.risk_level === "red_flag" ? "border-l-4 border-l-danger" : ""}`}
       >
         <span className="flex items-baseline justify-between gap-2">
-          <span className="truncate text-[14px] font-semibold text-ink">{patientName}</span>
-          <span className="shrink-0 text-[11px] text-ink-soft">
+          <span className="truncate text-body font-semibold text-ink">{patientName}</span>
+          <span className="shrink-0 text-micro text-ink-soft">
             {formatDateTime(item.created_at)}
           </span>
         </span>
-        <span className="mt-0.5 line-clamp-2 block text-[13px] text-ink-soft">
+        <span className="mt-0.5 line-clamp-2 block text-small text-ink-soft">
           {previewOf(item)}
         </span>
         <span className="mt-2 flex flex-wrap items-center gap-1.5">

@@ -18,7 +18,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Schemas } from "@/lib/api";
 import { errorMessage, http, unwrap } from "@/lib/api/client";
 import { PageHeader } from "@/components/admin/layout/page-header";
-import { IconBolt, IconSliders } from "@/components/admin/shared/dashboard-icons";
+import { IconSliders } from "@/components/admin/shared/dashboard-icons";
 import { SelectMenu } from "@/components/admin/shared/select-menu";
 import { Badge, ToggleKnob } from "@/components/admin/shared/ui-bits";
 import { ImageSettingsModal } from "@/components/admin/model/image-settings-modal";
@@ -167,13 +167,12 @@ export default function ToolsPage() {
   return (
     <>
       {agentLoi && (
-        <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-[13px] leading-relaxed text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+        <div className="mb-4 rounded-tile border border-warning-line bg-warning-soft px-4 py-2.5 text-small leading-relaxed text-warning">
           Chưa đọc được cấu hình agent, nên trang này chỉ đang hiện lớp TÀI KHOẢN. Công cụ bị agent
           tắt sẽ không có nhãn - tải lại trang để xem đầy đủ.
         </div>
       )}
       <PageHeader
-        icon={IconBolt}
         title="Tools"
         subtitle="Bật/tắt công cụ cho từng tài khoản. Model chỉ nhận được công cụ mà CẢ tài khoản này LẪN agent của nó cùng bật."
         aside={
@@ -185,7 +184,7 @@ export default function ToolsPage() {
               options={accounts.map((a) => ({
                 value: a.id,
                 label: a.label,
-                dotClass: a.running ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600",
+                dotClass: a.running ? "bg-success" : "bg-ink-soft/40",
               }))}
             />
           ) : undefined
@@ -193,13 +192,13 @@ export default function ToolsPage() {
       />
 
       {error && (
-        <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-[13px] text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+        <div className="mb-4 rounded-tile border border-danger-line bg-danger-soft px-4 py-2.5 text-small text-danger">
           {error}
         </div>
       )}
 
       {accounts.length === 0 ? (
-        <div className="gc-card px-5 py-10 text-center text-[14px] text-ink-soft">
+        <div className="gc-card px-5 py-10 text-center text-body text-ink-soft">
           Chưa có account nào - tạo account ở trang Accounts trước.
         </div>
       ) : (
@@ -207,8 +206,8 @@ export default function ToolsPage() {
           <section key={group} className="mb-6">
             {/* Mobile: hint xuống dòng riêng - đứng cạnh sẽ bóp tiêu đề wrap giữa chữ */}
             <div className="mb-2 flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2.5">
-              <h2 className="text-[15px] font-semibold text-ink">{GROUP_META[group].title}</h2>
-              <span className="text-[12px] text-ink-soft">{GROUP_META[group].hint}</span>
+              <h2 className="text-body-lg font-semibold text-ink">{GROUP_META[group].title}</h2>
+              <span className="text-label text-ink-soft">{GROUP_META[group].hint}</span>
             </div>
 
             <div className="gc-card divide-y divide-line">
@@ -229,8 +228,8 @@ export default function ToolsPage() {
                   >
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[14px] font-medium text-ink">{tool.label}</span>
-                        <code className="rounded bg-tile px-1.5 py-0.5 text-[11px] text-ink-soft">
+                        <span className="text-body font-medium text-ink">{tool.label}</span>
+                        <code className="rounded bg-tile px-1.5 py-0.5 text-micro text-ink-soft">
                           {tool.key}
                         </code>
                         {tool.key === "web_search" && search && (
@@ -262,19 +261,17 @@ export default function ToolsPage() {
                         )}
                         {agentTat && <Badge tone="amber">Agent đang tắt</Badge>}
                       </div>
-                      <p className="mt-0.5 text-[12px] leading-[1.6] text-ink-soft">
+                      <p className="mt-0.5 text-label leading-[1.6] text-ink-soft">
                         {tool.description}
                       </p>
                       {!tool.usable && tool.hint && (
-                        <p className="mt-1 text-[12px] leading-[1.6] text-amber-700 dark:text-amber-300">
-                          {tool.hint}
-                        </p>
+                        <p className="mt-1 text-label leading-[1.6] text-warning">{tool.hint}</p>
                       )}
                       {/* Bật công tắc này mà agent vẫn tắt thì model KHÔNG nhận
                           được tool - nói rõ và chỉ đường sửa, đừng để người dùng
                           gạt qua gạt lại ở đây mà không hiểu vì sao bot vẫn không làm được */}
                       {agentTat && enabled && (
-                        <p className="mt-1 text-[12px] leading-[1.6] text-amber-700 dark:text-amber-300">
+                        <p className="mt-1 text-label leading-[1.6] text-warning">
                           Công tắc này đang bật nhưng agent "{agent?.name}" đã tắt công cụ, nên
                           model vẫn không nhận được. Bật lại ở trang Agents.
                         </p>
@@ -286,7 +283,7 @@ export default function ToolsPage() {
                         <button
                           type="button"
                           onClick={() => setSettingsFor(tool)}
-                          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[13px] text-ink-soft transition-colors hover:bg-tile hover:text-ink"
+                          className="flex items-center gap-1.5 rounded-control px-2 py-1.5 text-small text-ink-soft transition-colors hover:bg-tile hover:text-ink"
                         >
                           <IconSliders size={15} />
                           Settings

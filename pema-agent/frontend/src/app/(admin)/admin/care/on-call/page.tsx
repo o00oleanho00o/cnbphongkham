@@ -61,12 +61,15 @@ function OnCallContent() {
       )}
       <ul className="space-y-3">
         {data?.items.map((contact) => (
-          <li key={contact.id} className="gc-card p-4">
+          <li
+            key={contact.id}
+            className="rounded-card border border-line bg-surface p-4 shadow-card"
+          >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
-                <h2 className="text-[15px] font-semibold text-ink">{contact.owner}</h2>
-                <p className="mt-0.5 text-[14px] text-ink">{contact.zalo_number}</p>
-                <p className="mt-1 text-[12px] text-ink-soft">
+                <h2 className="text-body-lg font-semibold text-ink">{contact.owner}</h2>
+                <p className="mt-0.5 text-body text-ink">{contact.zalo_number}</p>
+                <p className="mt-1 text-label text-ink-soft">
                   Từ {formatDateTime(contact.valid_from)}
                   {contact.valid_to
                     ? ` đến ${formatDateTime(contact.valid_to)}`

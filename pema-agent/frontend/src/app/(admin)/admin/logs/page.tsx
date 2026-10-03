@@ -12,7 +12,6 @@ import { errorMessage, http, unwrap } from "@/lib/api/client";
 type LogEntry = Schemas["LogEntry"];
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { DongLog } from "@/components/admin/logs/log-row";
-import { IconDatabase } from "@/components/admin/shared/dashboard-icons";
 import { SelectMenu } from "@/components/admin/shared/select-menu";
 
 /**
@@ -102,7 +101,6 @@ export default function LogsPage() {
   return (
     <>
       <PageHeader
-        icon={IconDatabase}
         title="Logs"
         subtitle="Log toàn hệ thống đọc từ file. File ghi cả mức debug nên đầy đủ hơn nhìn terminal."
       />
@@ -120,7 +118,7 @@ export default function LogsPage() {
             role="tab"
             aria-selected={tab === key}
             onClick={() => setTab(key)}
-            className={`min-h-11 rounded-full border px-4 text-[13px] font-medium lg:min-h-9 ${
+            className={`min-h-11 rounded-full border px-4 text-small font-medium lg:min-h-9 ${
               tab === key
                 ? "border-brand-500 bg-brand-500 text-white"
                 : "border-line bg-surface text-ink-soft hover:bg-tile"
@@ -136,12 +134,12 @@ export default function LogsPage() {
       {tab === "app" && (
         <>
           {tat && (
-            <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-2.5 text-[13px] text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
+            <div className="mb-4 rounded-tile border border-warning-line bg-warning-soft px-4 py-2.5 text-small text-warning">
               {goiY || "Ghi log ra file đang tắt"}
             </div>
           )}
           {loi && (
-            <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-[13px] text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+            <div className="mb-4 rounded-tile border border-danger-line bg-danger-soft px-4 py-2.5 text-small text-danger">
               {loi}
             </div>
           )}
@@ -177,18 +175,18 @@ export default function LogsPage() {
               type="button"
               onClick={() => void nap()}
               disabled={dangTai}
-              className="rounded-lg border border-line bg-surface px-4 py-2 text-[13px] font-medium text-ink hover:bg-tile disabled:opacity-50"
+              className="rounded-control border border-line bg-surface px-4 py-2 text-small font-medium text-ink hover:bg-tile disabled:opacity-50"
             >
               {dangTai ? "Đang tải..." : "Tải lại"}
             </button>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-line bg-surface">
+          <div className="overflow-hidden rounded-card border border-line bg-surface">
             {entries.map((e, i) => (
               <DongLog key={i} e={e} />
             ))}
             {entries.length === 0 && !dangTai && !tat && (
-              <p className="py-10 text-center text-[13px] text-ink-soft/60">
+              <p className="py-10 text-center text-small text-ink-soft/60">
                 Không có dòng log nào khớp.
               </p>
             )}
@@ -203,7 +201,7 @@ export default function LogsPage() {
                 type="button"
                 onClick={() => void nap(conTro)}
                 disabled={dangTaiThem}
-                className="rounded-lg border border-line bg-surface px-4 py-2 text-[13px] font-medium text-ink hover:bg-tile disabled:opacity-50"
+                className="rounded-control border border-line bg-surface px-4 py-2 text-small font-medium text-ink hover:bg-tile disabled:opacity-50"
               >
                 {dangTaiThem ? "Đang tải..." : `Xem thêm ${MOI_TRANG} dòng cũ hơn`}
               </button>
@@ -211,7 +209,7 @@ export default function LogsPage() {
           )}
 
           {!conTro && entries.length > 0 && (
-            <p className="mt-4 text-center text-[12px] text-ink-soft/60">
+            <p className="mt-4 text-center text-label text-ink-soft/60">
               Đã hết log lưu lại. Log cũ hơn bị xoay vòng theo thời hạn lưu của máy chủ.
             </p>
           )}

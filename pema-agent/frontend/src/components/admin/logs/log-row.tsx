@@ -31,17 +31,17 @@ function nhanMuc(level: number): { text: string; lop: string } {
   if (level >= 50)
     return {
       text: "ERROR",
-      lop: "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-100 dark:border-red-900/50",
+      lop: "bg-danger-soft text-danger border-danger-line",
     };
   if (level >= 40)
     return {
       text: "WARN",
-      lop: "bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-100 dark:border-amber-900/50",
+      lop: "bg-warning-soft text-warning border-warning-line",
     };
   if (level >= 30)
     return {
       text: "INFO",
-      lop: "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-100 dark:border-sky-900/50",
+      lop: "bg-info-soft text-info border-info-line",
     };
   return { text: "DEBUG", lop: "bg-tile text-ink-soft border-line" };
 }
@@ -64,30 +64,30 @@ export function DongLog({ e }: { e: LogEntry }) {
   return (
     <div className="border-b border-line/70 px-4 py-2 last:border-0 hover:bg-tile/50">
       <div className="flex items-start gap-2.5">
-        <span className="shrink-0 pt-0.5 font-mono text-[11px] text-ink-soft/60">
+        <span className="shrink-0 pt-0.5 font-mono text-micro text-ink-soft/60">
           {gioPhut(e.time)}
         </span>
         <span
-          className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-semibold ${muc.lop}`}
+          className={`shrink-0 rounded border px-1.5 py-0.5 text-eyebrow font-semibold ${muc.lop}`}
         >
           {muc.text}
         </span>
-        <span className="shrink-0 rounded bg-tile px-1.5 py-0.5 text-[11px] text-ink-soft">
+        <span className="shrink-0 rounded bg-tile px-1.5 py-0.5 text-micro text-ink-soft">
           {e.scope}
         </span>
-        <span className="min-w-0 flex-1 text-[13px] break-words text-ink">{e.message}</span>
+        <span className="min-w-0 flex-1 text-small break-words text-ink">{e.message}</span>
         {coTruongPhu && (
           <button
             type="button"
             onClick={() => setMo((v) => !v)}
-            className="shrink-0 text-[11px] text-ink-soft hover:text-ink"
+            className="shrink-0 text-micro text-ink-soft hover:text-ink"
           >
             {mo ? "Thu gọn" : "Chi tiết"}
           </button>
         )}
       </div>
       {mo && coTruongPhu && (
-        <pre className="mt-2 max-h-60 overflow-auto rounded-lg bg-tile px-3 py-2 text-[11px] leading-relaxed break-words whitespace-pre-wrap text-ink-soft">
+        <pre className="mt-2 max-h-60 overflow-auto rounded-control bg-tile px-3 py-2 text-micro leading-relaxed break-words whitespace-pre-wrap text-ink-soft">
           {JSON.stringify(e.fields, null, 2)}
         </pre>
       )}

@@ -105,7 +105,7 @@ export function TuningField({
     <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between xl:gap-6">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <label htmlFor={id} className="text-[14px] font-medium text-ink">
+          <label htmlFor={id} className="text-body font-medium text-ink">
             {def.label}
           </label>
           {fromEnv ? (
@@ -114,7 +114,7 @@ export function TuningField({
             // 46/46 tham số của trang này đều KHÔNG có mặt trong file đó (đếm
             // thật) - giá trị đến từ `.default()` của schema. Chip cũ khiến người
             // dùng mở .env đi tìm một dòng không tồn tại.
-            <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-600 dark:bg-brand-50/40 dark:text-brand-700">
+            <span className="rounded-full bg-brand-50 px-2 py-0.5 text-micro font-medium text-brand-600 dark:bg-brand-50/40 dark:text-brand-700">
               mặc định
             </span>
           ) : (
@@ -134,7 +134,7 @@ export function TuningField({
               onClick={() => void commit(null)}
               disabled={dangLuu}
               title="Xóa giá trị bạn đã đặt, quay lại giá trị mặc định"
-              className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 transition-colors hover:border-amber-300 hover:bg-amber-100 disabled:opacity-50 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-950/70"
+              className="inline-flex items-center gap-1 rounded-full border border-warning-line bg-warning-soft px-2 py-0.5 text-micro font-medium text-warning transition-colors hover:border-warning-line hover:bg-warning-soft disabled:opacity-50"
             >
               <IconUndo size={12} className="shrink-0" />
               <span className="leading-none">Về mặc định</span>
@@ -143,10 +143,8 @@ export function TuningField({
           <TrangThaiLuu phase={phase} />
         </div>
 
-        {def.hint && <p className="mt-0.5 text-[12px] leading-[1.6] text-ink-soft">{def.hint}</p>}
-        {phase === "error" && loi && (
-          <p className="mt-1 text-[12px] text-red-600 dark:text-red-400">{loi}</p>
-        )}
+        {def.hint && <p className="mt-0.5 text-label leading-[1.6] text-ink-soft">{def.hint}</p>}
+        {phase === "error" && loi && <p className="mt-1 text-label text-danger">{loi}</p>}
       </div>
 
       <TuningFieldControl
@@ -167,8 +165,7 @@ export function TuningField({
 }
 
 function TrangThaiLuu({ phase }: { phase: Phase }) {
-  if (phase === "saving") return <span className="text-[11px] text-ink-soft">Đang lưu...</span>;
-  if (phase === "saved")
-    return <span className="text-[11px] text-emerald-600 dark:text-emerald-400">Đã lưu</span>;
+  if (phase === "saving") return <span className="text-micro text-ink-soft">Đang lưu...</span>;
+  if (phase === "saved") return <span className="text-micro text-success">Đã lưu</span>;
   return null;
 }

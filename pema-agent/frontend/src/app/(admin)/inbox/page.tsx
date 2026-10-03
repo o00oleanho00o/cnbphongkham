@@ -10,7 +10,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
-import { IconInbox } from "@/components/admin/shared/ops-icons";
 import { IconSearch } from "@/components/admin/shared/dashboard-icons";
 import { ConversationList } from "@/components/ops/inbox/conversation-list";
 import { ThreadView } from "@/components/ops/inbox/thread-view";
@@ -29,6 +28,8 @@ import { viewersOf, type LiveEvent, type LiveEventType } from "@/lib/live/live-t
 import { useLiveEvents } from "@/lib/live/use-live-events";
 import { CONVERSATION_STATUS_LABEL } from "@/lib/ops/labels";
 import { useLoad } from "@/lib/use-load";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 type StatusFilter = "all" | Schemas["ConversationStatus"];
 
@@ -116,7 +117,7 @@ function InboxContent() {
             onChange={(e) => setQuery(e.target.value)}
             aria-label="Tìm hội thoại"
             placeholder="Tìm theo tên, mã hồ sơ hoặc nội dung"
-            className="gc-input w-full pl-9"
+            className={cx(FIELD_BASE_CLASS, "w-full pl-9")}
           />
         </div>
         <ChipRow label="Trạng thái hội thoại">
@@ -137,9 +138,8 @@ function InboxContent() {
   );
 
   return (
-    <div className="mx-auto max-w-[1600px]">
+    <div>
       <PageHeader
-        icon={IconInbox}
         title="Inbox"
         subtitle={`${data?.total ?? 0} hội thoại · ${pendingTotal} có nháp chờ duyệt`}
       />

@@ -5,8 +5,11 @@ import { useId, type ReactNode } from "react";
 import { cx } from "./classnames";
 
 /** Shared look of text inputs, selects and textareas (old `.field input`: radius 9, tinted fill). */
-export const FIELD_CONTROL_CLASS =
-  "w-full rounded-field border border-line-strong bg-field px-3 py-2 text-body-lg text-ink outline-none placeholder:text-ink-soft/60 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60 aria-[invalid=true]:border-danger";
+export const FIELD_BASE_CLASS =
+  "rounded-field border border-line-strong bg-field px-3 py-2 text-body-lg text-ink outline-none placeholder:text-ink-soft/60 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:opacity-60 aria-[invalid=true]:border-danger";
+
+/** The same, full width: the default for a control that fills its row. Use `FIELD_BASE_CLASS` plus a width otherwise. */
+export const FIELD_CONTROL_CLASS = `w-full ${FIELD_BASE_CLASS}`;
 
 export type FieldControlProps = {
   id: string;

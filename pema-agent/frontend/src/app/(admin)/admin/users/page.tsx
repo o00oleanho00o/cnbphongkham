@@ -11,7 +11,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { IconPlus, IconSearch } from "@/components/admin/shared/dashboard-icons";
-import { IconIdBadge } from "@/components/admin/shared/ops-icons";
 import { Badge, InitialAvatar, Pager, TableShell } from "@/components/admin/shared/ui-bits";
 import {
   ChipRow,
@@ -44,6 +43,8 @@ import {
 } from "@/lib/ops/staff-view";
 import { ROLE_LABEL, useSession } from "@/lib/session/session-context";
 import { useLoad } from "@/lib/use-load";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 const SEARCH_DEBOUNCE_MS = 300;
 const STATUS_FILTERS: StatusFilter[] = ["all", "active", "locked"];
@@ -166,9 +167,8 @@ export default function StaffPage() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div>
       <PageHeader
-        icon={IconIdBadge}
         title="Nhân viên"
         subtitle="Tài khoản đăng nhập của phòng khám: vai trò, trạng thái và mật khẩu"
         aside={
@@ -210,7 +210,7 @@ export default function StaffPage() {
                 onChange={(e) => setQuery(e.target.value)}
                 aria-label="Tìm nhân viên"
                 placeholder="Tìm theo họ tên hoặc email"
-                className="gc-input w-full pl-9"
+                className={cx(FIELD_BASE_CLASS, "w-full pl-9")}
               />
             </div>
             <ChipRow label="Vai trò">
@@ -257,12 +257,12 @@ export default function StaffPage() {
                             <div className="truncate font-semibold text-ink">
                               {s.display_name}
                               {s.id === user.id && (
-                                <span className="ml-2 text-[12px] font-normal text-ink-soft">
+                                <span className="ml-2 text-label font-normal text-ink-soft">
                                   (Bạn)
                                 </span>
                               )}
                             </div>
-                            <div className="truncate text-[12px] text-ink-soft">{s.email}</div>
+                            <div className="truncate text-label text-ink-soft">{s.email}</div>
                           </div>
                         </div>
                       </td>
@@ -270,10 +270,10 @@ export default function StaffPage() {
                       <td className="px-4 py-3 whitespace-nowrap">
                         <StatusBadge active={s.active} />
                       </td>
-                      <td className="px-4 py-3 text-[13px] whitespace-nowrap text-ink-soft">
+                      <td className="px-4 py-3 text-small whitespace-nowrap text-ink-soft">
                         {s.last_login_at ? formatDateTime(s.last_login_at) : "Chưa đăng nhập"}
                       </td>
-                      <td className="px-4 py-3 text-[13px] whitespace-nowrap text-ink-soft">
+                      <td className="px-4 py-3 text-small whitespace-nowrap text-ink-soft">
                         {formatDate(s.created_at)}
                       </td>
                       {canManage && <td className="px-4 py-3">{renderActions(s)}</td>}
@@ -287,26 +287,27 @@ export default function StaffPage() {
                 data-testid="staff-cards"
               >
                 {items.map((s) => (
-                  <li key={s.id} className="gc-card p-4">
+                  <li
+                    key={s.id}
+                    className="rounded-card border border-line bg-surface p-4 shadow-card"
+                  >
                     <div className="flex items-start gap-3">
                       <InitialAvatar name={s.display_name} />
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-[15px] font-semibold text-ink">
+                        <div className="truncate text-body-lg font-semibold text-ink">
                           {s.display_name}
                           {s.id === user.id && (
-                            <span className="ml-2 text-[12px] font-normal text-ink-soft">
-                              (Bạn)
-                            </span>
+                            <span className="ml-2 text-label font-normal text-ink-soft">(Bạn)</span>
                           )}
                         </div>
-                        <div className="truncate text-[12px] text-ink-soft">{s.email}</div>
+                        <div className="truncate text-label text-ink-soft">{s.email}</div>
                       </div>
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       {roleLine(s)}
                       <StatusBadge active={s.active} />
                     </div>
-                    <p className="mt-2 text-[12px] text-ink-soft">
+                    <p className="mt-2 text-label text-ink-soft">
                       {lastLoginLabel(s, formatDateTime)} · Tạo {formatDate(s.created_at)}
                     </p>
                     <div className="mt-3">{renderActions(s)}</div>
@@ -318,7 +319,7 @@ export default function StaffPage() {
 
           {data && data.total > PAGE_SIZE && (
             <div className="mt-4 flex items-center justify-between gap-3">
-              <span className="text-[13px] text-ink-soft">
+              <span className="text-small text-ink-soft">
                 {data.offset + 1}-{data.offset + items.length} / {data.total}
               </span>
               <Pager

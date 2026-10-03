@@ -129,10 +129,10 @@ export function TuningFieldControl({
                   onKeyDown={(e) => e.key === "Enter" && onCommitNumber()}
                 />
                 {def.unit && (
-                  <span className="text-[13px] whitespace-nowrap text-ink-soft">{def.unit}</span>
+                  <span className="text-small whitespace-nowrap text-ink-soft">{def.unit}</span>
                 )}
               </div>
-              <div className="mt-1 text-[11px] whitespace-nowrap text-ink-soft/70">
+              <div className="mt-1 text-micro whitespace-nowrap text-ink-soft/70">
                 ({def.min.toLocaleString("vi-VN")} - {def.max.toLocaleString("vi-VN")})
               </div>
               {/* Quy đổi ra token cho ô đo bằng KÝ TỰ mà nội dung lại đi vào
@@ -145,7 +145,7 @@ export function TuningFieldControl({
                   Giá trị rác hay rỗng thì KHÔNG hiện gì: "khoảng 0 token" là
                   một khẳng định sai, im lặng trung thực hơn. */}
               {def.hienQuyDoiToken && soHopLe(nhap) && (
-                <div className="mt-0.5 text-[11px] whitespace-nowrap text-ink-soft/70">
+                <div className="mt-0.5 text-micro whitespace-nowrap text-ink-soft/70">
                   khoảng {uocTokenTuKyTu(Number(nhap)).toLocaleString("vi-VN")} token
                 </div>
               )}

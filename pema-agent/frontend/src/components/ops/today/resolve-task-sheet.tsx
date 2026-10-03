@@ -24,6 +24,8 @@ import { localInputToIso } from "@/lib/ops/format";
 import { CHANNEL_LABEL, OUTCOME_LABEL, PRIORITY_LABEL, RULE_LABEL } from "@/lib/ops/labels";
 import { useSession } from "@/lib/session/session-context";
 import { useAssignableStaff } from "@/lib/staff/use-assignable-staff";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 type CrmTask = Schemas["CrmTaskOut"];
 type CrmChannel = Schemas["CrmChannel"];
@@ -178,7 +180,7 @@ export function ResolveTaskSheet({
         </Notice>
 
         <fieldset>
-          <legend className="mb-1.5 text-[13px] font-medium text-ink">Kênh liên hệ</legend>
+          <legend className="mb-1.5 text-small font-medium text-ink">Kênh liên hệ</legend>
           <div className="flex flex-wrap gap-2">
             {CHANNELS.map((channel) => (
               <FilterChip
@@ -211,19 +213,19 @@ export function ResolveTaskSheet({
             rows={3}
             required
             placeholder="Ghi cụ thể kết quả và điều đã thống nhất với khách..."
-            className="gc-input w-full"
+            className={cx(FIELD_BASE_CLASS, "w-full")}
           />
         </Field>
 
         {form.outcome === "booked" && (
-          <div className="grid gap-3 rounded-xl border border-line bg-tile/40 p-3 sm:grid-cols-2">
+          <div className="grid gap-3 rounded-tile border border-line bg-tile/40 p-3 sm:grid-cols-2">
             <Field label="Ngày giờ lịch hẹn" htmlFor="resolve-booking">
               <input
                 id="resolve-booking"
                 type="datetime-local"
                 value={form.bookingStart}
                 onChange={(e) => patch({ bookingStart: e.target.value, hasBooking: true })}
-                className="gc-input w-full"
+                className={cx(FIELD_BASE_CLASS, "w-full")}
               />
             </Field>
             <Field label="Thời lượng" htmlFor="resolve-duration">
@@ -235,7 +237,7 @@ export function ResolveTaskSheet({
                 onChange={setDurationMin}
               />
             </Field>
-            <p className="text-[12px] text-ink-soft sm:col-span-2">
+            <p className="text-label text-ink-soft sm:col-span-2">
               Lịch được lưu cùng lúc với việc chăm sóc; máy chủ kiểm tra trùng giờ bác sĩ trước khi
               hoàn tất.
             </p>
@@ -251,7 +253,7 @@ export function ResolveTaskSheet({
             type="datetime-local"
             value={form.nextAction}
             onChange={(e) => patch({ nextAction: e.target.value })}
-            className="gc-input w-full"
+            className={cx(FIELD_BASE_CLASS, "w-full")}
           />
         </Field>
 

@@ -115,12 +115,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-canvas p-6">
         <div className="gc-card max-w-sm p-6 text-center">
-          <p className="text-[15px] font-semibold text-ink">Không tải được phiên làm việc</p>
-          <p className="mt-1 text-[13px] text-ink-soft">{loadError}</p>
+          <p className="text-body-lg font-semibold text-ink">Không tải được phiên làm việc</p>
+          <p className="mt-1 text-small text-ink-soft">{loadError}</p>
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="mt-4 rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600"
+            className="mt-4 rounded-control bg-brand-500 px-4 py-2 text-body font-medium text-white hover:bg-brand-600"
           >
             Thử lại
           </button>
@@ -224,8 +224,8 @@ function ShellFrame({
     >
       {forbidden ? (
         <div className="gc-card mx-auto max-w-md p-6 text-center">
-          <p className="text-[15px] font-semibold text-ink">Bạn không có quyền xem màn này</p>
-          <p className="mt-1 text-[13px] text-ink-soft">
+          <p className="text-body-lg font-semibold text-ink">Bạn không có quyền xem màn này</p>
+          <p className="mt-1 text-small text-ink-soft">
             Vai trò hiện tại không được cấp quyền. Liên hệ chủ phòng khám hoặc quản lý nếu cần.
           </p>
         </div>

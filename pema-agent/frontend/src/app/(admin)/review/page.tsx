@@ -11,7 +11,6 @@ import { Suspense, useCallback, useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { SelectMenu, type SelectOption } from "@/components/admin/shared/select-menu";
-import { IconShieldCheck } from "@/components/admin/shared/ops-icons";
 import { LiveStatus } from "@/components/ops/live-status";
 import { MasterDetail } from "@/components/ops/master-detail";
 import {
@@ -145,9 +144,8 @@ function ReviewContent() {
   );
 
   return (
-    <div className="mx-auto max-w-[1600px]">
+    <div>
       <PageHeader
-        icon={IconShieldCheck}
         title="Hàng đợi duyệt AI"
         subtitle="Không tin nào của trợ lý AI tới khách khi chưa có người duyệt"
       />

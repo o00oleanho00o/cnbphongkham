@@ -14,7 +14,7 @@ type ThreadItem = Schemas["ThreadRow"];
 
 const PAGE_SIZE = 50;
 import { PageHeader } from "@/components/admin/layout/page-header";
-import { IconChat, IconTrash } from "@/components/admin/shared/dashboard-icons";
+import { IconTrash } from "@/components/admin/shared/dashboard-icons";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { AccountFilter, accountLabel } from "@/components/admin/shared/account-filter";
 import {
@@ -108,13 +108,12 @@ export default function SessionsPage() {
   return (
     <div>
       <PageHeader
-        icon={IconChat}
         title="Phiên chat AI"
         subtitle="Mỗi cuộc trò chuyện (chat riêng hoặc nhóm) là một phiên; ngữ cảnh trò chuyện của trợ lý AI giữ ở đây. Có thể chứa dữ liệu bệnh nhân: chỉ nhân viên được phân quyền xem."
       />
 
       {error && (
-        <p role="alert" className="mb-3 text-[13px] text-red-600 dark:text-red-400">
+        <p role="alert" className="mb-3 text-small text-danger">
           {error}
         </p>
       )}
@@ -154,7 +153,7 @@ export default function SessionsPage() {
                   <div className="truncate font-medium text-ink">
                     {t.display_name || t.thread_id}
                   </div>
-                  <div className="truncate text-[12px] text-ink-soft/60">{t.thread_id}</div>
+                  <div className="truncate text-label text-ink-soft/60">{t.thread_id}</div>
                 </div>
               </div>
             </td>
@@ -176,12 +175,12 @@ export default function SessionsPage() {
               <button
                 onClick={() => toggleBot(t)}
                 className={`relative h-5 w-9 rounded-full transition-colors ${
-                  t.bot_enabled ? "bg-brand-500" : "bg-slate-300 dark:bg-slate-600"
+                  t.bot_enabled ? "bg-brand-500" : "bg-ink-soft/40"
                 }`}
                 title={t.bot_enabled ? "Bot đang bật - bấm để tắt" : "Bot đang tắt - bấm để bật"}
               >
                 <span
-                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all ${
+                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow-sm transition-all ${
                     t.bot_enabled ? "left-[18px]" : "left-0.5"
                   }`}
                 />
@@ -191,13 +190,13 @@ export default function SessionsPage() {
               <div className="flex items-center justify-end gap-1">
                 <button
                   onClick={() => setOpenThread(t)}
-                  className="text-[13px] font-medium text-brand-600 hover:underline"
+                  className="text-small font-medium text-brand-600 hover:underline"
                 >
                   Xem
                 </button>
                 <button
                   onClick={() => xoa(t)}
-                  className="rounded-lg p-1.5 text-ink-soft/60 transition-colors hover:bg-red-500/10 hover:text-red-500"
+                  className="rounded-control p-1.5 text-ink-soft/60 transition-colors hover:bg-danger-soft hover:text-danger"
                   title="Xóa hẳn session này"
                 >
                   <IconTrash className="h-4 w-4" />

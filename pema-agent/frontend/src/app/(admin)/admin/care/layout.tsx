@@ -6,14 +6,12 @@
 import type { ReactNode } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
-import { IconBot } from "@/components/admin/shared/dashboard-icons";
 import { ADMIN_CARE_ITEMS, SubNav } from "@/components/care/care-ui";
 
 export default function AdminCareLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto max-w-5xl">
+    <div>
       <PageHeader
-        icon={IconBot}
         title="Agent chăm sóc"
         subtitle="Người nhận yêu cầu, số trực, ngưỡng độ sâu và thời hạn trả lời"
       />

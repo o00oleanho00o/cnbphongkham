@@ -52,24 +52,24 @@ export function McpHeaderFields({
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between gap-2">
-        <span className="text-[13px] font-medium text-ink">Header xác thực</span>
+        <span className="text-small font-medium text-ink">Header xác thực</span>
         <button
           type="button"
           onClick={() => onChange([...rows, { key: "", value: "" }])}
-          className="cursor-pointer text-[12px] font-medium text-brand-600 hover:underline dark:text-brand-400"
+          className="cursor-pointer text-label font-medium text-brand-600 hover:underline dark:text-brand-400"
         >
           + Thêm header
         </button>
       </div>
 
       {hasSavedHeaders && rows.length === 0 && (
-        <div className="mb-2 flex items-center justify-between gap-3 rounded-lg border border-line bg-tile/60 px-3 py-2 text-[12px] text-ink-soft">
+        <div className="mb-2 flex items-center justify-between gap-3 rounded-control border border-line bg-tile/60 px-3 py-2 text-label text-ink-soft">
           <span>Đã lưu header (ẩn) - gõ dòng mới bên dưới để thay, hoặc xóa hẳn</span>
           <button
             type="button"
             onClick={onRemoveSaved}
             disabled={busy}
-            className="shrink-0 cursor-pointer font-medium text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400"
+            className="shrink-0 cursor-pointer font-medium text-danger hover:underline disabled:cursor-not-allowed disabled:opacity-50"
           >
             Xóa header
           </button>
@@ -77,9 +77,9 @@ export function McpHeaderFields({
       )}
 
       {rows.length === 0 && !hasSavedHeaders && (
-        <p className="text-[12px] text-ink-soft">
+        <p className="text-label text-ink-soft">
           Không bắt buộc - chỉ điền nếu server yêu cầu xác thực. Ví dụ token:{" "}
-          <code className="rounded bg-tile px-1 py-0.5 text-[11px]">
+          <code className="rounded bg-tile px-1 py-0.5 text-micro">
             Authorization: Bearer sk-abc123def456...
           </code>
         </p>
@@ -87,7 +87,7 @@ export function McpHeaderFields({
 
       {rows.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[12px] text-ink-soft">
+          <p className="text-label text-ink-soft">
             Ô trái là tên header, ô phải là giá trị (token/khóa) - server cần header gì thì ghi
             trong tài liệu của nó.
           </p>
@@ -112,7 +112,7 @@ export function McpHeaderFields({
                   type="button"
                   onClick={() => removeRow(i)}
                   title="Bỏ dòng này"
-                  className="shrink-0 cursor-pointer p-1.5 text-ink-soft hover:text-red-600 dark:hover:text-red-400"
+                  className="shrink-0 cursor-pointer p-1.5 text-ink-soft hover:text-danger"
                 >
                   <IconTrash size={15} />
                 </button>

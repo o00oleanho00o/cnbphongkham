@@ -24,7 +24,7 @@
 
 body {
   @apply bg-canvas font-sans text-ink antialiased;
-  font-size: 15px;
+  font-size: var(--text-body);
 }
 
 /*
@@ -44,19 +44,25 @@ summary,
   outline-offset: 2px;
 }
 
-/* Trong @layer components để utility (pl-9...) vẫn override được khi cần */
+/*
+ * COMPATIBILITY CLASSES for the ported zalo-agent admin pages (`/admin/*`), which still say `gc-card`,
+ * `gc-tile` and `gc-input`. They are now one-line aliases of the design kit (src/ui: Card, Tile, FIELD_CONTROL_CLASS)
+ * and sit on its tokens. Marked for removal: when a page is rebuilt with the kit components it drops them, and the
+ * last one to go deletes this block. Do not use them in new code.
+ */
 @layer components {
-  /* Card chuẩn mẫu: border mảnh, radius 14 (Pema), bóng rất nhẹ. */
+  /* = ui/card.tsx */
   .gc-card {
-    @apply rounded-[14px] border border-line bg-surface shadow-(--shadow-card);
+    @apply rounded-card border border-line bg-surface shadow-card;
   }
 
-  /* Tile nhỏ trong panel (System Health): nền muted mờ */
+  /* = a muted tile inside a panel */
   .gc-tile {
-    @apply rounded-xl border border-line bg-tile/40 p-3;
+    @apply rounded-tile border border-line bg-tile/40 p-3;
   }
 
+  /* = FIELD_CONTROL_CLASS (ui/field.tsx) without the full-width default */
   .gc-input {
-    @apply rounded-lg border border-line bg-surface px-3 py-2 text-[15px] text-ink outline-none placeholder:text-ink-soft/60 focus:border-brand-500 focus:ring-2 focus:ring-brand-100;
+    @apply rounded-field border border-line-strong bg-field px-3 py-2 text-body-lg text-ink outline-none placeholder:text-ink-soft/60 focus:border-brand-500 focus:ring-2 focus:ring-brand-100;
   }
 }

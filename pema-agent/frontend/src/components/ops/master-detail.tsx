@@ -31,7 +31,7 @@ export function MasterDetail({
             <button
               type="button"
               onClick={onBack}
-              className="mb-3 inline-flex min-h-11 items-center gap-1 text-[14px] font-medium text-brand-500 hover:text-brand-600 lg:hidden"
+              className="mb-3 inline-flex min-h-11 items-center gap-1 text-body font-medium text-brand-500 hover:text-brand-600 lg:hidden"
             >
               <IconChevronLeft size={18} />
               {backLabel}

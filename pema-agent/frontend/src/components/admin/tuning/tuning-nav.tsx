@@ -72,7 +72,7 @@ export function TuningNav({
       style={{ "--cao-danh-muc": `${caoThe}px` } as CSSProperties}
       className="w-full shrink-0 lg:sticky lg:top-[min(0px,calc(100dvh-3.5rem-var(--cao-danh-muc,0px)))] lg:w-[20rem] lg:self-start"
     >
-      <div ref={theRef} className="rounded-2xl border border-line bg-surface/95 p-2">
+      <div ref={theRef} className="rounded-card border border-line bg-surface/95 p-2">
         {groups.map((g, i) => {
           const active = dangChon === g.id;
           // Đường kẻ ngăn cách vẽ ở mục TRÊN, và bỏ đi khi mục này hoặc mục
@@ -114,7 +114,7 @@ function NavItem({
       type="button"
       onClick={onClick}
       aria-current={active ? "true" : undefined}
-      className={`flex w-full items-center gap-3.5 rounded-xl px-4 py-3 text-left transition-colors ${
+      className={`flex w-full items-center gap-3.5 rounded-tile px-4 py-3 text-left transition-colors ${
         active ? "bg-brand-50" : "hover:bg-tile/50"
       }`}
     >
@@ -122,12 +122,10 @@ function NavItem({
           icon, thêm khung nền là quay lại kiểu "khối lồng khối" */}
       <span className={`shrink-0 ${active ? "text-brand-500" : "text-ink-soft"}`}>{icon}</span>
       <span className="min-w-0 flex-1">
-        <span
-          className={`block text-[14px] font-semibold ${active ? "text-brand-700" : "text-ink"}`}
-        >
+        <span className={`block text-body font-semibold ${active ? "text-brand-700" : "text-ink"}`}>
           {title}
         </span>
-        <span className="mt-0.5 block truncate text-[12px] text-ink-soft">{hint}</span>
+        <span className="mt-0.5 block truncate text-label text-ink-soft">{hint}</span>
       </span>
       <IconChevronRight size={16} className={active ? "text-brand-500" : "text-ink-soft/40"} />
     </button>

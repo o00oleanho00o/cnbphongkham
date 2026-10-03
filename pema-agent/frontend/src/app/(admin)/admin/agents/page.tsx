@@ -10,7 +10,7 @@ import type { Schemas } from "@/lib/api";
 import { errorMessage, http, unwrap } from "@/lib/api/client";
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
-import { IconBot, IconPlus } from "@/components/admin/shared/dashboard-icons";
+import { IconPlus } from "@/components/admin/shared/dashboard-icons";
 import { AgentCard } from "@/components/admin/agents/agent-card";
 import { AgentCreateModal } from "@/components/admin/agents/agent-create-modal";
 import { DUONG_DAN_TAO, khoTamCuaTab, luuBanNhap } from "@/lib/admin/agents/agent-draft";
@@ -107,13 +107,12 @@ export default function AgentsPage() {
   return (
     <div>
       <PageHeader
-        icon={IconBot}
         title="Agents"
         subtitle="Mỗi agent là một bộ não: persona + model riêng + hồ sơ chính sách, gắn vào tài khoản Zalo ở trang Tài khoản Zalo"
         aside={
           <button
             onClick={() => setCreating(true)}
-            className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600"
+            className="flex items-center gap-1.5 rounded-control bg-brand-500 px-4 py-2 text-body font-medium text-white hover:bg-brand-600"
           >
             <IconPlus size={17} />
             Tạo agent
@@ -121,7 +120,7 @@ export default function AgentsPage() {
         }
       />
 
-      {error && <p className="mb-4 text-[13px] text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="mb-4 text-small text-danger">{error}</p>}
 
       <DaiSoLieu soAgent={agents.length} soAccount={tongAccount} />
 
@@ -139,14 +138,14 @@ export default function AgentsPage() {
       )}
 
       {hienThi.length === 0 && (
-        <p className="rounded-2xl border border-line bg-surface px-5 py-10 text-center text-[13px] text-ink-soft/70">
+        <p className="rounded-card border border-line bg-surface px-5 py-10 text-center text-small text-ink-soft/70">
           {agents.length === 0 ? "Chưa có agent nào." : `Không có agent nào khớp "${tim}".`}
         </p>
       )}
 
       {hienThi.length > 0 &&
         (kieuXem === "danh-sach" ? (
-          <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
+          <div className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
             {hienThi.map((agent) => (
               <AgentCard
                 key={agent.id}

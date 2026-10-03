@@ -23,7 +23,7 @@ export function ProvidersSection() {
   const { settings, form, setForm, doiProvider, status, busy, save, test, reset, confirmDialog } =
     useProviderForm();
 
-  if (!settings) return <p className="text-[13px] text-ink-soft">Đang tải...</p>;
+  if (!settings) return <p className="text-small text-ink-soft">Đang tải...</p>;
 
   return (
     <div className="max-w-2xl">
@@ -42,7 +42,7 @@ export function ProvidersSection() {
               Gemini phải đi nhánh riêng chứ không đi lớp giả OpenAI của Google:
               lớp giả làm rơi `thought_signature` nên mọi lượt gọi tool ăn 400.
               Xem `llm-base-url-presets.ts`. */}
-          <label className="mb-1.5 block text-[13px] font-medium text-ink" htmlFor="pv-provider">
+          <label className="mb-1.5 block text-small font-medium text-ink" htmlFor="pv-provider">
             Kiểu kết nối
           </label>
           <SelectMenu
@@ -57,7 +57,7 @@ export function ProvidersSection() {
             onChange={doiProvider}
           />
           {form.provider === "openai-compatible" && laUrlGemini(form.baseUrl) && (
-            <p className="mt-1.5 text-[13px] text-amber-600 dark:text-amber-500">
+            <p className="mt-1.5 text-small text-warning">
               Base URL này là lớp giả OpenAI của Google. Chat chay chạy được, nhưng mọi lượt bot gọi
               công cụ sẽ lỗi. Đổi Kiểu kết nối sang <strong>Google (Gemini)</strong> - key và tên
               model giữ nguyên.
@@ -68,7 +68,7 @@ export function ProvidersSection() {
         {form.provider === "openai-compatible" && (
           <>
             <div>
-              <label className="mb-1.5 block text-[13px] font-medium text-ink" htmlFor="pv-preset">
+              <label className="mb-1.5 block text-small font-medium text-ink" htmlFor="pv-preset">
                 Chọn nhanh
               </label>
               {/* Chỉ ĐIỀN HỘ base URL rồi thôi - không đụng model hay key, vì
@@ -93,10 +93,7 @@ export function ProvidersSection() {
             </div>
 
             <div>
-              <label
-                className="mb-1.5 block text-[13px] font-medium text-ink"
-                htmlFor="pv-base-url"
-              >
+              <label className="mb-1.5 block text-small font-medium text-ink" htmlFor="pv-base-url">
                 Base URL
               </label>
               <input
@@ -111,7 +108,7 @@ export function ProvidersSection() {
         )}
 
         <div>
-          <label className="mb-1.5 block text-[13px] font-medium text-ink" htmlFor="pv-model">
+          <label className="mb-1.5 block text-small font-medium text-ink" htmlFor="pv-model">
             Model
           </label>
           <input
@@ -123,7 +120,7 @@ export function ProvidersSection() {
         </div>
 
         <div>
-          <label className="mb-1.5 block text-[13px] font-medium text-ink" htmlFor="pv-api-key">
+          <label className="mb-1.5 block text-small font-medium text-ink" htmlFor="pv-api-key">
             API key{" "}
             <span className="font-normal text-ink-soft">(hiện tại: {settings.api_key_masked})</span>
           </label>
@@ -133,15 +130,13 @@ export function ProvidersSection() {
             onChange={(apiKey) => setForm({ ...form, apiKey })}
             placeholder="Bỏ trống để giữ key hiện tại"
           />
-          <p className="mt-1.5 text-[12px] leading-[1.6] text-ink-soft">
+          <p className="mt-1.5 text-label leading-[1.6] text-ink-soft">
             Key được mã hóa AES-256-GCM khi lưu, không bao giờ trả lại đầy đủ.
           </p>
         </div>
 
         {status && (
-          <p
-            className={`text-[13px] ${status.tone === "green" ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}
-          >
+          <p className={`text-small ${status.tone === "green" ? "text-success" : "text-danger"}`}>
             {status.text}
           </p>
         )}
@@ -150,14 +145,14 @@ export function ProvidersSection() {
           <button
             onClick={save}
             disabled={busy}
-            className="rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+            className="rounded-control bg-brand-500 px-4 py-2 text-body font-medium text-white hover:bg-brand-600 disabled:opacity-50"
           >
             Lưu
           </button>
           <button
             onClick={test}
             disabled={busy}
-            className="rounded-lg border border-line bg-surface px-4 py-2 text-[14px] font-medium text-ink hover:bg-tile disabled:opacity-50"
+            className="rounded-control border border-line bg-surface px-4 py-2 text-body font-medium text-ink hover:bg-tile disabled:opacity-50"
           >
             Test kết nối
           </button>
@@ -165,7 +160,7 @@ export function ProvidersSection() {
             <button
               onClick={reset}
               disabled={busy}
-              className="ml-auto rounded-lg px-4 py-2 text-[14px] text-red-600 hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950/40"
+              className="ml-auto rounded-control px-4 py-2 text-body text-danger hover:bg-danger-soft disabled:opacity-50"
             >
               Xóa cấu hình LLM
             </button>

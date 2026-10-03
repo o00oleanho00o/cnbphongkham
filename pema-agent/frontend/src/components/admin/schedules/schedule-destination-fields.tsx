@@ -63,7 +63,7 @@ export function ScheduleDestinationFields({
   return (
     <>
       <div>
-        <label htmlFor="sch-account" className="mb-1.5 block text-[13px] font-medium text-ink">
+        <label htmlFor="sch-account" className="mb-1.5 block text-small font-medium text-ink">
           Account
         </label>
         <SelectMenu
@@ -74,12 +74,12 @@ export function ScheduleDestinationFields({
         />
       </div>
       <div>
-        <label htmlFor="sch-thread" className="mb-1.5 block text-[13px] font-medium text-ink">
+        <label htmlFor="sch-thread" className="mb-1.5 block text-small font-medium text-ink">
           Cuộc trò chuyện{" "}
           <span className="font-normal text-ink-soft">(đích gửi, không đổi được sau khi tạo)</span>
         </label>
         {threadOptions.length === 0 ? (
-          <p className="text-[12px] leading-[1.6] text-ink-soft">
+          <p className="text-label leading-[1.6] text-ink-soft">
             Account này chưa có cuộc trò chuyện nào ghi nhận - phải có ít nhất 1 tin đến trước.
           </p>
         ) : (
@@ -97,13 +97,13 @@ export function ScheduleDestinationFields({
         )}
       </div>
       {accounts.find((a) => a.id === accountId)?.policy_profile === "patient_channel" && (
-        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-[1.6] text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
+        <p className="rounded-control border border-warning-line bg-warning-soft px-3 py-2 text-label leading-[1.6] text-warning">
           Tài khoản này dùng hồ sơ Kênh bệnh nhân: lịch chỉ được gửi tin từ mẫu đã được bác sĩ duyệt
           (loại Nhắn tin). Job chạy agent chỉ soạn nháp để người duyệt, không tự gửi.
         </p>
       )}
       <div>
-        <label htmlFor="sch-kind" className="mb-1.5 block text-[13px] font-medium text-ink">
+        <label htmlFor="sch-kind" className="mb-1.5 block text-small font-medium text-ink">
           Loại job
         </label>
         <SelectMenu

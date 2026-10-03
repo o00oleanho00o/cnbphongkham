@@ -23,6 +23,9 @@ import {
   OUTCOME_LABEL,
   RULE_LABEL,
 } from "@/lib/ops/labels";
+import { Card as KitCard } from "@/ui/card";
+import { cx } from "@/ui/classnames";
+import { Tabs } from "@/ui/tabs";
 
 type P360 = Schemas["Patient360"];
 
@@ -36,42 +39,38 @@ const SECTION_LABEL: Record<SectionKey, string> = {
   consent: "Đồng ý",
 };
 const SECTIONS = Object.keys(SECTION_LABEL) as SectionKey[];
+const isSection = (value: string): value is SectionKey => value in SECTION_LABEL;
 
+/** One panel of a section: on a phone only the panels of the active section show, from `lg` all of them do. */
 function Card({
   title,
   section,
   active,
   children,
-  aside,
 }: {
   title: string;
   section: SectionKey;
   active: SectionKey;
   children: ReactNode;
-  aside?: ReactNode;
 }) {
   return (
-    <section className={`gc-card p-4 sm:p-5 ${active === section ? "block" : "hidden"} lg:block`}>
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
-        {aside}
-      </div>
+    <KitCard title={title} className={cx(active === section ? "block" : "hidden", "lg:block")}>
       {children}
-    </section>
+    </KitCard>
   );
 }
 
 function Fact({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div>
-      <dt className="text-[12px] text-ink-soft">{label}</dt>
-      <dd className="text-[14px] font-medium text-ink">{value}</dd>
+      <dt className="text-label text-ink-soft">{label}</dt>
+      <dd className="text-body font-medium text-ink">{value}</dd>
     </div>
   );
 }
 
 function Muted({ children }: { children: ReactNode }) {
-  return <p className="text-[13px] text-ink-soft">{children}</p>;
+  return <p className="text-small text-ink-soft">{children}</p>;
 }
 
 export function Patient360View({ data }: { data: P360 }) {
@@ -89,17 +88,17 @@ export function Patient360View({ data }: { data: P360 }) {
 
   return (
     <div className="space-y-4">
-      <header className="gc-card flex flex-wrap items-center gap-4 p-4 sm:p-5">
+      <header className="flex flex-wrap items-center gap-4 rounded-hero border border-brand-100 bg-brand-50 p-4 sm:p-5">
         <InitialAvatar name={patient.full_name} />
-        <div className="min-w-0 flex-1">
-          <h1 className="text-[20px] font-semibold text-ink">{patient.full_name}</h1>
-          <p className="text-[13px] text-ink-soft">
+        <div className="min-w-0 flex-1 basis-48">
+          <h1 className="text-title font-bold text-heading">{patient.full_name}</h1>
+          <p className="text-small text-ink-soft">
             {patient.code} · {GENDER_LABEL[patient.gender ?? "unknown"]}
             {age !== null ? ` · ${age} tuổi` : ""}
             {patient.doctor_name ? ` · ${patient.doctor_name}` : ""}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto">
           <Badge tone="blue" dot={false}>
             {stage}
           </Badge>
@@ -116,7 +115,7 @@ export function Patient360View({ data }: { data: P360 }) {
           {can("care.read") && (
             <Link
               href={`/care/patients/${patient.id}/timeline`}
-              className="inline-flex min-h-11 items-center px-2 text-[13px] font-medium text-brand-500 hover:text-brand-600 lg:min-h-9"
+              className="inline-flex min-h-11 items-center px-2 text-small font-semibold text-link hover:underline lg:min-h-9"
             >
               Agent chăm sóc
             </Link>
@@ -124,27 +123,16 @@ export function Patient360View({ data }: { data: P360 }) {
         </div>
       </header>
 
-      <div
-        role="tablist"
-        aria-label="Phần hồ sơ"
-        className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:hidden"
-      >
-        {SECTIONS.map((key) => (
-          <button
-            key={key}
-            role="tab"
-            type="button"
-            aria-selected={active === key}
-            onClick={() => setActive(key)}
-            className={`min-h-11 rounded-full border px-4 text-[13px] font-medium whitespace-nowrap ${
-              active === key
-                ? "border-brand-500 bg-brand-500 text-white"
-                : "border-line bg-surface text-ink-soft"
-            }`}
-          >
-            {SECTION_LABEL[key]}
-          </button>
-        ))}
+      <div className="-mb-5 lg:hidden">
+        <Tabs
+          label="Phần hồ sơ"
+          idPrefix="p360"
+          items={SECTIONS.map((key) => ({ id: key, label: SECTION_LABEL[key] }))}
+          value={active}
+          onChange={(key) => {
+            if (isSection(key)) setActive(key);
+          }}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -189,21 +177,21 @@ export function Patient360View({ data }: { data: P360 }) {
           ) : (
             <ul className="space-y-2">
               {(data.open_tasks ?? []).map((t) => (
-                <li key={t.id} className="rounded-lg border border-line px-3 py-2.5">
+                <li key={t.id} className="rounded-control border border-line px-3 py-2.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[13px] font-semibold text-ink">
+                    <span className="text-small font-semibold text-ink">
                       {RULE_LABEL[t.rule_key]}
                     </span>
                     <PriorityBadge priority={t.priority} />
                   </div>
-                  <p className="mt-0.5 text-[13px] text-ink-soft">{t.reason}</p>
-                  <p className="mt-0.5 text-[12px] text-ink-soft">{dueLabel(t.due_at)}</p>
+                  <p className="mt-0.5 text-small text-ink-soft">{t.reason}</p>
+                  <p className="mt-0.5 text-label text-ink-soft">{dueLabel(t.due_at)}</p>
                 </li>
               ))}
             </ul>
           )}
-          <p className="mt-3 text-[13px]">
-            <Link href="/today" className="text-brand-500 underline">
+          <p className="mt-3 text-small">
+            <Link href="/today" className="text-link underline">
               Mở Việc hôm nay
             </Link>
           </p>
@@ -215,13 +203,13 @@ export function Patient360View({ data }: { data: P360 }) {
             {[...upcoming, ...past.slice(0, 4)].map((a) => (
               <li
                 key={a.id}
-                className="flex items-center justify-between gap-3 rounded-lg border border-line px-3 py-2.5"
+                className="flex items-center justify-between gap-3 rounded-control border border-line px-3 py-2.5"
               >
                 <div className="min-w-0">
-                  <div className="text-[13px] font-semibold text-ink">
+                  <div className="text-small font-semibold text-ink">
                     {formatDateTime(a.starts_at)}
                   </div>
-                  <div className="truncate text-[12px] text-ink-soft">{a.note ?? "Lịch hẹn"}</div>
+                  <div className="truncate text-label text-ink-soft">{a.note ?? "Lịch hẹn"}</div>
                 </div>
                 <Badge tone={upcoming.includes(a) ? "blue" : "gray"} dot={false}>
                   {APPOINTMENT_STATUS_LABEL[a.status]}
@@ -236,7 +224,7 @@ export function Patient360View({ data }: { data: P360 }) {
             <Muted>Chưa có liệu trình.</Muted>
           )}
           {(data.episodes ?? []).map((e) => (
-            <p key={e.id} className="mb-2 text-[13px] text-ink">
+            <p key={e.id} className="mb-2 text-small text-ink">
               <strong>{e.title}</strong>{" "}
               <span className="text-ink-soft">· từ {formatDate(e.started_on)}</span>
             </p>
@@ -248,7 +236,7 @@ export function Patient360View({ data }: { data: P360 }) {
               );
               return (
                 <li key={plan.id}>
-                  <div className="flex items-baseline justify-between gap-2 text-[13px]">
+                  <div className="flex items-baseline justify-between gap-2 text-small">
                     <span className="font-medium text-ink">{plan.title}</span>
                     <span className="text-ink-soft">
                       {plan.completed_sessions}/{plan.total_sessions} buổi
@@ -260,10 +248,10 @@ export function Patient360View({ data }: { data: P360 }) {
                     aria-valuemin={0}
                     aria-valuemax={100}
                     aria-label={`Tiến độ ${plan.title}`}
-                    className="mt-1.5 h-2 overflow-hidden rounded-full bg-tile"
+                    className="mt-1.5 h-2 overflow-hidden rounded-pill bg-tile"
                   >
                     <div
-                      className="h-full rounded-full bg-brand-500"
+                      className="h-full rounded-pill bg-brand-500"
                       style={{ width: `${percent}%` }}
                     />
                   </div>
@@ -274,7 +262,7 @@ export function Patient360View({ data }: { data: P360 }) {
           {(data.recent_sessions ?? []).length > 0 && (
             <ul className="mt-4 space-y-1.5 border-t border-line pt-3">
               {(data.recent_sessions ?? []).map((s) => (
-                <li key={s.id} className="text-[13px] text-ink-soft">
+                <li key={s.id} className="text-small text-ink-soft">
                   {formatDate(s.performed_at)} · {s.title}
                 </li>
               ))}
@@ -283,20 +271,20 @@ export function Patient360View({ data }: { data: P360 }) {
         </Card>
 
         <Card title="Ghi nhận chăm sóc (nội bộ)" section="care" active={active}>
-          <p className="mb-2 text-[12px] text-ink-soft">
+          <p className="mb-2 text-label text-ink-soft">
             Nội dung liên hệ nội bộ không hiển thị cho người bệnh.
           </p>
           {(data.recent_activities ?? []).length === 0 && <Muted>Chưa có ghi nhận.</Muted>}
           <ul className="space-y-2">
             {(data.recent_activities ?? []).map((a) => (
-              <li key={a.id} className="rounded-lg border border-line px-3 py-2.5">
-                <div className="flex flex-wrap items-center gap-x-2 text-[12px] text-ink-soft">
+              <li key={a.id} className="rounded-control border border-line px-3 py-2.5">
+                <div className="flex flex-wrap items-center gap-x-2 text-label text-ink-soft">
                   <span>{formatDateTime(a.occurred_at)}</span>
                   <span>· {CHANNEL_LABEL[a.channel]}</span>
                   {a.outcome && <span>· {OUTCOME_LABEL[a.outcome]}</span>}
                   {a.actor_name && <span>· {a.actor_name}</span>}
                 </div>
-                <p className="mt-0.5 text-[13px] text-ink">{a.note}</p>
+                <p className="mt-0.5 text-small text-ink">{a.note}</p>
               </li>
             ))}
           </ul>
@@ -309,17 +297,17 @@ export function Patient360View({ data }: { data: P360 }) {
               <li key={c.id}>
                 <Link
                   href={`/inbox?c=${c.id}`}
-                  className="block rounded-lg border border-line px-3 py-2.5 hover:bg-tile/50"
+                  className="block rounded-control border border-line px-3 py-2.5 hover:bg-tile/50"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[12px] text-ink-soft">
+                    <span className="text-label text-ink-soft">
                       {formatDateTime(c.last_message_at)}
                     </span>
                     <Badge tone="gray" dot={false}>
                       {CONVERSATION_STATUS_LABEL[c.status]}
                     </Badge>
                   </div>
-                  <p className="mt-0.5 line-clamp-2 text-[13px] text-ink">
+                  <p className="mt-0.5 line-clamp-2 text-small text-ink">
                     {c.last_message_preview}
                   </p>
                 </Link>
@@ -332,7 +320,7 @@ export function Patient360View({ data }: { data: P360 }) {
           {(data.consents ?? []).length === 0 && <Muted>Chưa ghi nhận đồng ý nào.</Muted>}
           <ul className="space-y-2">
             {(data.consents ?? []).map((c) => (
-              <li key={c.id} className="flex items-center justify-between gap-3 text-[13px]">
+              <li key={c.id} className="flex items-center justify-between gap-3 text-small">
                 <span className="text-ink">{CONSENT_KIND_LABEL[c.kind]}</span>
                 <Badge tone={c.granted ? "green" : "gray"} dot={false}>
                   {c.granted ? "Đã đồng ý" : "Chưa đồng ý"}
@@ -340,7 +328,7 @@ export function Patient360View({ data }: { data: P360 }) {
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-[12px] text-ink-soft">
+          <p className="mt-3 text-label text-ink-soft">
             Đồng ý hình ảnh và tin quảng bá được kiểm tra trước khi hệ thống chuẩn bị tin cho khách.
           </p>
         </Card>
@@ -350,17 +338,17 @@ export function Patient360View({ data }: { data: P360 }) {
           <ol className="ml-1.5 space-y-3 border-l border-line pl-4">
             {(data.timeline ?? []).slice(0, 8).map((ev) => (
               <li key={ev.id} className="relative">
-                <span className="absolute top-1.5 -left-[21px] h-2 w-2 rounded-full bg-brand-400" />
-                <div className="text-[12px] text-ink-soft">{formatDateTime(ev.at)}</div>
-                <div className="text-[13px] font-medium text-ink">{ev.title}</div>
-                {ev.detail && <div className="text-[12px] text-ink-soft">{ev.detail}</div>}
+                <span className="absolute top-1.5 -left-[21px] h-2 w-2 rounded-pill bg-brand-400" />
+                <div className="text-label text-ink-soft">{formatDateTime(ev.at)}</div>
+                <div className="text-small font-medium text-ink">{ev.title}</div>
+                {ev.detail && <div className="text-label text-ink-soft">{ev.detail}</div>}
               </li>
             ))}
           </ol>
         </Card>
       </div>
 
-      <p className="text-[12px] text-ink-soft">
+      <p className="text-label text-ink-soft">
         Patient 360 chỉ tổng hợp ngữ cảnh để xem nhanh. Hồ sơ, lịch và liệu trình gốc vẫn là nguồn
         sự thật.
       </p>

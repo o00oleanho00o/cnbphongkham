@@ -19,7 +19,7 @@ import { SelectMenuPopup } from "@/components/admin/shared/select-menu-popup";
 export type SelectOption = {
   value: string;
   label: string;
-  /** Chấm trạng thái bên trái, vd bg-emerald-500 */
+  /** Chấm trạng thái bên trái, vd bg-success */
   dotClass?: string;
   /** Chữ phụ bên phải, vd "online" */
   hint?: string;
@@ -116,10 +116,10 @@ export function SelectMenu({
             moMenu();
           }
         }}
-        className={`flex w-full items-center gap-2 rounded-lg border bg-surface text-left text-ink transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+        className={`flex w-full items-center gap-2 rounded-control border bg-surface text-left text-ink transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
           // pr rộng hơn pl một nhịp: mũi tên sát mép ô trông như bị tràn ra
           // ngoài viền, đây đúng là chỗ `<select>` native làm xấu nhất.
-          md ? "px-3 py-2 pr-3.5 text-[15px]" : "px-2.5 py-2 pr-3 text-[13px]"
+          md ? "px-3 py-2 pr-3.5 text-body-lg" : "px-2.5 py-2 pr-3 text-small"
         } ${Icon ? (md ? "pl-10" : "pl-8") : ""} ${
           open ? "border-brand-500 ring-2 ring-brand-100 dark:ring-brand-200/60" : "border-line"
         } ${disabled ? "" : "hover:bg-tile/50"}`}
@@ -130,7 +130,7 @@ export function SelectMenu({
         {/* `leading-[22px]`: chữ nhỏ đi nhưng ô phải cao y như `.gc-input` bên
             cạnh, không thì ba control trên cùng một hàng lệch nhau vài pixel */}
         {prefix && (
-          <span className="shrink-0 text-[13px] leading-[22px] font-normal text-ink-soft">
+          <span className="shrink-0 text-small leading-[22px] font-normal text-ink-soft">
             {prefix}
           </span>
         )}
@@ -158,7 +158,7 @@ export function SelectMenu({
             `truncate` lo phần thừa. */}
         <span
           className={`max-w-full min-w-0 shrink-0 grow basis-auto truncate ${
-            prefix ? "text-[13px] leading-[22px] font-semibold" : "font-medium"
+            prefix ? "text-small leading-[22px] font-semibold" : "font-medium"
           } ${current ? "" : "text-ink-soft"}`}
         >
           {current?.label ?? placeholder}
@@ -168,7 +168,7 @@ export function SelectMenu({
             không co tí nào - làm nhãn "Tài khoản bot chính thức" bị cắt thành
             "Tài khoản bot ..." trong drawer hẹp. */}
         {current?.hint && (
-          <span className="min-w-0 shrink truncate text-[11px] text-ink-soft" title={current.hint}>
+          <span className="min-w-0 shrink truncate text-micro text-ink-soft" title={current.hint}>
             {current.hint}
           </span>
         )}

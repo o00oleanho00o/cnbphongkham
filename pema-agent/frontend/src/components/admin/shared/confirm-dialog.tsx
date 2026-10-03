@@ -84,16 +84,16 @@ function ConfirmDialog({
           phủ là `fixed inset-0` nên trang cuộn cũng không kéo nó vào. `dvh`
           chứ không `vh` để trên điện thoại còn trừ đúng phần thanh địa chỉ
           đang chiếm chỗ. */}
-      <div className="max-h-[85dvh] w-full max-w-sm overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
+      <div className="max-h-[85dvh] w-full max-w-sm overflow-y-auto rounded-card bg-surface p-5 shadow-xl">
         <div className="flex gap-3.5">
           {danger && (
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-danger-soft text-danger">
               <IconWarning size={19} />
             </span>
           )}
           <div className="min-w-0 pt-0.5">
-            <h2 className="text-[15px] font-semibold text-ink">{options.title}</h2>
-            <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">{options.message}</p>
+            <h2 className="text-body-lg font-semibold text-ink">{options.title}</h2>
+            <p className="mt-1 text-small leading-relaxed text-ink-soft">{options.message}</p>
           </div>
         </div>
 
@@ -101,7 +101,7 @@ function ConfirmDialog({
           <button
             type="button"
             onClick={() => onClose(false)}
-            className="rounded-lg border border-line px-4 py-2 text-[14px] font-medium text-ink-soft hover:bg-tile"
+            className="rounded-control border border-line px-4 py-2 text-body font-medium text-ink-soft hover:bg-tile"
           >
             {options.cancelLabel ?? "Hủy"}
           </button>
@@ -109,8 +109,10 @@ function ConfirmDialog({
             ref={confirmRef}
             type="button"
             onClick={() => onClose(true)}
-            className={`rounded-lg px-4 py-2 text-[14px] font-medium text-white ${
-              danger ? "bg-red-600 hover:bg-red-700" : "bg-brand-500 hover:bg-brand-600"
+            className={`rounded-control px-4 py-2 text-body font-medium ${
+              danger
+                ? "bg-danger text-surface hover:opacity-90"
+                : "bg-brand-500 text-white hover:bg-brand-600"
             }`}
           >
             {options.confirmLabel ?? "Xóa"}

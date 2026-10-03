@@ -21,7 +21,8 @@ One token source and one small component kit for the staff web, shaped to be por
 ## Kit
 
 `AppShell` (frame), `Sidebar`, `TopBar`, `Workspace` + `PageHeading`, `Card`, `Tile`, `TableShell` (re-export of the
-dashboard table), `Tabs` + `TabPanel`, `Badge`, `Field` + `FIELD_CONTROL_CLASS`, `Dialog`, `Sheet`, `EmptyState`,
+dashboard table), `Tabs` + `TabPanel`, `Badge`, `Button` + `buttonClass` (primary, secondary, danger, danger-solid,
+quiet), `Field` + `FIELD_CONTROL_CLASS` / `FIELD_BASE_CLASS`, `Dialog`, `Sheet`, `EmptyState`,
 `GuardedLink` (asks before leaving unsaved changes). Examples of all of them: `/dev/kit` (development only; a
 production build answers 404). The data-bound shell that fills the slots is
 `components/admin/layout/app-shell.tsx`.
@@ -31,3 +32,19 @@ production build answers 404). The data-bound shell that fills the slots is
 `lib/nav.tsx` holds the menu: the old Pema Clinic Web sections first, then "Zalo & CSKH", "Care agent" and
 "Quản trị agent". An item with `planned: true` is an old screen whose page a later step builds; it shows greyed
 and unclickable and the step removes the flag. `lib/nav.test.ts` checks every page is reachable.
+
+## Restyle status (U1)
+
+Every existing route sits on the kit through the shared pieces: `PageHeader` is `PageHeading`, `SectionCard` is
+`Card`, the dashboard `Badge` maps its tones onto the kit `Badge`, `Notice`, `FilterChip`, `PrimaryButton` and
+`SecondaryButton` use the status tokens and `Button`, the care sub-navigation uses the tab look. Colours are tokens
+only (the Tailwind palette classes `red-*`, `amber-*`, `emerald-*`, `slate-*` and the `dark:` variants that went
+with them are gone; the `.dark` block of tokens.css carries the dark values). Font sizes are the token scale
+(`text-eyebrow` 10, `text-micro` 11, `text-label` 12, `text-small` 13, `text-body` 14, `text-body-lg` 15,
+`text-section` 16, `text-subtitle` 20, `text-title` 25, `text-metric` 27, `text-page` 30).
+
+`gc-card`, `gc-tile` and `gc-input` (globals.css) are compatibility aliases kept only for the pages ported from the
+zalo-agent dashboard (`/admin/accounts|agents|contacts|friends|kb|logs|mcp|memory|overview|schedules|threads|tools|
+traces|tuning` and `components/admin/**`). They are marked for removal: a page rebuilt with the kit drops them, and the
+last one to go deletes the block. Screens of this app (`components/ops`, `components/care`, the clinic routes) do not
+use them.

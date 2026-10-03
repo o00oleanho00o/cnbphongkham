@@ -103,20 +103,20 @@ export function AuditLogTable() {
                   : row.actor_type}
               </Badge>
             </td>
-            <td className="px-4 py-3 font-mono text-[12px] text-ink">{row.action}</td>
+            <td className="px-4 py-3 font-mono text-label text-ink">{row.action}</td>
             <td className="px-4 py-3 text-ink-soft">
               {row.entity_type}
               {row.entity_id ? (
                 <span className="text-ink-soft/60"> · {row.entity_id.slice(0, 8)}</span>
               ) : null}
             </td>
-            <td className="max-w-xs truncate px-4 py-3 text-[12px] text-ink-soft">
+            <td className="max-w-xs truncate px-4 py-3 text-label text-ink-soft">
               {row.details ? JSON.stringify(row.details) : "-"}
             </td>
           </tr>
         ))}
       </TableShell>
-      <p className="mt-3 text-[12px] text-ink-soft">
+      <p className="mt-3 text-label text-ink-soft">
         Nhật ký chỉ thêm, không sửa hay xóa được. Nội dung tin nhắn của bệnh nhân không được ghi ở
         đây.
       </p>

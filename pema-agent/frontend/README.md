@@ -18,6 +18,10 @@ pnpm dev:mock        # mock backend on :4010 plus next dev on :3000 (no other se
 pnpm dev             # against the real API (PEMA_API_URL, default http://127.0.0.1:8000)
 pnpm build && pnpm start
 pnpm lint && pnpm typecheck && pnpm test
+pnpm inventory       # FEATURE-INVENTORY.md against the routes and tests on disk (fails when a screen or a test disappears)
+pnpm smoke           # Playwright: every route renders, main heading and primary control visible (needs `pnpm dev:mock`)
+pnpm visual          # Playwright: every route at the 5 viewports, fails on horizontal overflow (needs `pnpm dev:mock`)
+pnpm check           # all of the above in one go (lint, types, format, tests, inventory, then smoke and visual)
 pnpm gen:types       # ../backend/apps/api/openapi.json -> src/lib/api/schema.d.ts (never edit by hand)
 pnpm shots           # Playwright: every screen at the 5 project viewports into shots/ (needs `pnpm dev:mock` running);
                      # env SHOTS_ROLE=owner|manager|doctor|cs|reception, SHOTS_ROUTES=/today,/review. It also fails on

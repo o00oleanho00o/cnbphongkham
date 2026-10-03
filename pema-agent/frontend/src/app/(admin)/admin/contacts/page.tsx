@@ -13,7 +13,7 @@ type ContactItem = Schemas["ContactRow"];
 
 const PAGE_SIZE = 50;
 import { PageHeader } from "@/components/admin/layout/page-header";
-import { IconTrash, IconUsers } from "@/components/admin/shared/dashboard-icons";
+import { IconTrash } from "@/components/admin/shared/dashboard-icons";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { AccountFilter, accountLabel } from "@/components/admin/shared/account-filter";
 import {
@@ -89,13 +89,12 @@ export default function ContactsPage() {
   return (
     <div>
       <PageHeader
-        icon={IconUsers}
         title="Danh bạ"
         subtitle="Tự thu thập từ mọi tin nhắn đến, kể cả người trợ lý AI không trả lời"
       />
 
       {error && (
-        <p role="alert" className="mb-3 text-[13px] text-red-600 dark:text-red-400">
+        <p role="alert" className="mb-3 text-small text-danger">
           {error}
         </p>
       )}
@@ -150,7 +149,7 @@ export default function ContactsPage() {
             <td className="px-4 py-3 text-right">
               <button
                 onClick={() => xoa(contact)}
-                className="rounded-lg p-1.5 text-ink-soft/60 transition-colors hover:bg-red-500/10 hover:text-red-500"
+                className="rounded-control p-1.5 text-ink-soft/60 transition-colors hover:bg-danger-soft hover:text-danger"
                 title="Xóa danh bạ"
               >
                 <IconTrash className="h-4 w-4" />
