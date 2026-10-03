@@ -45,6 +45,8 @@ export function KbSourceRow({
   onDelete,
   onViewChunks,
   onAssignAgents,
+  guideTopic,
+  onEditGuide,
 }: {
   source: KbSourceListItem;
   /** Số agent đọc được nguồn này; null = chưa biết (không có quyền xem agent hoặc đang tải) */
@@ -58,6 +60,10 @@ export function KbSourceRow({
   onViewChunks: () => void;
   /** Mở modal gán nguồn này cho agent - đường thoát khỏi ngõ cụt "nạp xong mà bot không thấy" */
   onAssignAgents: () => void;
+  /** Package U7: topic of the staff-guide article this source is ("" = no topic); null = not an article */
+  guideTopic: string | null;
+  /** `kb.manage`: mở modal đưa nguồn vào / gỡ khỏi mục Hướng dẫn; undefined = không có quyền */
+  onEditGuide?: () => void;
 }) {
   const [dangXuLyLai, setDangXuLyLai] = useState(false);
   const [loiXuLyLai, setLoiXuLyLai] = useState("");
@@ -103,6 +109,13 @@ export function KbSourceRow({
         {(source.status === "hong" ||
           (source.status === "cho_xu_ly" && (source.attempts ?? 0) > 0)) && (
           <div className="mt-0.5 text-micro text-ink-soft">Đã thử {source.attempts ?? 0} lần</div>
+        )}
+        {guideTopic !== null && (
+          <div className="mt-1">
+            <Badge tone="blue" dot={false}>
+              {guideTopic === "" ? "Hướng dẫn" : `Hướng dẫn · ${guideTopic}`}
+            </Badge>
+          </div>
         )}
         {loiXuLyLai && <div className="mt-0.5 text-label text-danger">{loiXuLyLai}</div>}
       </td>
@@ -195,6 +208,15 @@ export function KbSourceRow({
             >
               <IconUndo size={14} />
               {dangXuLyLai ? "Đang xử lý..." : "Xử lý lại"}
+            </button>
+          )}
+          {onEditGuide && (
+            <button
+              onClick={onEditGuide}
+              title="Hiện nguồn này trong mục Hướng dẫn của nhân viên"
+              className="cursor-pointer text-small text-ink-soft hover:text-ink hover:underline"
+            >
+              Nhãn hướng dẫn
             </button>
           )}
           <button
