@@ -1283,6 +1283,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/appointments/free-slot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** First free start of a day for a patient and a doctor */
+        get: operations["appointments_get_free_slot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The clinic board: one day or seven days, optionally one doctor
+         * @description Every status is returned; the screen hides cancelled and missed by default. A doctor gets only their own appointments. Declared before `/appointments/{appointment_id}` so `schedule` is not read as an id.
+         */
+        get: operations["appointments_get_schedule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/appointments/{appointment_id}": {
         parameters: {
             query?: never;
@@ -1346,6 +1383,23 @@ export interface paths {
         put?: never;
         /** Treatment finished (in_progress to completed) */
         post: operations["appointments_complete_appointment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments/{appointment_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirmed with the patient (booked to confirmed) */
+        post: operations["appointments_confirm_appointment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1886,6 +1940,26 @@ export interface paths {
         put?: never;
         /** Log a contact attempt and close or reschedule the task */
         post: operations["crm_resolve_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/kpis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Clinic KPIs for today, this week or this month
+         * @description Only numbers the database holds. `appointments` and `patients` need `appointment.read`, `care` needs `crm.task.read`; a block the caller may not read is null. A doctor gets own appointments only. No revenue: there is no finance data until package U6.
+         */
+        get: operations["dashboard_get_kpis"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2679,6 +2753,37 @@ export interface components {
              */
             starts_at: string;
         };
+        /**
+         * AppointmentKpis
+         * @description Appointments whose start falls in the range, counted by their status now.
+         */
+        AppointmentKpis: {
+            /** Cancelled */
+            cancelled: number;
+            /** Completed */
+            completed: number;
+            /** In Progress */
+            in_progress: number;
+            /** Missed */
+            missed: number;
+            /** Total */
+            total: number;
+            /**
+             * Upcoming
+             * @description booked + confirmed: not arrived yet.
+             */
+            upcoming: number;
+            /**
+             * Visits
+             * @description Came to the clinic: arrived + in_progress + completed.
+             */
+            visits: number;
+            /**
+             * Waiting
+             * @description arrived: in the waiting room.
+             */
+            waiting: number;
+        };
         /** AppointmentOut */
         AppointmentOut: {
             /** Cancel Reason */
@@ -2921,6 +3026,52 @@ export interface components {
          * @enum {string}
          */
         CareDepth: "D1" | "D2" | "D3" | "D4" | "D5";
+        /**
+         * CareKpis
+         * @description CSKH numbers (need ``crm.task.read``). Rates are whole percents, ``None`` when there is nothing to
+         *     divide by (never a made-up 0%).
+         */
+        CareKpis: {
+            /**
+             * Booked After Care
+             * @description Contacts in the range that ended in an appointment.
+             */
+            booked_after_care: number;
+            /**
+             * Contact Attempts
+             * @description Logged contacts in the range, internal notes excluded.
+             */
+            contact_attempts: number;
+            /** Contact Rate Pct */
+            contact_rate_pct?: number | null;
+            /**
+             * Contacts Reached
+             * @description Of those, not unanswered or invalid.
+             */
+            contacts_reached: number;
+            /** Followup Completion Pct */
+            followup_completion_pct?: number | null;
+            /**
+             * Overdue Patients
+             * @description Distinct patients of those tasks.
+             */
+            overdue_patients: number;
+            /**
+             * Overdue Tasks
+             * @description Open or rescheduled, due before today.
+             */
+            overdue_tasks: number;
+            /**
+             * Tasks Due
+             * @description Tasks whose due day is in the range.
+             */
+            tasks_due: number;
+            /**
+             * Tasks Resolved
+             * @description Of those, resolved.
+             */
+            tasks_resolved: number;
+        };
         /**
          * CareLevel
          * @description Autonomy level of the agent: L0 drafts only, L1 approved templates, L2 plus KB answers.
@@ -3564,6 +3715,38 @@ export interface components {
             /** Turns */
             turns: number;
         };
+        /** DashboardKpisOut */
+        DashboardKpisOut: {
+            /** @description Null when the caller lacks ``appointment.read``. */
+            appointments?: components["schemas"]["AppointmentKpis"] | null;
+            /** @description Null when the caller lacks ``crm.task.read``. */
+            care?: components["schemas"]["CareKpis"] | null;
+            /**
+             * Ends On
+             * Format: date
+             * @description Inclusive.
+             */
+            ends_on: string;
+            /** @description Null with ``appointments``. */
+            patients?: components["schemas"]["PatientKpis"] | null;
+            range: components["schemas"]["DashboardRange"];
+            scope: components["schemas"]["DashboardScope"];
+            /**
+             * Starts On
+             * Format: date
+             */
+            starts_on: string;
+        };
+        /**
+         * DashboardRange
+         * @enum {string}
+         */
+        DashboardRange: "today" | "week" | "month";
+        /**
+         * DashboardScope
+         * @enum {string}
+         */
+        DashboardScope: "clinic" | "doctor";
         /** DepthRowOut */
         DepthRowOut: {
             from_depth: components["schemas"]["CareDepth"];
@@ -3629,6 +3812,15 @@ export interface components {
             kind: "every";
             /** Minutes */
             minutes: number;
+        };
+        /**
+         * FreeSlotOut
+         * @description First start the validator accepts for the given patient, doctor, day and duration; ``None`` when the
+         *     day has none (prototype: ``Khong co gio trong``).
+         */
+        FreeSlotOut: {
+            /** Starts At */
+            starts_at?: string | null;
         };
         /** FriendDecision */
         FriendDecision: {
@@ -4113,7 +4305,7 @@ export interface components {
          * LiveEventType
          * @enum {string}
          */
-        LiveEventType: "inbox.changed" | "tasks.changed" | "review.changed" | "presence.changed" | "handoff.changed" | "care.changed";
+        LiveEventType: "inbox.changed" | "tasks.changed" | "review.changed" | "presence.changed" | "handoff.changed" | "appointments.changed" | "care.changed";
         /**
          * LlmProviderKind
          * @description ``LLM_PROVIDER_KINDS`` of src/config/llm-provider-kind.ts.
@@ -4954,6 +5146,19 @@ export interface components {
             /** Source */
             source?: string | null;
         };
+        /**
+         * PatientKpis
+         * @description ``seen`` = distinct patients with a visit in the range; ``new`` of them had their first contact in the
+         *     range (``patient.first_contact_at``), ``returning`` is the rest.
+         */
+        PatientKpis: {
+            /** New */
+            new: number;
+            /** Returning */
+            returning: number;
+            /** Seen */
+            seen: number;
+        };
         /** PatientOut */
         PatientOut: {
             /** Birth Date */
@@ -5410,12 +5615,100 @@ export interface components {
              */
             timezone: string;
         };
+        /**
+         * ScheduleDoctor
+         * @description A doctor the schedule can be filtered by (active doctor or owner of the clinic).
+         */
+        ScheduleDoctor: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
         ScheduleInput: components["schemas"]["OnceAtInput"] | components["schemas"]["OnceInMinutesInput"] | components["schemas"]["EveryInput"] | components["schemas"]["CronInput"];
+        /**
+         * ScheduleItem
+         * @description One row of the schedule: the appointment plus the two names a reception desk reads on the board.
+         *     ``patient_name`` is filled only for a caller that holds ``patient.read``.
+         */
+        ScheduleItem: {
+            /** Cancel Reason */
+            cancel_reason?: string | null;
+            /** Cancelled At */
+            cancelled_at?: string | null;
+            /** Created By */
+            created_by?: string | null;
+            /** Doctor Id */
+            doctor_id: string | null;
+            /** Doctor Name */
+            doctor_name?: string | null;
+            /** Duration Min */
+            duration_min: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Missed At */
+            missed_at?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Patient Code */
+            patient_code: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** Patient Name */
+            patient_name?: string | null;
+            /**
+             * Starts At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            starts_at: string;
+            status: components["schemas"]["AppointmentStatus"];
+            /**
+             * Version
+             * @description Optimistic lock counter; send it back on PATCH/transitions.
+             */
+            version: number;
+        };
         /**
          * ScheduleKind
          * @enum {string}
          */
         ScheduleKind: "once" | "every" | "cron";
+        /**
+         * ScheduleOut
+         * @description The day (or the 7 days from ``from_day``) of the clinic board, oldest first. A doctor's own call lists
+         *     only that doctor's appointments.
+         */
+        ScheduleOut: {
+            /** Doctor Id */
+            doctor_id?: string | null;
+            /** Doctors */
+            doctors: components["schemas"]["ScheduleDoctor"][];
+            /**
+             * From Day
+             * Format: date
+             */
+            from_day: string;
+            /** Items */
+            items: components["schemas"]["ScheduleItem"][];
+            /**
+             * To Day
+             * Format: date
+             * @description Last day, inclusive (same as ``from_day`` for the day view).
+             */
+            to_day: string;
+            view: components["schemas"]["ScheduleView"];
+        };
         /** ScheduleUpdate */
         ScheduleUpdate: {
             /** Enabled */
@@ -5430,6 +5723,11 @@ export interface components {
             /** Timezone */
             timezone?: string | null;
         };
+        /**
+         * ScheduleView
+         * @enum {string}
+         */
+        ScheduleView: "day" | "week";
         /**
          * ScheduledJob
          * @description A job's CURRENT state. History of runs is ``JobRunRecord``.
@@ -14836,6 +15134,181 @@ export interface operations {
             };
         };
     };
+    appointments_get_free_slot: {
+        parameters: {
+            query: {
+                patient_id: string;
+                day: string;
+                doctor_id?: string | null;
+                duration_min?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FreeSlotOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appointments_get_schedule: {
+        parameters: {
+            query: {
+                day: string;
+                view?: components["schemas"]["ScheduleView"];
+                doctor_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     appointments_get_appointment: {
         parameters: {
             query?: never;
@@ -15189,6 +15662,95 @@ export interface operations {
         };
     };
     appointments_complete_appointment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appointment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppointmentTransition"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appointments_confirm_appointment: {
         parameters: {
             query?: never;
             header?: never;
@@ -18515,6 +19077,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CrmTaskOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    dashboard_get_kpis: {
+        parameters: {
+            query?: {
+                range?: components["schemas"]["DashboardRange"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardKpisOut"];
                 };
             };
             /** @description Not authenticated. */

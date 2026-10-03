@@ -30,6 +30,7 @@ EVENT_PERMISSION: dict[LiveEventType, Permission] = {
     LiveEventType.PRESENCE_CHANGED: Permission.CONVERSATION_READ,
     LiveEventType.REVIEW_CHANGED: Permission.REVIEW_READ,
     LiveEventType.TASKS_CHANGED: Permission.CRM_TASK_READ,
+    LiveEventType.APPOINTMENTS_CHANGED: Permission.APPOINTMENT_READ,
     LiveEventType.HANDOFF_CHANGED: Permission.CARE_READ,
     LiveEventType.CARE_CHANGED: Permission.CARE_READ,
 }

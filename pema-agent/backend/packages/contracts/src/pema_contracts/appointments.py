@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from enum import StrEnum
 from uuid import UUID
 
@@ -61,3 +62,42 @@ class AppointmentTransition(ApiModel):
 
     version: int
     reason: str | None = Field(default=None, max_length=500)
+
+
+class ScheduleView(StrEnum):
+    DAY = "day"
+    WEEK = "week"
+
+
+class ScheduleItem(AppointmentOut):
+    """One row of the schedule: the appointment plus the two names a reception desk reads on the board.
+    ``patient_name`` is filled only for a caller that holds ``patient.read``."""
+
+    patient_name: str | None = None
+    doctor_name: str | None = None
+
+
+class ScheduleDoctor(ApiModel):
+    """A doctor the schedule can be filtered by (active doctor or owner of the clinic)."""
+
+    id: UUID
+    name: str
+
+
+class ScheduleOut(ApiModel):
+    """The day (or the 7 days from ``from_day``) of the clinic board, oldest first. A doctor's own call lists
+    only that doctor's appointments."""
+
+    view: ScheduleView
+    from_day: date
+    to_day: date = Field(description="Last day, inclusive (same as ``from_day`` for the day view).")
+    doctor_id: UUID | None = None
+    items: list[ScheduleItem]
+    doctors: list[ScheduleDoctor]
+
+
+class FreeSlotOut(ApiModel):
+    """First start the validator accepts for the given patient, doctor, day and duration; ``None`` when the
+    day has none (prototype: ``Khong co gio trong``)."""
+
+    starts_at: VnDatetime | None = None
