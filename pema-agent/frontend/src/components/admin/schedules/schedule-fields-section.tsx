@@ -50,12 +50,9 @@ export function ScheduleFieldsSection({
   onChange: (patch: ScheduleFieldsPatch) => void;
 }) {
   return (
-    <div className="space-y-3 rounded-xl border border-line p-4">
+    <div className="space-y-3 rounded-tile border border-line p-4">
       <div>
-        <label
-          htmlFor="sch-schedule-kind"
-          className="mb-1.5 block text-[13px] font-medium text-ink"
-        >
+        <label htmlFor="sch-schedule-kind" className="mb-1.5 block text-small font-medium text-ink">
           Kiểu lịch
         </label>
         <SelectMenu
@@ -69,10 +66,7 @@ export function ScheduleFieldsSection({
       {scheduleKind === "once" && (
         <div className="flex gap-3">
           <div className="flex-1">
-            <label
-              htmlFor="sch-once-date"
-              className="mb-1.5 block text-[13px] font-medium text-ink"
-            >
+            <label htmlFor="sch-once-date" className="mb-1.5 block text-small font-medium text-ink">
               Ngày <span className="font-normal text-ink-soft">(giờ {timezone})</span>
             </label>
             <input
@@ -84,10 +78,7 @@ export function ScheduleFieldsSection({
             />
           </div>
           <div className="flex-1">
-            <label
-              htmlFor="sch-once-time"
-              className="mb-1.5 block text-[13px] font-medium text-ink"
-            >
+            <label htmlFor="sch-once-time" className="mb-1.5 block text-small font-medium text-ink">
               Giờ <span className="font-normal text-ink-soft">(giờ {timezone})</span>
             </label>
             <input
@@ -105,7 +96,7 @@ export function ScheduleFieldsSection({
         <div>
           <label
             htmlFor="sch-every-minutes"
-            className="mb-1.5 block text-[13px] font-medium text-ink"
+            className="mb-1.5 block text-small font-medium text-ink"
           >
             Lặp lại mỗi (phút)
           </label>
@@ -122,7 +113,7 @@ export function ScheduleFieldsSection({
 
       {scheduleKind === "cron" && (
         <div>
-          <label htmlFor="sch-cron-expr" className="mb-1.5 block text-[13px] font-medium text-ink">
+          <label htmlFor="sch-cron-expr" className="mb-1.5 block text-small font-medium text-ink">
             Biểu thức cron <span className="font-normal text-ink-soft">(giờ {timezone})</span>
           </label>
           <input
@@ -133,7 +124,7 @@ export function ScheduleFieldsSection({
             placeholder="0 7 * * * (7h sáng mỗi ngày)"
           />
           {job && job.schedule_kind === "cron" && (
-            <p className="mt-1.5 text-[12px] leading-[1.6] text-ink-soft">
+            <p className="mt-1.5 text-label leading-[1.6] text-ink-soft">
               Lần kế tiếp hiện tại (theo lịch đang lưu): {formatBotTime(job.next_run_at, timezone)}
             </p>
           )}

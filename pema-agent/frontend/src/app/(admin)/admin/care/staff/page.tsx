@@ -67,11 +67,14 @@ function StaffContent() {
       )}
       <ul className="grid gap-3 md:grid-cols-2">
         {data?.items.map((profile) => (
-          <li key={profile.user_id} className="gc-card p-4">
+          <li
+            key={profile.user_id}
+            className="rounded-card border border-line bg-surface p-4 shadow-card"
+          >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
-                <h2 className="text-[15px] font-semibold text-ink">{profile.name}</h2>
-                <p className="text-[12px] text-ink-soft">
+                <h2 className="text-body-lg font-semibold text-ink">{profile.name}</h2>
+                <p className="text-label text-ink-soft">
                   {ROLE_LABEL[profile.role as keyof typeof ROLE_LABEL] ?? "Nhân viên"} · đang giữ{" "}
                   {profile.load}/{profile.capacity} cuộc trò chuyện
                 </p>
@@ -80,7 +83,7 @@ function StaffContent() {
             </div>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {profile.skills.length === 0 && (
-                <span className="text-[13px] text-ink-soft">Chưa có kỹ năng</span>
+                <span className="text-small text-ink-soft">Chưa có kỹ năng</span>
               )}
               {profile.skills.map((s) => (
                 <Badge key={s} tone="blue" dot={false}>
@@ -88,7 +91,7 @@ function StaffContent() {
                 </Badge>
               ))}
             </div>
-            <p className="mt-3 text-[12px] leading-relaxed text-ink-soft">
+            <p className="mt-3 text-label leading-relaxed text-ink-soft">
               {shiftSummary(profile.shift)}
             </p>
             <span className="sr-only">{WEEKDAYS.map((d) => WEEKDAY_LABEL[d]).join(", ")}</span>

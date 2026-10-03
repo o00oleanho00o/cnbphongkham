@@ -69,17 +69,17 @@ export function AgentCard({
         <Avatar icon={agent.icon} nho />
         <div className="min-w-0 flex-1">
           <TenVaNhan agent={agent} providerChung={providerChung} />
-          <p className="truncate text-[12px] text-ink-soft">
+          <p className="truncate text-label text-ink-soft">
             {agent.persona || "(chưa có persona - dùng giọng mặc định của bot)"}
           </p>
         </div>
-        <span className="hidden shrink-0 text-[12px] text-ink-soft sm:block">
+        <span className="hidden shrink-0 text-label text-ink-soft sm:block">
           {moTaAccount(agent)}
         </span>
         <button
           type="button"
           onClick={onSua}
-          className="shrink-0 rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-ink hover:bg-tile"
+          className="shrink-0 rounded-control border border-line px-3 py-1.5 text-small font-medium text-ink hover:bg-tile"
         >
           Sửa
         </button>
@@ -94,8 +94,8 @@ export function AgentCard({
         <Avatar icon={agent.icon} />
         <div className="min-w-0 flex-1">
           <TenVaNhan agent={agent} providerChung={providerChung} />
-          <div className="text-[12px] text-ink-soft/60">{agent.id}</div>
-          <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-ink-soft">
+          <div className="text-label text-ink-soft/60">{agent.id}</div>
+          <p className="mt-2 line-clamp-2 text-small leading-relaxed text-ink-soft">
             {agent.persona || "(chưa có persona - dùng giọng mặc định của bot)"}
           </p>
         </div>
@@ -105,7 +105,7 @@ export function AgentCard({
       {moRong && <ChiTiet agent={agent} />}
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line/70 pt-3">
-        <span className="flex items-center gap-2 text-[12px] text-ink-soft">
+        <span className="flex items-center gap-2 text-label text-ink-soft">
           <IconUsers size={15} className="text-ink-soft/70" />
           {moTaAccount(agent)}
         </span>
@@ -113,7 +113,7 @@ export function AgentCard({
           <button
             type="button"
             onClick={() => setMoRong((v) => !v)}
-            className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-ink-soft hover:bg-tile hover:text-ink"
+            className="flex items-center gap-1.5 rounded-control border border-line px-3 py-1.5 text-small font-medium text-ink-soft hover:bg-tile hover:text-ink"
           >
             {moRong ? <IconEyeOff size={15} /> : <IconEye size={15} />}
             {moRong ? "Thu gọn" : "Xem chi tiết"}
@@ -121,7 +121,7 @@ export function AgentCard({
           <button
             type="button"
             onClick={onSua}
-            className="flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-[13px] font-medium text-brand-700 hover:bg-brand-100 dark:border-brand-200 dark:text-brand-700"
+            className="flex items-center gap-1.5 rounded-control border border-brand-200 bg-brand-50 px-3 py-1.5 text-small font-medium text-brand-700 hover:bg-brand-100 dark:border-brand-200 dark:text-brand-700"
           >
             <IconPencil size={15} />
             Sửa
@@ -141,8 +141,8 @@ function moTaAccount(a: ManagedAgent): string {
 function Avatar({ icon, nho }: { icon: string; nho?: boolean }) {
   return (
     <span
-      className={`flex shrink-0 items-center justify-center rounded-2xl bg-tile ${
-        nho ? "h-10 w-10 text-[20px]" : "h-14 w-14 text-[28px]"
+      className={`flex shrink-0 items-center justify-center rounded-card bg-tile ${
+        nho ? "h-10 w-10 text-subtitle" : "h-14 w-14 text-page"
       }`}
     >
       {icon}
@@ -159,7 +159,7 @@ function TenVaNhan({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-[15px] font-semibold text-ink">{agent.name}</span>
+      <span className="text-body-lg font-semibold text-ink">{agent.name}</span>
       {agent.is_default && (
         <Badge tone="blue" dot={false}>
           Mặc định
@@ -211,9 +211,9 @@ function ChiTiet({ agent }: { agent: ManagedAgent }) {
     },
   ];
   return (
-    <dl className="mt-4 space-y-1.5 rounded-xl bg-tile/60 px-4 py-3">
+    <dl className="mt-4 space-y-1.5 rounded-tile bg-tile/60 px-4 py-3">
       {dong.map((d) => (
-        <div key={d.nhan} className="flex flex-wrap justify-between gap-x-4 text-[12px]">
+        <div key={d.nhan} className="flex flex-wrap justify-between gap-x-4 text-label">
           <dt className="text-ink-soft">{d.nhan}</dt>
           <dd className="min-w-0 text-right text-ink">{d.giaTri}</dd>
         </div>

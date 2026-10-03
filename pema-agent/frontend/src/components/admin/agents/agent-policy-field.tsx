@@ -32,13 +32,13 @@ export function AgentPolicyField({
               role="radio"
               aria-checked={selected}
               onClick={() => onChange(key)}
-              className={`rounded-xl border p-3 text-left transition-colors ${
+              className={`rounded-tile border p-3 text-left transition-colors ${
                 selected
                   ? "border-brand-500 bg-brand-50"
                   : "border-line bg-surface hover:bg-tile/60"
               }`}
             >
-              <span className="flex items-center gap-2 text-[14px] font-semibold text-ink">
+              <span className="flex items-center gap-2 text-body font-semibold text-ink">
                 <span
                   className={`flex h-4 w-4 items-center justify-center rounded-full border ${
                     selected ? "border-brand-500" : "border-line"
@@ -48,10 +48,10 @@ export function AgentPolicyField({
                 </span>
                 {NHAN_HO_SO[key]}
               </span>
-              <span className="mt-1.5 block text-[12px] leading-relaxed text-ink-soft">
+              <span className="mt-1.5 block text-label leading-relaxed text-ink-soft">
                 {MO_TA_HO_SO[key][0]}
               </span>
-              <span className="mt-1 block text-[12px] leading-relaxed text-ink-soft">
+              <span className="mt-1 block text-label leading-relaxed text-ink-soft">
                 {MO_TA_HO_SO[key][1]}
               </span>
             </button>

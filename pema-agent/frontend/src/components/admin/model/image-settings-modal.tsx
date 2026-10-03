@@ -122,8 +122,8 @@ export function ImageSettingsModal({
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <div className="text-[13px] font-medium text-ink">Bật vẽ ảnh</div>
-              <div className="text-[12px] text-ink-soft">Tắt thì bot không có công cụ vẽ ảnh.</div>
+              <div className="text-small font-medium text-ink">Bật vẽ ảnh</div>
+              <div className="text-label text-ink-soft">Tắt thì bot không có công cụ vẽ ảnh.</div>
             </div>
             <button
               type="button"
@@ -178,13 +178,13 @@ export function ImageSettingsModal({
           </ModalField>
         </div>
 
-        <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-2.5 text-[12px] leading-[1.6] text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
+        <div className="rounded-tile border border-warning-line bg-warning-soft px-4 py-2.5 text-label leading-[1.6] text-warning">
           Mỗi ảnh mất khoảng 1 phút và tốn phí của nhà cung cấp. Hồ sơ chính sách Kênh bệnh nhân tắt
           công cụ này bất kể cấu hình ở đây.
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-[13px] text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+          <div className="rounded-tile border border-danger-line bg-danger-soft px-4 py-2.5 text-small text-danger">
             {error}
           </div>
         )}

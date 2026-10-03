@@ -32,17 +32,17 @@ export function HandoffCard({
   return (
     <article
       aria-label={`Yêu cầu của ${item.patient_name}`}
-      className={`gc-card p-4 sm:p-5 ${item.urgency === "urgent" ? "border-red-300 dark:border-red-900/60" : ""}`}
+      className={`rounded-card border border-line bg-surface p-4 shadow-card sm:p-5 ${item.urgency === "urgent" ? "border-danger-line" : ""}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <Link
             href={`/care/patients/${item.patient_id}/timeline`}
-            className="text-[16px] font-semibold text-ink hover:text-brand-500"
+            className="text-section font-semibold text-ink hover:text-brand-500"
           >
             {item.patient_name}
           </Link>
-          <p className="mt-0.5 text-[12px] text-ink-soft">
+          <p className="mt-0.5 text-label text-ink-soft">
             Mở {ageText(item.opened_at, now)} · bước {item.position}/{item.chain_length} trong chuỗi
           </p>
         </div>
@@ -52,10 +52,10 @@ export function HandoffCard({
         </div>
       </div>
 
-      <p className="mt-3 text-[14px] font-medium text-ink">{reasonLabel(item.reason)}</p>
-      <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">{item.summary}</p>
+      <p className="mt-3 text-body font-medium text-ink">{reasonLabel(item.reason)}</p>
+      <p className="mt-1 text-small leading-relaxed text-ink-soft">{item.summary}</p>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-[12px] text-ink-soft">
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-label text-ink-soft">
         {item.required_skill && <Badge tone="gray">Cần: {skillLabel(item.required_skill)}</Badge>}
         <span>Độ tin cậy của agent {Math.round(item.confidence * 100)}%</span>
         {item.on_call_step && <Badge tone="amber">Đã tới số trực 24/24</Badge>}
@@ -63,11 +63,7 @@ export function HandoffCard({
         {sla && (
           <span
             className={`inline-flex items-center gap-1 font-medium ${
-              sla.overdue
-                ? "text-red-700 dark:text-red-300"
-                : sla.soon
-                  ? "text-amber-700 dark:text-amber-300"
-                  : ""
+              sla.overdue ? "text-danger" : sla.soon ? "text-warning" : ""
             }`}
           >
             <IconClock size={14} />
@@ -77,7 +73,7 @@ export function HandoffCard({
       </div>
 
       {error && (
-        <p role="alert" className="mt-3 text-[13px] text-red-700 dark:text-red-300">
+        <p role="alert" className="mt-3 text-small text-danger">
           {error}
         </p>
       )}

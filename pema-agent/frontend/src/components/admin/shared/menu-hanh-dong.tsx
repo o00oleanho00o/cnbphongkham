@@ -47,7 +47,7 @@ export function MenuHanhDong({
         aria-haspopup="menu"
         aria-expanded={mo}
         onClick={() => setMo((v) => !v)}
-        className="rounded-lg p-1.5 text-ink-soft transition-colors hover:bg-tile hover:text-ink"
+        className="rounded-control p-1.5 text-ink-soft transition-colors hover:bg-tile hover:text-ink"
       >
         <IconDots size={16} />
       </button>
@@ -55,7 +55,7 @@ export function MenuHanhDong({
       {mo && (
         <div
           role="menu"
-          className="absolute top-[calc(100%+4px)] right-0 z-30 min-w-40 overflow-hidden rounded-xl border border-line bg-surface py-1 shadow-lg shadow-ink/10"
+          className="absolute top-[calc(100%+4px)] right-0 z-30 min-w-40 overflow-hidden rounded-tile border border-line bg-surface py-1 shadow-lg shadow-ink/10"
         >
           {children(() => setMo(false))}
         </div>
@@ -84,10 +84,8 @@ export function MucMenu({
       role="menuitem"
       disabled={disabled}
       onClick={onClick}
-      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-        nguyHiem
-          ? "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
-          : "text-ink hover:bg-tile"
+      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-small transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+        nguyHiem ? "text-danger hover:bg-danger-soft" : "text-ink hover:bg-tile"
       }`}
     >
       {Icon && <Icon size={14} className="shrink-0" />}

@@ -6,13 +6,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { IconSearch } from "@/components/admin/shared/dashboard-icons";
-import { IconUser } from "@/components/admin/shared/ops-icons";
 import { Badge, InitialAvatar } from "@/components/admin/shared/ui-bits";
 import { EmptyState, ListSkeleton, RetryNotice } from "@/components/ops/ops-ui";
 import { http, unwrap } from "@/lib/api/client";
 import { ageYears } from "@/lib/ops/format";
 import { GENDER_LABEL } from "@/lib/ops/labels";
 import { useLoad } from "@/lib/use-load";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 const SEARCH_DEBOUNCE_MS = 300;
 const PAGE_SIZE = 50;
@@ -40,9 +41,8 @@ export default function PatientsPage() {
   const items = useMemo(() => data?.items ?? [], [data]);
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div>
       <PageHeader
-        icon={IconUser}
         title="Hồ sơ bệnh nhân"
         subtitle="Tra cứu và xem Patient 360: lịch hẹn, liệu trình, chăm sóc và hội thoại"
       />
@@ -57,7 +57,7 @@ export default function PatientsPage() {
           onChange={(e) => setQuery(e.target.value)}
           aria-label="Tìm bệnh nhân"
           placeholder="Tìm theo tên hoặc mã hồ sơ"
-          className="gc-input w-full pl-9"
+          className={cx(FIELD_BASE_CLASS, "w-full pl-9")}
         />
       </div>
 
@@ -70,21 +70,21 @@ export default function PatientsPage() {
         />
       )}
 
-      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 wide:grid-cols-4">
         {items.map((p) => {
           const age = ageYears(p.birth_date);
           return (
             <li key={p.id}>
               <Link
                 href={`/patients/${p.id}`}
-                className="gc-card flex min-h-[68px] items-center gap-3 px-3.5 py-3 hover:bg-tile/50"
+                className="flex min-h-[68px] items-center gap-3 rounded-card border border-line bg-surface px-3.5 py-3 shadow-card hover:bg-tile/50"
               >
                 <InitialAvatar name={p.full_name} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] font-semibold text-ink">
+                  <span className="block truncate text-body font-semibold text-ink">
                     {p.full_name}
                   </span>
-                  <span className="block truncate text-[12px] text-ink-soft">
+                  <span className="block truncate text-label text-ink-soft">
                     {p.code} · {GENDER_LABEL[p.gender ?? "unknown"]}
                     {age !== null ? ` · ${age} tuổi` : ""}
                     {p.doctor_name ? ` · ${p.doctor_name}` : ""}
@@ -101,7 +101,7 @@ export default function PatientsPage() {
         })}
       </ul>
       {data && data.total > items.length && (
-        <p className="mt-3 text-[13px] text-ink-soft">
+        <p className="mt-3 text-small text-ink-soft">
           Hiển thị {items.length}/{data.total}. Gõ thêm để thu hẹp kết quả.
         </p>
       )}

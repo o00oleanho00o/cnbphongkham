@@ -56,11 +56,11 @@ function AlertsContent() {
         {data?.items.map((alert) => (
           <li
             key={alert.id}
-            className="gc-card flex flex-wrap items-center justify-between gap-2 p-4"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-card border border-line bg-surface p-4 shadow-card"
           >
             <div className="min-w-0">
               <Badge tone={TONE[alert.kind]}>{ALERT_KIND_LABEL[alert.kind]}</Badge>
-              <p className="mt-1 text-[14px] text-ink">
+              <p className="mt-1 text-body text-ink">
                 {alert.patient_id && alert.patient_name ? (
                   <Link
                     href={`/care/patients/${alert.patient_id}/timeline`}
@@ -74,7 +74,7 @@ function AlertsContent() {
                 {detailOf(alert.code)}
               </p>
             </div>
-            <span className="text-[12px] text-ink-soft">{formatDateTime(alert.at)}</span>
+            <span className="text-label text-ink-soft">{formatDateTime(alert.at)}</span>
           </li>
         ))}
       </ul>

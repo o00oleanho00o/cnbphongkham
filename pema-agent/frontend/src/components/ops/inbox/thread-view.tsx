@@ -40,6 +40,8 @@ import { presenceStateFor, presenceText, someoneReplying } from "@/lib/ops/prese
 import { useSession } from "@/lib/session/session-context";
 import { useAssignableStaff } from "@/lib/staff/use-assignable-staff";
 import { useLoad } from "@/lib/use-load";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 type Conversation = Schemas["ConversationOut"];
 type Message = Schemas["MessageOut"];
@@ -66,7 +68,7 @@ function MessageBubble({ message }: { message: Message }) {
   const tone = inbound
     ? "bg-surface border-line text-ink"
     : draft
-      ? "border-2 border-dashed border-amber-400 bg-amber-50 text-ink dark:bg-amber-950/30"
+      ? "border-2 border-dashed border-warning-line bg-warning-soft text-ink"
       : system
         ? "bg-tile text-ink-soft border-line"
         : "bg-brand-500 text-white border-brand-500";
@@ -74,10 +76,10 @@ function MessageBubble({ message }: { message: Message }) {
   return (
     <li className={`flex flex-col gap-1 ${align}`}>
       <div
-        className={`max-w-[88%] rounded-2xl border px-3.5 py-2.5 text-[14px] leading-relaxed sm:max-w-[75%] ${tone}`}
+        className={`max-w-[88%] rounded-card border px-3.5 py-2.5 text-body leading-relaxed sm:max-w-[75%] ${tone}`}
       >
         {message.body === null ? (
-          <span className="inline-flex items-center gap-2 text-[13px] text-ink-soft">
+          <span className="inline-flex items-center gap-2 text-small text-ink-soft">
             <IconImageOff size={18} />
             Tin không có chữ (ảnh hoặc tệp). Hệ thống không phân tích ảnh; nhân viên xem trực tiếp.
           </span>
@@ -85,7 +87,7 @@ function MessageBubble({ message }: { message: Message }) {
           <span className="whitespace-pre-wrap">{message.body}</span>
         )}
       </div>
-      <div className="flex flex-wrap items-center gap-1.5 px-1 text-[11px] text-ink-soft">
+      <div className="flex flex-wrap items-center gap-1.5 px-1 text-micro text-ink-soft">
         <span>{SENDER_LABEL[message.sender_type]}</span>
         <span>·</span>
         <span>{formatDateTime(message.created_at)}</span>
@@ -280,13 +282,13 @@ export function ThreadView({
   }
 
   return (
-    <section className="gc-card flex min-h-[60dvh] flex-col lg:max-h-[calc(100dvh-9rem)]">
+    <section className="flex min-h-[60dvh] flex-col rounded-card border border-line bg-surface shadow-card lg:max-h-[calc(100dvh-9rem)]">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
         <div className="min-w-0">
-          <h2 className="truncate text-[16px] font-semibold text-ink">
+          <h2 className="truncate text-section font-semibold text-ink">
             {conversationTitle(conversation)}
           </h2>
-          <p className="text-[12px] text-ink-soft">
+          <p className="text-label text-ink-soft">
             {conversation.patient_id ? (
               <Link
                 href={`/patients/${conversation.patient_id}`}
@@ -348,7 +350,7 @@ export function ThreadView({
             action={
               <Link
                 href={`/review?i=${redFlags[0]?.id}`}
-                className="text-[13px] font-semibold underline"
+                className="text-small font-semibold underline"
               >
                 Mở cảnh báo
               </Link>
@@ -364,7 +366,7 @@ export function ThreadView({
             action={
               <Link
                 href={`/review?i=${mediaFlags[0]?.id}`}
-                className="text-[13px] font-semibold underline"
+                className="text-small font-semibold underline"
               >
                 Mở mục xử lý
               </Link>
@@ -420,10 +422,10 @@ export function ThreadView({
             placeholder={
               closed ? "Hội thoại đã đóng, mở lại để nhắn." : "Nhập tin trả lời khách..."
             }
-            className="gc-input w-full resize-y"
+            className={cx(FIELD_BASE_CLASS, "w-full resize-y")}
           />
           <div className="mt-2 flex items-center justify-between gap-2">
-            <span className="text-[12px] text-ink-soft">
+            <span className="text-label text-ink-soft">
               {text.length}/{MAX_REPLY} · Tin do nhân viên soạn và gửi.
             </span>
             <PrimaryButton type="submit" disabled={sending || closed || !text.trim()}>

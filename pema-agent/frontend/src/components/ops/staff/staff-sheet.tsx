@@ -24,6 +24,8 @@ import {
   type StaffUser,
 } from "@/lib/ops/staff-view";
 import { ROLE_LABEL } from "@/lib/session/session-context";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 const ROLE_OPTIONS: SelectOption[] = STAFF_ROLES.map((role) => ({
   value: role,
@@ -126,7 +128,7 @@ export function StaffSheet({
             onChange={(e) => setDisplayName(e.target.value)}
             maxLength={MAX_NAME_LENGTH}
             autoComplete="off"
-            className="gc-input w-full"
+            className={cx(FIELD_BASE_CLASS, "w-full")}
           />
         </Field>
         <Field
@@ -142,7 +144,7 @@ export function StaffSheet({
             disabled={staff !== null}
             maxLength={254}
             autoComplete="off"
-            className="gc-input w-full disabled:opacity-60"
+            className={cx(FIELD_BASE_CLASS, "w-full disabled:opacity-60")}
           />
         </Field>
         <Field

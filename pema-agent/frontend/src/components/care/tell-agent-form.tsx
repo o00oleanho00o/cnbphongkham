@@ -14,6 +14,8 @@ import type { PatientCareTimeline } from "@/lib/care/care-types";
 import { INSTRUCTION_MAX, instructionError } from "@/lib/care/forms";
 import { MEMORY_SOURCE_LABEL } from "@/lib/care/labels";
 import { formatDateTime } from "@/lib/ops/format";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 export function TellAgentForm({
   patientId,
@@ -54,7 +56,7 @@ export function TellAgentForm({
   return (
     <div className="space-y-4">
       <form
-        className="gc-card space-y-4 p-4 sm:p-5"
+        className="space-y-4 rounded-card border border-line bg-surface p-4 shadow-card sm:p-5"
         onSubmit={(e) => {
           e.preventDefault();
           void submit();
@@ -67,7 +69,7 @@ export function TellAgentForm({
         >
           <textarea
             id={fieldId}
-            className="gc-input min-h-28 w-full"
+            className={cx(FIELD_BASE_CLASS, "min-h-28 w-full")}
             value={text}
             maxLength={INSTRUCTION_MAX}
             onChange={(e) => setText(e.target.value)}
@@ -76,7 +78,7 @@ export function TellAgentForm({
             aria-describedby={problem ? `${fieldId}-error` : undefined}
           />
           {problem && (
-            <p id={`${fieldId}-error`} role="alert" className="mt-1 text-[12px] text-red-700">
+            <p id={`${fieldId}-error`} role="alert" className="mt-1 text-label text-danger">
               {problem}
             </p>
           )}
@@ -89,13 +91,13 @@ export function TellAgentForm({
 
       <SectionCard title="Lời dặn đã lưu" subtitle="Của nhân viên cho agent của khách này">
         {told.length === 0 ? (
-          <p className="text-[13px] text-ink-soft">Chưa có lời dặn nào.</p>
+          <p className="text-small text-ink-soft">Chưa có lời dặn nào.</p>
         ) : (
           <ul className="space-y-2">
             {told.map((fact) => (
               <li key={fact.id} className="flex flex-wrap items-start justify-between gap-2">
-                <span className="min-w-0 flex-1 text-[14px] text-ink">{fact.fact}</span>
-                <span className="flex items-center gap-2 text-[12px] text-ink-soft">
+                <span className="min-w-0 flex-1 text-body text-ink">{fact.fact}</span>
+                <span className="flex items-center gap-2 text-label text-ink-soft">
                   <Badge tone="gray" dot={false}>
                     {MEMORY_SOURCE_LABEL[fact.source]}
                   </Badge>

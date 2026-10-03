@@ -16,12 +16,12 @@ import { useChotNen } from "@/lib/admin/shared/backdrop-close-guard";
 function Muc({ so, tieuDe, children }: { so: string; tieuDe: string; children: React.ReactNode }) {
   return (
     <div className="flex gap-3">
-      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[12px] font-semibold text-brand-700">
+      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-50 text-label font-semibold text-brand-700">
         {so}
       </div>
       <div className="min-w-0 space-y-1">
-        <div className="text-[14px] font-medium text-ink">{tieuDe}</div>
-        <div className="space-y-1 text-[13px] leading-[1.6] text-ink-soft">{children}</div>
+        <div className="text-body font-medium text-ink">{tieuDe}</div>
+        <div className="space-y-1 text-small leading-[1.6] text-ink-soft">{children}</div>
       </div>
     </div>
   );
@@ -35,12 +35,12 @@ export function KbGuideModal({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 p-4 backdrop-blur-[2px]"
       {...nen}
     >
-      <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl bg-surface shadow-xl">
+      <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-card bg-surface shadow-xl">
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
           <div className="font-semibold text-ink">Dùng Kho tri thức thế nào</div>
           <button
             onClick={onClose}
-            className="shrink-0 cursor-pointer rounded-lg border border-line px-3 py-1 text-[13px] text-ink-soft hover:bg-tile"
+            className="shrink-0 cursor-pointer rounded-control border border-line px-3 py-1 text-small text-ink-soft hover:bg-tile"
           >
             Đóng
           </button>

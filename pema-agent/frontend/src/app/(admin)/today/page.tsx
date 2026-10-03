@@ -10,7 +10,6 @@ import { useCallback, useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { SelectMenu, type SelectOption } from "@/components/admin/shared/select-menu";
-import { IconClipboardCheck } from "@/components/admin/shared/ops-icons";
 import {
   ChipRow,
   EmptyState,
@@ -121,9 +120,8 @@ export default function TodayPage() {
   const canResolve = can("crm.task.resolve");
 
   return (
-    <div className="mx-auto max-w-[1400px]">
+    <div>
       <PageHeader
-        icon={IconClipboardCheck}
         title="Việc hôm nay"
         subtitle={`${formatDate(clinicDateKey())} · ${data ? `${data.total} việc` : "đang tải"}`}
       />

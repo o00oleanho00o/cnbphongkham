@@ -67,23 +67,23 @@ export function SessionTraceView({ accountId, threadId }: { accountId: string; t
           <button
             type="button"
             onClick={() => moLuot(t.id)}
-            className="flex w-full items-center justify-between rounded-xl border border-line bg-surface px-4 py-2.5 text-left hover:bg-tile"
+            className="flex w-full items-center justify-between rounded-tile border border-line bg-surface px-4 py-2.5 text-left hover:bg-tile"
           >
             <div>
-              <div className="text-[13px] font-medium text-ink">
+              <div className="text-small font-medium text-ink">
                 {t.steps} step - {t.total_tokens.toLocaleString("vi-VN")} token
               </div>
-              <div className="text-[11px] text-ink-soft/60">{formatTime(t.created_at)}</div>
+              <div className="text-micro text-ink-soft/60">{formatTime(t.created_at)}</div>
             </div>
-            <span className="text-[12px] text-ink-soft">{dangMo === t.id ? "Thu gọn" : "Xem"}</span>
+            <span className="text-label text-ink-soft">{dangMo === t.id ? "Thu gọn" : "Xem"}</span>
           </button>
 
           {dangMo === t.id && (
             <div className="mt-2 space-y-2 pl-2">
-              {dangTai && <p className="text-[12px] text-ink-soft">Đang tải...</p>}
+              {dangTai && <p className="text-label text-ink-soft">Đang tải...</p>}
               {!dangTai && steps.map((s, i) => <TraceStepCard key={i} step={s} />)}
               {!dangTai && steps.length === 0 && (
-                <p className="text-[12px] text-ink-soft">Lượt này không có step nào được ghi.</p>
+                <p className="text-label text-ink-soft">Lượt này không có step nào được ghi.</p>
               )}
             </div>
           )}

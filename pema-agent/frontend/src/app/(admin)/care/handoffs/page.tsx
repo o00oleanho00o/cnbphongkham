@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
-import { IconBot } from "@/components/admin/shared/dashboard-icons";
 import { DeclineSheet } from "@/components/care/decline-sheet";
 import { HandoffCard } from "@/components/care/handoff-card";
 import { NoAccess } from "@/components/care/care-ui";
@@ -96,7 +95,6 @@ function HandoffsContent() {
   return (
     <div className="mx-auto max-w-4xl">
       <PageHeader
-        icon={IconBot}
         title="Yêu cầu đang chờ tôi"
         subtitle="Agent nhờ người nhận khi cuộc trò chuyện vượt mức nó được tự xử lý"
       />

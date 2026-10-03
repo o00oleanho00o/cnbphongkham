@@ -11,7 +11,6 @@
 // control is shown only with `admin.kill_switch`.
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { IconSignal } from "@/components/admin/shared/dashboard-icons";
 import { IconPower } from "@/components/admin/shared/ops-icons";
 import { Badge, SectionCard, ToggleKnob, formatTime } from "@/components/admin/shared/ui-bits";
 import { NHAN_KENH } from "@/lib/admin/accounts/mo-ta-loai-kenh";
@@ -46,12 +45,12 @@ const BRIDGE_BADGE: Record<
 };
 
 const NOTICE_TEXT_CLASS: Record<Notice["tone"], string> = {
-  red: "text-red-600 dark:text-red-400",
-  amber: "text-amber-700 dark:text-amber-300",
-  green: "text-emerald-700 dark:text-emerald-300",
+  red: "text-danger",
+  amber: "text-warning",
+  green: "text-success",
 };
 
-const FIELD_LABEL = "mb-1 block text-[12px] font-medium text-ink-soft";
+const FIELD_LABEL = "mb-1 block text-label font-medium text-ink-soft";
 const FIELD_INPUT = "gc-input w-full max-sm:min-h-11";
 
 /** Nói thẳng rủi ro của kênh cá nhân: đây là chỗ duy nhất người vận hành quyết định mức gửi chủ động. */
@@ -124,8 +123,8 @@ function KillSwitchDialog({
     ? `BẬT công tắc khẩn của ${NHAN_KENH[channel.channel]}?`
     : `Tắt công tắc khẩn của ${NHAN_KENH[channel.channel]}?`;
   const confirmClass = turningOn
-    ? "bg-red-600 hover:bg-red-700"
-    : "bg-brand-500 hover:bg-brand-600";
+    ? "bg-danger text-surface hover:opacity-90"
+    : "bg-brand-500 text-white hover:bg-brand-600";
 
   return (
     <div
@@ -135,19 +134,19 @@ function KillSwitchDialog({
       aria-modal="true"
       aria-label={title}
     >
-      <div className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-2xl bg-surface p-5 shadow-xl">
-        <h2 className="text-[15px] font-semibold text-ink">{title}</h2>
-        <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">{GIAI_THICH_CONG_TAC_KHAN}</p>
+      <div className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-card bg-surface p-5 shadow-xl">
+        <h2 className="text-body-lg font-semibold text-ink">{title}</h2>
+        <p className="mt-2 text-small leading-relaxed text-ink-soft">{GIAI_THICH_CONG_TAC_KHAN}</p>
         {turningOn && channel.channel === "zalo_personal" && (
-          <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">{CANH_BAO_KENH_CA_NHAN}</p>
+          <p className="mt-2 text-small leading-relaxed text-ink-soft">{CANH_BAO_KENH_CA_NHAN}</p>
         )}
         {!turningOn && (
-          <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">
+          <p className="mt-2 text-small leading-relaxed text-ink-soft">
             Tắt công tắc: tin chủ động sẽ được gửi lại theo trần, khoảng cách và khung giờ đang cài.
           </p>
         )}
 
-        <label className="mt-4 block text-[13px] font-medium text-ink" htmlFor="kill-switch-reason">
+        <label className="mt-4 block text-small font-medium text-ink" htmlFor="kill-switch-reason">
           Lý do {turningOn ? "(bắt buộc, ghi vào nhật ký kiểm toán)" : "(không bắt buộc)"}
         </label>
         <textarea
@@ -159,13 +158,13 @@ function KillSwitchDialog({
           className="gc-input mt-1.5 min-h-20 w-full resize-y"
           placeholder={turningOn ? "vd: Zalo nhắc tài khoản có dấu hiệu gửi quá nhiều" : ""}
         />
-        {error && <p className="mt-2 text-[13px] text-red-600 dark:text-red-400">{error}</p>}
+        {error && <p className="mt-2 text-small text-danger">{error}</p>}
 
         <div className="mt-5 flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="min-h-11 rounded-lg border border-line px-4 py-2 text-[14px] font-medium text-ink-soft hover:bg-tile sm:min-h-0"
+            className="min-h-11 rounded-control border border-line px-4 py-2 text-body font-medium text-ink-soft hover:bg-tile sm:min-h-0"
           >
             Hủy
           </button>
@@ -173,7 +172,7 @@ function KillSwitchDialog({
             type="button"
             onClick={submit}
             disabled={busy || missingReason}
-            className={`min-h-11 rounded-lg px-4 py-2 text-[14px] font-medium text-white disabled:opacity-50 sm:min-h-0 ${confirmClass}`}
+            className={`min-h-11 rounded-control px-4 py-2 text-body font-medium disabled:opacity-50 sm:min-h-0 ${confirmClass}`}
           >
             {turningOn ? "Bật công tắc khẩn" : "Tắt công tắc khẩn"}
           </button>
@@ -189,7 +188,7 @@ function UsageLine({ channel }: { channel: ChannelSettings }) {
   const capText = cap === null || cap === undefined ? "không giới hạn" : String(cap);
   return (
     <div>
-      <div className="text-[13px] text-ink">
+      <div className="text-small text-ink">
         Đã gửi chủ động hôm nay{" "}
         <span className="font-semibold">
           {channel.proactive_sent_today}/{capText}
@@ -198,7 +197,7 @@ function UsageLine({ channel }: { channel: ChannelSettings }) {
       {ratio !== null && (
         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-tile" aria-hidden="true">
           <div
-            className={`h-full rounded-full ${ratio >= 1 ? "bg-red-500" : "bg-brand-500"}`}
+            className={`h-full rounded-full ${ratio >= 1 ? "bg-danger" : "bg-brand-500"}`}
             style={{ width: `${Math.round(ratio * 100)}%` }}
           />
         </div>
@@ -214,7 +213,7 @@ function KillSwitchBanner({ channel }: { channel: ChannelSettings }) {
     : "";
   return (
     <div
-      className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-[13px] leading-[1.6] text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300"
+      className="rounded-tile border border-danger-line bg-danger-soft px-3 py-2.5 text-small leading-[1.6] text-danger"
       role="alert"
     >
       <span className="font-semibold">CÔNG TẮC KHẨN ĐANG BẬT{when}</span> - mọi tin chủ động của
@@ -288,7 +287,7 @@ function ChannelCard({
     <section className="gc-card flex flex-col gap-4 p-5" aria-label={NHAN_KENH[channel.channel]}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-[15px] font-semibold break-words text-ink">
+          <h3 className="text-body-lg font-semibold break-words text-ink">
             {NHAN_KENH[channel.channel]}
           </h3>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
@@ -304,7 +303,7 @@ function ChannelCard({
           aria-label={`Bật kênh ${NHAN_KENH[channel.channel]}`}
           disabled={busy || !supported}
           onClick={() => void save({ enabled: !channel.enabled })}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg disabled:opacity-50 sm:h-auto sm:w-auto"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control disabled:opacity-50 sm:h-auto sm:w-auto"
           title={channel.enabled ? "Đang bật - bấm để tắt" : "Đang tắt - bấm để bật"}
         >
           <ToggleKnob on={channel.enabled} />
@@ -384,36 +383,36 @@ function ChannelCard({
       </div>
 
       {channel.channel === "zalo_personal" && (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-[12px] leading-[1.6] text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+        <p className="rounded-control bg-warning-soft px-3 py-2 text-label leading-[1.6] text-warning">
           {CANH_BAO_KENH_CA_NHAN}
         </p>
       )}
 
-      {error && <p className="text-[13px] text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-small text-danger">{error}</p>}
 
       <button
         type="button"
         onClick={saveDraft}
         disabled={busy || !supported || !dirty}
-        className="min-h-11 rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600 disabled:opacity-50 sm:min-h-0 sm:self-start"
+        className="min-h-11 rounded-control bg-brand-500 px-4 py-2 text-body font-medium text-white hover:bg-brand-600 disabled:opacity-50 sm:min-h-0 sm:self-start"
       >
         {busy ? "Đang lưu..." : "Lưu cấu hình"}
       </button>
 
       {canKill && (
         <div className="border-t border-line pt-4">
-          <div className="flex items-center gap-2 text-[13px] font-semibold text-ink">
+          <div className="flex items-center gap-2 text-small font-semibold text-ink">
             <IconPower size={16} />
             Công tắc khẩn
           </div>
-          <p className="mt-1 text-[12px] leading-[1.6] text-ink-soft">{GIAI_THICH_CONG_TAC_KHAN}</p>
+          <p className="mt-1 text-label leading-[1.6] text-ink-soft">{GIAI_THICH_CONG_TAC_KHAN}</p>
           <button
             type="button"
             onClick={() => setKillDialog({ turningOn: !channel.kill_switch_on })}
-            className={`mt-2 min-h-11 rounded-lg px-4 py-2 text-[14px] font-medium sm:min-h-0 ${
+            className={`mt-2 min-h-11 rounded-control px-4 py-2 text-body font-medium sm:min-h-0 ${
               channel.kill_switch_on
                 ? "border border-line text-ink hover:bg-tile"
-                : "bg-red-600 text-white hover:bg-red-700"
+                : "bg-danger text-surface hover:opacity-90"
             }`}
           >
             {channel.kill_switch_on ? "Tắt công tắc khẩn" : "Bật công tắc khẩn"}
@@ -472,23 +471,18 @@ export function ChannelSettingsPanel() {
   return (
     <div className="mb-8">
       <SectionCard
-        icon={IconSignal}
         title="Kênh gửi tin"
         subtitle="Cấu hình chung của từng kênh Zalo: bật/tắt, trần tin chủ động, khung giờ và công tắc khẩn"
       >
         {notice && (
-          <p className={`mb-3 text-[13px] ${NOTICE_TEXT_CLASS[notice.tone]}`} role="status">
+          <p className={`mb-3 text-small ${NOTICE_TEXT_CLASS[notice.tone]}`} role="status">
             {notice.text}
           </p>
         )}
-        {loadError && (
-          <p className="mb-3 text-[13px] text-red-600 dark:text-red-400">{loadError}</p>
-        )}
-        {channels === null && !loadError && (
-          <p className="text-[13px] text-ink-soft">Đang tải...</p>
-        )}
+        {loadError && <p className="mb-3 text-small text-danger">{loadError}</p>}
+        {channels === null && !loadError && <p className="text-small text-ink-soft">Đang tải...</p>}
         {channels !== null && channels.length === 0 && (
-          <p className="text-[13px] text-ink-soft">Chưa có kênh nào được cấu hình.</p>
+          <p className="text-small text-ink-soft">Chưa có kênh nào được cấu hình.</p>
         )}
         <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
           {(channels ?? []).map((c) => (

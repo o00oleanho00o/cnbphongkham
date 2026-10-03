@@ -18,8 +18,8 @@ type ToastItem = { id: number; tone: ToastTone; text: string };
 const TOAST_MS = 4000;
 
 const TONE_CLASS: Record<ToastTone, string> = {
-  success: "bg-emerald-700 text-white",
-  error: "bg-red-700 text-white",
+  success: "bg-success text-surface",
+  error: "bg-danger text-surface",
   info: "bg-ink text-surface",
 };
 
@@ -65,7 +65,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {items.map((item) => (
           <div
             key={item.id}
-            className={`pointer-events-auto max-w-sm rounded-xl px-4 py-2.5 text-[13px] font-medium shadow-lg ${TONE_CLASS[item.tone]}`}
+            className={`pointer-events-auto max-w-sm rounded-tile px-4 py-2.5 text-small font-medium shadow-lg ${TONE_CLASS[item.tone]}`}
           >
             {item.text}
           </div>

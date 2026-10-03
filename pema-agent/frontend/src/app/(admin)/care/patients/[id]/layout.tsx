@@ -8,7 +8,6 @@ import { useParams } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
-import { IconBot } from "@/components/admin/shared/dashboard-icons";
 import { PatientCareProvider } from "@/components/care/patient-care-context";
 import {
   ControlBadge,
@@ -30,7 +29,6 @@ export default function PatientCareLayout({ children }: { children: ReactNode })
       {({ patientId, timeline, liveMode }) => (
         <div className="mx-auto max-w-4xl">
           <PageHeader
-            icon={IconBot}
             title={timeline.data?.patient_name ?? "Agent chăm sóc"}
             subtitle="Agent làm gì, đang giữ gì, đang chờ ai"
             aside={
@@ -39,7 +37,7 @@ export default function PatientCareLayout({ children }: { children: ReactNode })
                 {timeline.data && <LevelBadge level={timeline.data.autonomy.effective_level} />}
                 <Link
                   href={`/patients/${patientId}`}
-                  className="inline-flex min-h-11 items-center text-[13px] font-medium text-brand-500 hover:text-brand-600"
+                  className="inline-flex min-h-11 items-center text-small font-medium text-brand-500 hover:text-brand-600"
                 >
                   Hồ sơ bệnh nhân
                 </Link>
