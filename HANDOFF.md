@@ -266,7 +266,33 @@ How to run it (when the user says so):
 6. M6 numbers (D5 recall 100% with zero LLM calls, p50/p95 latency on the RTX 3060) go into
    `pema-agent/evals/care/report.md` and a line here.
 
-## Package U — UI parity with the old Pema web + port of the missing screens (planned; recipes ready; NOTHING built)
+## Package U — UI parity with the old Pema web + port of the missing screens (IN PROGRESS on `feat/ui-parity`, 2026-10-04)
+
+### Progress log (director-run gate per step: FE vitest/lint/tsc/build + `pnpm inventory` + `pnpm visual`, BE full pytest
+incl. evals + ruff + pyright + import-linter, 0 attribution lines; merged into `feat/ui-parity` only, NOT pushed)
+
+| Step | Branch / commit | Merged as | Gate result | Notes |
+|---|---|---|---|---|
+| U0 design foundation | `ui/u0` `f6bd955` | `ed0ba2d` | FE vitest 591; BE 5256 / 10 / 0 | tokens.css + generated tokens.json, kit, AppShell with old sidebar order, `pnpm visual`; fixed 2 inherited contrast failures |
+| U1 restyle + inventory | `ui/u1` 5 commits | `eb70b80` | FE vitest 602, inventory 40 routes, visual 190/0; BE 5256 / 10 / 0 | `FEATURE-INVENTORY.md` + `pnpm inventory`, `pnpm smoke`; admin tables still scroll on phone (owner decision) |
+| U2 dashboard + schedule | `ui/u2` `0c326b0` | `2cf3cc1` | FE vitest 672 (first run 11 files did not report under load; rerun green), visual 200/0; BE 5282 / 10 / 0 | no migration; open: check-in only on the visit's day?, dashboard for reception/CSKH?, at-risk/abandoned KPIs need a read model |
+| U3 Patient 360 five tabs | `ui/u3` → retry 1 `ui/u3-fix` `c41d622` + merge `d743145` | `1c734b2` | attempt 1 FAILED (M2c test downgraded "-1"); retry: FE vitest 753, visual 220/0; BE 5315 / 10 / 0 | migration `u3_0010`; open: photo retention, consent wording, manager photo access, storage location |
+| U7 guide / ask / CRM | `ui/u7` → retry 1 `1e19f34` → retry 2 `ui/u7-fix2` `5488d3f` | `81057ed` | attempts 1–2 FAILED (relative downgrade; then two alembic heads); retry 2: FE vitest 820, visual 235/0; BE 5359 / 10 / 0 | migration `u7_0001` restacked on `u3_0010`; "Hỏi Pema" = passage search (no LLM); label changed "Ask Pema" → "Hỏi Pema" |
+| U4 services / resources / studio | `ui/u4` → retry 1 `ui/u4-fix` `24dfd1c` | (gate running) | attempt 1 FAILED (two heads after merge); retry 1: FE vitest 875, inventory 48, visual 250/0; BE pending | migration `u4_0010` restacked on `u7_0001` (chain m_0002 → u3_0010 → u7_0001 → u4_0010, one head) |
+| U5 cashier / orders | — | — | — | waits for U4 merge |
+| U6 finance | — | — | — | waits for U5 |
+| U8 parity audit | — | — | — | waits for all; PARITY-AI01-U.md |
+
+Lessons for the remaining steps: every new migration must stack on the current single head (`alembic heads` = 1) or
+`test_the_migration_chain_has_one_head` fails; migration tests must downgrade to a named revision, never "-1". Parallel
+steps conflict on `openapi.json`/`schema.d.ts` (regenerate with `uv run python -m pema.api.export_openapi` and
+`pnpm gen:types`), `router.py`, `actions/__init__.py`, `models/__init__.py`, `nav.tsx`/`nav.test.ts`,
+`FEATURE-INVENTORY.md`. The director merges `feat/ui-parity` into a finished step's worktree, resolves, and gates the
+merged tree before merging back. Gate scripts used: `fe-gate.sh <worktree> <log> <app-port> <mock-port>` (vitest, lint,
+tsc, inventory, build, then `dev:mock` on its own ports + `pnpm visual`) and `be-gate.sh` (full pytest on a throwaway
+`pgvector/pgvector:pg17 -c fsync=off` + `redis:7`). Parallel agents need their own PORT/MOCK_PORT. Worktrees are made by
+hand (`git worktree add E:/... -b ui/<step> <base>`) because tool-made worktrees start from old `master`.
+
 
 Owner decision 2026-10-03: port the old Clinic Web features that the Next.js FE lacks (dashboard, schedule, Patient 360
 tabs consult/plan/session/photos, studio/resources/services, cashier/orders/catalog/A5 print, finance PB02, guide/ask,
