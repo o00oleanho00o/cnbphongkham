@@ -290,17 +290,43 @@
         "App A3 is titled \"Hồ sơ người bệnh\" with 12 sample rows; the web title is \"Tìm bệnh nhân\", the count chip \"46 hồ sơ\" and 4 filter chips."
       ],
       "gotchas": [
-        "Phone numbers are masked in the demo (\"09•• ••• 100\")."
+        "Phone numbers are masked in the demo (\"09•• ••• 100\").",
+        "Canvas: rows 2-7 of the sample table carry the other six concern chips (\"Mụn viêm\" ... \"Theo dõi da sau điều trị\"); the generated Layout lists only the first table row, so they are exempted through demo_data. The avatar, name link and \"P001 · 28 tuổi · phone\" line share one cell."
+      ],
+      "demo_data": [
+        "Mụn viêm",
+        "Thâm sau viêm",
+        "Đỏ da / nhạy cảm",
+        "Sẹo sau mụn",
+        "Trẻ hóa da",
+        "Theo dõi da sau điều trị",
+        "Ví dụ: Nguyễn Minh Linh, P001, nám..."
       ]
     },
     "WC2": {
       "logic": [
         "Empty state of `patients()`: \"Không tìm thấy hồ sơ\", \"Thử tên, mã hồ sơ hoặc mối quan tâm khác.\" and a clear-search button."
+      ],
+      "demo_data": [
+        "⌕ Không tìm thấy hồ sơ Thử tên, mã hồ sơ hoặc mối quan tâm khác. Xóa tìm kiếm"
+      ],
+      "gotchas": [
+        "Canvas: the empty state is one EmptyState block (icon \"search\" replaces the old \"⌕\" glyph, title, hint, \"Xóa tìm kiếm\"); the snapshot reads it as one concatenated string, so it is exempted through demo_data."
       ]
     },
     "WC3": {
       "logic": [
         "`data-modal=\"patient\"` → `modalHtml('patient')`; `action('create-patient')` saves a synthetic profile and toasts \"Đã tạo hồ sơ demo\"; an empty name toasts \"Nhập tên người bệnh\"."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
+        "Đóng hộp thoại"
+      ],
+      "gotchas": [
+        "Canvas: the dialog close button (old aria-label \"Đóng hộp thoại\") is drawn by the dlg helper as an icon; the generated Layout does not name it, so the label is exempted through demo_data."
       ]
     },
     "WC4": {
@@ -317,6 +343,12 @@
       ],
       "gotchas": [
         "The brief on this tab is the text of the AI brief dialog (WC13); \"AI chỉ là bản nháp\": the doctor must edit and approve it."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC5": {
@@ -331,6 +363,12 @@
       ],
       "differences": [
         "App J1/F2 shows the same flow in one column; the web has two columns \"Tư vấn lâm sàng\" and \"Bản nháp của Pema AI\"."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC6": {
@@ -339,6 +377,12 @@
       ],
       "gotchas": [
         "An empty draft toasts \"Bản nháp không được để trống\"; an empty input toasts \"Hãy nhập vài ý chính trước\"."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC7": {
@@ -347,6 +391,12 @@
       ],
       "differences": [
         "App J3 lists sessions only; the web adds the tracking criteria facts (\"Ảnh mốc\", \"Patient reported outcome\", \"Người duyệt\", \"Nhắc hẹn\")."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC8": {
@@ -362,6 +412,12 @@
       ],
       "gotchas": [
         "The tab is removed for the care and accountant roles (`staff-context.js`)."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC9": {
@@ -371,6 +427,16 @@
       "rules": [
         "\"Chưa kiểm định căn chỉnh ảnh; bác sĩ kiểm tra điều kiện chụp trước khi so sánh.\" (notice of the studio).",
         "Illustrative photos do not score efficacy: the faces are marked \"MINH HỌA TỔNG HỢP\"."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
+        "Phóng to Cùng góc khai báo · không tự căn chỉnh"
+      ],
+      "gotchas": [
+        "Canvas: the old studio-note notice (zoom slider + chip \"Cùng góc khai báo · không tự căn chỉnh\") is drawn as one info box holding the \"Phóng to\" range field and the chip, so the combined sentence is exempted through demo_data. Only the default \"Đặt cạnh nhau\" mode is drawn; the \"So sánh trượt\" mode adds a \"Vị trí so sánh\" slider and a \"Trước ← → Sau\" chip."
       ]
     },
     "WC10": {
@@ -380,6 +446,12 @@
       "rules": [
         "\"Giá trị phát sinh, tiền đã thu và dư nợ; không suy hoàn tất điều trị\" (subtitle): completed treatment is never inferred from payment.",
         "\"Tiền cọc còn chưa phân bổ: <số tiền>\" notice below the table."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC11": {
@@ -391,11 +463,23 @@
       ],
       "gotchas": [
         "The tab is hidden for the accountant role."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC12": {
       "logic": [
         "`PemaCRMUI.timeline(p)`: \"Lịch sử hợp nhất\" (events, source and person), or \"Lịch sử CSKH\" when opened from the CRM tab."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC13": {
@@ -408,6 +492,13 @@
       ],
       "gotchas": [
         "\"Không truy cập được clipboard; hãy chọn và sao chép văn bản.\" when the clipboard is blocked."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
+        "Đóng hộp thoại"
       ]
     },
     "WC14": {
@@ -420,21 +511,49 @@
       ],
       "differences": [
         "Title \"Gửi cập nhật\" with the eyebrow \"Tin nhắn · <tên>\"; the Next.js target is the inbox reply box (`/inbox`)."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
+        "Đóng hộp thoại"
       ]
     },
     "WC15": {
       "logic": [
         "`data-modal=\"edit\"` (\"Thông tin cần nhớ\"): alerts (one per line) and the photo-consent checkbox; `save-facts` toasts \"Đã lưu thông tin\"."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
+        "Đóng hộp thoại"
       ]
     },
     "WC16": {
       "logic": [
         "`data-modal=\"care\"` (\"Chăm sóc tại nhà\"): aftercare text `#care-edit`; `save-care` sets `aftercareSent` and toasts \"Đã gửi hướng dẫn vào patient app\"; empty text toasts \"Hãy nhập hướng dẫn\"."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
+        "Đóng hộp thoại"
       ]
     },
     "WC17": {
       "logic": [
         "`modalHtml('plan-edit')`: plan name and total sessions; `save-plan` is refused with \"Tên và số buổi chưa hợp lệ\" when the name is empty, the total is below the completed sessions or above 20; success toasts \"Đã cập nhật kế hoạch và patient app\"."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
+        "Đóng hộp thoại"
       ]
     },
     "WC18": {
@@ -444,6 +563,13 @@
       "rules": [
         "\"Nhập ngày hợp lệ, lý do và nguồn khuyến nghị.\"",
         "\"Nếu đã có lịch thực tế, Patient 360 ưu tiên ngày lịch đó. Khuyến nghị vẫn được giữ khi hủy lịch.\""
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
+        "Đóng hộp thoại"
       ]
     },
     "WC19": {
@@ -455,16 +581,35 @@
       ],
       "gotchas": [
         "The close button of this dialog is a bare \"×\" without an aria-label, unlike the other dialogs (\"Đóng hộp thoại\")."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Hành trình của Linh",
+        "Hóa đơn của Nguyễn Minh Linh",
+        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
+        "Đóng hộp thoại",
+        "×"
       ]
     },
     "WC20": {
       "logic": [
         "A profile created in WC3 opens straight on this tab with empty lists, zero sessions and no plan: the screen of a patient without history."
+      ],
+      "demo_data": [
+        "Nguyễn Thử Nghiệm",
+        "Hành trình của Nghiệm"
+      ],
+      "differences": [
+        "Canvas hero meta uses the old web's own line for a new profile (\"28 tuổi · Chưa xác nhận · Chưa nhập · Bác sĩ phụ trách: BS. Tâm\"); the new patient is the synthetic \"Trần Bảo Châu\" (P047) instead of the typed demo name."
       ]
     },
     "WC21": {
       "logic": [
         "`PemaCRMUI.timeline(p)` with no events: the empty text \"Chưa có hoạt động CSKH được ghi nhận.\""
+      ],
+      "demo_data": [
+        "Nguyễn Thử Nghiệm",
+        "Hành trình của Nghiệm"
       ]
     },
     "WD1": {
