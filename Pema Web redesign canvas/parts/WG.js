@@ -169,3 +169,140 @@ const WG = [
     txt('Đang tải dữ liệu…')
   ], { state: true, fin: 'Tài chính chờ kết nối · thử lại' })
 ];
+
+// ---- W6c-REST: ids WG10-WG23 (loading, empty and closed periods, accountant receipts, native dialogs, export and validation errors) ----------
+// Source: design-specs/web/screens/WG10..WG23.md, the old finance shots and manifest.json native_dialog (exact dialog text). Appended with WG.push.
+// The period field of `fin(...)` is always 2026-09, so the pages whose period is another month (WG11, WG12, WG13, WG14, WG18) are `page(..., 'finance', ...)` with the
+// same header (eyebrow, title, "Kỳ báo cáo", "Làm mới", four tabs) written here; the rate-snapshot wording and the rule that the performing doctor is chosen in the form
+// (never taken from the record owner) are those of WG3, WG4 and wgEntryForm.
+const wgFinHead = (tabIndex, monthValue) => [
+  row({ g: 20, jc: 'space-between', ai: 'flex-end' },
+    stack({ g: 2 }, txt('ĐIỀU HÀNH • PEMA CLINIC', { size: 's', tone: 'soft', up: true }), h1('Tài chính & tiền thủ thuật')),
+    row({ g: 12, ai: 'flex-end' }, month('Kỳ báo cáo', monthValue, { w: 160 }), secondary('Làm mới'))),
+  tabs(FIN_TABS, tabIndex)
+];
+const wgPage = (id, name, note, tabIndex, monthValue, blocks, o = {}) => page(id, name, note, 'finance', [wgFinHead(tabIndex, monthValue), flat(blocks)], { state: true, ...o });
+// "Bảng tiền thủ thuật • <month>" heading + period badge + "Xuất CSV cho Excel"
+const wgTableHeadOf = (m, periodBadge) => row({ g: 12, jc: 'space-between', ai: 'center' },
+  row({ g: 12, ai: 'center' }, h2('Bảng tiền thủ thuật • ' + m), periodBadge),
+  secondary('Xuất CSV cho Excel'));
+// the entry form of "+ Ghi nhận lượt thủ thuật đã hoàn tất" with a typed note and the main doctor's share (WG21, WG22); same fields as wgEntryFields
+const wgEntryFormOf = (note, share) => [
+  grid(3,
+    select('Hồ sơ', people[0].name + ' · ' + people[0].id, { hint: 'Một lựa chọn cho mỗi hồ sơ' }),
+    select('Thủ thuật', services[0].name),
+    date('Ngày thực hiện', '2026-09-20', { req: true, hint: 'Không chọn ngày sau hôm nay' }),
+    number('Giá niêm yết', '300000', { req: true }),
+    number('Giảm giá', '0', { req: true }),
+    select('Gắn hóa đơn đã có', 'Tạo hóa đơn mới cho lượt này', { hint: 'Hoặc một hóa đơn đã có của hồ sơ' }),
+    input('Ghi chú hoàn tất', note, { req: true, ph: 'Đã thực hiện, chờ đối soát' })),
+  h3('Ai thực hiện và được ghi nhận?'),
+  sm('Tổng tỷ trọng doanh số 100%. Tỷ lệ tiền của mỗi người tính trực tiếp trên cơ sở chính sách; tổng không quá 100%.'),
+  grid('minmax(0,2fr) minmax(0,1fr) minmax(0,1fr)', select('Bác sĩ chính', doctors[0].name), number('Tỷ trọng doanh số %', share), number('Tỷ lệ tiền thủ thuật %', '10')),
+  grid('minmax(0,2fr) minmax(0,1fr) minmax(0,1fr)', select('Người phối hợp (tùy chọn)', 'Không có'), number('Tỷ trọng doanh số %', '0'), number('Tỷ lệ tiền thủ thuật %', '0')),
+  primary('Ghi nhận • Chờ duyệt')
+];
+const wgEntryHead = () => card({}, row({ g: 8, ai: 'center' }, ico('chevron_right'), strong('+ Ghi nhận lượt thủ thuật đã hoàn tất')));
+// open period, owner: collapsed entry head, the fields it holds, the table (every row "Đã duyệt" with "Hủy") and "Chốt tháng đã kết thúc"
+const wgApprovedRows = [0, 1, 2, 3].map(i => wgRow(['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04'][i], people[i], services[i], doctors[i], [300000, 500000, 2400000, 1200000][i], [300000, 500000, 2400000, 1200000][i], [10, 15, 20, 12][i], 'net', [30000, 75000, 480000, 144000][i], 'approved', 'void'));
+const wgWorkOwner = () => [
+  wgEntryHead(),
+  card({ v: 'soft', title: 'Nội dung của ô khi mở', sub: 'Các trường có sẵn trong trang nhưng ẩn khi thu gọn (xem WG3)' }, ...wgEntryFields()),
+  card({}, wgTableHead(), table(wgCols, wgApprovedRows), row({ g: 12 }, primary('Chốt tháng đã kết thúc')))
+];
+// closed or paid period: no entry form, rows without Duyệt/Hủy, the badge of the period and (closed only) "Xác nhận đã chi"
+const wgClosedTable = (m, d, p, periodBadge, payout) => card({}, wgTableHeadOf(m, periodBadge),
+  table(wgCols, [wgRow(d, p, services[0], doctors[0], 300000, 300000, 10, 'net', 30000, 'approved', '')]),
+  ...(payout ? [row({ g: 12 }, primary('Xác nhận đã chi'))] : []));
+// receipts tab: left "Thu tiền khách hàng" (form, the rule line, "Giao dịch trong kỳ"), right the owner notification box
+const wgReceiptForm = amount => [
+  select('Hóa đơn còn nợ', people[0].id + ' · ' + money(150000) + ' · FIN-HD-1'),
+  grid(2, number('Số thu', amount, { req: true }), select('Phương thức', 'Tiền mặt', { hint: 'Tiền mặt · Chuyển khoản' })),
+  primary('Xác nhận thu'),
+  sm('Phiếu thu mới đồng bộ với app khi đang mở. Hóa đơn web cũ thu tại Thu ngân Clinic; không thu lại ở đây.'),
+  h3('Giao dịch trong kỳ')
+];
+const wgReceiptRows = [[11, '2026-09-12', 'Chuyển khoản', 1200000], [10, '2026-09-11', 'Tiền mặt', 2400000], [9, '2026-09-10', 'Chuyển khoản', 250000], [8, '2026-09-09', 'Tiền mặt', 300000], [7, '2026-09-08', 'Chuyển khoản', 1200000], [6, '2026-09-07', 'Tiền mặt', 1200000], [5, '2026-09-06', 'Chuyển khoản', 500000], [4, '2026-09-05', 'Tiền mặt', 300000], [3, '2026-09-04', 'Chuyển khoản', 600000], [2, '2026-09-03', 'Tiền mặt', 2400000], [1, '2026-09-02', 'Chuyển khoản', 500000], [0, '2026-09-01', 'Tiền mặt', 150000]]
+  .map(([i, d, m, a]) => ({ t: people[i].id, sub: d + ' · ' + m, actions: [strong(money(a))] }));
+const wgReceiptsSplit = (amount, history, side) => split(
+  [panel('Thu tiền khách hàng', '', [], ...wgReceiptForm(amount), history)],
+  [panel('Thông báo của chủ phòng khám', '', [], side)],
+  { cols: 'minmax(0,1.5fr) minmax(0,1fr)' });
+const wgOwnerNote = () => txt('Thanh toán thành công sẽ xuất hiện tại đây và trên app BS. Tâm.');
+
+WG.push(
+  // WG10 · request pending: header and tabs with no tab selected, "Đang tải dữ liệu…"
+  fin('WG10', 'Tài chính · đang tải dữ liệu', WEB + 'finance · yêu cầu tới máy chủ tài chính chưa trả lời: có tiêu đề, kỳ báo cáo "Làm mới" và bốn tab (chưa tab nào được chọn), nội dung là một dòng "Đang tải dữ liệu…" không có vòng quay và không có nút thử lại; WG9 là cùng trang khi yêu cầu thất bại; app không có trạng thái đang tải (H7 chỉ có "Mất kết nối") · chưa có trên Next.js', -1, [
+    txt('Đang tải dữ liệu…')
+  ], { state: true }),
+
+  // WG11 · a month with no procedure entries: empty table row, the entry form and "Chốt tháng đã kết thúc" stay
+  wgPage('WG11', 'Tài chính · tháng không có lượt thủ thuật', WEB + 'finance › Tiền thủ thuật · chọn kỳ 2026-06 chưa có lượt: bảng chỉ có dòng "Chưa có lượt thủ thuật trong kỳ này.", ô ghi nhận và nút "Chốt tháng đã kết thúc" vẫn có (máy chủ chỉ chốt tháng có lượt đã duyệt); app H3 không có ô chọn kỳ và không có trạng thái rỗng · chưa có trên Next.js', 1, '2026-06', [
+    wgEntryHead(),
+    card({ v: 'soft', title: 'Nội dung của ô khi mở', sub: 'Các trường có sẵn trong trang nhưng ẩn khi thu gọn (xem WG3)' }, ...wgEntryFields()),
+    card({}, wgTableHeadOf('2026-06', wgPeriod), table(wgCols, [], { empty: 'Chưa có lượt thủ thuật trong kỳ này.' }), row({ g: 12 }, primary('Chốt tháng đã kết thúc')))
+  ]),
+
+  // WG12 · receipts tab of a month without transactions
+  wgPage('WG12', 'Tài chính · phiếu thu · tháng không có giao dịch', WEB + 'finance › Phiếu thu & thông báo · chọn kỳ 2026-06 chưa có phiếu: "Giao dịch trong kỳ" chỉ có dòng "Chưa có phiếu thu.", hộp thông báo của chủ chỉ có câu "Thanh toán thành công sẽ xuất hiện tại đây và trên app BS. Tâm."; app H5/H6 là thẻ từng hóa đơn và nút "Đánh dấu đã đọc" · chưa có trên Next.js', 3, '2026-06', [
+    wgReceiptsSplit('150000', txt('Chưa có phiếu thu.'), wgOwnerNote())
+  ]),
+
+  // WG13 · closed period: badge "Đã chốt tháng", no Duyệt/Hủy, no entry form, "Xác nhận đã chi"
+  wgPage('WG13', 'Tài chính · kỳ đã chốt', WEB + 'finance › Tiền thủ thuật · kỳ 2026-08 đã chốt: huy hiệu "Đã chốt tháng", dòng chỉ có trạng thái "Đã duyệt" (không còn Duyệt/Hủy), không còn ô ghi nhận, nút cuối bảng là "Xác nhận đã chi"; app H4 chỉ vẽ kỳ đang mở · chưa có trên Next.js', 1, '2026-08', [
+    wgClosedTable('2026-08', '2026-08-10', people[1], badge('Đã chốt tháng', 'info', { dot: false }), true)
+  ]),
+
+  // WG14 · paid period: badge "Đã chi", no action button at all
+  wgPage('WG14', 'Tài chính · kỳ đã chi', WEB + 'finance › Tiền thủ thuật · kỳ 2026-07 đã chi: huy hiệu "Đã chi", không còn nút ở cuối bảng; mã chứng từ gửi cho máy chủ nhưng không hiện ở tab này; app H4 không có trạng thái đã chi · chưa có trên Next.js', 1, '2026-07', [
+    wgClosedTable('2026-07', '2026-07-10', people[2], badge('Đã chi', 'success', { dot: false }), false)
+  ]),
+
+  // WG15 · accountant: receipts tab with the 12 transactions and the box "Kế toán không đọc inbox của chủ."
+  fin('WG15', 'Tài chính · Phiếu thu & thông báo (kế toán)', WEB + 'finance › Phiếu thu & thông báo, tài khoản kế toán · đủ bốn tab và biểu mẫu thu tiền, 12 giao dịch trong kỳ; hộp "Thông báo của chủ phòng khám" chỉ có câu "Kế toán không đọc inbox của chủ."; app D1/H5 · chưa có trên Next.js', 3, [
+    wgReceiptsSplit('150000', list(wgReceiptRows), txt('Kế toán không đọc inbox của chủ.'))
+  ], { role: 'accountant', state: true }),
+
+  // WG16 · native prompt() for the void reason
+  fin('WG16', 'Hủy lượt thủ thuật (nhập lý do)', WEB + 'finance › Tiền thủ thuật · bấm "Hủy" ở một lượt: trình duyệt hỏi bằng hộp prompt() "Lý do hủy lượt chưa thu tiền"; không nhập lý do hoặc bấm Cancel thì không ghi gì; app H3/H4 gọi nút "Hủy lượt" (quyết định của chủ phòng khám: bản Next.js thay hộp prompt bằng hộp thoại có ô lý do bắt buộc) · chưa có trên Next.js', 1, wgWorkOwner(),
+    { state: true, native: native('prompt', 'Lý do hủy lượt chưa thu tiền') }),
+
+  // WG17 · native confirm() before closing the month
+  fin('WG17', 'Chốt tháng (hộp xác nhận)', WEB + 'finance › Tiền thủ thuật · bấm "Chốt tháng đã kết thúc": trình duyệt hỏi bằng confirm() "Chốt số liệu tháng 2026-09? Các lượt trong kỳ sẽ bị khóa." (tháng lấy từ ô Kỳ báo cáo); app H4 không có bước xác nhận · chưa có trên Next.js', 1, wgWorkOwner(),
+    { state: true, native: native('confirm', 'Chốt số liệu tháng 2026-09? Các lượt trong kỳ sẽ bị khóa.') }),
+
+  // WG18 · native prompt() for the payout voucher code, on the closed period of WG13
+  wgPage('WG18', 'Xác nhận đã chi (nhập mã chứng từ)', WEB + 'finance › Tiền thủ thuật · kỳ 2026-08 đã chốt, bấm "Xác nhận đã chi": trình duyệt hỏi bằng prompt() "Mã chứng từ chi"; app H4 không có bước chi · chưa có trên Next.js', 1, '2026-08', [
+    wgClosedTable('2026-08', '2026-08-10', people[1], badge('Đã chốt tháng', 'info', { dot: false }), true)
+  ], { native: native('prompt', 'Mã chứng từ chi') }),
+
+  // WG19 · native download bubble of the CSV export
+  fin('WG19', 'Xuất CSV cho Excel (tải tệp)', WEB + 'finance › Tiền thủ thuật · bấm "Xuất CSV cho Excel": trình duyệt tải tệp Pema-tien-thu-thuat-2026-09.csv (có BOM, cột Ngay, Ho so, Thu thuat, Bac si, Doanh so, Co so, Ty le %, Tien thu thuat, Trang thai); giao diện tải là của trình duyệt; app H3 không có xuất CSV · chưa có trên Next.js', 1, wgWorkOwner(),
+    { state: true, native: native('download', 'Pema-tien-thu-thuat-2026-09.csv') }),
+
+  // WG20 · export answered with an HTTP error: boxed red line under the tabs, the page stays usable
+  fin('WG20', 'Xuất CSV · lỗi', WEB + 'finance › Tiền thủ thuật · máy chủ trả lỗi khi xuất: hộp đỏ "Không xuất được bảng" dưới các tab, trang vẫn dùng được (mất mạng thì hiện chữ của trình duyệt, ví dụ "Failed to fetch"); app H7 là thẻ lỗi "Mất kết nối" có "Thử lại" · chưa có trên Next.js', 1, [
+    notice('Không xuất được bảng', 'danger'),
+    ...wgWorkOwner()
+  ], { state: true }),
+
+  // WG21 · shares do not add up to 100%
+  fin('WG21', 'Ghi nhận lượt · lỗi tỷ trọng', WEB + 'finance › Tiền thủ thuật, ô ghi nhận đang mở · bác sĩ chính 50% và không có người phối hợp: máy chủ trả "Tổng tỷ trọng doanh số phải là 100%", hộp đỏ dưới các tab, biểu mẫu giữ nguyên giá trị đã nhập, không lưu gì; bác sĩ thực hiện chọn trong biểu mẫu, không lấy từ người quản lý hồ sơ; app H9 không có dòng lỗi · chưa có trên Next.js', 1, [
+    notice('Tổng tỷ trọng doanh số phải là 100%', 'danger'),
+    disc('+ Ghi nhận lượt thủ thuật đã hoàn tất', ...wgEntryFormOf('Đã thực hiện', '50')),
+    card({}, wgTableHead(), table(wgCols, wgApprovedRows), row({ g: 12 }, primary('Chốt tháng đã kết thúc')))
+  ], { state: true }),
+
+  // WG22 · the completion note is only spaces
+  fin('WG22', 'Ghi nhận lượt · thiếu ghi chú hoàn tất', WEB + 'finance › Tiền thủ thuật, ô ghi nhận đang mở · "Ghi chú hoàn tất" chỉ có dấu cách (qua được kiểm tra của trình duyệt): máy chủ trả "Ghi chú xác nhận hoàn tất là bắt buộc", hộp đỏ dưới các tab, ô giữ ba dấu cách; app H9 có ô "Ghi chú xác nhận hoàn tất" nhưng không có dòng lỗi · chưa có trên Next.js', 1, [
+    notice('Ghi chú xác nhận hoàn tất là bắt buộc', 'danger'),
+    disc('+ Ghi nhận lượt thủ thuật đã hoàn tất', ...wgEntryFormOf('   ', '100')),
+    card({}, wgTableHead(), table(wgCols, wgApprovedRows), row({ g: 12 }, primary('Chốt tháng đã kết thúc')))
+  ], { state: true }),
+
+  // WG23 · receipt larger than the open balance
+  fin('WG23', 'Phiếu thu · số thu vượt công nợ', WEB + 'finance › Phiếu thu & thông báo · nhập "Số thu" 99999999: máy chủ trả "Số thu vượt công nợ", hộp đỏ dưới các tab, không ghi phiếu; app H5 thu từng hóa đơn bằng một nút nên không gõ được số quá nợ · chưa có trên Next.js', 3, [
+    notice('Số thu vượt công nợ', 'danger'),
+    wgReceiptsSplit('99999999', list(wgReceiptRows), wgOwnerNote())
+  ], { state: true })
+);

@@ -1635,7 +1635,8 @@
         "App F4 (Lên đơn nhanh) reads \"115 sản phẩm từ catalog web. Đơn nháp chưa gửi cho người bệnh.\" and ends in \"Xem đơn · 2 sản phẩm · 720.000 ₫\"; the web is one dialog with patient, doctor and diagnosis fields, a search box, the product list, the lines and \"Lưu nháp & xem tách đơn\". The app spec shows no empty-selection error."
       ],
       "gotchas": [
-        "The dialog stays open on error and keeps the patient, doctor and diagnosis values."
+        "The dialog stays open on error and keeps the patient, doctor and diagnosis values.",
+        "Canvas: the red line \"Chọn ít nhất một sản phẩm.\" is an inline error line (no box), as the shot; the product list shows the first 6 of 115 rows."
       ]
     },
     "WF12": {
@@ -1681,7 +1682,8 @@
         "App F5 offers the routes \"Phiếu tư vấn\" and \"Cần phân loại\" per line and does not draw the \"Không in\" route with its reason or the excluded-lines paragraph."
       ],
       "gotchas": [
-        "Lines with no class show instead \"Cần phân loại <n> sản phẩm: …. Mở “Sửa nháp” trong hồ sơ hoặc thu ngân để xử lý.\" (WF7) and disable the approve button."
+        "Lines with no class show instead \"Cần phân loại <n> sản phẩm: …. Mở “Sửa nháp” trong hồ sơ hoặc thu ngân để xử lý.\" (WF7) and disable the approve button.",
+        "Canvas: the \"Không in (1): …\" paragraph is plain text, not a boxed notice, as in the old page."
       ]
     },
     "WF15": {
@@ -1710,7 +1712,8 @@
       ],
       "gotchas": [
         "The page shows the status line and the error but no sheet; the print buttons are disabled.",
-        "The same checks (usage, issuable lines) also run before every print (`orderPrintData(…, true)`)."
+        "The same checks (usage, issuable lines) also run before every print (`orderPrintData(…, true)`).",
+        "Canvas: the error is an inline red line; the \"Không in (1): …\" paragraph is plain text."
       ]
     },
     "WF17": {
@@ -1750,7 +1753,8 @@
         "App F7 says \"In / chia sẻ PDF native sẽ nối sau khi duyệt template.\"; the web prints through the browser dialog."
       ],
       "gotchas": [
-        "The snapshot and the shot show the page just before the dialog; the harness replaces `window.print` with a counter (`hookPrint`)."
+        "The snapshot and the shot show the page just before the dialog; the harness replaces `window.print` with a counter (`hookPrint`).",
+        "Canvas: the browser print dialog is drawn over the page (NATIVE · print(), no message text); the print media of the sheets is the card \"Bản in (print media)\" at the bottom, as in WF6."
       ]
     },
     "WF20": {
@@ -1763,7 +1767,11 @@
       ],
       "gotchas": [
         "Created with the finance API blocked so that the payment is not mirrored into the shared finance data.",
-        "The toast of the payment (2800 ms) may still be on the page when the snapshot is taken."
+        "The toast of the payment (2800 ms) may still be on the page when the snapshot is taken.",
+        "Canvas: the payment toast is drawn as the page toast over the dialog (it covers part of the primary button, as the fixed toast does in the old page). The dialog Layout does not list page toasts, so the label is declared in demo_data."
+      ],
+      "demo_data": [
+        "Đã ghi phiếu thu và cập nhật hóa đơn"
       ]
     },
     "WF21": {
@@ -1779,7 +1787,8 @@
       ],
       "gotchas": [
         "Invoice and order codes are random UUIDs (`HD-<uuid>`, `OD-<uuid>`): the snapshot masks them. The data lives in the browser storage of the demo, so the figures are the same on every run.",
-        "Created with the finance API blocked so no invoice reaches the shared finance data."
+        "Created with the finance API blocked so no invoice reaches the shared finance data.",
+        "Canvas: invoice and order codes (HD-7F3A9C, OD-B21E40) are synthetic; the old web shows random UUIDs. The top bar reads \"Tài chính chờ kết nối · thử lại\" because the finance API is blocked in the reach."
       ]
     },
     "WF22": {
@@ -1791,7 +1800,8 @@
         "App F6 lists \"DN-1 · Đã duyệt\" with the two sheets and \"Xem bố cục hai phiếu A5\"; the web row has \"Xem / in\" and the cashier link \"In tách đơn\"."
       ],
       "gotchas": [
-        "Codes masked as in WF21. Compare with WF21: same page, draft versus approved."
+        "Codes masked as in WF21. Compare with WF21: same page, draft versus approved.",
+        "Canvas: invoice and order codes are synthetic (see WF21); the top bar reads \"Tài chính chờ kết nối · thử lại\"."
       ]
     },
     "WF23": {
@@ -1818,7 +1828,8 @@
       ],
       "gotchas": [
         "The table here also shows the first demo invoice HD-DEMO-001 (Tái khám & đánh giá, 300.000 ₫, 150.000 ₫ received).",
-        "Stats do not follow the filter: Tổng hóa đơn 48 and Còn phải thu 11.250.000 ₫ are always totals."
+        "Stats do not follow the filter: Tổng hóa đơn 48 and Còn phải thu 11.250.000 ₫ are always totals.",
+        "Canvas draws 5 of the 12 due invoices; the paging line keeps the old count \"12 hóa đơn · Trang 1/1\"."
       ]
     },
     "WF25": {
@@ -1834,7 +1845,8 @@
       ],
       "gotchas": [
         "The toast \"Đã ghi phiếu thu và cập nhật hóa đơn\" of the last payment may still be on the page (2800 ms).",
-        "The order-history block still reads \"Chưa có đơn từ catalog.\" (empty state) because no order was created."
+        "The order-history block still reads \"Chưa có đơn từ catalog.\" (empty state) because no order was created.",
+        "Canvas: the top bar reads \"Tài chính chờ kết nối · thử lại\" (finance API blocked in the reach); the payment toast is drawn as in WF20."
       ]
     },
     "WG10": {
@@ -1849,7 +1861,8 @@
         "The app finance specs (H3–H9) have no loading state; only H7 \"Mất kết nối\" (error with \"Thử lại\"). The web loading text is a bare paragraph with no spinner and no retry control."
       ],
       "gotchas": [
-        "The sync link of the topbar (`finance-bridge.js`) also reads \"Đang đồng bộ tài chính…\" in this state; it is outside the content scope of the snapshot."
+        "The sync link of the topbar (`finance-bridge.js`) also reads \"Đang đồng bộ tài chính…\" in this state; it is outside the content scope of the snapshot.",
+        "Canvas: the top bar keeps \"Tài chính đã đồng bộ\" as the shot shows, although the spec Gotchas say the sync link reads \"Đang đồng bộ tài chính…\" in this state."
       ]
     },
     "WG11": {
@@ -1864,7 +1877,8 @@
         "App H3 has no empty list state and no month picker; it shows the current period only (\"Kỳ 2026-09\")."
       ],
       "gotchas": [
-        "The button \"Chốt tháng đã kết thúc\" is shown for the empty month, but the finance server closes only a month that has an approved row (see WG13)."
+        "The button \"Chốt tháng đã kết thúc\" is shown for the empty month, but the finance server closes only a month that has an approved row (see WG13).",
+        "Canvas: `fin()` fixes the period field to 2026-09, so this page is built with page() and the same header (eyebrow, title, \"Kỳ báo cáo\" = 2026-06, \"Làm mới\", four tabs)."
       ]
     },
     "WG12": {
@@ -1882,7 +1896,8 @@
       ],
       "gotchas": [
         "The invoice select and \"Số thu\" depend on the open invoices of the shared finance database: the snapshot masks them (`<varies>`).",
-        "The button \"Xác nhận thu\" is disabled when no finance invoice has a balance."
+        "The button \"Xác nhận thu\" is disabled when no finance invoice has a balance.",
+        "Canvas: page() with the finance header, period 2026-06 (see WG11)."
       ]
     },
     "WG13": {
@@ -1898,7 +1913,8 @@
         "App H4 (Chốt kỳ) shows only the open period (\"Đang đối soát\") with \"Chốt tháng đã kết thúc\"; the closed state, the badge \"Đã chốt tháng\" and \"Xác nhận đã chi\" are not drawn there."
       ],
       "gotchas": [
-        "This id writes to the shared finance database (one approved row of 2026-08 and the closing); keep that in mind when the finance server is reset."
+        "This id writes to the shared finance database (one approved row of 2026-08 and the closing); keep that in mind when the finance server is reset.",
+        "Canvas: page() with the finance header, period 2026-08 (see WG11); the badge \"Đã chốt tháng\" is the info tone."
       ]
     },
     "WG14": {
@@ -1915,7 +1931,8 @@
       ],
       "gotchas": [
         "The voucher code (`reference`) is sent to the server but not shown on this tab.",
-        "Writes to the shared finance database (row of 2026-07, closed and paid), like WG13."
+        "Writes to the shared finance database (row of 2026-07, closed and paid), like WG13.",
+        "Canvas: page() with the finance header, period 2026-07 (see WG11); the badge \"Đã chi\" is the success tone."
       ]
     },
     "WG15": {
@@ -1931,7 +1948,8 @@
         "App D1 (Đối soát & thu ngân, accountant space) opens \"Tài chính & tiền thủ thuật\"; App H5 and H6 draw the payment cards and the notification list for the sample role without the accountant projection sentence."
       ],
       "gotchas": [
-        "Role variant: compare with WG5 (owner receipts tab). \"Giao dịch trong kỳ\" shows the last 20 payments, newest first (`state.payments.slice(-20).reverse()`); at snapshot time P001–P012, 2026-09-01 to 2026-09-12."
+        "Role variant: compare with WG5 (owner receipts tab). \"Giao dịch trong kỳ\" shows the last 20 payments, newest first (`state.payments.slice(-20).reverse()`); at snapshot time P001–P012, 2026-09-01 to 2026-09-12.",
+        "Canvas draws all 12 transactions of the period as list rows."
       ]
     },
     "WG16": {
@@ -1946,7 +1964,8 @@
         "App H3/H4 name the card button \"Hủy lượt\" (web: \"Hủy\"); their specs do not say how the reason is asked. The web uses the browser prompt, which the new UI should replace by a dialog with a required reason field (owner decision)."
       ],
       "gotchas": [
-        "The snapshot is the work tab before the prompt: the dialog itself is not part of the page."
+        "The snapshot is the work tab before the prompt: the dialog itself is not part of the page.",
+        "Canvas: as WG2, the entry form fields are drawn in a soft card under the collapsed head (the old disclosure is closed); the prompt is the NATIVE frame with the exact manifest text."
       ]
     },
     "WG17": {
@@ -1961,7 +1980,8 @@
       ],
       "gotchas": [
         "The finance server closes only a month that has an approved row (see WG13).",
-        "The page is 1467 px tall and the button sits under the table: the click scrolls the viewport down, so a screenshot taken after the click shows the end of the table, not the page head."
+        "The page is 1467 px tall and the button sits under the table: the click scrolls the viewport down, so a screenshot taken after the click shows the end of the table, not the page head.",
+        "Canvas: as WG16; the confirm text is the exact manifest text."
       ]
     },
     "WG18": {
@@ -1975,7 +1995,8 @@
         "App H4 draws no payout step."
       ],
       "gotchas": [
-        "Uses the closed period of WG13 (2026-08); the reach guards each set-up step so a rerun changes nothing."
+        "Uses the closed period of WG13 (2026-08); the reach guards each set-up step so a rerun changes nothing.",
+        "Canvas: page() with the finance header, period 2026-08 (see WG11); the prompt text \"Mã chứng từ chi\" is the exact manifest text."
       ]
     },
     "WG19": {
@@ -1990,7 +2011,8 @@
         "App H3 has no CSV export."
       ],
       "gotchas": [
-        "The harness opens the context with `acceptDownloads: false`; the snapshot is the page before the click."
+        "The harness opens the context with `acceptDownloads: false`; the snapshot is the page before the click.",
+        "Canvas: as WG16; the download bubble shows the file name of the manifest."
       ]
     },
     "WG20": {
@@ -2002,7 +2024,8 @@
         "App H7 \"Mất kết nối\" is a full error card with \"Thử lại\"; the web export error is one inline line and the page stays usable."
       ],
       "gotchas": [
-        "The line is the same `#error` element that carries every server error of the tab (WG21, WG22, WG23)."
+        "The line is the same `#error` element that carries every server error of the tab (WG21, WG22, WG23).",
+        "Canvas: the old #error is drawn as the boxed danger notice under the tabs."
       ]
     },
     "WG21": {
@@ -2017,7 +2040,8 @@
         "App H9 (Ghi lượt đã thực hiện) says \"Người phối hợp nhận phần tỷ trọng doanh số còn lại. Tổng tỷ lệ tiền không quá 100%.\" and the submit label \"Ghi nhận • Chờ kế toán duyệt\" (web: \"Ghi nhận • Chờ duyệt\"); the app spec has no error line."
       ],
       "gotchas": [
-        "The rule is checked by the server; the browser only enforces `required`, `min`, `max`."
+        "The rule is checked by the server; the browser only enforces `required`, `min`, `max`.",
+        "Canvas: the old #error is drawn as the boxed danger notice under the tabs; the form is drawn open with the typed values (note \"Đã thực hiện\", main doctor 50)."
       ]
     },
     "WG22": {
@@ -2028,7 +2052,8 @@
         "App H9 has the field \"Ghi chú xác nhận hoàn tất\" without an error line."
       ],
       "gotchas": [
-        "The field keeps the three spaces after the error, so the snapshot default reads \"   \"."
+        "The field keeps the three spaces after the error, so the snapshot default reads \"   \".",
+        "Canvas: boxed danger notice under the tabs; the note field keeps three spaces as the old field."
       ]
     },
     "WG23": {
@@ -2039,7 +2064,8 @@
         "App H5 collects cash with one button per invoice (no amount field), so an over-payment cannot be typed there."
       ],
       "gotchas": [
-        "The invoice select and the prefilled amount depend on the shared finance database: the snapshot masks them (`<varies>`)."
+        "The invoice select and the prefilled amount depend on the shared finance database: the snapshot masks them (`<varies>`).",
+        "Canvas: boxed danger notice under the tabs; \"Số thu\" shows 99999999 as typed by the reach."
       ]
     },
     "WH15": {

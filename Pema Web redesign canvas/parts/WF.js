@@ -158,3 +158,134 @@ const WF = [
       cart: [empty('Chọn sản phẩm ở danh sách.'), wfTotal(money(0))]
     }), wfOrderOpts())
 ];
+
+// ---- W6c-REST: ids WF11-WF25 (error and variant states of the cashier, the quick-order dialog and the A5 review page) ----------------
+// Source: design-specs/web/screens/WF11..WF25.md and the old-web shots. Appended with WF.push so the frames above stay as they were.
+const wfStatusDraft = n => 'Bản nháp · Bác sĩ phụ trách: ' + wfDoctor + ' · A5 dọc 148 × 210 mm · ' + n + ' sản phẩm';
+const wfStatusDone = 'Đã duyệt bởi ' + wfDoctor + ' · A5 dọc 148 × 210 mm · 2 sản phẩm';
+// "Không in (1): …" line of #review-excluded: plain text, the line is not a boxed notice in the old page
+const wfExcludedLine = () => txt('Không in (1): ' + wfCatalog[0][1] + ' — Không cần in. Vẫn tính trong hóa đơn.');
+// review page without the approve button (accountant, or an approved order) and with every print button disabled or enabled
+const wfPrintBtns = ready => [secondary('In đơn thuốc', { dis: !ready }), secondary('In phiếu tư vấn', { dis: !ready }), secondary('In tất cả', { dis: !ready }), secondary('Về thu ngân')];
+// the print-media card of WF6, reused by WF19 for the "-print" shots (two sheets one after the other, no toolbar, no draft mark)
+const wfPrintCard = () => card({ title: 'Bản in (print media)', sub: 'Khi bấm in: mỗi bộ phiếu một trang, chữ và đường kẻ đen, logo xám; không có thanh công cụ' },
+  list([
+    { t: 'ĐƠN THUỐC', sub: 'Phiếu A5 dọc, không dấu nháp' },
+    { t: 'PHIẾU TƯ VẤN', sub: 'Phiếu A5 dọc, không dấu nháp' }
+  ], { box: true }));
+
+// cashier page variants (WF21, WF22, WF24, WF25): same page as WF1, the list of invoices and the order history change
+const wfFinLink = 'Tài chính chờ kết nối · thử lại';
+const wfTiles2 = (total, collected, due) => kpis(kpi('Tổng hóa đơn', String(total), 'Dữ liệu giả lập'), kpi('Đã thu', money(collected), 'Tổng lũy kế'), kpi('Còn phải thu', money(due), 'Không thu trùng'), kpi('Catalog sản phẩm', '115', 'Từ danhsach.xlsx'));
+const wfInvCols = [['Hóa đơn / bệnh nhân', '1.7fr'], ['Dịch vụ / đơn nhanh', '1.3fr'], ['Tổng tiền', '1fr', 'r'], ['Đã thu', '1fr', 'r'], ['Còn lại', '1fr', 'r'], ['', '120px']];
+const wfInvRow = (p, code, date, svc, total, got) => [[strong(p.name), sm(code + ' · ' + date)], svc, money(total), money(got), money(total - got), total > got ? [primary('Thu tiền', { sm: true })] : [wfPaid()]];
+// invoice created by the quick order: service cell = "Đơn sản phẩm · n dòng", order code and the quiet "In tách đơn" link
+const wfOrderInvRow = (lines, total) => [[strong(people[0].name), sm('HD-7F3A9C · 2026-09-20')], ['Đơn sản phẩm · ' + lines + ' dòng', sm('OD-B21E40 ·'), quiet('In tách đơn', { sm: true })], money(total), money(0), money(total), [primary('Thu tiền', { sm: true })]];
+const wfInvPager = (text, prevDis, nextDis) => row({ jc: 'space-between' }, txt(text), row(secondary('← Trước', { dis: prevDis }), secondary('Sau →', { dis: nextDis })));
+const wfInvPanel = (sel, rows, text, o = {}) => panel('Hóa đơn & thanh toán', '', [chip('Tất cả', sel === 0 ? 'sel' : ''), chip('Còn phải thu', sel === 1 ? 'sel' : ''), chip('Đã thanh toán', sel === 2 ? 'sel' : '')],
+  table(wfInvCols, rows, o.empty ? { empty: o.empty } : {}),
+  wfInvPager(text, true, !!o.nextDis));
+const wfBase3 = () => [wfInvRow(people[0], 'HD-0001', '2026-09-06', 'Buổi chăm sóc / điều trị', 1200000, 1200000), wfInvRow(people[0], 'HD-DEMO-001', '2026-09-20', 'Tái khám & đánh giá', 300000, 150000), wfInvRow(people[1], 'HD-0002', '2026-09-06', 'Buổi chăm sóc / điều trị', 1500000, 1500000), wfInvRow(people[1], 'HD-DEMO-002', '2026-09-20', 'Tư vấn da liễu', 500000, 0)];
+const wfDueRows = () => [
+  wfInvRow(people[0], 'HD-DEMO-001', '2026-09-20', 'Tái khám & đánh giá', 300000, 150000),
+  wfInvRow(people[1], 'HD-DEMO-002', '2026-09-20', 'Tư vấn da liễu', 500000, 0),
+  wfInvRow(people[2], 'HD-DEMO-003', '2026-09-20', 'Laser theo chỉ định', 2500000, 0),
+  wfInvRow(people[3], 'HD-DEMO-004', '2026-09-20', 'Chăm sóc theo chỉ định', 1200000, 600000),
+  wfInvRow(people[4], 'HD-DEMO-005', '2026-09-20', 'Tái khám & đánh giá', 300000, 0)
+];
+const wfHistoryRow = (status, n, editable) => panel('Đơn thuốc & phiếu tư vấn', 'Nháp → bác sĩ duyệt → in và hiển thị trên app', [],
+  list([{ t: people[0].name, sub: wfDate + ' · ' + n + ' sản phẩm · ' + status, actions: [secondary('Xem / in'), ...(editable ? [secondary('Sửa nháp')] : [])] }], { box: true }));
+const wfHistoryEmpty = () => panel('Đơn thuốc & phiếu tư vấn', 'Nháp → bác sĩ duyệt → in và hiển thị trên app', [], empty('Chưa có đơn từ catalog.', '', { flat: true }));
+const wfCashier2 = (tiles, inv, history) => [wfCashierHead(), tiles, wfBanner(), inv, history];
+
+WF.push(
+  // WF11 · quick order saved with no product: the dialog stays open, red line under the notice
+  dlg('WF11', 'Tạo đơn thuốc / phiếu tư vấn', WEB + 'cashier › Lên đơn nhanh · bấm "Lưu nháp & xem tách đơn" khi chưa chọn sản phẩm: hộp thoại vẫn mở, giữ bệnh nhân, bác sĩ và chẩn đoán, dòng đỏ "Chọn ít nhất một sản phẩm." nằm trên hàng nút; như app F4 (app không có dòng lỗi này) · chưa có trên Next.js',
+    [...wfOrderForm({ results: wfProductList(), cart: [empty('Chọn sản phẩm ở danh sách.'), wfTotal(money(0))] }), errLine('Chọn ít nhất một sản phẩm.')], wfOrderOpts()),
+
+  // WF12 · one sheet, a prescription product only
+  page('WF12', 'Tách đơn · chỉ có đơn thuốc', WEB + 'order-review · một sản phẩm thuốc: chỉ có phiếu ĐƠN THUỐC, không có phiếu tư vấn; trang độc lập vẽ trong khung ứng dụng như WF5 · chưa có trên Next.js', 'cashier', [
+    wfHead(wfStatusDraft(1), wfReviewBtns({ ready: false })),
+    grid(2, wfSheet('rx', wfRx, true, wfUsage))
+  ], { state: true }),
+
+  // WF13 · one sheet, a consultation product only
+  page('WF13', 'Tách đơn · chỉ có phiếu tư vấn', WEB + 'order-review · một sản phẩm mỹ phẩm: chỉ có phiếu PHIẾU TƯ VẤN, không có phiếu thuốc; trang độc lập vẽ trong khung ứng dụng như WF5 · chưa có trên Next.js', 'cashier', [
+    wfHead(wfStatusDraft(1), wfReviewBtns({ ready: false })),
+    grid(2, wfSheet('cons', wfCons, true, wfUsage))
+  ], { state: true }),
+
+  // WF14 · a line routed to "Không in": the paragraph "Không in (1): …" above the only sheet
+  page('WF14', 'Tách đơn · có sản phẩm "Không in"', WEB + 'order-review · một dòng chọn loại "Không in" kèm lý do: đoạn chữ "Không in (1): … — Không cần in. Vẫn tính trong hóa đơn." nằm trên phiếu tư vấn còn lại; app F5 không có loại "Không in" · chưa có trên Next.js', 'cashier', [
+    wfHead(wfStatusDraft(2), wfReviewBtns({ ready: false })),
+    wfExcludedLine(),
+    grid(2, wfSheet('cons', wfCons, true, wfUsage))
+  ], { state: true }),
+
+  // WF15 · approve pressed with a line that has no usage: red line, the sheet prints the placeholder
+  page('WF15', 'Tách đơn · lỗi khi duyệt (thiếu cách dùng)', WEB + 'order-review · bấm "Bác sĩ duyệt & gửi app" khi dòng chưa có cách dùng: dòng đỏ "Dòng 1: cần cách dùng trước khi duyệt." dưới thanh công cụ, phiếu in chữ "Chưa nhập cách dùng"; app F5 khóa nút duyệt thay vì báo lỗi · chưa có trên Next.js', 'cashier', [
+    wfHead(wfStatusDraft(1), wfReviewBtns({ ready: false })),
+    errLine('Dòng 1: cần cách dùng trước khi duyệt.'),
+    grid(2, wfSheet('rx', wfRx, true, 'Chưa nhập cách dùng'))
+  ], { state: true }),
+
+  // WF16 · every line is "Không in": nothing to issue, no sheet at all
+  page('WF16', 'Tách đơn · không có sản phẩm để phát hành', WEB + 'order-review · mọi dòng là "Không in": dòng đỏ "Đơn không có sản phẩm để phát hành.", đoạn "Không in (1)…", không có phiếu nào; app F5 không có trạng thái này · chưa có trên Next.js', 'cashier', [
+    wfHead(wfStatusDraft(1), wfReviewBtns({ ready: false })),
+    errLine('Đơn không có sản phẩm để phát hành.'),
+    wfExcludedLine()
+  ], { state: true }),
+
+  // WF17 · stale link: patient code present, order code unknown
+  page('WF17', 'Tách đơn · không tìm thấy đơn', WEB + 'order-review · mở liên kết cũ (có mã bệnh nhân, mã đơn không còn): tiêu đề "Tách đơn", ba nút in bị khóa, không có nút duyệt, dòng đỏ "Không tìm thấy đơn."; WF8 là trang mở không kèm mã nào · chưa có trên Next.js', 'cashier', [
+    pageHead('Tách đơn', '', wfPrintBtns(false)),
+    errLine('Không tìm thấy đơn.')
+  ], { state: true }),
+
+  // WF18 · accountant opens a draft: both sheets, no approve button, print buttons disabled
+  page('WF18', 'Tách đơn · bản nháp · tài khoản không phải bác sĩ', WEB + 'order-review · tài khoản kế toán mở đơn nháp: thanh công cụ không có nút "Bác sĩ duyệt & gửi app" (thiếu quyền lâm sàng), ba nút in bị khóa, hai phiếu vẫn có dấu nháp; app F5 hiện ghi chú "Tài khoản bác sĩ mô phỏng" thay vì ẩn nút · chưa có trên Next.js', 'cashier', [
+    wfHead(wfStatusDraft(2), wfReviewBtns({ ready: false, approve: false })),
+    wfSheets(true)
+  ], { state: true, role: 'accountant' }),
+
+  // WF19 · approved order, "In đơn thuốc" pressed: the native print dialog opens over the page (the -print shots show the print media)
+  page('WF19', 'In đơn thuốc (hộp thoại in của trình duyệt)', WEB + 'order-review · sau khi duyệt bấm "In đơn thuốc", "In phiếu tư vấn" hoặc "In tất cả": trình duyệt mở hộp thoại in (window.print), không có chữ; hai phiếu A5 chữ đen một sau một ở bản in, như WF6; app F7 nói "In / chia sẻ PDF native sẽ nối sau khi duyệt template" · chưa có trên Next.js', 'cashier', [
+    wfHead(wfStatusDone, wfPrintBtns(true)),
+    wfSheets(false),
+    wfPrintCard()
+  ], { state: true, native: native('print') }),
+
+  // WF20 · edit of a draft whose invoice was paid: the dialog refuses, the payment toast is still on the page
+  dlg('WF20', 'Sửa đơn nháp', WEB + 'cashier › Sửa nháp · đơn đã thu tiền: lưu bị từ chối, hộp thoại giữ nguyên với bệnh nhân bị khóa và một dòng sản phẩm, dòng đỏ "Đơn đã thu tiền hoặc thiếu hóa đơn; không thể sửa.", thông báo "Đã ghi phiếu thu và cập nhật hóa đơn" của lần thu vừa rồi còn trên trang; app F4/F5 không có luồng sửa nháp · chưa có trên Next.js',
+    [...wfOrderForm({ locked: true, results: wfProductList(), cart: [wfLine(1, 'H002', wfCatalog[0][1], 'Viên', 5500, 'Đơn thuốc', wfUsage), wfTotal(money(5500))] }), errLine('Đơn đã thu tiền hoặc thiếu hóa đơn; không thể sửa.')],
+    { ...wfOrderOpts(), behind: [wfCashierHead(), wfHistory()], toast: 'Đã ghi phiếu thu và cập nhật hóa đơn' }),
+
+  // WF21 · a draft order exists: new invoice row with the order code and "In tách đơn", history row with Xem / in + Sửa nháp
+  page('WF21', 'Thu ngân · có đơn nháp', WEB + 'cashier · sau khi lưu một đơn nháp: hóa đơn mới ở đầu danh sách ("Đơn sản phẩm · 1 dòng", mã đơn, nút "In tách đơn"), còn 49 hóa đơn, dòng lịch sử "Bản nháp" có "Xem / in" và "Sửa nháp"; thanh trên "Tài chính chờ kết nối · thử lại" vì máy chủ tài chính bị chặn; app I10 không có lịch sử đơn · chưa có trên Next.js', 'cashier',
+    wfCashier2(wfTiles2(49, 61650000, 11255500), wfInvPanel(0, [wfOrderInvRow(1, 5500), ...wfBase3()], '49 hóa đơn · Trang 1/5'), wfHistoryRow('Bản nháp', 1, true)),
+    { state: true, fin: wfFinLink }),
+
+  // WF22 · an approved order: only "Xem / in"
+  page('WF22', 'Thu ngân · có đơn đã duyệt', WEB + 'cashier · đơn đã duyệt: dòng lịch sử "Đã duyệt" chỉ còn "Xem / in" (không còn "Sửa nháp"), hóa đơn đầu danh sách "Đơn sản phẩm · 2 dòng" kèm "In tách đơn"; so với WF21 cùng trang, khác nháp và đã duyệt · chưa có trên Next.js', 'cashier',
+    wfCashier2(wfTiles2(49, 61650000, 11970500), wfInvPanel(0, [wfOrderInvRow(2, 720500), ...wfBase3()], '49 hóa đơn · Trang 1/5'), wfHistoryRow('Đã duyệt', 2, false)),
+    { state: true, fin: wfFinLink }),
+
+  // WF23 · payment amount error
+  dlg('WF23', 'Thu tiền · ' + people[0].name, WEB + 'cashier › Thu tiền · nhập số tiền 0: hộp thoại giữ nguyên, dòng đỏ "Số tiền phải lớn hơn 0 và không vượt số còn lại." dưới nút "Xác nhận thu tiền", không ghi gì; như app I11 (app không có dòng lỗi) · chưa có trên Next.js', [
+    notice('HD-DEMO-001 · Còn lại ' + money(150000), 'info'),
+    number('Số tiền (VND)', '0'),
+    select('Phương thức', 'Tiền mặt', { opts: ['Tiền mặt', 'Chuyển khoản'] }),
+    row(primary('Xác nhận thu tiền')),
+    errLine('Số tiền phải lớn hơn 0 và không vượt số còn lại.')
+  ], { eyebrow: 'Pema · vận hành', nav: 'cashier', behind: wfBehind() }),
+
+  // WF24 · filter "Còn phải thu": 12 invoices, one page, no order history
+  page('WF24', 'Thu ngân · lọc "Còn phải thu"', WEB + 'cashier · lọc "Còn phải thu": chỉ các hóa đơn còn nợ (mọi dòng có "Thu tiền"), "12 hóa đơn · Trang 1/1" với hai nút phân trang đều tắt, ô tổng không đổi theo bộ lọc, lịch sử đơn báo "Chưa có đơn từ catalog."; lọc "Đã thanh toán" và nút phân trang chỉ đổi các dòng; app I10 có ba bộ lọc nhưng không phân trang · chưa có trên Next.js', 'cashier',
+    wfCashier2(wfTiles2(48, 61650000, 11250000), wfInvPanel(1, wfDueRows(), '12 hóa đơn · Trang 1/1', { nextDis: true }), wfHistoryEmpty()),
+    { state: true }),
+
+  // WF25 · every invoice paid: empty row, 0 invoices, the last payment toast still visible
+  page('WF25', 'Thu ngân · không có hóa đơn', WEB + 'cashier · sau khi thu hết 12 hóa đơn nợ, lọc "Còn phải thu" chỉ có dòng "Không có hóa đơn.", "0 hóa đơn · Trang 1/1", ô "Còn phải thu" 0 ₫, thông báo "Đã ghi phiếu thu và cập nhật hóa đơn" của lần thu cuối còn trên trang, lịch sử đơn vẫn "Chưa có đơn từ catalog."; app I10 không có trạng thái rỗng · chưa có trên Next.js', 'cashier',
+    wfCashier2(wfTiles2(48, 72900000, 0), wfInvPanel(1, [], '0 hóa đơn · Trang 1/1', { empty: 'Không có hóa đơn.', nextDis: true }), wfHistoryEmpty()),
+    { state: true, fin: wfFinLink, toast: 'Đã ghi phiếu thu và cập nhật hóa đơn' })
+);
