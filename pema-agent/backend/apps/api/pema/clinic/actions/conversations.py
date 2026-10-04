@@ -41,6 +41,7 @@ from pema.clinic.models import (
     Message,
     Patient,
     ReviewItem,
+    UserAccount,
 )
 from pema.clinic.rbac import require
 from pema.core.db import ClinicDatabase

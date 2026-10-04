@@ -128,7 +128,7 @@ Worker và API là hai tiến trình; chúng gặp nhau qua kênh Redis pub/sub 
 | Điểm cuối | Ai gọi | Ghi chú |
 |---|---|---|
 | `GET /api/v1/staff/assignable` | mọi nhân viên đã đăng nhập (kể cả lễ tân, CSKH) | `[{id, name, role}]` của nhân viên **đang hoạt động** có vai trò làm được hội thoại và việc CSKH (chủ, quản lý, bác sĩ, CSKH; không lễ tân), A-Z theo tên; không email, SĐT, hash, lần đăng nhập cuối; 60 lần/phút mỗi người; 401 khi chưa có phiên |
-| `PATCH /api/v1/conversations/{id}` (`assigned_user_id`) | quyền `conversation.reply` | giao cho đồng nghiệp hoặc `null` (chưa giao) |
+| `PATCH /api/v1/conversations/{id}` (`assigned_user_id`) | quyền `conversation.reply` | giao cho đồng nghiệp hoặc `null` (chưa giao); thành công thì phát `inbox.changed` tới các màn hình khác (mục trên) |
 | `POST /api/v1/crm/tasks/{id}/resolve` (`owner_user_id`) | quyền `crm_task.resolve` | người phụ trách của việc CSKH |
 | `POST/PATCH /api/v1/patients` (`doctor_id`, `cs_owner_id`) | quyền `patient.write` | bác sĩ điều trị, CSKH phụ trách hồ sơ |
 

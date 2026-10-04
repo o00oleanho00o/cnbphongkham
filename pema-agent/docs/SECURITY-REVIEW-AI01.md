@@ -189,6 +189,7 @@ Quyết định: mỗi bản cài MỘT phòng khám, với server, Postgres, Re
 
 Những mục đã xét lại mà không đổi mức: SEC-11 ("cùng phòng khám" nay là toàn CSDL), SEC-24 (các câu "khác phòng khám là 404" ở route nhân viên không còn nghĩa; việc bỏ do ST-B), webhook (đường mới không có đoạn phòng khám; bí mật webhook, chữ ký HMAC và danh sách cho phép không đổi). Webhook đã đăng ký ở Zalo bằng đường cũ sẽ trả 404 tới khi đăng ký lại: không phải lỗ hổng, là việc nâng cấp.
 
+
 ## 8. Cập nhật trực tiếp và hiện diện (gói ST-R)
 
 Thêm luồng SSE `GET /api/v1/events`, kênh Redis `pema:live:<clinic_id>` và hiện diện (`POST/DELETE /conversations/{id}/presence`, `viewers`). Các mục dưới đây mới, chưa tính vào bảng tổng ở mục 1.
@@ -216,7 +217,7 @@ Ngày 2026-10-02, nhánh `integration/st-live`. Hai việc: chạy thật (docke
 | SEC-58 | Thấp | `use-presence-heartbeat.ts` | Đóng thẻ, tải lại trang hay gõ địa chỉ mới (tải toàn trang) KHÔNG gửi lệnh rời đi (chỉ điều hướng trong ứng dụng làm bộ nhớ trang gỡ hội thoại và gửi `DELETE`). Đồng nghiệp còn thấy "đang trả lời" tới khi nhịp hết hạn: đo được 31 giây (TTL 30 giây cộng 1 giây trễ của sự kiện hết hạn), hơi quá "30 giây" trong tài liệu. Chỉ là cảnh báo, không bao giờ chặn gửi. Hướng sửa: `pagehide` gọi `fetch(DELETE, {keepalive: true})`. Không làm trong gói này: hành vi hiện tại đúng với đặc tả (TTL là chốt cuối) nên đây là cải tiến, không phải lỗi. | **Mở** (cải tiến) |
 | SEC-59 | Thông tin | khóa Redis | Kênh `pema:live:<clinic_id>` có mã phòng khám, khóa hiện diện `pema:presence:<conversation_id>` thì không (các khóa Redis khác như `pema:sched` cũng vậy). Hai bản cài dùng chung một Redis vẫn là cấm theo SEC-45 và SEC-48; nếu lỡ dùng chung: sự kiện không lẫn (kênh khác nhau), hiện diện cũng không lẫn vì mã hội thoại là UUID khác nhau, nhưng mọi khóa khác của Redis (hàng đợi lượt, khóa lịch) vẫn lẫn, nên không vá riêng chỗ này. Đổi `PEMA_CLINIC_ID` trong `.env` sau khi đã cài: `migrate.sh` dừng; kênh theo CSDL nên API và worker không bị tách đôi. | Chấp nhận (theo SEC-48) |
 
-## 8. Cập nhật ST-S: chọn người phụ trách thật (`GET /api/v1/staff/assignable`)
+## 10. Cập nhật ST-S: chọn người phụ trách thật (`GET /api/v1/staff/assignable`)
 
 Gói ST-S thêm route danh sách nhân viên giao được cho MỌI nhân viên đã đăng nhập, và đưa mọi nơi nhận "người được giao" về một kiểm tra phía máy chủ. Các mục dưới đây đánh số từ SEC-60 để không đụng số của các gói song song (SEC-49 trở đi); chưa tính vào bảng tổng ở mục 1.
 

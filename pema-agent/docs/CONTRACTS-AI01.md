@@ -360,9 +360,8 @@ the clinic calls `ctx.the_clinic_id()`. Python that needs the id calls `get_inst
 * Webhooks: `POST /api/v1/webhooks/zalo-bot/{account_id}` and `POST /api/v1/webhooks/zalo-bridge/{account_id}`; the
   bridge `.env.example`, Caddyfile, `infra/README.md` and the Ubuntu guide use the same paths. `openapi.json` and
   `frontend/src/lib/api/schema.d.ts` are regenerated (`make openapi types`); `LoginRequest` is e-mail + password.
-* Not yet in the backend (wave 4, the frontend mock serves them as `PENDING_CONTRACT`): `GET /api/v1/events` (SSE),
-  `POST /api/v1/conversations/{conversation_id}/presence`. `GET /api/v1/staff/assignable` is in the backend since
-  ST-S (section 10.9).
+* Live updates (`GET /api/v1/events`, presence) are in the backend since ST-R (section 11); `GET /api/v1/staff/assignable`
+  since ST-S (section 10.9). The frontend mock serves all of them and `mock/contract.test.ts` has no pending list left.
 * New closed-loop tests: `tests/integration/test_loop_single_tenant.py` (real login with e-mail and password only, then
   `/me` and refresh; two Zalo bot accounts of the one clinic answer their own customers independently, each with its own
   webhook secret). The harness `pema.composition.testing.open_loop` takes `extra_accounts`.
@@ -392,8 +391,11 @@ Decisions:
 * **Audit** (same transaction, ids only): `conversation.update` adds `assignee_from`/`assignee_to`, `crm_task.resolve`
   adds `owner_from`/`owner_to`, `patient.create`/`patient.update` add `doctor_id_from/_to`, `cs_owner_id_from/_to`. The
   actor (id, role) and the entity are the existing columns.
-* No live event is published by these writes (ST-R owns events and presence); the existing `tasks.changed`-like hooks, if
-  any, are untouched.
+* Live events: the writes emit what ST-R already emits (section 11), the assignee check does not change that.
+  `PATCH /conversations/{id}` that assigns a colleague publishes `inbox.changed` with the conversation id (after the commit,
+  so a refused 422 assignee publishes nothing); resolving a task publishes `tasks.changed`. Tests:
+  `tests/live/test_events_route.py::test_handing_a_conversation_to_a_colleague_reaches_the_colleagues_stream` and
+  `test_a_refused_assignee_announces_nothing`.
 * Security entries: `SECURITY-REVIEW-AI01` SEC-60 to SEC-63.
 
 ## 11. Live updates and presence (package ST-R)

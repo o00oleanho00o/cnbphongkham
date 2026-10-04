@@ -449,4 +449,15 @@ describe("Inbox assignment box", () => {
     expect(header).not.toBeNull();
     expect(within(header as HTMLElement).getByLabelText("Trạng thái hội thoại")).toBeTruthy();
   });
+
+  it("shows the viewers line and the assignee box in the same thread header", async () => {
+    api.search.current = `c=${C1}`;
+    listViewers = [{ user_id: LAN, name: "Bùi Ngọc Lan", state: "viewing" }];
+    detailViewers = listViewers;
+    renderInbox();
+    const box = await screen.findByLabelText("Phụ trách hội thoại");
+    const header = box.closest("header") as HTMLElement;
+    expect(within(header).getByTestId("presence-line")).toBeTruthy();
+    expect(within(header).getByLabelText("Trạng thái hội thoại")).toBeTruthy();
+  });
 });

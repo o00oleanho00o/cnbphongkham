@@ -1,6 +1,6 @@
 // Calls of the live package. Presence goes through the typed client (`http`, generated from the OpenAPI) and
 // `unwrap`, so a 401 still sends the browser to /login and an error is the BE's Vietnamese `ApiError`.
-// (`GET /api/v1/staff/assignable` is in the generated client now: see `lib/staff/`.)
+// (`GET /api/v1/staff/assignable` is in `lib/staff/`.)
 import { http, unwrap } from "@/lib/api/client";
 
 import type { PresenceState } from "@/lib/live/live-types";

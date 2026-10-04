@@ -1,8 +1,8 @@
-// Mock of the routes for several people working at once. Events and presence are in openapi.json (backend
-// package ST-R); `GET /api/v1/staff/assignable` is in the contract too and is served by mock/handlers/staff.ts:
+// Mock of the routes for several people working at once (all in openapi.json, backend package ST-R):
 //   GET    /api/v1/events                         SSE, `data: {"type": "...", "id": "..."}`; no message text
 //   POST   /api/v1/conversations/{id}/presence    {state: "viewing" | "replying"} -> 204
 //   DELETE /api/v1/conversations/{id}/presence    I left the conversation -> 204
+// (`GET /api/v1/staff/assignable` is in mock/handlers/staff.ts.)
 import { fail, type Ctx, type Reply, type Router, type Session } from "../core";
 import { emitLive, leavePresence, subscribe, touchPresence, type PresenceState } from "../live-bus";
 
