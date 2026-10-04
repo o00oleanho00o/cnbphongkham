@@ -1,4 +1,7 @@
-# W5 — Push the web canvas to claude.ai/design (director with the user, not a subagent)
+# W5 — Push the web canvas to claude.ai/design (director with the user, not a subagent) — OPTIONAL
+
+The canvas already runs locally: `docker compose up -d --build pema-web-design-viewer` (repo root) serves it at http://127.0.0.1:4191/
+(the app canvas stays at 4190). Do W5 only if the owner wants the canvas on claude.ai/design too.
 
 ## Goal
 Put `Pema Web redesign canvas/Pema Web.dc.html` and its `support.js` on claude.ai/design as their own project, and

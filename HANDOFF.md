@@ -385,7 +385,8 @@ Known gaps (2026-10-04):
 | W3b WA…WH (8 agents) | `design/w3b-wa` … `w3b-wh` | `9a1fe5d` WA, `43555e0` WE, `58ae88a` WD, `bd64183` WH, `77cae65` WG, `768912a` WF, WB, `453e114` WC | each group `--complete` check 0 | `notes.json` conflicts resolved by structured JSON merge |
 | W3c template fixes | `design/w3c` | `c40ba22` | all 81: errors/overflow/unresolved/missing empty; `web-specs --check` 0; 154 `demo_data` exemptions → 0 | bell by role, money nowrap, hero actions, dialog close label, table row variants, card tint, board buffer, notice bullets |
 | W4 skill, docs, audit | `design/w4` 6 commits | merge on `feat/web-design` | inventory/specs/canvas/coverage all 81; counts table equal | `pema-web-design` SKILL.md, `coverage-web.md`, `web-design-changes.md` + `pending-web.cjs`, CLAUDE.md section, `design-specs/README.md` row, SECTION_PROGRESS |
-| W5 push to claude.ai/design | — | — | — | needs the user: create project "Pema Web redesign canvas", run `/design-sync`; see `recipes/W/07-W5-push-design.md` |
+| Local viewer (Docker) | `feat/web-design` | — | image builds, `http://127.0.0.1:4191/` serves `Pema Web.dc.html` (462 KB), 0 page errors | `docker compose up -d --build pema-web-design-viewer` from the repo root; `design-viewer/Dockerfile` takes `CANVAS_DIR` (default app canvas, port 4190); the "Pema Web" tab is next to "Pema Web blocks" |
+| W5 push to claude.ai/design | — | — | — | OPTIONAL now (only to share on claude.ai): needs the user to create the project and run `/design-sync`; see `recipes/W/07-W5-push-design.md` |
 
 ## Next Steps (only when the user asks)
 

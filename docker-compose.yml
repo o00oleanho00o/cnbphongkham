@@ -16,3 +16,14 @@ services:
     ports:
       - "4190:80"
     restart: unless-stopped
+
+  pema-web-design-viewer:
+    build:
+      context: .
+      dockerfile: design-viewer/Dockerfile
+      args:
+        CANVAS_DIR: "Pema Web redesign canvas"
+    container_name: pema-web-design-viewer
+    ports:
+      - "4191:80"
+    restart: unless-stopped
