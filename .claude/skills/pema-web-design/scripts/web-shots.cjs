@@ -62,6 +62,37 @@ async function metrics(page) {
   });
 }
 
+/**
+ * finance-bridge.js writes a status link into the topbar ("Đang đồng bộ tài chính…" -> "Tài chính đã đồng bộ") after
+ * every change, about 300 ms after the click. Wait until it is final, or the shot shows either text at random.
+ * Pages without the link (the order review popup) pass at once.
+ */
+async function financeSynced(page, timeout, soft) {
+  await page.waitForTimeout(450);
+  // the bridge syncs once at load and then every 10 s; if it has not shown a status yet, ask it to sync now
+  // (`pema-external` is the event the web itself uses for that)
+  await page.evaluate(() => {
+    const el = document.getElementById('finance-sync');
+    if (document.querySelector('.top-actions') && (!el || !/đã đồng bộ/.test(el.textContent || ''))) {
+      window.dispatchEvent(new Event('pema-external'));
+    }
+  });
+  try {
+    await page.waitForFunction(
+      () => {
+        if (!document.querySelector('.top-actions')) return true;
+        const el = document.getElementById('finance-sync');
+        return !!el && /đã đồng bộ/.test(el.textContent || '');
+      },
+      null,
+      { timeout },
+    );
+  } catch (e) {
+    if (!soft) throw new Error('finance sync status never reached "đã đồng bộ"');
+  }
+  await page.waitForTimeout(100);
+}
+
 /** One entry at one viewport: returns [{file, media, ...metrics, page_errors}] or throws. */
 async function captureOne(browser, inv, entry, viewport, outDir, lenient) {
   const [w, h] = viewport;
@@ -74,6 +105,7 @@ async function captureOne(browser, inv, entry, viewport, outDir, lenient) {
       await shown.waitForLoadState('networkidle', { timeout: 6000 }).catch(() => {});
       await ow.settle(shown, 300);
     }
+    await financeSynced(shown, transient ? 1800 : 6000, transient || lenient);
     const why = await ow.verify(shown, entry);
     // `expect` not met: the first try fails (and is retried once); the retry still shoots the screen and records why,
     // because a responsive layout may legitimately hide the element (the 390px sidebar has no brand logo)
