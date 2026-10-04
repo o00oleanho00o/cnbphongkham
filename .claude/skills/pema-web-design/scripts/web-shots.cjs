@@ -93,6 +93,18 @@ async function financeSynced(page, timeout, soft) {
   await page.waitForTimeout(100);
 }
 
+/** Fire the native call of a `native: true` entry on the already shot page and return what the browser showed. */
+async function nativeDialog(page, entry, role) {
+  const n = entry.native_dialog;
+  if (n.type === 'select') {
+    const options = await page.$$eval(`${n.selector} option`, (els) => els.map((e) => (e.textContent || '').trim()));
+    return { type: 'select', options };
+  }
+  const target = await ow.run(page, n.trigger || [], { base: BASE, role: entry.role || role });
+  const got = (target.dialogs || []).at(-1);
+  return got ? { type: got.type, message: got.message } : { type: n.type, message: null };
+}
+
 /** One entry at one viewport: returns [{file, media, ...metrics, page_errors}] or throws. */
 async function captureOne(browser, inv, entry, viewport, outDir, lenient) {
   const [w, h] = viewport;
@@ -110,6 +122,15 @@ async function captureOne(browser, inv, entry, viewport, outDir, lenient) {
     // `expect` not met: the first try fails (and is retried once); the retry still shoots the screen and records why,
     // because a responsive layout may legitimately hide the element (the 390px sidebar has no brand logo)
     if (why && !lenient) throw new Error(`expect: ${why}`);
+    // a dialog is capped at 90vh and scrolls inside: at 390x844 its error line / status chip sits below the fold. Scroll the
+    // element the entry expects into view (nearest, so a visible element does not move) or the shot shows no state at all.
+    if (entry.expect && entry.expect.selector) {
+      await shown.evaluate((css) => {
+        const el = [...document.querySelectorAll(css)].find((e) => e.offsetParent !== null || e.getClientRects().length);
+        if (el && el.closest('.modal')) el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }, entry.expect.selector);
+      await ow.settle(shown, 150);
+    }
     const base = `${entry.id}-${vpName(viewport)}`;
     const shots = [{ file: `${base}.png`, media: 'screen' }];
     if (PRINT_IDS.includes(entry.id)) shots.push({ file: `${base}-print.png`, media: 'print' });
@@ -122,6 +143,13 @@ async function captureOne(browser, inv, entry, viewport, outDir, lenient) {
       const m = await metrics(shown);
       await shown.screenshot({ path: path.join(outDir, s.file) });
       out.push({ ...s, page_width: m.page_width, content_width: m.content_width, overflow: m.page_width > w, expect_unmet: why || null });
+    }
+    // native-dialog ids: the shot above is the page right before the native call; fire it now and record what the browser
+    // showed (confirm/prompt message, or the <option> texts of a native select) in the manifest
+    if (entry.native) {
+      const nd = await nativeDialog(shown, entry, inv.role);
+      out[0].native_dialog = nd;
+      if (!nd.message && !nd.options) throw new Error('native dialog not captured');
     }
     // page errors raised while the screen was reached and shot (collected by freeze on every page of the context)
     const errors = [...page.errors];
@@ -160,6 +188,7 @@ function entryRows(inv, entry, viewport, results, outDir) {
       content_width: r.content_width,
       overflow: r.overflow,
       expect_unmet: r.expect_unmet,
+      ...(r.native_dialog ? { native_dialog: r.native_dialog } : {}),
       page_errors: r.page_errors,
     });
     if (exists && r.media === 'screen' && entry.legacy_shot) {
