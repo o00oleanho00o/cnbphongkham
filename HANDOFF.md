@@ -312,7 +312,7 @@ Gates before merging a worktree: FE vitest ≥ 407 and `pnpm inventory`/`pnpm vi
 BE pytest/ruff/pyright/import-linter, no attribution in `git log --format=%B`, report filed. Migrations use prefix
 `u<step>_`; U8 adds the merge head. Photos: upload/view with consent only, no image analysis (scope unchanged).
 
-## Package W — design of the old Pema web: screenshots, screen specs, web canvas (PLANNED 2026-10-04, awaiting owner approval)
+## Package W — design of the old Pema web: screenshots, screen specs, web canvas (BUILT on `feat/web-design`, 2026-10-04; W5 push to claude.ai/design still open)
 
 Why: the app has a canvas (`Pema App.dc.html`, 82 mobile screens), generated specs (`design-specs/screens/`), the MCP
 server `pema-design` and two skills. The old web has only its code in `prototype/`. Package U ports the old web by
@@ -367,11 +367,25 @@ a fresh clone, not `E:\Desktop\cnbphongkham`.
   loaded (users `owner@example.test` and others; the password was given in the session, not stored here). The stack
   runs on ports 3000/8000.
 
+Known gaps (2026-10-04):
+- Empty-state texts with no scripted state in the old web were not given ids ("Inbox đã sạch", "Không còn việc CSKH mở", "Đã xếp hết danh sách chờ", `#crm-error`, booking rule errors); native confirm/prompt/print dialogs are only described in notes.
+- 390 top-bar title still truncates on long page names; `.k-stack>.bt` selectors share the `display:contents` flaw.
+- Kit gaps vs `pema-agent/frontend/src/ui` (hero, timeline, board, weekGrid, a5, photos, avatar, …): listed in `blocks-web.md`.
+- `design-specs.cjs --check` fails on this clone because git-ignored `pema-kmp/design-ref/*.png` are absent (not CRLF); `pending.cjs` needs baseline commit `1564115`.
+- `feat/web-design` is NOT pushed and NOT merged into `feat/ui-parity`.
+
 ### Progress log
 
 | Step | Branch / commit | Merged as | Gate result | Notes |
 |---|---|---|---|---|
-| (none yet) | | | | |
+| W0 inventory + skill skeleton | `design/w0` `072e457`+`bfcd847` | `17c36fb` | `web-inventory.cjs --check` 0 twice; scope clean | 81 ids (14 page, 11 tab, 6 modal, 13 dialog, 37 state), 8 groups, 132 entry points; clock 2026-09-20, role owner-tam |
+| W1 old web shots | `design/w1` 4 commits | `b460eb2` | 405 shots (81×5) + 80 legacy + 10 print; 0 page errors | agent stopped by director after ~2.5 h (single browser, flaky `http.server`); finished state verified; PNGs git-ignored, in main checkout `pema-agent/frontend/visual-ref/old/`; manifest SHAs re-synced from disk (112 had drifted) |
+| W2 specs + MCP | `design/w2` 6 commits | `8a966e1` | `web-specs.cjs --check` 0 (81 specs, 0 missing); `get_screen("A1")` byte-identical | 4 MCP tools + resource + prompt added; 55 unmatched colours |
+| W3a canvas foundation | `design/w3a` `168d15a`+`e35f1c3` | `02793f7` | `web-canvas-build.cjs --check` 0; WA1+WB1 proof | canvas generated from `parts/*.js` so 8 agents can work in parallel |
+| W3b WA…WH (8 agents) | `design/w3b-wa` … `w3b-wh` | `9a1fe5d` WA, `43555e0` WE, `58ae88a` WD, `bd64183` WH, `77cae65` WG, `768912a` WF, WB, `453e114` WC | each group `--complete` check 0 | `notes.json` conflicts resolved by structured JSON merge |
+| W3c template fixes | `design/w3c` | `c40ba22` | all 81: errors/overflow/unresolved/missing empty; `web-specs --check` 0; 154 `demo_data` exemptions → 0 | bell by role, money nowrap, hero actions, dialog close label, table row variants, card tint, board buffer, notice bullets |
+| W4 skill, docs, audit | `design/w4` 6 commits | merge on `feat/web-design` | inventory/specs/canvas/coverage all 81; counts table equal | `pema-web-design` SKILL.md, `coverage-web.md`, `web-design-changes.md` + `pending-web.cjs`, CLAUDE.md section, `design-specs/README.md` row, SECTION_PROGRESS |
+| W5 push to claude.ai/design | — | — | — | needs the user: create project "Pema Web redesign canvas", run `/design-sync`; see `recipes/W/07-W5-push-design.md` |
 
 ## Next Steps (only when the user asks)
 
