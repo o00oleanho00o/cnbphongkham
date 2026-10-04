@@ -242,7 +242,18 @@ function buildEntry(entry, data, scope, probes, tokens, index) {
     responsive: probes ? responsiveOf(probes.base, probes.list, describeIds(tree)) : {},
     stats: { text_runs: new Set(texts).size, uncovered_text: uncovered, unseen_controls: data.unseen || [] },
   };
-  return entry.group === 'WG' ? maskFinance(serverToday(e)) : e;
+  const masked = entry.group === 'WG' ? maskFinance(serverToday(e)) : e;
+  return maskGeneratedIds(masked);
+}
+
+/**
+ * The cashier makes invoice and order codes from a random UUID ("HD-<uuid>", "OD-<uuid>") every time an order is created
+ * (WF21, WF22), so a rerun would rewrite the snapshot. The code is demo data, not UI: it becomes a name.
+ */
+function maskGeneratedIds(e) {
+  const text = JSON.stringify(e);
+  const masked = text.replace(/(HD|OD)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, '$1-<uuid>');
+  return masked === text ? e : JSON.parse(masked);
 }
 
 async function snapshotOne(browser, entry, tokens, index) {
@@ -326,6 +337,27 @@ function tokensSummary(screens) {
   if (SHOW) {
     const all = readJson(OUT);
     console.log(JSON.stringify(all.screens[SHOW], null, 1));
+    return;
+  }
+  const MERGE = (argv.find((a) => a.startsWith('--merge=')) || '').slice(8).split(',').filter(Boolean);
+  if (MERGE.length) {
+    // Offline: union the screens of several snapshot files (parallel runs of --only on different ids), keep inventory order,
+    // rebuild meta and the tokens summary. Later files win only for ids the earlier ones lack.
+    const merged = {};
+    for (const f of MERGE) for (const [id, sc] of Object.entries(readJson(path.resolve(f)).screens)) if (!merged[id]) merged[id] = sc;
+    const orderedM = Object.fromEntries(inventory.screens.filter((s) => merged[s.id]).map((s) => [s.id, merged[s.id]]));
+    const metaM = {
+      generator: '.claude/skills/pema-web-design/scripts/web-snapshot.cjs',
+      inventory_sha: sha(fs.readFileSync(INVENTORY, 'utf8')),
+      web_source: sourceHash(),
+      base_url: inventory.base_url,
+      clock: inventory.clock,
+      count: Object.keys(orderedM).length,
+      note: 'Text only. The old web is synthetic; no pixels. Edit nothing here: regenerate with web-snapshot.cjs.',
+      tokens_summary: tokensSummary(orderedM),
+    };
+    fs.writeFileSync(OUT, renderJson(metaM, orderedM));
+    console.log(`merged ${MERGE.length} files: ${metaM.count} of ${inventory.screens.length} inventory ids`);
     return;
   }
   const status = await fetch(`${BASE}/clinic-web/`, { signal: AbortSignal.timeout(4000) }).then((r) => r.status, () => 0);

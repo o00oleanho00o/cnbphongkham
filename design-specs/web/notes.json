@@ -1482,6 +1482,586 @@
       "differences": [
         "App I6 lists 5 follow-ups (\"Tất cả 5\"); the web adds a sixth one for the just-saved session."
       ]
+    },
+    "WE7": {
+      "logic": [
+        "`operations-ui.js › resources()` after \"Gỡ khóa\" (`data-ops=\"unblock\"`, handled in `handle()`): the block list is filtered and the page re-rendered at once, with no confirmation and no toast. The only demo block (B1, 2026-09-21, 14:00–15:00, \"Bảo trì thiết bị laser\") disappears.",
+        "With `o.blocks` empty the table body is one row: `<tr><td colspan=\"5\">Không có khoảng khóa.</td></tr>`. The table head (Phòng, Ngày, Thời gian, Lý do, empty last column), the \"Khóa phòng\" button and the doctor cards stay."
+      ],
+      "rules": [
+        "\"Ca làm việc và khoảng khóa được kiểm tra khi đặt hoặc dời lịch.\" (page subtitle)",
+        "\"Thêm khoảng khóa nếu không vướng lịch hiện tại\" (subtitle of the panel \"Khoảng khóa phòng\")"
+      ],
+      "differences": [
+        "App F14 has no table of blocks: it lists the four doctors as tiles and one notice line (\"Laser & thủ thuật · Bảo trì 14:00–15:00 ngày 23/09. Khóa phòng phức tạp duyệt ở web.\"). The web table, its \"Gỡ khóa\" button and the empty row text exist only on the web."
+      ],
+      "gotchas": [
+        "The empty row is plain table text, not an `.empty` block: draw it as an empty row of the table shell, the same way WF25 and WG11 do.",
+        "Unlike `block()` (which asserts the `config` capability), the unblock branch of `handle()` has no assert of its own."
+      ]
+    },
+    "WE8": {
+      "logic": [
+        "`operations-ui.js › handle()` \"save-block\" calls `PemaOps.block()` (`operations-data.js`); a thrown `Error` is written by `error(err)` into `<p id=\"ops-error\" class=\"ops-error\" role=\"alert\">` at the bottom of the dialog (a toast is used only when that element is missing).",
+        "The reach clears \"Lý do\" (`#block-reason`) and presses \"Lưu khoảng khóa\": the first check of `block()` fails (reason empty). The same message also covers a date or room that does not exist and a time range outside 08:00–18:00 or with start not before end."
+      ],
+      "differences": [
+        "App I8 (RoomBlockScreen) keeps this message (domain `ClinicError`), but its spec does not draw an error line; the web shows it as a red line inside the dialog and keeps the dialog open with the typed values."
+      ],
+      "gotchas": [
+        "Nothing is stored and the dialog stays open on error; closing needs \"Đóng hộp thoại\" (the icon-only \"×\")."
+      ]
+    },
+    "WE9": {
+      "logic": [
+        "`operations-data.js › block()` second check: an active appointment of the same date and room with `minutes(a.time) < minutes(end)` and `minutes(a.time) + duration + buffer > minutes(start)` refuses the block. The demo has such an appointment in \"Khám da liễu\" on 2026-09-20, so the default values of the dialog (Khám da liễu, 2026-09-20, 14:00–15:00, reason \"Bảo trì thiết bị\") are refused."
+      ],
+      "differences": [
+        "App I8 relies on the same domain rule; its spec shows only the happy-path form (Laser & thủ thuật, 14:00–15:00, \"Bảo trì thiết bị laser\"). The web error line is not drawn there."
+      ],
+      "gotchas": [
+        "The appointment buffer counts as occupied time (end = start + duration + buffer), so a block that only touches the buffer is also refused."
+      ]
+    },
+    "WE10": {
+      "logic": [
+        "`operations-data.js › updateService()` (capability `config`): refuses an empty name, a duration that is not an integer 15–180, a buffer that is not an integer 0–60 and a price that is not a non-negative safe integer. The message is shown in `#ops-error` of the dialog \"Chỉnh dịch vụ\".",
+        "The reach clears \"Tên dịch vụ\" (`#service-name`) and presses \"Lưu dịch vụ\"."
+      ],
+      "differences": [
+        "App I9 shows the same fields (Tên dịch vụ, Điều trị (phút), Chuẩn bị (phút), Giá (VND), Trạng thái) and the notice \"Lịch đã đặt giữ giá và thời lượng tại lúc đặt.\"; the web dialog does not carry that notice (it is the page subtitle of the services page). The error line is web-only in the specs."
+      ],
+      "gotchas": [
+        "The cleared dialog reads: name empty, 30, 0, 300000, \"Đang dùng\" (the first service); only the name is invalid."
+      ]
+    },
+    "WE11": {
+      "logic": [
+        "`operations-ui.js › services()` after \"Lưu dịch vụ\" with \"Trạng thái\" = \"Tạm ngưng\" (select value `no`) on the first service: `updateService` stores `active:false`, `done()` closes the dialog and shows the toast \"Đã cập nhật dịch vụ cho lịch mới\". The first card then reads `.status.status-yellow` \"Tạm ngưng\"; the other three keep `.status-green` \"Đang dùng\"."
+      ],
+      "rules": [
+        "\"Giá và thời lượng dùng cho lịch mới. Lịch đã đặt giữ giá và thời lượng tại lúc đặt.\" (page subtitle)"
+      ],
+      "differences": [
+        "App F13 tiles show only \"300.000 ₫ · 30 phút\" and no active status; the \"Đang dùng\" / \"Tạm ngưng\" status of every web card (green or yellow) has no tile counterpart in F13. App I9 edits the status with a dropdown."
+      ],
+      "gotchas": [
+        "The toast \"Đã cập nhật dịch vụ cho lịch mới\" is transient (`setTimeout` 2800 ms in `clinic.js › toast`); the snapshot caught it, a screenshot may not."
+      ]
+    },
+    "WF11": {
+      "logic": [
+        "The quick-order dialog is `order-ui.js › open()`; its error line is `<p id=\"quick-error\">`, filled from the exception of `order-data.js` (`validateItems`, `saveOrder`).",
+        "The reach opens \"Lên đơn nhanh\" and presses \"Lưu nháp & xem tách đơn\" with no product: `validateItems` throws \"Chọn ít nhất một sản phẩm.\" and the empty list placeholder reads \"Chọn sản phẩm ở danh sách.\""
+      ],
+      "rules": [
+        "\"Sản phẩm chưa có loại trong Excel cần được phân loại. “Không in” chỉ loại khỏi phiếu, vẫn tính trong hóa đơn. Đơn nháp chưa xuất hiện trên app.\" (dialog notice, also on WF4)",
+        "Catalog line: \"115 sản phẩm · 30 thuốc · 78 sản phẩm tư vấn · 7 cần phân loại\" (counts of the catalog `danhsach.xlsx` through `PemaProducts`)."
+      ],
+      "differences": [
+        "App F4 (Lên đơn nhanh) reads \"115 sản phẩm từ catalog web. Đơn nháp chưa gửi cho người bệnh.\" and ends in \"Xem đơn · 2 sản phẩm · 720.000 ₫\"; the web is one dialog with patient, doctor and diagnosis fields, a search box, the product list, the lines and \"Lưu nháp & xem tách đơn\". The app spec shows no empty-selection error."
+      ],
+      "gotchas": [
+        "The dialog stays open on error and keeps the patient, doctor and diagnosis values."
+      ]
+    },
+    "WF12": {
+      "logic": [
+        "Review page `order-review/index.html` + `shared/order-review.js › refresh()`: toolbar (status line `#review-status`, three print buttons `data-print`, \"Bác sĩ duyệt & gửi app\" `#approve`, \"Về thu ngân\"), `#review-excluded` (warnings), `#documents` (the A5 sheets), `#review-error`. It opens in a new tab after \"Lưu nháp & xem tách đơn\" (`window.open`).",
+        "One product routed to the prescription class (H002 Desloratadine, route \"Đơn thuốc\") draws only the sheet \"ĐƠN THUỐC · 1 sản phẩm\"; no \"PHIẾU TƯ VẤN\" sheet is drawn because that list is empty. The draft mark reads \"BẢN NHÁP — CHỜ BÁC SĨ DUYỆT\".",
+        "The print buttons are disabled while the order is a draft (`ready` is true only for status `approved`); \"Bác sĩ duyệt & gửi app\" is visible for accounts with the `clinical` capability."
+      ],
+      "rules": [
+        "\"Bản nháp · Bác sĩ phụ trách: BS. Tâm · A5 dọc 148 × 210 mm · 1 sản phẩm\" (status line)",
+        "\"BẢN NHÁP — CHỜ BÁC SĨ DUYỆT\" (draft mark on every sheet of a draft)"
+      ],
+      "differences": [
+        "App F6/F7 show both sheets in the example (Tretinoin as \"Đơn thuốc\", Kem chống nắng as \"Phiếu tư vấn\"); the one-sheet case is not drawn there. App F6 notice: \"Nháp → bác sĩ duyệt → người bệnh xem. In không đồng nghĩa đã cấp thuốc.\""
+      ],
+      "gotchas": [
+        "Created with the finance API blocked (reach step `block`) so that no invoice is mirrored into the shared finance data.",
+        "The patient name, age, code and the date 20/9/2026 on the sheet are demo values (P001)."
+      ]
+    },
+    "WF13": {
+      "logic": [
+        "Review page `order-review/index.html` + `shared/order-review.js › refresh()`: toolbar (status line `#review-status`, three print buttons `data-print`, \"Bác sĩ duyệt & gửi app\" `#approve`, \"Về thu ngân\"), `#review-excluded` (warnings), `#documents` (the A5 sheets), `#review-error`. It opens in a new tab after \"Lưu nháp & xem tách đơn\" (`window.open`).",
+        "One product routed to \"Phiếu tư vấn\" (H005) draws only the sheet \"PHIẾU TƯ VẤN · 1 sản phẩm\"; no \"ĐƠN THUỐC\" sheet."
+      ],
+      "differences": [
+        "App F7 draws both A5 sheets with footer lines (\"Mang theo đơn này · Kiểm tra thuốc…\" / \"Mang theo phiếu này · …\"); the consultation-only case is not drawn in the app spec."
+      ],
+      "gotchas": [
+        "Same set-up as WF12 with product H005 instead of H002."
+      ]
+    },
+    "WF14": {
+      "logic": [
+        "Review page `order-review/index.html` + `shared/order-review.js › refresh()`: toolbar (status line `#review-status`, three print buttons `data-print`, \"Bác sĩ duyệt & gửi app\" `#approve`, \"Về thu ngân\"), `#review-excluded` (warnings), `#documents` (the A5 sheets), `#review-error`. It opens in a new tab after \"Lưu nháp & xem tách đơn\" (`window.open`).",
+        "A line whose route is set to \"Không in\" (`NONE`) with a reason is removed from both sheets and listed in `#review-excluded` as \"Không in (1): <product> — <reason>. Vẫn tính trong hóa đơn.\" The remaining product is drawn on its sheet (here \"PHIẾU TƯ VẤN · 1 sản phẩm\"), and the status line counts 2 sản phẩm."
+      ],
+      "rules": [
+        "\"Không in (1): … — Không cần in. Vẫn tính trong hóa đơn.\"",
+        "“Không in” chỉ loại khỏi phiếu, vẫn tính trong hóa đơn. (dialog notice of the quick order)"
+      ],
+      "differences": [
+        "App F5 offers the routes \"Phiếu tư vấn\" and \"Cần phân loại\" per line and does not draw the \"Không in\" route with its reason or the excluded-lines paragraph."
+      ],
+      "gotchas": [
+        "Lines with no class show instead \"Cần phân loại <n> sản phẩm: …. Mở “Sửa nháp” trong hồ sơ hoặc thu ngân để xử lý.\" (WF7) and disable the approve button."
+      ]
+    },
+    "WF15": {
+      "logic": [
+        "Review page `order-review/index.html` + `shared/order-review.js › refresh()`: toolbar (status line `#review-status`, three print buttons `data-print`, \"Bác sĩ duyệt & gửi app\" `#approve`, \"Về thu ngân\"), `#review-excluded` (warnings), `#documents` (the A5 sheets), `#review-error`. It opens in a new tab after \"Lưu nháp & xem tách đơn\" (`window.open`).",
+        "`#approve` click → `order-data.js › approveOrder` re-validates in final mode (`validateItems(items, true)`): a line that is not \"Không in\" and has no usage text throws \"Dòng <n>: cần cách dùng trước khi duyệt.\" The message is written into `#review-error`; the order stays a draft."
+      ],
+      "rules": [
+        "\"Dòng <n>: cần phân loại trước khi duyệt hoặc in.\" (same function, line with no class)"
+      ],
+      "differences": [
+        "App F5 disables \"Bác sĩ duyệt đơn\" until every line is classified and has usage text (\"Chỉ duyệt khi đã phân loại và nhập hướng dẫn cho mọi dòng.\"); the web keeps the button enabled (unless a class is missing) and reports the missing usage after the click."
+      ],
+      "gotchas": [
+        "The quick-order dialog accepts a draft without usage; the check only happens at approval or print time.",
+        "A line with no usage text is printed on the sheet with the placeholder \"Chưa nhập cách dùng\" (visible in the snapshot Layout)."
+      ]
+    },
+    "WF16": {
+      "logic": [
+        "Review page `order-review/index.html` + `shared/order-review.js › refresh()`: toolbar (status line `#review-status`, three print buttons `data-print`, \"Bác sĩ duyệt & gửi app\" `#approve`, \"Về thu ngân\"), `#review-excluded` (warnings), `#documents` (the A5 sheets), `#review-error`. It opens in a new tab after \"Lưu nháp & xem tách đơn\" (`window.open`).",
+        "All lines set to \"Không in\" leave both sheet lists empty: `#documents` stays empty (no heading), and \"Bác sĩ duyệt & gửi app\" throws \"Đơn không có sản phẩm để phát hành.\" (final-mode check `items.every(x => x.route === 'NONE')`) into `#review-error`."
+      ],
+      "differences": [
+        "No app counterpart text: App F5 has no \"Không in\" route, so this state cannot occur there."
+      ],
+      "gotchas": [
+        "The page shows the status line and the error but no sheet; the print buttons are disabled.",
+        "The same checks (usage, issuable lines) also run before every print (`orderPrintData(…, true)`)."
+      ]
+    },
+    "WF17": {
+      "logic": [
+        "`order-review.js › refresh()` with `?patient=P001&order=NOPE` (a stale link): `orderPrintData` throws \"Không tìm thấy đơn.\"; the catch branch clears `#documents` and `#review-excluded`, hides \"Bác sĩ duyệt & gửi app\", disables the three print buttons and writes the message to `#review-error`. \"Về thu ngân\" stays."
+      ],
+      "gotchas": [
+        "WF8 is the same page opened with no codes at all; here the patient code exists and only the order code is unknown. The snapshot url masks the order code as `<order id>`."
+      ]
+    },
+    "WF18": {
+      "logic": [
+        "Review page `order-review/index.html` + `shared/order-review.js › refresh()`: toolbar (status line `#review-status`, three print buttons `data-print`, \"Bác sĩ duyệt & gửi app\" `#approve`, \"Về thu ngân\"), `#review-excluded` (warnings), `#documents` (the A5 sheets), `#review-error`. It opens in a new tab after \"Lưu nháp & xem tách đơn\" (`window.open`).",
+        "Account `accountant` (no `clinical` capability): `approve.hidden = o.status !== 'draft' || !PemaStaff.can('clinical')`, so the toolbar has only the three disabled print buttons and \"Về thu ngân\". Both sheets (ĐƠN THUỐC and PHIẾU TƯ VẤN) are drawn, each with the draft mark."
+      ],
+      "rules": [
+        "\"Đơn nháp cần bác sĩ duyệt trước khi in.\" (thrown by `orderPrintData` for a draft; the print buttons stay disabled until a doctor approves)"
+      ],
+      "differences": [
+        "App F5 shows \"Tài khoản bác sĩ mô phỏng. Chỉ duyệt khi đã phân loại và nhập hướng dẫn cho mọi dòng.\"; the web hides the approve button for non-doctor accounts instead of showing a notice."
+      ],
+      "gotchas": [
+        "Role variant: compare with WF12 (owner-tam). In this walk the accountant account creates the draft in Thu ngân and cannot approve it."
+      ]
+    },
+    "WF19": {
+      "logic": [
+        "Review page `order-review/index.html` + `shared/order-review.js › refresh()`: toolbar (status line `#review-status`, three print buttons `data-print`, \"Bác sĩ duyệt & gửi app\" `#approve`, \"Về thu ngân\"), `#review-excluded` (warnings), `#documents` (the A5 sheets), `#review-error`. It opens in a new tab after \"Lưu nháp & xem tách đơn\" (`window.open`).",
+        "Click on \"In đơn thuốc\" (`data-print=\"PRESCRIPTION\"`), \"In phiếu tư vấn\" (`CONSULTATION`) or \"In tất cả\" (`all`): `P.reload()`, `orderPrintData(…, true)`, `document.body.dataset.printFilter = …`, `await document.fonts.ready`, then `window.print()`. `order-review.css` hides the other sheet for `data-print-filter`. `beforeprint` re-runs `refresh()`; `afterprint` deletes the filter.",
+        "Reached after \"Bác sĩ duyệt & gửi app\": `body[data-approved=\"true\"]`, the status line reads \"Đã duyệt bởi BS. Tâm · A5 dọc 148 × 210 mm · 2 sản phẩm\", the draft marks are gone and the three print buttons are enabled."
+      ],
+      "rules": [
+        "Native dialog: the browser print dialog of `window.print()` (type `print`, no message text). It cannot be captured; the A5 sheets it prints are drawn by the print media of WF5 and WF6.",
+        "\"Đơn nháp cần bác sĩ duyệt trước khi in.\" A draft or an invalid snapshot never prints (the buttons stay disabled)."
+      ],
+      "differences": [
+        "App F7 says \"In / chia sẻ PDF native sẽ nối sau khi duyệt template.\"; the web prints through the browser dialog."
+      ],
+      "gotchas": [
+        "The snapshot and the shot show the page just before the dialog; the harness replaces `window.print` with a counter (`hookPrint`)."
+      ]
+    },
+    "WF20": {
+      "logic": [
+        "`order-ui.js › open(host, patientId, orderId)` in edit mode (title \"Sửa đơn nháp\", from \"Sửa nháp\" `data-order-edit`) → \"Lưu nháp & xem tách đơn\" → `order-data.js › saveOrder`: when the draft invoice has `received > 0` or is `paid`, it throws \"Đơn đã thu tiền hoặc thiếu hóa đơn; không thể sửa.\" into `#quick-error`.",
+        "Reach: create a draft, pay its invoice in Thu ngân (toast \"Đã ghi phiếu thu và cập nhật hóa đơn\"), open \"Sửa nháp\" and save. The dialog shows the stored line with its quantity, class, usage text, note and reason fields."
+      ],
+      "differences": [
+        "App F4/F5 do not draw an edit-draft flow or this refusal."
+      ],
+      "gotchas": [
+        "Created with the finance API blocked so that the payment is not mirrored into the shared finance data.",
+        "The toast of the payment (2800 ms) may still be on the page when the snapshot is taken."
+      ]
+    },
+    "WF21": {
+      "logic": [
+        "`order-ui.js › history()` (section \"Đơn thuốc & phiếu tư vấn\", subtitle \"Nháp → bác sĩ duyệt → in và hiển thị trên app\"): one row per order, \"<patient> <date> · <n> sản phẩm · Bản nháp\" with \"Xem / in\" (`orderPreview`) and \"Sửa nháp\" (`orderEdit`).",
+        "`operations-ui.js › cashier()`: the new invoice is the first table row (\"Đơn sản phẩm · 1 dòng\", the order code with \"In tách đơn\", 5.500 ₫, 0 ₫, 5.500 ₫, \"Thu tiền\"); the stats read Tổng hóa đơn 49 and Còn phải thu 11.255.500 ₫ (11.250.000 + 5.500)."
+      ],
+      "rules": [
+        "\"Nháp → bác sĩ duyệt → in và hiển thị trên app\""
+      ],
+      "differences": [
+        "App I10 lists invoices as cards with Thu tiền and no order history, order code or \"In tách đơn\" link; the order list belongs to the app order screens (F4–F7)."
+      ],
+      "gotchas": [
+        "Invoice and order codes are random UUIDs (`HD-<uuid>`, `OD-<uuid>`): the snapshot masks them. The data lives in the browser storage of the demo, so the figures are the same on every run.",
+        "Created with the finance API blocked so no invoice reaches the shared finance data."
+      ]
+    },
+    "WF22": {
+      "logic": [
+        "`order-ui.js › history()` for an approved order: the row reads \"… · 2 sản phẩm · Đã duyệt\" and carries only \"Xem / in\" (no \"Sửa nháp\"). `operations-ui.js › cashier()` shows the invoice row with the order code and \"In tách đơn\" (`data-ops=\"print-order\"` → `printOrder` → `PemaOrderUI.preview`, opens the review page in a new tab).",
+        "Stats: Tổng hóa đơn 49, Còn phải thu 11.970.500 ₫ (11.250.000 + 720.500, the total of the two products)."
+      ],
+      "differences": [
+        "App F6 lists \"DN-1 · Đã duyệt\" with the two sheets and \"Xem bố cục hai phiếu A5\"; the web row has \"Xem / in\" and the cashier link \"In tách đơn\"."
+      ],
+      "gotchas": [
+        "Codes masked as in WF21. Compare with WF21: same page, draft versus approved."
+      ]
+    },
+    "WF23": {
+      "logic": [
+        "`operations-ui.js › handle()` \"save-pay\" → `operations-data.js › pay()` (capability `billing`): the amount must be a safe integer > 0 and not more than the invoice balance, else \"Số tiền phải lớn hơn 0 và không vượt số còn lại.\" goes to `#ops-error`. The dialog title is \"Thu tiền · <patient>\", its notice \"HD-DEMO-001 · Còn lại 150.000 ₫\".",
+        "The reach sets \"Số tiền (VND)\" to 0 (`setValue`) and presses \"Xác nhận thu tiền\". The method must be \"Tiền mặt\" or \"Chuyển khoản\", else \"Phương thức không hợp lệ.\"."
+      ],
+      "differences": [
+        "App I11 (payment sheet with the method choice) keeps the rule in the domain; its spec draws no error line. The web error is the red `#ops-error` line under the form."
+      ],
+      "gotchas": [
+        "The dialog opens with the whole balance (150.000) prefilled; nothing is stored on error."
+      ]
+    },
+    "WF24": {
+      "logic": [
+        "`operations-ui.js › cashier()` with `invoiceFilter = 'due'` (button `data-ops=\"invoice-filter\" data-value=\"due\"`): `received < amount`. The selected filter is the primary button (the other two are secondary); there are no chip elements. Every shown row has \"Thu tiền\". Rows per page: 12 (`invoicePage`), the footer reads \"12 hóa đơn · Trang 1/1\" with \"← Trước\" and \"Sau →\" disabled."
+      ],
+      "rules": [
+        "\"12 hóa đơn · Trang 1/1\" (pagination line; the filter \"Đã thanh toán\" and the paging buttons only change the rows)"
+      ],
+      "differences": [
+        "App I10 draws the same three filters as `PemaFilterChip` (\"Tất cả\", \"Còn phải thu\", \"Đã thanh toán\") and cards instead of a table; it has no pagination (the web pages by 12) and no order history block."
+      ],
+      "gotchas": [
+        "The table here also shows the first demo invoice HD-DEMO-001 (Tái khám & đánh giá, 300.000 ₫, 150.000 ₫ received).",
+        "Stats do not follow the filter: Tổng hóa đơn 48 and Còn phải thu 11.250.000 ₫ are always totals."
+      ]
+    },
+    "WF25": {
+      "logic": [
+        "`operations-ui.js › cashier()` with filter \"Còn phải thu\" and nothing left: the table body is `<tr><td colspan=\"6\">Không có hóa đơn.</td></tr>`, the footer pagination is disabled, the stats read Đã thu 72.900.000 ₫ (61.650.000 + 11.250.000) and Còn phải thu 0 ₫.",
+        "Reach: pay the twelve open invoices one by one (`ifVisible` loop of \"Thu tiền\" → \"Xác nhận thu tiền\"), with the finance API blocked."
+      ],
+      "rules": [
+        "\"Không có hóa đơn.\" (empty row of the invoice table)"
+      ],
+      "differences": [
+        "App I10 shows no empty state for an empty filter."
+      ],
+      "gotchas": [
+        "The toast \"Đã ghi phiếu thu và cập nhật hóa đơn\" of the last payment may still be on the page (2800 ms).",
+        "The order-history block still reads \"Chưa có đơn từ catalog.\" (empty state) because no order was created."
+      ]
+    },
+    "WG10": {
+      "logic": [
+        "`finance.js › html()` draws the shell with `<div id=\"content\" aria-live=\"polite\">Đang tải dữ liệu…</div>` and `mount()` calls `load()`; until the API answers the text stays. The header (title, month picker, \"Làm mới\") and the four tabs are already drawn.",
+        "The reach holds every request to 127.0.0.1:4174 (route `hold`), so the page stays in this state. WG9 is the same page after the request fails (error line in `#error`)."
+      ],
+      "rules": [
+        "\"Đang tải dữ liệu…\""
+      ],
+      "differences": [
+        "The app finance specs (H3–H9) have no loading state; only H7 \"Mất kết nối\" (error with \"Thử lại\"). The web loading text is a bare paragraph with no spinner and no retry control."
+      ],
+      "gotchas": [
+        "The sync link of the topbar (`finance-bridge.js`) also reads \"Đang đồng bộ tài chính…\" in this state; it is outside the content scope of the snapshot."
+      ]
+    },
+    "WG11": {
+      "logic": [
+        "`finance.js › table(rows)` with no entries: `<tr><td colspan=\"6\">Chưa có lượt thủ thuật trong kỳ này.</td></tr>`. Month picker set to 2026-06 (`setValue` on `#month`, fires `change` → `load()`). The period is open: badge \"Đang đối soát\", the collapsed entry form \"+ Ghi nhận lượt thủ thuật đã hoàn tất\", \"Xuất CSV cho Excel\" and \"Chốt tháng đã kết thúc\" stay."
+      ],
+      "rules": [
+        "\"Chưa có lượt thủ thuật trong kỳ này.\"",
+        "Revenue (\"Doanh số thực hiện\") follows the completion date of the procedure; cash (\"Thực thu\") follows the receipt date; they are tracked separately."
+      ],
+      "differences": [
+        "App H3 has no empty list state and no month picker; it shows the current period only (\"Kỳ 2026-09\")."
+      ],
+      "gotchas": [
+        "The button \"Chốt tháng đã kết thúc\" is shown for the empty month, but the finance server closes only a month that has an approved row (see WG13)."
+      ]
+    },
+    "WG12": {
+      "logic": [
+        "`finance.js › receipts()` for a month with no payments (2026-06): left card \"Thu tiền khách hàng\" (form `#payment`, invoice select, \"Số thu\", \"Phương thức\", \"Xác nhận thu\") then \"Giao dịch trong kỳ\" with `<p>Chưa có phiếu thu.</p>`; right card \"Thông báo của chủ phòng khám\" with `<p>Thanh toán thành công sẽ xuất hiện tại đây và trên app BS. Tâm.</p>` (owner, no notification yet).",
+        "With notifications the right card lists title, body, time and \"Đã đọc\" (read) or the button \"Đã đọc\" (`data-command=\"read\"`). That list needs a real payment and is not scripted, because it would write to the shared finance data."
+      ],
+      "rules": [
+        "\"Chưa có phiếu thu.\"",
+        "\"Thanh toán thành công sẽ xuất hiện tại đây và trên app BS. Tâm.\"",
+        "\"Phiếu thu mới đồng bộ với app khi đang mở. Hóa đơn web cũ thu tại Thu ngân Clinic; không thu lại ở đây.\""
+      ],
+      "differences": [
+        "App H5 (Thu tiền) draws one card per open invoice with \"Thu tiền mặt\"; the web is a form (invoice select, amount, method Tiền mặt / Chuyển khoản). App H6 (Thông báo) has \"Đánh dấu đã đọc\" and the line \"Đồng bộ khi ứng dụng đang mở; push nền chưa được cấu hình.\"; the web button reads \"Đã đọc\"."
+      ],
+      "gotchas": [
+        "The invoice select and \"Số thu\" depend on the open invoices of the shared finance database: the snapshot masks them (`<varies>`).",
+        "The button \"Xác nhận thu\" is disabled when no finance invoice has a balance."
+      ]
+    },
+    "WG13": {
+      "logic": [
+        "`finance.js › work()` and `table()` for a closed period (`state.period.status === 'closed'`): badge \"Đã chốt tháng\", rows without \"Duyệt\" and \"Hủy\", no entry form, no \"Chốt tháng đã kết thúc\", and the primary button \"Xác nhận đã chi\" (`data-command=\"paid\"`). Period 2026-08.",
+        "Set-up caveat: the finance server closes only a month that has an approved row, so the reach adds one approved entry (P002, linked to the existing invoice WEB:P002:HD-0002, so no invoice or debt is added) to 2026-08 on the first run and closes it; every step is guarded with `ifVisible`, later runs change nothing. Month 2026-09 stays open."
+      ],
+      "rules": [
+        "\"Chốt số liệu tháng 2026-08? Các lượt trong kỳ sẽ bị khóa.\" (native confirm accepted by the reach; see WG17)",
+        "\"Tiền thủ thuật đã duyệt\": \"Không phải lợi nhuận phòng khám\"."
+      ],
+      "differences": [
+        "App H4 (Chốt kỳ) shows only the open period (\"Đang đối soát\") with \"Chốt tháng đã kết thúc\"; the closed state, the badge \"Đã chốt tháng\" and \"Xác nhận đã chi\" are not drawn there."
+      ],
+      "gotchas": [
+        "This id writes to the shared finance database (one approved row of 2026-08 and the closing); keep that in mind when the finance server is reset."
+      ]
+    },
+    "WG14": {
+      "logic": [
+        "`finance.js › work()` for a paid period: badge \"Đã chi\", no period button (the \"Chốt\" and \"Xác nhận đã chi\" buttons are gone), rows without actions. Period 2026-07.",
+        "Same guarded set-up as WG13 (entry P003, linked to WEB:P003:HD-0003), then \"Xác nhận đã chi\" with the voucher code asked by a native prompt (the reach answers \"Demo\")."
+      ],
+      "rules": [
+        "Native dialogs used on the way here: confirm \"Chốt số liệu tháng 2026-07? Các lượt trong kỳ sẽ bị khóa.\" and prompt \"Mã chứng từ chi\" (see WG17, WG18).",
+        "\"Tiền thủ thuật đã duyệt\": \"Không phải lợi nhuận phòng khám\"."
+      ],
+      "differences": [
+        "App H4 has no paid-period state, badge \"Đã chi\" or voucher code."
+      ],
+      "gotchas": [
+        "The voucher code (`reference`) is sent to the server but not shown on this tab.",
+        "Writes to the shared finance database (row of 2026-07, closed and paid), like WG13."
+      ]
+    },
+    "WG15": {
+      "logic": [
+        "`finance.js › receipts()` with `state.role = 'accountant'`: the left card \"Thu tiền khách hàng\" is the same as for the owner (an accountant records payments); the right card \"Thông báo của chủ phòng khám\" shows only `<p>Kế toán không đọc inbox của chủ.</p>` instead of the owner notifications and the \"Đã đọc\" buttons.",
+        "The doctor account sees neither card: `<div class=\"panel\">Tài khoản bác sĩ không xem thu tiền toàn phòng khám.</div>` (not a separate id)."
+      ],
+      "rules": [
+        "\"Kế toán không đọc inbox của chủ.\"",
+        "\"Phiếu thu mới đồng bộ với app khi đang mở. Hóa đơn web cũ thu tại Thu ngân Clinic; không thu lại ở đây.\""
+      ],
+      "differences": [
+        "App D1 (Đối soát & thu ngân, accountant space) opens \"Tài chính & tiền thủ thuật\"; App H5 and H6 draw the payment cards and the notification list for the sample role without the accountant projection sentence."
+      ],
+      "gotchas": [
+        "Role variant: compare with WG5 (owner receipts tab). \"Giao dịch trong kỳ\" shows the last 20 payments, newest first (`state.payments.slice(-20).reverse()`); at snapshot time P001–P012, 2026-09-01 to 2026-09-12."
+      ]
+    },
+    "WG16": {
+      "logic": [
+        "`finance.js › bind()`: a click on a row button `data-command=\"void\"` (\"Hủy\", only in an open period for rows that are not void) runs `data.reason = prompt('Lý do hủy lượt chưa thu tiền')`; an empty answer or Cancel returns without calling the server (`if (!data.reason) return`). A void only sticks with a non-empty reason.",
+        "The same handler serves \"Duyệt\" (`approve`), \"Chốt tháng đã kết thúc\" (`close`, native confirm) and the notification button \"Đã đọc\" (`read`)."
+      ],
+      "rules": [
+        "Native dialog: prompt() with the message \"Lý do hủy lượt chưa thu tiền\" (cancelled in the walk, so nothing is written)."
+      ],
+      "differences": [
+        "App H3/H4 name the card button \"Hủy lượt\" (web: \"Hủy\"); their specs do not say how the reason is asked. The web uses the browser prompt, which the new UI should replace by a dialog with a required reason field (owner decision)."
+      ],
+      "gotchas": [
+        "The snapshot is the work tab before the prompt: the dialog itself is not part of the page."
+      ]
+    },
+    "WG17": {
+      "logic": [
+        "`finance.js › bind()`: \"Chốt tháng đã kết thúc\" (`data-command=\"close\"`) asks `confirm('Chốt số liệu tháng ' + state.month + '? Các lượt trong kỳ sẽ bị khóa.')` and sends the command only on OK. The month is the picker value (2026-09 on the frozen clock)."
+      ],
+      "rules": [
+        "Native dialog: confirm() with the message \"Chốt số liệu tháng 2026-09? Các lượt trong kỳ sẽ bị khóa.\" (cancelled in the walk)."
+      ],
+      "differences": [
+        "App H4 has the same button text but its spec records no confirmation step."
+      ],
+      "gotchas": [
+        "The finance server closes only a month that has an approved row (see WG13).",
+        "The page is 1467 px tall and the button sits under the table: the click scrolls the viewport down, so a screenshot taken after the click shows the end of the table, not the page head."
+      ]
+    },
+    "WG18": {
+      "logic": [
+        "`finance.js › bind()`: \"Xác nhận đã chi\" (`data-command=\"paid\"`, shown on a closed period, WG13) asks `data.reference = prompt('Mã chứng từ chi')`; an empty answer or Cancel returns without a call. The code is sent as the payout voucher and the period becomes \"Đã chi\" (WG14)."
+      ],
+      "rules": [
+        "Native dialog: prompt() with the message \"Mã chứng từ chi\" (cancelled in the walk)."
+      ],
+      "differences": [
+        "App H4 draws no payout step."
+      ],
+      "gotchas": [
+        "Uses the closed period of WG13 (2026-08); the reach guards each set-up step so a rerun changes nothing."
+      ]
+    },
+    "WG19": {
+      "logic": [
+        "`finance.js › bind()` `#export`: fetches `API + '/export?month=' + state.month` with the role headers, turns the blob into an object URL and clicks a hidden link with `download = 'Pema-tien-thu-thuat-' + month + '.csv'`.",
+        "The file has a BOM and the columns Ngay, Ho so, Thu thuat, Bac si, Doanh so, Co so, Ty le %, Tien thu thuat, Trang thai (ASCII headers)."
+      ],
+      "rules": [
+        "Native download: file name \"Pema-tien-thu-thuat-2026-09.csv\" (the browser download UI is not part of the page)."
+      ],
+      "differences": [
+        "App H3 has no CSV export."
+      ],
+      "gotchas": [
+        "The harness opens the context with `acceptDownloads: false`; the snapshot is the page before the click."
+      ]
+    },
+    "WG20": {
+      "logic": [
+        "`finance.js › bind()` `#export` catch: a non-OK response throws `Error('Không xuất được bảng')` and the message is written to `#error` (`<div id=\"error\" role=\"alert\">` under the tabs); a network failure shows the browser own text instead (for example \"Failed to fetch\").",
+        "The reach answers `/export*` with HTTP 500 (route `status`), then clicks \"Xuất CSV cho Excel\"."
+      ],
+      "differences": [
+        "App H7 \"Mất kết nối\" is a full error card with \"Thử lại\"; the web export error is one inline line and the page stays usable."
+      ],
+      "gotchas": [
+        "The line is the same `#error` element that carries every server error of the tab (WG21, WG22, WG23)."
+      ]
+    },
+    "WG21": {
+      "logic": [
+        "`finance.js › entryForm()` submit → `command('entry', …)`: shares are sent as `Math.round(Number(share) * 100)`; the server answers with \"Tổng tỷ trọng doanh số phải là 100%\" and `command()` writes the text into `#error`. The form stays open with the typed values; nothing is stored.",
+        "The reach opens \"+ Ghi nhận lượt thủ thuật đã hoàn tất\", types a note and sets \"Tỷ trọng doanh số %\" of the main doctor to 50 with no co-worker."
+      ],
+      "rules": [
+        "\"Tổng tỷ trọng doanh số 100%. Tỷ lệ tiền của mỗi người tính trực tiếp trên cơ sở chính sách; tổng không quá 100%.\" (helper text of the form)"
+      ],
+      "differences": [
+        "App H9 (Ghi lượt đã thực hiện) says \"Người phối hợp nhận phần tỷ trọng doanh số còn lại. Tổng tỷ lệ tiền không quá 100%.\" and the submit label \"Ghi nhận • Chờ kế toán duyệt\" (web: \"Ghi nhận • Chờ duyệt\"); the app spec has no error line."
+      ],
+      "gotchas": [
+        "The rule is checked by the server; the browser only enforces `required`, `min`, `max`."
+      ]
+    },
+    "WG22": {
+      "logic": [
+        "`finance.js › entryForm()`: \"Ghi chú hoàn tất\" is `required`, but the value \"   \" (spaces) passes the browser check; the server rejects it as empty and `command()` shows \"Ghi chú xác nhận hoàn tất là bắt buộc\" in `#error`. Nothing is stored."
+      ],
+      "differences": [
+        "App H9 has the field \"Ghi chú xác nhận hoàn tất\" without an error line."
+      ],
+      "gotchas": [
+        "The field keeps the three spaces after the error, so the snapshot default reads \"   \"."
+      ]
+    },
+    "WG23": {
+      "logic": [
+        "`finance.js › receipts()` form `#payment`: the amount is posted with an idempotency key (`paymentKey`); when it exceeds the open balance the server answers \"Số thu vượt công nợ\" and `command()` writes it into `#error`. The reach sets \"Số thu\" to 99999999 and presses \"Xác nhận thu\"."
+      ],
+      "differences": [
+        "App H5 collects cash with one button per invoice (no amount field), so an over-payment cannot be typed there."
+      ],
+      "gotchas": [
+        "The invoice select and the prefilled amount depend on the shared finance database: the snapshot masks them (`<varies>`)."
+      ]
+    },
+    "WH15": {
+      "logic": [
+        "`clinic.js › ask()` draws the page; `action('ask')` is a scripted query over the demo state (no model): it builds the sentence in `result`, writes it into `#ask-result` and adds \"Mở dữ liệu nguồn →\" (`data-nav` followups for image questions, patients otherwise).",
+        "Chip \"Kế hoạch đang chạy\" (`data-question`) fills the input, then \"Hỏi\": `/kế hoạch|plan/i` → \"Có <n> kế hoạch chưa hoàn tất trong <N> hồ sơ demo. Nguồn: Patient 360 (completed < total).\" with n = patients whose `completed < total` (here 46 of 46)."
+      ],
+      "rules": [
+        "\"Kết quả mô phỏng · có thể kiểm tra\" (result eyebrow)",
+        "\"Có 46 kế hoạch chưa hoàn tất trong 46 hồ sơ demo. Nguồn: Patient 360 (completed < total).\""
+      ],
+      "differences": [
+        "App I12 draws the answer as a notice (\"<n> ảnh chờ bác sĩ xem · Cách tính: …\") with a tile per patient and \"Nguồn: Follow-up Inbox · kiểm tra lại trước khi dùng.\"; the web answer is one sentence in a card with a single \"Mở dữ liệu nguồn →\" button."
+      ],
+      "gotchas": [
+        "The chip is called \"Kế hoạch đang chạy\" but the answer counts plans not yet complete.",
+        "The demo day is fixed (2026-09-20), so the counts are stable."
+      ]
+    },
+    "WH16": {
+      "logic": [
+        "`clinic.js › ask()` draws the page; `action('ask')` is a scripted query over the demo state (no model): it builds the sentence in `result`, writes it into `#ask-result` and adds \"Mở dữ liệu nguồn →\" (`data-nav` followups for image questions, patients otherwise).",
+        "Chip \"Quá hạn tái khám\": `/quá hạn|30 ngày/i` → patients whose `lastVisit` is more than 30 days before 2026-09-20; the answer lists \"<id> · <name>\" separated by commas (15 demo profiles)."
+      ],
+      "rules": [
+        "\"Có 15 hồ sơ có lần điều trị gần nhất hơn 30 ngày: … Nguồn: lastVisit, mốc demo 20/09/2026; đây là bộ lọc cần xem xét, không tự động là trễ hẹn.\""
+      ],
+      "differences": [
+        "App I12 has no \"Quá hạn tái khám\" answer drawn (only the chip and the photo example)."
+      ],
+      "gotchas": [
+        "The sentence is long (a list of 15 codes and names): the result card must wrap it.",
+        "If a question matches both \"ảnh/laser\" and \"quá hạn\", the image branch wins (`if … else if` order)."
+      ]
+    },
+    "WH17": {
+      "logic": [
+        "`clinic.js › ask()` draws the page; `action('ask')` is a scripted query over the demo state (no model): it builds the sentence in `result`, writes it into `#ask-result` and adds \"Mở dữ liệu nguồn →\" (`data-nav` followups for image questions, patients otherwise).",
+        "A question that matches no keyword keeps the initial `result`: \"Demo hỗ trợ 3 nhóm câu hỏi: ảnh chờ xem, kế hoạch chưa hoàn tất, và lần điều trị gần nhất hơn 30 ngày. Hãy chọn câu gợi ý để có kết quả kiểm tra được.\" The card heading echoes the typed text (\"xyz\"). An empty input only shows the toast \"Nhập câu hỏi\"."
+      ],
+      "rules": [
+        "\"Demo hỗ trợ 3 nhóm câu hỏi: ảnh chờ xem, kế hoạch chưa hoàn tất, và lần điều trị gần nhất hơn 30 ngày. Hãy chọn câu gợi ý để có kết quả kiểm tra được.\""
+      ],
+      "differences": [
+        "App I12 does not draw an unsupported-question answer."
+      ],
+      "gotchas": [
+        "The typed text is escaped (`esc(q)`) before it is shown in the heading."
+      ]
+    },
+    "WH18": {
+      "logic": [
+        "`clinic.js › action('ask-sample')`: \"Gợi ý câu hỏi\" (page head button) only fills `#ask-input` with \"Ai có ảnh gửi sau laser đang chờ xem?\"; no answer is computed until \"Hỏi\" is pressed. The result card keeps its start text: \"Kết quả sẽ xuất hiện ở đây\", \"Ask Pema\", \"Hãy hỏi một câu bên trái. Trong bản demo, câu trả lời luôn hiển thị cách tính và hồ sơ nguồn.\""
+      ],
+      "rules": [
+        "\"Hãy hỏi một câu bên trái. Trong bản demo, câu trả lời luôn hiển thị cách tính và hồ sơ nguồn.\"",
+        "\"Bộ truy vấn mô phỏng trên 46 hồ sơ tổng hợp · chưa tích hợp mô hình AI.\" (page subtitle)"
+      ],
+      "differences": [
+        "App I12 draws its hint as \"Bạn muốn biết điều gì?\" in the search field and has no \"Gợi ý câu hỏi\" button."
+      ],
+      "gotchas": [
+        "The input placeholder reads \"Ví dụ: Ai quá hạn tái khám hơn 30 ngày?\"; the filled sample replaces it with a real value."
+      ]
+    },
+    "WH19": {
+      "logic": [
+        "`clinic.js › ask()` draws the page; `action('ask')` is a scripted query over the demo state (no model): it builds the sentence in `result`, writes it into `#ask-result` and adds \"Mở dữ liệu nguồn →\" (`data-nav` followups for image questions, patients otherwise).",
+        "After the open follow-ups with an image are answered and closed in \"Theo dõi\" (filter \"image\", `data-action=\"view-followup\"`, then `review-submit`; capability `clinical`), the image question counts none: \"Có 0 ảnh chờ xem: Không có. Nguồn: Follow-up Inbox, status=open, có ảnh.\""
+      ],
+      "rules": [
+        "\"Có 0 ảnh chờ xem: Không có. Nguồn: Follow-up Inbox, status=open, có ảnh.\""
+      ],
+      "differences": [
+        "App I12 lists two patient tiles for the same question (\"2 ảnh chờ bác sĩ xem\"); the empty answer is not drawn there."
+      ],
+      "gotchas": [
+        "The toast \"Đã gửi phản hồi và đóng mục theo dõi\" (2800 ms) of the last follow-up may still be on the page in the snapshot.",
+        "The reach repeats the close step twice with `ifVisible`, so it works whether one or two image follow-ups are open."
+      ]
+    },
+    "WH20": {
+      "logic": [
+        "`guide.js › navigation()`: the topic index `#guide-topics` shows the articles whose normalized title, role, summary or steps contain the normalized search text (`search.oninput` redraws only `#guide-topics`). Search \"lịch\" leaves 8 of the 11 topics, including \"Lịch hẹn & tiếp đón\".",
+        "The article column keeps the current article (\"Hiểu hệ thống Pema\"): a search never changes it."
+      ],
+      "rules": [
+        "\"Không tìm thấy. Thử “lịch”, “thu tiền” hoặc tên vai trò.\" (shown by WH14 when nothing matches)"
+      ],
+      "differences": [
+        "App F16 has no search field and no topic index: it lists five fixed hand-over routes (\"Tiếp nhận → lịch → Patient 360\" …) as tiles."
+      ],
+      "gotchas": [
+        "Each topic button carries its role label in a `<small>` (\"Tất cả\", \"CSKH\", \"Bác sĩ\", \"Lễ tân\", \"Điều phối\") above the title; the snapshot lists them as one tab-like entry each."
+      ]
     }
   }
 }
