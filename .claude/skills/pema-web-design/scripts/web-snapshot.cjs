@@ -149,8 +149,9 @@ function responsiveOf(base, probes, desc) {
     }
     const baseSet = new Set(base.texts);
     const nowSet = new Set(p.texts);
-    const hidden = base.texts.filter((t) => !nowSet.has(t));
-    const shown = p.texts.filter((t) => !baseSet.has(t));
+    const volatile = (t) => /^(Tài chính đã đồng bộ|Đang đồng bộ tài chính|Tài chính chờ kết nối)/.test(t);
+    const hidden = base.texts.filter((t) => !nowSet.has(t) && !volatile(t));
+    const shown = p.texts.filter((t) => !baseSet.has(t) && !volatile(t));
     const o = { overflow_x: p.overflow_x, changes: [...new Set(changes)] };
     if (hidden.length) {
       o.hidden_text_n = hidden.length;
@@ -175,6 +176,39 @@ function serverToday(e) {
   return JSON.parse(JSON.stringify(e).split('"' + today + '"').join('"<server today>"'));
 }
 
+/**
+ * The finance server keeps its database between runs and the cashier screens (WF3-WF10) post invoices to it, so the
+ * debt figure and the invoice pickers drift from run to run. Those values are demo data, not UI: they get a name.
+ */
+function maskFinance(e) {
+  const walk = (nodes) => {
+    for (const n of nodes || []) {
+      if (n.n === 'kpi' && /Công nợ/.test(n.label)) n.value = '<varies with cashier activity>';
+      if (n.n === 'field' && /hóa đơn/i.test(n.label || '')) {
+        n.options = ['<one option per invoice of the finance database>'];
+        delete n.options_n;
+        if (n.default && /\d{3}\.\d{3}|HD-|INV|·/.test(n.default)) n.default = '<varies>';
+      }
+      if (n.n === 'field' && n.label === 'Số thu') n.default = '<varies>';
+      for (const k of ['children', 'item', 'actions']) if (Array.isArray(n[k])) walk(n[k]);
+      if (n.first) n.first.forEach(walk);
+    }
+  };
+  walk(e.tree);
+  e.kpis.forEach((k) => {
+    if (/Công nợ/.test(k.label)) k.value = '<varies with cashier activity>';
+  });
+  e.fields.forEach((x) => {
+    if (/hóa đơn/i.test(x.label || '')) {
+      x.options = ['<one option per invoice of the finance database>'];
+      delete x.options_n;
+      if (x.default && /\d{3}\.\d{3}|HD-|INV|·/.test(x.default)) x.default = '<varies>';
+    }
+    if (x.label === 'Số thu') x.default = '<varies>';
+  });
+  return e;
+}
+
 function buildEntry(entry, data, scope, probes, tokens, index) {
   const { tree, lists, texts, raw, regions, shell } = data;
   mergeVariants(tree, lists);
@@ -190,7 +224,7 @@ function buildEntry(entry, data, scope, probes, tokens, index) {
     role: entry.role,
     viewport: '1440x900',
     scope: scope.scope,
-    url: data.url,
+    url: data.url.replace(/order=[^&]+/, 'order=<order id>'),
     shell,
     regions,
     columns: columnsOf(tree),
@@ -208,7 +242,7 @@ function buildEntry(entry, data, scope, probes, tokens, index) {
     responsive: probes ? responsiveOf(probes.base, probes.list, describeIds(tree)) : {},
     stats: { text_runs: new Set(texts).size, uncovered_text: uncovered, unseen_controls: data.unseen || [] },
   };
-  return entry.group === 'WG' ? serverToday(e) : e;
+  return entry.group === 'WG' ? maskFinance(serverToday(e)) : e;
 }
 
 async function snapshotOne(browser, entry, tokens, index) {
@@ -218,6 +252,7 @@ async function snapshotOne(browser, entry, tokens, index) {
     await ow.settle(shown, 500);
     const bad = await ow.verify(shown, entry);
     if (bad) throw new Error(bad);
+    await shown.waitForFunction(() => !document.querySelector('.top-actions') || (document.getElementById('finance-sync') && !/Đang đồng bộ/.test(document.getElementById('finance-sync').textContent)), null, { timeout: 4000 }).catch(() => {});
     const scope = await scopeOf(shown, entry);
     const data = await shown.evaluate(extractInPage, { roots: scope.roots, mode: scope.mode || '', icons: ICONS });
     let probes = null;
