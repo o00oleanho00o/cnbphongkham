@@ -49,6 +49,7 @@ const COMPLETE = take('complete') === true;
 const [mode = 'list', fileArg = '', codesArg = '', outDir = '.'] = argv;
 const canvasDir = path.resolve(CANVAS_DIR_ARG || lib.CANVAS_DIR);
 const fileName = path.basename(fileArg || lib.CANVAS_FILE);
+const GALLERY = fileName === lib.BLOCKS_FILE; // the block gallery has scratch ids WA9xx that are not in the inventory
 const filePath = path.join(canvasDir, fileName);
 const SCREEN_ID = '^W[A-H]\\d+(-\\d+)?$';
 
@@ -76,6 +77,7 @@ function staticProblems(src, groups) {
   for (const g of groups) {
     for (const sc of g.screens) {
       const e = byId[sc.id];
+      if (GALLERY) continue;
       if (!e) {
         out.unknown.push(sc.id);
         continue;
@@ -110,7 +112,7 @@ function staticProblems(src, groups) {
   const { out: st, inv } = staticProblems(src, groups);
   const wanted = codesArg.split(',').map((c) => c.trim()).filter(Boolean);
   const codes = wanted.length ? wanted : lib.GROUP_CODES;
-  const expectedIds = inv.screens.filter((s) => codes.includes(s.group)).map((s) => s.id);
+  const expectedIds = GALLERY ? [] : inv.screens.filter((s) => codes.includes(s.group)).map((s) => s.id);
 
   const { chromium } = loadPlaywright();
   const browser = await chromium.launch();
@@ -165,7 +167,7 @@ function staticProblems(src, groups) {
     viewport: vp,
     total: rendered.length,
     expected: expectedIds.length,
-    missing: COMPLETE ? missing : missing.length ? `${missing.length} not built yet (WA/WB: ${missing.slice(0, 6).join(', ')}${missing.length > 6 ? ' …' : ''})` : [],
+    missing: COMPLETE ? missing : missing.length ? `${missing.length} id(s) of the inventory have no frame yet: ${missing.slice(0, 6).join(', ')}${missing.length > 6 ? ' …' : ''}` : [],
     frames: frames.filter((f) => inScope(f.id)).length,
     frameMismatch: st.frameMismatch,
     unknownIds: st.unknown,

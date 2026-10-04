@@ -6,7 +6,7 @@ const groups = GROUP_DEFS.map(g => ({ ...g, screens: PARTS[g.code] }));
 // A block that the markup cannot draw, a container nested too deep or a wrong id fails here, in the Node
 // loader and in the viewer alike, with the screen id in the message.
 const KIND_INLINE = ['txt', 'btn', 'badge', 'avatar', 'icon', 'chip', 'prog'];
-const KIND_LEAF = ['h', 'pageHead', 'hero', 'kpis', 'stat', 'chips', 'tabs', 'notice', 'facts', 'field', 'table', 'empty', 'bars', 'timeline', 'list', 'board', 'weekGrid', 'photos', 'a5', 'img', 'legend', 'sp', 'hr', 'code'];
+const KIND_LEAF = ['h', 'pageHead', 'hero', 'kpis', 'stat', 'chips', 'tags', 'tabs', 'notice', 'facts', 'field', 'table', 'empty', 'bars', 'timeline', 'list', 'board', 'weekGrid', 'photos', 'a5', 'img', 'legend', 'sp', 'hr', 'code'];
 const KIND_CONT = ['stack', 'row', 'grid', 'card', 'box', 'disc'];
 const MAX_CONTAINER_LEVEL = 3;
 const checkInline = (id, where, items) => (items || []).forEach(x => { if (!isNode(x) || !KIND_INLINE.includes(x.k)) throw new Error(`${id}: ${where} accepts only inline blocks (${KIND_INLINE.join(', ')}), got ${x && x.k}`); });

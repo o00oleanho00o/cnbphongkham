@@ -25,6 +25,8 @@ const FRONTEND = path.join(ROOT, 'pema-agent', 'frontend');
 const IMG_REL = 'pema-agent/frontend/visual-ref/old';
 const NOTE_KEYS = ['logic', 'rules', 'differences', 'gotchas', 'todo'];
 const GENERATOR = '.claude/skills/pema-web-design/scripts/web-specs.cjs';
+const canvasLayout = require('./lib/canvas-layout.cjs');
+const BLOCKS_DOC = path.join(ROOT, '.claude', 'skills', 'pema-web-design', 'references', 'blocks-web.md');
 
 const rel = (p) => path.relative(ROOT, p).split(path.sep).join('/');
 const lf = (s) => s.replace(/\r\n/g, '\n');
@@ -98,6 +100,7 @@ function loadModel() {
     staff: loadStaff(),
     feature: loadFeatureRows(),
     groups: Object.fromEntries(inventory.groups.map((g) => [g.code, g])),
+    canvas: canvasLayout.loadCanvasScreens(),
   };
 }
 
@@ -502,6 +505,30 @@ function expectedItems(e) {
   return items;
 }
 
+// With a canvas frame the Layout shows sample data (people, numbers, money) instead of the old demo values, so only the labels
+// of the old screen are compared, with every run of digits read as one number: "0 Khách mới" is found by "12 Khách mới".
+const LABEL_KINDS = new Set(['action', 'field', 'filter/tab', 'status', 'notice', 'empty state', 'heading', 'table column', 'kpi label']);
+const normNum = (t) => String(t).replace(/\d+(?:[.,:/′'’·]\d+)*/g, '#').replace(/\s+/g, ' ').trim();
+
+/** Labels of the snapshot that a canvas Layout does not contain. `demoData` (notes.json screens.<id>.demo_data) lists old demo values that the canvas replaces on purpose. */
+function canvasCoverage(e, layoutLines, demoData = []) {
+  const text = normNum(layoutLines.join('\n').replace(/\\"/g, '"'));
+  const exempt = demoData.map(normNum);
+  const missing = [];
+  const seen = new Set();
+  const names = new Set((e.actions || []).filter((a) => /^crm=profile$|^patient=/.test(a.hook || '')).map((a) => a.label)); // links named after a patient: sample data
+  for (const it of expectedItems(e)) {
+    if (!LABEL_KINDS.has(it.kind) || (it.kind === 'action' && names.has(it.text))) continue;
+    const n = normNum(it.text);
+    const key = it.kind + '|' + n;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (!n || exempt.some((x) => n.includes(x) || x.includes(n))) continue;
+    if (!text.includes(n)) missing.push(it);
+  }
+  return missing;
+}
+
 /** Items of the snapshot that the rendered Layout does not contain. Empty = the spec shows everything. */
 function coverage(e, layoutLines) {
   const text = layoutLines.join('\n');
@@ -663,7 +690,9 @@ function specMarkdown(entry, model) {
   if (!e) throw new Error(`no snapshot for ${entry.id}: run web-snapshot.cjs`);
   const g = model.groups[entry.group];
   const notes = notesFor(model, entry);
-  const lay = layoutOf(e);
+  const snap = layoutOf(e);
+  const cs = model.canvas && model.canvas.screens[entry.id];
+  const lay = cs ? canvasLayout.layout(cs) : snap;
   const kitUsed = Object.entries(lay.used).filter(([k]) => KIT.has(k)).sort((a, b) => b[1] - a[1]);
   const sharedUsed = Object.entries(lay.used).filter(([k]) => SHARED.has(k));
   const app = appInfo(model, entry, e);
@@ -698,8 +727,9 @@ ${app.text}
 ## Frame
 ${frameLines(e, entry)}
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. \`old="…"\` is the old CSS class, \`// key=value\` the old \`data-*\` hook that carries the behaviour.
+${cs ? `## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of \`Pema Web redesign canvas/Pema Web.dc.html\` (frame ${entry.id}): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".` : `## Layout (top to bottom, region → src/ui component)
+Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. \`old="…"\` is the old CSS class, \`// key=value\` the old \`data-*\` hook that carries the behaviour.`}
 \`\`\`tsx
 ${lay.lines.join('\n')}
 \`\`\`
@@ -723,7 +753,17 @@ ${bullet(diffs)}
 ## Gotchas
 ${bullet(notes.gotchas)}
 ${notes.todo.length ? `\n## Still to do\n${bullet(notes.todo)}\n` : ''}
-## Images
+${cs ? `## Web canvas
+- Frames: ${cs.frames.map((f) => f.size).join(', ')} (inventory: ${entry.frames.join(', ')}); screen label \`${cs.id} · ${cs.name}\`.
+- Canvas note: ${String(cs.note).replace(/\s+/g, ' ')}
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+\`\`\`tsx
+${snap.lines.join('\n')}
+\`\`\`
+
+` : ''}## Images
 ${imageLines(entry)}
 
 ## Prompt
@@ -775,11 +815,40 @@ ${rows.join('\n')}
 `;
 }
 
+// ---------- design-specs/web/BLOCKS.md: blocks-web.md plus how often the canvas uses each block ----------
+function blocksMarkdown(model) {
+  const doc = fs.existsSync(BLOCKS_DOC) ? read(BLOCKS_DOC) : '';
+  const use = model.canvas ? canvasLayout.usage(model.canvas.screens) : {};
+  const total = model.canvas ? Object.keys(model.canvas.screens).length : 0;
+  const lines = doc.split('\n');
+  const hi = lines.findIndex((l) => /^\| Block /.test(l));
+  const head = hi < 0 ? '' : lines[hi];
+  const body = [];
+  for (let k = hi + 2; hi >= 0 && k < lines.length && /^\|/.test(lines[k]); k++) body.push(lines[k]);
+  const rows = body.map((l) => {
+    const kinds = [...l.split('|')[1].matchAll(/`([A-Za-z]+)`/g)].map((m) => m[1]);
+    const n = kinds.reduce((a, k) => a + ((use[k] || {}).nodes || 0), 0);
+    const screens = kinds.reduce((a, k) => Math.max(a, (use[k] || {}).screens || 0), 0);
+    return `${l} ${n} blocks · ${screens} screens |`;
+  });
+  const cols = head ? head.split('|').length - 2 + 1 : 0;
+  return `<!-- Generated by ${GENERATOR} from .claude/skills/pema-web-design/references/blocks-web.md and Pema Web.dc.html. Edit blocks-web.md, not this file. -->
+# Web canvas blocks
+
+Every block of \`Pema Web redesign canvas\` with the \`src/ui\` component it renders, its KMP \`core:ui\` analogue and the rules for using it. The last column is how often the ${total} canvas screen(s) built so far use it. Helper arguments and examples: \`.claude/skills/pema-web-design/references/blocks-web.md\`.
+
+${head ? head.replace(/\|\s*$/, '| Used in the canvas |') : ''}
+${head ? '|' + '---|'.repeat(cols) : ''}
+${rows.join('\n')}
+`;
+}
+
 /** Everything the generator writes: Map(path → text). */
 function buildFiles(model) {
   const files = new Map();
   files.set(path.join(WEB, 'index.json'), JSON.stringify(indexJson(model), null, 2) + '\n');
   files.set(path.join(WEB, 'INDEX.md'), indexMarkdown(model));
+  files.set(path.join(WEB, 'BLOCKS.md'), blocksMarkdown(model));
   for (const s of model.inventory.screens) files.set(path.join(SCREENS, `${s.id}.md`), specMarkdown(s, model));
   return files;
 }
@@ -793,7 +862,9 @@ function coverageAll(model) {
       out[s.id] = [{ kind: 'snapshot', text: 'no snapshot entry' }];
       continue;
     }
-    const miss = coverage(e, layoutOf(e).lines);
+    const cs = model.canvas && model.canvas.screens[s.id];
+    const demo = ((model.notes.screens || {})[s.id] || {}).demo_data || [];
+    const miss = cs ? canvasCoverage(e, canvasLayout.layout(cs).lines, demo) : coverage(e, layoutOf(e).lines);
     if (miss.length) out[s.id] = miss;
   }
   return out;
@@ -804,4 +875,4 @@ function inventorySha() {
   return sha(fs.readFileSync(INVENTORY, 'utf8'));
 }
 
-module.exports = { inventorySha, ROOT, WEB, SCREENS, NOTES, INVENTORY, SNAPSHOT, IMG_REL, NOTE_KEYS, rel, loadModel, loadNotes, saveNotes, addNote, specMarkdown, promptOf, indexMarkdown, indexJson, buildFiles, coverage, coverageAll, layoutOf, lf };
+module.exports = { canvasCoverage, blocksMarkdown, inventorySha, ROOT, WEB, SCREENS, NOTES, INVENTORY, SNAPSHOT, IMG_REL, NOTE_KEYS, rel, loadModel, loadNotes, saveNotes, addNote, specMarkdown, promptOf, indexMarkdown, indexJson, buildFiles, coverage, coverageAll, layoutOf, lf };

@@ -75,6 +75,8 @@ const kpis = (...items) => ({ k: 'kpis', n: items.length, items });
 const stat = (label, value, sub = '', o = {}) => ({ k: 'stat', label, value, sub, unit: o.unit || '' });
 // chips(['Tất cả', ['Quá hạn', 'sel', 4], ...], { vert }): FilterChipGroup; an item is 'label' or [label, state, count].
 const chips = (items, o = {}) => ({ k: 'chips', cls: o.vert ? 'chs-v' : 'chs', items: items.map(x => { const [text, st = '', count = ''] = Array.isArray(x) ? x : [x]; return { text, count: count === '' ? '' : String(count), icon: '', cls: 'ch' + (st === 'sel' ? ' ch-sel' : st === 'dis' ? ' ch-dis' : '') }; }) });
+// tags(badge, badge, ...): a wrapping row of badges (hero chips, status lists) as one leaf.
+const tags = (...bs) => ({ k: 'tags', items: bs.flat().map(b => ({ text: b.text, dot: b.dot, cls: b.cls })) });
 // tabs(['Tổng quan', ['Tư vấn', 3], ...], activeIndex, { seg }): tab bar (underline) or segmented control.
 const tabs = (items, on = 0, o = {}) => ({ k: 'tabs', n: items.length, cls: o.seg ? 'tbs tbs-seg' : 'tbs', items: items.map((x, i) => { const [text, count = ''] = Array.isArray(x) ? x : [x]; return { text, count: count === '' ? '' : String(count), cls: 'tbi' + (i === on ? ' tbi-on' : '') }; }) });
 const NT_ICON = { info: 'info', warning: 'warning', danger: 'error', success: 'check_circle' };
@@ -146,8 +148,8 @@ const hm = m => pad2(Math.floor(m / 60)) + ':' + pad2(m % 60);
 const toMin = s => { const [a, b] = String(s).split(':'); return Number(a) * 60 + Number(b); };
 // board({ rooms: [{ name, sub, bk: [{ start: '08:00', mins: 30, title, sub, svc: 0..3 }] }], from, to, hh, legend }): rooms × time (day view).
 const board = (o = {}) => {
-  const from = o.from ?? 8, to = o.to ?? 18, hh = o.hh ?? 64;
-  const rms = (o.rooms || rooms).map(r => ({ name: r.name, sub: r.sub || '', bk: (r.bk || []).map(b => ({ time: hm(toMin(b.start)) + '–' + hm(toMin(b.start) + b.mins), top: (toMin(b.start) - from * 60) / 60 * hh + 1, hgt: Math.max(b.mins / 60 * hh - 2, 28), title: b.title, sub: b.sub || '', svc: b.svc || 0 })) }));
+  const from = o.from ?? 8, to = o.to ?? 18, hh = o.hh ?? 80;
+  const rms = (o.rooms || rooms).map(r => ({ name: r.name, sub: r.sub || '', bk: (r.bk || []).map(b => ({ time: hm(toMin(b.start)) + '–' + hm(toMin(b.start) + b.mins), top: (toMin(b.start) - from * 60) / 60 * hh + 1, hgt: Math.max(b.mins / 60 * hh - 2, 28), sz: b.mins / 60 * hh < 56 ? 'bk-s' : '', title: b.title, sub: b.sub || '', svc: b.svc || 0 })) }));
   const hours = []; for (let t = from; t < to; t++) hours.push({ t: t + ':00', top: (t - from) * hh });
   return { k: 'board', rooms: rms, nc: rms.length, hh, h: (to - from) * hh, hours, corner: o.corner || 'GIỜ', legend: (o.legend || SVC_LEGEND).map(([t, svc]) => ({ t, svc })) };
 };
@@ -193,8 +195,9 @@ const panel = (title, sub, aside, ...k) => card({ title, sub, aside: aside || []
 const box = (o0, ...k) => { const o = typeof o0 === 'string' ? { tone: o0 } : (o0 || {}); return cont('box', { title: o.title || '', hasHead: !!o.title, hcls: 'bx-h', tcls: 'bx-t', cls: 'bx bx-' + (o.tone || 'info'), tone: o.tone || 'info', icls: 'k-stack', ist: '--g:' + (o.g ?? 8) + 'px', kids: flat(k) }); };
 // disc('+ Ghi nhận ...', ...kids): the old `<details>` section, drawn open.
 const disc = (summary, ...k) => cont('disc', { title: summary, icon: 'expand_more', hasHead: true, hcls: 'ds-s', tcls: 'ds-t', cls: 'ds', icls: 'ds-b k-stack', ist: '--g:12px', kids: flat(k) });
-// split(main, aside): two columns 1.65fr : 1fr (stacked at 390).
-const split = (main, aside, o = {}) => grid(o.cols || 'minmax(0,1.65fr) minmax(300px,1fr)', stack({ g: o.g ?? 16 }, ...[].concat(main)), stack({ g: o.g ?? 16 }, ...[].concat(aside)));
+// split(main[], aside[]): two columns 1.65fr : 1fr (stacked at 390); a column with several blocks is wrapped in a stack, a single block is not (saves a nesting level).
+const col = (k, g) => { const a = [].concat(k).flat(); return a.length === 1 ? a[0] : stack({ g }, ...a); };
+const split = (main, aside, o = {}) => grid(o.cols || 'minmax(0,1.65fr) minmax(300px,1fr)', col(main, o.g ?? 16), col(aside, o.g ?? 16));
 
 // ---------------------------------------------------------------------------------------------------------
 // Shell: sidebar, top bar, roles (old web: clinic.js nav, staff-context.js pages)
@@ -265,7 +268,7 @@ const patientHead = (p, tabIndex, o = {}) => [
       row({ g: 16, ai: 'center' }, avatar(p.init, { size: 'lg' }),
         stack({ g: 4 }, eyebrow('Hồ sơ ' + p.id + ' · ' + (o.status || 'Đặt hẹn')), h1(p.name),
           txt(p.age + ' tuổi · Nữ · ' + p.phone + ' · Bác sĩ phụ trách: ' + p.doctor, { size: 's', tone: 'soft' }),
-          row({ g: 6 }, ...(o.chips || [badge('Nám · tăng sắc tố', 'brand', { dot: false }), badge('⚠ Da nhạy cảm', 'warning', { dot: false }), badge('⚠ Theo dõi đỏ da sau điều trị', 'warning', { dot: false })])))),
+          tags(...(o.chips || [badge('Nám · tăng sắc tố', 'brand', { dot: false }), badge('⚠ Da nhạy cảm', 'warning', { dot: false }), badge('⚠ Theo dõi đỏ da sau điều trị', 'warning', { dot: false })])))),
       row({ g: 8, jc: 'flex-end' }, ...(o.actions || [secondary('AI brief', { icon: 'auto_awesome' }), secondary('Nhắn tin'), primary('Ghi buổi điều trị', { icon: 'add' })])))),
   tabs(P360_TABS, tabIndex)
 ];
