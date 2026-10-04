@@ -5,6 +5,9 @@
 //   tools     list_screens · get_screen · get_screen_image · get_block_catalog · record_note · regenerate_specs
 //   prompts   port_screen(id) + one prompt per screen ("A1" … "K3")
 //   resources pema-design://screens/<ID> · pema-design://blocks · pema-design://index
+//   web (package W, old Pema web, additive): tools list_web_screens · get_web_screen · get_web_screen_image ·
+//   record_web_note · prompt port_web_screen(id) · resource pema-design://web-index (+ pema-design://web-screens/<ID>)
+//   built from design-specs/web/ by .claude/skills/pema-web-design/scripts/web-specs-lib.cjs
 //
 // Data is built live from the canvas, the KMP code and design-specs/notes.json
 // (see ../scripts/specs-lib.cjs), so it never goes stale. Register: see design-specs/README.md.
@@ -139,6 +142,117 @@ const TOOLS = [
   },
 ];
 
+// ---------- web tools (package W: specs of the OLD Pema web; additive, the tools above are unchanged) ----------
+const WEB_LIB = path.join(__dirname, '../../pema-web-design/scripts/web-specs-lib.cjs');
+let webCache = { at: 0, model: null };
+function webLib() {
+  if (!fs.existsSync(WEB_LIB)) throw new Error('pema-web-design skill not found (' + WEB_LIB + ')');
+  return require(WEB_LIB);
+}
+function webModel() {
+  if (!webCache.model || Date.now() - webCache.at > 3000) webCache = { at: Date.now(), model: webLib().loadModel() };
+  return webCache.model;
+}
+const webInvalidate = () => (webCache = { at: 0, model: null });
+function findWebScreen(id) {
+  const m = webModel();
+  const s = m.inventory.screens.find((x) => x.id.toLowerCase() === String(id || '').trim().toLowerCase());
+  if (!s) throw new Error(`No web screen "${id}". Use list_web_screens to see the ids (WA1 … WH14).`);
+  if (!m.snapshot.screens[s.id]) throw new Error(`No snapshot for ${s.id}: run .claude/skills/pema-web-design/scripts/web-snapshot.cjs`);
+  return s;
+}
+
+const WEB_TOOLS = [
+  {
+    name: 'list_web_screens',
+    description: 'List the screens of the OLD Pema web (Clinic Web in prototype/): id, name, kind, group, Next.js route and status, app canvas cross-reference. Filter by group (WA–WH) or keyword.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        group: { type: 'string', description: 'Group code WA–WH, e.g. "WB"' },
+        query: { type: 'string', description: 'Search id, name, route, kind' },
+      },
+    },
+    run: ({ group, query } = {}) => {
+      const q = String(query || '').toLowerCase();
+      const rows = webModel().inventory.screens
+        .filter((s) => !group || s.group === String(group).toUpperCase())
+        .filter((s) => !q || [s.id, s.name, s.kind, s.next_route || '', s.next_status].join(' ').toLowerCase().includes(q))
+        .map((s) => `${s.id} · ${s.name} — ${s.kind} · ${s.next_route || 'no route'} (${s.next_status}) · app: ${s.app_canvas.length ? s.app_canvas.join(',') : '—'}`);
+      return text(rows.length ? rows.join('\n') : 'No matching web screens.');
+    },
+  },
+  {
+    name: 'get_web_screen',
+    description: 'Full spec of one OLD-web screen, to build or check it in Next.js without re-reading prototype/: every field, action, status, filter and text as src/ui component calls, frame, responsive behaviour, tokens, required text, rules, differences from the app design, gotchas and a prompt.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Web screen id, e.g. "WB1"' },
+        format: { type: 'string', enum: ['markdown', 'json'], description: 'Default markdown' },
+      },
+      required: ['id'],
+    },
+    run: ({ id, format }) => {
+      const s = findWebScreen(id);
+      const m = webModel();
+      return text(format === 'json' ? JSON.stringify({ entry: s, snapshot: m.snapshot.screens[s.id] }, null, 2) : webLib().specMarkdown(s, m));
+    },
+  },
+  {
+    name: 'get_web_screen_image',
+    description: 'PNG screenshot of an OLD-web screen from pema-agent/frontend/visual-ref/old (<ID>-<W>x<H>.png). Viewports: 1920x1020, 1440x900, 1280x720, 1024x768, 390x844. Images are git-ignored: when missing, run .claude/skills/pema-web-design/scripts/web-shots.cjs.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Web screen id' },
+        viewport: { type: 'string', description: 'Default "1440x900"' },
+      },
+      required: ['id'],
+    },
+    run: ({ id, viewport }) => {
+      const s = findWebScreen(id);
+      const vp = String(viewport || '1440x900');
+      if (!/^\d+x\d+$/.test(vp)) throw new Error('viewport must look like 1440x900');
+      const file = path.join(webLib().ROOT, webLib().IMG_REL, `${s.id}-${vp}.png`);
+      if (!fs.existsSync(file)) {
+        throw new Error(`${path.relative(webLib().ROOT, file).split(path.sep).join('/')} missing. Run: node .claude/skills/pema-web-design/scripts/web-shots.cjs (needs the old web on :4173 and PLAYWRIGHT_MODULE).`);
+      }
+      return {
+        content: [
+          { type: 'image', data: fs.readFileSync(file).toString('base64'), mimeType: 'image/png' },
+          { type: 'text', text: `${s.id} · ${s.name} · ${vp}` },
+        ],
+      };
+    },
+  },
+  {
+    name: 'record_web_note',
+    description: 'Save something learned about an OLD-web screen (source function, business rule, difference from the app design, gotcha, remaining work) into design-specs/web/notes.json, then regenerate that screen\'s spec. Write in English; keep Vietnamese UI text and business wording verbatim in quotes.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Web screen id' },
+        key: { type: 'string', enum: ['logic', 'rules', 'differences', 'gotchas', 'todo'] },
+        text: { type: 'string', description: 'One short, concrete sentence (file, function, exact text)' },
+      },
+      required: ['id', 'key', 'text'],
+    },
+    run: ({ id, key, text: note }) => {
+      const s = findWebScreen(id);
+      if (!String(note || '').trim()) throw new Error('text is empty');
+      const lib = webLib();
+      lib.addNote(s.id, key, String(note).trim());
+      webInvalidate();
+      const out = path.join(lib.SCREENS, `${s.id}.md`);
+      fs.mkdirSync(path.dirname(out), { recursive: true });
+      fs.writeFileSync(out, lib.specMarkdown(findWebScreen(s.id), webModel()));
+      return text(`Saved (${key}) for ${s.id} in ${lib.rel(lib.NOTES)} and updated ${lib.rel(out)}.`);
+    },
+  },
+];
+TOOLS.push(...WEB_TOOLS);
+
 // ---------- prompts ----------
 function promptsList() {
   const port = {
@@ -146,10 +260,30 @@ function promptsList() {
     description: 'Port/rebuild one Pema screen in KMP + Compose from its saved spec (no need to re-read the web/canvas).',
     arguments: [{ name: 'id', description: 'Screen code (A1 … K3)', required: true }],
   };
-  return [port, ...model().screens.map((s) => ({ name: s.id, description: `${s.name} · group ${s.group} (${s.source.kind === 'web' ? 'web' : 'KMP'})` }))];
+  const portWeb = {
+    name: 'port_web_screen',
+    description: 'Build/port one screen of the OLD Pema web in the Next.js app (src/ui) from its saved spec (no need to re-read prototype/).',
+    arguments: [{ name: 'id', description: 'Web screen id (WA1 … WH14)', required: true }],
+  };
+  return [port, ...model().screens.map((s) => ({ name: s.id, description: `${s.name} · group ${s.group} (${s.source.kind === 'web' ? 'web' : 'KMP'})` })), portWeb];
 }
 
 function promptGet(name, args = {}) {
+  if (name === 'port_web_screen') {
+    const w = findWebScreen(args.id);
+    return {
+      description: `${w.id} · ${w.name}`,
+      messages: [
+        {
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `${webLib().promptOf(w, webModel())}\n\nFull spec (read this instead of prototype/; if you find something new, save it with the record_web_note tool):\n\n${webLib().specMarkdown(w, webModel())}`,
+          },
+        },
+      ],
+    };
+  }
   const s = findScreen(name === 'port_screen' ? args.id : name);
   return {
     description: `${s.id} · ${s.name}`,
@@ -171,6 +305,7 @@ function resourcesList() {
     { uri: 'pema-design://index', name: 'Screen index', mimeType: 'text/markdown' },
     { uri: 'pema-design://blocks', name: 'Canvas block → Compose', mimeType: 'text/markdown' },
     ...model().screens.map((s) => ({ uri: `pema-design://screens/${s.id}`, name: `${s.id} · ${s.name}`, mimeType: 'text/markdown' })),
+    { uri: 'pema-design://web-index', name: 'Old web screen index', mimeType: 'text/markdown' },
   ];
 }
 
@@ -179,6 +314,9 @@ function resourceRead(uri) {
   if (uri === 'pema-design://blocks') return lib.blocksMarkdown();
   const m = /^pema-design:\/\/screens\/(\w+)$/.exec(uri);
   if (m) return lib.screenMarkdown(findScreen(m[1]), model());
+  if (uri === 'pema-design://web-index') return webLib().indexMarkdown(webModel());
+  const wm = /^pema-design:\/\/web-screens\/(\w+)$/.exec(uri);
+  if (wm) return webLib().specMarkdown(findWebScreen(wm[1]), webModel());
   throw new Error('No resource ' + uri);
 }
 
