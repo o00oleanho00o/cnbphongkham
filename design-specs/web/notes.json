@@ -2343,7 +2343,8 @@
         "The app has no empty state for appointments."
       ],
       "gotchas": [
-        "The toast \"Chưa có lịch hẹn để xác nhận\" exists in the code but cannot appear: the button is disabled in this state."
+        "The toast \"Chưa có lịch hẹn để xác nhận\" exists in the code but cannot appear: the button is disabled in this state.",
+        "Canvas: the demo patient is people[4] (CRM group \"Quá hạn tái khám\") instead of the old web's Vũ Thanh Mai; the disabled \"Xác nhận tôi sẽ đến\" is drawn with the disabled button style."
       ]
     },
     "WI23": {
@@ -2386,6 +2387,9 @@
       ],
       "differences": [
         "The app has no empty state for the journey."
+      ],
+      "gotchas": [
+        "Canvas: the new profile P047 is the synthetic \"Nguyễn Thử Nghiệm\" (WI26, WI27, WI30, WI41, WI42)."
       ]
     },
     "WI27": {
@@ -2507,7 +2511,8 @@
       ],
       "gotchas": [
         "The invoice id is random on every run (`HD-<uuid>`); the snapshot masks it as `HD-<random id>`, the screenshot shows the real one.",
-        "At 390 the amount column of an invoice row is narrow: the currency sign wraps under the number (\"720.500\" / \"₫\"). It is how the old web looks; keep it unless the owner decides otherwise."
+        "At 390 the amount column of an invoice row is narrow: the currency sign wraps under the number (\"720.500\" / \"₫\"). It is how the old web looks; keep it unless the owner decides otherwise.",
+        "Canvas: the invoice id \"HD-8ab4058e-…\" is a placeholder (the old web draws a new random id on every run); the second section of \"Đơn & phiếu đã duyệt\" is the cashier order approved in WF6."
       ]
     },
     "WI38": {
@@ -2520,6 +2525,9 @@
       ],
       "differences": [
         "App G8 shows a check row \"Đồng ý dùng ảnh trong chăm sóc\" (checked) and \"Cài đặt đang được minh họa trong phiên duyệt.\"; the web uses a settings-style row and a toast."
+      ],
+      "gotchas": [
+        "Canvas: the two selects are drawn closed as in the old shot; the old list has 46 options (47 once a profile is created), only the group select and the first patients are listed in the spec."
       ]
     },
     "WI39": {
