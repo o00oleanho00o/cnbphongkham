@@ -119,6 +119,18 @@ async function captureOne(browser, inv, entry, viewport, outDir, lenient) {
     }
     await financeSynced(shown, transient ? 1800 : 6000, transient || lenient);
     const why = await ow.verify(shown, entry);
+    // a state shot is about its expected element (an error line, a result): when that element sits inside a dialog and
+    // below the visible part of the viewport (tall dialog at 1440x900), scroll the dialog until it shows
+    if (!why && entry.expect && entry.expect.selector) {
+      await shown.evaluate((sel) => {
+        const el = [...document.querySelectorAll(sel)].find((e) => e.getClientRects().length);
+        const box = el && el.closest('.modal');
+        if (!box) return;
+        const r = el.getBoundingClientRect();
+        const b = box.getBoundingClientRect();
+        if (r.bottom > Math.min(b.bottom, window.innerHeight) || r.top < Math.max(b.top, 0)) el.scrollIntoView({ block: 'nearest' });
+      }, entry.expect.selector);
+    }
     // `expect` not met: the first try fails (and is retried once); the retry still shoots the screen and records why,
     // because a responsive layout may legitimately hide the element (the 390px sidebar has no brand logo)
     if (why && !lenient) throw new Error(`expect: ${why}`);
