@@ -312,7 +312,7 @@ Gates before merging a worktree: FE vitest ≥ 407 and `pnpm inventory`/`pnpm vi
 BE pytest/ruff/pyright/import-linter, no attribution in `git log --format=%B`, report filed. Migrations use prefix
 `u<step>_`; U8 adds the merge head. Photos: upload/view with consent only, no image analysis (scope unchanged).
 
-## Package W — design of the old Pema web: screenshots, screen specs, web canvas (BUILT on `feat/web-design`, 2026-10-04; W5 push to claude.ai/design still open)
+## Package W — design of the old Pema web: screenshots, screen specs, web canvas (BUILT on `feat/web-design`, 2026-10-04: 211 screens incl. Patient Mobile; W5 push to claude.ai/design optional)
 
 Why: the app has a canvas (`Pema App.dc.html`, 82 mobile screens), generated specs (`design-specs/screens/`), the MCP
 server `pema-design` and two skills. The old web has only its code in `prototype/`. Package U ports the old web by
@@ -385,6 +385,10 @@ Known gaps (2026-10-04):
 | W3b WA…WH (8 agents) | `design/w3b-wa` … `w3b-wh` | `9a1fe5d` WA, `43555e0` WE, `58ae88a` WD, `bd64183` WH, `77cae65` WG, `768912a` WF, WB, `453e114` WC | each group `--complete` check 0 | `notes.json` conflicts resolved by structured JSON merge |
 | W3c template fixes | `design/w3c` | `c40ba22` | all 81: errors/overflow/unresolved/missing empty; `web-specs --check` 0; 154 `demo_data` exemptions → 0 | bell by role, money nowrap, hero actions, dialog close label, table row variants, card tint, board buffer, notice bullets |
 | W4 skill, docs, audit | `design/w4` 6 commits | merge on `feat/web-design` | inventory/specs/canvas/coverage all 81; counts table equal | `pema-web-design` SKILL.md, `coverage-web.md`, `web-design-changes.md` + `pending-web.cjs`, CLAUDE.md section, `design-specs/README.md` row, SECTION_PROGRESS |
+| W6a gap audit: Patient Mobile web (group WI) + every parked state | `design/w6a` 4 commits | merge on `feat/web-design` | `web-inventory.cjs --check` 0 (4 min 33 s): 211 ids (+130), static guard 0 unclaimed of 226 UI items (before: 123) | owner rule repeated 2026-10-04: no screen may be missing; WI = 42 Patient Mobile ids (9 pages, 9 next-step cards, empty/toast/error/approved/pending variants); 11 `non_screens` each proven unreachable by a grep; native confirm/prompt/print/download/select get ids with `native_dialog` |
+| W6b shots (4 agents) + specs (3 agents) for the 130 new ids | `design/w6b-shots-a…d`, `design/w6b-specs-1…3` | merged; manifest and snapshot/notes merged by script (`web-snapshot.cjs --merge=`) | manifest 1150 rows, 1150 PNG on disk, SHA 0 mismatch; `web-specs.cjs --check` 0 (211 specs, 0 missing) | each agent used its own old-web server (4173, 4175–4180); PNGs copied into the main checkout folder; `web-shots.cjs` records `native_dialog` messages |
+| W6c-0 phone frame + Patient Mobile blocks | `design/w6c0` | `88bdfcf` | proofs WI1, WI9, WI23 | `mob()` 390×844 frame, `native()` dialog frame, `errLine`, blocks appt/events/bubbles/upload/stepper/quick/rx |
+| W6c frames for 130 new ids (5 agents: WI-1, WI-2, OPS, REST-1, REST-2) | `design/w6c-wi1` … `rest2` | `f00e068` | **all 211 ids**: `web-canvas.cjs check … --complete --viewport=all --frames` exit 0, total 211/211, 263 frames, errors/overflow/unresolved/missing empty; `web-specs.cjs --check` 0; `web-coverage.cjs --check` ok (1150 files) | one-line fix in `canvas-layout.cjs` (dialog toast listed in Layout) |
 | Local viewer (Docker) | `feat/web-design` | — | image builds, `http://127.0.0.1:4191/` serves `Pema Web.dc.html` (462 KB), 0 page errors | `docker compose up -d --build pema-web-design-viewer` from the repo root; `design-viewer/Dockerfile` takes `CANVAS_DIR` (default app canvas, port 4190); the "Pema Web" tab is next to "Pema Web blocks" |
 | W5 push to claude.ai/design | — | — | — | OPTIONAL now (only to share on claude.ai): needs the user to create the project and run `/design-sync`; see `recipes/W/07-W5-push-design.md` |
 

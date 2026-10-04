@@ -33,8 +33,143 @@ Group **WA · Khung & điều hướng** · state · Next.js: **restyle (U1)** (
 - Layout `.top-actions` 686×53 px: flex row, gap 12px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WA5): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Tổng quan">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item active icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Tổng quan"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <PageHeading eyebrow="Pema · chăm sóc xuyên suốt" title="Chào buổi sáng, BS. Tâm" subtitle="Vận hành hôm nay và chăm sóc khách hàng · mốc demo 20/09/2026">
+    <Button variant="secondary">"Lịch hôm nay →"</Button>
+    <Button variant="primary">"Mở CSKH hôm nay"</Button>
+  </PageHeading>
+  <Grid cols="repeat(4, 1fr)" cols-390="repeat(2, 1fr)">
+    <Tile label="Lịch hôm nay" value="12">
+      <Button variant="quiet">"Mở tiếp đón →"</Button>
+    </Tile>
+    <Tile label="Đã đến / đang chờ" value="3 / 3">
+      <Button variant="quiet">"Bàn giao phòng khám →"</Button>
+    </Tile>
+    <Tile label="Vắng hẹn" value="1">
+      <Button variant="secondary">"Xử lý vắng hẹn"</Button>
+    </Tile>
+    <Tile label="Phát sinh hôm nay" value="13.500.000 ₫">
+      <Button variant="quiet">"Hóa đơn, không phải thực thu →"</Button>
+    </Tile>
+  </Grid>
+  <Grid cols="repeat(4, 1fr)" cols-390="repeat(2, 1fr)">
+    <Tile label="Khách cần CSKH" value="10" note="12 việc đến hạn" chevron />
+    <Tile label="Quá ngày dự kiến" value="2" note="Cần hỗ trợ chọn lịch" chevron />
+    <Tile label="Nguy cơ mất khách" value="3" note="Quá hạn hoặc bỏ dở" chevron />
+    <Tile label="Liệu trình bỏ dở" value="1" note="Còn buổi, >45 ngày" chevron />
+  </Grid>
+  <Grid cols="minmax(0,1.65fr) minmax(300px,1fr)" gap="16px">
+    <Card title="Ưu tiên chăm sóc" subtitle="Từ dữ liệu khám và lịch hẹn, có người phụ trách">
+      <Card.Aside>
+        <Button variant="secondary">"Tất cả →"</Button>
+      </Card.Aside>
+      <TableShell columns={["Khách hàng","Việc tiếp theo","Phụ trách",""]} rows={5}  /* cards at 390 */>
+        <Row sample="first row; demo values, the other rows have the same cells">
+          <Cell column="Khách hàng">
+            <Button variant="quiet">"Nguyễn Thu Hà"</Button>
+            <Text small>"P001"</Text>
+          </Cell>
+          <Cell column="Việc tiếp theo">
+            <Text>"Sau thủ thuật · D+1"</Text>
+            <Text small>"14/9/2026"</Text>
+          </Cell>
+          <Cell column="Phụ trách">
+            <Text>"CSKH Mai Anh"</Text>
+          </Cell>
+          <Cell column="">
+            <Button variant="secondary">"Xử lý"</Button>
+          </Cell>
+        </Row>
+      </TableShell>
+    </Card>
+    <Card title="Hiệu quả CSKH" subtitle="Kết quả thực từ hoạt động đã lưu">
+      <Facts items={[["Việc đã hoàn tất","4"],["Liên hệ thành công","75%","3/4 lần liên hệ"],["Lịch đặt sau CSKH","2"],["Đã quay lại thực tế","1"],["Việc quá hạn","5"]]} />
+      <Button variant="secondary">"Xem nhật ký kết quả"</Button>
+      <Notice tone="info" text="Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH." />
+    </Card>
+  </Grid>
+  <Card title="Vòng đời khách hàng" subtitle="Một hồ sơ, nhiều lần chăm sóc">
+    <Grid cols="repeat(5,minmax(0,1fr))" cols-390="repeat(2,minmax(0,1fr))" gap="16px">
+      <Button variant="secondary">"3 Khách mới"</Button>
+      <Button variant="secondary">"2 Khách quay lại"</Button>
+      <Button variant="secondary">"9 Đang điều trị"</Button>
+      <Button variant="secondary">"1 Lâu chưa quay lại"</Button>
+      <Button variant="secondary">"1 Đã quay lại sau CSKH"</Button>
+    </Grid>
+  </Card>
+  // native browser dialog, not a page element: the exact text the browser showed when the shots were taken
+  <NativeDialog type="confirm" message="Đặt lại dữ liệu demo?" buttons={["OK","Cancel"]} />
+</AppShell>
+```
+Kit components used: Button×17, Tile×8, Card×3, Field×2, Sidebar×1, TopBar×1, PageHeading×1, TableShell×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WA5-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
+
+## Tokens
+- Text colour: ink-soft ×15, heading ×2, ink ×2, surface ×2, link ×1
+- Background: surface ×4, brand-50 ×2, canvas ×2, accent ×1, heading ×1
+- Border: line ×7, info-line ×1
+- Radius: field ×15, pill ×1
+- Font size: small ×14, eyebrow ×4, label ×4, micro ×3, body ×1
+- Font: Be Vietnam Pro ×27
+- Unmatched colours (no token within ΔE 3): `#71869a` (text, ×3, nearest `ink-soft` ΔE 9.8); `#6b8093` (text, ×1, nearest `ink-soft` ΔE 7.4); `#b8c5bf` (text, ×1, nearest `success-line` ΔE 8.9)
+- Unmatched radius: 8px ×3 (nearest `field`), 50px ×1 (nearest `hero`)
+- Unmatched font size: 9px ×1 (nearest `eyebrow`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- The account picker is a demo identity boundary, "NOT authentication or production RBAC" (header comment of `staff-context.js`).
+- Native dialog (confirm): message "Đặt lại dữ liệu demo?"; the buttons are the browser's own OK and Cancel (no custom labels). Cancel changes nothing.
+- Accepting wipes every browser-local demo change (bookings, CSKH results, sessions, follow-ups) and shows the toast "Đã khôi phục dữ liệu demo" (WA4 draws a toast).
+
+## Differences from the app design
+- The app has no reset-demo control; the web confirms with the browser's native `confirm()`, which W3 draws as a two-button dialog with this exact text.
+- Canvas: the browser confirm() is drawn as an annotation (tag "NATIVE · confirm()", exact text, OK / Cancel) over the dimmed Tổng quan page; it is a builder note, not Next.js UI. Canvas: the skip link "Đến nội dung chính" is in the old DOM but visually hidden until focus, so this frame does not draw it (WA7 draws it focused); it is exempted through demo_data.
+
+## Gotchas
+- Role and page are kept in `sessionStorage` (`pema-staff`); a fresh browser context always starts as `owner-tam` unless `?staff=<id>` is in the URL.
+- The reset icon has no visible text in the topbar; its accessible name is "Đặt lại dữ liệu demo".
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WA5 · Đặt lại dữ liệu demo (hộp xác nhận)`.
+- Canvas note: Web › app shell · biểu tượng "Đặt lại" trên thanh trên mở hộp xác nhận của trình duyệt "Đặt lại dữ liệu demo?" (OK / Cancel); bấm OK khôi phục dữ liệu demo, quay về hồ sơ P001 và Tổng quan rồi báo "Đã khôi phục dữ liệu demo"; hộp thoại gốc do trình duyệt vẽ, canvas chú thích đúng văn bản để dựng lại bằng hộp thoại của Next.js
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <Button variant="secondary" href="#main-content" as="link" old="skip-link">"Đến nội dung chính"</Button>
 <Sidebar old="sidebar" tag="aside">
@@ -72,36 +207,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Row>
 </TopBar>
 ```
-Kit components used: Sidebar×14, Button×4, Field×2, TopBar×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WA5-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
-
-## Tokens
-- Text colour: ink-soft ×15, heading ×2, ink ×2, surface ×2, link ×1
-- Background: surface ×4, brand-50 ×2, canvas ×2, accent ×1, heading ×1
-- Border: line ×7, info-line ×1
-- Radius: field ×15, pill ×1
-- Font size: small ×14, eyebrow ×4, label ×4, micro ×3, body ×1
-- Font: Be Vietnam Pro ×27
-- Unmatched colours (no token within ΔE 3): `#71869a` (text, ×3, nearest `ink-soft` ΔE 9.8); `#6b8093` (text, ×1, nearest `ink-soft` ΔE 7.4); `#b8c5bf` (text, ×1, nearest `success-line` ΔE 8.9)
-- Unmatched radius: 8px ×3 (nearest `field`), 50px ×1 (nearest `hero`)
-- Unmatched font size: 9px ×1 (nearest `eyebrow`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- The account picker is a demo identity boundary, "NOT authentication or production RBAC" (header comment of `staff-context.js`).
-- Native dialog (confirm): message "Đặt lại dữ liệu demo?"; the buttons are the browser's own OK and Cancel (no custom labels). Cancel changes nothing.
-- Accepting wipes every browser-local demo change (bookings, CSKH results, sessions, follow-ups) and shows the toast "Đã khôi phục dữ liệu demo" (WA4 draws a toast).
-
-## Differences from the app design
-- The app has no reset-demo control; the web confirms with the browser's native `confirm()`, which W3 draws as a two-button dialog with this exact text.
-
-## Gotchas
-- Role and page are kept in `sessionStorage` (`pema-staff`); a fresh browser context always starts as `owner-tam` unless `?staff=<id>` is in the URL.
-- The reset icon has no visible text in the topbar; its accessible name is "Đặt lại dữ liệu demo".
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WA5-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

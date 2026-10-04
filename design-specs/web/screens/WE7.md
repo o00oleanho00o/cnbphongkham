@@ -32,36 +32,98 @@ Group **WE · Ảnh, bác sĩ & phòng, dịch vụ** · state · Next.js: **pla
 - Layout `.resource-grid` 1152×632 px: grid, columns `repeat(2, minmax(0px, 1fr))` (566px 566px), gap 20px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WE7): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
 ```tsx
-<AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Bác sĩ & phòng", page key "resources"
+<AppShell role="owner-tam" active="Bác sĩ & phòng">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item active icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Bác sĩ & phòng"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
   <PageHeading eyebrow="Vận hành · dữ liệu giả lập" title="Bác sĩ & phòng" subtitle="Ca làm việc và khoảng khóa được kiểm tra khi đặt hoặc dời lịch.">
-    <Button variant="primary" icon="plus" old="btn btn-primary">"Khóa phòng"</Button>  // ops=block
+    <Button variant="primary" icon="add">"Khóa phòng"</Button>
   </PageHeading>
-  <Field label="Ngày xem tải lịch" type="date" default="2026-09-20" id="ops-date" />
-  <Grid old="resource-grid" cols="repeat(2, minmax(0px, 1fr))" gap="20px">
-    <Repeat of=".resource-card" count={4} also-classes="panel">  // first item shown (demo values); the others have the same shape
-      <Card old="panel resource-card">
-        <Avatar old="resource-avatar">""</Avatar>
-        <Heading level={2}>"BS. Tâm"</Heading>
-        <Text>"Da liễu · lịch ngày 20/9/2026"</Text>
-        <Text old="shift-label">"08:00–18:00 Nghỉ 12:00–13:00"</Text>
-        <Progress value="44.4444%" />
-        <Text>"8 lịch · 240 phút điều trị / 540 phút ca"</Text>
-        <Button variant="secondary" old="btn">"Xem lịch bác sĩ"</Button>  // ops=doctor
-      </Card>
-      <RowVariants>actions "Xem lịch bác sĩ" (secondary, ops=doctor) ×3</RowVariants>
-    </Repeat>
+  <Row gap="10px" wrap>
+    <Field label="Ngày xem tải lịch" type="date" default="2026-09-20" />
+  </Row>
+  <Grid cols="repeat(auto-fill,minmax(380px,1fr))" gap="20px">
+    <Card title="BS. Tâm" subtitle="Da liễu · lịch ngày 20/9/2026">
+      <Card.Aside>
+        <Icon name="stethoscope" />
+      </Card.Aside>
+      <StatusBars items={[["08:00–18:00","Nghỉ 12:00–13:00"]]} />
+      <List>
+        <ListItem title="8 lịch · 240 phút điều trị / 540 phút ca">
+          <Button variant="secondary">"Xem lịch bác sĩ"</Button>
+        </ListItem>
+      </List>
+    </Card>
+    <Card title="BS. Mai" subtitle="Da liễu · lịch ngày 20/9/2026">
+      <Card.Aside>
+        <Icon name="stethoscope" />
+      </Card.Aside>
+      <StatusBars items={[["08:00–18:00","Nghỉ 12:00–13:00"]]} />
+      <List>
+        <ListItem title="8 lịch · 360 phút điều trị / 540 phút ca">
+          <Button variant="secondary">"Xem lịch bác sĩ"</Button>
+        </ListItem>
+      </List>
+    </Card>
+    <Card title="BS. An" subtitle="Thẩm mỹ da · lịch ngày 20/9/2026">
+      <Card.Aside>
+        <Icon name="stethoscope" />
+      </Card.Aside>
+      <StatusBars items={[["08:00–18:00","Nghỉ 12:00–13:00"]]} />
+      <List>
+        <ListItem title="7 lịch · 315 phút điều trị / 540 phút ca">
+          <Button variant="secondary">"Xem lịch bác sĩ"</Button>
+        </ListItem>
+      </List>
+    </Card>
+    <Card title="BS. Lan" subtitle="Chăm sóc da · lịch ngày 20/9/2026">
+      <Card.Aside>
+        <Icon name="stethoscope" />
+      </Card.Aside>
+      <StatusBars items={[["08:00–18:00","Nghỉ 12:00–13:00"]]} />
+      <List>
+        <ListItem title="8 lịch · 360 phút điều trị / 540 phút ca">
+          <Button variant="secondary">"Xem lịch bác sĩ"</Button>
+        </ListItem>
+      </List>
+    </Card>
   </Grid>
-  <Card old="panel" title="Khoảng khóa phòng" subtitle="Thêm khoảng khóa nếu không vướng lịch hiện tại">
-    <TableShell old="table" columns={["Phòng","Ngày","Thời gian","Lý do",""]} rows={0}>
+  <Card title="Khoảng khóa phòng" subtitle="Thêm khoảng khóa nếu không vướng lịch hiện tại">
+    <TableShell columns={["Phòng","Ngày","Thời gian","Lý do",""]} rows={0}  /* cards at 390 */>
       <EmptyRow>"Không có khoảng khóa."</EmptyRow>
     </TableShell>
   </Card>
 </AppShell>
 ```
-Kit components used: Button×2, Card×2, PageHeading×1, Field×1, TableShell×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Button×7, Card×5, Field×3, Sidebar×1, TopBar×1, PageHeading×1, TableShell×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WE7-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -90,6 +152,40 @@ Kit components used: Button×2, Card×2, PageHeading×1, Field×1, TableShell×1
 ## Gotchas
 - The empty row is plain table text, not an `.empty` block: draw it as an empty row of the table shell, the same way WF25 and WG11 do.
 - Unlike `block()` (which asserts the `config` capability), the unblock branch of `handle()` has no assert of its own.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WE7 · Bác sĩ & phòng · không có khoảng khóa`.
+- Canvas note: Web › resources · sau "Gỡ khóa" khoảng khóa duy nhất: bảng "Khoảng khóa phòng" giữ đủ cột và hiện một dòng "Không có khoảng khóa."; không có hộp xác nhận hay toast; app F14 không có bảng khoảng khóa · chưa có trên Next.js
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+```tsx
+<AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Bác sĩ & phòng", page key "resources"
+  <PageHeading eyebrow="Vận hành · dữ liệu giả lập" title="Bác sĩ & phòng" subtitle="Ca làm việc và khoảng khóa được kiểm tra khi đặt hoặc dời lịch.">
+    <Button variant="primary" icon="plus" old="btn btn-primary">"Khóa phòng"</Button>  // ops=block
+  </PageHeading>
+  <Field label="Ngày xem tải lịch" type="date" default="2026-09-20" id="ops-date" />
+  <Grid old="resource-grid" cols="repeat(2, minmax(0px, 1fr))" gap="20px">
+    <Repeat of=".resource-card" count={4} also-classes="panel">  // first item shown (demo values); the others have the same shape
+      <Card old="panel resource-card">
+        <Avatar old="resource-avatar">""</Avatar>
+        <Heading level={2}>"BS. Tâm"</Heading>
+        <Text>"Da liễu · lịch ngày 20/9/2026"</Text>
+        <Text old="shift-label">"08:00–18:00 Nghỉ 12:00–13:00"</Text>
+        <Progress value="44.4444%" />
+        <Text>"8 lịch · 240 phút điều trị / 540 phút ca"</Text>
+        <Button variant="secondary" old="btn">"Xem lịch bác sĩ"</Button>  // ops=doctor
+      </Card>
+      <RowVariants>actions "Xem lịch bác sĩ" (secondary, ops=doctor) ×3</RowVariants>
+    </Repeat>
+  </Grid>
+  <Card old="panel" title="Khoảng khóa phòng" subtitle="Thêm khoảng khóa nếu không vướng lịch hiện tại">
+    <TableShell old="table" columns={["Phòng","Ngày","Thời gian","Lý do",""]} rows={0}>
+      <EmptyRow>"Không có khoảng khóa."</EmptyRow>
+    </TableShell>
+  </Card>
+</AppShell>
+```
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WE7-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

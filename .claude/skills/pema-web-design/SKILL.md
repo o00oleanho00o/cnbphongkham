@@ -57,7 +57,7 @@ pema-agent/frontend/visual-ref/old/        <ID>-<W>x<H>.png, <ID>-…-print.png,
 
 Hand-written: `lib/catalog.cjs`, `notes.json`, `parts/*.js`, `web-design-changes.md`, `references/blocks-web.md`. Everything else is generated: never edit it, regenerate it. Every generator has `--check` (exit 1 when the committed output differs from a fresh run).
 
-Ids come only from `inventory.json` (`^W[A-H]\d+$`), never renumber; a new screen is appended at the end of its group (add it to `lib/catalog.cjs`). Groups: WA shell, WB operations, WC patients and Patient 360, WD CSKH, WE studio/resources/services, WF cashier and orders, WG finance, WH Ask Pema and guide.
+Ids come only from `inventory.json` (`^W[A-I]\d+$`), never renumber; a new screen is appended at the end of its group (add it to `lib/catalog.cjs`). Groups: WA shell, WB operations, WC patients and Patient 360, WD CSKH, WE studio/resources/services, WF cashier and orders, WG finance, WH Ask Pema and guide.
 
 ## 3. Refresh (old web → inventory → shots → snapshot → specs)
 

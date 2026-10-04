@@ -95,7 +95,7 @@ data for every group and never touches the template.
   - `list [file]` prints `ID · name · note`.
   - `check [file] [groups] [outDir] [--viewport=1440x900]` renders through `design-viewer`. It reports `errors`,
     `unresolved` (`{{ }}`), `overflow` per frame, and `total` against `inventory.json`, and writes one PNG per group.
-  - Screen id regex `^W[A-H]\d+$`.
+  - Screen id regex `^W[A-I]\d+$`.
 - `web-specs-lib.cjs` changes.
   - When a frame exists, the spec's Layout section is generated from the canvas blocks (block → kit component with
     real text).

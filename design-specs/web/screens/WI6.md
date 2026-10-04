@@ -31,43 +31,42 @@ Group **WI · Patient Mobile web** · page · Next.js: **none**
 - Layout `.mobile-photo-row` 378×183 px: grid, columns `1fr 1fr` (183px 183px), gap 12px
 - Frames to build (inventory D4): 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WI6): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
 ```tsx
-<Row old="mobile-top" justify="space-between">
-  <Img alt="Pema clinic & spa" size="96x51" />
-  <Button variant="secondary" aria-label="Mở hồ sơ demo của Nguyễn Minh Linh" old="mobile-icon">"ML"</Button>  // screen=profile
-</Row>
-<Stack old="mobile-content" tag="main">
-  <Button variant="secondary" old="mobile-back">"← Hành trình"</Button>  // screen=journey
-  <Heading level={1}>"Tiến độ số buổi & ảnh"</Heading>
-  <Card old="mobile-card">
-    <Row old="mobile-card-head" gap="12px" justify="space-between">
-      <Heading level={3}>"So sánh mốc ảnh"</Heading>
-      <Badge tone="brand" old="chip chip-soft">"Chính diện"</Badge>
-    </Row>
-    <Grid old="mobile-photo-row" cols="1fr 1fr" gap="12px">
-      <Img alt="Trước — minh họa tổng hợp, không phải ảnh bệnh nhân" size="183x183" />
-      <Notice tone="info" old="photo-disclaimer">"MINH HỌA TỔNG HỢP"</Notice>
-      <Img alt="Gần nhất — minh họa tổng hợp, không phải ảnh bệnh nhân" size="183x183" />
-      <Notice tone="info" old="photo-disclaimer">"MINH HỌA TỔNG HỢP"</Notice>
-    </Grid>
-    <Notice tone="info" old="notice">"Cùng góc chụp, cùng ánh sáng giúp bác sĩ xem thay đổi trong bối cảnh. Không dùng ảnh này để tự chẩn đoán."</Notice>
-  </Card>
-  <Card old="mobile-card" title="Gửi ảnh cập nhật">
-    <Text old="subtitle">"Gửi ảnh kèm mô tả để đội ngũ Pema xem và phản hồi."</Text>
-    <Button variant="primary" old="btn btn-primary">"Gửi ảnh cập nhật →"</Button>  // screen=send
-  </Card>
-</Stack>
-<nav old="mobile-nav">
-  <Button variant="secondary" icon="house">"Trang chủ"</Button>  // screen=home
-  <Button variant="secondary" icon="calendar-days">"Lịch hẹn"</Button>  // screen=appointments
-  <Button variant="secondary" icon="route">"Hành trình"</Button>  // screen=journey
-  <Button variant="secondary" icon="message-circle">"Tin nhắn"</Button>  // screen=messages
-  <Button variant="secondary" icon="user-round">"Hồ sơ"</Button>  // screen=profile
-</nav>
+<PhoneFrame patient="Nguyễn Thu Hà" active="Hành trình">  // 390×844, no clinic sidebar or top bar
+  <Row old="mobile-top" justify="space-between">
+    <Img alt="Pema clinic & spa" />
+    <Button variant="secondary" aria-label="Mở hồ sơ demo của Nguyễn Thu Hà" old="mobile-icon">"TH"</Button>  // screen=profile
+  </Row>
+  <Stack old="mobile-content" tag="main">
+    <Button variant="quiet">"← Hành trình"</Button>
+    <Heading level={1}>"Tiến độ số buổi & ảnh"</Heading>
+    <Card title="So sánh mốc ảnh">
+      <Card.Aside>
+        <Badge tone="brand" dot={false}>"Chính diện"</Badge>
+      </Card.Aside>
+      <PhotoGrid>
+        <PhotoPlaceholder label="Trước" tag="MINH HỌA TỔNG HỢP" />
+        <PhotoPlaceholder label="Gần nhất" tag="MINH HỌA TỔNG HỢP" />
+      </PhotoGrid>
+      <Notice tone="info" text="Cùng góc chụp, cùng ánh sáng giúp bác sĩ xem thay đổi trong bối cảnh. Không dùng ảnh này để tự chẩn đoán." />
+    </Card>
+    <Card title="Gửi ảnh cập nhật">
+      <Text>"Gửi ảnh kèm mô tả để đội ngũ Pema xem và phản hồi."</Text>
+      <Button variant="primary">"Gửi ảnh cập nhật →"</Button>
+    </Card>
+  </Stack>
+  <nav old="mobile-nav">
+    <Button variant="secondary" icon="home">"Trang chủ"</Button>
+    <Button variant="secondary" icon="calendar_month">"Lịch hẹn"</Button>
+    <Button variant="secondary" icon="route" active>"Hành trình"</Button>
+    <Button variant="secondary" icon="chat_bubble">"Tin nhắn"</Button>
+    <Button variant="secondary" icon="person">"Hồ sơ"</Button>
+  </nav>
+</PhoneFrame>
 ```
-Kit components used: Button×8, Card×2, Badge×1; shared pieces: Notice×3. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Button×3, Card×2, Badge×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - 390×844 is the primary frame; the snapshot reference is 1440×900, where the phone column is 460px wide (Frame, Layout).
@@ -111,6 +110,47 @@ Kit components used: Button×8, Card×2, Badge×1; shared pieces: Notice×3. Eve
 - Icon glyphs typed as characters in the code (✓ ✦ ⚙ ▤ ▧ ＋ › ▢) are swapped for lucide icons at render (`PemaUI.enhance`) and are not part of the labels in the snapshot (the label of "＋ Gửi tin nhắn" is "Gửi tin nhắn"); the web canvas draws icons from the kit.
 - Accessible names that are not visible text: the avatar button "Mở hồ sơ demo của <tên>", the session rail "<n> trên <total> buổi hoàn tất", the progress bar "Số buổi điều trị đã hoàn tất", the quick action "Xem hướng dẫn", the faces "Trước — minh họa tổng hợp, không phải ảnh bệnh nhân" and "Gần nhất — …", the file input "Ảnh cập nhật cho Pema", the consent box "Đồng ý để Pema xem ảnh cập nhật" and the preview "Xem trước ảnh cập nhật" (alt "Ảnh cập nhật đã chọn — bản demo").
 - Patient data is the synthetic store (46 patients; the default profile is P001, phone masked as "09•• ••• 100"). Screens of a toast (WI23, WI28, WI29, WI31, WI33, WI34, WI38-WI40) are captured while the toast is up (2.8 s) and list it as a `notice` with role "status".
+
+## Web canvas
+- Frames: 390x844 (inventory: 390x844); screen label `WI6 · Tiến độ số buổi & ảnh`.
+- Canvas note: Web › patient mobile · progress · từ Hành trình "Ảnh trước & sau" hoặc ô Ảnh tiến trình: So sánh mốc ảnh (chip Chính diện, hai khung Trước / Gần nhất, mỗi khung có tem MINH HỌA TỔNG HỢP), lưu ý chụp cùng góc và ánh sáng, thẻ Gửi ảnh cập nhật; thanh dưới sáng "Hành trình" · app G5 là "Theo dõi bằng hình ảnh", ba ô và một nút
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+```tsx
+<Row old="mobile-top" justify="space-between">
+  <Img alt="Pema clinic & spa" size="96x51" />
+  <Button variant="secondary" aria-label="Mở hồ sơ demo của Nguyễn Minh Linh" old="mobile-icon">"ML"</Button>  // screen=profile
+</Row>
+<Stack old="mobile-content" tag="main">
+  <Button variant="secondary" old="mobile-back">"← Hành trình"</Button>  // screen=journey
+  <Heading level={1}>"Tiến độ số buổi & ảnh"</Heading>
+  <Card old="mobile-card">
+    <Row old="mobile-card-head" gap="12px" justify="space-between">
+      <Heading level={3}>"So sánh mốc ảnh"</Heading>
+      <Badge tone="brand" old="chip chip-soft">"Chính diện"</Badge>
+    </Row>
+    <Grid old="mobile-photo-row" cols="1fr 1fr" gap="12px">
+      <Img alt="Trước — minh họa tổng hợp, không phải ảnh bệnh nhân" size="183x183" />
+      <Notice tone="info" old="photo-disclaimer">"MINH HỌA TỔNG HỢP"</Notice>
+      <Img alt="Gần nhất — minh họa tổng hợp, không phải ảnh bệnh nhân" size="183x183" />
+      <Notice tone="info" old="photo-disclaimer">"MINH HỌA TỔNG HỢP"</Notice>
+    </Grid>
+    <Notice tone="info" old="notice">"Cùng góc chụp, cùng ánh sáng giúp bác sĩ xem thay đổi trong bối cảnh. Không dùng ảnh này để tự chẩn đoán."</Notice>
+  </Card>
+  <Card old="mobile-card" title="Gửi ảnh cập nhật">
+    <Text old="subtitle">"Gửi ảnh kèm mô tả để đội ngũ Pema xem và phản hồi."</Text>
+    <Button variant="primary" old="btn btn-primary">"Gửi ảnh cập nhật →"</Button>  // screen=send
+  </Card>
+</Stack>
+<nav old="mobile-nav">
+  <Button variant="secondary" icon="house">"Trang chủ"</Button>  // screen=home
+  <Button variant="secondary" icon="calendar-days">"Lịch hẹn"</Button>  // screen=appointments
+  <Button variant="secondary" icon="route">"Hành trình"</Button>  // screen=journey
+  <Button variant="secondary" icon="message-circle">"Tin nhắn"</Button>  // screen=messages
+  <Button variant="secondary" icon="user-round">"Hồ sơ"</Button>  // screen=profile
+</nav>
+```
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WI6-390x844.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

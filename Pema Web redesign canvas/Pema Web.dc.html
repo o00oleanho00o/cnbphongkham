@@ -965,6 +965,34 @@ class Component extends DCLogic {
     const GROUP_DEFS = [{"code":"WA","title":"Khung & điều hướng","sub":"Sidebar, thanh trên, tài khoản demo, thông báo nổi · AppShell","ids":["WA1","WA2","WA3","WA4","WA5","WA6","WA7","WA8","WA9","WA10"]},{"code":"WB","title":"Vận hành: tổng quan, hôm nay, lịch","sub":"Tổng quan, hôm nay, điều phối lịch, đặt lịch, chi tiết lịch hẹn","ids":["WB1","WB2","WB3","WB4","WB5","WB6","WB7","WB8","WB9","WB10","WB11","WB12","WB13","WB14","WB15","WB16","WB17","WB18","WB19","WB20","WB21","WB22","WB23","WB24","WB25","WB26","WB27","WB28","WB29"]},{"code":"WC","title":"Hồ sơ & Patient 360","sub":"Tìm bệnh nhân, Patient 360 (8 tab), hộp thoại và modal của hồ sơ","ids":["WC1","WC2","WC3","WC4","WC5","WC6","WC7","WC8","WC9","WC10","WC11","WC12","WC13","WC14","WC15","WC16","WC17","WC18","WC19","WC20","WC21","WC22","WC23","WC24","WC25","WC26","WC27","WC28","WC29","WC30","WC31","WC32","WC33","WC34","WC35"]},{"code":"WD","title":"CSKH & theo dõi","sub":"CSKH hôm nay, Xử lý, protocol, nhóm khách, Theo dõi, duyệt phản hồi","ids":["WD1","WD2","WD3","WD4","WD5","WD6","WD7","WD8","WD9","WD10","WD11","WD12","WD13","WD14","WD15","WD16"]},{"code":"WE","title":"Ảnh, bác sĩ & phòng, dịch vụ","sub":"Ảnh trước / sau, Bác sĩ & phòng, khóa phòng, Dịch vụ","ids":["WE1","WE2","WE3","WE4","WE5","WE6","WE7","WE8","WE9","WE10","WE11"]},{"code":"WF","title":"Thu ngân & lên đơn","sub":"Thu ngân, thu tiền, lên đơn nhanh, tách đơn và bản in A5","ids":["WF1","WF2","WF3","WF4","WF5","WF6","WF7","WF8","WF9","WF10","WF11","WF12","WF13","WF14","WF15","WF16","WF17","WF18","WF19","WF20","WF21","WF22","WF23","WF24","WF25"]},{"code":"WG","title":"Tài chính PB02","sub":"Tài chính & tiền thủ thuật theo vai trò: chủ phòng khám, kế toán, bác sĩ","ids":["WG1","WG2","WG3","WG4","WG5","WG6","WG7","WG8","WG9","WG10","WG11","WG12","WG13","WG14","WG15","WG16","WG17","WG18","WG19","WG20","WG21","WG22","WG23"]},{"code":"WH","title":"Ask Pema & Hướng dẫn","sub":"Ask Pema và Hướng dẫn sử dụng","ids":["WH1","WH2","WH3","WH4","WH5","WH6","WH7","WH8","WH9","WH10","WH11","WH12","WH13","WH14","WH15","WH16","WH17","WH18","WH19","WH20"]},{"code":"WI","title":"Patient Mobile web","sub":"Patient Mobile web: trang chủ, lịch hẹn, hành trình, tin nhắn, hồ sơ và mọi trạng thái · khung điện thoại 390×844","ids":["WI1","WI2","WI3","WI4","WI5","WI6","WI7","WI8","WI9","WI10","WI11","WI12","WI13","WI14","WI15","WI16","WI17","WI18","WI19","WI20","WI21","WI22","WI23","WI24","WI25","WI26","WI27","WI28","WI29","WI30","WI31","WI32","WI33","WI34","WI35","WI36","WI37","WI38","WI39","WI40","WI41","WI42"]}];
 
     // WA · Khung & điều hướng. WA1 is the W3a proof screen (the owner shell); WA2-WA4 are filled by W3b-WA.
+    // W6c-OPS helper (local to this part, prefix wa): the dashboard body that WA5-WA9 draw behind the shell states (same blocks as WB1).
+    function waDash() {
+      return [
+        pageHead('Chào buổi sáng, BS. Tâm', 'Vận hành hôm nay và chăm sóc khách hàng · mốc demo 20/09/2026', [secondary('Lịch hôm nay →'), primary('Mở CSKH hôm nay')], 'Pema · chăm sóc xuyên suốt'),
+        kpis(
+          kpi('Lịch hôm nay', '12', '', { actions: [quiet('Mở tiếp đón →')] }),
+          kpi('Đã đến / đang chờ', '3', '', { unit: '/ 3', actions: [quiet('Bàn giao phòng khám →')] }),
+          kpi('Vắng hẹn', '1', '', { actions: [secondary('Xử lý vắng hẹn')] }),
+          kpi('Phát sinh hôm nay', money(13500000), '', { actions: [quiet('Hóa đơn, không phải thực thu →')] })),
+        kpis(
+          kpi('Khách cần CSKH', '10', '12 việc đến hạn', { chev: true }),
+          kpi('Quá ngày dự kiến', '2', 'Cần hỗ trợ chọn lịch', { chev: true }),
+          kpi('Nguy cơ mất khách', '3', 'Quá hạn hoặc bỏ dở', { chev: true }),
+          kpi('Liệu trình bỏ dở', '1', 'Còn buổi, >45 ngày', { chev: true })),
+        grid('minmax(0,1.65fr) minmax(300px,1fr)',
+          panel('Ưu tiên chăm sóc', 'Từ dữ liệu khám và lịch hẹn, có người phụ trách', [secondary('Tất cả →')],
+            table(['Khách hàng', ['Việc tiếp theo', '1.2fr'], 'Phụ trách', ['', '88px']], people.slice(0, 5).map((x, i) => [
+              [lnk(x.name), sm(x.id)], [txt(x.groupLabel), sm((14 + i) + '/9/2026')], 'CSKH Mai Anh', [secondary('Xử lý')]
+            ]))),
+          panel('Hiệu quả CSKH', 'Kết quả thực từ hoạt động đã lưu', [],
+            facts(['Việc đã hoàn tất', '4'], ['Liên hệ thành công', '75%', { sub: '3/4 lần liên hệ' }], ['Lịch đặt sau CSKH', '2'], ['Đã quay lại thực tế', '1'], ['Việc quá hạn', '5']),
+            secondary('Xem nhật ký kết quả'),
+            notice('Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH.'))),
+        panel('Vòng đời khách hàng', 'Một hồ sơ, nhiều lần chăm sóc', [],
+          grid(5, secondary('3 Khách mới', { full: true }), secondary('2 Khách quay lại', { full: true }), secondary('9 Đang điều trị', { full: true }), secondary('1 Lâu chưa quay lại', { full: true }), secondary('1 Đã quay lại sau CSKH', { full: true })))
+      ];
+    }
+
     const WA = [
       // The shell is drawn by page() itself (sidebar by role, top bar, 390 top bar + tab bar); the content area is a placeholder here.
       page('WA1', 'Khung ứng dụng · Chủ phòng khám', WEB + 'app shell · sidebar 3 nhóm 13 mục, thanh trên (đường dẫn, tài khoản demo, tìm bệnh nhân, thông báo, đặt lại); danh sách tài khoản mở sẵn, liên kết "Đến nội dung chính" hiện khi focus; liên kết tài chính có 3 trạng thái ("Tài chính đã đồng bộ", "Đang đồng bộ tài chính…", "Tài chính chờ kết nối · thử lại"); "Đặt lại" hỏi confirm "Đặt lại dữ liệu demo?" rồi báo "Đã khôi phục dữ liệu demo"; ô tìm chỉ chạy khi Enter', 'dashboard', [
@@ -1011,7 +1039,46 @@ class Component extends DCLogic {
             ['08:00', [lnk(people[2].name), sm(people[2].id + ' · ' + people[2].phone + ' · ' + people[2].age + ' tuổi')], 'Laser theo chỉ định\nThăm sau viêm', [badge('Chưa đến', 'neutral')], 'BS. An\nLễ tân', money(2500000), cell([primary('Check-in'), secondary('Vắng')], { row: true })],
             ['09:00', [lnk(people[3].name), sm(people[3].id + ' · ' + people[3].phone + ' · ' + people[3].age + ' tuổi')], 'Chăm sóc theo chỉ định\nĐỏ da / nhạy cảm', [badge('Chưa đến', 'neutral')], 'BS. Lan\nLễ tân', money(1200000), cell([primary('Check-in'), secondary('Vắng')], { row: true })]
           ]))
-      ], { state: true, toast: 'Đã cập nhật hàng đợi' })
+      ], { state: true, toast: 'Đã cập nhật hàng đợi' }),
+
+      // ---- W6c-OPS: shell states of the owner dashboard (native dialogs, skip link, finance sync) and the native review page ----
+      // Native confirm() raised by the reset icon; the page behind is the dashboard the shot shows. Accepting it toasts "Đã khôi phục dữ liệu demo".
+      page('WA5', 'Đặt lại dữ liệu demo (hộp xác nhận)', WEB + 'app shell · biểu tượng "Đặt lại" trên thanh trên mở hộp xác nhận của trình duyệt "Đặt lại dữ liệu demo?" (OK / Cancel); bấm OK khôi phục dữ liệu demo, quay về hồ sơ P001 và Tổng quan rồi báo "Đã khôi phục dữ liệu demo"; hộp thoại gốc do trình duyệt vẽ, canvas chú thích đúng văn bản để dựng lại bằng hộp thoại của Next.js', 'dashboard', waDash(), { state: true, native: native('confirm', 'Đặt lại dữ liệu demo?') }),
+
+      // The account picker is a native <select>; the open list is drawn by the browser, the eight options are recorded in the manifest.
+      page('WA6', 'Chọn tài khoản demo (danh sách của trình duyệt)', WEB + 'app shell · ô "Tài khoản demo" là <select> gốc: danh sách mở do trình duyệt vẽ nên canvas vẽ đủ 8 tùy chọn theo thứ tự (chủ phòng khám, 4 bác sĩ, 2 CSKH, kế toán); chọn một tài khoản tải lại khung theo vai (WA1, WA2, WA3, WB2); app A6 chọn vai ở màn hình riêng', 'dashboard', waDash(), {
+        state: true,
+        native: native('select', '', { options: ['BS. Tâm · Chủ phòng khám', 'BS. Tâm · Bác sĩ điều trị', 'BS. Mai · Bác sĩ điều trị', 'BS. An · Bác sĩ điều trị', 'BS. Lan · Bác sĩ điều trị', 'Mai Anh · CSKH', 'Thu · CSKH', 'Kế toán · Đối soát & thu ngân'] })
+      }),
+
+      // First Tab press: the skip link appears at the top left of the content column.
+      page('WA7', 'Liên kết "Đến nội dung chính" (khi focus bàn phím)', WEB + 'app shell · bấm Tab lần đầu thì liên kết "Đến nội dung chính" hiện ở góc trên trái cột nội dung (khi không focus thì ẩn); app không có vì giao diện cảm ứng, web giữ làm điểm dừng Tab đầu tiên; phần còn lại như WB1', 'dashboard', waDash(), { state: true, skip: true }),
+
+      // finance-bridge.js: the finance API is unreachable, so the topbar link reads "Tài chính chờ kết nối · thử lại" (WA1 shows "Tài chính đã đồng bộ").
+      page('WA8', 'Khung · liên kết đồng bộ tài chính chờ kết nối', WEB + 'app shell · liên kết nhỏ trước các nút của thanh trên đọc "Tài chính chờ kết nối · thử lại" khi API tài chính không phản hồi (WA1: "Tài chính đã đồng bộ"); bấm vào mở trang tài chính; app H7 chưa có trạng thái này', 'dashboard', waDash(), { state: true, fin: 'Tài chính chờ kết nối · thử lại' }),
+
+      // The request to the finance API is pending: the link reads "Đang đồng bộ tài chính…" until the 7 s timeout turns it into WA8.
+      page('WA9', 'Khung · liên kết đang đồng bộ tài chính', WEB + 'app shell · liên kết đồng bộ đọc "Đang đồng bộ tài chính…" trong lúc yêu cầu tới API tài chính còn treo, quá 7 giây chuyển sang WA8; trang vẫn thao tác được; app không có trạng thái chờ này', 'dashboard', waDash(), { state: true, fin: 'Đang đồng bộ tài chính…' }),
+
+      // Standalone page of the old prototype (native-review/index.html, no clinic shell); the canvas draws it in the shell frame as WF5/WF8 do. The iframe shows the server 404 page.
+      page('WA10', 'Duyệt template native Flutter (trang xem trước)', WEB + 'native-review (trang độc lập, chỉ vào được bằng URL, không có thanh bên) · cột trái: logo, tiêu đề, thẻ "FLUTTER TEMPLATE • REVIEW 01", ô chọn "Kích thước duyệt" (4 cỡ), 4 bước duyệt, liên kết "Mở app toàn màn hình ↗" và ghi chú; cột phải: khung điện thoại viền xanh đậm chứa iframe ../native-preview/ (thư mục này không có trong prototype nên khung hiện trang lỗi 404 của máy chủ); dưới 800 px các bước đánh số bị ẩn và khung chiếm hết chiều ngang; canvas vẽ trong khung ứng dụng như WF5 · chưa có trên Next.js', 'dashboard', [
+        grid('minmax(0,320px) minmax(0,1fr)',
+          stack({ g: 14 },
+            img('Pema · clinic & spa', { icon: 'spa', h: 64 }),
+            h1('Chăm sóc liên tục. Trải nghiệm native.'),
+            eyebrow('FLUTTER TEMPLATE • REVIEW 01'),
+            txt('Bản Flutter thật để duyệt bố cục, điều hướng và luồng nghiệp vụ trên điện thoại.', { tone: 'soft' }),
+            select('Kích thước duyệt', 'Điện thoại · 390 × 844', { opts: ['Điện thoại · 390 × 844', 'Điện thoại nhỏ · 360 × 800', 'Điện thoại lớn · 430 × 932', 'Tablet · 768 × 1024'] }),
+            h2('Bắt đầu duyệt'),
+            list(['Clinic → Hồ sơ → Patient 360.', 'Thêm → Lên đơn nhanh → chọn sản phẩm → kiểm tra và duyệt.', 'Nút Clinic ở header → Pema Care → xem đơn đã duyệt.', 'Care gửi cập nhật → Clinic Theo dõi → phản hồi.'], { ordered: true, plain: true }),
+            secondary('Mở app toàn màn hình ↗'),
+            sm('Lâm sàng dùng dữ liệu mẫu trong phiên. Tài chính Clinic đã dùng API chung với web; camera, PDF/in, AI và push nền chưa tích hợp. Chuyển kích thước giữ nguyên app đang mở.')),
+          card({ v: 'soft', g: 8 },
+            h2('Error response'),
+            txt('Error code: 404'),
+            txt('Message: File not found.'),
+            txt('Error code explanation: 404 - Nothing matches the given URI.')))
+      ])
     ];
 
     // WB · Vận hành: tổng quan, hôm nay, lịch. WB1 is the W3a proof screen (dashboard); WB2-WB9 by W3b-WB.
@@ -1101,6 +1168,86 @@ class Component extends DCLogic {
       notice('30 phút điều trị + 0 phút chuẩn bị · ' + money(300000) + (o.tail || ''), 'info')
     ];
 
+    // ---- W6c-OPS helpers (WB10-WB29: states of Hôm nay, Điều phối lịch and the booking dialogs; local names start with wb2) ----
+    // Hôm nay with a chosen total, reception counts (Chưa đến, Đang chờ, Đang khám/điều trị, Hoàn tất, Đã hủy, Vắng hẹn), filter value and rows. o.invoice = false for a doctor (tile not drawn).
+    const wb2Today = o => [
+      pageHead('Hôm nay tại Pema', 'Tiếp đón theo từng lịch hẹn · dữ liệu tổng hợp 20/09/2026', [primary('Đặt lịch mới', { icon: 'add' })], 'Pema · chăm sóc xuyên suốt'),
+      panel('', '', [],
+        grid(4, stat('Tổng lịch', String(o.total)), stat('Đã đến', String(o.arrived)), ...WB_STATUS_TILES.map(([t], i) => secondary(o.counts[i] + ' ' + t, { full: true }))),
+        o.invoice && hr(),
+        o.invoice && row({ g: 14, ai: 'center' }, txt(money(13500000), { size: 'sub', w: 'b' }), sm('Phát sinh hóa đơn hôm nay'))),
+      panel('', '', [],
+        row({ g: 12, ai: 'flex-end' },
+          search('Tìm nhanh khách…', { label: 'Tên / mã KH / liên hệ', w: 360 }),
+          select('Trạng thái', o.status, { w: 240, opts: ['Tất cả trạng thái', 'Chưa đến', 'Đã xác nhận', 'Đang chờ', 'Đang khám/điều trị', 'Hoàn tất', 'Đã hủy', 'Vắng hẹn'] }),
+          select('Bác sĩ', 'Tất cả bác sĩ', { w: 220, opts: ['Tất cả bác sĩ', ...doctors.map(d => d.name)] })),
+        table(WB_TODAY_COLS, o.rows),
+        row({ g: 12, ai: 'center', jc: 'space-between' }, txt(o.rows.length + ' lịch · Trang 1/1 · 25 dòng/trang'), row({ g: 8 }, secondary('← Trước'), secondary('Sau →'))))
+    ];
+    // one reception row: [time, patient, service index, content line 2, status badge, doctor name, actions]
+    const wb2Row = (time, x, svc, sub, st, bs, acts) => [strong(time), [lnk(x.name), sm(x.id)], [txt(x.phone), sm(x.age + ' tuổi')], [txt(services[svc].name), sm(sub)], [badge(st[0], st[1])], bs, 'Lễ tân', money(services[svc].price), cell(acts, { row: true })];
+    // the one booking of the demo patient after a status change (WB25-WB29)
+    const wb2One = (st, acts) => [wb2Row('08:00', people[0], 0, 'Nám · tăng sắc tố', st, 'BS. Tâm', acts)];
+
+    // schedule: o = { stats: [lịch, thời gian, chờ], date, view 0|1, doctor, lock, title, body: [blocks], wait: false for the emptied list }
+    const wb2Wait = () => WB_WAIT.map(([note, s], i) => card({ v: 'soft', g: 8 }, row({ g: 8, ai: 'center' }, avatar(people[i].init), strong(people[i].name)), txt(note), sm(services[s].name), secondary('Xếp lịch →')));
+    const wb2Schedule = o => [
+      pageHead('Điều phối lịch', 'Xếp theo phòng, ca bác sĩ và thời lượng. Kéo lịch hoặc mở chi tiết để dời.', [primary('Đặt lịch', { icon: 'add' })]),
+      kpis(kpi('Lịch trong ngày', o.stats[0]), kpi('Thời gian điều trị', o.stats[1]), kpi('Chờ xếp lịch', o.stats[2]), kpi('Khoảng khóa', '0')),
+      row({ g: 10, ai: 'flex-end' },
+        secondary('←'), date('Ngày bắt đầu', o.date, { w: 170 }), secondary('→'), secondary('Mốc demo'),
+        tabs(['Ngày', '7 ngày'], o.view, { seg: true }),
+        select('Bác sĩ', o.doctor, { w: 180, dis: !!o.lock, opts: ['Tất cả bác sĩ', ...doctors.map(d => d.name)] }),
+        select('Phòng', 'Tất cả phòng', { w: 200, opts: ['Tất cả phòng', ...rooms.map(r => r.name)] })),
+      grid('minmax(0,1fr) 250px',
+        panel(o.title, '08:00–18:00 · bước kéo 30 phút · nhấp thẻ để chỉnh giờ chính xác', [badge(o.view ? 'Theo ngày' : 'Theo phòng')], ...o.body),
+        panel('Chờ xếp lịch', 'Chọn hồ sơ để tìm giờ phù hợp', [], ...(o.wait === false ? [empty('Đã xếp hết danh sách chờ.', '', { flat: true })] : wb2Wait())))
+    ];
+    // day board where only room 2 holds bookings (BS. Mai, WB11) or none does (WB12); the free half hours are the dashed "Đặt lịch" cells
+    const wb2Board = mai => board({
+      from: 8, to: 12, hh: 112,
+      rooms: rooms.map((r, i) => ({
+        name: r.name, sub: (mai && i === 1 ? 8 : 0) + ' lịch · ' + r.sub,
+        bk: mai && i === 1 ? [0, 1, 2, 3].map(h => ({ start: (8 + h) + ':00', mins: 45, buf: 15, title: [people[1], people[5], people[9], people[3]][h].name, sub: services[1].name, sub2: 'BS. Mai · Đặt hẹn', svc: 1 })) : [],
+        slots: mai && i === 1 ? [] : [0, 1, 2, 3, 4, 5, 6, 7].map(k => ({ start: hm(480 + k * 30), mins: 30 })) // every free half hour is a "Đặt lịch" cell
+      }))
+    });
+    // 7 empty days of the week from 1/12/2026: day title, "0 lịch", the empty text and the add button (the week grid block has no empty-day text)
+    const wb2WeekEmpty = () => [
+      grid({ cols: 'repeat(7, minmax(0, 1fr))', g: 8 }, ...['Thứ 3, 01/12', 'Thứ 4, 02/12', 'Thứ 5, 03/12', 'Thứ 6, 04/12', 'Thứ 7, 05/12', 'CN, 06/12', 'Thứ 2, 07/12'].map(d =>
+        stack({ g: 8 }, strong(d), sm('0 lịch'), empty('Chưa có lịch', '', { flat: true }), secondary('Đặt lịch', { icon: 'add', full: true })))),
+      legend()
+    ];
+
+    // booking form (WB15-WB20, WB23-WB24): svc and room are indexes, the notice line follows the service (minutes + 15 minutes of room preparation, price)
+    const wb2Booking = o => [
+      select('Bệnh nhân', people[0].name, { opts: people.slice(0, 8).map(x => x.name) }),
+      grid(2,
+        select('Dịch vụ', services[o.svc || 0].name, { opts: services.map(s => s.name) }),
+        select('Bác sĩ', doctors[0].name, { opts: doctors.map(d => d.name) }),
+        select('Phòng', rooms[o.room || 0].name, { opts: rooms.map(r => r.name) }),
+        date('Ngày', o.date === undefined ? '2026-09-20' : o.date, { ph: 'mm/dd/yyyy' }),
+        time('Giờ', o.time || '10:00'),
+        input('Ghi chú', o.note || '')),
+      notice(services[o.svc || 0].mins + ' phút điều trị + ' + (o.svc ? 15 : 0) + ' phút chuẩn bị · ' + money(services[o.svc || 0].price) + (o.tail || ''), 'info')
+    ];
+    // the new-booking dialog with one inline line at its end (the old #ops-error carries errors and the "Đã chọn giờ trống" confirmation)
+    const wb2New = (id, note, form, line) => dlg(id, 'Đặt lịch hẹn', WEB + note, [
+      ...wb2Booking(form),
+      row({ g: 8 }, primary('Xác nhận đặt lịch'), secondary('Tìm giờ trống')),
+      errLine(line)
+    ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'today', behind: wbTodayBehind() });
+    // the details dialog: status chip, three action buttons, form, cancel part; line is the inline line at the end (omit for none); toast is the page toast that the previous action raised
+    const wb2Detail = (id, note, status, line, toast) => dlg(id, 'Chi tiết lịch hẹn', WEB + note, [
+      row({ g: 8, ai: 'center' }, badge(status, status === 'Đặt hẹn' ? 'neutral' : 'info'), secondary('Xác nhận lịch'), secondary('Check-in'), secondary('Patient 360 →')),
+      ...wb2Booking({ time: '08:00', note: 'Lịch giả lập để thử điều phối', tail: ' · theo lịch đã đặt' }),
+      row({ g: 8 }, primary('Lưu thay đổi'), secondary('Tìm giờ trống')),
+      hr(),
+      input('Lý do hủy', ''),
+      row({ g: 8 }, btn('Hủy lịch hẹn', 'danger')),
+      line ? errLine(line) : null
+    ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'schedule', behind: wbScheduleBehind(), toast });
+
     const WB = [
       page('WB1', 'Tổng quan', WEB + 'dashboard · bố cục như app I1/A1 ở cỡ web; web có thêm KPI "Quá ngày dự kiến", "Liệu trình bỏ dở" và hai khối "Hiệu quả CSKH", "Vòng đời khách hàng"; tên và số liệu là dữ liệu tổng hợp', 'dashboard', [
         pageHead('Chào buổi sáng, BS. Tâm', 'Vận hành hôm nay và chăm sóc khách hàng · mốc demo 20/09/2026', [secondary('Lịch hôm nay →'), primary('Mở CSKH hôm nay')], 'Pema · chăm sóc xuyên suốt'),
@@ -1177,7 +1324,66 @@ class Component extends DCLogic {
       dlg('WB9', 'Đặt lịch hẹn', WEB + 'dialog · "Xếp lịch →" trên thẻ chờ xếp lịch mở đúng hộp thoại WB7 với bệnh nhân, dịch vụ và ghi chú lấy từ dòng chờ; lưu xong dòng đó rời danh sách chờ', [
         ...wbBooking({ time: '10:00', note: 'Có thể đến trong ngày' }),
         row({ g: 8 }, primary('Xác nhận đặt lịch'), secondary('Tìm giờ trống'))
-      ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'schedule', behind: wbScheduleBehind() })
+      ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'schedule', behind: wbScheduleBehind() }),
+
+      // ---- W6c-OPS: role variants, empty states, filtered Hôm nay states, booking error lines, details dialogs ----
+      // WB10 · doctor projection of Hôm nay (crm-ui.js today): only BS. Mai's 8 bookings, no invoice tile.
+      page('WB10', 'Hôm nay · Bác sĩ', WEB + 'today (tài khoản bác sĩ) · chỉ hiện lịch của chính bác sĩ (8 lịch của BS. Mai) và không vẽ ô "Phát sinh hóa đơn hôm nay" (8 ô thay vì 9); bộ lọc "Bác sĩ" vẫn sửa được; app I2 không có lọc theo bác sĩ; tên và số liệu là dữ liệu tổng hợp', 'today', wb2Today({
+        total: 8, arrived: 0, counts: [8, 0, 0, 0, 0, 0], invoice: false, status: 'Tất cả trạng thái',
+        rows: [[1, '08:00', 'Mụn viêm'], [5, '09:00', 'Trẻ hóa da'], [9, '10:00', 'Đỏ da / nhạy cảm'], [3, '11:00', 'Mụn viêm'], [7, '13:00', 'Trẻ hóa da'], [11, '14:00', 'Đỏ da / nhạy cảm'], [2, '15:00', 'Mụn viêm'], [6, '16:00', 'Trẻ hóa da']]
+          .map(([i, t, sub]) => wb2Row(t, people[i], 1, sub, ['Chưa đến', 'info'], 'BS. Mai', [primary('Check-in'), secondary('Vắng')]))
+      }), { role: 'doctor-mai', state: true, badge: '2' }),
+
+      // WB11 · doctor projection of the schedule: the doctor filter is a disabled select with the signed-in doctor; only that doctor's bookings are drawn.
+      page('WB11', 'Điều phối lịch · Bác sĩ', WEB + 'schedule (tài khoản bác sĩ) · ô "Bác sĩ" bị khóa ở bác sĩ đang đăng nhập (BS. Mai), lưới chỉ vẽ lịch của bác sĩ đó (3 phòng còn lại "0 lịch"), danh sách "Chờ xếp lịch" không đổi; app I3 không khóa bộ lọc', 'schedule', wb2Schedule({
+        stats: ['8', '360′', '6'], date: '2026-09-20', view: 0, doctor: 'BS. Mai', lock: true, title: '20/9/2026', body: [wb2Board(true)]
+      }), { role: 'doctor-mai', state: true, badge: '2' }),
+
+      // WB12 · day view of a date with no booking
+      page('WB12', 'Điều phối lịch · ngày không có lịch', WEB + 'schedule · ngày 1/12/2026 không có lịch: bốn cột phòng trống, mỗi tiêu đề cột "0 lịch", thống kê "Lịch trong ngày" 0 và "Thời gian điều trị" 0′, danh sách "Chờ xếp lịch" vẫn 6 hồ sơ; ô trống bấm được để đặt lịch', 'schedule', wb2Schedule({
+        stats: ['0', '0′', '6'], date: '2026-12-01', view: 0, doctor: 'Tất cả bác sĩ', title: '1/12/2026', body: [wb2Board(false)]
+      }), { state: true }),
+
+      // WB13 · seven-day view of a week with no booking: every column says "Chưa có lịch" above "＋ Đặt lịch"
+      page('WB13', 'Điều phối lịch · 7 ngày · tuần không có lịch', WEB + 'schedule · nút "7 ngày" đang chọn, tuần 1/12 — 7/12/2026 không có lịch: mỗi cột ngày ghi "0 lịch", chữ "Chưa có lịch" và nút "Đặt lịch"; khối tuần có sẵn của canvas không có chữ ngày trống nên canvas ghép cột từ lưới, văn bản và nút (WB6 là cùng chế độ xem với tuần demo) · bản gốc 7 cột cuộn ngang', 'schedule', wb2Schedule({
+        stats: ['0', '0′', '6'], date: '2026-12-01', view: 1, doctor: 'Tất cả bác sĩ', title: '1/12/2026 — 7/12/2026', body: wb2WeekEmpty()
+      }), { state: true }),
+
+      // WB14 · all waiting-list cards were scheduled: the list reads "Đã xếp hết danh sách chờ." and the toast confirms the save
+      page('WB14', 'Điều phối lịch · đã xếp hết danh sách chờ', WEB + 'schedule · sau khi xếp lịch cho cả 6 hồ sơ chờ, "Chờ xếp lịch" 0 và khối bên phải chỉ còn "Đã xếp hết danh sách chờ."; thông báo nổi "Đã lưu lịch và cập nhật Patient 360" (WA4 là kiểu thông báo này); lưới và thống kê như WB5 nhưng ngày demo có 31 lịch', 'schedule', wb2Schedule({
+        stats: ['31', '1275′', '0'], date: '2026-09-20', view: 0, doctor: 'Tất cả bác sĩ', title: '20/9/2026', body: [wbBoard()], wait: false
+      }), { state: true, toast: 'Đã lưu lịch và cập nhật Patient 360' }),
+
+      // WB15-WB20 · the booking dialog (WB7) with the inline line #ops-error under its buttons
+      wb2New('WB15', 'dialog · "Tìm giờ trống" đã điền giờ trống đầu tiên (08:30); xác nhận nằm cùng dòng #ops-error với các lỗi và có màu như lỗi trong web gốc; mọi trường như WB7', { time: '08:30' }, 'Đã chọn giờ trống. Bấm xác nhận để lưu.'),
+      wb2New('WB16', 'dialog · "Tìm giờ trống" không tìm được giờ nào (mở với ô Ngày để trống nên hiện "mm/dd/yyyy"); dòng lỗi #ops-error dưới hai nút', { date: '', time: '10:00' }, 'Không có giờ trống cho lựa chọn này. Hãy đổi ngày, bác sĩ hoặc phòng.'),
+      wb2New('WB17', 'dialog · dịch vụ Laser trong phòng không có Laser (dòng tạm tính đổi theo dịch vụ: 45 phút + 15 phút chuẩn bị); lỗi từ quy tắc phòng của operations-data.js', { svc: 2, room: 1, time: '10:00' }, 'Phòng không phù hợp với dịch vụ đã chọn.'),
+      wb2New('WB18', 'dialog · giờ 12:30 rơi vào giờ nghỉ 12:00–13:00 hoặc ngoài ca của bác sĩ; lỗi từ quy tắc ca của operations-data.js', { time: '12:30' }, 'Ngoài ca bác sĩ hoặc trùng giờ nghỉ 12:00–13:00.'),
+      wb2New('WB19', 'dialog · bệnh nhân đã có lịch 08:00 cùng ngày; lỗi từ operations-data.js (tên bệnh nhân là dữ liệu tổng hợp)', { time: '08:00' }, 'Trùng bệnh nhân với lịch 08:00 của ' + people[0].name + '.'),
+      wb2New('WB20', 'dialog · ô Ngày để trống nên ngày, giờ hoặc thời lượng không hợp lệ; lỗi từ operations-data.js', { date: '', time: '10:00' }, 'Ngày, giờ hoặc thời lượng không hợp lệ.'),
+
+      // WB21-WB24 · details dialog of a booking (WB8): missing cancel reason, stale booking, confirmed and arrived chips
+      wb2Detail('WB21', 'dialog · "Hủy lịch hẹn" khi ô "Lý do hủy" còn trống; dòng lỗi dưới nút hủy, lịch giữ nguyên (xem WB8 cho dialog đầy đủ)', 'Đặt hẹn', 'Cần lý do hủy cho lịch đang hoạt động.'),
+      wb2Detail('WB22', 'dialog · lịch đã được đổi ở cửa sổ khác (đã hủy) nên "Xác nhận lịch" báo lỗi; chip vẫn "Đặt hẹn" vì dialog chưa tải lại', 'Đặt hẹn', 'Không thể chuyển trạng thái lịch này.'),
+      wb2Detail('WB23', 'dialog · sau "Xác nhận lịch" (thông báo "Đã cập nhật trạng thái lịch") mở lại: chip "Đã xác nhận"; các trạng thái của lịch: Đặt hẹn (WB8), Đã xác nhận, Đã đến (WB24)', 'Đã xác nhận', null, 'Đã cập nhật trạng thái lịch'),
+      wb2Detail('WB24', 'dialog · sau "Check-in" mở lại: chip "Đã đến"; lịch hủy hoặc vắng không hiện trên lịch điều phối', 'Đã đến', null, 'Đã cập nhật trạng thái lịch'),
+
+      // WB25-WB29 · Hôm nay filtered to one status of the demo patient (31 bookings: the other 30 are "Chưa đến")
+      page('WB25', 'Hôm nay · Đang chờ (đã check-in)', WEB + 'today · sau Check-in dòng đầu và bấm ô "Đang chờ": bộ lọc Trạng thái = Đang chờ, "Đã đến" 1, "Chưa đến" 30, hàng chỉ còn nút "Mời vào phòng"; mọi phần khác như WB3', 'today', wb2Today({
+        total: 31, arrived: 1, counts: [30, 1, 0, 0, 0, 0], invoice: true, status: 'Đang chờ', rows: wb2One(['Đang chờ', 'warning'], [primary('Mời vào phòng')])
+      }), { state: true, toast: 'Đã cập nhật hàng đợi' }),
+      page('WB26', 'Hôm nay · Đang khám / điều trị', WEB + 'today · sau "Bắt đầu" và ô "Đang khám/điều trị": bộ lọc Trạng thái = Đang khám/điều trị, hàng chỉ còn nút "Mở 360"; mọi phần khác như WB3', 'today', wb2Today({
+        total: 31, arrived: 1, counts: [30, 0, 1, 0, 0, 0], invoice: true, status: 'Đang khám/điều trị', rows: wb2One(['Đang khám/điều trị', 'brand'], [secondary('Mở 360')])
+      }), { state: true, toast: 'Đã cập nhật hàng đợi' }),
+      page('WB27', 'Hôm nay · Hoàn tất', WEB + 'today · sau khi lưu buổi điều trị trong Patient 360 và ô "Hoàn tất": bộ lọc Trạng thái = Hoàn tất, hàng chỉ còn nút "Mở 360"; hoàn tất không suy ra từ thanh toán', 'today', wb2Today({
+        total: 31, arrived: 1, counts: [30, 0, 0, 1, 0, 0], invoice: true, status: 'Hoàn tất', rows: wb2One(['Hoàn tất', 'success'], [secondary('Mở 360')])
+      }), { state: true }),
+      page('WB28', 'Hôm nay · Vắng hẹn', WEB + 'today · sau "Vắng" và ô "Vắng hẹn": bộ lọc Trạng thái = Vắng hẹn, "Đã đến" 0, hàng chỉ còn nút "Mở 360"; mọi phần khác như WB3', 'today', wb2Today({
+        total: 31, arrived: 0, counts: [30, 0, 0, 0, 0, 1], invoice: true, status: 'Vắng hẹn', rows: wb2One(['Vắng hẹn', 'danger'], [secondary('Mở 360')])
+      }), { state: true, toast: 'Đã cập nhật hàng đợi' }),
+      page('WB29', 'Hôm nay · Đã hủy (có lịch hủy)', WEB + 'today · sau khi hủy một lịch trong Điều phối lịch (thông báo "Đã hủy lịch, giữ lại lịch sử") và ô "Đã hủy": bộ lọc Trạng thái = Đã hủy, danh sách không còn trống như WB4, hàng chỉ còn nút "Mở 360"', 'today', wb2Today({
+        total: 31, arrived: 0, counts: [30, 0, 0, 0, 1, 0], invoice: true, status: 'Đã hủy', rows: wb2One(['Đã hủy', 'neutral'], [secondary('Mở 360')])
+      }), { state: true })
     ];
 
     // WC · Hồ sơ & Patient 360 (W3b-WC): patient list, its empty state and create dialog, the 8 Patient 360 tabs, the draft state,
@@ -1258,6 +1464,157 @@ class Component extends DCLogic {
     const wcAiBrief = text => card({ v: 'ai', eyebrow: 'Pema AI · bản nháp để bác sĩ duyệt', title: 'Brief trước buổi hẹn', g: 10 }, txt(text), secondary('Xem & chỉnh sửa →'));
     const wcFacts = (p, next, consent) => panel('Thông tin cần nhớ', '', [quiet('Sửa')],
       facts(['Mối quan tâm', 'Nám · tăng sắc tố'], ['Bác sĩ', p.doctor], ['Buổi tiếp theo', next], ['Tiền sử dị ứng', 'Chưa ghi nhận'], ['Đồng ý ảnh', consent]));
+
+    // ---- W6c-REST: WC22-WC35 (role projections of Patient 360, empty and error states) ----
+    // Same panels as WC4 with the old web's per-role and per-patient differences. Helpers are prefixed wc2 so they cannot clash with another part.
+    const wc2Chips = [badge('Nám · tăng sắc tố', 'brand', { dot: false }), badge('⚠ Da nhạy cảm', 'warning', { dot: false }), badge('⚠ Theo dõi đỏ da sau điều trị', 'warning', { dot: false })];
+    const wc2Actions = [secondary('AI brief', { icon: 'auto_awesome' }), secondary('Nhắn tin'), primary('Ghi buổi điều trị', { icon: 'add' })];
+    const wc2TabsCare = ['Tổng quan', 'Kế hoạch', 'Dịch vụ & tài chính', 'CRM & CSKH', 'Lịch sử'];
+    const wc2TabsAcc = ['Tổng quan', 'Kế hoạch', 'Dịch vụ & tài chính', 'Lịch sử'];
+    // capability sets (staff-context.js apply()): which buttons each role keeps
+    const wc2Doctor = { studio: true, brief: true, edit: true, rx: true, add: false, cashier: false };
+    const wc2Care = { studio: false, brief: false, edit: false, rx: false, add: false, cashier: false };
+    const wc2Acc = { studio: false, brief: false, edit: false, rx: false, add: true, cashier: true };
+    const wc2Owner = { studio: true, brief: true, edit: true, rx: true, add: true, cashier: true };
+
+    // hero (back link, patient card, tab bar) with the tabs and the actions the role sees; `o.actions` absent = no hero buttons
+    const wc2Hero = (p, o = {}) => [
+      quiet('← Danh sách bệnh nhân'),
+      card({ v: 'hero' },
+        row({ g: 20, jc: 'space-between', ai: 'center' },
+          row({ g: 16, ai: 'center' }, avatar(p.init, { size: 'lg' }),
+            stack({ g: 4 }, eyebrow('Hồ sơ ' + p.id + ' · ' + (o.status || 'Đặt hẹn')), h1(p.name),
+              txt(p.age + ' tuổi · Nữ · ' + p.phone + ' · Bác sĩ phụ trách: ' + p.doctor, { size: 's', tone: 'soft' }),
+              tags(...(o.chips || wc2Chips)))),
+          o.actions ? row({ g: 8, jc: 'flex-end' }, ...o.actions) : null)),
+      tabs(o.tabs || P360_TABS, o.sel || 0)
+    ];
+
+    // "Bước tiếp theo" card; `o.eyebrow`, `o.title`, `o.sub` and `o.care` change per patient
+    const wc2Summary = (o = {}) => card({ v: 'soft', g: 10 },
+      row({ g: 16, jc: 'space-between', ai: 'flex-start' },
+        stack({ g: 4 }, eyebrow(o.eyebrow || 'Bước tiếp theo'), h3(o.title || 'Dự kiến quay lại 20/9/2026'), sm(o.sub || 'Lịch hẹn đã xác nhận với phòng khám · Lịch đã đặt')),
+        stack({ g: 6 }, tags(badge('Đang điều trị', 'info', { dot: false })), sm(o.care || wcCare))),
+      row({ g: 8 }, secondary('CRM & CSKH'), secondary('Sửa ngày dự kiến')));
+
+    const wc2Care3 = [
+      { t: 'Sữa rửa mặt dịu nhẹ', sub: 'Sáng & tối · theo hướng dẫn đã duyệt', icon: 'auto_awesome' },
+      { t: 'Dưỡng ẩm phục hồi', sub: 'Sau làm sạch · dùng lượng phù hợp', icon: 'auto_awesome' },
+      { t: 'Chống nắng SPF 50+', sub: 'Buổi sáng · thoa lại theo hướng dẫn', icon: 'auto_awesome' }
+    ];
+    // the three patients of this part: P001 (WC4), P002 (draft prescription) and a synthetic P037 (no plan, no prescription)
+    const wc2P001 = {
+      p: pt, plan: 'Liệu trình kiểm soát sắc tố', done: 2, total: 5, nextVisit: '20/9/2026', concern: 'Nám · tăng sắc tố', before: 'Trước buổi 1', sum: {}, brief: wcBrief(pt), care: wc2Care3,
+      events: [
+        { date: '13/9/2026 · Cập nhật tại nhà', title: 'Cập nhật tại nhà đã được xem', detail: 'Đỏ nhẹ khoảng 2 ngày, hiện đã ổn. Không ghi nhận dấu hiệu cảnh báo trong báo cáo.', by: 'Ghi nhận bởi Điều dưỡng Hương', icon: 'chat_bubble', tone: 'success' },
+        { date: '6/9/2026 · Điều trị', title: 'Hoàn tất buổi 2/5', detail: services[2].name + '. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.', by: 'Ghi nhận bởi BS. Tâm', icon: 'medical_services' },
+        { date: '6/9/2026 · Ảnh lâm sàng', title: 'Bộ ảnh theo dõi · chính diện', detail: 'Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.', by: 'Ghi nhận bởi Điều dưỡng Hương', icon: 'photo_camera' },
+        { date: '26/6/2026 · Kế hoạch', title: 'Bắt đầu liệu trình kiểm soát sắc tố', detail: 'Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.', by: 'Ghi nhận bởi BS. Tâm', icon: 'flag' }
+      ],
+      linked: { plan: { kicker: 'LIỆU TRÌNH HIỆN TẠI · LP-P001', title: services[2].name, meta: '2/5 buổi', price: money(12000000) + ' sau giảm', pct: 40, paid: money(5350000), rest: 'Còn ' + money(6650000) }, deposit: money(4000000), rx: 'approved' }
+    };
+    const wc2P002 = {
+      p: people[1], plan: 'Theo dõi mụn & chăm sóc tại nhà', done: 2, total: 4, nextVisit: '20/9/2026', concern: 'Mụn viêm', before: 'Trước buổi 1', care: wc2Care3,
+      sum: { care: 'Phụ trách: CSKH Mai Anh · Có thể chăm sóc theo kế hoạch' },
+      brief: people[1].name + ', ' + people[1].age + ' tuổi, quay lại để đánh giá mụn viêm. Đã hoàn tất 2/4 buổi của theo dõi mụn & chăm sóc tại nhà. Lần gần nhất: 6/9/2026. Người bệnh báo đã làm theo hướng dẫn chăm sóc. Không có mục theo dõi đang mở. Bước tiếp theo: bác sĩ đánh giá đáp ứng, xác nhận dữ liệu và quyết định kế hoạch.',
+      events: [
+        { date: '13/9/2026 · Cập nhật tại nhà', title: 'Cập nhật tại nhà đã được xem', detail: 'Người bệnh báo đã làm theo hướng dẫn chăm sóc.', by: 'Ghi nhận bởi Điều dưỡng Hương', icon: 'chat_bubble', tone: 'success' },
+        { date: '6/9/2026 · Điều trị', title: 'Hoàn tất buổi 2/4', detail: services[0].name + '. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.', by: 'Ghi nhận bởi BS. Mai', icon: 'medical_services' },
+        { date: '6/9/2026 · Ảnh lâm sàng', title: 'Bộ ảnh theo dõi · chính diện', detail: 'Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.', by: 'Ghi nhận bởi Điều dưỡng Hương', icon: 'photo_camera' },
+        { date: '26/6/2026 · Kế hoạch', title: 'Bắt đầu theo dõi mụn & chăm sóc tại nhà', detail: 'Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.', by: 'Ghi nhận bởi BS. Mai', icon: 'flag' }
+      ],
+      linked: { plan: { kicker: 'LIỆU TRÌNH HIỆN TẠI · LP-P002', title: services[0].name, meta: '2/4 buổi', price: money(1200000) + ' sau giảm', pct: 50, paid: money(1200000), rest: 'Đã đủ tiền' }, deposit: money(0), rx: 'draft' }
+    };
+    // P037 is not one of the 12 sample patients: synthetic like wcNew
+    const wc2P037 = {
+      p: { id: 'P037', name: 'Hoàng Bảo Ngọc', doctor: 'BS. Tâm', age: 25, init: 'BN', phone: '09•• ••• 237' }, plan: 'Kế hoạch chăm sóc da cá nhân', done: 3, total: 6, nextVisit: 'Chưa đặt lịch', concern: 'Theo dõi da sau điều trị', before: 'Trước buổi 2', care: [],
+      sum: { eyebrow: 'Sau thủ thuật D+1', title: 'Dự kiến quay lại 19/10/2026', sub: 'Đánh giá D+30 sau Laser CO2 · Protocol dịch vụ' },
+      brief: 'Hoàng Bảo Ngọc, 25 tuổi, quay lại để đánh giá theo dõi da sau điều trị. Đã hoàn tất 3/6 buổi của kế hoạch chăm sóc da cá nhân. Lần gần nhất: 19/9/2026. Chưa có cập nhật sau điều trị. Không có mục theo dõi đang mở. Bước tiếp theo: bác sĩ đánh giá đáp ứng, xác nhận dữ liệu và quyết định kế hoạch.',
+      events: [{ date: '19/9/2026 · Điều trị', title: 'Buổi điều trị gần nhất', detail: 'Hồ sơ tổng hợp để kiểm thử chăm sóc.', by: 'Ghi nhận bởi BS. Tâm', icon: 'medical_services' }],
+      linked: { plan: null, deposit: money(0), rx: 'none' }
+    };
+
+    const wc2Journey = P => panel('Hành trình của ' + wcFirst(P.p), 'Toàn bộ sự kiện được nối theo thời gian, có nguồn và người phụ trách', [badge(P.done + '/' + P.total + ' buổi', 'neutral', { dot: false })],
+      row({ jc: 'space-between' }, strong(P.plan), txt('MỐC ' + P.done + ' / ' + P.total, { size: 'l', tone: 'info', w: 'b' })),
+      prog(P.done / P.total * 100),
+      timeline(...P.events));
+    const wc2Milestone = (P, v) => panel('Ảnh mốc gần nhất', 'Chính diện · đã đồng ý sử dụng trong chăm sóc', v.studio ? [quiet('Mở studio →')] : [],
+      photos([{ label: P.before, meta: '23/07' }, { label: 'Gần nhất', meta: '23/08' }], { n: 2 }),
+      notice(wcPhotoNote, 'info'));
+    const wc2Side = (P, v) => [
+      card({ v: 'ai', eyebrow: 'Pema AI · bản nháp để bác sĩ duyệt', title: 'Brief trước buổi hẹn', g: 10 }, txt(P.brief), v.brief ? secondary('Xem & chỉnh sửa →') : null),
+      panel('Thông tin cần nhớ', '', v.edit ? [quiet('Sửa')] : [],
+        facts(['Mối quan tâm', P.concern], ['Bác sĩ', P.p.doctor], ['Buổi tiếp theo', P.nextVisit === 'Chưa đặt lịch' ? 'Chưa hẹn' : P.nextVisit], ['Tiền sử dị ứng', 'Chưa ghi nhận'], ['Đồng ý ảnh', 'Đã xác nhận'])),
+      panel('Chăm sóc tại nhà', '', v.edit ? [quiet('Sửa')] : [], P.care.length ? list(P.care) : null)
+    ];
+
+    // the care-finance.js panels under every tab except CRM and Lịch sử: "Dịch vụ & liệu trình", "Đơn thuốc", "Đơn thuốc & phiếu tư vấn"
+    const wc2Rx = (kind, v) => kind === 'approved' ? [
+      row({ g: 12, jc: 'space-between', ai: 'flex-start' }, stack({ g: 2 }, eyebrow('DT-P001 · 6/9/2026'), h3('Đơn đã duyệt')), badge('Đã duyệt', 'success', { dot: false })),
+      notice('Chăm sóc và phục hồi sau buổi điều trị', 'info'),
+      list([
+        { t: 'Cicaderm Cream 40ml', sub: 'Bôi lớp mỏng vùng cần chăm sóc · Sáng và tối · 14 ngày' },
+        { t: 'Fudareus B 15g', sub: 'Bôi theo vùng bác sĩ đã dặn · Buổi tối · 7 ngày' }
+      ], { box: true }),
+      sm('Đã duyệt bởi BS. Tâm · người bệnh có thể xem trên app')
+    ] : kind === 'draft' ? [
+      row({ g: 12, jc: 'space-between', ai: 'flex-start' }, stack({ g: 2 }, eyebrow('DT-P002 · 20/9/2026'), h3('Bản nháp cần bác sĩ duyệt')), badge('Chờ duyệt', 'warning', { dot: false })),
+      notice('Đang chờ bác sĩ kiểm tra trước khi gửi', 'info'),
+      list([{ t: 'Cicaderm Cream 40ml', sub: 'Bôi lớp mỏng · Sáng và tối · 14 ngày' }], { box: true }),
+      primary('✓ Bác sĩ duyệt & gửi app')
+    ] : [empty('Chưa có đơn thuốc.', '', { icon: 'receipt_long' })];
+    const wc2Linked = (L, v) => [
+      grid('minmax(0,1.35fr) minmax(360px,1fr)',
+        panel('Dịch vụ & liệu trình', 'Giá chốt, số buổi và liên kết thu ngân', v.add ? [primary('＋ Thêm dịch vụ')] : [],
+          L.plan
+            ? card({ v: 'soft', g: 8 }, eyebrow(L.plan.kicker), h3(L.plan.title),
+              txt([[L.plan.meta, 'b'], ' · ' + L.plan.price]), badge('Đang thực hiện', 'info', { dot: false }),
+              prog(L.plan.pct), txt(['Đã thu ', [L.plan.paid, 'b']]), sm(L.plan.rest))
+            : empty('Chưa có dịch vụ gắn với hồ sơ.', '', { icon: 'receipt_long' }),
+          row({ g: 12 }, txt('Tiền cọc đã phân bổ'), strong(L.deposit), v.cashier ? quiet('Mở thu ngân →') : null)),
+        panel('Đơn thuốc', 'Chỉ đơn đã duyệt mới xuất hiện trên Patient Mobile', v.rx ? [secondary('＋ Tạo đơn nháp')] : [], ...wc2Rx(L.rx, v))),
+      panel('Đơn thuốc & phiếu tư vấn', 'Nháp → bác sĩ duyệt → in và hiển thị trên app', [], empty('Chưa có đơn từ catalog.', '', { icon: 'receipt_long' }))
+    ];
+    const wc2Overview = (P, v) => [
+      wc2Summary(P.sum),
+      grid('minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr)', stat('Liệu trình hiện tại', P.plan), stat('Buổi đã hoàn tất', String(P.done), '', { unit: '/ ' + P.total + ' buổi' }), stat('Hẹn tiếp theo', P.nextVisit)),
+      split([wc2Journey(P), wc2Milestone(P, v)], wc2Side(P, v)),
+      wc2Linked(P.linked, v)
+    ];
+
+    // Kế hoạch tab (WC7) with or without "Chỉnh sửa"
+    const wc2Plan = edit => grid('minmax(0,1.45fr) minmax(0,1fr)',
+      panel('Liệu trình kiểm soát sắc tố', 'Kế hoạch đang hoạt động · tạo 26/06/2026', edit ? [secondary('Chỉnh sửa')] : [],
+        card({ v: 'soft', g: 8 }, h4('Mục tiêu điều trị'),
+          txt('Giảm biểu hiện nám · tăng sắc tố, theo dõi đáp ứng qua từng mốc ảnh và bảo đảm người bệnh hiểu chăm sóc tại nhà.'), prog(40, { label: '2/5 buổi' })),
+        list([
+          { t: 'Buổi 1 · Đã hoàn tất', sub: 'Đã ghi nhận ảnh và hướng dẫn chăm sóc.', actions: [badge('Đã xong', 'success', { dot: false })] },
+          { t: 'Buổi 2 · Đã hoàn tất', sub: 'Đã ghi nhận ảnh và hướng dẫn chăm sóc.', actions: [badge('Đã xong', 'success', { dot: false })] },
+          { t: 'Buổi 3 · Tiếp theo', sub: 'Cần đánh giá da trước khi thực hiện.', actions: [badge('Sắp tới', 'info', { dot: false })] },
+          { t: 'Buổi 4 · Dự kiến', sub: 'Mốc dự kiến theo đáp ứng của người bệnh.', actions: [badge('Chưa mở', 'neutral', { dot: false })] },
+          { t: 'Buổi 5 · Dự kiến', sub: 'Mốc dự kiến theo đáp ứng của người bệnh.', actions: [badge('Chưa mở', 'neutral', { dot: false })] }
+        ])),
+      stack({ g: 16 },
+        panel('Bộ tiêu chí theo dõi', '', [], facts(['Ảnh mốc', 'Chính diện · 3/5'], ['Patient reported outcome', 'Chưa gửi'], ['Người duyệt', pt.doctor], ['Nhắc hẹn', 'Đang bật'])),
+        card({ v: 'soft', title: 'Khoảnh khắc cần hỏi ở buổi tới' }, txt('“Đỏ kéo dài bao lâu sau lần trước? Có thay đổi gì trong chăm sóc tại nhà không?”'))));
+    // "Dịch vụ & tài chính" invoice panel; the old table has two rows (the second is the demo invoice of the day)
+    const wc2Invoices = aside => panel('Hóa đơn của ' + pt.name, 'Giá trị phát sinh, tiền đã thu và dư nợ; không suy hoàn tất điều trị', aside,
+      table(['Hóa đơn', 'Dịch vụ', ['Phát sinh', '1fr', 'r'], ['Đã thu', '1fr', 'r'], ['Còn lại', '1fr', 'r']], [
+        ['HD-0001\n6/9/2026', 'Buổi chăm sóc / điều trị', money(1200000), money(1200000), money(0)],
+        ['HD-DEMO-001\n20/9/2026', services[0].name, money(300000), money(150000), money(150000)]
+      ], { foot: '2 hóa đơn của hồ sơ này' }),
+      notice('Tiền cọc còn chưa phân bổ: ' + money(0) + '. Cọc đã phân bổ được thể hiện riêng trong liệu trình bên dưới.', 'info'));
+    // Tư vấn tab (WC5/WC6 panels) for the clinical-error state
+    const wc2Consult = () => [
+      grid('minmax(0,1.45fr) minmax(0,1fr)',
+        panel('Tư vấn lâm sàng', '20/9/2026 · Bản ghi có người duyệt', [badge('Đang soạn', 'brand', { dot: false })],
+          notice('AI chỉ tạo bản nháp. Bác sĩ cần xem, sửa và xác nhận trước khi lưu vào hồ sơ.', 'warning'),
+          textarea('Ghi chú ngắn / transcript mô phỏng', '', { ph: 'Ví dụ: Da ổn hơn, đỏ giảm sau 2 ngày...', lines: 4 }),
+          primary('Tạo bản nháp ghi chú', { icon: 'auto_awesome' })),
+        panel('Bản nháp của Pema AI', 'Được tạo từ các sự kiện trên hồ sơ', [],
+          card({ v: 'soft', title: 'Chưa có bản nháp' }, txt('Nhập vài ý chính bên trái để Pema tạo bản nháp có cấu trúc.'))))
+    ];
+    const wc2BriefNew = wcNew.name + ', ' + wcNew.age + ' tuổi, quay lại để đánh giá nám · tăng sắc tố. Đã hoàn tất 0/1 buổi của chờ bác sĩ thiết lập kế hoạch. Lần gần nhất: Chưa ghi nhận. Chưa có cập nhật sau điều trị. Không có mục theo dõi đang mở. Bước tiếp theo: bác sĩ đánh giá đáp ứng, xác nhận dữ liệu và quyết định kế hoạch.';
 
     const WC = [
       // ---- patient list ----
@@ -1448,7 +1805,89 @@ class Component extends DCLogic {
       page('WC21', 'Patient 360 · Lịch sử · chưa có hoạt động', WEB + 'patients › Patient 360 › Lịch sử của hồ sơ vừa tạo: trạng thái rỗng "Chưa có hoạt động CSKH được ghi nhận."; toast "Đã tạo hồ sơ demo"', 'patients', [
         wcNewHead(7),
         panel('Lịch sử hợp nhất', 'Sự kiện gốc, người ghi nhận và liên kết công việc', [], empty('Chưa có hoạt động CSKH được ghi nhận.', '', { icon: 'forum' }))
-      ], { state: true, toast: 'Đã tạo hồ sơ demo' })
+      ], { state: true, toast: 'Đã tạo hồ sơ demo' }),
+
+      // ---- W6c-REST: role projections, empty and error states ----
+      page('WC22', 'Patient 360 · Bác sĩ (không có thu ngân)', WEB + 'patients › Patient 360 (tài khoản bác sĩ) · giữ cả 8 tab, "AI brief", "Nhắn tin", "Ghi buổi điều trị", "Mở studio →", các nút "Sửa" và "＋ Tạo đơn nháp"; mất "＋ Thêm dịch vụ" và "Mở thu ngân →" (quyền thu ngân); danh sách chỉ có bệnh nhân của bác sĩ đó', 'patients', [
+        wc2Hero(pt, { actions: wc2Actions }), wc2Overview(wc2P001, wc2Doctor)
+      ], { role: 'doctor-tam', state: true }),
+      page('WC23', 'Patient 360 · CSKH · Tổng quan', WEB + 'patients › Patient 360 (tài khoản CSKH) · chỉ 5 tab (Tổng quan, Kế hoạch, Dịch vụ & tài chính, CRM & CSKH, Lịch sử); không có nút ở hero, không có "Mở studio →", "Xem & chỉnh sửa →", "Sửa", "＋ Tạo đơn nháp", "＋ Thêm dịch vụ", "Mở thu ngân →"; thẻ "Bước tiếp theo" vẫn có "CRM & CSKH" và "Sửa ngày dự kiến"; app C5 là màn CSKH riêng, không có tab', 'patients', [
+        wc2Hero(pt, { tabs: wc2TabsCare }), wc2Overview(wc2P001, wc2Care)
+      ], { role: 'care-maianh', state: true }),
+      page('WC24', 'Patient 360 · CSKH · Kế hoạch (chỉ xem)', WEB + 'patients › Patient 360 (CSKH) › Kế hoạch · như WC7 nhưng không có nút "Chỉnh sửa" (quyền chuyên môn); app J3 có "Điều chỉnh kế hoạch" và câu "Cần tài khoản bác sĩ để thực hiện."', 'patients', [
+        wc2Hero(pt, { tabs: wc2TabsCare, sel: 1 }), wc2Plan(false), wc2Linked(wc2P001.linked, wc2Care)
+      ], { role: 'care-maianh', state: true }),
+      page('WC25', 'Patient 360 · CSKH · Dịch vụ & tài chính', WEB + 'patients › Patient 360 (CSKH) › Dịch vụ & tài chính · bảng hóa đơn và các khối liệu trình không có "Mở thu ngân →", "＋ Thêm dịch vụ", "＋ Tạo đơn nháp"; app J6 có "Mở thu ngân" · chưa có route Next.js', 'patients', [
+        wc2Hero(pt, { tabs: wc2TabsCare, sel: 2 }), wc2Invoices([]), wc2Linked(wc2P001.linked, wc2Care)
+      ], { role: 'care-maianh', state: true }),
+      page('WC26', 'Patient 360 · Kế toán · Tổng quan', WEB + 'patients › Patient 360 (kế toán) · 4 tab (Tổng quan, Kế hoạch, Dịch vụ & tài chính, Lịch sử; không có CRM & CSKH); nút chuyên môn bị gỡ nhưng giữ "＋ Thêm dịch vụ" và "Mở thu ngân →"; app D1 là không gian đối soát riêng', 'patients', [
+        wc2Hero(pt, { tabs: wc2TabsAcc }), wc2Overview(wc2P001, wc2Acc)
+      ], { role: 'accountant', state: true }),
+      page('WC27', 'Patient 360 · Kế toán · Dịch vụ & tài chính', WEB + 'patients › Patient 360 (kế toán) › Dịch vụ & tài chính · giữ "Mở thu ngân →" (cả ở bảng hóa đơn và dưới liệu trình) và "＋ Thêm dịch vụ"; không có "＋ Tạo đơn nháp" vì cần quyền chuyên môn · chưa có route Next.js', 'patients', [
+        wc2Hero(pt, { tabs: wc2TabsAcc, sel: 2 }), wc2Invoices([secondary('Mở thu ngân →')]), wc2Linked(wc2P001.linked, wc2Acc)
+      ], { role: 'accountant', state: true }),
+      page('WC28', 'Patient 360 · Đơn thuốc chờ bác sĩ duyệt', WEB + 'patients › Patient 360 của hồ sơ có đơn nháp · thẻ "Đơn thuốc" ở trạng thái "Chờ duyệt" với "Bản nháp cần bác sĩ duyệt", dòng "Đang chờ bác sĩ kiểm tra trước khi gửi" và nút "✓ Bác sĩ duyệt & gửi app"; chỉ đơn đã duyệt (WC4) mới lên Patient Mobile; app F4 kết thúc ở "Xem đơn" · chưa có route Next.js', 'patients', [
+        wc2Hero(wc2P002.p, { chips: [badge('Mụn viêm', 'brand', { dot: false })], actions: wc2Actions }), wc2Overview(wc2P002, wc2Owner)
+      ], { state: true }),
+      page('WC29', 'Patient 360 · hồ sơ tổng hợp chưa có liệu trình và đơn thuốc', WEB + 'patients › Patient 360 của một hồ sơ tổng hợp (một trong 10 hồ sơ CRM demo): "Chưa có dịch vụ gắn với hồ sơ.", "Chưa có đơn thuốc.", "Chưa có đơn từ catalog.", trạng thái hero "Chưa có lịch hôm nay", "Hẹn tiếp theo" là "Chưa đặt lịch"; tên và mã là dữ liệu tổng hợp · chưa có route Next.js', 'patients', [
+        wc2Hero(wc2P037.p, { status: 'Chưa có lịch hôm nay', chips: [badge('Theo dõi da sau điều trị', 'brand', { dot: false })], actions: wc2Actions }), wc2Overview(wc2P037, wc2Owner)
+      ], { state: true }),
+      page('WC30', 'Patient 360 · hồ sơ vừa tạo · chưa có buổi điều trị', WEB + 'patients › "Tạo hồ sơ" › Buổi điều trị của hồ sơ trống: form ghi buổi 10 trường, "Loại buổi" mặc định "Tư vấn ban đầu", hướng dẫn "Chưa có hướng dẫn được duyệt.", gợi ý "Hồ sơ có cảnh báo: Cần khai thác tiền sử.", "Chưa có buổi nào trong bản demo."; toast "Đã tạo hồ sơ demo"; khối liệu trình bên dưới vẫn là của hồ sơ mẫu như trên web cũ', 'patients', [
+        wcNewHead(3),
+        grid('minmax(0,1.45fr) minmax(0,1fr)',
+          panel('Ghi buổi điều trị', 'Tạo sự kiện mới cho ' + wcNew.name, [badge('1/1 dự kiến', 'brand', { dot: false })],
+            grid(2, date('Ngày', '2026-09-20'), select('Loại buổi', 'Tư vấn ban đầu', { opts: ['Tư vấn ban đầu', 'Tái khám đánh giá', 'Chăm sóc phục hồi'] })),
+            grid(2, select('Protocol chăm sóc', 'Theo khuyến nghị bác sĩ', { opts: ['Theo khuyến nghị bác sĩ', 'Laser CO2 · D+1 / D+3 / D+7 / D+30'] }), date('Ngày dự kiến tái khám', '2026-10-20')),
+            textarea('Đánh giá trước buổi', '', { ph: 'Tình trạng da, phản hồi, quyết định của bác sĩ...', lines: 4 }),
+            textarea('Hướng dẫn chăm sóc gửi sau buổi', 'Chưa có hướng dẫn được duyệt.', { lines: 2 }),
+            grid(2, select('Vùng chụp', 'Mặt', { opts: ['Mặt', 'Cổ', 'Vùng khác'] }), select('Góc chụp', 'Chính diện', { opts: ['Chính diện', 'Má trái', 'Má phải'] })),
+            file('Ảnh mốc', 'Chọn tệp (png, jpeg, webp)', { hint: 'Thêm ảnh chính diện hoặc vùng điều trị. Prototype tự kiểm tra loại tệp và kích thước.' }),
+            check('Người bệnh đã có đồng ý phù hợp cho ảnh chăm sóc.', false),
+            primary('Lưu buổi điều trị', { icon: 'check' })),
+          stack({ g: 16 },
+            card({ v: 'ai', eyebrow: 'Gợi ý kiểm tra', title: 'Trước khi lưu' }, txt('Hồ sơ có cảnh báo: Cần khai thác tiền sử. Hãy xác nhận trước khi thực hiện.')),
+            panel('Các buổi đã ghi', '', [], empty('Chưa có buổi nào trong bản demo.', '', { icon: 'event_note' })))),
+        wc2Linked(wc2P001.linked, wc2Owner)
+      ], { state: true, toast: 'Đã tạo hồ sơ demo' }),
+      tab('WC31', 'Patient 360 · Tư vấn · lỗi nhận định', WEB + 'patients › Patient 360 › Tư vấn › "Bác sĩ lưu nhận định" với hai ô chỉ có dấu cách: dòng lỗi đỏ "Nhập tiền sử và nhận định/chẩn đoán do bác sĩ xác nhận." dưới nút (dấu cách qua được kiểm tra "required" của trình duyệt nhưng không qua kiểm tra nghiệp vụ); app J1 không vẽ dòng lỗi', 1, [
+        panel('Tiền sử & chẩn đoán', 'Bác sĩ ghi nhận, không dùng AI tự chẩn đoán', [],
+          grid(2, textarea('Tiền sử đã khai thác', '  ', { req: true }), textarea('Khám / chẩn đoán do bác sĩ xác nhận', '  ', { req: true })),
+          secondary('Bác sĩ lưu nhận định'),
+          errLine('Nhập tiền sử và nhận định/chẩn đoán do bác sĩ xác nhận.')),
+        wc2Consult(),
+        wc2Linked(wc2P001.linked, wc2Owner)
+      ], { state: true }),
+      dlg('WC32', 'Brief trước buổi hẹn', WEB + 'Patient 360 của hồ sơ vừa tạo › "AI brief": bản nháp cho hồ sơ chưa có sự kiện hay mục theo dõi ("Chưa có cập nhật sau điều trị. Không có mục theo dõi đang mở."); WC13 là brief của hồ sơ P001; toast "Đã tạo hồ sơ demo" còn hiện · chưa có route Next.js', [
+        card({ v: 'soft', title: wcNew.name + ' · Chờ bác sĩ thiết lập kế hoạch' }, textarea('Brief mô phỏng · sửa trước khi duyệt', wc2BriefNew, { lines: 6 })),
+        notice('Nguồn: Patient 360, events đã ghi nhận, follow-up đang mở. Bác sĩ cần xác nhận trước khi dùng trong chăm sóc.', 'info')
+      ], { eyebrow: 'Pema AI · bản nháp', nav: 'patients', behind: wcNewHead(0), footer: [secondary('Sao chép'), primary('Duyệt & lưu brief')], toast: 'Đã tạo hồ sơ demo' }),
+      tab('WC33', 'Patient 360 · CRM & CSKH · không còn việc mở', WEB + 'patients › Patient 360 › CRM & CSKH sau khi ghi kết quả cho việc mở duy nhất ("Đã liên hệ, chưa có nhu cầu"): "Việc còn mở" chỉ còn "Không còn việc CSKH mở.", "Kết quả CSKH gần nhất" và "Lịch sử CSKH" có dòng mới, toast "Đã lưu kết quả và cập nhật hàng đợi"; Patient Mobile khi đó hiện "Việc hôm nay" (WI20)', 6, [
+        wcSummary(),
+        grid('minmax(0,1.65fr) minmax(300px,1fr)',
+          panel('Bối cảnh chăm sóc', 'Dữ liệu từ hồ sơ và liệu trình', [],
+            facts(['Nguồn khách', 'Giới thiệu'], ['Tiếp xúc đầu tiên', '26/6/2026'], ['Khám gần nhất', '6/9/2026'], ['Liệu trình', 'Liệu trình kiểm soát sắc tố · còn 3 buổi'], ['Kết quả CSKH gần nhất', 'Đã liên hệ, chưa có nhu cầu'], ['Bước tiếp', 'Chưa thiết lập · call']),
+            row({ g: 8 }, secondary('Sửa ngày dự kiến'), secondary('Xem liệu trình'), secondary('Toàn bộ lịch sử →'))),
+          panel('Việc còn mở', '0 việc gắn với hồ sơ', [], empty('Không còn việc CSKH mở.', '', { icon: 'task_alt' }))),
+        panel('Lịch sử CSKH', 'Sự kiện gốc, người ghi nhận và liên kết công việc', [],
+          timeline({ date: '2026-09-20 09:00', title: 'Gọi điện · Đã liên hệ, chưa có nhu cầu', detail: 'Đã trao đổi, chưa có nhu cầu.', by: 'BS. Tâm · CRM:due:P001:2026-09-20', icon: 'call' }))
+      ], { state: true, toast: 'Đã lưu kết quả và cập nhật hàng đợi' }),
+      dlg('WC34', 'Ngày dự kiến quay lại', WEB + 'Patient 360 › "Sửa ngày dự kiến" › "Lưu ngày dự kiến" với lý do chỉ có dấu cách: dòng lỗi đỏ "Nhập ngày hợp lệ, lý do và nguồn khuyến nghị." dưới nút; hộp thoại giữ nguyên; app J7 không vẽ dòng lỗi · chưa có route Next.js', [
+        date('Ngày bác sĩ/CSKH khuyến nghị', '2026-09-20', { req: true }),
+        input('Lý do', '   ', { req: true }),
+        select('Nguồn', 'Bác sĩ khuyến nghị', { opts: ['Bác sĩ khuyến nghị', 'Protocol dịch vụ', 'Kế hoạch điều trị', 'Chăm sóc sau điều trị'] }),
+        notice('Nếu đã có lịch thực tế, Patient 360 ưu tiên ngày lịch đó. Khuyến nghị vẫn được giữ khi hủy lịch.', 'info'),
+        errLine('Nhập ngày hợp lệ, lý do và nguồn khuyến nghị.')
+      ], { nav: 'patients', behind: patientHead(pt, 0), footer: [primary('Lưu ngày dự kiến')] }),
+      tab('WC35', 'Patient 360 · Ảnh trước / sau · có ảnh upload', WEB + 'patients › Patient 360 › Ảnh trước / sau sau khi lưu một buổi có ảnh: "1 ảnh gắn với buổi điều trị, lọc cùng góc khai báo: Chính diện." thay cho dòng ảnh minh họa của WC9; mỗi ô ảnh là placeholder có nhãn ngày và trạng thái đồng ý, không hiện ảnh thật; "3/5 buổi" và toast "Đã lưu buổi điều trị và cập nhật hành trình"', 4, [
+        card({ g: 12 },
+          row({ g: 16, jc: 'space-between', ai: 'flex-end' }, h3('Before / After Studio', pt.name + ' · Nám · tăng sắc tố'),
+            row({ g: 8, ai: 'flex-end' }, select('Góc ảnh so sánh', 'Chính diện', { w: 180, opts: ['Chính diện', 'Má trái', 'Má phải'] }), secondary('So sánh trượt'), primary('Thêm ảnh', { icon: 'add' }))),
+          notice('1 ảnh gắn với buổi điều trị, lọc cùng góc khai báo: Chính diện. Chưa kiểm định căn chỉnh ảnh; bác sĩ kiểm tra điều kiện chụp trước khi so sánh.', 'info'),
+          photos([{ label: '20/9/2026', meta: 'Ảnh Mặt · Chính diện ngày 20/9/2026 · đồng ý chăm sóc: có ghi nhận' }, { label: '20/9/2026', meta: 'Ảnh Mặt · Chính diện ngày 20/9/2026 · đồng ý chăm sóc: có ghi nhận' }], { n: 2 }),
+          box('info', range('Phóng to', '1×', 0), badge('Cùng góc khai báo · không tự căn chỉnh', 'neutral', { dot: false })),
+          notice('Metadata: vùng Mặt; góc Chính diện; mốc buổi s1789869600000; đồng ý chăm sóc: có ghi nhận. Không suy ra hiệu quả y khoa từ các ảnh minh họa.', 'info')),
+        wc2Linked({ ...wc2P001.linked, plan: { ...wc2P001.linked.plan, meta: '3/5 buổi', pct: 60 } }, wc2Owner)
+      ], { state: true, toast: 'Đã lưu buổi điều trị và cập nhật hành trình' })
     ];
 
     // WD · CSKH: hàng chờ CSKH hôm nay, hộp thoại Xử lý, protocol, kết quả, nhóm vòng đời, Theo dõi (Follow-up Inbox) và duyệt phản hồi (W3b-WD).
@@ -1530,6 +1969,58 @@ class Component extends DCLogic {
         grid(5, secondary('3 Khách mới', { full: true }), secondary('2 Khách quay lại', { full: true }), secondary('9 Đang điều trị', { full: true }), secondary('1 Lâu chưa quay lại', { full: true }), secondary('1 Đã quay lại sau CSKH', { full: true })))
     ];
 
+    // ---- W6c-OPS helpers (WD9-WD16: populated results, empty lifecycle group, CSKH dialog states, Follow-up Inbox states; local names start with wd2) ----
+    const WD_OUTCOMES = ['Không nghe máy', 'Gọi lại sau', 'Đã liên hệ, chưa có nhu cầu', 'Đang bận, hẹn gọi lại', 'Đồng ý đặt lịch', 'Muốn bác sĩ tư vấn', 'Có phản hồi sau điều trị', 'Khiếu nại', 'Không muốn nhận CSKH', 'Sai số / không liên hệ được'];
+    // the CSKH queue with the KPI values of the moment (total, overdue, done, booked after CSKH); used behind WD9
+    const wd2Queue = (n, late, done, booked) => [
+      wdHead(),
+      kpis(
+        kpi('Việc CSKH toàn đội', String(n), '46 khách cần chăm sóc', { chev: true, btn: true }),
+        kpi('Quá hạn', String(late), 'Ưu tiên gọi và xác nhận', { chev: true, btn: true }),
+        kpi('Đã hoàn tất', String(done), 'Có kết quả được ghi nhận', { chev: true, btn: true }),
+        kpi('Đặt lịch sau CSKH', String(booked), 'Chưa đồng nghĩa đã quay lại', { chev: true, btn: true })),
+      grid('238px minmax(0,1fr)', wdGroupsPanel(),
+        panel('Danh sách cần chăm sóc', n + ' việc · không gửi tin tự động', [], wdToolbar(''), table(WD_COLS, wdQueueRows()), wdPager(n + ' việc · Trang 1/6')))
+    ];
+    // the dashboard with the lifecycle counts of the moment (new, returning, in treatment, long absent, returned after CSKH); used behind WD10
+    const wd2Dash = counts => [
+      pageHead('Chào buổi sáng, BS. Tâm', 'Vận hành hôm nay và chăm sóc khách hàng · mốc demo 20/09/2026', [secondary('Lịch hôm nay →'), primary('Mở CSKH hôm nay')], 'Pema · chăm sóc xuyên suốt'),
+      panel('Vòng đời khách hàng', 'Một hồ sơ, nhiều lần chăm sóc', [],
+        grid(5, ...['Khách mới', 'Khách quay lại', 'Đang điều trị', 'Lâu chưa quay lại', 'Đã quay lại sau CSKH'].map((t, i) => secondary(counts[i] + ' ' + t, { full: true }))))
+    ];
+    // the care dialog (WD2) with the value of the outcome and note, the submit label and the inline line at its end (o.line, omitted for none)
+    const wd2Task = (id, note, o) => dlg(id, 'Chăm sóc · ' + people[0].name, WEB + note, [
+      card({ v: 'soft', g: 8 },
+        row({ g: 18, jc: 'space-between', ai: 'center' },
+          stack({ g: 6 },
+            tags(badge('Sau thủ thuật D+1', 'warning')),
+            txt([['Theo dõi mụn & chăm sóc tại nhà · Còn '], ['2 buổi', 'b']]),
+            sm('Khám: 13/9/2026 · Dự kiến: 20/9/2026 · Quá hạn 0 ngày'),
+            sm('Liên hệ gần nhất: Chưa thiết lập · Chưa ghi nhận')),
+          secondary('Patient 360 →'))),
+      notice('Ghi nhận cuộc gọi/tin nhắn mô phỏng. Không gửi Zalo/SMS hoặc thực hiện cuộc gọi thật.', 'info'),
+      grid(2,
+        select('Kênh liên hệ', 'Gọi điện', { opts: ['Gọi điện', 'Zalo', 'SMS', 'Ghi chú nội bộ'] }),
+        select('Kết quả', o.outcome, { opts: WD_OUTCOMES })),
+      textarea('Nội dung / kết quả trao đổi', o.note, { req: true, ph: 'Ghi cụ thể kết quả và điều đã thống nhất với khách…', lines: 2 }),
+      grid(2,
+        date('Ngày giờ tiếp theo (nếu cần)', '', { ph: 'mm/dd/yyyy --:-- --' }),
+        select('Hành động tiếp theo', 'Gọi lại', { opts: ['Gọi lại', 'Bác sĩ xem', 'Đặt lịch', 'Nhắn chăm sóc'] }),
+        select('Phụ trách', 'CSKH Mai Anh', { opts: WD_OWNERS }),
+        select('Ưu tiên', 'Ưu tiên cao', { opts: ['Ưu tiên cao', 'Thông thường', 'Chăm sóc'] })),
+      hr(),
+      row({ g: 14 }, primary(o.submit || 'Lưu kết quả chăm sóc'), sm('Đồng ý đặt lịch sẽ mở form lịch trước khi hoàn tất.')),
+      o.line ? errLine(o.line) : null
+    ], { w: 760, nav: 'crm', behind: wdQueue(), badge: '5' });
+    // one Follow-up Inbox card (same shape as wdFollowCards): [dot flag, title, patient, text, date + owner, attachment chip?]
+    const wd2FollowCard = (dot, title, who, text, meta, attach) => card({ v: 'panel', g: 8 },
+      row({ g: 16, jc: 'space-between', ai: 'center' },
+        stack({ g: 4 },
+          txt([['● ', dot], [title + ' · ' + who, 'b']]),
+          txt(text),
+          attach ? row({ g: 12 }, sm(meta), badge('Ảnh đính kèm', 'neutral', { dot: false })) : sm(meta)),
+        row({ g: 8 }, secondary('Mở'), primary('Xử lý', { icon: 'check' }))));
+
     const WD = [
       page('WD1', 'CSKH hôm nay', WEB + 'crm · hàng chờ CSKH: 4 KPI bấm được, danh sách nhóm công việc theo quy tắc, bộ lọc Phụ trách và Thời hạn, bảng 12 việc/trang; app C1-C4 chỉ có 3 nhóm và danh sách ngắn; tên, mã hồ sơ và số liệu là dữ liệu tổng hợp', 'crm', wdQueue(), { badge: '5' }),
 
@@ -1590,7 +2081,41 @@ class Component extends DCLogic {
         primary('Duyệt, phản hồi & đóng mục')
       ], { w: 620, eyebrow: 'Ảnh / phản hồi chưa duyệt · BS. Tâm', nav: 'followups', behind: wdFollow(), badge: '5' }),
 
-      page('WD8', 'CSKH hôm nay · không có việc phù hợp', WEB + 'crm · tìm kiếm không khớp việc nào: bảng giữ tiêu đề cột và hiện một dòng trống, bộ đếm "0 việc · Trang 1/1"; các trạng thái trống khác (không còn việc CSKH mở, Inbox đã sạch, đã xếp hết danh sách chờ) không có kịch bản trong web cũ', 'crm', wdQueueEmpty(), { state: true, badge: '5' })
+      page('WD8', 'CSKH hôm nay · không có việc phù hợp', WEB + 'crm · tìm kiếm không khớp việc nào: bảng giữ tiêu đề cột và hiện một dòng trống, bộ đếm "0 việc · Trang 1/1"; các trạng thái trống khác (không còn việc CSKH mở, Inbox đã sạch, đã xếp hết danh sách chờ) không có kịch bản trong web cũ', 'crm', wdQueueEmpty(), { state: true, badge: '5' }),
+
+      // ---- W6c-OPS: populated results, empty lifecycle group, CSKH dialog states, Follow-up Inbox states ----
+      // WD9 · the populated list of WD4: one article per recorded outcome (patient, outcome label, note, actor and time).
+      dlg('WD9', 'Kết quả chăm sóc đã ghi', WEB + 'dialog crm → KPI "Đã hoàn tất" · khi đã có kết quả (sau khi lưu một cuộc gọi "Đã liên hệ, chưa có nhu cầu"): mỗi kết quả một khối gồm khách · kết quả, ghi chú, người ghi · thời gian (giữ nguyên chuỗi giờ của bản gốc); thông báo nổi "Đã lưu kết quả và cập nhật hàng đợi"; trạng thái trống là WD4', [
+        list([{ t: people[0].name + ' · Đã liên hệ, chưa có nhu cầu', sub: 'Đã trao đổi, chưa có nhu cầu.', sub2: 'BS. Tâm · 2026-09-20T09:00:01+07:00' }])
+      ], { w: 760, nav: 'crm', behind: wd2Queue(71, 30, 1, 0), badge: '5', toast: 'Đã lưu kết quả và cập nhật hàng đợi' }),
+
+      // WD10 · a lifecycle group with no patient (Đã quay lại sau CSKH; "Khách mới" and "Khách quay lại" are empty too).
+      dlg('WD10', 'Đã quay lại sau CSKH', WEB + 'dialog dashboard → ô vòng đời · nhóm chưa có khách nào: tiêu đề là tên giai đoạn và một dòng "Chưa có khách trong nhóm."; cũng gặp ở "Khách mới" và "Khách quay lại"; danh sách có khách là WD5', [
+        txt('Chưa có khách trong nhóm.')
+      ], { w: 760, nav: 'dashboard', behind: wd2Dash([0, 0, 42, 4, 0]), badge: '5' }),
+
+      // WD11-WD14 · the care dialog (WD2) with the inline line #crm-error under the buttons.
+      wd2Task('WD11', 'dialog crm → Xử lý · kết quả "Gọi lại sau" nhưng chưa chọn "Ngày giờ tiếp theo": dòng lỗi #crm-error dưới nút lưu, mọi trường như WD2', { outcome: 'Gọi lại sau', note: 'Gọi lại sau', line: 'Cần ngày giờ gọi lại.' }),
+      wd2Task('WD12', 'dialog crm → Xử lý · ô "Nội dung / kết quả trao đổi" chỉ có khoảng trắng nên lưu bị chặn; dòng lỗi #crm-error dưới nút lưu', { outcome: 'Đã liên hệ, chưa có nhu cầu', note: ' ', line: 'Chọn kênh, kết quả, người phụ trách và nhập ghi chú.' }),
+      wd2Task('WD13', 'dialog crm → Xử lý · chọn kết quả "Đồng ý đặt lịch": nút lưu đổi thành "Tiếp tục → Đặt lịch" và mở hộp thoại đặt lịch (WB7) với ghi chú "Sau CSKH: …"; ô ghi chú đang focus trong bản gốc', { outcome: 'Đồng ý đặt lịch', note: 'Khách đồng ý đặt lịch.', submit: 'Tiếp tục → Đặt lịch' }),
+      wd2Task('WD14', 'dialog crm → Xử lý · việc đã được xử lý ở cửa sổ khác nên lưu báo lỗi; dòng lỗi #crm-error dưới nút lưu (bản gốc vẽ như một thông báo nguy hiểm có role=alert)', { outcome: 'Đã liên hệ, chưa có nhu cầu', note: 'Đã trao đổi.', line: 'Việc đã được xử lý hoặc không còn hợp lệ. Tải lại danh sách.' }),
+
+      // WD15 · BS. Lan closed her only open follow-up: the inbox is clean, the nav badge reads 0.
+      page('WD15', 'Theo dõi · inbox đã sạch', WEB + 'followups (BS. Lan) · sau "Duyệt, phản hồi & đóng mục" mục cuối cùng của bác sĩ: ba ô đều 0, chip "Tất cả 0 / Ảnh 0 / Triệu chứng 0 / Quá hạn 0" không chip nào chọn, khối trống "Inbox đã sạch. Không có follow-up đang mở." và huy hiệu "Theo dõi 0"; thông báo nổi "Đã gửi phản hồi và đóng mục theo dõi"; app I6/A4 chưa có trạng thái này', 'followups', [
+        pageHead('Follow-up Inbox', 'Một hàng đợi cho ảnh bệnh nhân gửi, triệu chứng và các mốc bị bỏ sót.', [], 'Pema Digital Clinic'),
+        kpis(kpi('Đang mở', '0', 'tất cả nhóm', { icon: 'tune' }), kpi('Cần bác sĩ', '0', 'ảnh và triệu chứng', { icon: 'tune' }), kpi('Mốc bị bỏ sót', '0', 'cần giao người phụ trách', { icon: 'tune' })),
+        chips([['Tất cả', '', 0], ['Ảnh', '', 0], ['Triệu chứng', '', 0], ['Quá hạn', '', 0]]),
+        panel('', '', [], empty('Inbox đã sạch. Không có follow-up đang mở.', '', { flat: true }))
+      ], { role: 'doctor-lan', state: true, badge: '0', toast: 'Đã gửi phản hồi và đóng mục theo dõi' }),
+
+      // WD16 · saving a session without a photo opened a sixth follow-up (missing milestone photo) at the top of the inbox.
+      page('WD16', 'Theo dõi · thiếu ảnh mốc sau buổi điều trị', WEB + 'followups · lưu một buổi điều trị không kèm ảnh mở thêm mục "Thiếu ảnh mốc đánh giá" ("Buổi điều trị vừa lưu chưa có ảnh mốc.") ở đầu hộp thư: "Đang mở" 6, "Mốc bị bỏ sót" 3, chip "Tất cả 6"; thông báo nổi "Đã lưu buổi điều trị và cập nhật hành trình"; mục này không đính ảnh', 'followups', [
+        pageHead('Follow-up Inbox', 'Một hàng đợi cho ảnh bệnh nhân gửi, triệu chứng và các mốc bị bỏ sót.', [], 'Pema Digital Clinic'),
+        kpis(kpi('Đang mở', '6', 'tất cả nhóm', { icon: 'tune' }), kpi('Cần bác sĩ', '3', 'ảnh và triệu chứng', { icon: 'tune' }), kpi('Mốc bị bỏ sót', '3', 'cần giao người phụ trách', { icon: 'tune' })),
+        chips([['Tất cả', '', 6], ['Ảnh', '', 2], ['Triệu chứng', '', 1], ['Quá hạn', '', 1]]),
+        wd2FollowCard('soft', 'Thiếu ảnh mốc đánh giá', people[0].name, 'Buổi điều trị vừa lưu chưa có ảnh mốc.', '20/9/2026   •   Giao: CSKH Mai Anh', false),
+        wdFollowCards()
+      ], { state: true, badge: '6', toast: 'Đã lưu buổi điều trị và cập nhật hành trình' })
     ];
 
     // WE · Ảnh, bác sĩ & phòng, dịch vụ (W3b-WE). WE1-WE2 studio, WE3-WE4 doctors, rooms and room blocks, WE5-WE6 services.
@@ -1663,7 +2188,41 @@ class Component extends DCLogic {
         input('Tên dịch vụ', services[0].name),
         grid(2, number('Điều trị (phút)', String(services[0].mins)), number('Chuẩn bị (phút)', '0'),
           number('Giá (VND)', String(services[0].price)), select('Trạng thái', 'Đang dùng', { opts: ['Đang dùng', 'Tạm ngưng'], open: true }))
-      ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'services', behind: WE_SERVICES, footer: [primary('Lưu dịch vụ')] })
+      ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'services', behind: WE_SERVICES, footer: [primary('Lưu dịch vụ')] }),
+      page('WE7', 'Bác sĩ & phòng · không có khoảng khóa', WEB + 'resources · sau "Gỡ khóa" khoảng khóa duy nhất: bảng "Khoảng khóa phòng" giữ đủ cột và hiện một dòng "Không có khoảng khóa."; không có hộp xác nhận hay toast; app F14 không có bảng khoảng khóa · chưa có trên Next.js', 'resources', [
+        pageHead('Bác sĩ & phòng', 'Ca làm việc và khoảng khóa được kiểm tra khi đặt hoặc dời lịch.', [primary('Khóa phòng', { icon: 'add' })], 'Vận hành · dữ liệu giả lập'),
+        row({ g: 10, ai: 'flex-end' }, date('Ngày xem tải lịch', '2026-09-20', { w: 180 })),
+        WE_DOCTOR_CARDS,
+        panel('Khoảng khóa phòng', 'Thêm khoảng khóa nếu không vướng lịch hiện tại', [],
+          table(['Phòng', 'Ngày', 'Thời gian', 'Lý do', ['', '120px']], [], { empty: 'Không có khoảng khóa.' }))
+      ], { state: true }),
+      dlg('WE8', 'Khóa thời gian phòng', WEB + 'resources › Khóa phòng › "Lưu khoảng khóa" với lý do để trống: dòng lỗi đỏ trong hộp thoại, hộp thoại giữ nguyên các giá trị đã nhập; app I8 giữ cùng thông báo nhưng không vẽ dòng lỗi · chưa có trên Next.js', [
+        select('Phòng', rooms[0].name, { opts: rooms.map(r => r.name), w: 560 }),
+        date('Ngày', '2026-09-20'),
+        grid(2, time('Từ', '14:00'), time('Đến', '15:00')),
+        input('Lý do', ''),
+        errLine('Khoảng khóa phải hợp lệ trong 08:00–18:00 và có lý do.')
+      ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'resources', behind: WE_RESOURCES, footer: [primary('Lưu khoảng khóa')] }),
+      dlg('WE9', 'Khóa thời gian phòng', WEB + 'resources › Khóa phòng › "Lưu khoảng khóa" khi trong khoảng đã có lịch hẹn: dòng lỗi "Có lịch hẹn trong khoảng này. Hãy dời lịch trước khi khóa phòng."; các giá trị đã nhập được giữ; app I8 chỉ vẽ nhánh thành công · chưa có trên Next.js', [
+        select('Phòng', rooms[0].name, { opts: rooms.map(r => r.name), w: 560 }),
+        date('Ngày', '2026-09-20'),
+        grid(2, time('Từ', '14:00'), time('Đến', '15:00')),
+        input('Lý do', 'Bảo trì thiết bị'),
+        errLine('Có lịch hẹn trong khoảng này. Hãy dời lịch trước khi khóa phòng.')
+      ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'resources', behind: WE_RESOURCES, footer: [primary('Lưu khoảng khóa')] }),
+      dlg('WE10', 'Chỉnh dịch vụ', WEB + 'services › Chỉnh dịch vụ › "Lưu dịch vụ" với tên để trống: dòng lỗi về tên, thời lượng 15–180 phút, đệm 0–60 phút và giá không âm; hộp thoại không có dòng "Lịch đã đặt giữ giá…" như app I9 · chưa có trên Next.js', [
+        input('Tên dịch vụ', ''),
+        grid(2, number('Điều trị (phút)', String(services[0].mins)), number('Chuẩn bị (phút)', '0'),
+          number('Giá (VND)', String(services[0].price)), select('Trạng thái', 'Đang dùng', { opts: ['Đang dùng', 'Tạm ngưng'] })),
+        errLine('Kiểm tra tên, thời lượng 15–180 phút, đệm 0–60 phút và giá không âm.')
+      ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'services', behind: WE_SERVICES, footer: [primary('Lưu dịch vụ')] }),
+      page('WE11', 'Dịch vụ · có dịch vụ tạm ngưng', WEB + 'services › Chỉnh dịch vụ › Trạng thái "Tạm ngưng" › Lưu: thẻ đầu tiên đổi sang trạng thái vàng "Tạm ngưng", ba thẻ còn lại "Đang dùng" (xanh); toast "Đã cập nhật dịch vụ cho lịch mới"; app F13 không có trạng thái trên thẻ · chưa có trên Next.js', 'services', [
+        pageHead('Danh mục dịch vụ', 'Giá và thời lượng dùng cho lịch mới. Lịch đã đặt giữ giá và thời lượng tại lúc đặt.', [], 'Vận hành · dữ liệu giả lập'),
+        grid({ cols: 'repeat(auto-fill,minmax(380px,1fr))', colsn: '1fr', g: 20 }, ...services.map((s, i) =>
+          card({ title: s.name, tint: s.svc, aside: [ico('favorite', { size: 22, tone: 'info' }), i === 0 ? badge('Tạm ngưng', 'warning') : badge('Đang dùng', 'success')] },
+            h2(money(s.price)),
+            list([{ t: s.mins + ' phút điều trị', sub: WE_BUFFER[i] + ' phút chuẩn bị phòng', actions: [secondary('Chỉnh dịch vụ')] }], { plain: true }))))
+      ], { state: true, toast: 'Đã cập nhật dịch vụ cho lịch mới' })
     ];
 
     // WF · Thu ngân & lên đơn: thu ngân, thu tiền, lên đơn nhanh, tách đơn A5 (W3b-WF).
@@ -1826,6 +2385,137 @@ class Component extends DCLogic {
           cart: [empty('Chọn sản phẩm ở danh sách.'), wfTotal(money(0))]
         }), wfOrderOpts())
     ];
+
+    // ---- W6c-REST: ids WF11-WF25 (error and variant states of the cashier, the quick-order dialog and the A5 review page) ----------------
+    // Source: design-specs/web/screens/WF11..WF25.md and the old-web shots. Appended with WF.push so the frames above stay as they were.
+    const wfStatusDraft = n => 'Bản nháp · Bác sĩ phụ trách: ' + wfDoctor + ' · A5 dọc 148 × 210 mm · ' + n + ' sản phẩm';
+    const wfStatusDone = 'Đã duyệt bởi ' + wfDoctor + ' · A5 dọc 148 × 210 mm · 2 sản phẩm';
+    // "Không in (1): …" line of #review-excluded: plain text, the line is not a boxed notice in the old page
+    const wfExcludedLine = () => txt('Không in (1): ' + wfCatalog[0][1] + ' — Không cần in. Vẫn tính trong hóa đơn.');
+    // review page without the approve button (accountant, or an approved order) and with every print button disabled or enabled
+    const wfPrintBtns = ready => [secondary('In đơn thuốc', { dis: !ready }), secondary('In phiếu tư vấn', { dis: !ready }), secondary('In tất cả', { dis: !ready }), secondary('Về thu ngân')];
+    // the print-media card of WF6, reused by WF19 for the "-print" shots (two sheets one after the other, no toolbar, no draft mark)
+    const wfPrintCard = () => card({ title: 'Bản in (print media)', sub: 'Khi bấm in: mỗi bộ phiếu một trang, chữ và đường kẻ đen, logo xám; không có thanh công cụ' },
+      list([
+        { t: 'ĐƠN THUỐC', sub: 'Phiếu A5 dọc, không dấu nháp' },
+        { t: 'PHIẾU TƯ VẤN', sub: 'Phiếu A5 dọc, không dấu nháp' }
+      ], { box: true }));
+
+    // cashier page variants (WF21, WF22, WF24, WF25): same page as WF1, the list of invoices and the order history change
+    const wfFinLink = 'Tài chính chờ kết nối · thử lại';
+    const wfTiles2 = (total, collected, due) => kpis(kpi('Tổng hóa đơn', String(total), 'Dữ liệu giả lập'), kpi('Đã thu', money(collected), 'Tổng lũy kế'), kpi('Còn phải thu', money(due), 'Không thu trùng'), kpi('Catalog sản phẩm', '115', 'Từ danhsach.xlsx'));
+    const wfInvCols = [['Hóa đơn / bệnh nhân', '1.7fr'], ['Dịch vụ / đơn nhanh', '1.3fr'], ['Tổng tiền', '1fr', 'r'], ['Đã thu', '1fr', 'r'], ['Còn lại', '1fr', 'r'], ['', '120px']];
+    const wfInvRow = (p, code, date, svc, total, got) => [[strong(p.name), sm(code + ' · ' + date)], svc, money(total), money(got), money(total - got), total > got ? [primary('Thu tiền', { sm: true })] : [wfPaid()]];
+    // invoice created by the quick order: service cell = "Đơn sản phẩm · n dòng", order code and the quiet "In tách đơn" link
+    const wfOrderInvRow = (lines, total) => [[strong(people[0].name), sm('HD-7F3A9C · 2026-09-20')], ['Đơn sản phẩm · ' + lines + ' dòng', sm('OD-B21E40 ·'), quiet('In tách đơn', { sm: true })], money(total), money(0), money(total), [primary('Thu tiền', { sm: true })]];
+    const wfInvPager = (text, prevDis, nextDis) => row({ jc: 'space-between' }, txt(text), row(secondary('← Trước', { dis: prevDis }), secondary('Sau →', { dis: nextDis })));
+    const wfInvPanel = (sel, rows, text, o = {}) => panel('Hóa đơn & thanh toán', '', [chip('Tất cả', sel === 0 ? 'sel' : ''), chip('Còn phải thu', sel === 1 ? 'sel' : ''), chip('Đã thanh toán', sel === 2 ? 'sel' : '')],
+      table(wfInvCols, rows, o.empty ? { empty: o.empty } : {}),
+      wfInvPager(text, true, !!o.nextDis));
+    const wfBase3 = () => [wfInvRow(people[0], 'HD-0001', '2026-09-06', 'Buổi chăm sóc / điều trị', 1200000, 1200000), wfInvRow(people[0], 'HD-DEMO-001', '2026-09-20', 'Tái khám & đánh giá', 300000, 150000), wfInvRow(people[1], 'HD-0002', '2026-09-06', 'Buổi chăm sóc / điều trị', 1500000, 1500000), wfInvRow(people[1], 'HD-DEMO-002', '2026-09-20', 'Tư vấn da liễu', 500000, 0)];
+    const wfDueRows = () => [
+      wfInvRow(people[0], 'HD-DEMO-001', '2026-09-20', 'Tái khám & đánh giá', 300000, 150000),
+      wfInvRow(people[1], 'HD-DEMO-002', '2026-09-20', 'Tư vấn da liễu', 500000, 0),
+      wfInvRow(people[2], 'HD-DEMO-003', '2026-09-20', 'Laser theo chỉ định', 2500000, 0),
+      wfInvRow(people[3], 'HD-DEMO-004', '2026-09-20', 'Chăm sóc theo chỉ định', 1200000, 600000),
+      wfInvRow(people[4], 'HD-DEMO-005', '2026-09-20', 'Tái khám & đánh giá', 300000, 0)
+    ];
+    const wfHistoryRow = (status, n, editable) => panel('Đơn thuốc & phiếu tư vấn', 'Nháp → bác sĩ duyệt → in và hiển thị trên app', [],
+      list([{ t: people[0].name, sub: wfDate + ' · ' + n + ' sản phẩm · ' + status, actions: [secondary('Xem / in'), ...(editable ? [secondary('Sửa nháp')] : [])] }], { box: true }));
+    const wfHistoryEmpty = () => panel('Đơn thuốc & phiếu tư vấn', 'Nháp → bác sĩ duyệt → in và hiển thị trên app', [], empty('Chưa có đơn từ catalog.', '', { flat: true }));
+    const wfCashier2 = (tiles, inv, history) => [wfCashierHead(), tiles, wfBanner(), inv, history];
+
+    WF.push(
+      // WF11 · quick order saved with no product: the dialog stays open, red line under the notice
+      dlg('WF11', 'Tạo đơn thuốc / phiếu tư vấn', WEB + 'cashier › Lên đơn nhanh · bấm "Lưu nháp & xem tách đơn" khi chưa chọn sản phẩm: hộp thoại vẫn mở, giữ bệnh nhân, bác sĩ và chẩn đoán, dòng đỏ "Chọn ít nhất một sản phẩm." nằm trên hàng nút; như app F4 (app không có dòng lỗi này) · chưa có trên Next.js',
+        [...wfOrderForm({ results: wfProductList(), cart: [empty('Chọn sản phẩm ở danh sách.'), wfTotal(money(0))] }), errLine('Chọn ít nhất một sản phẩm.')], wfOrderOpts()),
+
+      // WF12 · one sheet, a prescription product only
+      page('WF12', 'Tách đơn · chỉ có đơn thuốc', WEB + 'order-review · một sản phẩm thuốc: chỉ có phiếu ĐƠN THUỐC, không có phiếu tư vấn; trang độc lập vẽ trong khung ứng dụng như WF5 · chưa có trên Next.js', 'cashier', [
+        wfHead(wfStatusDraft(1), wfReviewBtns({ ready: false })),
+        grid(2, wfSheet('rx', wfRx, true, wfUsage))
+      ], { state: true }),
+
+      // WF13 · one sheet, a consultation product only
+      page('WF13', 'Tách đơn · chỉ có phiếu tư vấn', WEB + 'order-review · một sản phẩm mỹ phẩm: chỉ có phiếu PHIẾU TƯ VẤN, không có phiếu thuốc; trang độc lập vẽ trong khung ứng dụng như WF5 · chưa có trên Next.js', 'cashier', [
+        wfHead(wfStatusDraft(1), wfReviewBtns({ ready: false })),
+        grid(2, wfSheet('cons', wfCons, true, wfUsage))
+      ], { state: true }),
+
+      // WF14 · a line routed to "Không in": the paragraph "Không in (1): …" above the only sheet
+      page('WF14', 'Tách đơn · có sản phẩm "Không in"', WEB + 'order-review · một dòng chọn loại "Không in" kèm lý do: đoạn chữ "Không in (1): … — Không cần in. Vẫn tính trong hóa đơn." nằm trên phiếu tư vấn còn lại; app F5 không có loại "Không in" · chưa có trên Next.js', 'cashier', [
+        wfHead(wfStatusDraft(2), wfReviewBtns({ ready: false })),
+        wfExcludedLine(),
+        grid(2, wfSheet('cons', wfCons, true, wfUsage))
+      ], { state: true }),
+
+      // WF15 · approve pressed with a line that has no usage: red line, the sheet prints the placeholder
+      page('WF15', 'Tách đơn · lỗi khi duyệt (thiếu cách dùng)', WEB + 'order-review · bấm "Bác sĩ duyệt & gửi app" khi dòng chưa có cách dùng: dòng đỏ "Dòng 1: cần cách dùng trước khi duyệt." dưới thanh công cụ, phiếu in chữ "Chưa nhập cách dùng"; app F5 khóa nút duyệt thay vì báo lỗi · chưa có trên Next.js', 'cashier', [
+        wfHead(wfStatusDraft(1), wfReviewBtns({ ready: false })),
+        errLine('Dòng 1: cần cách dùng trước khi duyệt.'),
+        grid(2, wfSheet('rx', wfRx, true, 'Chưa nhập cách dùng'))
+      ], { state: true }),
+
+      // WF16 · every line is "Không in": nothing to issue, no sheet at all
+      page('WF16', 'Tách đơn · không có sản phẩm để phát hành', WEB + 'order-review · mọi dòng là "Không in": dòng đỏ "Đơn không có sản phẩm để phát hành.", đoạn "Không in (1)…", không có phiếu nào; app F5 không có trạng thái này · chưa có trên Next.js', 'cashier', [
+        wfHead(wfStatusDraft(1), wfReviewBtns({ ready: false })),
+        errLine('Đơn không có sản phẩm để phát hành.'),
+        wfExcludedLine()
+      ], { state: true }),
+
+      // WF17 · stale link: patient code present, order code unknown
+      page('WF17', 'Tách đơn · không tìm thấy đơn', WEB + 'order-review · mở liên kết cũ (có mã bệnh nhân, mã đơn không còn): tiêu đề "Tách đơn", ba nút in bị khóa, không có nút duyệt, dòng đỏ "Không tìm thấy đơn."; WF8 là trang mở không kèm mã nào · chưa có trên Next.js', 'cashier', [
+        pageHead('Tách đơn', '', wfPrintBtns(false)),
+        errLine('Không tìm thấy đơn.')
+      ], { state: true }),
+
+      // WF18 · accountant opens a draft: both sheets, no approve button, print buttons disabled
+      page('WF18', 'Tách đơn · bản nháp · tài khoản không phải bác sĩ', WEB + 'order-review · tài khoản kế toán mở đơn nháp: thanh công cụ không có nút "Bác sĩ duyệt & gửi app" (thiếu quyền lâm sàng), ba nút in bị khóa, hai phiếu vẫn có dấu nháp; app F5 hiện ghi chú "Tài khoản bác sĩ mô phỏng" thay vì ẩn nút · chưa có trên Next.js', 'cashier', [
+        wfHead(wfStatusDraft(2), wfReviewBtns({ ready: false, approve: false })),
+        wfSheets(true)
+      ], { state: true, role: 'accountant' }),
+
+      // WF19 · approved order, "In đơn thuốc" pressed: the native print dialog opens over the page (the -print shots show the print media)
+      page('WF19', 'In đơn thuốc (hộp thoại in của trình duyệt)', WEB + 'order-review · sau khi duyệt bấm "In đơn thuốc", "In phiếu tư vấn" hoặc "In tất cả": trình duyệt mở hộp thoại in (window.print), không có chữ; hai phiếu A5 chữ đen một sau một ở bản in, như WF6; app F7 nói "In / chia sẻ PDF native sẽ nối sau khi duyệt template" · chưa có trên Next.js', 'cashier', [
+        wfHead(wfStatusDone, wfPrintBtns(true)),
+        wfSheets(false),
+        wfPrintCard()
+      ], { state: true, native: native('print') }),
+
+      // WF20 · edit of a draft whose invoice was paid: the dialog refuses, the payment toast is still on the page
+      dlg('WF20', 'Sửa đơn nháp', WEB + 'cashier › Sửa nháp · đơn đã thu tiền: lưu bị từ chối, hộp thoại giữ nguyên với bệnh nhân bị khóa và một dòng sản phẩm, dòng đỏ "Đơn đã thu tiền hoặc thiếu hóa đơn; không thể sửa.", thông báo "Đã ghi phiếu thu và cập nhật hóa đơn" của lần thu vừa rồi còn trên trang; app F4/F5 không có luồng sửa nháp · chưa có trên Next.js',
+        [...wfOrderForm({ locked: true, results: wfProductList(), cart: [wfLine(1, 'H002', wfCatalog[0][1], 'Viên', 5500, 'Đơn thuốc', wfUsage), wfTotal(money(5500))] }), errLine('Đơn đã thu tiền hoặc thiếu hóa đơn; không thể sửa.')],
+        { ...wfOrderOpts(), behind: [wfCashierHead(), wfHistory()], toast: 'Đã ghi phiếu thu và cập nhật hóa đơn' }),
+
+      // WF21 · a draft order exists: new invoice row with the order code and "In tách đơn", history row with Xem / in + Sửa nháp
+      page('WF21', 'Thu ngân · có đơn nháp', WEB + 'cashier · sau khi lưu một đơn nháp: hóa đơn mới ở đầu danh sách ("Đơn sản phẩm · 1 dòng", mã đơn, nút "In tách đơn"), còn 49 hóa đơn, dòng lịch sử "Bản nháp" có "Xem / in" và "Sửa nháp"; thanh trên "Tài chính chờ kết nối · thử lại" vì máy chủ tài chính bị chặn; app I10 không có lịch sử đơn · chưa có trên Next.js', 'cashier',
+        wfCashier2(wfTiles2(49, 61650000, 11255500), wfInvPanel(0, [wfOrderInvRow(1, 5500), ...wfBase3()], '49 hóa đơn · Trang 1/5'), wfHistoryRow('Bản nháp', 1, true)),
+        { state: true, fin: wfFinLink }),
+
+      // WF22 · an approved order: only "Xem / in"
+      page('WF22', 'Thu ngân · có đơn đã duyệt', WEB + 'cashier · đơn đã duyệt: dòng lịch sử "Đã duyệt" chỉ còn "Xem / in" (không còn "Sửa nháp"), hóa đơn đầu danh sách "Đơn sản phẩm · 2 dòng" kèm "In tách đơn"; so với WF21 cùng trang, khác nháp và đã duyệt · chưa có trên Next.js', 'cashier',
+        wfCashier2(wfTiles2(49, 61650000, 11970500), wfInvPanel(0, [wfOrderInvRow(2, 720500), ...wfBase3()], '49 hóa đơn · Trang 1/5'), wfHistoryRow('Đã duyệt', 2, false)),
+        { state: true, fin: wfFinLink }),
+
+      // WF23 · payment amount error
+      dlg('WF23', 'Thu tiền · ' + people[0].name, WEB + 'cashier › Thu tiền · nhập số tiền 0: hộp thoại giữ nguyên, dòng đỏ "Số tiền phải lớn hơn 0 và không vượt số còn lại." dưới nút "Xác nhận thu tiền", không ghi gì; như app I11 (app không có dòng lỗi) · chưa có trên Next.js', [
+        notice('HD-DEMO-001 · Còn lại ' + money(150000), 'info'),
+        number('Số tiền (VND)', '0'),
+        select('Phương thức', 'Tiền mặt', { opts: ['Tiền mặt', 'Chuyển khoản'] }),
+        row(primary('Xác nhận thu tiền')),
+        errLine('Số tiền phải lớn hơn 0 và không vượt số còn lại.')
+      ], { eyebrow: 'Pema · vận hành', nav: 'cashier', behind: wfBehind() }),
+
+      // WF24 · filter "Còn phải thu": 12 invoices, one page, no order history
+      page('WF24', 'Thu ngân · lọc "Còn phải thu"', WEB + 'cashier · lọc "Còn phải thu": chỉ các hóa đơn còn nợ (mọi dòng có "Thu tiền"), "12 hóa đơn · Trang 1/1" với hai nút phân trang đều tắt, ô tổng không đổi theo bộ lọc, lịch sử đơn báo "Chưa có đơn từ catalog."; lọc "Đã thanh toán" và nút phân trang chỉ đổi các dòng; app I10 có ba bộ lọc nhưng không phân trang · chưa có trên Next.js', 'cashier',
+        wfCashier2(wfTiles2(48, 61650000, 11250000), wfInvPanel(1, wfDueRows(), '12 hóa đơn · Trang 1/1', { nextDis: true }), wfHistoryEmpty()),
+        { state: true }),
+
+      // WF25 · every invoice paid: empty row, 0 invoices, the last payment toast still visible
+      page('WF25', 'Thu ngân · không có hóa đơn', WEB + 'cashier · sau khi thu hết 12 hóa đơn nợ, lọc "Còn phải thu" chỉ có dòng "Không có hóa đơn.", "0 hóa đơn · Trang 1/1", ô "Còn phải thu" 0 ₫, thông báo "Đã ghi phiếu thu và cập nhật hóa đơn" của lần thu cuối còn trên trang, lịch sử đơn vẫn "Chưa có đơn từ catalog."; app I10 không có trạng thái rỗng · chưa có trên Next.js', 'cashier',
+        wfCashier2(wfTiles2(48, 72900000, 0), wfInvPanel(1, [], '0 hóa đơn · Trang 1/1', { empty: 'Không có hóa đơn.', nextDis: true }), wfHistoryEmpty()),
+        { state: true, fin: wfFinLink, toast: 'Đã ghi phiếu thu và cập nhật hóa đơn' })
+    );
 
     // WG · Tài chính PB02 (W3b-WG). Source: prototype/finance/finance.js (PemaFinance), mounted in the clinic shell. WG1-WG5 are the owner pages and
     // tabs, WG6-WG7 the doctor projection, WG8 the accountant projection, WG9 the API-down state. Names, ids and money come from base.js; the wording
@@ -1998,6 +2688,143 @@ class Component extends DCLogic {
         txt('Đang tải dữ liệu…')
       ], { state: true, fin: 'Tài chính chờ kết nối · thử lại' })
     ];
+
+    // ---- W6c-REST: ids WG10-WG23 (loading, empty and closed periods, accountant receipts, native dialogs, export and validation errors) ----------
+    // Source: design-specs/web/screens/WG10..WG23.md, the old finance shots and manifest.json native_dialog (exact dialog text). Appended with WG.push.
+    // The period field of `fin(...)` is always 2026-09, so the pages whose period is another month (WG11, WG12, WG13, WG14, WG18) are `page(..., 'finance', ...)` with the
+    // same header (eyebrow, title, "Kỳ báo cáo", "Làm mới", four tabs) written here; the rate-snapshot wording and the rule that the performing doctor is chosen in the form
+    // (never taken from the record owner) are those of WG3, WG4 and wgEntryForm.
+    const wgFinHead = (tabIndex, monthValue) => [
+      row({ g: 20, jc: 'space-between', ai: 'flex-end' },
+        stack({ g: 2 }, txt('ĐIỀU HÀNH • PEMA CLINIC', { size: 's', tone: 'soft', up: true }), h1('Tài chính & tiền thủ thuật')),
+        row({ g: 12, ai: 'flex-end' }, month('Kỳ báo cáo', monthValue, { w: 160 }), secondary('Làm mới'))),
+      tabs(FIN_TABS, tabIndex)
+    ];
+    const wgPage = (id, name, note, tabIndex, monthValue, blocks, o = {}) => page(id, name, note, 'finance', [wgFinHead(tabIndex, monthValue), flat(blocks)], { state: true, ...o });
+    // "Bảng tiền thủ thuật • <month>" heading + period badge + "Xuất CSV cho Excel"
+    const wgTableHeadOf = (m, periodBadge) => row({ g: 12, jc: 'space-between', ai: 'center' },
+      row({ g: 12, ai: 'center' }, h2('Bảng tiền thủ thuật • ' + m), periodBadge),
+      secondary('Xuất CSV cho Excel'));
+    // the entry form of "+ Ghi nhận lượt thủ thuật đã hoàn tất" with a typed note and the main doctor's share (WG21, WG22); same fields as wgEntryFields
+    const wgEntryFormOf = (note, share) => [
+      grid(3,
+        select('Hồ sơ', people[0].name + ' · ' + people[0].id, { hint: 'Một lựa chọn cho mỗi hồ sơ' }),
+        select('Thủ thuật', services[0].name),
+        date('Ngày thực hiện', '2026-09-20', { req: true, hint: 'Không chọn ngày sau hôm nay' }),
+        number('Giá niêm yết', '300000', { req: true }),
+        number('Giảm giá', '0', { req: true }),
+        select('Gắn hóa đơn đã có', 'Tạo hóa đơn mới cho lượt này', { hint: 'Hoặc một hóa đơn đã có của hồ sơ' }),
+        input('Ghi chú hoàn tất', note, { req: true, ph: 'Đã thực hiện, chờ đối soát' })),
+      h3('Ai thực hiện và được ghi nhận?'),
+      sm('Tổng tỷ trọng doanh số 100%. Tỷ lệ tiền của mỗi người tính trực tiếp trên cơ sở chính sách; tổng không quá 100%.'),
+      grid('minmax(0,2fr) minmax(0,1fr) minmax(0,1fr)', select('Bác sĩ chính', doctors[0].name), number('Tỷ trọng doanh số %', share), number('Tỷ lệ tiền thủ thuật %', '10')),
+      grid('minmax(0,2fr) minmax(0,1fr) minmax(0,1fr)', select('Người phối hợp (tùy chọn)', 'Không có'), number('Tỷ trọng doanh số %', '0'), number('Tỷ lệ tiền thủ thuật %', '0')),
+      primary('Ghi nhận • Chờ duyệt')
+    ];
+    const wgEntryHead = () => card({}, row({ g: 8, ai: 'center' }, ico('chevron_right'), strong('+ Ghi nhận lượt thủ thuật đã hoàn tất')));
+    // open period, owner: collapsed entry head, the fields it holds, the table (every row "Đã duyệt" with "Hủy") and "Chốt tháng đã kết thúc"
+    const wgApprovedRows = [0, 1, 2, 3].map(i => wgRow(['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04'][i], people[i], services[i], doctors[i], [300000, 500000, 2400000, 1200000][i], [300000, 500000, 2400000, 1200000][i], [10, 15, 20, 12][i], 'net', [30000, 75000, 480000, 144000][i], 'approved', 'void'));
+    const wgWorkOwner = () => [
+      wgEntryHead(),
+      card({ v: 'soft', title: 'Nội dung của ô khi mở', sub: 'Các trường có sẵn trong trang nhưng ẩn khi thu gọn (xem WG3)' }, ...wgEntryFields()),
+      card({}, wgTableHead(), table(wgCols, wgApprovedRows), row({ g: 12 }, primary('Chốt tháng đã kết thúc')))
+    ];
+    // closed or paid period: no entry form, rows without Duyệt/Hủy, the badge of the period and (closed only) "Xác nhận đã chi"
+    const wgClosedTable = (m, d, p, periodBadge, payout) => card({}, wgTableHeadOf(m, periodBadge),
+      table(wgCols, [wgRow(d, p, services[0], doctors[0], 300000, 300000, 10, 'net', 30000, 'approved', '')]),
+      ...(payout ? [row({ g: 12 }, primary('Xác nhận đã chi'))] : []));
+    // receipts tab: left "Thu tiền khách hàng" (form, the rule line, "Giao dịch trong kỳ"), right the owner notification box
+    const wgReceiptForm = amount => [
+      select('Hóa đơn còn nợ', people[0].id + ' · ' + money(150000) + ' · FIN-HD-1'),
+      grid(2, number('Số thu', amount, { req: true }), select('Phương thức', 'Tiền mặt', { hint: 'Tiền mặt · Chuyển khoản' })),
+      primary('Xác nhận thu'),
+      sm('Phiếu thu mới đồng bộ với app khi đang mở. Hóa đơn web cũ thu tại Thu ngân Clinic; không thu lại ở đây.'),
+      h3('Giao dịch trong kỳ')
+    ];
+    const wgReceiptRows = [[11, '2026-09-12', 'Chuyển khoản', 1200000], [10, '2026-09-11', 'Tiền mặt', 2400000], [9, '2026-09-10', 'Chuyển khoản', 250000], [8, '2026-09-09', 'Tiền mặt', 300000], [7, '2026-09-08', 'Chuyển khoản', 1200000], [6, '2026-09-07', 'Tiền mặt', 1200000], [5, '2026-09-06', 'Chuyển khoản', 500000], [4, '2026-09-05', 'Tiền mặt', 300000], [3, '2026-09-04', 'Chuyển khoản', 600000], [2, '2026-09-03', 'Tiền mặt', 2400000], [1, '2026-09-02', 'Chuyển khoản', 500000], [0, '2026-09-01', 'Tiền mặt', 150000]]
+      .map(([i, d, m, a]) => ({ t: people[i].id, sub: d + ' · ' + m, actions: [strong(money(a))] }));
+    const wgReceiptsSplit = (amount, history, side) => split(
+      [panel('Thu tiền khách hàng', '', [], ...wgReceiptForm(amount), history)],
+      [panel('Thông báo của chủ phòng khám', '', [], side)],
+      { cols: 'minmax(0,1.5fr) minmax(0,1fr)' });
+    const wgOwnerNote = () => txt('Thanh toán thành công sẽ xuất hiện tại đây và trên app BS. Tâm.');
+
+    WG.push(
+      // WG10 · request pending: header and tabs with no tab selected, "Đang tải dữ liệu…"
+      fin('WG10', 'Tài chính · đang tải dữ liệu', WEB + 'finance · yêu cầu tới máy chủ tài chính chưa trả lời: có tiêu đề, kỳ báo cáo "Làm mới" và bốn tab (chưa tab nào được chọn), nội dung là một dòng "Đang tải dữ liệu…" không có vòng quay và không có nút thử lại; WG9 là cùng trang khi yêu cầu thất bại; app không có trạng thái đang tải (H7 chỉ có "Mất kết nối") · chưa có trên Next.js', -1, [
+        txt('Đang tải dữ liệu…')
+      ], { state: true }),
+
+      // WG11 · a month with no procedure entries: empty table row, the entry form and "Chốt tháng đã kết thúc" stay
+      wgPage('WG11', 'Tài chính · tháng không có lượt thủ thuật', WEB + 'finance › Tiền thủ thuật · chọn kỳ 2026-06 chưa có lượt: bảng chỉ có dòng "Chưa có lượt thủ thuật trong kỳ này.", ô ghi nhận và nút "Chốt tháng đã kết thúc" vẫn có (máy chủ chỉ chốt tháng có lượt đã duyệt); app H3 không có ô chọn kỳ và không có trạng thái rỗng · chưa có trên Next.js', 1, '2026-06', [
+        wgEntryHead(),
+        card({ v: 'soft', title: 'Nội dung của ô khi mở', sub: 'Các trường có sẵn trong trang nhưng ẩn khi thu gọn (xem WG3)' }, ...wgEntryFields()),
+        card({}, wgTableHeadOf('2026-06', wgPeriod), table(wgCols, [], { empty: 'Chưa có lượt thủ thuật trong kỳ này.' }), row({ g: 12 }, primary('Chốt tháng đã kết thúc')))
+      ]),
+
+      // WG12 · receipts tab of a month without transactions
+      wgPage('WG12', 'Tài chính · phiếu thu · tháng không có giao dịch', WEB + 'finance › Phiếu thu & thông báo · chọn kỳ 2026-06 chưa có phiếu: "Giao dịch trong kỳ" chỉ có dòng "Chưa có phiếu thu.", hộp thông báo của chủ chỉ có câu "Thanh toán thành công sẽ xuất hiện tại đây và trên app BS. Tâm."; app H5/H6 là thẻ từng hóa đơn và nút "Đánh dấu đã đọc" · chưa có trên Next.js', 3, '2026-06', [
+        wgReceiptsSplit('150000', txt('Chưa có phiếu thu.'), wgOwnerNote())
+      ]),
+
+      // WG13 · closed period: badge "Đã chốt tháng", no Duyệt/Hủy, no entry form, "Xác nhận đã chi"
+      wgPage('WG13', 'Tài chính · kỳ đã chốt', WEB + 'finance › Tiền thủ thuật · kỳ 2026-08 đã chốt: huy hiệu "Đã chốt tháng", dòng chỉ có trạng thái "Đã duyệt" (không còn Duyệt/Hủy), không còn ô ghi nhận, nút cuối bảng là "Xác nhận đã chi"; app H4 chỉ vẽ kỳ đang mở · chưa có trên Next.js', 1, '2026-08', [
+        wgClosedTable('2026-08', '2026-08-10', people[1], badge('Đã chốt tháng', 'info', { dot: false }), true)
+      ]),
+
+      // WG14 · paid period: badge "Đã chi", no action button at all
+      wgPage('WG14', 'Tài chính · kỳ đã chi', WEB + 'finance › Tiền thủ thuật · kỳ 2026-07 đã chi: huy hiệu "Đã chi", không còn nút ở cuối bảng; mã chứng từ gửi cho máy chủ nhưng không hiện ở tab này; app H4 không có trạng thái đã chi · chưa có trên Next.js', 1, '2026-07', [
+        wgClosedTable('2026-07', '2026-07-10', people[2], badge('Đã chi', 'success', { dot: false }), false)
+      ]),
+
+      // WG15 · accountant: receipts tab with the 12 transactions and the box "Kế toán không đọc inbox của chủ."
+      fin('WG15', 'Tài chính · Phiếu thu & thông báo (kế toán)', WEB + 'finance › Phiếu thu & thông báo, tài khoản kế toán · đủ bốn tab và biểu mẫu thu tiền, 12 giao dịch trong kỳ; hộp "Thông báo của chủ phòng khám" chỉ có câu "Kế toán không đọc inbox của chủ."; app D1/H5 · chưa có trên Next.js', 3, [
+        wgReceiptsSplit('150000', list(wgReceiptRows), txt('Kế toán không đọc inbox của chủ.'))
+      ], { role: 'accountant', state: true }),
+
+      // WG16 · native prompt() for the void reason
+      fin('WG16', 'Hủy lượt thủ thuật (nhập lý do)', WEB + 'finance › Tiền thủ thuật · bấm "Hủy" ở một lượt: trình duyệt hỏi bằng hộp prompt() "Lý do hủy lượt chưa thu tiền"; không nhập lý do hoặc bấm Cancel thì không ghi gì; app H3/H4 gọi nút "Hủy lượt" (quyết định của chủ phòng khám: bản Next.js thay hộp prompt bằng hộp thoại có ô lý do bắt buộc) · chưa có trên Next.js', 1, wgWorkOwner(),
+        { state: true, native: native('prompt', 'Lý do hủy lượt chưa thu tiền') }),
+
+      // WG17 · native confirm() before closing the month
+      fin('WG17', 'Chốt tháng (hộp xác nhận)', WEB + 'finance › Tiền thủ thuật · bấm "Chốt tháng đã kết thúc": trình duyệt hỏi bằng confirm() "Chốt số liệu tháng 2026-09? Các lượt trong kỳ sẽ bị khóa." (tháng lấy từ ô Kỳ báo cáo); app H4 không có bước xác nhận · chưa có trên Next.js', 1, wgWorkOwner(),
+        { state: true, native: native('confirm', 'Chốt số liệu tháng 2026-09? Các lượt trong kỳ sẽ bị khóa.') }),
+
+      // WG18 · native prompt() for the payout voucher code, on the closed period of WG13
+      wgPage('WG18', 'Xác nhận đã chi (nhập mã chứng từ)', WEB + 'finance › Tiền thủ thuật · kỳ 2026-08 đã chốt, bấm "Xác nhận đã chi": trình duyệt hỏi bằng prompt() "Mã chứng từ chi"; app H4 không có bước chi · chưa có trên Next.js', 1, '2026-08', [
+        wgClosedTable('2026-08', '2026-08-10', people[1], badge('Đã chốt tháng', 'info', { dot: false }), true)
+      ], { native: native('prompt', 'Mã chứng từ chi') }),
+
+      // WG19 · native download bubble of the CSV export
+      fin('WG19', 'Xuất CSV cho Excel (tải tệp)', WEB + 'finance › Tiền thủ thuật · bấm "Xuất CSV cho Excel": trình duyệt tải tệp Pema-tien-thu-thuat-2026-09.csv (có BOM, cột Ngay, Ho so, Thu thuat, Bac si, Doanh so, Co so, Ty le %, Tien thu thuat, Trang thai); giao diện tải là của trình duyệt; app H3 không có xuất CSV · chưa có trên Next.js', 1, wgWorkOwner(),
+        { state: true, native: native('download', 'Pema-tien-thu-thuat-2026-09.csv') }),
+
+      // WG20 · export answered with an HTTP error: boxed red line under the tabs, the page stays usable
+      fin('WG20', 'Xuất CSV · lỗi', WEB + 'finance › Tiền thủ thuật · máy chủ trả lỗi khi xuất: hộp đỏ "Không xuất được bảng" dưới các tab, trang vẫn dùng được (mất mạng thì hiện chữ của trình duyệt, ví dụ "Failed to fetch"); app H7 là thẻ lỗi "Mất kết nối" có "Thử lại" · chưa có trên Next.js', 1, [
+        notice('Không xuất được bảng', 'danger'),
+        ...wgWorkOwner()
+      ], { state: true }),
+
+      // WG21 · shares do not add up to 100%
+      fin('WG21', 'Ghi nhận lượt · lỗi tỷ trọng', WEB + 'finance › Tiền thủ thuật, ô ghi nhận đang mở · bác sĩ chính 50% và không có người phối hợp: máy chủ trả "Tổng tỷ trọng doanh số phải là 100%", hộp đỏ dưới các tab, biểu mẫu giữ nguyên giá trị đã nhập, không lưu gì; bác sĩ thực hiện chọn trong biểu mẫu, không lấy từ người quản lý hồ sơ; app H9 không có dòng lỗi · chưa có trên Next.js', 1, [
+        notice('Tổng tỷ trọng doanh số phải là 100%', 'danger'),
+        disc('+ Ghi nhận lượt thủ thuật đã hoàn tất', ...wgEntryFormOf('Đã thực hiện', '50')),
+        card({}, wgTableHead(), table(wgCols, wgApprovedRows), row({ g: 12 }, primary('Chốt tháng đã kết thúc')))
+      ], { state: true }),
+
+      // WG22 · the completion note is only spaces
+      fin('WG22', 'Ghi nhận lượt · thiếu ghi chú hoàn tất', WEB + 'finance › Tiền thủ thuật, ô ghi nhận đang mở · "Ghi chú hoàn tất" chỉ có dấu cách (qua được kiểm tra của trình duyệt): máy chủ trả "Ghi chú xác nhận hoàn tất là bắt buộc", hộp đỏ dưới các tab, ô giữ ba dấu cách; app H9 có ô "Ghi chú xác nhận hoàn tất" nhưng không có dòng lỗi · chưa có trên Next.js', 1, [
+        notice('Ghi chú xác nhận hoàn tất là bắt buộc', 'danger'),
+        disc('+ Ghi nhận lượt thủ thuật đã hoàn tất', ...wgEntryFormOf('   ', '100')),
+        card({}, wgTableHead(), table(wgCols, wgApprovedRows), row({ g: 12 }, primary('Chốt tháng đã kết thúc')))
+      ], { state: true }),
+
+      // WG23 · receipt larger than the open balance
+      fin('WG23', 'Phiếu thu · số thu vượt công nợ', WEB + 'finance › Phiếu thu & thông báo · nhập "Số thu" 99999999: máy chủ trả "Số thu vượt công nợ", hộp đỏ dưới các tab, không ghi phiếu; app H5 thu từng hóa đơn bằng một nút nên không gõ được số quá nợ · chưa có trên Next.js', 3, [
+        notice('Số thu vượt công nợ', 'danger'),
+        wgReceiptsSplit('99999999', list(wgReceiptRows), wgOwnerNote())
+      ], { state: true })
+    );
 
     // WH · Hỏi Pema (Ask Pema) và Hướng dẫn (guide). Filled by W3b-WH from design-specs/web/screens/WH1..WH14.md.
     // The 11 guide articles are UI content of the old web (prototype/shared/guide.js) and stay verbatim; names in the Ask answer are
@@ -2195,6 +3022,37 @@ class Component extends DCLogic {
               txt('Hãy hỏi một câu bên trái. Trong bản demo, câu trả lời luôn hiển thị cách tính và hồ sơ nguồn.')))
       ], o.state ? { state: true } : {});
 
+      // ---- W6c-REST: WH15-WH20 (more Ask answers, free-text fallback, sample button, empty answer, guide search results) ----
+      // The old answers name patients of the old demo data; here they name canvas sample people (P005 and up), so the count in the sentence is the canvas count.
+      const ASK_Q = ['Ai có ảnh gửi sau laser đang chờ xem?', 'Có bao nhiêu kế hoạch đang chạy?', 'Ai quá hạn tái khám hơn 30 ngày?'];
+      const OVERDUE = people.slice(4);
+      const ASK_PLANS = 'Có 46 kế hoạch chưa hoàn tất trong 46 hồ sơ demo. Nguồn: Patient 360 (completed < total).';
+      const ASK_OVERDUE = 'Có ' + OVERDUE.length + ' hồ sơ có lần điều trị gần nhất hơn 30 ngày: ' + OVERDUE.map(x => x.id + ' · ' + x.name).join(', ') + '. Nguồn: lastVisit, mốc demo 20/09/2026; đây là bộ lọc cần xem xét, không tự động là trễ hẹn.';
+      const ASK_FALLBACK = 'Demo hỗ trợ 3 nhóm câu hỏi: ảnh chờ xem, kế hoạch chưa hoàn tất, và lần điều trị gần nhất hơn 30 ngày. Hãy chọn câu gợi ý để có kết quả kiểm tra được.';
+      const ASK_NONE = 'Có 0 ảnh chờ xem: Không có. Nguồn: Follow-up Inbox, status=open, có ảnh.';
+
+      // Ask Pema with a free result card: `o.q` is the text in the input, `o.heading` and `o.text` fill the result card; no `text` = the "will appear here" card.
+      const askPage2 = (id, name, note, o = {}) => page(id, name, WEB + note, 'ask', [
+        pageHead('Ask Pema', 'Bộ truy vấn mô phỏng trên 46 hồ sơ tổng hợp · chưa tích hợp mô hình AI.', [secondary('Gợi ý câu hỏi')], 'Pema Digital Clinic'),
+        grid('minmax(0,1.45fr) minmax(0,1fr)',
+          panel('Bạn muốn biết điều gì?', 'Pema hiển thị nguồn dữ liệu và câu trả lời có thể kiểm tra lại.', [],
+            row({ g: 12 }, ico('auto_awesome'), input('', o.q || '', { ph: ASK_PLACEHOLDER, w: 420 }), primary('Hỏi')),
+            chips(['Ảnh chờ xem', 'Kế hoạch đang chạy', 'Quá hạn tái khám'])),
+          o.text
+            ? card({ v: 'ai', eyebrow: 'Kết quả mô phỏng · có thể kiểm tra', title: o.heading }, txt(o.text, { size: 'b' }), secondary('Mở dữ liệu nguồn →'))
+            : card({ v: 'ai', eyebrow: 'Kết quả sẽ xuất hiện ở đây', title: 'Ask Pema' },
+              txt('Hãy hỏi một câu bên trái. Trong bản demo, câu trả lời luôn hiển thị cách tính và hồ sơ nguồn.')))
+      ], { state: true, ...(o.toast ? { toast: o.toast } : {}) });
+
+      // Guide with the topic list filtered by the search text (the old index shows only the topics that match).
+      const guideFiltered = (id, name, note, cur, q, ids) => page(id, name, WEB + note, 'guide', [
+        pageHead('Hướng dẫn sử dụng', 'Hiểu hành trình, làm đúng bước và bàn giao đủ thông tin.', [], 'Cách làm việc cùng Pema'),
+        grid('290px minmax(0,1fr)',
+          stack({ g: 14 },
+            search(GUIDE_SEARCH, { label: 'Tìm chủ đề hoặc vai trò', val: q, suf: 'close' }),
+            chips(ids.map(t => [ART[t].role + ' ' + ART[t].title, t === cur ? 'sel' : '']), { vert: true })),
+          article(cur))
+      ], { state: true });
       return [
         askPage('WH1', 'Ask Pema', 'ask · hai cột như web: ô hỏi và ba câu gợi ý bên trái, thẻ kết quả bên phải; app I12/F15 chỉ có một cột; tên và số liệu là dữ liệu tổng hợp'),
         askPage('WH2', 'Ask Pema · có câu trả lời', 'ask · sau khi hỏi "Ai có ảnh gửi sau laser đang chờ xem?": thẻ kết quả có câu trả lời, nguồn và nút "Mở dữ liệu nguồn →"; tên bệnh nhân là dữ liệu tổng hợp',
@@ -2210,12 +3068,39 @@ class Component extends DCLogic {
         guidePage('WH11', 'Hướng dẫn · Khi cần kiểm tra lại', 'guide · bài "exceptions": không có nút điều hướng, chỉ có "Đọc tiếp"', 'exceptions', { state: true }),
         guidePage('WH12', 'Hướng dẫn · CSKH chủ động & tài khoản nhân viên', 'guide · bài "crm01"', 'crm01', { state: true }),
         guidePage('WH13', 'Hướng dẫn · Mobile, CSKH & tài chính theo vai trò', 'guide · bài "mobile-finance"', 'mobile-finance', { state: true }),
-        guidePage('WH14', 'Hướng dẫn · không tìm thấy chủ đề', 'guide · gõ "zzzz" vào ô tìm: mục lục chỉ còn ghi chú "Không tìm thấy", bài mặc định vẫn hiển thị', 'system', { q: 'zzzz', state: true })
+        guidePage('WH14', 'Hướng dẫn · không tìm thấy chủ đề', 'guide · gõ "zzzz" vào ô tìm: mục lục chỉ còn ghi chú "Không tìm thấy", bài mặc định vẫn hiển thị', 'system', { q: 'zzzz', state: true }),
+        askPage2('WH15', 'Ask Pema · kế hoạch đang chạy', 'ask · chip "Kế hoạch đang chạy" rồi "Hỏi": thẻ kết quả đếm kế hoạch chưa hoàn tất (câu trả lời là một câu và nút "Mở dữ liệu nguồn →"); app I12 vẽ câu trả lời bằng thông báo và một thẻ cho mỗi người bệnh',
+          { q: ASK_Q[1], heading: ASK_Q[1], text: ASK_PLANS }),
+        askPage2('WH16', 'Ask Pema · quá hạn tái khám', 'ask · chip "Quá hạn tái khám" rồi "Hỏi": một câu liệt kê mã và tên hồ sơ có lần điều trị gần nhất hơn 30 ngày, nguồn lastVisit và lưu ý "bộ lọc cần xem xét, không tự động là trễ hẹn"; app I12 chưa vẽ câu trả lời này; tên là dữ liệu tổng hợp của canvas',
+          { q: ASK_Q[2], heading: ASK_Q[2], text: ASK_OVERDUE }),
+        askPage2('WH17', 'Ask Pema · câu hỏi ngoài nhóm hỗ trợ', 'ask · gõ "xyz" rồi "Hỏi": thẻ kết quả không khớp câu nào nên liệt kê 3 nhóm câu hỏi được hỗ trợ; app I12 không vẽ câu trả lời cho câu hỏi ngoài nhóm',
+          { q: 'xyz', heading: 'xyz', text: ASK_FALLBACK }),
+        askPage2('WH18', 'Ask Pema · gợi ý câu hỏi', 'ask · "Gợi ý câu hỏi" điền ô nhập bằng "Ai có ảnh gửi sau laser đang chờ xem?" nhưng chưa hỏi, thẻ kết quả vẫn ở trạng thái chờ; app I12 không có nút "Gợi ý câu hỏi"',
+          { q: ASK_Q[0] }),
+        askPage2('WH19', 'Ask Pema · không có ảnh chờ xem', 'ask · sau khi đóng hai mục theo dõi có ảnh, câu "Ai có ảnh gửi sau laser đang chờ xem?" trả lời "Có 0 ảnh chờ xem: Không có." và nút "Mở dữ liệu nguồn →" dẫn tới Theo dõi; toast "Đã gửi phản hồi và đóng mục theo dõi" còn hiện từ thao tác trước; app I12 liệt kê 2 ảnh và không vẽ câu trả lời rỗng',
+          { q: ASK_Q[0], heading: ASK_Q[0], text: ASK_NONE, toast: 'Đã gửi phản hồi và đóng mục theo dõi' }),
+        guideFiltered('WH20', 'Hướng dẫn · kết quả tìm kiếm', 'guide · gõ "lịch" vào ô tìm: mục lục chỉ còn 8 chủ đề khớp (có nút xóa × trong ô), bài mặc định "Hiểu hệ thống Pema" vẫn mở; WH14 là trường hợp không khớp chủ đề nào; app F16 không có ô tìm kiếm',
+          'system', 'lịch', ['mobile-finance', 'crm01', 'system', 'roles', 'records', 'schedule', 'resources', 'exceptions'])
       ];
     })();
 
     // WI · Patient Mobile web (parts WI.js and WI2.js are merged into this group). Owner: W6c-WI-1 (home, appointments, journey, progress, care).
     // Use mob(id, name, note, activeTab, blocks, o) and the Patient Mobile blocks of base.js (see references/blocks-web.md section 9).
+
+    // The home page (old `patient.js#home`) is the same page for every care group: greeting, one next-step card chosen by the group, the journey hero,
+    // "Lịch hẹn tiếp theo", the three quick actions when no CSKH task is left, and "Đơn & phiếu đã duyệt". Only the data differs, so these ids share this builder.
+    const wi1Home = (p, o) => [
+      mobTitle('Hôm nay của bạn', 'Chào ' + p.name.split(' ').pop()),
+      o.step ? card({ title: o.step[0] }, txt(o.step[1]), primary(o.step[2] || 'Gửi cập nhật')) : null,
+      hero(o.plan || 'Kế hoạch chăm sóc da cá nhân', 'Buổi ' + o.done + ' / ' + o.total + ' · Cập nhật ' + o.upd, 'route', { over: 'Hành trình đang tiếp diễn', small: true, rail: [o.done, o.total], actions: [light('Xem hành trình →')] }),
+      card({ title: 'Lịch hẹn tiếp theo', aside: [quiet('Xem tất cả')] },
+        o.when
+          ? appt({ day: o.when[0], month: 'Tháng 09', lines: [o.when[1], p.doctor + ' · ' + o.when[2]] })
+          : appt({ none: true, lines: ['Chưa có lịch hẹn · Liên hệ Pema để đặt lịch', p.doctor + ' · Theo dõi da sau điều trị'] })),
+      o.tasks ? card({ title: 'Việc hôm nay', aside: [badge('Pema đồng hành', 'brand', { dot: false })] }, quick(['favorite', 'Chăm sóc', 'Hướng dẫn tại nhà'], ['photo_library', 'Ảnh tiến trình', 'So sánh mốc'], ['chat_bubble', 'Gửi cập nhật', 'Nhắn Pema'])) : null,
+      o.rx ? rx({ sections: [{ title: 'DT-P001 · 6/9/2026', sub: 'Bác sĩ ' + doctors[0].name, lines: [{ name: 'Cicaderm Cream 40ml', use: 'Bôi lớp mỏng vùng cần chăm sóc · Sáng và tối · 14 ngày' }, { name: 'Fudareus B 15g', use: 'Bôi theo vùng bác sĩ đã dặn · Buổi tối · 7 ngày' }] }] }) : rx()
+    ];
+
     const WI = [
       mob('WI1', 'Trang chủ', WEB + 'patient mobile · home · mở /patient-mobile/: thẻ bước tiếp theo (Đến mốc tái khám), hero hành trình với thanh buổi, Lịch hẹn tiếp theo, Đơn & phiếu đã duyệt; thanh dưới 5 tab · app E1 chỉ có 4 tab và hero khác', 'home', [
         mobTitle('Hôm nay của bạn', 'Chào ' + pt.name.split(' ').pop()),
@@ -2224,6 +3109,95 @@ class Component extends DCLogic {
         card({ title: 'Lịch hẹn tiếp theo', aside: [quiet('Xem tất cả')] },
           appt({ day: '20', month: 'Tháng 09', lines: ['Chủ Nhật, 20/09 · 08:00', doctors[0].name + ' · Nám · tăng sắc tố'] })),
         rx({ sections: [{ title: 'DT-P001 · 6/9/2026', sub: 'Bác sĩ ' + doctors[0].name, lines: [{ name: 'Cicaderm Cream 40ml', use: 'Bôi lớp mỏng vùng cần chăm sóc · Sáng và tối · 14 ngày' }, { name: 'Fudareus B 15g', use: 'Bôi theo vùng bác sĩ đã dặn · Buổi tối · 7 ngày' }] }] })
+      ]),
+      mob('WI2', 'Lịch hẹn', WEB + 'patient mobile · appointments · mở từ thanh dưới "Lịch hẹn": Sắp tới (chip Đã đặt lịch, nút Xác nhận tôi sẽ đến), Các lịch đã đặt, Lịch đã qua, lưu ý đổi lịch trước ít nhất 4 giờ · app K1 là ô lối vào, câu lưu ý bắt đầu bằng "Nếu bạn cần đổi lịch"', 'appointments', [
+        back('← Trang chủ'),
+        h1('Lịch hẹn'),
+        card({ title: 'Sắp tới', aside: [badge('Đã đặt lịch', 'brand', { dot: false })] },
+          appt({ day: '20', month: 'Tháng 09', lines: ['Chủ Nhật, 20/09 · 08:00 · Pema Clinic', doctors[0].name + ' · Nám · tăng sắc tố'] }),
+          primary('Xác nhận tôi sẽ đến', { full: true })),
+        card({ title: 'Các lịch đã đặt' }, list([
+          { icon: 'calendar_month', t: '20/9/2026 · 08:00', sub: services[0].name + ' · ' + services[0].mins + ' phút', sub2: doctors[0].name },
+          { icon: 'calendar_month', t: '26/9/2026 · 09:00', sub: services[2].name + ' · ' + services[2].mins + ' phút', sub2: doctors[2].name }
+        ], { sq: true })),
+        card({ title: 'Lịch đã qua' }, list([
+          { icon: 'check', t: 'Buổi 2 · Chăm sóc & laser theo chỉ định', sub: '6/9/2026 · Đã hoàn tất', chev: true },
+          { icon: 'check', t: 'Tư vấn ban đầu', sub: '26/06/2026 · Đã hoàn tất', chev: true }
+        ], { sq: true })),
+        notice('Nếu bạn cần đổi lịch, hãy nhắn cho đội ngũ Pema trước ít nhất 4 giờ.', 'info')
+      ]),
+      mob('WI3', 'Hành trình', WEB + 'patient mobile · journey · mở từ thanh dưới "Hành trình": tóm tắt liệu trình với số buổi (không phải mức cải thiện da), lối tắt Ảnh trước & sau, Cập nhật gần đây (3 mốc, bấm để mở) và Xem thêm lịch sử · app có H1-H3 riêng, không có thanh số buổi này', 'journey', [
+        h1('Hành trình của bạn'),
+        card({ g: 10 },
+          eyebrow('Đang điều trị'),
+          h2('Liệu trình kiểm soát sắc tố'),
+          stepper('2/5 buổi', 40, 'Tiến độ số buổi, không phải mức cải thiện da.')),
+        list([{ icon: 'photo_library', t: 'Ảnh trước & sau', sub: 'Xem các mốc ảnh trong hành trình', chev: true }], { box: true }),
+        card({ title: 'Cập nhật gần đây', aside: [badge('4 mốc', 'neutral', { dot: false })] },
+          events(
+            { kind: 'followup', date: '13/9/2026', title: 'Cập nhật tại nhà đã được xem', detail: 'Đỏ nhẹ khoảng 2 ngày, hiện đã ổn. Không ghi nhận dấu hiệu cảnh báo trong báo cáo.' },
+            { kind: 'done', date: '6/9/2026', title: 'Hoàn tất buổi 2/5', detail: 'Chăm sóc & laser theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.' },
+            { kind: 'photo', date: '6/9/2026', title: 'Bộ ảnh theo dõi · chính diện', detail: 'Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.' }),
+          quiet('Xem thêm lịch sử', { full: true }))
+      ]),
+      mob('WI4', 'Tin nhắn', WEB + 'patient mobile · messages · mở từ thanh dưới "Tin nhắn": thẻ Pema Care Team (chip Đang hỗ trợ), tin nhắn của đội ngũ kèm giờ, nút Gửi tin nhắn mở màn gửi cập nhật; không có ô soạn tin và không có câu "không phải kênh cấp cứu" (câu đó ở màn gửi cập nhật) · app E3 có lưu ý và hai ô Bạn / Đội ngũ Pema', 'messages', [
+        back('← Trang chủ'),
+        h1('Tin nhắn'),
+        card({ title: 'Pema Care Team', aside: [badge('Đang hỗ trợ', 'success')] },
+          bubbles({ text: 'Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.', time: '13/09 · 09:15' }),
+          primary('Gửi tin nhắn', { icon: 'add', full: true }))
+      ]),
+      mob('WI5', 'Hồ sơ', WEB + 'patient mobile · profile · mở từ thanh dưới "Hồ sơ" hoặc nút avatar: thẻ hồ sơ demo, ba dòng (Tài liệu & hóa đơn, Chăm sóc tại nhà, Quyền riêng tư), Đổi hồ sơ demo (hai ô chọn), Đơn & phiếu đã duyệt · app E4 có bốn dòng và nhãn khác, quyền riêng tư là dòng bật/tắt chứ không có màn riêng', 'profile', [
+        h1('Hồ sơ'),
+        card({},
+          row({ g: 13, ai: 'center' }, avatar(pt.init, { size: 'lg' }), stack({ g: 2 }, h3(pt.name), txt(pt.age + ' tuổi · ' + pt.phone + ' · ' + pt.id, { size: 'l', tone: 'soft' }))),
+          notice('Bạn đang xem trải nghiệm patient app của hồ sơ demo. Tài khoản và dữ liệu thật sẽ cần xác thực riêng.', 'info')),
+        card({}, list([
+          { icon: 'description', t: 'Tài liệu & hóa đơn', sub: 'Xem lịch sử thanh toán và hướng dẫn', chev: true },
+          { icon: 'auto_awesome', t: 'Chăm sóc tại nhà', sub: 'Hướng dẫn của kế hoạch hiện tại', chev: true },
+          { icon: 'verified_user', t: 'Quyền riêng tư', sub: 'Ảnh chăm sóc: đã đồng ý', chev: true }
+        ], { sq: true })),
+        card({ title: 'Đổi hồ sơ demo' },
+          select('Nhóm tài khoản mẫu', 'Tất cả hồ sơ', { opts: ['Tất cả hồ sơ', 'Sau thủ thuật D+1', 'D+3 cần ảnh', 'D+7 bác sĩ review', 'Đến hạn tái khám', 'Quá hạn tái khám', 'Vắng/hủy chưa đặt lại', 'Nguy cơ bỏ liệu trình', '90 ngày chưa quay lại', '180 ngày chưa quay lại', 'Sinh nhật trong tuần'] }),
+          select('Chọn người bệnh tổng hợp', pt.name + ' · ' + pt.id, { opts: people.map(x => x.name + ' · ' + x.id) }),
+          txt('Chỉ dùng để trình diễn trải nghiệm liên thông; không đại diện đăng nhập thật.', { size: 'l', tone: 'soft' })),
+        rx({ sections: [{ title: 'DT-P001 · 6/9/2026', sub: 'Bác sĩ ' + doctors[0].name, lines: [{ name: 'Cicaderm Cream 40ml', use: 'Bôi lớp mỏng vùng cần chăm sóc · Sáng và tối · 14 ngày' }, { name: 'Fudareus B 15g', use: 'Bôi theo vùng bác sĩ đã dặn · Buổi tối · 7 ngày' }] }] })
+      ]),
+      mob('WI6', 'Tiến độ số buổi & ảnh', WEB + 'patient mobile · progress · từ Hành trình "Ảnh trước & sau" hoặc ô Ảnh tiến trình: So sánh mốc ảnh (chip Chính diện, hai khung Trước / Gần nhất, mỗi khung có tem MINH HỌA TỔNG HỢP), lưu ý chụp cùng góc và ánh sáng, thẻ Gửi ảnh cập nhật; thanh dưới sáng "Hành trình" · app G5 là "Theo dõi bằng hình ảnh", ba ô và một nút', 'progress', [
+        back('← Hành trình'),
+        h1('Tiến độ số buổi & ảnh'),
+        card({ title: 'So sánh mốc ảnh', aside: [badge('Chính diện', 'brand', { dot: false })] },
+          photos([{ label: 'Trước' }, { label: 'Gần nhất' }], { n: 2, sq: true }),
+          notice('Cùng góc chụp, cùng ánh sáng giúp bác sĩ xem thay đổi trong bối cảnh. Không dùng ảnh này để tự chẩn đoán.', 'info')),
+        card({ title: 'Gửi ảnh cập nhật' },
+          txt('Gửi ảnh kèm mô tả để đội ngũ Pema xem và phản hồi.'),
+          primary('Gửi ảnh cập nhật →'))
+      ]),
+      mob('WI7', 'Chăm sóc tại nhà', WEB + 'patient mobile · care · từ Hồ sơ "Chăm sóc tại nhà" hoặc ô Chăm sóc: hướng dẫn đã duyệt (Sau buổi điều trị, ba dòng theo thuốc), thẻ Khi nào cần nhắn Pema? với Tôi đã đọc hướng dẫn và Gửi cập nhật →; thanh dưới sáng "Hành trình" · app G1 có ba ô khác và nút "Gửi cập nhật cho Pema"', 'care', [
+        back('← Trang chủ'),
+        h1('Chăm sóc tại nhà'),
+        card({ g: 10 },
+          eyebrow('Sau buổi điều trị · 6/9/2026'),
+          h2('Mỗi ngày một chút dịu dàng.'),
+          txt('SPF 50+ mỗi sáng; thoa lại theo hướng dẫn', { tone: 'soft' }),
+          list([
+            { icon: 'auto_awesome', t: 'Sữa rửa mặt dịu nhẹ', sub: 'Sáng & tối · theo hướng dẫn đã duyệt' },
+            { icon: 'auto_awesome', t: 'Dưỡng ẩm phục hồi', sub: 'Sau làm sạch · dùng lượng phù hợp' },
+            { icon: 'auto_awesome', t: 'Chống nắng SPF 50+', sub: 'Buổi sáng · thoa lại theo hướng dẫn' }
+          ], { sq: true })),
+        card({ title: 'Khi nào cần nhắn Pema?' },
+          txt('Nếu bạn thấy phản ứng bất thường, khó chịu kéo dài hoặc cần hỏi cách chăm sóc, hãy gửi cập nhật trong ứng dụng. Đội ngũ sẽ xem và phản hồi theo quy trình của phòng khám.', { size: 's' }),
+          row({ g: 10 }, secondary('Tôi đã đọc hướng dẫn'), primary('Gửi cập nhật →')))
+      ]),
+      mob('WI8', 'Gửi cập nhật cho Pema', WEB + 'patient mobile · send · từ Chăm sóc tại nhà "Gửi cập nhật →": Bạn đang cảm thấy thế nào? (ô nhập), thêm ảnh (Chọn ảnh PNG/JPEG/WebP, tối đa 2,5 MB), ô đồng ý cho đội ngũ xem ảnh, Gửi cho Pema, lưu ý không phải kênh cấp cứu; thanh dưới sáng "Hành trình" · app G2 dùng ảnh mẫu và nút Gửi cập nhật bị khóa đến khi đồng ý', 'send', [
+        back('← Chăm sóc tại nhà'),
+        h1('Gửi cập nhật cho Pema'),
+        card({},
+          textarea('Bạn đang cảm thấy thế nào?', '', { ph: 'Ví dụ: Da hơi khô ở hai má từ tối qua...', lines: 4 }),
+          upload({}),
+          check('Tôi đồng ý để đội ngũ Pema xem ảnh này cho mục đích chăm sóc.', false),
+          primary('Gửi cho Pema', { full: true }),
+          notice('Tin nhắn được gửi tới đội ngũ chăm sóc. Đây không phải kênh cấp cứu.', 'info'))
       ]),
       mob('WI9', 'Tài liệu & hóa đơn', WEB + 'patient mobile · docs · từ Hồ sơ: Hóa đơn của bạn, Hướng dẫn đã gửi, Đơn & phiếu đã duyệt; thanh dưới sáng "Hồ sơ" (docs là màn con của Hồ sơ)', 'docs', [
         back('← Hồ sơ'),
@@ -2234,11 +3208,117 @@ class Component extends DCLogic {
         ], { sq: true })),
         card({ title: 'Hướng dẫn đã gửi' }, list([{ icon: 'photo_camera', t: 'Hướng dẫn chăm sóc sau buổi', sub: 'Hướng dẫn đã duyệt · 6/9/2026', chev: true }], { sq: true })),
         rx({ sections: [{ title: 'DT-P001 · 6/9/2026', sub: 'Bác sĩ ' + doctors[0].name, lines: [{ name: 'Cicaderm Cream 40ml', use: 'Bôi lớp mỏng vùng cần chăm sóc · Sáng và tối · 14 ngày' }, { name: 'Fudareus B 15g', use: 'Bôi theo vùng bác sĩ đã dặn · Buổi tối · 7 ngày' }] }] })
-      ])
+      ]),
+      mob('WI10', 'Trang chủ · Sau thủ thuật D+1', WEB + 'patient mobile · home · nhóm Sau thủ thuật D+1: thẻ bước tiếp theo "Hôm nay bạn cảm thấy thế nào?" với Gửi cập nhật; chưa có lịch hẹn nên ô lịch ghi "Chọn lịch"; Đơn & phiếu đã duyệt "Chưa có" · app E1 chỉ vẽ nhóm D+1 với câu khác', 'home',
+        wi1Home(people[0], { step: ['Hôm nay bạn cảm thấy thế nào?', 'Gửi tình trạng sau buổi điều trị để đội ngũ Pema theo dõi.'], done: 3, total: 6, upd: '19/9/2026' }), { patient: people[0] }),
+      mob('WI11', 'Trang chủ · D+3 cần ảnh', WEB + 'patient mobile · home · nhóm D+3 cần ảnh: thẻ "Cập nhật ảnh tiến triển" với Gửi cập nhật; chưa có lịch hẹn · app E1 chỉ vẽ nhóm D+1', 'home',
+        wi1Home(people[1], { step: ['Cập nhật ảnh tiến triển', 'Bạn có thể gửi ảnh cùng mô tả và đồng ý cho bác sĩ xem.'], done: 3, total: 6, upd: '17/9/2026' }), { patient: people[1] }),
+      mob('WI12', 'Trang chủ · D+7 bác sĩ review', WEB + 'patient mobile · home · nhóm D+7 bác sĩ review: thẻ "Cùng bác sĩ xem lại tiến triển" với Gửi cập nhật; phản hồi sẽ ở Tin nhắn; chưa có lịch hẹn · app E1 chỉ vẽ nhóm D+1', 'home',
+        wi1Home(people[2], { step: ['Cùng bác sĩ xem lại tiến triển', 'Gửi cập nhật để bác sĩ đánh giá; phản hồi sẽ ở Tin nhắn.'], done: 3, total: 6, upd: '13/9/2026' }), { patient: people[2] }),
+      mob('WI13', 'Trang chủ · Quá hạn tái khám', WEB + 'patient mobile · home · nhóm Quá hạn tái khám: thẻ "Sắp xếp lần tái khám tiếp theo" với Gửi cập nhật; chưa có lịch hẹn · app E1 chỉ vẽ nhóm D+1', 'home',
+        wi1Home(people[4], { step: ['Sắp xếp lần tái khám tiếp theo', 'Nhắn Pema nếu bạn cần hỗ trợ chọn lịch phù hợp.'], done: 3, total: 6, upd: '7/8/2026' }), { patient: people[4] }),
+      mob('WI14', 'Trang chủ · Vắng/hủy chưa đặt lại', WEB + 'patient mobile · home · nhóm Vắng/hủy chưa đặt lại: thẻ "Chọn lại một lịch hẹn phù hợp" với Gửi cập nhật; chưa có lịch hẹn · app E1 chỉ vẽ nhóm D+1', 'home',
+        wi1Home(people[5], { step: ['Chọn lại một lịch hẹn phù hợp', 'Đội ngũ Pema sẽ hỗ trợ bạn sắp xếp lại.'], done: 3, total: 6, upd: '16/8/2026' }), { patient: people[5] }),
+      mob('WI15', 'Trang chủ · Nguy cơ bỏ liệu trình', WEB + 'patient mobile · home · nhóm Nguy cơ bỏ liệu trình: thẻ "Tiếp tục kế hoạch chăm sóc" với Gửi cập nhật; chưa có lịch hẹn · app E1 chỉ vẽ nhóm D+1', 'home',
+        wi1Home(people[6], { step: ['Tiếp tục kế hoạch chăm sóc', 'Trao đổi với Pema về các buổi còn lại của bạn.'], done: 3, total: 6, upd: '22/7/2026' }), { patient: people[6] }),
+      mob('WI16', 'Trang chủ · 90 ngày chưa quay lại', WEB + 'patient mobile · home · nhóm 90 ngày chưa quay lại: thẻ "Pema sẵn sàng đồng hành" với Gửi cập nhật; chưa có lịch hẹn · app E1 chỉ vẽ nhóm D+1', 'home',
+        wi1Home(people[7], { step: ['Pema sẵn sàng đồng hành', 'Nhắn nhu cầu hiện tại để đội ngũ hỗ trợ.'], done: 3, total: 6, upd: '17/6/2026' }), { patient: people[7] }),
+      mob('WI17', 'Trang chủ · 180 ngày chưa quay lại', WEB + 'patient mobile · home · nhóm 180 ngày chưa quay lại: thẻ "Kết nối lại với Pema" với Gửi cập nhật; chưa có lịch hẹn · app E1 chỉ vẽ nhóm D+1', 'home',
+        wi1Home(people[8], { step: ['Kết nối lại với Pema', 'Chia sẻ nhu cầu để được hỗ trợ trước khi hẹn khám.'], done: 3, total: 6, upd: '19/3/2026' }), { patient: people[8] }),
+      mob('WI18', 'Trang chủ · Sinh nhật trong tuần', WEB + 'patient mobile · home · nhóm Sinh nhật trong tuần: thẻ "Một lời chúc từ Pema" với nút Mở tin nhắn (mở Tin nhắn, không phải màn gửi cập nhật); chưa có lịch hẹn · app E1 chỉ vẽ nhóm D+1', 'home',
+        wi1Home(people[9], { step: ['Một lời chúc từ Pema', 'Chúc bạn đón tuổi mới thật nhiều sức khỏe.', 'Mở tin nhắn'], done: 3, total: 6, upd: '10/9/2026' }), { patient: people[9] }),
+      mob('WI19', 'Trang chủ · đơn thuốc chờ duyệt (chưa hiện trên app)', WEB + 'patient mobile · home · nhóm Đến hạn tái khám, đơn thuốc đang chờ bác sĩ duyệt: thẻ "Đến mốc tái khám" với Xem lịch hẹn; ô Đơn & phiếu đã duyệt vẫn "Chưa có" vì đơn chưa duyệt không bao giờ hiện cho bệnh nhân · app E1 không có trạng thái này', 'home',
+        wi1Home(people[3], { step: ['Đến mốc tái khám', 'Xem lịch đã đặt hoặc nhắn Pema để chọn thời gian.', 'Xem lịch hẹn'], plan: 'Theo dõi mụn & chăm sóc tại nhà', done: 2, total: 4, upd: '6/9/2026', when: ['20', 'Chủ Nhật, 20/09 · 08:00', 'Mụn viêm'] }), { patient: people[3] }),
+      mob('WI20', 'Trang chủ · việc hôm nay (không còn việc CSKH)', WEB + 'patient mobile · home · hồ sơ không còn việc CSKH nên không có thẻ bước tiếp theo: thay bằng thẻ "Việc hôm nay" (chip Pema đồng hành) với ba lối tắt Chăm sóc, Ảnh tiến trình, Gửi cập nhật; có đơn đã duyệt · app E1 luôn có hàng lối tắt với "Đơn đã duyệt" thay cho "Ảnh tiến trình"', 'home',
+        wi1Home(pt, { plan: 'Liệu trình kiểm soát sắc tố', done: 2, total: 5, upd: '6/9/2026', when: ['20', 'Chủ Nhật, 20/09 · 08:00', 'Nám · tăng sắc tố'], tasks: true, rx: true })),
+      mob('WI21', 'Trang chủ · hồ sơ vừa tạo', WEB + 'patient mobile · home · hồ sơ vừa tạo: kế hoạch chờ bác sĩ thiết lập (Buổi 0 / 1, "Chưa ghi nhận"), lịch hẹn đã đặt, thẻ Việc hôm nay, chưa có đơn đã duyệt · app E1 không có trạng thái này', 'home',
+        wi1Home(people[10], { plan: 'Chờ bác sĩ thiết lập kế hoạch', done: 0, total: 1, upd: 'Chưa ghi nhận', when: ['21', 'Thứ Hai, 21/09 · 10:30', 'Nám · tăng sắc tố'], tasks: true }), { patient: people[10] })
     ];
 
     // WI2 · Patient Mobile web, second part (merged into group WI by the build). Owner: W6c-WI-2 (send, messages, docs, profile, privacy, every modal and state).
+    // Shared pieces of the WI2 frames (names start with wi2 / WI2_ so they cannot clash with another part).
+    const WI2_NEW = { id: 'P047', name: 'Nguyễn Thử Nghiệm', init: 'TN', age: 28, phone: 'Chưa nhập', doctor: doctors[0].name, group: '', groupLabel: '' }; // profile created in the clinic web (WI26, WI27, WI30, WI41, WI42)
+    const WI2_EMERGENCY = 'Tin nhắn được gửi tới đội ngũ chăm sóc. Đây không phải kênh cấp cứu.';
+    const WI2_RX1 = { title: 'DT-P001 · 6/9/2026', sub: 'Bác sĩ ' + doctors[0].name, lines: [{ name: 'Cicaderm Cream 40ml', use: 'Bôi lớp mỏng vùng cần chăm sóc · Sáng và tối · 14 ngày' }, { name: 'Fudareus B 15g', use: 'Bôi theo vùng bác sĩ đã dặn · Buổi tối · 7 ngày' }] };
+    const WI2_GROUPS = ['Tất cả hồ sơ', 'Sau thủ thuật D+1', 'D+3 cần ảnh', 'D+7 bác sĩ review', 'Đến hạn tái khám', 'Quá hạn tái khám', 'Vắng/hủy chưa đặt lại', 'Nguy cơ bỏ liệu trình', '90 ngày chưa quay lại', '180 ngày chưa quay lại', 'Sinh nhật trong tuần'];
+    const WI2_EVENTS = [
+      { kind: 'followup', date: '13/9/2026', title: 'Cập nhật tại nhà đã được xem', detail: 'Đỏ nhẹ khoảng 2 ngày, hiện đã ổn. Không ghi nhận dấu hiệu cảnh báo trong báo cáo.' },
+      { kind: 'done', date: '6/9/2026', title: 'Hoàn tất buổi 2/5', detail: 'Chăm sóc & laser theo chỉ định. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.' },
+      { kind: 'photo', date: '6/9/2026', title: 'Bộ ảnh theo dõi · chính diện', detail: 'Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.' },
+      { kind: 'done', date: '26/6/2026', title: 'Bắt đầu liệu trình kiểm soát sắc tố', detail: 'Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.' }
+    ];
+    const WI2_ROUTINE = [
+      { icon: 'auto_awesome', t: 'Sữa rửa mặt dịu nhẹ', sub: 'Sáng & tối · theo hướng dẫn đã duyệt' },
+      { icon: 'auto_awesome', t: 'Dưỡng ẩm phục hồi', sub: 'Sau làm sạch · dùng lượng phù hợp' },
+      { icon: 'auto_awesome', t: 'Chống nắng SPF 50+', sub: 'Buổi sáng · thoa lại theo hướng dẫn' }
+    ];
+    // Journey screen (Hành trình): summary card, photo shortcut, "Cập nhật gần đây" card. o: plan, label, pct, count, events (none = empty line), more ("Xem thêm lịch sử").
+    const wi2Journey = o => [
+      h1('Hành trình của bạn'),
+      card({}, eyebrow('Đang điều trị'), h2(o.plan), stepper(o.label, o.pct, 'Tiến độ số buổi, không phải mức cải thiện da.')),
+      list([{ icon: 'photo_library', t: 'Ảnh trước & sau', sub: 'Xem các mốc ảnh trong hành trình', chev: true }], { box: true }),
+      card({ title: 'Cập nhật gần đây', aside: [badge(o.count, 'neutral', { dot: false })] }, o.events ? events(...o.events) : sm('Chưa có sự kiện trong hành trình.'), o.more ? quiet('Xem thêm lịch sử') : null)
+    ];
+    // Send-update screen (Gửi cập nhật cho Pema): msg = text of the draft, up = options of upload().
+    const wi2Send = (msg, up) => [
+      back('← Chăm sóc tại nhà'),
+      h1('Gửi cập nhật cho Pema'),
+      card({},
+        textarea('Bạn đang cảm thấy thế nào?', msg, { ph: 'Ví dụ: Da hơi khô ở hai má từ tối qua...' }),
+        upload(up),
+        check('Tôi đồng ý để đội ngũ Pema xem ảnh này cho mục đích chăm sóc.', false),
+        primary('Gửi cho Pema', { full: true }),
+        notice(WI2_EMERGENCY, 'info'))
+    ];
+    // Care screen (Chăm sóc tại nhà): routine = care rows (null for a new patient), readBtn = the acknowledge button.
+    const wi2Care = (eyebrowText, routine, readBtn) => [
+      back('← Trang chủ'),
+      h1('Chăm sóc tại nhà'),
+      card({}, eyebrow(eyebrowText), h2('Mỗi ngày một chút dịu dàng.'),
+        routine ? [txt('SPF 50+ mỗi sáng; thoa lại theo hướng dẫn', { tone: 'soft' }), list(routine, { sq: true })] : sm('Chưa có hướng dẫn được duyệt.')),
+      card({ title: 'Khi nào cần nhắn Pema?' },
+        txt('Nếu bạn thấy phản ứng bất thường, khó chịu kéo dài hoặc cần hỏi cách chăm sóc, hãy gửi cập nhật trong ứng dụng. Đội ngũ sẽ xem và phản hồi theo quy trình của phòng khám.'),
+        row({ g: 10 }, readBtn, primary('Gửi cập nhật →')))
+    ];
+    // Docs screen (Tài liệu & hóa đơn): invoices = doc-rows (empty = the flat empty line), guideDate, rxBlock = the "Đơn & phiếu đã duyệt" card.
+    const wi2Docs = (invoices, guideDate, rxBlock) => [
+      back('← Hồ sơ'),
+      h1('Tài liệu & hóa đơn'),
+      card({ title: 'Hóa đơn của bạn' }, invoices.length ? list(invoices, { sq: true }) : empty('Chưa có hóa đơn trong demo.', '', { flat: true })),
+      card({ title: 'Hướng dẫn đã gửi' }, list([{ icon: 'photo_camera', t: 'Hướng dẫn chăm sóc sau buổi', sub: 'Hướng dẫn đã duyệt · ' + guideDate, chev: true }], { sq: true })),
+      rxBlock
+    ];
+    // Profile screen (Hồ sơ): p = the patient, consent = subtitle of the privacy row, rxBlock = the "Đơn & phiếu đã duyệt" card.
+    const wi2Profile = (p, consent, rxBlock) => [
+      h1('Hồ sơ'),
+      card({}, row({ g: 13 }, avatar(p.init, { size: 'lg' }), stack({ g: 2 }, h3(p.name), sm(p.age + ' tuổi · ' + p.phone + ' · ' + p.id))),
+        notice('Bạn đang xem trải nghiệm patient app của hồ sơ demo. Tài khoản và dữ liệu thật sẽ cần xác thực riêng.', 'info')),
+      card({}, list([
+        { icon: 'description', t: 'Tài liệu & hóa đơn', sub: 'Xem lịch sử thanh toán và hướng dẫn', chev: true },
+        { icon: 'auto_awesome', t: 'Chăm sóc tại nhà', sub: 'Hướng dẫn của kế hoạch hiện tại', chev: true },
+        { icon: 'verified_user', t: 'Quyền riêng tư', sub: 'Ảnh chăm sóc: ' + consent, chev: true }
+      ], { sq: true })),
+      card({ title: 'Đổi hồ sơ demo' },
+        select('Nhóm tài khoản mẫu', 'Tất cả hồ sơ', { opts: WI2_GROUPS }),
+        select('Chọn người bệnh tổng hợp', p.name + ' · ' + p.id, { opts: people.slice(0, 8).map(x => x.name + ' · ' + x.id) }),
+        sm('Chỉ dùng để trình diễn trải nghiệm liên thông; không đại diện đăng nhập thật.')),
+      rxBlock
+    ];
+
     const WI2 = [
+      mob('WI22', 'Lịch hẹn · chưa có lịch', WEB + 'patient mobile · appointments · hồ sơ demo chưa có lịch (nhóm "Quá hạn tái khám"): chip "Chưa có lịch", ô "Chọn lịch", nút "Xác nhận tôi sẽ đến" bị khóa, "Chưa có lịch đã đặt." · app K1 không có trạng thái trống', 'appointments', [
+        back('← Trang chủ'),
+        h1('Lịch hẹn'),
+        card({ title: 'Sắp tới', aside: [badge('Chưa có lịch', 'brand', { dot: false })] },
+          appt({ none: true, lines: ['Chưa có lịch hẹn · Liên hệ Pema để đặt lịch · Pema Clinic', doctors[0].name + ' · Theo dõi da sau điều trị'] }),
+          primary('Xác nhận tôi sẽ đến', { full: true, dis: true })),
+        card({ title: 'Các lịch đã đặt' }, sm('Chưa có lịch đã đặt.')),
+        card({ title: 'Lịch đã qua' }, list([
+          { icon: 'check', t: 'Buổi 3 · Chăm sóc theo chỉ định', sub: '7/8/2026 · Đã hoàn tất', chev: true },
+          { icon: 'check', t: 'Tư vấn ban đầu', sub: '26/06/2026 · Đã hoàn tất', chev: true }
+        ], { sq: true })),
+        notice('Nếu bạn cần đổi lịch, hãy nhắn cho đội ngũ Pema trước ít nhất 4 giờ.', 'info')
+      ], { state: true, patient: people[4] }),
       mob('WI23', 'Lịch hẹn · đã xác nhận', WEB + 'patient mobile · appointments · bấm "Xác nhận tôi sẽ đến": toast "Đã xác nhận lịch hẹn" (2,8 giây) trên thanh dưới; lịch hẹn đã đặt, lịch đã qua và lưu ý đổi lịch giữ nguyên', 'appointments', [
         back('← Trang chủ'),
         h1('Lịch hẹn'),
@@ -2254,7 +3334,79 @@ class Component extends DCLogic {
           { icon: 'check', t: 'Tư vấn ban đầu', sub: '26/06/2026 · Đã hoàn tất', chev: true }
         ], { sq: true })),
         notice('Nếu bạn cần đổi lịch, hãy nhắn cho đội ngũ Pema trước ít nhất 4 giờ.', 'info')
-      ], { state: true, toast: 'Đã xác nhận lịch hẹn' })
+      ], { state: true, toast: 'Đã xác nhận lịch hẹn' }),
+      mob('WI24', 'Hành trình · xem thêm lịch sử', WEB + 'patient mobile · journey · sau "Xem thêm lịch sử": cả bốn mốc hiện ra (mới nhất trên cùng), nút "Xem thêm lịch sử" biến mất, các dòng đóng', 'journey',
+        wi2Journey({ plan: 'Liệu trình kiểm soát sắc tố', label: '2/5 buổi', pct: 40, count: '4 mốc', events: WI2_EVENTS }), { state: true }),
+      mob('WI25', 'Hành trình · mở chi tiết', WEB + 'patient mobile · journey · dòng đầu mở (<details open>): câu chi tiết hiện dưới tiêu đề, "Xem thêm lịch sử" còn đó', 'journey',
+        wi2Journey({ plan: 'Liệu trình kiểm soát sắc tố', label: '2/5 buổi', pct: 40, count: '4 mốc', events: [{ ...WI2_EVENTS[0], open: true }, WI2_EVENTS[1], WI2_EVENTS[2]], more: true }), { state: true }),
+      mob('WI26', 'Hành trình · hồ sơ mới', WEB + 'patient mobile · journey · hồ sơ vừa tạo ở clinic web: "Chờ bác sĩ thiết lập kế hoạch", "0/1 buổi", "0 mốc", "Chưa có sự kiện trong hành trình." · app không có trạng thái trống', 'journey',
+        wi2Journey({ plan: 'Chờ bác sĩ thiết lập kế hoạch', label: '0/1 buổi', pct: 0, count: '0 mốc' }), { state: true, patient: WI2_NEW }),
+      mob('WI27', 'Tin nhắn · hồ sơ mới', WEB + 'patient mobile · messages · hồ sơ mới chưa có tin nhắn: chỉ có đầu thread "Pema Care Team" · "Đang hỗ trợ" và nút "Gửi tin nhắn", không có câu trạng thái trống', 'messages', [
+        back('← Trang chủ'),
+        h1('Tin nhắn'),
+        card({ title: 'Pema Care Team', aside: [badge('Đang hỗ trợ', 'success')] }, primary('Gửi tin nhắn', { icon: 'add', full: true }))
+      ], { state: true, patient: WI2_NEW }),
+      mob('WI28', 'Tin nhắn · đã gửi cập nhật', WEB + 'patient mobile · messages · sau "Gửi cho Pema": chuyển sang Tin nhắn, tin của bạn bên phải "20/09 · vừa xong", toast "Đã gửi cập nhật tới đội ngũ Pema" · app G2 báo "vào hàng chờ"', 'messages', [
+        back('← Trang chủ'),
+        h1('Tin nhắn'),
+        card({ title: 'Pema Care Team', aside: [badge('Đang hỗ trợ', 'success')] },
+          bubbles({ text: 'Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất. Bạn có thể gửi cập nhật bất cứ lúc nào.', time: '13/09 · 09:15' }, { text: 'Da hơi khô ở hai má từ tối qua.', time: '20/09 · vừa xong', mine: true }),
+          primary('Gửi tin nhắn', { icon: 'add', full: true }))
+      ], { state: true, toast: 'Đã gửi cập nhật tới đội ngũ Pema' }),
+      mob('WI29', 'Chăm sóc · đã đọc hướng dẫn', WEB + 'patient mobile · care · bấm "Đã đọc hướng dẫn": nút đổi thành "✓ Đã đọc hướng dẫn", toast "Đã ghi nhận bạn đã đọc hướng dẫn" · app G1 giữ "Tôi đã đọc hướng dẫn"', 'care',
+        wi2Care('Sau buổi điều trị · 6/9/2026', WI2_ROUTINE, secondary('Đã đọc hướng dẫn', { icon: 'check' })), { state: true, toast: 'Đã ghi nhận bạn đã đọc hướng dẫn' }),
+      mob('WI30', 'Chăm sóc · hồ sơ mới', WEB + 'patient mobile · care · hồ sơ mới: "Sau buổi điều trị · Chưa ghi nhận", không có dòng thuốc, "Chưa có hướng dẫn được duyệt." · app không có trạng thái trống', 'care',
+        wi2Care('Sau buổi điều trị · Chưa ghi nhận', null, secondary('Tôi đã đọc hướng dẫn')), { state: true, patient: WI2_NEW }),
+      mob('WI31', 'Gửi cập nhật · thiếu nội dung', WEB + 'patient mobile · send · bấm "Gửi cho Pema" khi chưa viết gì: toast "Hãy viết vài dòng cập nhật", không lưu gì · app G2 khóa nút thay vì báo', 'send',
+        wi2Send('', {}), { state: true, toast: 'Hãy viết vài dòng cập nhật' }),
+      mob('WI32', 'Gửi cập nhật · đã chọn ảnh', WEB + 'patient mobile · send · chọn ảnh tổng hợp: "Đã chọn: anh-demo.png (đã giữ trong phiên demo)", xem trước, ô đồng ý bỏ tick (mỗi ảnh hỏi đồng ý lại) · app G2 vẽ ảnh mẫu bằng nút', 'send',
+        wi2Send('Da hơi khô ở hai má.', { file: 'anh-demo.png', preview: true }), { state: true }),
+      mob('WI33', 'Gửi cập nhật · thiếu đồng ý ảnh', WEB + 'patient mobile · send · gửi kèm ảnh nhưng chưa tick: toast "Bạn cần đồng ý để Pema xem ảnh cập nhật", chữ và ảnh vẫn giữ làm bản nháp · app G2 khóa nút gửi', 'send',
+        wi2Send('Da hơi khô ở hai má.', { file: 'anh-demo.png' }), { state: true, toast: 'Bạn cần đồng ý để Pema xem ảnh cập nhật' }),
+      mob('WI34', 'Gửi cập nhật · tệp không hợp lệ', WEB + 'patient mobile · send · chọn tệp không phải ảnh: toast "Chỉ hỗ trợ PNG, JPEG hoặc WebP.", ảnh nháp bị xóa (lỗi khác: "Ảnh demo tối đa 2,5 MB.", "Tệp không phải ảnh hợp lệ.", "Không đọc được ảnh.") · app không có lỗi tệp', 'send',
+        wi2Send('', {}), { state: true, toast: 'Chỉ hỗ trợ PNG, JPEG hoặc WebP.' }),
+      mob('WI35', 'Tài liệu · hóa đơn chờ thanh toán', WEB + 'patient mobile · docs · hồ sơ P002: một hóa đơn "Đã thanh toán" và một "Chờ thanh toán"; thanh dưới sáng "Hồ sơ" · app G7 mở bằng "Khoản cần thanh toán"', 'docs',
+        wi2Docs([
+          { icon: 'description', t: 'Buổi chăm sóc / điều trị', sub: 'HD-0002 · 2026-09-06 · Đã thanh toán', actions: [strong(money(1500000))] },
+          { icon: 'description', t: services[1].name, sub: 'HD-DEMO-002 · 2026-09-20 · Chờ thanh toán', actions: [strong(money(500000))] }
+        ], '6/9/2026', rx()), { state: true, patient: people[1] }),
+      mob('WI36', 'Tài liệu · chưa có hóa đơn', WEB + 'patient mobile · docs · hồ sơ chưa có hóa đơn: "Chưa có hóa đơn trong demo.", "Hướng dẫn đã gửi" vẫn có dòng, thẻ đơn & phiếu hiện "Chưa có" · app K2 luôn có hóa đơn', 'docs',
+        wi2Docs([], '19/9/2026', rx()), { state: true }),
+      mob('WI37', 'Tài liệu · đơn đã duyệt từ thu ngân', WEB + 'patient mobile · docs · phiếu đã duyệt ở thu ngân (WF6) hiện trong "Đơn & phiếu đã duyệt" cạnh đơn thuốc: ngày, "Đã duyệt bởi …", nhóm "Đơn thuốc" và "Phiếu tư vấn"; hóa đơn "Đơn sản phẩm · 2 dòng" chờ thanh toán (mã hóa đơn ngẫu nhiên, ở đây là mã giữ chỗ)', 'docs',
+        wi2Docs([
+          { icon: 'description', t: 'Đơn sản phẩm · 2 dòng', sub: 'HD-8ab4058e-d736-44a1-bdcd-bd5b896520d2 · 2026-09-20 · Chờ thanh toán', actions: [strong(money(720500))] },
+          { icon: 'description', t: 'Buổi chăm sóc / điều trị', sub: 'HD-0001 · 2026-09-06 · Đã thanh toán', actions: [strong(money(1200000))] },
+          { icon: 'description', t: 'Tái khám & đánh giá', sub: 'HD-DEMO-001 · 2026-09-20 · Đã thu một phần · còn ' + money(150000), actions: [strong(money(300000))] }
+        ], '6/9/2026', rx({
+          sections: [WI2_RX1, {
+            title: '20/9/2026', sub: 'Đã duyệt bởi ' + doctors[0].name + ' · 20/9/2026',
+            groups: [
+              { heading: 'Đơn thuốc', lines: [{ name: 'Desloratadine/Genepharm (Desloratadine 5 mg) Hộp 30 Viên - Viên - A', qty: '1 Viên', use: 'Bôi lớp mỏng, sáng và tối, 14 ngày' }] },
+              { heading: 'Phiếu tư vấn', lines: [{ name: 'Cicaderm Cream 40ml - Kem làm mềm da, dưỡng ẩm, hỗ trợ làm đều màu da, mờ sẹo 40 ml - A', qty: '1 Hộp', use: 'Bôi lớp mỏng, sáng và tối, 14 ngày' }] }
+            ]
+          }]
+        })), { state: true }),
+      mob('WI38', 'Hồ sơ · tắt đồng ý ảnh', WEB + 'patient mobile · profile · bấm dòng "Quyền riêng tư" (không có màn riêng): đồng ý ảnh chăm sóc bị tắt, dòng đọc "Ảnh chăm sóc: chưa đồng ý", toast "Đã tắt đồng ý ảnh chăm sóc trong demo", không hộp xác nhận', 'profile',
+        wi2Profile(pt, 'chưa đồng ý', rx({ sections: [WI2_RX1] })), { state: true, toast: 'Đã tắt đồng ý ảnh chăm sóc trong demo' }),
+      mob('WI39', 'Hồ sơ · bật lại đồng ý ảnh', WEB + 'patient mobile · profile · bấm "Quyền riêng tư" lần hai: đồng ý ảnh bật lại, dòng đọc "Ảnh chăm sóc: đã đồng ý", toast "Đã đồng ý ảnh cho chăm sóc trong demo"', 'profile',
+        wi2Profile(pt, 'đã đồng ý', rx({ sections: [WI2_RX1] })), { state: true, toast: 'Đã đồng ý ảnh cho chăm sóc trong demo' }),
+      mob('WI40', 'Hồ sơ · đổi hồ sơ demo', WEB + 'patient mobile · profile · chọn người bệnh khác trong "Chọn người bệnh tổng hợp": xóa bản nháp, lưu hồ sơ đã chọn, toast "Đã đổi hồ sơ demo"; ô nhóm tài khoản chỉ lọc danh sách, không toast', 'profile',
+        wi2Profile(people[1], 'đã đồng ý', rx()), { state: true, toast: 'Đã đổi hồ sơ demo', patient: people[1] }),
+      mob('WI41', 'Hồ sơ · hồ sơ mới', WEB + 'patient mobile · profile · hồ sơ vừa tạo ở clinic web (P047): "28 tuổi · Chưa nhập · P047", "Ảnh chăm sóc: chưa đồng ý", danh sách chọn có thêm hồ sơ mới', 'profile',
+        wi2Profile(WI2_NEW, 'chưa đồng ý', rx()), { state: true, patient: WI2_NEW }),
+      mob('WI42', 'Lịch hẹn · hồ sơ mới', WEB + 'patient mobile · appointments · hồ sơ mới: có ngày sắp tới (21/09 10:30, "Đã đặt lịch") nhưng "Chưa có lịch đã đặt.", lịch đã qua "Buổi 1 · Tư vấn ban đầu · Chưa ghi nhận"', 'appointments', [
+        back('← Trang chủ'),
+        h1('Lịch hẹn'),
+        card({ title: 'Sắp tới', aside: [badge('Đã đặt lịch', 'brand', { dot: false })] },
+          appt({ day: '21', month: 'Tháng 09', lines: ['Thứ Hai, 21/09 · 10:30 · Pema Clinic', doctors[0].name + ' · Nám · tăng sắc tố'] }),
+          primary('Xác nhận tôi sẽ đến', { full: true })),
+        card({ title: 'Các lịch đã đặt' }, sm('Chưa có lịch đã đặt.')),
+        card({ title: 'Lịch đã qua' }, list([
+          { icon: 'check', t: 'Buổi 1 · Tư vấn ban đầu', sub: 'Chưa ghi nhận · Đã hoàn tất', chev: true },
+          { icon: 'check', t: 'Tư vấn ban đầu', sub: '26/06/2026 · Đã hoàn tất', chev: true }
+        ], { sq: true })),
+        notice('Nếu bạn cần đổi lịch, hãy nhắn cho đội ngũ Pema trước ít nhất 4 giờ.', 'info')
+      ], { state: true, patient: WI2_NEW })
     ];
 
     // tail.js: groups and validation (framework part, frozen after W3a). GROUP_DEFS is written by web-canvas-build.cjs from

@@ -392,6 +392,7 @@ function layout(sc) {
       out.push('  </Dialog.Footer>');
     }
     out.push('</Dialog>');
+    if (sc.hasToast) out.push(`<Toast>${q(sc.toast)}</Toast>`);
     nativeLines(sc).forEach((l) => out.push(l));
     return { lines: out, used: ctx.used };
   }

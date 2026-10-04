@@ -31,23 +31,26 @@ Group **WE · Ảnh, bác sĩ & phòng, dịch vụ** · state · Next.js: **pla
 - Layout `.two-col-form` 624×90 px: grid, columns `1fr 1fr` (304.5px 304.5px), gap 15px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WE9): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
 ```tsx
-// opens over the page; the backdrop and the page behind it are not part of this screen
-<Dialog old="modal ops-modal" eyebrow="Pema · vận hành" title="Khóa thời gian phòng" close={{"label":"Đóng hộp thoại"}}>
-  <Field label="Phòng" type="select" default="Khám da liễu" id="block-room" options={["Khám da liễu","Tư vấn chuyên sâu","Laser & thủ thuật","Chăm sóc da"]} />
-  <Field label="Ngày" type="date" default="2026-09-20" id="block-date" />
-  <Grid old="two-col-form" cols="1fr 1fr" gap="15px">
-    <Field label="Từ" type="time" default="14:00" id="block-start" />
-    <Field label="Đến" type="time" default="15:00" id="block-end" />
+// opens over the page "Bác sĩ & phòng" (dimmed); the page behind it is not part of this screen
+<Dialog eyebrow="Pema · vận hành" title="Khóa thời gian phòng" width="720px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
+  <Field label="Phòng" type="select" default="Khám da liễu" options={["Khám da liễu","Tư vấn chuyên sâu","Laser & thủ thuật","Chăm sóc da"]} />
+  <Field label="Ngày" type="date" default="2026-09-20" />
+  <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
+    <Field label="Từ" type="time" default="14:00" />
+    <Field label="Đến" type="time" default="15:00" />
   </Grid>
-  <Field label="Lý do" type="text" default="Bảo trì thiết bị" id="block-reason" />
-  <Button variant="primary" old="btn btn-primary">"Lưu khoảng khóa"</Button>  // ops=save-block
-  <Notice tone="danger" role="alert" old="ops-error">"Có lịch hẹn trong khoảng này. Hãy dời lịch trước khi khóa phòng."</Notice>
+  <Field label="Lý do" type="text" default="Bảo trì thiết bị" />
+  <Notice tone="danger" role="alert" old="error-line">"Có lịch hẹn trong khoảng này. Hãy dời lịch trước khi khóa phòng."</Notice>
+  <Dialog.Footer>
+    <Button variant="primary">"Lưu khoảng khóa"</Button>
+  </Dialog.Footer>
 </Dialog>
 ```
-Kit components used: Field×5, Dialog×1, Button×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Field×5, Dialog×1, Button×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WE9-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -75,6 +78,27 @@ Kit components used: Field×5, Dialog×1, Button×1; shared pieces: Notice×1. E
 
 ## Gotchas
 - The appointment buffer counts as occupied time (end = start + duration + buffer), so a block that only touches the buffer is also refused.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WE9 · Khóa thời gian phòng`.
+- Canvas note: Web › resources › Khóa phòng › "Lưu khoảng khóa" khi trong khoảng đã có lịch hẹn: dòng lỗi "Có lịch hẹn trong khoảng này. Hãy dời lịch trước khi khóa phòng."; các giá trị đã nhập được giữ; app I8 chỉ vẽ nhánh thành công · chưa có trên Next.js
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+```tsx
+// opens over the page; the backdrop and the page behind it are not part of this screen
+<Dialog old="modal ops-modal" eyebrow="Pema · vận hành" title="Khóa thời gian phòng" close={{"label":"Đóng hộp thoại"}}>
+  <Field label="Phòng" type="select" default="Khám da liễu" id="block-room" options={["Khám da liễu","Tư vấn chuyên sâu","Laser & thủ thuật","Chăm sóc da"]} />
+  <Field label="Ngày" type="date" default="2026-09-20" id="block-date" />
+  <Grid old="two-col-form" cols="1fr 1fr" gap="15px">
+    <Field label="Từ" type="time" default="14:00" id="block-start" />
+    <Field label="Đến" type="time" default="15:00" id="block-end" />
+  </Grid>
+  <Field label="Lý do" type="text" default="Bảo trì thiết bị" id="block-reason" />
+  <Button variant="primary" old="btn btn-primary">"Lưu khoảng khóa"</Button>  // ops=save-block
+  <Notice tone="danger" role="alert" old="ops-error">"Có lịch hẹn trong khoảng này. Hãy dời lịch trước khi khóa phòng."</Notice>
+</Dialog>
+```
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WE9-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

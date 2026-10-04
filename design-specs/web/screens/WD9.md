@@ -31,20 +31,19 @@ Group **WD · CSKH & theo dõi** · state · Next.js: **built (U7)** (`/crm`) ·
 - Layout `.modal-head` 704×36 px: flex row, space-between
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WD9): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
 ```tsx
-// opens over the page; the backdrop and the page behind it are not part of this screen
-<Dialog old="modal crm-modal" title="Kết quả chăm sóc đã ghi" close={{"label":"Đóng hộp thoại"}} aria-label="Kết quả chăm sóc đã ghi">
-  <Stack tag="article">
-    <Text strong>"Ngô Khánh Vy · Đã liên hệ, chưa có nhu cầu"</Text>
-    <Text>"Đã trao đổi, chưa có nhu cầu."</Text>
-    <Text small>"BS. Tâm · 2026-09-20T09:00:01+07:00"</Text>
-  </Stack>
+// opens over the page "CSKH hôm nay" (dimmed); the page behind it is not part of this screen
+<Dialog title="Kết quả chăm sóc đã ghi" width="760px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
+  <List>
+    <ListItem title="Nguyễn Thu Hà · Đã liên hệ, chưa có nhu cầu" sub="Đã trao đổi, chưa có nhu cầu." sub2="BS. Tâm · 2026-09-20T09:00:01+07:00" />
+  </List>
 </Dialog>
-<Notice tone="info" old="toast">"Đã lưu kết quả và cập nhật hàng đợi"</Notice>
+<Toast>"Đã lưu kết quả và cập nhật hàng đợi"</Toast>
 ```
-Kit components used: Dialog×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Dialog×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WD9-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -70,9 +69,28 @@ Kit components used: Dialog×1; shared pieces: Notice×1. Everything else (Row, 
 
 ## Differences from the app design
 - The app has no counterpart for this activity log dialog.
+- Canvas: the toast "Đã lưu kết quả và cập nhật hàng đợi" is drawn bottom right behind the dialog; the old shot is taken after it has gone. The Layout generator does not list a dialog toast, so the text is exempted through demo_data. The time string is the old web's ISO value, kept verbatim.
 
 ## Gotchas
 - Every CSKH dialog uses `crm-modal` with its own `#crm-error` line; errors of the commands are shown there, not in a toast.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WD9 · Kết quả chăm sóc đã ghi`.
+- Canvas note: Web › dialog crm → KPI "Đã hoàn tất" · khi đã có kết quả (sau khi lưu một cuộc gọi "Đã liên hệ, chưa có nhu cầu"): mỗi kết quả một khối gồm khách · kết quả, ghi chú, người ghi · thời gian (giữ nguyên chuỗi giờ của bản gốc); thông báo nổi "Đã lưu kết quả và cập nhật hàng đợi"; trạng thái trống là WD4
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+```tsx
+// opens over the page; the backdrop and the page behind it are not part of this screen
+<Dialog old="modal crm-modal" title="Kết quả chăm sóc đã ghi" close={{"label":"Đóng hộp thoại"}} aria-label="Kết quả chăm sóc đã ghi">
+  <Stack tag="article">
+    <Text strong>"Ngô Khánh Vy · Đã liên hệ, chưa có nhu cầu"</Text>
+    <Text>"Đã trao đổi, chưa có nhu cầu."</Text>
+    <Text small>"BS. Tâm · 2026-09-20T09:00:01+07:00"</Text>
+  </Stack>
+</Dialog>
+<Notice tone="info" old="toast">"Đã lưu kết quả và cập nhật hàng đợi"</Notice>
+```
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WD9-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
