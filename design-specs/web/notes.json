@@ -88,7 +88,12 @@
       "gotchas": [
         "\"Đặt lại dữ liệu demo\" (`#reset-demo`) asks a native `confirm('Đặt lại dữ liệu demo?')`, then toasts \"Đã khôi phục dữ liệu demo\".",
         "The global search answers Enter only: it sets the patient search and opens \"Tìm bệnh nhân\".",
-        "The bell button is a link to \"Theo dõi\" (`data-nav=followups`)."
+        "The bell button is a link to \"Theo dõi\" (`data-nav=followups`).",
+        "The finance link in the top bar has three states from `finance-bridge.js`: \"Tài chính đã đồng bộ\", \"Đang đồng bộ tài chính…\", \"Tài chính chờ kết nối · thử lại\"; the canvas draws the first one.",
+        "The canvas draws the content area as a placeholder: each page is drawn by its own group (WB-WH)."
+      ],
+      "demo_data": [
+        "Account labels and the user card come from the 8 demo accounts of `staff-context.js` (BS. Tâm, BS. Mai, BS. An, BS. Lan, Mai Anh, Thu, Kế toán)."
       ]
     },
     "WA2": {
@@ -96,12 +101,29 @@
         "`staff-context.js › home()`: care lands on `crm`, accountant on `cashier`, everyone else on `dashboard`."
       ],
       "gotchas": [
-        "Care sees 4 menu items only (Điều phối lịch, Tìm bệnh nhân, CSKH hôm nay, Hướng dẫn)."
+        "Care sees 4 menu items only (Điều phối lịch, Tìm bệnh nhân, CSKH hôm nay, Hướng dẫn).",
+        "The care shell keeps the finance link \"Tài chính đã đồng bộ\" (old shot) although care has no finance page.",
+        "The landing page \"CSKH hôm nay\" is drawn in full by group WD (WD1); WA2 draws only its heading and the four KPI tiles for context, with demo numbers from the canvas."
+      ],
+      "differences": [
+        "The canvas top bar always draws the bell; the old web shows it for owner and doctor only (care sees the finance link but no bell). Template change needed, see the W3b-WA report."
+      ],
+      "demo_data": [
+        "KPI numbers (12, 5, 4, 2) are canvas sample data, not the old web's counts."
       ]
     },
     "WA3": {
       "logic": [
         "Accountant menu: Tài chính, Thu ngân, Tìm bệnh nhân, Hướng dẫn; capabilities `billing` and `readFinance`."
+      ],
+      "differences": [
+        "The canvas top bar always draws the bell; the old web shows it for owner and doctor only (accountant has the finance link but no bell). Template change needed, see the W3b-WA report."
+      ],
+      "gotchas": [
+        "The landing page \"Thu ngân\" is drawn in full by group WF; WA3 draws only its heading and the four KPI tiles for context."
+      ],
+      "demo_data": [
+        "KPI numbers (12, 8.400.000 ₫, 2.100.000 ₫, 96) are canvas sample data, not the old web's counts."
       ]
     },
     "WA4": {
@@ -109,7 +131,12 @@
         "`clinic.js › toast(msg)` removes any existing `.toast`, appends a `div.toast` to `body` and removes it after 2800 ms."
       ],
       "gotchas": [
-        "The toast is outside `#app`; the snapshot adds any visible `.toast` to the tree of every screen."
+        "The toast is outside `#app`; the snapshot adds any visible `.toast` to the tree of every screen.",
+        "The toast is a fixed pill at the bottom right of the viewport, above the page content; the page behind it (\"Hôm nay\", drawn in full at WB3) is only context.",
+        "Check-in and Vắng act at once: the row's status badge changes and the buttons become \"Bắt đầu\" (Đã đến) or \"Mời vào phòng\" (Đang chờ); no dialog opens."
+      ],
+      "demo_data": [
+        "Patient names, contact, doctors and prices in the reception table are canvas sample data (`people`, `doctors`)."
       ]
     },
     "WB1": {
