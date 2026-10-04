@@ -72,6 +72,25 @@
       "logic": [
         "\"Ask Pema\" is `clinic.js › ask()` (a scripted query over the demo state, no model); the guide is `guide.js` (`PemaGuide.render()` and its navigation)."
       ]
+    },
+    "WI": {
+      "logic": [
+        "The whole phone web is one script, `shared/patient.js` (an IIFE; page `patient-mobile/index.html` only holds `<div id=\"app\">` and the script tags). Module state: `screen`, `identity`, `group`, `historyLimit` and the send-update drafts. `render()` picks one of `home`, `appointments`, `journey`, `progress`, `care`, `send`, `messages`, `docs`, `profile`; `app(content)` wraps it with the top bar (logo, avatar button \"ML\" that opens Hồ sơ), `<main class=\"mobile-content\">` and the bottom `<nav class=\"mobile-nav\">`.",
+        "Navigation is data-driven: every `data-screen` button switches screen (and resets the history limit to 3), every `data-action` button calls `action()`. The bottom navigation has five items, \"Trang chủ\", \"Lịch hẹn\", \"Hành trình\", \"Tin nhắn\", \"Hồ sơ\". Sub-screens keep a parent item lit: `progress`, `care` and `send` light \"Hành trình\"; `docs` lights \"Hồ sơ\" (so WI6, WI7, WI8 and WI9 show a different active item than their back button suggests). Back buttons: \"← Trang chủ\", \"← Hành trình\", \"← Hồ sơ\", \"← Chăm sóc tại nhà\".",
+        "`shared/care-finance.js › injectMobile` appends the card \"Đơn & phiếu đã duyệt\" (class `mobile-linked-prescriptions`) under the Trang chủ, Hồ sơ and Tài liệu & hóa đơn screens. It lists only what a doctor approved (prescription, and approved cashier orders with \"Đơn thuốc\" and \"Phiếu tư vấn\"); otherwise it shows the chip \"Chưa có\" and \"Đơn và phiếu sẽ xuất hiện sau khi bác sĩ duyệt.\"",
+        "Data is the demo store `Pema.state` (localStorage, shared with the clinic web of the same origin) and `pema-patient-identity` (the chosen synthetic patient, default P001). A change made in the clinic web shows here on the next render (`pema-external` and `pema-change` events), except while the send or progress screen is open so a draft is never wiped.",
+        "Feedback is a toast only: `showToast(msg)` re-renders with `<div class=\"mobile-toast\" role=\"status\" aria-live=\"polite\">` and clears it after 2.8 s (the whole screen is rendered again both times). A failed save (`saveOrRollback`) restores the state and toasts \"Không lưu được thay đổi. Dữ liệu và bản nháp vẫn được giữ lại.\""
+      ],
+      "rules": [
+        "There is no native browser dialog (`confirm`, `prompt`, `alert`) in the phone web (checked in `patient.js` and `index.html`): every message is a toast or an inline line, so no id of this group needs a captured native text."
+      ],
+      "gotchas": [
+        "Primary frame is 390×844. From 701px up, `.mobile-app` is a 460px column (max-width) of 100dvh with a scrolling `.mobile-content` and the bottom navigation inside the column, so the 1440×900 snapshot shows the column at x 490 and the probes at 1920, 1280, 1024 and 390 report \"no layout change\". What the probes cannot see changes at ≤700px (design.css): content padding 20px, top bar padding 22px 20px, `.mobile-heading` 28px, `.mobile-card` padding 18px, logo 112px; at max-height 740px the home cards compact (heading 22-23px, quick-action captions hidden); at ≤370px the nav font is 10px.",
+        "Every screen has the same frame (top bar, content, bottom navigation, and the toast when one is up), so the ids differ only in the content. The snapshot scope is `body`.",
+        "Icon glyphs typed as characters in the code (✓ ✦ ⚙ ▤ ▧ ＋ › ▢) are swapped for lucide icons at render (`PemaUI.enhance`) and are not part of the labels in the snapshot (the label of \"＋ Gửi tin nhắn\" is \"Gửi tin nhắn\"); the web canvas draws icons from the kit.",
+        "Accessible names that are not visible text: the avatar button \"Mở hồ sơ demo của <tên>\", the session rail \"<n> trên <total> buổi hoàn tất\", the progress bar \"Số buổi điều trị đã hoàn tất\", the quick action \"Xem hướng dẫn\", the faces \"Trước — minh họa tổng hợp, không phải ảnh bệnh nhân\" and \"Gần nhất — …\", the file input \"Ảnh cập nhật cho Pema\", the consent box \"Đồng ý để Pema xem ảnh cập nhật\" and the preview \"Xem trước ảnh cập nhật\" (alt \"Ảnh cập nhật đã chọn — bản demo\").",
+        "Patient data is the synthetic store (46 patients; the default profile is P001, phone masked as \"09•• ••• 100\"). Screens of a toast (WI23, WI28, WI29, WI31, WI33, WI34, WI38-WI40) are captured while the toast is up (2.8 s) and list it as a `notice` with role \"status\"."
+      ]
     }
   },
   "screens": {
@@ -865,6 +884,471 @@
     "WF4": {
       "logic": [
         "Cart lines keep the catalog route as default (H002 Đơn thuốc, H005 Phiếu tư vấn); the total is quantity × unit price (5.500 ₫ + 715.000 ₫ = 720.500 ₫)."
+      ]
+    },
+    "WI1": {
+      "logic": [
+        "`patient.js › home()` for the default patient P001 (the screen that opens at /patient-mobile/). The first card is `nextStep(patient)`: it takes the CSKH task of the patient from `PemaCRM.queue` (the task of the patient's `demoGroup`, else the newest d1/d3/d7 task, else the first due/overdue/no_show/abandoned task) and maps its type to a title, a sentence and a button (table in WI10-WI18). P001 has a \"due\" task: \"Đến mốc tái khám\" → \"Xem lịch hẹn\".",
+        "Order of the content: greeting \"Chào <tên cuối>\", \"Hôm nay của bạn\", next-step card, journey hero (eyebrow \"Hành trình đang tiếp diễn\", plan, \"Buổi 2 / 5 · Cập nhật 6/9/2026\", session rail of 5 segments with 2 complete, \"Xem hành trình →\"), \"Lịch hẹn tiếp theo\" with \"Xem tất cả\", then either nothing (a next-step card exists) or the card \"Việc hôm nay\" (WI20), then the approved prescription card."
+      ],
+      "rules": [
+        "The home calendar tile comes from `appointmentDisplay`: a valid `next` date gives \"20\" and \"Tháng 09\" with the label \"Chủ Nhật, 20/09 · 08:00\"; no valid date gives a calendar icon, \"Chọn lịch\", \"Chưa có lịch hẹn · Liên hệ Pema để đặt lịch\" (WI10-WI18)."
+      ],
+      "differences": [
+        "App E1 has four tabs (Trang chủ, Hành trình, Tin nhắn, Hồ sơ); the web has five, adding \"Lịch hẹn\" (WI2). In the app the appointment is reached from the \"Lịch hẹn tiếp theo\" tile (K1).",
+        "App E1 greets \"Chào Hà,\" with \"Hôm nay, dành chút thời gian cho làn da\"; the web greets \"Chào Linh\" (last word of the name) with the title \"Hôm nay của bạn\".",
+        "App E1 draws a hero \"Chăm sóc nhẹ nhàng. Đồng hành mỗi ngày.\" (kicker \"PEMA • CHĂM SÓC LIÊN TỤC\") and the quick actions \"Chăm sóc\", \"Gửi cập nhật\", \"Đơn đã duyệt\" plus \"Việc cần làm\"; the web hero is the journey card with the session rail, the quick actions exist only in \"Việc hôm nay\" (WI20, shown when the patient has no open CSKH task), and the approved prescriptions are the card \"Đơn & phiếu đã duyệt\" instead of a shortcut.",
+        "App E1 shows \"10:30 · 22/9/2026 / BS. Tâm · Khám da liễu\"; the web shows the date tile \"20 Tháng 09\", \"Đánh giá mốc tiếp theo\" and \"Chủ Nhật, 20/09 · 08:00\" with doctor and concern."
+      ]
+    },
+    "WI2": {
+      "logic": [
+        "`patient.js › appointments()`: card \"Sắp tới\" with the chip \"Đã đặt lịch\" (or \"Chưa có lịch\"), the date tile, \"Đánh giá mốc tiếp theo\", the full-width button \"Xác nhận tôi sẽ đến\" (disabled without a valid date); \"Các lịch đã đặt\" lists the active bookings of the patient from `PemaOps.seed().appointments` (date · time, service · duration, doctor); \"Lịch đã qua\" has the last session and \"Tư vấn ban đầu 26/06/2026\" (both \"Đã hoàn tất\", with ›); the notice about changing a booking."
+      ],
+      "rules": [
+        "\"Nếu bạn cần đổi lịch, hãy nhắn cho đội ngũ Pema trước ít nhất 4 giờ.\": the patient can only confirm attendance here; changing a booking goes through a message at least 4 hours ahead."
+      ],
+      "differences": [
+        "App K1 notice reads \"Cần đổi lịch, hãy nhắn cho đội ngũ Pema trước ít nhất 4 giờ.\"; the web sentence starts with \"Nếu bạn cần đổi lịch, \".",
+        "App G3 (\"Lịch của tôi\") confirms with \"Xác nhận tham dự\"; the web button is \"Xác nhận tôi sẽ đến\" (as in app K1).",
+        "App K1 shows one past row (\"Buổi 2 · Chăm sóc & laser\", 6/9/2026) and two booked rows with the app's own sample dates (22/9, 06/10); the web shows two past rows including \"Tư vấn ban đầu\" and the clinic schedule's real seed bookings (20/9/2026 08:00, 26/9/2026 09:00).",
+        "Appointments are a bottom-navigation item in the web and a tile entry in the app."
+      ]
+    },
+    "WI3": {
+      "logic": [
+        "`patient.js › journey()`: summary card (\"Đang điều trị\", plan, \"2/5 buổi\" with the progress bar `role=\"progressbar\"` and \"Tiến độ số buổi, không phải mức cải thiện da.\"), the photo shortcut \"Ảnh trước & sau / Xem các mốc ảnh trong hành trình\" (opens WI6), and \"Cập nhật gần đây\" with the chip \"<n> mốc\": the first 3 events as `<details class=\"event-disclosure\">` (date + title in the summary, detail sentence inside), then \"Xem thêm lịch sử\" while more events exist (`historyLimit` grows by 3)."
+      ],
+      "rules": [
+        "\"Tiến độ số buổi, không phải mức cải thiện da.\": progress is the count of sessions, never a promise of results."
+      ],
+      "differences": [
+        "App E2 has a hero \"Phục hồi & chăm sóc da\" and four tiles (Kế hoạch điều trị, Ảnh tiến triển, Chăm sóc tại nhà, Đơn thuốc & tư vấn); the web has none of those tiles, only the photo shortcut, and shows the plan name and a progress bar.",
+        "App K3 headed the timeline \"Cập nhật gần đây · 3 mốc\" as plain tiles; the web shows the chip \"4 mốc\", expandable rows with a detail sentence, and the button \"Xem thêm lịch sử\"."
+      ],
+      "gotchas": [
+        "Event icons are chosen by kind: photo → images, followup → message-circle, anything else → check."
+      ]
+    },
+    "WI4": {
+      "logic": [
+        "`patient.js › messages()`: back \"← Trang chủ\", thread card \"Pema Care Team\" with the status \"Đang hỗ trợ\" (`status-green`), one bubble per message (clinic left, patient right with class `mine`, text + time such as \"13/09 · 09:15\"), and the full-width button \"Gửi tin nhắn\" (goes to WI8)."
+      ],
+      "rules": [
+        "Messages are not an emergency channel, but unlike app E3 this thread shows no sentence saying so; the wording \"Đây không phải kênh cấp cứu.\" appears on the send screen (WI8)."
+      ],
+      "differences": [
+        "App E3 starts with the notice \"Nếu có dấu hiệu bất thường nặng, hãy liên hệ trực tiếp. Tin nhắn không phải kênh cấp cứu.\"; the web Tin nhắn page has no notice (the sentence \"Đây không phải kênh cấp cứu.\" is on the send screen, WI8).",
+        "App E3 shows two tiles \"Bạn\" / \"Đội ngũ Pema\" with sample texts and the button \"Gửi cập nhật\"; the web shows chat bubbles with times, a status chip, a back button and the button \"＋ Gửi tin nhắn\"."
+      ]
+    },
+    "WI5": {
+      "logic": [
+        "`patient.js › profile()`: avatar with initials, name, \"32 tuổi · 09•• ••• 100 · P001\", the demo notice; three rows (`doc-row btn`): \"Tài liệu & hóa đơn\" (WI9), \"Chăm sóc tại nhà\" (WI7) and \"Quyền riêng tư\" whose subtitle shows the consent state (\"Ảnh chăm sóc: đã đồng ý\" / \"chưa đồng ý\"), which is a toggle, not a screen (WI38, WI39); then \"Đổi hồ sơ demo\" with the two selects (11 groups, 46 patients) and the demo sentence; then the approved prescription card."
+      ],
+      "rules": [
+        "The profile switch is a demo, not a login: \"Chỉ dùng để trình diễn trải nghiệm liên thông; không đại diện đăng nhập thật.\" and \"Tài khoản và dữ liệu thật sẽ cần xác thực riêng.\""
+      ],
+      "differences": [
+        "App E4 draws \"Tài khoản mẫu · 10 nhóm CSKH\" with a dropdown (no label) and \"Người bệnh đang xem\"; the web labels are \"Nhóm tài khoản mẫu\" and \"Chọn người bệnh tổng hợp\" (options \"Tên · Pxxx\", with the demo case suffix when one exists).",
+        "App E4 lists four rows (Đơn thuốc & tư vấn, Hóa đơn, Quyền riêng tư, Hướng dẫn) all with \"Thông tin của bạn\"; the web has three rows with their own subtitles and no prescription or invoice row (they are inside \"Tài liệu & hóa đơn\").",
+        "App G8 is a privacy screen with a check row \"Đồng ý dùng ảnh trong chăm sóc\" and \"Template không sử dụng dữ liệu bệnh nhân thật.\"; the web has no privacy screen, the row itself toggles the consent."
+      ]
+    },
+    "WI6": {
+      "logic": [
+        "`patient.js › progress()` (reached from the photo shortcut of Hành trình): card \"So sánh mốc ảnh\" with the chip \"Chính diện\", two illustrative faces from `Pema.face` (\"Trước\" and \"Gần nhất\", each stamped \"MINH HỌA TỔNG HỢP\"), the notice \"Cùng góc chụp, cùng ánh sáng giúp bác sĩ xem thay đổi trong bối cảnh. Không dùng ảnh này để tự chẩn đoán.\"; card \"Gửi ảnh cập nhật\" with \"Gửi ảnh kèm mô tả để đội ngũ Pema xem và phản hồi.\" and \"Gửi ảnh cập nhật →\" (opens WI8)."
+      ],
+      "rules": [
+        "The faces are synthetic SVG illustrations (aria-label \"<Trước|Gần nhất> — minh họa tổng hợp, không phải ảnh bệnh nhân\"); no real photo is ever shown in the demo.",
+        "The stamp \"MINH HỌA TỔNG HỢP\" and \"Không dùng ảnh này để tự chẩn đoán.\" mark the faces as illustrations, not patient photos or a diagnosis."
+      ],
+      "differences": [
+        "App G5 reads \"Theo dõi bằng hình ảnh / Ảnh minh họa • không đánh giá hiệu quả tự động\" with tiles \"Trước\", \"Gần nhất\" and \"Minh họa\", and the notice \"Chính diện · Vùng mặt · Cần cùng điều kiện ánh sáng\"; the web title is \"Tiến độ số buổi & ảnh\", the angle is a chip, and the notice is the longer sentence above.",
+        "App G5 has one button \"Gửi ảnh cập nhật\"; the web adds the card \"Gửi ảnh cập nhật\" with its sentence and \"Gửi ảnh cập nhật →\"."
+      ]
+    },
+    "WI7": {
+      "logic": [
+        "`patient.js › care()`: eyebrow \"Sau buổi điều trị · <ngày>\", fixed title \"Mỗi ngày một chút dịu dàng.\", the approved after-care text of the patient, one `care-row` per medication (name + use); card \"Khi nào cần nhắn Pema?\" with the explanation, \"Tôi đã đọc hướng dẫn\" and \"Gửi cập nhật →\" (opens WI8)."
+      ],
+      "rules": [
+        "\"Nếu bạn thấy phản ứng bất thường, khó chịu kéo dài hoặc cần hỏi cách chăm sóc, hãy gửi cập nhật trong ứng dụng. Đội ngũ sẽ xem và phản hồi theo quy trình của phòng khám.\" The sentence sends the patient to a message, not to an emergency number."
+      ],
+      "differences": [
+        "App G1 reads \"Nhẹ nhàng với làn da / Hướng dẫn mẫu đã được bác sĩ kiểm tra\" with three tiles (Làm sạch dịu nhẹ, Dưỡng ẩm theo hướng dẫn, Bảo vệ da khỏi ánh nắng) and the buttons \"Tôi đã đọc hướng dẫn\" and \"Gửi cập nhật cho Pema\"; the web title is \"Chăm sóc tại nhà\", the body is the approved text plus one row per medication, and the second button is \"Gửi cập nhật →\"."
+      ]
+    },
+    "WI8": {
+      "logic": [
+        "`patient.js › send()` (reached from Tin nhắn, Chăm sóc tại nhà, Tiến độ số buổi & ảnh and the next-step cards): back \"← Chăm sóc tại nhà\", textarea `#patient-message` \"Bạn đang cảm thấy thế nào?\" (placeholder \"Ví dụ: Da hơi khô ở hai má từ tối qua...\"), upload box with the hint \"Thêm ảnh nếu bạn muốn đội ngũ xem vùng da cụ thể.\" and the picker \"Chọn ảnh\" (`#patient-photo`, accept PNG/JPEG/WebP), consent checkbox `#patient-consent`, \"Gửi cho Pema\" (`data-action=\"send-update\"`), and the notice about the emergency channel."
+      ],
+      "rules": [
+        "\"Tin nhắn được gửi tới đội ngũ chăm sóc. Đây không phải kênh cấp cứu.\" (notice under \"Gửi cho Pema\"): messages are not an emergency channel; the sentence lives only on the send screen, not on the Tin nhắn thread.",
+        "Photos: PNG, JPEG or WebP only, at most 2.5 MB (\"Chỉ hỗ trợ PNG, JPEG hoặc WebP.\", \"Ảnh demo tối đa 2,5 MB.\", \"Tệp không phải ảnh hợp lệ.\", \"Không đọc được ảnh.\"). Sending a photo needs the tick \"Tôi đồng ý để đội ngũ Pema xem ảnh này cho mục đích chăm sóc.\"; choosing a file clears the tick, so consent is asked again for every photo."
+      ],
+      "differences": [
+        "App G2 says \"Hôm nay da bạn thế nào?\" and the notice \"Cập nhật sẽ vào hàng chờ để đội ngũ Pema xem.\"; the web label is \"Bạn đang cảm thấy thế nào?\" and its only notice is \"Tin nhắn được gửi tới đội ngũ chăm sóc. Đây không phải kênh cấp cứu.\"",
+        "App G2 has a sample-photo button \"Đã chọn ảnh mẫu\", the note \"Ảnh mẫu dùng duyệt UI • camera native chưa kết nối\", the consent text \"Tôi đồng ý chia sẻ ảnh để chăm sóc\" and a \"Gửi cập nhật\" button that is disabled until consent; the web uses a real file picker, the longer consent sentence and an always-enabled \"Gửi cho Pema\" that answers with a toast."
+      ]
+    },
+    "WI9": {
+      "logic": [
+        "`patient.js › docs()` (reached from Hồ sơ): \"Hóa đơn của bạn\" with one `doc-row` per invoice (label, \"<mã> · <ngày> · <trạng thái>\", amount at the right) where the status is \"Đã thanh toán\", \"Đã thu một phần · còn <số tiền>\" or \"Chờ thanh toán\"; \"Hướng dẫn đã gửi\" with the row \"Hướng dẫn chăm sóc sau buổi / Hướng dẫn đã duyệt · <ngày>\" (opens WI7); then the approved prescription card."
+      ],
+      "rules": [
+        "The patient only reads invoices: there is no pay or collect button (collection is a clinic task on the cashier screen)."
+      ],
+      "differences": [
+        "App K2/G7 show the invoice rows as tiles \"Buổi chăm sóc / điều trị\" with \"HD-0001 · 6/9/2026 · Đã thanh toán\"; G7 adds a hero with the amount to pay (\"580.000 ₫\", \"Đã thu 0 ₫\") and the heading \"Khoản cần thanh toán\" that the web does not have.",
+        "App K2 puts \"Đơn & phiếu đã duyệt\" as tiles (\"DN-1 · BS. Tâm\"); the web card lists prescription lines with usage, and the invoice date uses the ISO form (\"2026-09-06\")."
+      ],
+      "gotchas": [
+        "At 390 the amount column of an invoice row is narrow: the currency sign wraps under the number (\"720.500\" / \"₫\"). It is how the old web looks; keep it unless the owner decides otherwise."
+      ]
+    },
+    "WI10": {
+      "logic": [
+        "`nextStep()` for a demo patient of the CRM group \"Sau thủ thuật D+1\" (`#case-group` value `d1` on Hồ sơ, then Trang chủ): the card `data-next-step=\"d1\"` reads \"Hôm nay bạn cảm thấy thế nào?\" / \"Gửi tình trạng sau buổi điều trị để đội ngũ Pema theo dõi.\" and its button \"Gửi cập nhật\" goes to the send screen (WI8)."
+      ],
+      "differences": [
+        "App E1 note: \"patientNext() theo nhóm D+1\" is the nearest app counterpart; its tile reads \"Hôm nay bạn cảm thấy thế nào?\" with \"Xem lịch hoặc gửi nhu cầu để đội ngũ hỗ trợ\" while the web sentence is \"Gửi tình trạng sau buổi điều trị để đội ngũ Pema theo dõi.\""
+      ],
+      "gotchas": [
+        "A demo patient of a CRM group has no booked appointment (the tile reads \"Chọn lịch\" / \"Chưa có lịch hẹn · Liên hệ Pema để đặt lịch\") and no approved prescription (chip \"Chưa có\"). The other cards are the same as WI1."
+      ]
+    },
+    "WI11": {
+      "logic": [
+        "`nextStep()` for a demo patient of the CRM group \"D+3 cần ảnh\" (`#case-group` value `d3` on Hồ sơ, then Trang chủ): the card `data-next-step=\"d3\"` reads \"Cập nhật ảnh tiến triển\" / \"Bạn có thể gửi ảnh cùng mô tả và đồng ý cho bác sĩ xem.\" and its button \"Gửi cập nhật\" goes to the send screen (WI8)."
+      ],
+      "differences": [
+        "The app has one fixed Trang chủ (E1, \"patientNext() theo nhóm D+1\"): only the D+1 wording is drawn there; the other eight next-step cards exist only in the web."
+      ],
+      "gotchas": [
+        "A demo patient of a CRM group has no booked appointment (the tile reads \"Chọn lịch\" / \"Chưa có lịch hẹn · Liên hệ Pema để đặt lịch\") and no approved prescription (chip \"Chưa có\"). The other cards are the same as WI1."
+      ]
+    },
+    "WI12": {
+      "logic": [
+        "`nextStep()` for a demo patient of the CRM group \"D+7 bác sĩ review\" (`#case-group` value `d7` on Hồ sơ, then Trang chủ): the card `data-next-step=\"d7\"` reads \"Cùng bác sĩ xem lại tiến triển\" / \"Gửi cập nhật để bác sĩ đánh giá; phản hồi sẽ ở Tin nhắn.\" and its button \"Gửi cập nhật\" goes to the send screen (WI8)."
+      ],
+      "differences": [
+        "The app has one fixed Trang chủ (E1, \"patientNext() theo nhóm D+1\"): only the D+1 wording is drawn there; the other eight next-step cards exist only in the web."
+      ],
+      "gotchas": [
+        "A demo patient of a CRM group has no booked appointment (the tile reads \"Chọn lịch\" / \"Chưa có lịch hẹn · Liên hệ Pema để đặt lịch\") and no approved prescription (chip \"Chưa có\"). The other cards are the same as WI1."
+      ]
+    },
+    "WI13": {
+      "logic": [
+        "`nextStep()` for a demo patient of the CRM group \"Quá hạn tái khám\" (`#case-group` value `overdue` on Hồ sơ, then Trang chủ): the card `data-next-step=\"overdue\"` reads \"Sắp xếp lần tái khám tiếp theo\" / \"Nhắn Pema nếu bạn cần hỗ trợ chọn lịch phù hợp.\" and its button \"Gửi cập nhật\" goes to the send screen (WI8)."
+      ],
+      "differences": [
+        "The app has one fixed Trang chủ (E1, \"patientNext() theo nhóm D+1\"): only the D+1 wording is drawn there; the other eight next-step cards exist only in the web."
+      ],
+      "gotchas": [
+        "A demo patient of a CRM group has no booked appointment (the tile reads \"Chọn lịch\" / \"Chưa có lịch hẹn · Liên hệ Pema để đặt lịch\") and no approved prescription (chip \"Chưa có\"). The other cards are the same as WI1."
+      ]
+    },
+    "WI14": {
+      "logic": [
+        "`nextStep()` for a demo patient of the CRM group \"Vắng/hủy chưa đặt lại\" (`#case-group` value `no_show` on Hồ sơ, then Trang chủ): the card `data-next-step=\"no_show\"` reads \"Chọn lại một lịch hẹn phù hợp\" / \"Đội ngũ Pema sẽ hỗ trợ bạn sắp xếp lại.\" and its button \"Gửi cập nhật\" goes to the send screen (WI8)."
+      ],
+      "differences": [
+        "The app has one fixed Trang chủ (E1, \"patientNext() theo nhóm D+1\"): only the D+1 wording is drawn there; the other eight next-step cards exist only in the web."
+      ],
+      "gotchas": [
+        "A demo patient of a CRM group has no booked appointment (the tile reads \"Chọn lịch\" / \"Chưa có lịch hẹn · Liên hệ Pema để đặt lịch\") and no approved prescription (chip \"Chưa có\"). The other cards are the same as WI1."
+      ]
+    },
+    "WI15": {
+      "logic": [
+        "`nextStep()` for a demo patient of the CRM group \"Nguy cơ bỏ liệu trình\" (`#case-group` value `abandoned` on Hồ sơ, then Trang chủ): the card `data-next-step=\"abandoned\"` reads \"Tiếp tục kế hoạch chăm sóc\" / \"Trao đổi với Pema về các buổi còn lại của bạn.\" and its button \"Gửi cập nhật\" goes to the send screen (WI8)."
+      ],
+      "differences": [
+        "The app has one fixed Trang chủ (E1, \"patientNext() theo nhóm D+1\"): only the D+1 wording is drawn there; the other eight next-step cards exist only in the web."
+      ],
+      "gotchas": [
+        "A demo patient of a CRM group has no booked appointment (the tile reads \"Chọn lịch\" / \"Chưa có lịch hẹn · Liên hệ Pema để đặt lịch\") and no approved prescription (chip \"Chưa có\"). The other cards are the same as WI1."
+      ]
+    },
+    "WI16": {
+      "logic": [
+        "`nextStep()` for a demo patient of the CRM group \"90 ngày chưa quay lại\" (`#case-group` value `dormant90` on Hồ sơ, then Trang chủ): the card `data-next-step=\"dormant90\"` reads \"Pema sẵn sàng đồng hành\" / \"Nhắn nhu cầu hiện tại để đội ngũ hỗ trợ.\" and its button \"Gửi cập nhật\" goes to the send screen (WI8)."
+      ],
+      "differences": [
+        "The app has one fixed Trang chủ (E1, \"patientNext() theo nhóm D+1\"): only the D+1 wording is drawn there; the other eight next-step cards exist only in the web."
+      ],
+      "gotchas": [
+        "A demo patient of a CRM group has no booked appointment (the tile reads \"Chọn lịch\" / \"Chưa có lịch hẹn · Liên hệ Pema để đặt lịch\") and no approved prescription (chip \"Chưa có\"). The other cards are the same as WI1."
+      ]
+    },
+    "WI17": {
+      "logic": [
+        "`nextStep()` for a demo patient of the CRM group \"180 ngày chưa quay lại\" (`#case-group` value `dormant180` on Hồ sơ, then Trang chủ): the card `data-next-step=\"dormant180\"` reads \"Kết nối lại với Pema\" / \"Chia sẻ nhu cầu để được hỗ trợ trước khi hẹn khám.\" and its button \"Gửi cập nhật\" goes to the send screen (WI8)."
+      ],
+      "differences": [
+        "The app has one fixed Trang chủ (E1, \"patientNext() theo nhóm D+1\"): only the D+1 wording is drawn there; the other eight next-step cards exist only in the web."
+      ],
+      "gotchas": [
+        "A demo patient of a CRM group has no booked appointment (the tile reads \"Chọn lịch\" / \"Chưa có lịch hẹn · Liên hệ Pema để đặt lịch\") and no approved prescription (chip \"Chưa có\"). The other cards are the same as WI1."
+      ]
+    },
+    "WI18": {
+      "logic": [
+        "`nextStep()` for a demo patient of the CRM group \"Sinh nhật trong tuần\" (`#case-group` value `birthday` on Hồ sơ, then Trang chủ): the card `data-next-step=\"birthday\"` reads \"Một lời chúc từ Pema\" / \"Chúc bạn đón tuổi mới thật nhiều sức khỏe.\" and its button \"Mở tin nhắn\" goes to Tin nhắn (WI4)."
+      ],
+      "differences": [
+        "The app has one fixed Trang chủ (E1, \"patientNext() theo nhóm D+1\"): only the D+1 wording is drawn there; the other eight next-step cards exist only in the web."
+      ],
+      "gotchas": [
+        "A demo patient of a CRM group has no booked appointment (the tile reads \"Chọn lịch\" / \"Chưa có lịch hẹn · Liên hệ Pema để đặt lịch\") and no approved prescription (chip \"Chưa có\"). The other cards are the same as WI1."
+      ]
+    },
+    "WI19": {
+      "logic": [
+        "`care-finance.js › injectMobile` for P002, who has a draft prescription (WC28) but nothing approved: the patient sees only the chip \"Chưa có\" and \"Đơn và phiếu sẽ xuất hiện sau khi bác sĩ duyệt.\" Reached by switching to P002 in Hồ sơ (the toast \"Đã đổi hồ sơ demo\" is waited out) and opening Trang chủ."
+      ],
+      "rules": [
+        "A draft or pending prescription is never shown to the patient: only \"Duyệt\" by a doctor publishes it (clinic-web rule \"chưa hiện trên app\")."
+      ]
+    },
+    "WI20": {
+      "logic": [
+        "`home()` when `nextStep()` returns an empty string (the patient has no open CSKH task): the card is replaced by \"Việc hôm nay\" with the chip \"Pema đồng hành\" and three quick actions \"Chăm sóc / Hướng dẫn tại nhà\" (care), \"Ảnh tiến trình / So sánh mốc\" (progress) and \"Gửi cập nhật / Nhắn Pema\" (send). Reached by recording P001's only task as \"no_need\" in the clinic web (Hồ sơ › CRM › task) and opening /patient-mobile/ in the same browser."
+      ],
+      "differences": [
+        "App E1 always shows the quick actions row \"Chăm sóc\", \"Gửi cập nhật\", \"Đơn đã duyệt\" and a \"Việc cần làm\" section; the web shows its three quick actions only in this state and the third differs (\"Ảnh tiến trình\" instead of \"Đơn đã duyệt\")."
+      ]
+    },
+    "WI21": {
+      "logic": [
+        "`home()` for a profile created in the clinic web (WC20 \"Thêm người bệnh\", name \"Nguyễn Thử Nghiệm\", P047): plan \"Chờ bác sĩ thiết lập kế hoạch\", \"Buổi 0 / 1 · Cập nhật Chưa ghi nhận\", appointment \"21 Tháng 09\" \"Thứ Hai, 21/09 · 10:30\", no CSKH task so \"Việc hôm nay\" shows, no approved prescription."
+      ],
+      "gotchas": [
+        "The new profile starts with a hard-coded next date (21/09 10:30) although nothing is booked in the clinic schedule; see WI42."
+      ]
+    },
+    "WI22": {
+      "logic": [
+        "`appointments()` for a demo patient without a booking (Vũ Thanh Mai, CRM group \"Quá hạn tái khám\"): chip \"Chưa có lịch\", calendar-icon tile \"Chọn lịch\", \"Chưa có lịch hẹn · Liên hệ Pema để đặt lịch · Pema Clinic\", the button \"Xác nhận tôi sẽ đến\" is disabled, \"Chưa có lịch đã đặt.\""
+      ],
+      "rules": [
+        "Same 4-hour rule as WI2."
+      ],
+      "differences": [
+        "The app has no empty state for appointments."
+      ],
+      "gotchas": [
+        "The toast \"Chưa có lịch hẹn để xác nhận\" exists in the code but cannot appear: the button is disabled in this state."
+      ]
+    },
+    "WI23": {
+      "logic": [
+        "`action(\"confirm-appointment\")`: adds a clinic message \"Lịch hẹn ngày <ngày> lúc <giờ> đã được xác nhận. Hẹn gặp bạn tại Pema.\" to Tin nhắn and the event \"Người bệnh đã xác nhận lịch hẹn\" to the journey, saves (with rollback), then toasts \"Đã xác nhận lịch hẹn\"."
+      ],
+      "rules": [
+        "Confirmation does not change the booking in the clinic schedule; it only leaves a message and a journey event. The button stays enabled, so it can be pressed again."
+      ],
+      "differences": [
+        "App G3 has the same single action (\"Xác nhận tham dự\") and no toast text is recorded for it."
+      ]
+    },
+    "WI24": {
+      "logic": [
+        "After `action(\"more-history\")` the limit is 6: all four events show and the button disappears. Newest first: \"13/9/2026 Cập nhật tại nhà đã được xem\", \"6/9/2026 Hoàn tất buổi 2/5\", \"6/9/2026 Bộ ảnh theo dõi · chính diện\", \"26/6/2026 Bắt đầu liệu trình kiểm soát sắc tố\"."
+      ],
+      "rules": [
+        "\"Tiến độ số buổi, không phải mức cải thiện da.\": progress is the count of sessions, never a promise of results."
+      ]
+    },
+    "WI25": {
+      "logic": [
+        "Native `<details>` behaviour, no script: opening a row shows its detail sentence (\"Đỏ nhẹ khoảng 2 ngày, hiện đã ổn. Không ghi nhận dấu hiệu cảnh báo trong báo cáo.\"); several rows can be open at the same time, and any re-render (a toast, a clinic-web change) closes them."
+      ],
+      "rules": [
+        "\"Tiến độ số buổi, không phải mức cải thiện da.\": progress is the count of sessions, never a promise of results."
+      ]
+    },
+    "WI26": {
+      "logic": [
+        "`journey()` for the profile created in the clinic web: plan \"Chờ bác sĩ thiết lập kế hoạch\", \"0/1 buổi\", empty bar, chip \"0 mốc\" and the line \"Chưa có sự kiện trong hành trình.\"; no \"Xem thêm lịch sử\" button."
+      ],
+      "rules": [
+        "\"Tiến độ số buổi, không phải mức cải thiện da.\": progress is the count of sessions, never a promise of results."
+      ],
+      "differences": [
+        "The app has no empty state for the journey."
+      ]
+    },
+    "WI27": {
+      "logic": [
+        "`messages()` for the profile created in the clinic web: `x.messages` is empty, so only the header \"Pema Care Team\" with \"Đang hỗ trợ\" and the button \"Gửi tin nhắn\" show; there is no empty-state sentence."
+      ],
+      "differences": [
+        "The app has no empty state for messages."
+      ]
+    },
+    "WI28": {
+      "logic": [
+        "`action(\"send-update\")` with a non-empty text: appends the patient message with the time \"20/09 · vừa xong\", adds a follow-up of type \"Phản hồi từ patient app\" (priority review, owner = the patient's doctor) to the clinic Theo dõi inbox, adds the journey event \"Đã gửi cập nhật cho Pema\", clears the drafts, switches to Tin nhắn and toasts \"Đã gửi cập nhật tới đội ngũ Pema\"."
+      ],
+      "rules": [
+        "\"Tin nhắn được gửi tới đội ngũ chăm sóc. Đây không phải kênh cấp cứu.\" (notice under \"Gửi cho Pema\"): messages are not an emergency channel; the sentence lives only on the send screen, not on the Tin nhắn thread."
+      ],
+      "differences": [
+        "App G2 sends into a queue with the notice \"Cập nhật sẽ vào hàng chờ để đội ngũ Pema xem.\"; the web has no such sentence, the toast is the only confirmation."
+      ]
+    },
+    "WI29": {
+      "logic": [
+        "`action(\"ack-aftercare\")`: sets `aftercareAck`, adds the journey event \"Người bệnh đã đọc hướng dẫn chăm sóc\" (\"Xác nhận từ patient app.\"), saves, toasts \"Đã ghi nhận bạn đã đọc hướng dẫn\"; the button now reads \"✓ Đã đọc hướng dẫn\" (label \"Đã đọc hướng dẫn\")."
+      ],
+      "differences": [
+        "App G1 keeps the button \"Tôi đã đọc hướng dẫn\" with no recorded changed state."
+      ]
+    },
+    "WI30": {
+      "logic": [
+        "`care()` for the profile created in the clinic web: eyebrow \"Sau buổi điều trị · Chưa ghi nhận\", no medication rows and the subtitle \"Chưa có hướng dẫn được duyệt.\" The demo patients of the CRM groups also have no medication rows."
+      ],
+      "differences": [
+        "The app has no empty state for home care."
+      ]
+    },
+    "WI31": {
+      "logic": [
+        "`action(\"send-update\")` with an empty (or blank) text: toasts \"Hãy viết vài dòng cập nhật\"; nothing is saved."
+      ],
+      "rules": [
+        "\"Tin nhắn được gửi tới đội ngũ chăm sóc. Đây không phải kênh cấp cứu.\" (notice under \"Gửi cho Pema\"): messages are not an emergency channel; the sentence lives only on the send screen, not on the Tin nhắn thread."
+      ],
+      "differences": [
+        "App G2 disables the send button instead of answering with a message."
+      ]
+    },
+    "WI32": {
+      "logic": [
+        "`#patient-photo` change with a 1×1 PNG (synthetic): the draft keeps the file, the label reads \"Đã chọn: anh-demo.png (đã giữ trong phiên demo)\", a preview `#patient-photo-preview` appears (max 180×180, radius 12) and the consent box is unticked."
+      ],
+      "rules": [
+        "A photo is kept in the demo session only (\"đã giữ trong phiên demo\").",
+        "\"Tin nhắn được gửi tới đội ngũ chăm sóc. Đây không phải kênh cấp cứu.\" (notice under \"Gửi cho Pema\"): messages are not an emergency channel; the sentence lives only on the send screen, not on the Tin nhắn thread.",
+        "Photos: PNG, JPEG or WebP only, at most 2.5 MB (\"Chỉ hỗ trợ PNG, JPEG hoặc WebP.\", \"Ảnh demo tối đa 2,5 MB.\", \"Tệp không phải ảnh hợp lệ.\", \"Không đọc được ảnh.\"). Sending a photo needs the tick \"Tôi đồng ý để đội ngũ Pema xem ảnh này cho mục đích chăm sóc.\"; choosing a file clears the tick, so consent is asked again for every photo."
+      ],
+      "differences": [
+        "App G2 draws a sample photo as a button; the web shows the chosen file name and a preview."
+      ]
+    },
+    "WI33": {
+      "logic": [
+        "`action(\"send-update\")` with a photo and no consent tick: toasts \"Bạn cần đồng ý để Pema xem ảnh cập nhật\"; the text and photo stay as drafts."
+      ],
+      "rules": [
+        "\"With a photo, the consent tick is required before sending\" (same rule as app G2, enforced by a toast in the web instead of a disabled button).",
+        "\"Tin nhắn được gửi tới đội ngũ chăm sóc. Đây không phải kênh cấp cứu.\" (notice under \"Gửi cho Pema\"): messages are not an emergency channel; the sentence lives only on the send screen, not on the Tin nhắn thread.",
+        "Photos: PNG, JPEG or WebP only, at most 2.5 MB (\"Chỉ hỗ trợ PNG, JPEG hoặc WebP.\", \"Ảnh demo tối đa 2,5 MB.\", \"Tệp không phải ảnh hợp lệ.\", \"Không đọc được ảnh.\"). Sending a photo needs the tick \"Tôi đồng ý để đội ngũ Pema xem ảnh này cho mục đích chăm sóc.\"; choosing a file clears the tick, so consent is asked again for every photo."
+      ],
+      "differences": [
+        "App G2 keeps the send button disabled until the consent is ticked."
+      ]
+    },
+    "WI34": {
+      "logic": [
+        "`#patient-photo` change with a text file: `Pema.imageData` throws \"Chỉ hỗ trợ PNG, JPEG hoặc WebP.\" which `showToast` shows; the draft photo is cleared. Other image errors use the same toast: \"Ảnh demo tối đa 2,5 MB.\", \"Tệp không phải ảnh hợp lệ.\", \"Không đọc được ảnh.\" (not scripted)."
+      ],
+      "rules": [
+        "\"Tin nhắn được gửi tới đội ngũ chăm sóc. Đây không phải kênh cấp cứu.\" (notice under \"Gửi cho Pema\"): messages are not an emergency channel; the sentence lives only on the send screen, not on the Tin nhắn thread.",
+        "Photos: PNG, JPEG or WebP only, at most 2.5 MB (\"Chỉ hỗ trợ PNG, JPEG hoặc WebP.\", \"Ảnh demo tối đa 2,5 MB.\", \"Tệp không phải ảnh hợp lệ.\", \"Không đọc được ảnh.\"). Sending a photo needs the tick \"Tôi đồng ý để đội ngũ Pema xem ảnh này cho mục đích chăm sóc.\"; choosing a file clears the tick, so consent is asked again for every photo."
+      ],
+      "differences": [
+        "The app has no error text for an invalid file (it uses a sample photo)."
+      ]
+    },
+    "WI35": {
+      "logic": [
+        "`docs()` for P002: one paid invoice \"Buổi chăm sóc / điều trị HD-0002 · 2026-09-06 · Đã thanh toán 1.500.000 ₫\" and \"Tư vấn da liễu HD-DEMO-002 · 2026-09-20 · Chờ thanh toán 500.000 ₫\"."
+      ],
+      "rules": [
+        "\"Chờ thanh toán\" is shown for an invoice with nothing received."
+      ],
+      "differences": [
+        "App G7 opens with the heading \"Khoản cần thanh toán\" and a hero with the amount still to pay (\"580.000 ₫\", \"Đã thu 0 ₫\"); the web has no total, only the status text of each invoice (\"Chờ thanh toán\")."
+      ],
+      "gotchas": [
+        "At 390 the amount column of an invoice row is narrow: the currency sign wraps under the number (\"720.500\" / \"₫\"). It is how the old web looks; keep it unless the owner decides otherwise."
+      ]
+    },
+    "WI36": {
+      "logic": [
+        "`docs()` for a demo patient without invoices: \"Chưa có hóa đơn trong demo.\" (class `empty`); \"Hướng dẫn đã gửi\" still shows its row and the prescription card reads \"Chưa có\"."
+      ],
+      "differences": [
+        "The app has no empty state for invoices.",
+        "App K2 always lists invoice tiles; the web shows the line \"Chưa có hóa đơn trong demo.\" in the empty state (class empty)."
+      ]
+    },
+    "WI37": {
+      "logic": [
+        "An order approved in the clinic web (the cashier quick order with the catalog lines H002 and H005 and their usage, opened in the order-review page and approved there with the button `#approve`) is injected by `care-finance.js › injectMobile` under \"Đơn & phiếu đã duyệt\": a block with the date, \"Đã duyệt bởi BS. Tâm · <ngày>\", the groups \"Đơn thuốc\" and \"Phiếu tư vấn\" and their lines; its invoice \"Đơn sản phẩm · 2 dòng\" is listed as \"Chờ thanh toán\" with the total."
+      ],
+      "rules": [
+        "Only an approved order reaches the patient. The reach blocks the finance API (port 4174), so the order lives in the browser store only."
+      ],
+      "differences": [
+        "App K2 shows the approved prescription as one tile \"DN-1 · BS. Tâm\" with product names; the web block lists the order date, \"Đã duyệt bởi …\", the groups \"Đơn thuốc\" and \"Phiếu tư vấn\" with quantity and usage per line, and adds the invoice \"Đơn sản phẩm · 2 dòng\" to the invoice list."
+      ],
+      "gotchas": [
+        "The invoice id is random on every run (`HD-<uuid>`); the snapshot masks it as `HD-<random id>`, the screenshot shows the real one.",
+        "At 390 the amount column of an invoice row is narrow: the currency sign wraps under the number (\"720.500\" / \"₫\"). It is how the old web looks; keep it unless the owner decides otherwise."
+      ]
+    },
+    "WI38": {
+      "logic": [
+        "`action(\"privacy-info\")` flips `photoConsent` (to false here), logs \"Rút đồng ý ảnh chăm sóc\" and toasts \"Đã tắt đồng ý ảnh chăm sóc trong demo\"; the row subtitle becomes \"Ảnh chăm sóc: chưa đồng ý\"."
+      ],
+      "rules": [
+        "Withdrawing consent is one tap with no confirmation dialog.",
+        "The profile switch is a demo, not a login: \"Chỉ dùng để trình diễn trải nghiệm liên thông; không đại diện đăng nhập thật.\" and \"Tài khoản và dữ liệu thật sẽ cần xác thực riêng.\""
+      ],
+      "differences": [
+        "App G8 shows a check row \"Đồng ý dùng ảnh trong chăm sóc\" (checked) and \"Cài đặt đang được minh họa trong phiên duyệt.\"; the web uses a settings-style row and a toast."
+      ]
+    },
+    "WI39": {
+      "logic": [
+        "The second press of the same row flips `photoConsent` back to true, logs \"Đồng ý sử dụng ảnh chăm sóc\" and toasts \"Đã đồng ý ảnh cho chăm sóc trong demo\"; the subtitle reads \"Ảnh chăm sóc: đã đồng ý\" again."
+      ],
+      "rules": [
+        "The profile switch is a demo, not a login: \"Chỉ dùng để trình diễn trải nghiệm liên thông; không đại diện đăng nhập thật.\" and \"Tài khoản và dữ liệu thật sẽ cần xác thực riêng.\""
+      ],
+      "differences": [
+        "As WI38: no separate privacy screen in the web."
+      ]
+    },
+    "WI40": {
+      "logic": [
+        "`#identity-select` change: stores `pema-patient-identity`, clears the message, photo and consent drafts, re-renders and toasts \"Đã đổi hồ sơ demo\" (here P002 \"Trần Ngọc Anh\"). The other select `#case-group` only filters the patient list and jumps to the first patient of the group, without a toast."
+      ],
+      "rules": [
+        "The profile switch is a demo, not a login: \"Chỉ dùng để trình diễn trải nghiệm liên thông; không đại diện đăng nhập thật.\" and \"Tài khoản và dữ liệu thật sẽ cần xác thực riêng.\""
+      ]
+    },
+    "WI41": {
+      "logic": [
+        "`profile()` for the profile created in the clinic web (P047): \"28 tuổi · Chưa nhập · P047\" (the phone was left empty), \"Ảnh chăm sóc: chưa đồng ý\", the patient select has 47 options and the new profile is selected."
+      ],
+      "rules": [
+        "The profile switch is a demo, not a login: \"Chỉ dùng để trình diễn trải nghiệm liên thông; không đại diện đăng nhập thật.\" and \"Tài khoản và dữ liệu thật sẽ cần xác thực riêng.\""
+      ]
+    },
+    "WI42": {
+      "logic": [
+        "`appointments()` for the profile created in the clinic web: the upcoming tile is valid (21/09 10:30, \"Đã đặt lịch\") because a new profile gets a default `next` date, but `PemaOps.seed().appointments` has no booking of that patient, so \"Các lịch đã đặt\" reads \"Chưa có lịch đã đặt.\" The past rows are \"Buổi 1 · Tư vấn ban đầu\" with \"Chưa ghi nhận · Đã hoàn tất\" and \"Tư vấn ban đầu 26/06/2026\"."
+      ],
+      "gotchas": [
+        "\"Đã đặt lịch\" with an empty list of bookings is an inconsistency of the old web; keep it, the owner decides."
       ]
     }
   }
