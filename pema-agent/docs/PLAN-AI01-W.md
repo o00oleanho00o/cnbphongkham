@@ -119,7 +119,8 @@ Expected size: 45–70 screen ids. W0 fixes the exact list. Nothing is filtered 
 design-specs/web/                                inventory.json, snapshot.json, notes.json (hand), INDEX.md, BLOCKS.md,
                                                  index.json, screens/<ID>.md (generated)
 pema-agent/frontend/visual-ref/old/              <ID>-<W>x<H>.png (git-ignored), manifest.json (tracked), README.md
-Pema Web redesign canvas/                        Pema Web.dc.html, support.js (same bytes as the app canvas copy)
+Pema Web redesign canvas/                        Pema Web.dc.html (GENERATED), support.js (same bytes as the app canvas copy),
+                                                 parts/<group>.js (hand-written data, one file per group), template.html
 .claude/skills/pema-canvas-to-kmp-compose/mcp/pema-design-mcp.cjs   + list_web_screens, get_web_screen,
                                                  get_web_screen_image, record_web_note (W2)
 ```
@@ -131,12 +132,15 @@ Pema Web redesign canvas/                        Pema Web.dc.html, support.js (s
 | **W0** Inventory + foundation | all | skill skeleton, `pw.cjs`, `web-inventory.cjs`, `inventory.json` with ids, clock and role decisions | — | skill `scripts/`, `design-specs/web/inventory.json` |
 | **W1** Old web screenshots | 1 | `web-shots.cjs`, all ids × 5 viewports, `manifest.json`, gallery, legacy names for U0/U8 | W0 | `visual-ref/old/`, `web-shots.cjs` |
 | **W2** Web screen specs + MCP | 2 | `web-snapshot.cjs`, `web-specs*.cjs`, `notes.json` seed, generated specs, MCP web tools | W0 (W1 for images, by file name only) | `design-specs/web/` except inventory, MCP file |
-| **W3a** Web canvas foundation | 3 | canvas file, frame template, tokens, blocks in the app design language ↔ kit, shell + groups WA/WB, `web-canvas.cjs`, specs read canvas | W2 | canvas folder, `web-canvas.cjs`, `blocks-web.md` |
-| **W3b** Web canvas screens | 3 | groups WC–WH, every inventory id has a frame | W3a | canvas file |
+| **W3a** Web canvas foundation | 3 | canvas file, frame template, tokens, blocks in the app design language ↔ kit, build script, stub parts, proof screens WA1 + WB1, `web-canvas.cjs`, specs read canvas | W2 | canvas folder, `web-canvas.cjs`, `blocks-web.md` |
+| **W3b** Web canvas screens, **8 parallel agents** W3b-WA … W3b-WH | 3 | one agent per group WA, WB, WC, WD, WE, WF, WG, WH; every inventory id of the group has a frame | W3a | each agent only its own `Pema Web redesign canvas/parts/<group>.js` and its own ids in `notes.json` |
 | **W4** Skill, docs, audit | all | final `SKILL.md`, coverage table, CLAUDE.md/README pointers, change-log rule (D6), full re-run of all checks | W1, W3b | docs only |
 | **W5** Push to claude.ai/design | 3 | create project, upload canvas, verify remote = local | W4 + user | **director with the user**, not a subagent |
 
-Order: `W0 → (W1 ‖ W2) → W3a → W3b → W4 → W5`. At most 2 subagents run at once.
+Order: `W0 → (W1 ‖ W2) → W3a → (W3b-WA ‖ WB ‖ WC ‖ WD ‖ WE ‖ WF ‖ WG ‖ WH) → W4 → W5`. W0–W2 ran with at most 2 agents because the old web's
+`http.server` drops connections above 2 browsers. W3b agents never touch the old web (they read specs and shots), so up to 8
+run at once. Each agent runs its own design-viewer: `DC_CANVAS_DIR=<its worktree canvas folder> npm run dev -- --port <own port>`
+from the main checkout's `design-viewer/` (deps installed once there).
 
 Groups (W0 may rename them, but not reorder them):
 

@@ -3,7 +3,8 @@
 ## Goal
 Create `Pema Web redesign canvas/Pema Web.dc.html`, a claude.ai/design canvas of the web screens at web size. Its blocks
 map 1:1 to the Next.js kit `pema-agent/frontend/src/ui`, and its tokens come from `tokens.json`. Fill the shell
-(group WA) and operations (group WB). W3b only adds data for the remaining groups and never touches the template.
+(group WA, proof only) and operations (group WB, proof only). W3b (eight parallel agents, one per group WA–WH) adds the
+data for every group and never touches the template.
 
 **Owner rule (plan §0, principle 0): the result must contain EVERY piece of UI the old web has.** Nothing is filtered. The app design gives the look (tokens, blocks, kit); the old web gives all content. So this canvas is the whole old web, redrawn in the app's design language.
 
@@ -26,6 +27,22 @@ map 1:1 to the Next.js kit `pema-agent/frontend/src/ui`, and its tokens come fro
    references/visual-system.md`.
 
 ## Ingredients
+- **Parts, so that W3b can run in 6 parallel agents without merge conflicts.** The canvas is one HTML file for
+  claude.ai/design, but it is GENERATED:
+  - `Pema Web redesign canvas/template.html`: helmet, frame template, block renderers, helpers, props (hand-written
+    here in W3a, frozen afterwards).
+  - `Pema Web redesign canvas/parts/base.js`: shared sample data (`people`, `doctors`, `rooms`, `services`, `GROUPS`,
+    `money()`, `WEB` const) and the helper definitions.
+  - `Pema Web redesign canvas/parts/WA.js … WH.js`: each defines `const WX = [ …screens… ];` using the helpers. W3a
+    writes `WA.js` and `WB.js` and creates **stub** `WC.js … WH.js` (`const WC = [];`).
+  - `.claude/skills/pema-web-design/scripts/web-canvas-build.cjs`: concatenates `base.js` + `WA…WH.js` into the
+    `<script type="text/x-dc" data-dc-script>` of `template.html`, adds the `groups` array and the `KEYS`/`fill`
+    normalisation, and writes `Pema Web.dc.html`. `--check` fails when the committed `Pema Web.dc.html` differs from
+    what the build would write. Output is deterministic.
+  - A part may only use the helpers and blocks of `base.js`/the template. A part never edits another part.
+  - `web-canvas.cjs check` accepts `--canvas-dir <dir>` and `--viewer-url <url>` so each agent can use its own
+    design-viewer. Document how to start one: `cd <main checkout>/design-viewer && DC_CANVAS_DIR=<worktree canvas dir>
+    npm run dev -- --port <port>`.
 - `Pema Web redesign canvas/support.js`: a byte-identical copy of the app canvas's `support.js`.
   `Pema Web redesign canvas/Pema Web.dc.html`:
   - Helmet: Be Vietnam Pro, Material Symbols, and a `:root` block of CSS variables **generated** from `tokens.json`
@@ -91,7 +108,8 @@ map 1:1 to the Next.js kit `pema-agent/frontend/src/ui`, and its tokens come fro
    tokens differ from `tokens.json`.
 2. Implement every block, and render each once on a scratch screen at the 3 viewports. At 390, tables become cards and
    the sidebar becomes a top bar or drawer, as in the Next.js FE.
-3. Fill every id of group WA (shell states) and WB (dashboard, today, schedule, booking and check-in dialogs) from
+3. PROOF ONLY: build exactly two screens end to end, `WA1` (owner shell) and `WB1` (dashboard), to prove every block works
+   at 1440, 1920 and 390. The rest of WA and WB is done by the W3b agents. Fill each from
    its spec and screenshot. Every field, action, status, filter and text of the spec appears. Block shapes follow
    the matching app canvas frame when there is one. Each note starts with `WEB + '<nav/tab/modal> · <difference from old web, if any>'`.
 4. Run `web-canvas.cjs check "Pema Web.dc.html" WA,WB <tmp>` at 1440, then for pages at 1920 and 390. Open every PNG.
@@ -103,13 +121,14 @@ map 1:1 to the Next.js kit `pema-agent/frontend/src/ui`, and its tokens come fro
 ## Acceptance
 - `node .claude/skills/pema-web-design/scripts/web-canvas.cjs check "Pema Web redesign canvas/Pema Web.dc.html" WA,WB`
   exits 0, with `errors`, `unresolved` and `overflow` empty, and `total` = the WA + WB count in the inventory.
+- `web-canvas-build.cjs --check` exits 0, the build is deterministic, and stub parts WC–WH build without error.
 - Every block in `blocks-web.md` has a kit component that exists in `pema-agent/frontend/src/ui`. If a kit component
   is missing, the block is marked "kit gap" and listed in the report. Do not add it to the FE in this step.
 - No hex colour inside blocks (grep). Tokens equal `tokens.json` (the check).
 - `web-specs.cjs --check` and app `design-specs.cjs --check` exit 0. The app canvas is byte-identical.
 
 ## Out of scope
-- Groups WC–WH (W3b). Pushing to claude.ai/design (W5). Adding components to the Next.js kit.
+- Groups WC–WH content (W3b, six agents). Pushing to claude.ai/design (W5). Adding components to the Next.js kit.
 
 ## Report
 Use `_REPORT-TEMPLATE.md`. Also include:

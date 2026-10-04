@@ -11,7 +11,8 @@ The source of truth is `pema-agent/docs/PLAN-AI01-W.md`. If a recipe and the pla
                  └─► 03-W2-web-specs ─► 04-W3a-canvas-foundation ─► 05-W3b-canvas-screens ─┴─► 06-W4-skill-docs-audit ─► 07-W5-push-design (director + user)
 ```
 
-At most 2 subagents run at once (W1 ‖ W2). W5 is not a subagent step.
+W1 ‖ W2 ran with 2 agents (shared old-web server limit). W3b runs as 8 agents in parallel, one per group (WA–WH), each with
+its own design-viewer port. W5 is not a subagent step.
 
 ## Running a step (director)
 
