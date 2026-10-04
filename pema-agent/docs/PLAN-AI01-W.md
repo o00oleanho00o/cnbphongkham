@@ -54,8 +54,11 @@ In scope, all from the old web (`prototype/`, read-only):
 | Order review / A5 print | `prototype/order-review/index.html` | |
 | Shell: sidebar, header, role picker, empty states reachable from the UI | `workspace-layout.css`, `ui.js`, `staff-context.js` | one id per visible state |
 
+**Scope extension (owner, 2026-10-04, repeated): nothing may be missing.** The Patient Mobile web (`prototype/patient-mobile`) is IN scope as
+group WI, and every state W0 parked (native dialogs, empty and error lines, per-role variants) gets an id. Work: `recipes/W/08` to `10` (W6a
+inventory completion, W6b shots and specs for the new ids, W6c canvas frames). The old line "Patient Mobile web is out of scope" no longer applies.
+
 Out of scope:
-- **Patient Mobile web** (`prototype/patient-mobile`): already covered by app canvas groups E, G and K.
 - **Screens that exist only in the new Next.js FE** (inbox, review, templates, care/*, admin/*): see decision D3.
 - App code (`pema-kmp/`), Next.js page code, the existing app canvas and its specs (`design-specs/screens/*`). These
   must stay byte-identical, except for the additive MCP change in W2.
