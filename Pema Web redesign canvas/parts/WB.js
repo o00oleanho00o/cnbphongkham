@@ -36,17 +36,18 @@ const wbTodayBehind = () => wbToday({}).slice(0, 2);
 
 // schedule body: view 0 = day board by room, 1 = 7-day list. Right column "Chờ xếp lịch".
 const WB_WAIT = [['Có thể đến trong ngày', 0], ['Ưu tiên buổi chiều', 1], ['Có thể đến trong ngày', 2], ['Ưu tiên buổi chiều', 3], ['Có thể đến trong ngày', 0], ['Ưu tiên buổi chiều', 1]];
+// Room 1 has 30-minute visits and free half hours (dashed "Đặt lịch" slots), room 2 is free from 11:00; the other rooms book 45 minutes + a 15-minute buffer (hatched block, "· +15′ đệm").
 const wbBoard = () => board({
   from: 8, to: 12, hh: 112,
   rooms: rooms.map((r, i) => {
-    const bk = [];
+    const bk = [], slots = [];
     for (let h = 0; h < 4; h++) {
+      if (i === 1 && h === 3) { slots.push({ start: '11:00', mins: 30 }, { start: '11:30', mins: 30 }); continue; } // room 2 is free from 11:00
       const p = people[(i * 4 + h) % 12], sv = services[(i + h) % 4];
-      const mins = i === 0 ? 30 : 45;
-      bk.push({ start: (8 + h) + ':00', mins, title: p.name, sub: doctors[(i + h) % 4].name + ' · Đặt hẹn', svc: sv.svc });
-      if (i > 0) bk.push({ start: (8 + h) + ':45', mins: 15, title: '15′ chuẩn bị phòng', sub: '', svc: 1 });
+      bk.push({ start: (8 + h) + ':00', mins: i === 0 ? 30 : 45, buf: i > 0 ? 15 : 0, title: p.name, sub: sv.name, sub2: doctors[(i + h) % 4].name + ' · Đặt hẹn', svc: sv.svc });
+      if (i === 0) slots.push({ start: (8 + h) + ':30', mins: 30 });
     }
-    return { name: r.name, sub: [8, 8, 7, 8][i] + ' lịch · ' + r.sub, bk };
+    return { name: r.name, sub: [8, 8, 7, 8][i] + ' lịch · ' + r.sub, bk, slots };
   })
 });
 const wbWeek = () => weekGrid({
@@ -66,7 +67,8 @@ const wbSchedule = view => [
   grid('minmax(0,1fr) 250px',
     panel(view ? '20/9/2026 — 26/9/2026' : '20/9/2026', '08:00–18:00 · bước kéo 30 phút · nhấp thẻ để chỉnh giờ chính xác', [badge(view ? 'Theo ngày' : 'Theo phòng')], view ? wbWeek() : wbBoard()),
     panel('Chờ xếp lịch', 'Chọn hồ sơ để tìm giờ phù hợp', [],
-      ...WB_WAIT.map(([note, s], i) => card({ v: 'soft', g: 8 }, row({ g: 8, ai: 'center' }, avatar(people[i].init), strong(people[i].name)), txt(note), sm(services[s].name), secondary('Xếp lịch →')))))
+      ...WB_WAIT.map(([note, s], i) => card({ v: 'soft', g: 8 }, row({ g: 8, ai: 'center' }, avatar(people[i].init), strong(people[i].name)), txt(note), sm(services[s].name), secondary('Xếp lịch →'))),
+        notice('Màu thẻ phân biệt dịch vụ. Lịch hủy được giữ trong nhật ký; thời gian đệm vẫn chiếm phòng.', 'info')))
 ];
 const wbScheduleBehind = () => wbSchedule(0).slice(0, 2);
 
@@ -134,7 +136,7 @@ const WB = [
   page('WB4', 'Hôm nay · lọc không có kết quả', WEB + 'today · ô trạng thái "Đã hủy" đang chọn nên danh sách chỉ còn dòng trống "Không có lịch phù hợp."; mọi phần khác như WB3', 'today', wbToday({ empty: true }), { state: true }),
 
   // WB5 · schedule, day board by room
-  page('WB5', 'Điều phối lịch', WEB + 'schedule · app I3/A2 là dải tuần và danh sách ngày; web là lưới phòng × giờ (kéo thả bằng chuột), chú giải 4 màu dịch vụ và khối "Chờ xếp lịch"; khoảng đệm "15′ chuẩn bị phòng" vẽ như một thẻ lịch vì canvas chưa có khối đệm gạch chéo; bác sĩ đăng nhập bị khóa bộ lọc bác sĩ', 'schedule', wbSchedule(0)),
+  page('WB5', 'Điều phối lịch', WEB + 'schedule · app I3/A2 là dải tuần và danh sách ngày; web là lưới phòng × giờ (kéo thả bằng chuột), chú giải 4 màu dịch vụ và khối "Chờ xếp lịch"; khoảng đệm "15′ chuẩn bị phòng" là khối gạch chéo dưới thẻ lịch, ô trống có nút "Đặt lịch" nét đứt, ghi chú về màu thẻ nằm dưới "Chờ xếp lịch"; bác sĩ đăng nhập bị khóa bộ lọc bác sĩ', 'schedule', wbSchedule(0)),
 
   // WB6 · schedule, 7-day view
   page('WB6', 'Điều phối lịch · 7 ngày', WEB + 'schedule · nút "7 ngày" đang chọn, huy hiệu "Theo ngày", 7 cột ngày với số lịch, thẻ lịch và "Đặt lịch" cuối mỗi cột; văn bản "Chưa có lịch" của ngày trống chỉ có trong mã (mọi ngày demo đều có lịch)', 'schedule', wbSchedule(1), { state: true }),

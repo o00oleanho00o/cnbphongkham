@@ -50,7 +50,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -84,7 +84,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Tile label="Vắng hẹn" value="1">
       <Button variant="secondary">"Xử lý vắng hẹn"</Button>
     </Tile>
-    <Tile label="Phát sinh hôm nay" value="13.500.000 ₫">
+    <Tile label="Phát sinh hôm nay" value="13.500.000 ₫">
       <Button variant="quiet">"Hóa đơn, không phải thực thu →"</Button>
     </Tile>
   </Grid>

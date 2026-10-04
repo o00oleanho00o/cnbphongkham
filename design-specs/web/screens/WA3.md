@@ -55,7 +55,6 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
     <Field label="Tài khoản demo" type="select" default="Kế toán · Đối soát & thu ngân" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
     <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
-    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
     <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
   </TopBar>
   <PageHeading title="Thu ngân" subtitle="Thu tiền và lên đơn nhanh theo mẫu PEMA.">
@@ -63,14 +62,14 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
   </PageHeading>
   <Grid cols="repeat(4, 1fr)" cols-390="repeat(2, 1fr)">
     <Tile label="Tổng hóa đơn" value="12" note="Dữ liệu giả lập" />
-    <Tile label="Đã thu" value="8.400.000 ₫" note="Tổng lũy kế" />
-    <Tile label="Còn phải thu" value="2.100.000 ₫" note="Không thu trùng" />
+    <Tile label="Đã thu" value="8.400.000 ₫" note="Tổng lũy kế" />
+    <Tile label="Còn phải thu" value="2.100.000 ₫" note="Không thu trùng" />
     <Tile label="Catalog sản phẩm" value="96" note="Từ danhsach.xlsx" />
   </Grid>
   <Img placeholder label="Lên đơn theo mẫu PEMA và bảng hóa đơn: vẽ ở nhóm WF" />
 </AppShell>
 ```
-Kit components used: Button×4, Tile×4, Field×2, Sidebar×1, TopBar×1, PageHeading×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Tile×4, Button×3, Field×2, Sidebar×1, TopBar×1, PageHeading×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WA3-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).

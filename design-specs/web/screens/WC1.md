@@ -44,7 +44,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item active icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -100,11 +100,41 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
           <Button variant="secondary">"Mở →"</Button>
         </Cell>
       </Row>
+      <Row sample="row 2 of 7: only the actions and statuses that the rows above do not show">
+        <Cell column="Mối quan tâm">
+          <Badge tone="brand" dot={false}>"Mụn viêm"</Badge>
+        </Cell>
+      </Row>
+      <Row sample="row 3 of 7: only the actions and statuses that the rows above do not show">
+        <Cell column="Mối quan tâm">
+          <Badge tone="brand" dot={false}>"Thâm sau viêm"</Badge>
+        </Cell>
+      </Row>
+      <Row sample="row 4 of 7: only the actions and statuses that the rows above do not show">
+        <Cell column="Mối quan tâm">
+          <Badge tone="brand" dot={false}>"Đỏ da / nhạy cảm"</Badge>
+        </Cell>
+      </Row>
+      <Row sample="row 5 of 7: only the actions and statuses that the rows above do not show">
+        <Cell column="Mối quan tâm">
+          <Badge tone="brand" dot={false}>"Sẹo sau mụn"</Badge>
+        </Cell>
+      </Row>
+      <Row sample="row 6 of 7: only the actions and statuses that the rows above do not show">
+        <Cell column="Mối quan tâm">
+          <Badge tone="brand" dot={false}>"Trẻ hóa da"</Badge>
+        </Cell>
+      </Row>
+      <Row sample="row 7 of 7: only the actions and statuses that the rows above do not show">
+        <Cell column="Mối quan tâm">
+          <Badge tone="brand" dot={false}>"Theo dõi da sau điều trị"</Badge>
+        </Cell>
+      </Row>
     </TableShell>
   </Card>
 </AppShell>
 ```
-Kit components used: Button×5, Field×3, Badge×2, Sidebar×1, TopBar×1, PageHeading×1, Card×1, TableShell×1; shared pieces: FilterChip×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Badge×8, Button×5, Field×3, Sidebar×1, TopBar×1, PageHeading×1, Card×1, TableShell×1; shared pieces: FilterChip×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - 1440×900 is the reference (Frame, Layout).

@@ -61,7 +61,7 @@ function inline(n, ctx, tail = '') {
 function fieldLine(n, ctx) {
   ctx.used.Field = (ctx.used.Field || 0) + 1;
   const type = { check: 'checkbox', radio: 'radio', file: 'file', range: 'range', textarea: 'textarea', select: 'select', search: 'search' }[n.ty] || n.ty;
-  const a = { label: n.text || n.label, type, required: n.req, placeholder: n.vc === 'fc-ph' && n.box ? n.shown : '', default: n.vc === 'fc-v' && n.box ? n.shown : n.ty === 'file' || n.ty === 'range' ? n.shown : '', checked: n.ty === 'check' && /ck-on/.test(n.cb) ? true : undefined, hint: n.hint, error: n.err };
+  const a = { label: n.text || n.label, type, required: n.req, placeholder: n.ph, default: n.vc === 'fc-v' && n.box ? n.shown : n.ty === 'file' || n.ty === 'range' ? n.shown : '', checked: n.ty === 'check' && /ck-on/.test(n.cb) ? true : undefined, hint: n.hint, error: n.err };
   if (n.opts && n.opts.length) a.options = n.opts.map((o) => o.t);
   return `<Field${attrs(a)} />`;
 }
@@ -123,26 +123,40 @@ function renderNode(n, pad, out, ctx) {
       const sel = n.items.find((i) => /tbi-on/.test(i.cls));
       return push(`<Tabs${/tbs-seg/.test(n.cls) ? ' segmented' : ''} items={${JSON.stringify(n.items.map((i) => (i.count ? `${i.text} ${i.count}` : i.text)))}} selected=${q(sel ? sel.text : '')} />`);
     }
-    case 'notice':
+    case 'notice': {
       use('Notice');
-      push(`<Notice tone=${q(n.tone)}${n.title ? ` title=${q(n.title)}` : ''}${n.actions.length ? '>' : ` text=${q(n.text)} />`}`);
-      if (n.actions.length) {
-        push(`  <Text>${q(n.text)}</Text>`);
+      const block = n.actions.length || (n.items && n.items.length);
+      push(`<Notice tone=${q(n.tone)}${n.title ? ` title=${q(n.title)}` : ''}${block ? '>' : ` text=${q(n.text)} />`}`);
+      if (block) {
+        if (n.text) push(`  <Text>${q(n.text)}</Text>`);
+        if (n.items && n.items.length) {
+          if (n.itemsTitle) push(`  <Text><Strong>${q(n.itemsTitle)}</Strong></Text>`);
+          push('  <ul>');
+          n.items.forEach((t) => push(`    <li>${q(t)}</li>`));
+          push('  </ul>');
+        }
         inlines(n.actions, pad + '  ', out, ctx);
         push('</Notice>');
       }
       return;
+    }
     case 'facts':
       return push(`<Facts items={${JSON.stringify(n.rows.map((r) => (r.sub ? [r.l, r.v, r.sub] : [r.l, r.v])))}} />`);
     case 'field':
       return push(fieldLine(n, ctx));
     case 'table': {
       push(`<${use('TableShell')} columns={${JSON.stringify(n.head.map((h) => h.h))}} rows={${n.rows.length}}${n.foot ? ` foot=${q(n.foot)}` : ''}  /* cards at 390 */>`);
-      n.rows.slice(0, 1).forEach((r) => {
-        push('  <Row sample="first row; demo values, the other rows have the same cells">');
-        r.cells.forEach((c, i) => {
+      const seen = new Set();
+      const keyOf = (x) => `${x.k}|${x.k === 'btn' ? x.text + x.icon + x.ric : x.text || ''}`.replace(/\d+(?:[.,:/]\d+)*/g, '#');
+      n.rows.forEach((r, ri) => {
+        const cells = r.cells.map((c) => (ri === 0 ? c.items : c.items.filter((x) => ['btn', 'badge', 'chip'].includes(x.k) && !(x.k === 'btn' && /\bbt-link\b/.test(x.cls)) && !seen.has(keyOf(x)))));
+        r.cells.forEach((c) => c.items.forEach((x) => seen.add(keyOf(x))));
+        if (ri > 0 && !cells.some((c) => c.length)) return;
+        push(ri === 0 ? '  <Row sample="first row; demo values, the other rows have the same cells">' : `  <Row sample="row ${ri + 1} of ${n.rows.length}: only the actions and statuses that the rows above do not show">`);
+        cells.forEach((items, i) => {
+          if (ri > 0 && !items.length) return;
           push(`    <Cell column=${q(n.head[i] ? n.head[i].h : '')}>`);
-          inlines(c.items, pad + '      ', out, ctx);
+          inlines(items, pad + '      ', out, ctx);
           push('    </Cell>');
         });
         push('  </Row>');
@@ -150,12 +164,11 @@ function renderNode(n, pad, out, ctx) {
       return push('</TableShell>');
     }
     case 'empty':
-      push(`<${use('EmptyState')}${attrs({ title: n.title, hint: n.hint, icon: n.icon })}${n.actions.length ? '>' : ' />'}`);
-      if (n.actions.length) {
-        inlines(n.actions, pad + '  ', out, ctx);
-        push('</EmptyState>');
-      }
-      return;
+      push(`<${use('EmptyState')}${attrs({ icon: n.icon })}>`);
+      push(`  <Heading level={3}>${q(n.title)}</Heading>`);
+      if (n.hint) push(`  <Text>${q(n.hint)}</Text>`);
+      inlines(n.actions, pad + '  ', out, ctx);
+      return push('</EmptyState>');
     case 'bars':
       return push(`<StatusBars items={${JSON.stringify(n.items.map((i) => [i.label, i.count]))}} />`);
     case 'timeline':
@@ -174,14 +187,14 @@ function renderNode(n, pad, out, ctx) {
       return push('</List>');
     case 'board':
       push(`<ScheduleBoard rooms={${JSON.stringify(n.rooms.map((r) => [r.name, r.sub]))}} corner=${q(n.corner)}>`);
-      n.rooms.forEach((r) => r.bk.forEach((b) => push(`  <Booking room=${q(r.name)} time=${q(b.time)} title=${q(b.title)}${b.sub ? ` sub=${q(b.sub)}` : ''} service={${b.svc}} />`)));
+      n.rooms.forEach((r) => r.bk.forEach((b) => push(b.kind === 'buffer' ? `  <Buffer room=${q(r.name)} service={${b.svc}}>${q(b.title)}</Buffer>` : b.kind === 'slot' ? `  <DropSlot room=${q(r.name)} aria-label=${q(b.label)}>${q(b.title)}</DropSlot>` : `  <Booking room=${q(r.name)} label=${q([b.time, b.title, b.sub, b.sub2].filter(Boolean).join(' '))} service={${b.svc}} />`)));
       n.legend.forEach((l) => push(`  <LegendItem service={${l.svc}}>${q(l.t)}</LegendItem>`));
       return push('</ScheduleBoard>');
     case 'weekGrid':
       push('<WeekGrid>');
       n.days.forEach((d) => {
         push(`  <Day title=${q(d.title)}${d.sub ? ` sub=${q(d.sub)}` : ''}${d.add ? ` add=${q(d.add)}` : ''}>`);
-        d.items.forEach((b) => push(`    <Booking time=${q(b.time)} title=${q(b.title)}${b.sub ? ` sub=${q(b.sub)}` : ''} service={${b.svc}} />`));
+        d.items.forEach((b) => push(`    <Booking label=${q([b.time, b.title, b.sub].filter(Boolean).join(' '))} service={${b.svc}} />`));
         push('  </Day>');
       });
       n.legend.forEach((l) => push(`  <LegendItem service={${l.svc}}>${q(l.t)}</LegendItem>`));
@@ -224,7 +237,7 @@ function renderNode(n, pad, out, ctx) {
       renderNodes(n.kids, pad + '  ', out, ctx);
       return push('</Grid>');
     case 'card':
-      push(`<${use('Card')}${attrs({ variant: n.cls.replace('cd cd-', '') === 'panel' ? '' : n.cls.replace('cd cd-', ''), eyebrow: n.eyebrow, title: n.title, subtitle: n.sub })}>`);
+      push(`<${use('Card')}${attrs({ variant: (/cd cd-(\w+)/.exec(n.cls) || [0, 'panel'])[1] === 'panel' ? '' : (/cd cd-(\w+)/.exec(n.cls) || [0, ''])[1], tint: n.tint, eyebrow: n.eyebrow, title: n.title, subtitle: n.sub })}>`);
       if (n.aside.length) {
         push('  <Card.Aside>');
         inlines(n.aside, pad + '    ', out, ctx);
@@ -263,7 +276,7 @@ function shellLines(sc, ctx) {
   if (s.fin) out.push(`  <Button variant="quiet" href="../finance/" as="link">${q(s.fin)}</Button>`);
   out.push(`  <${use('Field')} label="Tài khoản demo" type="select" default=${q(s.account)} options={${JSON.stringify(s.accounts.map((a) => a.t))}} />`);
   out.push(`  <${use('Field')} label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />`);
-  out.push(`  <${use('Button')} variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>`);
+  if (s.bell) out.push(`  <${use('Button')} variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>`);
   out.push(`  <${use('Button')} variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>`);
   out.push('</TopBar>');
   return out;
@@ -276,6 +289,7 @@ function layout(sc) {
   if (sc.hasDialog) {
     out.push(`// opens over the page "${sc.shell.crumb}" (dimmed); the page behind it is not part of this screen`);
     out.push(`<${(ctx.used.Dialog = 1, 'Dialog')}${attrs({ eyebrow: sc.dialog.eyebrow, title: sc.dialog.title, subtitle: sc.dialog.sub, width: sc.dialog.w + 'px' })}>`);
+    out.push('  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>');
     renderNodes(sc.dialog.blocks, '  ', out, ctx);
     if (sc.dialog.footer.length) {
       out.push('  <Dialog.Footer>');

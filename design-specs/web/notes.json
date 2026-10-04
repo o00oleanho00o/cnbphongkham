@@ -91,9 +91,6 @@
         "The bell button is a link to \"Theo dõi\" (`data-nav=followups`).",
         "The finance link in the top bar has three states from `finance-bridge.js`: \"Tài chính đã đồng bộ\", \"Đang đồng bộ tài chính…\", \"Tài chính chờ kết nối · thử lại\"; the canvas draws the first one.",
         "The canvas draws the content area as a placeholder: each page is drawn by its own group (WB-WH)."
-      ],
-      "demo_data": [
-        "Account labels and the user card come from the 8 demo accounts of `staff-context.js` (BS. Tâm, BS. Mai, BS. An, BS. Lan, Mai Anh, Thu, Kế toán)."
       ]
     },
     "WA2": {
@@ -107,9 +104,6 @@
       ],
       "differences": [
         "The canvas top bar always draws the bell; the old web shows it for owner and doctor only (care sees the finance link but no bell). Template change needed, see the W3b-WA report."
-      ],
-      "demo_data": [
-        "KPI numbers (12, 5, 4, 2) are canvas sample data, not the old web's counts."
       ]
     },
     "WA3": {
@@ -121,9 +115,6 @@
       ],
       "gotchas": [
         "The landing page \"Thu ngân\" is drawn in full by group WF; WA3 draws only its heading and the four KPI tiles for context."
-      ],
-      "demo_data": [
-        "KPI numbers (12, 8.400.000 ₫, 2.100.000 ₫, 96) are canvas sample data, not the old web's counts."
       ]
     },
     "WA4": {
@@ -134,9 +125,6 @@
         "The toast is outside `#app`; the snapshot adds any visible `.toast` to the tree of every screen.",
         "The toast is a fixed pill at the bottom right of the viewport, above the page content; the page behind it (\"Hôm nay\", drawn in full at WB3) is only context.",
         "Check-in and Vắng act at once: the row's status badge changes and the buttons become \"Bắt đầu\" (Đã đến) or \"Mời vào phòng\" (Đang chờ); no dialog opens."
-      ],
-      "demo_data": [
-        "Patient names, contact, doctors and prices in the reception table are canvas sample data (`people`, `doctors`)."
       ]
     },
     "WB1": {
@@ -206,22 +194,11 @@
       "gotchas": [
         "The 4 service colours are the classes `service-S0..S3` (calendar legend and booking cards).",
         "Drag and drop is mouse only (`draggable=true`); keyboard users open the card and use the dialog."
-      ],
-      "demo_data": [
-        "08:00–08:30 Nguyễn Minh Linh Tái khám & đánh giá BS. Tâm · Đặt hẹn",
-        "09:00–09:30 Vũ Quỳnh Trang Tái khám & đánh giá BS. Tâm · Đặt hẹn",
-        "Đặt lịch Khám da liễu 08:00",
-        "Đặt lịch Tư vấn chuyên sâu 08:00",
-        "08:00–08:45 · +15′ đệm Trần Ngọc Anh Tư vấn da liễu BS. Mai · Đặt hẹn"
       ]
     },
     "WB6": {
       "logic": [
         "Same `schedule()` with `view = 'week'`: seven `week-day` columns starting at the chosen date, each with a title \"CN, 20/09\" and the day's bookings."
-      ],
-      "demo_data": [
-        "08:00–08:30 Nguyễn Minh Linh Tái khám & đánh giá",
-        "08:00–08:30 Đặng Gia Hân Tái khám & đánh giá"
       ],
       "differences": [
         "Canvas WB6: 7 columns at 1440 truncate long names; the old web keeps 178 px columns and scrolls horizontally. Each day shows 3 sample cards, the count in the day header is the old one."
@@ -248,9 +225,6 @@
       ],
       "gotchas": [
         "Every ops dialog ends with an empty `<p id=\"ops-error\" role=\"alert\">`; it has no text until a rule error is thrown, so it is not drawn in the layout."
-      ],
-      "demo_data": [
-        "Đóng hộp thoại"
       ]
     },
     "WB8": {
@@ -261,9 +235,6 @@
         "\"Cần lý do hủy cho lịch đang hoạt động.\"",
         "\"Không thể chuyển trạng thái lịch này.\" (only confirmed and arrived are allowed targets)."
       ],
-      "demo_data": [
-        "Đóng hộp thoại"
-      ],
       "differences": [
         "The close button \"Đóng hộp thoại\" (the X) is drawn by the dialog block without its accessible label."
       ]
@@ -271,9 +242,6 @@
     "WB9": {
       "logic": [
         "`data-ops=\"wait\"` on a waiting-list card opens the booking dialog with the waiting patient, service and note; the form carries `data-wait=<waitlist id>` so the entry leaves the list when saved."
-      ],
-      "demo_data": [
-        "Đóng hộp thoại"
       ],
       "differences": [
         "The close button \"Đóng hộp thoại\" (the X) is drawn by the dialog block without its accessible label."
@@ -292,23 +260,11 @@
       "gotchas": [
         "Phone numbers are masked in the demo (\"09•• ••• 100\").",
         "Canvas: rows 2-7 of the sample table carry the other six concern chips (\"Mụn viêm\" ... \"Theo dõi da sau điều trị\"); the generated Layout lists only the first table row, so they are exempted through demo_data. The avatar, name link and \"P001 · 28 tuổi · phone\" line share one cell."
-      ],
-      "demo_data": [
-        "Mụn viêm",
-        "Thâm sau viêm",
-        "Đỏ da / nhạy cảm",
-        "Sẹo sau mụn",
-        "Trẻ hóa da",
-        "Theo dõi da sau điều trị",
-        "Ví dụ: Nguyễn Minh Linh, P001, nám..."
       ]
     },
     "WC2": {
       "logic": [
         "Empty state of `patients()`: \"Không tìm thấy hồ sơ\", \"Thử tên, mã hồ sơ hoặc mối quan tâm khác.\" and a clear-search button."
-      ],
-      "demo_data": [
-        "⌕ Không tìm thấy hồ sơ Thử tên, mã hồ sơ hoặc mối quan tâm khác. Xóa tìm kiếm"
       ],
       "gotchas": [
         "Canvas: the empty state is one EmptyState block (icon \"search\" replaces the old \"⌕\" glyph, title, hint, \"Xóa tìm kiếm\"); the snapshot reads it as one concatenated string, so it is exempted through demo_data."
@@ -317,13 +273,6 @@
     "WC3": {
       "logic": [
         "`data-modal=\"patient\"` → `modalHtml('patient')`; `action('create-patient')` saves a synthetic profile and toasts \"Đã tạo hồ sơ demo\"; an empty name toasts \"Nhập tên người bệnh\"."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
-        "Đóng hộp thoại"
       ],
       "gotchas": [
         "Canvas: the dialog close button (old aria-label \"Đóng hộp thoại\") is drawn by the dlg helper as an icon; the generated Layout does not name it, so the label is exempted through demo_data."
@@ -343,12 +292,6 @@
       ],
       "gotchas": [
         "The brief on this tab is the text of the AI brief dialog (WC13); \"AI chỉ là bản nháp\": the doctor must edit and approve it."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC5": {
@@ -363,12 +306,6 @@
       ],
       "differences": [
         "App J1/F2 shows the same flow in one column; the web has two columns \"Tư vấn lâm sàng\" and \"Bản nháp của Pema AI\"."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC6": {
@@ -377,12 +314,6 @@
       ],
       "gotchas": [
         "An empty draft toasts \"Bản nháp không được để trống\"; an empty input toasts \"Hãy nhập vài ý chính trước\"."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC7": {
@@ -391,12 +322,6 @@
       ],
       "differences": [
         "App J3 lists sessions only; the web adds the tracking criteria facts (\"Ảnh mốc\", \"Patient reported outcome\", \"Người duyệt\", \"Nhắc hẹn\")."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC8": {
@@ -412,12 +337,6 @@
       ],
       "gotchas": [
         "The tab is removed for the care and accountant roles (`staff-context.js`)."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC9": {
@@ -427,13 +346,6 @@
       "rules": [
         "\"Chưa kiểm định căn chỉnh ảnh; bác sĩ kiểm tra điều kiện chụp trước khi so sánh.\" (notice of the studio).",
         "Illustrative photos do not score efficacy: the faces are marked \"MINH HỌA TỔNG HỢP\"."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
-        "Phóng to Cùng góc khai báo · không tự căn chỉnh"
       ],
       "gotchas": [
         "Canvas: the old studio-note notice (zoom slider + chip \"Cùng góc khai báo · không tự căn chỉnh\") is drawn as one info box holding the \"Phóng to\" range field and the chip, so the combined sentence is exempted through demo_data. Only the default \"Đặt cạnh nhau\" mode is drawn; the \"So sánh trượt\" mode adds a \"Vị trí so sánh\" slider and a \"Trước ← → Sau\" chip."
@@ -446,12 +358,6 @@
       "rules": [
         "\"Giá trị phát sinh, tiền đã thu và dư nợ; không suy hoàn tất điều trị\" (subtitle): completed treatment is never inferred from payment.",
         "\"Tiền cọc còn chưa phân bổ: <số tiền>\" notice below the table."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC11": {
@@ -463,23 +369,11 @@
       ],
       "gotchas": [
         "The tab is hidden for the accountant role."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC12": {
       "logic": [
         "`PemaCRMUI.timeline(p)`: \"Lịch sử hợp nhất\" (events, source and person), or \"Lịch sử CSKH\" when opened from the CRM tab."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố"
       ]
     },
     "WC13": {
@@ -492,13 +386,6 @@
       ],
       "gotchas": [
         "\"Không truy cập được clipboard; hãy chọn và sao chép văn bản.\" when the clipboard is blocked."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
-        "Đóng hộp thoại"
       ]
     },
     "WC14": {
@@ -511,49 +398,21 @@
       ],
       "differences": [
         "Title \"Gửi cập nhật\" with the eyebrow \"Tin nhắn · <tên>\"; the Next.js target is the inbox reply box (`/inbox`)."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
-        "Đóng hộp thoại"
       ]
     },
     "WC15": {
       "logic": [
         "`data-modal=\"edit\"` (\"Thông tin cần nhớ\"): alerts (one per line) and the photo-consent checkbox; `save-facts` toasts \"Đã lưu thông tin\"."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
-        "Đóng hộp thoại"
       ]
     },
     "WC16": {
       "logic": [
         "`data-modal=\"care\"` (\"Chăm sóc tại nhà\"): aftercare text `#care-edit`; `save-care` sets `aftercareSent` and toasts \"Đã gửi hướng dẫn vào patient app\"; empty text toasts \"Hãy nhập hướng dẫn\"."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
-        "Đóng hộp thoại"
       ]
     },
     "WC17": {
       "logic": [
         "`modalHtml('plan-edit')`: plan name and total sessions; `save-plan` is refused with \"Tên và số buổi chưa hợp lệ\" when the name is empty, the total is below the completed sessions or above 20; success toasts \"Đã cập nhật kế hoạch và patient app\"."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
-        "Đóng hộp thoại"
       ]
     },
     "WC18": {
@@ -563,13 +422,6 @@
       "rules": [
         "\"Nhập ngày hợp lệ, lý do và nguồn khuyến nghị.\"",
         "\"Nếu đã có lịch thực tế, Patient 360 ưu tiên ngày lịch đó. Khuyến nghị vẫn được giữ khi hủy lịch.\""
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
-        "Đóng hộp thoại"
       ]
     },
     "WC19": {
@@ -581,23 +433,11 @@
       ],
       "gotchas": [
         "The close button of this dialog is a bare \"×\" without an aria-label, unlike the other dialogs (\"Đóng hộp thoại\")."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Hành trình của Linh",
-        "Hóa đơn của Nguyễn Minh Linh",
-        "Nguyễn Minh Linh · Liệu trình kiểm soát sắc tố",
-        "Đóng hộp thoại",
-        "×"
       ]
     },
     "WC20": {
       "logic": [
         "A profile created in WC3 opens straight on this tab with empty lists, zero sessions and no plan: the screen of a patient without history."
-      ],
-      "demo_data": [
-        "Nguyễn Thử Nghiệm",
-        "Hành trình của Nghiệm"
       ],
       "differences": [
         "Canvas hero meta uses the old web's own line for a new profile (\"28 tuổi · Chưa xác nhận · Chưa nhập · Bác sĩ phụ trách: BS. Tâm\"); the new patient is the synthetic \"Trần Bảo Châu\" (P047) instead of the typed demo name."
@@ -606,10 +446,6 @@
     "WC21": {
       "logic": [
         "`PemaCRMUI.timeline(p)` with no events: the empty text \"Chưa có hoạt động CSKH được ghi nhận.\""
-      ],
-      "demo_data": [
-        "Nguyễn Thử Nghiệm",
-        "Hành trình của Nghiệm"
       ]
     },
     "WD1": {
@@ -629,13 +465,6 @@
       ],
       "gotchas": [
         "The owner filter starts as the account's own care owner (\"CSKH Mai Anh\"), so the care account sees only its tasks; the owner account sees all."
-      ],
-      "demo_data": [
-        "Ngô Khánh Vy",
-        "Lê Bảo Ngọc",
-        "Sinh nhật tuần này",
-        "02 · D+3 gửi ảnh",
-        "01 · Sau Laser CO2 D+1"
       ]
     },
     "WD2": {
@@ -651,10 +480,6 @@
       "differences": [
         "App C6 \"Chăm sóc khách hàng\" is a full screen; the web is a dialog.",
         "Canvas: option lists of the five selects are carried in the frame data (spec Layout lists them) but the selects are drawn closed, as in the old screenshot; the \"Ngày giờ tiếp theo\" field is a plain date field with the browser placeholder."
-      ],
-      "demo_data": [
-        "Chăm sóc · Ngô Khánh Vy",
-        "Đóng hộp thoại"
       ]
     },
     "WD3": {
@@ -666,27 +491,17 @@
       ],
       "differences": [
         "Canvas draws the ten rule articles as a divided list (title, step, trigger line) instead of ten bare stacks; same text and order."
-      ],
-      "demo_data": [
-        "Đóng hộp thoại"
       ]
     },
     "WD4": {
       "logic": [
         "`handle('activity')`: the saved CSKH results (patient, outcome, note, actor, time, related appointment); empty text \"Chưa có kết quả. Bắt đầu từ CSKH hôm nay.\"",
         "Frame shows the only scripted state (empty). When results exist the dialog lists patient, outcome, note, actor, time and related appointment (not scripted in the old web, so not drawn)."
-      ],
-      "demo_data": [
-        "Đóng hộp thoại"
       ]
     },
     "WD5": {
       "logic": [
         "`handle('segment')`: dialog titled with the lifecycle stage label and one row per patient of the stage with \"Mở hồ sơ\" (opens the CRM tab); empty text \"Chưa có khách trong nhóm.\""
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Đóng hộp thoại"
       ],
       "differences": [
         "Canvas shows 12 sample patients (old web: 42 in the stage). The empty text \"Chưa có khách trong nhóm.\" of an empty stage has no scripted state and no frame (inventory has one id for the dialog)."
@@ -703,14 +518,6 @@
       "differences": [
         "App I6/A4 are titled \"Theo dõi\" with the subtitle \"Ảnh, triệu chứng và mốc bị bỏ sót\"; the web title is \"Follow-up Inbox\" and the third metric is \"Mốc bị bỏ sót\" (app: \"Bỏ sót\").",
         "Canvas drops the outer panel around the five follow-up cards (4-level nesting limit); each card keeps title, text, date, assignee, attachment chip, \"Mở\" and \"Xử lý\". \"Inbox đã sạch. Không có follow-up đang mở.\" is not drawn (no scripted state)."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Phạm Thảo Vy",
-        "Vũ Quỳnh Trang",
-        "Hồ Bảo Ngọc",
-        "Bùi Khánh An",
-        "Giao: Điều dưỡng Hương"
       ]
     },
     "WD7": {
@@ -719,10 +526,6 @@
       ],
       "rules": [
         "\"Ảnh / phản hồi chưa duyệt\" eyebrow: the image is unreviewed; the reply is edited by the doctor (\"Phản hồi sau khi xem · bác sĩ cần chỉnh sửa\"); \"Hãy nhập phản hồi\" when empty."
-      ],
-      "demo_data": [
-        "Nguyễn Minh Linh",
-        "Đóng hộp thoại"
       ],
       "differences": [
         "The old dialog shows an illustrated face under the \"MINH HỌA TỔNG HỢP\" tag; the canvas draws a neutral photo placeholder with the same tag (no faces in the canvas, plan principle 6)."
@@ -746,10 +549,6 @@
       "differences": [
         "App I7 adds the sentence \"Không suy ra hiệu quả y khoa từ ảnh minh họa.\" and a metadata line; the web shows the alignment sentence only."
       ],
-      "demo_data": [
-        "Phóng to Cùng góc khai báo · không tự căn chỉnh",
-        "Nguyễn Minh Linh"
-      ],
       "gotchas": [
         "The old `studio-note` is one notice that holds the \"Phóng to\" range and the chip \"Cùng góc khai báo · không tự căn chỉnh\"; the canvas draws it as an info box with the range field and the chip, so the composite notice text is exempted in demo_data.",
         "Photos are two synthetic placeholders with the tag \"MINH HỌA TỔNG HỢP\" and the consent line; no real or generated face, no before/after score.",
@@ -759,10 +558,6 @@
     "WE2": {
       "logic": [
         "`studioMode = 'slider'` (button \"So sánh trượt\"): one image with a clip-path overlay of the \"before\" image, a zoom range `#studio-zoom` and a position range `#comparison-slider`; the chip \"Trước ← → Sau\" labels the two halves."
-      ],
-      "demo_data": [
-        "Phóng to Vị trí so sánh",
-        "Nguyễn Minh Linh"
       ],
       "gotchas": [
         "The old notice \"Phóng to Vị trí so sánh\" is the box holding the two range fields \"Phóng to\" and \"Vị trí so sánh\"; exempted in demo_data. The slider image is a neutral placeholder."
@@ -778,9 +573,6 @@
       "differences": [
         "App F14 \"Nguồn lực phòng khám\" lists doctors and one blocked room line; the sentence \"Khóa phòng phức tạp duyệt ở web.\" says complex blocks stay on the web."
       ],
-      "demo_data": [
-        "Khi chưa có khoảng khóa, bảng hiện một dòng"
-      ],
       "gotchas": [
         "Empty state of the table when no block exists: one row \"Không có khoảng khóa.\" (`operations-ui.js › resources()`); the canvas shows the sentence under the table.",
         "Doctor load numbers (8 lịch · 240 phút, …) are the old demo values for the day 20/9/2026; the shift is 08:00–18:00, break 12:00–13:00, load bar = minutes / 540."
@@ -792,9 +584,6 @@
       ],
       "rules": [
         "Blocks live between 08:00 and 18:00 on a valid date with a reason; overlapping bookings are refused by the booking rules of WB7."
-      ],
-      "demo_data": [
-        "Đóng hộp thoại"
       ],
       "gotchas": [
         "The dialog close button is drawn by `dlg` as an icon-only \"×\"; its accessible name \"Đóng hộp thoại\" is not a visible label, so it is exempted in demo_data.",
@@ -819,9 +608,6 @@
       "logic": [
         "`updateService(id, input)`, capability `config`: name, price, duration 15–180, buffer, active flag."
       ],
-      "demo_data": [
-        "Đóng hộp thoại"
-      ],
       "gotchas": [
         "The dialog close button is drawn by `dlg` as an icon-only \"×\"; its accessible name \"Đóng hộp thoại\" is not a visible label, so it is exempted in demo_data.",
         "\"Trạng thái\" is shown open so that both options (Đang dùng, Tạm ngưng) are visible."
@@ -839,18 +625,13 @@
         "App I10/F11/D1 show 3 tiles and a short list; the web adds the product catalog tile (\"Catalog sản phẩm\"), the quick-order banner and the order history.",
         "The canvas draws the order-history rows (Xem / in, Sửa nháp, status line) and, below them, the empty state \"Chưa có đơn từ catalog.\" that the old shot shows when no order exists; the old web shows one or the other."
       ],
-      "demo_data": [
-        "Tên bệnh nhân (Nguyễn Minh Linh, Trần Ngọc Anh, Lê Hoàng Nam) thay bằng people của canvas",
-        "Số liệu ô tổng (48, 61.650.000 ₫, 11.250.000 ₫, 115) giữ như web cũ; 6 dòng hóa đơn mẫu lấy giá từ services; hai dòng lịch sử đơn là mẫu để thấy nút Xem / in và Sửa nháp"
+      "gotchas": [
+        "Canvas sample content: Số liệu ô tổng (48, 61.650.000 ₫, 11.250.000 ₫, 115) giữ như web cũ; 6 dòng hóa đơn mẫu lấy giá từ services; hai dòng lịch sử đơn là mẫu để thấy nút Xem / in và Sửa nháp"
       ]
     },
     "WF2": {
       "logic": [
         "`handle('pay')` dialog: amount, method; `PemaOps.pay()` needs capability `billing`."
-      ],
-      "demo_data": [
-        "Tên bệnh nhân thay bằng people[0]",
-        "Thu tiền · Nguyễn Minh Linh"
       ],
       "differences": [
         "\"Xác nhận thu tiền\" stays under the fields as in the old dialog, not in a right-aligned footer. The ops-error line under it (#ops-error, empty) and the toast \"Đã ghi phiếu thu và cập nhật hóa đơn\" are not drawn."
@@ -868,10 +649,6 @@
         "The doctor cannot approve a line without its usage text (\"Cách dùng\"); the reach steps of the inventory fill it.",
         "The picker lists 115 products in a scroll box; the canvas draws the first 6. The error line #quick-error (empty; shows \"Chọn ít nhất một sản phẩm.\" or \"Chọn bác sĩ trong danh sách.\") is not drawn."
       ],
-      "demo_data": [
-        "Tên bệnh nhân thay bằng people[0]; mã, tên, đơn vị, giá sản phẩm là dữ liệu catalog, giữ như web cũ",
-        "Desloratadine/Genepharm (Desloratadine 5 mg) Hộp 30 Viên - Viên - A H002 · Viên · Thuốc · Đơn thuốc 5.500 ₫"
-      ],
       "differences": [
         "Product pick rows are drawn as list rows (name, code · unit · group · route, price) instead of one button label; the whole row is the click target in the old web."
       ]
@@ -888,9 +665,6 @@
         "App F6/F7 show the A5 slip as a mobile preview; the web page is a two-column review (prescription and consultation sheets side by side) with a toolbar.",
         "The old page is standalone (/order-review/, no sidebar, new tab); the canvas draws it in the app shell because the Next.js target /orders/[id] sits in AppShell.",
         "The print-media capture of a draft shows only \"BẢN NHÁP — chưa được bác sĩ duyệt để phát hành.\" (class print-blocked): the toolbar, section labels and sheets are hidden. The canvas shows it in the card \"Bản in (print media)\". Conditional lines not drawn: \"Địa chỉ:\" row (only when the patient has an address), \"Ghi chú:\" under an item, and the \"Không in (n): …\" paragraph for excluded lines."
-      ],
-      "demo_data": [
-        "Tên bệnh nhân thay bằng people[0] (tuổi 28 thay vì 32)"
       ]
     },
     "WF6": {
@@ -899,17 +673,11 @@
       ],
       "differences": [
         "Print-media capture of an approved order: the two sheets stack on one white page, no toolbar, black text and rules, logo in grayscale, one document set per page (break-after). Drawn as the card \"Bản in (print media)\"."
-      ],
-      "demo_data": [
-        "Tên bệnh nhân thay bằng people[0]"
       ]
     },
     "WF7": {
       "logic": [
         "`current.unresolved`: products with no class are listed in a warning paragraph \"Cần phân loại <n> sản phẩm: …\" and cannot be printed."
-      ],
-      "demo_data": [
-        "Tên bệnh nhân thay bằng people[0]; sản phẩm Triluma là dữ liệu catalog"
       ],
       "gotchas": [
         "The approve button is visible but disabled while products need a class; only the prescription sheet exists because the consultation list is empty."
@@ -930,18 +698,11 @@
       "rules": [
         "\"Đơn đã thu tiền hoặc thiếu hóa đơn; không thể sửa.\"",
         "\"Đơn cũ cần mở Sửa nháp để đối chiếu lại catalog trước khi duyệt.\""
-      ],
-      "demo_data": [
-        "Tên bệnh nhân thay bằng people[0]",
-        "Desloratadine/Genepharm (Desloratadine 5 mg) Hộp 30 Viên - Viên - A H002 · Viên · Thuốc · Đơn thuốc 5.500 ₫"
       ]
     },
     "WF10": {
       "logic": [
         "Product search with no match: the list column shows the empty state \"Không tìm thấy sản phẩm phù hợp.\"; the cart keeps \"Chọn sản phẩm ở danh sách.\"."
-      ],
-      "demo_data": [
-        "Tên bệnh nhân thay bằng people[0]"
       ]
     },
     "WG1": {
@@ -954,9 +715,6 @@
       ],
       "differences": [
         "App H1 shows 186.400.000 ₫ sample figures and a short text; the web page holds the team contribution bars and the reconciliation panel."
-      ],
-      "demo_data": [
-        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity)."
       ]
     },
     "WG2": {
@@ -972,9 +730,6 @@
       "gotchas": [
         "The CSV export is a download (`Pema-tien-thu-thuat-<tháng>.csv`), not a page.",
         "Native browser dialogs are not drawn: Hủy asks \"Lý do hủy lượt chưa thu tiền\", Chốt tháng asks \"Chốt số liệu tháng <tháng>? Các lượt trong kỳ sẽ bị khóa.\", Xác nhận đã chi asks \"Mã chứng từ chi\"."
-      ],
-      "demo_data": [
-        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity)."
       ]
     },
     "WG3": {
@@ -987,9 +742,6 @@
       ],
       "gotchas": [
         "The block is collapsed by default: its fields exist in the DOM but are not visible until the summary is clicked, and the auto refresh pauses while it is open."
-      ],
-      "demo_data": [
-        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity)."
       ]
     },
     "WG4": {
@@ -1000,9 +752,6 @@
         "\"Áp dụng cho lượt tạo sau khi lưu. Người phối hợp có thể được kế toán phân bổ riêng tại lượt thực hiện.\"",
         "Doctors see \"Bác sĩ xem tỷ lệ trên các lượt của mình; chính sách chung thuộc kế toán.\" instead of the forms.",
         "PB02 rate snapshots: \"Tỷ lệ lưu theo từng lượt. Đổi chính sách không tính lại lịch sử.\" The version (\"Phiên bản 1\") belongs to the service policy; only lines created after saving use a new rate."
-      ],
-      "demo_data": [
-        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity)."
       ],
       "differences": [
         "App H8 has no per-service basis selection (Giá sau giảm, Giá niêm yết, Theo thực thu) or version line; the web keeps them."
@@ -1016,29 +765,20 @@
         "\"Phiếu thu mới đồng bộ với app khi đang mở. Hóa đơn web cũ thu tại Thu ngân Clinic; không thu lại ở đây.\"",
         "Doctors: \"Tài khoản bác sĩ không xem thu tiền toàn phòng khám.\""
       ],
-      "demo_data": [
-        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity).",
-        "The two sample notifications are illustrative: the old shot shows only the empty message."
-      ],
       "gotchas": [
-        "The right panel states (empty message, unread with the button \"Đã đọc\", read with the text \"Đã đọc\"), the accountant text \"Kế toán không đọc inbox của chủ.\" and the empty \"Chưa có phiếu thu.\" are drawn together in one frame; the live page shows one of them."
+        "The right panel states (empty message, unread with the button \"Đã đọc\", read with the text \"Đã đọc\"), the accountant text \"Kế toán không đọc inbox của chủ.\" and the empty \"Chưa có phiếu thu.\" are drawn together in one frame; the live page shows one of them.",
+        "Canvas sample content: The two sample notifications are illustrative: the old shot shows only the empty message."
       ]
     },
     "WG6": {
       "logic": [
         "`finance.js › overview()` with `state.role = 'doctor'`: title \"Doanh số của tôi\", hero \"Công việc được ghi nhận, thu nhập rõ ràng\", metrics \"Doanh số của tôi\", \"Tiền chờ duyệt\", \"Tiền thủ thuật đã duyệt\".",
         "The doctor account gets two tabs; the page title stays \"Tài chính & tiền thủ thuật\" while the menu and breadcrumb read \"Doanh số của tôi\"."
-      ],
-      "demo_data": [
-        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity)."
       ]
     },
     "WG7": {
       "logic": [
         "`work()` for the doctor: own rows only, no entry form, no approve, void, close or export commands except the export button."
-      ],
-      "demo_data": [
-        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity)."
       ],
       "gotchas": [
         "The info box at the bottom of the frame is canvas-only documentation of the placeholder sentences of the two tabs a doctor cannot open (\"Bác sĩ xem tỷ lệ trên các lượt của mình; chính sách chung thuộc kế toán.\", \"Tài khoản bác sĩ không xem thu tiền toàn phòng khám.\")."
@@ -1050,9 +790,6 @@
       ],
       "differences": [
         "App D1 \"Đối soát & thu ngân\" is the accountant home with 3 tiles; the web lands the accountant on \"Thu ngân\" (WF1) and reaches finance from the menu."
-      ],
-      "demo_data": [
-        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity)."
       ]
     },
     "WG9": {
@@ -1085,9 +822,6 @@
     "WH2": {
       "logic": [
         "After a question the result card shows the answer, \"Cách tính\" and the source patients."
-      ],
-      "demo_data": [
-        "Ví dụ: Ai quá hạn tái khám hơn 30 ngày?"
       ],
       "gotchas": [
         "The placeholder of #ask-input is replaced by the typed question once a sample question is asked, so the canvas shows the question only; the patients named in the answer (P001, P007) are canvas sample patients, not the old demo names."
@@ -1131,10 +865,6 @@
     "WF4": {
       "logic": [
         "Cart lines keep the catalog route as default (H002 Đơn thuốc, H005 Phiếu tư vấn); the total is quantity × unit price (5.500 ₫ + 715.000 ₫ = 720.500 ₫)."
-      ],
-      "demo_data": [
-        "Tên bệnh nhân thay bằng people[0]; dữ liệu catalog giữ nguyên",
-        "Desloratadine/Genepharm (Desloratadine 5 mg) Hộp 30 Viên - Viên - A H002 · Viên · Thuốc · Đơn thuốc 5.500 ₫"
       ]
     }
   }

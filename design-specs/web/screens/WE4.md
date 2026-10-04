@@ -36,6 +36,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
 ```tsx
 // opens over the page "Bác sĩ & phòng" (dimmed); the page behind it is not part of this screen
 <Dialog eyebrow="Pema · vận hành" title="Khóa thời gian phòng" width="720px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
   <Field label="Phòng" type="select" default="Khám da liễu" options={["Khám da liễu","Tư vấn chuyên sâu","Laser & thủ thuật","Chăm sóc da"]} />
   <Field label="Ngày" type="date" default="2026-09-20" />
   <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">

@@ -36,6 +36,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
 ```tsx
 // opens over the page "Theo dõi" (dimmed); the page behind it is not part of this screen
 <Dialog eyebrow="Ảnh / phản hồi chưa duyệt · BS. Tâm" title="Nguyễn Thu Hà" width="620px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
   <Text small>"Đỏ nhẹ đã giảm, không đau. Em gửi ảnh trước buổi hẹn."</Text>
   <PhotoGrid>
     <PhotoPlaceholder label="" tag="MINH HỌA TỔNG HỢP" />

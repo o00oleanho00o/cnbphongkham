@@ -43,7 +43,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -84,7 +84,15 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
             <ListItem title="Nếu hủy, nhập lý do. Lịch đã hủy không chiếm chỗ và được giữ trong lịch sử hồ sơ." />
           </List>
         </Stack>
-        <Notice tone="info" text="Thông tin đi tiếp như thế nào? Sau khi lưu, lịch đã đặt xuất hiện trong Patient Mobile; lịch sắp tới trên hồ sơ được tính lại. Check-in của ngày hiện tại đưa người bệnh vào trạng thái đang chờ để bàn giao cho phòng khám. Điểm cần nhớ Trùng bác sĩ, người bệnh hoặc phòng: đổi giờ hoặc nguồn lực phù hợp. Khoảng chuẩn bị vẫn chiếm phòng; vùng gạch chéo không phải giờ trống. Ngoài ca, giờ nghỉ, phòng khóa hoặc dịch vụ tạm ngưng: cần chọn phương án khác." />
+        <Notice tone="info" title="Thông tin đi tiếp như thế nào?">
+          <Text>"Sau khi lưu, lịch đã đặt xuất hiện trong Patient Mobile; lịch sắp tới trên hồ sơ được tính lại. Check-in của ngày hiện tại đưa người bệnh vào trạng thái đang chờ để bàn giao cho phòng khám."</Text>
+          <Text><Strong>"Điểm cần nhớ"</Strong></Text>
+          <ul>
+            <li>"Trùng bác sĩ, người bệnh hoặc phòng: đổi giờ hoặc nguồn lực phù hợp."</li>
+            <li>"Khoảng chuẩn bị vẫn chiếm phòng; vùng gạch chéo không phải giờ trống."</li>
+            <li>"Ngoài ca, giờ nghỉ, phòng khóa hoặc dịch vụ tạm ngưng: cần chọn phương án khác."</li>
+          </ul>
+        </Notice>
       </Grid>
       <Row gap="8px" wrap>
         <Button variant="primary">"Mở điều phối lịch →"</Button>

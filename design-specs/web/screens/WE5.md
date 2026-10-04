@@ -42,7 +42,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -69,43 +69,43 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
         <Icon name="favorite" />
         <Badge tone="success">"Đang dùng"</Badge>
       </Card.Aside>
-      <Heading level={2}>"300.000 ₫"</Heading>
+      <Heading level={2}>"300.000 ₫"</Heading>
       <List>
         <ListItem title="30 phút điều trị" sub="0 phút chuẩn bị phòng">
           <Button variant="secondary">"Chỉnh dịch vụ"</Button>
         </ListItem>
       </List>
     </Card>
-    <Card title="Tư vấn da liễu">
+    <Card tint="brand" title="Tư vấn da liễu">
       <Card.Aside>
         <Icon name="favorite" />
         <Badge tone="success">"Đang dùng"</Badge>
       </Card.Aside>
-      <Heading level={2}>"500.000 ₫"</Heading>
+      <Heading level={2}>"500.000 ₫"</Heading>
       <List>
         <ListItem title="45 phút điều trị" sub="15 phút chuẩn bị phòng">
           <Button variant="secondary">"Chỉnh dịch vụ"</Button>
         </ListItem>
       </List>
     </Card>
-    <Card title="Laser theo chỉ định">
+    <Card tint="success" title="Laser theo chỉ định">
       <Card.Aside>
         <Icon name="favorite" />
         <Badge tone="success">"Đang dùng"</Badge>
       </Card.Aside>
-      <Heading level={2}>"2.500.000 ₫"</Heading>
+      <Heading level={2}>"2.500.000 ₫"</Heading>
       <List>
         <ListItem title="45 phút điều trị" sub="15 phút chuẩn bị phòng">
           <Button variant="secondary">"Chỉnh dịch vụ"</Button>
         </ListItem>
       </List>
     </Card>
-    <Card title="Chăm sóc theo chỉ định">
+    <Card tint="warning" title="Chăm sóc theo chỉ định">
       <Card.Aside>
         <Icon name="favorite" />
         <Badge tone="warning">"Tạm ngưng"</Badge>
       </Card.Aside>
-      <Heading level={2}>"1.200.000 ₫"</Heading>
+      <Heading level={2}>"1.200.000 ₫"</Heading>
       <List>
         <ListItem title="45 phút điều trị" sub="15 phút chuẩn bị phòng">
           <Button variant="secondary">"Chỉnh dịch vụ"</Button>

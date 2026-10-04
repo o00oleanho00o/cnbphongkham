@@ -44,7 +44,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="account_balance_wallet">"Doanh số của tôi"</Sidebar.Item>

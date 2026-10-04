@@ -52,7 +52,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -77,8 +77,8 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
   </PageHeading>
   <Grid cols="repeat(4, 1fr)" cols-390="repeat(2, 1fr)">
     <Tile label="Tổng hóa đơn" value="48" note="Dữ liệu giả lập" />
-    <Tile label="Đã thu" value="61.650.000 ₫" note="Tổng lũy kế" />
-    <Tile label="Còn phải thu" value="11.250.000 ₫" note="Không thu trùng" />
+    <Tile label="Đã thu" value="61.650.000 ₫" note="Tổng lũy kế" />
+    <Tile label="Còn phải thu" value="11.250.000 ₫" note="Không thu trùng" />
     <Tile label="Catalog sản phẩm" value="115" note="Từ danhsach.xlsx" />
   </Grid>
   <Card variant="soft" title="Lên đơn theo mẫu PEMA" subtitle="Thuốc vào Đơn thuốc; mỹ phẩm, TPCN và loại khác vào Phiếu tư vấn. Bản in A5 dọc.">
@@ -102,16 +102,21 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
           <Text>"Buổi chăm sóc / điều trị"</Text>
         </Cell>
         <Cell column="Tổng tiền">
-          <Text>"1.200.000 ₫"</Text>
+          <Text>"1.200.000 ₫"</Text>
         </Cell>
         <Cell column="Đã thu">
-          <Text>"1.200.000 ₫"</Text>
+          <Text>"1.200.000 ₫"</Text>
         </Cell>
         <Cell column="Còn lại">
-          <Text>"0 ₫"</Text>
+          <Text>"0 ₫"</Text>
         </Cell>
         <Cell column="">
           <Badge tone="success">"Đã thanh toán"</Badge>
+        </Cell>
+      </Row>
+      <Row sample="row 2 of 6: only the actions and statuses that the rows above do not show">
+        <Cell column="">
+          <Button variant="primary">"Thu tiền"</Button>
         </Cell>
       </Row>
     </TableShell>
@@ -133,11 +138,14 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
         <Button variant="secondary">"Xem / in"</Button>
       </ListItem>
     </List>
-    <EmptyState title="Chưa có đơn từ catalog." hint="Hiện thay cho danh sách khi chưa có đơn nào." icon="receipt_long" />
+    <EmptyState icon="receipt_long">
+      <Heading level={3}>"Chưa có đơn từ catalog."</Heading>
+      <Text>"Hiện thay cho danh sách khi chưa có đơn nào."</Text>
+    </EmptyState>
   </Card>
 </AppShell>
 ```
-Kit components used: Button×9, Tile×4, Card×3, Field×2, Sidebar×1, TopBar×1, PageHeading×1, TableShell×1, Badge×1, EmptyState×1; shared pieces: FilterChip×3. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Button×10, Tile×4, Card×3, Field×2, Sidebar×1, TopBar×1, PageHeading×1, TableShell×1, Badge×1, EmptyState×1; shared pieces: FilterChip×3. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - 1440×900 is the reference (Frame, Layout).
@@ -171,7 +179,7 @@ Kit components used: Button×9, Tile×4, Card×3, Field×2, Sidebar×1, TopBar×
 - The canvas draws the order-history rows (Xem / in, Sửa nháp, status line) and, below them, the empty state "Chưa có đơn từ catalog." that the old shot shows when no order exists; the old web shows one or the other.
 
 ## Gotchas
-- (none recorded)
+- Canvas sample content: Số liệu ô tổng (48, 61.650.000 ₫, 11.250.000 ₫, 115) giữ như web cũ; 6 dòng hóa đơn mẫu lấy giá từ services; hai dòng lịch sử đơn là mẫu để thấy nút Xem / in và Sửa nháp
 
 ## Web canvas
 - Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WF1 · Thu ngân`.

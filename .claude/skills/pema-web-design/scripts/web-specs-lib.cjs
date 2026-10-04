@@ -510,21 +510,59 @@ function expectedItems(e) {
 const LABEL_KINDS = new Set(['action', 'field', 'filter/tab', 'status', 'notice', 'empty state', 'heading', 'table column', 'kpi label']);
 const normNum = (t) => String(t).replace(/\d+(?:[.,:/′'’·]\d+)*/g, '#').replace(/\s+/g, ' ').trim();
 
+// Person names are sample data (the canvas has its own people), so a name, or a given name that comes after a name was seen, is read as one
+// placeholder on both sides: "Hóa đơn của Nguyễn Minh Linh" is found by "Hóa đơn của Nguyễn Thu Hà", and "Hành trình của Linh" by "Hành trình của Hà".
+const NAME_RUN = /\p{Lu}\p{Ll}+(?:\s+\p{Lu}\p{Ll}+)+/gu;
+const nameTokens = (texts) => {
+  const given = new Set();
+  for (const t of texts) for (const m of String(t).matchAll(NAME_RUN)) given.add(m[0].trim().split(/\s+/).pop());
+  return given;
+};
+const maskNames = (t, given) => {
+  let s = String(t).replace(NAME_RUN, '@');
+  for (const g of given) s = s.replace(new RegExp(`(^|[^\\p{L}])${g}(?![\\p{L}])`, 'gu'), '$1@');
+  return s;
+};
+
+// A notice or an empty state of the old web is one text made of several pieces (title, text, bullets, button label, a leading glyph); the
+// canvas draws the pieces as separate lines. Read the layout's text-bearing string literals in order and compare letters and digits only.
+const TEXT_ATTRS = new Set(['title', 'text', 'hint', 'label', 'subtitle', 'sub', 'sub2', 'over', 'eyebrow', 'summary', 'caption', 'foot']);
+const literalsOf = (lines) => {
+  const out = [];
+  const src = lines.join('\n').replace(/\w+=\{[^}]*\}/g, ' ');
+  for (const m of src.matchAll(/(?:([\w-]+)=)?("(?:[^"\\]|\\.)*")/g)) {
+    if (m[1] && !TEXT_ATTRS.has(m[1])) continue;
+    try {
+      out.push(JSON.parse(m[2]));
+    } catch {
+      /* not a JSON string */
+    }
+  }
+  return out;
+};
+const alnum = (t) => normNum(t).replace(/[^\p{L}\p{N}#@]+/gu, '');
+
 /** Labels of the snapshot that a canvas Layout does not contain. `demoData` (notes.json screens.<id>.demo_data) lists old demo values that the canvas replaces on purpose. */
 function canvasCoverage(e, layoutLines, demoData = []) {
-  const text = normNum(layoutLines.join('\n').replace(/\\"/g, '"'));
-  const exempt = demoData.map(normNum);
+  const items = expectedItems(e);
+  const given = nameTokens([...items.map((i) => i.text), ...layoutLines]);
+  const norm = (t) => normNum(maskNames(t, given));
+  const text = norm(layoutLines.join('\n').replace(/\\"/g, '"'));
+  const joined = alnum(literalsOf(layoutLines).map((l) => maskNames(l, given)).join(' '));
+  const exempt = demoData.map(norm);
   const missing = [];
   const seen = new Set();
   const names = new Set((e.actions || []).filter((a) => /^crm=profile$|^patient=/.test(a.hook || '')).map((a) => a.label)); // links named after a patient: sample data
-  for (const it of expectedItems(e)) {
+  for (const it of items) {
     if (!LABEL_KINDS.has(it.kind) || (it.kind === 'action' && names.has(it.text))) continue;
-    const n = normNum(it.text);
+    const n = norm(it.text);
     const key = it.kind + '|' + n;
     if (seen.has(key)) continue;
     seen.add(key);
     if (!n || exempt.some((x) => n.includes(x) || x.includes(n))) continue;
-    if (!text.includes(n)) missing.push(it);
+    if (text.includes(n)) continue;
+    if (['notice', 'empty state', 'action'].includes(it.kind) && joined.includes(alnum(maskNames(it.text, given)))) continue;
+    missing.push(it);
   }
   return missing;
 }

@@ -36,6 +36,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
 ```tsx
 // opens over the page "Dịch vụ" (dimmed); the page behind it is not part of this screen
 <Dialog eyebrow="Pema · vận hành" title="Chỉnh dịch vụ" width="720px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
   <Field label="Tên dịch vụ" type="text" default="Tái khám & đánh giá" />
   <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
     <Field label="Điều trị (phút)" type="number" default="30" />

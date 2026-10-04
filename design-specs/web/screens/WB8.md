@@ -39,6 +39,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
 ```tsx
 // opens over the page "Điều phối lịch" (dimmed); the page behind it is not part of this screen
 <Dialog eyebrow="Pema · vận hành" title="Chi tiết lịch hẹn" width="720px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
   <Row gap="8px" wrap>
     <Badge tone="neutral">"Đặt hẹn"</Badge>
     <Button variant="secondary">"Xác nhận lịch"</Button>
@@ -54,7 +55,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Field label="Giờ" type="time" default="08:00" />
     <Field label="Ghi chú" type="text" default="Lịch giả lập để thử điều phối" />
   </Grid>
-  <Notice tone="info" text="30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫ · theo lịch đã đặt" />
+  <Notice tone="info" text="30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫ · theo lịch đã đặt" />
   <Row gap="8px" wrap>
     <Button variant="primary">"Lưu thay đổi"</Button>
     <Button variant="secondary">"Tìm giờ trống"</Button>

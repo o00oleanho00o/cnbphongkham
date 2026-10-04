@@ -42,7 +42,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -82,7 +82,14 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
             <ListItem title="Lưu buổi điều trị, sau đó kiểm tra sự kiện mới trong hành trình và hướng dẫn đã chuyển sang Patient Mobile." />
           </List>
         </Stack>
-        <Notice tone="info" text="Thông tin đi tiếp như thế nào? Buổi đã lưu nối vào lịch sử và cập nhật số buổi hoàn tất. Hướng dẫn sau buổi là đầu vào của chăm sóc tại nhà. Nếu thiếu ảnh mốc, đội ngũ có mục theo dõi để bổ sung. Điểm cần nhớ AI brief và ghi chú cần bác sĩ xem, sửa và duyệt; không tự ra chẩn đoán. Ảnh và số buổi cần được đọc trong bối cảnh; không dùng làm kết luận tự động về hiệu quả." />
+        <Notice tone="info" title="Thông tin đi tiếp như thế nào?">
+          <Text>"Buổi đã lưu nối vào lịch sử và cập nhật số buổi hoàn tất. Hướng dẫn sau buổi là đầu vào của chăm sóc tại nhà. Nếu thiếu ảnh mốc, đội ngũ có mục theo dõi để bổ sung."</Text>
+          <Text><Strong>"Điểm cần nhớ"</Strong></Text>
+          <ul>
+            <li>"AI brief và ghi chú cần bác sĩ xem, sửa và duyệt; không tự ra chẩn đoán."</li>
+            <li>"Ảnh và số buổi cần được đọc trong bối cảnh; không dùng làm kết luận tự động về hiệu quả."</li>
+          </ul>
+        </Notice>
       </Grid>
       <Row gap="8px" wrap>
         <Button variant="primary">"Chọn hồ sơ để làm việc →"</Button>
