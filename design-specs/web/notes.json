@@ -815,6 +815,12 @@
     "WH2": {
       "logic": [
         "After a question the result card shows the answer, \"Cách tính\" and the source patients."
+      ],
+      "demo_data": [
+        "Ví dụ: Ai quá hạn tái khám hơn 30 ngày?"
+      ],
+      "gotchas": [
+        "The placeholder of #ask-input is replaced by the typed question once a sample question is asked, so the canvas shows the question only; the patients named in the answer (P001, P007) are canvas sample patients, not the old demo names."
       ]
     },
     "WH3": {
@@ -826,6 +832,10 @@
       ],
       "differences": [
         "App F16 shows a one-column \"Hướng dẫn sử dụng Pema\" with 5 handoff cards; the web has a topic index, 10 articles, related links and per-article action buttons."
+      ],
+      "gotchas": [
+        "From 1600px (guide.css) the article splits into a text column and a context column; the canvas grid does the same with auto-fit, and keeps the action buttons under both columns because of the container nesting limit. The topic index is a vertical chip group whose labels read \"role title\".",
+        "The old context column (handoff, \"Điểm cần nhớ\", bullets) is one notice in the web DOM, and the coverage check compares a notice as one string, so the canvas draws it as one notice whose text starts with \"Thông tin đi tiếp như thế nào?\" (the bullets run on after \"Điểm cần nhớ\")."
       ]
     },
     "WH4": {
@@ -836,6 +846,16 @@
     "WH14": {
       "logic": [
         "The guide search finds no topic: the index shows the notice \"Không tìm thấy. Thử “lịch”, “thu tiền” hoặc tên vai trò.\" and the article column keeps the default article."
+      ]
+    },
+    "WH6": {
+      "logic": [
+        "Articles schedule, resources, clinical, care and billing add a \"Điểm cần nhớ\" bullet list inside the context column; the other articles have none."
+      ]
+    },
+    "WH11": {
+      "logic": [
+        "Article \"exceptions\" has no action buttons (links is empty); only the \"Đọc tiếp\" row follows the notice."
       ]
     }
   }
