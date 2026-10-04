@@ -315,7 +315,8 @@ function stable(obj) {
   const kinds = Object.entries(inventory.counts.by_kind).map(([k, v]) => `${k}=${v}`).join(' ');
   const groups = Object.entries(inventory.counts.by_group).map(([k, v]) => `${k}=${v}`).join(' ');
   if (CHECK) {
-    const current = fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf8') : '';
+    // git may check the file out with CRLF on Windows; the content is what counts
+    const current = fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf8').replaceAll('\r\n', '\n') : '';
     if (current !== text) {
       const a = current ? JSON.parse(current) : { screens: [] };
       const diff = inventory.screens.filter((s, i) => JSON.stringify(s) !== JSON.stringify(a.screens[i])).map((s) => s.id);

@@ -68,7 +68,7 @@ const screens = [
     sources: ['prototype/shared/clinic.js#shell', 'prototype/shared/staff-context.js#picker', 'prototype/shared/workspace-layout.css'],
     next_route: '(app shell)', next_status: 'restyle (U1)', app_canvas: ['A5', 'A6'],
     covers: ['staff:owner-tam'],
-    notes: 'Sidebar (3 sections, 13 items, nav badge, user card), topbar (breadcrumbs, account picker, demo label, global search, bell, reset). The account picker is a native select; its open list is not capturable. Reset asks a native confirm(). finance-bridge.js adds a small link in the topbar ("Tài chính đã đồng bộ", "Đang đồng bộ tài chính…", "Tài chính chờ kết nối · thử lại") that follows the finance API.',
+    notes: 'Sidebar (3 sections, 13 items, nav badge, user card), topbar (breadcrumbs, account picker, demo label, global search, bell, reset). The account picker is a native select; its open list is not capturable. Reset asks a native confirm(). finance-bridge.js adds a small link in the topbar ("Tài chính đã đồng bộ", "Đang đồng bộ tài chính…", "Tài chính chờ kết nối · thử lại") that follows the finance API. A skip link "Đến nội dung chính" shows on keyboard focus.',
   }),
   S('WA2', 'WA', 'Khung · CSKH (trang chủ CSKH hôm nay)', 'state', [START, { wait: '.sidebar' }], { text: 'CSKH hôm nay' }, {
     role: CARE, sources: ['prototype/shared/staff-context.js#pages', 'prototype/shared/clinic.js#shell'],
@@ -85,8 +85,8 @@ const screens = [
   S('WA4', 'WA', 'Thông báo nổi (toast)', 'state', [START, nav('today'), { click: '[data-crm="arrive"]' }, { wait: '.toast' }], { selector: '.toast', text: 'Đã cập nhật hàng đợi' }, {
     sources: ['prototype/shared/clinic.js#toast', 'prototype/shared/crm-ui.js#handle'],
     next_route: '(app shell)', next_status: 'restyle (U1)', app_canvas: ['A7'],
-    covers: ['crm:arrive', 'crm:missed', 'dialog:today→Check-in'],
-    notes: 'Check-in and Vắng in the reception list act at once and show this toast; they open no dialog. The toast disappears after 2.8 s.',
+    covers: ['crm:arrive', 'crm:missed', 'crm:start', 'dialog:today→Check-in'],
+    notes: 'Check-in and Vắng in the reception list act at once and show this toast; they open no dialog. After Check-in the row offers "Bắt đầu" (crm:start). The toast disappears after 2.8 s.',
   }),
 
   // ---------------------------------------------------------------- WB operations
