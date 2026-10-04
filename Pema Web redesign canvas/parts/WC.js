@@ -27,7 +27,7 @@ const wcNewHead = tabIndex => [
 const wcSummary = (o = {}) => card({ v: 'soft', g: 10 },
   row({ g: 16, jc: 'space-between', ai: 'flex-start' },
     stack({ g: 4 }, eyebrow('Bước tiếp theo'), h3(o.title || 'Dự kiến quay lại 20/9/2026'), sm(o.sub || 'Lịch hẹn đã xác nhận với phòng khám · Lịch đã đặt')),
-    stack({ g: 6 }, badge(o.status || 'Đang điều trị', 'info', { dot: false }), sm(wcCare))),
+    stack({ g: 6 }, tags(badge(o.status || 'Đang điều trị', 'info', { dot: false })), sm(wcCare))),
   row({ g: 8 }, secondary('CRM & CSKH'), secondary('Sửa ngày dự kiến')));
 
 // care-finance.js: "Dịch vụ & liệu trình", "Đơn thuốc" and "Đơn thuốc & phiếu tư vấn" under every tab except CRM and Lịch sử
