@@ -51,7 +51,7 @@ its own design-viewer port. W5 is not a subagent step.
   `design-specs/{INDEX,BLOCKS}.md`, `design-specs/index.json`, `design-specs/notes.json`, `docs/**`.
 - Never start the old web on any port other than 4173, or the finance server on any port other than 4174. If a port is
   taken, ask the director.
-- Screen ids come only from `design-specs/web/inventory.json` (`^W[A-H]\d+$`). Never renumber after W0. New ids are
+- Screen ids come only from `design-specs/web/inventory.json` (`^W[A-I]\d+$`). Never renumber after W0. New ids are
   appended at the end of their group.
 - Scripts are CommonJS (`.cjs`), Node 24, no new npm dependency. Load Playwright only through
   `scripts/lib/pw.cjs`.

@@ -552,7 +552,8 @@ function canvasCoverage(e, layoutLines, demoData = []) {
   const exempt = demoData.map(norm);
   const missing = [];
   const seen = new Set();
-  const names = new Set((e.actions || []).filter((a) => /^crm=profile$|^patient=/.test(a.hook || '')).map((a) => a.label)); // links named after a patient: sample data
+  // links named after a patient, and the avatar button of the phone web (the patient's initials, "ML"): sample data
+  const names = new Set((e.actions || []).filter((a) => /^crm=profile$|^patient=/.test(a.hook || '') || /^\p{Lu}{1,3}$/u.test(a.label || '')).map((a) => a.label));
   for (const it of items) {
     if (!LABEL_KINDS.has(it.kind) || (it.kind === 'action' && names.has(it.text))) continue;
     const n = norm(it.text);

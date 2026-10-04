@@ -44,7 +44,8 @@ const WA = [
     grid(2,
       panel('timeline', '', [], timeline({ date: '13/9/2026 · Cập nhật tại nhà', title: 'Cập nhật tại nhà đã được xem', detail: UPDATE, by: 'Ghi nhận bởi Điều dưỡng Hương', icon: 'chat_bubble' }, { date: '6/9/2026 · Buổi điều trị', title: 'Hoàn tất buổi 2/5', icon: 'check_circle', tone: 'success' }, { date: '1/9/2026 · Kế hoạch', title: 'Điều chỉnh kế hoạch', icon: 'edit_calendar', tone: 'warning' })),
       panel('bars, stat, legend', '', [], bars(['Đã đặt', 12, 60], ['Đã đến', 6, 30, 'success'], ['Vắng hẹn', 2, 10, 'danger']), grid(3, stat('Liệu trình hiện tại', 'Kiểm soát sắc tố'), stat('Buổi đã hoàn tất', '2', '', { unit: '/ 5 buổi' }), stat('Hẹn tiếp theo', '20/9/2026')), legend())),
-    empty('empty title', 'empty hint with the action that fixes it', { icon: 'inbox', actions: [primary('Hồ sơ mới', { icon: 'add' })] })
+    empty('empty title', 'empty hint with the action that fixes it', { icon: 'inbox', actions: [primary('Hồ sơ mới', { icon: 'add' })] }),
+    panel('table { empty }', 'no rows: one empty row with the old text', [], table(['Giờ', 'Khách hàng', 'Trạng thái'], [], { empty: 'Không có lịch phù hợp.' }))
   ]),
   page('WA903', 'Blocks · board, weekGrid, photos, a5, hero, img, containers', 'week/board rooms × time, weekGrid, photos (placeholders), a5 print preview, hero, img, box, disc, split', 'dashboard', [
     panel('board (alias week)', '08:00–12:00 · bước 30 phút', [badge('Theo phòng')], board({ from: 8, to: 12, hh: 64, rooms: rooms.map((r, i) => ({ ...r, bk: [{ start: '08:00', mins: 30, title: people[i].name, sub: services[i].name, sub2: doctors[i].name + ' · Đặt hẹn', svc: i }, { start: '09:30', mins: 45, buf: 15, title: people[i + 4].name, sub: services[(i + 1) % 4].name, sub2: doctors[(i + 1) % 4].name + ' · Đặt hẹn', svc: (i + 1) % 4 }], slots: [{ start: '08:30', mins: 30 }] })) })),
@@ -66,5 +67,33 @@ const WA = [
     row(badge('Đặt hẹn'), secondary('Xác nhận lịch'), secondary('Check-in')),
     grid(2, select('Bệnh nhân', 'Nguyễn Thu Hà'), select('Dịch vụ', 'Tái khám & đánh giá'), date('Ngày', '2026-09-20'), time('Giờ', '08:00')),
     notice('30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫ · theo lịch đã đặt')
-  ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'schedule', footer: [secondary('Hủy'), primary('Lưu thay đổi')] })
+  ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'schedule', footer: [secondary('Hủy'), primary('Lưu thay đổi')] }),
+  mob('WA908', 'Blocks · mob() Patient Mobile: home blocks', 'mob(id, name, note, active, blocks, { toast, sheet, native, patient }): phone frame with top bar and 5-tab navigation; mobTitle, card, hero with rail + light button, appt, quick, stepper, events, list sq/chev, rx', 'home', [
+    mobTitle('Hôm nay của bạn', 'Chào Hà'),
+    hero('Liệu trình kiểm soát sắc tố', 'Buổi 2 / 5 · Cập nhật 6/9/2026', 'route', { over: 'Hành trình đang tiếp diễn', small: true, rail: [2, 5], actions: [light('Xem hành trình →')] }),
+    card({ title: 'appt (day tile, none = "Chọn lịch")', aside: [quiet('Xem tất cả')] }, appt({ day: '20', month: 'Tháng 09', lines: ['Chủ Nhật, 20/09 · 08:00', 'BS. Tâm · Nám · tăng sắc tố'] }), hr(), appt({ none: true, lines: ['Chưa có lịch hẹn · Liên hệ Pema để đặt lịch'] })),
+    card({ title: 'quick', aside: [badge('Pema đồng hành', 'brand', { dot: false })] }, quick(['favorite', 'Chăm sóc', 'Hướng dẫn tại nhà'], ['photo_library', 'Ảnh tiến trình', 'So sánh mốc'], ['chat_bubble', 'Gửi cập nhật', 'Nhắn Pema'])),
+    card({ title: 'stepper + events (journey)' }, stepper('2/5 buổi', 40, 'Tiến độ số buổi, không phải mức cải thiện da.'),
+      events({ date: '13/9/2026', title: 'Cập nhật tại nhà đã được xem', kind: 'followup', detail: UPDATE, open: true }, { date: '6/9/2026', title: 'Hoàn tất buổi 2/5', kind: 'done', detail: 'Chăm sóc & laser theo chỉ định.' }, { date: '6/9/2026', title: 'Bộ ảnh theo dõi · chính diện', kind: 'photo', detail: 'Ảnh minh họa giả lập.' })),
+    card({ title: 'list { sq: true } with chev and money' }, list([{ icon: 'description', t: 'Buổi chăm sóc / điều trị', sub: 'HD-0001 · 2026-09-06 · Đã thanh toán', actions: [strong(money(1200000))] }, { icon: 'photo_camera', t: 'Hướng dẫn chăm sóc sau buổi', sub: 'Hướng dẫn đã duyệt · 6/9/2026', chev: true }], { sq: true })),
+    rx({ sections: [{ title: 'DT-P001 · 6/9/2026', sub: 'Bác sĩ BS. Tâm', lines: [{ name: 'Cicaderm Cream 40ml', use: 'Bôi lớp mỏng · Sáng và tối · 14 ngày' }] }, { title: '20/9/2026', sub: 'Đã duyệt bởi BS. Tâm · 20/9/2026', groups: [{ heading: 'Đơn thuốc', lines: [{ name: 'Desloratadine 5 mg Hộp 30 Viên', qty: '1 Viên', use: 'Bôi lớp mỏng, sáng và tối, 14 ngày' }] }, { heading: 'Phiếu tư vấn', lines: [{ name: 'Cicaderm Cream 40ml', qty: '1 Hộp', use: 'Bôi lớp mỏng, sáng và tối, 14 ngày' }] }] }] }),
+    rx()
+  ]),
+  mob('WA909', 'Blocks · mob() Patient Mobile: messages, send, photos, states + toast', 'bubbles, upload (empty / chosen with preview), consent check, photos { sq }, empty { flat }, notice, errLine, back(); toast option (frame keeps room under the content)', 'send', [
+    back('← Chăm sóc tại nhà'), h1('Gửi cập nhật cho Pema'),
+    card({ title: 'bubbles' }, bubbles({ text: 'Chào bạn, Pema đã lưu hướng dẫn chăm sóc của buổi điều trị gần nhất.', time: '13/09 · 09:15' }, { text: 'Da hơi khô ở hai má từ tối qua.', time: '20/09 · vừa xong', mine: true }), primary('Gửi tin nhắn', { icon: 'add', full: true })),
+    card({ title: 'upload, check, errLine' }, textarea('Bạn đang cảm thấy thế nào?', '', { ph: 'Ví dụ: Da hơi khô ở hai má từ tối qua...' }), upload(), upload({ file: 'anh-demo.png', preview: true }), check('Tôi đồng ý để đội ngũ Pema xem ảnh này cho mục đích chăm sóc.', false), errLine('Bạn cần đồng ý để Pema xem ảnh cập nhật'), primary('Gửi cho Pema', { full: true })),
+    card({ title: 'photos { sq }, empty { flat }' }, photos([{ label: 'Trước' }, { label: 'Gần nhất' }], { n: 2, sq: true }), empty('Chưa có hóa đơn trong demo.', '', { flat: true })),
+    notice('Tin nhắn được gửi tới đội ngũ chăm sóc. Đây không phải kênh cấp cứu.', 'info')
+  ], { toast: 'Đã gửi cập nhật tới đội ngũ Pema', state: true }),
+  mob('WA910', 'Blocks · mob() bottom sheet', 'mob option sheet: { title, sub, eyebrow, blocks, footer } over the dimmed phone page (handle, no close button)', 'profile', [
+    h1('Hồ sơ'), card({ title: 'Đổi hồ sơ demo' }, select('Nhóm tài khoản mẫu', 'Tất cả hồ sơ'), select('Chọn người bệnh tổng hợp', pt.name + ' · ' + pt.id))
+  ], { state: true, sheet: { title: 'Chọn người bệnh tổng hợp', sub: 'Sheet content is any block list', blocks: [list(people.slice(0, 3).map(x => ({ avatar: x.init, t: x.name, sub: x.id })))], footer: [secondary('Đóng')] } }),
+  page('WA911', 'Blocks · native confirm', 'page option native: native("confirm", message): the browser dialog with the exact captured text; buttons are the browser OK / Cancel', 'dashboard', [pageHead('Tổng quan', 'page behind the native dialog')], { state: true, native: native('confirm', 'Đặt lại dữ liệu demo?') }),
+  dlg('WA912', 'Blocks · native prompt over a dialog + errLine', 'dlg option native: native("prompt", message, { value }); errLine(text) is the inline error line at the end of a dialog body', [
+    textarea('Lý do hủy', 'Khách đổi lịch'), errLine('Cần lý do hủy cho lịch đang hoạt động.')
+  ], { eyebrow: 'Pema · vận hành', footer: [secondary('Hủy'), primary('Xác nhận')], native: native('prompt', 'Mã chứng từ chi', { value: '' }) }),
+  page('WA913', 'Blocks · native print', 'native("print"): the browser print dialog (no message text can be captured); the A5 sheets are drawn by the print screens', 'cashier', [pageHead('Thu ngân', 'page behind the print dialog')], { state: true, native: native('print') }),
+  page('WA914', 'Blocks · native download', 'native("download", fileName): the browser download bubble with the file name', 'finance', [pageHead('Tài chính & tiền thủ thuật', 'page behind the download bubble')], { state: true, native: native('download', 'Pema-tien-thu-thuat-2026-09.csv') }),
+  page('WA915', 'Blocks · native select (account list)', 'native("select", "", { options }): the open option list of the account picker, first option = current', 'dashboard', [pageHead('Tổng quan', 'page behind the native option list')], { state: true, native: native('select', '', { options: ACCOUNTS.map(a => a.name + ' · ' + a.label) }) })
 ];

@@ -95,6 +95,7 @@ function renderNode(n, pad, out, ctx) {
       push(`<Hero${attrs({ over: n.over, icon: n.icon })}>`);
       push(`  <Heading level={2}>${q(n.title)}</Heading>`);
       push(`  <Text>${q(n.sub)}</Text>`);
+      if (n.rail && n.rail.length) push(`  <Progress aria-label=${q(n.railLabel)} segments={${n.rail.length}} done={${n.rail.filter(Boolean).length}} />`);
       inlines(n.actions, pad + '  ', out, ctx);
       return push('</Hero>');
     case 'kpis':
@@ -161,6 +162,7 @@ function renderNode(n, pad, out, ctx) {
         });
         push('  </Row>');
       });
+      if (n.empty) push(`  <EmptyRow>${q(n.empty)}</EmptyRow>`);
       return push('</TableShell>');
     }
     case 'empty':
@@ -178,7 +180,7 @@ function renderNode(n, pad, out, ctx) {
     case 'list':
       push(`<List${/ls-box/.test(n.cls) ? ' boxed' : ''}${n.items[0] && n.items[0].num ? ' ordered' : ''}>`);
       n.items.forEach((i) => {
-        push(`  <ListItem${attrs({ avatar: i.avatar, icon: i.icon, over: i.over, title: i.t, sub: i.sub, sub2: i.sub2 })}${i.actions.length ? '>' : ' />'}`);
+        push(`  <ListItem${attrs({ avatar: i.avatar, icon: i.icon, over: i.over, title: i.t, sub: i.sub, sub2: i.sub2, chevron: !!i.chev })}${i.actions.length ? '>' : ' />'}`);
         if (i.actions.length) {
           inlines(i.actions, pad + '    ', out, ctx);
           push('  </ListItem>');
@@ -213,6 +215,56 @@ function renderNode(n, pad, out, ctx) {
       push(`  <Text><Strong>${q(n.noteL)}</Strong> ${q(n.note)}</Text>`);
       push(`  <Text>${q(n.signDate)} <Strong>${q(n.signRole)}</Strong> <Strong>${q(n.signName)}</Strong></Text>`);
       return push('</A5Sheet>');
+    case 'appt':
+      push(`<Appointment${attrs({ day: n.day, month: n.month, icon: n.icon, title: n.title })}>`);
+      n.lines.forEach((l) => push(`  <Text>${q(l)}</Text>`));
+      return push('</Appointment>');
+    case 'events':
+      push('<EventList>');
+      n.items.forEach((e) => {
+        push(`  <Disclosure summary=${q(e.date + ' ' + e.title)} icon=${q(e.icon)}${e.open ? ' open' : ''}>`);
+        push(`    <Text>${q(e.detail)}</Text>`);
+        push('  </Disclosure>');
+      });
+      return push('</EventList>');
+    case 'bubbles':
+      push('<MessageList>');
+      n.items.forEach((m) => push(`  <Message${/bu-me/.test(m.cls) ? ' mine' : ''}>${q(m.text)}${m.time ? ` <Small>${q(m.time)}</Small>` : ''}</Message>`));
+      return push('</MessageList>');
+    case 'upload':
+      push('<Card old="upload-box">');
+      push(`  <Icon name=${q(n.icon)} />`);
+      push(`  <Text>${q(n.text)}</Text>`);
+      push(`  <Field label=${q(n.btn)} type="file" accept="image/png,image/jpeg,image/webp" />`);
+      if (n.file) push(`  <Text>${q(n.file)}</Text>`);
+      if (n.status) push(`  <Text small>${q(n.status)}</Text>`);
+      if (n.preview) push(`  <Img placeholder alt="Ảnh cập nhật đã chọn — bản demo" tag=${q(n.tag)} />`);
+      return push('</Card>');
+    case 'stepper':
+      push(`<Row><Text strong>${q(n.label)}</Text> <Progress value="${n.pct}%" aria-label="Số buổi điều trị đã hoàn tất" /></Row>`);
+      return n.caption ? push(`<Text small>${q(n.caption)}</Text>`) : undefined;
+    case 'quick':
+      push(`<Grid cols="repeat(${n.n}, minmax(0, 1fr))" gap="8px">`);
+      n.items.forEach((i) => push(`  <Button variant="secondary" icon=${q(i.icon)}>${q(i.title + ' ' + i.sub)}</Button>`));
+      return push('</Grid>');
+    case 'rx':
+      push(`<${use('Card')} old="mobile-linked-prescriptions">`);
+      push('  <Row justify="space-between">');
+      push(`    <Heading level={3}>${q(n.title)}</Heading>`);
+      push(`    <${use('Badge')} tone="brand">${q(n.count)}</Badge>`);
+      push('  </Row>');
+      if (n.empty) push(`  <Text>${q(n.empty)}</Text>`);
+      n.sections.forEach((sec) => {
+        push(`  <Text strong>${q(sec.title)}</Text>`);
+        if (sec.sub) push(`  <Text small>${q(sec.sub)}</Text>`);
+        sec.groups.forEach((g) => {
+          if (g.heading) push(`  <Heading level={4}>${q(g.heading)}</Heading>`);
+          g.lines.forEach((l) => push(`  <Text><Strong>${q(l.name)}</Strong>${l.qty ? ' ' + q(l.qty) : ''} ${q(l.use)}</Text>`));
+        });
+      });
+      return push('</Card>');
+    case 'errLine':
+      return push(`<Notice tone="danger" role="alert" old="error-line">${q(n.text)}</Notice>`);
     case 'img':
       return push(`<Img placeholder label=${q(n.label)} />`);
     case 'legend':
@@ -274,7 +326,7 @@ function shellLines(sc, ctx) {
   out.push(`<${use('TopBar')} old="topbar">`);
   out.push(`  <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>${q(s.crumb)}</Strong></Text>`);
   if (s.fin) out.push(`  <Button variant="quiet" href="../finance/" as="link">${q(s.fin)}</Button>`);
-  out.push(`  <${use('Field')} label="Tài khoản demo" type="select" default=${q(s.account)} options={${JSON.stringify(s.accounts.map((a) => a.t))}} />`);
+  out.push(`  <${use('Field')} label="Tài khoản demo" type="select" default=${q(s.account)} options={${JSON.stringify(s.accounts.map((a) => a.t))}} />${s.pickerTag ? '  // native select popup of the browser, drawn open: ' + s.pickerTag : ''}`);
   out.push(`  <${use('Field')} label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />`);
   if (s.bell) out.push(`  <${use('Button')} variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>`);
   out.push(`  <${use('Button')} variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>`);
@@ -282,10 +334,53 @@ function shellLines(sc, ctx) {
   return out;
 }
 
+/** A native browser dialog drawn over the page (confirm, prompt, alert, print, download); select is the open account list of the top bar. */
+function nativeLines(sc, pad = '') {
+  if (!sc.hasNative) return [];
+  const n = sc.native;
+  const type = (/NATIVE · (\w+)\(\)/.exec(n.tag) || [0, 'confirm'])[1];
+  const out = [`${pad}// native browser dialog, not a page element: the exact text the browser showed when the shots were taken`];
+  out.push(`${pad}<NativeDialog type=${q(type)}${n.print ? '' : n.download ? ` file=${q(n.message)}` : ` message=${q(n.message)}`}${n.prompt ? ` value=${q(n.value)}` : ''}${n.buttons.length ? ` buttons={${JSON.stringify(n.buttons.map((b) => b.t))}}` : ''} />`);
+  return out;
+}
+
+/** The Patient Mobile page: phone top bar, content, bottom navigation of five tabs, toast, sheet, native dialog. */
+function phoneLines(sc, ctx) {
+  const out = [];
+  const use = (c) => ((ctx.used[c] = (ctx.used[c] || 0) + 1), c);
+  const m = sc.mob;
+  out.push(`<${use('PhoneFrame')} patient=${q(m.name)} active=${q(m.active)}>  // 390×844, no clinic sidebar or top bar`);
+  out.push('  <Row old="mobile-top" justify="space-between">');
+  out.push('    <Img alt="Pema clinic & spa" />');
+  out.push(`    <${use('Button')} variant="secondary" aria-label=${q('Mở hồ sơ demo của ' + m.name)} old="mobile-icon">${q(m.init)}</Button>  // screen=profile`);
+  out.push('  </Row>');
+  out.push('  <Stack old="mobile-content" tag="main">');
+  renderNodes(sc.blocks, '    ', out, ctx);
+  out.push('  </Stack>');
+  out.push('  <nav old="mobile-nav">');
+  m.tabs.forEach((t) => out.push(`    <Button variant="secondary" icon=${q(t.icon)}${/mnav-on/.test(t.cls) ? ' active' : ''}>${q(t.label)}</Button>`));
+  out.push('  </nav>');
+  if (sc.hasToast) out.push(`  <Notice tone="info" role="status" old="mobile-toast">${q(sc.toast)}</Notice>`);
+  if (sc.hasDialog) {
+    out.push(`  <Sheet${attrs({ eyebrow: sc.dialog.eyebrow, title: sc.dialog.title, subtitle: sc.dialog.sub })}>  // bottom sheet over the dimmed page`);
+    renderNodes(sc.dialog.blocks, '    ', out, ctx);
+    if (sc.dialog.footer.length) {
+      out.push('    <Sheet.Footer>');
+      inlines(sc.dialog.footer, '      ', out, ctx);
+      out.push('    </Sheet.Footer>');
+    }
+    out.push('  </Sheet>');
+  }
+  nativeLines(sc, '  ').forEach((l) => out.push(l));
+  out.push('</PhoneFrame>');
+  return out;
+}
+
 /** { lines, used } of a canvas screen, as the Layout section of its spec. */
 function layout(sc) {
   const ctx = { used: {} };
   const out = [];
+  if (sc.phone) return { lines: phoneLines(sc, ctx), used: ctx.used };
   if (sc.hasDialog) {
     out.push(`// opens over the page "${sc.shell.crumb}" (dimmed); the page behind it is not part of this screen`);
     out.push(`<${(ctx.used.Dialog = 1, 'Dialog')}${attrs({ eyebrow: sc.dialog.eyebrow, title: sc.dialog.title, subtitle: sc.dialog.sub, width: sc.dialog.w + 'px' })}>`);
@@ -297,12 +392,14 @@ function layout(sc) {
       out.push('  </Dialog.Footer>');
     }
     out.push('</Dialog>');
+    nativeLines(sc).forEach((l) => out.push(l));
     return { lines: out, used: ctx.used };
   }
   out.push(`<AppShell role=${q(sc.role)} active=${q(sc.shell.crumb)}>`);
   for (const l of shellLines(sc, ctx)) out.push('  ' + l);
   if (sc.hasToast) out.push(`  <Toast>${q(sc.toast)}</Toast>`);
   renderNodes(sc.blocks, '  ', out, ctx);
+  nativeLines(sc, '  ').forEach((l) => out.push(l));
   out.push('</AppShell>');
   return { lines: out, used: ctx.used };
 }

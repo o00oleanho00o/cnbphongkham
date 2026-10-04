@@ -37,8 +37,107 @@ Group **WI · Patient Mobile web** · page · Next.js: **none**
 - Layout `.mobile-card-head` 378×27 px: flex row, space-between, gap 12px
 - Frames to build (inventory D4): 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WI1): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<PhoneFrame patient="Nguyễn Thu Hà" active="Trang chủ">  // 390×844, no clinic sidebar or top bar
+  <Row old="mobile-top" justify="space-between">
+    <Img alt="Pema clinic & spa" />
+    <Button variant="secondary" aria-label="Mở hồ sơ demo của Nguyễn Thu Hà" old="mobile-icon">"TH"</Button>  // screen=profile
+  </Row>
+  <Stack old="mobile-content" tag="main">
+    <Stack>
+      <Text small>"Chào Hà"</Text>
+      <Heading level={1}>"Hôm nay của bạn"</Heading>
+    </Stack>
+    <Card title="Đến mốc tái khám">
+      <Text>"Xem lịch đã đặt hoặc nhắn Pema để chọn thời gian."</Text>
+      <Button variant="primary">"Xem lịch hẹn"</Button>
+    </Card>
+    <Hero over="Hành trình đang tiếp diễn" icon="route">
+      <Heading level={2}>"Liệu trình kiểm soát sắc tố"</Heading>
+      <Text>"Buổi 2 / 5 · Cập nhật 6/9/2026"</Text>
+      <Progress aria-label="2 trên 5 buổi hoàn tất" segments={5} done={2} />
+      <Button variant="light">"Xem hành trình →"</Button>
+    </Hero>
+    <Card title="Lịch hẹn tiếp theo">
+      <Card.Aside>
+        <Button variant="quiet">"Xem tất cả"</Button>
+      </Card.Aside>
+      <Appointment day="20" month="Tháng 09" title="Đánh giá mốc tiếp theo">
+        <Text>"Chủ Nhật, 20/09 · 08:00"</Text>
+        <Text>"BS. Tâm · Nám · tăng sắc tố"</Text>
+      </Appointment>
+    </Card>
+    <Card old="mobile-linked-prescriptions">
+      <Row justify="space-between">
+        <Heading level={3}>"Đơn & phiếu đã duyệt"</Heading>
+        <Badge tone="brand">"1 đơn"</Badge>
+      </Row>
+      <Text strong>"DT-P001 · 6/9/2026"</Text>
+      <Text small>"Bác sĩ BS. Tâm"</Text>
+      <Text><Strong>"Cicaderm Cream 40ml"</Strong> "Bôi lớp mỏng vùng cần chăm sóc · Sáng và tối · 14 ngày"</Text>
+      <Text><Strong>"Fudareus B 15g"</Strong> "Bôi theo vùng bác sĩ đã dặn · Buổi tối · 7 ngày"</Text>
+    </Card>
+  </Stack>
+  <nav old="mobile-nav">
+    <Button variant="secondary" icon="home" active>"Trang chủ"</Button>
+    <Button variant="secondary" icon="calendar_month">"Lịch hẹn"</Button>
+    <Button variant="secondary" icon="route">"Hành trình"</Button>
+    <Button variant="secondary" icon="chat_bubble">"Tin nhắn"</Button>
+    <Button variant="secondary" icon="person">"Hồ sơ"</Button>
+  </nav>
+</PhoneFrame>
+```
+Kit components used: Button×4, Card×3, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- 390×844 is the primary frame; the snapshot reference is 1440×900, where the phone column is 460px wide (Frame, Layout).
+- 1920×1020: no layout change
+- 1280×720: no layout change
+- 1024×768: no layout change
+- 390×844: no layout change
+- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
+
+## Tokens
+- Text colour: ink ×6, ink-soft ×4, heading ×3, link ×2, surface ×2, info-line ×1
+- Background: brand-50 ×5, surface ×4, canvas-alt ×1, field ×1, heading ×1, link ×1
+- Border: line ×5, brand-50 ×1, info-line ×1, link ×1
+- Radius: field ×3, control ×1
+- Font size: eyebrow ×12, label ×7, body ×3, micro ×1, section ×1, small ×1
+- Font: Be Vietnam Pro ×29
+- Unmatched colours (no token within ΔE 3): `#71879a` (text, ×4, nearest `ink-soft` ΔE 10.1); `#326493` (background, ×3, nearest `info` ΔE 4.9); `#25577d` (text, ×2, nearest `link` ΔE 4.9); `#276b93` (text, ×2, nearest `info` ΔE 3.4); `#a8d8ed` (background, ×2, nearest `brand-200` ΔE 5.2); `#2b6c96` (text, ×1, nearest `info` ΔE 3.4); `#60798b` (text, ×1, nearest `ink-soft` ΔE 4.9); `#bcdcf0` (text, ×1, nearest `line-strong` ΔE 3.6); `#edf0ed` (border, ×1, nearest `table-head` ΔE 3.5)
+- Unmatched radius: 50px ×1 (nearest `hero`), 16px ×4 (nearest `card`), 2px ×5 (nearest `field`), 99px ×1 (nearest `hero`), 8px ×5 (nearest `field`)
+- Unmatched font size: 24px ×1 (nearest `title`), 21px ×1 (nearest `subtitle`), 23px ×1 (nearest `title`), 8px ×1 (nearest `eyebrow`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- There is no native browser dialog (`confirm`, `prompt`, `alert`) in the phone web (checked in `patient.js` and `index.html`): every message is a toast or an inline line, so no id of this group needs a captured native text.
+- The home calendar tile comes from `appointmentDisplay`: a valid `next` date gives "20" and "Tháng 09" with the label "Chủ Nhật, 20/09 · 08:00"; no valid date gives a calendar icon, "Chọn lịch", "Chưa có lịch hẹn · Liên hệ Pema để đặt lịch" (WI10-WI18).
+
+## Differences from the app design
+- App E1 has four tabs (Trang chủ, Hành trình, Tin nhắn, Hồ sơ); the web has five, adding "Lịch hẹn" (WI2). In the app the appointment is reached from the "Lịch hẹn tiếp theo" tile (K1).
+- App E1 greets "Chào Hà," with "Hôm nay, dành chút thời gian cho làn da"; the web greets "Chào Linh" (last word of the name) with the title "Hôm nay của bạn".
+- App E1 draws a hero "Chăm sóc nhẹ nhàng. Đồng hành mỗi ngày." (kicker "PEMA • CHĂM SÓC LIÊN TỤC") and the quick actions "Chăm sóc", "Gửi cập nhật", "Đơn đã duyệt" plus "Việc cần làm"; the web hero is the journey card with the session rail, the quick actions exist only in "Việc hôm nay" (WI20, shown when the patient has no open CSKH task), and the approved prescriptions are the card "Đơn & phiếu đã duyệt" instead of a shortcut.
+- App E1 shows "10:30 · 22/9/2026 / BS. Tâm · Khám da liễu"; the web shows the date tile "20 Tháng 09", "Đánh giá mốc tiếp theo" and "Chủ Nhật, 20/09 · 08:00" with doctor and concern.
+- The old hero is a navy card with a wave illustration (care-waves.svg); the canvas draws the app hero gradient with the same text, the 24px route icon and the session rail (5 segments, 2 lit). The logo is the text mark "Pema clinic & spa" instead of pema-logo.png.
+
+## Gotchas
+- Primary frame is 390×844. From 701px up, `.mobile-app` is a 460px column (max-width) of 100dvh with a scrolling `.mobile-content` and the bottom navigation inside the column, so the 1440×900 snapshot shows the column at x 490 and the probes at 1920, 1280, 1024 and 390 report "no layout change". What the probes cannot see changes at ≤700px (design.css): content padding 20px, top bar padding 22px 20px, `.mobile-heading` 28px, `.mobile-card` padding 18px, logo 112px; at max-height 740px the home cards compact (heading 22-23px, quick-action captions hidden); at ≤370px the nav font is 10px.
+- Every screen has the same frame (top bar, content, bottom navigation, and the toast when one is up), so the ids differ only in the content. The snapshot scope is `body`.
+- Icon glyphs typed as characters in the code (✓ ✦ ⚙ ▤ ▧ ＋ › ▢) are swapped for lucide icons at render (`PemaUI.enhance`) and are not part of the labels in the snapshot (the label of "＋ Gửi tin nhắn" is "Gửi tin nhắn"); the web canvas draws icons from the kit.
+- Accessible names that are not visible text: the avatar button "Mở hồ sơ demo của <tên>", the session rail "<n> trên <total> buổi hoàn tất", the progress bar "Số buổi điều trị đã hoàn tất", the quick action "Xem hướng dẫn", the faces "Trước — minh họa tổng hợp, không phải ảnh bệnh nhân" and "Gần nhất — …", the file input "Ảnh cập nhật cho Pema", the consent box "Đồng ý để Pema xem ảnh cập nhật" and the preview "Xem trước ảnh cập nhật" (alt "Ảnh cập nhật đã chọn — bản demo").
+- Patient data is the synthetic store (46 patients; the default profile is P001, phone masked as "09•• ••• 100"). Screens of a toast (WI23, WI28, WI29, WI31, WI33, WI34, WI38-WI40) are captured while the toast is up (2.8 s) and list it as a `notice` with role "status".
+- Canvas frame: 390 wide, at least 844 tall; the old page scrolls inside the viewport, the canvas frame grows to show the whole content with the bottom navigation at the end (nothing is cut). Names are the canvas sample patient, so the avatar initials and the greeting differ from the old "ML" / "Chào Linh".
+
+## Web canvas
+- Frames: 390x844 (inventory: 390x844); screen label `WI1 · Trang chủ`.
+- Canvas note: Web › patient mobile · home · mở /patient-mobile/: thẻ bước tiếp theo (Đến mốc tái khám), hero hành trình với thanh buổi, Lịch hẹn tiếp theo, Đơn & phiếu đã duyệt; thanh dưới 5 tab · app E1 chỉ có 4 tab và hero khác
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <Row old="mobile-top" justify="space-between">
   <Img alt="Pema clinic & spa" size="96x51" />
@@ -89,46 +188,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   <Button variant="secondary" icon="user-round">"Hồ sơ"</Button>  // screen=profile
 </nav>
 ```
-Kit components used: Button×9, Card×4, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- 390×844 is the primary frame; the snapshot reference is 1440×900, where the phone column is 460px wide (Frame, Layout).
-- 1920×1020: no layout change
-- 1280×720: no layout change
-- 1024×768: no layout change
-- 390×844: no layout change
-- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
-
-## Tokens
-- Text colour: ink ×6, ink-soft ×4, heading ×3, link ×2, surface ×2, info-line ×1
-- Background: brand-50 ×5, surface ×4, canvas-alt ×1, field ×1, heading ×1, link ×1
-- Border: line ×5, brand-50 ×1, info-line ×1, link ×1
-- Radius: field ×3, control ×1
-- Font size: eyebrow ×12, label ×7, body ×3, micro ×1, section ×1, small ×1
-- Font: Be Vietnam Pro ×29
-- Unmatched colours (no token within ΔE 3): `#71879a` (text, ×4, nearest `ink-soft` ΔE 10.1); `#326493` (background, ×3, nearest `info` ΔE 4.9); `#25577d` (text, ×2, nearest `link` ΔE 4.9); `#276b93` (text, ×2, nearest `info` ΔE 3.4); `#a8d8ed` (background, ×2, nearest `brand-200` ΔE 5.2); `#2b6c96` (text, ×1, nearest `info` ΔE 3.4); `#60798b` (text, ×1, nearest `ink-soft` ΔE 4.9); `#bcdcf0` (text, ×1, nearest `line-strong` ΔE 3.6); `#edf0ed` (border, ×1, nearest `table-head` ΔE 3.5)
-- Unmatched radius: 50px ×1 (nearest `hero`), 16px ×4 (nearest `card`), 2px ×5 (nearest `field`), 99px ×1 (nearest `hero`), 8px ×5 (nearest `field`)
-- Unmatched font size: 24px ×1 (nearest `title`), 21px ×1 (nearest `subtitle`), 23px ×1 (nearest `title`), 8px ×1 (nearest `eyebrow`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- There is no native browser dialog (`confirm`, `prompt`, `alert`) in the phone web (checked in `patient.js` and `index.html`): every message is a toast or an inline line, so no id of this group needs a captured native text.
-- The home calendar tile comes from `appointmentDisplay`: a valid `next` date gives "20" and "Tháng 09" with the label "Chủ Nhật, 20/09 · 08:00"; no valid date gives a calendar icon, "Chọn lịch", "Chưa có lịch hẹn · Liên hệ Pema để đặt lịch" (WI10-WI18).
-
-## Differences from the app design
-- App E1 has four tabs (Trang chủ, Hành trình, Tin nhắn, Hồ sơ); the web has five, adding "Lịch hẹn" (WI2). In the app the appointment is reached from the "Lịch hẹn tiếp theo" tile (K1).
-- App E1 greets "Chào Hà," with "Hôm nay, dành chút thời gian cho làn da"; the web greets "Chào Linh" (last word of the name) with the title "Hôm nay của bạn".
-- App E1 draws a hero "Chăm sóc nhẹ nhàng. Đồng hành mỗi ngày." (kicker "PEMA • CHĂM SÓC LIÊN TỤC") and the quick actions "Chăm sóc", "Gửi cập nhật", "Đơn đã duyệt" plus "Việc cần làm"; the web hero is the journey card with the session rail, the quick actions exist only in "Việc hôm nay" (WI20, shown when the patient has no open CSKH task), and the approved prescriptions are the card "Đơn & phiếu đã duyệt" instead of a shortcut.
-- App E1 shows "10:30 · 22/9/2026 / BS. Tâm · Khám da liễu"; the web shows the date tile "20 Tháng 09", "Đánh giá mốc tiếp theo" and "Chủ Nhật, 20/09 · 08:00" with doctor and concern.
-
-## Gotchas
-- Primary frame is 390×844. From 701px up, `.mobile-app` is a 460px column (max-width) of 100dvh with a scrolling `.mobile-content` and the bottom navigation inside the column, so the 1440×900 snapshot shows the column at x 490 and the probes at 1920, 1280, 1024 and 390 report "no layout change". What the probes cannot see changes at ≤700px (design.css): content padding 20px, top bar padding 22px 20px, `.mobile-heading` 28px, `.mobile-card` padding 18px, logo 112px; at max-height 740px the home cards compact (heading 22-23px, quick-action captions hidden); at ≤370px the nav font is 10px.
-- Every screen has the same frame (top bar, content, bottom navigation, and the toast when one is up), so the ids differ only in the content. The snapshot scope is `body`.
-- Icon glyphs typed as characters in the code (✓ ✦ ⚙ ▤ ▧ ＋ › ▢) are swapped for lucide icons at render (`PemaUI.enhance`) and are not part of the labels in the snapshot (the label of "＋ Gửi tin nhắn" is "Gửi tin nhắn"); the web canvas draws icons from the kit.
-- Accessible names that are not visible text: the avatar button "Mở hồ sơ demo của <tên>", the session rail "<n> trên <total> buổi hoàn tất", the progress bar "Số buổi điều trị đã hoàn tất", the quick action "Xem hướng dẫn", the faces "Trước — minh họa tổng hợp, không phải ảnh bệnh nhân" and "Gần nhất — …", the file input "Ảnh cập nhật cho Pema", the consent box "Đồng ý để Pema xem ảnh cập nhật" and the preview "Xem trước ảnh cập nhật" (alt "Ảnh cập nhật đã chọn — bản demo").
-- Patient data is the synthetic store (46 patients; the default profile is P001, phone masked as "09•• ••• 100"). Screens of a toast (WI23, WI28, WI29, WI31, WI33, WI34, WI38-WI40) are captured while the toast is up (2.8 s) and list it as a `notice` with role "status".
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WI1-390x844.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

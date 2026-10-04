@@ -2094,7 +2094,11 @@
         "App E1 has four tabs (Trang chủ, Hành trình, Tin nhắn, Hồ sơ); the web has five, adding \"Lịch hẹn\" (WI2). In the app the appointment is reached from the \"Lịch hẹn tiếp theo\" tile (K1).",
         "App E1 greets \"Chào Hà,\" with \"Hôm nay, dành chút thời gian cho làn da\"; the web greets \"Chào Linh\" (last word of the name) with the title \"Hôm nay của bạn\".",
         "App E1 draws a hero \"Chăm sóc nhẹ nhàng. Đồng hành mỗi ngày.\" (kicker \"PEMA • CHĂM SÓC LIÊN TỤC\") and the quick actions \"Chăm sóc\", \"Gửi cập nhật\", \"Đơn đã duyệt\" plus \"Việc cần làm\"; the web hero is the journey card with the session rail, the quick actions exist only in \"Việc hôm nay\" (WI20, shown when the patient has no open CSKH task), and the approved prescriptions are the card \"Đơn & phiếu đã duyệt\" instead of a shortcut.",
-        "App E1 shows \"10:30 · 22/9/2026 / BS. Tâm · Khám da liễu\"; the web shows the date tile \"20 Tháng 09\", \"Đánh giá mốc tiếp theo\" and \"Chủ Nhật, 20/09 · 08:00\" with doctor and concern."
+        "App E1 shows \"10:30 · 22/9/2026 / BS. Tâm · Khám da liễu\"; the web shows the date tile \"20 Tháng 09\", \"Đánh giá mốc tiếp theo\" and \"Chủ Nhật, 20/09 · 08:00\" with doctor and concern.",
+        "The old hero is a navy card with a wave illustration (care-waves.svg); the canvas draws the app hero gradient with the same text, the 24px route icon and the session rail (5 segments, 2 lit). The logo is the text mark \"Pema clinic & spa\" instead of pema-logo.png."
+      ],
+      "gotchas": [
+        "Canvas frame: 390 wide, at least 844 tall; the old page scrolls inside the viewport, the canvas frame grows to show the whole content with the bottom navigation at the end (nothing is cut). Names are the canvas sample patient, so the avatar initials and the greeting differ from the old \"ML\" / \"Chào Linh\"."
       ]
     },
     "WI2": {
@@ -2200,7 +2204,9 @@
         "App K2 puts \"Đơn & phiếu đã duyệt\" as tiles (\"DN-1 · BS. Tâm\"); the web card lists prescription lines with usage, and the invoice date uses the ISO form (\"2026-09-06\")."
       ],
       "gotchas": [
-        "At 390 the amount column of an invoice row is narrow: the currency sign wraps under the number (\"720.500\" / \"₫\"). It is how the old web looks; keep it unless the owner decides otherwise."
+        "At 390 the amount column of an invoice row is narrow: the currency sign wraps under the number (\"720.500\" / \"₫\"). It is how the old web looks; keep it unless the owner decides otherwise.",
+        "Canvas frame: 390 wide, at least 844 tall; the old page scrolls inside the viewport, the canvas frame grows to show the whole content with the bottom navigation at the end (nothing is cut). Names are the canvas sample patient, so the avatar initials and the greeting differ from the old \"ML\" / \"Chào Linh\".",
+        "The canvas uses the Material icon names description (file-text) and photo_camera (camera) for the doc-row tiles; the old web draws lucide icons. Money wraps nowhere: the no-break space keeps \"1.200.000 ₫\" on one line."
       ]
     },
     "WI10": {
@@ -2349,6 +2355,10 @@
       ],
       "differences": [
         "App G3 has the same single action (\"Xác nhận tham dự\") and no toast text is recorded for it."
+      ],
+      "gotchas": [
+        "Canvas frame: 390 wide, at least 844 tall; the old page scrolls inside the viewport, the canvas frame grows to show the whole content with the bottom navigation at the end (nothing is cut). Names are the canvas sample patient, so the avatar initials and the greeting differ from the old \"ML\" / \"Chào Linh\".",
+        "The toast (dark pill, role status, 2.8 s) sits above the bottom navigation; the frame keeps 64px of room under the content so the toast never covers the last notice, which the old viewport does hide."
       ]
     },
     "WI24": {

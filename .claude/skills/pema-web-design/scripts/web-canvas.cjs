@@ -3,7 +3,7 @@
 //
 //   node web-canvas.cjs list  [file]                       "ID · name · note" per screen (no browser needed)
 //   node web-canvas.cjs check [file] [groups] [outDir] [--viewport=1440x900|1920x1020|390x844|all] [--canvas-dir <dir>]
-//                             [--viewer-url <url>] [--theme=light|dark] [--frames] [--complete]
+//                             [--viewer-url <url>] [--theme=light|dark] [--frames] [--complete] [--ids=WI3,WI4]
 //
 // check renders the canvas through design-viewer (see below) and reports, as JSON:
 //   total / expected / missing   screens rendered vs inventory.json ids of the requested groups (--complete fails on `missing`)
@@ -39,19 +39,22 @@ function take(name) {
   argv.splice(i, 1);
   return true;
 }
-const VIEWPORT = take('viewport') || '1440x900';
+let VIEWPORT = take('viewport') || '';
 const CANVAS_DIR_ARG = take('canvas-dir');
 const VIEWER = String(take('viewer-url') || process.env.CANVAS_URL || 'http://localhost:4181').replace(/\/$/, '');
 const THEME = take('theme') || 'light';
 const FRAMES = take('frames') === true;
 const COMPLETE = take('complete') === true;
+const IDS = String(take('ids') || '').split(',').map((c) => c.trim()).filter(Boolean); // --ids=WI3,WI4: judge only these screens (an agent that owns some ids of a group)
 
 const [mode = 'list', fileArg = '', codesArg = '', outDir = '.'] = argv;
+// the phone group WI has 390x844 frames only (inventory D4): without --viewport a WI-only check renders that size, every other check 1440x900
+if (!VIEWPORT) VIEWPORT = codesArg.split(',').map((c) => c.trim()).filter(Boolean).every((c) => c === 'WI') && codesArg ? '390x844' : '1440x900';
 const canvasDir = path.resolve(CANVAS_DIR_ARG || lib.CANVAS_DIR);
 const fileName = path.basename(fileArg || lib.CANVAS_FILE);
 const GALLERY = fileName === lib.BLOCKS_FILE; // the block gallery has scratch ids WA9xx that are not in the inventory
 const filePath = path.join(canvasDir, fileName);
-const SCREEN_ID = '^W[A-H]\\d+(-\\d+)?$';
+const SCREEN_ID = '^W[A-I]\\d+(-\\d+)?$';
 
 /** Evaluate the built canvas script in Node, like specs-lib loadCanvas does for the app canvas. */
 function loadGroups(file) {
@@ -112,7 +115,7 @@ function staticProblems(src, groups) {
   const { out: st, inv } = staticProblems(src, groups);
   const wanted = codesArg.split(',').map((c) => c.trim()).filter(Boolean);
   const codes = wanted.length ? wanted : lib.GROUP_CODES;
-  const expectedIds = GALLERY ? [] : inv.screens.filter((s) => codes.includes(s.group)).map((s) => s.id);
+  const expectedIds = GALLERY ? [] : inv.screens.filter((s) => codes.includes(s.group) && (!IDS.length || IDS.includes(s.id))).map((s) => s.id);
 
   const { chromium } = loadPlaywright();
   const browser = await chromium.launch();
@@ -159,7 +162,7 @@ function staticProblems(src, groups) {
   }));
 
   const baseIds = [...new Set(frames.map((f) => f.id.replace(/-\d+$/, '')))];
-  const inScope = (id) => codes.some((c) => id.startsWith(c));
+  const inScope = (id) => codes.some((c) => id.startsWith(c)) && (!IDS.length || IDS.includes(id.replace(/-\d+$/, '')));
   const rendered = baseIds.filter(inScope);
   const bad = frames.filter((f) => inScope(f.id) && (f.unresolved || f.overflow.length));
   const missing = expectedIds.filter((id) => !rendered.includes(id) && !groups.some((g) => g.screens.some((s) => s.id === id)));
