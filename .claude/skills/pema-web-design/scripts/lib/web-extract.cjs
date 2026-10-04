@@ -402,7 +402,8 @@ function extractInPage(cfg) {
         continue;
       }
       if (c.nodeType !== 1) continue;
-      const key = repeatKey(c);
+      // the phone web (Patient Mobile, group WI) is short and every row is content (a timeline of events, a list of invoices): nothing is collapsed there
+      const key = c.closest('.mobile-app') ? '' : repeatKey(c);
       if (key) {
         // collapse a run of >= REPEAT_MIN data-row siblings: show the first, count the rest
         let j = i;

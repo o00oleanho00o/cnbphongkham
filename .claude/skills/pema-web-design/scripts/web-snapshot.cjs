@@ -209,6 +209,14 @@ function maskFinance(e) {
   return e;
 }
 
+/**
+ * Patient Mobile (WI): the quick order made on the cashier screen (WI37) gets a random invoice id from
+ * crypto.randomUUID(), which would change on every run. It becomes a name; every other value of the phone web is fixed.
+ */
+function maskMobile(e) {
+  return JSON.parse(JSON.stringify(e).replace(/HD-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, 'HD-<random id>'));
+}
+
 function buildEntry(entry, data, scope, probes, tokens, index) {
   const { tree, lists, texts, raw, regions, shell } = data;
   mergeVariants(tree, lists);
@@ -242,6 +250,7 @@ function buildEntry(entry, data, scope, probes, tokens, index) {
     responsive: probes ? responsiveOf(probes.base, probes.list, describeIds(tree)) : {},
     stats: { text_runs: new Set(texts).size, uncovered_text: uncovered, unseen_controls: data.unseen || [] },
   };
+  if (entry.group === 'WI') return maskMobile(e);
   return entry.group === 'WG' ? maskFinance(serverToday(e)) : e;
 }
 
