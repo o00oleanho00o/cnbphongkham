@@ -77,6 +77,157 @@ const wcAiBrief = text => card({ v: 'ai', eyebrow: 'Pema AI · bản nháp để
 const wcFacts = (p, next, consent) => panel('Thông tin cần nhớ', '', [quiet('Sửa')],
   facts(['Mối quan tâm', 'Nám · tăng sắc tố'], ['Bác sĩ', p.doctor], ['Buổi tiếp theo', next], ['Tiền sử dị ứng', 'Chưa ghi nhận'], ['Đồng ý ảnh', consent]));
 
+// ---- W6c-REST: WC22-WC35 (role projections of Patient 360, empty and error states) ----
+// Same panels as WC4 with the old web's per-role and per-patient differences. Helpers are prefixed wc2 so they cannot clash with another part.
+const wc2Chips = [badge('Nám · tăng sắc tố', 'brand', { dot: false }), badge('⚠ Da nhạy cảm', 'warning', { dot: false }), badge('⚠ Theo dõi đỏ da sau điều trị', 'warning', { dot: false })];
+const wc2Actions = [secondary('AI brief', { icon: 'auto_awesome' }), secondary('Nhắn tin'), primary('Ghi buổi điều trị', { icon: 'add' })];
+const wc2TabsCare = ['Tổng quan', 'Kế hoạch', 'Dịch vụ & tài chính', 'CRM & CSKH', 'Lịch sử'];
+const wc2TabsAcc = ['Tổng quan', 'Kế hoạch', 'Dịch vụ & tài chính', 'Lịch sử'];
+// capability sets (staff-context.js apply()): which buttons each role keeps
+const wc2Doctor = { studio: true, brief: true, edit: true, rx: true, add: false, cashier: false };
+const wc2Care = { studio: false, brief: false, edit: false, rx: false, add: false, cashier: false };
+const wc2Acc = { studio: false, brief: false, edit: false, rx: false, add: true, cashier: true };
+const wc2Owner = { studio: true, brief: true, edit: true, rx: true, add: true, cashier: true };
+
+// hero (back link, patient card, tab bar) with the tabs and the actions the role sees; `o.actions` absent = no hero buttons
+const wc2Hero = (p, o = {}) => [
+  quiet('← Danh sách bệnh nhân'),
+  card({ v: 'hero' },
+    row({ g: 20, jc: 'space-between', ai: 'center' },
+      row({ g: 16, ai: 'center' }, avatar(p.init, { size: 'lg' }),
+        stack({ g: 4 }, eyebrow('Hồ sơ ' + p.id + ' · ' + (o.status || 'Đặt hẹn')), h1(p.name),
+          txt(p.age + ' tuổi · Nữ · ' + p.phone + ' · Bác sĩ phụ trách: ' + p.doctor, { size: 's', tone: 'soft' }),
+          tags(...(o.chips || wc2Chips)))),
+      o.actions ? row({ g: 8, jc: 'flex-end' }, ...o.actions) : null)),
+  tabs(o.tabs || P360_TABS, o.sel || 0)
+];
+
+// "Bước tiếp theo" card; `o.eyebrow`, `o.title`, `o.sub` and `o.care` change per patient
+const wc2Summary = (o = {}) => card({ v: 'soft', g: 10 },
+  row({ g: 16, jc: 'space-between', ai: 'flex-start' },
+    stack({ g: 4 }, eyebrow(o.eyebrow || 'Bước tiếp theo'), h3(o.title || 'Dự kiến quay lại 20/9/2026'), sm(o.sub || 'Lịch hẹn đã xác nhận với phòng khám · Lịch đã đặt')),
+    stack({ g: 6 }, tags(badge('Đang điều trị', 'info', { dot: false })), sm(o.care || wcCare))),
+  row({ g: 8 }, secondary('CRM & CSKH'), secondary('Sửa ngày dự kiến')));
+
+const wc2Care3 = [
+  { t: 'Sữa rửa mặt dịu nhẹ', sub: 'Sáng & tối · theo hướng dẫn đã duyệt', icon: 'auto_awesome' },
+  { t: 'Dưỡng ẩm phục hồi', sub: 'Sau làm sạch · dùng lượng phù hợp', icon: 'auto_awesome' },
+  { t: 'Chống nắng SPF 50+', sub: 'Buổi sáng · thoa lại theo hướng dẫn', icon: 'auto_awesome' }
+];
+// the three patients of this part: P001 (WC4), P002 (draft prescription) and a synthetic P037 (no plan, no prescription)
+const wc2P001 = {
+  p: pt, plan: 'Liệu trình kiểm soát sắc tố', done: 2, total: 5, nextVisit: '20/9/2026', concern: 'Nám · tăng sắc tố', before: 'Trước buổi 1', sum: {}, brief: wcBrief(pt), care: wc2Care3,
+  events: [
+    { date: '13/9/2026 · Cập nhật tại nhà', title: 'Cập nhật tại nhà đã được xem', detail: 'Đỏ nhẹ khoảng 2 ngày, hiện đã ổn. Không ghi nhận dấu hiệu cảnh báo trong báo cáo.', by: 'Ghi nhận bởi Điều dưỡng Hương', icon: 'chat_bubble', tone: 'success' },
+    { date: '6/9/2026 · Điều trị', title: 'Hoàn tất buổi 2/5', detail: services[2].name + '. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.', by: 'Ghi nhận bởi BS. Tâm', icon: 'medical_services' },
+    { date: '6/9/2026 · Ảnh lâm sàng', title: 'Bộ ảnh theo dõi · chính diện', detail: 'Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.', by: 'Ghi nhận bởi Điều dưỡng Hương', icon: 'photo_camera' },
+    { date: '26/6/2026 · Kế hoạch', title: 'Bắt đầu liệu trình kiểm soát sắc tố', detail: 'Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.', by: 'Ghi nhận bởi BS. Tâm', icon: 'flag' }
+  ],
+  linked: { plan: { kicker: 'LIỆU TRÌNH HIỆN TẠI · LP-P001', title: services[2].name, meta: '2/5 buổi', price: money(12000000) + ' sau giảm', pct: 40, paid: money(5350000), rest: 'Còn ' + money(6650000) }, deposit: money(4000000), rx: 'approved' }
+};
+const wc2P002 = {
+  p: people[1], plan: 'Theo dõi mụn & chăm sóc tại nhà', done: 2, total: 4, nextVisit: '20/9/2026', concern: 'Mụn viêm', before: 'Trước buổi 1', care: wc2Care3,
+  sum: { care: 'Phụ trách: CSKH Mai Anh · Có thể chăm sóc theo kế hoạch' },
+  brief: people[1].name + ', ' + people[1].age + ' tuổi, quay lại để đánh giá mụn viêm. Đã hoàn tất 2/4 buổi của theo dõi mụn & chăm sóc tại nhà. Lần gần nhất: 6/9/2026. Người bệnh báo đã làm theo hướng dẫn chăm sóc. Không có mục theo dõi đang mở. Bước tiếp theo: bác sĩ đánh giá đáp ứng, xác nhận dữ liệu và quyết định kế hoạch.',
+  events: [
+    { date: '13/9/2026 · Cập nhật tại nhà', title: 'Cập nhật tại nhà đã được xem', detail: 'Người bệnh báo đã làm theo hướng dẫn chăm sóc.', by: 'Ghi nhận bởi Điều dưỡng Hương', icon: 'chat_bubble', tone: 'success' },
+    { date: '6/9/2026 · Điều trị', title: 'Hoàn tất buổi 2/4', detail: services[0].name + '. Đã gửi hướng dẫn chăm sóc sau buổi điều trị.', by: 'Ghi nhận bởi BS. Mai', icon: 'medical_services' },
+    { date: '6/9/2026 · Ảnh lâm sàng', title: 'Bộ ảnh theo dõi · chính diện', detail: 'Ảnh minh họa giả lập · đồng ý sử dụng trong chăm sóc.', by: 'Ghi nhận bởi Điều dưỡng Hương', icon: 'photo_camera' },
+    { date: '26/6/2026 · Kế hoạch', title: 'Bắt đầu theo dõi mụn & chăm sóc tại nhà', detail: 'Mục tiêu và lịch đánh giá đã được trao đổi với người bệnh.', by: 'Ghi nhận bởi BS. Mai', icon: 'flag' }
+  ],
+  linked: { plan: { kicker: 'LIỆU TRÌNH HIỆN TẠI · LP-P002', title: services[0].name, meta: '2/4 buổi', price: money(1200000) + ' sau giảm', pct: 50, paid: money(1200000), rest: 'Đã đủ tiền' }, deposit: money(0), rx: 'draft' }
+};
+// P037 is not one of the 12 sample patients: synthetic like wcNew
+const wc2P037 = {
+  p: { id: 'P037', name: 'Hoàng Bảo Ngọc', doctor: 'BS. Tâm', age: 25, init: 'BN', phone: '09•• ••• 237' }, plan: 'Kế hoạch chăm sóc da cá nhân', done: 3, total: 6, nextVisit: 'Chưa đặt lịch', concern: 'Theo dõi da sau điều trị', before: 'Trước buổi 2', care: [],
+  sum: { eyebrow: 'Sau thủ thuật D+1', title: 'Dự kiến quay lại 19/10/2026', sub: 'Đánh giá D+30 sau Laser CO2 · Protocol dịch vụ' },
+  brief: 'Hoàng Bảo Ngọc, 25 tuổi, quay lại để đánh giá theo dõi da sau điều trị. Đã hoàn tất 3/6 buổi của kế hoạch chăm sóc da cá nhân. Lần gần nhất: 19/9/2026. Chưa có cập nhật sau điều trị. Không có mục theo dõi đang mở. Bước tiếp theo: bác sĩ đánh giá đáp ứng, xác nhận dữ liệu và quyết định kế hoạch.',
+  events: [{ date: '19/9/2026 · Điều trị', title: 'Buổi điều trị gần nhất', detail: 'Hồ sơ tổng hợp để kiểm thử chăm sóc.', by: 'Ghi nhận bởi BS. Tâm', icon: 'medical_services' }],
+  linked: { plan: null, deposit: money(0), rx: 'none' }
+};
+
+const wc2Journey = P => panel('Hành trình của ' + wcFirst(P.p), 'Toàn bộ sự kiện được nối theo thời gian, có nguồn và người phụ trách', [badge(P.done + '/' + P.total + ' buổi', 'neutral', { dot: false })],
+  row({ jc: 'space-between' }, strong(P.plan), txt('MỐC ' + P.done + ' / ' + P.total, { size: 'l', tone: 'info', w: 'b' })),
+  prog(P.done / P.total * 100),
+  timeline(...P.events));
+const wc2Milestone = (P, v) => panel('Ảnh mốc gần nhất', 'Chính diện · đã đồng ý sử dụng trong chăm sóc', v.studio ? [quiet('Mở studio →')] : [],
+  photos([{ label: P.before, meta: '23/07' }, { label: 'Gần nhất', meta: '23/08' }], { n: 2 }),
+  notice(wcPhotoNote, 'info'));
+const wc2Side = (P, v) => [
+  card({ v: 'ai', eyebrow: 'Pema AI · bản nháp để bác sĩ duyệt', title: 'Brief trước buổi hẹn', g: 10 }, txt(P.brief), v.brief ? secondary('Xem & chỉnh sửa →') : null),
+  panel('Thông tin cần nhớ', '', v.edit ? [quiet('Sửa')] : [],
+    facts(['Mối quan tâm', P.concern], ['Bác sĩ', P.p.doctor], ['Buổi tiếp theo', P.nextVisit === 'Chưa đặt lịch' ? 'Chưa hẹn' : P.nextVisit], ['Tiền sử dị ứng', 'Chưa ghi nhận'], ['Đồng ý ảnh', 'Đã xác nhận'])),
+  panel('Chăm sóc tại nhà', '', v.edit ? [quiet('Sửa')] : [], P.care.length ? list(P.care) : null)
+];
+
+// the care-finance.js panels under every tab except CRM and Lịch sử: "Dịch vụ & liệu trình", "Đơn thuốc", "Đơn thuốc & phiếu tư vấn"
+const wc2Rx = (kind, v) => kind === 'approved' ? [
+  row({ g: 12, jc: 'space-between', ai: 'flex-start' }, stack({ g: 2 }, eyebrow('DT-P001 · 6/9/2026'), h3('Đơn đã duyệt')), badge('Đã duyệt', 'success', { dot: false })),
+  notice('Chăm sóc và phục hồi sau buổi điều trị', 'info'),
+  list([
+    { t: 'Cicaderm Cream 40ml', sub: 'Bôi lớp mỏng vùng cần chăm sóc · Sáng và tối · 14 ngày' },
+    { t: 'Fudareus B 15g', sub: 'Bôi theo vùng bác sĩ đã dặn · Buổi tối · 7 ngày' }
+  ], { box: true }),
+  sm('Đã duyệt bởi BS. Tâm · người bệnh có thể xem trên app')
+] : kind === 'draft' ? [
+  row({ g: 12, jc: 'space-between', ai: 'flex-start' }, stack({ g: 2 }, eyebrow('DT-P002 · 20/9/2026'), h3('Bản nháp cần bác sĩ duyệt')), badge('Chờ duyệt', 'warning', { dot: false })),
+  notice('Đang chờ bác sĩ kiểm tra trước khi gửi', 'info'),
+  list([{ t: 'Cicaderm Cream 40ml', sub: 'Bôi lớp mỏng · Sáng và tối · 14 ngày' }], { box: true }),
+  primary('✓ Bác sĩ duyệt & gửi app')
+] : [empty('Chưa có đơn thuốc.', '', { icon: 'receipt_long' })];
+const wc2Linked = (L, v) => [
+  grid('minmax(0,1.35fr) minmax(360px,1fr)',
+    panel('Dịch vụ & liệu trình', 'Giá chốt, số buổi và liên kết thu ngân', v.add ? [primary('＋ Thêm dịch vụ')] : [],
+      L.plan
+        ? card({ v: 'soft', g: 8 }, eyebrow(L.plan.kicker), h3(L.plan.title),
+          txt([[L.plan.meta, 'b'], ' · ' + L.plan.price]), badge('Đang thực hiện', 'info', { dot: false }),
+          prog(L.plan.pct), txt(['Đã thu ', [L.plan.paid, 'b']]), sm(L.plan.rest))
+        : empty('Chưa có dịch vụ gắn với hồ sơ.', '', { icon: 'receipt_long' }),
+      row({ g: 12 }, txt('Tiền cọc đã phân bổ'), strong(L.deposit), v.cashier ? quiet('Mở thu ngân →') : null)),
+    panel('Đơn thuốc', 'Chỉ đơn đã duyệt mới xuất hiện trên Patient Mobile', v.rx ? [secondary('＋ Tạo đơn nháp')] : [], ...wc2Rx(L.rx, v))),
+  panel('Đơn thuốc & phiếu tư vấn', 'Nháp → bác sĩ duyệt → in và hiển thị trên app', [], empty('Chưa có đơn từ catalog.', '', { icon: 'receipt_long' }))
+];
+const wc2Overview = (P, v) => [
+  wc2Summary(P.sum),
+  grid('minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr)', stat('Liệu trình hiện tại', P.plan), stat('Buổi đã hoàn tất', String(P.done), '', { unit: '/ ' + P.total + ' buổi' }), stat('Hẹn tiếp theo', P.nextVisit)),
+  split([wc2Journey(P), wc2Milestone(P, v)], wc2Side(P, v)),
+  wc2Linked(P.linked, v)
+];
+
+// Kế hoạch tab (WC7) with or without "Chỉnh sửa"
+const wc2Plan = edit => grid('minmax(0,1.45fr) minmax(0,1fr)',
+  panel('Liệu trình kiểm soát sắc tố', 'Kế hoạch đang hoạt động · tạo 26/06/2026', edit ? [secondary('Chỉnh sửa')] : [],
+    card({ v: 'soft', g: 8 }, h4('Mục tiêu điều trị'),
+      txt('Giảm biểu hiện nám · tăng sắc tố, theo dõi đáp ứng qua từng mốc ảnh và bảo đảm người bệnh hiểu chăm sóc tại nhà.'), prog(40, { label: '2/5 buổi' })),
+    list([
+      { t: 'Buổi 1 · Đã hoàn tất', sub: 'Đã ghi nhận ảnh và hướng dẫn chăm sóc.', actions: [badge('Đã xong', 'success', { dot: false })] },
+      { t: 'Buổi 2 · Đã hoàn tất', sub: 'Đã ghi nhận ảnh và hướng dẫn chăm sóc.', actions: [badge('Đã xong', 'success', { dot: false })] },
+      { t: 'Buổi 3 · Tiếp theo', sub: 'Cần đánh giá da trước khi thực hiện.', actions: [badge('Sắp tới', 'info', { dot: false })] },
+      { t: 'Buổi 4 · Dự kiến', sub: 'Mốc dự kiến theo đáp ứng của người bệnh.', actions: [badge('Chưa mở', 'neutral', { dot: false })] },
+      { t: 'Buổi 5 · Dự kiến', sub: 'Mốc dự kiến theo đáp ứng của người bệnh.', actions: [badge('Chưa mở', 'neutral', { dot: false })] }
+    ])),
+  stack({ g: 16 },
+    panel('Bộ tiêu chí theo dõi', '', [], facts(['Ảnh mốc', 'Chính diện · 3/5'], ['Patient reported outcome', 'Chưa gửi'], ['Người duyệt', pt.doctor], ['Nhắc hẹn', 'Đang bật'])),
+    card({ v: 'soft', title: 'Khoảnh khắc cần hỏi ở buổi tới' }, txt('“Đỏ kéo dài bao lâu sau lần trước? Có thay đổi gì trong chăm sóc tại nhà không?”'))));
+// "Dịch vụ & tài chính" invoice panel; the old table has two rows (the second is the demo invoice of the day)
+const wc2Invoices = aside => panel('Hóa đơn của ' + pt.name, 'Giá trị phát sinh, tiền đã thu và dư nợ; không suy hoàn tất điều trị', aside,
+  table(['Hóa đơn', 'Dịch vụ', ['Phát sinh', '1fr', 'r'], ['Đã thu', '1fr', 'r'], ['Còn lại', '1fr', 'r']], [
+    ['HD-0001\n6/9/2026', 'Buổi chăm sóc / điều trị', money(1200000), money(1200000), money(0)],
+    ['HD-DEMO-001\n20/9/2026', services[0].name, money(300000), money(150000), money(150000)]
+  ], { foot: '2 hóa đơn của hồ sơ này' }),
+  notice('Tiền cọc còn chưa phân bổ: ' + money(0) + '. Cọc đã phân bổ được thể hiện riêng trong liệu trình bên dưới.', 'info'));
+// Tư vấn tab (WC5/WC6 panels) for the clinical-error state
+const wc2Consult = () => [
+  grid('minmax(0,1.45fr) minmax(0,1fr)',
+    panel('Tư vấn lâm sàng', '20/9/2026 · Bản ghi có người duyệt', [badge('Đang soạn', 'brand', { dot: false })],
+      notice('AI chỉ tạo bản nháp. Bác sĩ cần xem, sửa và xác nhận trước khi lưu vào hồ sơ.', 'warning'),
+      textarea('Ghi chú ngắn / transcript mô phỏng', '', { ph: 'Ví dụ: Da ổn hơn, đỏ giảm sau 2 ngày...', lines: 4 }),
+      primary('Tạo bản nháp ghi chú', { icon: 'auto_awesome' })),
+    panel('Bản nháp của Pema AI', 'Được tạo từ các sự kiện trên hồ sơ', [],
+      card({ v: 'soft', title: 'Chưa có bản nháp' }, txt('Nhập vài ý chính bên trái để Pema tạo bản nháp có cấu trúc.'))))
+];
+const wc2BriefNew = wcNew.name + ', ' + wcNew.age + ' tuổi, quay lại để đánh giá nám · tăng sắc tố. Đã hoàn tất 0/1 buổi của chờ bác sĩ thiết lập kế hoạch. Lần gần nhất: Chưa ghi nhận. Chưa có cập nhật sau điều trị. Không có mục theo dõi đang mở. Bước tiếp theo: bác sĩ đánh giá đáp ứng, xác nhận dữ liệu và quyết định kế hoạch.';
+
 const WC = [
   // ---- patient list ----
   page('WC1', 'Tìm bệnh nhân', WEB + 'patients · tiêu đề "Tìm bệnh nhân" (app A3 là "Hồ sơ người bệnh"), chip đếm "46 hồ sơ" và 4 chip lọc; bảng 7 cột có thanh hành trình và nút "Mở →"; tên và mã là dữ liệu tổng hợp', 'patients', [
@@ -266,5 +417,87 @@ const WC = [
   page('WC21', 'Patient 360 · Lịch sử · chưa có hoạt động', WEB + 'patients › Patient 360 › Lịch sử của hồ sơ vừa tạo: trạng thái rỗng "Chưa có hoạt động CSKH được ghi nhận."; toast "Đã tạo hồ sơ demo"', 'patients', [
     wcNewHead(7),
     panel('Lịch sử hợp nhất', 'Sự kiện gốc, người ghi nhận và liên kết công việc', [], empty('Chưa có hoạt động CSKH được ghi nhận.', '', { icon: 'forum' }))
-  ], { state: true, toast: 'Đã tạo hồ sơ demo' })
+  ], { state: true, toast: 'Đã tạo hồ sơ demo' }),
+
+  // ---- W6c-REST: role projections, empty and error states ----
+  page('WC22', 'Patient 360 · Bác sĩ (không có thu ngân)', WEB + 'patients › Patient 360 (tài khoản bác sĩ) · giữ cả 8 tab, "AI brief", "Nhắn tin", "Ghi buổi điều trị", "Mở studio →", các nút "Sửa" và "＋ Tạo đơn nháp"; mất "＋ Thêm dịch vụ" và "Mở thu ngân →" (quyền thu ngân); danh sách chỉ có bệnh nhân của bác sĩ đó', 'patients', [
+    wc2Hero(pt, { actions: wc2Actions }), wc2Overview(wc2P001, wc2Doctor)
+  ], { role: 'doctor-tam', state: true }),
+  page('WC23', 'Patient 360 · CSKH · Tổng quan', WEB + 'patients › Patient 360 (tài khoản CSKH) · chỉ 5 tab (Tổng quan, Kế hoạch, Dịch vụ & tài chính, CRM & CSKH, Lịch sử); không có nút ở hero, không có "Mở studio →", "Xem & chỉnh sửa →", "Sửa", "＋ Tạo đơn nháp", "＋ Thêm dịch vụ", "Mở thu ngân →"; thẻ "Bước tiếp theo" vẫn có "CRM & CSKH" và "Sửa ngày dự kiến"; app C5 là màn CSKH riêng, không có tab', 'patients', [
+    wc2Hero(pt, { tabs: wc2TabsCare }), wc2Overview(wc2P001, wc2Care)
+  ], { role: 'care-maianh', state: true }),
+  page('WC24', 'Patient 360 · CSKH · Kế hoạch (chỉ xem)', WEB + 'patients › Patient 360 (CSKH) › Kế hoạch · như WC7 nhưng không có nút "Chỉnh sửa" (quyền chuyên môn); app J3 có "Điều chỉnh kế hoạch" và câu "Cần tài khoản bác sĩ để thực hiện."', 'patients', [
+    wc2Hero(pt, { tabs: wc2TabsCare, sel: 1 }), wc2Plan(false), wc2Linked(wc2P001.linked, wc2Care)
+  ], { role: 'care-maianh', state: true }),
+  page('WC25', 'Patient 360 · CSKH · Dịch vụ & tài chính', WEB + 'patients › Patient 360 (CSKH) › Dịch vụ & tài chính · bảng hóa đơn và các khối liệu trình không có "Mở thu ngân →", "＋ Thêm dịch vụ", "＋ Tạo đơn nháp"; app J6 có "Mở thu ngân" · chưa có route Next.js', 'patients', [
+    wc2Hero(pt, { tabs: wc2TabsCare, sel: 2 }), wc2Invoices([]), wc2Linked(wc2P001.linked, wc2Care)
+  ], { role: 'care-maianh', state: true }),
+  page('WC26', 'Patient 360 · Kế toán · Tổng quan', WEB + 'patients › Patient 360 (kế toán) · 4 tab (Tổng quan, Kế hoạch, Dịch vụ & tài chính, Lịch sử; không có CRM & CSKH); nút chuyên môn bị gỡ nhưng giữ "＋ Thêm dịch vụ" và "Mở thu ngân →"; app D1 là không gian đối soát riêng', 'patients', [
+    wc2Hero(pt, { tabs: wc2TabsAcc }), wc2Overview(wc2P001, wc2Acc)
+  ], { role: 'accountant', state: true }),
+  page('WC27', 'Patient 360 · Kế toán · Dịch vụ & tài chính', WEB + 'patients › Patient 360 (kế toán) › Dịch vụ & tài chính · giữ "Mở thu ngân →" (cả ở bảng hóa đơn và dưới liệu trình) và "＋ Thêm dịch vụ"; không có "＋ Tạo đơn nháp" vì cần quyền chuyên môn · chưa có route Next.js', 'patients', [
+    wc2Hero(pt, { tabs: wc2TabsAcc, sel: 2 }), wc2Invoices([secondary('Mở thu ngân →')]), wc2Linked(wc2P001.linked, wc2Acc)
+  ], { role: 'accountant', state: true }),
+  page('WC28', 'Patient 360 · Đơn thuốc chờ bác sĩ duyệt', WEB + 'patients › Patient 360 của hồ sơ có đơn nháp · thẻ "Đơn thuốc" ở trạng thái "Chờ duyệt" với "Bản nháp cần bác sĩ duyệt", dòng "Đang chờ bác sĩ kiểm tra trước khi gửi" và nút "✓ Bác sĩ duyệt & gửi app"; chỉ đơn đã duyệt (WC4) mới lên Patient Mobile; app F4 kết thúc ở "Xem đơn" · chưa có route Next.js', 'patients', [
+    wc2Hero(wc2P002.p, { chips: [badge('Mụn viêm', 'brand', { dot: false })], actions: wc2Actions }), wc2Overview(wc2P002, wc2Owner)
+  ], { state: true }),
+  page('WC29', 'Patient 360 · hồ sơ tổng hợp chưa có liệu trình và đơn thuốc', WEB + 'patients › Patient 360 của một hồ sơ tổng hợp (một trong 10 hồ sơ CRM demo): "Chưa có dịch vụ gắn với hồ sơ.", "Chưa có đơn thuốc.", "Chưa có đơn từ catalog.", trạng thái hero "Chưa có lịch hôm nay", "Hẹn tiếp theo" là "Chưa đặt lịch"; tên và mã là dữ liệu tổng hợp · chưa có route Next.js', 'patients', [
+    wc2Hero(wc2P037.p, { status: 'Chưa có lịch hôm nay', chips: [badge('Theo dõi da sau điều trị', 'brand', { dot: false })], actions: wc2Actions }), wc2Overview(wc2P037, wc2Owner)
+  ], { state: true }),
+  page('WC30', 'Patient 360 · hồ sơ vừa tạo · chưa có buổi điều trị', WEB + 'patients › "Tạo hồ sơ" › Buổi điều trị của hồ sơ trống: form ghi buổi 10 trường, "Loại buổi" mặc định "Tư vấn ban đầu", hướng dẫn "Chưa có hướng dẫn được duyệt.", gợi ý "Hồ sơ có cảnh báo: Cần khai thác tiền sử.", "Chưa có buổi nào trong bản demo."; toast "Đã tạo hồ sơ demo"; khối liệu trình bên dưới vẫn là của hồ sơ mẫu như trên web cũ', 'patients', [
+    wcNewHead(3),
+    grid('minmax(0,1.45fr) minmax(0,1fr)',
+      panel('Ghi buổi điều trị', 'Tạo sự kiện mới cho ' + wcNew.name, [badge('1/1 dự kiến', 'brand', { dot: false })],
+        grid(2, date('Ngày', '2026-09-20'), select('Loại buổi', 'Tư vấn ban đầu', { opts: ['Tư vấn ban đầu', 'Tái khám đánh giá', 'Chăm sóc phục hồi'] })),
+        grid(2, select('Protocol chăm sóc', 'Theo khuyến nghị bác sĩ', { opts: ['Theo khuyến nghị bác sĩ', 'Laser CO2 · D+1 / D+3 / D+7 / D+30'] }), date('Ngày dự kiến tái khám', '2026-10-20')),
+        textarea('Đánh giá trước buổi', '', { ph: 'Tình trạng da, phản hồi, quyết định của bác sĩ...', lines: 4 }),
+        textarea('Hướng dẫn chăm sóc gửi sau buổi', 'Chưa có hướng dẫn được duyệt.', { lines: 2 }),
+        grid(2, select('Vùng chụp', 'Mặt', { opts: ['Mặt', 'Cổ', 'Vùng khác'] }), select('Góc chụp', 'Chính diện', { opts: ['Chính diện', 'Má trái', 'Má phải'] })),
+        file('Ảnh mốc', 'Chọn tệp (png, jpeg, webp)', { hint: 'Thêm ảnh chính diện hoặc vùng điều trị. Prototype tự kiểm tra loại tệp và kích thước.' }),
+        check('Người bệnh đã có đồng ý phù hợp cho ảnh chăm sóc.', false),
+        primary('Lưu buổi điều trị', { icon: 'check' })),
+      stack({ g: 16 },
+        card({ v: 'ai', eyebrow: 'Gợi ý kiểm tra', title: 'Trước khi lưu' }, txt('Hồ sơ có cảnh báo: Cần khai thác tiền sử. Hãy xác nhận trước khi thực hiện.')),
+        panel('Các buổi đã ghi', '', [], empty('Chưa có buổi nào trong bản demo.', '', { icon: 'event_note' })))),
+    wc2Linked(wc2P001.linked, wc2Owner)
+  ], { state: true, toast: 'Đã tạo hồ sơ demo' }),
+  tab('WC31', 'Patient 360 · Tư vấn · lỗi nhận định', WEB + 'patients › Patient 360 › Tư vấn › "Bác sĩ lưu nhận định" với hai ô chỉ có dấu cách: dòng lỗi đỏ "Nhập tiền sử và nhận định/chẩn đoán do bác sĩ xác nhận." dưới nút (dấu cách qua được kiểm tra "required" của trình duyệt nhưng không qua kiểm tra nghiệp vụ); app J1 không vẽ dòng lỗi', 1, [
+    panel('Tiền sử & chẩn đoán', 'Bác sĩ ghi nhận, không dùng AI tự chẩn đoán', [],
+      grid(2, textarea('Tiền sử đã khai thác', '  ', { req: true }), textarea('Khám / chẩn đoán do bác sĩ xác nhận', '  ', { req: true })),
+      secondary('Bác sĩ lưu nhận định'),
+      errLine('Nhập tiền sử và nhận định/chẩn đoán do bác sĩ xác nhận.')),
+    wc2Consult(),
+    wc2Linked(wc2P001.linked, wc2Owner)
+  ], { state: true }),
+  dlg('WC32', 'Brief trước buổi hẹn', WEB + 'Patient 360 của hồ sơ vừa tạo › "AI brief": bản nháp cho hồ sơ chưa có sự kiện hay mục theo dõi ("Chưa có cập nhật sau điều trị. Không có mục theo dõi đang mở."); WC13 là brief của hồ sơ P001; toast "Đã tạo hồ sơ demo" còn hiện · chưa có route Next.js', [
+    card({ v: 'soft', title: wcNew.name + ' · Chờ bác sĩ thiết lập kế hoạch' }, textarea('Brief mô phỏng · sửa trước khi duyệt', wc2BriefNew, { lines: 6 })),
+    notice('Nguồn: Patient 360, events đã ghi nhận, follow-up đang mở. Bác sĩ cần xác nhận trước khi dùng trong chăm sóc.', 'info')
+  ], { eyebrow: 'Pema AI · bản nháp', nav: 'patients', behind: wcNewHead(0), footer: [secondary('Sao chép'), primary('Duyệt & lưu brief')], toast: 'Đã tạo hồ sơ demo' }),
+  tab('WC33', 'Patient 360 · CRM & CSKH · không còn việc mở', WEB + 'patients › Patient 360 › CRM & CSKH sau khi ghi kết quả cho việc mở duy nhất ("Đã liên hệ, chưa có nhu cầu"): "Việc còn mở" chỉ còn "Không còn việc CSKH mở.", "Kết quả CSKH gần nhất" và "Lịch sử CSKH" có dòng mới, toast "Đã lưu kết quả và cập nhật hàng đợi"; Patient Mobile khi đó hiện "Việc hôm nay" (WI20)', 6, [
+    wcSummary(),
+    grid('minmax(0,1.65fr) minmax(300px,1fr)',
+      panel('Bối cảnh chăm sóc', 'Dữ liệu từ hồ sơ và liệu trình', [],
+        facts(['Nguồn khách', 'Giới thiệu'], ['Tiếp xúc đầu tiên', '26/6/2026'], ['Khám gần nhất', '6/9/2026'], ['Liệu trình', 'Liệu trình kiểm soát sắc tố · còn 3 buổi'], ['Kết quả CSKH gần nhất', 'Đã liên hệ, chưa có nhu cầu'], ['Bước tiếp', 'Chưa thiết lập · call']),
+        row({ g: 8 }, secondary('Sửa ngày dự kiến'), secondary('Xem liệu trình'), secondary('Toàn bộ lịch sử →'))),
+      panel('Việc còn mở', '0 việc gắn với hồ sơ', [], empty('Không còn việc CSKH mở.', '', { icon: 'task_alt' }))),
+    panel('Lịch sử CSKH', 'Sự kiện gốc, người ghi nhận và liên kết công việc', [],
+      timeline({ date: '2026-09-20 09:00', title: 'Gọi điện · Đã liên hệ, chưa có nhu cầu', detail: 'Đã trao đổi, chưa có nhu cầu.', by: 'BS. Tâm · CRM:due:P001:2026-09-20', icon: 'call' }))
+  ], { state: true, toast: 'Đã lưu kết quả và cập nhật hàng đợi' }),
+  dlg('WC34', 'Ngày dự kiến quay lại', WEB + 'Patient 360 › "Sửa ngày dự kiến" › "Lưu ngày dự kiến" với lý do chỉ có dấu cách: dòng lỗi đỏ "Nhập ngày hợp lệ, lý do và nguồn khuyến nghị." dưới nút; hộp thoại giữ nguyên; app J7 không vẽ dòng lỗi · chưa có route Next.js', [
+    date('Ngày bác sĩ/CSKH khuyến nghị', '2026-09-20', { req: true }),
+    input('Lý do', '   ', { req: true }),
+    select('Nguồn', 'Bác sĩ khuyến nghị', { opts: ['Bác sĩ khuyến nghị', 'Protocol dịch vụ', 'Kế hoạch điều trị', 'Chăm sóc sau điều trị'] }),
+    notice('Nếu đã có lịch thực tế, Patient 360 ưu tiên ngày lịch đó. Khuyến nghị vẫn được giữ khi hủy lịch.', 'info'),
+    errLine('Nhập ngày hợp lệ, lý do và nguồn khuyến nghị.')
+  ], { nav: 'patients', behind: patientHead(pt, 0), footer: [primary('Lưu ngày dự kiến')] }),
+  tab('WC35', 'Patient 360 · Ảnh trước / sau · có ảnh upload', WEB + 'patients › Patient 360 › Ảnh trước / sau sau khi lưu một buổi có ảnh: "1 ảnh gắn với buổi điều trị, lọc cùng góc khai báo: Chính diện." thay cho dòng ảnh minh họa của WC9; mỗi ô ảnh là placeholder có nhãn ngày và trạng thái đồng ý, không hiện ảnh thật; "3/5 buổi" và toast "Đã lưu buổi điều trị và cập nhật hành trình"', 4, [
+    card({ g: 12 },
+      row({ g: 16, jc: 'space-between', ai: 'flex-end' }, h3('Before / After Studio', pt.name + ' · Nám · tăng sắc tố'),
+        row({ g: 8, ai: 'flex-end' }, select('Góc ảnh so sánh', 'Chính diện', { w: 180, opts: ['Chính diện', 'Má trái', 'Má phải'] }), secondary('So sánh trượt'), primary('Thêm ảnh', { icon: 'add' }))),
+      notice('1 ảnh gắn với buổi điều trị, lọc cùng góc khai báo: Chính diện. Chưa kiểm định căn chỉnh ảnh; bác sĩ kiểm tra điều kiện chụp trước khi so sánh.', 'info'),
+      photos([{ label: '20/9/2026', meta: 'Ảnh Mặt · Chính diện ngày 20/9/2026 · đồng ý chăm sóc: có ghi nhận' }, { label: '20/9/2026', meta: 'Ảnh Mặt · Chính diện ngày 20/9/2026 · đồng ý chăm sóc: có ghi nhận' }], { n: 2 }),
+      box('info', range('Phóng to', '1×', 0), badge('Cùng góc khai báo · không tự căn chỉnh', 'neutral', { dot: false })),
+      notice('Metadata: vùng Mặt; góc Chính diện; mốc buổi s1789869600000; đồng ý chăm sóc: có ghi nhận. Không suy ra hiệu quả y khoa từ các ảnh minh họa.', 'info')),
+    wc2Linked({ ...wc2P001.linked, plan: { ...wc2P001.linked.plan, meta: '3/5 buổi', pct: 60 } }, wc2Owner)
+  ], { state: true, toast: 'Đã lưu buổi điều trị và cập nhật hành trình' })
 ];
