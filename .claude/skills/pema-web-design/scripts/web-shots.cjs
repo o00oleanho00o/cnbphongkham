@@ -37,7 +37,8 @@ const INVENTORY = path.join(REPO, 'design-specs', 'web', 'inventory.json');
 const REF_DIR = path.join(REPO, 'pema-agent', 'frontend', 'visual-ref', 'old');
 const CHANGED_LIMIT = 0.05;
 // the A5 order review is printed from the same page: also capture it under print media
-const PRINT_IDS = ['WF5', 'WF6'];
+// WF19 is the print call of an approved order: the print media draws its A5 sheets (WF12-WF14 are drafts, which print nothing)
+const PRINT_IDS = ['WF5', 'WF6', 'WF19'];
 
 const loadInventory = () => JSON.parse(fs.readFileSync(INVENTORY, 'utf8'));
 const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
@@ -93,16 +94,37 @@ async function financeSynced(page, timeout, soft) {
   await page.waitForTimeout(100);
 }
 
-/** Fire the native call of a `native: true` entry on the already shot page and return what the browser showed. */
-async function nativeDialog(page, entry, role) {
+/** Fire the native call of an entry once, after its shot. Returns {dialog: {type, message}, errors: []}. */
+async function fireNative(page, entry, role) {
   const n = entry.native_dialog;
+  const errors = [];
+  let message = null;
   if (n.type === 'select') {
+    // a native <select> popup cannot be screenshotted: record its option texts
     const options = await page.$$eval(`${n.selector} option`, (els) => els.map((e) => (e.textContent || '').trim()));
-    return { type: 'select', options };
+    return { dialog: { type: 'select', options }, errors: options.length ? [] : ['native select has no options'] };
   }
-  const target = await ow.run(page, n.trigger || [], { base: BASE, role: entry.role || role });
-  const got = (target.dialogs || []).at(-1);
-  return got ? { type: got.type, message: got.message } : { type: n.type, message: null };
+  try {
+    if (n.type === 'download') {
+      const [download] = await Promise.all([page.waitForEvent('download', { timeout: 8000 }), ow.run(page, n.trigger, { base: BASE, role })]);
+      message = download.suggestedFilename();
+    } else {
+      const target = await ow.run(page, n.trigger, { base: BASE, role });
+      if (n.type === 'print') {
+        const printed = await target.evaluate(() => window.__printed || 0);
+        if (printed !== 1) errors.push(`native print: window.print called ${printed} times`);
+      } else {
+        const got = (target.dialogs || []).at(-1);
+        if (!got) errors.push(`native ${n.type} did not fire`);
+        else if (got.type !== n.type) errors.push(`native dialog is a ${got.type}, expected ${n.type}`);
+        else message = got.message;
+      }
+    }
+  } catch (e) {
+    errors.push(`native trigger failed: ${String(e.message || e).split('\n')[0].slice(0, 160)}`);
+  }
+  if (n.type !== 'print' && n.type !== 'download' && n.message && message !== n.message && !errors.length) errors.push(`native message differs: ${message}`);
+  return { dialog: { type: n.type, message }, errors };
 }
 
 /** One entry at one viewport: returns [{file, media, ...metrics, page_errors}] or throws. */
@@ -156,16 +178,14 @@ async function captureOne(browser, inv, entry, viewport, outDir, lenient) {
       await shown.screenshot({ path: path.join(outDir, s.file) });
       out.push({ ...s, page_width: m.page_width, content_width: m.content_width, overflow: m.page_width > w, expect_unmet: why || null });
     }
-    // native-dialog ids: the shot above is the page right before the native call; fire it now and record what the browser
-    // showed (confirm/prompt message, or the <option> texts of a native select) in the manifest
-    if (entry.native) {
-      const nd = await nativeDialog(shown, entry, inv.role);
-      out[0].native_dialog = nd;
-      if (!nd.message && !nd.options) throw new Error('native dialog not captured');
-    }
+    // the print capture left the page under print media (the toolbar is hidden there): back to screen before the click
+    if (shots.length > 1) await shown.emulateMedia({ media: 'screen' });
+    // native confirm / prompt / print / download: the shot above is the page before the call; now fire the call once and
+    // record what the browser showed (the inventory walk checks the same message)
+    const nativeInfo = entry.native_dialog && ((entry.native_dialog.trigger && entry.native_dialog.trigger.length) || entry.native_dialog.type === 'select') ? await fireNative(shown, entry, entry.role || inv.role) : null;
     // page errors raised while the screen was reached and shot (collected by freeze on every page of the context)
     const errors = [...page.errors];
-    return out.map((o) => ({ ...o, page_errors: errors }));
+    return out.map((o) => ({ ...o, ...(nativeInfo && o.media === 'screen' ? { native_dialog: nativeInfo.dialog } : {}), page_errors: [...errors, ...(nativeInfo ? nativeInfo.errors : [])] }));
   } finally {
     await page.context().close();
   }
