@@ -11,7 +11,9 @@ const CANVAS_FILE = 'Pema Web.dc.html';
 const BLOCKS_FILE = 'Pema Web blocks.dc.html';
 const TOKENS = path.join(ROOT, 'pema-agent', 'frontend', 'src', 'ui', 'tokens.json');
 const INVENTORY = path.join(ROOT, 'design-specs', 'web', 'inventory.json');
-const GROUP_CODES = ['WA', 'WB', 'WC', 'WD', 'WE', 'WF', 'WG', 'WH'];
+const GROUP_CODES = ['WA', 'WB', 'WC', 'WD', 'WE', 'WF', 'WG', 'WH', 'WI'];
+// part files of a group: WI is written in two files (parts/WI.js, parts/WI2.js) that the canvas merges into the single group WI
+const GROUP_PARTS = { WI: ['WI', 'WI2'] };
 const GROUP_SUB = {
   WA: 'Sidebar, thanh trên, tài khoản demo, thông báo nổi · AppShell',
   WB: 'Tổng quan, hôm nay, điều phối lịch, đặt lịch, chi tiết lịch hẹn',
@@ -20,7 +22,8 @@ const GROUP_SUB = {
   WE: 'Ảnh trước / sau, Bác sĩ & phòng, khóa phòng, Dịch vụ',
   WF: 'Thu ngân, thu tiền, lên đơn nhanh, tách đơn và bản in A5',
   WG: 'Tài chính & tiền thủ thuật theo vai trò: chủ phòng khám, kế toán, bác sĩ',
-  WH: 'Ask Pema và Hướng dẫn sử dụng'
+  WH: 'Ask Pema và Hướng dẫn sử dụng',
+  WI: 'Patient Mobile web: trang chủ, lịch hẹn, hành trình, tin nhắn, hồ sơ và mọi trạng thái · khung điện thoại 390×844'
 };
 
 const lf = (s) => s.replace(/\r\n/g, '\n');
@@ -118,7 +121,8 @@ function groupDefs() {
   const inv = JSON.parse(read(INVENTORY));
   return GROUP_CODES.map((code) => {
     const g = inv.groups.find((x) => x.code === code);
-    return { code, title: g ? g.name : code, sub: GROUP_SUB[code] };
+    const ids = inv.screens.filter((x) => x.group === code).map((x) => x.id); // inventory order: the canvas lists a group's screens in this order
+    return { code, title: g ? g.name : code, sub: GROUP_SUB[code], ids };
   });
 }
 
@@ -150,8 +154,15 @@ const RENDER_VALS = `
 
 function buildScript(defs, blocks) {
   // the block gallery replaces WA with parts/blocks.js and leaves the other groups empty
-  const names = ['base', ...GROUP_CODES.map((c) => (blocks ? (c === 'WA' ? 'blocks' : null) : c)), 'tail'];
-  const parts = names.map((n, i) => (n === null ? `const ${GROUP_CODES[i - 1]} = [];` : read(path.join(CANVAS_DIR, 'parts', `${n}.js`)).replace(/\s+$/, '')));
+  const names = ['base'];
+  for (const code of GROUP_CODES) {
+    for (const part of GROUP_PARTS[code] || [code]) {
+      if (blocks) names.push(code === 'WA' ? 'blocks' : `@const ${part} = [];`);
+      else names.push(part);
+    }
+  }
+  names.push('tail');
+  const parts = names.map((n) => (n.startsWith('@') ? n.slice(1) : read(path.join(CANVAS_DIR, 'parts', `${n}.js`)).replace(/\s+$/, '')));
   const [base, ...rest] = parts;
   const tail = rest.pop();
   const indent = (s) => s.split('\n').map((l) => (l ? '    ' + l : l)).join('\n');
@@ -185,4 +196,4 @@ function buildCanvas(opts = {}) {
   return out;
 }
 
-module.exports = { ROOT, CANVAS_DIR, CANVAS_FILE, BLOCKS_FILE, TOKENS, INVENTORY, GROUP_CODES, lf, read, sha, tokenVars, tokenCss, tokenVarsOfCanvas, compareTokens, buildCanvas, buildScript, groupDefs };
+module.exports = { ROOT, CANVAS_DIR, CANVAS_FILE, BLOCKS_FILE, TOKENS, INVENTORY, GROUP_CODES, GROUP_PARTS, lf, read, sha, tokenVars, tokenCss, tokenVarsOfCanvas, compareTokens, buildCanvas, buildScript, groupDefs };

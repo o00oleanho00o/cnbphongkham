@@ -140,7 +140,7 @@ ${rows.map((r) => `| [${r.id}](../../../../design-specs/web/screens/${r.id}.md) 
 
 // ---- counts table ----
 const mc = manifest.counts || {};
-const specFiles = fs.existsSync(SPEC_DIR) ? fs.readdirSync(SPEC_DIR).filter((f) => /^W[A-H]\d+\.md$/.test(f)).length : 0;
+const specFiles = fs.existsSync(SPEC_DIR) ? fs.readdirSync(SPEC_DIR).filter((f) => /^W[A-I]\d+\.md$/.test(f)).length : 0;
 const canvasCount = canvas ? Object.keys(canvas.screens).length : 0;
 const screenShots = manifest.images.filter((i) => i.media === 'screen').length;
 const legacyShots = manifest.images.filter((i) => i.media === 'legacy-copy').length;
