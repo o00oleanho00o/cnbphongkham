@@ -35,8 +35,80 @@ Group **WA · Khung & điều hướng** · state · Next.js: **restyle (U1)** (
 - Layout `.top-actions` 686×53 px: flex row, gap 12px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WA1): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Tổng quan">
+  <Button variant="secondary" href="#main-content" as="link" old="skip-link">"Đến nội dung chính"</Button>
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item active icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Tổng quan"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <Img placeholder label="Vùng nội dung trang: mỗi trang vẽ ở nhóm WB–WH" />
+</AppShell>
+```
+Kit components used: Button×3, Field×2, Sidebar×1, TopBar×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WA1-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
+
+## Tokens
+- Text colour: ink-soft ×15, heading ×2, ink ×2, surface ×2, link ×1
+- Background: surface ×4, brand-50 ×2, canvas ×2, accent ×1, heading ×1
+- Border: line ×7, info-line ×1
+- Radius: field ×15, pill ×1
+- Font size: small ×14, eyebrow ×4, label ×4, micro ×3, body ×1
+- Font: Be Vietnam Pro ×27
+- Unmatched colours (no token within ΔE 3): `#71869a` (text, ×3, nearest `ink-soft` ΔE 9.8); `#6b8093` (text, ×1, nearest `ink-soft` ΔE 7.4); `#b8c5bf` (text, ×1, nearest `success-line` ΔE 8.9)
+- Unmatched radius: 8px ×3 (nearest `field`), 50px ×1 (nearest `hero`)
+- Unmatched font size: 9px ×1 (nearest `eyebrow`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- The account picker is a demo identity boundary, "NOT authentication or production RBAC" (header comment of `staff-context.js`).
+- The sidebar shows only the pages of the role (`pages` in `staff-context.js`); a section title with no visible item is removed.
+
+## Differences from the app design
+- The old web shell is a left sidebar of 13 items in 3 sections; the app (A5, A6) uses a bottom navigation per role plus "Đổi không gian làm việc".
+
+## Gotchas
+- Role and page are kept in `sessionStorage` (`pema-staff`); a fresh browser context always starts as `owner-tam` unless `?staff=<id>` is in the URL.
+- "Đặt lại dữ liệu demo" (`#reset-demo`) asks a native `confirm('Đặt lại dữ liệu demo?')`, then toasts "Đã khôi phục dữ liệu demo".
+- The global search answers Enter only: it sets the patient search and opens "Tìm bệnh nhân".
+- The bell button is a link to "Theo dõi" (`data-nav=followups`).
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WA1 · Khung ứng dụng · Chủ phòng khám`.
+- Canvas note: Web › app shell · sidebar 3 nhóm 13 mục, thanh trên (đường dẫn, tài khoản demo, tìm bệnh nhân, thông báo, đặt lại); danh sách tài khoản mở sẵn, liên kết "Đến nội dung chính" hiện khi focus
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <Button variant="secondary" href="#main-content" as="link" old="skip-link">"Đến nội dung chính"</Button>
 <Sidebar old="sidebar" tag="aside">
@@ -74,37 +146,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Row>
 </TopBar>
 ```
-Kit components used: Sidebar×14, Button×4, Field×2, TopBar×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WA1-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
-
-## Tokens
-- Text colour: ink-soft ×15, heading ×2, ink ×2, surface ×2, link ×1
-- Background: surface ×4, brand-50 ×2, canvas ×2, accent ×1, heading ×1
-- Border: line ×7, info-line ×1
-- Radius: field ×15, pill ×1
-- Font size: small ×14, eyebrow ×4, label ×4, micro ×3, body ×1
-- Font: Be Vietnam Pro ×27
-- Unmatched colours (no token within ΔE 3): `#71869a` (text, ×3, nearest `ink-soft` ΔE 9.8); `#6b8093` (text, ×1, nearest `ink-soft` ΔE 7.4); `#b8c5bf` (text, ×1, nearest `success-line` ΔE 8.9)
-- Unmatched radius: 8px ×3 (nearest `field`), 50px ×1 (nearest `hero`)
-- Unmatched font size: 9px ×1 (nearest `eyebrow`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- The account picker is a demo identity boundary, "NOT authentication or production RBAC" (header comment of `staff-context.js`).
-- The sidebar shows only the pages of the role (`pages` in `staff-context.js`); a section title with no visible item is removed.
-
-## Differences from the app design
-- The old web shell is a left sidebar of 13 items in 3 sections; the app (A5, A6) uses a bottom navigation per role plus "Đổi không gian làm việc".
-
-## Gotchas
-- Role and page are kept in `sessionStorage` (`pema-staff`); a fresh browser context always starts as `owner-tam` unless `?staff=<id>` is in the URL.
-- "Đặt lại dữ liệu demo" (`#reset-demo`) asks a native `confirm('Đặt lại dữ liệu demo?')`, then toasts "Đã khôi phục dữ liệu demo".
-- The global search answers Enter only: it sets the patient search and opens "Tìm bệnh nhân".
-- The bell button is a link to "Theo dõi" (`data-nav=followups`).
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WA1-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

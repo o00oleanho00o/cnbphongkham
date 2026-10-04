@@ -19,3 +19,12 @@ Today it holds:
 The old web (`prototype/`) is read-only. Serve it with
 `python -m http.server 4173 --bind 127.0.0.1 --directory prototype` and the finance API with
 `python prototype/finance_server.py --port 4174 --db <temp>/finance.sqlite3`.
+
+Added in W3a (web canvas foundation):
+
+- `Pema Web redesign canvas/` holds the canvas sources: `template.html` (frame, shell, CSS), `nodes.html` (block markup),
+  `parts/base.js` (sample data and helpers), `parts/WA.js … WH.js` (one per group, written in W3b), `parts/tail.js`, `parts/blocks.js`
+  (the block gallery) and `support.js` (same bytes as the app canvas). `Pema Web.dc.html` and `Pema Web blocks.dc.html` are generated.
+- `scripts/web-canvas-build.cjs` builds them (`--check`, `--blocks`, `--out`); `scripts/web-canvas.cjs` lists and checks them through
+  design-viewer; `scripts/lib/canvas-layout.cjs` turns canvas screens into the Layout of the web specs.
+- `references/blocks-web.md` is the manual of every block and helper, with the work loop for a group agent.

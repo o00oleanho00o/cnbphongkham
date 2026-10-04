@@ -38,8 +38,146 @@ Group **WB · Vận hành: tổng quan, hôm nay, lịch** · page · Next.js: *
 - Layout `.crm-stages` 1102×94 px: grid, columns `repeat(5, 1fr)` (220.391px 220.406px 220.391px 220.406px 220.391px)
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WB1): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Tổng quan">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item active icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Tổng quan"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <PageHeading eyebrow="Pema · chăm sóc xuyên suốt" title="Chào buổi sáng, BS. Tâm" subtitle="Vận hành hôm nay và chăm sóc khách hàng · mốc demo 20/09/2026">
+    <Button variant="secondary">"Lịch hôm nay →"</Button>
+    <Button variant="primary">"Mở CSKH hôm nay"</Button>
+  </PageHeading>
+  <Grid cols="repeat(4, 1fr)" cols-390="repeat(2, 1fr)">
+    <Tile label="Lịch hôm nay" value="12">
+      <Button variant="quiet">"Mở tiếp đón →"</Button>
+    </Tile>
+    <Tile label="Đã đến / đang chờ" value="3 / 3">
+      <Button variant="quiet">"Bàn giao phòng khám →"</Button>
+    </Tile>
+    <Tile label="Vắng hẹn" value="1">
+      <Button variant="secondary">"Xử lý vắng hẹn"</Button>
+    </Tile>
+    <Tile label="Phát sinh hôm nay" value="13.500.000 ₫">
+      <Button variant="quiet">"Hóa đơn, không phải thực thu →"</Button>
+    </Tile>
+  </Grid>
+  <Grid cols="repeat(4, 1fr)" cols-390="repeat(2, 1fr)">
+    <Tile label="Khách cần CSKH" value="10" note="12 việc đến hạn" chevron />
+    <Tile label="Quá ngày dự kiến" value="2" note="Cần hỗ trợ chọn lịch" chevron />
+    <Tile label="Nguy cơ mất khách" value="3" note="Quá hạn hoặc bỏ dở" chevron />
+    <Tile label="Liệu trình bỏ dở" value="1" note="Còn buổi, >45 ngày" chevron />
+  </Grid>
+  <Grid cols="minmax(0,1.65fr) minmax(300px,1fr)" gap="16px">
+    <Card title="Ưu tiên chăm sóc" subtitle="Từ dữ liệu khám và lịch hẹn, có người phụ trách">
+      <Card.Aside>
+        <Button variant="secondary">"Tất cả →"</Button>
+      </Card.Aside>
+      <TableShell columns={["Khách hàng","Việc tiếp theo","Phụ trách",""]} rows={5}  /* cards at 390 */>
+        <Row sample="first row; demo values, the other rows have the same cells">
+          <Cell column="Khách hàng">
+            <Button variant="quiet">"Nguyễn Thu Hà"</Button>
+            <Text small>"P001"</Text>
+          </Cell>
+          <Cell column="Việc tiếp theo">
+            <Text>"Sau thủ thuật · D+1"</Text>
+            <Text small>"14/9/2026"</Text>
+          </Cell>
+          <Cell column="Phụ trách">
+            <Text>"CSKH Mai Anh"</Text>
+          </Cell>
+          <Cell column="">
+            <Button variant="secondary">"Xử lý"</Button>
+          </Cell>
+        </Row>
+      </TableShell>
+    </Card>
+    <Card title="Hiệu quả CSKH" subtitle="Kết quả thực từ hoạt động đã lưu">
+      <Facts items={[["Việc đã hoàn tất","4"],["Liên hệ thành công","75%","3/4 lần liên hệ"],["Lịch đặt sau CSKH","2"],["Đã quay lại thực tế","1"],["Việc quá hạn","5"]]} />
+      <Button variant="secondary">"Xem nhật ký kết quả"</Button>
+      <Notice tone="info" text="Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH." />
+    </Card>
+  </Grid>
+  <Card title="Vòng đời khách hàng" subtitle="Một hồ sơ, nhiều lần chăm sóc">
+    <Grid cols="repeat(5,minmax(0,1fr))" cols-390="repeat(2,minmax(0,1fr))" gap="16px">
+      <Button variant="secondary">"3 Khách mới"</Button>
+      <Button variant="secondary">"2 Khách quay lại"</Button>
+      <Button variant="secondary">"9 Đang điều trị"</Button>
+      <Button variant="secondary">"1 Lâu chưa quay lại"</Button>
+      <Button variant="secondary">"1 Đã quay lại sau CSKH"</Button>
+    </Grid>
+  </Card>
+</AppShell>
+```
+Kit components used: Button×17, Tile×8, Card×3, Field×2, Sidebar×1, TopBar×1, PageHeading×1, TableShell×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- 1440×900 is the reference (Frame, Layout).
+- 1920×1020: no layout change
+- 1280×720: no layout change
+- 1024×768: .metrics: grid 4 → 2 columns; .crm-dashboard-grid: grid 2 → 1 columns; .sidebar: width 232 → 204px
+- 390×844: .page-heading: display flex → block; .metrics: grid 4 → 2 columns; .crm-kpis: grid 4 → 2 columns; .panel-head: flex-wrap off → on; .crm-dashboard-grid: display grid → block; .crm-stages: grid 5 → 2 columns; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "BS. Tâm", "Chủ phòng khám", "Không gian phòng khám" (+1)
+- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
+
+## Tokens
+- Text colour: ink ×33, ink-soft ×21, link ×8, heading ×6, surface ×1
+- Background: surface ×21, row-hover ×4, link ×1, table-head ×1
+- Border: tile ×25, line ×15, line-strong ×9, link ×1
+- Radius: field ×14, card ×4
+- Font size: label ×40, small ×30, eyebrow ×4, body-lg ×3, micro ×1, page ×1
+- Font: Be Vietnam Pro ×93
+- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×9, nearest `link` ΔE 6.7); `#60778b` (text, ×4, nearest `ink-soft` ΔE 3.9); `#20496d` (text, ×3, nearest `link` ΔE 5.1); `#698095` (text, ×3, nearest `ink-soft` ΔE 7.4); `#70879a` (text, ×3, nearest `ink-soft` ΔE 10.1); `#467a9c` (text, ×1, nearest `info` ΔE 5.3); `#5b7487` (text, ×1, nearest `ink-soft` ΔE 3.2)
+- Unmatched radius: 16px ×4 (nearest `card`)
+- Unmatched font size: 32px ×3 (nearest `page`), 18px ×1 (nearest `section`), 21.6px ×1 (nearest `subtitle`), 29px ×4 (nearest `page`), 26px ×5 (nearest `title`)
+
+## Required text (keep verbatim)
+- Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH.
+
+## Business rules
+- (old web notice) "Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH."
+- "Hóa đơn, không phải thực thu": "Phát sinh hôm nay" counts invoices dated today, not money received.
+- Lifecycle groups ("Khách mới", "Khách quay lại", "Đang điều trị", "Lâu chưa quay lại", "Đã quay lại sau CSKH") open the segment dialog WD5.
+
+## Differences from the app design
+- App I1 shows 3 CSKH metrics ("Cần CSKH", "Quá hạn", "Nguy cơ mất"); the web has 4 KPI buttons ("Khách cần CSKH", "Quá ngày dự kiến", "Nguy cơ mất khách", "Liệu trình bỏ dở") plus the panels "Hiệu quả CSKH" and "Vòng đời khách hàng" that the app does not show.
+- The web page eyebrow is "Pema · chăm sóc xuyên suốt" and the subtitle ends with "mốc demo 20/09/2026"; the app shows 22/09/2026.
+- App I1 puts "Phát sinh hôm nay" in one tile with the sentence; the web uses a metric card with the quiet button "Hóa đơn, không phải thực thu →".
+
+## Gotchas
+- The demo day is fixed: 2026-09-20 09:00 (`DAY` in `operations-data.js` and `crm-automation.js`). Dates before that day cannot be booked.
+
+## Web canvas
+- Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WB1 · Tổng quan`.
+- Canvas note: Web › dashboard · bố cục như app I1/A1 ở cỡ web; web có thêm KPI "Quá ngày dự kiến", "Liệu trình bỏ dở" và hai khối "Hiệu quả CSKH", "Vòng đời khách hàng"; tên và số liệu là dữ liệu tổng hợp
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Tổng quan", page key "dashboard"
   <PageHeading eyebrow="Pema · chăm sóc xuyên suốt" title="Chào buổi sáng, BS. Tâm" subtitle="Vận hành hôm nay và chăm sóc khách hàng · mốc demo 20/09/2026">
@@ -107,42 +245,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Card>
 </AppShell>
 ```
-Kit components used: Button×15, Tile×8, Card×3, PageHeading×1, TableShell×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- 1440×900 is the reference (Frame, Layout).
-- 1920×1020: no layout change
-- 1280×720: no layout change
-- 1024×768: .metrics: grid 4 → 2 columns; .crm-dashboard-grid: grid 2 → 1 columns; .sidebar: width 232 → 204px
-- 390×844: .page-heading: display flex → block; .metrics: grid 4 → 2 columns; .crm-kpis: grid 4 → 2 columns; .panel-head: flex-wrap off → on; .crm-dashboard-grid: display grid → block; .crm-stages: grid 5 → 2 columns; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "BS. Tâm", "Chủ phòng khám", "Không gian phòng khám" (+1)
-- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
-
-## Tokens
-- Text colour: ink ×33, ink-soft ×21, link ×8, heading ×6, surface ×1
-- Background: surface ×21, row-hover ×4, link ×1, table-head ×1
-- Border: tile ×25, line ×15, line-strong ×9, link ×1
-- Radius: field ×14, card ×4
-- Font size: label ×40, small ×30, eyebrow ×4, body-lg ×3, micro ×1, page ×1
-- Font: Be Vietnam Pro ×93
-- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×9, nearest `link` ΔE 6.7); `#60778b` (text, ×4, nearest `ink-soft` ΔE 3.9); `#20496d` (text, ×3, nearest `link` ΔE 5.1); `#698095` (text, ×3, nearest `ink-soft` ΔE 7.4); `#70879a` (text, ×3, nearest `ink-soft` ΔE 10.1); `#467a9c` (text, ×1, nearest `info` ΔE 5.3); `#5b7487` (text, ×1, nearest `ink-soft` ΔE 3.2)
-- Unmatched radius: 16px ×4 (nearest `card`)
-- Unmatched font size: 32px ×3 (nearest `page`), 18px ×1 (nearest `section`), 21.6px ×1 (nearest `subtitle`), 29px ×4 (nearest `page`), 26px ×5 (nearest `title`)
-
-## Required text (keep verbatim)
-- Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH.
-
-## Business rules
-- (old web notice) "Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH."
-- "Hóa đơn, không phải thực thu": "Phát sinh hôm nay" counts invoices dated today, not money received.
-- Lifecycle groups ("Khách mới", "Khách quay lại", "Đang điều trị", "Lâu chưa quay lại", "Đã quay lại sau CSKH") open the segment dialog WD5.
-
-## Differences from the app design
-- App I1 shows 3 CSKH metrics ("Cần CSKH", "Quá hạn", "Nguy cơ mất"); the web has 4 KPI buttons ("Khách cần CSKH", "Quá ngày dự kiến", "Nguy cơ mất khách", "Liệu trình bỏ dở") plus the panels "Hiệu quả CSKH" and "Vòng đời khách hàng" that the app does not show.
-- The web page eyebrow is "Pema · chăm sóc xuyên suốt" and the subtitle ends with "mốc demo 20/09/2026"; the app shows 22/09/2026.
-- App I1 puts "Phát sinh hôm nay" in one tile with the sentence; the web uses a metric card with the quiet button "Hóa đơn, không phải thực thu →".
-
-## Gotchas
-- The demo day is fixed: 2026-09-20 09:00 (`DAY` in `operations-data.js` and `crm-automation.js`). Dates before that day cannot be booked.
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WB1-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
