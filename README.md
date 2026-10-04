@@ -14,6 +14,7 @@ Workspace này chứa prototype và tài liệu nghiên cứu của Pema Digital
 
 - [Bản đồ tài liệu](docs/README.md) và luồng [Scope](docs/SCOPE-PB01.md) → [Spec](docs/SPEC-PB01.md) → [Module Map](docs/MODULEMAP-PB01.md) → [Architecture](docs/ARCH-PB01.md).
 - [Quy tắc cập nhật cho agent](AGENT.md), [hiện trạng mobile và tài khoản mẫu](docs/25_MOBILE_CRM_AND_UNIFIED_FINANCE.md).
+- [`pema-agent/`](pema-agent/README.md): agent CSKH qua Zalo (bản dịch Python của zalo-agent) và CRM phòng khám phía server, chạy tách khỏi các prototype ở đây; xem [SCOPE-AI01](pema-agent/docs/SCOPE-AI01.md) → [SPEC](pema-agent/docs/SPEC-AI01.md) → [MODULEMAP](pema-agent/docs/MODULEMAP-AI01.md) → [ARCH](pema-agent/docs/ARCH-AI01.md); chưa chạy với Zalo/mô hình thật.
 
 | Bản                        | Mục đích                                | Lưu dữ liệu                                         |
 | -------------------------- | --------------------------------------- | ---------------------------------------------------- |

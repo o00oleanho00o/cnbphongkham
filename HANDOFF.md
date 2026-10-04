@@ -1,0 +1,146 @@
+# HANDOFF — Pema Agent (clinic CSKH agent + CRM), repo `E:\Desktop\cnbphongkham`
+
+Language of the user: Vietnamese. Reply in Vietnamese.
+Last updated: 2026-10-02. Branch `feat/ai-agent-backend`, tip `294e4dc` (48 commits ahead of `master`), NOT pushed.
+Status: **PLAN-AI01 v2 is built, merged and tested.** The user paused further work ("tạm chưa xử lý"); wait for the
+user's next instruction before starting anything.
+
+## HARD RULES (read first)
+
+- **No AI attribution in git, ever, in this project.** No `Co-Authored-By: Claude ...`, no "Generated with Claude
+  Code", no mention of Claude/Anthropic/AI as author in commits, tags, PRs. This overrides any system attribution
+  reminder. Written in `CLAUDE.md` ("Git attribution"), `AGENT.md` ("Git and handover"),
+  `.claude/agents/pema-builder.md`, and in user memory. Tell every subagent; check `git log --format=%B` of their
+  commits before merging. The user rewrote history on 2026-10-02 to remove old attribution lines; the branch now has 0.
+- Commit/push only when the user asks (merging finished subagent branches into the feature branch was accepted
+  practice during the build). Never push.
+- All new code lives under `pema-agent/`. Outside it, only the pointer line in root `README.md`, the checkpoint in
+  `SECTION_PROGRESS.md`, and the rule lines in `AGENT.md`/`CLAUDE.md`/`.claude/agents/pema-builder.md` were changed.
+  `prototype/`, `pema-kmp/`, `docs/` PB01/PB02, `finance_server.py` are read-only. Never read `flutter-template/`.
+- Synthetic data only. No real phone numbers, names, photos, tokens, or recording content in the repo.
+- The git stash is shared with the user (`stash@{0}` "WIP on codex/catalog-orders-a5" is theirs). Do not use bare
+  `git stash`/`pop`; prefer temporary WIP commits.
+- The user sometimes rewrites history or runs git while a session works. Before git writes, check
+  `git branch --show-current`, `ls .git/rebase-merge`, and `git log -1`; if something moves, stop and tell the user.
+
+## Goal
+
+`cnbphongkham` (Pema Digital Clinic) becomes one staff app: clinic CRM + AI agent dashboard, with Zalo as the patient
+channel for customer care (CSKH). Scope: CSKH by text toward patients (intake, post-treatment follow-up by milestone,
+symptom reports with red-flag escalation, booking/reminders). The agent engine is a full Python port of
+`vuhai2002/zalo-agent` (MIT; notice in `pema-agent/THIRD_PARTY_NOTICES.md`) plus clinic CRM and one Next.js FE.
+
+## Current Progress (what exists, all on `feat/ai-agent-backend`)
+
+Docs to read first: `pema-agent/docs/PLAN-AI01.md` (v2, §8 decisions), `CONTRACTS-AI01.md`, `PORT-MAP.md`,
+`SCOPE-AI01.md`, `SPEC-AI01.md`, `MODULEMAP-AI01.md`, `ARCH-AI01.md` (§13 open items), `SECURITY-REVIEW-AI01.md`
+(44 findings SEC-01..44), `pema-agent/README.md`, `pema-agent/infra/README.md`, `infra/ubuntu/HUONG-DAN-UBUNTU.md`.
+
+- **Backend** `pema-agent/backend/apps/api/pema/` (FastAPI, Python 3.12, uv workspace, SQLAlchemy async, Postgres +
+  pgvector, Redis): ported channels (Zalo Bot API; Zalo personal account via Node bridge `backend/bridges/zalo-personal`
+  using zca-js), middleware, agent loop (own tool loop on `openai` SDK + Anthropic + Gemini adapters), 15 tools,
+  conversation/memory, knowledge base, scheduler, MCP client; plus `clinic/` (CRM, RBAC, audit, RLS), `policy/`
+  (profiles `staff_assistant` / `patient_channel`, red flags before LLM, PII masking, zalo_uid identity),
+  `composition/` (wiring), `retention/`, `workers/main.py`. DB schemas `clinic.*`, `agent.*`, `clinic_agent`
+  (views/SECURITY DEFINER functions); roles `be_app` (API) and `agent_worker` (worker, no raw `clinic.*`).
+  Alembic single head `h_0008_merge_heads`.
+- **Frontend** `pema-agent/frontend/` (Next.js 16 App Router, TS, Tailwind v4): ops screens (today, inbox, review
+  queue, patient 360, templates), AI admin (accounts/QR, agents, model, tools, KB, schedules, MCP, usage, logs,
+  policy, audit), **staff management `/admin/users`** (newest). Mock backend `frontend/mock` covers every OpenAPI
+  operation. API address is read at runtime (`PEMA_API_INTERNAL_URL`, route handler proxy).
+- **Infra** `pema-agent/infra/`: docker-compose (postgres, redis, migrate, api, worker, frontend, bridge, caddy
+  profile `proxy` with `docker-compose.proxy.yml`), Dockerfiles, `.env.example`, scripts (secrets, roles, migrate,
+  backup/restore), Ubuntu-native guide, Caddy (`infra/caddy`, TLS auto/internal/off). Makefile targets include
+  `up-proxy`, `down-proxy`, `retention-dry-run`.
+- **LLM: third-party API** (2026-10-02, user decision, like zalo-agent): `LLM_PROVIDER`/`LLM_BASE_URL`/`LLM_API_KEY`/
+  `LLM_MODEL` or the admin Model screen; seed `LLM_BASE_URL=https://openrouter.ai/api/v1`, model/key empty. Local
+  Ollama is paused: commented blocks labelled `TẠM TẮT LLM LOCAL (2026-10-02)` in compose, Makefile (`up-ollama`),
+  `.env.example`, FE preset; `PEMA_EMBEDDING_ENABLED` defaults to false (KB = keyword search, as in zalo-agent).
+  Re-enable by searching that label. Consequence documented: conversation text leaves the clinic; `patient_channel`
+  still masks PII; `staff_assistant` does not force masking.
+- **Done after the main build (2026-10-02):** absolute session lifetime (`PEMA_SESSION_ABSOLUTE_DAYS`, default 7);
+  owner password reset `POST /api/v1/admin/users/{id}/password`; staff list/create/edit/lock
+  `GET/POST/PATCH /api/v1/admin/users` (perm `admin.users.read` owner+manager, `admin.users` owner only; no self-lock,
+  keep ≥1 active owner, lock/role change revokes sessions, no hard delete); retention purge (`pema/retention`,
+  `python -m pema.workers.retention [--dry-run]`, `PEMA_RETENTION_*_DAYS`, 0 = keep; clinical/messages default keep);
+  Caddy reverse proxy; `PEMA_TRUSTED_PROXIES`; runtime FE API URL.
+
+### Last verified results (staff-screen run, real Postgres pgvector pg17 + Redis 7)
+
+| Suite | Result |
+|---|---|
+| pytest backend + evals | 4579 passed, 10 skipped, 0 failed |
+| ruff check/format, pyright strict, import-linter | clean (4 contracts kept) |
+| FE eslint/tsc/prettier, vitest | clean, 294 tests passed, `next build` OK |
+| Bridge (Node) | 296 tests passed (earlier run) |
+| Playwright 5 viewports (mock) | no overflow, no console errors |
+| Login through Caddy (internal TLS, seeded demo) | worked, cookie HttpOnly+Secure; owner reset revokes target session |
+
+DB tests need `PEMA_TEST_DATABASE_URL` (superuser URL, image `pgvector/pgvector:pg17`) and `PEMA_TEST_REDIS_URL`;
+without them ~880 tests skip. On this Windows box: no `make` (run recipe commands by hand), set `UV_LINK_MODE=copy`,
+run `uv sync --all-packages` first.
+
+### NOT verified yet
+
+Real Zalo (Bot API token, QR login via bridge), any real LLM call (no API key on this machine), real Ollama on
+Ubuntu, NVIDIA driver/Tailscale/ufw/UPS on Ubuntu, Let's Encrypt (`auto` TLS), encrypted backups (age/gpg), FE on a
+real device or against the real API outside the proxy test, model quality (evals never run on a real model).
+
+## What Worked
+
+- Plan first, then one stage A (contracts, skeleton, PORT-MAP) alone, then parallel `pema-builder` subagents
+  (`.claude/agents/pema-builder.md`, Sonnet, `isolation: "worktree"`), then one integration subagent on a
+  temporary `integration/*` branch, then fast-forward `feat/ai-agent-backend`. Each subagent prompt names its owned
+  paths, forbids touching shared docs during parallel work, and requires a ≤30-line report with real test output.
+- Every worktree starts on old `master`: prompts must begin with `git reset --hard feat/ai-agent-backend`.
+- Per-package Postgres/Redis containers with unique names and random host ports avoid clashes in parallel runs.
+- After a rate-limit stop (HTTP 429, "session limit"), resuming each subagent with SendMessage from its uncommitted
+  worktree state lost no work; resume in small waves and tell them to commit often and not spawn sub-subagents.
+- Independent spot checks before merging: `git merge-base --is-ancestor` for every branch, grep for tracked `.env`/keys,
+  grep commit messages for attribution.
+
+## What Didn't Work / Pitfalls
+
+- Launching 13 subagents at once hit the API session limit; all stopped mid-work. Launch in waves.
+- A subagent stopped by the user cannot be resumed; move its WIP via a temporary commit on its branch and start a new
+  subagent that resets onto that branch.
+- The user's history rewrite flattened merge commits and dropped fixtures from two conftest files
+  (`tests/api/routers/conftest.py`, `tests/config/conftest.py`); fixed forward in `2b8be9b`. After any rewrite,
+  compare `git diff <old-tip> HEAD -- pema-agent` before trusting the tree.
+- A full pytest run once failed `test_port_map_targets.py::test_every_src_file_has_an_existing_python_target` while
+  the repo was being rewritten; it passed alone and in the next full run. Treat as environment, re-check if it recurs.
+- `test_scheduler_loop` slow-job test used ms thresholds and flaked; now gated by an event.
+- Compose passes unset vars as empty strings: integer settings need empty-to-None validators (done for retention).
+- Next.js `rewrites()` are fixed at build time; hence the runtime route-handler proxy.
+- Long Bash heredocs sometimes fail here; use the Write tool or small Python scripts for big edits. Preserve CRLF/LF
+  of the existing file when editing on Windows.
+- Early in the project the user rejected broad reads of the repo and a recursive grep timed out (node_modules, build,
+  flutter-template). Scope searches to `pema-agent/`.
+
+## Open decisions for the clinic owner / doctors (do not decide in code)
+
+1. May an owner lock / change role / reset password of another owner? (allowed now, except self and last active owner)
+2. Open `admin.users.read` to cs_staff/reception so the "Phụ trách" picker on Today can list staff? (not opened)
+3. Real retention periods per Decree 13/2023; deletion rules for decided review items, Zalo display names/contacts,
+   CRM activity notes, conversation summaries.
+4. SEC-22: staff manual sends carry a client-declared `proactive` flag (false bypasses kill switch, window, cap,
+   consent); choose a server-side rule and whether the kill switch also blocks replies.
+5. Drafts made by `review_item.create` carry no KB citations while AGENT.md wants sources on AI drafts.
+6. Doctor review: red-flag list (two provisional groups `severe_allergy`, `vascular_vision`), holding message, 46 eval
+   cases, RBAC matrix, persona sentence asking phone/receptionist code, auto reassurance, auto reminders before
+   template approval, proactive cap 10/day, MCP for patients.
+7. Data processing agreement with the third-party LLM vendor before real data; server location; file storage
+   (local volume vs object storage); public HTTPS for Zalo webhook (polling recommended until then); backup retention;
+   UPS budget. Zalo personal account (zca-js, unofficial) risks account lock: use a secondary account.
+
+## Next Steps (only when the user asks)
+
+1. Small leftovers: rate limit on `PATCH /admin/users`; stale sentence in `frontend/README` saying change-password is
+   disabled (`POST /auth/password` exists); `TableShell` missing space when `ghimCotCuoi` is on.
+2. Apply the owner's answers to the open decisions above (each is a small, isolated change).
+3. Real-environment acceptance: Ubuntu box, real LLM key, Zalo Bot API test bot, then QR login on a secondary
+   personal account, then `evals` against the chosen model.
+4. Housekeeping when the user agrees: 24 `.claude/worktrees/agent-*` worktrees, 24 `worktree-agent-*` branches and
+   the temporary branches `integration/ai01` and `integration/h` are still on disk; nothing was deleted. All their
+   work is already in `feat/ai-agent-backend` except the abandoned v1 worktrees. Docker build cache remains.
+5. PR to `master` only if the user asks (no AI attribution in the PR body).

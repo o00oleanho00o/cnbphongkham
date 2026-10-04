@@ -1,0 +1,23 @@
+# Nightly Postgres backup (HUONG-DAN-UBUNTU.md section 10). Adjust the two paths to where the repository is
+# checked out, and create /etc/pema-backup.env (mode 600) with the PEMA_BACKUP_* variables, for example:
+#   PEMA_BACKUP_DIR=/mnt/backup-disk/pema
+#   PEMA_BACKUP_AGE_RECIPIENT=age1...   (public key; keep the private key off this machine)
+#   PEMA_BACKUP_KEEP_DAYS=14
+#   PEMA_BACKUP_HOOK=/usr/local/bin/pema-offsite.sh   (optional: a script of yours that receives the finished
+#                     backup path as $1 and copies it off-site, e.g. rsync to another machine over Tailscale)
+#
+#   sudo install -m 0644 pema-backup.service pema-backup.timer /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now pema-backup.timer
+[Unit]
+Description=Pema Agent Postgres backup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/pema-backup.env
+WorkingDirectory=/opt/cnbphongkham/pema-agent
+ExecStart=/opt/cnbphongkham/pema-agent/infra/scripts/backup-postgres.sh
+# the dump holds patient data: nobody else reads what we write
+UMask=0077
+Nice=10

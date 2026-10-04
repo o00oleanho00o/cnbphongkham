@@ -1,0 +1,39 @@
+# ROADMAP unit (HUONG-DAN-UBUNTU.md section 9): llama.cpp `llama-server` serving the chat model instead of
+# Ollama. Not run in anger by package F; check every flag against `llama-server --help` of the build you make,
+# flags changed names between releases (for example `-fa` now takes on/off/auto).
+#
+# Install:  sudo install -m 0644 llama-server-chat.service /etc/systemd/system/
+#           sudo useradd --system --home /srv/llama --shell /usr/sbin/nologin llama
+#           sudo systemctl daemon-reload && sudo systemctl enable --now llama-server-chat
+#
+# -c is the TOTAL context shared by the slots: 32768 with -np 2 gives 16384 per conversation.
+# --jinja enables the model's chat template, which tool calling needs.
+# Listening on 127.0.0.1: put a Tailscale IP here instead if the API runs on another machine. No auth.
+[Unit]
+Description=llama-server (Qwen3-8B chat) for Pema Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=llama
+Group=llama
+ExecStart=/opt/llama.cpp/build/bin/llama-server \
+  --model /srv/llama/models/Qwen3-8B-Q6_K.gguf \
+  --alias pema-chat \
+  --host 127.0.0.1 --port 8080 \
+  --n-gpu-layers 99 \
+  --ctx-size 32768 --parallel 2 \
+  --flash-attn on \
+  --cache-type-k q8_0 --cache-type-v q8_0 \
+  --jinja
+Restart=on-failure
+RestartSec=5
+# The model file is read-only and nothing else is needed.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/srv/llama/models
+
+[Install]
+WantedBy=multi-user.target

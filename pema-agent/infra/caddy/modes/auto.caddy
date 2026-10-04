@@ -1,0 +1,13 @@
+# TLS mode `auto` (PEMA_PROXY_TLS=auto, the default): PEMA_PUBLIC_DOMAIN is a real domain pointing at this machine.
+# Caddy gets and renews a Let's Encrypt certificate by itself and redirects http to https. It needs port 80 AND 443
+# reachable from the internet (PEMA_PROXY_BIND=0.0.0.0 or the public IP) and the DNS record already in place.
+
+(pema_tls) {
+	# empty on purpose: automatic HTTPS is Caddy's default for a domain name
+}
+
+(pema_hsts) {
+	# a browser remembers this for a year: only safe with a certificate it trusts. No includeSubDomains, no preload:
+	# the parent domain may host other things.
+	Strict-Transport-Security "max-age=31536000"
+}

@@ -1,0 +1,12 @@
+# TLS mode `internal` (PEMA_PROXY_TLS=internal): no public domain yet. Caddy signs its own certificate with a local
+# CA, for the name in PEMA_PUBLIC_DOMAIN (localhost, a LAN name such as pema.lan, a Tailscale MagicDNS name).
+# Browsers warn until the CA root is installed on the device (see infra/README.md for how to export it). No HSTS: a
+# self-signed certificate must never get a browser to refuse the click-through.
+
+(pema_tls) {
+	tls internal
+}
+
+(pema_hsts) {
+	# empty on purpose
+}
