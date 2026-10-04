@@ -242,7 +242,18 @@ function buildEntry(entry, data, scope, probes, tokens, index) {
     responsive: probes ? responsiveOf(probes.base, probes.list, describeIds(tree)) : {},
     stats: { text_runs: new Set(texts).size, uncovered_text: uncovered, unseen_controls: data.unseen || [] },
   };
-  return entry.group === 'WG' ? maskFinance(serverToday(e)) : e;
+  const masked = entry.group === 'WG' ? maskFinance(serverToday(e)) : e;
+  return maskGeneratedIds(masked);
+}
+
+/**
+ * The cashier makes invoice and order codes from a random UUID ("HD-<uuid>", "OD-<uuid>") every time an order is created
+ * (WF21, WF22), so a rerun would rewrite the snapshot. The code is demo data, not UI: it becomes a name.
+ */
+function maskGeneratedIds(e) {
+  const text = JSON.stringify(e);
+  const masked = text.replace(/(HD|OD)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, '$1-<uuid>');
+  return masked === text ? e : JSON.parse(masked);
 }
 
 async function snapshotOne(browser, entry, tokens, index) {
