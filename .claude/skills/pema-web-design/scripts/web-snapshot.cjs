@@ -54,7 +54,7 @@ async function scopeOf(page, entry) {
   const hasModal = await page.locator('.modal-backdrop .modal').locator('visible=true').count();
   if (hasModal) return { scope: 'dialog', roots: ['.modal-backdrop .modal'] };
   if (entry.id === 'WA4') return { scope: 'toast', roots: ['.toast'], mode: 'toast' };
-  if (['WA1', 'WA2', 'WA3'].includes(entry.id)) return { scope: 'shell', roots: ['.skip-link', '.sidebar', '.topbar'] };
+  if (['WA1', 'WA2', 'WA3', 'WA5', 'WA6', 'WA7', 'WA8', 'WA9'].includes(entry.id)) return { scope: 'shell', roots: ['.skip-link', '.sidebar', '.topbar'] };
   const hasMain = await page.locator('#main-content').count();
   return hasMain ? { scope: 'content', roots: ['#main-content'] } : { scope: 'body', roots: ['body'] };
 }
