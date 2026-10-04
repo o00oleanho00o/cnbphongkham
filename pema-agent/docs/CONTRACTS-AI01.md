@@ -30,7 +30,7 @@ Everything else is read-only for it; a needed change elsewhere goes into the rep
 | Package | Owns |
 |---|---|
 | A | `pema/core`, `pema/shared/{logger,zone_time,current_datetime,ky_tu_moi_token,safe_error_serializer,turn_log_context,db_transaction,doi_cho_den_khi}.py`, `pema/config/{env,secret_cipher,secret_cipher_core,tuning_specs}.py`, `pema/channels/registry.py`, `pema/bootstrap.py`, `pema/api/{router,deps,errors,export_openapi}.py`, `pema_contracts`, `alembic/versions/0001..0003`, root files |
-| B1 | `pema/clinic/{domain,actions,rbac,audit,models}`, `pema/api/routers/{auth,patients,appointments,crm,conversations,review_items,admin_audit,admin_users}.py` (`admin_users.py`: `GET /admin/users` with `admin.users.read` for owner and manager; `POST /admin/users`, `PATCH /admin/users/{user_id}` and `POST /admin/users/{user_id}/password` with `admin.users`, owner only), `pema/api/{client_ip,dashboard_auth,dashboard_password_store,dashboard_session_store,dashboard_staff_store}.py` |
+| B1 | `pema/clinic/{domain,actions,rbac,audit,models}`, `pema/api/routers/{auth,patients,appointments,crm,conversations,review_items,staff,admin_audit,admin_users}.py` (`staff.py`, ST-S: `GET /staff/assignable` for every signed-in staff member) (`admin_users.py`: `GET /admin/users` with `admin.users.read` for owner and manager; `POST /admin/users`, `PATCH /admin/users/{user_id}` and `POST /admin/users/{user_id}/password` with `admin.users`, owner only), `pema/api/{client_ip,dashboard_auth,dashboard_password_store,dashboard_session_store,dashboard_staff_store}.py` |
 | B2 | `pema/clinic/crm_rules`, `pema/api/routers/admin_crm_rules.py` |
 | C1 | `pema/channels/zalo_bot`, `pema/channels/oa_api.py` (stub), `pema/channels/{record_incoming_message,busy_wait_notice,payload_anomaly_watch,reply_target_tu_kenh}.py`, `pema/middleware`, `routers/{webhooks_zalo_bot,admin_bot_accounts}.py` |
 | C2 | `pema/channels/zalo_personal`, the shared outbound/turn pipeline in `pema/channels/*.py` (the C2 rows of PORT-MAP), `pema/workers/turn_worker.py`, `backend/bridges/zalo-personal`, `routers/{webhooks_zalo_bridge,admin_accounts,admin_friends,admin_channels}.py` |
@@ -71,11 +71,11 @@ named there.
 | `SchedulerPort`, `CreateScheduledJobInput`, `ScheduledJob`, `ProactiveSendGuard`, `ScheduleInput` | `scheduler` | S | B2, D4 (`schedule_task`), admin routes | |
 | `AgentFacingClinicActions`, `CareContext`, `IdentityLink`, `InboxRef` | `clinic_actions` | B1 (`pema/clinic/actions/agent_facing.py`) | D1/D4 tools, P, C1/C2 (Inbox), S | dict-based fake |
 | `ActionContext`, `Action` | `actions` | B1 | everyone calling an action | |
-| Domain DTOs | `patients`, `appointments`, `crm`, `conversations`, `review`, `auth` (incl. `ChangePasswordRequest`, `ResetPasswordRequest`, `StaffUserOut`, `StaffUserCreate`, `StaffUserUpdate`), `admin`, `admin_agent`, `roles` (incl. `Permission.ADMIN_USERS = "admin.users"`, owner only, and `Permission.ADMIN_USERS_READ = "admin.users.read"`, owner and manager), `errors`, `common` | | B1, B2, E (via OpenAPI) | |
+| Domain DTOs | `patients`, `appointments`, `crm`, `conversations`, `review`, `auth` (incl. `ChangePasswordRequest`, `ResetPasswordRequest`, `StaffUserOut`, `StaffUserCreate`, `StaffUserUpdate`, `AssignableStaffOut`), `admin`, `admin_agent`, `roles` (incl. `Permission.ADMIN_USERS = "admin.users"`, owner only, and `Permission.ADMIN_USERS_READ = "admin.users.read"`, owner and manager), `errors`, `common` | | B1, B2, E (via OpenAPI) | |
 | Retention | `pema.retention` (`RetentionPolicy`, `Scope`, `RetentionRunner`, `start_retention_loop`) | H2 | worker (`Scope.AGENT`), API wiring (`Scope.CLINIC`), CLI | `pema.retention.pg_testing` |
 | Tuning API | `pema.config.runtime_tuning_settings` (A, first version) | A API, D1 provider | every package | `StaticTuningProvider` |
 | Secret cipher | `pema.config.secret_cipher` | A | C1, C2, D1, D2, D4, D5 | set `PEMA_SECRET_ENCRYPTION_KEY` in the test |
-| DB session with clinic context | `pema.core.db.ClinicDatabase` | A | every store | `tests/test_database.py` shows the pattern |
+| DB session (no clinic context since ST-A) | `pema.core.db.ClinicDatabase`, `get_installation_clinic_id` | A | every store | `tests/test_database.py` shows the pattern; test clinic: `pema.core.testing.ensure_test_clinic` (section 10) |
 
 ### Policy hook call sites (so P attaches without editing D1 or S)
 
@@ -122,10 +122,10 @@ that staff read. The channel layer writes both. Review items live in `clinic.rev
   (engine tables). Mapping of every zalo-agent table is in the docstring of `0002_agent_schema.py`.
 * Roles: `be_app` (API process, DML on `clinic.*` and `agent.*`, `audit_log` insert/select only), `agent_worker`
   (DML on `agent.*`; reads `clinic_agent` views; EXECUTE on `clinic_agent` functions; NOTHING on `clinic.*`).
-  Neither owns tables, so RLS applies to both.
-* RLS: every table has `clinic_id` and `USING (clinic_id = ctx.current_clinic_id())`. Open a unit of work only with
-  `async with db.session(clinic_id) as s:` (`ClinicDatabase`), which sets `app.clinic_id` for the transaction.
-  No context means no rows. `ctx.resolve_clinic(slug)` and `ctx.list_active_clinic_ids()` work without a context.
+  **Single tenant (section 10): there is no RLS any more.**
+* ~~RLS~~ (removed by migration `st_0009_single_tenant`, section 10): every table keeps `clinic_id` as the fixed
+  installation id; open a unit of work with `async with db.session() as s:`; the id comes from
+  `get_installation_clinic_id(db)`; `ctx.the_clinic_id()` is the SQL function behind it.
 * `agent_worker` reaches the clinic through `clinic_agent.patient_ref`, `patient_appointment`, `patient_open_task`,
   `patient_care_plan`, `patient_last_session`, `consent_current`, `identity_verified`, `channel_policy`,
   `message_template_approved` (no phone, birth date, address, clinical free text or credentials) and the functions
@@ -133,7 +133,7 @@ that staff read. The channel layer writes both. Review items live in `clinic.rev
   A package that needs more adds a view/function in its own migration and says so; it never grants a table.
 * Migrations: never edit `0001..0003`. A package adds `alembic/versions/<pkg>_NNNN_<what>.py` with
   `down_revision = "0003_clinic_agent_access"` (or its own previous revision). Several heads are fine
-  (`alembic upgrade heads`, `make db-upgrade`); package G merges them. Every new table needs `clinic_id`, RLS, and
+  (`alembic upgrade heads`, `make db-upgrade`); package G merges them. Every new table needs `clinic_id` (no RLS, no policy since `st_0009`), and
   grants to the right role(s). DDL tests run with `PEMA_TEST_DATABASE_URL` against a THROWAWAY database.
 * Windows: psycopg async needs the selector loop: call `pema.core.event_loop.ensure_selector_event_loop_policy()`
   before the loop starts (done in `tests/conftest.py`). Production is Ubuntu, where it is a no-op.
@@ -216,5 +216,215 @@ packages in one change.
   password of another owner (refused only for the caller's own account for lock and role, for the caller's own
   password reset, and when it would leave the clinic without an active owner); whether the clinic wants that is
   the clinic owner's decision. `StaffUserOut` carries no password or hash; the list is for the owner and the manager
-  only, so the "Phụ trách" box of "Việc hôm nay" (used by `cs_staff`) does not use it: opening `admin.users.read` to
-  `cs_staff` and `reception` is an open product decision, not done.
+  only, so the "Phụ trách" box of "Việc hôm nay" and the Inbox header (used by `cs_staff`) use `GET /staff/assignable`
+  instead (section 10.9, ST-S); `admin.users.read` stays owner and manager.
+
+## 10. Single-tenant (package ST-A, branch `feat/single-tenant`)
+
+Decision: **one installation is ONE clinic with its own database.** Nothing lets several clinics share a system any
+more. The `clinic_id` column stays in every table as the fixed "installation id" (no schema rewrite, foreign keys and
+composite keys keep working); only the mechanisms for many clinics go. Sections 3 and 5 above describe the old model
+where they mention RLS, `current_clinic_id`, `resolve_clinic`, `list_active_clinic_ids` or "per active clinic": this
+section wins.
+
+### 10.1 Database (migration `st_0009_single_tenant`, the only head, after `h_0008_merge_heads`)
+
+* `clinic.clinic` holds EXACTLY ONE row, enforced by the database (`singleton boolean NOT NULL DEFAULT true`,
+  `CHECK (singleton)`, `UNIQUE (singleton)`); a second INSERT fails, the row cannot be DELETEd (trigger). The upgrade
+  refuses a database that already holds two or more clinics.
+* `clinic.ensure_clinic(name, slug, timezone, id)`: idempotent create of that row (never renames, never changes the
+  id, raises when asked for another id). Owner role only, no grant to `be_app`/`agent_worker`. The migration calls it
+  with `PEMA_CLINIC_NAME` (default `Pema Clinic`), the fixed slug `clinic`, and `PEMA_CLINIC_ID` as id when set
+  (otherwise an id is generated once). An installed clinic is left alone.
+* `ctx.the_clinic_id()`: STABLE SECURITY DEFINER, both runtime roles may call it, RAISES `no clinic installed` when the
+  table is empty. It replaces `ctx.current_clinic_id()` everywhere: the ten `clinic_agent` views and the nine
+  `clinic_agent` definer functions were re-created from the catalog with it (attributes, `security_barrier`, grants and
+  the `search_path ... pg_temp` of g_0006 kept). New SQL: use `ctx.the_clinic_id()`, never read `app.clinic_id`.
+* Dropped: every policy `clinic_isolation` (41), ROW LEVEL SECURITY on all tables of `clinic.*` and `agent.*`,
+  `ctx.current_clinic_id`, `ctx.resolve_clinic`, `ctx.list_active_clinic_ids`. A new table needs `clinic_id` (FK to
+  `clinic.clinic`) and grants; **no RLS, no policy**.
+* Grants unchanged: `agent_worker` still has NOTHING on `clinic.*` and reaches the clinic only through the
+  `clinic_agent` views/functions; `be_app` keeps its grants (`audit_log` insert/select only); `clinic.audit_log` is still
+  append-only. Accepted consequence: `be_app` and `agent_worker` now read every row of the tables they hold a grant on,
+  whatever a session setting says (there is one clinic in the database). The views still filter by the installation id.
+* Downgrade restores policies, RLS and the old functions (one round trip is tested); the clinic row stays.
+
+### 10.2 Python surface (what exists now, what is deprecated, what goes)
+
+| Item | State | Who changes callers |
+|---|---|---|
+| `pema.core.db.get_installation_clinic_id(db, *, verify=False) -> UUID` | NEW, source of truth: cache per `ClinicDatabase`, then `PEMA_CLINIC_ID`, then `ctx.the_clinic_id()`; also fills `pema_contracts.installation`. Call it once at start-up (`verify=True` compares `PEMA_CLINIC_ID` with the DB) | all |
+| `ClinicDatabase.session()` | REMOVED the `clinic_id` argument (no `app.clinic_id` is set); no caller passes it any more (ST-G1) | done |
+| `ClinicDatabase.system_session()` | REMOVED (ST-G1; no caller left) | done |
+| `ClinicDatabase.resolve_clinic(slug=None)` | REMOVED (ST-G1; login, webhooks and bridge read the installation id) | done |
+| `ClinicDatabase.list_active_clinic_ids()` | REMOVED (ST-G1); the loops over clinics (scheduler, KB ingest, retention, MCP, snapshots) are one pass | done |
+| `ClinicDatabase.read_installation_clinic_id()` / `.installation_clinic_id` | NEW (uncached read / cache) | |
+| `pema_contracts.installation`: `installation_clinic_id()`, `installation_clinic_id_or_none()`, `set_installation_clinic_id()`, `reset_installation_clinic_id()`, `InstallationClinicNotLoadedError` | NEW (leaf, process-wide value) | |
+| `clinic_id` of `ActionContext`, `TurnJob`, `AgentTurnRequest`, `ReviewItemCreate`, `CreateScheduledJobInput` | now `Field(default_factory=installation_clinic_id)`: leave it out and it is filled (raises if the id was not loaded); passing it still works | ST-B/ST-C drop the argument at call sites |
+| `clinic_id` of `PolicyContext`, `ToolContext` (dataclasses), `AccountConfig`, `AgentProfile`, `ScheduledJob`, `McpPolicy`, `UserSummary`, `ToolScope`, every store/port method argument (`AccountStore`, `AgentStore`, `ConversationStore`, `KnowledgeStore`, `ChannelRegistry.get_running/list_running`, `ThreadLock.hold`, ...) | UNCHANGED in this step (still passed explicitly; pass `get_installation_clinic_id(db)`). Removing them is a contract change of the owning package, done after the steps below | ST-B, ST-C |
+| `Settings.clinic_name` (`PEMA_CLINIC_NAME`), `Settings.clinic_id` (`PEMA_CLINIC_ID`, optional) in `pema.config.env` | NEW | ST-F puts them in compose/`.env.example` |
+| `pema.core.installation.ensure_clinic(conn, name=None, *, clinic_id=None, timezone=None) -> UUID`, `ensure_clinic_async(...)`, CLI `python -m pema.core.installation` | NEW: idempotent create-or-get of the one clinic (owner connection) for seeds and bootstrap | ST-B (`seed_demo`), ST-F (bootstrap) |
+| `pema.core.testing.ensure_test_clinic(conn) -> UUID`, `ensure_test_clinic_async(conn)`, `truncate_installation_data(conn)` | NEW test helpers (below) | ST-B, ST-C |
+| Login `clinic_slug`, webhook path `/webhooks/zalo-bot/{clinic_slug}/{account_id}`, bridge clinic segment | REMOVED (ST-B, ST-C, ST-E); the paths are now `/api/v1/webhooks/zalo-bot/{account_id}` and `/api/v1/webhooks/zalo-bridge/{account_id}`, `openapi.json` and `schema.d.ts` regenerated | done |
+
+### 10.3 Recipe for the fixtures (ST-B, ST-C)
+
+A migrated database now already contains its one clinic, so `INSERT INTO clinic.clinic` per test fails
+(`UNIQUE (singleton)`). Change every fixture from "create a fresh clinic id per test" to "use the one clinic, clean
+the data between tests":
+
+```python
+from pema.core.testing import ensure_test_clinic, truncate_installation_data
+
+with admin_engine.begin() as conn:
+    clinic_id = ensure_test_clinic(conn)   # same id every time; also sets the installation id for the DTO defaults
+    truncate_installation_data(conn)       # all of clinic.* and agent.* except clinic.clinic (superuser, test DB only)
+    # then insert the agent/accounts/patients the test needs with clinic_id=clinic_id
+```
+
+Rules: no test inserts a second clinic; "tenant isolation" tests (two clinics must not see each other) are deleted or
+turned into "agent_worker has no raw access to `clinic.*`" (see `tests/test_database.py`); a test that needs a clinic
+with other settings updates the one row. `PgTestServer`-style helpers that create a throwaway database per module
+keep working (the migration creates the clinic in it; set `PEMA_CLINIC_NAME` if the name matters). Call
+`pema_contracts.installation.reset_installation_clinic_id()` when a fixture swaps databases.
+
+### 10.4 Who removes what (after this step the build is green; the removal is incremental)
+
+* **ST-B (auth, actions, workers, scheduler, retention)**: `pema/api/dashboard_auth.py` (login by slug, `account_key`
+  with slug), `pema/api/clinic_testing.py`, `pema/clinic/actions/seed_demo.py` (use `ensure_clinic`), the
+  `ActionContext` construction in the API layer, `pema/composition/{runtime,api_wiring}.py`,
+  `pema/workers/{main,scheduler_worker,retention,kb_ingest_worker}.py`, `pema/scheduler/scheduler_loop.py`,
+  `pema/retention/runner.py` (loops over `list_active_clinic_ids`); the `pema/core` shims once nobody calls them.
+  Delete `tests/clinic/test_rls_isolation.py`.
+* **ST-C (Zalo channels, bridge, agent stores, MCP, KB, policy)**: `pema/channels/zalo_bot/{webhook,settings,
+  bot_account_manager}.py`, `pema/channels/zalo_personal/{services,service_testing,testing,account_manager,
+  bridge_client,bridge_events,channel_settings,qr_login_manager}.py`, `pema/api/routers/webhooks_zalo_{bot,bridge}.py`,
+  `pema/composition/{intake,testing}.py` (`make_clinic_resolver`), `pema/config/{account_store,runtime_settings_store}.py`,
+  `pema/mcp/{mcp_manager,mcp_schema}.py`, `pema/knowledge/kb_ingest_worker.py`, the `clinic_id` arguments of the stores
+  in `pema/conversation`, `pema/knowledge`, `pema/config`, `pema/mcp`, `pema/policy`.
+* **ST-E (UI)**: the clinic slug field of `frontend/src/components/admin/auth/login-form.tsx` and the use of
+  `UserSummary.clinic_id`/`clinic_name`, once ST-B changes the login DTO and regenerates `openapi.json` and `schema.d.ts`.
+* **ST-F (infra, docs)**: `infra/docker-compose.yml` and `.env.example` (`PEMA_CLINIC_NAME`, optional `PEMA_CLINIC_ID`),
+  `infra/scripts/{migrate,bootstrap-roles,backup-postgres}.sh` and `infra/README.md` wording about RLS/clinics,
+  `ARCH-AI01` sections 3 and 8, `SECURITY-REVIEW-AI01` SEC-06/SEC-12 (RLS is gone; the accepted limit is now "one clinic
+  per database"), `MODULEMAP-AI01`, `PORT-MAP.md` mentions, the open item "one worker per clinic" of section 9.
+
+### 10.5 Tests (history of the ST-A step, closed in ST-G1)
+
+After the database step alone, a full `pytest` run on Postgres 17 + Redis 7 showed 393 failures and 497 errors: fixtures
+that insert a second clinic, and tests of RLS or slug behaviour. ST-B and ST-C moved the fixtures to the one clinic
+(`ensure_test_clinic` + `truncate_installation_data`) and deleted the tests that only checked isolation between two
+clinics (`tests/clinic/test_rls_isolation.py`, the per-clinic cases of the runtime settings and MCP boot tests). After the
+merge of the four packages and the clean-up of ST-G1 (below) the full backend run on a clean Postgres 17 + Redis 7 is
+**4583 passed, 10 skipped, 0 failed, 0 errors** (the skips are optional tools and platform limits).
+
+### 10.6 Rules for new code from now on
+
+No `set_config('app.clinic_id')`, no `ctx.current_clinic_id()`, no policy, no `ENABLE ROW LEVEL SECURITY`. SQL that needs
+the clinic calls `ctx.the_clinic_id()`. Python that needs the id calls `get_installation_clinic_id(db)` once at start-up
+(or lets the DTO default fill it). A new test never inserts a second clinic.
+
+### 10.7 Infrastructure done in ST-F (`infra/`)
+
+* `infra/.env.example` documents `PEMA_CLINIC_NAME` (default `Pema Clinic`) and the optional `PEMA_CLINIC_ID` (UUID,
+  empty = generated once). `docker-compose.yml` passes both to `migrate` and (through `x-backend-env`) to `api` and
+  `worker`; an empty `PEMA_CLINIC_ID` means "unset" (the migration and `Settings` both read empty as unset).
+* `infra/scripts/migrate.sh`, after `alembic upgrade heads`, checks that `clinic.clinic` holds exactly one row, prints
+  `migrate: clinic '<name>' (id <uuid>), exactly one row in clinic.clinic`, and fails when the row count is not one or
+  `PEMA_CLINIC_ID` differs from the stored id. `restore-postgres.sh` makes the same count check; `backup-postgres.sh`
+  checks that `clinic.clinic` data is in the archive.
+* No Makefile target or script takes a clinic slug or `--clinic`. Webhook paths in infra docs are
+  `/api/v1/webhooks/zalo-bot/<account_id>` and `/api/v1/webhooks/zalo-bridge/<account_id>` (the new paths owned by
+  ST-C; the Caddy block on `zalo-bridge/*` is unchanged).
+* A second clinic is a second stack (own `.env`, secrets, compose project, ports, database, Redis, domain, backups):
+  `infra/README.md`, "One system, one clinic".
+
+### 10.8 Integration state (ST-G1: merge of ST-B, ST-C, ST-E, ST-F and clean-up)
+
+* One migration head, `st_0009_single_tenant`; `alembic upgrade heads` on an empty database leaves exactly one row in
+  `clinic.clinic` (`test_the_migration_chain_has_one_head` does not name the head).
+* Removed from `pema/core/db.py`: `session(clinic_id)` argument, `system_session`, `resolve_clinic`,
+  `list_active_clinic_ids`. Removed "which clinics" callables: `RuntimeSettingsSnapshot.start_refresh_loop(clinic_ids)`
+  (now `start_refresh_loop(interval_s=...)`, it refreshes the installation clinic it was given by `refresh`),
+  `KbAvailabilitySnapshot(store, clinic_ids)` (now `KbAvailabilitySnapshot(store)`), `DefaultMcpManager(clinic_ids=...)`,
+  `installation_clinic_ids()` and `Runtime.clinic_ids()` of the composition root. `RuntimeSettingsSnapshot` holds one
+  set of rows; the `ContextVar` that picked a clinic for a synchronous read (`use_settings_clinic`,
+  `set_settings_clinic`, `current_settings_clinic`) is gone, nothing sets a "current clinic" per task or request.
+* **Kept on purpose, "installation id"**: the `clinic_id` argument of the stores and ports (`AccountStore`, `AgentStore`,
+  `ConversationStore`, `KnowledgeStore`, `RuntimeSettingsStore` and `RuntimeSettingsSnapshot.refresh/set/delete`,
+  `update_llm_settings` and the other settings writers, MCP stores, `ThreadLock`, ...), the `clinic_id` fields of
+  `PolicyContext`, `ToolContext`, `AccountConfig`, `AgentProfile`, `ScheduledJob`, `McpPolicy`, `UserSummary`, `ToolScope`
+  and the `clinic_id` column of every table. Removing them touches the contract of several packages and every test
+  fixture at once for no behavioural gain; callers pass the installation id (`get_installation_clinic_id(db)`, or the
+  DTO default). A new store may omit the argument and read `installation_clinic_id()`.
+* Webhooks: `POST /api/v1/webhooks/zalo-bot/{account_id}` and `POST /api/v1/webhooks/zalo-bridge/{account_id}`; the
+  bridge `.env.example`, Caddyfile, `infra/README.md` and the Ubuntu guide use the same paths. `openapi.json` and
+  `frontend/src/lib/api/schema.d.ts` are regenerated (`make openapi types`); `LoginRequest` is e-mail + password.
+* Live updates (`GET /api/v1/events`, presence) are in the backend since ST-R (section 11); `GET /api/v1/staff/assignable`
+  since ST-S (section 10.9). The frontend mock serves all of them and `mock/contract.test.ts` has no pending list left.
+* New closed-loop tests: `tests/integration/test_loop_single_tenant.py` (real login with e-mail and password only, then
+  `/me` and refresh; two Zalo bot accounts of the one clinic answer their own customers independently, each with its own
+  webhook secret). The harness `pema.composition.testing.open_loop` takes `extra_accounts`.
+
+### 10.9 Assignable staff and the one assignee check (ST-S)
+
+Route, `openapi.json` and `schema.d.ts` regenerated (`make openapi types`); the contract change is additive (one new
+route, one new DTO), so it did not need package G.
+
+| Route | Who | Answer |
+|---|---|---|
+| `GET /api/v1/staff/assignable` (tag `staff`, operation `staff_list_assignable_staff`) | ANY signed-in staff member (a session is the only requirement; no permission code, so reception and `cs_staff` may call it; anonymous 401, agent/scheduler/patient actor 403) | `AssignableStaffOut[]` = `{id, name, role}`: ACTIVE staff of the installation with an assignable role, A to Z by name (case-insensitive), ties by id. Never an e-mail, phone, hash, last sign-in or locked account. 60 calls per minute per user (429 `rate_limited`) |
+
+Decisions:
+
+* **Assignable roles** (`pema.clinic.rbac.ASSIGNABLE_ROLES`, derived from the permission matrix, not a second list): the
+  staff roles that hold `conversation.reply` or `crm_task.resolve` = owner, manager, doctor, cs_staff. Reception is out
+  (no Inbox, no CRM queue: an item handed to them would sit unseen) and so is `patient`. A role that gains or loses
+  those permissions follows automatically.
+* **Who may assign** stays the permission of each action: `conversation.reply` (conversation `assigned_user_id`),
+  `crm_task.resolve` (`owner_user_id`), `patient.write` (`doctor_id`, `cs_owner_id`). Since ST-S a staff member may hand
+  work to a colleague, not only to themselves; no role may assign to a locked user, to reception or from another clinic.
+* **One check on write** (`pema.clinic.actions.assignees.load_assignable_user`): the target must exist in the
+  installation, be active and hold an assignable role; a caller may only NARROW the roles (treating doctor: doctor or
+  owner; CSKH owner: cs_staff, manager or owner). Every refusal is a 422 `validation_failed` with the same message for
+  an unknown id, a locked user and a wrong role, so the answer cannot be used to probe accounts.
+* **Audit** (same transaction, ids only): `conversation.update` adds `assignee_from`/`assignee_to`, `crm_task.resolve`
+  adds `owner_from`/`owner_to`, `patient.create`/`patient.update` add `doctor_id_from/_to`, `cs_owner_id_from/_to`. The
+  actor (id, role) and the entity are the existing columns.
+* Live events: the writes emit what ST-R already emits (section 11), the assignee check does not change that.
+  `PATCH /conversations/{id}` that assigns a colleague publishes `inbox.changed` with the conversation id (after the commit,
+  so a refused 422 assignee publishes nothing); resolving a task publishes `tasks.changed`. Tests:
+  `tests/live/test_events_route.py::test_handing_a_conversation_to_a_colleague_reaches_the_colleagues_stream` and
+  `test_a_refused_assignee_announces_nothing`.
+* Security entries: `SECURITY-REVIEW-AI01` SEC-60 to SEC-63.
+
+## 11. Live updates and presence (package ST-R)
+
+New package `pema.live` (`apps/api/pema/live/`) and DTOs in `pema_contracts.live`. No change to a table or a migration.
+
+### 11.1 HTTP
+
+| Route | Notes |
+|---|---|
+| `GET /api/v1/events` (tag `live`, operation `live_stream_events`) | `text/event-stream`, staff session cookie required (401 without). Default `message` event, `data` = `LiveEvent` JSON `{"type", "id"}`. First frame `retry: 3000`, then a comment `: keep-alive` every 15 s since the last write; an event the person may not read writes nothing (SEC-55). Headers `Cache-Control: no-cache, no-transform`, `X-Accel-Buffering: no`. 429 `rate_limited` past 5 streams per person (200 per API process), 503 `channel_unavailable` while the bus is down (the FE then polls). Re-authorised every 15 s; ends with the session. |
+| `POST /api/v1/conversations/{conversation_id}/presence` | body `PresenceBeat` `{"state": "viewing" or "replying"}`, 204. Needs the right to read the conversation (403, 404 for a conversation that does not exist or is outside a doctor's scope). Entry TTL 30 s, FE beats every 15 s. 204 also when Redis is down. At most 120 beats plus leave calls per person per 60 s: past it the call answers 204 and is ignored (SEC-54). |
+| `DELETE /api/v1/conversations/{conversation_id}/presence` | 204, same authorization. |
+| `ConversationSummary.viewers` (list, detail, patch) | `[PresenceViewer {user_id, name, state}]`, the caller excluded, empty when presence is unavailable. |
+
+`LiveEventType`: `inbox.changed`, `tasks.changed`, `review.changed`, `presence.changed`. `id` is the conversation, task or review item, or null. **No payload ever carries message text, names, phones or any other PII.**
+
+Deviation from the first design note (agreed rule: the FE's existing shape wins): the heartbeat is `POST` (not `PUT`) with body key `state` (not `mode`), and `PresenceViewer` has `state`.
+
+### 11.2 Python surface
+
+* `pema.live.bus`: `LiveEventBus` Protocol (`publish`, `listen`), `InMemoryLiveEventBus` (tests, with `fail_publish` / `fail_listen` switches), `channel_name(clinic_id)` = `pema:live:<clinic_id>`, `encode_event` / `decode_event`. `pema.live.redis_bus.RedisLiveEventBus` is the Redis adapter.
+* `pema.live.emit_live(type, id=None)`: the ONE call business code makes, AFTER the commit; synchronous, never raises, no-op when no publisher is installed. `install_live_publisher` is called by `build_runtime` (both processes). Same `(type, id)` within 200 ms is sent once.
+* `pema.live.hub.LiveHub`: one bus subscription per API process, fan-out to the open streams, the per-person and per-process caps. `pema.live.sse.event_stream`: the stream body.
+* `pema.live.presence`: `PresenceStore` Protocol, `RedisPresenceStore`, `InMemoryPresenceStore`, `PresenceService` (never raises for a store failure; announces `presence.changed` when the set of viewers changes and once more after the last heartbeat expired).
+* `Runtime.live` (`LiveServices`) and `app.state.live`; `ApiLifecycle.start` starts the hub.
+* Where events are emitted: `ClinicAgentFacingActions.record_inbound_message` (not for a duplicate), `record_outbound_message`, `create_review_item` (review and conversation), `conversations.update_conversation` / `mark_conversation_read` / `send_message`, `outbound.deliver_queued_message`, `review_items.approve/reject/escalate`, `crm_tasks.resolve_task` / `create_activity`, `appointments.create_appointment` (when it links a task), `CrmRulesRunner.run_clinic` (tasks created or superseded). A new write site of the Inbox, the review queue or the tasks must call `emit_live` after its commit.
+* import-linter: `pema.live` is listed among the packages that may not import `pema.clinic.models`, `domain`, `rbac`, `audit`, `crm_rules` and among those that may not import `pema.api`, `pema.workers`, `pema.bootstrap`.
+
+### 11.3 Tests
+
+`apps/api/tests/live/` (bus, publisher, hub, stream, presence, routes; real Redis in `test_live_redis.py`) and `tests/integration/test_loop_live_events.py` (real API and worker over a real Redis).

@@ -39,7 +39,11 @@ import mode.caddy
 {$PEMA_PUBLIC_DOMAIN:localhost} {
 	import pema_tls
 
-	encode zstd gzip
+	# Compression never touches the live-update stream: a gzip/zstd writer holds bytes back until a block is
+	# full, and the browser would see events late or in a lump. (/api/v1/events is a server-sent events stream:
+	# no body ceiling, no response timeout in this file, `flush_interval -1` in `to_api` pushes every write.)
+	@compressible not path /api/v1/events
+	encode @compressible zstd gzip
 
 	header {
 		# hide what runs behind (Caddy, Next.js)
@@ -72,7 +76,8 @@ import mode.caddy
 	}
 
 	# The bridge posts its events to the API over the compose network (http://api:8000), never through here. It
-	# authenticates with an HMAC, but there is no reason to leave the route reachable from the internet.
+	# authenticates with an HMAC, but there is no reason to leave the route reachable from the internet. The path
+	# is /api/v1/webhooks/zalo-bridge/<account_id> (one installation = one clinic: no clinic segment).
 	handle /api/v1/webhooks/zalo-bridge/* {
 		respond "Not found" 404
 	}

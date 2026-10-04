@@ -25,7 +25,7 @@ CAI_DAT = CaiDatIngest(tran_lan_thu=2, co_doan_toi_da=1200, chong_lan=10, han_ms
 
 
 async def xu_ly(kb: KbHarness, tmp_path: Path, id_: str) -> KbSource:
-    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=CAI_DAT).xu_ly_mot_vong(kb.clinic_id)
+    await KbIngestWorker(kb.db, data_dir=tmp_path, cai_dat=CAI_DAT).xu_ly_mot_vong()
     async with kb.session() as s:
         n = await lay_nguon(s, kb.clinic_id, id_)
     assert n is not None

@@ -6,11 +6,13 @@
 import { useMemo, useRef, useState, type FormEvent } from "react";
 
 import { SelectMenu, type SelectOption } from "@/components/admin/shared/select-menu";
+import { AssigneeStatus } from "@/components/ops/assignee-status";
 import { FilterChip, Field, Notice, PrimaryButton, SecondaryButton } from "@/components/ops/ops-ui";
 import { Sheet } from "@/components/ops/sheet";
 import { useToast } from "@/components/ops/toast";
 import type { Schemas } from "@/lib/api";
 import { ApiError, errorMessage, http, newIdempotencyKey, unwrap } from "@/lib/api/client";
+import { OWNER_ME, ownerIdFor, ownerOptions } from "@/lib/ops/assignee-options";
 import {
   channelOfTask,
   defaultNoteFor,
@@ -21,6 +23,7 @@ import {
 import { localInputToIso } from "@/lib/ops/format";
 import { CHANNEL_LABEL, OUTCOME_LABEL, PRIORITY_LABEL, RULE_LABEL } from "@/lib/ops/labels";
 import { useSession } from "@/lib/session/session-context";
+import { useAssignableStaff } from "@/lib/staff/use-assignable-staff";
 
 type CrmTask = Schemas["CrmTaskOut"];
 type CrmChannel = Schemas["CrmChannel"];
@@ -74,21 +77,29 @@ export function ResolveTaskSheet({
     bookingStart: "",
   });
   const [durationMin, setDurationMin] = useState("45");
-  const [keepOwner, setKeepOwner] = useState(false);
+  const {
+    staff,
+    loading: staffLoading,
+    error: staffError,
+    reload: reloadStaff,
+  } = useAssignableStaff();
+  // "me" (default), "keep" (the current owner stays) or the id of a colleague from `staff/assignable`.
+  const [ownerValue, setOwnerValue] = useState(OWNER_ME);
   const [priority, setPriority] = useState<string>(task.priority);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   const patch = (change: Partial<ResolveForm>) => setForm((f) => ({ ...f, ...change }));
 
-  const ownerOptions = useMemo<SelectOption[]>(
-    () => [
-      { value: "me", label: `Tôi (${user.display_name})` },
-      ...(task.owner_user_id && task.owner_user_id !== user.id
-        ? [{ value: "keep", label: `Giữ nguyên: ${task.owner_name ?? "người phụ trách hiện tại"}` }]
-        : []),
-    ],
-    [task.owner_user_id, task.owner_name, user.id, user.display_name],
+  const ownerChoices = useMemo<SelectOption[]>(
+    () =>
+      ownerOptions({
+        me: user,
+        currentId: task.owner_user_id,
+        currentName: task.owner_name,
+        staff,
+      }),
+    [user, task.owner_user_id, task.owner_name, staff],
   );
 
   async function submit(e: FormEvent) {
@@ -100,7 +111,7 @@ export function ResolveTaskSheet({
     }
     setBusy(true);
     setError("");
-    const owner = keepOwner && task.owner_user_id ? task.owner_user_id : user.id;
+    const owner = ownerIdFor(ownerValue, user, task.owner_user_id) ?? user.id;
     const booking =
       form.outcome === "booked"
         ? {
@@ -249,10 +260,11 @@ export function ResolveTaskSheet({
             <SelectMenu
               id="resolve-owner"
               size="md"
-              value={keepOwner ? "keep" : "me"}
-              options={ownerOptions}
-              onChange={(value) => setKeepOwner(value === "keep")}
+              value={ownerValue}
+              options={ownerChoices}
+              onChange={setOwnerValue}
             />
+            <AssigneeStatus loading={staffLoading} error={staffError} onRetry={reloadStaff} />
           </Field>
           <Field label="Ưu tiên" htmlFor="resolve-priority">
             <SelectMenu

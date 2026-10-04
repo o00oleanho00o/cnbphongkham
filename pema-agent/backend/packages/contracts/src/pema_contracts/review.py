@@ -18,6 +18,7 @@ from uuid import UUID
 from pydantic import Field
 
 from pema_contracts.common import ApiModel, VnDatetime
+from pema_contracts.installation import installation_clinic_id
 
 
 class ReviewKind(StrEnum):
@@ -96,7 +97,7 @@ class ReviewItemCreate(ApiModel):
     ``job_id`` returns the first item."""
 
     job_id: str
-    clinic_id: UUID
+    clinic_id: UUID = Field(default_factory=installation_clinic_id)
     patient_ref: str | None = Field(default=None, description="Patient code, never a name or phone.")
     conversation_ref: str | None = Field(default=None, description="clinic.conversation id as string.")
     kind: ReviewKind

@@ -3,7 +3,9 @@
 import { memo } from "react";
 
 import { Badge, InitialAvatar } from "@/components/admin/shared/ui-bits";
+import { PresenceLine } from "@/components/ops/inbox/presence-line";
 import type { Schemas } from "@/lib/api";
+import { viewersOf } from "@/lib/live/live-types";
 import { formatDateTime } from "@/lib/ops/format";
 import { CHANNEL_KIND_LABEL, CONVERSATION_STATUS_LABEL } from "@/lib/ops/labels";
 
@@ -59,6 +61,7 @@ function ConversationRowView({ conversation: c, selected, onOpen }: RowProps) {
             )}
             <span className="text-[11px] text-ink-soft">{CHANNEL_KIND_LABEL[c.channel]}</span>
           </span>
+          <PresenceLine viewers={viewersOf(c)} className="mt-1 max-w-full" />
         </span>
         {(c.unread_count ?? 0) > 0 && (
           <span

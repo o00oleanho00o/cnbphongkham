@@ -198,10 +198,7 @@ async def test_bridge_qr_deps_dich_trang_thai_bridge_thanh_su_kien_qr_scanned_ex
     async def no_sleep(_: float) -> None:
         await asyncio.sleep(0)
 
-    async def clinic_ref(clinic_id: UUID) -> str:
-        return str(clinic_id)
-
-    deps = bridge_qr_deps(bridge, attach, clinic_ref, sleep=no_sleep)
+    deps = bridge_qr_deps(bridge, attach, sleep=no_sleep)
     manager = QrLoginManager(deps)
     await manager.start_qr_login(CLINIC, "acc-b")
 
@@ -223,10 +220,7 @@ async def test_bridge_qr_deps_bridge_bao_declined_thi_giu_trang_thai_declined() 
     async def no_sleep(_: float) -> None:
         await asyncio.sleep(0)
 
-    async def clinic_ref(clinic_id: UUID) -> str:
-        return str(clinic_id)
-
-    manager = QrLoginManager(bridge_qr_deps(bridge, attach, clinic_ref, sleep=no_sleep))
+    manager = QrLoginManager(bridge_qr_deps(bridge, attach, sleep=no_sleep))
     await manager.start_qr_login(CLINIC, "acc-d")
 
     await doi_cho_den_khi(lambda: status(manager, "acc-d") == "declined", WaitOptions(mo_ta="declined"))

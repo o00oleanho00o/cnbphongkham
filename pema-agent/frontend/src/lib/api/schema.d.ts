@@ -1457,6 +1457,264 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/care/admin/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Demotions, unresponsive patients, red flags, on-call used */
+        get: operations["care_list_alerts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/care/admin/matrix": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Depth and autonomy matrix, with the pending-approval badge */
+        get: operations["care_get_matrix"];
+        /** Save the cells of the matrix (the badge goes back to pending) */
+        put: operations["care_save_matrix"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/care/admin/matrix/approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clear or restore the pending-doctor-approval badge */
+        post: operations["care_approve_matrix"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/care/admin/on-call": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The 24/7 on-call contacts */
+        get: operations["care_list_on_call"];
+        put?: never;
+        /** Add an on-call contact */
+        post: operations["care_create_on_call"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/care/admin/on-call/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Change or switch off an on-call contact */
+        put: operations["care_update_on_call"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/care/admin/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Skills, shift and capacity of every staff member */
+        get: operations["care_list_staff_profiles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/care/admin/staff/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Change the skills, shift and capacity of one staff member */
+        put: operations["care_update_staff_profile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/care/admin/timing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** SLA and chain length, send window */
+        get: operations["care_get_timing"];
+        /** Change the SLA and the chain length */
+        put: operations["care_save_timing"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/care/handoffs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Handoffs waiting for a person */
+        get: operations["care_list_handoffs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/care/handoffs/{patient_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Take the conversation (HANDOFF_ROUTING to STAFF) */
+        post: operations["care_accept_handoff"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/care/handoffs/{patient_id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline with a reason, optionally suggesting a colleague */
+        post: operations["care_decline_handoff"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/care/patients/{patient_id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Return the conversation to the agent (STAFF to AUTO), with a note and an optional lower level */
+        post: operations["care_release_to_agent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/care/patients/{patient_id}/release/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The consequence of a release, in words, before it is done */
+        post: operations["care_preview_release"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/care/patients/{patient_id}/tell-agent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A free-text instruction for the agent of this patient (saved as care memory, source staff) */
+        post: operations["care_tell_agent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/care/patients/{patient_id}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What the care agent of one patient did, holds and waits for */
+        get: operations["care_patient_timeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/conversations": {
         parameters: {
             query?: never;
@@ -1505,6 +1763,27 @@ export interface paths {
         /** Send a manual staff reply through the channel */
         post: operations["conversations_send_message"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/{conversation_id}/presence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Presence heartbeat: I am looking at or answering this conversation
+         * @description Sent every 15 seconds while the conversation is open; an entry expires after 30 seconds. A WARNING shown to colleagues in `viewers`, never a lock: it does not block sending. Needs the right to read the conversation (403, or 404 when it is not visible). Answers 204 also when the presence store is unavailable.
+         */
+        post: operations["conversations_touch_presence"];
+        /** Presence: I left this conversation */
+        delete: operations["conversations_leave_presence"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1590,6 +1869,26 @@ export interface paths {
         put?: never;
         /** Log a contact attempt and close or reschedule the task */
         post: operations["crm_resolve_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Live updates (server-sent events)
+         * @description Each event is the default `message` event whose data is a `LiveEvent` JSON. It says that something changed, never what: refetch the list you show. A comment line every 15 seconds keeps the connection open. The stream ends when the session ends; the browser reconnects by itself. 503 while the live bus is down (the screen then polls), 429 past 5 streams per person.
+         */
+        get: operations["live_stream_events"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1786,7 +2085,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/webhooks/zalo-bot/{clinic_slug}/{account_id}": {
+    "/api/v1/staff/assignable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Colleagues a task or a conversation can be handed to
+         * @description Any signed-in staff member (no admin permission). ACTIVE staff of the clinic whose role can work conversations and CRM tasks (owner, manager, doctor, cs_staff; not reception), A to Z by name. Only `id`, `name` and `role`: never an e-mail, a phone, a hash, the last sign-in or a locked account. Limited to 60 calls per minute per user. The server checks the same rule again when an assignee is saved, so this list is a convenience, not the authority.
+         */
+        get: operations["staff_list_assignable_staff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/webhooks/zalo-bot/{account_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1803,7 +2122,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/webhooks/zalo-bridge/{clinic_slug}/{account_id}": {
+    "/api/v1/webhooks/zalo-bridge/{account_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2239,6 +2558,22 @@ export interface components {
             /** Version */
             version: number;
         };
+        /**
+         * AssignableStaffOut
+         * @description A colleague a task or a conversation can be handed to (``GET /staff/assignable``, every signed-in staff
+         *     member may read it). The minimum a picker needs: no e-mail, phone, last sign-in or lock state (locked
+         *     accounts are never listed). ``role`` is only one of the roles that can handle conversations and tasks.
+         */
+        AssignableStaffOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            role: components["schemas"]["Role"];
+        };
         /** AuditLogOut */
         AuditLogOut: {
             /**
@@ -2268,6 +2603,32 @@ export interface components {
             /** Request Id */
             request_id?: string | null;
         };
+        /** AutonomyMatrixOut */
+        AutonomyMatrixOut: {
+            /** Appointment Confirm L1 */
+            appointment_confirm_l1: boolean;
+            /** Confidence Threshold */
+            confidence_threshold: number;
+            /** Rules */
+            rules: components["schemas"]["AutonomyRuleOut"][];
+        };
+        /** AutonomyRuleOut */
+        AutonomyRuleOut: {
+            /** Action Type */
+            action_type: string;
+            /** D3 Enabled */
+            d3_enabled: boolean;
+            /**
+             * Hard Human
+             * @description Always a person; the cell cannot be edited.
+             */
+            hard_human: boolean;
+            /**
+             * N To L2
+             * @description Unchanged approvals before L2; null: none.
+             */
+            n_to_l2?: number | null;
+        };
         /** Body_admin_kb_upload_kb_file_source */
         Body_admin_kb_upload_kb_file_source: {
             /**
@@ -2292,6 +2653,160 @@ export interface components {
          * @enum {string}
          */
         BridgeState: "not_configured" | "awaiting_qr" | "connected" | "blocked" | "down";
+        /**
+         * CareAlertKind
+         * @enum {string}
+         */
+        CareAlertKind: "demotion" | "unresponsive" | "red_flag" | "on_call_used";
+        /** CareAlertListOut */
+        CareAlertListOut: {
+            /** Items */
+            items: components["schemas"]["CareAlertOut"][];
+        };
+        /** CareAlertOut */
+        CareAlertOut: {
+            /**
+             * At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            at: string;
+            /** Code */
+            code?: string | null;
+            /** Id */
+            id: string;
+            kind: components["schemas"]["CareAlertKind"];
+            /** Patient Id */
+            patient_id?: string | null;
+            /** Patient Name */
+            patient_name?: string | null;
+        };
+        /** CareApprovalIn */
+        CareApprovalIn: {
+            /**
+             * Approved
+             * @description True clears the badge, false puts it back.
+             */
+            approved: boolean;
+            /** Version */
+            version: number;
+        };
+        /** CareAutonomyOut */
+        CareAutonomyOut: {
+            base_level: components["schemas"]["CareLevel"];
+            effective_level: components["schemas"]["CareLevel"];
+            override_level?: components["schemas"]["CareLevel"] | null;
+            /** Override Until */
+            override_until?: string | null;
+            /** Paused */
+            paused: boolean;
+        };
+        /** CareControlOut */
+        CareControlOut: {
+            /** Release Note */
+            release_note?: string | null;
+            /**
+             * Since
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            since: string;
+            /** Staff Owner Id */
+            staff_owner_id?: string | null;
+            /** Staff Owner Name */
+            staff_owner_name?: string | null;
+            state: components["schemas"]["CareControlState"];
+        };
+        /**
+         * CareControlState
+         * @enum {string}
+         */
+        CareControlState: "AUTO" | "HANDOFF_ROUTING" | "STAFF";
+        /**
+         * CareDepth
+         * @description How deep a question goes: D1 administrative ... D5 red flag (PLAN-AI01-M section 6).
+         * @enum {string}
+         */
+        CareDepth: "D1" | "D2" | "D3" | "D4" | "D5";
+        /**
+         * CareLevel
+         * @description Autonomy level of the agent: L0 drafts only, L1 approved templates, L2 plus KB answers.
+         * @enum {string}
+         */
+        CareLevel: "L0" | "L1" | "L2";
+        /**
+         * CareMatrixIn
+         * @description Cells of the matrix. Saving sets ``pending_doctor_approval`` again (whoever edits).
+         */
+        CareMatrixIn: {
+            autonomy: components["schemas"]["AutonomyMatrixOut"];
+            handoff: components["schemas"]["HandoffMatrixOut"];
+            /** Version */
+            version: number;
+        };
+        /** CareMatrixOut */
+        CareMatrixOut: {
+            autonomy: components["schemas"]["AutonomyMatrixOut"];
+            /** Can Approve */
+            can_approve: boolean;
+            /** Can Edit */
+            can_edit: boolean;
+            handoff: components["schemas"]["HandoffMatrixOut"];
+            /**
+             * Pending Doctor Approval
+             * @description The badge: the numbers are defaults until a doctor approves.
+             */
+            pending_doctor_approval: boolean;
+            /** Version */
+            version: number;
+        };
+        /** CareTimingIn */
+        CareTimingIn: {
+            /** Max Candidates */
+            max_candidates: number;
+            oncall_direct_from_depth: components["schemas"]["CareDepth"];
+            /** Sla Normal Minutes */
+            sla_normal_minutes: number;
+            /** Sla Urgent Minutes */
+            sla_urgent_minutes: number;
+            /** Version */
+            version: number;
+        };
+        /** CareTimingOut */
+        CareTimingOut: {
+            /** Can Edit */
+            can_edit: boolean;
+            /**
+             * Max Candidates
+             * @description Chain length including the on-call contact.
+             */
+            max_candidates: number;
+            oncall_direct_from_depth: components["schemas"]["CareDepth"];
+            /** Pending Doctor Approval */
+            pending_doctor_approval: boolean;
+            /** Send Window End */
+            send_window_end?: string | null;
+            /**
+             * Send Window Start
+             * @description Read only here: edited in the channel settings.
+             */
+            send_window_start?: string | null;
+            /** Sla Normal Minutes */
+            sla_normal_minutes: number;
+            /** Sla Urgent Minutes */
+            sla_urgent_minutes: number;
+            /** Time Zone */
+            time_zone: string;
+            /** Version */
+            version: number;
+        };
+        /**
+         * CareUrgency
+         * @enum {string}
+         */
+        CareUrgency: "normal" | "urgent";
         /**
          * ChangePasswordRequest
          * @description A signed-in user changes their OWN password (``POST /auth/password``). The floor of the new password
@@ -2487,6 +3002,11 @@ export interface components {
             unread_count: number;
             /** Version */
             version: number;
+            /**
+             * Viewers
+             * @description Colleagues who have this conversation open now, the caller excluded. A warning, not a lock; empty when presence is unavailable.
+             */
+            viewers?: components["schemas"]["PresenceViewer"][];
         };
         /**
          * ConversationStatus
@@ -2526,6 +3046,11 @@ export interface components {
             unread_count: number;
             /** Version */
             version: number;
+            /**
+             * Viewers
+             * @description Colleagues who have this conversation open now, the caller excluded. A warning, not a lock; empty when presence is unavailable.
+             */
+            viewers?: components["schemas"]["PresenceViewer"][];
         };
         /** ConversationUpdate */
         ConversationUpdate: {
@@ -2785,6 +3310,17 @@ export interface components {
             /** Turns */
             turns: number;
         };
+        /** DepthRowOut */
+        DepthRowOut: {
+            from_depth: components["schemas"]["CareDepth"];
+            signal: components["schemas"]["DepthSignal"];
+        };
+        /**
+         * DepthSignal
+         * @description Signals of the handoff skill that have their own "hand off from depth X" cell.
+         * @enum {string}
+         */
+        DepthSignal: "default" | "vip" | "complex_history" | "past_complaint" | "pending_doctor_work" | "post_procedure" | "out_of_hours" | "asks_for_human" | "negative_sentiment" | "repeated_question" | "answer_rejected" | "urgent";
         /** EpisodeOut */
         EpisodeOut: {
             /** Closed On */
@@ -2880,6 +3416,122 @@ export interface components {
          * @enum {string}
          */
         Gender: "female" | "male" | "other" | "unknown";
+        /** HandoffDeclineIn */
+        HandoffDeclineIn: {
+            /**
+             * Reason
+             * @description Free text, kept for the routing, not for the patient.
+             */
+            reason: string;
+            /**
+             * Suggest User Id
+             * @description Another colleague who should take it.
+             */
+            suggest_user_id?: string | null;
+        };
+        /** HandoffListOut */
+        HandoffListOut: {
+            /** Items */
+            items: components["schemas"]["HandoffWaitingOut"][];
+        };
+        /** HandoffMatrixOut */
+        HandoffMatrixOut: {
+            /** Confidence Threshold */
+            confidence_threshold: number;
+            /** Post Procedure Window Hours */
+            post_procedure_window_hours: number;
+            /** Repeat Question Threshold */
+            repeat_question_threshold: number;
+            /** Rows */
+            rows: components["schemas"]["DepthRowOut"][];
+            unverified_max_depth: components["schemas"]["CareDepth"];
+        };
+        /** HandoffResultOut */
+        HandoffResultOut: {
+            /**
+             * Outcome
+             * @description ``accepted`` once somebody took it, else null.
+             */
+            outcome?: string | null;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            state: components["schemas"]["CareControlState"];
+        };
+        /** @enum {string} */
+        HandoffScope: "mine" | "all";
+        /**
+         * HandoffWaitingOut
+         * @description One routing round that is waiting for a person.
+         */
+        HandoffWaitingOut: {
+            /** Can Accept */
+            can_accept: boolean;
+            /** Can Decline */
+            can_decline: boolean;
+            /** Chain Length */
+            chain_length: number;
+            /** Confidence */
+            confidence: number;
+            depth: components["schemas"]["CareDepth"];
+            /**
+             * Mine
+             * @description The caller is the person being asked now.
+             */
+            mine: boolean;
+            /**
+             * On Call Step
+             * @description The chain reached the 24/7 on-call contact.
+             */
+            on_call_step: boolean;
+            /**
+             * Opened At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            opened_at: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /**
+             * Patient Name
+             * @description Display name; staff-only information.
+             */
+            patient_name: string;
+            /**
+             * Position
+             * @description 1-based place of the asked person in the chain.
+             */
+            position: number;
+            /**
+             * Reason
+             * @description Code of the signal that decided (never patient text).
+             */
+            reason: string;
+            /** Required Skill */
+            required_skill?: string | null;
+            /**
+             * Sla Due At
+             * @description When the person asked now must answer by.
+             */
+            sla_due_at?: string | null;
+            /**
+             * Suggested By Name
+             * @description A colleague who suggested the person asked.
+             */
+            suggested_by_name?: string | null;
+            /**
+             * Summary
+             * @description PII-masked summary of the context, written by the agent.
+             */
+            summary: string;
+            urgency: components["schemas"]["CareUrgency"];
+        };
         /** HealthResponse */
         HealthResponse: {
             /**
@@ -3192,6 +3844,23 @@ export interface components {
             reason?: string | null;
         };
         /**
+         * LiveEvent
+         * @description The ``data`` of one server-sent event (default ``message`` event type).
+         */
+        LiveEvent: {
+            /**
+             * Id
+             * @description The changed object, or null for 'some of them'.
+             */
+            id?: string | null;
+            type: components["schemas"]["LiveEventType"];
+        };
+        /**
+         * LiveEventType
+         * @enum {string}
+         */
+        LiveEventType: "inbox.changed" | "tasks.changed" | "review.changed" | "presence.changed" | "handoff.changed" | "care.changed";
+        /**
          * LlmProviderKind
          * @description ``LLM_PROVIDER_KINDS`` of src/config/llm-provider-kind.ts.
          * @enum {string}
@@ -3286,10 +3955,11 @@ export interface components {
             /** Scopes */
             scopes?: string[];
         };
-        /** LoginRequest */
+        /**
+         * LoginRequest
+         * @description Sign-in of a staff member. One installation is one clinic (single tenant): no clinic field.
+         */
         LoginRequest: {
-            /** Clinic Slug */
-            clinic_slug: string;
             /** Email */
             email: string;
             /**
@@ -3432,6 +4102,31 @@ export interface components {
             /** Subject Id */
             subject_id: string;
         };
+        /** MemoryFactOut */
+        MemoryFactOut: {
+            /**
+             * Created At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            created_at: string;
+            /** Fact */
+            fact: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            source: components["schemas"]["MemorySourceOut"];
+            /** Valid Until */
+            valid_until?: string | null;
+        };
+        /**
+         * MemorySourceOut
+         * @enum {string}
+         */
+        MemorySourceOut: "patient" | "staff" | "doctor_edit";
         /**
          * MemoryWritePolicy
          * @enum {string}
@@ -3565,6 +4260,70 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** OnCallContactIn */
+        OnCallContactIn: {
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /** Owner */
+            owner: string;
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid To */
+            valid_to?: string | null;
+            /**
+             * Version
+             * @description Required to change an existing contact.
+             */
+            version?: number | null;
+            /** Zalo Number */
+            zalo_number: string;
+        };
+        /** OnCallContactOut */
+        OnCallContactOut: {
+            /** Active */
+            active: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Is Fixture
+             * @description A test number; the screen flags it as not a real contact.
+             */
+            is_fixture: boolean;
+            /** Owner */
+            owner: string;
+            /**
+             * Valid From
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            valid_from: string;
+            /** Valid To */
+            valid_to?: string | null;
+            /** Version */
+            version: number;
+            /**
+             * Zalo Number
+             * @description Staff-only (care.admin). Never logged and never sent to the model.
+             */
+            zalo_number: string;
+        };
+        /** OnCallListOut */
+        OnCallListOut: {
+            /**
+             * Chain Ends With On Call
+             * @description True while an active contact exists: the chain always ends at the 24/7 number.
+             */
+            chain_ends_with_on_call: boolean;
+            /** Items */
+            items: components["schemas"]["OnCallContactOut"][];
+        };
         /**
          * OnceAtInput
          * @description ``date`` + ``time`` in the schedule's time zone. The raw datetime string of the LLM is NOT accepted:
@@ -3592,6 +4351,30 @@ export interface components {
              * @constant
              */
             kind: "once";
+        };
+        /** OpenHandoffOut */
+        OpenHandoffOut: {
+            /** Confidence */
+            confidence: number;
+            /** Current Candidate Name */
+            current_candidate_name?: string | null;
+            depth: components["schemas"]["CareDepth"];
+            /**
+             * Opened At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            opened_at: string;
+            /** Reason */
+            reason: string;
+            /** Required Skill */
+            required_skill?: string | null;
+            /** Sla Due At */
+            sla_due_at?: string | null;
+            /** Summary */
+            summary: string;
+            urgency: components["schemas"]["CareUrgency"];
         };
         /**
          * OutboundMode
@@ -3742,6 +4525,44 @@ export interface components {
             /** Timeline */
             timeline?: components["schemas"]["TimelineEvent"][];
         };
+        /** PatientCareTimelineOut */
+        PatientCareTimelineOut: {
+            autonomy: components["schemas"]["CareAutonomyOut"];
+            /**
+             * Can Release
+             * @description The conversation is in STAFF and the caller may return it.
+             */
+            can_release: boolean;
+            /** Can Tell Agent */
+            can_tell_agent: boolean;
+            control: components["schemas"]["CareControlOut"];
+            /** Entries */
+            entries: components["schemas"]["TimelineEntryOut"][];
+            /**
+             * Max Override Days
+             * @description Longest time-boxed override a release may set.
+             */
+            max_override_days: number;
+            /** Memory */
+            memory: components["schemas"]["MemoryFactOut"][];
+            open_handoff?: components["schemas"]["OpenHandoffOut"] | null;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** Patient Name */
+            patient_name: string;
+            /** Paused Reminders */
+            paused_reminders: components["schemas"]["PausedReminderOut"][];
+            /** Pending Drafts */
+            pending_drafts: components["schemas"]["PendingDraftOut"][];
+            /**
+             * Release Levels
+             * @description Levels a release may set: a release only LOWERS the level, never raises it.
+             */
+            release_levels: components["schemas"]["CareLevel"][];
+        };
         /** PatientCreate */
         PatientCreate: {
             /** Birth Date */
@@ -3822,11 +4643,55 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** PausedReminderOut */
+        PausedReminderOut: {
+            /**
+             * Due At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            due_at: string;
+            /** Event Kind */
+            event_kind: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Paused At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            paused_at: string;
+            /** Prepared Text */
+            prepared_text?: string | null;
+        };
+        /** PendingDraftOut */
+        PendingDraftOut: {
+            /**
+             * Created At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            created_at: string;
+            kind: components["schemas"]["ReviewKind"];
+            /** Requires Doctor */
+            requires_doctor: boolean;
+            /**
+             * Review Item Id
+             * Format: uuid
+             */
+            review_item_id: string;
+        };
         /**
          * Permission
          * @enum {string}
          */
-        Permission: "patient.read" | "patient.write" | "patient.read_360" | "consent.read" | "consent.write" | "appointment.read" | "appointment.write" | "appointment.check_in" | "session.write" | "crm.task.read" | "crm.task.resolve" | "crm.activity.write" | "conversation.read" | "conversation.reply" | "review.read" | "review.decide" | "review.decide_clinical" | "kb.read" | "kb.manage" | "admin.rules" | "admin.channels" | "admin.kill_switch" | "admin.logs" | "admin.accounts" | "admin.users.read" | "admin.users" | "admin.agents" | "admin.model" | "admin.tools" | "admin.schedules" | "admin.mcp" | "admin.usage" | "admin.policy" | "agent.submit";
+        Permission: "patient.read" | "patient.write" | "patient.read_360" | "consent.read" | "consent.write" | "appointment.read" | "appointment.write" | "appointment.check_in" | "session.write" | "crm.task.read" | "crm.task.resolve" | "crm.activity.write" | "conversation.read" | "conversation.reply" | "review.read" | "review.decide" | "review.decide_clinical" | "kb.read" | "kb.manage" | "admin.rules" | "admin.channels" | "admin.kill_switch" | "admin.logs" | "admin.accounts" | "admin.users.read" | "admin.users" | "admin.agents" | "admin.model" | "admin.tools" | "admin.schedules" | "admin.mcp" | "admin.usage" | "admin.policy" | "care.read" | "care.act" | "care.admin" | "care.matrix" | "care.approve" | "agent.submit";
         /** PermissionsResponse */
         PermissionsResponse: {
             /** Permissions */
@@ -3881,6 +4746,35 @@ export interface components {
             profiles: components["schemas"]["PolicyProfile"][];
         };
         /**
+         * PresenceBeat
+         * @description Body of the heartbeat the browser sends every 15 seconds while a conversation is open.
+         */
+        PresenceBeat: {
+            state: components["schemas"]["PresenceState"];
+        };
+        /**
+         * PresenceState
+         * @enum {string}
+         */
+        PresenceState: "viewing" | "replying";
+        /**
+         * PresenceViewer
+         * @description A colleague who has the conversation open now (the caller is never in the list).
+         */
+        PresenceViewer: {
+            /**
+             * Name
+             * @description Display name of the staff member; staff-only information.
+             */
+            name: string;
+            state: components["schemas"]["PresenceState"];
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /**
          * ProactiveCapScope
          * @enum {string}
          */
@@ -3913,6 +4807,44 @@ export interface components {
          * @enum {string}
          */
         ReasoningEffort: "off" | "low" | "medium" | "high" | "xhigh";
+        /**
+         * ReleaseIn
+         * @description Return the conversation to the agent. ``level`` null keeps the agent's own level; a level needs
+         *     ``days`` (how long it applies) and must not be above the agent's own.
+         */
+        ReleaseIn: {
+            /** Days */
+            days?: number | null;
+            level?: components["schemas"]["CareLevel"] | null;
+            /**
+             * Note
+             * @description Handover note; PII is masked before it is stored.
+             * @default
+             */
+            note: string;
+        };
+        /** ReleasePreviewOut */
+        ReleasePreviewOut: {
+            /** Allowed */
+            allowed: boolean;
+            /**
+             * Consequence
+             * @description What the agent will do after the release (Vietnamese).
+             */
+            consequence: string;
+        };
+        /** ReleaseResultOut */
+        ReleaseResultOut: {
+            override_level?: components["schemas"]["CareLevel"] | null;
+            /** Override Until */
+            override_until?: string | null;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            state: components["schemas"]["CareControlState"];
+        };
         /**
          * ResetPasswordRequest
          * @description The owner sets a new password for ANOTHER staff account (``POST /admin/users/{user_id}/password``).
@@ -4200,6 +5132,36 @@ export interface components {
             expires_at: string;
             user: components["schemas"]["UserSummary"];
         };
+        /** ShiftIntervalOut */
+        ShiftIntervalOut: {
+            /**
+             * End
+             * @description An end earlier than the start means the shift ends the next morning.
+             */
+            end: string;
+            /** Start */
+            start: string;
+        };
+        /**
+         * ShiftOut
+         * @description Weekly shift of a person: a list of intervals per weekday (local clinic time).
+         */
+        ShiftOut: {
+            /** Fri */
+            fri: components["schemas"]["ShiftIntervalOut"][];
+            /** Mon */
+            mon: components["schemas"]["ShiftIntervalOut"][];
+            /** Sat */
+            sat: components["schemas"]["ShiftIntervalOut"][];
+            /** Sun */
+            sun: components["schemas"]["ShiftIntervalOut"][];
+            /** Thu */
+            thu: components["schemas"]["ShiftIntervalOut"][];
+            /** Tue */
+            tue: components["schemas"]["ShiftIntervalOut"][];
+            /** Wed */
+            wed: components["schemas"]["ShiftIntervalOut"][];
+        };
         /**
          * SourceCitation
          * @description A knowledge-base passage the draft relies on. AI drafts must carry at least one when the
@@ -4214,6 +5176,57 @@ export interface components {
             source_id: string;
             /** Title */
             title: string;
+        };
+        /** StaffCareProfileIn */
+        StaffCareProfileIn: {
+            /** Capacity */
+            capacity: number;
+            /** Languages */
+            languages: string[];
+            shift: components["schemas"]["ShiftOut"];
+            /** Skills */
+            skills: string[];
+            /**
+             * Version
+             * @description Optimistic lock: the version that was read.
+             */
+            version: number;
+        };
+        /** StaffCareProfileListOut */
+        StaffCareProfileListOut: {
+            /** Items */
+            items: components["schemas"]["StaffCareProfileOut"][];
+            /**
+             * Known Skills
+             * @description Skills the routing knows (suggestions for the editor).
+             */
+            known_skills: string[];
+        };
+        /** StaffCareProfileOut */
+        StaffCareProfileOut: {
+            /** Capacity */
+            capacity: number;
+            /** Languages */
+            languages: string[];
+            /**
+             * Load
+             * @description Conversations in STAFF state that the person owns now.
+             */
+            load: number;
+            /** Name */
+            name: string;
+            /** Role */
+            role: string;
+            shift: components["schemas"]["ShiftOut"];
+            /** Skills */
+            skills: string[];
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Version */
+            version: number;
         };
         /**
          * StaffUserCreate
@@ -4332,6 +5345,24 @@ export interface components {
          * @enum {string}
          */
         TaskStatus: "open" | "rescheduled" | "resolved" | "superseded";
+        /** TellAgentIn */
+        TellAgentIn: {
+            /**
+             * Instruction
+             * @description Free text; PII is masked before it is stored.
+             */
+            instruction: string;
+        };
+        /** TellAgentOut */
+        TellAgentOut: {
+            /**
+             * Memory Id
+             * Format: uuid
+             */
+            memory_id: string;
+            /** @default staff */
+            source: components["schemas"]["MemorySourceOut"];
+        };
         /** ThreadRow */
         ThreadRow: {
             /** Account Id */
@@ -4357,6 +5388,34 @@ export interface components {
             bot_enabled?: boolean | null;
             /** Display Name */
             display_name?: string | null;
+        };
+        /**
+         * TimelineEntryKind
+         * @enum {string}
+         */
+        TimelineEntryKind: "sent" | "reviewed" | "paused" | "control" | "autonomy";
+        /** TimelineEntryOut */
+        TimelineEntryOut: {
+            /** Actor Name */
+            actor_name?: string | null;
+            /**
+             * At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            at: string;
+            /**
+             * Code
+             * @description Machine code of the action; the FE words it.
+             */
+            code: string;
+            depth?: components["schemas"]["CareDepth"] | null;
+            /** Detail */
+            detail?: string | null;
+            /** Id */
+            id: string;
+            kind: components["schemas"]["TimelineEntryKind"];
         };
         /**
          * TimelineEvent
@@ -14158,6 +15217,1559 @@ export interface operations {
             };
         };
     };
+    care_list_alerts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareAlertListOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_get_matrix: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareMatrixOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_save_matrix: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CareMatrixIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareMatrixOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_approve_matrix: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CareApprovalIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareMatrixOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_list_on_call: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnCallListOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_create_on_call: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OnCallContactIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnCallContactOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_update_on_call: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OnCallContactIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnCallContactOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_list_staff_profiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffCareProfileListOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_update_staff_profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffCareProfileIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffCareProfileOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_get_timing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareTimingOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_save_timing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CareTimingIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareTimingOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_list_handoffs: {
+        parameters: {
+            query?: {
+                /** @description mine: asked of me now; all: every open round. */
+                scope?: components["schemas"]["HandoffScope"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoffListOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_accept_handoff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoffResultOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_decline_handoff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HandoffDeclineIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoffResultOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_release_to_agent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReleaseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReleaseResultOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_preview_release: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReleaseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReleasePreviewOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_tell_agent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TellAgentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TellAgentOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    care_patient_timeline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatientCareTimelineOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     conversations_list_conversations: {
         parameters: {
             query?: {
@@ -14541,6 +17153,176 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MessageOut"];
                 };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    conversations_touch_presence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PresenceBeat"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    conversations_leave_presence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Not authenticated. */
             401: {
@@ -15133,6 +17915,89 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    live_stream_events: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description text/event-stream of LiveEvent. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["LiveEvent"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -16363,12 +19228,94 @@ export interface operations {
             };
         };
     };
+    staff_list_assignable_staff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssignableStaffOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     webhooks_receive_zalo_bot_update: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                clinic_slug: string;
                 account_id: string;
             };
             cookie?: never;
@@ -16460,7 +19407,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                clinic_slug: string;
                 account_id: string;
             };
             cookie?: never;

@@ -2,7 +2,7 @@
 // Deviations:
 // - the SESSION STATE lives here in the bridge (the Python port is only a thin client of it);
 // - a class with injected deps instead of module-level state, so tests are independent;
-// - `getAccount(...).enabled` is gone: the success handler is `attach(accountId, clinicSlug, session)`,
+// - `getAccount(...).enabled` is gone: the success handler is `attach(accountId, session)`,
 //   which starts the listener and tells the API the new credential (`credential_updated`);
 // - superseded / timed-out sessions are ABORTED (AbortController) so zca-js stops asking Zalo for QR
 //   codes for an abandoned session; and a "declined" status is not overwritten by the abort error;
@@ -24,7 +24,6 @@ export type QrLoginStatus =
 type QrSession = {
   seq: number;
   status: QrLoginStatus;
-  clinicSlug: string;
   qrBase64?: string | undefined;
   error?: string | undefined;
   startedAt: number;
@@ -41,7 +40,7 @@ export type QrLoginDeps = {
     onEvent: (event: QrLoginEvent) => void,
     signal: AbortSignal,
   ) => Promise<ZaloSession>;
-  attach: (accountId: string, clinicSlug: string, session: ZaloSession) => Promise<void> | void;
+  attach: (accountId: string, session: ZaloSession) => Promise<void> | void;
   /** Re-login of a running account: kick the old listener first (Zalo allows one). */
   stopAccount: (accountId: string) => Promise<void> | void;
   now?: () => number;
@@ -66,7 +65,7 @@ export class QrLoginManager {
     return PENDING.has(session.status) && this.now() - session.startedAt < SESSION_TTL_MS;
   }
 
-  startQrLogin(accountId: string, clinicSlug: string): { seq: number; status: QrLoginStatus } {
+  startQrLogin(accountId: string): { seq: number; status: QrLoginStatus } {
     const existing = this.sessions.get(accountId);
     if (existing && this.isActive(existing)) return existing;
     // A new session supersedes the old one: stop its login and ignore anything it still reports.
@@ -80,7 +79,6 @@ export class QrLoginManager {
     const session: QrSession = {
       seq,
       status: "starting",
-      clinicSlug,
       startedAt: this.now(),
       controller: new AbortController(),
     };
@@ -99,7 +97,7 @@ export class QrLoginManager {
         if (!stillCurrent()) return;
         session.status = "success";
         session.qrBase64 = undefined;
-        await this.deps.attach(accountId, session.clinicSlug, apiSession);
+        await this.deps.attach(accountId, apiSession);
         log.info({ accountId }, "Login QR từ dashboard thành công");
       })
       .catch((err: unknown) => {

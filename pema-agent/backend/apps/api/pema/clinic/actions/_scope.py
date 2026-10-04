@@ -3,7 +3,7 @@
 New module. docs/ARCH-PB01.md and AGENT.md (CRM01): "Doctors only open records they own or are scheduled
 for". ``rbac.matrix`` gives the doctor ``patient.read``; this module narrows it to the doctor's own
 patients (``patient.doctor_id``) and the patients with an active appointment of that doctor.
-Every other role keeps the whole clinic (RLS already limits it to one clinic).
+Every other role keeps the whole clinic (one installation is one clinic).
 """
 
 from __future__ import annotations

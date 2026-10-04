@@ -166,7 +166,7 @@ async def test_marketing_opt_out_chan_tac_vu_va_job_tiep_thi(make_loop: LoopFact
 async def _tasks(loop: Loop) -> set[tuple[str, str]]:
     from sqlalchemy import text
 
-    async with loop.api.db.session(loop.clinic_id) as session:
+    async with loop.api.db.session() as session:
         rows = await session.execute(
             text(
                 "SELECT p.code, t.rule_key FROM clinic.crm_task t JOIN clinic.patient p "

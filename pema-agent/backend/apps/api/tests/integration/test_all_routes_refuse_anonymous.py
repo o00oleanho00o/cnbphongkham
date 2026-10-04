@@ -19,8 +19,8 @@ pytestmark = [pytest.mark.db, pytest.mark.redis]
 PUBLIC: frozenset[tuple[str, str]] = frozenset(
     {
         ("post", "/api/v1/auth/login"),
-        ("post", "/api/v1/webhooks/zalo-bot/{clinic_slug}/{account_id}"),
-        ("post", "/api/v1/webhooks/zalo-bridge/{clinic_slug}/{account_id}"),
+        ("post", "/api/v1/webhooks/zalo-bot/{account_id}"),
+        ("post", "/api/v1/webhooks/zalo-bridge/{account_id}"),
         ("get", "/healthz"),
     }
 )

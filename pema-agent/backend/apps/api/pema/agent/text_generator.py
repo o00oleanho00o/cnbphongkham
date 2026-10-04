@@ -14,9 +14,8 @@ What the original did and is kept:
   store a cut summary.
 
 How to wire it (package G): ``ProviderTextGenerator()`` needs no argument in production. It reads the LLM
-settings of the CURRENT clinic (the settings ``ContextVar`` of ``runtime_settings_store``): the summariser
-runs inside the task of the turn (or a task created from it, which copies the context), so the clinic is
-already set. Tests pass a ``resolve_model`` returning a fake model.
+settings of the installation (the ``runtime_settings_store`` snapshot). Tests pass a ``resolve_model``
+returning a fake model.
 
 The only exception it raises is ``AgentTurnError`` (the kind classified, the provider exception in
 ``__cause__``), like the engine, so the caller never imports an SDK type.

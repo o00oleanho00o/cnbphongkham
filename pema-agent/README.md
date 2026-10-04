@@ -5,6 +5,8 @@ Agent chăm sóc khách hàng (CSKH) bằng chữ qua Zalo cho Pema Digital Clin
 1. **Bản dịch Python của [zalo-agent](https://github.com/vuhai2002/zalo-agent)** (MIT, TypeScript): kênh Zalo, vòng lặp agent, persona, công cụ, bộ nhớ, kho tri thức, bộ lập lịch, MCP client, kế toán token.
 2. **CRM phòng khám** (Patient 360, lịch hẹn, việc chăm sóc, Inbox, hàng chờ duyệt) và **một FE Next.js** cho cả vận hành lẫn cấu hình AI.
 
+**Một hệ thống, một phòng khám** (nhánh `feat/single-tenant`): mỗi bản cài phục vụ đúng MỘT phòng khám, có server, Postgres, Redis, tài khoản Zalo và khóa mã hóa riêng (yêu cầu bảo mật của phòng khám, bệnh viện, ngân hàng). Không còn RLS, không còn mã phòng khám khi đăng nhập hay trên đường dẫn webhook; một phòng khám vẫn có nhiều tài khoản Zalo. Muốn phục vụ phòng khám thứ hai thì dựng một bộ mới hoàn toàn ([infra/README.md](infra/README.md), mục "One system, one clinic"). Hai nhánh song song, xem mục "Hai nhánh song song" bên dưới.
+
 Zalo là kênh ra khách. Giai đoạn này chỉ CSKH bằng chữ. Có hai hồ sơ chính sách: `staff_assistant` (giống zalo-agent gốc) và `patient_channel` (an toàn lâm sàng: mọi tin ra khách do người duyệt, cờ đỏ đến bác sĩ trước khi gọi mô hình, che PII, xác minh danh tính). Dữ liệu trong repo là **hư cấu**.
 
 > **Trạng thái trung thực.** Mã và test hoàn thành với **đồ giả** (mô hình giả, client Bot API giả, cầu nối giả) và với Postgres + Redis tạm. **Chưa chạy** với Zalo thật, mô hình thật, Ollama cài trên Ubuntu thật, sao lưu mã hóa age/gpg, hay thiết bị thật cho FE. Chi tiết: [SCOPE-AI01 mục 8](docs/SCOPE-AI01.md#8-điều-chưa-kiểm-chứng). Tài khoản Zalo cá nhân là kênh **không chính thức** có rủi ro bị khóa; mặc định tắt.
@@ -18,7 +20,7 @@ Zalo là kênh ra khách. Giai đoạn này chỉ CSKH bằng chữ. Có hai h�
 | [docs/SCOPE-AI01.md](docs/SCOPE-AI01.md) | Phạm vi, quyết định đã chốt, điều chưa kiểm chứng, **việc mở cần chủ phòng khám/bác sĩ quyết** |
 | [docs/SPEC-AI01.md](docs/SPEC-AI01.md) | Hành vi, use case, tiêu chí nghiệm thu và bằng chứng, phân quyền |
 | [docs/MODULEMAP-AI01.md](docs/MODULEMAP-AI01.md) | Module, gói sở hữu, ranh giới import |
-| [docs/ARCH-AI01.md](docs/ARCH-AI01.md) | Tiến trình, DB, luồng tin, kênh, an toàn, triển khai |
+| [docs/ARCH-AI01.md](docs/ARCH-AI01.md) | Tiến trình, DB, luồng tin, kênh, an toàn, triển khai; mục 14: hai nhánh song song (đa phòng khám và một phòng khám) |
 | [docs/PORT-MAP.md](docs/PORT-MAP.md) | Mỗi file zalo-agent → module Python; cuối file có "Khác biệt so với PORT-MAP ban đầu" |
 | [infra/README.md](infra/README.md), [infra/ubuntu/HUONG-DAN-UBUNTU.md](infra/ubuntu/HUONG-DAN-UBUNTU.md) | Compose, role DB, sao lưu; hướng dẫn Ubuntu + Ollama + Tailscale |
 | [frontend/README.md](frontend/README.md), [backend/bridges/zalo-personal/README.md](backend/bridges/zalo-personal/README.md), [evals/README.md](evals/README.md) | FE và mock; cầu nối Zalo cá nhân và rủi ro; eval với mô hình thật |
@@ -33,7 +35,7 @@ Zalo ─► webhook (api, FastAPI, role be_app) ─► gộp tin ─► Redis Tu
 Zalo cá nhân ─► cầu nối Node (zca-js, tuỳ chọn) ─► webhook                      │ vòng lặp agent, tool, hook chính sách
 Nhân viên ─► Next.js ─► api (OpenAPI là hợp đồng)                                └─► ChannelPort.send_text
                                                                      (patient_channel: người duyệt trước khi gửi)
-Postgres: clinic.* (CRM, RLS) | clinic_agent.* (cửa duy nhất của agent) | agent.* (engine, pgvector)
+Postgres (MỘT phòng khám): clinic.* (CRM) | clinic_agent.* (cửa duy nhất của agent) | agent.* (engine, pgvector)
 Redis: hàng đợi lượt, khoá thread, gộp tin, khoá lịch      LLM: Ollama / llama-server trên PC GPU (Qwen3-8B, bge-m3)
 ```
 
@@ -41,7 +43,7 @@ Redis: hàng đợi lượt, khoá thread, gộp tin, khoá lịch      LLM: Oll
 |---|---|
 | `backend/packages/contracts` | `pema_contracts`: DTO, `ChannelPort`, các port giữa gói, đồ giả |
 | `backend/apps/api/pema` | ứng dụng: `channels`, `middleware`, `agent`, `conversation`, `knowledge`, `scheduler`, `mcp`, `documents`, `images`, `video`, `config`, `clinic`, `policy`, `api`, `composition`, `workers`, `shared`, `core` |
-| `backend/apps/api/alembic` | DDL (`0001` clinic, `0002` agent, `0003` clinic_agent, các migration của từng gói, `g_0005` gộp đầu nhánh) |
+| `backend/apps/api/alembic` | DDL (`0001` clinic, `0002` agent, `0003` clinic_agent, các migration của từng gói, `g_0005` và `h_0008` gộp đầu nhánh, `st_0009_single_tenant`: một phòng khám, bỏ RLS) |
 | `backend/apps/api/openapi.json` | hợp đồng API (sinh bằng `make openapi`) |
 | `backend/bridges/zalo-personal` | cầu nối Node cho tài khoản Zalo cá nhân (tuỳ chọn, cờ tắt) |
 | `frontend` | Next.js App Router, backend giả để chạy không cần dịch vụ nào |
@@ -60,7 +62,7 @@ make lint         # ruff, ruff format --check, pyright strict, import-linter
 make test         # pytest; test cần DB/Redis bị BỎ QUA nếu thiếu biến môi trường
 ```
 
-`make test` không đặt biến nào **không** kiểm RLS, vai trò DB hay vòng khép kín. Để chạy đủ, dùng một Postgres + pgvector và một Redis **tạm** (không bao giờ trỏ vào DB có dữ liệu cần giữ: fixture xóa mọi schema Pema trong đó rồi chạy lại migration):
+`make test` không đặt biến nào **không** kiểm vai trò và grant của DB, ràng buộc một phòng khám hay vòng khép kín. Để chạy đủ, dùng một Postgres + pgvector và một Redis **tạm** (không bao giờ trỏ vào DB có dữ liệu cần giữ: fixture xóa mọi schema Pema trong đó rồi chạy lại migration):
 
 ```
 docker run -d --name pema-pg-test -e POSTGRES_PASSWORD=testpw -e POSTGRES_DB=pema \
@@ -90,32 +92,68 @@ pnpm install
 pnpm dev:mock     # backend giả :4010 + next dev :3000
 ```
 
-Mở `http://127.0.0.1:3000`, đăng nhập với phòng khám `pema-demo`, mật khẩu `demo1234`, một trong `owner@pema.test`, `manager@pema.test`, `doctor@pema.test`, `cs@pema.test`, `reception@pema.test` (người dùng hư cấu của mock). `pnpm shots` chụp mọi màn ở 5 viewport (cần mock đang chạy; thất bại nếu tràn ngang). Mock bám đúng `openapi.json` (có test hợp đồng). Đây **không** phải backend thật và chưa kiểm trên thiết bị thật.
+Mở `http://127.0.0.1:3000`, đăng nhập bằng email và mật khẩu `demo1234` (không còn ô phòng khám), một trong `owner@pema.test`, `manager@pema.test`, `doctor@pema.test`, `cs@pema.test`, `reception@pema.test` (người dùng hư cấu của mock). `pnpm shots` chụp mọi màn ở 5 viewport (cần mock đang chạy; thất bại nếu tràn ngang). Mock bám đúng `openapi.json` (có test hợp đồng). Đây **không** phải backend thật và chưa kiểm trên thiết bị thật.
 
 ### Stack bằng Docker Compose
 
 ```
-make infra-secrets   # tạo infra/.env với bí mật ngẫu nhiên (từ chối ghi đè); sao lưu ngoại tuyến PEMA_SECRET_ENCRYPTION_KEY
+make infra-secrets   # tạo infra/.env với bí mật ngẫu nhiên (từ chối ghi đè); sao lưu ngoại tuyến PEMA_SECRET_ENCRYPTION_KEY; đặt PEMA_CLINIC_NAME
 make infra-config    # kiểm file compose với mọi profile
-make up              # postgres + pgvector, redis, migrate (một lần: role + alembic upgrade heads), api  → /healthz
+make up              # postgres + pgvector, redis, migrate (một lần: role + alembic upgrade heads, tạo MỘT phòng khám từ PEMA_CLINIC_NAME, kiểm đúng một dòng), api  → /healthz
 make ps
 make up-app          # thêm worker và frontend (profile app)
 make up-ollama       # thêm container Ollama có GPU NVIDIA (hoặc cài Ollama trực tiếp, xem hướng dẫn Ubuntu)
 make down
 ```
 
-Không có profile `worker` thì API nhận webhook và xếp lượt nhưng không ai chạy lượt. Tham số mô hình (`LLM_BASE_URL`, `LLM_MODEL=pema-chat`) và tuỳ chọn mạng (`PEMA_*_BIND`, chỉ loopback theo mặc định) ở `infra/.env.example`. Dữ liệu mẫu hư cấu cho một phòng khám: `uv run python -m pema.clinic.actions.seed_demo` (xem docstring của module; không có mật khẩu mặc định trong repo). Bot Zalo, QR cho tài khoản cá nhân, persona và KB cấu hình ở trang quản trị AI của FE.
+Không có profile `worker` thì API nhận webhook và xếp lượt nhưng không ai chạy lượt. Tham số mô hình (`LLM_BASE_URL`, `LLM_MODEL=pema-chat`) và tuỳ chọn mạng (`PEMA_*_BIND`, chỉ loopback theo mặc định) ở `infra/.env.example`. Dữ liệu mẫu hư cấu cho phòng khám của bản cài: `uv run python -m pema.clinic.actions.seed_demo` (xem docstring của module; không có mật khẩu mặc định trong repo). Bot Zalo, QR cho tài khoản cá nhân, persona và KB cấu hình ở trang quản trị AI của FE.
 
 Ảnh Docker của cầu nối (`bridge` profile) và của FE đã dựng thật và khởi động thử (không cần Zalo thật); cầu nối chạy bằng tsx, không có bước build, và chỉ lắng nghe trong mạng compose.
+
+## Cập nhật trực tiếp và hiện diện (gói ST-R)
+
+Màn Inbox, "Việc hôm nay" và "Hàng đợi duyệt" tự tải lại khi có thay đổi, và hội thoại cho biết đồng nghiệp nào đang xem hoặc đang trả lời. Chỉ là cảnh báo, không khóa gì.
+
+| Route | Việc |
+|---|---|
+| `GET /api/v1/events` | Server-Sent Events cho nhân viên đã đăng nhập. Mỗi sự kiện là JSON `{"type": "inbox.changed" \| "tasks.changed" \| "review.changed" \| "presence.changed", "id": "<uuid hoặc null>"}`; không bao giờ có nội dung tin, tên hay số điện thoại. Comment `: keep-alive` mỗi 15 giây; 429 quá 5 luồng mỗi người; 503 khi Redis hỏng (FE chuyển sang tải lại định kỳ). |
+| `POST /api/v1/conversations/{id}/presence` | Nhịp 15 giây `{"state": "viewing" \| "replying"}`; mục hết hạn sau 30 giây. 204 cả khi Redis hỏng. |
+| `DELETE /api/v1/conversations/{id}/presence` | Rời hội thoại. |
+| `GET /api/v1/conversations`, `GET/PATCH /api/v1/conversations/{id}` | Có thêm `viewers: [{user_id, name, state}]`, không gồm chính người gọi. |
+
+Worker và API là hai tiến trình; chúng gặp nhau qua kênh Redis pub/sub `pema:live:<clinic_id>` (package `pema.live`). Chi tiết: [CONTRACTS-AI01 mục 11](docs/CONTRACTS-AI01.md), [ARCH-AI01 mục 15](docs/ARCH-AI01.md), [SECURITY-REVIEW-AI01 mục 8](docs/SECURITY-REVIEW-AI01.md).
+
+## Giao việc cho đồng nghiệp ("Phụ trách")
+
+| Điểm cuối | Ai gọi | Ghi chú |
+|---|---|---|
+| `GET /api/v1/staff/assignable` | mọi nhân viên đã đăng nhập (kể cả lễ tân, CSKH) | `[{id, name, role}]` của nhân viên **đang hoạt động** có vai trò làm được hội thoại và việc CSKH (chủ, quản lý, bác sĩ, CSKH; không lễ tân), A-Z theo tên; không email, SĐT, hash, lần đăng nhập cuối; 60 lần/phút mỗi người; 401 khi chưa có phiên |
+| `PATCH /api/v1/conversations/{id}` (`assigned_user_id`) | quyền `conversation.reply` | giao cho đồng nghiệp hoặc `null` (chưa giao); thành công thì phát `inbox.changed` tới các màn hình khác (mục trên) |
+| `POST /api/v1/crm/tasks/{id}/resolve` (`owner_user_id`) | quyền `crm_task.resolve` | người phụ trách của việc CSKH |
+| `POST/PATCH /api/v1/patients` (`doctor_id`, `cs_owner_id`) | quyền `patient.write` | bác sĩ điều trị, CSKH phụ trách hồ sơ |
+
+Mọi nơi nhận người được giao chạy chung một kiểm tra phía máy chủ (`pema/clinic/actions/assignees.py`): người đó phải thuộc bản cài, đang hoạt động và có vai trò giao được, nếu không là 422 với cùng một câu trả lời (không lộ tài khoản nào tồn tại hay bị khóa). Dòng audit ghi id người giao trước và sau (không ghi tên). Quy tắc chọn vai trò và mục SEC-60 đến SEC-63 ở `docs/SECURITY-REVIEW-AI01.md`.
 
 ## Quy tắc áp dụng khắp nơi
 
 - Phía agent chạm phòng khám **chỉ** qua `pema.clinic.actions` (import-linter); trong DB role `agent_worker` không có quyền gì trên `clinic.*` (chỉ view/hàm của `clinic_agent`).
-- Mọi bảng có `clinic_id` và RLS; mở công việc bằng `ClinicDatabase.session(clinic_id)`.
+- Mọi bảng có `clinic_id` làm mã cài đặt cố định của MỘT phòng khám; không RLS, không ngữ cảnh phòng khám: mở công việc bằng `ClinicDatabase.session()`, lấy mã bằng `get_installation_clinic_id(db)`, SQL dùng `ctx.the_clinic_id()` (CONTRACTS-AI01 mục 10). Ranh giới DB là grant của `be_app`/`agent_worker`; cách ly giữa các phòng khám là hạ tầng riêng cho từng phòng khám.
 - Thời gian trên đường truyền là ISO 8601 có `+07:00`. Giao diện tiếng Việt.
 - Không commit `.env`, token, số điện thoại hay tên thật. Không PII trong log.
 - Không bao giờ tự gửi tin cho bệnh nhân trong `patient_channel` mà không có người duyệt; agent chỉ đề xuất lịch; sinh nhật không tự gửi; `marketingOptOut` chặn tiếp thị.
 - Chế độ Zalo cá nhân chỉ bật khi đặt `PEMA_ZALO_PERSONAL_ENABLED` và đã quét QR; dùng **tài khoản phụ**.
+
+## Hai nhánh song song
+
+| | `feat/ai-agent-backend` | `feat/single-tenant` |
+|---|---|---|
+| Mô hình | nhiều phòng khám trong một CSDL, RLS theo `clinic_id` | MỘT phòng khám mỗi bản cài, không RLS; `clinic.clinic` đúng một dòng |
+| Đăng nhập | phòng khám (slug) + email + mật khẩu | email + mật khẩu |
+| Webhook Zalo | `/api/v1/webhooks/zalo-bot/{clinic}/{account}` | `/api/v1/webhooks/zalo-bot/{account}` (cầu nối tương tự) |
+| Cấu hình | không có biến phòng khám | `PEMA_CLINIC_NAME`, `PEMA_CLINIC_ID` (tùy chọn) |
+| Phòng khám thứ hai | thêm dòng trong cùng CSDL | một bộ hạ tầng mới hoàn toàn |
+
+Cả hai nhánh được giữ. **Tính năng về sau làm trên `feat/single-tenant` trước**; nhánh đa phòng khám chỉ nhận bản backport khi có yêu cầu cụ thể, và hai nhánh không gộp vào nhau (migration `st_0009` bỏ RLS). Chi tiết và lý do: [ARCH-AI01 mục 14](docs/ARCH-AI01.md), quyết định: [SCOPE-AI01 mục 7](docs/SCOPE-AI01.md), hệ quả bảo mật: [SECURITY-REVIEW-AI01 mục 7](docs/SECURITY-REVIEW-AI01.md). Việc mở: ứng dụng bệnh nhân (web, KMP) và client khác gọi đăng nhập theo slug hoặc đường webhook có đoạn phòng khám phải đổi theo (SCOPE-AI01 mục 9, việc 12).
 
 ## Giấy phép và nguồn gốc
 

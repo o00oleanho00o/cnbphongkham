@@ -58,7 +58,7 @@ async def conclude_cap_blocked(
     before getting here. Resets ``delivery_attempts``: this run ended NOT because of a failed send (the real
     payload was never even tried) - a chain of failed sends of other runs must not accumulate through a run
     blocked by this cap."""
-    async with deps.db.session(job.clinic_id) as s:
+    async with deps.db.session() as s:
         if job.schedule_kind is ScheduleKind.ONCE:
             await deps.jobs.set_next_run(
                 job.clinic_id,

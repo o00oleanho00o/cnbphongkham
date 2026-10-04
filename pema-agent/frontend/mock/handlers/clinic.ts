@@ -26,6 +26,8 @@ import {
   type Schemas,
   type Session,
 } from "../core";
+import { assertAssignable } from "../assignable";
+import { viewersFor } from "../live-bus";
 
 type S = Schemas;
 
@@ -233,6 +235,7 @@ function resolveTask(ctx: Ctx): Reply {
     if (input.outcome === "booked" && !input.booking) {
       fail(422, "validation_failed", "Cần lưu lịch hẹn hợp lệ trước khi hoàn tất việc.");
     }
+    assertAssignable(input.owner_user_id, "Chọn người phụ trách hợp lệ.");
     const appointment = input.booking ? createAppointment(input.booking, user.userId) : null;
     activities.unshift({
       id: uid("act"),
@@ -459,7 +462,8 @@ export function register(r: Router): void {
       .filter((t) => !rule || t.rule_key === rule)
       .filter((t) => !owner || t.owner_user_id === owner)
       .filter((t) => !patient || t.patient_id === patient)
-      .filter((t) => !dueBy || Date.parse(t.due_at) <= Date.parse(dueBy))
+      // the real API takes a DATE and reads it as that whole clinic day (+07:00)
+      .filter((t) => !dueBy || Date.parse(t.due_at) <= Date.parse(`${dueBy}T23:59:59+07:00`))
       .toSorted((a, b) => a.due_at.localeCompare(b.due_at));
     return { body: paginate(found, ctx.query) };
   });
@@ -515,16 +519,18 @@ export function register(r: Router): void {
           ).includes(foldForSearch(q)),
       )
       .toSorted((a, b) => (b.last_message_at ?? "").localeCompare(a.last_message_at ?? ""))
-      .map(conversationSummary);
+      .map((c) => ({ ...conversationSummary(c), viewers: viewersFor(c.id, session(ctx).userId) }));
     return { body: paginate(found, ctx.query) };
   });
-  r.get("/api/v1/conversations/{conversation_id}", "conversation.read", (ctx): Reply => ({
-    body: findOr404(conversations, ctx.params.conversation_id ?? "", "hội thoại"),
-  }));
+  r.get("/api/v1/conversations/{conversation_id}", "conversation.read", (ctx): Reply => {
+    const conv = findOr404(conversations, ctx.params.conversation_id ?? "", "hội thoại");
+    return { body: { ...conv, viewers: viewersFor(conv.id, session(ctx).userId) } };
+  });
   r.patch("/api/v1/conversations/{conversation_id}", "conversation.reply", (ctx): Reply => {
     const conv = findOr404(conversations, ctx.params.conversation_id ?? "", "hội thoại");
     const { version, assigned_user_id, status } = bodyOf<S["ConversationUpdate"]>(ctx);
     checkVersion(conv.version, version);
+    if (assigned_user_id) assertAssignable(assigned_user_id);
     if (assigned_user_id !== undefined) conv.assigned_user_id = assigned_user_id;
     if (status) conv.status = status;
     conv.version += 1;

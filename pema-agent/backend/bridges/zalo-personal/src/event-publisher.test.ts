@@ -43,18 +43,18 @@ function publisherWith(
   return { publisher, seen, sleeps };
 }
 
-const target = { accountId: "acc-1", clinicSlug: "clinic-a" };
+const target = { accountId: "acc-1" };
 const stateEvent: BridgeEvent = { type: "account_state", state: "connected", reason: "connected" };
 
 describe("HttpEventPublisher", () => {
-  it("an_event_is_posted_to_the_webhook_of_its_clinic_and_account_with_a_valid_signature", async () => {
+  it("an_event_is_posted_to_the_webhook_of_its_account_with_a_valid_signature", async () => {
     const { publisher, seen } = publisherWith();
 
     publisher.publish(target, stateEvent);
     await publisher.flush();
 
     assert.equal(seen.length, 1);
-    assert.equal(seen[0]?.url, "http://api.test/api/v1/webhooks/zalo-bridge/clinic-a/acc-1");
+    assert.equal(seen[0]?.url, "http://api.test/api/v1/webhooks/zalo-bridge/acc-1");
     assert.deepEqual(JSON.parse(seen[0]?.body ?? ""), stateEvent);
     const headers = seen[0]?.headers ?? {};
     assert.deepEqual(
@@ -69,11 +69,11 @@ describe("HttpEventPublisher", () => {
     );
   });
 
-  it("the_clinic_slug_and_account_id_are_escaped_in_the_path", async () => {
+  it("the_account_id_is_escaped_in_the_path", async () => {
     const { publisher, seen } = publisherWith();
-    publisher.publish({ accountId: "a/b", clinicSlug: "c d" }, stateEvent);
+    publisher.publish({ accountId: "a/b" }, stateEvent);
     await publisher.flush();
-    assert.equal(seen[0]?.url, "http://api.test/api/v1/webhooks/zalo-bridge/c%20d/a%2Fb");
+    assert.equal(seen[0]?.url, "http://api.test/api/v1/webhooks/zalo-bridge/a%2Fb");
   });
 
   it("publish_returns_at_once_and_never_waits_for_the_api", () => {

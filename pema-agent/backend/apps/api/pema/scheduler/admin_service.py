@@ -10,8 +10,8 @@ web".
 Forced deviation from the original IDOR rule: the original addressed an existing job by ``(accountId,
 threadId, id)`` taken from the request, because its only admin was ONE shared dashboard password. Here the
 OpenAPI contract addresses a job by ``job_id`` alone and the caller is a signed-in staff member of ONE clinic:
-the clinic is the isolation boundary (RLS on ``clinic_id`` plus the explicit ``clinic_id`` predicate of every
-query), so a job of ANOTHER clinic is simply not found. Inside a clinic every staff member with the schedules
+the explicit ``clinic_id`` predicate (the installation id) is kept on every query, and an unknown
+``job_id`` is simply not found. Inside a clinic every staff member with the schedules
 permission may see every thread's jobs (the list already shows them all); the permission itself is checked by
 package B1's dependency in the router.
 

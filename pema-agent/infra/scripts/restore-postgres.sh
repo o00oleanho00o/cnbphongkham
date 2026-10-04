@@ -46,6 +46,15 @@ TABLES="$(psql_in -d "$TARGET" -At -c "SELECT count(*) FROM information_schema.t
 REV="$(psql_in -d "$TARGET" -At -c "SELECT string_agg(version_num, ',') FROM public.alembic_version_pema")"
 echo "restored into $TARGET: $TABLES tables/views in clinic/agent/clinic_agent/ctx, alembic revision(s): $REV"
 
+# One installation = one clinic: a restored database must hold exactly one clinic row.
+CLINICS="$(psql_in -d "$TARGET" -At -c "SELECT count(*) FROM clinic.clinic")"
+if [ "$CLINICS" != "1" ]; then
+  echo "restore check failed: clinic.clinic holds $CLINICS row(s), expected exactly 1" >&2
+  exit 2
+fi
+CLINIC_NAME="$(psql_in -d "$TARGET" -At -c "SELECT name FROM clinic.clinic")"
+echo "restored clinic: $CLINIC_NAME (exactly one row)"
+
 if [ "$MODE" = "--verify" ]; then
   psql_in -d postgres -c "DROP DATABASE \"$TARGET\"" >/dev/null
   echo "verify ok; scratch database dropped"

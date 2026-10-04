@@ -6,7 +6,8 @@
 
 Forced deviations:
 
-* SQLite sync -> SQLAlchemy async + Postgres (``clinic_id`` + RLS, primary key ``(clinic_id, id)``);
+* SQLite sync -> SQLAlchemy async + Postgres (``clinic_id`` = the fixed installation id, primary key
+  ``(clinic_id, id)``; one installation is one clinic, there is no row level security);
 * ``trongGiaoDich`` becomes the transaction of ``ClinicDatabase.session``;
 * ``AccountStore.get_bot_token`` / ``get_credential`` are the ONE easy-to-audit path that returns a
   plaintext secret (``layBotTokenGiaiMa``); ``AccountConfig`` carries ``has_bot_token`` only, because the
@@ -15,8 +16,8 @@ Forced deviations:
   and the only gap was delete-then-recreate with the same id, which is closed by deleting the jobs and
   friend requests below). ``datLoaiKenh`` is not ported: the contract has no way to change it, the stored
   credential means something different per channel;
-* ``list_all_enabled_accounts`` (start-up of the listeners) asks each ACTIVE clinic in turn, one query per
-  clinic (RLS gives a session one clinic), bounded by the number of clinics;
+* ``list_all_enabled_accounts`` (start-up of the listeners) is ONE query: the database holds one clinic
+  (single tenant), so there is no loop over clinics any more;
 * ``policy_profile`` is new: the default is ``patient_channel`` (fail safe, CONTRACTS-AI01 decision 2).
   ``AgentStoreImpl.get_effective_policy_profile`` combines it with the agent's, the restrictive one winning;
 * secrets are encrypted with ``pema.config.secret_cipher`` (AES-GCM, key ``PEMA_SECRET_ENCRYPTION_KEY``),
@@ -38,7 +39,7 @@ from pema.config.agent_store import AgentStoreImpl
 from pema.config.parse_disabled_tools import parse_disabled_tools
 from pema.config.secret_cipher import decrypt_secret, encrypt_secret
 from pema.conversation.sql_util import affected_rows
-from pema.core.db import ClinicDatabase
+from pema.core.db import ClinicDatabase, get_installation_clinic_id
 from pema.shared.logger import create_logger
 from pema_contracts.agents import AccountConfig, Allowlist, AllowlistMode
 from pema_contracts.channel import ChannelKind
@@ -56,6 +57,7 @@ _SELECT = """
     FROM agent.accounts
 """
 _LIST = text(_SELECT + " WHERE clinic_id = :clinic_id ORDER BY id")
+_LIST_ENABLED = text(_SELECT + " WHERE enabled ORDER BY id")
 _GET = text(_SELECT + " WHERE clinic_id = :clinic_id AND id = :id")
 _INSERT = text(
     "INSERT INTO agent.accounts (clinic_id, id, label, channel, agent_id, policy_profile) "
@@ -162,7 +164,7 @@ class AccountStoreImpl:
         self._agents = agents or AgentStoreImpl(db)
 
     async def list_accounts(self, clinic_id: UUID) -> list[AccountConfig]:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (await session.execute(_LIST, {"clinic_id": clinic_id})).mappings().all()
         return [_to_config(clinic_id, r) for r in rows]
 
@@ -170,14 +172,14 @@ class AccountStoreImpl:
         return [a for a in await self.list_accounts(clinic_id) if a.enabled]
 
     async def list_all_enabled_accounts(self) -> list[AccountConfig]:
-        """Across clinics (system query for start-up): one query per active clinic (module docstring)."""
-        accounts: list[AccountConfig] = []
-        for clinic_id in await self._db.list_active_clinic_ids():
-            accounts.extend(await self.list_enabled_accounts(clinic_id))
-        return accounts
+        """Every enabled account of the installation (start-up of the listeners): one query."""
+        clinic_id = await get_installation_clinic_id(self._db)
+        async with self._db.session() as session:
+            rows = (await session.execute(_LIST_ENABLED)).mappings().all()
+        return [_to_config(clinic_id, r) for r in rows]
 
     async def get_account(self, clinic_id: UUID, account_id: str) -> AccountConfig | None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             row = (await session.execute(_GET, {"clinic_id": clinic_id, "id": account_id})).mappings().first()
         return _to_config(clinic_id, row) if row is not None else None
 
@@ -193,7 +195,7 @@ class AccountStoreImpl:
     ) -> AccountConfig:
         resolved_agent_id = await self._resolve_agent_id(clinic_id, agent_id)
         try:
-            async with self._db.session(clinic_id) as session:
+            async with self._db.session() as session:
                 await session.execute(
                     _INSERT,
                     {
@@ -226,7 +228,7 @@ class AccountStoreImpl:
         if "agent_id" in patch and await self._agents.get_agent(clinic_id, merged.agent_id) is None:
             raise DomainError(ErrorCode.VALIDATION_FAILED, "Agent không tồn tại.")
 
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(
                 _UPDATE,
                 {
@@ -252,7 +254,7 @@ class AccountStoreImpl:
         return await self.get_account(clinic_id, account_id)
 
     async def delete_account(self, clinic_id: UUID, account_id: str) -> bool:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             params = {"clinic_id": clinic_id, "id": account_id}
             await session.execute(_DELETE_JOBS, params)
             await session.execute(_DELETE_FRIEND_REQUESTS, params)
@@ -262,7 +264,7 @@ class AccountStoreImpl:
         """Seed 1 lần từ config/accounts.json (bản cũ trước khi DB là source of truth). Account có persona
         riêng được tách thành agent riêng để giữ nguyên hành vi; persona rỗng dùng agent mặc định. Bảng
         accounts đã có dữ liệu thì bỏ qua. Runs for ONE clinic (the account table is per clinic)."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             count = int((await session.execute(_COUNT, {"clinic_id": clinic_id})).scalar_one())
         if count > 0:
             await self._agents.ensure_default_agent(clinic_id)
@@ -285,7 +287,7 @@ class AccountStoreImpl:
                     policy_profile=acc.policy_profile,
                 )
                 agent_id = created.id
-            async with self._db.session(clinic_id) as session:
+            async with self._db.session() as session:
                 await session.execute(
                     _INSERT_SEED,
                     {
@@ -339,7 +341,7 @@ class AccountStoreImpl:
         return (await self._agents.ensure_default_agent(clinic_id)).id
 
     async def _read_secret(self, statement: Any, clinic_id: UUID, account_id: str, what: str) -> str | None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             stored = (await session.execute(statement, {"clinic_id": clinic_id, "id": account_id})).scalar()
         if not stored:
             return None
@@ -355,5 +357,5 @@ class AccountStoreImpl:
             return None
 
     async def _write_secret(self, statement: Any, clinic_id: UUID, account_id: str, encrypted: str) -> None:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await session.execute(statement, {"clinic_id": clinic_id, "id": account_id, "enc": encrypted})

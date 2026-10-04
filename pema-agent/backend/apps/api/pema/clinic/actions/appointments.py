@@ -33,6 +33,7 @@ from pema.clinic.domain import appointments as rules
 from pema.clinic.models import Appointment, CrmTask, Patient, UserAccount
 from pema.clinic.rbac import is_doctor_scoped, require, require_any
 from pema.core.db import ClinicDatabase
+from pema.live import emit_live
 from pema_contracts.actions import ActionContext
 from pema_contracts.appointments import (
     AppointmentCreate,
@@ -43,6 +44,7 @@ from pema_contracts.appointments import (
 )
 from pema_contracts.common import Page
 from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.live import LiveEventType
 from pema_contracts.roles import Permission, Role
 
 DOCTOR_ROLES = (Role.DOCTOR.value, Role.OWNER.value)
@@ -246,7 +248,7 @@ async def list_appointments(
         conditions.append(Appointment.doctor_id == doctor_id)
     if status is not None:
         conditions.append(Appointment.status == status.value)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         total = await session.scalar(select(func.count()).select_from(Appointment).where(*conditions)) or 0
         rows = await session.execute(
             select(Appointment, Patient.code)
@@ -264,7 +266,7 @@ async def list_appointments(
 
 async def get_appointment(db: ClinicDatabase, ctx: ActionContext, appointment_id: UUID) -> AppointmentOut:
     require(ctx, Permission.APPOINTMENT_READ)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row, code = await _load(session, ctx, appointment_id)
         return appointment_out(row, code)
 
@@ -278,7 +280,7 @@ async def create_appointment(
         require(ctx, Permission.APPOINTMENT_WRITE)
     if is_doctor_scoped(ctx):
         _own_only(ctx, payload.doctor_id)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         task: CrmTask | None = None
         if payload.crm_task_id is not None:
             task = await session.scalar(
@@ -309,14 +311,17 @@ async def create_appointment(
                 task.id,
                 {"appointment_id": str(row.id)},
             )
-        return appointment_out(row, code)
+        created = appointment_out(row, code)
+    if task is not None:
+        emit_live(LiveEventType.TASKS_CHANGED, task.id)
+    return created
 
 
 async def update_appointment(
     db: ClinicDatabase, ctx: ActionContext, appointment_id: UUID, payload: AppointmentUpdate
 ) -> AppointmentOut:
     require(ctx, Permission.APPOINTMENT_WRITE)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row, code = await _load(session, ctx, appointment_id)
         _own_only(ctx, row.doctor_id)
         check_version(row.version, payload.version)
@@ -375,7 +380,7 @@ async def _transition(
 ) -> AppointmentOut:
     require(ctx, permission)
     action = f"appointment.{verb}"
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row, code = await _load(session, ctx, appointment_id)
         _own_only(ctx, row.doctor_id)
         if await audit.find_replay(session, ctx, action, row.id):

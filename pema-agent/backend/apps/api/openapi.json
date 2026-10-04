@@ -1048,6 +1048,31 @@
         "title": "AppointmentUpdate",
         "type": "object"
       },
+      "AssignableStaffOut": {
+        "additionalProperties": false,
+        "description": "A colleague a task or a conversation can be handed to (``GET /staff/assignable``, every signed-in staff\nmember may read it). The minimum a picker needs: no e-mail, phone, last sign-in or lock state (locked\naccounts are never listed). ``role`` is only one of the roles that can handle conversations and tasks.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "role"
+        ],
+        "title": "AssignableStaffOut",
+        "type": "object"
+      },
       "AuditLogOut": {
         "additionalProperties": false,
         "properties": {
@@ -1145,6 +1170,75 @@
         "title": "AuditLogOut",
         "type": "object"
       },
+      "AutonomyMatrixOut": {
+        "additionalProperties": false,
+        "properties": {
+          "appointment_confirm_l1": {
+            "title": "Appointment Confirm L1",
+            "type": "boolean"
+          },
+          "confidence_threshold": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence Threshold",
+            "type": "number"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/AutonomyRuleOut"
+            },
+            "title": "Rules",
+            "type": "array"
+          }
+        },
+        "required": [
+          "confidence_threshold",
+          "appointment_confirm_l1",
+          "rules"
+        ],
+        "title": "AutonomyMatrixOut",
+        "type": "object"
+      },
+      "AutonomyRuleOut": {
+        "additionalProperties": false,
+        "properties": {
+          "action_type": {
+            "maxLength": 100,
+            "title": "Action Type",
+            "type": "string"
+          },
+          "d3_enabled": {
+            "title": "D3 Enabled",
+            "type": "boolean"
+          },
+          "hard_human": {
+            "description": "Always a person; the cell cannot be edited.",
+            "title": "Hard Human",
+            "type": "boolean"
+          },
+          "n_to_l2": {
+            "anyOf": [
+              {
+                "maximum": 1000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Unchanged approvals before L2; null: none.",
+            "title": "N To L2"
+          }
+        },
+        "required": [
+          "action_type",
+          "hard_human",
+          "d3_enabled"
+        ],
+        "title": "AutonomyRuleOut",
+        "type": "object"
+      },
       "Body_admin_kb_upload_kb_file_source": {
         "properties": {
           "file": {
@@ -1200,6 +1294,443 @@
           "down"
         ],
         "title": "BridgeState",
+        "type": "string"
+      },
+      "CareAlertKind": {
+        "enum": [
+          "demotion",
+          "unresponsive",
+          "red_flag",
+          "on_call_used"
+        ],
+        "title": "CareAlertKind",
+        "type": "string"
+      },
+      "CareAlertListOut": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CareAlertOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CareAlertListOut",
+        "type": "object"
+      },
+      "CareAlertOut": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CareAlertKind"
+          },
+          "patient_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patient Id"
+          },
+          "patient_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patient Name"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "at"
+        ],
+        "title": "CareAlertOut",
+        "type": "object"
+      },
+      "CareApprovalIn": {
+        "additionalProperties": false,
+        "properties": {
+          "approved": {
+            "description": "True clears the badge, false puts it back.",
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "approved",
+          "version"
+        ],
+        "title": "CareApprovalIn",
+        "type": "object"
+      },
+      "CareAutonomyOut": {
+        "additionalProperties": false,
+        "properties": {
+          "base_level": {
+            "$ref": "#/components/schemas/CareLevel"
+          },
+          "effective_level": {
+            "$ref": "#/components/schemas/CareLevel"
+          },
+          "override_level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CareLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "override_until": {
+            "anyOf": [
+              {
+                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+                "examples": [
+                  "2026-09-20T09:00:00+07:00"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Override Until"
+          },
+          "paused": {
+            "title": "Paused",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "effective_level",
+          "base_level",
+          "paused"
+        ],
+        "title": "CareAutonomyOut",
+        "type": "object"
+      },
+      "CareControlOut": {
+        "additionalProperties": false,
+        "properties": {
+          "release_note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Note"
+          },
+          "since": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Since",
+            "type": "string"
+          },
+          "staff_owner_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Staff Owner Id"
+          },
+          "staff_owner_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Staff Owner Name"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CareControlState"
+          }
+        },
+        "required": [
+          "state",
+          "since"
+        ],
+        "title": "CareControlOut",
+        "type": "object"
+      },
+      "CareControlState": {
+        "enum": [
+          "AUTO",
+          "HANDOFF_ROUTING",
+          "STAFF"
+        ],
+        "title": "CareControlState",
+        "type": "string"
+      },
+      "CareDepth": {
+        "description": "How deep a question goes: D1 administrative ... D5 red flag (PLAN-AI01-M section 6).",
+        "enum": [
+          "D1",
+          "D2",
+          "D3",
+          "D4",
+          "D5"
+        ],
+        "title": "CareDepth",
+        "type": "string"
+      },
+      "CareLevel": {
+        "description": "Autonomy level of the agent: L0 drafts only, L1 approved templates, L2 plus KB answers.",
+        "enum": [
+          "L0",
+          "L1",
+          "L2"
+        ],
+        "title": "CareLevel",
+        "type": "string"
+      },
+      "CareMatrixIn": {
+        "additionalProperties": false,
+        "description": "Cells of the matrix. Saving sets ``pending_doctor_approval`` again (whoever edits).",
+        "properties": {
+          "autonomy": {
+            "$ref": "#/components/schemas/AutonomyMatrixOut"
+          },
+          "handoff": {
+            "$ref": "#/components/schemas/HandoffMatrixOut"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "handoff",
+          "autonomy",
+          "version"
+        ],
+        "title": "CareMatrixIn",
+        "type": "object"
+      },
+      "CareMatrixOut": {
+        "additionalProperties": false,
+        "properties": {
+          "autonomy": {
+            "$ref": "#/components/schemas/AutonomyMatrixOut"
+          },
+          "can_approve": {
+            "title": "Can Approve",
+            "type": "boolean"
+          },
+          "can_edit": {
+            "title": "Can Edit",
+            "type": "boolean"
+          },
+          "handoff": {
+            "$ref": "#/components/schemas/HandoffMatrixOut"
+          },
+          "pending_doctor_approval": {
+            "description": "The badge: the numbers are defaults until a doctor approves.",
+            "title": "Pending Doctor Approval",
+            "type": "boolean"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "pending_doctor_approval",
+          "can_edit",
+          "can_approve",
+          "handoff",
+          "autonomy",
+          "version"
+        ],
+        "title": "CareMatrixOut",
+        "type": "object"
+      },
+      "CareTimingIn": {
+        "additionalProperties": false,
+        "properties": {
+          "max_candidates": {
+            "maximum": 10.0,
+            "minimum": 2.0,
+            "title": "Max Candidates",
+            "type": "integer"
+          },
+          "oncall_direct_from_depth": {
+            "$ref": "#/components/schemas/CareDepth"
+          },
+          "sla_normal_minutes": {
+            "maximum": 1440.0,
+            "minimum": 1.0,
+            "title": "Sla Normal Minutes",
+            "type": "integer"
+          },
+          "sla_urgent_minutes": {
+            "maximum": 240.0,
+            "minimum": 1.0,
+            "title": "Sla Urgent Minutes",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sla_urgent_minutes",
+          "sla_normal_minutes",
+          "max_candidates",
+          "oncall_direct_from_depth",
+          "version"
+        ],
+        "title": "CareTimingIn",
+        "type": "object"
+      },
+      "CareTimingOut": {
+        "additionalProperties": false,
+        "properties": {
+          "can_edit": {
+            "title": "Can Edit",
+            "type": "boolean"
+          },
+          "max_candidates": {
+            "description": "Chain length including the on-call contact.",
+            "maximum": 10.0,
+            "minimum": 2.0,
+            "title": "Max Candidates",
+            "type": "integer"
+          },
+          "oncall_direct_from_depth": {
+            "$ref": "#/components/schemas/CareDepth"
+          },
+          "pending_doctor_approval": {
+            "title": "Pending Doctor Approval",
+            "type": "boolean"
+          },
+          "send_window_end": {
+            "anyOf": [
+              {
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Send Window End"
+          },
+          "send_window_start": {
+            "anyOf": [
+              {
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Read only here: edited in the channel settings.",
+            "title": "Send Window Start"
+          },
+          "sla_normal_minutes": {
+            "maximum": 1440.0,
+            "minimum": 1.0,
+            "title": "Sla Normal Minutes",
+            "type": "integer"
+          },
+          "sla_urgent_minutes": {
+            "maximum": 240.0,
+            "minimum": 1.0,
+            "title": "Sla Urgent Minutes",
+            "type": "integer"
+          },
+          "time_zone": {
+            "title": "Time Zone",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sla_urgent_minutes",
+          "sla_normal_minutes",
+          "max_candidates",
+          "oncall_direct_from_depth",
+          "time_zone",
+          "pending_doctor_approval",
+          "can_edit",
+          "version"
+        ],
+        "title": "CareTimingOut",
+        "type": "object"
+      },
+      "CareUrgency": {
+        "enum": [
+          "normal",
+          "urgent"
+        ],
+        "title": "CareUrgency",
         "type": "string"
       },
       "ChangePasswordRequest": {
@@ -1749,6 +2280,14 @@
           "version": {
             "title": "Version",
             "type": "integer"
+          },
+          "viewers": {
+            "description": "Colleagues who have this conversation open now, the caller excluded. A warning, not a lock; empty when presence is unavailable.",
+            "items": {
+              "$ref": "#/components/schemas/PresenceViewer"
+            },
+            "title": "Viewers",
+            "type": "array"
           }
         },
         "required": [
@@ -1876,6 +2415,14 @@
           "version": {
             "title": "Version",
             "type": "integer"
+          },
+          "viewers": {
+            "description": "Colleagues who have this conversation open now, the caller excluded. A warning, not a lock; empty when presence is unavailable.",
+            "items": {
+              "$ref": "#/components/schemas/PresenceViewer"
+            },
+            "title": "Viewers",
+            "type": "array"
           }
         },
         "required": [
@@ -2621,6 +3168,42 @@
         "title": "DailyUsage",
         "type": "object"
       },
+      "DepthRowOut": {
+        "additionalProperties": false,
+        "properties": {
+          "from_depth": {
+            "$ref": "#/components/schemas/CareDepth"
+          },
+          "signal": {
+            "$ref": "#/components/schemas/DepthSignal"
+          }
+        },
+        "required": [
+          "signal",
+          "from_depth"
+        ],
+        "title": "DepthRowOut",
+        "type": "object"
+      },
+      "DepthSignal": {
+        "description": "Signals of the handoff skill that have their own \"hand off from depth X\" cell.",
+        "enum": [
+          "default",
+          "vip",
+          "complex_history",
+          "past_complaint",
+          "pending_doctor_work",
+          "post_procedure",
+          "out_of_hours",
+          "asks_for_human",
+          "negative_sentiment",
+          "repeated_question",
+          "answer_rejected",
+          "urgent"
+        ],
+        "title": "DepthSignal",
+        "type": "string"
+      },
       "EpisodeOut": {
         "additionalProperties": false,
         "properties": {
@@ -2878,6 +3461,271 @@
         ],
         "title": "Gender",
         "type": "string"
+      },
+      "HandoffDeclineIn": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "description": "Free text, kept for the routing, not for the patient.",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "suggest_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Another colleague who should take it.",
+            "title": "Suggest User Id"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "HandoffDeclineIn",
+        "type": "object"
+      },
+      "HandoffListOut": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HandoffWaitingOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "HandoffListOut",
+        "type": "object"
+      },
+      "HandoffMatrixOut": {
+        "additionalProperties": false,
+        "properties": {
+          "confidence_threshold": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence Threshold",
+            "type": "number"
+          },
+          "post_procedure_window_hours": {
+            "maximum": 720.0,
+            "minimum": 0.0,
+            "title": "Post Procedure Window Hours",
+            "type": "integer"
+          },
+          "repeat_question_threshold": {
+            "maximum": 10.0,
+            "minimum": 2.0,
+            "title": "Repeat Question Threshold",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/DepthRowOut"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "unverified_max_depth": {
+            "$ref": "#/components/schemas/CareDepth"
+          }
+        },
+        "required": [
+          "confidence_threshold",
+          "unverified_max_depth",
+          "post_procedure_window_hours",
+          "repeat_question_threshold",
+          "rows"
+        ],
+        "title": "HandoffMatrixOut",
+        "type": "object"
+      },
+      "HandoffResultOut": {
+        "additionalProperties": false,
+        "properties": {
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "``accepted`` once somebody took it, else null.",
+            "title": "Outcome"
+          },
+          "patient_id": {
+            "format": "uuid",
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CareControlState"
+          }
+        },
+        "required": [
+          "patient_id",
+          "state"
+        ],
+        "title": "HandoffResultOut",
+        "type": "object"
+      },
+      "HandoffScope": {
+        "enum": [
+          "mine",
+          "all"
+        ],
+        "type": "string"
+      },
+      "HandoffWaitingOut": {
+        "additionalProperties": false,
+        "description": "One routing round that is waiting for a person.",
+        "properties": {
+          "can_accept": {
+            "title": "Can Accept",
+            "type": "boolean"
+          },
+          "can_decline": {
+            "title": "Can Decline",
+            "type": "boolean"
+          },
+          "chain_length": {
+            "minimum": 1.0,
+            "title": "Chain Length",
+            "type": "integer"
+          },
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "depth": {
+            "$ref": "#/components/schemas/CareDepth"
+          },
+          "mine": {
+            "description": "The caller is the person being asked now.",
+            "title": "Mine",
+            "type": "boolean"
+          },
+          "on_call_step": {
+            "description": "The chain reached the 24/7 on-call contact.",
+            "title": "On Call Step",
+            "type": "boolean"
+          },
+          "opened_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Opened At",
+            "type": "string"
+          },
+          "patient_id": {
+            "format": "uuid",
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "patient_name": {
+            "description": "Display name; staff-only information.",
+            "maxLength": 200,
+            "title": "Patient Name",
+            "type": "string"
+          },
+          "position": {
+            "description": "1-based place of the asked person in the chain.",
+            "minimum": 1.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "reason": {
+            "description": "Code of the signal that decided (never patient text).",
+            "maxLength": 200,
+            "title": "Reason",
+            "type": "string"
+          },
+          "required_skill": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Skill"
+          },
+          "sla_due_at": {
+            "anyOf": [
+              {
+                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+                "examples": [
+                  "2026-09-20T09:00:00+07:00"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the person asked now must answer by.",
+            "title": "Sla Due At"
+          },
+          "suggested_by_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A colleague who suggested the person asked.",
+            "title": "Suggested By Name"
+          },
+          "summary": {
+            "description": "PII-masked summary of the context, written by the agent.",
+            "maxLength": 1000,
+            "title": "Summary",
+            "type": "string"
+          },
+          "urgency": {
+            "$ref": "#/components/schemas/CareUrgency"
+          }
+        },
+        "required": [
+          "patient_id",
+          "patient_name",
+          "reason",
+          "summary",
+          "depth",
+          "urgency",
+          "confidence",
+          "opened_at",
+          "position",
+          "chain_length",
+          "on_call_step",
+          "mine",
+          "can_accept",
+          "can_decline"
+        ],
+        "title": "HandoffWaitingOut",
+        "type": "object"
       },
       "HealthResponse": {
         "additionalProperties": false,
@@ -3507,6 +4355,45 @@
         "title": "KillSwitchRequest",
         "type": "object"
       },
+      "LiveEvent": {
+        "additionalProperties": false,
+        "description": "The ``data`` of one server-sent event (default ``message`` event type).",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The changed object, or null for 'some of them'.",
+            "title": "Id"
+          },
+          "type": {
+            "$ref": "#/components/schemas/LiveEventType"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "LiveEvent",
+        "type": "object"
+      },
+      "LiveEventType": {
+        "enum": [
+          "inbox.changed",
+          "tasks.changed",
+          "review.changed",
+          "presence.changed",
+          "handoff.changed",
+          "care.changed"
+        ],
+        "title": "LiveEventType",
+        "type": "string"
+      },
       "LlmProviderKind": {
         "description": "``LLM_PROVIDER_KINDS`` of src/config/llm-provider-kind.ts.",
         "enum": [
@@ -3745,14 +4632,8 @@
       },
       "LoginRequest": {
         "additionalProperties": false,
+        "description": "Sign-in of a staff member. One installation is one clinic (single tenant): no clinic field.",
         "properties": {
-          "clinic_slug": {
-            "maxLength": 64,
-            "minLength": 1,
-            "pattern": "^[a-z0-9][a-z0-9-]*$",
-            "title": "Clinic Slug",
-            "type": "string"
-          },
           "email": {
             "maxLength": 254,
             "minLength": 3,
@@ -3768,7 +4649,6 @@
           }
         },
         "required": [
-          "clinic_slug",
           "email",
           "password"
         ],
@@ -4047,6 +4927,66 @@
         ],
         "title": "MemoryFact",
         "type": "object"
+      },
+      "MemoryFactOut": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "fact": {
+            "maxLength": 500,
+            "title": "Fact",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/MemorySourceOut"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+                "examples": [
+                  "2026-09-20T09:00:00+07:00"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          }
+        },
+        "required": [
+          "id",
+          "fact",
+          "source",
+          "created_at"
+        ],
+        "title": "MemoryFactOut",
+        "type": "object"
+      },
+      "MemorySourceOut": {
+        "enum": [
+          "patient",
+          "staff",
+          "doctor_edit"
+        ],
+        "title": "MemorySourceOut",
+        "type": "string"
       },
       "MemoryWritePolicy": {
         "enum": [
@@ -4399,6 +5339,169 @@
         "title": "MessageTemplateUpdate",
         "type": "object"
       },
+      "OnCallContactIn": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "default": true,
+            "title": "Active",
+            "type": "boolean"
+          },
+          "owner": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Owner",
+            "type": "string"
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+                "examples": [
+                  "2026-09-20T09:00:00+07:00"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+                "examples": [
+                  "2026-09-20T09:00:00+07:00"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required to change an existing contact.",
+            "title": "Version"
+          },
+          "zalo_number": {
+            "pattern": "^\\+?\\d{8,15}$",
+            "title": "Zalo Number",
+            "type": "string"
+          }
+        },
+        "required": [
+          "zalo_number",
+          "owner"
+        ],
+        "title": "OnCallContactIn",
+        "type": "object"
+      },
+      "OnCallContactOut": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_fixture": {
+            "description": "A test number; the screen flags it as not a real contact.",
+            "title": "Is Fixture",
+            "type": "boolean"
+          },
+          "owner": {
+            "maxLength": 200,
+            "title": "Owner",
+            "type": "string"
+          },
+          "valid_from": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Valid From",
+            "type": "string"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+                "examples": [
+                  "2026-09-20T09:00:00+07:00"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "zalo_number": {
+            "description": "Staff-only (care.admin). Never logged and never sent to the model.",
+            "title": "Zalo Number",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "zalo_number",
+          "owner",
+          "valid_from",
+          "active",
+          "is_fixture",
+          "version"
+        ],
+        "title": "OnCallContactOut",
+        "type": "object"
+      },
+      "OnCallListOut": {
+        "additionalProperties": false,
+        "properties": {
+          "chain_ends_with_on_call": {
+            "description": "True while an active contact exists: the chain always ends at the 24/7 number.",
+            "title": "Chain Ends With On Call",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OnCallContactOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "chain_ends_with_on_call"
+        ],
+        "title": "OnCallListOut",
+        "type": "object"
+      },
       "OnceAtInput": {
         "additionalProperties": false,
         "description": "``date`` + ``time`` in the schedule's time zone. The raw datetime string of the LLM is NOT accepted:\nNode/Python would read it in the SERVER zone and shift the hour (schedule-parser.ts).",
@@ -4446,6 +5549,88 @@
           "in_minutes"
         ],
         "title": "OnceInMinutesInput",
+        "type": "object"
+      },
+      "OpenHandoffOut": {
+        "additionalProperties": false,
+        "properties": {
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "current_candidate_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Candidate Name"
+          },
+          "depth": {
+            "$ref": "#/components/schemas/CareDepth"
+          },
+          "opened_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Opened At",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "required_skill": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Skill"
+          },
+          "sla_due_at": {
+            "anyOf": [
+              {
+                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+                "examples": [
+                  "2026-09-20T09:00:00+07:00"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sla Due At"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "urgency": {
+            "$ref": "#/components/schemas/CareUrgency"
+          }
+        },
+        "required": [
+          "reason",
+          "summary",
+          "depth",
+          "urgency",
+          "confidence",
+          "opened_at"
+        ],
+        "title": "OpenHandoffOut",
         "type": "object"
       },
       "OutboundMode": {
@@ -4918,6 +6103,104 @@
         "title": "Patient360",
         "type": "object"
       },
+      "PatientCareTimelineOut": {
+        "additionalProperties": false,
+        "properties": {
+          "autonomy": {
+            "$ref": "#/components/schemas/CareAutonomyOut"
+          },
+          "can_release": {
+            "description": "The conversation is in STAFF and the caller may return it.",
+            "title": "Can Release",
+            "type": "boolean"
+          },
+          "can_tell_agent": {
+            "title": "Can Tell Agent",
+            "type": "boolean"
+          },
+          "control": {
+            "$ref": "#/components/schemas/CareControlOut"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineEntryOut"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "max_override_days": {
+            "description": "Longest time-boxed override a release may set.",
+            "minimum": 1.0,
+            "title": "Max Override Days",
+            "type": "integer"
+          },
+          "memory": {
+            "items": {
+              "$ref": "#/components/schemas/MemoryFactOut"
+            },
+            "title": "Memory",
+            "type": "array"
+          },
+          "open_handoff": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OpenHandoffOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "patient_id": {
+            "format": "uuid",
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "patient_name": {
+            "maxLength": 200,
+            "title": "Patient Name",
+            "type": "string"
+          },
+          "paused_reminders": {
+            "items": {
+              "$ref": "#/components/schemas/PausedReminderOut"
+            },
+            "title": "Paused Reminders",
+            "type": "array"
+          },
+          "pending_drafts": {
+            "items": {
+              "$ref": "#/components/schemas/PendingDraftOut"
+            },
+            "title": "Pending Drafts",
+            "type": "array"
+          },
+          "release_levels": {
+            "description": "Levels a release may set: a release only LOWERS the level, never raises it.",
+            "items": {
+              "$ref": "#/components/schemas/CareLevel"
+            },
+            "title": "Release Levels",
+            "type": "array"
+          }
+        },
+        "required": [
+          "patient_id",
+          "patient_name",
+          "control",
+          "autonomy",
+          "pending_drafts",
+          "paused_reminders",
+          "entries",
+          "memory",
+          "can_release",
+          "can_tell_agent",
+          "release_levels",
+          "max_override_days"
+        ],
+        "title": "PatientCareTimelineOut",
+        "type": "object"
+      },
       "PatientCreate": {
         "additionalProperties": false,
         "properties": {
@@ -5239,6 +6522,92 @@
         "title": "PatientUpdate",
         "type": "object"
       },
+      "PausedReminderOut": {
+        "additionalProperties": false,
+        "properties": {
+          "due_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Due At",
+            "type": "string"
+          },
+          "event_kind": {
+            "title": "Event Kind",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "paused_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Paused At",
+            "type": "string"
+          },
+          "prepared_text": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prepared Text"
+          }
+        },
+        "required": [
+          "id",
+          "event_kind",
+          "due_at",
+          "paused_at"
+        ],
+        "title": "PausedReminderOut",
+        "type": "object"
+      },
+      "PendingDraftOut": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ReviewKind"
+          },
+          "requires_doctor": {
+            "title": "Requires Doctor",
+            "type": "boolean"
+          },
+          "review_item_id": {
+            "format": "uuid",
+            "title": "Review Item Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "review_item_id",
+          "kind",
+          "created_at",
+          "requires_doctor"
+        ],
+        "title": "PendingDraftOut",
+        "type": "object"
+      },
       "Permission": {
         "enum": [
           "patient.read",
@@ -5274,6 +6643,11 @@
           "admin.mcp",
           "admin.usage",
           "admin.policy",
+          "care.read",
+          "care.act",
+          "care.admin",
+          "care.matrix",
+          "care.approve",
           "agent.submit"
         ],
         "title": "Permission",
@@ -5403,6 +6777,55 @@
         "title": "PolicyProfilesOut",
         "type": "object"
       },
+      "PresenceBeat": {
+        "additionalProperties": false,
+        "description": "Body of the heartbeat the browser sends every 15 seconds while a conversation is open.",
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/PresenceState"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "PresenceBeat",
+        "type": "object"
+      },
+      "PresenceState": {
+        "enum": [
+          "viewing",
+          "replying"
+        ],
+        "title": "PresenceState",
+        "type": "string"
+      },
+      "PresenceViewer": {
+        "additionalProperties": false,
+        "description": "A colleague who has the conversation open now (the caller is never in the list).",
+        "properties": {
+          "name": {
+            "description": "Display name of the staff member; staff-only information.",
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/PresenceState"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "state"
+        ],
+        "title": "PresenceViewer",
+        "type": "object"
+      },
       "ProactiveCapScope": {
         "enum": [
           "account_thread",
@@ -5488,6 +6911,110 @@
         ],
         "title": "ReasoningEffort",
         "type": "string"
+      },
+      "ReleaseIn": {
+        "additionalProperties": false,
+        "description": "Return the conversation to the agent. ``level`` null keeps the agent's own level; a level needs\n``days`` (how long it applies) and must not be above the agent's own.",
+        "properties": {
+          "days": {
+            "anyOf": [
+              {
+                "maximum": 365.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CareLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "default": "",
+            "description": "Handover note; PII is masked before it is stored.",
+            "maxLength": 500,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "title": "ReleaseIn",
+        "type": "object"
+      },
+      "ReleasePreviewOut": {
+        "additionalProperties": false,
+        "properties": {
+          "allowed": {
+            "title": "Allowed",
+            "type": "boolean"
+          },
+          "consequence": {
+            "description": "What the agent will do after the release (Vietnamese).",
+            "maxLength": 500,
+            "title": "Consequence",
+            "type": "string"
+          }
+        },
+        "required": [
+          "allowed",
+          "consequence"
+        ],
+        "title": "ReleasePreviewOut",
+        "type": "object"
+      },
+      "ReleaseResultOut": {
+        "additionalProperties": false,
+        "properties": {
+          "override_level": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CareLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "override_until": {
+            "anyOf": [
+              {
+                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+                "examples": [
+                  "2026-09-20T09:00:00+07:00"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Override Until"
+          },
+          "patient_id": {
+            "format": "uuid",
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CareControlState"
+          }
+        },
+        "required": [
+          "patient_id",
+          "state"
+        ],
+        "title": "ReleaseResultOut",
+        "type": "object"
       },
       "ResetPasswordRequest": {
         "additionalProperties": false,
@@ -6326,6 +7853,94 @@
         "title": "SessionInfo",
         "type": "object"
       },
+      "ShiftIntervalOut": {
+        "additionalProperties": false,
+        "properties": {
+          "end": {
+            "description": "An end earlier than the start means the shift ends the next morning.",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "title": "End",
+            "type": "string"
+          },
+          "start": {
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end"
+        ],
+        "title": "ShiftIntervalOut",
+        "type": "object"
+      },
+      "ShiftOut": {
+        "additionalProperties": false,
+        "description": "Weekly shift of a person: a list of intervals per weekday (local clinic time).",
+        "properties": {
+          "fri": {
+            "items": {
+              "$ref": "#/components/schemas/ShiftIntervalOut"
+            },
+            "title": "Fri",
+            "type": "array"
+          },
+          "mon": {
+            "items": {
+              "$ref": "#/components/schemas/ShiftIntervalOut"
+            },
+            "title": "Mon",
+            "type": "array"
+          },
+          "sat": {
+            "items": {
+              "$ref": "#/components/schemas/ShiftIntervalOut"
+            },
+            "title": "Sat",
+            "type": "array"
+          },
+          "sun": {
+            "items": {
+              "$ref": "#/components/schemas/ShiftIntervalOut"
+            },
+            "title": "Sun",
+            "type": "array"
+          },
+          "thu": {
+            "items": {
+              "$ref": "#/components/schemas/ShiftIntervalOut"
+            },
+            "title": "Thu",
+            "type": "array"
+          },
+          "tue": {
+            "items": {
+              "$ref": "#/components/schemas/ShiftIntervalOut"
+            },
+            "title": "Tue",
+            "type": "array"
+          },
+          "wed": {
+            "items": {
+              "$ref": "#/components/schemas/ShiftIntervalOut"
+            },
+            "title": "Wed",
+            "type": "array"
+          }
+        },
+        "required": [
+          "mon",
+          "tue",
+          "wed",
+          "thu",
+          "fri",
+          "sat",
+          "sun"
+        ],
+        "title": "ShiftOut",
+        "type": "object"
+      },
       "SourceCitation": {
         "additionalProperties": false,
         "description": "A knowledge-base passage the draft relies on. AI drafts must carry at least one when the\nanswer states a clinic fact.",
@@ -6361,6 +7976,145 @@
           "snippet"
         ],
         "title": "SourceCitation",
+        "type": "object"
+      },
+      "StaffCareProfileIn": {
+        "additionalProperties": false,
+        "properties": {
+          "capacity": {
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Capacity",
+            "type": "integer"
+          },
+          "languages": {
+            "items": {
+              "maxLength": 8,
+              "minLength": 2,
+              "type": "string"
+            },
+            "maxItems": 5,
+            "title": "Languages",
+            "type": "array"
+          },
+          "shift": {
+            "$ref": "#/components/schemas/ShiftOut"
+          },
+          "skills": {
+            "items": {
+              "maxLength": 40,
+              "minLength": 1,
+              "pattern": "^[a-z0-9_]+$",
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Skills",
+            "type": "array"
+          },
+          "version": {
+            "description": "Optimistic lock: the version that was read.",
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "skills",
+          "shift",
+          "capacity",
+          "languages",
+          "version"
+        ],
+        "title": "StaffCareProfileIn",
+        "type": "object"
+      },
+      "StaffCareProfileListOut": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StaffCareProfileOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "known_skills": {
+            "description": "Skills the routing knows (suggestions for the editor).",
+            "items": {
+              "type": "string"
+            },
+            "title": "Known Skills",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "known_skills"
+        ],
+        "title": "StaffCareProfileListOut",
+        "type": "object"
+      },
+      "StaffCareProfileOut": {
+        "additionalProperties": false,
+        "properties": {
+          "capacity": {
+            "minimum": 1.0,
+            "title": "Capacity",
+            "type": "integer"
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Languages",
+            "type": "array"
+          },
+          "load": {
+            "description": "Conversations in STAFF state that the person owns now.",
+            "minimum": 0.0,
+            "title": "Load",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "shift": {
+            "$ref": "#/components/schemas/ShiftOut"
+          },
+          "skills": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Skills",
+            "type": "array"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "role",
+          "skills",
+          "shift",
+          "capacity",
+          "languages",
+          "load",
+          "version"
+        ],
+        "title": "StaffCareProfileOut",
         "type": "object"
       },
       "StaffUserCreate": {
@@ -6644,6 +8398,42 @@
         "title": "TaskStatus",
         "type": "string"
       },
+      "TellAgentIn": {
+        "additionalProperties": false,
+        "properties": {
+          "instruction": {
+            "description": "Free text; PII is masked before it is stored.",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Instruction",
+            "type": "string"
+          }
+        },
+        "required": [
+          "instruction"
+        ],
+        "title": "TellAgentIn",
+        "type": "object"
+      },
+      "TellAgentOut": {
+        "additionalProperties": false,
+        "properties": {
+          "memory_id": {
+            "format": "uuid",
+            "title": "Memory Id",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/MemorySourceOut",
+            "default": "staff"
+          }
+        },
+        "required": [
+          "memory_id"
+        ],
+        "title": "TellAgentOut",
+        "type": "object"
+      },
       "ThreadRow": {
         "additionalProperties": false,
         "properties": {
@@ -6738,6 +8528,86 @@
           }
         },
         "title": "ThreadUpdate",
+        "type": "object"
+      },
+      "TimelineEntryKind": {
+        "enum": [
+          "sent",
+          "reviewed",
+          "paused",
+          "control",
+          "autonomy"
+        ],
+        "title": "TimelineEntryKind",
+        "type": "string"
+      },
+      "TimelineEntryOut": {
+        "additionalProperties": false,
+        "properties": {
+          "actor_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Name"
+          },
+          "at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "code": {
+            "description": "Machine code of the action; the FE words it.",
+            "maxLength": 200,
+            "title": "Code",
+            "type": "string"
+          },
+          "depth": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CareDepth"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/TimelineEntryKind"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "kind",
+          "code"
+        ],
+        "title": "TimelineEntryOut",
         "type": "object"
       },
       "TimelineEvent": {
@@ -20011,6 +21881,1937 @@
         ]
       }
     },
+    "/api/v1/care/admin/alerts": {
+      "get": {
+        "operationId": "care_list_alerts",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CareAlertListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Demotions, unresponsive patients, red flags, on-call used",
+        "tags": [
+          "care"
+        ]
+      }
+    },
+    "/api/v1/care/admin/matrix": {
+      "get": {
+        "operationId": "care_get_matrix",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CareMatrixOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Depth and autonomy matrix, with the pending-approval badge",
+        "tags": [
+          "care"
+        ]
+      },
+      "put": {
+        "operationId": "care_save_matrix",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CareMatrixIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CareMatrixOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Save the cells of the matrix (the badge goes back to pending)",
+        "tags": [
+          "care"
+        ]
+      }
+    },
+    "/api/v1/care/admin/matrix/approval": {
+      "post": {
+        "operationId": "care_approve_matrix",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CareApprovalIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CareMatrixOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Clear or restore the pending-doctor-approval badge",
+        "tags": [
+          "care"
+        ]
+      }
+    },
+    "/api/v1/care/admin/on-call": {
+      "get": {
+        "operationId": "care_list_on_call",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnCallListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "The 24/7 on-call contacts",
+        "tags": [
+          "care"
+        ]
+      },
+      "post": {
+        "operationId": "care_create_on_call",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnCallContactIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnCallContactOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Add an on-call contact",
+        "tags": [
+          "care"
+        ]
+      }
+    },
+    "/api/v1/care/admin/on-call/{contact_id}": {
+      "put": {
+        "operationId": "care_update_on_call",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Contact Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnCallContactIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnCallContactOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Change or switch off an on-call contact",
+        "tags": [
+          "care"
+        ]
+      }
+    },
+    "/api/v1/care/admin/staff": {
+      "get": {
+        "operationId": "care_list_staff_profiles",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffCareProfileListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Skills, shift and capacity of every staff member",
+        "tags": [
+          "care"
+        ]
+      }
+    },
+    "/api/v1/care/admin/staff/{user_id}": {
+      "put": {
+        "operationId": "care_update_staff_profile",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffCareProfileIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffCareProfileOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Change the skills, shift and capacity of one staff member",
+        "tags": [
+          "care"
+        ]
+      }
+    },
+    "/api/v1/care/admin/timing": {
+      "get": {
+        "operationId": "care_get_timing",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CareTimingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "SLA and chain length, send window",
+        "tags": [
+          "care"
+        ]
+      },
+      "put": {
+        "operationId": "care_save_timing",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CareTimingIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CareTimingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Change the SLA and the chain length",
+        "tags": [
+          "care"
+        ]
+      }
+    },
+    "/api/v1/care/handoffs": {
+      "get": {
+        "operationId": "care_list_handoffs",
+        "parameters": [
+          {
+            "description": "mine: asked of me now; all: every open round.",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/HandoffScope",
+              "default": "mine",
+              "description": "mine: asked of me now; all: every open round."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoffListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Handoffs waiting for a person",
+        "tags": [
+          "care"
+        ]
+      }
+    },
+    "/api/v1/care/handoffs/{patient_id}/accept": {
+      "post": {
+        "operationId": "care_accept_handoff",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoffResultOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Take the conversation (HANDOFF_ROUTING to STAFF)",
+        "tags": [
+          "care"
+        ]
+      }
+    },
+    "/api/v1/care/handoffs/{patient_id}/decline": {
+      "post": {
+        "operationId": "care_decline_handoff",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HandoffDeclineIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoffResultOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Decline with a reason, optionally suggesting a colleague",
+        "tags": [
+          "care"
+        ]
+      }
+    },
+    "/api/v1/care/patients/{patient_id}/release": {
+      "post": {
+        "operationId": "care_release_to_agent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReleaseResultOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Return the conversation to the agent (STAFF to AUTO), with a note and an optional lower level",
+        "tags": [
+          "care"
+        ]
+      }
+    },
+    "/api/v1/care/patients/{patient_id}/release/preview": {
+      "post": {
+        "operationId": "care_preview_release",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReleasePreviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "The consequence of a release, in words, before it is done",
+        "tags": [
+          "care"
+        ]
+      }
+    },
+    "/api/v1/care/patients/{patient_id}/tell-agent": {
+      "post": {
+        "operationId": "care_tell_agent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TellAgentIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TellAgentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "A free-text instruction for the agent of this patient (saved as care memory, source staff)",
+        "tags": [
+          "care"
+        ]
+      }
+    },
+    "/api/v1/care/patients/{patient_id}/timeline": {
+      "get": {
+        "operationId": "care_patient_timeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientCareTimelineOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "What the care agent of one patient did, holds and waits for",
+        "tags": [
+          "care"
+        ]
+      }
+    },
     "/api/v1/conversations": {
       "get": {
         "operationId": "conversations_list_conversations",
@@ -20707,6 +24508,217 @@
           }
         ],
         "summary": "Send a manual staff reply through the channel",
+        "tags": [
+          "conversations"
+        ]
+      }
+    },
+    "/api/v1/conversations/{conversation_id}/presence": {
+      "delete": {
+        "operationId": "conversations_leave_presence",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Presence: I left this conversation",
+        "tags": [
+          "conversations"
+        ]
+      },
+      "post": {
+        "description": "Sent every 15 seconds while the conversation is open; an entry expires after 30 seconds. A WARNING shown to colleagues in `viewers`, never a lock: it does not block sending. Needs the right to read the conversation (403, or 404 when it is not visible). Answers 204 also when the presence store is unavailable.",
+        "operationId": "conversations_touch_presence",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresenceBeat"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Presence heartbeat: I am looking at or answering this conversation",
         "tags": [
           "conversations"
         ]
@@ -21526,6 +25538,104 @@
         "summary": "Log a contact attempt and close or reschedule the task",
         "tags": [
           "crm"
+        ]
+      }
+    },
+    "/api/v1/events": {
+      "get": {
+        "description": "Each event is the default `message` event whose data is a `LiveEvent` JSON. It says that something changed, never what: refetch the list you show. A comment line every 15 seconds keeps the connection open. The stream ends when the session ends; the browser reconnects by itself. 503 while the live bus is down (the screen then polls), 429 past 5 streams per person.",
+        "operationId": "live_stream_events",
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveEvent",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "text/event-stream of LiveEvent."
+          },
+          "401": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Live updates (server-sent events)",
+        "tags": [
+          "live"
         ]
       }
     },
@@ -23251,19 +27361,111 @@
         ]
       }
     },
-    "/api/v1/webhooks/zalo-bot/{clinic_slug}/{account_id}": {
+    "/api/v1/staff/assignable": {
+      "get": {
+        "description": "Any signed-in staff member (no admin permission). ACTIVE staff of the clinic whose role can work conversations and CRM tasks (owner, manager, doctor, cs_staff; not reception), A to Z by name. Only `id`, `name` and `role`: never an e-mail, a phone, a hash, the last sign-in or a locked account. Limited to 60 calls per minute per user. The server checks the same rule again when an assignee is saved, so this list is a convenience, not the authority.",
+        "operationId": "staff_list_assignable_staff",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AssignableStaffOut"
+                  },
+                  "title": "Response Staff List Assignable Staff",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Colleagues a task or a conversation can be handed to",
+        "tags": [
+          "staff"
+        ]
+      }
+    },
+    "/api/v1/webhooks/zalo-bot/{account_id}": {
       "post": {
         "operationId": "webhooks_receive_zalo_bot_update",
         "parameters": [
-          {
-            "in": "path",
-            "name": "clinic_slug",
-            "required": true,
-            "schema": {
-              "title": "Clinic Slug",
-              "type": "string"
-            }
-          },
           {
             "in": "path",
             "name": "account_id",
@@ -23375,19 +27577,10 @@
         ]
       }
     },
-    "/api/v1/webhooks/zalo-bridge/{clinic_slug}/{account_id}": {
+    "/api/v1/webhooks/zalo-bridge/{account_id}": {
       "post": {
         "operationId": "webhooks_receive_zalo_bridge_event",
         "parameters": [
-          {
-            "in": "path",
-            "name": "clinic_slug",
-            "required": true,
-            "schema": {
-              "title": "Clinic Slug",
-              "type": "string"
-            }
-          },
           {
             "in": "path",
             "name": "account_id",
@@ -23545,6 +27738,18 @@
     {
       "description": "Human review queue for agent output. (B1)",
       "name": "review-items"
+    },
+    {
+      "description": "Live updates (server-sent events) and presence. (ST-R)",
+      "name": "live"
+    },
+    {
+      "description": "Supervision of the per-patient care agent and its administration. (M5)",
+      "name": "care"
+    },
+    {
+      "description": "Pickers for every signed-in member: who can be assigned work. (ST-S)",
+      "name": "staff"
     },
     {
       "description": "Channel webhooks, not for the FE. (C1 Bot API, C2 bridge)",

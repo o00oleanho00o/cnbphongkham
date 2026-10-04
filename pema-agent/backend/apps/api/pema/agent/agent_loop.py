@@ -89,7 +89,6 @@ from pema.agent.tool_loop_guard import ToolLoopGuard
 from pema.agent.tool_loop_guard_thresholds import NguongGuard, nguong_theo_tran_step
 from pema.agent.trim_context_to_budget import cat_ngu_canh_theo_ngan_sach
 from pema.agent.vision_rejection_fallback import has_image_parts, is_image_rejection_error
-from pema.config.runtime_settings_store import set_settings_clinic
 from pema.config.runtime_tuning_settings import get_tuning, get_tuning_bool, get_tuning_int
 from pema.config.runtime_vision_settings import is_sidecar_configured
 from pema.shared.logger import create_logger
@@ -329,9 +328,6 @@ async def run_agent_turn(
     """Run one agent turn (``runAgentTurn``). Raises ``AgentTurnError`` for every failure."""
     cb = callbacks if callbacks is not None else TurnCallbacks()
     clinic_id = request.clinic_id
-    # The synchronous readers (tuning, LLM settings) are keyed by clinic through a ContextVar; every asyncio
-    # task has its own copy so concurrent turns of different clinics do not interfere.
-    set_settings_clinic(clinic_id)
 
     account = await deps.accounts.get_account(clinic_id, request.account_id)
     if account is None:

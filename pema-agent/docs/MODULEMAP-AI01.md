@@ -24,16 +24,18 @@
 | F | Hạ tầng và tài liệu | |
 | G | Tích hợp: composition, tiến trình worker, kịch bản vòng khép kín, review | |
 
+> Nhánh `feat/single-tenant`: một bản cài một phòng khám. Các chỗ dưới đây nhắc `clinic_id`, RLS hay "theo phòng khám" đọc theo CONTRACTS-AI01 mục 10 (cột `clinic_id` là mã cài đặt cố định, không RLS, không hàm chọn phòng khám). Hạ tầng (`infra/`) thêm `PEMA_CLINIC_NAME`/`PEMA_CLINIC_ID` và bước kiểm "đúng một phòng khám" ở `migrate.sh`. Hai nhánh song song: ARCH-AI01 mục 14.
+
 ## Nền ẩn
 
 | Module | Trách nhiệm | Hợp đồng | Gói |
 |---|---|---|---|
 | `backend/packages/contracts` (`pema_contracts`, 25 file) | DTO pydantic, `ChannelPort`, `AgentEngine`, `PolicyHooks`, `ToolRegistry`, `SchedulerPort`, `AgentFacingClinicActions`, `ConversationStore`, các bản giả (`testing`) | Mọi seam giữa gói là Protocol ở đây; là lá, không import gói nào | A (+ G cho các thêm seam) |
-| `pema/core` | `ClinicDatabase.session(clinic_id)` (đặt `app.clinic_id` cho giao dịch → RLS), vòng lặp sự kiện selector cho Windows | Không có ngữ cảnh phòng khám thì không có hàng | A |
+| `pema/core` | `ClinicDatabase.session()` (không còn đặt `app.clinic_id`; đối số `clinic_id` cũ bị bỏ qua), `get_installation_clinic_id(db)` (mã cài đặt: bộ nhớ đệm, `PEMA_CLINIC_ID`, `ctx.the_clinic_id()`), `installation.ensure_clinic` (tạo phòng khám duy nhất, idempotent), helper test `testing.ensure_test_clinic`; shim `resolve_clinic`/`list_active_clinic_ids` (deprecated, trả mã cài đặt), vòng lặp sự kiện selector cho Windows | Một bản cài một phòng khám, không RLS (CONTRACTS-AI01 mục 10) | A, ST-A |
 | `pema/shared` (27 file) | Logger che PII, giờ VN, múi giờ, bộ tuần tự lỗi an toàn, chặn địa chỉ riêng/SSRF, tải xuống an toàn, đọc zip/xml có trần, chờ có điều kiện | | A, D1, D2, D3, D4 |
 | `pema/config` (20 file) | `Settings` (`PEMA_*`), 72 tham số tuning, mã hóa bí mật, account/agent store, cài đặt LLM/ảnh/tool/thị giác, kho `agent.runtime_settings` | `get_tuning`, `bot_time_zone` | A, D1, D2, D4, G |
-| `backend/apps/api/alembic/versions` | `0001` clinic, `0002` agent, `0003` clinic_agent; `b1_0004` phiên + Inbox; `b2_0001` dấu giao thức CRM; `s_0004` runtime bộ lập lịch; `p0001` liên kết danh tính; `g_0005` gộp đầu nhánh | Không sửa `0001..0003`; bảng mới có `clinic_id`, RLS, grant | A + từng gói + G |
-| Role DB `be_app`, `agent_worker` | `be_app`: DML trên `clinic.*` và `agent.*`, `audit_log` chỉ chèn/đọc. `agent_worker`: DML `agent.*`, đọc view `clinic_agent`, EXECUTE hàm `clinic_agent`; **không có gì trên `clinic.*`** | Không sở hữu bảng nên RLS áp dụng | A (tạo) + `infra/scripts/bootstrap-roles.sh` (F, mật khẩu) |
+| `backend/apps/api/alembic/versions` | `0001` clinic, `0002` agent, `0003` clinic_agent; `b1_0004` phiên + Inbox; `b2_0001` dấu giao thức CRM; `s_0004` runtime bộ lập lịch; `p0001` liên kết danh tính; `g_0005` gộp đầu nhánh; `h_0008` gộp tiếp; `st_0009_single_tenant` (một phòng khám, bỏ RLS; đầu duy nhất) | Không sửa `0001..0003`; bảng mới có `clinic_id` (khóa ngoại tới `clinic.clinic`) và grant, **không RLS, không policy** | A + từng gói + G |
+| Role DB `be_app`, `agent_worker` | `be_app`: DML trên `clinic.*` và `agent.*`, `audit_log` chỉ chèn/đọc. `agent_worker`: DML `agent.*`, đọc view `clinic_agent`, EXECUTE hàm `clinic_agent`; **không có gì trên `clinic.*`** | Grant là ranh giới duy nhất của DB (không còn RLS: `be_app` đọc mọi dòng của một CSDL chỉ có một phòng khám) | A (tạo) + `infra/scripts/bootstrap-roles.sh` (F, mật khẩu) |
 
 ## Lõi phòng khám (`pema/clinic`, 48 file)
 

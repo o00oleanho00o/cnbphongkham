@@ -21,7 +21,6 @@ import {
 } from "./core";
 
 export const CLINIC_ID = uuid(1, 0);
-export const CLINIC_SLUG = "pema-demo";
 export const CLINIC_NAME = "Phòng khám Pema (dữ liệu mẫu)";
 export const COOKIE = "pema_session";
 
@@ -165,6 +164,11 @@ const ALL: Permission[] = [
   "admin.policy",
   // The manager LISTS staff (`GET /admin/users`); changing them is `admin.users`, the owner's alone.
   "admin.users.read",
+  "care.read",
+  "care.act",
+  "care.admin",
+  "care.matrix",
+  "care.approve",
 ];
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
@@ -184,6 +188,10 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "review.decide",
     "review.decide_clinical",
     "kb.read",
+    "care.read",
+    "care.act",
+    "care.matrix",
+    "care.approve",
   ],
   cs_staff: [
     "patient.read",
@@ -200,6 +208,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "review.read",
     "review.decide",
     "kb.read",
+    "care.read",
+    "care.act",
   ],
   reception: [
     "patient.read",
@@ -272,15 +282,16 @@ function requireSession(ctx: Ctx): Session {
 
 export function register(r: Router): void {
   r.post("/api/v1/auth/login", null, (ctx): Reply => {
-    const { clinic_slug, email, password } = ctx.body as {
-      clinic_slug?: string;
+    // One installation is ONE clinic: the body is e-mail + password. A leftover `clinic_slug` from an old
+    // client is accepted and ignored, so nothing breaks while both sides are being changed.
+    const { email, password } = ctx.body as {
       email?: string;
       password?: string;
     };
     const user = USERS.find((u) => u.email === email?.toLowerCase());
     // A locked account is refused exactly like a wrong password (no hint that the account exists).
-    if (clinic_slug !== CLINIC_SLUG || !user || !user.active || user.password !== password) {
-      throw new HttpError(401, "unauthenticated", "Sai phòng khám, email hoặc mật khẩu.");
+    if (!user || !user.active || user.password !== password) {
+      throw new HttpError(401, "unauthenticated", "Sai email hoặc mật khẩu.");
     }
     user.last_login_at = isoFromNow(0);
     const id = randomUUID();

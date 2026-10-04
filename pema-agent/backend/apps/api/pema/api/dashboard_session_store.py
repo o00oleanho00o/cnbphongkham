@@ -1,10 +1,10 @@
 # ported from: src/server/dashboard-session-store.ts
 """Server-side record of a dashboard login in ``clinic.auth_session``.
 
-Forced deviations: SQLite ``dashboard_sessions`` becomes ``clinic.auth_session`` (Postgres, RLS by
-``clinic_id``, one row per login, tied to a user). The original stored ``sha256(secret)`` because its token
-was ``<id>.<secret>``; here the token is a signed JWT that carries only the session id, so no secret needs
-hashing: the signature authenticates the cookie and the ROW is what can be revoked. Same properties:
+Forced deviations: SQLite ``dashboard_sessions`` becomes ``clinic.auth_session`` (Postgres, one row per
+login, tied to a user). The original stored ``sha256(secret)`` because its token was ``<id>.<secret>``; here
+the token is a signed JWT that carries only the session id, so no secret needs hashing: the signature
+authenticates the cookie and the ROW is what can be revoked. Same properties:
 
 * logout deletes the row, so a leaked cookie stops working at once (a self-contained token would not);
 * every row stores the fingerprint of the password in force when it was created, so changing the password

@@ -32,7 +32,6 @@ from pema.config.runtime_settings_store import (
     InMemoryRuntimeSettingsStore,
     RuntimeSettingsSnapshot,
     install_runtime_settings,
-    use_settings_clinic,
 )
 from pema.config.runtime_tuning_settings import (
     StaticTuningProvider,
@@ -88,8 +87,7 @@ def env(monkeypatch: pytest.MonkeyPatch) -> Iterator[Env]:
     e = Env()
     install_runtime_settings(e.snapshot)
     install_tuning_provider(e.tuning)
-    with use_settings_clinic(FAKE_CLINIC_ID):
-        yield e
+    yield e
     reset_tuning_provider()
     env_module.get_settings.cache_clear()
     get_llm_env.cache_clear()

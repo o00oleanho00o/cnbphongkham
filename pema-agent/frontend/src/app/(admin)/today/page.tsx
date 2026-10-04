@@ -4,6 +4,8 @@
 // clinic time). New screen (no zalo-agent original); behaviour from the web prototype's "CSKH hôm nay"
 // (prototype/shared/crm-ui.js) and design-specs C1/C2/C6/I13. For tasks that staff send by hand it offers
 // "Sao chép nội dung" and "Đánh dấu đã làm". The BE owns the rules; this page only lists and records.
+// Several people work on the same queue: a `tasks.changed` event (GET /api/v1/events) reloads the list quietly,
+// the open form and the filters stay as they are, and without the stream the list refreshes every 30 seconds.
 import { useCallback, useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
@@ -16,14 +18,17 @@ import {
   ListSkeleton,
   RetryNotice,
 } from "@/components/ops/ops-ui";
+import { LiveStatus } from "@/components/ops/live-status";
 import { ResolveTaskSheet } from "@/components/ops/today/resolve-task-sheet";
 import { TaskCard } from "@/components/ops/today/task-card";
 import { useToast } from "@/components/ops/toast";
 import type { Schemas } from "@/lib/api";
 import { http, unwrap } from "@/lib/api/client";
+import type { LiveEventType } from "@/lib/live/live-types";
+import { useLiveEvents } from "@/lib/live/use-live-events";
 import { type ChannelFilter, matchesChannel } from "@/lib/ops/crm-task-view";
 import { copyText, messageToCopy } from "@/lib/ops/clipboard";
-import { clinicDateKey, endOfTodayIso, formatDate } from "@/lib/ops/format";
+import { clinicDateKey, formatDate } from "@/lib/ops/format";
 import { CHANNEL_LABEL, RULE_LABEL, TASK_STATUS_LABEL } from "@/lib/ops/labels";
 import { displayName, usePatientIndex } from "@/lib/ops/use-patient-names";
 import { useSession } from "@/lib/session/session-context";
@@ -35,6 +40,7 @@ type StatusFilter = "open" | "rescheduled" | "resolved";
 const STATUSES: StatusFilter[] = ["open", "rescheduled", "resolved"];
 const CHANNEL_FILTERS: ChannelFilter[] = ["all", "call", "zalo", "sms"];
 const PAGE_SIZE = 200;
+const LIVE_TYPES: readonly LiveEventType[] = ["tasks.changed"];
 
 const RULE_OPTIONS: SelectOption[] = [
   { value: "", label: "Tất cả nhóm chăm sóc" },
@@ -65,8 +71,9 @@ export default function TodayPage() {
               task_status: status,
               rule_key: rule ? (rule as Schemas["RuleKey"]) : undefined,
               owner_user_id: mineOnly ? user.id : undefined,
-              // "Hôm nay" = everything due by the end of the clinic's day, overdue included.
-              due_by: status === "resolved" ? undefined : endOfTodayIso(),
+              // "Hôm nay" = everything due by the end of the clinic's day, overdue included. The API takes a
+              // DATE (a datetime is a 422 "Dữ liệu gửi lên không hợp lệ") and reads it as that whole day.
+              due_by: status === "resolved" ? undefined : clinicDateKey(),
               limit: PAGE_SIZE,
             },
           },
@@ -75,7 +82,8 @@ export default function TodayPage() {
       ),
     [status, rule, mineOnly, user.id],
   );
-  const { data, error, loading, reload } = useLoad(load);
+  const { data, error, loading, reload, refresh } = useLoad(load);
+  const liveMode = useLiveEvents({ types: LIVE_TYPES, onEvent: refresh, onRefresh: refresh });
 
   const items = useMemo(() => data?.items ?? [], [data]);
   const visible = useMemo(() => items.filter((t) => matchesChannel(t, channel)), [items, channel]);
@@ -119,6 +127,8 @@ export default function TodayPage() {
         title="Việc hôm nay"
         subtitle={`${formatDate(clinicDateKey())} · ${data ? `${data.total} việc` : "đang tải"}`}
       />
+
+      <LiveStatus mode={liveMode} />
 
       <div className="mb-4 space-y-3">
         <ChipRow label="Trạng thái">

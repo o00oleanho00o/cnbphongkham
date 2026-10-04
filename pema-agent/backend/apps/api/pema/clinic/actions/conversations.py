@@ -32,6 +32,7 @@ from pema.clinic.actions._common import (
 )
 from pema.clinic.actions._mappers import conversation_out, conversation_summary, message_out
 from pema.clinic.actions._scope import patient_scope
+from pema.clinic.actions.assignees import load_assignable_user
 from pema.clinic.actions.outbound import OutboundDelivery, deliver_queued_message
 from pema.clinic.models import (
     ChannelIdentity,
@@ -44,6 +45,7 @@ from pema.clinic.models import (
 )
 from pema.clinic.rbac import require
 from pema.core.db import ClinicDatabase
+from pema.live import emit_live
 from pema_contracts.actions import ActionContext
 from pema_contracts.common import Page
 from pema_contracts.conversations import (
@@ -58,10 +60,10 @@ from pema_contracts.conversations import (
     SenderType,
 )
 from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.live import LiveEventType
 from pema_contracts.patients import ConsentKind
-from pema_contracts.roles import Permission, Role
+from pema_contracts.roles import Permission
 
-ASSIGNEE_ROLES = (Role.CS_STAFF.value, Role.DOCTOR.value, Role.MANAGER.value, Role.OWNER.value)
 OPEN_REVIEW_STATUSES = ("pending", "escalated")
 
 
@@ -204,7 +206,7 @@ async def list_conversations(
                 func.lower(ChannelIdentity.display_name).like(pattern, escape="\\"),
             )
         )
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         items, total, _ = await summaries(session, ctx, conditions, limit=limit, offset=offset)
     return Page[ConversationSummary](items=items, total=total, limit=limit, offset=offset)
 
@@ -218,16 +220,43 @@ async def _one_out(session: AsyncSession, ctx: ActionContext, conversation_id: U
 
 async def get_conversation(db: ClinicDatabase, ctx: ActionContext, conversation_id: UUID) -> ConversationOut:
     require(ctx, Permission.CONVERSATION_READ)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         await load_conversation(session, ctx, conversation_id)
         return await _one_out(session, ctx, conversation_id)
+
+
+async def require_conversation_access(db: ClinicDatabase, ctx: ActionContext, conversation_id: UUID) -> None:
+    """The same authorization as reading the conversation (``conversation.read``; a doctor only reaches the
+    conversations of their own patients): 403 without the permission, 404 when it does not exist here or is
+    out of scope. Presence uses it: whoever may read a conversation may say they are looking at it."""
+    require(ctx, Permission.CONVERSATION_READ)
+    async with db.session() as session:
+        await load_conversation(session, ctx, conversation_id)
+
+
+async def staff_display_names(
+    db: ClinicDatabase, ctx: ActionContext, user_ids: list[UUID]
+) -> dict[UUID, str]:
+    """Display names of active staff accounts, one query (the colleagues shown next to a conversation)."""
+    require(ctx, Permission.CONVERSATION_READ)
+    if not user_ids:
+        return {}
+    async with db.session() as session:
+        rows = await session.execute(
+            select(UserAccount.id, UserAccount.display_name).where(
+                UserAccount.clinic_id == ctx.clinic_id,
+                UserAccount.id.in_(user_ids),
+                UserAccount.active.is_(True),
+            )
+        )
+        return {row.id: row.display_name for row in rows.all()}
 
 
 async def update_conversation(
     db: ClinicDatabase, ctx: ActionContext, conversation_id: UUID, payload: ConversationUpdate
 ) -> ConversationOut:
     require(ctx, Permission.CONVERSATION_REPLY)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row = await load_conversation(session, ctx, conversation_id)
         check_version(row.version, payload.version)
         changed: list[str] = []
@@ -250,31 +279,34 @@ async def update_conversation(
                     )
             row.status = payload.status.value
             changed.append("status")
+        details: dict[str, Any] = {}
         if "assigned_user_id" in payload.model_fields_set:
             if payload.assigned_user_id is not None:
-                ok = await session.scalar(
-                    select(UserAccount.id).where(
-                        UserAccount.id == payload.assigned_user_id,
-                        UserAccount.clinic_id == ctx.clinic_id,
-                        UserAccount.active.is_(True),
-                        UserAccount.role.in_(ASSIGNEE_ROLES),
-                    )
-                )
-                if ok is None:
-                    raise DomainError(ErrorCode.VALIDATION_FAILED, "Người được giao không hợp lệ.")
+                # active, of this installation and a role that can work conversations; one answer for all
+                await load_assignable_user(session, ctx, payload.assigned_user_id)
+            if payload.assigned_user_id != row.assigned_user_id:
+                details["assignee_from"] = str(row.assigned_user_id) if row.assigned_user_id else None
+                details["assignee_to"] = str(payload.assigned_user_id) if payload.assigned_user_id else None
             row.assigned_user_id = payload.assigned_user_id
             changed.append("assigned_user_id")
         with lost_race_is_conflict():
             await session.flush()
         await audit.record(
-            session, ctx, "conversation.update", "conversation", row.id, {"changed_fields": changed}
+            session,
+            ctx,
+            "conversation.update",
+            "conversation",
+            row.id,
+            {"changed_fields": changed, **details},
         )
-        return await _one_out(session, ctx, conversation_id)
+        result = await _one_out(session, ctx, conversation_id)
+    emit_live(LiveEventType.INBOX_CHANGED, conversation_id)
+    return result
 
 
 async def mark_conversation_read(db: ClinicDatabase, ctx: ActionContext, conversation_id: UUID) -> None:
     require(ctx, Permission.CONVERSATION_READ)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row = await load_conversation(session, ctx, conversation_id)
         cleared = row.unread_count
         row.unread_count = 0
@@ -283,13 +315,14 @@ async def mark_conversation_read(db: ClinicDatabase, ctx: ActionContext, convers
         await audit.record(
             session, ctx, "conversation.mark_read", "conversation", row.id, {"cleared": cleared}
         )
+    emit_live(LiveEventType.INBOX_CHANGED, conversation_id)
 
 
 async def list_messages(
     db: ClinicDatabase, ctx: ActionContext, conversation_id: UUID, *, limit: int = 50, offset: int = 0
 ) -> Page[MessageOut]:
     require(ctx, Permission.CONVERSATION_READ)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         await load_conversation(session, ctx, conversation_id)
         base = (Message.clinic_id == ctx.clinic_id, Message.conversation_id == conversation_id)
         total = await session.scalar(select(func.count()).select_from(Message).where(*base)) or 0
@@ -335,7 +368,7 @@ async def send_message(
     transaction 2 records sent/rejected (``outbound.deliver_queued_message``)."""
     require(ctx, Permission.CONVERSATION_REPLY)
     update_id = f"staff:{ctx.idempotency_key}" if ctx.idempotency_key else None
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         conv = await load_conversation(session, ctx, conversation_id)
         existing = None
         if update_id is not None:
@@ -388,6 +421,7 @@ async def send_message(
                 {"conversation_id": str(conv.id), "proactive": payload.proactive},
             )
             message_id = row.id
+    emit_live(LiveEventType.INBOX_CHANGED, conversation_id)
     result = await deliver_queued_message(db, ctx, message_id, delivery)
     if result is None:  # pragma: no cover - the row was just written
         raise not_found("tin nhắn")
@@ -400,7 +434,9 @@ __all__ = [
     "list_messages",
     "load_conversation",
     "mark_conversation_read",
+    "require_conversation_access",
     "send_message",
+    "staff_display_names",
     "summaries",
     "update_conversation",
 ]

@@ -42,6 +42,7 @@ from pema.clinic.domain import review as review_rules
 from pema.clinic.domain.profile import ProfileFacts, days_between, lifecycle_stage
 from pema.clinic.rbac import require
 from pema.core.db import ClinicDatabase
+from pema.live import emit_live
 from pema_contracts.actions import ActionContext
 from pema_contracts.appointments import AppointmentCreate, AppointmentOut, AppointmentStatus
 from pema_contracts.channel import ChannelKind, InboundMessage
@@ -58,6 +59,7 @@ from pema_contracts.clinic_actions import (
 from pema_contracts.common import VN_TZ
 from pema_contracts.conversations import MessageStatus
 from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.live import LiveEventType
 from pema_contracts.review import (
     ReviewItemCreate,
     ReviewItemOut,
@@ -104,7 +106,7 @@ class ClinicAgentFacingActions:
     async def get_care_context(self, ctx: ActionContext, patient_ref: str) -> CareContext | None:
         _agent_actor(ctx)
         today = now().astimezone(VN_TZ).date()
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             ref = (
                 await session.execute(
                     sql(
@@ -214,7 +216,7 @@ class ClinicAgentFacingActions:
         self, ctx: ActionContext, patient_ref: str, limit: int = 5
     ) -> list[AgentAppointmentView]:
         _agent_actor(ctx)
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 await session.execute(
                     sql(
@@ -254,7 +256,7 @@ class ClinicAgentFacingActions:
         _agent_actor(ctx)
         stamp = now()
         schedule.validate_slot(request.starts_at, request.duration_min, stamp, require_future=True)
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             patient = (
                 await session.execute(
                     sql("SELECT id, code FROM clinic_agent.patient_ref WHERE code = :code"),
@@ -341,7 +343,7 @@ class ClinicAgentFacingActions:
         _agent_actor(ctx)
         if request.clinic_id != ctx.clinic_id:
             raise DomainError(ErrorCode.FORBIDDEN, "Không được tạo mục chờ duyệt cho phòng khám khác.")
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             item_id = (
                 await session.execute(
                     sql(
@@ -370,6 +372,9 @@ class ClinicAgentFacingActions:
                     sql("SELECT * FROM clinic_agent.review_item_summary WHERE id = :id"), {"id": item_id}
                 )
             ).one()
+        emit_live(LiveEventType.REVIEW_CHANGED, row.id)
+        if row.conversation_id is not None:
+            emit_live(LiveEventType.INBOX_CHANGED, row.conversation_id)
         return ReviewItemOut(
             id=row.id,
             kind=ReviewKind(row.kind),
@@ -414,7 +419,7 @@ class ClinicAgentFacingActions:
         self, ctx: ActionContext, channel: ChannelKind, external_user_id: str
     ) -> IdentityLink:
         _agent_actor(ctx)
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 await session.execute(
                     sql("SELECT * FROM clinic_agent.resolve_identity(:c, :u)"),
@@ -433,7 +438,7 @@ class ClinicAgentFacingActions:
     async def record_inbound_message(self, ctx: ActionContext, message: InboundMessage) -> InboxRef:
         """Inbox of record. Idempotent on ``update_id``: a duplicate delivery writes nothing."""
         actor = _agent_actor(ctx)
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 await session.execute(
                     sql(
@@ -452,6 +457,8 @@ class ClinicAgentFacingActions:
                     },
                 )
             ).one()
+        if not row.o_duplicate:
+            emit_live(LiveEventType.INBOX_CHANGED, row.o_conversation_id)
         return InboxRef(
             conversation_id=row.o_conversation_id,
             message_id=row.o_message_id,
@@ -474,7 +481,7 @@ class ClinicAgentFacingActions:
         if status not in _OUTBOUND_STATUSES:
             raise DomainError(ErrorCode.VALIDATION_FAILED, "Trạng thái tin nhắn đi không hợp lệ.")
         try:
-            async with self._db.session(ctx.clinic_id) as session:
+            async with self._db.session() as session:
                 row = (
                     await session.execute(
                         sql(
@@ -496,4 +503,5 @@ class ClinicAgentFacingActions:
             if "conversation not found" in str(exc.orig):
                 raise not_found("hội thoại") from exc
             raise
+        emit_live(LiveEventType.INBOX_CHANGED, row.o_conversation_id)
         return InboxRef(conversation_id=row.o_conversation_id, message_id=row.o_message_id)

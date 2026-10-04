@@ -164,7 +164,7 @@ class AgentTraceStore:
         """INSERT of the whole trace of a turn (``saveTurnTrace``); a turn without steps writes nothing."""
         if not steps:
             return
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             await self.save_turn_trace_in(session, clinic_id, turn_id, steps)
 
     @staticmethod
@@ -174,7 +174,7 @@ class AgentTraceStore:
         await session.execute(_INSERT, [_step_params(clinic_id, turn_id, s) for s in steps])
 
     async def get_turn_trace(self, clinic_id: UUID, turn_id: int) -> list[StepTrace]:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 (await session.execute(_SELECT, {"clinic_id": clinic_id, "turn_id": turn_id}))
                 .mappings()
@@ -209,7 +209,7 @@ class AgentTraceStore:
             "thread_id": thread_id,
             "limit": limit,
         }
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             if before_id is None:
                 rows = (await session.execute(_RECENT_TURNS, params)).mappings().all()
             else:
@@ -234,7 +234,7 @@ class AgentTraceStore:
     ) -> list[TurnAcrossThreads]:
         """Lượt gần đây của mọi thread - nguồn cho trang Trace ở sidebar."""
         params: dict[str, Any] = {"clinic_id": clinic_id, "limit": limit}
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             if before_id is None:
                 rows = (await session.execute(_RECENT_ALL, params)).mappings().all()
             else:
@@ -263,7 +263,7 @@ class AgentTraceStore:
         """Xóa trace cũ hơn N ngày (default ``AGENT_TRACE_RETENTION_DAYS``). Trả về số dòng đã xóa."""
         days = retention_days if retention_days is not None else get_tuning_int("AGENT_TRACE_RETENTION_DAYS")
         cutoff = (now or datetime.now(UTC)) - timedelta(days=days)
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             result = await session.execute(_PRUNE, {"clinic_id": clinic_id, "cutoff": cutoff})
             return affected_rows(result)
 
@@ -310,7 +310,7 @@ class PgTraceReader:
         account_id: str | None = None,
         thread_id: str | None = None,
     ) -> list[TraceTurnRow]:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 (
                     await session.execute(
@@ -344,7 +344,7 @@ class PgTraceReader:
         ]
 
     async def get_turn_steps(self, clinic_id: UUID, turn_id: int) -> list[TraceStepRow]:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 (await session.execute(_READER_STEPS, {"clinic_id": clinic_id, "turn_id": turn_id}))
                 .mappings()

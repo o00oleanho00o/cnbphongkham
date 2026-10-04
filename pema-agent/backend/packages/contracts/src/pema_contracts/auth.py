@@ -12,7 +12,8 @@ from pema_contracts.roles import Permission, Role
 
 
 class LoginRequest(ApiModel):
-    clinic_slug: str = Field(min_length=1, max_length=64, pattern=r"^[a-z0-9][a-z0-9-]*$")
+    """Sign-in of a staff member. One installation is one clinic (single tenant): no clinic field."""
+
     email: str = Field(min_length=3, max_length=254)
     password: SecretStr = Field(max_length=1024)
 
@@ -96,3 +97,13 @@ class StaffUserUpdate(ApiModel):
     display_name: str | None = Field(default=None, min_length=1, max_length=120)
     role: Role | None = None
     active: bool | None = None
+
+
+class AssignableStaffOut(ApiModel):
+    """A colleague a task or a conversation can be handed to (``GET /staff/assignable``, every signed-in staff
+    member may read it). The minimum a picker needs: no e-mail, phone, last sign-in or lock state (locked
+    accounts are never listed). ``role`` is only one of the roles that can handle conversations and tasks."""
+
+    id: UUID
+    name: str
+    role: Role

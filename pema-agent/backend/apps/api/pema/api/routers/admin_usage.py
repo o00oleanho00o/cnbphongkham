@@ -31,7 +31,6 @@ from fastapi import Depends, Query
 from pydantic import BeforeValidator
 
 from pema.api.deps import admin_router
-from pema.config.runtime_settings_store import set_settings_clinic
 from pema.config.runtime_tuning_settings import bot_time_zone
 from pema.shared.log_cursor import doc_con_tro
 from pema.shared.log_file_lines import LOG_LEVELS
@@ -150,7 +149,6 @@ async def get_overview(
     from the bot's local time. ``days`` is only 7, 14 or 30 (the DTO enforces it): ``?days=100000`` would scan
     the whole turns table and fold it in memory.
     """
-    set_settings_clinic(clinic_id)
     zone = bot_time_zone()
     stored = await accounts_store.list_accounts(clinic_id)
     accounts = [

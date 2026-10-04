@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.db, pytest.mark.redis]
 
 
 async def _rows(loop: Loop, action: str) -> list[dict[str, object]]:
-    async with loop.api.db.session(loop.clinic_id) as session:
+    async with loop.api.db.session() as session:
         found = (
             (
                 await session.execute(

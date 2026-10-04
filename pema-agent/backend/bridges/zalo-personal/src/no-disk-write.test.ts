@@ -62,7 +62,6 @@ describe("credential handling: nothing is written to disk", () => {
 
     // When the API starts an account with a credential, a message arrives and a reply is sent
     await sender.post("/v1/accounts/acc-1/start", {
-      clinic_slug: "clinic-a",
       credential: TEST_CREDENTIAL,
     });
     fake.listener.emitMessage(fakeUserMessage());
@@ -72,7 +71,7 @@ describe("credential handling: nothing is written to disk", () => {
       text: "Chào bạn",
       proactive: false,
     });
-    await sender.post("/v1/accounts/acc-2/login/qr", { clinic_slug: "clinic-a" });
+    await sender.post("/v1/accounts/acc-2/login/qr", {});
     gateway.qrControls[0]?.emit({ type: "qr", qrBase64: "QR_PNG_BASE64" });
     gateway.qrControls[0]?.succeed(createFakeSession(createFakeApi(), "1000099"));
     await doiChoDenKhi(

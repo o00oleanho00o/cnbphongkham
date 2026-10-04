@@ -2,9 +2,11 @@
 
 Builds the REAL API router (``build_api_router``) on a bare FastAPI app with the real error handlers, wires
 ``app.state.admin_stores`` to the Postgres stores of a ``ClinicEnv`` and plays package B1's auth layer with
-a tiny middleware: the headers ``x-test-clinic`` and ``x-test-permissions`` become
-``request.state.clinic_id`` / ``request.state.permissions``. No header = not signed in. The cancel-batch
-hook and the audit sink record what they receive so a test can assert on them.
+a tiny middleware: the header ``x-test-clinic`` marks a signed-in staff member and fills
+``request.state.clinic_id`` with the ONE clinic of the installation (single tenant: the value is ignored,
+there is no other clinic to name); ``x-test-permissions`` becomes ``request.state.permissions``. No header =
+not signed in. The cancel-batch hook and the audit sink record what they receive so a test can assert on
+them.
 
 Lives next to the routers (not under ``tests/``) because the test directories are imported in ``importlib``
 mode and cannot share modules; nothing in production imports it.
@@ -53,9 +55,6 @@ class Harness:
             out["x-test-permissions"] = permissions
         return out
 
-    def headers_for(self, clinic_id: UUID, permissions: str = ADMIN_AGENTS) -> dict[str, str]:
-        return {"x-test-clinic": str(clinic_id), "x-test-permissions": permissions}
-
 
 @asynccontextmanager
 async def open_harness(env: ClinicEnv, media_root: Path) -> AsyncGenerator[Harness]:
@@ -64,9 +63,8 @@ async def open_harness(env: ClinicEnv, media_root: Path) -> AsyncGenerator[Harne
     app.include_router(build_api_router())
 
     async def fake_auth(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-        clinic = request.headers.get("x-test-clinic")
-        if clinic:
-            request.state.clinic_id = UUID(clinic)
+        if request.headers.get("x-test-clinic"):
+            request.state.clinic_id = env.clinic_id
         permissions = request.headers.get("x-test-permissions")
         if permissions is not None:
             request.state.permissions = frozenset(p for p in permissions.split(",") if p)

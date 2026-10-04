@@ -45,6 +45,7 @@ from pema.composition.intake import BotStack, PersonalStack, build_bot_stack, bu
 from pema.composition.runtime import ProcessRole, Runtime, build_runtime
 from pema.config.env import Settings, get_settings
 from pema.config.runtime_tuning_settings import get_tuning_int
+from pema.core.db import get_installation_clinic_id
 from pema.core.event_loop import ensure_selector_event_loop_policy
 from pema.knowledge.kb_extract_timeout_boot_guard import kiem_tra_kb_extract_timeout
 from pema.knowledge.kb_ingest_worker import KbIngestWorker
@@ -193,9 +194,8 @@ async def _run(
     periodic: list[asyncio.Task[None]] = []
     retention_task: asyncio.Task[None] | None = None
     try:
-        for clinic_id in await rt.db.list_active_clinic_ids():
-            await rt.snapshot.refresh(clinic_id)
-        rt.snapshot.start_refresh_loop(rt.db.list_active_clinic_ids)
+        await rt.snapshot.refresh(await get_installation_clinic_id(rt.db, verify=True))
+        rt.snapshot.start_refresh_loop()
         rt.kb_availability.start()
         await rt.kb_availability.refresh()
         await rt.mcp.manager.start()
@@ -260,10 +260,9 @@ async def _run(
 
 
 async def _purge_dedupe(rt: Runtime, bot: BotStack) -> None:
-    for clinic_id in await rt.db.list_active_clinic_ids():
-        removed = await bot.dedupe.purge(clinic_id)
-        if removed:
-            log.info("purged update marks", clinic_id=str(clinic_id), removed=removed)
+    removed = await bot.dedupe.purge(await rt.clinic_id())
+    if removed:
+        log.info("purged update marks", removed=removed)
 
 
 async def start_worker(

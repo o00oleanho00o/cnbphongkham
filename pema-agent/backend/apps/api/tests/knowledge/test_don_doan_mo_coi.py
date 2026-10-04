@@ -67,6 +67,6 @@ async def test_don_doan_mo_coi_is_wired_into_the_boot_of_bat_dau_worker(kb: KbHa
         await luu_doan(s, kb.clinic_id, n.id, [DoanMoi(0, "", "sẽ mồ côi")])
     _xoa_khong_cascade(kb, n.id)
 
-    await KbIngestWorker(kb.db).bat_dau_worker([kb.clinic_id])
+    await KbIngestWorker(kb.db).bat_dau_worker()
 
     assert kb.kb_database.scalar("SELECT count(*) FROM agent.kb_chunk") == 0

@@ -31,7 +31,16 @@ export type Ctx = {
   raw: Buffer;
 };
 
-export type Reply = { status?: number; body?: unknown; headers?: Record<string, string> };
+export type Reply = {
+  status?: number;
+  body?: unknown;
+  headers?: Record<string, string>;
+  /**
+   * Server-sent events: the handler gets `write(data)` (a `data:` line; null is a keep-alive comment) and
+   * returns what to run when the client goes away. The server keeps the connection open until then.
+   */
+  sse?: (write: (data: string | null) => void) => () => void;
+};
 export type Handler = (ctx: Ctx) => Reply | Promise<Reply>;
 
 type Route = {

@@ -29,7 +29,7 @@ class PgThreadStatusReader:
     async def find_thread_status(
         self, clinic_id: UUID, account_id: str, thread_id: str
     ) -> ThreadStatus | None:
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             row = (
                 await s.execute(
                     text(
@@ -49,7 +49,7 @@ class PgChannelPolicyReader:
         self._db = db
 
     async def get_channel_policy(self, clinic_id: UUID, channel: str) -> ChannelPolicy | None:
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             row = (
                 await s.execute(
                     text(
@@ -77,7 +77,7 @@ class PgApprovedTemplateReader:
         self._db = db
 
     async def get_template(self, clinic_id: UUID, template_key: str) -> ApprovedTemplate | None:
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             row = (
                 await s.execute(
                     text(
@@ -102,7 +102,7 @@ class PgPatientRefReader:
         self._db = db
 
     async def get_patient_ref(self, clinic_id: UUID, patient_id: UUID) -> PatientRef | None:
-        async with self._db.session(clinic_id) as s:
+        async with self._db.session() as s:
             row = (
                 await s.execute(
                     text("SELECT code, marketing_opt_out FROM clinic_agent.patient_ref WHERE id = :id"),

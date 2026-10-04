@@ -34,7 +34,7 @@ def start_retention_loop(
 
     async def one_pass() -> None:
         try:
-            reports = await runner.run_active_clinics()
+            reports = await runner.run_all()
         except asyncio.CancelledError:
             raise
         except Exception as err:

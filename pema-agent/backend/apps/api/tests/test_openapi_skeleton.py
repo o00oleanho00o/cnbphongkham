@@ -22,14 +22,16 @@ EXPECTED_PATHS = [
     "/api/v1/crm/tasks",
     "/api/v1/crm/activities",
     "/api/v1/conversations/{conversation_id}/messages",
+    "/api/v1/conversations/{conversation_id}/presence",
+    "/api/v1/events",
     "/api/v1/review-items/{item_id}/approve",
     "/api/v1/admin/rules",
     "/api/v1/admin/logs/audit",
     "/api/v1/admin/templates",
     "/api/v1/admin/templates/{template_id}/approve",
     # channels (C1, C2)
-    "/api/v1/webhooks/zalo-bot/{clinic_slug}/{account_id}",
-    "/api/v1/webhooks/zalo-bridge/{clinic_slug}/{account_id}",
+    "/api/v1/webhooks/zalo-bot/{account_id}",
+    "/api/v1/webhooks/zalo-bridge/{account_id}",
     "/api/v1/admin/channels/{channel}/kill-switch",
     "/api/v1/admin/accounts",
     "/api/v1/admin/accounts/{account_id}/login",
@@ -201,7 +203,7 @@ async def test_a_bare_app_never_serves_a_staff_route_to_an_anonymous_caller(
 async def test_validation_errors_use_the_error_envelope_without_echoing_input(
     client: httpx.AsyncClient,
 ) -> None:
-    resp = await client.post("/api/v1/auth/login", json={"clinic_slug": "demo", "email": "a@example.test"})
+    resp = await client.post("/api/v1/auth/login", json={"email": "a@example.test"})
     assert resp.status_code == 422
     body = resp.json()["error"]
     assert body["code"] == "validation_failed"

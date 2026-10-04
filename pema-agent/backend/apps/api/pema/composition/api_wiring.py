@@ -41,9 +41,9 @@ from pema.composition.auth_bridge import (
 from pema.composition.intake import BotStack, PersonalStack
 from pema.composition.outbound import RegistryOutboundDelivery
 from pema.composition.runtime import Runtime
-from pema.config.runtime_settings_store import current_settings_clinic, set_settings_clinic
 from pema.config.runtime_tuning_settings import get_tuning_int
 from pema.conversation.agent_trace_store import PgTraceReader
+from pema.core.db import get_installation_clinic_id
 from pema.middleware.thread_run_chain import ThreadRef
 from pema.policy.identity_admin import PolicyAdminService
 from pema.retention.policy import Scope, policy_from_settings
@@ -53,7 +53,7 @@ from pema.scheduler.admin_service import ScheduleAdminService
 from pema.shared.logger import create_logger
 from pema_contracts.actions import ActionContext, ActionSource
 from pema_contracts.common import JsonObject
-from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.installation import installation_clinic_id
 from pema_contracts.roles import ActorType, Permission
 
 log = create_logger("composition.api")
@@ -81,6 +81,7 @@ def wire_api(app: FastAPI, rt: Runtime, bot: BotStack, personal: PersonalStack) 
     state = app.state
     state.runtime = rt
     state.clinic_db = rt.db
+    state.live = rt.live
     state.outbound_delivery = RegistryOutboundDelivery(rt.accounts, rt.channels, rt.conversation)
     state.admin_stores = AdminStores(
         agents=rt.agents,
@@ -146,19 +147,13 @@ def wire_api(app: FastAPI, rt: Runtime, bot: BotStack, personal: PersonalStack) 
     app.dependency_overrides[get_mcp_admin_context] = mcp_context
 
     # D4: tools admin
-    def current_clinic() -> UUID:
-        clinic_id = current_settings_clinic()
-        if clinic_id is None:
-            raise DomainError(ErrorCode.UNAUTHENTICATED, "Bạn chưa đăng nhập.")
-        return clinic_id
-
     install_tools_admin_services(
         ToolsAdminServices(
             registry=rt.tool_registry,
             accounts=rt.accounts,
             agents=rt.agents,
             channels=StaticChannelCapabilities(),
-            clinic_id=current_clinic,
+            clinic_id=installation_clinic_id,
         )
     )
 
@@ -176,12 +171,13 @@ class ApiLifecycle:
 
     async def start(self) -> None:
         rt = self._rt
-        # Settings of every clinic first: the tuning provider reads this snapshot, so the accounts and the
-        # batcher below already see the overrides saved on the dashboard.
-        for clinic_id in await rt.db.list_active_clinic_ids():
-            await rt.snapshot.refresh(clinic_id)
-        rt.snapshot.start_refresh_loop(rt.db.list_active_clinic_ids)
+        # Settings of the clinic first: the tuning provider reads this snapshot, so the accounts and the
+        # batcher below already see the overrides saved on the dashboard. ``verify=True``: a
+        # ``PEMA_CLINIC_ID`` that is not the clinic of this database stops the start-up.
+        await rt.snapshot.refresh(await get_installation_clinic_id(rt.db, verify=True))
+        rt.snapshot.start_refresh_loop()
         rt.kb_availability.start()
+        rt.live.hub.start()
         recovered = await self._bot.batcher.recover()
         log.info("batcher recovered", batches=recovered)
         started = await self._bot.manager.start_all()
@@ -203,17 +199,11 @@ class ApiLifecycle:
     async def _crm_loop(self, interval_s: int) -> None:
         runner = CrmRulesRunner(SqlCrmRuleStore(self._rt.db), self._rt.scheduler)
         while True:
-            for clinic_id in await self._rt.db.list_active_clinic_ids():
-                try:
-                    report = await runner.run_clinic(clinic_id)
-                    log.info(
-                        "crm rules ran",
-                        clinic_id=str(clinic_id),
-                        tasks=report.tasks_created,
-                        jobs=report.jobs_created,
-                    )
-                except Exception as err:
-                    log.error("crm rules run failed", err=err, clinic_id=str(clinic_id))
+            try:
+                report = await runner.run_clinic(await self._rt.clinic_id())
+                log.info("crm rules ran", tasks=report.tasks_created, jobs=report.jobs_created)
+            except Exception as err:
+                log.error("crm rules run failed", err=err)
             await asyncio.sleep(interval_s)
 
     async def stop(self) -> None:
@@ -232,5 +222,4 @@ class ApiLifecycle:
             await self._personal.manager.stop_all_accounts()
         await self._personal.bridge.aclose()
         await self._rt.close()
-        set_settings_clinic(None)
         install_tools_admin_services(None)

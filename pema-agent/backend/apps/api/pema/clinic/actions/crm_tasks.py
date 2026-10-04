@@ -34,10 +34,12 @@ from pema.clinic.actions._common import check_version, lost_race_is_conflict, no
 from pema.clinic.actions._mappers import activity_out, task_out
 from pema.clinic.actions._scope import patient_scope, require_patient_access
 from pema.clinic.actions.appointments import book_in_session
+from pema.clinic.actions.assignees import load_assignable_user
 from pema.clinic.actions.patients import CS_OWNER_ROLES, load_patient
 from pema.clinic.models import CrmActivity, CrmTask, Patient, ReviewItem, UserAccount
 from pema.clinic.rbac import is_doctor_scoped, require
 from pema.core.db import ClinicDatabase
+from pema.live import emit_live
 from pema_contracts.actions import ActionContext
 from pema_contracts.common import VN_TZ, Page
 from pema_contracts.crm import (
@@ -51,13 +53,13 @@ from pema_contracts.crm import (
     TaskStatus,
 )
 from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.live import LiveEventType
 from pema_contracts.review import ReviewKind, ReviewOrigin, RiskLevel
-from pema_contracts.roles import Permission, Role
+from pema_contracts.roles import Permission
 
 OPEN_STATUSES = (TaskStatus.OPEN.value, TaskStatus.RESCHEDULED.value)
 NEEDS_NEXT_ACTION = frozenset({CrmOutcome.UNANSWERED, CrmOutcome.CALLBACK, CrmOutcome.BUSY})
 HAND_OVER_TO_DOCTOR = frozenset({CrmOutcome.DOCTOR, CrmOutcome.REACTION, CrmOutcome.COMPLAINT})
-OWNER_ROLES = (Role.CS_STAFF.value, Role.MANAGER.value, Role.OWNER.value, Role.DOCTOR.value)
 DOCTOR_TASK_RULE = RuleKey.D7.value
 """JS: ``Tai khoan bac si chi xu ly review D+7 cua ho so phu trach``."""
 
@@ -119,7 +121,7 @@ async def list_tasks(
     rank = case((CrmTask.rule_key.in_(("d1", "d3", "d7")), 0), else_=1)
     priority = case((CrmTask.priority == "high", 0), (CrmTask.priority == "normal", 1), else_=2)
     owner = aliased(UserAccount)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         total = await session.scalar(select(func.count()).select_from(CrmTask).where(*conditions)) or 0
         rows = await session.execute(
             select(CrmTask, Patient.code, owner.display_name)
@@ -136,7 +138,7 @@ async def list_tasks(
 
 async def get_task(db: ClinicDatabase, ctx: ActionContext, task_id: UUID) -> CrmTaskOut:
     require(ctx, Permission.CRM_TASK_READ)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row, code, name = await _load_task(session, ctx, task_id)
         return task_out(row, code, name)
 
@@ -156,7 +158,7 @@ async def resolve_task(
     db: ClinicDatabase, ctx: ActionContext, task_id: UUID, payload: CrmTaskResolve
 ) -> CrmTaskOut:
     require(ctx, Permission.CRM_TASK_RESOLVE)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         task, code, _ = await _load_task(session, ctx, task_id)
         if await audit.find_replay(session, ctx, "crm_task.resolve", task.id):
             owner_name = await _owner_name(session, ctx, task.owner_user_id)
@@ -168,16 +170,10 @@ async def resolve_task(
             )
         stamp = now()
         _validate_resolve(payload, stamp)
-        owner = await session.scalar(
-            select(UserAccount).where(
-                UserAccount.id == payload.owner_user_id,
-                UserAccount.clinic_id == ctx.clinic_id,
-                UserAccount.active.is_(True),
-                UserAccount.role.in_(OWNER_ROLES),
-            )
+        # a colleague may take the task: active, of this installation, a role that can work CSKH tasks
+        owner = await load_assignable_user(
+            session, ctx, payload.owner_user_id, message="Chọn người phụ trách hợp lệ."
         )
-        if owner is None:
-            raise DomainError(ErrorCode.VALIDATION_FAILED, "Chọn người phụ trách hợp lệ.")
         patient = await load_patient(session, ctx, task.patient_id)
 
         appointment_id: UUID | None = None
@@ -210,6 +206,7 @@ async def resolve_task(
 
         rescheduled = payload.next_action_at is not None and appointment_id is None
         task.status = TaskStatus.RESCHEDULED.value if rescheduled else TaskStatus.RESOLVED.value
+        previous_owner = task.owner_user_id
         task.owner_user_id = owner.id
         if payload.priority is not None:
             task.priority = payload.priority.value
@@ -261,9 +258,15 @@ async def resolve_task(
                 "activity_id": str(activity.id),
                 "appointment_id": str(appointment_id) if appointment_id else None,
                 "handed_over_to_doctor": handed_over,
+                "owner_from": str(previous_owner) if previous_owner else None,
+                "owner_to": str(owner.id),
             },
         )
-        return task_out(task, code, owner.display_name)
+        resolved = task_out(task, code, owner.display_name)
+    emit_live(LiveEventType.TASKS_CHANGED, task_id)
+    if handed_over:
+        emit_live(LiveEventType.REVIEW_CHANGED)
+    return resolved
 
 
 async def _owner_name(session: AsyncSession, ctx: ActionContext, user_id: UUID | None) -> str | None:
@@ -297,7 +300,7 @@ async def list_activities(
     if task_id is not None:
         conditions.append(CrmActivity.task_id == task_id)
     actor = aliased(UserAccount)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         total = await session.scalar(select(func.count()).select_from(CrmActivity).where(*conditions)) or 0
         rows = await session.execute(
             select(CrmActivity, actor.display_name)
@@ -321,7 +324,7 @@ async def create_activity(
     stamp = now()
     if payload.next_action_at is not None and payload.next_action_at <= stamp:
         raise DomainError(ErrorCode.VALIDATION_FAILED, "Bước tiếp theo phải sau thời điểm hiện tại.")
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         patient = await load_patient(session, ctx, payload.patient_id)
         await require_patient_access(session, ctx, payload.patient_id)
         if payload.task_id is not None:
@@ -362,4 +365,7 @@ async def create_activity(
             row.id,
             {"patient_id": str(payload.patient_id), "channel": payload.channel.value},
         )
-        return activity_out(row, await _owner_name(session, ctx, ctx.actor_user_id))
+        created = activity_out(row, await _owner_name(session, ctx, ctx.actor_user_id))
+    if payload.task_id is not None:
+        emit_live(LiveEventType.TASKS_CHANGED, payload.task_id)
+    return created

@@ -50,7 +50,7 @@ async def _load(session: AsyncSession, ctx: ActionContext, template_id: UUID) ->
 
 async def list_templates(db: ClinicDatabase, ctx: ActionContext) -> list[MessageTemplateOut]:
     require_any(ctx, (Permission.ADMIN_RULES, Permission.REVIEW_DECIDE_CLINICAL))
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         rows = (
             await session.scalars(
                 select(MessageTemplate)
@@ -65,7 +65,7 @@ async def create_template(
     db: ClinicDatabase, ctx: ActionContext, payload: MessageTemplateCreate
 ) -> MessageTemplateOut:
     require(ctx, Permission.ADMIN_RULES)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row = MessageTemplate(
             clinic_id=ctx.clinic_id,
             template_key=payload.template_key,
@@ -95,7 +95,7 @@ async def update_template(
     db: ClinicDatabase, ctx: ActionContext, template_id: UUID, payload: MessageTemplateUpdate
 ) -> MessageTemplateOut:
     require(ctx, Permission.ADMIN_RULES)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row = await _load(session, ctx, template_id)
         check_version(row.version, payload.version)
         changed: list[str] = []
@@ -142,7 +142,7 @@ async def approve_template(
 ) -> MessageTemplateOut:
     """Doctor sign-off (``review.decide_clinical``): activates the template and records who and when."""
     require(ctx, Permission.REVIEW_DECIDE_CLINICAL)
-    async with db.session(ctx.clinic_id) as session:
+    async with db.session() as session:
         row = await _load(session, ctx, template_id)
         if await audit.find_replay(session, ctx, "message_template.approve", row.id):
             return template_out(row)

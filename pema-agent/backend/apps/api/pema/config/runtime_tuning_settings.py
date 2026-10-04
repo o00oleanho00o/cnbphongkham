@@ -191,16 +191,15 @@ class TuningListItem:
 
 def list_tuning() -> list[TuningListItem]:
     """Every parameter with its effective value and whether it is overridden (``listTuning``)."""
-    from pema.config.runtime_settings_store import current_settings_clinic, get_runtime_settings
+    from pema.config.runtime_settings_store import get_runtime_settings
 
-    overridden = current_settings_clinic() is not None
     snapshot = get_runtime_settings()
     return [
         TuningListItem(
             key=key,
             value=get_tuning(key),
             mac_dinh=tuning_default(key),
-            from_env=not (overridden and snapshot.read(TUNING_PREFIX + key) is not None),
+            from_env=snapshot.read(TUNING_PREFIX + key) is None,
         )
         for key in TUNING_SPECS
     ]

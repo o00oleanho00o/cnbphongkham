@@ -3,6 +3,9 @@
 // Inbox: conversations of patients on Zalo (`GET /api/v1/conversations`), with the thread beside the list
 // on desktop and as a child screen on a phone (`?c=<id>`). Messages come from `clinic.message`, the Inbox
 // of record; `agent.history` (the LLM context) is a different store and never shown here.
+// Several people work here at once: `inbox.changed` and `presence.changed` events (GET /api/v1/events) reload
+// the list quietly (selection, scroll and a draft being typed stay), the open thread reloads when it is the one
+// that changed, and without the stream the list refreshes every 30 seconds.
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
@@ -18,9 +21,12 @@ import {
   ListSkeleton,
   RetryNotice,
 } from "@/components/ops/ops-ui";
+import { LiveStatus } from "@/components/ops/live-status";
 import { MasterDetail } from "@/components/ops/master-detail";
 import type { Schemas } from "@/lib/api";
 import { http, unwrap } from "@/lib/api/client";
+import { viewersOf, type LiveEvent, type LiveEventType } from "@/lib/live/live-types";
+import { useLiveEvents } from "@/lib/live/use-live-events";
 import { CONVERSATION_STATUS_LABEL } from "@/lib/ops/labels";
 import { useLoad } from "@/lib/use-load";
 
@@ -28,6 +34,7 @@ type StatusFilter = "all" | Schemas["ConversationStatus"];
 
 const STATUS_FILTERS: StatusFilter[] = ["all", "pending_review", "handoff", "open", "closed"];
 const SEARCH_DEBOUNCE_MS = 300;
+const LIVE_TYPES: readonly LiveEventType[] = ["inbox.changed", "presence.changed"];
 
 function useDebounced(value: string, delayMs: number): string {
   const [debounced, setDebounced] = useState(value);
@@ -62,8 +69,34 @@ function InboxContent() {
       ),
     [status, q],
   );
-  const { data, error, loading, reload } = useLoad(load);
+  const { data, error, loading, reload, refresh } = useLoad(load);
   const items = useMemo(() => data?.items ?? [], [data]);
+
+  // Bumped when the open conversation itself changed; the thread reloads on it (see ThreadView `liveTick`).
+  const [threadTick, setThreadTick] = useState(0);
+  const onLiveEvent = useCallback(
+    (event: LiveEvent) => {
+      refresh();
+      const concernsThread = event.id === null || event.id === selectedId;
+      if (event.type === "inbox.changed" && concernsThread) setThreadTick((n) => n + 1);
+    },
+    [refresh, selectedId],
+  );
+  const onLiveRefresh = useCallback(() => {
+    refresh();
+    setThreadTick((n) => n + 1);
+  }, [refresh]);
+  const liveMode = useLiveEvents({
+    types: LIVE_TYPES,
+    onEvent: onLiveEvent,
+    onRefresh: onLiveRefresh,
+  });
+
+  // Presence of the open conversation as the (fresher) list knows it; undefined when it is not in the list.
+  const viewers = useMemo(() => {
+    const row = items.find((c) => c.id === selectedId);
+    return row ? viewersOf(row) : undefined;
+  }, [items, selectedId]);
 
   const open = useCallback((id: string) => router.push(`/inbox?c=${id}`), [router]);
   const back = useCallback(() => router.push("/inbox"), [router]);
@@ -110,6 +143,7 @@ function InboxContent() {
         title="Inbox"
         subtitle={`${data?.total ?? 0} hội thoại · ${pendingTotal} có nháp chờ duyệt`}
       />
+      <LiveStatus mode={liveMode} />
       <MasterDetail
         list={list}
         detailOpen={selectedId !== null}
@@ -117,7 +151,13 @@ function InboxContent() {
         backLabel="Danh sách hội thoại"
         detail={
           selectedId ? (
-            <ThreadView key={selectedId} conversationId={selectedId} onChanged={reload} />
+            <ThreadView
+              key={selectedId}
+              conversationId={selectedId}
+              onChanged={reload}
+              liveTick={threadTick}
+              listViewers={viewers}
+            />
           ) : null
         }
         emptyDetail={

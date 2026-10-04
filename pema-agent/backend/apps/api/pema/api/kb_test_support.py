@@ -35,11 +35,9 @@ class KbApi:
     data_dir: Path
     user_id: uuid.UUID
 
-    def headers(
-        self, *, role: str = "manager", permissions: str = TOAN_QUYEN, clinic: uuid.UUID | None = None
-    ) -> dict[str, str]:
+    def headers(self, *, role: str = "manager", permissions: str = TOAN_QUYEN) -> dict[str, str]:
         return {
-            "x-test-clinic": str(clinic or self.kb_database.clinic_id),
+            "x-test-clinic": str(self.kb_database.clinic_id),
             "x-test-user": str(self.user_id),
             "x-test-role": role,
             "x-test-perms": permissions,

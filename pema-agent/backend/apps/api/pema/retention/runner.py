@@ -1,18 +1,20 @@
-"""The retention job: delete expired data per clinic, in small batches, safely (new module, no TS source).
+"""The retention job: delete expired data of the installation's clinic, in small batches, safely (new module,
+no TS source).
 
-One run is ``(clinic, scope)``. Scope ``agent`` is what the worker may do (``agent.*`` rows and the image
+Single tenant: one installation is one clinic, so there is no loop over clinics and no clinic argument; one
+run is one ``scope``. Scope ``agent`` is what the worker may do (``agent.*`` rows and the image
 files of the local volume, role ``agent_worker``); scope ``clinic`` is what the API process may do
 (``clinic.*`` rows, role ``be_app``). Neither process gets a wider right than it had: see
 ``pema.retention.policy``.
 
 Properties the tests pin down:
 
-* **Per clinic, under RLS.** Every unit of work is ``db.session(clinic_id)``; another clinic's rows are not
-  visible, so they cannot be deleted by a run for this one.
+* **Only the installation's rows.** Every statement carries ``clinic_id = :clinic_id`` (the installation
+  id, ``get_installation_clinic_id``); there is no row level security any more.
 * **Small batches, bounded run.** ``batch_size`` rows per statement, at most ``MAX_BATCHES_PER_GROUP``
   batches per group per run; a group that hits the cap is reported as ``capped`` and the next run continues.
 * **Idempotent.** A second run finds nothing more to delete; a crash between batches loses nothing but time.
-* **Safe with two runners.** A session-level advisory lock per ``(clinic, scope)``, taken with
+* **Safe with two runners.** A session-level advisory lock per scope (one for the installation), taken with
   ``pg_try_advisory_lock`` on a connection of its own: the second runner does not wait, it reports
   ``skipped_locked``. (Rows are also picked with ``FOR UPDATE SKIP LOCKED``, so even without the lock two
   batches could never delete the same row twice.)
@@ -20,7 +22,7 @@ Properties the tests pin down:
   row, removes no file.
 * **One audit row per real run and scope**, through ``clinic_agent.record_retention_run``: counters only, no
   PII. ``clinic.audit_log`` itself is never purged.
-* **A failing group does not stop the others**; it is logged (no PII: the clinic id and the group name) and
+* **A failing group does not stop the others**; it is logged (no PII: the group name) and
   listed in ``ScopeReport.failed``.
 
 Files are removed AFTER the transaction that deleted their rows commits (a file cannot be rolled back); a
@@ -31,7 +33,6 @@ from __future__ import annotations
 
 import json
 import time
-import zlib
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
@@ -45,7 +46,7 @@ from sqlalchemy import text
 from pema.conversation.history_store import parse_images
 from pema.conversation.media_store import MediaStore
 from pema.conversation.sql_util import affected_rows
-from pema.core.db import ClinicDatabase
+from pema.core.db import ClinicDatabase, get_installation_clinic_id
 from pema.retention import rules
 from pema.retention.policy import RetentionPolicy, Scope
 from pema.shared.logger import create_logger
@@ -56,6 +57,9 @@ MAX_BATCHES_PER_GROUP = 1000
 LOCK_NAMESPACE = 0x50454D41
 """First key of the advisory locks (``"PEMA"``); the scope is added so the two scopes never wait for each
 other."""
+LOCK_INSTALLATION_KEY = 0
+"""Second key of the advisory locks: fixed, there is one clinic per installation (it used to be a hash of the
+clinic id)."""
 _SCOPE_ORDER = (Scope.AGENT, Scope.CLINIC)
 
 
@@ -66,7 +70,7 @@ class RunStatus(StrEnum):
 
 @dataclass
 class ScopeReport:
-    """What one ``(clinic, scope)`` run did (or, in a dry run, would do)."""
+    """What one ``scope`` run did (or, in a dry run, would do)."""
 
     clinic_id: UUID
     scope: Scope
@@ -99,11 +103,9 @@ class _Ctx:
         return self.now - timedelta(days=days)
 
 
-def lock_keys(clinic_id: UUID, scope: Scope) -> tuple[int, int]:
-    """The two int4 keys of the advisory lock of ``(clinic, scope)``."""
-    first = LOCK_NAMESPACE + _SCOPE_ORDER.index(scope)
-    second = zlib.crc32(clinic_id.bytes) - 2**31  # signed int4
-    return first, second
+def lock_keys(scope: Scope) -> tuple[int, int]:
+    """The two int4 keys of the advisory lock of ``scope`` (one lock per scope for the installation)."""
+    return LOCK_NAMESPACE + _SCOPE_ORDER.index(scope), LOCK_INSTALLATION_KEY
 
 
 class RetentionRunner:
@@ -132,31 +134,25 @@ class RetentionRunner:
         return self._scopes
 
     # ------------------------------------------------------------------------------------------ entry points
-    async def run_active_clinics(self, *, dry_run: bool = False) -> list[ScopeReport]:
-        """Every scope of this runner for every active clinic (the periodic pass)."""
-        return await self.run_clinics(await self._db.list_active_clinic_ids(), dry_run=dry_run)
-
-    async def run_clinics(self, clinic_ids: Iterable[UUID], *, dry_run: bool = False) -> list[ScopeReport]:
+    async def run_all(self, *, dry_run: bool = False) -> list[ScopeReport]:
+        """Every scope of this runner for the clinic of the installation (the periodic pass)."""
         reports: list[ScopeReport] = []
-        for clinic_id in clinic_ids:
-            for scope in self._scopes:
-                try:
-                    reports.append(await self.run_scope(clinic_id, scope, dry_run=dry_run))
-                except Exception as err:
-                    log.error("retention run failed", err=err, clinic_id=str(clinic_id), scope=scope.value)
-                    reports.append(ScopeReport(clinic_id, scope, dry_run, failed=["run"]))
+        for scope in self._scopes:
+            try:
+                reports.append(await self.run_scope(scope, dry_run=dry_run))
+            except Exception as err:
+                log.error("retention run failed", err=err, scope=scope.value)
+                clinic_id = self._db.installation_clinic_id or UUID(int=0)
+                reports.append(ScopeReport(clinic_id, scope, dry_run, failed=["run"]))
         return reports
 
-    async def run_scope(self, clinic_id: UUID, scope: Scope, *, dry_run: bool = False) -> ScopeReport:
+    async def run_scope(self, scope: Scope, *, dry_run: bool = False) -> ScopeReport:
+        clinic_id = await get_installation_clinic_id(self._db)
         report = ScopeReport(clinic_id, scope, dry_run)
-        async with self._advisory_lock(clinic_id, scope) as acquired:
+        async with self._advisory_lock(scope) as acquired:
             if not acquired:
                 report.status = RunStatus.SKIPPED_LOCKED
-                log.info(
-                    "retention skipped: another runner holds the lock",
-                    clinic_id=str(clinic_id),
-                    scope=scope.value,
-                )
+                log.info("retention skipped: another runner holds the lock", scope=scope.value)
                 return report
             ctx = _Ctx(clinic_id, self._policy(), self._now(), report)
             started = time.monotonic()
@@ -168,7 +164,6 @@ class RetentionRunner:
                 await self._audit(ctx)
             log.info(
                 "retention dry run" if dry_run else "retention run",
-                clinic_id=str(clinic_id),
                 scope=scope.value,
                 counts=report.counts,
                 capped=report.capped,
@@ -205,7 +200,7 @@ class RetentionRunner:
         try:
             await work(ctx, group, ctx.cutoff(days))
         except Exception as err:
-            log.error("retention group failed", err=err, clinic_id=str(ctx.clinic_id), group=group)
+            log.error("retention group failed", err=err, group=group)
             ctx.report.failed.append(group)
 
     # ----------------------------------------------------------------------------------------------- groups
@@ -213,7 +208,7 @@ class RetentionRunner:
         async def work(ctx: _Ctx, group: str, cutoff: datetime) -> None:
             params: dict[str, Any] = {"clinic_id": ctx.clinic_id, "cutoff": cutoff}
             if ctx.dry_run:
-                async with self._db.session(ctx.clinic_id) as session:
+                async with self._db.session() as session:
                     ctx.report.add(
                         group, int((await session.execute(rules.count_sql(rule), params)).scalar() or 0)
                     )
@@ -222,15 +217,13 @@ class RetentionRunner:
             await self._in_batches(
                 ctx,
                 group,
-                lambda: self._delete_batch(ctx.clinic_id, statement, params, ctx.policy.batch_size),
+                lambda: self._delete_batch(statement, params, ctx.policy.batch_size),
             )
 
         return work
 
-    async def _delete_batch(
-        self, clinic_id: UUID, statement: Any, params: dict[str, Any], batch_size: int
-    ) -> int:
-        async with self._db.session(clinic_id) as session:
+    async def _delete_batch(self, statement: Any, params: dict[str, Any], batch_size: int) -> int:
+        async with self._db.session() as session:
             return affected_rows(await session.execute(statement, {**params, "batch": batch_size}))
 
     async def _in_batches(self, ctx: _Ctx, group: str, batch: Callable[[], Awaitable[int]]) -> None:
@@ -245,14 +238,14 @@ class RetentionRunner:
     async def _history(self, ctx: _Ctx, group: str, cutoff: datetime) -> None:
         params: dict[str, Any] = {"clinic_id": ctx.clinic_id, "cutoff": cutoff}
         if ctx.dry_run:
-            async with self._db.session(ctx.clinic_id) as session:
+            async with self._db.session() as session:
                 row = (await session.execute(rules.HISTORY_COUNT, params)).one()
             ctx.report.add(group, int(row.n))
             ctx.report.add("history_media_files", int(row.images))
             return
 
         async def batch() -> int:
-            async with self._db.session(ctx.clinic_id) as session:
+            async with self._db.session() as session:
                 rows = (
                     await session.execute(
                         rules.HISTORY_DELETE_BATCH, {**params, "batch": ctx.policy.batch_size}
@@ -280,15 +273,13 @@ class RetentionRunner:
     async def _thread_summaries(self, ctx: _Ctx, group: str, cutoff: datetime) -> None:
         params: dict[str, Any] = {"clinic_id": ctx.clinic_id, "cutoff": cutoff}
         if ctx.dry_run:
-            async with self._db.session(ctx.clinic_id) as session:
+            async with self._db.session() as session:
                 ctx.report.add(group, int((await session.execute(rules.THREADS_COUNT, params)).scalar() or 0))
             return
         await self._in_batches(
             ctx,
             group,
-            lambda: self._delete_batch(
-                ctx.clinic_id, rules.THREADS_RESET_BATCH, params, ctx.policy.batch_size
-            ),
+            lambda: self._delete_batch(rules.THREADS_RESET_BATCH, params, ctx.policy.batch_size),
         )
 
     async def _media_files(self, ctx: _Ctx, group: str, cutoff: datetime) -> None:
@@ -307,7 +298,7 @@ class RetentionRunner:
     async def _link_attempts(self, ctx: _Ctx, group: str, cutoff: datetime) -> None:
         params: dict[str, Any] = {"cutoff": cutoff, "dry_run": ctx.dry_run}
         if ctx.dry_run:
-            async with self._db.session(ctx.clinic_id) as session:
+            async with self._db.session() as session:
                 ctx.report.add(
                     group,
                     int(
@@ -318,7 +309,7 @@ class RetentionRunner:
             return
 
         async def batch() -> int:
-            async with self._db.session(ctx.clinic_id) as session:
+            async with self._db.session() as session:
                 value = (
                     await session.execute(
                         rules.PURGE_LINK_ATTEMPTS, {**params, "batch": ctx.policy.batch_size}
@@ -337,21 +328,21 @@ class RetentionRunner:
             "failed_groups": len(ctx.report.failed),
         }
         try:
-            async with self._db.session(ctx.clinic_id) as session:
+            async with self._db.session() as session:
                 await session.execute(
                     rules.AUDIT_RUN, {"scope": ctx.report.scope.value, "counts": json.dumps(counters)}
                 )
         except Exception as err:
-            log.error("retention audit row failed", err=err, clinic_id=str(ctx.clinic_id))
+            log.error("retention audit row failed", err=err)
             ctx.report.failed.append("audit")
 
     # ---------------------------------------------------------------------------------------------- lock
     @asynccontextmanager
-    async def _advisory_lock(self, clinic_id: UUID, scope: Scope) -> AsyncGenerator[bool]:
-        """Session-level advisory lock of ``(clinic, scope)`` on a connection of its own (autocommit, so it
-        never
-        sits ``idle in transaction``). ``False`` means another runner holds it; the caller must not run."""
-        first, second = lock_keys(clinic_id, scope)
+    async def _advisory_lock(self, scope: Scope) -> AsyncGenerator[bool]:
+        """Session-level advisory lock of ``scope`` (the whole installation) on a connection of its own
+        (autocommit, so it never sits ``idle in transaction``). ``False`` means another runner holds it; the
+        caller must not run."""
+        first, second = lock_keys(scope)
         keys = {"a": first, "b": second}
         conn = await self._db.engine.connect()
         try:

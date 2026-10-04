@@ -17,7 +17,6 @@ webhook mode -> the API, polling mode -> the worker (``listen`` below).
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -62,22 +61,6 @@ from pema_contracts.agents import AccountConfig
 from pema_contracts.channel import InboundMessage
 
 log = create_logger("composition.intake")
-
-type ClinicResolver = Callable[[str], Awaitable[UUID | None]]
-
-
-def make_clinic_resolver(rt: Runtime) -> ClinicResolver:
-    """Webhook path segment -> clinic id. The segment is the clinic slug, or the clinic id as text (the
-    worker, which cannot read ``clinic.*``, only knows the id). ``None`` for an unknown or inactive clinic."""
-
-    async def resolve(segment: str) -> UUID | None:
-        try:
-            wanted = UUID(segment)
-        except ValueError:
-            return await rt.db.resolve_clinic(segment)
-        return wanted if wanted in await rt.db.list_active_clinic_ids() else None
-
-    return resolve
 
 
 def make_batcher(rt: Runtime) -> MessageBatcher:
@@ -129,20 +112,16 @@ def build_bot_stack(
             send_in_parts=send_in_parts,
         )
     )
-    channel_settings = ChannelSettingsRepository(rt.db)
     manager = BotAccountManager(
         accounts=rt.accounts,
         router=router,
         registry=rt.channels,
         settings=bot_settings,
-        clinic_slug_of=channel_settings.clinic_slug,
         client_factory=client_factory,
         listen=listens_to_bot_accounts(rt.role, bot_settings.mode),
     )
     dedupe = PostgresUpdateDedupe(rt.db)
-    webhook = ZaloBotWebhookService(
-        resolve_clinic=make_clinic_resolver(rt), registry=rt.channels, router=router, dedupe=dedupe
-    )
+    webhook = ZaloBotWebhookService(registry=rt.channels, router=router, dedupe=dedupe)
     admin = BotAccountAdminService(accounts=rt.accounts, manager=manager, client_factory=client_factory)
     return BotStack(batcher, router, manager, admin, webhook, dedupe, bot_settings)
 
@@ -230,7 +209,7 @@ def build_personal_stack(
         bridge_secret=bridge_secret,
         counter_for=lambda clinic_id: PgProactiveSendGuard(counters, clinic_id),
     )
-    qr = build_qr_manager(bridge, manager, rt.accounts, _clinic_ref)
+    qr = build_qr_manager(bridge, manager, rt.accounts)
 
     async def record_incoming(clinic_id: UUID, msg: InboundMessage, /, *, luu_anh_ngay: bool) -> int:
         recorded = await ghi_tin_den_vao_history(
@@ -283,7 +262,6 @@ def build_personal_stack(
         flag_enabled=flag_enabled,
         bridge_secret=bridge_secret,
         authorize=resolve_staff_context,
-        resolve_clinic=make_clinic_resolver(rt),
         accounts=rt.accounts,
         agents=rt.agents,
         vault=vault,
@@ -297,8 +275,3 @@ def build_personal_stack(
         bot_lifecycle=None if bot_manager is None else _BotLifecycle(rt, bot_manager),
     )
     return PersonalStack(services, manager, bridge)
-
-
-async def _clinic_ref(clinic_id: UUID) -> str:
-    """The id as text: the webhook path accepts it, and the worker cannot read the slug."""
-    return str(clinic_id)

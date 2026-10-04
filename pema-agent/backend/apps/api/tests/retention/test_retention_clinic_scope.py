@@ -11,8 +11,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 
-from pema.conversation.pg_testing import ClinicEnv
-from pema.retention.pg_testing import Seed
+from pema.retention.pg_testing import RetentionEnv, Seed
 from pema.retention.policy import RetentionPolicy, Scope
 from pema.retention.runner import RetentionRunner, ScopeReport
 
@@ -38,13 +37,13 @@ def _policy(**days: int) -> RetentionPolicy:
     return RetentionPolicy(**(keep | days), batch_size=50)
 
 
-async def _run(env: ClinicEnv, policy: RetentionPolicy, *, dry_run: bool = False) -> ScopeReport:
+async def _run(env: RetentionEnv, policy: RetentionPolicy, *, dry_run: bool = False) -> ScopeReport:
     runner = RetentionRunner(env.db, policy, scopes=(Scope.CLINIC,))
-    return await runner.run_scope(env.clinic_id, Scope.CLINIC, dry_run=dry_run)
+    return await runner.run_scope(Scope.CLINIC, dry_run=dry_run)
 
 
 async def test_messages_of_a_conversation_closed_long_ago_are_deleted_and_the_empty_conversation_goes(
-    env: ClinicEnv, seed: Seed
+    env: RetentionEnv, seed: Seed
 ) -> None:
     c = env.clinic_id
     old_closed = seed.conversation(c, "closed", age=100)
@@ -56,7 +55,9 @@ async def test_messages_of_a_conversation_closed_long_ago_are_deleted_and_the_em
     assert seed.count("clinic.conversation", c) == 0
 
 
-async def test_open_and_recently_closed_conversations_keep_their_messages(env: ClinicEnv, seed: Seed) -> None:
+async def test_open_and_recently_closed_conversations_keep_their_messages(
+    env: RetentionEnv, seed: Seed
+) -> None:
     c = env.clinic_id
     open_conv = seed.conversation(c, "open", age=500)
     handoff = seed.conversation(c, "handoff", age=500)
@@ -69,7 +70,7 @@ async def test_open_and_recently_closed_conversations_keep_their_messages(env: C
     assert seed.count("clinic.conversation", c) == 3
 
 
-async def test_zero_days_keeps_messages_and_conversations_of_any_age(env: ClinicEnv, seed: Seed) -> None:
+async def test_zero_days_keeps_messages_and_conversations_of_any_age(env: RetentionEnv, seed: Seed) -> None:
     c = env.clinic_id
     conv = seed.conversation(c, "closed", age=2000)
     seed.message(c, conv)
@@ -82,7 +83,7 @@ async def test_zero_days_keeps_messages_and_conversations_of_any_age(env: Clinic
 
 @pytest.mark.parametrize("status", ["pending", "escalated"])
 async def test_an_open_review_item_protects_its_conversation_and_messages(
-    env: ClinicEnv, seed: Seed, status: str
+    env: RetentionEnv, seed: Seed, status: str
 ) -> None:
     c = env.clinic_id
     conv = seed.conversation(c, "closed", age=500)
@@ -96,7 +97,7 @@ async def test_an_open_review_item_protects_its_conversation_and_messages(
 
 
 async def test_a_decided_review_item_keeps_its_conversation_but_not_the_messages(
-    env: ClinicEnv, seed: Seed
+    env: RetentionEnv, seed: Seed
 ) -> None:
     c = env.clinic_id
     conv = seed.conversation(c, "closed", age=500)
@@ -108,7 +109,9 @@ async def test_a_decided_review_item_keeps_its_conversation_but_not_the_messages
     assert seed.count("clinic.review_item", c) == 1
 
 
-async def test_patients_appointments_consent_and_audit_are_never_touched(env: ClinicEnv, seed: Seed) -> None:
+async def test_patients_appointments_consent_and_audit_are_never_touched(
+    env: RetentionEnv, seed: Seed
+) -> None:
     c = env.clinic_id
     patient = seed.patient(c)
     seed.sql(
@@ -137,7 +140,7 @@ async def test_patients_appointments_consent_and_audit_are_never_touched(env: Cl
 
 
 async def test_expired_dashboard_sessions_go_after_the_grace_period_and_valid_ones_stay(
-    env: ClinicEnv, seed: Seed
+    env: RetentionEnv, seed: Seed
 ) -> None:
     c = env.clinic_id
     user = seed.user(c)
@@ -149,7 +152,7 @@ async def test_expired_dashboard_sessions_go_after_the_grace_period_and_valid_on
     assert seed.count("clinic.auth_session", c) == 2
 
 
-async def test_expired_or_spent_link_codes_go_and_a_live_code_stays(env: ClinicEnv, seed: Seed) -> None:
+async def test_expired_or_spent_link_codes_go_and_a_live_code_stays(env: RetentionEnv, seed: Seed) -> None:
     c = env.clinic_id
     user = seed.user(c)
     patient = seed.patient(c)
@@ -164,7 +167,7 @@ async def test_expired_or_spent_link_codes_go_and_a_live_code_stays(env: ClinicE
 
 
 async def test_old_link_attempts_are_deleted_through_the_narrow_door_and_recent_ones_stay(
-    env: ClinicEnv, seed: Seed
+    env: RetentionEnv, seed: Seed
 ) -> None:
     c = env.clinic_id
     seed.link_attempt(c, 90)
@@ -176,14 +179,14 @@ async def test_old_link_attempts_are_deleted_through_the_narrow_door_and_recent_
 
 
 async def test_the_link_attempt_door_refuses_a_cutoff_inside_the_rate_limit_window(
-    env: ClinicEnv,
+    env: RetentionEnv,
 ) -> None:
-    async with env.db.session(env.clinic_id) as session:
+    async with env.db.session() as session:
         with pytest.raises(DBAPIError, match="older than one hour"):
             await session.execute(text("SELECT clinic_agent.retention_purge_link_attempts(now(), 10, false)"))
 
 
-async def test_dry_run_counts_what_would_go_and_changes_nothing(env: ClinicEnv, seed: Seed) -> None:
+async def test_dry_run_counts_what_would_go_and_changes_nothing(env: RetentionEnv, seed: Seed) -> None:
     c = env.clinic_id
     user = seed.user(c)
     conv = seed.conversation(c, "closed", age=100)
@@ -201,19 +204,16 @@ async def test_dry_run_counts_what_would_go_and_changes_nothing(env: ClinicEnv, 
     assert seed.count("clinic.audit_log", c, "action = 'retention.run'") == 0, "a dry run writes no audit row"
 
 
-async def test_two_clinics_are_isolated_a_run_for_one_never_deletes_the_rows_of_the_other(
-    env: ClinicEnv, seed: Seed
+async def test_a_clinic_run_deletes_expired_rows_of_the_installation_clinic_and_keeps_the_fresh_ones(
+    env: RetentionEnv, seed: Seed
 ) -> None:
-    other = seed.new_clinic()
-    for clinic in (env.clinic_id, other):
-        conv = seed.conversation(clinic, "closed", age=100)
-        seed.message(clinic, conv)
-        seed.auth_session(clinic, seed.user(clinic), expired_days_ago=9)
+    old_conv = seed.conversation(env.clinic_id, "closed", age=100)
+    seed.message(env.clinic_id, old_conv)
+    fresh_conv = seed.conversation(env.clinic_id, "open", age=1)
+    seed.message(env.clinic_id, fresh_conv)
+    seed.auth_session(env.clinic_id, seed.user(env.clinic_id), expired_days_ago=9)
     report = await _run(env, _policy(message_days=90, auth_session_days=1))
+    assert report.clinic_id == env.clinic_id
     assert report.counts["messages"] == 1
-    assert seed.count("clinic.message", env.clinic_id) == 0
-    assert seed.count("clinic.message", other) == 1
-    assert seed.count("clinic.auth_session", other) == 1
-    runner = RetentionRunner(env.db, _policy(message_days=90, auth_session_days=1), scopes=(Scope.CLINIC,))
-    await runner.run_clinics([other])
-    assert seed.count("clinic.message", other) == 0
+    assert seed.count("clinic.message", env.clinic_id) == 1
+    assert seed.count("clinic.auth_session", env.clinic_id) == 0

@@ -14,6 +14,7 @@ from pydantic import Field
 
 from pema_contracts.channel import ChannelKind
 from pema_contracts.common import ApiModel, VnDatetime
+from pema_contracts.live import PresenceViewer
 
 
 class ConversationStatus(StrEnum):
@@ -61,6 +62,11 @@ class ConversationSummary(ApiModel):
     last_message_preview: str | None = Field(default=None, max_length=120)
     unread_count: int = 0
     has_pending_review: bool = False
+    viewers: list[PresenceViewer] = Field(
+        default_factory=list[PresenceViewer],
+        description="Colleagues who have this conversation open now, the caller excluded. A warning, not a "
+        "lock; empty when presence is unavailable.",
+    )
     version: int
 
 

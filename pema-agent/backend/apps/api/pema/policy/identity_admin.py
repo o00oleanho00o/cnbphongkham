@@ -4,7 +4,7 @@ New module behind ``routers/admin_policy.py``. Every method:
 
 * checks ``Permission.ADMIN_POLICY`` (deny by default; ``can`` is injectable so package B1's role matrix
   replaces the conservative default below),
-* works inside ``ClinicDatabase.session(clinic_id)``, so RLS applies,
+* works inside ``ClinicDatabase.session()`` (single tenant: no RLS),
 * writes one ``clinic.audit_log`` row with ids and codes only (never a name, phone or code).
 
 PACKAGE B1 NOTE. The plan wants UI and agent to go through the same action layer. B1 has not published
@@ -140,7 +140,7 @@ class PolicyAdminService:
         )
         if updated is None:
             raise DomainError(ErrorCode.NOT_FOUND, "Không tìm thấy tài khoản.")
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             await self._audit(
                 session,
                 ctx,
@@ -160,7 +160,7 @@ class PolicyAdminService:
     # --------------------------------------------------------------------------- identity links
     async def list_pending(self, ctx: ActionContext) -> list[IdentityLink]:
         self._require(ctx, Permission.ADMIN_POLICY)
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             rows = (
                 await session.execute(
                     text(
@@ -186,7 +186,7 @@ class PolicyAdminService:
 
     async def confirm(self, ctx: ActionContext, body: IdentityConfirm) -> IdentityLink:
         user_id = self._require(ctx, Permission.ADMIN_POLICY)
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             row = (
                 await session.execute(
                     text(
@@ -270,7 +270,7 @@ class PolicyAdminService:
         if digest is None:  # unreachable: the generator only emits valid codes
             raise DomainError(ErrorCode.INTERNAL, "Không tạo được mã xác minh.")
         expires_at = datetime.now(UTC) + timedelta(minutes=ttl_minutes)
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             exists = (
                 await session.execute(
                     text("SELECT 1 FROM clinic.patient WHERE id = :pid"), {"pid": patient_id}

@@ -12,7 +12,7 @@ export type BridgeConfig = {
   secret: string;
   host: string;
   port: number;
-  /** Gốc URL API; sự kiện được POST tới `{apiBaseUrl}/webhooks/zalo-bridge/{clinic_slug}/{account_id}`. */
+  /** Gốc URL API; sự kiện được POST tới `{apiBaseUrl}/webhooks/zalo-bridge/{account_id}`. */
   apiBaseUrl: string;
   /** Múi giờ của khóa ngày cho trần tin chủ động mỗi ngày. */
   timezone: string;

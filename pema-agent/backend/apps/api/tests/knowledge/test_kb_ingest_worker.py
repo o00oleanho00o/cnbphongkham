@@ -59,7 +59,7 @@ async def test_kb_ingest_worker_process_a_pending_source_is_chunked_then_becomes
     """nguồn cho_xu_ly được cắt đoạn rồi chuyển sang san_sang"""
     async with kb.session() as s:
         n = await tao_nguon(s, kb.clinic_id, ten="x", loai="text", noi_dung_goc="# Bảo hành\n\n12 tháng.")
-    await tao_worker(kb, tmp_path).xu_ly_mot_vong(kb.clinic_id)
+    await tao_worker(kb, tmp_path).xu_ly_mot_vong()
     sau = await lay(kb, n.id)
     assert sau.trang_thai == "san_sang"
     assert sau.so_doan > 0
@@ -78,7 +78,7 @@ async def test_kb_ingest_worker_process_a_broken_file_is_marked_hong_with_a_read
             dinh_dang="pdf",
             duong_dan=luu_file("h", "pdf", b"khong phai pdf", data_dir=tmp_path),
         )
-    await tao_worker(kb, tmp_path).xu_ly_mot_vong(kb.clinic_id)
+    await tao_worker(kb, tmp_path).xu_ly_mot_vong()
     sau = await lay(kb, n.id)
     assert sau.trang_thai == "hong"
     assert "không đọc được" in sau.loi.lower()
@@ -98,7 +98,7 @@ async def test_kb_ingest_worker_process_one_broken_source_does_not_block_the_oth
             duong_dan=luu_file("h2", "pdf", b"rac", data_dir=tmp_path),
         )
         tot = await tao_nguon(s, kb.clinic_id, ten="tốt", loai="text", noi_dung_goc="# Giá\n\n25.000đ")
-    await tao_worker(kb, tmp_path).xu_ly_mot_vong(kb.clinic_id)
+    await tao_worker(kb, tmp_path).xu_ly_mot_vong()
     assert (await lay(kb, hong.id)).trang_thai == "hong"
     assert (await lay(kb, tot.id)).trang_thai == "san_sang", "một nguồn hỏng không được kéo cả vòng chết theo"
 
@@ -110,7 +110,7 @@ async def test_kb_ingest_worker_process_a_source_not_pending_is_left_alone_ready
     async with kb.session() as s:
         n = await tao_nguon(s, kb.clinic_id, ten="đã xong", loai="text", noi_dung_goc="abc")
         await dat_trang_thai(s, kb.clinic_id, n.id, "san_sang", so_doan=3)
-    await tao_worker(kb, tmp_path).xu_ly_mot_vong(kb.clinic_id)
+    await tao_worker(kb, tmp_path).xu_ly_mot_vong()
     sau = await lay(kb, n.id)
     assert sau.trang_thai == "san_sang"
     assert sau.so_doan == 3
@@ -125,7 +125,7 @@ async def test_kb_ingest_worker_process_a_source_stuck_in_dang_xu_ly_from_a_prev
     async with kb.session() as s:
         n = await tao_nguon(s, kb.clinic_id, ten="kẹt", loai="text", noi_dung_goc="x")
         await dat_trang_thai(s, kb.clinic_id, n.id, "dang_xu_ly")
-    await tao_worker(kb, tmp_path).go_nguon_ket_dau_tick(kb.clinic_id)
+    await tao_worker(kb, tmp_path).go_nguon_ket_dau_tick()
     assert (await lay(kb, n.id)).trang_thai == "cho_xu_ly"
 
 
@@ -136,7 +136,7 @@ async def test_kb_ingest_worker_process_go_nguon_ket_dau_tick_does_not_touch_oth
     async with kb.session() as s:
         san_sang = await tao_nguon(s, kb.clinic_id, ten="a", loai="text", noi_dung_goc="x")
         await dat_trang_thai(s, kb.clinic_id, san_sang.id, "san_sang", so_doan=1)
-    await tao_worker(kb, tmp_path).go_nguon_ket_dau_tick(kb.clinic_id)
+    await tao_worker(kb, tmp_path).go_nguon_ket_dau_tick()
     assert (await lay(kb, san_sang.id)).trang_thai == "san_sang"
 
 
@@ -155,7 +155,7 @@ async def test_kb_ingest_worker_orphan_race_the_worker_does_not_write_chunks_for
             dinh_dang="docx",
             duong_dan=luu_file("cham", "docx", bom_quay_cpu_docx(60_000), data_dir=tmp_path),
         )
-    chay = asyncio.create_task(tao_worker(kb, tmp_path).xu_ly_mot_vong(kb.clinic_id))
+    chay = asyncio.create_task(tao_worker(kb, tmp_path).xu_ly_mot_vong())
     await doi_cho_den_khi(
         lambda: (
             kb.kb_database.scalar("SELECT status FROM agent.kb_document WHERE id = :id", {"id": n.id})
@@ -194,7 +194,7 @@ async def test_kb_ingest_worker_claim_error_an_error_while_claiming_does_not_aba
         "EXECUTE FUNCTION agent.gia_lap_loi_gianh()"
     )
     try:
-        await tao_worker(kb, tmp_path).xu_ly_mot_vong(kb.clinic_id)  # must not raise
+        await tao_worker(kb, tmp_path).xu_ly_mot_vong()  # must not raise
     finally:
         kb.kb_database.execute("DROP TRIGGER gia_lap_loi_gianh ON agent.kb_document")
         kb.kb_database.execute("DROP FUNCTION agent.gia_lap_loi_gianh()")
@@ -227,7 +227,7 @@ async def test_kb_ingest_worker_overlapping_rounds_a_round_with_an_old_snapshot_
         "UPDATE agent.kb_document SET created_at = '2020-01-01T00:00:00.001Z' WHERE id = :id", {"id": x.id}
     )
 
-    luot_a = asyncio.create_task(tao_worker(kb, tmp_path).xu_ly_mot_vong(kb.clinic_id))
+    luot_a = asyncio.create_task(tao_worker(kb, tmp_path).xu_ly_mot_vong())
     await doi_cho_den_khi(
         lambda: (
             kb.kb_database.scalar("SELECT status FROM agent.kb_document WHERE id = :id", {"id": x.id})
@@ -268,7 +268,7 @@ async def test_kb_ingest_worker_source_name_enters_the_index_through_the_real_pr
             noi_dung_goc="Điều khoản riêng tư không liên quan chuyện khác.",
         )
 
-    await tao_worker(kb, tmp_path).xu_ly_mot_vong(kb.clinic_id)
+    await tao_worker(kb, tmp_path).xu_ly_mot_vong()
 
     assert (await lay(kb, n.id)).trang_thai == "san_sang"
     with kb.kb_database.admin_engine.connect() as conn:

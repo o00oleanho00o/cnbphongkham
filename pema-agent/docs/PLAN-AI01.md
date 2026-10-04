@@ -2,6 +2,8 @@
 
 Trạng thái: kế hoạch, chưa có code. Nhánh: `feat/ai-agent-backend`. Phiên bản 2 (2026-10-01), thay thế bản 1 "chỉ lấy phần kênh".
 
+> Nhánh `feat/single-tenant`: kế hoạch này viết cho mô hình đa phòng khám có RLS. Từ migration `st_0009` mỗi bản cài là MỘT phòng khám, không còn RLS; đọc các chỗ nhắc RLS hoặc "theo phòng khám" theo CONTRACTS-AI01 mục 10 và ARCH-AI01 mục 14.
+
 **Mọi thứ mới nằm trong một thư mục duy nhất `pema-agent/`.** Code cũ (`prototype/`, `pema-kmp/`, `finance_server.py`, `docs/` PB01/PB02) chỉ được đọc. Ngoại lệ: một dòng trỏ trong `README.md` gốc và một checkpoint trong `SECTION_PROGRESS.md`, do gói F làm sau cùng.
 
 Cách chạy: sau một lệnh "go" duy nhất, làm **toàn bộ** các gói theo mục 6, không dừng chờ duyệt giữa các stage. Người nhận một báo cáo tổng hợp cuối và danh sách việc mở.
@@ -119,9 +121,10 @@ Mỗi gói: một subagent `pema-builder` (Sonnet 5.5, effort cao), worktree ri�
 | **P. Policy** | `profiles.py`, `redflags.py`, `pii.py` (SĐT/CCCD/email VN, tên→mã), gắn vào agent loop, scheduler, channel; luồng xác minh `zalo_uid` | pytest; case cờ đỏ không gọi LLM |
 | **E. Next.js FE** | Vận hành: Việc hôm nay, Inbox, Hàng đợi duyệt, Patient 360. Quản trị AI (dịch tính năng dashboard gốc): accounts/QR, agents/persona, model, tools, KB sources, schedules, MCP servers, usage/token, logs. Mobile-first; brand token | build/lint pass; chạy với BE mock; kiểm 5 viewport |
 | **F. Infra & docs** | docker-compose; `.env.example`; hướng dẫn Ubuntu + Ollama/llama-server; Tailscale; SCOPE/SPEC/MODULEMAP/ARCH-AI01; README; dòng trỏ ở README gốc + SECTION_PROGRESS | `docker compose up` lên được; docs khớp hành vi thật |
+| **M. Care agent per khách (multi-agent)** (sau D1, S, P, B1; trước G) | Xem **`PLAN-AI01-M.md`**: agent chăm sóc riêng 1-1 cho từng khách, chủ động theo sự kiện; bậc tự chủ L0–L2; máy trạng thái AUTO→HANDOFF_ROUTING→STAFF; skill `handoff` tự cảm nhận; tự chọn/đổi nhân viên theo kỹ năng, SLA, kết thúc ở số trực 24/24; Scheduler/Knowledge/Reviewer agent | Theo §13 của PLAN-AI01-M (M1–M6) |
 | **G. Tích hợp & review** (sau cùng) | Gộp worktree; chạy toàn bộ test; vòng khép kín cả hai hồ sơ; review bảo mật (PII, grant DB, token, SSRF); đối chiếu PORT-MAP không sót file | Báo cáo + fix nhỏ; việc mở |
 
-Thứ tự: **A** → (B1, B2, C1, C2, D1, D2, D3, D4, D5, S, P, E song song; F bắt đầu phần hạ tầng) → **F** docs → **G**. Phụ thuộc mềm: B2 và P cần giao diện của S và D1, lấy từ contracts của A.
+Thứ tự: **A** → (B1, B2, C1, C2, D1, D2, D3, D4, D5, S, P, E song song; F bắt đầu phần hạ tầng) → **M** (cần D1, S, P, B1 xong) → **F** docs → **G**. Phụ thuộc mềm: B2 và P cần giao diện của S và D1, lấy từ contracts của A.
 
 ## 7. Quy ước cho subagent
 

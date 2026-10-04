@@ -122,7 +122,7 @@ class WorkerChannelPolicyReader:
         self._db = db
 
     async def get_policy(self, clinic_id: UUID, channel: ChannelKind) -> ChannelSettings:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             result = await session.execute(
                 text(f"SELECT {_WORKER_COLUMNS} FROM clinic_agent.channel_policy WHERE channel = :channel"),  # noqa: S608
                 {"channel": channel.value},
@@ -143,12 +143,12 @@ class ChannelSettingsRepository:
         return await self.get(clinic_id, channel)
 
     async def get(self, clinic_id: UUID, channel: ChannelKind) -> ChannelSettings:
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             return await self._load(session, channel)
 
     async def list_all(self, clinic_id: UUID) -> list[ChannelSettings]:
         """All three channels; a channel without a row appears with its defaults (``version == 0``)."""
-        async with self._db.session(clinic_id) as session:
+        async with self._db.session() as session:
             return [await self._load(session, kind) for kind in ChannelKind]
 
     async def update(
@@ -169,7 +169,7 @@ class ChannelSettingsRepository:
         if patch.max_gap_seconds is not None:
             changes["max_gap_seconds"] = patch.max_gap_seconds
 
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             current = await self._load(session, channel)
             if current.version != patch.version:
                 raise DomainError(ErrorCode.VERSION_CONFLICT, "Cài đặt kênh đã được người khác thay đổi.")
@@ -205,7 +205,7 @@ class ChannelSettingsRepository:
         self, ctx: ActionContext, channel: ChannelKind, *, on: bool, reason: str | None
     ) -> ChannelSettings:
         """Audited. Turning it ON must never need the ``version`` of the form: speed matters more."""
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             await self._ensure_row(session, ctx.clinic_id, channel)
             await session.execute(
                 text(
@@ -242,7 +242,7 @@ class ChannelSettingsRepository:
         is the signal that moves the scheduled jobs to manual sending. A reconnect NEVER turns the kill switch
         off by itself: a human decides when sending resumes.
         """
-        async with self._db.session(ctx.clinic_id) as session:
+        async with self._db.session() as session:
             await self._ensure_row(session, ctx.clinic_id, channel)
             if kill_switch_reason is not None:
                 await session.execute(
@@ -270,15 +270,6 @@ class ChannelSettingsRepository:
                 {"bridge_state": bridge_state.value, "kill_switch_engaged": kill_switch_reason is not None},
             )
             return await self._load(session, channel)
-
-    async def clinic_slug(self, clinic_id: UUID) -> str | None:
-        async with self._db.session(clinic_id) as session:
-            row = (
-                await session.execute(
-                    text("SELECT slug FROM clinic.clinic WHERE id = :clinic_id"), {"clinic_id": clinic_id}
-                )
-            ).scalar()
-        return str(row) if row is not None else None
 
     # ------------------------------------------------------------------------------------------ helpers
 

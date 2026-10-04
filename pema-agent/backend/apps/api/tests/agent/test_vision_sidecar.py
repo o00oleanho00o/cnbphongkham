@@ -22,7 +22,6 @@ from pema.config.runtime_settings_store import (
     InMemoryRuntimeSettingsStore,
     RuntimeSettingsSnapshot,
     install_runtime_settings,
-    use_settings_clinic,
 )
 from pema.config.runtime_vision_settings import VisionSettingsUpdate, update_vision_settings
 from pema_contracts.testing import FAKE_CLINIC_ID
@@ -66,8 +65,7 @@ def env(monkeypatch: pytest.MonkeyPatch) -> Iterator[Env]:
     get_llm_env.cache_clear()
     e = Env()
     install_runtime_settings(e.snapshot)
-    with use_settings_clinic(FAKE_CLINIC_ID):
-        yield e
+    yield e
     env_module.get_settings.cache_clear()
     get_llm_env.cache_clear()
 

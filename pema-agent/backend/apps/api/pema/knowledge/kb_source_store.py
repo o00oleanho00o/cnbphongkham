@@ -2,8 +2,8 @@
 """CRUD of knowledge-base sources + their processing state. Schema: Alembic 0002 (``agent.kb_document``).
 
 Forced deviations (SQLite -> Postgres, sync -> async):
-* every function is ``async`` and takes the open ``AsyncSession`` of ``ClinicDatabase.session(clinic_id)``
-  plus the ``clinic_id`` (every row carries it; row level security enforces it). A function never opens its
+* every function is ``async`` and takes the open ``AsyncSession`` of ``ClinicDatabase.session()``
+  plus the ``clinic_id`` (every row carries it: the fixed installation id). A function never opens its
   own transaction, so the caller composes several steps into one unit of work;
 * table ``kb_sources`` -> ``agent.kb_document``; columns ``ten, loai, dinh_dang, duong_dan, noi_dung_goc,
   trang_thai, loi, so_doan, so_byte, so_lan_thu`` -> ``name, kind, format, storage_key, raw_text, status,
