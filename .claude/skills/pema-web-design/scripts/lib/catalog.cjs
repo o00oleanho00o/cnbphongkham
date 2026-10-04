@@ -120,7 +120,7 @@ const screens = [
   S('WB6', 'WB', 'Điều phối lịch · 7 ngày', 'state', [START, nav('schedule'), { click: '[data-ops="view"][data-value="week"]' }], { selector: '.week-grid' }, {
     sources: ['prototype/shared/operations-ui.js#schedule'],
     next_route: '/schedule', next_status: 'built (U2)', app_canvas: ['I3'],
-    notes: 'Seven day columns, each with its count, cards and "＋ Đặt lịch". Every day of the demo week has bookings, so the empty-day text "Chưa có lịch" exists in code only.',
+    notes: 'Seven day columns, each with its count, cards and "＋ Đặt lịch". Every day of the demo week has bookings; the empty-day text "Chưa có lịch" is WB13.',
   }),
   S('WB7', 'WB', 'Đặt lịch hẹn', 'dialog', [START, nav('today'), { click: '[data-ops="new"]' }, { wait: '#booking-form' }], { selector: '#booking-form', text: 'Đặt lịch hẹn' }, {
     sources: ['prototype/shared/operations-ui.js#edit', 'prototype/shared/operations-ui.js#preview'],
@@ -270,7 +270,7 @@ const screens = [
     sources: ['prototype/shared/clinic.js#followups'],
     next_route: '/inbox', next_status: 'restyle (U1)', app_canvas: ['I6', 'A4'], legacy_shot: 'followups',
     covers: ['nav:followups', 'followupFilter:all', 'followupFilter:image', 'followupFilter:urgent', 'followupFilter:overdue', 'patient:link'],
-    notes: 'The bell icon in the topbar opens this page. The empty message "Inbox đã sạch" appears only when every item is resolved (not scripted).',
+    notes: 'The bell icon in the topbar opens this page. The empty message "Inbox đã sạch" appears when every item is resolved (WD15).',
   }),
   S('WD7', 'WD', 'Duyệt phản hồi follow-up', 'dialog', [START, nav('followups'), { click: '[data-action="view-followup"]' }, { wait: MODAL }], { selector: '#review-reply' }, {
     sources: ['prototype/shared/clinic.js#action'],
@@ -282,7 +282,7 @@ const screens = [
   S('WD8', 'WD', 'CSKH hôm nay · không có việc phù hợp', 'state', [START, nav('crm'), { fill: ['#crm-search', 'zzzz'] }, { press: ['#crm-search', 'Enter'] }, { wait: '#crm-search' }], { text: 'Không có việc phù hợp' }, {
     sources: ['prototype/shared/crm-ui.js#queue'],
     next_route: '/crm', next_status: 'built (U7)', app_canvas: ['C4'],
-    notes: 'Search with no match: the list shows its empty message. Other empty variants not scripted: "Không còn việc CSKH mở", "Inbox đã sạch", "Đã xếp hết danh sách chờ".',
+    notes: 'Search with no match: the list shows its empty message. Other empty variants: WC33 ("Không còn việc CSKH mở"), WD15 ("Inbox đã sạch"), WB14 ("Đã xếp hết danh sách chờ").',
   }),
 
   // ---------------------------------------------------------------- WE studio, resources, services
@@ -1059,8 +1059,8 @@ const extraCovers = {
   WF8: ['id:review-error'],
   WH3: ['text:Có lịch hẹn không có nghĩa đã điều trị*'],
   WH4: ['text:Đây là hướng dẫn phân công công việc*'],
-  WH5: ['text:Hiện ca bác sĩ là ca cố định*'],
-  WH8: ['text:Hiện đặt lịch chưa tự tạo hóa đơn*'],
+  WH7: ['text:Hiện ca bác sĩ là ca cố định*'],
+  WH10: ['text:Hiện đặt lịch chưa tự tạo hóa đơn*'],
   WH11: ['text:Xử lý lỗi và hiểu phạm vi đang sử dụng', 'text:Khi hệ thống từ chối một thao tác*', 'text:Không thể khóa phòng*', 'text:Chưa có đăng nhập/phân quyền thực*'],
 };
 const extraSources = {
