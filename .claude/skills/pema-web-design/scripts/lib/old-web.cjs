@@ -21,6 +21,9 @@
 //   {"key": "Tab"}                             press a key on the page (focus states)
 //   {"hover": "css"}                           move the mouse over the first visible match
 //   {"setValue": ["css", "value"]}             set a value and fire input + change (date and month inputs)
+//   {"gone": "css"}                            wait until nothing visible matches (a transient toast has gone)
+//   {"tab": [steps]}                           run the steps in a second tab of the same browser (same storage), close it and
+//                                              come back: another window changing the data under an open dialog
 // `expect` ({selector, text}) says what must be visible once the steps are done.
 
 const DEFAULT_CLOCK = '2026-09-20T09:00:00+07:00';
@@ -145,6 +148,16 @@ async function runStep(step, state, { base, vars }) {
   } else if (step.upload !== undefined) {
     await cur.locator(step.upload[0]).first().setInputFiles(syntheticFile(step.upload[1]));
     await settle(cur, 400);
+  } else if (step.gone !== undefined) {
+    await cur.locator(step.gone).locator('visible=true').first().waitFor({ state: 'detached', timeout: STEP_TIMEOUT }).catch(() => {});
+    await settle(cur, 100);
+  } else if (step.tab !== undefined) {
+    const second = await cur.context().newPage();
+    const inner = { main: second, current: second };
+    for (const sub of step.tab) await runStep(sub, inner, { base, vars });
+    await second.close();
+    await cur.bringToFront();
+    await settle(cur, 200);
   } else if (step.hookPrint !== undefined) {
     await cur.evaluate(() => {
       window.__printed = 0;
