@@ -36,27 +36,25 @@ Group **WB · Vận hành: tổng quan, hôm nay, lịch** · dialog · Next.js:
 - Layout `.actions` 624×40 px: flex row wrap, gap 8px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WB7): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
 ```tsx
-// opens over the page; the backdrop and the page behind it are not part of this screen
-<Dialog old="modal ops-modal" eyebrow="Pema · vận hành" title="Đặt lịch hẹn" close={{"label":"Đóng hộp thoại"}}>
-  <form id="booking-form">
-    <Field label="Bệnh nhân" type="select" default="Nguyễn Minh Linh" id="booking-patient" options={["Nguyễn Minh Linh","Trần Ngọc Anh","Lê Hoàng Nam","Phạm Thảo Vy","Vũ Quỳnh Trang","Đặng Gia Hân","Bùi Khánh An","Ngô Đức Minh"]} /* 46 options in the demo, first 8 shown */ />
-    <Grid old="two-col-form" cols="1fr 1fr" gap="15px">
-      <Field label="Dịch vụ" type="select" default="Tái khám & đánh giá" id="booking-service" options={["Tái khám & đánh giá","Tư vấn da liễu","Laser theo chỉ định","Chăm sóc theo chỉ định"]} />
-      <Field label="Bác sĩ" type="select" default="BS. Tâm" id="booking-doctor" options={["BS. Tâm","BS. Mai","BS. An","BS. Lan"]} />
-      <Field label="Phòng" type="select" default="Khám da liễu" id="booking-room" options={["Khám da liễu","Tư vấn chuyên sâu","Laser & thủ thuật","Chăm sóc da"]} />
-      <Field label="Ngày" type="date" default="2026-09-20" id="booking-date" />
-      <Field label="Giờ" type="time" default="10:00" id="booking-time" />
-      <Field label="Ghi chú" type="text" id="booking-note" />
-    </Grid>
-    <Notice tone="info" old="notice">"30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫"</Notice>
-    <Row old="actions ops-form-actions" gap="8px" wrap>
-      <Button variant="primary" old="btn btn-primary">"Xác nhận đặt lịch"</Button>
-      <Button variant="secondary" old="btn">"Tìm giờ trống"</Button>  // ops=suggest
-    </Row>
-  </form>
+// opens over the page "Hôm nay" (dimmed); the page behind it is not part of this screen
+<Dialog eyebrow="Pema · vận hành" title="Đặt lịch hẹn" width="720px">
+  <Field label="Bệnh nhân" type="select" default="Nguyễn Thu Hà" options={["Nguyễn Thu Hà","Trần Minh Anh","Lê Hoàng Yến","Phạm Quốc Bảo","Võ Ngọc Trâm","Đặng Gia Linh","Bùi Khánh Vy","Hồ Thanh Tùng"]} />
+  <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
+    <Field label="Dịch vụ" type="select" default="Tái khám & đánh giá" options={["Tái khám & đánh giá","Tư vấn da liễu","Laser theo chỉ định","Chăm sóc theo chỉ định"]} />
+    <Field label="Bác sĩ" type="select" default="BS. Tâm" options={["BS. Tâm","BS. Mai","BS. An","BS. Lan"]} />
+    <Field label="Phòng" type="select" default="Khám da liễu" options={["Khám da liễu","Tư vấn chuyên sâu","Laser & thủ thuật","Chăm sóc da"]} />
+    <Field label="Ngày" type="date" default="2026-09-20" />
+    <Field label="Giờ" type="time" default="10:00" />
+    <Field label="Ghi chú" type="text" />
+  </Grid>
+  <Notice tone="info" text="30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫" />
+  <Row gap="8px" wrap>
+    <Button variant="primary">"Xác nhận đặt lịch"</Button>
+    <Button variant="secondary">"Tìm giờ trống"</Button>
+  </Row>
 </Dialog>
 ```
 Kit components used: Field×7, Button×2, Dialog×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
@@ -91,10 +89,39 @@ Kit components used: Field×7, Button×2, Dialog×1; shared pieces: Notice×1. E
 
 ## Differences from the app design
 - App I4/F8 book with a bottom sheet and a week strip; the web is one dialog with 8 fields, the preview and "Tìm giờ trống".
+- The close button "Đóng hộp thoại" (the X) is drawn by the dialog block without its accessible label.
 
 ## Gotchas
 - The demo day is fixed: 2026-09-20 09:00 (`DAY` in `operations-data.js` and `crm-automation.js`). Dates before that day cannot be booked.
 - Every ops dialog ends with an empty `<p id="ops-error" role="alert">`; it has no text until a rule error is thrown, so it is not drawn in the layout.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WB7 · Đặt lịch hẹn`.
+- Canvas note: Web › dialog · mở từ Hôm nay (Đặt lịch mới), Điều phối lịch (Đặt lịch, ô trống) và Xử lý CSKH; app I4/F8 là bottom sheet và dải tuần, web là một hộp thoại 8 trường kèm dòng tạm tính và "Tìm giờ trống"; dòng lỗi #ops-error rỗng cho tới khi vi phạm quy tắc nên không vẽ
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+```tsx
+// opens over the page; the backdrop and the page behind it are not part of this screen
+<Dialog old="modal ops-modal" eyebrow="Pema · vận hành" title="Đặt lịch hẹn" close={{"label":"Đóng hộp thoại"}}>
+  <form id="booking-form">
+    <Field label="Bệnh nhân" type="select" default="Nguyễn Minh Linh" id="booking-patient" options={["Nguyễn Minh Linh","Trần Ngọc Anh","Lê Hoàng Nam","Phạm Thảo Vy","Vũ Quỳnh Trang","Đặng Gia Hân","Bùi Khánh An","Ngô Đức Minh"]} /* 46 options in the demo, first 8 shown */ />
+    <Grid old="two-col-form" cols="1fr 1fr" gap="15px">
+      <Field label="Dịch vụ" type="select" default="Tái khám & đánh giá" id="booking-service" options={["Tái khám & đánh giá","Tư vấn da liễu","Laser theo chỉ định","Chăm sóc theo chỉ định"]} />
+      <Field label="Bác sĩ" type="select" default="BS. Tâm" id="booking-doctor" options={["BS. Tâm","BS. Mai","BS. An","BS. Lan"]} />
+      <Field label="Phòng" type="select" default="Khám da liễu" id="booking-room" options={["Khám da liễu","Tư vấn chuyên sâu","Laser & thủ thuật","Chăm sóc da"]} />
+      <Field label="Ngày" type="date" default="2026-09-20" id="booking-date" />
+      <Field label="Giờ" type="time" default="10:00" id="booking-time" />
+      <Field label="Ghi chú" type="text" id="booking-note" />
+    </Grid>
+    <Notice tone="info" old="notice">"30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫"</Notice>
+    <Row old="actions ops-form-actions" gap="8px" wrap>
+      <Button variant="primary" old="btn btn-primary">"Xác nhận đặt lịch"</Button>
+      <Button variant="secondary" old="btn">"Tìm giờ trống"</Button>  // ops=suggest
+    </Row>
+  </form>
+</Dialog>
+```
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WB7-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

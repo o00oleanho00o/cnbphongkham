@@ -41,8 +41,198 @@ Group **WB · Vận hành: tổng quan, hôm nay, lịch** · page · Next.js: *
 - Layout `.calendar-legend` 894×39 px: flex row wrap, gap 8px
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WB5): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Điều phối lịch">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item active icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Điều phối lịch"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <PageHeading title="Điều phối lịch" subtitle="Xếp theo phòng, ca bác sĩ và thời lượng. Kéo lịch hoặc mở chi tiết để dời.">
+    <Button variant="primary" icon="add">"Đặt lịch"</Button>
+  </PageHeading>
+  <Grid cols="repeat(4, 1fr)" cols-390="repeat(2, 1fr)">
+    <Tile label="Lịch trong ngày" value="31" />
+    <Tile label="Thời gian điều trị" value="1275′" />
+    <Tile label="Chờ xếp lịch" value="6" />
+    <Tile label="Khoảng khóa" value="0" />
+  </Grid>
+  <Row gap="10px" wrap>
+    <Button variant="secondary">"←"</Button>
+    <Field label="Ngày bắt đầu" type="date" default="2026-09-20" />
+    <Button variant="secondary">"→"</Button>
+    <Button variant="secondary">"Mốc demo"</Button>
+    <Tabs segmented items={["Ngày","7 ngày"]} selected="Ngày" />
+    <Field label="Bác sĩ" type="select" default="Tất cả bác sĩ" options={["Tất cả bác sĩ","BS. Tâm","BS. Mai","BS. An","BS. Lan"]} />
+    <Field label="Phòng" type="select" default="Tất cả phòng" options={["Tất cả phòng","Khám da liễu","Tư vấn chuyên sâu","Laser & thủ thuật","Chăm sóc da"]} />
+  </Row>
+  <Grid cols="minmax(0,1fr) 250px" gap="16px">
+    <Card title="20/9/2026" subtitle="08:00–18:00 · bước kéo 30 phút · nhấp thẻ để chỉnh giờ chính xác">
+      <Card.Aside>
+        <Badge tone="neutral">"Theo phòng"</Badge>
+      </Card.Aside>
+      <ScheduleBoard rooms={[["Khám da liễu","8 lịch · phòng 1"],["Tư vấn chuyên sâu","8 lịch · phòng 2"],["Laser & thủ thuật","7 lịch · phòng 3"],["Chăm sóc da","8 lịch · phòng 4"]]} corner="GIỜ">
+        <Booking room="Khám da liễu" time="08:00–08:30" title="Nguyễn Thu Hà" sub="BS. Tâm · Đặt hẹn" service={0} />
+        <Booking room="Khám da liễu" time="09:00–09:30" title="Trần Minh Anh" sub="BS. Mai · Đặt hẹn" service={1} />
+        <Booking room="Khám da liễu" time="10:00–10:30" title="Lê Hoàng Yến" sub="BS. An · Đặt hẹn" service={2} />
+        <Booking room="Khám da liễu" time="11:00–11:30" title="Phạm Quốc Bảo" sub="BS. Lan · Đặt hẹn" service={3} />
+        <Booking room="Tư vấn chuyên sâu" time="08:00–08:45" title="Võ Ngọc Trâm" sub="BS. Mai · Đặt hẹn" service={1} />
+        <Booking room="Tư vấn chuyên sâu" time="08:45–09:00" title="15′ chuẩn bị phòng" service={1} />
+        <Booking room="Tư vấn chuyên sâu" time="09:00–09:45" title="Đặng Gia Linh" sub="BS. An · Đặt hẹn" service={2} />
+        <Booking room="Tư vấn chuyên sâu" time="09:45–10:00" title="15′ chuẩn bị phòng" service={1} />
+        <Booking room="Tư vấn chuyên sâu" time="10:00–10:45" title="Bùi Khánh Vy" sub="BS. Lan · Đặt hẹn" service={3} />
+        <Booking room="Tư vấn chuyên sâu" time="10:45–11:00" title="15′ chuẩn bị phòng" service={1} />
+        <Booking room="Tư vấn chuyên sâu" time="11:00–11:45" title="Hồ Thanh Tùng" sub="BS. Tâm · Đặt hẹn" service={0} />
+        <Booking room="Tư vấn chuyên sâu" time="11:45–12:00" title="15′ chuẩn bị phòng" service={1} />
+        <Booking room="Laser & thủ thuật" time="08:00–08:45" title="Ngô Mỹ Duyên" sub="BS. An · Đặt hẹn" service={2} />
+        <Booking room="Laser & thủ thuật" time="08:45–09:00" title="15′ chuẩn bị phòng" service={1} />
+        <Booking room="Laser & thủ thuật" time="09:00–09:45" title="Đỗ Phương Thảo" sub="BS. Lan · Đặt hẹn" service={3} />
+        <Booking room="Laser & thủ thuật" time="09:45–10:00" title="15′ chuẩn bị phòng" service={1} />
+        <Booking room="Laser & thủ thuật" time="10:00–10:45" title="Lý Tuấn Kiệt" sub="BS. Tâm · Đặt hẹn" service={0} />
+        <Booking room="Laser & thủ thuật" time="10:45–11:00" title="15′ chuẩn bị phòng" service={1} />
+        <Booking room="Laser & thủ thuật" time="11:00–11:45" title="Mai Hải Yến" sub="BS. Mai · Đặt hẹn" service={1} />
+        <Booking room="Laser & thủ thuật" time="11:45–12:00" title="15′ chuẩn bị phòng" service={1} />
+        <Booking room="Chăm sóc da" time="08:00–08:45" title="Nguyễn Thu Hà" sub="BS. Lan · Đặt hẹn" service={3} />
+        <Booking room="Chăm sóc da" time="08:45–09:00" title="15′ chuẩn bị phòng" service={1} />
+        <Booking room="Chăm sóc da" time="09:00–09:45" title="Trần Minh Anh" sub="BS. Tâm · Đặt hẹn" service={0} />
+        <Booking room="Chăm sóc da" time="09:45–10:00" title="15′ chuẩn bị phòng" service={1} />
+        <Booking room="Chăm sóc da" time="10:00–10:45" title="Lê Hoàng Yến" sub="BS. Mai · Đặt hẹn" service={1} />
+        <Booking room="Chăm sóc da" time="10:45–11:00" title="15′ chuẩn bị phòng" service={1} />
+        <Booking room="Chăm sóc da" time="11:00–11:45" title="Phạm Quốc Bảo" sub="BS. An · Đặt hẹn" service={2} />
+        <Booking room="Chăm sóc da" time="11:45–12:00" title="15′ chuẩn bị phòng" service={1} />
+        <LegendItem service={0}>"Tái khám & đánh giá"</LegendItem>
+        <LegendItem service={1}>"Tư vấn da liễu"</LegendItem>
+        <LegendItem service={2}>"Laser theo chỉ định"</LegendItem>
+        <LegendItem service={3}>"Chăm sóc theo chỉ định"</LegendItem>
+      </ScheduleBoard>
+    </Card>
+    <Card title="Chờ xếp lịch" subtitle="Chọn hồ sơ để tìm giờ phù hợp">
+      <Card variant="soft">
+        <Row gap="8px" wrap>
+          <Avatar>"TH"</Avatar>
+          <Text strong>"Nguyễn Thu Hà"</Text>
+        </Row>
+        <Text>"Có thể đến trong ngày"</Text>
+        <Text small>"Tái khám & đánh giá"</Text>
+        <Button variant="secondary">"Xếp lịch →"</Button>
+      </Card>
+      <Card variant="soft">
+        <Row gap="8px" wrap>
+          <Avatar>"MA"</Avatar>
+          <Text strong>"Trần Minh Anh"</Text>
+        </Row>
+        <Text>"Ưu tiên buổi chiều"</Text>
+        <Text small>"Tư vấn da liễu"</Text>
+        <Button variant="secondary">"Xếp lịch →"</Button>
+      </Card>
+      <Card variant="soft">
+        <Row gap="8px" wrap>
+          <Avatar>"HY"</Avatar>
+          <Text strong>"Lê Hoàng Yến"</Text>
+        </Row>
+        <Text>"Có thể đến trong ngày"</Text>
+        <Text small>"Laser theo chỉ định"</Text>
+        <Button variant="secondary">"Xếp lịch →"</Button>
+      </Card>
+      <Card variant="soft">
+        <Row gap="8px" wrap>
+          <Avatar>"QB"</Avatar>
+          <Text strong>"Phạm Quốc Bảo"</Text>
+        </Row>
+        <Text>"Ưu tiên buổi chiều"</Text>
+        <Text small>"Chăm sóc theo chỉ định"</Text>
+        <Button variant="secondary">"Xếp lịch →"</Button>
+      </Card>
+      <Card variant="soft">
+        <Row gap="8px" wrap>
+          <Avatar>"NT"</Avatar>
+          <Text strong>"Võ Ngọc Trâm"</Text>
+        </Row>
+        <Text>"Có thể đến trong ngày"</Text>
+        <Text small>"Tái khám & đánh giá"</Text>
+        <Button variant="secondary">"Xếp lịch →"</Button>
+      </Card>
+      <Card variant="soft">
+        <Row gap="8px" wrap>
+          <Avatar>"GL"</Avatar>
+          <Text strong>"Đặng Gia Linh"</Text>
+        </Row>
+        <Text>"Ưu tiên buổi chiều"</Text>
+        <Text small>"Tư vấn da liễu"</Text>
+        <Button variant="secondary">"Xếp lịch →"</Button>
+      </Card>
+    </Card>
+  </Grid>
+</AppShell>
+```
+Kit components used: Button×12, Card×8, Field×5, Tile×4, Sidebar×1, TopBar×1, PageHeading×1, Tabs×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- 1440×900 is the reference (Frame, Layout).
+- 1920×1020: no layout change
+- 1280×720: no layout change
+- 1024×768: card .panel: display flex → block; card .panel: display block → grid; .ops-layout: grid 2 → 1 columns; 14: display flex → block; .sidebar: width 232 → 204px; .main: display flex → block; #main-content: display flex → block
+- 390×844: .page-heading: display flex → block; .panel-head: flex-wrap off → on; card .panel: display flex → block; card .panel: display block → grid; .ops-layout: grid 2 → 1 columns; 14: display flex → block; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static; .main: display flex → block; #main-content: display flex → block · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "BS. Tâm", "Chủ phòng khám", "Không gian phòng khám" (+1)
+- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
+
+## Tokens
+- Text colour: ink-soft ×57, ink ×12, heading ×11, surface ×2, info ×1
+- Background: surface ×97, brand-50 ×14, success-soft ×8, field ×6, link ×2, info-soft ×1, row-hover ×1
+- Border: tile ×80, line-strong ×36, line ×24, success-line ×7, info-line ×6, link ×2
+- Radius: field ×12, card ×2, control ×2
+- Font size: eyebrow ×42, micro ×41, label ×12, body-lg ×2, title ×1
+- Font: Be Vietnam Pro ×223
+- Unmatched colours (no token within ΔE 3): `#414e83` (text, ×33, nearest `link` ΔE 8); `#7a572b` (text, ×33, nearest `warning` ΔE 7.3); `#173f61` (text, ×32, nearest `heading` ΔE 3.7); `#296655` (text, ×29, nearest `success` ΔE 5.1); `#34536d` (text, ×10, nearest `link` ΔE 6.7); `#eef0fc` (background, ×9, nearest `tile` ΔE 4.3); `#fff5e7` (background, ×9, nearest `warning-soft` ΔE 3.2); `#bcd9ee` (border, ×8, nearest `line-strong` ΔE 3.4); `#d2d7f2` (border, ×8, nearest `line` ΔE 9.4); `#ecdbc0` (border, ×8, nearest `warning-line` ΔE 3.5); `#20496d` (text, ×2, nearest `link` ΔE 5.1); `#70879a` (text, ×1, nearest `ink-soft` ΔE 10.1)
+- Unmatched radius: 8px ×3 (nearest `field`), 99px ×1 (nearest `hero`), 7px ×31 (nearest `field`), 4px ×23 (nearest `field`), 5px ×4 (nearest `field`), 50px ×6 (nearest `hero`)
+- Unmatched font size: 18px ×4 (nearest `section`), 9px ×121 (nearest `eyebrow`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- A doctor account has the doctor filter locked to its own doctor (`PemaStaff.apply()` disables `#ops-doctor`).
+- Doctor shifts 08:00–18:00 with a break 12:00–13:00; "Ngoài ca bác sĩ hoặc trùng giờ nghỉ 12:00–13:00."
+
+## Differences from the app design
+- App I3/A2 show a week strip and a day list; the web board is a room-by-time grid with drag and drop, the legend of the four service colours and the side panel "Chờ xếp lịch".
+- Canvas WB5: booking cards show time, patient and "BS. · Đặt hẹn" (the service is the card colour, named in the legend); the old card also repeats the service name and "· +15′ đệm" in the time line. The hatched "15′ chuẩn bị phòng" blocks are drawn as small cards of the board block, which has no hatched buffer kind (open item). The 60 empty half-hour slots (buttons "Đặt lịch <phòng> <giờ>", ops=new) are not drawn: the board block has no empty-slot buttons (open item). The canvas shows 08:00–12:00 with one booking per hour per room; the old grid scrolls 08:00–18:00.
+
+## Gotchas
+- The demo day is fixed: 2026-09-20 09:00 (`DAY` in `operations-data.js` and `crm-automation.js`). Dates before that day cannot be booked.
+- The 4 service colours are the classes `service-S0..S3` (calendar legend and booking cards).
+- Drag and drop is mouse only (`draggable=true`); keyboard users open the card and use the dialog.
+
+## Web canvas
+- Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WB5 · Điều phối lịch`.
+- Canvas note: Web › schedule · app I3/A2 là dải tuần và danh sách ngày; web là lưới phòng × giờ (kéo thả bằng chuột), chú giải 4 màu dịch vụ và khối "Chờ xếp lịch"; khoảng đệm "15′ chuẩn bị phòng" vẽ như một thẻ lịch vì canvas chưa có khối đệm gạch chéo; bác sĩ đăng nhập bị khóa bộ lọc bác sĩ
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Điều phối lịch", page key "schedule"
   <PageHeading title="Điều phối lịch" subtitle="Xếp theo phòng, ca bác sĩ và thời lượng. Kéo lịch hoặc mở chi tiết để dời.">
@@ -114,41 +304,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Grid>
 </AppShell>
 ```
-Kit components used: Button×6, Tile×4, Field×3, Card×3, PageHeading×1, Badge×1; shared pieces: FilterChip×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- 1440×900 is the reference (Frame, Layout).
-- 1920×1020: no layout change
-- 1280×720: no layout change
-- 1024×768: card .panel: display flex → block; card .panel: display block → grid; .ops-layout: grid 2 → 1 columns; 14: display flex → block; .sidebar: width 232 → 204px; .main: display flex → block; #main-content: display flex → block
-- 390×844: .page-heading: display flex → block; .panel-head: flex-wrap off → on; card .panel: display flex → block; card .panel: display block → grid; .ops-layout: grid 2 → 1 columns; 14: display flex → block; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static; .main: display flex → block; #main-content: display flex → block · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "BS. Tâm", "Chủ phòng khám", "Không gian phòng khám" (+1)
-- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
-
-## Tokens
-- Text colour: ink-soft ×57, ink ×12, heading ×11, surface ×2, info ×1
-- Background: surface ×97, brand-50 ×14, success-soft ×8, field ×6, link ×2, info-soft ×1, row-hover ×1
-- Border: tile ×80, line-strong ×36, line ×24, success-line ×7, info-line ×6, link ×2
-- Radius: field ×12, card ×2, control ×2
-- Font size: eyebrow ×42, micro ×41, label ×12, body-lg ×2, title ×1
-- Font: Be Vietnam Pro ×223
-- Unmatched colours (no token within ΔE 3): `#414e83` (text, ×33, nearest `link` ΔE 8); `#7a572b` (text, ×33, nearest `warning` ΔE 7.3); `#173f61` (text, ×32, nearest `heading` ΔE 3.7); `#296655` (text, ×29, nearest `success` ΔE 5.1); `#34536d` (text, ×10, nearest `link` ΔE 6.7); `#eef0fc` (background, ×9, nearest `tile` ΔE 4.3); `#fff5e7` (background, ×9, nearest `warning-soft` ΔE 3.2); `#bcd9ee` (border, ×8, nearest `line-strong` ΔE 3.4); `#d2d7f2` (border, ×8, nearest `line` ΔE 9.4); `#ecdbc0` (border, ×8, nearest `warning-line` ΔE 3.5); `#20496d` (text, ×2, nearest `link` ΔE 5.1); `#70879a` (text, ×1, nearest `ink-soft` ΔE 10.1)
-- Unmatched radius: 8px ×3 (nearest `field`), 99px ×1 (nearest `hero`), 7px ×31 (nearest `field`), 4px ×23 (nearest `field`), 5px ×4 (nearest `field`), 50px ×6 (nearest `hero`)
-- Unmatched font size: 18px ×4 (nearest `section`), 9px ×121 (nearest `eyebrow`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- A doctor account has the doctor filter locked to its own doctor (`PemaStaff.apply()` disables `#ops-doctor`).
-- Doctor shifts 08:00–18:00 with a break 12:00–13:00; "Ngoài ca bác sĩ hoặc trùng giờ nghỉ 12:00–13:00."
-
-## Differences from the app design
-- App I3/A2 show a week strip and a day list; the web board is a room-by-time grid with drag and drop, the legend of the four service colours and the side panel "Chờ xếp lịch".
-
-## Gotchas
-- The demo day is fixed: 2026-09-20 09:00 (`DAY` in `operations-data.js` and `crm-automation.js`). Dates before that day cannot be booked.
-- The 4 service colours are the classes `service-S0..S3` (calendar legend and booking cards).
-- Drag and drop is mouse only (`draggable=true`); keyboard users open the card and use the dialog.
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WB5-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

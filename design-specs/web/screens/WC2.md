@@ -31,32 +31,54 @@ Group **WC · Hồ sơ & Patient 360** · state · Next.js: **built (U1)** (`/pa
 - Layout `.filter-row` 1160×34 px: flex row wrap, gap 8px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WC2): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
 ```tsx
-<AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Tìm bệnh nhân", page key "patients"
+<AppShell role="owner-tam" active="Tìm bệnh nhân">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item active icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Tìm bệnh nhân"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
   <PageHeading title="Tìm bệnh nhân" subtitle="Tìm theo tên, mã hồ sơ, số điện thoại hoặc mối quan tâm.">
-    <Button variant="primary" icon="plus" old="btn btn-primary">"Hồ sơ mới"</Button>  // modal=patient
+    <Button variant="primary" icon="add">"Hồ sơ mới"</Button>
   </PageHeading>
-  <Row old="search-box" gap="12px">
-    <Icon name="search" />
-    <Field label="Tìm tên, mã hoặc số điện thoại" type="text" placeholder="Ví dụ: Nguyễn Minh Linh, P001, nám..." default="zzzz" id="patient-search" />
-    <Badge tone="neutral" old="chip">"0 hồ sơ"</Badge>
+  <Row gap="12px" wrap>
+    <Field label="Tìm tên, mã hoặc số điện thoại" type="search" default="zzzz" />
+    <Badge tone="neutral" dot={false}>"0 hồ sơ"</Badge>
   </Row>
-  <Row old="filter-row" gap="8px" wrap>
-    <FilterChipGroup items={["Tất cả","Đang điều trị","Tái khám tuần này","Có cảnh báo"]} selected={[]} />  // patientFilter
-  </Row>
-  <Card old="panel">
-    <EmptyState text={"⌕ Không tìm thấy hồ sơ Thử tên, mã hồ sơ hoặc mối quan tâm khác. Xóa tìm kiếm"}>
-      <Text>"⌕"</Text>
-      <Text strong>"Không tìm thấy hồ sơ"</Text>
-      <Text>"Thử tên, mã hồ sơ hoặc mối quan tâm khác."</Text>
-      <Button variant="secondary" old="btn">"Xóa tìm kiếm"</Button>
+  <FilterChipGroup items={["Tất cả","Đang điều trị","Tái khám tuần này","Có cảnh báo"]} selected={["Tất cả"]} />
+  <Card>
+    <EmptyState title="Không tìm thấy hồ sơ" hint="Thử tên, mã hồ sơ hoặc mối quan tâm khác." icon="search">
+      <Button variant="secondary">"Xóa tìm kiếm"</Button>
     </EmptyState>
   </Card>
 </AppShell>
 ```
-Kit components used: Button×2, PageHeading×1, Field×1, Badge×1, Card×1, EmptyState×1; shared pieces: FilterChip×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Button×4, Field×3, Sidebar×1, TopBar×1, PageHeading×1, Badge×1, Card×1, EmptyState×1; shared pieces: FilterChip×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WC2-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -83,6 +105,37 @@ Kit components used: Button×2, PageHeading×1, Field×1, Badge×1, Card×1, Emp
 
 ## Gotchas
 - Opening a patient from the list is a row click (`tr[data-patient]`) or the "Mở →" button; the tab is kept in the module variable `tab`, so a re-render keeps it.
+- Canvas: the empty state is one EmptyState block (icon "search" replaces the old "⌕" glyph, title, hint, "Xóa tìm kiếm"); the snapshot reads it as one concatenated string, so it is exempted through demo_data.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WC2 · Tìm bệnh nhân · không có hồ sơ`.
+- Canvas note: Web › patients · tìm "zzzz": chip đếm "0 hồ sơ" và trạng thái rỗng với nút "Xóa tìm kiếm"
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+```tsx
+<AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Tìm bệnh nhân", page key "patients"
+  <PageHeading title="Tìm bệnh nhân" subtitle="Tìm theo tên, mã hồ sơ, số điện thoại hoặc mối quan tâm.">
+    <Button variant="primary" icon="plus" old="btn btn-primary">"Hồ sơ mới"</Button>  // modal=patient
+  </PageHeading>
+  <Row old="search-box" gap="12px">
+    <Icon name="search" />
+    <Field label="Tìm tên, mã hoặc số điện thoại" type="text" placeholder="Ví dụ: Nguyễn Minh Linh, P001, nám..." default="zzzz" id="patient-search" />
+    <Badge tone="neutral" old="chip">"0 hồ sơ"</Badge>
+  </Row>
+  <Row old="filter-row" gap="8px" wrap>
+    <FilterChipGroup items={["Tất cả","Đang điều trị","Tái khám tuần này","Có cảnh báo"]} selected={[]} />  // patientFilter
+  </Row>
+  <Card old="panel">
+    <EmptyState text={"⌕ Không tìm thấy hồ sơ Thử tên, mã hồ sơ hoặc mối quan tâm khác. Xóa tìm kiếm"}>
+      <Text>"⌕"</Text>
+      <Text strong>"Không tìm thấy hồ sơ"</Text>
+      <Text>"Thử tên, mã hồ sơ hoặc mối quan tâm khác."</Text>
+      <Button variant="secondary" old="btn">"Xóa tìm kiếm"</Button>
+    </EmptyState>
+  </Card>
+</AppShell>
+```
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WC2-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

@@ -34,8 +34,75 @@ Group **WB · Vận hành: tổng quan, hôm nay, lịch** · dialog · Next.js:
 - Layout `.actions` 624×40 px: flex row wrap, gap 8px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WB8): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+// opens over the page "Điều phối lịch" (dimmed); the page behind it is not part of this screen
+<Dialog eyebrow="Pema · vận hành" title="Chi tiết lịch hẹn" width="720px">
+  <Row gap="8px" wrap>
+    <Badge tone="neutral">"Đặt hẹn"</Badge>
+    <Button variant="secondary">"Xác nhận lịch"</Button>
+    <Button variant="secondary">"Check-in"</Button>
+    <Button variant="secondary">"Patient 360 →"</Button>
+  </Row>
+  <Field label="Bệnh nhân" type="select" default="Nguyễn Thu Hà" options={["Nguyễn Thu Hà","Trần Minh Anh","Lê Hoàng Yến","Phạm Quốc Bảo","Võ Ngọc Trâm","Đặng Gia Linh","Bùi Khánh Vy","Hồ Thanh Tùng"]} />
+  <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
+    <Field label="Dịch vụ" type="select" default="Tái khám & đánh giá" options={["Tái khám & đánh giá","Tư vấn da liễu","Laser theo chỉ định","Chăm sóc theo chỉ định"]} />
+    <Field label="Bác sĩ" type="select" default="BS. Tâm" options={["BS. Tâm","BS. Mai","BS. An","BS. Lan"]} />
+    <Field label="Phòng" type="select" default="Khám da liễu" options={["Khám da liễu","Tư vấn chuyên sâu","Laser & thủ thuật","Chăm sóc da"]} />
+    <Field label="Ngày" type="date" default="2026-09-20" />
+    <Field label="Giờ" type="time" default="08:00" />
+    <Field label="Ghi chú" type="text" default="Lịch giả lập để thử điều phối" />
+  </Grid>
+  <Notice tone="info" text="30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫ · theo lịch đã đặt" />
+  <Row gap="8px" wrap>
+    <Button variant="primary">"Lưu thay đổi"</Button>
+    <Button variant="secondary">"Tìm giờ trống"</Button>
+  </Row>
+  <Divider />
+  <Field label="Lý do hủy" type="text" />
+  <Row gap="8px" wrap>
+    <Button variant="danger">"Hủy lịch hẹn"</Button>
+  </Row>
+</Dialog>
+```
+Kit components used: Field×8, Button×6, Dialog×1, Badge×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- Not probed: this dialog has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WB8-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
+
+## Tokens
+- Text colour: ink-soft ×8, danger ×1, heading ×1, info ×1, surface ×1
+- Background: field ×8, surface ×6, link ×1, row-hover ×1, table-head ×1
+- Border: line-strong ×13, line ×3, link ×1
+- Radius: field ×7
+- Font size: label ×11, micro ×4, eyebrow ×2
+- Font: Be Vietnam Pro ×18
+- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×4, nearest `link` ΔE 6.7); `#467a9c` (text, ×1, nearest `info` ΔE 5.3); `#5b7487` (text, ×1, nearest `ink-soft` ΔE 3.2)
+- Unmatched radius: 18px ×1 (nearest `modal`), 8px ×9 (nearest `field`), 99px ×1 (nearest `hero`)
+- Unmatched font size: 23px ×1 (nearest `title`)
+
+## Required text (keep verbatim)
+- 30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫ · theo lịch đã đặt
+
+## Business rules
+- (old web notice) "30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫ · theo lịch đã đặt"
+- "Cần lý do hủy cho lịch đang hoạt động."
+- "Không thể chuyển trạng thái lịch này." (only confirmed and arrived are allowed targets).
+
+## Differences from the app design
+- The close button "Đóng hộp thoại" (the X) is drawn by the dialog block without its accessible label.
+- (generated) Notice of the old web not found verbatim in F9: "30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫ · theo lịch đã đặt"
+
+## Gotchas
+- The demo day is fixed: 2026-09-20 09:00 (`DAY` in `operations-data.js` and `crm-automation.js`). Dates before that day cannot be booked.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WB8 · Chi tiết lịch hẹn`.
+- Canvas note: Web › dialog · từ thẻ lịch trong Điều phối lịch: chip trạng thái, Xác nhận lịch, Check-in, Patient 360 →, biểu mẫu đặt lịch (Lưu thay đổi, Tìm giờ trống) và phần hủy lịch có lý do; app F9 không có dòng tạm tính "theo lịch đã đặt"
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 // opens over the page; the backdrop and the page behind it are not part of this screen
 <Dialog old="modal ops-modal" eyebrow="Pema · vận hành" title="Chi tiết lịch hẹn" close={{"label":"Đóng hộp thoại"}}>
@@ -65,35 +132,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   <Button variant="secondary" old="btn">"Hủy lịch hẹn"</Button>  // ops=cancel
 </Dialog>
 ```
-Kit components used: Field×8, Button×6, Dialog×1, Badge×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- Not probed: this dialog has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WB8-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
-
-## Tokens
-- Text colour: ink-soft ×8, danger ×1, heading ×1, info ×1, surface ×1
-- Background: field ×8, surface ×6, link ×1, row-hover ×1, table-head ×1
-- Border: line-strong ×13, line ×3, link ×1
-- Radius: field ×7
-- Font size: label ×11, micro ×4, eyebrow ×2
-- Font: Be Vietnam Pro ×18
-- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×4, nearest `link` ΔE 6.7); `#467a9c` (text, ×1, nearest `info` ΔE 5.3); `#5b7487` (text, ×1, nearest `ink-soft` ΔE 3.2)
-- Unmatched radius: 18px ×1 (nearest `modal`), 8px ×9 (nearest `field`), 99px ×1 (nearest `hero`)
-- Unmatched font size: 23px ×1 (nearest `title`)
-
-## Required text (keep verbatim)
-- 30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫ · theo lịch đã đặt
-
-## Business rules
-- (old web notice) "30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫ · theo lịch đã đặt"
-- "Cần lý do hủy cho lịch đang hoạt động."
-- "Không thể chuyển trạng thái lịch này." (only confirmed and arrived are allowed targets).
-
-## Differences from the app design
-- (generated) Notice of the old web not found verbatim in F9: "30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫ · theo lịch đã đặt"
-
-## Gotchas
-- The demo day is fixed: 2026-09-20 09:00 (`DAY` in `operations-data.js` and `crm-automation.js`). Dates before that day cannot be booked.
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WB8-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

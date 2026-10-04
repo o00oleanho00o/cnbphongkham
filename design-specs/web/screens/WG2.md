@@ -8,6 +8,8 @@ Group **WG · Tài chính PB02** · tab · Next.js: **planned (U6)** (`/finance`
 - Old web: `prototype/finance/finance.js#table`
 - Finance PB02 is `prototype/finance/finance.js` (`PemaFinance.html()` + `mount(root)`), mounted inside the clinic shell; data comes from the Python API `finance_server.py` on 127.0.0.1:4174 with the headers `X-Pema-Role` and `X-Pema-Doctor`.
 - `finance.js › work()` + `table(rows)`: the table of procedure entries with "Duyệt" and "Hủy" per pending row, "Xuất CSV cho Excel", "Chốt tháng đã kết thúc" (period open) or "Xác nhận đã chi" (period closed).
+- Canvas frame: the table shows every row state (Chờ duyệt with Duyệt and Hủy, Đã duyệt with Hủy, Đã hủy without buttons) and every basis (Giá sau giảm, Giá niêm yết, Theo thực thu); the live page shows only what the period state allows ("Chốt tháng đã kết thúc" while open, "Xác nhận đã chi" once closed; period badges Đang đối soát, Đã chốt tháng, Đã chi).
+- Canvas frame: the fields of the collapsed block are drawn under the collapsed bar as their own card, because the old DOM holds them while hidden. The toast "Đã ghi nhận thành công" is `#status` (role=status, 2.5 s).
 - Inventory note: Duyệt, Hủy (native prompt for the reason), Chốt tháng đã kết thúc (native confirm), Xác nhận đã chi (native prompt for the voucher), Xuất CSV (download).
 - Page key `finance` is allowed for roles: owner, doctor, accountant (`staff-context.js` › pages). Shown here with account `owner-tam`.
 - Capabilities (`staff-context.js` › capabilities): clinical: owner/doctor; crm: owner/care/doctor; booking: owner/care/doctor; billing: owner/accountant; config: owner; readFinance: owner/accountant/doctor.
@@ -38,8 +40,179 @@ Group **WG · Tài chính PB02** · tab · Next.js: **planned (U6)** (`/finance`
 - Layout `.row` 1106×97 px: flex row wrap, space-between, gap 12px
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WG2): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Tài chính & tiền thủ thuật">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item active icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Tài chính & tiền thủ thuật"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <Toast>"Đã ghi nhận thành công"</Toast>
+  <Row gap="20px" justify="space-between" wrap>
+    <Stack>
+      <Text small>"ĐIỀU HÀNH • PEMA CLINIC"</Text>
+      <Heading level={1}>"Tài chính & tiền thủ thuật"</Heading>
+    </Stack>
+    <Row gap="12px" wrap>
+      <Field label="Kỳ báo cáo" type="month" default="2026-09" />
+      <Button variant="secondary">"Làm mới"</Button>
+    </Row>
+  </Row>
+  <Tabs items={["Tổng quan","Tiền thủ thuật","Chính sách tỷ lệ","Phiếu thu & thông báo"]} selected="Tiền thủ thuật" />
+  <Card>
+    <Row gap="8px" wrap>
+      <Icon name="chevron_right" />
+      <Text strong>"+ Ghi nhận lượt thủ thuật đã hoàn tất"</Text>
+    </Row>
+  </Card>
+  <Card variant="soft" title="Nội dung của ô khi mở" subtitle="Các trường có sẵn trong trang nhưng ẩn khi thu gọn (xem WG3)">
+    <Grid cols="repeat(3,minmax(0,1fr))" gap="16px">
+      <Field label="Hồ sơ" type="select" default="Nguyễn Thu Hà · P001" hint="Một lựa chọn cho mỗi hồ sơ" />
+      <Field label="Thủ thuật" type="select" default="Tái khám & đánh giá" />
+      <Field label="Ngày thực hiện" type="date" required default="2026-09-20" hint="Không chọn ngày sau hôm nay" />
+      <Field label="Giá niêm yết" type="number" required default="300000" />
+      <Field label="Giảm giá" type="number" required default="0" />
+      <Field label="Gắn hóa đơn đã có" type="select" default="Tạo hóa đơn mới cho lượt này" hint="Hoặc một hóa đơn đã có của hồ sơ" />
+      <Field label="Ghi chú hoàn tất" type="text" required placeholder="Đã thực hiện, chờ đối soát" />
+    </Grid>
+    <Heading level={3}>"Ai thực hiện và được ghi nhận?"</Heading>
+    <Text small>"Tổng tỷ trọng doanh số 100%. Tỷ lệ tiền của mỗi người tính trực tiếp trên cơ sở chính sách; tổng không quá 100%."</Text>
+    <Grid cols="minmax(0,2fr) minmax(0,1fr) minmax(0,1fr)" gap="16px">
+      <Field label="Bác sĩ chính" type="select" default="BS. Tâm" />
+      <Field label="Tỷ trọng doanh số %" type="number" default="100" />
+      <Field label="Tỷ lệ tiền thủ thuật %" type="number" default="10" />
+    </Grid>
+    <Grid cols="minmax(0,2fr) minmax(0,1fr) minmax(0,1fr)" gap="16px">
+      <Field label="Người phối hợp (tùy chọn)" type="select" default="Không có" />
+      <Field label="Tỷ trọng doanh số %" type="number" default="0" />
+      <Field label="Tỷ lệ tiền thủ thuật %" type="number" default="0" />
+    </Grid>
+    <Button variant="primary">"Ghi nhận • Chờ duyệt"</Button>
+  </Card>
+  <Card>
+    <Row gap="12px" justify="space-between" wrap>
+      <Row gap="12px" wrap>
+        <Heading level={2}>"Bảng tiền thủ thuật • 2026-09"</Heading>
+        <Badge tone="neutral" dot={false}>"Đang đối soát"</Badge>
+      </Row>
+      <Button variant="secondary">"Xuất CSV cho Excel"</Button>
+    </Row>
+    <TableShell columns={["Ngày / Hồ sơ","Thủ thuật / Bác sĩ","Doanh số phân bổ","Cơ sở × tỷ lệ","Tiền thủ thuật","Trạng thái"]} rows={6}  /* cards at 390 */>
+      <Row sample="first row; demo values, the other rows have the same cells">
+        <Cell column="Ngày / Hồ sơ">
+          <Text>"2026-09-01"</Text>
+          <Text small>"P001"</Text>
+        </Cell>
+        <Cell column="Thủ thuật / Bác sĩ">
+          <Text>"Tái khám & đánh giá"</Text>
+          <Text small>"BS. Tâm"</Text>
+        </Cell>
+        <Cell column="Doanh số phân bổ">
+          <Text>"300.000 ₫"</Text>
+        </Cell>
+        <Cell column="Cơ sở × tỷ lệ">
+          <Text>"300.000 ₫ × 10%"</Text>
+          <Text small>"Giá sau giảm"</Text>
+        </Cell>
+        <Cell column="Tiền thủ thuật">
+          <Text strong>"30.000 ₫"</Text>
+        </Cell>
+        <Cell column="Trạng thái">
+          <Badge tone="success" dot={false}>"Đã duyệt"</Badge>
+          <Button variant="secondary">"Hủy"</Button>
+        </Cell>
+      </Row>
+    </TableShell>
+    <Row gap="12px" wrap>
+      <Button variant="primary">"Chốt tháng đã kết thúc"</Button>
+    </Row>
+    <Divider />
+    <Stack>
+      <Text small>"Trạng thái kỳ (huy hiệu cạnh tiêu đề): đổi theo kỳ, hiện đúng một huy hiệu"</Text>
+      <Row gap="6px" wrap>
+        <Badge tone="neutral">"Đang đối soát"</Badge>
+        <Badge tone="info">"Đã chốt tháng"</Badge>
+        <Badge tone="success">"Đã chi"</Badge>
+      </Row>
+      <Text small>"Khi chưa có lượt trong kỳ, bảng chỉ có một dòng: \"Chưa có lượt thủ thuật trong kỳ này.\""</Text>
+    </Stack>
+    <Text small>"Khi kỳ đã chốt (Đã chốt tháng), nút cuối bảng đổi thành:"</Text>
+    <Row gap="12px" wrap>
+      <Button variant="primary">"Xác nhận đã chi"</Button>
+    </Row>
+  </Card>
+</AppShell>
+```
+Kit components used: Field×16, Button×8, Badge×5, Card×3, Sidebar×1, TopBar×1, Tabs×1, TableShell×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- 1440×900 is the reference (Frame, Layout).
+- 1920×1020: no layout change
+- 1280×720: no layout change
+- 1024×768: group: flex row → column; .sidebar: width 232 → 204px
+- 390×844: group: flex row → column; .formgrid: grid 3 → 1 columns; .person: grid 3 → 1 columns; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "Chủ phòng khám", "Không gian phòng khám", "/"
+- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
+
+## Tokens
+- Text colour: ink ×64, ink-soft ×58, link ×30, surface ×3
+- Background: surface ×33, brand-50 ×13, canvas ×6, link ×3
+- Border: tile ×79, line ×22, line-strong ×14
+- Radius: control ×34, modal ×13
+- Font size: body ×69, label ×63, micro ×19, body-lg ×1, eyebrow ×1
+- Font: Be Vietnam Pro ×155
+- Unmatched colours (no token within ΔE 3): none
+- Unmatched radius: 18px ×2 (nearest `modal`)
+- Unmatched font size: 26px ×1 (nearest `title`), 19px ×1 (nearest `subtitle`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- Revenue ("Doanh số thực hiện") follows the completion date of the procedure; cash ("Thực thu") follows the receipt date; they are tracked separately.
+- "Tiền thủ thuật đã duyệt": "Không phải lợi nhuận phòng khám".
+- Void asks a native `prompt('Lý do hủy lượt chưa thu tiền')`; close asks `confirm('Chốt số liệu tháng <tháng>? Các lượt trong kỳ sẽ bị khóa.')`; paid asks `prompt('Mã chứng từ chi')`.
+- "Chưa có lượt thủ thuật trong kỳ này." when the table is empty.
+
+## Differences from the app design
+- (none recorded)
+
+## Gotchas
+- The tab content refreshes every 10 s (`setInterval`) unless an input has focus or the entry form is open; a pending form is never overwritten (`dirty` flag).
+- Without the API the page shows "Chưa kết nối dữ liệu tài chính: <error>. Chạy python prototype/finance_server.py rồi thử lại." in `#error` (see WG9).
+- The CSV export is a download (`Pema-tien-thu-thuat-<tháng>.csv`), not a page.
+- Native browser dialogs are not drawn: Hủy asks "Lý do hủy lượt chưa thu tiền", Chốt tháng asks "Chốt số liệu tháng <tháng>? Các lượt trong kỳ sẽ bị khóa.", Xác nhận đã chi asks "Mã chứng từ chi".
+
+## Web canvas
+- Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WG2 · Tài chính · Tiền thủ thuật`.
+- Canvas note: Web › finance › Tiền thủ thuật (chủ) · ô "+ Ghi nhận lượt thủ thuật đã hoàn tất" đang thu gọn; Duyệt, Hủy, Chốt tháng, Xác nhận đã chi, Xuất CSV · hộp hỏi lý do, xác nhận chốt và mã chứng từ là hộp thoại của trình duyệt · chưa có trên Next.js
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Tài chính & tiền thủ thuật", page key "finance"
   <Row gap="20px" justify="space-between">
@@ -113,43 +286,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Card>
 </AppShell>
 ```
-Kit components used: Field×14, Button×5, Badge×2, Tabs×1, Card×1, TableShell×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- 1440×900 is the reference (Frame, Layout).
-- 1920×1020: no layout change
-- 1280×720: no layout change
-- 1024×768: group: flex row → column; .sidebar: width 232 → 204px
-- 390×844: group: flex row → column; .formgrid: grid 3 → 1 columns; .person: grid 3 → 1 columns; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "Chủ phòng khám", "Không gian phòng khám", "/"
-- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
-
-## Tokens
-- Text colour: ink ×64, ink-soft ×58, link ×30, surface ×3
-- Background: surface ×33, brand-50 ×13, canvas ×6, link ×3
-- Border: tile ×79, line ×22, line-strong ×14
-- Radius: control ×34, modal ×13
-- Font size: body ×69, label ×63, micro ×19, body-lg ×1, eyebrow ×1
-- Font: Be Vietnam Pro ×155
-- Unmatched colours (no token within ΔE 3): none
-- Unmatched radius: 18px ×2 (nearest `modal`)
-- Unmatched font size: 26px ×1 (nearest `title`), 19px ×1 (nearest `subtitle`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- Revenue ("Doanh số thực hiện") follows the completion date of the procedure; cash ("Thực thu") follows the receipt date; they are tracked separately.
-- "Tiền thủ thuật đã duyệt": "Không phải lợi nhuận phòng khám".
-- Void asks a native `prompt('Lý do hủy lượt chưa thu tiền')`; close asks `confirm('Chốt số liệu tháng <tháng>? Các lượt trong kỳ sẽ bị khóa.')`; paid asks `prompt('Mã chứng từ chi')`.
-- "Chưa có lượt thủ thuật trong kỳ này." when the table is empty.
-
-## Differences from the app design
-- (none recorded)
-
-## Gotchas
-- The tab content refreshes every 10 s (`setInterval`) unless an input has focus or the entry form is open; a pending form is never overwritten (`dirty` flag).
-- Without the API the page shows "Chưa kết nối dữ liệu tài chính: <error>. Chạy python prototype/finance_server.py rồi thử lại." in `#error` (see WG9).
-- The CSV export is a download (`Pema-tien-thu-thuat-<tháng>.csv`), not a page.
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WG2-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

@@ -34,8 +34,124 @@ Group **WH · Ask Pema & Hướng dẫn** · page · Next.js: **built (U7)** (`/
 - Layout `.care-map` 800×105 px: flex row, gap 6px
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WH3): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Hướng dẫn">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item active icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Hướng dẫn"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <PageHeading eyebrow="Cách làm việc cùng Pema" title="Hướng dẫn sử dụng" subtitle="Hiểu hành trình, làm đúng bước và bàn giao đủ thông tin." />
+  <Grid cols="290px minmax(0,1fr)" gap="16px">
+    <Stack>
+      <Field label="Tìm chủ đề hoặc vai trò" type="search" placeholder="Ví dụ: dời lịch, bác sĩ, thu tiền" />
+      <FilterChipGroup direction="vertical" items={["Tất cả Mobile, CSKH & tài chính theo vai trò","CSKH CSKH chủ động & tài khoản nhân viên","Tất cả Hiểu hệ thống Pema","Tất cả Bắt đầu theo vai trò","Bác sĩ Hồ sơ & Patient 360","Lễ tân Lịch hẹn & tiếp đón","Điều phối Bác sĩ, phòng & dịch vụ","Bác sĩ Từ tư vấn đến buổi điều trị","Chăm sóc Chăm sóc & phản hồi tại nhà","Thu ngân Hóa đơn & thu tiền","Tất cả Khi cần kiểm tra lại"]} selected={["Tất cả Hiểu hệ thống Pema"]} />
+    </Stack>
+    <Card>
+      <Heading level={2} sub="Một hồ sơ xuyên suốt, nhiều điểm tiếp nối chăm sóc." eyebrow="Tất cả">"Hiểu hệ thống Pema"</Heading>
+      <Grid cols="repeat(5,minmax(0,1fr))" cols-390="repeat(2,minmax(0,1fr))" gap="16px">
+        <Button variant="secondary">"01 Hồ sơ →"</Button>
+        <Button variant="secondary">"02 Lịch hẹn →"</Button>
+        <Button variant="secondary">"03 Điều trị →"</Button>
+        <Button variant="secondary">"04 Chăm sóc →"</Button>
+        <Button variant="secondary">"05 Tái khám →"</Button>
+      </Grid>
+      <Grid cols="repeat(auto-fit,minmax(min(100%,520px),1fr))" gap="16px">
+        <Stack>
+          <Text>"Patient 360 là nơi nối các sự kiện của một người bệnh. Lịch hẹn tổ chức lần gặp; buổi điều trị ghi nhận việc đã làm; chăm sóc tại nhà và phản hồi giúp đội ngũ chuẩn bị cho lần gặp tiếp theo."</Text>
+          <Heading level={3}>"Cách thực hiện"</Heading>
+          <List ordered>
+            <ListItem title="Tìm hồ sơ trước khi tạo mới để tránh chia lịch sử chăm sóc thành nhiều hồ sơ." />
+            <ListItem title="Đọc kế hoạch, mốc gần nhất và việc còn mở trước khi quyết định bước tiếp theo." />
+            <ListItem title="Thực hiện công việc ở màn phụ trách: điều phối ở Lịch, ghi chuyên môn ở Patient 360, phản hồi ở Theo dõi, thanh toán ở Thu ngân." />
+            <ListItem title="Sau khi lưu, kiểm tra kết quả ở hồ sơ và phần thông tin người bệnh nhìn thấy." />
+          </List>
+        </Stack>
+        <Notice tone="info" text="Thông tin đi tiếp như thế nào? Mỗi lần bàn giao cần rõ: ai phụ trách, việc nào đã hoàn tất và bước tiếp theo là gì. Có lịch hẹn không có nghĩa đã điều trị; đã thu tiền không có nghĩa đã hoàn tất chăm sóc." />
+      </Grid>
+      <Row gap="8px" wrap>
+        <Button variant="primary">"Tìm hồ sơ →"</Button>
+        <Button variant="primary">"Xem lịch →"</Button>
+      </Row>
+      <Divider />
+      <Heading level={3}>"Đọc tiếp"</Heading>
+      <Row gap="8px" wrap>
+        <Button variant="secondary">"Lịch hẹn & tiếp đón →"</Button>
+        <Button variant="secondary">"Từ tư vấn đến buổi điều trị →"</Button>
+        <Button variant="secondary">"Chăm sóc & phản hồi tại nhà →"</Button>
+        <Button variant="secondary">"Hóa đơn & thu tiền →"</Button>
+      </Row>
+    </Card>
+  </Grid>
+</AppShell>
+```
+Kit components used: Button×13, Field×3, Sidebar×1, TopBar×1, PageHeading×1, Card×1; shared pieces: FilterChip×1, Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- 1440×900 is the reference (Frame, Layout).
+- 1920×1020: no layout change
+- 1280×720: no layout change
+- 1024×768: .care-map: flex-wrap off → on; .sidebar: width 232 → 204px
+- 390×844: .page-heading: display flex → block; .care-map: flex-wrap off → on; .guide-layout: display grid → block; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "BS. Tâm", "Chủ phòng khám", "Không gian phòng khám" (+1)
+- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
+
+## Tokens
+- Text colour: ink ×20, ink-soft ×13, heading ×12, surface ×2, link ×1
+- Background: surface ×6, row-hover ×5, link ×2, brand-50 ×1, canvas-alt ×1
+- Border: line ×8, line-strong ×4, link ×2, brand-400 ×1
+- Radius: control ×16, field ×7
+- Font size: label ×33, eyebrow ×13, body ×6, body-lg ×3, page ×1, section ×1, small ×1
+- Font: Be Vietnam Pro ×59
+- Unmatched colours (no token within ΔE 3): `#67869f` (text, ×5, nearest `focus` ΔE 9.1); `#34536d` (text, ×4, nearest `link` ΔE 6.7); `#467a9c` (text, ×2, nearest `info` ΔE 5.3)
+- Unmatched radius: 16px ×1 (nearest `card`)
+- Unmatched font size: 26px ×1 (nearest `title`)
+
+## Required text (keep verbatim)
+- Thông tin đi tiếp như thế nào? Mỗi lần bàn giao cần rõ: ai phụ trách, việc nào đã hoàn tất và bước tiếp theo là gì. Có lịch hẹn không có nghĩa đã điều trị; đã thu tiền không có nghĩa đã hoàn tất chăm sóc.
+
+## Business rules
+- (old web notice) "Thông tin đi tiếp như thế nào? Mỗi lần bàn giao cần rõ: ai phụ trách, việc nào đã hoàn tất và bước tiếp theo là gì. Có lịch hẹn không có nghĩa đã điều trị; đã thu tiền không có nghĩa đã hoàn tất chăm sóc."
+- "Đây là hướng dẫn phân công công việc; phiên bản hiện tại phân vai bằng tài khoản demo, chưa có xác thực và phân quyền server."
+
+## Differences from the app design
+- App F16 shows a one-column "Hướng dẫn sử dụng Pema" with 5 handoff cards; the web has a topic index, 10 articles, related links and per-article action buttons.
+- (generated) Notice of the old web not found verbatim in F16: "Thông tin đi tiếp như thế nào? Mỗi lần bàn giao cần rõ: ai phụ trách, việc nào đã hoàn tất và bước tiếp theo là gì. Có lịch hẹn không có nghĩa đã điều trị; đã thu tiền không có nghĩa đã hoàn tất chăm sóc."
+
+## Gotchas
+- From 1600px (guide.css) the article splits into a text column and a context column; the canvas grid does the same with auto-fit, and keeps the action buttons under both columns because of the container nesting limit. The topic index is a vertical chip group whose labels read "role title".
+- The old context column (handoff, "Điểm cần nhớ", bullets) is one notice in the web DOM, and the coverage check compares a notice as one string, so the canvas draws it as one notice whose text starts with "Thông tin đi tiếp như thế nào?" (the bullets run on after "Điểm cần nhớ").
+
+## Web canvas
+- Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WH3 · Hướng dẫn sử dụng`.
+- Canvas note: Web › guide · mục lục chủ đề bên trái, bài "Hiểu hệ thống Pema" bên phải với bản đồ 5 bước; app F16 là một cột 5 thẻ bàn giao; từ 1600px web chia bài thành hai cột (canvas: tự chia khi đủ rộng)
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Hướng dẫn", page key "guide"
   <PageHeading eyebrow="Cách làm việc cùng Pema" title="Hướng dẫn sử dụng" subtitle="Hiểu hành trình, làm đúng bước và bàn giao đủ thông tin." />
@@ -82,40 +198,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Grid>
 </AppShell>
 ```
-Kit components used: Button×11, PageHeading×1, Field×1, Card×1; shared pieces: FilterChip×1, Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- 1440×900 is the reference (Frame, Layout).
-- 1920×1020: no layout change
-- 1280×720: no layout change
-- 1024×768: .care-map: flex-wrap off → on; .sidebar: width 232 → 204px
-- 390×844: .page-heading: display flex → block; .care-map: flex-wrap off → on; .guide-layout: display grid → block; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "BS. Tâm", "Chủ phòng khám", "Không gian phòng khám" (+1)
-- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
-
-## Tokens
-- Text colour: ink ×20, ink-soft ×13, heading ×12, surface ×2, link ×1
-- Background: surface ×6, row-hover ×5, link ×2, brand-50 ×1, canvas-alt ×1
-- Border: line ×8, line-strong ×4, link ×2, brand-400 ×1
-- Radius: control ×16, field ×7
-- Font size: label ×33, eyebrow ×13, body ×6, body-lg ×3, page ×1, section ×1, small ×1
-- Font: Be Vietnam Pro ×59
-- Unmatched colours (no token within ΔE 3): `#67869f` (text, ×5, nearest `focus` ΔE 9.1); `#34536d` (text, ×4, nearest `link` ΔE 6.7); `#467a9c` (text, ×2, nearest `info` ΔE 5.3)
-- Unmatched radius: 16px ×1 (nearest `card`)
-- Unmatched font size: 26px ×1 (nearest `title`)
-
-## Required text (keep verbatim)
-- Thông tin đi tiếp như thế nào? Mỗi lần bàn giao cần rõ: ai phụ trách, việc nào đã hoàn tất và bước tiếp theo là gì. Có lịch hẹn không có nghĩa đã điều trị; đã thu tiền không có nghĩa đã hoàn tất chăm sóc.
-
-## Business rules
-- (old web notice) "Thông tin đi tiếp như thế nào? Mỗi lần bàn giao cần rõ: ai phụ trách, việc nào đã hoàn tất và bước tiếp theo là gì. Có lịch hẹn không có nghĩa đã điều trị; đã thu tiền không có nghĩa đã hoàn tất chăm sóc."
-- "Đây là hướng dẫn phân công công việc; phiên bản hiện tại phân vai bằng tài khoản demo, chưa có xác thực và phân quyền server."
-
-## Differences from the app design
-- App F16 shows a one-column "Hướng dẫn sử dụng Pema" with 5 handoff cards; the web has a topic index, 10 articles, related links and per-article action buttons.
-- (generated) Notice of the old web not found verbatim in F16: "Thông tin đi tiếp như thế nào? Mỗi lần bàn giao cần rõ: ai phụ trách, việc nào đã hoàn tất và bước tiếp theo là gì. Có lịch hẹn không có nghĩa đã điều trị; đã thu tiền không có nghĩa đã hoàn tất chăm sóc."
-
-## Gotchas
-- (none recorded)
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WH3-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

@@ -7,6 +7,7 @@ Group **WD · CSKH & theo dõi** · dialog · Next.js: **built (U7)** (`/crm`) �
 - Old web: `prototype/shared/crm-ui.js#handle`
 - CSKH screens are drawn by `crm-ui.js` (queue, task and expected-date dialogs, protocol, activity, segments); commands live in `crm-automation.js` (`PemaCRM`).
 - `handle('activity')`: the saved CSKH results (patient, outcome, note, actor, time, related appointment); empty text "Chưa có kết quả. Bắt đầu từ CSKH hôm nay."
+- Frame shows the only scripted state (empty). When results exist the dialog lists patient, outcome, note, actor, time and related appointment (not scripted in the old web, so not drawn).
 - Page key `crm` is allowed for roles: owner, care (`staff-context.js` › pages). Shown here with account `owner-tam`.
 - Capabilities (`staff-context.js` › capabilities): clinical: owner/doctor; crm: owner/care/doctor; booking: owner/care/doctor; billing: owner/accountant; config: owner; readFinance: owner/accountant/doctor.
 - No control on this screen is removed by a capability check.
@@ -30,12 +31,12 @@ Group **WD · CSKH & theo dõi** · dialog · Next.js: **built (U7)** (`/crm`) �
 - Layout `.modal-head` 704×36 px: flex row, space-between
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WD4): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
 ```tsx
-// opens over the page; the backdrop and the page behind it are not part of this screen
-<Dialog old="modal crm-modal" title="Kết quả chăm sóc đã ghi" close={{"label":"Đóng hộp thoại"}} aria-label="Kết quả chăm sóc đã ghi">
-  <EmptyState>"Chưa có kết quả. Bắt đầu từ CSKH hôm nay."</EmptyState>
+// opens over the page "CSKH hôm nay" (dimmed); the page behind it is not part of this screen
+<Dialog title="Kết quả chăm sóc đã ghi" width="760px">
+  <EmptyState title="Chưa có kết quả. Bắt đầu từ CSKH hôm nay." />
 </Dialog>
 ```
 Kit components used: Dialog×1, EmptyState×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
@@ -65,6 +66,19 @@ Kit components used: Dialog×1, EmptyState×1. Everything else (Row, Grid, Stack
 
 ## Gotchas
 - Every CSKH dialog uses `crm-modal` with its own `#crm-error` line; errors of the commands are shown there, not in a toast.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WD4 · Kết quả chăm sóc đã ghi`.
+- Canvas note: Web › dialog crm → KPI "Đã hoàn tất" / "Đặt lịch sau CSKH" · trạng thái chưa có kết quả nào được ghi; khi đã có kết quả, hộp thoại liệt kê khách, kết quả, ghi chú, người ghi, thời gian và lịch hẹn liên quan
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+```tsx
+// opens over the page; the backdrop and the page behind it are not part of this screen
+<Dialog old="modal crm-modal" title="Kết quả chăm sóc đã ghi" close={{"label":"Đóng hộp thoại"}} aria-label="Kết quả chăm sóc đã ghi">
+  <EmptyState>"Chưa có kết quả. Bắt đầu từ CSKH hôm nay."</EmptyState>
+</Dialog>
+```
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WD4-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

@@ -30,8 +30,153 @@ Group **WE · Ảnh, bác sĩ & phòng, dịch vụ** · page · Next.js: **plan
 - Layout `.resource-grid` 1152×632 px: grid, columns `repeat(2, minmax(0px, 1fr))` (566px 566px), gap 20px
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WE3): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Bác sĩ & phòng">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item active icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Bác sĩ & phòng"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <PageHeading eyebrow="Vận hành · dữ liệu giả lập" title="Bác sĩ & phòng" subtitle="Ca làm việc và khoảng khóa được kiểm tra khi đặt hoặc dời lịch.">
+    <Button variant="primary" icon="add">"Khóa phòng"</Button>
+  </PageHeading>
+  <Row gap="10px" wrap>
+    <Field label="Ngày xem tải lịch" type="date" default="2026-09-20" />
+  </Row>
+  <Grid cols="repeat(auto-fill,minmax(380px,1fr))" gap="20px">
+    <Card title="BS. Tâm" subtitle="Da liễu · lịch ngày 20/9/2026">
+      <Card.Aside>
+        <Icon name="stethoscope" />
+      </Card.Aside>
+      <StatusBars items={[["08:00–18:00","Nghỉ 12:00–13:00"]]} />
+      <List>
+        <ListItem title="8 lịch · 240 phút điều trị / 540 phút ca">
+          <Button variant="secondary">"Xem lịch bác sĩ"</Button>
+        </ListItem>
+      </List>
+    </Card>
+    <Card title="BS. Mai" subtitle="Da liễu · lịch ngày 20/9/2026">
+      <Card.Aside>
+        <Icon name="stethoscope" />
+      </Card.Aside>
+      <StatusBars items={[["08:00–18:00","Nghỉ 12:00–13:00"]]} />
+      <List>
+        <ListItem title="8 lịch · 360 phút điều trị / 540 phút ca">
+          <Button variant="secondary">"Xem lịch bác sĩ"</Button>
+        </ListItem>
+      </List>
+    </Card>
+    <Card title="BS. An" subtitle="Thẩm mỹ da · lịch ngày 20/9/2026">
+      <Card.Aside>
+        <Icon name="stethoscope" />
+      </Card.Aside>
+      <StatusBars items={[["08:00–18:00","Nghỉ 12:00–13:00"]]} />
+      <List>
+        <ListItem title="7 lịch · 315 phút điều trị / 540 phút ca">
+          <Button variant="secondary">"Xem lịch bác sĩ"</Button>
+        </ListItem>
+      </List>
+    </Card>
+    <Card title="BS. Lan" subtitle="Chăm sóc da · lịch ngày 20/9/2026">
+      <Card.Aside>
+        <Icon name="stethoscope" />
+      </Card.Aside>
+      <StatusBars items={[["08:00–18:00","Nghỉ 12:00–13:00"]]} />
+      <List>
+        <ListItem title="8 lịch · 360 phút điều trị / 540 phút ca">
+          <Button variant="secondary">"Xem lịch bác sĩ"</Button>
+        </ListItem>
+      </List>
+    </Card>
+  </Grid>
+  <Card title="Khoảng khóa phòng" subtitle="Thêm khoảng khóa nếu không vướng lịch hiện tại">
+    <TableShell columns={["Phòng","Ngày","Thời gian","Lý do",""]} rows={1} foot="Khi chưa có khoảng khóa, bảng hiện một dòng: \"Không có khoảng khóa.\""  /* cards at 390 */>
+      <Row sample="first row; demo values, the other rows have the same cells">
+        <Cell column="Phòng">
+          <Text>"Laser & thủ thuật"</Text>
+        </Cell>
+        <Cell column="Ngày">
+          <Text>"21/9/2026"</Text>
+        </Cell>
+        <Cell column="Thời gian">
+          <Text>"14:00–15:00"</Text>
+        </Cell>
+        <Cell column="Lý do">
+          <Text>"Bảo trì thiết bị laser"</Text>
+        </Cell>
+        <Cell column="">
+          <Button variant="secondary">"Gỡ khóa"</Button>
+        </Cell>
+      </Row>
+    </TableShell>
+  </Card>
+</AppShell>
+```
+Kit components used: Button×8, Card×5, Field×3, Sidebar×1, TopBar×1, PageHeading×1, TableShell×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- 1440×900 is the reference (Frame, Layout).
+- 1920×1020: .resource-grid: grid 2 → 4 columns
+- 1280×720: no layout change
+- 1024×768: .sidebar: width 232 → 204px
+- 390×844: .page-heading: display flex → block; .resource-grid: grid 2 → 1 columns; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "Chủ phòng khám", "Không gian phòng khám", "/"
+- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
+
+## Tokens
+- Text colour: ink-soft ×14, ink ×12, heading ×1, surface ×1
+- Background: surface ×11, table-head ×5, brand-400 ×4, brand-50 ×4, tile ×4, link ×1
+- Border: line-strong ×6, line ×5, tile ×5, link ×1
+- Radius: field ×14, card ×5, tile ×4
+- Font size: label ×19, eyebrow ×6, small ×5, micro ×4, body-lg ×1, page ×1
+- Font: Be Vietnam Pro ×40
+- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×5, nearest `link` ΔE 6.7); `#698095` (text, ×4, nearest `ink-soft` ΔE 7.4); `#20496d` (text, ×1, nearest `link` ΔE 5.1); `#467a9c` (text, ×1, nearest `info` ΔE 5.3); `#70879a` (text, ×1, nearest `ink-soft` ΔE 10.1)
+- Unmatched radius: 8px ×1 (nearest `field`)
+- Unmatched font size: 18px ×4 (nearest `section`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- "Ca làm việc và khoảng khóa được kiểm tra khi đặt hoặc dời lịch." (subtitle).
+
+## Differences from the app design
+- App F14 "Nguồn lực phòng khám" lists doctors and one blocked room line; the sentence "Khóa phòng phức tạp duyệt ở web." says complex blocks stay on the web.
+
+## Gotchas
+- Empty state of the table when no block exists: one row "Không có khoảng khóa." (`operations-ui.js › resources()`); the canvas shows the sentence under the table.
+- Doctor load numbers (8 lịch · 240 phút, …) are the old demo values for the day 20/9/2026; the shift is 08:00–18:00, break 12:00–13:00, load bar = minutes / 540.
+
+## Web canvas
+- Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WE3 · Bác sĩ & phòng`.
+- Canvas note: Web › resources · thẻ bác sĩ có ca làm, giờ nghỉ, tải lịch theo ngày và bảng khoảng khóa phòng; app F14 chỉ liệt kê bác sĩ và một dòng khóa phòng · chưa có trên Next.js
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Bác sĩ & phòng", page key "resources"
   <PageHeading eyebrow="Vận hành · dữ liệu giả lập" title="Bác sĩ & phòng" subtitle="Ca làm việc và khoảng khóa được kiểm tra khi đặt hoặc dời lịch.">
@@ -76,38 +221,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Card>
 </AppShell>
 ```
-Kit components used: Button×3, Card×2, PageHeading×1, Field×1, TableShell×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- 1440×900 is the reference (Frame, Layout).
-- 1920×1020: .resource-grid: grid 2 → 4 columns
-- 1280×720: no layout change
-- 1024×768: .sidebar: width 232 → 204px
-- 390×844: .page-heading: display flex → block; .resource-grid: grid 2 → 1 columns; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "Chủ phòng khám", "Không gian phòng khám", "/"
-- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
-
-## Tokens
-- Text colour: ink-soft ×14, ink ×12, heading ×1, surface ×1
-- Background: surface ×11, table-head ×5, brand-400 ×4, brand-50 ×4, tile ×4, link ×1
-- Border: line-strong ×6, line ×5, tile ×5, link ×1
-- Radius: field ×14, card ×5, tile ×4
-- Font size: label ×19, eyebrow ×6, small ×5, micro ×4, body-lg ×1, page ×1
-- Font: Be Vietnam Pro ×40
-- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×5, nearest `link` ΔE 6.7); `#698095` (text, ×4, nearest `ink-soft` ΔE 7.4); `#20496d` (text, ×1, nearest `link` ΔE 5.1); `#467a9c` (text, ×1, nearest `info` ΔE 5.3); `#70879a` (text, ×1, nearest `ink-soft` ΔE 10.1)
-- Unmatched radius: 8px ×1 (nearest `field`)
-- Unmatched font size: 18px ×4 (nearest `section`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- "Ca làm việc và khoảng khóa được kiểm tra khi đặt hoặc dời lịch." (subtitle).
-
-## Differences from the app design
-- App F14 "Nguồn lực phòng khám" lists doctors and one blocked room line; the sentence "Khóa phòng phức tạp duyệt ở web." says complex blocks stay on the web.
-
-## Gotchas
-- (none recorded)
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WE3-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

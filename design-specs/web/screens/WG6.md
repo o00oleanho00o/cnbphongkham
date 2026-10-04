@@ -7,6 +7,7 @@ Group **WG · Tài chính PB02** · state · Next.js: **planned (U6)** (`/financ
 - Old web: `prototype/finance/finance.js#overview`
 - Finance PB02 is `prototype/finance/finance.js` (`PemaFinance.html()` + `mount(root)`), mounted inside the clinic shell; data comes from the Python API `finance_server.py` on 127.0.0.1:4174 with the headers `X-Pema-Role` and `X-Pema-Doctor`.
 - `finance.js › overview()` with `state.role = 'doctor'`: title "Doanh số của tôi", hero "Công việc được ghi nhận, thu nhập rõ ràng", metrics "Doanh số của tôi", "Tiền chờ duyệt", "Tiền thủ thuật đã duyệt".
+- The doctor account gets two tabs; the page title stays "Tài chính & tiền thủ thuật" while the menu and breadcrumb read "Doanh số của tôi".
 - Inventory note: Doctor projection: personal hero, tiles "Doanh số của tôi", "Tiền chờ duyệt", only two tabs (Tổng quan, Tiền thủ thuật).
 - Page key `finance` is allowed for roles: owner, doctor, accountant (`staff-context.js` › pages). Shown here with account `doctor-mai`.
 - Capabilities (`staff-context.js` › capabilities): clinical: owner/doctor; crm: owner/care/doctor; booking: owner/care/doctor; billing: owner/accountant; config: owner; readFinance: owner/accountant/doctor.
@@ -34,8 +35,102 @@ Group **WG · Tài chính PB02** · state · Next.js: **planned (U6)** (`/financ
 - Layout `.row` 633×86 px: flex row wrap, space-between, gap 12px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WG6): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="doctor-mai" active="Doanh số của tôi">
+  <Sidebar old="sidebar">  // menu of account `doctor-mai`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item active icon="account_balance_wallet">"Doanh số của tôi"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BM"</Avatar> <Text><Strong>"BS. Mai"</Strong> <Small>"Bác sĩ điều trị"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Doanh số của tôi"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Mai · Bác sĩ điều trị" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <Row gap="20px" justify="space-between" wrap>
+    <Stack>
+      <Text small>"ĐIỀU HÀNH • PEMA CLINIC"</Text>
+      <Heading level={1}>"Tài chính & tiền thủ thuật"</Heading>
+    </Stack>
+    <Row gap="12px" wrap>
+      <Field label="Kỳ báo cáo" type="month" default="2026-09" />
+      <Button variant="secondary">"Làm mới"</Button>
+    </Row>
+  </Row>
+  <Tabs items={["Tổng quan","Tiền thủ thuật"]} selected="Tổng quan" />
+  <Hero over="GÓC NHÌN CÁ NHÂN" icon="account_balance_wallet">
+    <Heading level={2}>"Công việc được ghi nhận, thu nhập rõ ràng"</Heading>
+    <Text>"Kỳ 2026-09 · Doanh số thực hiện và tiền đã thu được theo dõi riêng."</Text>
+    <Badge tone="neutral" dot={false}>"Đang đối soát"</Badge>
+  </Hero>
+  <Grid cols="repeat(3, 1fr)" cols-390="repeat(2, 1fr)">
+    <Tile label="Doanh số của tôi" value="1.500.000 ₫" note="Theo ngày hoàn tất thủ thuật" />
+    <Tile label="Tiền chờ duyệt" value="0 ₫" note="Chưa tính vào khoản đã duyệt" />
+    <Tile label="Tiền thủ thuật đã duyệt" value="225.000 ₫" note="Không phải lợi nhuận phòng khám" />
+  </Grid>
+  <Grid cols="minmax(0,1.5fr) minmax(0,1fr)" gap="16px">
+    <Card title="Chi tiết của tôi">
+      <StatusBars items={[["BS. Mai · 3 lượt · Tiền thủ thuật 225.000 ₫","1.500.000 ₫"]]} />
+    </Card>
+    <Card title="Việc cần đối soát">
+      <Facts items={[["Lượt chờ kế toán duyệt","0"],["Tiền chờ duyệt","0 ₫"]]} />
+      <Text small>"Tỷ lệ lưu theo từng lượt. Đổi chính sách không tính lại lịch sử. Khoản theo thực thu được đóng băng khi chốt kỳ."</Text>
+      <Button variant="secondary">"Mở bảng tiền thủ thuật →"</Button>
+    </Card>
+  </Grid>
+</AppShell>
+```
+Kit components used: Button×4, Field×3, Tile×3, Card×2, Sidebar×1, TopBar×1, Tabs×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WG6-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
+
+## Tokens
+- Text colour: ink ×12, ink-soft ×10, link ×4, surface ×2, brand-100 ×1
+- Background: surface ×9, brand-400 ×1, brand-50 ×1, link ×1, tile ×1
+- Border: line ×9, tile ×3, line-strong ×1
+- Radius: control ×5, hero ×1, modal ×1
+- Font size: body ×11, label ×6, eyebrow ×5, title ×3, micro ×1
+- Font: Be Vietnam Pro ×30
+- Unmatched colours (no token within ΔE 3): `#b8def5` (text, ×1, nearest `brand-100` ΔE 4.6)
+- Unmatched radius: 18px ×5 (nearest `modal`), 8px ×1 (nearest `field`)
+- Unmatched font size: 26px ×1 (nearest `title`), 19px ×3 (nearest `subtitle`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- Revenue ("Doanh số thực hiện") follows the completion date of the procedure; cash ("Thực thu") follows the receipt date; they are tracked separately.
+- "Tiền thủ thuật đã duyệt": "Không phải lợi nhuận phòng khám".
+
+## Differences from the app design
+- (none recorded)
+
+## Gotchas
+- The tab content refreshes every 10 s (`setInterval`) unless an input has focus or the entry form is open; a pending form is never overwritten (`dirty` flag).
+- Without the API the page shows "Chưa kết nối dữ liệu tài chính: <error>. Chạy python prototype/finance_server.py rồi thử lại." in `#error` (see WG9).
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WG6 · Doanh số của tôi · Tổng quan (bác sĩ)`.
+- Canvas note: Web › finance › Tổng quan, tài khoản bác sĩ · hero "GÓC NHÌN CÁ NHÂN", 3 thẻ, chỉ 2 tab (Tổng quan, Tiền thủ thuật); menu đổi tên thành "Doanh số của tôi" · chưa có trên Next.js
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="doctor-mai">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Doanh số của tôi", page key "finance"
   <Row gap="20px" justify="space-between">
@@ -78,35 +173,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Grid>
 </AppShell>
 ```
-Kit components used: Card×3, Tile×3, Button×2, Field×1, Tabs×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WG6-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
-
-## Tokens
-- Text colour: ink ×12, ink-soft ×10, link ×4, surface ×2, brand-100 ×1
-- Background: surface ×9, brand-400 ×1, brand-50 ×1, link ×1, tile ×1
-- Border: line ×9, tile ×3, line-strong ×1
-- Radius: control ×5, hero ×1, modal ×1
-- Font size: body ×11, label ×6, eyebrow ×5, title ×3, micro ×1
-- Font: Be Vietnam Pro ×30
-- Unmatched colours (no token within ΔE 3): `#b8def5` (text, ×1, nearest `brand-100` ΔE 4.6)
-- Unmatched radius: 18px ×5 (nearest `modal`), 8px ×1 (nearest `field`)
-- Unmatched font size: 26px ×1 (nearest `title`), 19px ×3 (nearest `subtitle`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- Revenue ("Doanh số thực hiện") follows the completion date of the procedure; cash ("Thực thu") follows the receipt date; they are tracked separately.
-- "Tiền thủ thuật đã duyệt": "Không phải lợi nhuận phòng khám".
-
-## Differences from the app design
-- (none recorded)
-
-## Gotchas
-- The tab content refreshes every 10 s (`setInterval`) unless an input has focus or the entry form is open; a pending form is never overwritten (`dirty` flag).
-- Without the API the page shows "Chưa kết nối dữ liệu tài chính: <error>. Chạy python prototype/finance_server.py rồi thử lại." in `#error` (see WG9).
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WG6-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

@@ -34,8 +34,78 @@ Group **WA · Khung & điều hướng** · state · Next.js: **restyle (U1)** (
 - Layout `.top-actions` 636×53 px: flex row, gap 12px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WA2): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="care-maianh" active="CSKH hôm nay">
+  <Button variant="secondary" href="#main-content" as="link" old="skip-link">"Đến nội dung chính"</Button>
+  <Sidebar old="sidebar">  // menu of account `care-maianh`; at 390 a top bar with menu button and a bottom tab bar ("CSKH", "Lịch", "Hồ sơ", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item active icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"MA"</Avatar> <Text><Strong>"Mai Anh"</Strong> <Small>"CSKH"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"CSKH hôm nay"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="Mai Anh · CSKH" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <PageHeading title="CSKH hôm nay" subtitle="Từ dữ liệu khám đến việc cần làm · ngày demo 20/09/2026">
+    <Button variant="secondary">"Xem protocol"</Button>
+  </PageHeading>
+  <Grid cols="repeat(4, 1fr)" cols-390="repeat(2, 1fr)">
+    <Tile label="Việc CSKH toàn đội" value="12" note="10 khách cần chăm sóc" chevron />
+    <Tile label="Quá hạn" value="5" note="Ưu tiên gọi và xác nhận" chevron />
+    <Tile label="Đã hoàn tất" value="4" note="Có kết quả được ghi nhận" chevron />
+    <Tile label="Đặt lịch sau CSKH" value="2" note="Chưa đồng nghĩa đã quay lại" chevron />
+  </Grid>
+  <Img placeholder label="Nhóm công việc, bộ lọc và danh sách việc: vẽ ở nhóm WD" />
+</AppShell>
+```
+Kit components used: Button×4, Tile×4, Field×2, Sidebar×1, TopBar×1, PageHeading×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WA2-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
+
+## Tokens
+- Text colour: ink-soft ×6, heading ×2, ink ×2, link ×1, surface ×1
+- Background: surface ×3, brand-50 ×2, canvas ×2, heading ×1
+- Border: line ×6, info-line ×1
+- Radius: field ×5
+- Font size: small ×5, label ×4, eyebrow ×3, micro ×2, body ×1
+- Font: Be Vietnam Pro ×16
+- Unmatched colours (no token within ΔE 3): `#71869a` (text, ×2, nearest `ink-soft` ΔE 9.8); `#6b8093` (text, ×1, nearest `ink-soft` ΔE 7.4); `#b8c5bf` (text, ×1, nearest `success-line` ΔE 8.9)
+- Unmatched radius: 8px ×3 (nearest `field`), 50px ×1 (nearest `hero`)
+- Unmatched font size: 9px ×1 (nearest `eyebrow`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- The account picker is a demo identity boundary, "NOT authentication or production RBAC" (header comment of `staff-context.js`).
+
+## Differences from the app design
+- The canvas top bar always draws the bell; the old web shows it for owner and doctor only (care sees the finance link but no bell). Template change needed, see the W3b-WA report.
+
+## Gotchas
+- Role and page are kept in `sessionStorage` (`pema-staff`); a fresh browser context always starts as `owner-tam` unless `?staff=<id>` is in the URL.
+- Care sees 4 menu items only (Điều phối lịch, Tìm bệnh nhân, CSKH hôm nay, Hướng dẫn).
+- The care shell keeps the finance link "Tài chính đã đồng bộ" (old shot) although care has no finance page.
+- The landing page "CSKH hôm nay" is drawn in full by group WD (WD1); WA2 draws only its heading and the four KPI tiles for context, with demo numbers from the canvas.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WA2 · Khung · CSKH (trang chủ CSKH hôm nay)`.
+- Canvas note: Web › app shell · vai CSKH (Mai Anh, Thu): sidebar 4 mục (Điều phối lịch, Tìm bệnh nhân, CSKH hôm nay, Hướng dẫn), có liên kết tài chính, không có chuông (khung vẽ chuông ở mọi vai: xem open items); liên kết "Đến nội dung chính" hiện khi focus; vào thẳng "CSKH hôm nay". Nội dung đầy đủ của trang vẽ ở nhóm WD
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <Button variant="secondary" href="#main-content" as="link" old="skip-link">"Đến nội dung chính"</Button>
 <Sidebar old="sidebar" tag="aside">
@@ -62,34 +132,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Row>
 </TopBar>
 ```
-Kit components used: Sidebar×5, Button×3, Field×2, TopBar×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WA2-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
-
-## Tokens
-- Text colour: ink-soft ×6, heading ×2, ink ×2, link ×1, surface ×1
-- Background: surface ×3, brand-50 ×2, canvas ×2, heading ×1
-- Border: line ×6, info-line ×1
-- Radius: field ×5
-- Font size: small ×5, label ×4, eyebrow ×3, micro ×2, body ×1
-- Font: Be Vietnam Pro ×16
-- Unmatched colours (no token within ΔE 3): `#71869a` (text, ×2, nearest `ink-soft` ΔE 9.8); `#6b8093` (text, ×1, nearest `ink-soft` ΔE 7.4); `#b8c5bf` (text, ×1, nearest `success-line` ΔE 8.9)
-- Unmatched radius: 8px ×3 (nearest `field`), 50px ×1 (nearest `hero`)
-- Unmatched font size: 9px ×1 (nearest `eyebrow`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- The account picker is a demo identity boundary, "NOT authentication or production RBAC" (header comment of `staff-context.js`).
-
-## Differences from the app design
-- (none recorded)
-
-## Gotchas
-- Role and page are kept in `sessionStorage` (`pema-staff`); a fresh browser context always starts as `owner-tam` unless `?staff=<id>` is in the URL.
-- Care sees 4 menu items only (Điều phối lịch, Tìm bệnh nhân, CSKH hôm nay, Hướng dẫn).
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WA2-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

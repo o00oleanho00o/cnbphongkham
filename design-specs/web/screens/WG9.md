@@ -30,26 +30,54 @@ Group **WG · Tài chính PB02** · state · Next.js: **planned (U6)** (`/financ
 - Layout `.tools` 260×67 px: flex row wrap, gap 12px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WG9): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
 ```tsx
-<AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Tài chính & tiền thủ thuật", page key "finance"
-  <Row gap="20px" justify="space-between">
-    <Text small>"ĐIỀU HÀNH • PEMA CLINIC"</Text>
-    <Heading level={1}>"Tài chính & tiền thủ thuật"</Heading>
-    <Row old="tools" gap="12px" wrap>
-      <Field label="Kỳ báo cáo" type="month" default="2026-09" id="month" />
+<AppShell role="owner-tam" active="Tài chính & tiền thủ thuật">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item active icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Tài chính & tiền thủ thuật"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính chờ kết nối · thử lại"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <Row gap="20px" justify="space-between" wrap>
+    <Stack>
+      <Text small>"ĐIỀU HÀNH • PEMA CLINIC"</Text>
+      <Heading level={1}>"Tài chính & tiền thủ thuật"</Heading>
+    </Stack>
+    <Row gap="12px" wrap>
+      <Field label="Kỳ báo cáo" type="month" default="2026-09" />
       <Button variant="secondary">"Làm mới"</Button>
     </Row>
   </Row>
-  <nav aria-label="Phân hệ tài chính" old="finance-tabs">
-    <Tabs items={["Tổng quan","Tiền thủ thuật","Chính sách tỷ lệ","Phiếu thu & thông báo"]} selected="" />  // financeTab
-  </nav>
-  <Notice tone="info" role="alert">"Chưa kết nối dữ liệu tài chính: Failed to fetch. Chạy python prototype/finance_server.py rồi thử lại."</Notice>
+  <Tabs items={["Tổng quan","Tiền thủ thuật","Chính sách tỷ lệ","Phiếu thu & thông báo"]} selected="" />
+  <Notice tone="danger" text="Chưa kết nối dữ liệu tài chính: Failed to fetch. Chạy python prototype/finance_server.py rồi thử lại." />
   <Text>"Đang tải dữ liệu…"</Text>
 </AppShell>
 ```
-Kit components used: Field×1, Button×1, Tabs×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Field×3, Button×3, Sidebar×1, TopBar×1, Tabs×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WG9-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -74,12 +102,37 @@ Kit components used: Field×1, Button×1, Tabs×1; shared pieces: Notice×1. Eve
 - "Chưa kết nối dữ liệu tài chính: <lỗi>. Chạy python prototype/finance_server.py rồi thử lại."
 
 ## Differences from the app design
+- The old shot shows the top bar link as "Tài chính đã đồng bộ" (timing); the frame draws "Tài chính chờ kết nối · thử lại" as the spec describes, and the notice in the danger colour as the shot shows (the layout dump calls it info).
 - (generated) Notice of the old web not found verbatim in H7: "Chưa kết nối dữ liệu tài chính: Failed to fetch. Chạy python prototype/finance_server.py rồi thử lại."
 
 ## Gotchas
 - The tab content refreshes every 10 s (`setInterval`) unless an input has focus or the entry form is open; a pending form is never overwritten (`dirty` flag).
 - Without the API the page shows "Chưa kết nối dữ liệu tài chính: <error>. Chạy python prototype/finance_server.py rồi thử lại." in `#error` (see WG9).
 - The topbar link of `finance-bridge.js` shows "Tài chính chờ kết nối · thử lại" in this state.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WG9 · Tài chính · Chưa kết nối dữ liệu`.
+- Canvas note: Web › finance › trạng thái lỗi khi máy chủ tài chính (cổng 4174) không trả lời · không tab nào được chọn; thanh trên cùng đổi thành "Tài chính chờ kết nối · thử lại" · chưa có trên Next.js
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+```tsx
+<AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Tài chính & tiền thủ thuật", page key "finance"
+  <Row gap="20px" justify="space-between">
+    <Text small>"ĐIỀU HÀNH • PEMA CLINIC"</Text>
+    <Heading level={1}>"Tài chính & tiền thủ thuật"</Heading>
+    <Row old="tools" gap="12px" wrap>
+      <Field label="Kỳ báo cáo" type="month" default="2026-09" id="month" />
+      <Button variant="secondary">"Làm mới"</Button>
+    </Row>
+  </Row>
+  <nav aria-label="Phân hệ tài chính" old="finance-tabs">
+    <Tabs items={["Tổng quan","Tiền thủ thuật","Chính sách tỷ lệ","Phiếu thu & thông báo"]} selected="" />  // financeTab
+  </nav>
+  <Notice tone="info" role="alert">"Chưa kết nối dữ liệu tài chính: Failed to fetch. Chạy python prototype/finance_server.py rồi thử lại."</Notice>
+  <Text>"Đang tải dữ liệu…"</Text>
+</AppShell>
+```
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WG9-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

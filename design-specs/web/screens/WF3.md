@@ -34,8 +34,100 @@ Group **WF · Thu ngân & lên đơn** · dialog · Next.js: **planned (U5)** (`
 - Layout `.quick-order-actions` 1024×40 px: flex row wrap, flex-end, gap 8px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WF3): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+// opens over the page "Thu ngân" (dimmed); the page behind it is not part of this screen
+<Dialog eyebrow="Lên đơn từ danh mục Excel" title="Tạo đơn thuốc / phiếu tư vấn" width="1040px">
+  <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
+    <Field label="Bệnh nhân" type="select" default="Nguyễn Thu Hà · P001" />
+    <Field label="Bác sĩ phụ trách" type="select" default="BS. Tâm" options={["BS. Tâm","BS. Mai","BS. An","BS. Lan"]} />
+  </Grid>
+  <Field label="Chẩn đoán / nội dung tư vấn" type="text" default="Nám · tăng sắc tố" />
+  <Grid cols="minmax(0,1fr) minmax(300px,0.85fr)" gap="16px">
+    <Stack>
+      <Field label="Tìm mã hoặc tên sản phẩm" type="text" placeholder="Ví dụ: H002, Cicaderm, TPCN" />
+      <Notice tone="info" text="115 sản phẩm · 30 thuốc · 78 sản phẩm tư vấn · 7 cần phân loại" />
+      <List boxed>
+        <ListItem title="Desloratadine/Genepharm (Desloratadine 5 mg) Hộp 30 Viên - Viên - A" sub="H002 · Viên · Thuốc · Đơn thuốc">
+          <Text strong>"5.500 ₫"</Text>
+        </ListItem>
+        <ListItem title="Cicaderm Cream 40ml - Kem làm mềm da, dưỡng ẩm, hỗ trợ làm đều màu da, mờ sẹo 40 ml - A" sub="H005 · Hộp · Mỹ Phẩm · Phiếu tư vấn">
+          <Text strong>"715.000 ₫"</Text>
+        </ListItem>
+        <ListItem title="Heliocare Luminance Oral 60 Caps/ Viên uống sáng da - P" sub="H006 · Hộp · TPCN · Phiếu tư vấn">
+          <Text strong>"2.808.000 ₫"</Text>
+        </ListItem>
+        <ListItem title="Bio Phyto -1 Mild Facial Cleanser - Sữa rửa mặt làm sạch sâu 100ml - A" sub="H007 · Chai · Mỹ Phẩm · Phiếu tư vấn">
+          <Text strong>"660.000 ₫"</Text>
+        </ListItem>
+        <ListItem title="Kem trị mụn NV ACTIPUR 3 EN 1 CARE 30ML - P" sub="H008 · Hộp · Mỹ Phẩm · Phiếu tư vấn">
+          <Text strong>"635.000 ₫"</Text>
+        </ListItem>
+        <ListItem title="Bio Phyto -1 Mild Facial Cleanser - Sữa rửa mặt làm sạch sâu 500 ml - A" sub="H010 · Tuýp · Mỹ Phẩm · Phiếu tư vấn">
+          <Text strong>"2.390.000 ₫"</Text>
+        </ListItem>
+      </List>
+    </Stack>
+    <Card title="Nội dung đơn" subtitle="Nhập cách dùng trước khi bác sĩ duyệt">
+      <EmptyState title="Chọn sản phẩm ở danh sách." />
+      <Row gap="8px" justify="space-between" wrap>
+        <Text small>"Tổng tiền dự kiến"</Text>
+        <Text strong>"0 ₫"</Text>
+      </Row>
+    </Card>
+  </Grid>
+  <Field label="Dặn dò chung" type="textarea" />
+  <Notice tone="info" text="Sản phẩm chưa có loại trong Excel cần được phân loại. “Không in” chỉ loại khỏi phiếu, vẫn tính trong hóa đơn. Đơn nháp chưa xuất hiện trên app." />
+  <Dialog.Footer>
+    <Button variant="secondary">"Hủy"</Button>
+    <Button variant="primary">"Lưu nháp & xem tách đơn"</Button>
+  </Dialog.Footer>
+</Dialog>
+```
+Kit components used: Field×5, Button×2, Dialog×1, Card×1, EmptyState×1; shared pieces: Notice×2. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- Not probed: this dialog has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WF3-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
+
+## Tokens
+- Text colour: ink-soft ×122, heading ×117, ink ×116, surface ×1
+- Background: surface ×118, field ×5, link ×1, table-head ×1
+- Border: line ×117, line-strong ×6, link ×1
+- Radius: field ×3, control ×1, tile ×1
+- Font size: label ×124, micro ×117, eyebrow ×116, body ×1, body-lg ×1
+- Font: Be Vietnam Pro ×361
+- Unmatched colours (no token within ΔE 3): `#20496d` (text, ×1, nearest `link` ΔE 5.1); `#34536d` (text, ×1, nearest `link` ΔE 6.7); `#467a9c` (text, ×1, nearest `info` ΔE 5.3); `#5b7487` (text, ×1, nearest `ink-soft` ΔE 3.2); `#70879a` (text, ×1, nearest `ink-soft` ΔE 10.1)
+- Unmatched radius: 18px ×1 (nearest `modal`), 8px ×6 (nearest `field`)
+- Unmatched font size: 23px ×1 (nearest `title`), 18px ×1 (nearest `section`)
+
+## Required text (keep verbatim)
+- 115 sản phẩm · 30 thuốc · 78 sản phẩm tư vấn · 7 cần phân loại
+- Sản phẩm chưa có loại trong Excel cần được phân loại. “Không in” chỉ loại khỏi phiếu, vẫn tính trong hóa đơn. Đơn nháp chưa xuất hiện trên app.
+- Chọn sản phẩm ở danh sách. (empty state)
+
+## Business rules
+- (old web notice) "115 sản phẩm · 30 thuốc · 78 sản phẩm tư vấn · 7 cần phân loại"
+- (old web notice) "Sản phẩm chưa có loại trong Excel cần được phân loại. “Không in” chỉ loại khỏi phiếu, vẫn tính trong hóa đơn. Đơn nháp chưa xuất hiện trên app."
+- "AI chỉ là bản nháp" principle for orders: a draft needs the responsible doctor's approval before it is printed or shown in the patient app ("Đơn nháp cần bác sĩ duyệt trước khi in.").
+- "Chọn ít nhất một sản phẩm." and "Chọn bác sĩ trong danh sách."
+- "Sản phẩm chưa có loại trong Excel cần được phân loại. “Không in” chỉ loại khỏi phiếu, vẫn tính trong hóa đơn. Đơn nháp chưa xuất hiện trên app."
+
+## Differences from the app design
+- Product pick rows are drawn as list rows (name, code · unit · group · route, price) instead of one button label; the whole row is the click target in the old web.
+- (generated) Notice of the old web not found verbatim in F4: "115 sản phẩm · 30 thuốc · 78 sản phẩm tư vấn · 7 cần phân loại"
+- (generated) Notice of the old web not found verbatim in F4: "Sản phẩm chưa có loại trong Excel cần được phân loại. “Không in” chỉ loại khỏi phiếu, vẫn tính trong hóa đơn. Đơn nháp chưa xuất hiện trên app."
+
+## Gotchas
+- The doctor cannot approve a line without its usage text ("Cách dùng"); the reach steps of the inventory fill it.
+- The picker lists 115 products in a scroll box; the canvas draws the first 6. The error line #quick-error (empty; shows "Chọn ít nhất một sản phẩm." or "Chọn bác sĩ trong danh sách.") is not drawn.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WF3 · Tạo đơn thuốc / phiếu tư vấn`.
+- Canvas note: Web › cashier › Lên đơn nhanh · hộp thoại rộng như app F4: chọn sản phẩm trong danh mục Excel 115 dòng (hiện 6 dòng đầu, danh sách cuộn), giỏ "Nội dung đơn" đang trống · chưa có trên Next.js
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 // opens over the page; the backdrop and the page behind it are not part of this screen
 <Dialog old="modal ops-modal order-modal" eyebrow="Lên đơn từ danh mục Excel" title="Tạo đơn thuốc / phiếu tư vấn" close={{"label":"Đóng hộp thoại"}}>
@@ -67,40 +159,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </form>
 </Dialog>
 ```
-Kit components used: Field×5, Button×3, Dialog×1, Card×1, EmptyState×1; shared pieces: Notice×2. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- Not probed: this dialog has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WF3-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
-
-## Tokens
-- Text colour: ink-soft ×122, heading ×117, ink ×116, surface ×1
-- Background: surface ×118, field ×5, link ×1, table-head ×1
-- Border: line ×117, line-strong ×6, link ×1
-- Radius: field ×3, control ×1, tile ×1
-- Font size: label ×124, micro ×117, eyebrow ×116, body ×1, body-lg ×1
-- Font: Be Vietnam Pro ×361
-- Unmatched colours (no token within ΔE 3): `#20496d` (text, ×1, nearest `link` ΔE 5.1); `#34536d` (text, ×1, nearest `link` ΔE 6.7); `#467a9c` (text, ×1, nearest `info` ΔE 5.3); `#5b7487` (text, ×1, nearest `ink-soft` ΔE 3.2); `#70879a` (text, ×1, nearest `ink-soft` ΔE 10.1)
-- Unmatched radius: 18px ×1 (nearest `modal`), 8px ×6 (nearest `field`)
-- Unmatched font size: 23px ×1 (nearest `title`), 18px ×1 (nearest `section`)
-
-## Required text (keep verbatim)
-- 115 sản phẩm · 30 thuốc · 78 sản phẩm tư vấn · 7 cần phân loại
-- Sản phẩm chưa có loại trong Excel cần được phân loại. “Không in” chỉ loại khỏi phiếu, vẫn tính trong hóa đơn. Đơn nháp chưa xuất hiện trên app.
-- Chọn sản phẩm ở danh sách. (empty state)
-
-## Business rules
-- (old web notice) "115 sản phẩm · 30 thuốc · 78 sản phẩm tư vấn · 7 cần phân loại"
-- (old web notice) "Sản phẩm chưa có loại trong Excel cần được phân loại. “Không in” chỉ loại khỏi phiếu, vẫn tính trong hóa đơn. Đơn nháp chưa xuất hiện trên app."
-- "AI chỉ là bản nháp" principle for orders: a draft needs the responsible doctor's approval before it is printed or shown in the patient app ("Đơn nháp cần bác sĩ duyệt trước khi in.").
-- "Chọn ít nhất một sản phẩm." and "Chọn bác sĩ trong danh sách."
-- "Sản phẩm chưa có loại trong Excel cần được phân loại. “Không in” chỉ loại khỏi phiếu, vẫn tính trong hóa đơn. Đơn nháp chưa xuất hiện trên app."
-
-## Differences from the app design
-- (generated) Notice of the old web not found verbatim in F4: "115 sản phẩm · 30 thuốc · 78 sản phẩm tư vấn · 7 cần phân loại"
-- (generated) Notice of the old web not found verbatim in F4: "Sản phẩm chưa có loại trong Excel cần được phân loại. “Không in” chỉ loại khỏi phiếu, vẫn tính trong hóa đơn. Đơn nháp chưa xuất hiện trên app."
-
-## Gotchas
-- The doctor cannot approve a line without its usage text ("Cách dùng"); the reach steps of the inventory fill it.
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WF3-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

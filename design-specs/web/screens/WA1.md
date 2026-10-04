@@ -102,10 +102,12 @@ Kit components used: Button×3, Field×2, Sidebar×1, TopBar×1. Everything else
 - "Đặt lại dữ liệu demo" (`#reset-demo`) asks a native `confirm('Đặt lại dữ liệu demo?')`, then toasts "Đã khôi phục dữ liệu demo".
 - The global search answers Enter only: it sets the patient search and opens "Tìm bệnh nhân".
 - The bell button is a link to "Theo dõi" (`data-nav=followups`).
+- The finance link in the top bar has three states from `finance-bridge.js`: "Tài chính đã đồng bộ", "Đang đồng bộ tài chính…", "Tài chính chờ kết nối · thử lại"; the canvas draws the first one.
+- The canvas draws the content area as a placeholder: each page is drawn by its own group (WB-WH).
 
 ## Web canvas
 - Frames: 1440x900 (inventory: 1440x900); screen label `WA1 · Khung ứng dụng · Chủ phòng khám`.
-- Canvas note: Web › app shell · sidebar 3 nhóm 13 mục, thanh trên (đường dẫn, tài khoản demo, tìm bệnh nhân, thông báo, đặt lại); danh sách tài khoản mở sẵn, liên kết "Đến nội dung chính" hiện khi focus
+- Canvas note: Web › app shell · sidebar 3 nhóm 13 mục, thanh trên (đường dẫn, tài khoản demo, tìm bệnh nhân, thông báo, đặt lại); danh sách tài khoản mở sẵn, liên kết "Đến nội dung chính" hiện khi focus; liên kết tài chính có 3 trạng thái ("Tài chính đã đồng bộ", "Đang đồng bộ tài chính…", "Tài chính chờ kết nối · thử lại"); "Đặt lại" hỏi confirm "Đặt lại dữ liệu demo?" rồi báo "Đã khôi phục dữ liệu demo"; ô tìm chỉ chạy khi Enter
 
 ## Old web snapshot (for comparison)
 The old web's own layout, with its demo values.

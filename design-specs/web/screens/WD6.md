@@ -33,8 +33,160 @@ Group **WD · CSKH & theo dõi** · page · Next.js: **restyle (U1)** (`/inbox`)
 - Layout `.filter-row` 1152×36 px: flex row wrap, gap 8px
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WD6): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Theo dõi">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item active icon="inbox">"Theo dõi 5"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Theo dõi"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <PageHeading eyebrow="Pema Digital Clinic" title="Follow-up Inbox" subtitle="Một hàng đợi cho ảnh bệnh nhân gửi, triệu chứng và các mốc bị bỏ sót." />
+  <Grid cols="repeat(3, 1fr)" cols-390="repeat(2, 1fr)">
+    <Tile label="Đang mở" value="5" note="tất cả nhóm" icon="tune" />
+    <Tile label="Cần bác sĩ" value="3" note="ảnh và triệu chứng" icon="tune" />
+    <Tile label="Mốc bị bỏ sót" value="2" note="cần giao người phụ trách" icon="tune" />
+  </Grid>
+  <FilterChipGroup items={["Tất cả 5","Ảnh 2","Triệu chứng 1","Quá hạn 1"]} selected={["Tất cả"]} />
+  <Card>
+    <Row gap="16px" justify="space-between" wrap>
+      <Stack>
+        <Text>"● " <Strong>"Ảnh cần bác sĩ xem · Nguyễn Thu Hà"</Strong></Text>
+        <Text>"Đỏ nhẹ đã giảm, không đau. Em gửi ảnh trước buổi hẹn."</Text>
+        <Row gap="12px" wrap>
+          <Text small>"20/9/2026   •   Giao: BS. Tâm"</Text>
+          <Badge tone="neutral" dot={false}>"Ảnh đính kèm"</Badge>
+        </Row>
+      </Stack>
+      <Row gap="8px" wrap>
+        <Button variant="secondary">"Mở"</Button>
+        <Button variant="primary" icon="check">"Xử lý"</Button>
+      </Row>
+    </Row>
+  </Card>
+  <Card>
+    <Row gap="16px" justify="space-between" wrap>
+      <Stack>
+        <Text>"● " <Strong>"Phản hồi triệu chứng · Đặng Gia Linh"</Strong></Text>
+        <Text>"Rát tăng lên sau chăm sóc, muốn được phòng khám gọi lại."</Text>
+        <Text small>"20/9/2026   •   Giao: BS. Tâm"</Text>
+      </Stack>
+      <Row gap="8px" wrap>
+        <Button variant="secondary">"Mở"</Button>
+        <Button variant="primary" icon="check">"Xử lý"</Button>
+      </Row>
+    </Row>
+  </Card>
+  <Card>
+    <Row gap="16px" justify="space-between" wrap>
+      <Stack>
+        <Text>"● " <Strong>"Quá hạn phản hồi 3 ngày · Võ Ngọc Trâm"</Strong></Text>
+        <Text>"Chưa có phản hồi kiểm tra sau buổi điều trị."</Text>
+        <Text small>"17/9/2026   •   Giao: CSKH Thu"</Text>
+      </Stack>
+      <Row gap="8px" wrap>
+        <Button variant="secondary">"Mở"</Button>
+        <Button variant="primary" icon="check">"Xử lý"</Button>
+      </Row>
+    </Row>
+  </Card>
+  <Card>
+    <Row gap="16px" justify="space-between" wrap>
+      <Stack>
+        <Text><Small>"● "</Small> <Strong>"Thiếu ảnh mốc đánh giá · Bùi Khánh Vy"</Strong></Text>
+        <Text>"Chưa lưu bộ ảnh chính diện của buổi 2."</Text>
+        <Text small>"20/9/2026   •   Giao: CSKH Mai Anh"</Text>
+      </Stack>
+      <Row gap="8px" wrap>
+        <Button variant="secondary">"Mở"</Button>
+        <Button variant="primary" icon="check">"Xử lý"</Button>
+      </Row>
+    </Row>
+  </Card>
+  <Card>
+    <Row gap="16px" justify="space-between" wrap>
+      <Stack>
+        <Text>"● " <Strong>"Kiểm tra chăm sóc ngày 2 · Đỗ Phương Thảo"</Strong></Text>
+        <Text>"Da ổn, hơi khô. Đã dùng dưỡng ẩm như hướng dẫn."</Text>
+        <Row gap="12px" wrap>
+          <Text small>"20/9/2026   •   Giao: BS. Tâm"</Text>
+          <Badge tone="neutral" dot={false}>"Ảnh đính kèm"</Badge>
+        </Row>
+      </Stack>
+      <Row gap="8px" wrap>
+        <Button variant="secondary">"Mở"</Button>
+        <Button variant="primary" icon="check">"Xử lý"</Button>
+      </Row>
+    </Row>
+  </Card>
+</AppShell>
+```
+Kit components used: Button×12, Card×5, Tile×3, Field×2, Badge×2, Sidebar×1, TopBar×1, PageHeading×1; shared pieces: FilterChip×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- 1440×900 is the reference (Frame, Layout).
+- 1920×1020: no layout change
+- 1280×720: no layout change
+- 1024×768: .sidebar: width 232 → 204px
+- 390×844: .page-heading: display flex → block; .metrics: grid 3 → 2 columns; .followup-actions: flex-wrap off → on; card .followup-card: grid 3 → 2 columns; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "BS. Tâm", "Chủ phòng khám", "Không gian phòng khám" (+1)
+- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
+
+## Tokens
+- Text colour: ink-soft ×21, ink ×10, info ×6, surface ×5, heading ×4
+- Background: surface ×15, row-hover ×6, link ×5
+- Border: line ×15, line-strong ×5, link ×5
+- Radius: field ×10, tile ×5, card ×2
+- Font size: micro ×22, label ×18, body ×10, eyebrow ×3, page ×1, small ×1
+- Font: Be Vietnam Pro ×58
+- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×5, nearest `link` ΔE 6.7); `#60778b` (text, ×3, nearest `ink-soft` ΔE 3.9); `#678095` (text, ×3, nearest `ink-soft` ΔE 7.4); `#5e9cb6` (background, ×2, nearest `brand-400` ΔE 8.6); `#467a9c` (text, ×1, nearest `info` ΔE 5.3); `#927ec1` (background, ×1, nearest `ink-soft` ΔE 17.3); `#d09b41` (background, ×1, nearest `warning` ΔE 20.3); `#d96157` (background, ×1, nearest `accent` ΔE 5)
+- Unmatched radius: 8px ×4 (nearest `field`), 50px ×5 (nearest `hero`), 99px ×2 (nearest `hero`)
+- Unmatched font size: 32px ×3 (nearest `page`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- "Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH." (a booking after CSKH is not a returned patient until a check-in).
+- Priority classes: `urgent` and `review` need a doctor; `missing` and `overdue` are forgotten milestones.
+- "Inbox đã sạch. Không có follow-up đang mở." appears when nothing is open.
+
+## Differences from the app design
+- App I6/A4 are titled "Theo dõi" with the subtitle "Ảnh, triệu chứng và mốc bị bỏ sót"; the web title is "Follow-up Inbox" and the third metric is "Mốc bị bỏ sót" (app: "Bỏ sót").
+- Canvas drops the outer panel around the five follow-up cards (4-level nesting limit); each card keeps title, text, date, assignee, attachment chip, "Mở" and "Xử lý". "Inbox đã sạch. Không có follow-up đang mở." is not drawn (no scripted state).
+
+## Gotchas
+- Every CSKH dialog uses `crm-modal` with its own `#crm-error` line; errors of the commands are shown there, not in a toast.
+
+## Web canvas
+- Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WD6 · Theo dõi`.
+- Canvas note: Web › followups · menu "Theo dõi" mở hộp thư "Follow-up Inbox" (app I6/A4 đặt tên "Theo dõi", mốc thứ ba là "Bỏ sót"); thẻ chấm màu theo mức ưu tiên (xanh ảnh, đỏ triệu chứng, vàng quá hạn, tím thiếu mốc); khung thẻ ngoài bị bỏ để đủ chỗ lồng; tên khách là dữ liệu tổng hợp
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Theo dõi 5", page key "followups"
   <PageHeading eyebrow="Pema Digital Clinic" title="Follow-up Inbox" subtitle="Một hàng đợi cho ảnh bệnh nhân gửi, triệu chứng và các mốc bị bỏ sót." />
@@ -70,40 +222,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Card>
 </AppShell>
 ```
-Kit components used: Tile×3, Button×3, Card×2, PageHeading×1, Badge×1; shared pieces: FilterChip×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- 1440×900 is the reference (Frame, Layout).
-- 1920×1020: no layout change
-- 1280×720: no layout change
-- 1024×768: .sidebar: width 232 → 204px
-- 390×844: .page-heading: display flex → block; .metrics: grid 3 → 2 columns; .followup-actions: flex-wrap off → on; card .followup-card: grid 3 → 2 columns; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "BS. Tâm", "Chủ phòng khám", "Không gian phòng khám" (+1)
-- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
-
-## Tokens
-- Text colour: ink-soft ×21, ink ×10, info ×6, surface ×5, heading ×4
-- Background: surface ×15, row-hover ×6, link ×5
-- Border: line ×15, line-strong ×5, link ×5
-- Radius: field ×10, tile ×5, card ×2
-- Font size: micro ×22, label ×18, body ×10, eyebrow ×3, page ×1, small ×1
-- Font: Be Vietnam Pro ×58
-- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×5, nearest `link` ΔE 6.7); `#60778b` (text, ×3, nearest `ink-soft` ΔE 3.9); `#678095` (text, ×3, nearest `ink-soft` ΔE 7.4); `#5e9cb6` (background, ×2, nearest `brand-400` ΔE 8.6); `#467a9c` (text, ×1, nearest `info` ΔE 5.3); `#927ec1` (background, ×1, nearest `ink-soft` ΔE 17.3); `#d09b41` (background, ×1, nearest `warning` ΔE 20.3); `#d96157` (background, ×1, nearest `accent` ΔE 5)
-- Unmatched radius: 8px ×4 (nearest `field`), 50px ×5 (nearest `hero`), 99px ×2 (nearest `hero`)
-- Unmatched font size: 32px ×3 (nearest `page`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- "Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH." (a booking after CSKH is not a returned patient until a check-in).
-- Priority classes: `urgent` and `review` need a doctor; `missing` and `overdue` are forgotten milestones.
-- "Inbox đã sạch. Không có follow-up đang mở." appears when nothing is open.
-
-## Differences from the app design
-- App I6/A4 are titled "Theo dõi" with the subtitle "Ảnh, triệu chứng và mốc bị bỏ sót"; the web title is "Follow-up Inbox" and the third metric is "Mốc bị bỏ sót" (app: "Bỏ sót").
-
-## Gotchas
-- Every CSKH dialog uses `crm-modal` with its own `#crm-error` line; errors of the commands are shown there, not in a toast.
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WD6-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

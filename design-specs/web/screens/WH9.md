@@ -30,8 +30,108 @@ Group **WH · Ask Pema & Hướng dẫn** · state · Next.js: **built (U7)** (`
 - Layout `.guide-layout` 1152×1015 px: grid, columns `250px minmax(0px, 1fr)` (250px 874px), gap 28px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WH9): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Hướng dẫn">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item active icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Hướng dẫn"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <PageHeading eyebrow="Cách làm việc cùng Pema" title="Hướng dẫn sử dụng" subtitle="Hiểu hành trình, làm đúng bước và bàn giao đủ thông tin." />
+  <Grid cols="290px minmax(0,1fr)" gap="16px">
+    <Stack>
+      <Field label="Tìm chủ đề hoặc vai trò" type="search" placeholder="Ví dụ: dời lịch, bác sĩ, thu tiền" />
+      <FilterChipGroup direction="vertical" items={["Tất cả Mobile, CSKH & tài chính theo vai trò","CSKH CSKH chủ động & tài khoản nhân viên","Tất cả Hiểu hệ thống Pema","Tất cả Bắt đầu theo vai trò","Bác sĩ Hồ sơ & Patient 360","Lễ tân Lịch hẹn & tiếp đón","Điều phối Bác sĩ, phòng & dịch vụ","Bác sĩ Từ tư vấn đến buổi điều trị","Chăm sóc Chăm sóc & phản hồi tại nhà","Thu ngân Hóa đơn & thu tiền","Tất cả Khi cần kiểm tra lại"]} selected={["Chăm sóc Chăm sóc & phản hồi tại nhà"]} />
+    </Stack>
+    <Card>
+      <Heading level={2} sub="Khép kín vòng phản hồi giữa người bệnh và phòng khám." eyebrow="Chăm sóc">"Chăm sóc & phản hồi tại nhà"</Heading>
+      <Grid cols="repeat(auto-fit,minmax(min(100%,520px),1fr))" gap="16px">
+        <Stack>
+          <Text>"Hành trình không kết thúc khi người bệnh rời phòng khám. Hướng dẫn và phản hồi giúp đội ngũ biết cần xem điều gì trước buổi tiếp theo."</Text>
+          <Heading level={3}>"Cách thực hiện"</Heading>
+          <List ordered>
+            <ListItem title="Người bệnh mở Chăm sóc tại nhà để đọc hướng dẫn đã gửi và xác nhận đã đọc." />
+            <ListItem title="Người bệnh dùng Gửi cập nhật để mô tả tình trạng; có thể thêm ảnh và phải đồng ý cho sử dụng ảnh khi đính kèm." />
+            <ListItem title="Đội ngũ vào Theo dõi để xem các mục đang mở và người phụ trách; ưu tiên phản hồi cần bác sĩ xem." />
+            <ListItem title="Mở mục theo dõi, xem nội dung/ảnh, chỉnh phản hồi rồi Duyệt, phản hồi & đóng mục." />
+            <ListItem title="Kiểm tra phản hồi trong tin nhắn người bệnh và sự kiện tương ứng ở Patient 360." />
+          </List>
+        </Stack>
+        <Notice tone="info" text="Thông tin đi tiếp như thế nào? Gửi cập nhật tạo việc cần xử lý. Duyệt và phản hồi mới hoàn tất vòng theo dõi; gửi thành công không đồng nghĩa bác sĩ đã xem. Điểm cần nhớ Tin nhắn không phải kênh cấp cứu. CRM01 tự lập task D1/D3/D7 cho session có protocol Laser CO2. Nhân viên xử lý; không tự gửi tin hoặc tự review lâm sàng." />
+      </Grid>
+      <Row gap="8px" wrap>
+        <Button variant="primary">"Mở theo dõi →"</Button>
+      </Row>
+      <Divider />
+      <Heading level={3}>"Đọc tiếp"</Heading>
+      <Row gap="8px" wrap>
+        <Button variant="secondary">"Từ tư vấn đến buổi điều trị →"</Button>
+        <Button variant="secondary">"Hồ sơ & Patient 360 →"</Button>
+        <Button variant="secondary">"Lịch hẹn & tiếp đón →"</Button>
+      </Row>
+    </Card>
+  </Grid>
+</AppShell>
+```
+Kit components used: Button×6, Field×3, Sidebar×1, TopBar×1, PageHeading×1, Card×1; shared pieces: FilterChip×1, Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WH9-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
+
+## Tokens
+- Text colour: ink ×24, ink-soft ×13, heading ×2, link ×1, surface ×1
+- Background: surface ×5, canvas-alt ×1, info-soft ×1, link ×1
+- Border: line ×3, line-strong ×3, brand-400 ×1, link ×1
+- Radius: control ×11, field ×5
+- Font size: label ×16, eyebrow ×13, body ×9, body-lg ×4, page ×1, section ×1, small ×1
+- Font: Be Vietnam Pro ×46
+- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×3, nearest `link` ΔE 6.7); `#467a9c` (text, ×2, nearest `info` ΔE 5.3)
+- Unmatched radius: 16px ×1 (nearest `card`)
+- Unmatched font size: 26px ×1 (nearest `title`)
+
+## Required text (keep verbatim)
+- Thông tin đi tiếp như thế nào? Gửi cập nhật tạo việc cần xử lý. Duyệt và phản hồi mới hoàn tất vòng theo dõi; gửi thành công không đồng nghĩa bác sĩ đã xem. Điểm cần nhớ Tin nhắn không phải kênh cấp cứu. CRM01 tự lập task D1/D3/D7 cho session có protocol Laser CO2. Nhân viên xử lý; không tự gửi tin hoặc tự review lâm sàng.
+
+## Business rules
+- (old web notice) "Thông tin đi tiếp như thế nào? Gửi cập nhật tạo việc cần xử lý. Duyệt và phản hồi mới hoàn tất vòng theo dõi; gửi thành công không đồng nghĩa bác sĩ đã xem. Điểm cần nhớ Tin nhắn không phải kênh cấp cứu. CRM01 tự lập task D1/D3/D7 cho session có protocol Laser CO2. Nhân viên xử lý; không tự gửi tin hoặc tự review lâm sàng."
+
+## Differences from the app design
+- (generated) Notice of the old web not found verbatim in F16: "Thông tin đi tiếp như thế nào? Gửi cập nhật tạo việc cần xử lý. Duyệt và phản hồi mới hoàn tất vòng theo dõi; gửi thành công không đồng nghĩa bác sĩ đã xem. Điểm cần nhớ Tin nhắn không phải kênh cấp cứu. CRM01 tự lập task D1/D3/D7 cho session có protocol Laser CO2. Nhân viên xử lý; không tự gửi tin hoặc tự review lâm sàng."
+
+## Gotchas
+- (none recorded)
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WH9 · Hướng dẫn · Chăm sóc & phản hồi tại nhà`.
+- Canvas note: Web › guide · bài "care": tin nhắn không phải kênh cấp cứu
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Hướng dẫn", page key "guide"
   <PageHeading eyebrow="Cách làm việc cùng Pema" title="Hướng dẫn sử dụng" subtitle="Hiểu hành trình, làm đúng bước và bàn giao đủ thông tin." />
@@ -70,33 +170,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Grid>
 </AppShell>
 ```
-Kit components used: Button×4, PageHeading×1, Field×1, Card×1; shared pieces: FilterChip×1, Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WH9-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
-
-## Tokens
-- Text colour: ink ×24, ink-soft ×13, heading ×2, link ×1, surface ×1
-- Background: surface ×5, canvas-alt ×1, info-soft ×1, link ×1
-- Border: line ×3, line-strong ×3, brand-400 ×1, link ×1
-- Radius: control ×11, field ×5
-- Font size: label ×16, eyebrow ×13, body ×9, body-lg ×4, page ×1, section ×1, small ×1
-- Font: Be Vietnam Pro ×46
-- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×3, nearest `link` ΔE 6.7); `#467a9c` (text, ×2, nearest `info` ΔE 5.3)
-- Unmatched radius: 16px ×1 (nearest `card`)
-- Unmatched font size: 26px ×1 (nearest `title`)
-
-## Required text (keep verbatim)
-- Thông tin đi tiếp như thế nào? Gửi cập nhật tạo việc cần xử lý. Duyệt và phản hồi mới hoàn tất vòng theo dõi; gửi thành công không đồng nghĩa bác sĩ đã xem. Điểm cần nhớ Tin nhắn không phải kênh cấp cứu. CRM01 tự lập task D1/D3/D7 cho session có protocol Laser CO2. Nhân viên xử lý; không tự gửi tin hoặc tự review lâm sàng.
-
-## Business rules
-- (old web notice) "Thông tin đi tiếp như thế nào? Gửi cập nhật tạo việc cần xử lý. Duyệt và phản hồi mới hoàn tất vòng theo dõi; gửi thành công không đồng nghĩa bác sĩ đã xem. Điểm cần nhớ Tin nhắn không phải kênh cấp cứu. CRM01 tự lập task D1/D3/D7 cho session có protocol Laser CO2. Nhân viên xử lý; không tự gửi tin hoặc tự review lâm sàng."
-
-## Differences from the app design
-- (generated) Notice of the old web not found verbatim in F16: "Thông tin đi tiếp như thế nào? Gửi cập nhật tạo việc cần xử lý. Duyệt và phản hồi mới hoàn tất vòng theo dõi; gửi thành công không đồng nghĩa bác sĩ đã xem. Điểm cần nhớ Tin nhắn không phải kênh cấp cứu. CRM01 tự lập task D1/D3/D7 cho session có protocol Laser CO2. Nhân viên xử lý; không tự gửi tin hoặc tự review lâm sàng."
-
-## Gotchas
-- (none recorded)
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WH9-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

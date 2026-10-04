@@ -38,8 +38,99 @@ Group **WG · Tài chính PB02** · state · Next.js: **planned (U6)** (`/financ
 - Layout `.row` 633×86 px: flex row wrap, space-between, gap 12px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WG8): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="accountant" active="Tài chính & tiền thủ thuật">
+  <Sidebar old="sidebar">  // menu of account `accountant`; at 390 a top bar with menu button and a bottom tab bar ("Thu ngân", "Tài chính", "Hồ sơ", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item active icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"KT"</Avatar> <Text><Strong>"Kế toán"</Strong> <Small>"Đối soát & thu ngân"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Tài chính & tiền thủ thuật"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="Kế toán · Đối soát & thu ngân" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <Row gap="20px" justify="space-between" wrap>
+    <Stack>
+      <Text small>"ĐIỀU HÀNH • PEMA CLINIC"</Text>
+      <Heading level={1}>"Tài chính & tiền thủ thuật"</Heading>
+    </Stack>
+    <Row gap="12px" wrap>
+      <Field label="Kỳ báo cáo" type="month" default="2026-09" />
+      <Button variant="secondary">"Làm mới"</Button>
+    </Row>
+  </Row>
+  <Tabs items={["Tổng quan","Tiền thủ thuật","Chính sách tỷ lệ","Phiếu thu & thông báo"]} selected="Tổng quan" />
+  <Hero over="KẾ TOÁN • ĐỐI SOÁT" icon="account_balance_wallet">
+    <Heading level={2}>"Một màn hình, nắm rõ dòng tiền"</Heading>
+    <Text>"Kỳ 2026-09 · Doanh số thực hiện và tiền đã thu được theo dõi riêng."</Text>
+    <Badge tone="neutral" dot={false}>"Đang đối soát"</Badge>
+  </Hero>
+  <Grid cols="repeat(4, 1fr)" cols-390="repeat(2, 1fr)">
+    <Tile label="Doanh số thực hiện" value="13.200.000 ₫" note="Theo ngày hoàn tất thủ thuật" />
+    <Tile label="Thực thu trong tháng" value="11.000.000 ₫" note="Theo ngày phiếu thu" />
+    <Tile label="Công nợ hiện tại" value="1.250.000 ₫" note="Tất cả hóa đơn, không chỉ trong tháng" />
+    <Tile label="Tiền thủ thuật đã duyệt" value="2.187.000 ₫" note="Không phải lợi nhuận phòng khám" />
+  </Grid>
+  <Grid cols="minmax(0,1.5fr) minmax(0,1fr)" gap="16px">
+    <Card title="Đóng góp của đội ngũ">
+      <StatusBars items={[["BS. Tâm · 3 lượt · Tiền thủ thuật 90.000 ₫","900.000 ₫"],["BS. Mai · 3 lượt · Tiền thủ thuật 225.000 ₫","1.500.000 ₫"],["BS. An · 3 lượt · Tiền thủ thuật 1.440.000 ₫","7.200.000 ₫"],["BS. Lan · 3 lượt · Tiền thủ thuật 432.000 ₫","3.600.000 ₫"]]} />
+    </Card>
+    <Card title="Việc cần đối soát">
+      <Facts items={[["Lượt chờ kế toán duyệt","0"],["Tiền chờ duyệt","0 ₫"]]} />
+      <Text small>"Tỷ lệ lưu theo từng lượt. Đổi chính sách không tính lại lịch sử. Khoản theo thực thu được đóng băng khi chốt kỳ."</Text>
+      <Button variant="secondary">"Mở bảng tiền thủ thuật →"</Button>
+    </Card>
+  </Grid>
+</AppShell>
+```
+Kit components used: Button×4, Tile×4, Field×3, Card×2, Sidebar×1, TopBar×1, Tabs×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WG8-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
+
+## Tokens
+- Text colour: ink ×19, ink-soft ×15, link ×6, surface ×2, brand-100 ×1
+- Background: surface ×12, brand-400 ×4, tile ×4, brand-50 ×1, link ×1
+- Border: line ×12, tile ×6, line-strong ×1
+- Radius: control ×7, hero ×1, modal ×1
+- Font size: body ×19, label ×10, eyebrow ×6, title ×4, micro ×1
+- Font: Be Vietnam Pro ×44
+- Unmatched colours (no token within ΔE 3): `#b8def5` (text, ×1, nearest `brand-100` ΔE 4.6)
+- Unmatched radius: 18px ×6 (nearest `modal`), 8px ×4 (nearest `field`)
+- Unmatched font size: 26px ×1 (nearest `title`), 19px ×3 (nearest `subtitle`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- Revenue ("Doanh số thực hiện") follows the completion date of the procedure; cash ("Thực thu") follows the receipt date; they are tracked separately.
+- "Tiền thủ thuật đã duyệt": "Không phải lợi nhuận phòng khám".
+
+## Differences from the app design
+- App D1 "Đối soát & thu ngân" is the accountant home with 3 tiles; the web lands the accountant on "Thu ngân" (WF1) and reaches finance from the menu.
+
+## Gotchas
+- The tab content refreshes every 10 s (`setInterval`) unless an input has focus or the entry form is open; a pending form is never overwritten (`dirty` flag).
+- Without the API the page shows "Chưa kết nối dữ liệu tài chính: <error>. Chạy python prototype/finance_server.py rồi thử lại." in `#error` (see WG9).
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WG8 · Tài chính · Tổng quan (kế toán)`.
+- Canvas note: Web › finance › Tổng quan, tài khoản kế toán · hero "KẾ TOÁN • ĐỐI SOÁT", đủ 4 tab; app D1 là trang chủ "Đối soát & thu ngân" 3 thẻ, web vào Thu ngân rồi mở Tài chính từ menu · chưa có trên Next.js
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="accountant">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Tài chính & tiền thủ thuật", page key "finance"
   <Row gap="20px" justify="space-between">
@@ -101,35 +192,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Grid>
 </AppShell>
 ```
-Kit components used: Tile×4, Card×3, Button×2, Field×1, Tabs×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WG8-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
-
-## Tokens
-- Text colour: ink ×19, ink-soft ×15, link ×6, surface ×2, brand-100 ×1
-- Background: surface ×12, brand-400 ×4, tile ×4, brand-50 ×1, link ×1
-- Border: line ×12, tile ×6, line-strong ×1
-- Radius: control ×7, hero ×1, modal ×1
-- Font size: body ×19, label ×10, eyebrow ×6, title ×4, micro ×1
-- Font: Be Vietnam Pro ×44
-- Unmatched colours (no token within ΔE 3): `#b8def5` (text, ×1, nearest `brand-100` ΔE 4.6)
-- Unmatched radius: 18px ×6 (nearest `modal`), 8px ×4 (nearest `field`)
-- Unmatched font size: 26px ×1 (nearest `title`), 19px ×3 (nearest `subtitle`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- Revenue ("Doanh số thực hiện") follows the completion date of the procedure; cash ("Thực thu") follows the receipt date; they are tracked separately.
-- "Tiền thủ thuật đã duyệt": "Không phải lợi nhuận phòng khám".
-
-## Differences from the app design
-- App D1 "Đối soát & thu ngân" is the accountant home with 3 tiles; the web lands the accountant on "Thu ngân" (WF1) and reaches finance from the menu.
-
-## Gotchas
-- The tab content refreshes every 10 s (`setInterval`) unless an input has focus or the entry form is open; a pending form is never overwritten (`dirty` flag).
-- Without the API the page shows "Chưa kết nối dữ liệu tài chính: <error>. Chạy python prototype/finance_server.py rồi thử lại." in `#error` (see WG9).
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WG8-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

@@ -31,18 +31,20 @@ Group **WD · CSKH & theo dõi** · dialog · Next.js: **restyle (U1)** (`/revie
 - Layout `.modal-head` 564×42 px: flex row, space-between
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WD7): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
 ```tsx
-// opens over the page; the backdrop and the page behind it are not part of this screen
-<Dialog old="modal" eyebrow="Ảnh / phản hồi chưa duyệt · BS. Tâm" title="Nguyễn Minh Linh" close={{"label":"Đóng hộp thoại"}}>
-  <Text old="subtitle">"Đỏ nhẹ đã giảm, không đau. Em gửi ảnh trước buổi hẹn."</Text>
-  <Notice tone="info" old="photo-disclaimer">"MINH HỌA TỔNG HỢP"</Notice>
-  <Field label="Phản hồi sau khi xem · bác sĩ cần chỉnh sửa" type="textarea" default="Pema đã xem cập nhật và ghi nhận vào hành trình. Bạn hãy tiếp tục theo hướng dẫn…" id="review-reply" />
-  <Button variant="primary" old="btn btn-primary">"Duyệt, phản hồi & đóng mục"</Button>  // action=review-submit followup=F001
+// opens over the page "Theo dõi" (dimmed); the page behind it is not part of this screen
+<Dialog eyebrow="Ảnh / phản hồi chưa duyệt · BS. Tâm" title="Nguyễn Thu Hà" width="620px">
+  <Text small>"Đỏ nhẹ đã giảm, không đau. Em gửi ảnh trước buổi hẹn."</Text>
+  <PhotoGrid>
+    <PhotoPlaceholder label="" tag="MINH HỌA TỔNG HỢP" />
+  </PhotoGrid>
+  <Field label="Phản hồi sau khi xem · bác sĩ cần chỉnh sửa" type="textarea" default="Pema đã xem cập nhật và ghi nhận vào hành trình. Bạn hãy tiếp tục theo hướng dẫn đã được bác sĩ duyệt." />
+  <Button variant="primary">"Duyệt, phản hồi & đóng mục"</Button>
 </Dialog>
 ```
-Kit components used: Dialog×1, Field×1, Button×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Dialog×1, Field×1, Button×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - Not probed: this dialog has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WD7-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -67,10 +69,27 @@ Kit components used: Dialog×1, Field×1, Button×1; shared pieces: Notice×1. E
 - "Ảnh / phản hồi chưa duyệt" eyebrow: the image is unreviewed; the reply is edited by the doctor ("Phản hồi sau khi xem · bác sĩ cần chỉnh sửa"); "Hãy nhập phản hồi" when empty.
 
 ## Differences from the app design
+- The old dialog shows an illustrated face under the "MINH HỌA TỔNG HỢP" tag; the canvas draws a neutral photo placeholder with the same tag (no faces in the canvas, plan principle 6).
 - (generated) Notice of the old web not found verbatim in F10: "MINH HỌA TỔNG HỢP"
 
 ## Gotchas
 - Every CSKH dialog uses `crm-modal` with its own `#crm-error` line; errors of the commands are shown there, not in a toast.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WD7 · Nguyễn Thu Hà`.
+- Canvas note: Web › dialog followups → Mở / Xử lý · duyệt phản hồi trước khi đóng mục (app F10); ảnh bệnh nhân là khung minh họa tổng hợp, không dùng ảnh thật
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+```tsx
+// opens over the page; the backdrop and the page behind it are not part of this screen
+<Dialog old="modal" eyebrow="Ảnh / phản hồi chưa duyệt · BS. Tâm" title="Nguyễn Minh Linh" close={{"label":"Đóng hộp thoại"}}>
+  <Text old="subtitle">"Đỏ nhẹ đã giảm, không đau. Em gửi ảnh trước buổi hẹn."</Text>
+  <Notice tone="info" old="photo-disclaimer">"MINH HỌA TỔNG HỢP"</Notice>
+  <Field label="Phản hồi sau khi xem · bác sĩ cần chỉnh sửa" type="textarea" default="Pema đã xem cập nhật và ghi nhận vào hành trình. Bạn hãy tiếp tục theo hướng dẫn…" id="review-reply" />
+  <Button variant="primary" old="btn btn-primary">"Duyệt, phản hồi & đóng mục"</Button>  // action=review-submit followup=F001
+</Dialog>
+```
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WD7-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

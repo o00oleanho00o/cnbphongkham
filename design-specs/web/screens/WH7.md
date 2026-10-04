@@ -30,8 +30,107 @@ Group **WH · Ask Pema & Hướng dẫn** · state · Next.js: **built (U7)** (`
 - Layout `.guide-layout` 1152×1015 px: grid, columns `250px minmax(0px, 1fr)` (250px 874px), gap 28px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WH7): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Hướng dẫn">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item active icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Hướng dẫn"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <PageHeading eyebrow="Cách làm việc cùng Pema" title="Hướng dẫn sử dụng" subtitle="Hiểu hành trình, làm đúng bước và bàn giao đủ thông tin." />
+  <Grid cols="290px minmax(0,1fr)" gap="16px">
+    <Stack>
+      <Field label="Tìm chủ đề hoặc vai trò" type="search" placeholder="Ví dụ: dời lịch, bác sĩ, thu tiền" />
+      <FilterChipGroup direction="vertical" items={["Tất cả Mobile, CSKH & tài chính theo vai trò","CSKH CSKH chủ động & tài khoản nhân viên","Tất cả Hiểu hệ thống Pema","Tất cả Bắt đầu theo vai trò","Bác sĩ Hồ sơ & Patient 360","Lễ tân Lịch hẹn & tiếp đón","Điều phối Bác sĩ, phòng & dịch vụ","Bác sĩ Từ tư vấn đến buổi điều trị","Chăm sóc Chăm sóc & phản hồi tại nhà","Thu ngân Hóa đơn & thu tiền","Tất cả Khi cần kiểm tra lại"]} selected={["Điều phối Bác sĩ, phòng & dịch vụ"]} />
+    </Stack>
+    <Card>
+      <Heading level={2} sub="Thiết lập điều kiện để lịch có thể thực hiện được." eyebrow="Điều phối">"Bác sĩ, phòng & dịch vụ"</Heading>
+      <Grid cols="repeat(auto-fit,minmax(min(100%,520px),1fr))" gap="16px">
+        <Stack>
+          <Text>"Thời lượng dịch vụ, phòng phù hợp và ca bác sĩ là đầu vào của điều phối. Điều chỉnh các điều kiện này cần tính tới những lịch đã cam kết."</Text>
+          <Heading level={3}>"Cách thực hiện"</Heading>
+          <List ordered>
+            <ListItem title="Vào Bác sĩ & phòng, chọn ngày để xem số lịch và số phút điều trị của từng bác sĩ." />
+            <ListItem title="Bấm Xem lịch bác sĩ để chuyển sang lịch đã lọc." />
+            <ListItem title="Khi phòng cần bảo trì hoặc tạm không sử dụng, tạo khoảng khóa có ngày, giờ và lý do. Nếu đang vướng lịch, dời lịch trước rồi mới khóa." />
+            <ListItem title="Gỡ khóa khi phòng có thể hoạt động trở lại." />
+            <ListItem title="Vào Dịch vụ để sửa tên, giá, thời lượng, thời gian chuẩn bị hoặc tạm ngưng." />
+          </List>
+        </Stack>
+        <Notice tone="info" text="Thông tin đi tiếp như thế nào? Thông số dịch vụ mới áp dụng cho lịch mới. Khi chỉ dời giờ/phòng, lịch cũ giữ thông số đã chốt; đổi dịch vụ trong lịch lấy thông số của dịch vụ mới. Điểm cần nhớ Hiện ca bác sĩ là ca cố định, chưa có màn chỉnh ca hoặc nghỉ phép. Khóa phòng là thao tác điều phối, không phải hủy tự động các lịch đã đặt." />
+      </Grid>
+      <Row gap="8px" wrap>
+        <Button variant="primary">"Mở bác sĩ & phòng →"</Button>
+        <Button variant="primary">"Mở dịch vụ →"</Button>
+      </Row>
+      <Divider />
+      <Heading level={3}>"Đọc tiếp"</Heading>
+      <Row gap="8px" wrap>
+        <Button variant="secondary">"Lịch hẹn & tiếp đón →"</Button>
+      </Row>
+    </Card>
+  </Grid>
+</AppShell>
+```
+Kit components used: Button×5, Field×3, Sidebar×1, TopBar×1, PageHeading×1, Card×1; shared pieces: FilterChip×1, Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WH7-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
+
+## Tokens
+- Text colour: ink ×24, ink-soft ×13, heading ×2, surface ×2, link ×1
+- Background: surface ×3, link ×2, canvas-alt ×1, info-soft ×1
+- Border: line ×3, link ×2, brand-400 ×1, line-strong ×1
+- Radius: control ×11, field ×4
+- Font size: label ×15, eyebrow ×13, body ×9, body-lg ×4, page ×1, section ×1, small ×1
+- Font: Be Vietnam Pro ×45
+- Unmatched colours (no token within ΔE 3): `#467a9c` (text, ×2, nearest `info` ΔE 5.3); `#34536d` (text, ×1, nearest `link` ΔE 6.7)
+- Unmatched radius: 16px ×1 (nearest `card`)
+- Unmatched font size: 26px ×1 (nearest `title`)
+
+## Required text (keep verbatim)
+- Thông tin đi tiếp như thế nào? Thông số dịch vụ mới áp dụng cho lịch mới. Khi chỉ dời giờ/phòng, lịch cũ giữ thông số đã chốt; đổi dịch vụ trong lịch lấy thông số của dịch vụ mới. Điểm cần nhớ Hiện ca bác sĩ là ca cố định, chưa có màn chỉnh ca hoặc nghỉ phép. Khóa phòng là thao tác điều phối, không phải hủy tự động các lịch đã đặt.
+
+## Business rules
+- (old web notice) "Thông tin đi tiếp như thế nào? Thông số dịch vụ mới áp dụng cho lịch mới. Khi chỉ dời giờ/phòng, lịch cũ giữ thông số đã chốt; đổi dịch vụ trong lịch lấy thông số của dịch vụ mới. Điểm cần nhớ Hiện ca bác sĩ là ca cố định, chưa có màn chỉnh ca hoặc nghỉ phép. Khóa phòng là thao tác điều phối, không phải hủy tự động các lịch đã đặt."
+
+## Differences from the app design
+- (generated) Notice of the old web not found verbatim in F16: "Thông tin đi tiếp như thế nào? Thông số dịch vụ mới áp dụng cho lịch mới. Khi chỉ dời giờ/phòng, lịch cũ giữ thông số đã chốt; đổi dịch vụ trong lịch lấy thông số của dịch vụ mới. Điểm cần nhớ Hiện ca bác sĩ là ca cố định, chưa có màn chỉnh ca hoặc nghỉ phép. Khóa phòng là thao tác điều phối, không phải hủy tự động các lịch đã đặt."
+
+## Gotchas
+- (none recorded)
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WH7 · Hướng dẫn · Bác sĩ, phòng & dịch vụ`.
+- Canvas note: Web › guide · bài "resources"
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Hướng dẫn", page key "guide"
   <PageHeading eyebrow="Cách làm việc cùng Pema" title="Hướng dẫn sử dụng" subtitle="Hiểu hành trình, làm đúng bước và bàn giao đủ thông tin." />
@@ -69,33 +168,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Grid>
 </AppShell>
 ```
-Kit components used: Button×3, PageHeading×1, Field×1, Card×1; shared pieces: FilterChip×1, Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WH7-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
-
-## Tokens
-- Text colour: ink ×24, ink-soft ×13, heading ×2, surface ×2, link ×1
-- Background: surface ×3, link ×2, canvas-alt ×1, info-soft ×1
-- Border: line ×3, link ×2, brand-400 ×1, line-strong ×1
-- Radius: control ×11, field ×4
-- Font size: label ×15, eyebrow ×13, body ×9, body-lg ×4, page ×1, section ×1, small ×1
-- Font: Be Vietnam Pro ×45
-- Unmatched colours (no token within ΔE 3): `#467a9c` (text, ×2, nearest `info` ΔE 5.3); `#34536d` (text, ×1, nearest `link` ΔE 6.7)
-- Unmatched radius: 16px ×1 (nearest `card`)
-- Unmatched font size: 26px ×1 (nearest `title`)
-
-## Required text (keep verbatim)
-- Thông tin đi tiếp như thế nào? Thông số dịch vụ mới áp dụng cho lịch mới. Khi chỉ dời giờ/phòng, lịch cũ giữ thông số đã chốt; đổi dịch vụ trong lịch lấy thông số của dịch vụ mới. Điểm cần nhớ Hiện ca bác sĩ là ca cố định, chưa có màn chỉnh ca hoặc nghỉ phép. Khóa phòng là thao tác điều phối, không phải hủy tự động các lịch đã đặt.
-
-## Business rules
-- (old web notice) "Thông tin đi tiếp như thế nào? Thông số dịch vụ mới áp dụng cho lịch mới. Khi chỉ dời giờ/phòng, lịch cũ giữ thông số đã chốt; đổi dịch vụ trong lịch lấy thông số của dịch vụ mới. Điểm cần nhớ Hiện ca bác sĩ là ca cố định, chưa có màn chỉnh ca hoặc nghỉ phép. Khóa phòng là thao tác điều phối, không phải hủy tự động các lịch đã đặt."
-
-## Differences from the app design
-- (generated) Notice of the old web not found verbatim in F16: "Thông tin đi tiếp như thế nào? Thông số dịch vụ mới áp dụng cho lịch mới. Khi chỉ dời giờ/phòng, lịch cũ giữ thông số đã chốt; đổi dịch vụ trong lịch lấy thông số của dịch vụ mới. Điểm cần nhớ Hiện ca bác sĩ là ca cố định, chưa có màn chỉnh ca hoặc nghỉ phép. Khóa phòng là thao tác điều phối, không phải hủy tự động các lịch đã đặt."
-
-## Gotchas
-- (none recorded)
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WH7-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

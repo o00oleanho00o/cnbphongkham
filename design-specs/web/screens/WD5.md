@@ -32,21 +32,52 @@ Group **WD · CSKH & theo dõi** · dialog · Next.js: **built (U7)** (`/crm`) �
 - Layout `.modal-head` 704×36 px: flex row, space-between
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WD5): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
 ```tsx
-// opens over the page; the backdrop and the page behind it are not part of this screen
-<Dialog old="modal crm-modal" title="Đang điều trị" close={{"label":"Đóng hộp thoại"}} aria-label="Đang điều trị">
-  <Repeat of=".crm-task-row" count={42}>  // first item shown (demo values); the others have the same shape
-    <Row old="crm-task-row" gap="16px" justify="space-between">
-      <Text strong>"Nguyễn Minh Linh"</Text>
-      <Button variant="secondary" old="btn">"Mở hồ sơ"</Button>  // crm=patient-crm
-    </Row>
-    <RowVariants>actions "Mở hồ sơ" (secondary, crm=patient-crm) ×41</RowVariants>
-  </Repeat>
+// opens over the page "Tổng quan" (dimmed); the page behind it is not part of this screen
+<Dialog title="Đang điều trị" width="760px">
+  <List>
+    <ListItem title="Nguyễn Thu Hà">
+      <Button variant="secondary">"Mở hồ sơ"</Button>
+    </ListItem>
+    <ListItem title="Trần Minh Anh">
+      <Button variant="secondary">"Mở hồ sơ"</Button>
+    </ListItem>
+    <ListItem title="Lê Hoàng Yến">
+      <Button variant="secondary">"Mở hồ sơ"</Button>
+    </ListItem>
+    <ListItem title="Phạm Quốc Bảo">
+      <Button variant="secondary">"Mở hồ sơ"</Button>
+    </ListItem>
+    <ListItem title="Võ Ngọc Trâm">
+      <Button variant="secondary">"Mở hồ sơ"</Button>
+    </ListItem>
+    <ListItem title="Đặng Gia Linh">
+      <Button variant="secondary">"Mở hồ sơ"</Button>
+    </ListItem>
+    <ListItem title="Bùi Khánh Vy">
+      <Button variant="secondary">"Mở hồ sơ"</Button>
+    </ListItem>
+    <ListItem title="Hồ Thanh Tùng">
+      <Button variant="secondary">"Mở hồ sơ"</Button>
+    </ListItem>
+    <ListItem title="Ngô Mỹ Duyên">
+      <Button variant="secondary">"Mở hồ sơ"</Button>
+    </ListItem>
+    <ListItem title="Đỗ Phương Thảo">
+      <Button variant="secondary">"Mở hồ sơ"</Button>
+    </ListItem>
+    <ListItem title="Lý Tuấn Kiệt">
+      <Button variant="secondary">"Mở hồ sơ"</Button>
+    </ListItem>
+    <ListItem title="Mai Hải Yến">
+      <Button variant="secondary">"Mở hồ sơ"</Button>
+    </ListItem>
+  </List>
 </Dialog>
 ```
-Kit components used: Dialog×1, Button×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Button×12, Dialog×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - Not probed: this dialog has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WD5-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -69,10 +100,29 @@ Kit components used: Dialog×1, Button×1. Everything else (Row, Grid, Stack, Te
 - "Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH." (a booking after CSKH is not a returned patient until a check-in).
 
 ## Differences from the app design
-- (none recorded)
+- Canvas shows 12 sample patients (old web: 42 in the stage). The empty text "Chưa có khách trong nhóm." of an empty stage has no scripted state and no frame (inventory has one id for the dialog).
 
 ## Gotchas
 - Every CSKH dialog uses `crm-modal` with its own `#crm-error` line; errors of the commands are shown there, not in a toast.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WD5 · Đang điều trị`.
+- Canvas note: Web › dialog dashboard → ô vòng đời · tiêu đề là tên giai đoạn (5 giai đoạn), mỗi khách một dòng với "Mở hồ sơ" (mở tab CRM); chưa có trong app; danh sách mẫu hiển thị 12 khách, bản gốc có 42
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+```tsx
+// opens over the page; the backdrop and the page behind it are not part of this screen
+<Dialog old="modal crm-modal" title="Đang điều trị" close={{"label":"Đóng hộp thoại"}} aria-label="Đang điều trị">
+  <Repeat of=".crm-task-row" count={42}>  // first item shown (demo values); the others have the same shape
+    <Row old="crm-task-row" gap="16px" justify="space-between">
+      <Text strong>"Nguyễn Minh Linh"</Text>
+      <Button variant="secondary" old="btn">"Mở hồ sơ"</Button>  // crm=patient-crm
+    </Row>
+    <RowVariants>actions "Mở hồ sơ" (secondary, crm=patient-crm) ×41</RowVariants>
+  </Repeat>
+</Dialog>
+```
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WD5-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

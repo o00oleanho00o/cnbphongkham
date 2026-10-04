@@ -30,13 +30,96 @@ Group **WA · Khung & điều hướng** · state · Next.js: **restyle (U1)** (
 - Region `.page-heading` (page-heading): x 260, y 88, 1152×87 px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WA4): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
 ```tsx
-// appears over the page; the page behind it is not part of this screen
-<Notice tone="info" old="toast">"Đã cập nhật hàng đợi"</Notice>
+<AppShell role="owner-tam" active="Hôm nay">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item active icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Hôm nay"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <Toast>"Đã cập nhật hàng đợi"</Toast>
+  <PageHeading eyebrow="Pema · chăm sóc xuyên suốt" title="Hôm nay tại Pema" subtitle="Tiếp đón theo từng lịch hẹn · dữ liệu tổng hợp 20/09/2026">
+    <Button variant="primary" icon="add">"Đặt lịch mới"</Button>
+  </PageHeading>
+  <Grid cols="repeat(4, 1fr)" cols-390="repeat(2, 1fr)">
+    <Tile label="Tổng lịch" value="12" />
+    <Tile label="Đã đến" value="2" />
+    <Tile label="Chưa đến" value="8" />
+    <Tile label="Đang chờ" value="1" />
+  </Grid>
+  <Grid cols="repeat(4, 1fr)" cols-390="repeat(2, 1fr)">
+    <Tile label="Đang khám/điều trị" value="1" />
+    <Tile label="Hoàn tất" value="0" />
+    <Tile label="Đã hủy" value="0" />
+    <Tile label="Vắng hẹn" value="0" />
+  </Grid>
+  <Row gap="10px" wrap>
+    <Text strong>"13.500.000 ₫"</Text>
+    <Text small>"Phát sinh hóa đơn hôm nay"</Text>
+  </Row>
+  <Card>
+    <Grid cols="repeat(3,minmax(0,1fr))" gap="16px">
+      <Field label="Tên / mã KH / liên hệ" type="search" placeholder="Tìm nhanh khách…" />
+      <Field label="Trạng thái" type="select" default="Tất cả trạng thái" />
+      <Field label="Bác sĩ" type="select" default="Tất cả bác sĩ" />
+    </Grid>
+    <TableShell columns={["Giờ","Mã KH · Bệnh nhân","Nội dung","Trạng thái","Bác sĩ · Người tạo","Giá lịch dự kiến","Tiếp đón"]} rows={4}  /* cards at 390 */>
+      <Row sample="first row; demo values, the other rows have the same cells">
+        <Cell column="Giờ">
+          <Text>"08:00"</Text>
+        </Cell>
+        <Cell column="Mã KH · Bệnh nhân">
+          <Button variant="quiet">"Nguyễn Thu Hà"</Button>
+          <Text small>"P001 · 09•• ••• 100 · 28 tuổi"</Text>
+        </Cell>
+        <Cell column="Nội dung">
+          <Text>"Tái khám & đánh giá"</Text>
+          <Text small>"Nám · tăng sắc tố"</Text>
+        </Cell>
+        <Cell column="Trạng thái">
+          <Badge tone="info">"Đã đến"</Badge>
+        </Cell>
+        <Cell column="Bác sĩ · Người tạo">
+          <Text>"BS. Tâm"</Text>
+          <Text small>"Lễ tân"</Text>
+        </Cell>
+        <Cell column="Giá lịch dự kiến">
+          <Text>"300.000 ₫"</Text>
+        </Cell>
+        <Cell column="Tiếp đón">
+          <Button variant="primary">"Bắt đầu"</Button>
+        </Cell>
+      </Row>
+    </TableShell>
+  </Card>
+</AppShell>
 ```
-Kit components used: —; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Tile×8, Field×5, Button×5, Sidebar×1, TopBar×1, PageHeading×1, Card×1, TableShell×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WA4-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -63,6 +146,19 @@ Kit components used: —; shared pieces: Notice×1. Everything else (Row, Grid, 
 ## Gotchas
 - Role and page are kept in `sessionStorage` (`pema-staff`); a fresh browser context always starts as `owner-tam` unless `?staff=<id>` is in the URL.
 - The toast is outside `#app`; the snapshot adds any visible `.toast` to the tree of every screen.
+- The toast is a fixed pill at the bottom right of the viewport, above the page content; the page behind it ("Hôm nay", drawn in full at WB3) is only context.
+- Check-in and Vắng act at once: the row's status badge changes and the buttons become "Bắt đầu" (Đã đến) or "Mời vào phòng" (Đang chờ); no dialog opens.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WA4 · Thông báo nổi (toast)`.
+- Canvas note: Web › toast · hiện góc dưới phải trên trang "Hôm nay" sau Check-in hoặc Vắng (không mở hộp thoại), tự biến mất sau 2,8 giây; sau Check-in dòng chuyển sang "Bắt đầu". Trang phía sau chỉ để minh họa, đầy đủ ở WB3
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+```tsx
+// appears over the page; the page behind it is not part of this screen
+<Notice tone="info" old="toast">"Đã cập nhật hàng đợi"</Notice>
+```
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WA4-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

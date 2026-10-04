@@ -31,19 +31,21 @@ Group **WE · Ảnh, bác sĩ & phòng, dịch vụ** · dialog · Next.js: **pl
 - Layout `.two-col-form` 624×191 px: grid, columns `1fr 1fr` (304.5px 304.5px), gap 15px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WE6): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
 ```tsx
-// opens over the page; the backdrop and the page behind it are not part of this screen
-<Dialog old="modal ops-modal" eyebrow="Pema · vận hành" title="Chỉnh dịch vụ" close={{"label":"Đóng hộp thoại"}}>
-  <Field label="Tên dịch vụ" type="text" default="Tái khám & đánh giá" id="service-name" />
-  <Grid old="two-col-form" cols="1fr 1fr" gap="15px">
-    <Field label="Điều trị (phút)" type="number" default="30" id="service-duration" />
-    <Field label="Chuẩn bị (phút)" type="number" default="0" id="service-buffer" />
-    <Field label="Giá (VND)" type="number" default="300000" id="service-price" />
-    <Field label="Trạng thái" type="select" default="Đang dùng" id="service-active" options={["Đang dùng","Tạm ngưng"]} />
+// opens over the page "Dịch vụ" (dimmed); the page behind it is not part of this screen
+<Dialog eyebrow="Pema · vận hành" title="Chỉnh dịch vụ" width="720px">
+  <Field label="Tên dịch vụ" type="text" default="Tái khám & đánh giá" />
+  <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
+    <Field label="Điều trị (phút)" type="number" default="30" />
+    <Field label="Chuẩn bị (phút)" type="number" default="0" />
+    <Field label="Giá (VND)" type="number" default="300000" />
+    <Field label="Trạng thái" type="select" default="Đang dùng" options={["Đang dùng","Tạm ngưng"]} />
   </Grid>
-  <Button variant="primary" old="btn btn-primary">"Lưu dịch vụ"</Button>  // ops=save-service
+  <Dialog.Footer>
+    <Button variant="primary">"Lưu dịch vụ"</Button>
+  </Dialog.Footer>
 </Dialog>
 ```
 Kit components used: Field×5, Dialog×1, Button×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
@@ -72,7 +74,28 @@ Kit components used: Field×5, Dialog×1, Button×1. Everything else (Row, Grid,
 - (none recorded)
 
 ## Gotchas
-- (none recorded)
+- The dialog close button is drawn by `dlg` as an icon-only "×"; its accessible name "Đóng hộp thoại" is not a visible label, so it is exempted in demo_data.
+- "Trạng thái" is shown open so that both options (Đang dùng, Tạm ngưng) are visible.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WE6 · Chỉnh dịch vụ`.
+- Canvas note: Web › services › Chỉnh dịch vụ · chỉ chủ phòng khám (quyền cấu hình); app I9 cùng các trường · chưa có trên Next.js
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+```tsx
+// opens over the page; the backdrop and the page behind it are not part of this screen
+<Dialog old="modal ops-modal" eyebrow="Pema · vận hành" title="Chỉnh dịch vụ" close={{"label":"Đóng hộp thoại"}}>
+  <Field label="Tên dịch vụ" type="text" default="Tái khám & đánh giá" id="service-name" />
+  <Grid old="two-col-form" cols="1fr 1fr" gap="15px">
+    <Field label="Điều trị (phút)" type="number" default="30" id="service-duration" />
+    <Field label="Chuẩn bị (phút)" type="number" default="0" id="service-buffer" />
+    <Field label="Giá (VND)" type="number" default="300000" id="service-price" />
+    <Field label="Trạng thái" type="select" default="Đang dùng" id="service-active" options={["Đang dùng","Tạm ngưng"]} />
+  </Grid>
+  <Button variant="primary" old="btn btn-primary">"Lưu dịch vụ"</Button>  // ops=save-service
+</Dialog>
+```
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WE6-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

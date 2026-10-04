@@ -43,8 +43,172 @@ Group **WC · Hồ sơ & Patient 360** · tab · Next.js: **built (U3)** (`/pati
 - Layout `.linked-total` 601×55 px: flex row, gap 12px
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WC5): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Tìm bệnh nhân">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item active icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Tìm bệnh nhân"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <Button variant="quiet">"← Danh sách bệnh nhân"</Button>
+  <Card variant="hero">
+    <Row gap="20px" justify="space-between" wrap>
+      <Row gap="16px" wrap>
+        <Avatar size="lg">"TH"</Avatar>
+        <Stack>
+          <Eyebrow>"Hồ sơ P001 · Đặt hẹn"</Eyebrow>
+          <Heading level={1}>"Nguyễn Thu Hà"</Heading>
+          <Text small>"28 tuổi · Nữ · 09•• ••• 100 · Bác sĩ phụ trách: BS. Tâm"</Text>
+          <Row gap="6px" wrap>
+            <Badge tone="brand">"Nám · tăng sắc tố"</Badge>
+            <Badge tone="warning">"⚠ Da nhạy cảm"</Badge>
+            <Badge tone="warning">"⚠ Theo dõi đỏ da sau điều trị"</Badge>
+          </Row>
+        </Stack>
+      </Row>
+      <Row gap="8px" justify="flex-end" wrap>
+        <Button variant="secondary" icon="auto_awesome">"AI brief"</Button>
+        <Button variant="secondary">"Nhắn tin"</Button>
+        <Button variant="primary" icon="add">"Ghi buổi điều trị"</Button>
+      </Row>
+    </Row>
+  </Card>
+  <Tabs items={["Tổng quan","Tư vấn","Kế hoạch","Buổi điều trị","Ảnh trước / sau","Dịch vụ & tài chính","CRM & CSKH","Lịch sử"]} selected="Tư vấn" />
+  <Card title="Tiền sử & chẩn đoán" subtitle="Bác sĩ ghi nhận, không dùng AI tự chẩn đoán">
+    <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
+      <Field label="Tiền sử đã khai thác" type="textarea" required />
+      <Field label="Khám / chẩn đoán do bác sĩ xác nhận" type="textarea" required />
+    </Grid>
+    <Button variant="secondary">"Bác sĩ lưu nhận định"</Button>
+  </Card>
+  <Grid cols="minmax(0,1.45fr) minmax(0,1fr)" gap="16px">
+    <Card title="Tư vấn lâm sàng" subtitle="20/9/2026 · Bản ghi có người duyệt">
+      <Card.Aside>
+        <Badge tone="brand" dot={false}>"Đang soạn"</Badge>
+      </Card.Aside>
+      <Notice tone="warning" text="AI chỉ tạo bản nháp. Bác sĩ cần xem, sửa và xác nhận trước khi lưu vào hồ sơ." />
+      <Field label="Ghi chú ngắn / transcript mô phỏng" type="textarea" placeholder="Ví dụ: Da ổn hơn, đỏ giảm sau 2 ngày..." />
+      <Button variant="primary" icon="auto_awesome">"Tạo bản nháp ghi chú"</Button>
+    </Card>
+    <Card title="Bản nháp của Pema AI" subtitle="Được tạo từ các sự kiện trên hồ sơ">
+      <Card variant="soft" title="Chưa có bản nháp">
+        <Text>"Nhập vài ý chính bên trái để Pema tạo bản nháp có cấu trúc."</Text>
+      </Card>
+    </Card>
+  </Grid>
+  <Grid cols="minmax(0,1.35fr) minmax(360px,1fr)" gap="16px">
+    <Card title="Dịch vụ & liệu trình" subtitle="Giá chốt, số buổi và liên kết thu ngân">
+      <Card.Aside>
+        <Button variant="primary">"＋ Thêm dịch vụ"</Button>
+      </Card.Aside>
+      <Card variant="soft">
+        <Eyebrow>"LIỆU TRÌNH HIỆN TẠI · LP-P001"</Eyebrow>
+        <Heading level={3}>"Laser theo chỉ định"</Heading>
+        <Text><Strong>"2/5 buổi"</Strong> " · 12.000.000 ₫ sau giảm"</Text>
+        <Badge tone="info" dot={false}>"Đang thực hiện"</Badge>
+        <Progress value="40%" />
+        <Text>"Đã thu " <Strong>"5.350.000 ₫"</Strong></Text>
+        <Text small>"Còn 6.650.000 ₫"</Text>
+      </Card>
+      <Text>"Tiền cọc đã phân bổ " <Strong>"4.000.000 ₫"</Strong></Text>
+      <Button variant="quiet">"Mở thu ngân →"</Button>
+    </Card>
+    <Card title="Đơn thuốc" subtitle="Chỉ đơn đã duyệt mới xuất hiện trên Patient Mobile">
+      <Card.Aside>
+        <Button variant="secondary">"＋ Tạo đơn nháp"</Button>
+      </Card.Aside>
+      <Row gap="12px" justify="space-between" wrap>
+        <Stack>
+          <Eyebrow>"DT-P001 · 6/9/2026"</Eyebrow>
+          <Heading level={3}>"Đơn đã duyệt"</Heading>
+        </Stack>
+        <Badge tone="success" dot={false}>"Đã duyệt"</Badge>
+      </Row>
+      <Notice tone="info" text="Chăm sóc và phục hồi sau buổi điều trị" />
+      <List boxed>
+        <ListItem title="Cicaderm Cream 40ml" sub="Bôi lớp mỏng vùng cần chăm sóc · Sáng và tối · 14 ngày" />
+        <ListItem title="Fudareus B 15g" sub="Bôi theo vùng bác sĩ đã dặn · Buổi tối · 7 ngày" />
+      </List>
+      <Text small>"Đã duyệt bởi BS. Tâm · người bệnh có thể xem trên app"</Text>
+    </Card>
+  </Grid>
+  <Card title="Đơn thuốc & phiếu tư vấn" subtitle="Nháp → bác sĩ duyệt → in và hiển thị trên app">
+    <EmptyState title="Chưa có đơn từ catalog." icon="receipt_long" />
+  </Card>
+</AppShell>
+```
+Kit components used: Button×11, Card×9, Badge×6, Field×5, Sidebar×1, TopBar×1, Tabs×1, EmptyState×1; shared pieces: Notice×2. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- 1440×900 is the reference (Frame, Layout).
+- 1920×1020: no layout change
+- 1280×720: no layout change
+- 1024×768: card .patient-hero: flex-wrap off → on; .grid: grid 2 → 1 columns; .linked-workspace: grid 2 → 1 columns; .sidebar: width 232 → 204px
+- 390×844: card .patient-hero: display flex → block; .two-col-form: display grid → block; .panel-head: flex-wrap off → on; .grid: grid 2 → 1 columns; card .linked-plan: grid 2 → 1 columns; .linked-total: flex-wrap off → on; .linked-workspace: display grid → block; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "BS. Tâm", "Chủ phòng khám", "Không gian phòng khám" (+2)
+- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
+
+## Tokens
+- Text colour: ink-soft ×15, heading ×7, ink ×3, surface ×3, accent-strong ×2, link ×2, warning ×1
+- Background: surface ×11, brand-50 ×4, field ×3, link ×3, row-hover ×3, brand-400 ×1, canvas-alt ×1, success-soft ×1
+- Border: line ×11, line-strong ×7, link ×3, info-line ×1, warning-line ×1
+- Radius: field ×11, card ×7, control ×3, pill ×1
+- Font size: label ×30, eyebrow ×13, body-lg ×9, micro ×8, body ×1, metric ×1, small ×1, subtitle ×1
+- Font: Be Vietnam Pro ×64
+- Unmatched colours (no token within ΔE 3): `#688095` (text, ×7, nearest `ink-soft` ΔE 7.4); `#20496d` (text, ×6, nearest `link` ΔE 5.1); `#70879a` (text, ×6, nearest `ink-soft` ΔE 10.1); `#34536d` (text, ×4, nearest `link` ΔE 6.7); `#2b6c96` (text, ×2, nearest `info` ΔE 3.4); `#6d9275` (text, ×2, nearest `success` ΔE 15); `#ecc4bd` (border, ×2, nearest `danger-line` ΔE 3.6); `#edf1ec` (border, ×2, nearest `success-soft` ΔE 4.1); `#31734c` (text, ×1, nearest `success` ΔE 5.6); `#467a9c` (text, ×1, nearest `info` ΔE 5.3); `#668369` (text, ×1, nearest `success` ΔE 11.7); `#685019` (text, ×1, nearest `warning` ΔE 9.8)
+- Unmatched radius: 16px ×1 (nearest `card`), 99px ×4 (nearest `hero`), 7px ×8 (nearest `field`), 8px ×3 (nearest `field`)
+
+## Required text (keep verbatim)
+- AI chỉ tạo bản nháp. Bác sĩ cần xem, sửa và xác nhận trước khi lưu vào hồ sơ.
+- Chăm sóc và phục hồi sau buổi điều trị
+- Chưa có đơn từ catalog. (empty state)
+
+## Business rules
+- (old web notice) "AI chỉ tạo bản nháp. Bác sĩ cần xem, sửa và xác nhận trước khi lưu vào hồ sơ."
+- (old web notice) "Chăm sóc và phục hồi sau buổi điều trị"
+- Clinical actions need the `clinical` capability (owner, doctor); without it `action()` answers "Cần tài khoản bác sĩ để thực hiện." and `staff-context.js › apply()` removes the controls.
+- "AI chỉ tạo bản nháp. Bác sĩ cần xem, sửa và xác nhận trước khi lưu vào hồ sơ."
+- "Bác sĩ ghi nhận, không dùng AI tự chẩn đoán" (subtitle of "Tiền sử & chẩn đoán").
+- "Nhập tiền sử và nhận định/chẩn đoán do bác sĩ xác nhận." when saving empty.
+- Draft flow: "Tạo bản nháp ghi chú" (toast "Đã tạo bản nháp — hãy kiểm tra trước khi duyệt") then "Duyệt & lưu vào Patient 360" (toast "Đã duyệt và nối vào Patient 360").
+
+## Differences from the app design
+- App J1/F2 shows the same flow in one column; the web has two columns "Tư vấn lâm sàng" and "Bản nháp của Pema AI".
+- (generated) Notice of the old web not found verbatim in J1/F2: "Chăm sóc và phục hồi sau buổi điều trị"
+
+## Gotchas
+- Opening a patient from the list is a row click (`tr[data-patient]`) or the "Mở →" button; the tab is kept in the module variable `tab`, so a re-render keeps it.
+
+## Web canvas
+- Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WC5 · Patient 360 · Tư vấn`.
+- Canvas note: Web › patients › Patient 360 › Tư vấn · app J1/F2 là một cột; web có 2 cột "Tư vấn lâm sàng" và "Bản nháp của Pema AI", cộng form tiền sử & chẩn đoán do bác sĩ ghi nhận
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Tìm bệnh nhân", page key "patient"
   <Button variant="quiet" old="btn btn-quiet back-to-list">"← Danh sách bệnh nhân"</Button>  // nav=patients
@@ -135,46 +299,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Grid>
 </AppShell>
 ```
-Kit components used: Button×9, Card×9, Badge×5, Field×3, Tabs×1, EmptyState×1; shared pieces: Notice×2. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- 1440×900 is the reference (Frame, Layout).
-- 1920×1020: no layout change
-- 1280×720: no layout change
-- 1024×768: card .patient-hero: flex-wrap off → on; .grid: grid 2 → 1 columns; .linked-workspace: grid 2 → 1 columns; .sidebar: width 232 → 204px
-- 390×844: card .patient-hero: display flex → block; .two-col-form: display grid → block; .panel-head: flex-wrap off → on; .grid: grid 2 → 1 columns; card .linked-plan: grid 2 → 1 columns; .linked-total: flex-wrap off → on; .linked-workspace: display grid → block; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "BS. Tâm", "Chủ phòng khám", "Không gian phòng khám" (+2)
-- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
-
-## Tokens
-- Text colour: ink-soft ×15, heading ×7, ink ×3, surface ×3, accent-strong ×2, link ×2, warning ×1
-- Background: surface ×11, brand-50 ×4, field ×3, link ×3, row-hover ×3, brand-400 ×1, canvas-alt ×1, success-soft ×1
-- Border: line ×11, line-strong ×7, link ×3, info-line ×1, warning-line ×1
-- Radius: field ×11, card ×7, control ×3, pill ×1
-- Font size: label ×30, eyebrow ×13, body-lg ×9, micro ×8, body ×1, metric ×1, small ×1, subtitle ×1
-- Font: Be Vietnam Pro ×64
-- Unmatched colours (no token within ΔE 3): `#688095` (text, ×7, nearest `ink-soft` ΔE 7.4); `#20496d` (text, ×6, nearest `link` ΔE 5.1); `#70879a` (text, ×6, nearest `ink-soft` ΔE 10.1); `#34536d` (text, ×4, nearest `link` ΔE 6.7); `#2b6c96` (text, ×2, nearest `info` ΔE 3.4); `#6d9275` (text, ×2, nearest `success` ΔE 15); `#ecc4bd` (border, ×2, nearest `danger-line` ΔE 3.6); `#edf1ec` (border, ×2, nearest `success-soft` ΔE 4.1); `#31734c` (text, ×1, nearest `success` ΔE 5.6); `#467a9c` (text, ×1, nearest `info` ΔE 5.3); `#668369` (text, ×1, nearest `success` ΔE 11.7); `#685019` (text, ×1, nearest `warning` ΔE 9.8)
-- Unmatched radius: 16px ×1 (nearest `card`), 99px ×4 (nearest `hero`), 7px ×8 (nearest `field`), 8px ×3 (nearest `field`)
-
-## Required text (keep verbatim)
-- AI chỉ tạo bản nháp. Bác sĩ cần xem, sửa và xác nhận trước khi lưu vào hồ sơ.
-- Chăm sóc và phục hồi sau buổi điều trị
-- Chưa có đơn từ catalog. (empty state)
-
-## Business rules
-- (old web notice) "AI chỉ tạo bản nháp. Bác sĩ cần xem, sửa và xác nhận trước khi lưu vào hồ sơ."
-- (old web notice) "Chăm sóc và phục hồi sau buổi điều trị"
-- Clinical actions need the `clinical` capability (owner, doctor); without it `action()` answers "Cần tài khoản bác sĩ để thực hiện." and `staff-context.js › apply()` removes the controls.
-- "AI chỉ tạo bản nháp. Bác sĩ cần xem, sửa và xác nhận trước khi lưu vào hồ sơ."
-- "Bác sĩ ghi nhận, không dùng AI tự chẩn đoán" (subtitle of "Tiền sử & chẩn đoán").
-- "Nhập tiền sử và nhận định/chẩn đoán do bác sĩ xác nhận." when saving empty.
-- Draft flow: "Tạo bản nháp ghi chú" (toast "Đã tạo bản nháp — hãy kiểm tra trước khi duyệt") then "Duyệt & lưu vào Patient 360" (toast "Đã duyệt và nối vào Patient 360").
-
-## Differences from the app design
-- App J1/F2 shows the same flow in one column; the web has two columns "Tư vấn lâm sàng" and "Bản nháp của Pema AI".
-- (generated) Notice of the old web not found verbatim in J1/F2: "Chăm sóc và phục hồi sau buổi điều trị"
-
-## Gotchas
-- Opening a patient from the list is a row click (`tr[data-patient]`) or the "Mở →" button; the tab is kept in the module variable `tab`, so a re-render keeps it.
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WC5-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

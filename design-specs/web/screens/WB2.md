@@ -33,8 +33,96 @@ Group **WB · Vận hành: tổng quan, hôm nay, lịch** · state · Next.js: 
 - Layout `.crm-kpis` 1152×137 px: grid, columns `repeat(3, minmax(0px, 1fr))` (374.656px 374.672px 374.656px), gap 14px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WB2): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="doctor-mai" active="Tổng quan">
+  <Sidebar old="sidebar">  // menu of account `doctor-mai`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item active icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="account_balance_wallet">"Doanh số của tôi"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BM"</Avatar> <Text><Strong>"BS. Mai"</Strong> <Small>"Bác sĩ điều trị"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Tổng quan"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Mai · Bác sĩ điều trị" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <PageHeading eyebrow="Pema · chăm sóc xuyên suốt" title="Không gian bác sĩ · BS. Mai" subtitle="Lịch cá nhân, hồ sơ phụ trách và phản hồi cần xem.">
+    <Button variant="secondary">"Doanh số của tôi →"</Button>
+    <Button variant="primary">"Lịch khám của tôi →"</Button>
+  </PageHeading>
+  <Grid cols="repeat(3, 1fr)" cols-390="repeat(2, 1fr)">
+    <Tile label="Lịch hôm nay" value="8" note="Lịch theo tài khoản bác sĩ" chevron />
+    <Tile label="Hồ sơ phụ trách" value="22" note="Patient 360 của bác sĩ" chevron />
+    <Tile label="Cần bác sĩ xem" value="2" note="Phản hồi đang mở" chevron />
+  </Grid>
+  <Card title="Lịch khám của tôi" subtitle="Không bao gồm dashboard CSKH hoặc tài chính toàn phòng khám">
+    <TableShell columns={["Giờ","Bệnh nhân","Trạng thái",""]} rows={6} foot="8 lịch khám của BS. Mai"  /* cards at 390 */>
+      <Row sample="first row; demo values, the other rows have the same cells">
+        <Cell column="Giờ">
+          <Text>"08:00"</Text>
+        </Cell>
+        <Cell column="Bệnh nhân">
+          <Text>"Trần Minh Anh"</Text>
+        </Cell>
+        <Cell column="Trạng thái">
+          <Badge tone="info">"Chưa đến"</Badge>
+        </Cell>
+        <Cell column="">
+          <Button variant="secondary">"Mở hồ sơ"</Button>
+        </Cell>
+      </Row>
+    </TableShell>
+  </Card>
+</AppShell>
+```
+Kit components used: Button×5, Tile×3, Field×2, Sidebar×1, TopBar×1, PageHeading×1, Card×1, TableShell×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WB2-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
+
+## Tokens
+- Text colour: ink ×22, info ×8, ink-soft ×4, heading ×1, surface ×1
+- Background: surface ×13, info-soft ×8, row-hover ×4, link ×1
+- Border: tile ×32, line-strong ×9, line ×4, link ×1
+- Radius: field ×10, card ×1
+- Font size: small ×20, label ×14, micro ×8, eyebrow ×4, body-lg ×1, page ×1
+- Font: Be Vietnam Pro ×51
+- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×9, nearest `link` ΔE 6.7); `#698095` (text, ×3, nearest `ink-soft` ΔE 7.4); `#20496d` (text, ×1, nearest `link` ΔE 5.1); `#467a9c` (text, ×1, nearest `info` ΔE 5.3); `#70879a` (text, ×1, nearest `ink-soft` ΔE 10.1)
+- Unmatched radius: 16px ×3 (nearest `card`), 99px ×8 (nearest `hero`)
+- Unmatched font size: 29px ×3 (nearest `page`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- "Không bao gồm dashboard CSKH hoặc tài chính toàn phòng khám" (subtitle of "Lịch khám của tôi").
+
+## Differences from the app design
+- App B1/B2 are the doctor workspace in mobile shape; the web adds the link "Doanh số của tôi →" to finance.
+
+## Gotchas
+- The demo day is fixed: 2026-09-20 09:00 (`DAY` in `operations-data.js` and `crm-automation.js`). Dates before that day cannot be booked.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WB2 · Tổng quan · Bác sĩ`.
+- Canvas note: Web › dashboard (tài khoản bác sĩ) · app B1/B2 là không gian bác sĩ dạng mobile; web thêm liên kết "Doanh số của tôi →" sang tài chính; ba KPI là nút mở danh sách; tên và giờ khám là dữ liệu tổng hợp
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="doctor-mai">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Tổng quan", page key "dashboard"
   <PageHeading eyebrow="Pema · chăm sóc xuyên suốt" title="Không gian bác sĩ · BS. Mai" subtitle="Lịch cá nhân, hồ sơ phụ trách và phản hồi cần xem.">
@@ -67,33 +155,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Card>
 </AppShell>
 ```
-Kit components used: Button×3, Tile×3, PageHeading×1, Card×1, TableShell×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WB2-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
-
-## Tokens
-- Text colour: ink ×22, info ×8, ink-soft ×4, heading ×1, surface ×1
-- Background: surface ×13, info-soft ×8, row-hover ×4, link ×1
-- Border: tile ×32, line-strong ×9, line ×4, link ×1
-- Radius: field ×10, card ×1
-- Font size: small ×20, label ×14, micro ×8, eyebrow ×4, body-lg ×1, page ×1
-- Font: Be Vietnam Pro ×51
-- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×9, nearest `link` ΔE 6.7); `#698095` (text, ×3, nearest `ink-soft` ΔE 7.4); `#20496d` (text, ×1, nearest `link` ΔE 5.1); `#467a9c` (text, ×1, nearest `info` ΔE 5.3); `#70879a` (text, ×1, nearest `ink-soft` ΔE 10.1)
-- Unmatched radius: 16px ×3 (nearest `card`), 99px ×8 (nearest `hero`)
-- Unmatched font size: 29px ×3 (nearest `page`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- "Không bao gồm dashboard CSKH hoặc tài chính toàn phòng khám" (subtitle of "Lịch khám của tôi").
-
-## Differences from the app design
-- App B1/B2 are the doctor workspace in mobile shape; the web adds the link "Doanh số của tôi →" to finance.
-
-## Gotchas
-- The demo day is fixed: 2026-09-20 09:00 (`DAY` in `operations-data.js` and `crm-automation.js`). Dates before that day cannot be booked.
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WB2-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

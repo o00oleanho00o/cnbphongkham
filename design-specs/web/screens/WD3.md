@@ -30,8 +30,63 @@ Group **WD · CSKH & theo dõi** · dialog · Next.js: **built (U7)** (`/crm`) �
 - Layout `.modal-head` 704×36 px: flex row, space-between
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WD3): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+// opens over the page "CSKH hôm nay" (dimmed); the page behind it is not part of this screen
+<Dialog title="Protocol chăm sóc mẫu" width="760px">
+  <Text small>"Hoàn tất Laser CO2 → D+1 hỏi tình trạng → D+3 yêu cầu ảnh → D+7 bác sĩ review → D+30 dự kiến tái khám."</Text>
+  <List>
+    <ListItem title="Sau thủ thuật D+1" sub="Hỏi tình trạng sau thủ thuật" sub2="Hoàn tất buổi → 1 ngày → tạo việc cho CSKH" />
+    <ListItem title="D+3 cần ảnh" sub="Mời gửi cập nhật/ảnh có đồng ý qua Patient Mobile" sub2="Hoàn tất buổi → 3 ngày → tạo việc cho CSKH" />
+    <ListItem title="D+7 bác sĩ review" sub="Chuyển bác sĩ xem ảnh và phản hồi" sub2="Hoàn tất buổi → 7 ngày → tạo việc cho bác sĩ" />
+    <ListItem title="Đến hạn tái khám" sub="Xác nhận kế hoạch tái khám" sub2="Ngày dự kiến → 0 ngày → tạo việc cho CSKH" />
+    <ListItem title="Quá hạn tái khám" sub="Hỏi trở ngại và hỗ trợ đặt lại lịch" sub2="Ngày dự kiến → 1 ngày → tạo việc cho CSKH" />
+    <ListItem title="Vắng/hủy chưa đặt lại" sub="Liên hệ hỗ trợ chọn lịch mới" sub2="Hủy/vắng hẹn → 1 ngày → tạo việc cho CSKH" />
+    <ListItem title="Nguy cơ bỏ liệu trình" sub="Trao đổi về các buổi còn lại" sub2="Còn buổi → 45 ngày → tạo việc cho CSKH" />
+    <ListItem title="90 ngày chưa quay lại" sub="Hỏi thăm nhu cầu chăm sóc" sub2="Lần khám gần nhất → 90 ngày → tạo việc cho CSKH" />
+    <ListItem title="180 ngày chưa quay lại" sub="Chăm sóc lại khách cũ" sub2="Lần khám gần nhất → 180 ngày → tạo việc cho CSKH" />
+    <ListItem title="Sinh nhật trong tuần" sub="Chúc mừng sinh nhật, không gửi tự động" sub2="Ngày sinh → 7 ngày → tạo việc cho CSKH" />
+  </List>
+  <Notice tone="info" text="Ngưỡng và nội dung là mẫu cần chủ phòng khám duyệt trước pilot. Không tự gửi tin hoặc tự duyệt y khoa." />
+</Dialog>
+```
+Kit components used: Dialog×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- Not probed: this dialog has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WD3-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
+
+## Tokens
+- Text colour: ink ×20, ink-soft ×11, heading ×1
+- Background: surface ×1, table-head ×1
+- Border: tile ×10
+- Radius: field ×1
+- Font size: small ×21, label ×10, micro ×1
+- Font: Be Vietnam Pro ×33
+- Unmatched colours (no token within ΔE 3): `#5b7487` (text, ×1, nearest `ink-soft` ΔE 3.2)
+- Unmatched radius: 18px ×1 (nearest `modal`), 8px ×1 (nearest `field`)
+- Unmatched font size: 21px ×1 (nearest `subtitle`)
+
+## Required text (keep verbatim)
+- Ngưỡng và nội dung là mẫu cần chủ phòng khám duyệt trước pilot. Không tự gửi tin hoặc tự duyệt y khoa.
+
+## Business rules
+- (old web notice) "Ngưỡng và nội dung là mẫu cần chủ phòng khám duyệt trước pilot. Không tự gửi tin hoặc tự duyệt y khoa."
+- "Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH." (a booking after CSKH is not a returned patient until a check-in).
+- "Ngưỡng và nội dung là mẫu cần chủ phòng khám duyệt trước pilot. Không tự gửi tin hoặc tự duyệt y khoa."
+
+## Differences from the app design
+- Canvas draws the ten rule articles as a divided list (title, step, trigger line) instead of ten bare stacks; same text and order.
+
+## Gotchas
+- Every CSKH dialog uses `crm-modal` with its own `#crm-error` line; errors of the commands are shown there, not in a toast.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WD3 · Protocol chăm sóc mẫu`.
+- Canvas note: Web › dialog crm → Xem protocol · mẫu quy tắc chăm sóc chờ chủ phòng khám duyệt; không có màn tương ứng trong app
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 // opens over the page; the backdrop and the page behind it are not part of this screen
 <Dialog old="modal crm-modal" title="Protocol chăm sóc mẫu" close={{"label":"Đóng hộp thoại"}} aria-label="Protocol chăm sóc mẫu">
@@ -89,35 +144,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   <Notice tone="info" old="notice">"Ngưỡng và nội dung là mẫu cần chủ phòng khám duyệt trước pilot. Không tự gửi tin hoặc tự duyệt y khoa."</Notice>
 </Dialog>
 ```
-Kit components used: Dialog×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- Not probed: this dialog has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WD3-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
-
-## Tokens
-- Text colour: ink ×20, ink-soft ×11, heading ×1
-- Background: surface ×1, table-head ×1
-- Border: tile ×10
-- Radius: field ×1
-- Font size: small ×21, label ×10, micro ×1
-- Font: Be Vietnam Pro ×33
-- Unmatched colours (no token within ΔE 3): `#5b7487` (text, ×1, nearest `ink-soft` ΔE 3.2)
-- Unmatched radius: 18px ×1 (nearest `modal`), 8px ×1 (nearest `field`)
-- Unmatched font size: 21px ×1 (nearest `subtitle`)
-
-## Required text (keep verbatim)
-- Ngưỡng và nội dung là mẫu cần chủ phòng khám duyệt trước pilot. Không tự gửi tin hoặc tự duyệt y khoa.
-
-## Business rules
-- (old web notice) "Ngưỡng và nội dung là mẫu cần chủ phòng khám duyệt trước pilot. Không tự gửi tin hoặc tự duyệt y khoa."
-- "Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH." (a booking after CSKH is not a returned patient until a check-in).
-- "Ngưỡng và nội dung là mẫu cần chủ phòng khám duyệt trước pilot. Không tự gửi tin hoặc tự duyệt y khoa."
-
-## Differences from the app design
-- (none recorded)
-
-## Gotchas
-- Every CSKH dialog uses `crm-modal` with its own `#crm-error` line; errors of the commands are shown there, not in a toast.
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WD3-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

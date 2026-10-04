@@ -35,8 +35,148 @@ Group **WG · Tài chính PB02** · tab · Next.js: **planned (U6)** (`/finance`
 - Layout `.tools` 326×67 px: flex row wrap, gap 12px
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WG4): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Tài chính & tiền thủ thuật">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item active icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Tài chính & tiền thủ thuật"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <Row gap="20px" justify="space-between" wrap>
+    <Stack>
+      <Text small>"ĐIỀU HÀNH • PEMA CLINIC"</Text>
+      <Heading level={1}>"Tài chính & tiền thủ thuật"</Heading>
+    </Stack>
+    <Row gap="12px" wrap>
+      <Field label="Kỳ báo cáo" type="month" default="2026-09" />
+      <Button variant="secondary">"Làm mới"</Button>
+    </Row>
+  </Row>
+  <Tabs items={["Tổng quan","Tiền thủ thuật","Chính sách tỷ lệ","Phiếu thu & thông báo"]} selected="Chính sách tỷ lệ" />
+  <Card title="Chính sách theo thủ thuật">
+    <Text small>"Áp dụng cho lượt tạo sau khi lưu. Người phối hợp có thể được kế toán phân bổ riêng tại lượt thực hiện."</Text>
+    <Row gap="16px" justify="space-between" wrap>
+      <Stack>
+        <Text strong>"Tái khám & đánh giá"</Text>
+        <Text small>"Phiên bản 1"</Text>
+      </Stack>
+      <Row gap="12px" wrap>
+        <Field label="Cơ sở" type="select" default="Giá sau giảm" />
+        <Field label="Tỷ lệ %" type="number" required default="10" />
+        <Button variant="secondary">"Lưu tỷ lệ"</Button>
+      </Row>
+    </Row>
+    <Divider />
+    <Row gap="16px" justify="space-between" wrap>
+      <Stack>
+        <Text strong>"Tư vấn da liễu"</Text>
+        <Text small>"Phiên bản 1"</Text>
+      </Stack>
+      <Row gap="12px" wrap>
+        <Field label="Cơ sở" type="select" default="Giá sau giảm" />
+        <Field label="Tỷ lệ %" type="number" required default="15" />
+        <Button variant="secondary">"Lưu tỷ lệ"</Button>
+      </Row>
+    </Row>
+    <Divider />
+    <Row gap="16px" justify="space-between" wrap>
+      <Stack>
+        <Text strong>"Laser theo chỉ định"</Text>
+        <Text small>"Phiên bản 1"</Text>
+      </Stack>
+      <Row gap="12px" wrap>
+        <Field label="Cơ sở" type="select" default="Giá sau giảm" />
+        <Field label="Tỷ lệ %" type="number" required default="20" />
+        <Button variant="secondary">"Lưu tỷ lệ"</Button>
+      </Row>
+    </Row>
+    <Divider />
+    <Row gap="16px" justify="space-between" wrap>
+      <Stack>
+        <Text strong>"Chăm sóc theo chỉ định"</Text>
+        <Text small>"Phiên bản 1"</Text>
+      </Stack>
+      <Row gap="12px" wrap>
+        <Field label="Cơ sở" type="select" default="Giá sau giảm" />
+        <Field label="Tỷ lệ %" type="number" required default="12" />
+        <Button variant="secondary">"Lưu tỷ lệ"</Button>
+      </Row>
+    </Row>
+    <Divider />
+    <Text small>"Cơ sở tính có 3 lựa chọn: Giá sau giảm · Giá niêm yết · Theo thực thu."</Text>
+    <Text small>"Bác sĩ xem tỷ lệ trên các lượt của mình; chính sách chung thuộc kế toán. (nội dung thay cho các form khi đăng nhập bác sĩ)"</Text>
+  </Card>
+</AppShell>
+```
+Kit components used: Field×11, Button×7, Sidebar×1, TopBar×1, Tabs×1, Card×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- 1440×900 is the reference (Frame, Layout).
+- 1920×1020: no layout change
+- 1280×720: no layout change
+- 1024×768: group: flex row → column; .sidebar: width 232 → 204px
+- 390×844: group: flex row → column; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "BS. Tâm", "Chủ phòng khám", "Không gian phòng khám" (+1)
+- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
+
+## Tokens
+- Text colour: ink-soft ×15, link ×8, ink ×6, surface ×1
+- Background: surface ×18, link ×1
+- Border: line ×10, line-strong ×9, tile ×4
+- Radius: control ×18
+- Font size: label ×14, body ×13, eyebrow ×1
+- Font: Be Vietnam Pro ×30
+- Unmatched colours (no token within ΔE 3): none
+- Unmatched radius: 18px ×1 (nearest `modal`)
+- Unmatched font size: 26px ×1 (nearest `title`), 19px ×1 (nearest `subtitle`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- Revenue ("Doanh số thực hiện") follows the completion date of the procedure; cash ("Thực thu") follows the receipt date; they are tracked separately.
+- "Tiền thủ thuật đã duyệt": "Không phải lợi nhuận phòng khám".
+- "Áp dụng cho lượt tạo sau khi lưu. Người phối hợp có thể được kế toán phân bổ riêng tại lượt thực hiện."
+- Doctors see "Bác sĩ xem tỷ lệ trên các lượt của mình; chính sách chung thuộc kế toán." instead of the forms.
+- PB02 rate snapshots: "Tỷ lệ lưu theo từng lượt. Đổi chính sách không tính lại lịch sử." The version ("Phiên bản 1") belongs to the service policy; only lines created after saving use a new rate.
+
+## Differences from the app design
+- App H8 has no per-service basis selection (Giá sau giảm, Giá niêm yết, Theo thực thu) or version line; the web keeps them.
+
+## Gotchas
+- The tab content refreshes every 10 s (`setInterval`) unless an input has focus or the entry form is open; a pending form is never overwritten (`dirty` flag).
+- Without the API the page shows "Chưa kết nối dữ liệu tài chính: <error>. Chạy python prototype/finance_server.py rồi thử lại." in `#error` (see WG9).
+
+## Web canvas
+- Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WG4 · Tài chính · Chính sách tỷ lệ`.
+- Canvas note: Web › finance › Chính sách tỷ lệ · mỗi thủ thuật một dòng có phiên bản; tỷ lệ lưu theo từng lượt, không tính lại lịch sử · chưa có trên Next.js
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Tài chính & tiền thủ thuật", page key "finance"
   <Row gap="20px" justify="space-between">
@@ -91,42 +231,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Card>
 </AppShell>
 ```
-Kit components used: Field×9, Button×5, Tabs×1, Card×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- 1440×900 is the reference (Frame, Layout).
-- 1920×1020: no layout change
-- 1280×720: no layout change
-- 1024×768: group: flex row → column; .sidebar: width 232 → 204px
-- 390×844: group: flex row → column; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "BS. Tâm", "Chủ phòng khám", "Không gian phòng khám" (+1)
-- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
-
-## Tokens
-- Text colour: ink-soft ×15, link ×8, ink ×6, surface ×1
-- Background: surface ×18, link ×1
-- Border: line ×10, line-strong ×9, tile ×4
-- Radius: control ×18
-- Font size: label ×14, body ×13, eyebrow ×1
-- Font: Be Vietnam Pro ×30
-- Unmatched colours (no token within ΔE 3): none
-- Unmatched radius: 18px ×1 (nearest `modal`)
-- Unmatched font size: 26px ×1 (nearest `title`), 19px ×1 (nearest `subtitle`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- Revenue ("Doanh số thực hiện") follows the completion date of the procedure; cash ("Thực thu") follows the receipt date; they are tracked separately.
-- "Tiền thủ thuật đã duyệt": "Không phải lợi nhuận phòng khám".
-- "Áp dụng cho lượt tạo sau khi lưu. Người phối hợp có thể được kế toán phân bổ riêng tại lượt thực hiện."
-- Doctors see "Bác sĩ xem tỷ lệ trên các lượt của mình; chính sách chung thuộc kế toán." instead of the forms.
-
-## Differences from the app design
-- (none recorded)
-
-## Gotchas
-- The tab content refreshes every 10 s (`setInterval`) unless an input has focus or the entry form is open; a pending form is never overwritten (`dirty` flag).
-- Without the API the page shows "Chưa kết nối dữ liệu tài chính: <error>. Chạy python prototype/finance_server.py rồi thử lại." in `#error` (see WG9).
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WG4-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

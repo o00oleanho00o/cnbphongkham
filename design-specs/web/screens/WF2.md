@@ -31,15 +31,17 @@ Group **WF · Thu ngân & lên đơn** · dialog · Next.js: **planned (U5)** (`
 - Layout `.modal-head` 624×42 px: flex row, space-between
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WF2): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
 ```tsx
-// opens over the page; the backdrop and the page behind it are not part of this screen
-<Dialog old="modal ops-modal" eyebrow="Pema · vận hành" title="Thu tiền · Nguyễn Minh Linh" close={{"label":"Đóng hộp thoại"}}>
-  <Notice tone="info" old="notice">"HD-DEMO-001 · Còn lại 150.000 ₫"</Notice>
-  <Field label="Số tiền (VND)" type="number" default="150000" id="pay-amount" />
-  <Field label="Phương thức" type="select" default="Tiền mặt" id="pay-method" options={["Tiền mặt","Chuyển khoản"]} />
-  <Button variant="primary" old="btn btn-primary">"Xác nhận thu tiền"</Button>  // ops=save-pay
+// opens over the page "Thu ngân" (dimmed); the page behind it is not part of this screen
+<Dialog eyebrow="Pema · vận hành" title="Thu tiền · Nguyễn Thu Hà" width="640px">
+  <Notice tone="info" text="HD-DEMO-001 · Còn lại 150.000 ₫" />
+  <Field label="Số tiền (VND)" type="number" default="150000" />
+  <Field label="Phương thức" type="select" default="Tiền mặt" options={["Tiền mặt","Chuyển khoản"]} />
+  <Row gap="8px" wrap>
+    <Button variant="primary">"Xác nhận thu tiền"</Button>
+  </Row>
 </Dialog>
 ```
 Kit components used: Field×2, Dialog×1, Button×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
@@ -66,10 +68,26 @@ Kit components used: Field×2, Dialog×1, Button×1; shared pieces: Notice×1. E
 - "AI chỉ là bản nháp" principle for orders: a draft needs the responsible doctor's approval before it is printed or shown in the patient app ("Đơn nháp cần bác sĩ duyệt trước khi in.").
 
 ## Differences from the app design
-- (none recorded)
+- "Xác nhận thu tiền" stays under the fields as in the old dialog, not in a right-aligned footer. The ops-error line under it (#ops-error, empty) and the toast "Đã ghi phiếu thu và cập nhật hóa đơn" are not drawn.
 
 ## Gotchas
 - (none recorded)
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WF2 · Thu tiền · Nguyễn Thu Hà`.
+- Canvas note: Web › cashier › Thu tiền · hộp thoại nhỏ như app I11/F12 (số tiền, phương thức, xác nhận); nút "Xác nhận thu tiền" nằm dưới các trường · chưa có trên Next.js
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+```tsx
+// opens over the page; the backdrop and the page behind it are not part of this screen
+<Dialog old="modal ops-modal" eyebrow="Pema · vận hành" title="Thu tiền · Nguyễn Minh Linh" close={{"label":"Đóng hộp thoại"}}>
+  <Notice tone="info" old="notice">"HD-DEMO-001 · Còn lại 150.000 ₫"</Notice>
+  <Field label="Số tiền (VND)" type="number" default="150000" id="pay-amount" />
+  <Field label="Phương thức" type="select" default="Tiền mặt" id="pay-method" options={["Tiền mặt","Chuyển khoản"]} />
+  <Button variant="primary" old="btn btn-primary">"Xác nhận thu tiền"</Button>  // ops=save-pay
+</Dialog>
+```
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WF2-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

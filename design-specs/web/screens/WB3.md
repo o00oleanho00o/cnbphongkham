@@ -36,8 +36,151 @@ Group **WB · Vận hành: tổng quan, hôm nay, lịch** · page · Next.js: *
 - Layout `.actions` 156×40 px: flex row wrap, gap 8px
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WB3): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Hôm nay">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item active icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Hôm nay"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <PageHeading eyebrow="Pema · chăm sóc xuyên suốt" title="Hôm nay tại Pema" subtitle="Tiếp đón theo từng lịch hẹn · dữ liệu tổng hợp 20/09/2026">
+    <Button variant="primary" icon="add">"Đặt lịch mới"</Button>
+  </PageHeading>
+  <Card>
+    <Grid cols="repeat(4,minmax(0,1fr))" cols-390="repeat(2,minmax(0,1fr))" gap="16px">
+      <Text><Small>"Tổng lịch"</Small> <Strong>"31"</Strong></Text>
+      <Text><Small>"Đã đến"</Small> <Strong>"0"</Strong></Text>
+      <Button variant="secondary">"31 Chưa đến"</Button>
+      <Button variant="secondary">"0 Đang chờ"</Button>
+      <Button variant="secondary">"0 Đang khám/điều trị"</Button>
+      <Button variant="secondary">"0 Hoàn tất"</Button>
+      <Button variant="secondary">"0 Đã hủy"</Button>
+      <Button variant="secondary">"0 Vắng hẹn"</Button>
+    </Grid>
+    <Divider />
+    <Row gap="14px" wrap>
+      <Text strong>"13.500.000 ₫"</Text>
+      <Text small>"Phát sinh hóa đơn hôm nay"</Text>
+    </Row>
+  </Card>
+  <Card>
+    <Row gap="12px" wrap>
+      <Field label="Tên / mã KH / liên hệ" type="search" placeholder="Tìm nhanh khách…" />
+      <Field label="Trạng thái" type="select" default="Tất cả trạng thái" options={["Tất cả trạng thái","Chưa đến","Đã xác nhận","Đang chờ","Đang khám/điều trị","Hoàn tất","Đã hủy","Vắng hẹn"]} />
+      <Field label="Bác sĩ" type="select" default="Tất cả bác sĩ" options={["Tất cả bác sĩ","BS. Tâm","BS. Mai","BS. An","BS. Lan"]} />
+    </Row>
+    <TableShell columns={["Giờ","Mã KH · bệnh nhân","Liên hệ","Nội dung","Trạng thái","Bác sĩ","Người tạo","Giá lịch dự kiến","Tiếp đón"]} rows={8}  /* cards at 390 */>
+      <Row sample="first row; demo values, the other rows have the same cells">
+        <Cell column="Giờ">
+          <Text strong>"08:00"</Text>
+        </Cell>
+        <Cell column="Mã KH · bệnh nhân">
+          <Button variant="quiet">"Nguyễn Thu Hà"</Button>
+          <Text small>"P001"</Text>
+        </Cell>
+        <Cell column="Liên hệ">
+          <Text>"09•• ••• 100"</Text>
+          <Text small>"28 tuổi"</Text>
+        </Cell>
+        <Cell column="Nội dung">
+          <Text>"Tái khám & đánh giá"</Text>
+          <Text small>"Sau thủ thuật · D+1"</Text>
+        </Cell>
+        <Cell column="Trạng thái">
+          <Badge tone="info">"Chưa đến"</Badge>
+        </Cell>
+        <Cell column="Bác sĩ">
+          <Text>"BS. Tâm"</Text>
+        </Cell>
+        <Cell column="Người tạo">
+          <Text>"Lễ tân"</Text>
+        </Cell>
+        <Cell column="Giá lịch dự kiến">
+          <Text>"300.000 ₫"</Text>
+        </Cell>
+        <Cell column="Tiếp đón">
+          <Button variant="primary">"Check-in"</Button>
+          <Button variant="secondary">"Vắng"</Button>
+        </Cell>
+      </Row>
+    </TableShell>
+    <Row gap="12px" justify="space-between" wrap>
+      <Text>"31 lịch · Trang 1/2 · 25 dòng/trang"</Text>
+      <Row gap="8px" wrap>
+        <Button variant="secondary">"← Trước"</Button>
+        <Button variant="secondary">"Sau →"</Button>
+      </Row>
+    </Row>
+  </Card>
+</AppShell>
+```
+Kit components used: Button×14, Field×5, Card×2, Sidebar×1, TopBar×1, PageHeading×1, TableShell×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- 1440×900 is the reference (Frame, Layout).
+- 1920×1020: no layout change
+- 1280×720: no layout change
+- 1024×768: .crm-reception-stats: grid 8 → 4 columns; .sidebar: width 232 → 204px
+- 390×844: .page-heading: display flex → block; .crm-reception-stats: grid 8 → 4 columns; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "Chủ phòng khám", "Không gian phòng khám", "/"
+- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
+
+## Tokens
+- Text colour: ink ×159, ink-soft ×89, surface ×26, info ×25, link ×25, heading ×1
+- Background: surface ×36, link ×26, info-soft ×25, row-hover ×10, field ×3, line ×1
+- Border: tile ×225, line-strong ×30, link ×26, line ×2
+- Radius: field ×53, card ×2
+- Font size: small ×176, label ×132, micro ×34, eyebrow ×10, page ×1
+- Font: Be Vietnam Pro ×362
+- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×27, nearest `link` ΔE 6.7); `#698095` (text, ×9, nearest `ink-soft` ΔE 7.4); `#467a9c` (text, ×1, nearest `info` ΔE 5.3)
+- Unmatched radius: 8px ×3 (nearest `field`), 99px ×25 (nearest `hero`)
+- Unmatched font size: 24px ×8 (nearest `title`), 18px ×1 (nearest `section`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- Status words: booked "Chưa đến" (also counts confirmed), arrived "Đang chờ", in_progress "Đang khám/điều trị", completed "Hoàn tất", cancelled "Đã hủy", missed "Vắng hẹn".
+- Doctors see only their own visits and no invoice total ("Phát sinh hóa đơn hôm nay" is hidden for role doctor).
+
+## Differences from the app design
+- App I2 lists "Tổng lịch", "Đang chờ", "Hoàn tất" and a status chip row; the web has 8 reception tiles that act as filters, a doctor select, a search field and paging ("← Trước", "Sau →").
+- Canvas WB3: the six status tiles are drawn as buttons "31 Chưa đến" … "0 Vắng hẹn" in a 4-column grid beside "Tổng lịch" and "Đã đến"; the old web shows all 8 in one row. Sample rows show every status with its action: Check-in + Vắng (Chưa đến, Đã xác nhận), "Mời vào phòng" (Đang chờ), "Mở 360" (all others), as in crm-ui.js.
+
+## Gotchas
+- The demo day is fixed: 2026-09-20 09:00 (`DAY` in `operations-data.js` and `crm-automation.js`). Dates before that day cannot be booked.
+- The money tile "Phát sinh hóa đơn hôm nay" is missing for the doctor role (WB4 and WB2 use other roles).
+
+## Web canvas
+- Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WB3 · Hôm nay`.
+- Canvas note: Web › today · app I2 chỉ có "Tổng lịch", "Đang chờ", "Hoàn tất" và chip trạng thái; web có 8 ô tiếp đón (6 ô là nút lọc), ô "Phát sinh hóa đơn hôm nay" (ẩn với bác sĩ), ba bộ lọc, bảng 9 cột, nút Check-in / Vắng / Mời vào phòng / Mở 360 theo trạng thái và phân trang 25 dòng; tên và số liệu là dữ liệu tổng hợp
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Hôm nay", page key "today"
   <PageHeading eyebrow="Pema · chăm sóc xuyên suốt" title="Hôm nay tại Pema" subtitle="Tiếp đón theo từng lịch hẹn · dữ liệu tổng hợp 20/09/2026">
@@ -109,40 +252,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Card>
 </AppShell>
 ```
-Kit components used: Button×12, Field×3, PageHeading×1, Card×1, TableShell×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- 1440×900 is the reference (Frame, Layout).
-- 1920×1020: no layout change
-- 1280×720: no layout change
-- 1024×768: .crm-reception-stats: grid 8 → 4 columns; .sidebar: width 232 → 204px
-- 390×844: .page-heading: display flex → block; .crm-reception-stats: grid 8 → 4 columns; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "Chủ phòng khám", "Không gian phòng khám", "/"
-- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
-
-## Tokens
-- Text colour: ink ×159, ink-soft ×89, surface ×26, info ×25, link ×25, heading ×1
-- Background: surface ×36, link ×26, info-soft ×25, row-hover ×10, field ×3, line ×1
-- Border: tile ×225, line-strong ×30, link ×26, line ×2
-- Radius: field ×53, card ×2
-- Font size: small ×176, label ×132, micro ×34, eyebrow ×10, page ×1
-- Font: Be Vietnam Pro ×362
-- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×27, nearest `link` ΔE 6.7); `#698095` (text, ×9, nearest `ink-soft` ΔE 7.4); `#467a9c` (text, ×1, nearest `info` ΔE 5.3)
-- Unmatched radius: 8px ×3 (nearest `field`), 99px ×25 (nearest `hero`)
-- Unmatched font size: 24px ×8 (nearest `title`), 18px ×1 (nearest `section`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- Status words: booked "Chưa đến" (also counts confirmed), arrived "Đang chờ", in_progress "Đang khám/điều trị", completed "Hoàn tất", cancelled "Đã hủy", missed "Vắng hẹn".
-- Doctors see only their own visits and no invoice total ("Phát sinh hóa đơn hôm nay" is hidden for role doctor).
-
-## Differences from the app design
-- App I2 lists "Tổng lịch", "Đang chờ", "Hoàn tất" and a status chip row; the web has 8 reception tiles that act as filters, a doctor select, a search field and paging ("← Trước", "Sau →").
-
-## Gotchas
-- The demo day is fixed: 2026-09-20 09:00 (`DAY` in `operations-data.js` and `crm-automation.js`). Dates before that day cannot be booked.
-- The money tile "Phát sinh hóa đơn hôm nay" is missing for the doctor role (WB4 and WB2 use other roles).
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WB3-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

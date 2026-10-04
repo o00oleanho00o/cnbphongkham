@@ -30,8 +30,108 @@ Group **WH · Ask Pema & Hướng dẫn** · state · Next.js: **built (U7)** (`
 - Layout `.guide-layout` 1152×989 px: grid, columns `250px minmax(0px, 1fr)` (250px 874px), gap 28px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WH8): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Hướng dẫn">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item active icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Hướng dẫn"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <PageHeading eyebrow="Cách làm việc cùng Pema" title="Hướng dẫn sử dụng" subtitle="Hiểu hành trình, làm đúng bước và bàn giao đủ thông tin." />
+  <Grid cols="290px minmax(0,1fr)" gap="16px">
+    <Stack>
+      <Field label="Tìm chủ đề hoặc vai trò" type="search" placeholder="Ví dụ: dời lịch, bác sĩ, thu tiền" />
+      <FilterChipGroup direction="vertical" items={["Tất cả Mobile, CSKH & tài chính theo vai trò","CSKH CSKH chủ động & tài khoản nhân viên","Tất cả Hiểu hệ thống Pema","Tất cả Bắt đầu theo vai trò","Bác sĩ Hồ sơ & Patient 360","Lễ tân Lịch hẹn & tiếp đón","Điều phối Bác sĩ, phòng & dịch vụ","Bác sĩ Từ tư vấn đến buổi điều trị","Chăm sóc Chăm sóc & phản hồi tại nhà","Thu ngân Hóa đơn & thu tiền","Tất cả Khi cần kiểm tra lại"]} selected={["Bác sĩ Từ tư vấn đến buổi điều trị"]} />
+    </Stack>
+    <Card>
+      <Heading level={2} sub="Biến một lần gặp thành bản ghi có thể tiếp tục sử dụng." eyebrow="Bác sĩ">"Từ tư vấn đến buổi điều trị"</Heading>
+      <Grid cols="repeat(auto-fit,minmax(min(100%,520px),1fr))" gap="16px">
+        <Stack>
+          <Text>"Kế hoạch thể hiện hướng theo dõi. Buổi điều trị ghi lại đánh giá, việc đã thực hiện và hướng dẫn cho giai đoạn ở nhà."</Text>
+          <Heading level={3}>"Cách thực hiện"</Heading>
+          <List ordered>
+            <ListItem title="Từ hồ sơ, xem tiền sử, cảnh báo, ảnh mốc và cập nhật chưa xử lý trước khi bắt đầu." />
+            <ListItem title="Ở Tư vấn, nhập ghi chú. Nếu tạo bản nháp AI, đọc, chỉnh sửa rồi mới Duyệt & lưu vào Patient 360." />
+            <ListItem title="Ở Kế hoạch, kiểm tra tên kế hoạch, tổng số buổi và số buổi đã hoàn tất. Điều chỉnh nếu cần." />
+            <ListItem title="Ở Buổi điều trị, nhập ngày, đánh giá trước buổi và hướng dẫn sau buổi. Nếu gắn ảnh, kiểm tra đồng ý ảnh và thông tin vùng/góc chụp." />
+            <ListItem title="Lưu buổi điều trị, sau đó kiểm tra sự kiện mới trong hành trình và hướng dẫn đã chuyển sang Patient Mobile." />
+          </List>
+        </Stack>
+        <Notice tone="info" text="Thông tin đi tiếp như thế nào? Buổi đã lưu nối vào lịch sử và cập nhật số buổi hoàn tất. Hướng dẫn sau buổi là đầu vào của chăm sóc tại nhà. Nếu thiếu ảnh mốc, đội ngũ có mục theo dõi để bổ sung. Điểm cần nhớ AI brief và ghi chú cần bác sĩ xem, sửa và duyệt; không tự ra chẩn đoán. Ảnh và số buổi cần được đọc trong bối cảnh; không dùng làm kết luận tự động về hiệu quả." />
+      </Grid>
+      <Row gap="8px" wrap>
+        <Button variant="primary">"Chọn hồ sơ để làm việc →"</Button>
+        <Button variant="primary">"Mở ảnh trước / sau →"</Button>
+      </Row>
+      <Divider />
+      <Heading level={3}>"Đọc tiếp"</Heading>
+      <Row gap="8px" wrap>
+        <Button variant="secondary">"Hồ sơ & Patient 360 →"</Button>
+        <Button variant="secondary">"Chăm sóc & phản hồi tại nhà →"</Button>
+      </Row>
+    </Card>
+  </Grid>
+</AppShell>
+```
+Kit components used: Button×6, Field×3, Sidebar×1, TopBar×1, PageHeading×1, Card×1; shared pieces: FilterChip×1, Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WH8-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
+
+## Tokens
+- Text colour: ink ×24, ink-soft ×13, heading ×2, surface ×2, link ×1
+- Background: surface ×4, link ×2, canvas-alt ×1, info-soft ×1
+- Border: line ×3, line-strong ×2, link ×2, brand-400 ×1
+- Radius: control ×11, field ×5
+- Font size: label ×16, eyebrow ×13, body ×9, body-lg ×4, page ×1, section ×1, small ×1
+- Font: Be Vietnam Pro ×46
+- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×2, nearest `link` ΔE 6.7); `#467a9c` (text, ×2, nearest `info` ΔE 5.3)
+- Unmatched radius: 16px ×1 (nearest `card`)
+- Unmatched font size: 26px ×1 (nearest `title`)
+
+## Required text (keep verbatim)
+- Thông tin đi tiếp như thế nào? Buổi đã lưu nối vào lịch sử và cập nhật số buổi hoàn tất. Hướng dẫn sau buổi là đầu vào của chăm sóc tại nhà. Nếu thiếu ảnh mốc, đội ngũ có mục theo dõi để bổ sung. Điểm cần nhớ AI brief và ghi chú cần bác sĩ xem, sửa và duyệt; không tự ra chẩn đoán. Ảnh và số buổi cần được đọc trong bối cảnh; không dùng làm kết luận tự động về hiệu quả.
+
+## Business rules
+- (old web notice) "Thông tin đi tiếp như thế nào? Buổi đã lưu nối vào lịch sử và cập nhật số buổi hoàn tất. Hướng dẫn sau buổi là đầu vào của chăm sóc tại nhà. Nếu thiếu ảnh mốc, đội ngũ có mục theo dõi để bổ sung. Điểm cần nhớ AI brief và ghi chú cần bác sĩ xem, sửa và duyệt; không tự ra chẩn đoán. Ảnh và số buổi cần được đọc trong bối cảnh; không dùng làm kết luận tự động về hiệu quả."
+
+## Differences from the app design
+- (generated) Notice of the old web not found verbatim in F16: "Thông tin đi tiếp như thế nào? Buổi đã lưu nối vào lịch sử và cập nhật số buổi hoàn tất. Hướng dẫn sau buổi là đầu vào của chăm sóc tại nhà. Nếu thiếu ảnh mốc, đội ngũ có mục theo dõi để bổ sung. Điểm cần nhớ AI brief và ghi chú cần bác sĩ xem, sửa và duyệt; không tự ra chẩn đoán. Ảnh và số buổi cần được đọc trong bối cảnh; không dùng làm kết luận tự động về hiệu quả."
+
+## Gotchas
+- (none recorded)
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WH8 · Hướng dẫn · Từ tư vấn đến buổi điều trị`.
+- Canvas note: Web › guide · bài "clinical": bản nháp AI cần bác sĩ duyệt
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Hướng dẫn", page key "guide"
   <PageHeading eyebrow="Cách làm việc cùng Pema" title="Hướng dẫn sử dụng" subtitle="Hiểu hành trình, làm đúng bước và bàn giao đủ thông tin." />
@@ -70,33 +170,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Grid>
 </AppShell>
 ```
-Kit components used: Button×4, PageHeading×1, Field×1, Card×1; shared pieces: FilterChip×1, Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WH8-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
-
-## Tokens
-- Text colour: ink ×24, ink-soft ×13, heading ×2, surface ×2, link ×1
-- Background: surface ×4, link ×2, canvas-alt ×1, info-soft ×1
-- Border: line ×3, line-strong ×2, link ×2, brand-400 ×1
-- Radius: control ×11, field ×5
-- Font size: label ×16, eyebrow ×13, body ×9, body-lg ×4, page ×1, section ×1, small ×1
-- Font: Be Vietnam Pro ×46
-- Unmatched colours (no token within ΔE 3): `#34536d` (text, ×2, nearest `link` ΔE 6.7); `#467a9c` (text, ×2, nearest `info` ΔE 5.3)
-- Unmatched radius: 16px ×1 (nearest `card`)
-- Unmatched font size: 26px ×1 (nearest `title`)
-
-## Required text (keep verbatim)
-- Thông tin đi tiếp như thế nào? Buổi đã lưu nối vào lịch sử và cập nhật số buổi hoàn tất. Hướng dẫn sau buổi là đầu vào của chăm sóc tại nhà. Nếu thiếu ảnh mốc, đội ngũ có mục theo dõi để bổ sung. Điểm cần nhớ AI brief và ghi chú cần bác sĩ xem, sửa và duyệt; không tự ra chẩn đoán. Ảnh và số buổi cần được đọc trong bối cảnh; không dùng làm kết luận tự động về hiệu quả.
-
-## Business rules
-- (old web notice) "Thông tin đi tiếp như thế nào? Buổi đã lưu nối vào lịch sử và cập nhật số buổi hoàn tất. Hướng dẫn sau buổi là đầu vào của chăm sóc tại nhà. Nếu thiếu ảnh mốc, đội ngũ có mục theo dõi để bổ sung. Điểm cần nhớ AI brief và ghi chú cần bác sĩ xem, sửa và duyệt; không tự ra chẩn đoán. Ảnh và số buổi cần được đọc trong bối cảnh; không dùng làm kết luận tự động về hiệu quả."
-
-## Differences from the app design
-- (generated) Notice of the old web not found verbatim in F16: "Thông tin đi tiếp như thế nào? Buổi đã lưu nối vào lịch sử và cập nhật số buổi hoàn tất. Hướng dẫn sau buổi là đầu vào của chăm sóc tại nhà. Nếu thiếu ảnh mốc, đội ngũ có mục theo dõi để bổ sung. Điểm cần nhớ AI brief và ghi chú cần bác sĩ xem, sửa và duyệt; không tự ra chẩn đoán. Ảnh và số buổi cần được đọc trong bối cảnh; không dùng làm kết luận tự động về hiệu quả."
-
-## Gotchas
-- (none recorded)
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WH8-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

@@ -32,8 +32,119 @@ Group **WC · Hồ sơ & Patient 360** · page · Next.js: **built (U1)** (`/pat
 - Layout `.filter-row` 1160×34 px: flex row wrap, gap 8px
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WC1): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="owner-tam" active="Tìm bệnh nhân">
+  <Sidebar old="sidebar">  // menu of account `owner-tam`; at 390 a top bar with menu button and a bottom tab bar ("Hôm nay", "Hồ sơ", "Theo dõi", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="space_dashboard">"Tổng quan"</Sidebar.Item>
+    <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
+    <Sidebar.Item active icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
+    <Sidebar.Item icon="spa">"Dịch vụ"</Sidebar.Item>
+    <Sidebar.Item icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="auto_awesome">"Ask Pema"</Sidebar.Item>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"BT"</Avatar> <Text><Strong>"BS. Tâm"</Strong> <Small>"Chủ phòng khám"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Tìm bệnh nhân"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="BS. Tâm · Chủ phòng khám" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <PageHeading title="Tìm bệnh nhân" subtitle="Tìm theo tên, mã hồ sơ, số điện thoại hoặc mối quan tâm.">
+    <Button variant="primary" icon="add">"Hồ sơ mới"</Button>
+  </PageHeading>
+  <Row gap="12px" wrap>
+    <Field label="Tìm tên, mã hoặc số điện thoại" type="search" placeholder="Ví dụ: Nguyễn Thu Hà, P001, nám..." />
+    <Badge tone="neutral" dot={false}>"46 hồ sơ"</Badge>
+  </Row>
+  <FilterChipGroup items={["Tất cả","Đang điều trị","Tái khám tuần này","Có cảnh báo"]} selected={["Tất cả"]} />
+  <Card>
+    <TableShell columns={["Bệnh nhân","Mối quan tâm","Hành trình","Bác sĩ","Lần gần nhất","Hẹn tiếp theo",""]} rows={7} foot="Hiển thị 7 trong 46 hồ sơ · bấm vào một dòng hoặc \"Mở →\" để vào Patient 360"  /* cards at 390 */>
+      <Row sample="first row; demo values, the other rows have the same cells">
+        <Cell column="Bệnh nhân">
+          <Avatar size="sm">"TH"</Avatar>
+          <Button variant="quiet">"Nguyễn Thu Hà"</Button>
+          <Text small>"P001 · 28 tuổi · 09•• ••• 100"</Text>
+        </Cell>
+        <Cell column="Mối quan tâm">
+          <Badge tone="brand" dot={false}>"Nám · tăng sắc tố"</Badge>
+        </Cell>
+        <Cell column="Hành trình">
+          <Progress value="40%" label="2/5" />
+        </Cell>
+        <Cell column="Bác sĩ">
+          <Text>"BS. Tâm"</Text>
+        </Cell>
+        <Cell column="Lần gần nhất">
+          <Text>"6/9/2026"</Text>
+        </Cell>
+        <Cell column="Hẹn tiếp theo">
+          <Text>"20/9/2026"</Text>
+          <Text small>"08:00"</Text>
+        </Cell>
+        <Cell column="">
+          <Button variant="secondary">"Mở →"</Button>
+        </Cell>
+      </Row>
+    </TableShell>
+  </Card>
+</AppShell>
+```
+Kit components used: Button×5, Field×3, Badge×2, Sidebar×1, TopBar×1, PageHeading×1, Card×1, TableShell×1; shared pieces: FilterChip×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- 1440×900 is the reference (Frame, Layout).
+- 1920×1020: no layout change
+- 1280×720: no layout change
+- 1024×768: 8: display flex → block; .sidebar: width 232 → 204px; .main: display flex → block; #main-content: display flex → block
+- 390×844: .page-heading: display flex → block; .search-box: flex-wrap off → on; 8: display flex → block; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static; .main: display flex → block; #main-content: display flex → block · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "Chủ phòng khám", "Không gian phòng khám", "/"
+- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
+
+## Tokens
+- Text colour: ink ×184, ink-soft ×124, heading ×47, info ×5, surface ×1
+- Background: brand-50 ×92, surface ×49, brand-400 ×46, tile ×46, table-head ×7, row-hover ×5, link ×1
+- Border: tile ×322, line ×52, line-strong ×47, info-line ×46, link ×1
+- Radius: field ×139, tile ×2
+- Font size: label ×278, micro ×96, eyebrow ×84, title ×1
+- Font: Be Vietnam Pro ×459
+- Unmatched colours (no token within ΔE 3): `#2b6c96` (text, ×46, nearest `info` ΔE 3.4); `#34536d` (text, ×46, nearest `link` ΔE 6.7); `#698095` (text, ×6, nearest `ink-soft` ΔE 7.4)
+- Unmatched radius: 99px ×47 (nearest `hero`), 8px ×4 (nearest `field`), 50px ×46 (nearest `hero`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- Clinical actions need the `clinical` capability (owner, doctor); without it `action()` answers "Cần tài khoản bác sĩ để thực hiện." and `staff-context.js › apply()` removes the controls.
+- "Tái khám tuần này" = next visit between 2026-09-20 and 2026-09-27; "Đang điều trị" = completed < total; "Có cảnh báo" = alerts not empty.
+
+## Differences from the app design
+- App A3 is titled "Hồ sơ người bệnh" with 12 sample rows; the web title is "Tìm bệnh nhân", the count chip "46 hồ sơ" and 4 filter chips.
+
+## Gotchas
+- Opening a patient from the list is a row click (`tr[data-patient]`) or the "Mở →" button; the tab is kept in the module variable `tab`, so a re-render keeps it.
+- Phone numbers are masked in the demo ("09•• ••• 100").
+- Canvas: rows 2-7 of the sample table carry the other six concern chips ("Mụn viêm" ... "Theo dõi da sau điều trị"); the generated Layout lists only the first table row, so they are exempted through demo_data. The avatar, name link and "P001 · 28 tuổi · phone" line share one cell.
+
+## Web canvas
+- Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WC1 · Tìm bệnh nhân`.
+- Canvas note: Web › patients · tiêu đề "Tìm bệnh nhân" (app A3 là "Hồ sơ người bệnh"), chip đếm "46 hồ sơ" và 4 chip lọc; bảng 7 cột có thanh hành trình và nút "Mở →"; tên và mã là dữ liệu tổng hợp
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <AppShell role="owner-tam">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Tìm bệnh nhân", page key "patients"
   <PageHeading title="Tìm bệnh nhân" subtitle="Tìm theo tên, mã hồ sơ, số điện thoại hoặc mối quan tâm.">
@@ -83,39 +194,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Card>
 </AppShell>
 ```
-Kit components used: Button×2, Badge×2, PageHeading×1, Field×1, Card×1, TableShell×1; shared pieces: FilterChip×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- 1440×900 is the reference (Frame, Layout).
-- 1920×1020: no layout change
-- 1280×720: no layout change
-- 1024×768: 8: display flex → block; .sidebar: width 232 → 204px; .main: display flex → block; #main-content: display flex → block
-- 390×844: .page-heading: display flex → block; .search-box: flex-wrap off → on; 8: display flex → block; .sidebar: position fixed → static; .sidebar: width 232 → 390px; .topbar: position sticky → static; .main: display flex → block; #main-content: display flex → block · hidden: "PHÒNG KHÁM DA LIỄU", "Không gian làm việc", "Quản lý", "Phân tích", "BT", "Chủ phòng khám", "Không gian phòng khám", "/"
-- Overflow per viewport from the screenshots: `pema-agent/frontend/visual-ref/old/manifest.json` (W1), when present.
-
-## Tokens
-- Text colour: ink ×184, ink-soft ×124, heading ×47, info ×5, surface ×1
-- Background: brand-50 ×92, surface ×49, brand-400 ×46, tile ×46, table-head ×7, row-hover ×5, link ×1
-- Border: tile ×322, line ×52, line-strong ×47, info-line ×46, link ×1
-- Radius: field ×139, tile ×2
-- Font size: label ×278, micro ×96, eyebrow ×84, title ×1
-- Font: Be Vietnam Pro ×459
-- Unmatched colours (no token within ΔE 3): `#2b6c96` (text, ×46, nearest `info` ΔE 3.4); `#34536d` (text, ×46, nearest `link` ΔE 6.7); `#698095` (text, ×6, nearest `ink-soft` ΔE 7.4)
-- Unmatched radius: 99px ×47 (nearest `hero`), 8px ×4 (nearest `field`), 50px ×46 (nearest `hero`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- Clinical actions need the `clinical` capability (owner, doctor); without it `action()` answers "Cần tài khoản bác sĩ để thực hiện." and `staff-context.js › apply()` removes the controls.
-- "Tái khám tuần này" = next visit between 2026-09-20 and 2026-09-27; "Đang điều trị" = completed < total; "Có cảnh báo" = alerts not empty.
-
-## Differences from the app design
-- App A3 is titled "Hồ sơ người bệnh" with 12 sample rows; the web title is "Tìm bệnh nhân", the count chip "46 hồ sơ" and 4 filter chips.
-
-## Gotchas
-- Opening a patient from the list is a row click (`tr[data-patient]`) or the "Mở →" button; the tab is kept in the module variable `tab`, so a re-render keeps it.
-- Phone numbers are masked in the demo ("09•• ••• 100").
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WC1-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

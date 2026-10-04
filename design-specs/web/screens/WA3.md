@@ -34,8 +34,77 @@ Group **WA · Khung & điều hướng** · state · Next.js: **restyle (U1)** (
 - Layout `.top-actions` 636×53 px: flex row, gap 12px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WA3): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
+```tsx
+<AppShell role="accountant" active="Thu ngân">
+  <Button variant="secondary" href="#main-content" as="link" old="skip-link">"Đến nội dung chính"</Button>
+  <Sidebar old="sidebar">  // menu of account `accountant`; at 390 a top bar with menu button and a bottom tab bar ("Thu ngân", "Tài chính", "Hồ sơ", "Menu") replace it
+    <Text old="brand-context">"PHÒNG KHÁM DA LIỄU"</Text>
+    <Text old="nav-section">"Không gian làm việc"</Text>
+    <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
+    <Text old="nav-section">"Quản lý"</Text>
+    <Sidebar.Item active icon="receipt_long">"Thu ngân"</Sidebar.Item>
+    <Sidebar.Item icon="account_balance_wallet">"Tài chính & tiền thủ thuật"</Sidebar.Item>
+    <Text old="nav-section">"Phân tích"</Text>
+    <Sidebar.Item icon="menu_book">"Hướng dẫn"</Sidebar.Item>
+    <Row old="clinic-user"><Avatar>"KT"</Avatar> <Text><Strong>"Kế toán"</Strong> <Small>"Đối soát & thu ngân"</Small></Text></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <Text old="breadcrumbs">"Không gian phòng khám" <Strong>"/"</Strong> <Strong>"Thu ngân"</Strong></Text>
+    <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
+    <Field label="Tài khoản demo" type="select" default="Kế toán · Đối soát & thu ngân" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
+    <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
+    <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
+  </TopBar>
+  <PageHeading title="Thu ngân" subtitle="Thu tiền và lên đơn nhanh theo mẫu PEMA.">
+    <Button variant="primary" icon="add">"Lên đơn nhanh"</Button>
+  </PageHeading>
+  <Grid cols="repeat(4, 1fr)" cols-390="repeat(2, 1fr)">
+    <Tile label="Tổng hóa đơn" value="12" note="Dữ liệu giả lập" />
+    <Tile label="Đã thu" value="8.400.000 ₫" note="Tổng lũy kế" />
+    <Tile label="Còn phải thu" value="2.100.000 ₫" note="Không thu trùng" />
+    <Tile label="Catalog sản phẩm" value="96" note="Từ danhsach.xlsx" />
+  </Grid>
+  <Img placeholder label="Lên đơn theo mẫu PEMA và bảng hóa đơn: vẽ ở nhóm WF" />
+</AppShell>
+```
+Kit components used: Button×4, Tile×4, Field×2, Sidebar×1, TopBar×1, PageHeading×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+
+## Responsive
+- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WA3-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
+
+## Tokens
+- Text colour: ink-soft ×6, heading ×2, ink ×2, link ×1, surface ×1
+- Background: surface ×3, brand-50 ×2, canvas ×2, heading ×1
+- Border: line ×6, info-line ×1
+- Radius: field ×5
+- Font size: small ×5, eyebrow ×4, label ×4, micro ×2, body ×1
+- Font: Be Vietnam Pro ×17
+- Unmatched colours (no token within ΔE 3): `#71869a` (text, ×3, nearest `ink-soft` ΔE 9.8); `#6b8093` (text, ×1, nearest `ink-soft` ΔE 7.4); `#b8c5bf` (text, ×1, nearest `success-line` ΔE 8.9)
+- Unmatched radius: 8px ×3 (nearest `field`), 50px ×1 (nearest `hero`)
+- Unmatched font size: 9px ×1 (nearest `eyebrow`)
+
+## Required text (keep verbatim)
+- (no notice or empty state on this screen)
+
+## Business rules
+- The account picker is a demo identity boundary, "NOT authentication or production RBAC" (header comment of `staff-context.js`).
+
+## Differences from the app design
+- The canvas top bar always draws the bell; the old web shows it for owner and doctor only (accountant has the finance link but no bell). Template change needed, see the W3b-WA report.
+
+## Gotchas
+- Role and page are kept in `sessionStorage` (`pema-staff`); a fresh browser context always starts as `owner-tam` unless `?staff=<id>` is in the URL.
+- The landing page "Thu ngân" is drawn in full by group WF; WA3 draws only its heading and the four KPI tiles for context.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WA3 · Khung · Kế toán (trang chủ Thu ngân)`.
+- Canvas note: Web › app shell · vai Kế toán: sidebar 4 mục (Tìm bệnh nhân, Thu ngân, Tài chính & tiền thủ thuật, Hướng dẫn), có liên kết tài chính, không có chuông (khung vẽ chuông ở mọi vai); liên kết "Đến nội dung chính" hiện khi focus; vào thẳng "Thu ngân". Nội dung đầy đủ của trang vẽ ở nhóm WF
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
 ```tsx
 <Button variant="secondary" href="#main-content" as="link" old="skip-link">"Đến nội dung chính"</Button>
 <Sidebar old="sidebar" tag="aside">
@@ -63,33 +132,6 @@ Every field, action, status, filter and text of the old screen is listed; rows a
   </Row>
 </TopBar>
 ```
-Kit components used: Sidebar×5, Button×3, Field×2, TopBar×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
-
-## Responsive
-- Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WA3-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
-
-## Tokens
-- Text colour: ink-soft ×6, heading ×2, ink ×2, link ×1, surface ×1
-- Background: surface ×3, brand-50 ×2, canvas ×2, heading ×1
-- Border: line ×6, info-line ×1
-- Radius: field ×5
-- Font size: small ×5, eyebrow ×4, label ×4, micro ×2, body ×1
-- Font: Be Vietnam Pro ×17
-- Unmatched colours (no token within ΔE 3): `#71869a` (text, ×3, nearest `ink-soft` ΔE 9.8); `#6b8093` (text, ×1, nearest `ink-soft` ΔE 7.4); `#b8c5bf` (text, ×1, nearest `success-line` ΔE 8.9)
-- Unmatched radius: 8px ×3 (nearest `field`), 50px ×1 (nearest `hero`)
-- Unmatched font size: 9px ×1 (nearest `eyebrow`)
-
-## Required text (keep verbatim)
-- (no notice or empty state on this screen)
-
-## Business rules
-- The account picker is a demo identity boundary, "NOT authentication or production RBAC" (header comment of `staff-context.js`).
-
-## Differences from the app design
-- (none recorded)
-
-## Gotchas
-- Role and page are kept in `sessionStorage` (`pema-staff`); a fresh browser context always starts as `owner-tam` unless `?staff=<id>` is in the URL.
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WA3-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)

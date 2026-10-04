@@ -31,17 +31,19 @@ Group **WC · Hồ sơ & Patient 360** · modal · Next.js: **none** · account 
 - Layout `.two-col-form` 564×88 px: grid, columns `1fr 1fr` (274.5px 274.5px), gap 15px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Every field, action, status, filter and text of the old screen is listed; rows and cards that repeat show the first one with demo values and their count. `old="…"` is the old CSS class, `// key=value` the old `data-*` hook that carries the behaviour.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WC3): every block is one kit component or web block (see BLOCKS.md). Names, numbers and money are the canvas sample data; labels, actions, statuses, filters and notices are the old web's, verbatim. The old web's own tree is under "Old web snapshot".
 ```tsx
-// opens over the page; the backdrop and the page behind it are not part of this screen
-<Dialog old="modal" eyebrow="Hồ sơ mới · demo" title="Thêm người bệnh" close={{"label":"Đóng hộp thoại"}}>
-  <Grid old="two-col-form" cols="1fr 1fr" gap="15px">
-    <Field label="Họ và tên" type="text" placeholder="Nguyễn ..." id="new-name" />
-    <Field label="Tuổi" type="number" default="28" id="new-age" />
+// opens over the page "Tìm bệnh nhân" (dimmed); the page behind it is not part of this screen
+<Dialog eyebrow="Hồ sơ mới · demo" title="Thêm người bệnh" width="640px">
+  <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
+    <Field label="Họ và tên" type="text" placeholder="Nguyễn ..." />
+    <Field label="Tuổi" type="number" default="28" />
   </Grid>
-  <Field label="Mối quan tâm" type="text" default="Nám · tăng sắc tố" id="new-concern" />
-  <Button variant="primary" old="btn btn-primary">"Tạo hồ sơ"</Button>  // action=create-patient
+  <Field label="Mối quan tâm" type="text" default="Nám · tăng sắc tố" />
+  <Dialog.Footer>
+    <Button variant="primary">"Tạo hồ sơ"</Button>
+  </Dialog.Footer>
 </Dialog>
 ```
 Kit components used: Field×3, Dialog×1, Button×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
@@ -71,6 +73,25 @@ Kit components used: Field×3, Dialog×1, Button×1. Everything else (Row, Grid,
 
 ## Gotchas
 - Opening a patient from the list is a row click (`tr[data-patient]`) or the "Mở →" button; the tab is kept in the module variable `tab`, so a re-render keeps it.
+- Canvas: the dialog close button (old aria-label "Đóng hộp thoại") is drawn by the dlg helper as an icon; the generated Layout does not name it, so the label is exempted through demo_data.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WC3 · Thêm người bệnh`.
+- Canvas note: Web › patients › modal "Hồ sơ mới" (data-modal=patient) · app I5 là màn "Hồ sơ mới" đầy đủ; web chỉ có 3 trường
+
+## Old web snapshot (for comparison)
+The old web's own layout, with its demo values.
+```tsx
+// opens over the page; the backdrop and the page behind it are not part of this screen
+<Dialog old="modal" eyebrow="Hồ sơ mới · demo" title="Thêm người bệnh" close={{"label":"Đóng hộp thoại"}}>
+  <Grid old="two-col-form" cols="1fr 1fr" gap="15px">
+    <Field label="Họ và tên" type="text" placeholder="Nguyễn ..." id="new-name" />
+    <Field label="Tuổi" type="number" default="28" id="new-age" />
+  </Grid>
+  <Field label="Mối quan tâm" type="text" default="Nám · tăng sắc tố" id="new-concern" />
+  <Button variant="primary" old="btn btn-primary">"Tạo hồ sơ"</Button>  // action=create-patient
+</Dialog>
+```
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WC3-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
