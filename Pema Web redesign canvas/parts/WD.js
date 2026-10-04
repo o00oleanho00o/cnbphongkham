@@ -77,6 +77,58 @@ const wdDash = () => [
     grid(5, secondary('3 Khách mới', { full: true }), secondary('2 Khách quay lại', { full: true }), secondary('9 Đang điều trị', { full: true }), secondary('1 Lâu chưa quay lại', { full: true }), secondary('1 Đã quay lại sau CSKH', { full: true })))
 ];
 
+// ---- W6c-OPS helpers (WD9-WD16: populated results, empty lifecycle group, CSKH dialog states, Follow-up Inbox states; local names start with wd2) ----
+const WD_OUTCOMES = ['Không nghe máy', 'Gọi lại sau', 'Đã liên hệ, chưa có nhu cầu', 'Đang bận, hẹn gọi lại', 'Đồng ý đặt lịch', 'Muốn bác sĩ tư vấn', 'Có phản hồi sau điều trị', 'Khiếu nại', 'Không muốn nhận CSKH', 'Sai số / không liên hệ được'];
+// the CSKH queue with the KPI values of the moment (total, overdue, done, booked after CSKH); used behind WD9
+const wd2Queue = (n, late, done, booked) => [
+  wdHead(),
+  kpis(
+    kpi('Việc CSKH toàn đội', String(n), '46 khách cần chăm sóc', { chev: true, btn: true }),
+    kpi('Quá hạn', String(late), 'Ưu tiên gọi và xác nhận', { chev: true, btn: true }),
+    kpi('Đã hoàn tất', String(done), 'Có kết quả được ghi nhận', { chev: true, btn: true }),
+    kpi('Đặt lịch sau CSKH', String(booked), 'Chưa đồng nghĩa đã quay lại', { chev: true, btn: true })),
+  grid('238px minmax(0,1fr)', wdGroupsPanel(),
+    panel('Danh sách cần chăm sóc', n + ' việc · không gửi tin tự động', [], wdToolbar(''), table(WD_COLS, wdQueueRows()), wdPager(n + ' việc · Trang 1/6')))
+];
+// the dashboard with the lifecycle counts of the moment (new, returning, in treatment, long absent, returned after CSKH); used behind WD10
+const wd2Dash = counts => [
+  pageHead('Chào buổi sáng, BS. Tâm', 'Vận hành hôm nay và chăm sóc khách hàng · mốc demo 20/09/2026', [secondary('Lịch hôm nay →'), primary('Mở CSKH hôm nay')], 'Pema · chăm sóc xuyên suốt'),
+  panel('Vòng đời khách hàng', 'Một hồ sơ, nhiều lần chăm sóc', [],
+    grid(5, ...['Khách mới', 'Khách quay lại', 'Đang điều trị', 'Lâu chưa quay lại', 'Đã quay lại sau CSKH'].map((t, i) => secondary(counts[i] + ' ' + t, { full: true }))))
+];
+// the care dialog (WD2) with the value of the outcome and note, the submit label and the inline line at its end (o.line, omitted for none)
+const wd2Task = (id, note, o) => dlg(id, 'Chăm sóc · ' + people[0].name, WEB + note, [
+  card({ v: 'soft', g: 8 },
+    row({ g: 18, jc: 'space-between', ai: 'center' },
+      stack({ g: 6 },
+        tags(badge('Sau thủ thuật D+1', 'warning')),
+        txt([['Theo dõi mụn & chăm sóc tại nhà · Còn '], ['2 buổi', 'b']]),
+        sm('Khám: 13/9/2026 · Dự kiến: 20/9/2026 · Quá hạn 0 ngày'),
+        sm('Liên hệ gần nhất: Chưa thiết lập · Chưa ghi nhận')),
+      secondary('Patient 360 →'))),
+  notice('Ghi nhận cuộc gọi/tin nhắn mô phỏng. Không gửi Zalo/SMS hoặc thực hiện cuộc gọi thật.', 'info'),
+  grid(2,
+    select('Kênh liên hệ', 'Gọi điện', { opts: ['Gọi điện', 'Zalo', 'SMS', 'Ghi chú nội bộ'] }),
+    select('Kết quả', o.outcome, { opts: WD_OUTCOMES })),
+  textarea('Nội dung / kết quả trao đổi', o.note, { req: true, ph: 'Ghi cụ thể kết quả và điều đã thống nhất với khách…', lines: 2 }),
+  grid(2,
+    date('Ngày giờ tiếp theo (nếu cần)', '', { ph: 'mm/dd/yyyy --:-- --' }),
+    select('Hành động tiếp theo', 'Gọi lại', { opts: ['Gọi lại', 'Bác sĩ xem', 'Đặt lịch', 'Nhắn chăm sóc'] }),
+    select('Phụ trách', 'CSKH Mai Anh', { opts: WD_OWNERS }),
+    select('Ưu tiên', 'Ưu tiên cao', { opts: ['Ưu tiên cao', 'Thông thường', 'Chăm sóc'] })),
+  hr(),
+  row({ g: 14 }, primary(o.submit || 'Lưu kết quả chăm sóc'), sm('Đồng ý đặt lịch sẽ mở form lịch trước khi hoàn tất.')),
+  o.line ? errLine(o.line) : null
+], { w: 760, nav: 'crm', behind: wdQueue(), badge: '5' });
+// one Follow-up Inbox card (same shape as wdFollowCards): [dot flag, title, patient, text, date + owner, attachment chip?]
+const wd2FollowCard = (dot, title, who, text, meta, attach) => card({ v: 'panel', g: 8 },
+  row({ g: 16, jc: 'space-between', ai: 'center' },
+    stack({ g: 4 },
+      txt([['● ', dot], [title + ' · ' + who, 'b']]),
+      txt(text),
+      attach ? row({ g: 12 }, sm(meta), badge('Ảnh đính kèm', 'neutral', { dot: false })) : sm(meta)),
+    row({ g: 8 }, secondary('Mở'), primary('Xử lý', { icon: 'check' }))));
+
 const WD = [
   page('WD1', 'CSKH hôm nay', WEB + 'crm · hàng chờ CSKH: 4 KPI bấm được, danh sách nhóm công việc theo quy tắc, bộ lọc Phụ trách và Thời hạn, bảng 12 việc/trang; app C1-C4 chỉ có 3 nhóm và danh sách ngắn; tên, mã hồ sơ và số liệu là dữ liệu tổng hợp', 'crm', wdQueue(), { badge: '5' }),
 
@@ -137,5 +189,39 @@ const WD = [
     primary('Duyệt, phản hồi & đóng mục')
   ], { w: 620, eyebrow: 'Ảnh / phản hồi chưa duyệt · BS. Tâm', nav: 'followups', behind: wdFollow(), badge: '5' }),
 
-  page('WD8', 'CSKH hôm nay · không có việc phù hợp', WEB + 'crm · tìm kiếm không khớp việc nào: bảng giữ tiêu đề cột và hiện một dòng trống, bộ đếm "0 việc · Trang 1/1"; các trạng thái trống khác (không còn việc CSKH mở, Inbox đã sạch, đã xếp hết danh sách chờ) không có kịch bản trong web cũ', 'crm', wdQueueEmpty(), { state: true, badge: '5' })
+  page('WD8', 'CSKH hôm nay · không có việc phù hợp', WEB + 'crm · tìm kiếm không khớp việc nào: bảng giữ tiêu đề cột và hiện một dòng trống, bộ đếm "0 việc · Trang 1/1"; các trạng thái trống khác (không còn việc CSKH mở, Inbox đã sạch, đã xếp hết danh sách chờ) không có kịch bản trong web cũ', 'crm', wdQueueEmpty(), { state: true, badge: '5' }),
+
+  // ---- W6c-OPS: populated results, empty lifecycle group, CSKH dialog states, Follow-up Inbox states ----
+  // WD9 · the populated list of WD4: one article per recorded outcome (patient, outcome label, note, actor and time).
+  dlg('WD9', 'Kết quả chăm sóc đã ghi', WEB + 'dialog crm → KPI "Đã hoàn tất" · khi đã có kết quả (sau khi lưu một cuộc gọi "Đã liên hệ, chưa có nhu cầu"): mỗi kết quả một khối gồm khách · kết quả, ghi chú, người ghi · thời gian (giữ nguyên chuỗi giờ của bản gốc); thông báo nổi "Đã lưu kết quả và cập nhật hàng đợi"; trạng thái trống là WD4', [
+    list([{ t: people[0].name + ' · Đã liên hệ, chưa có nhu cầu', sub: 'Đã trao đổi, chưa có nhu cầu.', sub2: 'BS. Tâm · 2026-09-20T09:00:01+07:00' }])
+  ], { w: 760, nav: 'crm', behind: wd2Queue(71, 30, 1, 0), badge: '5', toast: 'Đã lưu kết quả và cập nhật hàng đợi' }),
+
+  // WD10 · a lifecycle group with no patient (Đã quay lại sau CSKH; "Khách mới" and "Khách quay lại" are empty too).
+  dlg('WD10', 'Đã quay lại sau CSKH', WEB + 'dialog dashboard → ô vòng đời · nhóm chưa có khách nào: tiêu đề là tên giai đoạn và một dòng "Chưa có khách trong nhóm."; cũng gặp ở "Khách mới" và "Khách quay lại"; danh sách có khách là WD5', [
+    txt('Chưa có khách trong nhóm.')
+  ], { w: 760, nav: 'dashboard', behind: wd2Dash([0, 0, 42, 4, 0]), badge: '5' }),
+
+  // WD11-WD14 · the care dialog (WD2) with the inline line #crm-error under the buttons.
+  wd2Task('WD11', 'dialog crm → Xử lý · kết quả "Gọi lại sau" nhưng chưa chọn "Ngày giờ tiếp theo": dòng lỗi #crm-error dưới nút lưu, mọi trường như WD2', { outcome: 'Gọi lại sau', note: 'Gọi lại sau', line: 'Cần ngày giờ gọi lại.' }),
+  wd2Task('WD12', 'dialog crm → Xử lý · ô "Nội dung / kết quả trao đổi" chỉ có khoảng trắng nên lưu bị chặn; dòng lỗi #crm-error dưới nút lưu', { outcome: 'Đã liên hệ, chưa có nhu cầu', note: ' ', line: 'Chọn kênh, kết quả, người phụ trách và nhập ghi chú.' }),
+  wd2Task('WD13', 'dialog crm → Xử lý · chọn kết quả "Đồng ý đặt lịch": nút lưu đổi thành "Tiếp tục → Đặt lịch" và mở hộp thoại đặt lịch (WB7) với ghi chú "Sau CSKH: …"; ô ghi chú đang focus trong bản gốc', { outcome: 'Đồng ý đặt lịch', note: 'Khách đồng ý đặt lịch.', submit: 'Tiếp tục → Đặt lịch' }),
+  wd2Task('WD14', 'dialog crm → Xử lý · việc đã được xử lý ở cửa sổ khác nên lưu báo lỗi; dòng lỗi #crm-error dưới nút lưu (bản gốc vẽ như một thông báo nguy hiểm có role=alert)', { outcome: 'Đã liên hệ, chưa có nhu cầu', note: 'Đã trao đổi.', line: 'Việc đã được xử lý hoặc không còn hợp lệ. Tải lại danh sách.' }),
+
+  // WD15 · BS. Lan closed her only open follow-up: the inbox is clean, the nav badge reads 0.
+  page('WD15', 'Theo dõi · inbox đã sạch', WEB + 'followups (BS. Lan) · sau "Duyệt, phản hồi & đóng mục" mục cuối cùng của bác sĩ: ba ô đều 0, chip "Tất cả 0 / Ảnh 0 / Triệu chứng 0 / Quá hạn 0" không chip nào chọn, khối trống "Inbox đã sạch. Không có follow-up đang mở." và huy hiệu "Theo dõi 0"; thông báo nổi "Đã gửi phản hồi và đóng mục theo dõi"; app I6/A4 chưa có trạng thái này', 'followups', [
+    pageHead('Follow-up Inbox', 'Một hàng đợi cho ảnh bệnh nhân gửi, triệu chứng và các mốc bị bỏ sót.', [], 'Pema Digital Clinic'),
+    kpis(kpi('Đang mở', '0', 'tất cả nhóm', { icon: 'tune' }), kpi('Cần bác sĩ', '0', 'ảnh và triệu chứng', { icon: 'tune' }), kpi('Mốc bị bỏ sót', '0', 'cần giao người phụ trách', { icon: 'tune' })),
+    chips([['Tất cả', '', 0], ['Ảnh', '', 0], ['Triệu chứng', '', 0], ['Quá hạn', '', 0]]),
+    panel('', '', [], empty('Inbox đã sạch. Không có follow-up đang mở.', '', { flat: true }))
+  ], { role: 'doctor-lan', state: true, badge: '0', toast: 'Đã gửi phản hồi và đóng mục theo dõi' }),
+
+  // WD16 · saving a session without a photo opened a sixth follow-up (missing milestone photo) at the top of the inbox.
+  page('WD16', 'Theo dõi · thiếu ảnh mốc sau buổi điều trị', WEB + 'followups · lưu một buổi điều trị không kèm ảnh mở thêm mục "Thiếu ảnh mốc đánh giá" ("Buổi điều trị vừa lưu chưa có ảnh mốc.") ở đầu hộp thư: "Đang mở" 6, "Mốc bị bỏ sót" 3, chip "Tất cả 6"; thông báo nổi "Đã lưu buổi điều trị và cập nhật hành trình"; mục này không đính ảnh', 'followups', [
+    pageHead('Follow-up Inbox', 'Một hàng đợi cho ảnh bệnh nhân gửi, triệu chứng và các mốc bị bỏ sót.', [], 'Pema Digital Clinic'),
+    kpis(kpi('Đang mở', '6', 'tất cả nhóm', { icon: 'tune' }), kpi('Cần bác sĩ', '3', 'ảnh và triệu chứng', { icon: 'tune' }), kpi('Mốc bị bỏ sót', '3', 'cần giao người phụ trách', { icon: 'tune' })),
+    chips([['Tất cả', '', 6], ['Ảnh', '', 2], ['Triệu chứng', '', 1], ['Quá hạn', '', 1]]),
+    wd2FollowCard('soft', 'Thiếu ảnh mốc đánh giá', people[0].name, 'Buổi điều trị vừa lưu chưa có ảnh mốc.', '20/9/2026   •   Giao: CSKH Mai Anh', false),
+    wdFollowCards()
+  ], { state: true, badge: '6', toast: 'Đã lưu buổi điều trị và cập nhật hành trình' })
 ];
