@@ -148,7 +148,8 @@
         "Doctors see only their own visits and no invoice total (\"Phát sinh hóa đơn hôm nay\" is hidden for role doctor)."
       ],
       "differences": [
-        "App I2 lists \"Tổng lịch\", \"Đang chờ\", \"Hoàn tất\" and a status chip row; the web has 8 reception tiles that act as filters, a doctor select, a search field and paging (\"← Trước\", \"Sau →\")."
+        "App I2 lists \"Tổng lịch\", \"Đang chờ\", \"Hoàn tất\" and a status chip row; the web has 8 reception tiles that act as filters, a doctor select, a search field and paging (\"← Trước\", \"Sau →\").",
+        "Canvas WB3: the six status tiles are drawn as buttons \"31 Chưa đến\" … \"0 Vắng hẹn\" in a 4-column grid beside \"Tổng lịch\" and \"Đã đến\"; the old web shows all 8 in one row. Sample rows show every status with its action: Check-in + Vắng (Chưa đến, Đã xác nhận), \"Mời vào phòng\" (Đang chờ), \"Mở 360\" (all others), as in crm-ui.js."
       ],
       "gotchas": [
         "The money tile \"Phát sinh hóa đơn hôm nay\" is missing for the doctor role (WB4 and WB2 use other roles)."
@@ -157,6 +158,9 @@
     "WB4": {
       "logic": [
         "Same `today()` with a search that matches nothing; the table body becomes one empty row."
+      ],
+      "differences": [
+        "Canvas WB4: the table header is followed by the line \"Không có lịch phù hợp.\" instead of a full-width empty row."
       ]
     },
     "WB5": {
@@ -169,16 +173,31 @@
         "Doctor shifts 08:00–18:00 with a break 12:00–13:00; \"Ngoài ca bác sĩ hoặc trùng giờ nghỉ 12:00–13:00.\""
       ],
       "differences": [
-        "App I3/A2 show a week strip and a day list; the web board is a room-by-time grid with drag and drop, the legend of the four service colours and the side panel \"Chờ xếp lịch\"."
+        "App I3/A2 show a week strip and a day list; the web board is a room-by-time grid with drag and drop, the legend of the four service colours and the side panel \"Chờ xếp lịch\".",
+        "Canvas WB5: booking cards show time, patient and \"BS. · Đặt hẹn\" (the service is the card colour, named in the legend); the old card also repeats the service name and \"· +15′ đệm\" in the time line. The hatched \"15′ chuẩn bị phòng\" blocks are drawn as small cards of the board block, which has no hatched buffer kind (open item). The 60 empty half-hour slots (buttons \"Đặt lịch <phòng> <giờ>\", ops=new) are not drawn: the board block has no empty-slot buttons (open item). The canvas shows 08:00–12:00 with one booking per hour per room; the old grid scrolls 08:00–18:00."
       ],
       "gotchas": [
         "The 4 service colours are the classes `service-S0..S3` (calendar legend and booking cards).",
         "Drag and drop is mouse only (`draggable=true`); keyboard users open the card and use the dialog."
+      ],
+      "demo_data": [
+        "08:00–08:30 Nguyễn Minh Linh Tái khám & đánh giá BS. Tâm · Đặt hẹn",
+        "09:00–09:30 Vũ Quỳnh Trang Tái khám & đánh giá BS. Tâm · Đặt hẹn",
+        "Đặt lịch Khám da liễu 08:00",
+        "Đặt lịch Tư vấn chuyên sâu 08:00",
+        "08:00–08:45 · +15′ đệm Trần Ngọc Anh Tư vấn da liễu BS. Mai · Đặt hẹn"
       ]
     },
     "WB6": {
       "logic": [
         "Same `schedule()` with `view = 'week'`: seven `week-day` columns starting at the chosen date, each with a title \"CN, 20/09\" and the day's bookings."
+      ],
+      "demo_data": [
+        "08:00–08:30 Nguyễn Minh Linh Tái khám & đánh giá",
+        "08:00–08:30 Đặng Gia Hân Tái khám & đánh giá"
+      ],
+      "differences": [
+        "Canvas WB6: 7 columns at 1440 truncate long names; the old web keeps 178 px columns and scrolls horizontally. Each day shows 3 sample cards, the count in the day header is the old one."
       ]
     },
     "WB7": {
@@ -197,10 +216,14 @@
         "\"Không có giờ trống cho lựa chọn này. Hãy đổi ngày, bác sĩ hoặc phòng.\""
       ],
       "differences": [
-        "App I4/F8 book with a bottom sheet and a week strip; the web is one dialog with 8 fields, the preview and \"Tìm giờ trống\"."
+        "App I4/F8 book with a bottom sheet and a week strip; the web is one dialog with 8 fields, the preview and \"Tìm giờ trống\".",
+        "The close button \"Đóng hộp thoại\" (the X) is drawn by the dialog block without its accessible label."
       ],
       "gotchas": [
         "Every ops dialog ends with an empty `<p id=\"ops-error\" role=\"alert\">`; it has no text until a rule error is thrown, so it is not drawn in the layout."
+      ],
+      "demo_data": [
+        "Đóng hộp thoại"
       ]
     },
     "WB8": {
@@ -210,11 +233,23 @@
       "rules": [
         "\"Cần lý do hủy cho lịch đang hoạt động.\"",
         "\"Không thể chuyển trạng thái lịch này.\" (only confirmed and arrived are allowed targets)."
+      ],
+      "demo_data": [
+        "Đóng hộp thoại"
+      ],
+      "differences": [
+        "The close button \"Đóng hộp thoại\" (the X) is drawn by the dialog block without its accessible label."
       ]
     },
     "WB9": {
       "logic": [
         "`data-ops=\"wait\"` on a waiting-list card opens the booking dialog with the waiting patient, service and note; the form carries `data-wait=<waitlist id>` so the entry leaves the list when saved."
+      ],
+      "demo_data": [
+        "Đóng hộp thoại"
+      ],
+      "differences": [
+        "The close button \"Đóng hộp thoại\" (the X) is drawn by the dialog block without its accessible label."
       ]
     },
     "WC1": {
