@@ -104,7 +104,7 @@ function deltaE(l1, l2) {
 }
 
 function colorIndex(tokens) {
-  const entries = Object.entries(tokens.color.light).map(([name, v]) => ({ name, rgb: fromHex(v), v })).filter((e) => e.rgb);
+  const entries = Object.entries(tokens.color.light).filter(([name]) => name !== 'overlay').map(([name, v]) => ({ name, rgb: fromHex(v), v })).filter((e) => e.rgb);
   entries.forEach((e) => (e.lab = toLab(e.rgb)));
   entries.sort((a, b) => {
     const ia = PREFER.indexOf(a.name);

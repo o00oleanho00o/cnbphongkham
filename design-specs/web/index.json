@@ -1,0 +1,2148 @@
+{
+  "generator": ".claude/skills/pema-web-design/scripts/web-specs.cjs",
+  "snapshot": "ad8dbcaaafa349cb",
+  "counts": {
+    "total": 81,
+    "by_kind": {
+      "dialog": 13,
+      "modal": 6,
+      "page": 14,
+      "state": 37,
+      "tab": 11
+    },
+    "by_group": {
+      "WA": 4,
+      "WB": 9,
+      "WC": 21,
+      "WD": 8,
+      "WE": 6,
+      "WF": 10,
+      "WG": 9,
+      "WH": 14
+    }
+  },
+  "groups": [
+    {
+      "code": "WA",
+      "name": "Khung & điều hướng"
+    },
+    {
+      "code": "WB",
+      "name": "Vận hành: tổng quan, hôm nay, lịch"
+    },
+    {
+      "code": "WC",
+      "name": "Hồ sơ & Patient 360"
+    },
+    {
+      "code": "WD",
+      "name": "CSKH & theo dõi"
+    },
+    {
+      "code": "WE",
+      "name": "Ảnh, bác sĩ & phòng, dịch vụ"
+    },
+    {
+      "code": "WF",
+      "name": "Thu ngân & lên đơn"
+    },
+    {
+      "code": "WG",
+      "name": "Tài chính PB02"
+    },
+    {
+      "code": "WH",
+      "name": "Ask Pema & Hướng dẫn"
+    }
+  ],
+  "screens": [
+    {
+      "id": "WA1",
+      "name": "Khung ứng dụng · Chủ phòng khám",
+      "group": "WA",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "(app shell)",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "A5",
+        "A6"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WA1.md",
+      "counts": {
+        "actions": 17,
+        "fields": 2,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WA2",
+      "name": "Khung · CSKH (trang chủ CSKH hôm nay)",
+      "group": "WA",
+      "kind": "state",
+      "role": "care-maianh",
+      "next_route": "(app shell)",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "C1",
+        "A6"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WA2.md",
+      "counts": {
+        "actions": 7,
+        "fields": 2,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WA3",
+      "name": "Khung · Kế toán (trang chủ Thu ngân)",
+      "group": "WA",
+      "kind": "state",
+      "role": "accountant",
+      "next_route": "(app shell)",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "D1",
+        "A6"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WA3.md",
+      "counts": {
+        "actions": 7,
+        "fields": 2,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WA4",
+      "name": "Thông báo nổi (toast)",
+      "group": "WA",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "(app shell)",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "A7"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WA4.md",
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WB1",
+      "name": "Tổng quan",
+      "group": "WB",
+      "kind": "page",
+      "role": "owner-tam",
+      "next_route": "/dashboard",
+      "next_status": "built (U2)",
+      "app_canvas": [
+        "I1",
+        "A1"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WB1.md",
+      "counts": {
+        "actions": 12,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 8,
+        "notices": 1,
+        "tables": 1
+      }
+    },
+    {
+      "id": "WB2",
+      "name": "Tổng quan · Bác sĩ",
+      "group": "WB",
+      "kind": "state",
+      "role": "doctor-mai",
+      "next_route": "/dashboard",
+      "next_status": "built (U2)",
+      "app_canvas": [
+        "B1",
+        "B2"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WB2.md",
+      "counts": {
+        "actions": 4,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 1,
+        "kpis": 3,
+        "notices": 0,
+        "tables": 1
+      }
+    },
+    {
+      "id": "WB3",
+      "name": "Hôm nay",
+      "group": "WB",
+      "kind": "page",
+      "role": "owner-tam",
+      "next_route": "/today",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "I2",
+        "A1"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WB3.md",
+      "counts": {
+        "actions": 14,
+        "fields": 3,
+        "chips_tabs": 0,
+        "statuses": 1,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 1
+      }
+    },
+    {
+      "id": "WB4",
+      "name": "Hôm nay · lọc không có kết quả",
+      "group": "WB",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/today",
+      "next_status": "restyle (U1)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WB4.md",
+      "counts": {
+        "actions": 9,
+        "fields": 3,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 1
+      }
+    },
+    {
+      "id": "WB5",
+      "name": "Điều phối lịch",
+      "group": "WB",
+      "kind": "page",
+      "role": "owner-tam",
+      "next_route": "/schedule",
+      "next_status": "built (U2)",
+      "app_canvas": [
+        "I3",
+        "A2"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WB5.md",
+      "counts": {
+        "actions": 11,
+        "fields": 3,
+        "chips_tabs": 2,
+        "statuses": 1,
+        "kpis": 4,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WB6",
+      "name": "Điều phối lịch · 7 ngày",
+      "group": "WB",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/schedule",
+      "next_status": "built (U2)",
+      "app_canvas": [
+        "I3"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WB6.md",
+      "counts": {
+        "actions": 10,
+        "fields": 3,
+        "chips_tabs": 2,
+        "statuses": 1,
+        "kpis": 4,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WB7",
+      "name": "Đặt lịch hẹn",
+      "group": "WB",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "next_route": "/schedule",
+      "next_status": "built (U2)",
+      "app_canvas": [
+        "I4",
+        "F8"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WB7.md",
+      "counts": {
+        "actions": 3,
+        "fields": 7,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WB8",
+      "name": "Chi tiết lịch hẹn",
+      "group": "WB",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "next_route": "/schedule",
+      "next_status": "built (U2)",
+      "app_canvas": [
+        "F9"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WB8.md",
+      "counts": {
+        "actions": 7,
+        "fields": 8,
+        "chips_tabs": 0,
+        "statuses": 1,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WB9",
+      "name": "Xếp lịch từ danh sách chờ",
+      "group": "WB",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/schedule",
+      "next_status": "built (U2)",
+      "app_canvas": [
+        "F8"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WB9.md",
+      "counts": {
+        "actions": 3,
+        "fields": 7,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC1",
+      "name": "Tìm bệnh nhân",
+      "group": "WC",
+      "kind": "page",
+      "role": "owner-tam",
+      "next_route": "/patients",
+      "next_status": "built (U1)",
+      "app_canvas": [
+        "A3",
+        "I5"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WC1.md",
+      "counts": {
+        "actions": 2,
+        "fields": 1,
+        "chips_tabs": 4,
+        "statuses": 7,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 1
+      }
+    },
+    {
+      "id": "WC2",
+      "name": "Tìm bệnh nhân · không có hồ sơ",
+      "group": "WC",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/patients",
+      "next_status": "built (U1)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WC2.md",
+      "counts": {
+        "actions": 1,
+        "fields": 1,
+        "chips_tabs": 4,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC3",
+      "name": "Thêm người bệnh",
+      "group": "WC",
+      "kind": "modal",
+      "role": "owner-tam",
+      "next_route": null,
+      "next_status": "none",
+      "app_canvas": [
+        "I5"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WC3.md",
+      "counts": {
+        "actions": 2,
+        "fields": 3,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC4",
+      "name": "Patient 360 · Tổng quan",
+      "group": "WC",
+      "kind": "tab",
+      "role": "owner-tam",
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "F1"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WC4.md",
+      "counts": {
+        "actions": 13,
+        "fields": 0,
+        "chips_tabs": 8,
+        "statuses": 6,
+        "kpis": 0,
+        "notices": 4,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC5",
+      "name": "Patient 360 · Tư vấn",
+      "group": "WC",
+      "kind": "tab",
+      "role": "owner-tam",
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "J1",
+        "F2"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WC5.md",
+      "counts": {
+        "actions": 9,
+        "fields": 3,
+        "chips_tabs": 8,
+        "statuses": 5,
+        "kpis": 0,
+        "notices": 2,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC6",
+      "name": "Patient 360 · Tư vấn · bản nháp ghi chú",
+      "group": "WC",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "F2"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WC6.md",
+      "counts": {
+        "actions": 10,
+        "fields": 4,
+        "chips_tabs": 8,
+        "statuses": 5,
+        "kpis": 0,
+        "notices": 3,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC7",
+      "name": "Patient 360 · Kế hoạch",
+      "group": "WC",
+      "kind": "tab",
+      "role": "owner-tam",
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "J3"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WC7.md",
+      "counts": {
+        "actions": 8,
+        "fields": 0,
+        "chips_tabs": 8,
+        "statuses": 7,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC8",
+      "name": "Patient 360 · Buổi điều trị",
+      "group": "WC",
+      "kind": "tab",
+      "role": "owner-tam",
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "J5",
+        "F3"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WC8.md",
+      "counts": {
+        "actions": 8,
+        "fields": 10,
+        "chips_tabs": 8,
+        "statuses": 5,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC9",
+      "name": "Patient 360 · Ảnh trước / sau",
+      "group": "WC",
+      "kind": "tab",
+      "role": "owner-tam",
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "I7"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WC9.md",
+      "counts": {
+        "actions": 9,
+        "fields": 1,
+        "chips_tabs": 8,
+        "statuses": 4,
+        "kpis": 0,
+        "notices": 6,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC10",
+      "name": "Patient 360 · Dịch vụ & tài chính",
+      "group": "WC",
+      "kind": "tab",
+      "role": "owner-tam",
+      "next_route": null,
+      "next_status": "none",
+      "app_canvas": [
+        "J6"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WC10.md",
+      "counts": {
+        "actions": 8,
+        "fields": 0,
+        "chips_tabs": 8,
+        "statuses": 4,
+        "kpis": 0,
+        "notices": 2,
+        "tables": 1
+      }
+    },
+    {
+      "id": "WC11",
+      "name": "Patient 360 · CRM & CSKH",
+      "group": "WC",
+      "kind": "tab",
+      "role": "owner-tam",
+      "next_route": "/patients/[id]",
+      "next_status": "built (U1)",
+      "app_canvas": [
+        "J7",
+        "C5"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WC11.md",
+      "counts": {
+        "actions": 9,
+        "fields": 0,
+        "chips_tabs": 8,
+        "statuses": 4,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC12",
+      "name": "Patient 360 · Lịch sử",
+      "group": "WC",
+      "kind": "tab",
+      "role": "owner-tam",
+      "next_route": "/patients/[id]",
+      "next_status": "built (U1)",
+      "app_canvas": [
+        "J8"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WC12.md",
+      "counts": {
+        "actions": 4,
+        "fields": 0,
+        "chips_tabs": 8,
+        "statuses": 3,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC13",
+      "name": "Brief trước buổi hẹn",
+      "group": "WC",
+      "kind": "modal",
+      "role": "owner-tam",
+      "next_route": null,
+      "next_status": "none",
+      "app_canvas": [
+        "J2"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WC13.md",
+      "counts": {
+        "actions": 3,
+        "fields": 1,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC14",
+      "name": "Gửi cập nhật cho người bệnh",
+      "group": "WC",
+      "kind": "modal",
+      "role": "owner-tam",
+      "next_route": "/inbox",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "J9"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WC14.md",
+      "counts": {
+        "actions": 2,
+        "fields": 1,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC15",
+      "name": "Thông tin cần nhớ",
+      "group": "WC",
+      "kind": "modal",
+      "role": "owner-tam",
+      "next_route": null,
+      "next_status": "none",
+      "app_canvas": [
+        "J10"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WC15.md",
+      "counts": {
+        "actions": 2,
+        "fields": 2,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC16",
+      "name": "Chăm sóc tại nhà",
+      "group": "WC",
+      "kind": "modal",
+      "role": "owner-tam",
+      "next_route": null,
+      "next_status": "none",
+      "app_canvas": [
+        "J11"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WC16.md",
+      "counts": {
+        "actions": 2,
+        "fields": 1,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC17",
+      "name": "Điều chỉnh kế hoạch",
+      "group": "WC",
+      "kind": "modal",
+      "role": "owner-tam",
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "J4"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WC17.md",
+      "counts": {
+        "actions": 2,
+        "fields": 2,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC18",
+      "name": "Ngày dự kiến quay lại",
+      "group": "WC",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "next_route": null,
+      "next_status": "none",
+      "app_canvas": [
+        "J7"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WC18.md",
+      "counts": {
+        "actions": 2,
+        "fields": 3,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC19",
+      "name": "Thêm dịch vụ vào liệu trình",
+      "group": "WC",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "next_route": null,
+      "next_status": "none",
+      "app_canvas": [
+        "J6"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WC19.md",
+      "counts": {
+        "actions": 2,
+        "fields": 3,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC20",
+      "name": "Patient 360 · hồ sơ vừa tạo",
+      "group": "WC",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "F1"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WC20.md",
+      "counts": {
+        "actions": 13,
+        "fields": 0,
+        "chips_tabs": 8,
+        "statuses": 5,
+        "kpis": 0,
+        "notices": 5,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WC21",
+      "name": "Patient 360 · Lịch sử · chưa có hoạt động",
+      "group": "WC",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/patients/[id]",
+      "next_status": "built (U1)",
+      "app_canvas": [
+        "J8"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WC21.md",
+      "counts": {
+        "actions": 4,
+        "fields": 0,
+        "chips_tabs": 8,
+        "statuses": 2,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WD1",
+      "name": "CSKH hôm nay",
+      "group": "WD",
+      "kind": "page",
+      "role": "owner-tam",
+      "next_route": "/crm",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WD1.md",
+      "counts": {
+        "actions": 6,
+        "fields": 3,
+        "chips_tabs": 11,
+        "statuses": 7,
+        "kpis": 4,
+        "notices": 1,
+        "tables": 1
+      }
+    },
+    {
+      "id": "WD2",
+      "name": "Ghi nhận CSKH (Xử lý)",
+      "group": "WD",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "next_route": "/today",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "I13",
+        "C6"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WD2.md",
+      "counts": {
+        "actions": 3,
+        "fields": 7,
+        "chips_tabs": 0,
+        "statuses": 1,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WD3",
+      "name": "Protocol chăm sóc mẫu",
+      "group": "WD",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "next_route": "/crm",
+      "next_status": "built (U7)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WD3.md",
+      "counts": {
+        "actions": 1,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WD4",
+      "name": "Kết quả chăm sóc đã ghi",
+      "group": "WD",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "next_route": "/crm",
+      "next_status": "built (U7)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WD4.md",
+      "counts": {
+        "actions": 1,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WD5",
+      "name": "Nhóm khách (vòng đời)",
+      "group": "WD",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "next_route": "/crm",
+      "next_status": "built (U7)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WD5.md",
+      "counts": {
+        "actions": 3,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WD6",
+      "name": "Theo dõi",
+      "group": "WD",
+      "kind": "page",
+      "role": "owner-tam",
+      "next_route": "/inbox",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "I6",
+        "A4"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WD6.md",
+      "counts": {
+        "actions": 10,
+        "fields": 0,
+        "chips_tabs": 4,
+        "statuses": 5,
+        "kpis": 3,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WD7",
+      "name": "Duyệt phản hồi follow-up",
+      "group": "WD",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "next_route": "/review",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "F10"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WD7.md",
+      "counts": {
+        "actions": 2,
+        "fields": 1,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WD8",
+      "name": "CSKH hôm nay · không có việc phù hợp",
+      "group": "WD",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/crm",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "C4"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WD8.md",
+      "counts": {
+        "actions": 3,
+        "fields": 3,
+        "chips_tabs": 11,
+        "statuses": 0,
+        "kpis": 4,
+        "notices": 1,
+        "tables": 1
+      }
+    },
+    {
+      "id": "WE1",
+      "name": "Ảnh trước / sau",
+      "group": "WE",
+      "kind": "page",
+      "role": "owner-tam",
+      "next_route": "/studio",
+      "next_status": "planned (U4)",
+      "app_canvas": [
+        "I7"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WE1.md",
+      "counts": {
+        "actions": 3,
+        "fields": 1,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 5,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WE2",
+      "name": "Ảnh trước / sau · so sánh trượt",
+      "group": "WE",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/studio",
+      "next_status": "planned (U4)",
+      "app_canvas": [
+        "I7"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WE2.md",
+      "counts": {
+        "actions": 3,
+        "fields": 1,
+        "chips_tabs": 0,
+        "statuses": 1,
+        "kpis": 0,
+        "notices": 5,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WE3",
+      "name": "Bác sĩ & phòng",
+      "group": "WE",
+      "kind": "page",
+      "role": "owner-tam",
+      "next_route": "/resources",
+      "next_status": "planned (U4)",
+      "app_canvas": [
+        "F14"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WE3.md",
+      "counts": {
+        "actions": 5,
+        "fields": 1,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 1
+      }
+    },
+    {
+      "id": "WE4",
+      "name": "Khóa thời gian phòng",
+      "group": "WE",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "next_route": "/resources",
+      "next_status": "planned (U4)",
+      "app_canvas": [
+        "I8"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WE4.md",
+      "counts": {
+        "actions": 2,
+        "fields": 5,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WE5",
+      "name": "Dịch vụ",
+      "group": "WE",
+      "kind": "page",
+      "role": "owner-tam",
+      "next_route": "/services",
+      "next_status": "planned (U4)",
+      "app_canvas": [
+        "F13"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WE5.md",
+      "counts": {
+        "actions": 2,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 1,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WE6",
+      "name": "Chỉnh dịch vụ",
+      "group": "WE",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "next_route": "/services",
+      "next_status": "planned (U4)",
+      "app_canvas": [
+        "I9"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WE6.md",
+      "counts": {
+        "actions": 2,
+        "fields": 5,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WF1",
+      "name": "Thu ngân",
+      "group": "WF",
+      "kind": "page",
+      "role": "owner-tam",
+      "next_route": "/cashier",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "I10",
+        "F11",
+        "D1"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WF1.md",
+      "counts": {
+        "actions": 8,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 1,
+        "kpis": 4,
+        "notices": 0,
+        "tables": 1
+      }
+    },
+    {
+      "id": "WF2",
+      "name": "Thu tiền",
+      "group": "WF",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "next_route": "/cashier",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "I11",
+        "F12"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WF2.md",
+      "counts": {
+        "actions": 2,
+        "fields": 2,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WF3",
+      "name": "Tạo đơn thuốc / phiếu tư vấn",
+      "group": "WF",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "next_route": "/cashier",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "F4"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WF3.md",
+      "counts": {
+        "actions": 4,
+        "fields": 5,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 2,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WF4",
+      "name": "Lên đơn · đã chọn sản phẩm",
+      "group": "WF",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/cashier",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "F5"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WF4.md",
+      "counts": {
+        "actions": 6,
+        "fields": 15,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 2,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WF5",
+      "name": "Tách đơn · bản nháp",
+      "group": "WF",
+      "kind": "page",
+      "role": "owner-tam",
+      "next_route": "/orders/[id]",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "F6",
+        "F7"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WF5.md",
+      "counts": {
+        "actions": 5,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 3,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WF6",
+      "name": "Tách đơn · đã duyệt",
+      "group": "WF",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/orders/[id]/print",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "F7"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WF6.md",
+      "counts": {
+        "actions": 4,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WF7",
+      "name": "Tách đơn · sản phẩm cần phân loại",
+      "group": "WF",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/orders/[id]",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "F5"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WF7.md",
+      "counts": {
+        "actions": 5,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 3,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WF8",
+      "name": "Tách đơn · thiếu mã đơn",
+      "group": "WF",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/orders/[id]",
+      "next_status": "planned (U5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WF8.md",
+      "counts": {
+        "actions": 4,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WF9",
+      "name": "Sửa đơn nháp",
+      "group": "WF",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/cashier",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "F5"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WF9.md",
+      "counts": {
+        "actions": 5,
+        "fields": 10,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 2,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WF10",
+      "name": "Lên đơn · không tìm thấy sản phẩm",
+      "group": "WF",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/cashier",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "F4"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WF10.md",
+      "counts": {
+        "actions": 3,
+        "fields": 5,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 2,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WG1",
+      "name": "Tài chính & tiền thủ thuật · Tổng quan",
+      "group": "WG",
+      "kind": "page",
+      "role": "owner-tam",
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H1"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WG1.md",
+      "counts": {
+        "actions": 2,
+        "fields": 1,
+        "chips_tabs": 4,
+        "statuses": 1,
+        "kpis": 4,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WG2",
+      "name": "Tài chính · Tiền thủ thuật",
+      "group": "WG",
+      "kind": "tab",
+      "role": "owner-tam",
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H3",
+        "H4"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WG2.md",
+      "counts": {
+        "actions": 6,
+        "fields": 14,
+        "chips_tabs": 4,
+        "statuses": 2,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 1
+      }
+    },
+    {
+      "id": "WG3",
+      "name": "Tài chính · Ghi lượt thủ thuật đã hoàn tất",
+      "group": "WG",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H9"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WG3.md",
+      "counts": {
+        "actions": 6,
+        "fields": 14,
+        "chips_tabs": 4,
+        "statuses": 2,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 1
+      }
+    },
+    {
+      "id": "WG4",
+      "name": "Tài chính · Chính sách tỷ lệ",
+      "group": "WG",
+      "kind": "tab",
+      "role": "owner-tam",
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H8"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WG4.md",
+      "counts": {
+        "actions": 2,
+        "fields": 9,
+        "chips_tabs": 4,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WG5",
+      "name": "Tài chính · Phiếu thu & thông báo",
+      "group": "WG",
+      "kind": "tab",
+      "role": "owner-tam",
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H5",
+        "H6"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WG5.md",
+      "counts": {
+        "actions": 2,
+        "fields": 4,
+        "chips_tabs": 4,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WG6",
+      "name": "Doanh số của tôi · Tổng quan (bác sĩ)",
+      "group": "WG",
+      "kind": "state",
+      "role": "doctor-mai",
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H2"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WG6.md",
+      "counts": {
+        "actions": 2,
+        "fields": 1,
+        "chips_tabs": 2,
+        "statuses": 1,
+        "kpis": 3,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WG7",
+      "name": "Doanh số của tôi · Tiền thủ thuật (bác sĩ)",
+      "group": "WG",
+      "kind": "state",
+      "role": "doctor-mai",
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H2",
+        "H3"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WG7.md",
+      "counts": {
+        "actions": 2,
+        "fields": 1,
+        "chips_tabs": 2,
+        "statuses": 2,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 1
+      }
+    },
+    {
+      "id": "WG8",
+      "name": "Tài chính · Tổng quan (kế toán)",
+      "group": "WG",
+      "kind": "state",
+      "role": "accountant",
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "D1",
+        "H1"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WG8.md",
+      "counts": {
+        "actions": 2,
+        "fields": 1,
+        "chips_tabs": 4,
+        "statuses": 1,
+        "kpis": 4,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WG9",
+      "name": "Tài chính · Chưa kết nối dữ liệu",
+      "group": "WG",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H7"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WG9.md",
+      "counts": {
+        "actions": 1,
+        "fields": 1,
+        "chips_tabs": 4,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WH1",
+      "name": "Ask Pema",
+      "group": "WH",
+      "kind": "page",
+      "role": "owner-tam",
+      "next_route": "/ask",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "I12",
+        "F15"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WH1.md",
+      "counts": {
+        "actions": 2,
+        "fields": 1,
+        "chips_tabs": 3,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WH2",
+      "name": "Ask Pema · có câu trả lời",
+      "group": "WH",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/ask",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "I12",
+        "F15"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WH2.md",
+      "counts": {
+        "actions": 3,
+        "fields": 1,
+        "chips_tabs": 3,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WH3",
+      "name": "Hướng dẫn sử dụng",
+      "group": "WH",
+      "kind": "page",
+      "role": "owner-tam",
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WH3.md",
+      "counts": {
+        "actions": 11,
+        "fields": 1,
+        "chips_tabs": 11,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WH4",
+      "name": "Hướng dẫn · Bắt đầu theo vai trò",
+      "group": "WH",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WH4.md",
+      "counts": {
+        "actions": 5,
+        "fields": 1,
+        "chips_tabs": 11,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WH5",
+      "name": "Hướng dẫn · Hồ sơ & Patient 360",
+      "group": "WH",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WH5.md",
+      "counts": {
+        "actions": 4,
+        "fields": 1,
+        "chips_tabs": 11,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WH6",
+      "name": "Hướng dẫn · Lịch hẹn & tiếp đón",
+      "group": "WH",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WH6.md",
+      "counts": {
+        "actions": 5,
+        "fields": 1,
+        "chips_tabs": 11,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WH7",
+      "name": "Hướng dẫn · Bác sĩ, phòng & dịch vụ",
+      "group": "WH",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WH7.md",
+      "counts": {
+        "actions": 3,
+        "fields": 1,
+        "chips_tabs": 11,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WH8",
+      "name": "Hướng dẫn · Từ tư vấn đến buổi điều trị",
+      "group": "WH",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WH8.md",
+      "counts": {
+        "actions": 4,
+        "fields": 1,
+        "chips_tabs": 11,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WH9",
+      "name": "Hướng dẫn · Chăm sóc & phản hồi tại nhà",
+      "group": "WH",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WH9.md",
+      "counts": {
+        "actions": 4,
+        "fields": 1,
+        "chips_tabs": 11,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WH10",
+      "name": "Hướng dẫn · Hóa đơn & thu tiền",
+      "group": "WH",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WH10.md",
+      "counts": {
+        "actions": 3,
+        "fields": 1,
+        "chips_tabs": 11,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WH11",
+      "name": "Hướng dẫn · Khi cần kiểm tra lại",
+      "group": "WH",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WH11.md",
+      "counts": {
+        "actions": 3,
+        "fields": 1,
+        "chips_tabs": 11,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WH12",
+      "name": "Hướng dẫn · CSKH chủ động & tài khoản nhân viên",
+      "group": "WH",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WH12.md",
+      "counts": {
+        "actions": 6,
+        "fields": 1,
+        "chips_tabs": 11,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WH13",
+      "name": "Hướng dẫn · Mobile, CSKH & tài chính theo vai trò",
+      "group": "WH",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WH13.md",
+      "counts": {
+        "actions": 5,
+        "fields": 1,
+        "chips_tabs": 11,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WH14",
+      "name": "Hướng dẫn · không tìm thấy chủ đề",
+      "group": "WH",
+      "kind": "state",
+      "role": "owner-tam",
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WH14.md",
+      "counts": {
+        "actions": 11,
+        "fields": 1,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 2,
+        "tables": 0
+      }
+    }
+  ]
+}

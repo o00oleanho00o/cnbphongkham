@@ -172,6 +172,10 @@ const variantsLine = (v) => {
 const hookTail = (n) => (n.hook ? `  // ${n.hook}` : '');
 
 function actionLine(n, ctx) {
+  if (/nav-item/.test(n.c || '')) {
+    use(ctx, 'Sidebar');
+    return `<Sidebar.Item${attrs({ active: n.current, href: n.href, icon: n.icon })}>${q(n.label)}</Sidebar.Item>` + hookTail(n);
+  }
   const name = use(ctx, 'Button');
   const a = { variant: n.variant, disabled: n.disabled, href: n.href, 'aria-label': n.aria, title: n.title, draggable: n.draggable, icon: n.icon };
   if (n.icon_only) a['icon-only'] = true;
@@ -258,8 +262,8 @@ function renderDialog(n, pad, out, ctx) {
     eyebrow = (head.children.find((c) => c.n === 'text' && c.eyebrow) || {}).t;
     const h = head.children.find((c) => c.n === 'heading');
     title = h && h.t;
-    const x = head.children.find((c) => c.n === 'action' && c.icon_only);
-    close = x ? x.aria || x.label : '';
+    const x = head.children.find((c) => c.n === 'action' && (c.icon_only || /Đóng/.test(c.aria || '') || /modal-close/.test(c.c || '')));
+    close = x ? { label: x.label, ...(x.aria && x.aria !== x.label ? { aria: x.aria } : {}) } : '';
     rest = kids.filter((c) => c !== head);
   } else {
     const h = kids.find((c) => c.n === 'heading');
@@ -268,7 +272,7 @@ function renderDialog(n, pad, out, ctx) {
     rest = kids.filter((c, i) => i !== hi && !(c.n === 'text' && c.eyebrow));
     eyebrow = (kids.find((c) => c.n === 'text' && c.eyebrow) || {}).t;
   }
-  out.push(`${pad}<${use(ctx, 'Dialog')}${attrs({ old: n.c, eyebrow, title, 'close-label': close, 'aria-label': n.aria })}>`);
+  out.push(`${pad}<${use(ctx, 'Dialog')}${attrs({ old: n.c, eyebrow, title, close, 'aria-label': n.aria })}>`);
   renderNodes(rest, pad + '  ', out, ctx);
   out.push(`${pad}</Dialog>`);
 }
@@ -295,6 +299,8 @@ function renderNode(n, pad, out, ctx) {
     case 'group': {
       if (isPageHeading(n)) return renderPageHeading(n, pad, out, ctx);
       let tagName = 'Stack';
+      if (/sidebar/.test(n.c || '')) tagName = use(ctx, 'Sidebar');
+      else if (/topbar/.test(n.c || '')) tagName = use(ctx, 'TopBar');
       const a = { old: n.c, tag: n.tag };
       if (n.lay) {
         if (n.lay.d === 'grid') {
@@ -302,7 +308,7 @@ function renderNode(n, pad, out, ctx) {
           a.cols = n.lay.cols;
           a.gap = n.lay.gap;
         } else {
-          tagName = 'Row';
+          if (tagName === 'Stack') tagName = 'Row';
           a.gap = n.lay.gap;
           a.justify = n.lay.jc;
           a.wrap = n.lay.wrap;
@@ -513,7 +519,7 @@ function tokensLines(e) {
 }
 
 function frameLines(e, entry) {
-  const lines = [`- Viewport ${e.viewport}, clock ${'2026-09-20 09:00 (Asia/Ho_Chi_Minh)'}, account \`${e.role}\`; snapshot scope: ${e.scope}.`];
+  const lines = [`- Viewport ${e.viewport.replace('x', '×')}, clock ${'2026-09-20 09:00 (Asia/Ho_Chi_Minh)'}, account \`${e.role}\`; snapshot scope: ${e.scope}.`];
   for (const r of e.regions) lines.push(`- Region \`${r.sel}\` (${r.name}): x ${r.box[0]}, y ${r.box[1]}, ${r.box[2]}×${r.box[3]} px`);
   for (const c of e.columns.slice(0, 12)) lines.push(`- Layout \`.${(c.c || '').split(' ')[0] || 'region'}\` ${c.box[2]}×${c.box[3]} px: ${c.lay.d === 'grid' ? `grid, columns \`${c.lay.cols}\` (${c.lay.px})${c.lay.gap ? ', gap ' + c.lay.gap : ''}` : `flex ${c.lay.dir}${c.lay.wrap ? ' wrap' : ''}${c.lay.jc ? ', ' + c.lay.jc : ''}${c.lay.gap ? ', gap ' + c.lay.gap : ''}`}`);
   lines.push(`- Frames to build (inventory D4): ${entry.frames.join(', ')}.`);

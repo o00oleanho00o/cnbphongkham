@@ -174,7 +174,8 @@ function extractInPage(cfg) {
     const h = hook(el);
     if (h) n.hook = h;
     if (el.querySelector('svg')) n.icon = true;
-    if (el.draggable) n.draggable = true;
+    if (el.getAttribute('draggable') === 'true') n.draggable = true;
+    if (!isChip && selectedOf(el)) n.current = true;
     const c = classOf(el);
     if (c) n.c = c;
     return n;
@@ -475,13 +476,15 @@ function extractInPage(cfg) {
       return [n];
     }
     if (T === 'LABEL') {
-      const ctl = el.control || (el.querySelector('input,select,textarea') ?? null);
+      const next = el.nextElementSibling;
+      // a label without `for` labels the control right after it (<div class="field"><label>…</label><select>)
+      const ctl = el.control || el.querySelector('input,select,textarea') || (next && next.matches('input,select,textarea') ? next : null);
       if (ctl && vis(ctl) && !(ctl.tagName === 'INPUT' && ctl.type === 'file')) {
         if (consumed.has(ctl)) return [];
         consumed.add(ctl);
         seen.add(ctl);
         const n = fieldNode(ctl);
-        // a label that wraps its control may also hold extra text (checkbox sentence): fieldNode already took it
+        if (!n.label) n.label = textOf(el);
         lists.fields.push(n);
         return [n];
       }
