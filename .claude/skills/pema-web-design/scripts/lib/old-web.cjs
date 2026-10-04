@@ -13,6 +13,7 @@
 //   {"wait": "css"}                            wait until visible
 //   {"block": "url-glob"}                      abort requests to that URL (network down)
 //   {"dialog": "accept"|"dismiss"}             answer the next native confirm()/prompt(); the message is kept in page.dialogs
+//   {"status": ["url-glob", 500]}              answer requests to that URL with an HTTP error status
 //   {"hold": "url-glob"}                       never answer requests to that URL (loading state)
 //   {"ifVisible": ["css", [steps]]}            run the steps only when the css is visible (idempotent set-up of a state)
 //   {"upload": ["css", "png"|"txt"|"big"]}     choose a synthetic file in a file input (png = 1x1 image, txt = not an image,
@@ -138,6 +139,8 @@ async function runStep(step, state, { base, vars }) {
       cur.dialogs.push({ type: d.type(), message: d.message() });
       return step.dialog === 'accept' ? d.accept('Demo') : d.dismiss();
     });
+  } else if (step.status !== undefined) {
+    await cur.context().route(step.status[0], (route) => route.fulfill({ status: step.status[1], contentType: 'text/plain', body: 'error' }));
   } else if (step.hold !== undefined) {
     await cur.context().route(step.hold, () => {
       // never fulfilled: the page stays in its loading state

@@ -499,9 +499,11 @@ const MNEW = [START, ...NEWP, ...MOBILE, mnav('profile'), { select: ['#identity-
 const MV = [390, 844];
 // the clinic web resolves one open CSKH task of the first row
 const resolveTask = [{ click: '[data-crm="task"]' }, { wait: '#crm-task-form' }, { select: ['#crm-outcome', 'no_need'] }, { fill: ['#crm-note', 'Đã trao đổi, chưa có nhu cầu.'] }, { click: '#crm-submit' }, { wait: '.patient-hero, .crm-queue' }];
-const WAIT_ROOM = ['R0', 'R0', 'R2', 'R3', 'R0', 'R0'];
-const waitSteps = WAIT_ROOM.flatMap((room) => [
-  { ifVisible: ['[data-ops="wait"]', [{ click: '[data-ops="wait"]' }, { wait: '#booking-form' }, { select: ['#booking-room', room] }, { click: '[data-ops="suggest"]' }, BOOK_SUBMIT, { gone: '.modal' }]] },
+// the six waiting-list cards, in the order the list shows them: room, doctor and a time. They are booked on an empty
+// future day (the demo day is full), the first card is always the next one to book.
+const WAIT_SLOTS = [['R0', 'D0', '10:00'], ['R1', 'D1', '10:00'], ['R2', 'D2', '10:00'], ['R3', 'D3', '10:00'], ['R0', 'D0', '11:00'], ['R1', 'D1', '11:00']];
+const waitSteps = WAIT_SLOTS.flatMap(([room, doctor, time]) => [
+  { ifVisible: ['[data-ops="wait"]', [{ click: '[data-ops="wait"]' }, { wait: '#booking-form' }, { select: ['#booking-room', room] }, { select: ['#booking-doctor', doctor] }, { setValue: ['#booking-date', '2026-12-01'] }, { setValue: ['#booking-time', time] }, BOOK_SUBMIT, { gone: '.modal' }]] },
 ]);
 
 const MOBILE_COMMON = { next_route: null, next_status: 'none', viewport: MV, frames: ['390x844'] };
@@ -565,7 +567,7 @@ const added = {
     }),
     S('WB14', 'WB', 'Điều phối lịch · đã xếp hết danh sách chờ', 'state', [START, nav('schedule'), ...waitSteps], { selector: '.ops-side', text: 'Đã xếp hết danh sách chờ' }, {
       sources: ['prototype/shared/operations-ui.js#schedule'], next_route: '/schedule', next_status: 'built (U2)', app_canvas: ['I3'], covers: ['text:Đã xếp hết danh sách chờ'],
-      notes: 'The six waiting-list cards were each booked through "Xếp lịch →" (room chosen to fit the service); the side panel then reads "Đã xếp hết danh sách chờ.". Browser-local data only.',
+      notes: 'The six waiting-list cards were each booked through "Xếp lịch →" on an empty future day (room and doctor chosen to fit the service); the side panel then reads "Đã xếp hết danh sách chờ.". Browser-local data only.',
     }),
     S('WB15', 'WB', 'Đặt lịch hẹn · đã chọn giờ trống', 'state', [START, ...BOOK, { click: '[data-ops="suggest"]' }], { selector: '#ops-error', text: 'Đã chọn giờ trống. Bấm xác nhận để lưu.' }, {
       sources: ['prototype/shared/operations-ui.js#handle'], next_route: '/schedule', next_status: 'built (U2)', app_canvas: ['I4'], covers: ['id:ops-error'],
@@ -786,14 +788,14 @@ const added = {
     S('WF23', 'WF', 'Thu tiền · lỗi số tiền', 'state', [START, nav('cashier'), { click: '[data-ops="pay"]' }, { wait: '#pay-amount' }, { setValue: ['#pay-amount', '0'] }, { click: '[data-ops="save-pay"]' }], { selector: '#ops-error', text: 'Số tiền phải lớn hơn 0 và không vượt số còn lại.' }, {
       sources: ['prototype/shared/operations-data.js#pay'], next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['I11'], covers: ['id:ops-error'],
     }),
-    S('WF24', 'WF', 'Thu ngân · lọc "Còn phải thu"', 'state', [START, nav('cashier'), { click: '[data-ops="invoice-filter"][data-value="due"]' }], { selector: '.invoice-pagination', text: '6 hóa đơn' }, {
+    S('WF24', 'WF', 'Thu ngân · lọc "Còn phải thu"', 'state', [START, nav('cashier'), { click: '[data-ops="invoice-filter"][data-value="due"]' }], { selector: '.invoice-pagination', text: '12 hóa đơn' }, {
       sources: ['prototype/shared/operations-ui.js#cashier'], next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['I10'],
-      notes: 'Invoice list filtered to the 6 unpaid invoices (every row has "Thu tiền"). The filter "Đã thanh toán" and the paging buttons ("← Trước", "Sau →") change only the rows.',
+      notes: 'Invoice list filtered to the 12 invoices with an open balance (every row has "Thu tiền"). The filter "Đã thanh toán" and the paging buttons ("← Trước", "Sau →") change only the rows.',
     }),
     S('WF25', 'WF', 'Thu ngân · không có hóa đơn', 'state', [BLOCK_FIN, START, nav('cashier'), { click: '[data-ops="invoice-filter"][data-value="due"]' },
-      ...Array.from({ length: 6 }, () => ({ ifVisible: ['[data-ops="pay"]', [{ click: '[data-ops="pay"]' }, { wait: '#pay-amount' }, { click: '[data-ops="save-pay"]' }, { gone: '.modal' }]] }))], { selector: '.table', text: 'Không có hóa đơn.' }, {
+      ...Array.from({ length: 12 }, () => ({ ifVisible: ['[data-ops="pay"]', [{ click: '[data-ops="pay"]' }, { wait: '#pay-amount' }, { click: '[data-ops="save-pay"]' }, { gone: '.modal' }]] }))], { selector: '.table', text: 'Không có hóa đơn.' }, {
       sources: ['prototype/shared/operations-ui.js#cashier'], next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['I10'], covers: ['text:Không có hóa đơn'],
-      notes: 'After the six unpaid invoices are paid in the browser (finance API blocked so nothing reaches the shared finance data) the filter "Còn phải thu" shows "Không có hóa đơn."',
+      notes: 'After the twelve unpaid invoices are paid in the browser (finance API blocked so nothing reaches the shared finance data) the filter "Còn phải thu" shows "Không có hóa đơn."',
     }),
   ],
   WG: [
@@ -841,9 +843,9 @@ const added = {
       native: { type: 'download', filename: 'Pema-tien-thu-thuat-2026-09.csv', trigger: [{ click: '#export' }] },
       notes: 'The button downloads Pema-tien-thu-thuat-<month>.csv (BOM, columns Ngay, Ho so, Thu thuat, Bac si, Doanh so, Co so, Ty le %, Tien thu thuat, Trang thai). The browser\'s download UI is native.',
     }),
-    S('WG20', 'WG', 'Xuất CSV · lỗi', 'state', [START, ...FIN_WORK, { wait: '#export' }, { block: 'http://127.0.0.1:4174/export*' }, { click: '#export' }], { selector: '#error', text: 'Không xuất được bảng' }, {
+    S('WG20', 'WG', 'Xuất CSV · lỗi', 'state', [START, ...FIN_WORK, { wait: '#export' }, { status: ['http://127.0.0.1:4174/export*', 500] }, { click: '#export' }], { selector: '#error', text: 'Không xuất được bảng' }, {
       sources: ['prototype/finance/finance.js#bind'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H7'],
-      notes: 'Export request fails: the red #error line reads "Không xuất được bảng" (the exact network text follows).',
+      notes: 'Export answers with an HTTP error: the red #error line reads "Không xuất được bảng" (a network failure shows the browser own text, for example "Failed to fetch").',
     }),
     S('WG21', 'WG', 'Ghi nhận lượt · lỗi tỷ trọng', 'state', [START, ...FIN_WORK, { click: '#content details > summary' }, { wait: '#entry' }, { fill: ['#entry [name=note]', 'Đã thực hiện'] }, { setValue: ['#entry [name=share0]', '50'] }, { click: '#entry [type=submit]' }], { selector: '#error', text: 'Tổng tỷ trọng doanh số phải là 100%' }, {
       sources: ['prototype/finance/finance.js#entryForm'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H9'],
