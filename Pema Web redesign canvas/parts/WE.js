@@ -68,5 +68,39 @@ const WE = [
     input('Tên dịch vụ', services[0].name),
     grid(2, number('Điều trị (phút)', String(services[0].mins)), number('Chuẩn bị (phút)', '0'),
       number('Giá (VND)', String(services[0].price)), select('Trạng thái', 'Đang dùng', { opts: ['Đang dùng', 'Tạm ngưng'], open: true }))
-  ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'services', behind: WE_SERVICES, footer: [primary('Lưu dịch vụ')] })
+  ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'services', behind: WE_SERVICES, footer: [primary('Lưu dịch vụ')] }),
+  page('WE7', 'Bác sĩ & phòng · không có khoảng khóa', WEB + 'resources · sau "Gỡ khóa" khoảng khóa duy nhất: bảng "Khoảng khóa phòng" giữ đủ cột và hiện một dòng "Không có khoảng khóa."; không có hộp xác nhận hay toast; app F14 không có bảng khoảng khóa · chưa có trên Next.js', 'resources', [
+    pageHead('Bác sĩ & phòng', 'Ca làm việc và khoảng khóa được kiểm tra khi đặt hoặc dời lịch.', [primary('Khóa phòng', { icon: 'add' })], 'Vận hành · dữ liệu giả lập'),
+    row({ g: 10, ai: 'flex-end' }, date('Ngày xem tải lịch', '2026-09-20', { w: 180 })),
+    WE_DOCTOR_CARDS,
+    panel('Khoảng khóa phòng', 'Thêm khoảng khóa nếu không vướng lịch hiện tại', [],
+      table(['Phòng', 'Ngày', 'Thời gian', 'Lý do', ['', '120px']], [], { empty: 'Không có khoảng khóa.' }))
+  ], { state: true }),
+  dlg('WE8', 'Khóa thời gian phòng', WEB + 'resources › Khóa phòng › "Lưu khoảng khóa" với lý do để trống: dòng lỗi đỏ trong hộp thoại, hộp thoại giữ nguyên các giá trị đã nhập; app I8 giữ cùng thông báo nhưng không vẽ dòng lỗi · chưa có trên Next.js', [
+    select('Phòng', rooms[0].name, { opts: rooms.map(r => r.name), w: 560 }),
+    date('Ngày', '2026-09-20'),
+    grid(2, time('Từ', '14:00'), time('Đến', '15:00')),
+    input('Lý do', ''),
+    errLine('Khoảng khóa phải hợp lệ trong 08:00–18:00 và có lý do.')
+  ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'resources', behind: WE_RESOURCES, footer: [primary('Lưu khoảng khóa')] }),
+  dlg('WE9', 'Khóa thời gian phòng', WEB + 'resources › Khóa phòng › "Lưu khoảng khóa" khi trong khoảng đã có lịch hẹn: dòng lỗi "Có lịch hẹn trong khoảng này. Hãy dời lịch trước khi khóa phòng."; các giá trị đã nhập được giữ; app I8 chỉ vẽ nhánh thành công · chưa có trên Next.js', [
+    select('Phòng', rooms[0].name, { opts: rooms.map(r => r.name), w: 560 }),
+    date('Ngày', '2026-09-20'),
+    grid(2, time('Từ', '14:00'), time('Đến', '15:00')),
+    input('Lý do', 'Bảo trì thiết bị'),
+    errLine('Có lịch hẹn trong khoảng này. Hãy dời lịch trước khi khóa phòng.')
+  ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'resources', behind: WE_RESOURCES, footer: [primary('Lưu khoảng khóa')] }),
+  dlg('WE10', 'Chỉnh dịch vụ', WEB + 'services › Chỉnh dịch vụ › "Lưu dịch vụ" với tên để trống: dòng lỗi về tên, thời lượng 15–180 phút, đệm 0–60 phút và giá không âm; hộp thoại không có dòng "Lịch đã đặt giữ giá…" như app I9 · chưa có trên Next.js', [
+    input('Tên dịch vụ', ''),
+    grid(2, number('Điều trị (phút)', String(services[0].mins)), number('Chuẩn bị (phút)', '0'),
+      number('Giá (VND)', String(services[0].price)), select('Trạng thái', 'Đang dùng', { opts: ['Đang dùng', 'Tạm ngưng'] })),
+    errLine('Kiểm tra tên, thời lượng 15–180 phút, đệm 0–60 phút và giá không âm.')
+  ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'services', behind: WE_SERVICES, footer: [primary('Lưu dịch vụ')] }),
+  page('WE11', 'Dịch vụ · có dịch vụ tạm ngưng', WEB + 'services › Chỉnh dịch vụ › Trạng thái "Tạm ngưng" › Lưu: thẻ đầu tiên đổi sang trạng thái vàng "Tạm ngưng", ba thẻ còn lại "Đang dùng" (xanh); toast "Đã cập nhật dịch vụ cho lịch mới"; app F13 không có trạng thái trên thẻ · chưa có trên Next.js', 'services', [
+    pageHead('Danh mục dịch vụ', 'Giá và thời lượng dùng cho lịch mới. Lịch đã đặt giữ giá và thời lượng tại lúc đặt.', [], 'Vận hành · dữ liệu giả lập'),
+    grid({ cols: 'repeat(auto-fill,minmax(380px,1fr))', colsn: '1fr', g: 20 }, ...services.map((s, i) =>
+      card({ title: s.name, tint: s.svc, aside: [ico('favorite', { size: 22, tone: 'info' }), i === 0 ? badge('Tạm ngưng', 'warning') : badge('Đang dùng', 'success')] },
+        h2(money(s.price)),
+        list([{ t: s.mins + ' phút điều trị', sub: WE_BUFFER[i] + ' phút chuẩn bị phòng', actions: [secondary('Chỉnh dịch vụ')] }], { plain: true }))))
+  ], { state: true, toast: 'Đã cập nhật dịch vụ cho lịch mới' })
 ];

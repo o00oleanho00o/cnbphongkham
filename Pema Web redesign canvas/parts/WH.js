@@ -194,6 +194,37 @@ const WH = (() => {
           txt('Hãy hỏi một câu bên trái. Trong bản demo, câu trả lời luôn hiển thị cách tính và hồ sơ nguồn.')))
   ], o.state ? { state: true } : {});
 
+  // ---- W6c-REST: WH15-WH20 (more Ask answers, free-text fallback, sample button, empty answer, guide search results) ----
+  // The old answers name patients of the old demo data; here they name canvas sample people (P005 and up), so the count in the sentence is the canvas count.
+  const ASK_Q = ['Ai có ảnh gửi sau laser đang chờ xem?', 'Có bao nhiêu kế hoạch đang chạy?', 'Ai quá hạn tái khám hơn 30 ngày?'];
+  const OVERDUE = people.slice(4);
+  const ASK_PLANS = 'Có 46 kế hoạch chưa hoàn tất trong 46 hồ sơ demo. Nguồn: Patient 360 (completed < total).';
+  const ASK_OVERDUE = 'Có ' + OVERDUE.length + ' hồ sơ có lần điều trị gần nhất hơn 30 ngày: ' + OVERDUE.map(x => x.id + ' · ' + x.name).join(', ') + '. Nguồn: lastVisit, mốc demo 20/09/2026; đây là bộ lọc cần xem xét, không tự động là trễ hẹn.';
+  const ASK_FALLBACK = 'Demo hỗ trợ 3 nhóm câu hỏi: ảnh chờ xem, kế hoạch chưa hoàn tất, và lần điều trị gần nhất hơn 30 ngày. Hãy chọn câu gợi ý để có kết quả kiểm tra được.';
+  const ASK_NONE = 'Có 0 ảnh chờ xem: Không có. Nguồn: Follow-up Inbox, status=open, có ảnh.';
+
+  // Ask Pema with a free result card: `o.q` is the text in the input, `o.heading` and `o.text` fill the result card; no `text` = the "will appear here" card.
+  const askPage2 = (id, name, note, o = {}) => page(id, name, WEB + note, 'ask', [
+    pageHead('Ask Pema', 'Bộ truy vấn mô phỏng trên 46 hồ sơ tổng hợp · chưa tích hợp mô hình AI.', [secondary('Gợi ý câu hỏi')], 'Pema Digital Clinic'),
+    grid('minmax(0,1.45fr) minmax(0,1fr)',
+      panel('Bạn muốn biết điều gì?', 'Pema hiển thị nguồn dữ liệu và câu trả lời có thể kiểm tra lại.', [],
+        row({ g: 12 }, ico('auto_awesome'), input('', o.q || '', { ph: ASK_PLACEHOLDER, w: 420 }), primary('Hỏi')),
+        chips(['Ảnh chờ xem', 'Kế hoạch đang chạy', 'Quá hạn tái khám'])),
+      o.text
+        ? card({ v: 'ai', eyebrow: 'Kết quả mô phỏng · có thể kiểm tra', title: o.heading }, txt(o.text, { size: 'b' }), secondary('Mở dữ liệu nguồn →'))
+        : card({ v: 'ai', eyebrow: 'Kết quả sẽ xuất hiện ở đây', title: 'Ask Pema' },
+          txt('Hãy hỏi một câu bên trái. Trong bản demo, câu trả lời luôn hiển thị cách tính và hồ sơ nguồn.')))
+  ], { state: true, ...(o.toast ? { toast: o.toast } : {}) });
+
+  // Guide with the topic list filtered by the search text (the old index shows only the topics that match).
+  const guideFiltered = (id, name, note, cur, q, ids) => page(id, name, WEB + note, 'guide', [
+    pageHead('Hướng dẫn sử dụng', 'Hiểu hành trình, làm đúng bước và bàn giao đủ thông tin.', [], 'Cách làm việc cùng Pema'),
+    grid('290px minmax(0,1fr)',
+      stack({ g: 14 },
+        search(GUIDE_SEARCH, { label: 'Tìm chủ đề hoặc vai trò', val: q, suf: 'close' }),
+        chips(ids.map(t => [ART[t].role + ' ' + ART[t].title, t === cur ? 'sel' : '']), { vert: true })),
+      article(cur))
+  ], { state: true });
   return [
     askPage('WH1', 'Ask Pema', 'ask · hai cột như web: ô hỏi và ba câu gợi ý bên trái, thẻ kết quả bên phải; app I12/F15 chỉ có một cột; tên và số liệu là dữ liệu tổng hợp'),
     askPage('WH2', 'Ask Pema · có câu trả lời', 'ask · sau khi hỏi "Ai có ảnh gửi sau laser đang chờ xem?": thẻ kết quả có câu trả lời, nguồn và nút "Mở dữ liệu nguồn →"; tên bệnh nhân là dữ liệu tổng hợp',
@@ -209,6 +240,18 @@ const WH = (() => {
     guidePage('WH11', 'Hướng dẫn · Khi cần kiểm tra lại', 'guide · bài "exceptions": không có nút điều hướng, chỉ có "Đọc tiếp"', 'exceptions', { state: true }),
     guidePage('WH12', 'Hướng dẫn · CSKH chủ động & tài khoản nhân viên', 'guide · bài "crm01"', 'crm01', { state: true }),
     guidePage('WH13', 'Hướng dẫn · Mobile, CSKH & tài chính theo vai trò', 'guide · bài "mobile-finance"', 'mobile-finance', { state: true }),
-    guidePage('WH14', 'Hướng dẫn · không tìm thấy chủ đề', 'guide · gõ "zzzz" vào ô tìm: mục lục chỉ còn ghi chú "Không tìm thấy", bài mặc định vẫn hiển thị', 'system', { q: 'zzzz', state: true })
+    guidePage('WH14', 'Hướng dẫn · không tìm thấy chủ đề', 'guide · gõ "zzzz" vào ô tìm: mục lục chỉ còn ghi chú "Không tìm thấy", bài mặc định vẫn hiển thị', 'system', { q: 'zzzz', state: true }),
+    askPage2('WH15', 'Ask Pema · kế hoạch đang chạy', 'ask · chip "Kế hoạch đang chạy" rồi "Hỏi": thẻ kết quả đếm kế hoạch chưa hoàn tất (câu trả lời là một câu và nút "Mở dữ liệu nguồn →"); app I12 vẽ câu trả lời bằng thông báo và một thẻ cho mỗi người bệnh',
+      { q: ASK_Q[1], heading: ASK_Q[1], text: ASK_PLANS }),
+    askPage2('WH16', 'Ask Pema · quá hạn tái khám', 'ask · chip "Quá hạn tái khám" rồi "Hỏi": một câu liệt kê mã và tên hồ sơ có lần điều trị gần nhất hơn 30 ngày, nguồn lastVisit và lưu ý "bộ lọc cần xem xét, không tự động là trễ hẹn"; app I12 chưa vẽ câu trả lời này; tên là dữ liệu tổng hợp của canvas',
+      { q: ASK_Q[2], heading: ASK_Q[2], text: ASK_OVERDUE }),
+    askPage2('WH17', 'Ask Pema · câu hỏi ngoài nhóm hỗ trợ', 'ask · gõ "xyz" rồi "Hỏi": thẻ kết quả không khớp câu nào nên liệt kê 3 nhóm câu hỏi được hỗ trợ; app I12 không vẽ câu trả lời cho câu hỏi ngoài nhóm',
+      { q: 'xyz', heading: 'xyz', text: ASK_FALLBACK }),
+    askPage2('WH18', 'Ask Pema · gợi ý câu hỏi', 'ask · "Gợi ý câu hỏi" điền ô nhập bằng "Ai có ảnh gửi sau laser đang chờ xem?" nhưng chưa hỏi, thẻ kết quả vẫn ở trạng thái chờ; app I12 không có nút "Gợi ý câu hỏi"',
+      { q: ASK_Q[0] }),
+    askPage2('WH19', 'Ask Pema · không có ảnh chờ xem', 'ask · sau khi đóng hai mục theo dõi có ảnh, câu "Ai có ảnh gửi sau laser đang chờ xem?" trả lời "Có 0 ảnh chờ xem: Không có." và nút "Mở dữ liệu nguồn →" dẫn tới Theo dõi; toast "Đã gửi phản hồi và đóng mục theo dõi" còn hiện từ thao tác trước; app I12 liệt kê 2 ảnh và không vẽ câu trả lời rỗng',
+      { q: ASK_Q[0], heading: ASK_Q[0], text: ASK_NONE, toast: 'Đã gửi phản hồi và đóng mục theo dõi' }),
+    guideFiltered('WH20', 'Hướng dẫn · kết quả tìm kiếm', 'guide · gõ "lịch" vào ô tìm: mục lục chỉ còn 8 chủ đề khớp (có nút xóa × trong ô), bài mặc định "Hiểu hệ thống Pema" vẫn mở; WH14 là trường hợp không khớp chủ đề nào; app F16 không có ô tìm kiếm',
+      'system', 'lịch', ['mobile-finance', 'crm01', 'system', 'roles', 'records', 'schedule', 'resources', 'exceptions'])
   ];
 })();
