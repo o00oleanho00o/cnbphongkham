@@ -23,7 +23,10 @@ const SHOW = (args.find((a) => a.startsWith('--show=')) || '').slice(7);
 const GROUP = (args.find((a) => a.startsWith('--group=')) || '').slice(8);
 
 const model = lib.loadModel();
-const ids = model.inventory.screens.map((s) => s.id);
+const allIds = model.inventory.screens.map((s) => s.id);
+// --group=XX: only that group is read, so a group can be checked before the snapshots of the other groups are merged
+const ids = GROUP ? allIds.filter((id) => id.startsWith(GROUP)) : allIds;
+if (GROUP) model.inventory.screens = model.inventory.screens.filter((s) => ids.includes(s.id));
 
 if (SHOW) {
   const entry = model.inventory.screens.find((s) => s.id.toLowerCase() === SHOW.toLowerCase());
@@ -38,7 +41,7 @@ if (SHOW) {
 const problems = [];
 const snapIds = Object.keys(model.snapshot.screens);
 for (const id of ids) if (!snapIds.includes(id)) problems.push(`${id}: not in snapshot.json (run web-snapshot.cjs)`);
-for (const id of snapIds) if (!ids.includes(id)) problems.push(`${id}: in snapshot.json but not in inventory.json`);
+for (const id of snapIds) if (!allIds.includes(id)) problems.push(`${id}: in snapshot.json but not in inventory.json`);
 if (model.snapshot.meta.inventory_sha !== lib.inventorySha()) problems.push('snapshot.json was made from another inventory.json (run web-snapshot.cjs)');
 if (problems.length) {
   problems.forEach((p) => console.error('FAILED ' + p));

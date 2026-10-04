@@ -419,7 +419,7 @@ function renderNode(n, pad, out, ctx) {
       out.push(`${pad}<Fact label=${q(n.label)} value=${q(n.value)} />`);
       return;
     case 'progress':
-      out.push(`${pad}<Progress value=${q(n.pct)} />`);
+      out.push(`${pad}<Progress value=${q(n.pct)}${n.aria ? ` aria-label=${q(n.aria)}` : ''}${n.segments ? ` segments={${n.segments}} done={${n.done}}` : ''} />`);
       return;
     case 'avatar':
       out.push(`${pad}<Avatar${attrs({ old: n.c })}>${q(n.t)}</Avatar>`);

@@ -474,6 +474,8 @@ function extractInPage(cfg) {
     if (seen.has(el)) return [];
     const T = el.tagName.toUpperCase();
     if (el.tagName.toLowerCase() === 'svg' && el.classList.contains('ui-icon') && vis(el) && !el.closest('button, a[href]')) return [{ n: 'icon', name: iconName(el) }];
+    // Patient Mobile (WI): the illustrative faces are svg role=img whose aria-label is their only text
+    if (el.tagName.toLowerCase() === 'svg' && el.getAttribute('role') === 'img' && el.closest('.mobile-app') && vis(el)) return [{ n: 'img', alt: el.getAttribute('aria-label') || '', box: box(el)[2] + 'x' + box(el)[3] }];
     if (NO_WALK.has(T) || el.tagName.toLowerCase() === 'svg') return [];
     if (!vis(el)) return [];
     seen.add(el);
@@ -548,9 +550,16 @@ function extractInPage(cfg) {
       const t = textOf(el);
       return [{ n: 'avatar', t, c: classOf(el) }];
     }
+    // Patient Mobile (WI): the session rail (one segment per session) and the progress bar carry their text in aria-label
+    if (el.matches('.session-rail') && el.closest('.mobile-app')) {
+      const segs = [...el.children];
+      const done = segs.filter((s) => s.classList.contains('complete')).length;
+      return [{ n: 'progress', pct: segs.length ? Math.round((done / segs.length) * 100) + '%' : '', segments: segs.length, done, aria: el.getAttribute('aria-label') || '' }];
+    }
     if (el.matches('.progress, .bar') && !textOf(el)) {
       const i = el.querySelector('i');
-      return [{ n: 'progress', pct: i ? i.style.width || '' : '' }];
+      const aria = el.closest('.mobile-app') ? el.getAttribute('aria-label') || '' : '';
+      return [{ n: 'progress', pct: i ? i.style.width || '' : '', ...(aria ? { aria } : {}) }];
     }
     if (el.matches(NOTICE_SEL) && textOf(el)) {
       const nn = { n: 'notice', t: textOf(el), c: classOf(el) };
