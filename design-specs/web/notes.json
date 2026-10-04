@@ -1320,7 +1320,8 @@
         "\"Tiền cọc còn chưa phân bổ: 0 ₫. Cọc đã phân bổ được thể hiện riêng trong liệu trình bên dưới.\""
       ],
       "differences": [
-        "App J6 shows \"Mở thu ngân\"; the care variant of the web hides it."
+        "App J6 shows \"Mở thu ngân\"; the care variant of the web hides it.",
+        "The old invoice table has a second demo invoice (HD-DEMO-001, \"Tái khám & đánh giá\", 300.000 / 150.000 / 150.000); the canvas draws both rows."
       ]
     },
     "WC26": {
@@ -1359,7 +1360,8 @@
         "\"Bản nháp cần bác sĩ duyệt\" before approval; \"Chỉ đơn đã duyệt mới xuất hiện trên Patient Mobile\". The approved card is WC4 (P001)."
       ],
       "differences": [
-        "App F4 \"Lên đơn nhanh\" ends with \"Xem đơn · 2 sản phẩm · 720.000 ₫\"; the doctor approval step is a button on the web card."
+        "App F4 \"Lên đơn nhanh\" ends with \"Xem đơn · 2 sản phẩm · 720.000 ₫\"; the doctor approval step is a button on the web card.",
+        "Patient P002 is drawn with the canvas sample patient (Trần Minh Anh, BS. Mai); journey events 2-4 follow the pattern of WC4 because the spec lists only the first event."
       ]
     },
     "WC29": {
@@ -1370,7 +1372,8 @@
         "Empty texts: \"Chưa có dịch vụ gắn với hồ sơ.\", \"Chưa có đơn thuốc.\" (and \"Chưa có đơn từ catalog.\" in the catalog panel)."
       ],
       "differences": [
-        "App J6 has no empty state for a patient without a plan."
+        "App J6 has no empty state for a patient without a plan.",
+        "P037 is not one of the 12 canvas sample patients: the canvas uses a synthetic name for it (like P047 in WC20)."
       ],
       "gotchas": [
         "One of the ten CRM demo patients; \"Dự kiến quay lại 19/10/2026\" comes from the CRM expected date."
@@ -1384,7 +1387,8 @@
         "New patient defaults: plan \"Chờ bác sĩ thiết lập kế hoạch\", alert \"Cần khai thác tiền sử\", 1 buổi, phone \"Chưa nhập\", doctor \"BS. Tâm\". Toast \"Đã tạo hồ sơ demo\"."
       ],
       "differences": [
-        "App J5 \"Ghi buổi điều trị\" has no empty-sessions text."
+        "App J5 \"Ghi buổi điều trị\" has no empty-sessions text.",
+        "The old web shows the sample patient LP-P001 plan and prescription under the empty new profile (the linked panels are not patient-specific there); the canvas draws the same."
       ],
       "gotchas": [
         "The name is synthetic (\"Nguyễn Thử Nghiệm\"); P047 is deterministic because the demo has 46 patients."
@@ -1409,7 +1413,8 @@
         "\"Nguồn: Patient 360, events đã ghi nhận, follow-up đang mở. Bác sĩ cần xác nhận trước khi dùng trong chăm sóc.\""
       ],
       "differences": [
-        "App J2 is titled \"AI brief trước buổi hẹn\" and its sources line is \"Nguồn: Patient 360, sự kiện đã ghi nhận, mục theo dõi đang mở.\""
+        "App J2 is titled \"AI brief trước buổi hẹn\" and its sources line is \"Nguồn: Patient 360, sự kiện đã ghi nhận, mục theo dõi đang mở.\"",
+        "The toast \"Đã tạo hồ sơ demo\" is drawn over the dialog, but canvas-layout.cjs does not write dialog toasts into the Layout section, so web-specs.cjs --check reports it missing; the old shot shows no toast."
       ]
     },
     "WC33": {
@@ -1443,7 +1448,8 @@
         "\"Chưa kiểm định căn chỉnh ảnh; bác sĩ kiểm tra điều kiện chụp trước khi so sánh.\" The metadata line lists vùng, góc, mốc buổi and \"đồng ý chăm sóc: có ghi nhận\"."
       ],
       "differences": [
-        "App I7 \"Before / After Studio\" shows \"Metadata: vùng Mặt · góc Chính diện · đồng ý chăm sóc: có ghi nhận\" (dot separated, no session milestone); the web line is \"; \" separated and adds the session milestone."
+        "App I7 \"Before / After Studio\" shows \"Metadata: vùng Mặt · góc Chính diện · đồng ý chăm sóc: có ghi nhận\" (dot separated, no session milestone); the web line is \"; \" separated and adds the session milestone.",
+        "The uploaded photo is drawn as a placeholder tile with the date label and consent state (no image content); the metadata line keeps the old internal session id \"s1789869600000\" verbatim."
       ],
       "gotchas": [
         "The metadata contains the epoch milliseconds of the fixed demo clock (\"mốc buổi s1789869600000\"), not a real timestamp."
@@ -2062,7 +2068,8 @@
         "\"Có 15 hồ sơ có lần điều trị gần nhất hơn 30 ngày: … Nguồn: lastVisit, mốc demo 20/09/2026; đây là bộ lọc cần xem xét, không tự động là trễ hẹn.\""
       ],
       "differences": [
-        "App I12 has no \"Quá hạn tái khám\" answer drawn (only the chip and the photo example)."
+        "App I12 has no \"Quá hạn tái khám\" answer drawn (only the chip and the photo example).",
+        "Canvas draws the answer with the sample people (P005 and up, 8 profiles) instead of the old demo list of 15, so the count in the sentence differs; the wording around the list is verbatim."
       ],
       "gotchas": [
         "The sentence is long (a list of 15 codes and names): the result card must wrap it.",
@@ -2108,7 +2115,8 @@
         "\"Có 0 ảnh chờ xem: Không có. Nguồn: Follow-up Inbox, status=open, có ảnh.\""
       ],
       "differences": [
-        "App I12 lists two patient tiles for the same question (\"2 ảnh chờ bác sĩ xem\"); the empty answer is not drawn there."
+        "App I12 lists two patient tiles for the same question (\"2 ảnh chờ bác sĩ xem\"); the empty answer is not drawn there.",
+        "The old shot does not show the toast \"Đã gửi phản hồi và đóng mục theo dõi\" (it had expired); the canvas draws it because the snapshot lists it."
       ],
       "gotchas": [
         "The toast \"Đã gửi phản hồi và đóng mục theo dõi\" (2800 ms) of the last follow-up may still be on the page in the snapshot.",
