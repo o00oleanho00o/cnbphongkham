@@ -12,4 +12,5 @@ playwright-report/
 visual-ref/old/*
 visual-ref/new/*
 !visual-ref/old/README.md
+!visual-ref/old/manifest.json
 !visual-ref/new/README.md
