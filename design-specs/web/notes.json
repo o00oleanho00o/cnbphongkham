@@ -727,18 +727,27 @@
       ],
       "differences": [
         "App H1 shows 186.400.000 ₫ sample figures and a short text; the web page holds the team contribution bars and the reconciliation panel."
+      ],
+      "demo_data": [
+        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity)."
       ]
     },
     "WG2": {
       "logic": [
-        "`finance.js › work()` + `table(rows)`: the table of procedure entries with \"Duyệt\" and \"Hủy\" per pending row, \"Xuất CSV cho Excel\", \"Chốt tháng đã kết thúc\" (period open) or \"Xác nhận đã chi\" (period closed)."
+        "`finance.js › work()` + `table(rows)`: the table of procedure entries with \"Duyệt\" and \"Hủy\" per pending row, \"Xuất CSV cho Excel\", \"Chốt tháng đã kết thúc\" (period open) or \"Xác nhận đã chi\" (period closed).",
+        "Canvas frame: the table shows every row state (Chờ duyệt with Duyệt and Hủy, Đã duyệt with Hủy, Đã hủy without buttons) and every basis (Giá sau giảm, Giá niêm yết, Theo thực thu); the live page shows only what the period state allows (\"Chốt tháng đã kết thúc\" while open, \"Xác nhận đã chi\" once closed; period badges Đang đối soát, Đã chốt tháng, Đã chi).",
+        "Canvas frame: the fields of the collapsed block are drawn under the collapsed bar as their own card, because the old DOM holds them while hidden. The toast \"Đã ghi nhận thành công\" is `#status` (role=status, 2.5 s)."
       ],
       "rules": [
         "Void asks a native `prompt('Lý do hủy lượt chưa thu tiền')`; close asks `confirm('Chốt số liệu tháng <tháng>? Các lượt trong kỳ sẽ bị khóa.')`; paid asks `prompt('Mã chứng từ chi')`.",
         "\"Chưa có lượt thủ thuật trong kỳ này.\" when the table is empty."
       ],
       "gotchas": [
-        "The CSV export is a download (`Pema-tien-thu-thuat-<tháng>.csv`), not a page."
+        "The CSV export is a download (`Pema-tien-thu-thuat-<tháng>.csv`), not a page.",
+        "Native browser dialogs are not drawn: Hủy asks \"Lý do hủy lượt chưa thu tiền\", Chốt tháng asks \"Chốt số liệu tháng <tháng>? Các lượt trong kỳ sẽ bị khóa.\", Xác nhận đã chi asks \"Mã chứng từ chi\"."
+      ],
+      "demo_data": [
+        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity)."
       ]
     },
     "WG3": {
@@ -746,10 +755,14 @@
         "`entryForm()`: the `<details>` block \"+ Ghi nhận lượt thủ thuật đã hoàn tất\" opened: patient, procedure, date (max today), list price, discount, invoice link, note and up to two people with share and rate."
       ],
       "rules": [
-        "\"Tổng tỷ trọng doanh số 100%. Tỷ lệ tiền của mỗi người tính trực tiếp trên cơ sở chính sách; tổng không quá 100%.\""
+        "\"Tổng tỷ trọng doanh số 100%. Tỷ lệ tiền của mỗi người tính trực tiếp trên cơ sở chính sách; tổng không quá 100%.\"",
+        "PB02: the performing doctor of a line is chosen in this form (\"Bác sĩ chính\" and the optional \"Người phối hợp\"); it is never assigned from the record owner of the patient. The rate is read from the service policy when the line is saved and stored on the line (rate snapshot), so later policy changes do not recalculate history."
       ],
       "gotchas": [
         "The block is collapsed by default: its fields exist in the DOM but are not visible until the summary is clicked, and the auto refresh pauses while it is open."
+      ],
+      "demo_data": [
+        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity)."
       ]
     },
     "WG4": {
@@ -758,7 +771,14 @@
       ],
       "rules": [
         "\"Áp dụng cho lượt tạo sau khi lưu. Người phối hợp có thể được kế toán phân bổ riêng tại lượt thực hiện.\"",
-        "Doctors see \"Bác sĩ xem tỷ lệ trên các lượt của mình; chính sách chung thuộc kế toán.\" instead of the forms."
+        "Doctors see \"Bác sĩ xem tỷ lệ trên các lượt của mình; chính sách chung thuộc kế toán.\" instead of the forms.",
+        "PB02 rate snapshots: \"Tỷ lệ lưu theo từng lượt. Đổi chính sách không tính lại lịch sử.\" The version (\"Phiên bản 1\") belongs to the service policy; only lines created after saving use a new rate."
+      ],
+      "demo_data": [
+        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity)."
+      ],
+      "differences": [
+        "App H8 has no per-service basis selection (Giá sau giảm, Giá niêm yết, Theo thực thu) or version line; the web keeps them."
       ]
     },
     "WG5": {
@@ -768,16 +788,33 @@
       "rules": [
         "\"Phiếu thu mới đồng bộ với app khi đang mở. Hóa đơn web cũ thu tại Thu ngân Clinic; không thu lại ở đây.\"",
         "Doctors: \"Tài khoản bác sĩ không xem thu tiền toàn phòng khám.\""
+      ],
+      "demo_data": [
+        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity).",
+        "The two sample notifications are illustrative: the old shot shows only the empty message."
+      ],
+      "gotchas": [
+        "The right panel states (empty message, unread with the button \"Đã đọc\", read with the text \"Đã đọc\"), the accountant text \"Kế toán không đọc inbox của chủ.\" and the empty \"Chưa có phiếu thu.\" are drawn together in one frame; the live page shows one of them."
       ]
     },
     "WG6": {
       "logic": [
-        "`finance.js › overview()` with `state.role = 'doctor'`: title \"Doanh số của tôi\", hero \"Công việc được ghi nhận, thu nhập rõ ràng\", metrics \"Doanh số của tôi\", \"Tiền chờ duyệt\", \"Tiền thủ thuật đã duyệt\"."
+        "`finance.js › overview()` with `state.role = 'doctor'`: title \"Doanh số của tôi\", hero \"Công việc được ghi nhận, thu nhập rõ ràng\", metrics \"Doanh số của tôi\", \"Tiền chờ duyệt\", \"Tiền thủ thuật đã duyệt\".",
+        "The doctor account gets two tabs; the page title stays \"Tài chính & tiền thủ thuật\" while the menu and breadcrumb read \"Doanh số của tôi\"."
+      ],
+      "demo_data": [
+        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity)."
       ]
     },
     "WG7": {
       "logic": [
         "`work()` for the doctor: own rows only, no entry form, no approve, void, close or export commands except the export button."
+      ],
+      "demo_data": [
+        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity)."
+      ],
+      "gotchas": [
+        "The info box at the bottom of the frame is canvas-only documentation of the placeholder sentences of the two tabs a doctor cannot open (\"Bác sĩ xem tỷ lệ trên các lượt của mình; chính sách chung thuộc kế toán.\", \"Tài khoản bác sĩ không xem thu tiền toàn phòng khám.\")."
       ]
     },
     "WG8": {
@@ -786,6 +823,9 @@
       ],
       "differences": [
         "App D1 \"Đối soát & thu ngân\" is the accountant home with 3 tiles; the web lands the accountant on \"Thu ngân\" (WF1) and reaches finance from the menu."
+      ],
+      "demo_data": [
+        "All names, patient ids (P001-P012), money and ratios are canvas sample data, not the old demo values (for example the debt 1.250.000 ₫ replaces 100.085.500 ₫, which varies with cashier activity)."
       ]
     },
     "WG9": {
@@ -797,6 +837,9 @@
       ],
       "gotchas": [
         "The topbar link of `finance-bridge.js` shows \"Tài chính chờ kết nối · thử lại\" in this state."
+      ],
+      "differences": [
+        "The old shot shows the top bar link as \"Tài chính đã đồng bộ\" (timing); the frame draws \"Tài chính chờ kết nối · thử lại\" as the spec describes, and the notice in the danger colour as the shot shows (the layout dump calls it info)."
       ]
     },
     "WH1": {
