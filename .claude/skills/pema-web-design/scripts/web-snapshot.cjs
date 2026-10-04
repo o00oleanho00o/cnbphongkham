@@ -101,7 +101,7 @@ function mergeVariants(tree, lists) {
 
 function trimAction(a) {
   const o = { label: a.label, variant: a.variant };
-  for (const k of ['disabled', 'link', 'href', 'icon_only', 'hook', 'title', 'aria', 'in_rows']) if (a[k]) o[k] = a[k];
+  for (const k of ['disabled', 'link', 'href', 'icon_only', 'hook', 'title', 'aria', 'in_rows', 'summary']) if (a[k]) o[k] = a[k];
   o.count = a.count || 1;
   return o;
 }
@@ -165,6 +165,16 @@ function responsiveOf(base, probes, desc) {
   return out;
 }
 
+/**
+ * The finance API fills date fields with the REAL date of the machine (the browser clock is fixed, the python server
+ * is not). Writing that date down would make every other day's run differ, so it becomes a name.
+ */
+function serverToday(e) {
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date());
+  if (today === '2026-09-20') return e;
+  return JSON.parse(JSON.stringify(e).split('"' + today + '"').join('"<server today>"'));
+}
+
 function buildEntry(entry, data, scope, probes, tokens, index) {
   const { tree, lists, texts, raw, regions, shell } = data;
   mergeVariants(tree, lists);
@@ -196,9 +206,9 @@ function buildEntry(entry, data, scope, probes, tokens, index) {
     tree,
     tokens_used: tokensUsed,
     responsive: probes ? responsiveOf(probes.base, probes.list, describeIds(tree)) : {},
-    stats: { text_runs: new Set(texts).size, uncovered_text: uncovered },
+    stats: { text_runs: new Set(texts).size, uncovered_text: uncovered, unseen_controls: data.unseen || [] },
   };
-  return e;
+  return entry.group === 'WG' ? serverToday(e) : e;
 }
 
 async function snapshotOne(browser, entry, tokens, index) {
@@ -209,7 +219,7 @@ async function snapshotOne(browser, entry, tokens, index) {
     const bad = await ow.verify(shown, entry);
     if (bad) throw new Error(bad);
     const scope = await scopeOf(shown, entry);
-    const data = await shown.evaluate(extractInPage, { roots: scope.roots, mode: scope.mode || '' });
+    const data = await shown.evaluate(extractInPage, { roots: scope.roots, mode: scope.mode || '', icons: ICONS });
     let probes = null;
     if (!NO_PROBE && entry.frames.includes('390x844')) {
       const base = await shown.evaluate(probeInPage);
@@ -229,6 +239,13 @@ async function snapshotOne(browser, entry, tokens, index) {
 }
 
 let INV_ROLE = '';
+
+/** Lucide icon registry of the old web (shared/ui.js, read only): name -> svg inner markup. */
+const ICONS = (() => {
+  const src = fs.readFileSync(path.join(REPO, 'prototype', 'shared', 'ui.js'), 'utf8');
+  const m = /const paths = (\{[\s\S]*?\});\r?\n/.exec(src);
+  return m ? new Function('return ' + m[1])() : {};
+})();
 function ow_role(entry) {
   return entry.role || INV_ROLE;
 }
@@ -308,7 +325,7 @@ function tokensSummary(screens) {
         continue;
       }
       screens[entry.id] = r;
-      console.log(`ok ${entry.id} ${r.scope} text_runs=${r.stats.text_runs} uncovered=${r.stats.uncovered_text.length}`);
+      console.log(`ok ${entry.id} ${r.scope} text_runs=${r.stats.text_runs} uncovered=${r.stats.uncovered_text.length} unseen_controls=${r.stats.unseen_controls.length}${r.stats.unseen_controls.length ? ' ' + JSON.stringify(r.stats.unseen_controls.slice(0, 4)) : ''}`);
     }
   } finally {
     await browser.close();

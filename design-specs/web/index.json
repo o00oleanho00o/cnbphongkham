@@ -1,6 +1,6 @@
 {
   "generator": ".claude/skills/pema-web-design/scripts/web-specs.cjs",
-  "snapshot": "ad8dbcaaafa349cb",
+  "snapshot": "bb00d61541332cc1",
   "counts": {
     "total": 81,
     "by_kind": {
@@ -415,7 +415,7 @@
         "actions": 2,
         "fields": 1,
         "chips_tabs": 4,
-        "statuses": 7,
+        "statuses": 8,
         "kpis": 0,
         "notices": 0,
         "tables": 1
@@ -435,10 +435,10 @@
       ],
       "spec": "screens/WC2.md",
       "counts": {
-        "actions": 1,
+        "actions": 2,
         "fields": 1,
         "chips_tabs": 4,
-        "statuses": 0,
+        "statuses": 1,
         "kpis": 0,
         "notices": 0,
         "tables": 0
@@ -623,9 +623,9 @@
       "spec": "screens/WC9.md",
       "counts": {
         "actions": 9,
-        "fields": 1,
+        "fields": 2,
         "chips_tabs": 8,
-        "statuses": 4,
+        "statuses": 5,
         "kpis": 0,
         "notices": 6,
         "tables": 0
@@ -1082,7 +1082,7 @@
       ],
       "spec": "screens/WD6.md",
       "counts": {
-        "actions": 10,
+        "actions": 5,
         "fields": 0,
         "chips_tabs": 4,
         "statuses": 5,
@@ -1185,7 +1185,7 @@
       "spec": "screens/WE2.md",
       "counts": {
         "actions": 3,
-        "fields": 1,
+        "fields": 3,
         "chips_tabs": 0,
         "statuses": 1,
         "kpis": 0,
@@ -1599,7 +1599,7 @@
       ],
       "spec": "screens/WG2.md",
       "counts": {
-        "actions": 6,
+        "actions": 7,
         "fields": 14,
         "chips_tabs": 4,
         "statuses": 2,
@@ -1624,7 +1624,7 @@
       ],
       "spec": "screens/WG3.md",
       "counts": {
-        "actions": 6,
+        "actions": 7,
         "fields": 14,
         "chips_tabs": 4,
         "statuses": 2,

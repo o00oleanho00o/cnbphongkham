@@ -228,10 +228,10 @@ function renderPageHeading(n, pad, out, ctx) {
 
 function cardHead(n) {
   const first = (n.children || [])[0];
-  if (first && first.n === 'group' && /\bpanel-head\b/.test(first.c || '') && (first.children || [])[0] && first.children[0].n === 'heading') {
+  if (first && first.n === 'group' && /\bpanel-head\b/.test(first.c || '') && (first.children || [])[0] && first.children[0].n === 'heading' && !first.children[0].children) {
     return { head: first.children[0], aside: first.children.slice(1), skip: 1 };
   }
-  if (first && first.n === 'heading' && first.level >= 2) return { head: first, aside: [], skip: 1 };
+  if (first && first.n === 'heading' && first.level >= 2 && !first.children) return { head: first, aside: [], skip: 1 };
   return null;
 }
 
@@ -350,7 +350,17 @@ function renderNode(n, pad, out, ctx) {
     }
     case 'heading': {
       const a = { level: n.level, sub: n.sub, transform: n.tt };
-      out.push(`${pad}<Heading${attrs(a)}>${q(n.t)}</Heading>`);
+      if (n.children) {
+        out.push(`${pad}<Heading${attrs(a)} text={${q(n.t)}}>`);
+        renderNodes(n.children, pad + '  ', out, ctx);
+        out.push(`${pad}</Heading>`);
+      } else out.push(`${pad}<Heading${attrs(a)}>${q(n.t)}</Heading>`);
+      return;
+    }
+    case 'details': {
+      out.push(`${pad}<Disclosure${attrs({ summary: n.summary, open: n.open })}>`);
+      renderNodes(n.children || [], pad + '  ', out, ctx);
+      out.push(`${pad}</Disclosure>`);
       return;
     }
     case 'action':
@@ -379,7 +389,11 @@ function renderNode(n, pad, out, ctx) {
     }
     case 'notice': {
       const a = { tone: noticeTone(n.c), role: n.role, old: n.c, transform: n.tt };
-      if (n.actions && n.actions.length) {
+      if (n.children) {
+        out.push(`${pad}<${use(ctx, 'Notice')}${attrs(a)} text={${q(n.t)}}>`);
+        renderNodes(n.children, pad + '  ', out, ctx);
+        out.push(`${pad}</Notice>`);
+      } else if (n.actions && n.actions.length) {
         out.push(`${pad}<${use(ctx, 'Notice')}${attrs(a)}>${q(n.t)}`);
         n.actions.forEach((x) => out.push(`${pad}  ${actionLine(x, ctx)}`));
         out.push(`${pad}</Notice>`);
@@ -387,7 +401,11 @@ function renderNode(n, pad, out, ctx) {
       return;
     }
     case 'empty':
-      out.push(`${pad}<${use(ctx, 'EmptyState')}>${q(n.t)}</EmptyState>`);
+      if (n.children) {
+        out.push(`${pad}<${use(ctx, 'EmptyState')} text={${q(n.t)}}>`);
+        renderNodes(n.children, pad + '  ', out, ctx);
+        out.push(`${pad}</EmptyState>`);
+      } else out.push(`${pad}<${use(ctx, 'EmptyState')}>${q(n.t)}</EmptyState>`);
       return;
     case 'table':
       return renderTable(n, pad, out, ctx);
@@ -408,6 +426,9 @@ function renderNode(n, pad, out, ctx) {
       return;
     case 'rule':
       out.push(`${pad}<hr />`);
+      return;
+    case 'icon':
+      out.push(`${pad}<Icon name=${q(n.name)} />`);
       return;
     case 'list': {
       out.push(`${pad}<Repeat${attrs({ of: '.' + n.of, count: n.count, 'also-classes': (n.classes || []).join(' ') })}>  // first item shown (demo values); the others have the same shape`);
@@ -494,6 +515,7 @@ function coverage(e, layoutLines) {
   }
   const unc = (e.stats && e.stats.uncovered_text) || [];
   for (const t of unc) missing.push({ kind: 'visible text not in the tree', text: t });
+  for (const c of (e.stats && e.stats.unseen_controls) || []) missing.push({ kind: 'visible control not in the tree', text: c });
   return missing;
 }
 

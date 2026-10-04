@@ -24,6 +24,27 @@ function extractInPage(cfg) {
   const REPEAT_MIN = 3;
   const NOISE_CLASS = new Set(['active', 'selected', 'clickable', 'ui-icon', 'icon-wrap', 'ico', 'current']);
 
+  const CTRL = 'button, a[href], input:not([type="hidden"]), select, textarea, summary, [role="button"]';
+  const hasCtl = (el) => [...el.querySelectorAll(CTRL)].some((c) => vis(c));
+  // lucide icon of an element, by the registry of shared/ui.js (cfg.icons: name -> svg inner markup)
+  const iconMap = {};
+  for (const [name, inner] of Object.entries(cfg.icons || {})) {
+    const holder = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    holder.innerHTML = inner;
+    iconMap[holder.innerHTML.replace(/\s+/g, '')] = name;
+  }
+  const iconName = (host) => {
+    const svg = host.tagName.toLowerCase() === 'svg' ? host : host.querySelector('svg');
+    if (!svg) return '';
+    const r = svg.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) return '';
+    return iconMap[svg.innerHTML.replace(/\s+/g, '')] || 'unknown';
+  };
+  const withIcon = (n, el) => {
+    const ic = iconName(el);
+    if (ic) n.icon = ic;
+    return n;
+  };
   let idSeq = 0;
   const tag = (el) => {
     if (!el.dataset.w2id) el.dataset.w2id = String(++idSeq);
@@ -173,7 +194,8 @@ function extractInPage(cfg) {
     if (title && title !== label) n.title = title;
     const h = hook(el);
     if (h) n.hook = h;
-    if (el.querySelector('svg')) n.icon = true;
+    const ic = iconName(el);
+    if (ic) n.icon = ic;
     if (el.getAttribute('draggable') === 'true') n.draggable = true;
     if (!isChip && selectedOf(el)) n.current = true;
     const c = classOf(el);
@@ -184,6 +206,8 @@ function extractInPage(cfg) {
     const parts = [];
     for (const l of el.labels || []) {
       const clone = l.cloneNode(true);
+      // a label that also holds a chip (the patient search box) is a wrapper, not the field's name
+      if (clone.querySelector('.chip, .badge, .status')) continue;
       clone.querySelectorAll('select,input,textarea,svg,option').forEach((x) => x.remove());
       parts.push(norm(clone.textContent));
     }
@@ -232,6 +256,7 @@ function extractInPage(cfg) {
   const trunc = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
   const text = (el, flags) => {
     const n = { n: 'text', t: textOf(el) };
+    withIcon(n, el);
     const tt = ttOf(el);
     if (tt) n.tt = tt;
     Object.assign(n, flags || {});
@@ -253,6 +278,7 @@ function extractInPage(cfg) {
       for (const c of e.children) {
         if (!vis(c) || NO_WALK.has(c.tagName.toUpperCase()) || c.tagName.toLowerCase() === 'svg') continue;
         if (c.tagName === 'BUTTON' || (c.tagName === 'A' && c.getAttribute('href'))) {
+          seen.add(c);
           if (!(c.matches(KPI_SEL) && c === el)) actions.push(actionNode(c));
           continue;
         }
@@ -277,6 +303,7 @@ function extractInPage(cfg) {
     const label = blocks.filter((_, i) => i < vi).map((b) => b.t).join(' ') || (vi > 0 ? '' : '');
     const hint = blocks.filter((_, i) => i > vi).map((b) => b.t).join(' · ');
     const n = { n: 'kpi', label: label || (blocks.length > 1 && vi === 0 ? '' : label), value: value ? value.t : '', c: classOf(el) };
+    withIcon(n, el);
     if (vi === 0 && blocks.length > 1) {
       // value first, caption after (crm-reception-stats, crm-stages): the next block is the label
       n.label = blocks[1].t;
@@ -332,10 +359,11 @@ function extractInPage(cfg) {
         const l = labelOf(b);
         const h = hook(b);
         // buttons that share a hook (data-ops="new", data-crm="task") are one action with data in its label
-        const key = (h || l) + '|' + variantOf(b);
+        // the first data-* pair is the kind of action; the others (ids) are data
+        const key = (h ? h.split(' ')[0] : l) + '|' + variantOf(b);
         if (b.matches('.crm-name, [data-patient], .linked-link')) links.set(key, (links.get(key) || 0) + 1);
         else {
-          const cur = acts.get(key) || { label: l, variant: variantOf(b), hook: h, count: 0, labels: new Set() };
+          const cur = acts.get(key) || { label: l, variant: variantOf(b), hook: h ? h.split(' ')[0] : '', count: 0, labels: new Set() };
           cur.count++;
           cur.labels.add(l);
           acts.set(key, cur);
@@ -444,6 +472,7 @@ function extractInPage(cfg) {
     if (!el || el.nodeType !== 1) return [];
     if (seen.has(el)) return [];
     const T = el.tagName.toUpperCase();
+    if (el.tagName.toLowerCase() === 'svg' && el.classList.contains('ui-icon') && vis(el) && !el.closest('button, a[href]')) return [{ n: 'icon', name: iconName(el) }];
     if (NO_WALK.has(T) || el.tagName.toLowerCase() === 'svg') return [];
     if (!vis(el)) return [];
     seen.add(el);
@@ -479,7 +508,8 @@ function extractInPage(cfg) {
       const next = el.nextElementSibling;
       // a label without `for` labels the control right after it (<div class="field"><label>…</label><select>)
       const ctl = el.control || el.querySelector('input,select,textarea') || (next && next.matches('input,select,textarea') ? next : null);
-      if (ctl && vis(ctl) && !(ctl.tagName === 'INPUT' && ctl.type === 'file')) {
+      const wrapsMore = ctl && el.contains(ctl) && [...el.children].some((c) => c !== ctl && !c.contains(ctl) && vis(c) && textOf(c));
+      if (ctl && vis(ctl) && !wrapsMore && !(ctl.tagName === 'INPUT' && ctl.type === 'file')) {
         if (consumed.has(ctl)) return [];
         consumed.add(ctl);
         seen.add(ctl);
@@ -488,7 +518,7 @@ function extractInPage(cfg) {
         lists.fields.push(n);
         return [n];
       }
-      if (ctl && ctl.tagName === 'INPUT' && ctl.type === 'file') {
+      if (ctl && !wrapsMore && ctl.tagName === 'INPUT' && ctl.type === 'file') {
         const n = fieldNode(ctl);
         n.label = textOf(el) || n.label;
         n.n = 'field';
@@ -512,6 +542,7 @@ function extractInPage(cfg) {
       mark(el);
       return [k];
     }
+    if (el.matches('.icon-wrap, .ico, .care-icon, .doc-icon, .step-icon, .metric-symbol') && !textOf(el) && !hasCtl(el) && el.querySelector('svg')) return [{ n: 'icon', name: iconName(el) }];
     if (el.matches('.avatar, .patient-avatar, .resource-avatar')) {
       const t = textOf(el);
       return [{ n: 'avatar', t, c: classOf(el) }];
@@ -527,6 +558,13 @@ function extractInPage(cfg) {
       const tt = ttOf(el);
       if (tt) nn.tt = tt;
       const acts = [...el.querySelectorAll('button, a[href]')].filter(vis);
+      if ([...el.querySelectorAll('input:not([type="hidden"]), select, textarea')].some(vis)) {
+        // a box that holds fields (studio zoom and slider): keep the whole content, not only its text
+        mark(el);
+        nn.children = walkChildren(el);
+        lists.notices.push(nn);
+        return [nn];
+      }
       if (acts.length) {
         nn.t = textOf(el, (x) => x.tagName === 'BUTTON');
         nn.actions = acts.map((a) => {
@@ -542,6 +580,7 @@ function extractInPage(cfg) {
     }
     if (el.matches('p.empty, .empty') && textOf(el)) {
       const e = { n: 'empty', t: textOf(el) };
+      if (hasCtl(el)) e.children = walkChildren(el);
       lists.empty_states.push(e);
       return [e];
     }
@@ -560,12 +599,15 @@ function extractInPage(cfg) {
       const level = /^H[1-6]$/.test(T) ? +T[1] : el.matches('.page-title') ? 1 : 3;
       const t = textOf(el, (x) => x.tagName === 'SMALL');
       const sm = el.querySelector('small');
-      const h = { n: 'heading', level, t: t || textOf(el) };
+      const h = withIcon({ n: 'heading', level, t: t || textOf(el) }, el);
       if (sm && vis(sm)) h.sub = textOf(sm);
       const tt = ttOf(el);
       if (tt) h.tt = tt;
       lists.headings.push({ level, t: h.t });
-      if (h.t) return [h];
+      if (h.t) {
+        if (hasCtl(el)) h.children = walkChildren(el);
+        return [h];
+      }
     }
     if (el.matches('.panel-title') && el.querySelector('small')) {
       const t = textOf(el, (x) => x.tagName === 'SMALL');
@@ -573,7 +615,7 @@ function extractInPage(cfg) {
       lists.headings.push({ level: 3, t });
       return [h];
     }
-    if (T === 'DL') {
+    if (T === 'DL' && !hasCtl(el)) {
       const items = [];
       for (const c of el.children) {
         if (c.tagName === 'DT') items.push([textOf(c), '']);
@@ -586,12 +628,19 @@ function extractInPage(cfg) {
       }
       return [{ n: 'facts', items }];
     }
-    if (el.matches('.fact') && el.children.length >= 2) {
+    if (el.matches('.fact') && el.children.length >= 2 && !hasCtl(el)) {
       const lab = el.querySelector('label, span, small');
       const val = el.querySelector('strong, b');
       if (lab && val) return [{ n: 'fact', label: textOf(lab), value: textOf(val) }];
     }
     if (T === 'HR') return [{ n: 'rule' }];
+    if (T === 'DETAILS') {
+      const sm = [...el.children].find((c) => c.tagName === 'SUMMARY');
+      if (sm) seen.add(sm);
+      const dn = { n: 'details', summary: sm ? textOf(sm) : '', open: el.open, children: walkChildren(el) };
+      if (sm) lists.actions.push({ n: 'action', label: dn.summary, variant: 'secondary', summary: true });
+      return [dn];
+    }
     if (el.matches('.dot') && !textOf(el)) return [];
 
     // ---- inline-only text container ----
@@ -699,6 +748,19 @@ function extractInPage(cfg) {
     }
   }
 
+  // ---------- every visible control must have become a node (field, action, tab, chip, kpi button) ----------
+  const unseen = [];
+  for (const r of rootEls) {
+    for (const c of r.querySelectorAll(CTRL)) {
+      if (!vis(c) || seen.has(c) || consumed.has(c)) continue;
+      let data = false;
+      for (let e = c.parentElement; e; e = e.parentElement) if (skipData.has(e)) data = true;
+      if (data || c.closest('details:not([open])') && c.tagName !== 'SUMMARY') continue;
+      if (c.tagName === 'INPUT' && c.type === 'file' && c.closest('label, .upload-box')) continue;
+      unseen.push(c.tagName.toLowerCase() + (c.id ? '#' + c.id : '') + ' ' + trunc(textOf(c) || c.getAttribute('aria-label') || c.getAttribute('name') || '', 60));
+    }
+  }
+
   // ---------- computed styles of every visible element under the roots ----------
   const raw = { color: {}, bg: {}, border: {}, radius: {}, font: {}, shadow: {}, family: {} };
   const bump = (o, k, who) => {
@@ -759,7 +821,7 @@ function extractInPage(cfg) {
   shell.body = { page: document.body.dataset.page || '', role: document.body.dataset.staffRole || '', patient_tab: document.body.dataset.patientTab || '' };
   shell.title = document.title;
 
-  return { tree, lists, texts, raw, regions, shell, tagged: idSeq, url: location.pathname + location.search };
+  return { tree, lists, texts, raw, regions, shell, unseen, tagged: idSeq, url: location.pathname + location.search };
 }
 
 // ---- layout probe: same tagged elements at another viewport ----
