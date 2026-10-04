@@ -444,10 +444,18 @@
         "Booking after a call: the outcome \"Đặt lịch\" turns the submit button into \"Tiếp tục → Đặt lịch\" and opens the booking dialog; the task is closed only when the appointment is saved (\"Cần lưu lịch hẹn hợp lệ trước khi hoàn tất việc.\")."
       ],
       "differences": [
-        "App C1-C4 show 3 buckets and a short list; the web adds 4 KPI buttons, the rule group list, a mode select, an owner select, paging and the protocol/activity dialogs."
+        "App C1-C4 show 3 buckets and a short list; the web adds 4 KPI buttons, the rule group list, a mode select, an owner select, paging and the protocol/activity dialogs.",
+        "Canvas: rows use the canvas sample patients (people) with money() amounts; the list shows 7 sample rows, the old web shows 12 per page; the first chip \"Tất cả · 72\" is drawn selected."
       ],
       "gotchas": [
         "The owner filter starts as the account's own care owner (\"CSKH Mai Anh\"), so the care account sees only its tasks; the owner account sees all."
+      ],
+      "demo_data": [
+        "Ngô Khánh Vy",
+        "Lê Bảo Ngọc",
+        "Sinh nhật tuần này",
+        "02 · D+3 gửi ảnh",
+        "01 · Sau Laser CO2 D+1"
       ]
     },
     "WD2": {
@@ -461,7 +469,12 @@
         "Success toasts \"Đã lưu kết quả và cập nhật hàng đợi\"."
       ],
       "differences": [
-        "App C6 \"Chăm sóc khách hàng\" is a full screen; the web is a dialog."
+        "App C6 \"Chăm sóc khách hàng\" is a full screen; the web is a dialog.",
+        "Canvas: option lists of the five selects are carried in the frame data (spec Layout lists them) but the selects are drawn closed, as in the old screenshot; the \"Ngày giờ tiếp theo\" field is a plain date field with the browser placeholder."
+      ],
+      "demo_data": [
+        "Chăm sóc · Ngô Khánh Vy",
+        "Đóng hộp thoại"
       ]
     },
     "WD3": {
@@ -470,16 +483,33 @@
       ],
       "rules": [
         "\"Ngưỡng và nội dung là mẫu cần chủ phòng khám duyệt trước pilot. Không tự gửi tin hoặc tự duyệt y khoa.\""
+      ],
+      "differences": [
+        "Canvas draws the ten rule articles as a divided list (title, step, trigger line) instead of ten bare stacks; same text and order."
+      ],
+      "demo_data": [
+        "Đóng hộp thoại"
       ]
     },
     "WD4": {
       "logic": [
-        "`handle('activity')`: the saved CSKH results (patient, outcome, note, actor, time, related appointment); empty text \"Chưa có kết quả. Bắt đầu từ CSKH hôm nay.\""
+        "`handle('activity')`: the saved CSKH results (patient, outcome, note, actor, time, related appointment); empty text \"Chưa có kết quả. Bắt đầu từ CSKH hôm nay.\"",
+        "Frame shows the only scripted state (empty). When results exist the dialog lists patient, outcome, note, actor, time and related appointment (not scripted in the old web, so not drawn)."
+      ],
+      "demo_data": [
+        "Đóng hộp thoại"
       ]
     },
     "WD5": {
       "logic": [
         "`handle('segment')`: dialog titled with the lifecycle stage label and one row per patient of the stage with \"Mở hồ sơ\" (opens the CRM tab); empty text \"Chưa có khách trong nhóm.\""
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Đóng hộp thoại"
+      ],
+      "differences": [
+        "Canvas shows 12 sample patients (old web: 42 in the stage). The empty text \"Chưa có khách trong nhóm.\" of an empty stage has no scripted state and no frame (inventory has one id for the dialog)."
       ]
     },
     "WD6": {
@@ -491,7 +521,16 @@
         "\"Inbox đã sạch. Không có follow-up đang mở.\" appears when nothing is open."
       ],
       "differences": [
-        "App I6/A4 are titled \"Theo dõi\" with the subtitle \"Ảnh, triệu chứng và mốc bị bỏ sót\"; the web title is \"Follow-up Inbox\" and the third metric is \"Mốc bị bỏ sót\" (app: \"Bỏ sót\")."
+        "App I6/A4 are titled \"Theo dõi\" with the subtitle \"Ảnh, triệu chứng và mốc bị bỏ sót\"; the web title is \"Follow-up Inbox\" and the third metric is \"Mốc bị bỏ sót\" (app: \"Bỏ sót\").",
+        "Canvas drops the outer panel around the five follow-up cards (4-level nesting limit); each card keeps title, text, date, assignee, attachment chip, \"Mở\" and \"Xử lý\". \"Inbox đã sạch. Không có follow-up đang mở.\" is not drawn (no scripted state)."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Phạm Thảo Vy",
+        "Vũ Quỳnh Trang",
+        "Hồ Bảo Ngọc",
+        "Bùi Khánh An",
+        "Giao: Điều dưỡng Hương"
       ]
     },
     "WD7": {
@@ -500,11 +539,21 @@
       ],
       "rules": [
         "\"Ảnh / phản hồi chưa duyệt\" eyebrow: the image is unreviewed; the reply is edited by the doctor (\"Phản hồi sau khi xem · bác sĩ cần chỉnh sửa\"); \"Hãy nhập phản hồi\" when empty."
+      ],
+      "demo_data": [
+        "Nguyễn Minh Linh",
+        "Đóng hộp thoại"
+      ],
+      "differences": [
+        "The old dialog shows an illustrated face under the \"MINH HỌA TỔNG HỢP\" tag; the canvas draws a neutral photo placeholder with the same tag (no faces in the canvas, plan principle 6)."
       ]
     },
     "WD8": {
       "logic": [
         "`queue()` with a search that matches nothing: the table keeps its head and shows one empty row \"Không có việc phù hợp. Thử nhóm khác hoặc xem các việc đã hẹn lại.\"; the pager reads \"0 việc · Trang 1/1\"."
+      ],
+      "differences": [
+        "Canvas draws the empty row as the app empty-state block under the table head; the old web writes it as a centred table row."
       ]
     },
     "WE1": {
