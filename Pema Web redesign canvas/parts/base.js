@@ -109,7 +109,7 @@ const field = (label, o = {}) => {
   const box = !['check', 'radio', 'range', 'file'].includes(ty);
   const opts = (o.opts || []).map(x => { const [t, on] = Array.isArray(x) ? x : [x, String(x) === val]; return { t, on, cls: ty === 'radio' ? 'rd-dot' + (on ? ' rd-on' : '') : 'lb-o' + (on ? ' lb-on' : '') }; });
   return {
-    k: 'field', ty, label: ty === 'check' ? '' : label, text: label, ph: o.ph || '', req: !!o.req, hint: o.hint || '', err: o.err || '', w: o.w ? o.w + 'px' : '220px',
+    k: 'field', ty, label: ty === 'check' ? '' : label, text: label, ph: o.ph || '', fcls: o.w ? 'fd fd-w' : 'fd', req: !!o.req, hint: o.hint || '', err: o.err || '', w: o.w ? o.w + 'px' : '220px',
     box, cls: 'fc' + (ty === 'textarea' ? ' fc-ta' : '') + (o.err ? ' fc-err' : '') + (o.dis ? ' fc-dis' : ''), lh: (o.lines || 3) * 24 + 16,
     pre: ty === 'search' ? 'search' : '', suf: o.suf !== undefined ? o.suf : (SUFFIX[ty] || ''), vc: val ? 'fc-v' : 'fc-ph', shown: ty === 'file' ? (o.text || 'Chọn tệp') : (val || o.ph || ''),
     cb: 'ck-b' + (o.on ? ' ck-on' : ''), opts, open: !!o.open, pct: o.pct === undefined ? 0 : o.pct
@@ -158,7 +158,7 @@ const board = (o = {}) => {
     const items = [];
     (r.bk || []).forEach(b => {
       const s = toMin(b.start), e = s + b.mins, svc = b.svc || 0, bh = b.mins / 60 * hh;
-      items.push({ kind: 'booking', time: hm(s) + '–' + hm(e) + (b.buf ? ' · +' + b.buf + '′ đệm' : ''), top: topOf(s), hgt: Math.max(bh - 2, 28), cls: 'bk bk-' + svc + (bh < 56 ? ' bk-s' : ''), fcls: 'bk bk-' + svc + ' bk-flat', title: b.title, sub: b.sub || '', sub2: b.sub2 || '', svc, slot: '', label: '' });
+      items.push({ kind: 'booking', time: hm(s) + '–' + hm(e) + (b.buf ? ' · +' + b.buf + '′ đệm' : ''), top: topOf(s), hgt: Math.max(bh - 2, 28), cls: 'bk bk-' + svc + (bh < 56 ? ' bk-s' : bh < 66 ? ' bk-m' : ''), fcls: 'bk bk-' + svc + ' bk-flat', title: b.title, sub: b.sub || '', sub2: b.sub2 || '', svc, slot: '', label: '' });
       if (b.buf) items.push({ kind: 'buffer', time: '', top: topOf(e), hgt: Math.max(b.buf / 60 * hh - 2, 22), cls: 'bk bk-buf bk-s', fcls: 'bk bk-buf bk-flat', title: b.buf + '′ chuẩn bị phòng', sub: '', sub2: '', svc, slot: '', label: '' });
     });
     (r.slots || []).forEach(sl => { const s = toMin(sl.start); items.push({ kind: 'slot', time: '', top: topOf(s), hgt: Math.max((sl.mins || 30) / 60 * hh - 2, 22), cls: 'bk bk-slot bk-s', fcls: 'bk bk-slot bk-flat', title: o.slotText || 'Đặt lịch', sub: '', sub2: '', svc: 0, slot: 'add', label: 'Đặt lịch ' + r.name + ' ' + hm(s) }); });

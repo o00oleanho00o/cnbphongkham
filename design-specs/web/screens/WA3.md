@@ -100,7 +100,7 @@ Kit components used: Tile×4, Button×3, Field×2, Sidebar×1, TopBar×1, PageHe
 
 ## Web canvas
 - Frames: 1440x900 (inventory: 1440x900); screen label `WA3 · Khung · Kế toán (trang chủ Thu ngân)`.
-- Canvas note: Web › app shell · vai Kế toán: sidebar 4 mục (Tìm bệnh nhân, Thu ngân, Tài chính & tiền thủ thuật, Hướng dẫn), có liên kết tài chính, không có chuông (khung vẽ chuông ở mọi vai); liên kết "Đến nội dung chính" hiện khi focus; vào thẳng "Thu ngân". Nội dung đầy đủ của trang vẽ ở nhóm WF
+- Canvas note: Web › app shell · vai Kế toán: sidebar 4 mục (Tìm bệnh nhân, Thu ngân, Tài chính & tiền thủ thuật, Hướng dẫn), có liên kết tài chính, không có chuông (chuông chỉ có ở chủ phòng khám và bác sĩ); liên kết "Đến nội dung chính" hiện khi focus; vào thẳng "Thu ngân". Nội dung đầy đủ của trang vẽ ở nhóm WF
 
 ## Old web snapshot (for comparison)
 The old web's own layout, with its demo values.

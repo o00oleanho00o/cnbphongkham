@@ -47,9 +47,11 @@ while ids of the group have no frame yet. `Pema Web blocks.dc.html` (build with 
 - Notes start with `WEB + '<nav/tab/modal> · <difference from the old web, if any>'`; for Next.js targets `planned (U4|U5|U6)` add
   `· chưa có trên Next.js`.
 - Photos are placeholders (`photos`) with consent text; no real or generated faces, no before/after scoring.
-- Old demo values replaced on purpose (a hero chip such as the old patient's concern, a name button) go to
-  `design-specs/web/notes.json` under your id as `"demo_data": ["…"]`. `web-specs.cjs` compares labels only, with digits read as
-  one number ("0 Khách mới" matches "12 Khách mới"); names in links that open a patient (`crm=profile`) are skipped automatically.
+- `web-specs.cjs` compares labels only: every run of digits is one number ("0 Khách mới" matches "12 Khách mới"), person names are one placeholder
+  on both sides ("Hóa đơn của Nguyễn Minh Linh" matches "Hóa đơn của Nguyễn Thu Hà", "Hành trình của Linh" matches "… của Hà"), booking-card labels
+  compare the same way, and a notice, an empty state or an action made of several pieces (title + text + bullets + button) matches when the layout
+  holds the pieces in order. All 81 ids pass with no exemption. If a label of your screen still needs one, add `"demo_data": ["…"]` under your id in
+  `design-specs/web/notes.json` and say why in the report.
 
 ## 3. Sample data (parts/base.js)
 
@@ -71,7 +73,7 @@ while ids of the group have no frame yet. `Pema Web blocks.dc.html` (build with 
 `page(id, name, note, nav, blocks, o?)` is a page inside the app shell. `nav` is the menu key: `dashboard today schedule patients crm
 followups studio resources services cashier finance ask guide`. `blocks` is an array (or several arguments nested in arrays; falsy
 values are dropped). Options `o`: `role` (account id, default `'owner-tam'`; others `doctor-tam doctor-mai doctor-an doctor-lan
-care-maianh care-thu accountant`: the sidebar shows the pages of that role), `state` (1440 only), `frames` (explicit list),
+care-maianh care-thu accountant`: the sidebar shows the pages of that role; the bell is drawn for owner and doctors only), `state` (1440 only), `frames` (explicit list),
 `toast` (bottom-right toast text), `drawer` (390 frame shows the open drawer), `crumb` (breadcrumb text when not the menu label),
 `fin` (top-bar finance link text or `''`), `pickerOpen` (account list open), `skip` (the "Đến nội dung chính" link in focus),
 `badge` (count on "Theo dõi").
@@ -84,7 +86,7 @@ buttons) and the 8-tab bar are drawn for you, `blocks` go under the bar. `tabInd
 drawn for you. `o`: `title` (default 'Tài chính & tiền thủ thuật'; doctor 'Doanh số của tôi'), `eyebrow`, `tabs` (array of tab labels,
 default `FIN_TABS`), `role`, `state`.
 
-`dlg(id, title, note, blocks, o?)` is a dialog or modal over the dimmed page, 1440 only. `o`: `eyebrow` (small line over the title),
+`dlg(id, title, note, blocks, o?)` is a dialog or modal over the dimmed page, 1440 only; its × button has the accessible name "Đóng hộp thoại" (title and aria-label). `o`: `eyebrow` (small line over the title),
 `sub`, `w` (panel width in px, default 640; 720 for forms, 1040 for the order dialog), `footer` (array of inline blocks, right-aligned
 buttons), `nav` (which menu item is active on the page behind, default `dashboard`), `behind` (blocks drawn on the page behind),
 `role`, `toast`.
@@ -111,13 +113,13 @@ Columns: block kind, the helper(s) that make it, the `src/ui` component it rende
 |---|---|---|---|---|
 | `h` | `h h1 h2 h3 h4` | heading element (`PageHeading` for a page title; no component for h2-h4) | `PemaHeading`, `PemaSection` | h1 = page/hero title 25, h2 = 20, h3 = card title 16, h4 = 15. Optional sub line and eyebrow |
 | `pageHead` | `pageHead(title, sub, actions, eyebrow)` | `PageHeading` (`workspace.tsx`) | `PemaHeading` | One per page, first block. Actions are inline blocks (buttons) |
-| `hero` | `hero(title, sub, icon, { over, actions })` | kit gap (gradient hero) | `PemaHero` | Identity areas only, never behind tables or notes. **web-only use** (app uses it on home tabs) |
+| `hero` | `hero(title, sub, icon, { over, actions })` | kit gap (gradient hero) | `PemaHero` | Identity areas only, never behind tables or notes. Actions (e.g. the period badge) sit on the right, below the text at 390. **web-only use** (app uses it on home tabs) |
 | `kpis` | `kpi(label, value, note, o)`, `kpis(...)` | `Tile` (`tile.tsx`) | `PemaMetrics`, `PemaTile` | Any count 1-6 in one row (390: 2 per row). Tile = label, value 27/700, note; `unit`, `icon`, `chev`, `tone`, `actions: [btn]` |
 | `stat` | `stat(label, value, sub, { unit })` | kit gap (plain text label/value cell) | `PemaCardLine` | Small summary cell, e.g. "Liệu trình hiện tại / Buổi đã hoàn tất" in a `grid(3, ...)` |
 | `chips` | `chips(items, { vert })` | `FilterChip` (shared, `ops-ui.tsx`) | `PemaChipWrap`, `PemaFilterChip` | Filter pills: `'Tất cả'` or `[label, 'sel'|'dis'|'', count]`. `vert` stacks them (group lists with counts) |
 | `tags` | `tags(...badges)` | `Badge` (`badge.tsx`) in a row | `PemaPillButton` | Wrapping row of badges as one leaf (hero chips) |
 | `tabs` | `tabs(items, activeIndex, { seg })` | `Tabs` (`tabs.tsx`) | none (app uses bottom nav) | Underline bar; `seg` = segmented control (Ngày / 7 ngày). Item `'label'` or `[label, count]`. 390: equal pills |
-| `notice` | `notice(text, tone, { title, actions })` | `Notice` (shared) | `PemaNotice` | tone `info warning danger success`; text verbatim; `actions: [btn]` for notices with buttons |
+| `notice` | `notice(text, tone, { title, actions, items, itemsTitle })` | `Notice` (shared) | `PemaNotice` | tone `info warning danger success`; text verbatim; `title` = bold first line; `items` (+ bold `itemsTitle`, e.g. "Điểm cần nhớ") = bullet list; `actions: [btn]` for notices with buttons. The coverage check reads title, text, bullets and button labels in order as one old notice |
 | `facts` | `facts([label, value, { sub }], ...)` | kit gap (`Facts`, label left / value right rows) | `PemaCardLine` | Key facts, dividers between rows |
 | `field` | `field(label, o)` and `input select date time month number textarea check radio search file range` | `Field` (`field.tsx`) | `PemaTextField`, `PemaDropdownField`, `PemaSearchField`, `PemaCheckRow` | One field per old field, label verbatim. `o`: `req hint err ph lines opts open dis w`. `select(..., { open: true, opts })` shows the option list |
 | `table` | `table(cols, rows, { foot })`, `cell(items, { row })` | `TableShell` (`table-shell.ts`, re-export) | none (cards `PemaCareRow` on mobile) | Up to 7 columns. At 390 every row becomes a card (first cell = title, others under their column label). Use a table for 3+ comparable rows, `list` or cards otherwise |
@@ -125,7 +127,7 @@ Columns: block kind, the helper(s) that make it, the `src/ui` component it rende
 | `bars` | `bars([label, count, pct, tone], ...)` | kit gap | none | Dashboard "Lịch hẹn theo trạng thái"; `pct` 0-100, tone `success warning danger info` |
 | `timeline` | `timeline({ date, title, detail, by, icon, tone }, ...)` | kit gap | `PemaTile` list (J8) | Patient journey / history. Dot icon + connector line |
 | `list` | `list(items, { box, plain, ordered })` | kit gap | `PemaTile`, `PemaCareRow` | Rows `{ t, sub, sub2, over, icon, avatar, actions }`; `ordered` numbers them, `plain` = text lines (guide steps), `box` = bordered rows (wait cards) |
-| `board` | `board({ rooms, from, to, hh, legend })` (alias `week`) | kit gap | `WeekStrip` (partial) | **web-only.** Rooms × time, bookings positioned by start/mins. 390: one list per room |
+| `board` | `board({ rooms, from, to, hh, legend })` (alias `week`) | kit gap | `WeekStrip` (partial) | **web-only.** Rooms × time, bookings positioned by start/mins; `buf` (minutes) adds "· +15′ đệm" to the time line and a hatched "15′ chuẩn bị phòng" block; `slots` draw free time as dashed "Đặt lịch" buttons (label "Đặt lịch <phòng> <giờ>"). 390: one list per room |
 | `weekGrid` | `weekGrid({ days, legend })` | kit gap | `WeekStrip` (partial) | **web-only.** 7 day columns of booking cards with "Đặt lịch" per day. 390: one list per day |
 | `photos` | `photos(items, { n })` (alias `photoGrid`) | kit gap | photo tile / `LocalPhoto` | Placeholders only, always with the tag "MINH HỌA TỔNG HỢP"; `{ empty: true }` for a missing photo, `{ slider: true }` for the slider compare |
 | `a5` | `a5({ title, draft, rows, items, note, signDate, signRole, signName })` | kit gap (print sheet) | `A5PrintPreviewScreen` | **web-only.** Portrait paper (148 × 210), 2 per row in a `grid(2, ...)` |
@@ -137,7 +139,7 @@ Columns: block kind, the helper(s) that make it, the `src/ui` component it rende
 | `stack` | `stack({ g }, ...kids)` | none (plain flex column) | `Column` | Container. `g` gap px, default 12 |
 | `row` | `row({ g, ai, jc }, ...kids)` | none (plain flex row, wraps) | `Row` | Container. `ai` align-items, `jc` justify-content (`'space-between'`, `'flex-end'`) |
 | `grid` | `grid(cols, ...kids)`, `grid({ cols, colsn, g }, ...)`, `split(main, aside)` | `Workspace` (split / cards layout) or plain grid | none | Container. `cols`: number (equal columns), CSS template (`'minmax(0,1.65fr) minmax(300px,1fr)'`) ; `colsn` = template at 390 (default one column, two for 4+ equal columns) |
-| `card` | `card({ title, sub, eyebrow, aside, v, g }, ...kids)`, `panel(title, sub, aside, ...kids)` | `Card` (`card.tsx`) | `PemaInfoCard` | Container. `v`: `panel` (default) `soft` `ai` (pale brand, "Pema AI · bản nháp") `plain` `flush` `hero` (patient card). `aside` = inline blocks on the header's right |
+| `card` | `card({ title, sub, eyebrow, aside, v, tint, g }, ...kids)`, `panel(title, sub, aside, ...kids)` | `Card` (`card.tsx`) | `PemaInfoCard` | Container. `tint`: a tone (`info brand success warning danger`) or a service number 0-3 (0 none, 1 brand, 2 success, 3 warning, as the old service cards S0-S3); title and headings take the tone colour. `v`: `panel` (default) `soft` `ai` (pale brand, "Pema AI · bản nháp") `plain` `flush` `hero` (patient card). `aside` = inline blocks on the header's right |
 | `box` | `box(tone, ...kids)`, `box({ tone, title }, ...kids)` | kit gap (rich notice container) | `PemaNotice` | Container. Callout with children (fields, badges, buttons), e.g. a notice that holds a slider |
 | `disc` | `disc(summary, ...kids)` | kit gap (disclosure) | none | Container. The old `<details>` (finance "+ Ghi nhận lượt thủ thuật…"), drawn open |
 | `txt` | `txt(text, o)`, `sm lbl strong eyebrow kv` | text element | `PemaText` | Inline. See helper reference |
@@ -182,7 +184,7 @@ drawn by the screen helpers (kit: `sidebar.tsx`, `top-bar.tsx`, `app-shell.tsx`;
 `field(label, { ty, val, ph, hint, err, req, lines, opts, open, on, dis, w, text })` is the base; shorthands (all
 `(label, value, o)` unless noted): `input select date time month number textarea`, `check(label, on)`, `radio(label, options, selected)`,
 `search(placeholder, { label })`, `file(label, text)`, `range(label, shownValue, pct)`. `val` empty + `ph` shows the placeholder.
-`w` px is the preferred width inside a `row` (default 220). Date values are ISO (`'2026-09-20'`), as the old inputs show them.
+`w` px is the width inside a `row` (a field without `w` keeps its content width; at 390 it is full width). `money(n)` writes a no-break space before "₫", so money never wraps there. Date values are ISO (`'2026-09-20'`), as the old inputs show them.
 Example: `grid(2, select('Dịch vụ', 'Tái khám & đánh giá', { opts: services.map(s => s.name) }), time('Giờ', '08:00'))`.
 
 ### Table
@@ -195,7 +197,7 @@ Pagination buttons: a `row({ jc: 'space-between' }, txt('48 hóa đơn · Trang 
 under the table.
 
 ### Schedule, photos, print
-- `board({ rooms: [{ name, sub, bk: [{ start: '08:00', mins: 30, title, sub, svc: 0 }] }], from: 8, to: 18, hh: 80, legend })`: `rooms`
+- `board({ rooms: [{ name, sub, bk: [{ start: '08:00', mins: 30, title, sub, sub2, svc: 0, buf: 15 }], slots: [{ start: '08:30', mins: 30 }] }], from: 8, to: 18, hh: 80, legend })`: a booking card has up to four lines (time, name `title`, service `sub`, doctor · status `sub2`; a card under 66px hides `sub2`); `rooms`
   default to `rooms` of the sample data; `svc` 0-3 picks the booking colour (service). A booking shorter than 56px shows one line.
 - `weekGrid({ days: [{ title: 'CN, 20/09', sub: '31 lịch', add: 'Đặt lịch', items: [{ time, title, sub, svc }] }], legend })`.
 - `photos([{ label: 'Trước buổi 1', meta: '23/07', empty, slider, tag }], { n })`: `n` columns.

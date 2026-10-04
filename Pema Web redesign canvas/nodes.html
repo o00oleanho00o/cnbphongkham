@@ -40,7 +40,7 @@
 
 <sc-if value="{{ $V.k == 'facts' }}"><div class="fa"><sc-for list="{{ $V.rows }}" as="f$L"><div class="fa-r"><div class="fa-l">{{ f$L.l }}</div><div class="fa-v"><span class="{{ f$L.cls }}">{{ f$L.v }}</span><sc-if value="{{ f$L.sub }}"><span class="fa-s">{{ f$L.sub }}</span></sc-if></div></div></sc-for></div></sc-if>
 
-<sc-if value="{{ $V.k == 'field' }}"><div class="fd" style="--fw:{{ $V.w }}">
+<sc-if value="{{ $V.k == 'field' }}"><div class="{{ $V.fcls }}" style="--fw:{{ $V.w }}">
 <sc-if value="{{ $V.label }}"><div class="fd-l">{{ $V.label }}<sc-if value="{{ $V.req }}"><b class="fd-r">*</b></sc-if></div></sc-if>
 <sc-if value="{{ $V.box }}"><div class="{{ $V.cls }}" style="--lh:{{ $V.lh }}px"><sc-if value="{{ $V.pre }}"><span class="ms fc-p">{{ $V.pre }}</span></sc-if><span class="{{ $V.vc }}">{{ $V.shown }}</span><sc-if value="{{ $V.suf }}"><span class="ms fc-s">{{ $V.suf }}</span></sc-if></div></sc-if>
 <sc-if value="{{ $V.ty == 'check' }}"><div class="ck"><span class="{{ $V.cb }}"><span class="ms">check</span></span><span class="ck-t">{{ $V.text }}</span></div></sc-if>
