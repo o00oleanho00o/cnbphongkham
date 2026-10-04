@@ -896,10 +896,14 @@
         "Accepting wipes every browser-local demo change (bookings, CSKH results, sessions, follow-ups) and shows the toast \"Đã khôi phục dữ liệu demo\" (WA4 draws a toast)."
       ],
       "differences": [
-        "The app has no reset-demo control; the web confirms with the browser's native `confirm()`, which W3 draws as a two-button dialog with this exact text."
+        "The app has no reset-demo control; the web confirms with the browser's native `confirm()`, which W3 draws as a two-button dialog with this exact text.",
+        "Canvas: the browser confirm() is drawn as an annotation (tag \"NATIVE · confirm()\", exact text, OK / Cancel) over the dimmed Tổng quan page; it is a builder note, not Next.js UI. Canvas: the skip link \"Đến nội dung chính\" is in the old DOM but visually hidden until focus, so this frame does not draw it (WA7 draws it focused); it is exempted through demo_data."
       ],
       "gotchas": [
         "The reset icon has no visible text in the topbar; its accessible name is \"Đặt lại dữ liệu demo\"."
+      ],
+      "demo_data": [
+        "Đến nội dung chính"
       ]
     },
     "WA6": {
@@ -912,10 +916,14 @@
         "Choosing another account changes menu, page access and capabilities at once (owner: all pages; doctor: dashboard, today, schedule, patients, followups, studio, finance, guide; care: crm, schedule, patients, guide; accountant: finance, cashier, patients, guide). Nothing is authenticated."
       ],
       "differences": [
-        "App A6 switches workspace with a bottom tab bar per role (the clinic owner has 5 tabs \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\"); the web keeps one sidebar and a native \"Tài khoản demo\" select in the topbar."
+        "App A6 switches workspace with a bottom tab bar per role (the clinic owner has 5 tabs \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\"); the web keeps one sidebar and a native \"Tài khoản demo\" select in the topbar.",
+        "Canvas: the native <select> popup is drawn open under the account picker with the eight options in order (first = current), tag \"NATIVE · select()\". Canvas: the skip link \"Đến nội dung chính\" is in the old DOM but visually hidden until focus, so this frame does not draw it (WA7 draws it focused); it is exempted through demo_data."
       ],
       "gotchas": [
         "Arrow, option list and keyboard behaviour belong to the browser; W3 may draw a custom list, but the eight labels must stay as written."
+      ],
+      "demo_data": [
+        "Đến nội dung chính"
       ]
     },
     "WA7": {
@@ -927,7 +935,8 @@
         "The skip link is the first focusable element of every clinic page (accessibility; keep the label \"Đến nội dung chính\")."
       ],
       "differences": [
-        "The app has no skip link (touch UI); a web build keeps it as the first tab stop."
+        "The app has no skip link (touch UI); a web build keeps it as the first tab stop.",
+        "Canvas: the link is drawn focused at the top left of the content column (the old focus ring is a navy outline), over the same Tổng quan page as WB1."
       ],
       "gotchas": [
         "The snapshot lists the same shell as WA1 (the link is in the DOM all the time); only its position and visibility differ, which is the whole point of this state."
@@ -942,10 +951,14 @@
         "Three texts of the link: \"Đang đồng bộ tài chính…\" (request pending, WA9), \"Tài chính đã đồng bộ\" (OK, WA1), \"Tài chính chờ kết nối · thử lại\" (failed or unreachable). The ledger stays local until the API accepts it; the sync retries every 10 s and after each `pema-change`."
       ],
       "differences": [
-        "App H7 \"Mất kết nối\" is an error screen with a \"Thử lại\" button when the finance API is down; the web only changes the text of the small link in the topbar and keeps the page usable."
+        "App H7 \"Mất kết nối\" is an error screen with a \"Thử lại\" button when the finance API is down; the web only changes the text of the small link in the topbar and keeps the page usable.",
+        "Canvas: only the link text changes (\"Tài chính chờ kết nối · thử lại\"); the rest of the shell is WA1. Canvas: the skip link \"Đến nội dung chính\" is in the old DOM but visually hidden until focus, so this frame does not draw it (WA7 draws it focused); it is exempted through demo_data."
       ],
       "gotchas": [
         "The link text changes while the page settles; the responsive probe ignores the three texts."
+      ],
+      "demo_data": [
+        "Đến nội dung chính"
       ]
     },
     "WA9": {
@@ -957,10 +970,14 @@
         "The pending text is \"Đang đồng bộ tài chính…\" (with the ellipsis character); the page stays interactive while it shows."
       ],
       "differences": [
-        "The app has no counterpart for the pending state of the finance link."
+        "The app has no counterpart for the pending state of the finance link.",
+        "Canvas: only the link text changes (\"Đang đồng bộ tài chính…\"); the rest of the shell is WA1. Canvas: the skip link \"Đến nội dung chính\" is in the old DOM but visually hidden until focus, so this frame does not draw it (WA7 draws it focused); it is exempted through demo_data."
       ],
       "gotchas": [
         "On a real timeout the state lasts about 7 s; the snapshot is taken while the request is held."
+      ],
+      "demo_data": [
+        "Đến nội dung chính"
       ]
     },
     "WA10": {
@@ -975,7 +992,8 @@
         "Small print: \"Lâm sàng dùng dữ liệu mẫu trong phiên. Tài chính Clinic đã dùng API chung với web; camera, PDF/in, AI và push nền chưa tích hợp. Chuyển kích thước giữ nguyên app đang mở.\""
       ],
       "differences": [
-        "No app or clinic-web counterpart; it is listed because it is a page of the old web. Below 800 px the numbered steps are hidden and the frame fills the width (height 80 dvh, 4 px border)."
+        "No app or clinic-web counterpart; it is listed because it is a page of the old web. Below 800 px the numbered steps are hidden and the frame fills the width (height 80 dvh, 4 px border).",
+        "Canvas: the old page is standalone (no sidebar, no top bar); the canvas has no frame without the shell, so it is drawn inside the app shell as WF5 and WF8 are. The phone frame is a soft card holding the 404 text of the iframe (no navy border, no device size); at 390 px the old page hides the four numbered steps, the canvas keeps them."
       ],
       "gotchas": [
         "The iframe content (`../native-preview/`) is not in `prototype/`, so the frame shows the static server's 404 page; the snapshot does not extract the iframe, only the page around it.",
@@ -991,7 +1009,8 @@
         "Reception buttons per row: \"Check-in\" and \"Vắng\" for Chưa đến and Đã xác nhận rows; \"Mời vào phòng\" after check-in; \"Mở 360\" for the other statuses."
       ],
       "differences": [
-        "App I2 also shows the signed-in role's list; the web subtitle says \"dữ liệu tổng hợp 20/09/2026\", the app \"22/09/2026\"."
+        "App I2 also shows the signed-in role's list; the web subtitle says \"dữ liệu tổng hợp 20/09/2026\", the app \"22/09/2026\".",
+        "Canvas: the eight reception tiles are drawn in two rows of four, as WB3 does; the old page has one row of eight."
       ],
       "gotchas": [
         "Money is not hidden for doctors: the column \"Giá lịch dự kiến\" still shows each appointment price; only the invoice total tile is removed."
@@ -1006,10 +1025,14 @@
         "Doctor accounts cannot change the doctor filter: the \"Bác sĩ\" select is `disabled` with value \"BS. Mai\". Booking still needs the `booking` capability (owner, care, doctor)."
       ],
       "differences": [
-        "App I4: \"Doctor role: the doctor is fixed to the signed-in doctor\", the same rule; I3 draws the room schedule without a locked filter control."
+        "App I4: \"Doctor role: the doctor is fixed to the signed-in doctor\", the same rule; I3 draws the room schedule without a locked filter control.",
+        "Canvas: the day board shows the first four hours (as WB5); every free half hour is a dashed \"Đặt lịch\" cell, which is the old drop-slot (transparent, aria-label only). Room 2 is fully booked from 08:00 so its 08:00 drop-slot sits under the first booking; the label \"Đặt lịch Tư vấn chuyên sâu 08:00\" is exempted through demo_data. The sidebar badge of BS. Mai reads 2."
       ],
       "gotchas": [
         "The date, the room filter and the view switch (\"Theo phòng\" / \"Theo ngày\") stay usable."
+      ],
+      "demo_data": [
+        "Đặt lịch Tư vấn chuyên sâu 08:00"
       ]
     },
     "WB12": {
@@ -1020,7 +1043,8 @@
         "Stats for an empty day: \"Lịch trong ngày\" 0, \"Thời gian điều trị\" 0′, \"Chờ xếp lịch\" 6 (the waiting list is not bound to the date), \"Khoảng khóa\" 0."
       ],
       "differences": [
-        "App I3 is drawn for a busy day (header \"Khám da liễu · 8 lịch\"); an empty day has no frame in the app."
+        "App I3 is drawn for a busy day (header \"Khám da liễu · 8 lịch\"); an empty day has no frame in the app.",
+        "Canvas: every free half hour of the four empty rooms is a dashed \"Đặt lịch\" cell (the old drop-slots are transparent with an aria-label; their grid lines are what the shot shows)."
       ],
       "gotchas": [
         "\"Mốc demo\" resets the date to 20/09/2026; dates before the demo day cannot be booked (see the group note)."
@@ -1034,7 +1058,8 @@
         "The week range label reads \"1/12/2026 — 7/12/2026\" (start date to start + 6 days)."
       ],
       "differences": [
-        "App I3 has room columns for one day only; it has no 7-day view and no \"Chưa có lịch\" text."
+        "App I3 has room columns for one day only; it has no 7-day view and no \"Chưa có lịch\" text.",
+        "Canvas: the week grid block has no empty-day text, so each column is composed from a grid cell, the day title, \"0 lịch\", \"Chưa có lịch\" and the \"Đặt lịch\" button; the old grid scrolls sideways (5 of 7 columns visible at 1440)."
       ],
       "gotchas": [
         "\"Chưa có lịch\" is the empty text of the schedule; it is drawn once per day column."
@@ -1049,7 +1074,8 @@
         "Empty text \"Đã xếp hết danh sách chờ.\" (with the final full stop)."
       ],
       "differences": [
-        "App I3 does not draw a waiting list; the panel \"Chờ xếp lịch\" and its empty state are old-web only."
+        "App I3 does not draw a waiting list; the panel \"Chờ xếp lịch\" and its empty state are old-web only.",
+        "Canvas: the toast \"Đã lưu lịch và cập nhật Patient 360\" is drawn bottom right as WA4; in the old shot it covers the lower right of the grid."
       ],
       "gotchas": [
         "The last booking leaves the toast \"Đã lưu lịch và cập nhật Patient 360\" in the snapshot (a toast lives 2800 ms; the snapshot is inside that window and was identical on two runs)."
@@ -1063,7 +1089,8 @@
         "\"Đã chọn giờ trống. Bấm xác nhận để lưu.\" (success text in `#ops-error`)."
       ],
       "differences": [
-        "App I4 has \"Tìm giờ trống\" but its spec draws no feedback line."
+        "App I4 has \"Tìm giờ trống\" but its spec draws no feedback line.",
+        "Canvas: the confirmation uses the same inline line as the errors (old #ops-error, red in the old web too)."
       ],
       "gotchas": [
         "The line is called `ops-error` for both the errors and this confirmation; style it by tone, not by id."
@@ -1166,7 +1193,11 @@
         "Booking status chips: \"Đặt hẹn\" (WB8), \"Đã xác nhận\" (this), \"Đã đến\" (WB24). Cancelled and missed bookings are not shown on the schedule."
       ],
       "differences": [
-        "App F9 has one \"Xác nhận tham dự\" action; the web has the chip plus \"Xác nhận lịch\", \"Check-in\" and \"Patient 360 →\"."
+        "App F9 has one \"Xác nhận tham dự\" action; the web has the chip plus \"Xác nhận lịch\", \"Check-in\" and \"Patient 360 →\".",
+        "Canvas: the toast \"Đã cập nhật trạng thái lịch\" is drawn bottom right; the old shot is taken after it has gone. The Layout generator does not list a dialog toast, so the text is exempted through demo_data."
+      ],
+      "demo_data": [
+        "Đã cập nhật trạng thái lịch"
       ]
     },
     "WB24": {
@@ -1177,7 +1208,11 @@
         "Same chip rule as WB23; \"Đã đến\" is the last status reachable from this dialog."
       ],
       "differences": [
-        "App F9 has no check-in action; check-in is on the reception list (I2)."
+        "App F9 has no check-in action; check-in is on the reception list (I2).",
+        "Canvas: the toast \"Đã cập nhật trạng thái lịch\" is drawn bottom right; the old shot is taken after it has gone. The Layout generator does not list a dialog toast, so the text is exempted through demo_data."
+      ],
+      "demo_data": [
+        "Đã cập nhật trạng thái lịch"
       ]
     },
     "WB25": {
@@ -1188,7 +1223,8 @@
         "Reception flow: Chưa đến → (Check-in) Đang chờ → (Mời vào phòng) Đang khám/điều trị → Hoàn tất; or Vắng hẹn or Đã hủy. Statuses: booked and confirmed both count under \"Chưa đến\". The toast \"Đã cập nhật hàng đợi\" follows check-in, start and Vắng."
       ],
       "differences": [
-        "App I2 draws the same row buttons (\"Check-in\", \"Vắng\", \"Mời vào phòng\")."
+        "App I2 draws the same row buttons (\"Check-in\", \"Vắng\", \"Mời vào phòng\").",
+        "Canvas: the toast \"Đã cập nhật hàng đợi\" (check-in) is drawn bottom right; the old status badge colours follow WB3 (Đang chờ yellow, Đang khám/điều trị brand, Hoàn tất green, Đã hủy grey, Vắng hẹn red) while the old web uses yellow or blue for all."
       ]
     },
     "WB26": {
@@ -1199,7 +1235,8 @@
         "Tile counts: \"Chưa đến\" 30 and \"Đang khám/điều trị\" 1 of the 31 bookings of the demo day."
       ],
       "differences": [
-        "App I2 lists no filter tile named \"Đang khám/điều trị\"."
+        "App I2 lists no filter tile named \"Đang khám/điều trị\".",
+        "Canvas: the toast \"Đã cập nhật hàng đợi\" is drawn bottom right."
       ]
     },
     "WB27": {
@@ -1224,7 +1261,8 @@
         "\"Vắng\" on a Chưa đến row sets the booking to missed; it leaves the schedule (WB6) but stays in this list."
       ],
       "differences": [
-        "App I2 lists \"Vắng hẹn\" among its status texts."
+        "App I2 lists \"Vắng hẹn\" among its status texts.",
+        "Canvas: the toast \"Đã cập nhật hàng đợi\" is drawn bottom right."
       ]
     },
     "WB29": {
@@ -1419,7 +1457,11 @@
         "After a result is saved the toast is \"Đã lưu kết quả và cập nhật hàng đợi\"."
       ],
       "differences": [
-        "The app has no counterpart for this activity log dialog."
+        "The app has no counterpart for this activity log dialog.",
+        "Canvas: the toast \"Đã lưu kết quả và cập nhật hàng đợi\" is drawn bottom right behind the dialog; the old shot is taken after it has gone. The Layout generator does not list a dialog toast, so the text is exempted through demo_data. The time string is the old web's ISO value, kept verbatim."
+      ],
+      "demo_data": [
+        "Đã lưu kết quả và cập nhật hàng đợi"
       ]
     },
     "WD10": {
@@ -1430,7 +1472,8 @@
         "Stages: \"Khách mới\", \"Khách quay lại\", \"Đang điều trị\", \"Lâu chưa quay lại\", \"Đã quay lại sau CSKH\"; \"Khách mới\", \"Khách quay lại\" and \"Đã quay lại sau CSKH\" are empty in the demo."
       ],
       "differences": [
-        "The app (I1) has no lifecycle segment dialogs."
+        "The app (I1) has no lifecycle segment dialogs.",
+        "Canvas: the dashboard behind the dialog shows the lifecycle row with 0 / 0 / 42 / 4 / 0 as in the old shot."
       ]
     },
     "WD11": {
@@ -1452,7 +1495,8 @@
         "\"Chọn kênh, kết quả, người phụ trách và nhập ghi chú.\" (a whitespace-only note passes the browser check and fails the domain check)."
       ],
       "differences": [
-        "App I13 draws no inline validation line."
+        "App I13 draws no inline validation line.",
+        "Canvas: the note field holds a single space (the old field holds three), so the placeholder is not visible, as in the old shot."
       ]
     },
     "WD13": {
@@ -1463,7 +1507,8 @@
         "The outcome \"Đồng ý đặt lịch\" changes the submit button to \"Tiếp tục → Đặt lịch\"; submitting opens the booking dialog with \"Sau CSKH: …\" (WB7). Other outcomes read \"Lưu kết quả chăm sóc\". Note: \"Ghi nhận cuộc gọi/tin nhắn mô phỏng. Không gửi Zalo/SMS hoặc thực hiện cuộc gọi thật.\""
       ],
       "differences": [
-        "App I13 shows the same hint \"Đồng ý đặt lịch sẽ mở form lịch trước khi hoàn tất.\" next to the save button (the web has it too, small text right of the button); the web also relabels the button to \"Tiếp tục → Đặt lịch\", which the I13 spec does not mention."
+        "App I13 shows the same hint \"Đồng ý đặt lịch sẽ mở form lịch trước khi hoàn tất.\" next to the save button (the web has it too, small text right of the button); the web also relabels the button to \"Tiếp tục → Đặt lịch\", which the I13 spec does not mention.",
+        "Canvas: the keyboard focus ring on the note field of the old shot is not drawn."
       ]
     },
     "WD14": {
@@ -1474,7 +1519,8 @@
         "\"Việc đã được xử lý hoặc không còn hợp lệ. Tải lại danh sách.\" (the task was resolved in another tab)."
       ],
       "differences": [
-        "App I13 has no concurrent-edit handling."
+        "App I13 has no concurrent-edit handling.",
+        "Canvas: the old error is a notice with role=\"alert\" drawn as a plain red line; the canvas draws it as the same inline error line as WD11 and WD12."
       ],
       "gotchas": [
         "Reached with two tabs of the same browser; the second tab saves the same first task first."
@@ -1488,7 +1534,8 @@
         "\"Inbox đã sạch. Không có follow-up đang mở.\" The metrics read 0 (\"Đang mở\", \"Cần bác sĩ\", \"Mốc bị bỏ sót\"), the chips \"Tất cả 0\", \"Ảnh 0\", \"Triệu chứng 0\", \"Quá hạn 0\"; the menu badge \"Theo dõi\" goes to 0."
       ],
       "differences": [
-        "App I6 and A4 are titled \"Theo dõi\" and call the third metric \"Bỏ sót\"; neither draws the empty text."
+        "App I6 and A4 are titled \"Theo dõi\" and call the third metric \"Bỏ sót\"; neither draws the empty text.",
+        "Canvas: the chips \"Tất cả 0 / Ảnh 0 / Triệu chứng 0 / Quá hạn 0\" are drawn with no chip selected, as in the old shot."
       ]
     },
     "WD16": {
@@ -1499,7 +1546,8 @@
         "Counts: metrics \"Đang mở\" 6, \"Cần bác sĩ\" 3, \"Mốc bị bỏ sót\" 3; chips \"Tất cả 6\", \"Ảnh 2\", \"Triệu chứng 1\", \"Quá hạn 1\". Toast \"Đã lưu buổi điều trị và cập nhật hành trình\"."
       ],
       "differences": [
-        "App I6 lists 5 follow-ups (\"Tất cả 5\"); the web adds a sixth one for the just-saved session."
+        "App I6 lists 5 follow-ups (\"Tất cả 5\"); the web adds a sixth one for the just-saved session.",
+        "Canvas: the assignee of the new card is \"CSKH Mai Anh\" (canvas sample data) instead of the old demo name."
       ]
     },
     "WE7": {

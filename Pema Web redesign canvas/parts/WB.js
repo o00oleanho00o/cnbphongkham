@@ -120,13 +120,13 @@ const wb2Schedule = o => [
     panel(o.title, '08:00–18:00 · bước kéo 30 phút · nhấp thẻ để chỉnh giờ chính xác', [badge(o.view ? 'Theo ngày' : 'Theo phòng')], ...o.body),
     panel('Chờ xếp lịch', 'Chọn hồ sơ để tìm giờ phù hợp', [], ...(o.wait === false ? [empty('Đã xếp hết danh sách chờ.', '', { flat: true })] : wb2Wait())))
 ];
-// day board without bookings except the given room (BS. Mai in room 2 for WB11), or with no booking at all (WB12)
+// day board where only room 2 holds bookings (BS. Mai, WB11) or none does (WB12); the free half hours are the dashed "Đặt lịch" cells
 const wb2Board = mai => board({
   from: 8, to: 12, hh: 112,
   rooms: rooms.map((r, i) => ({
     name: r.name, sub: (mai && i === 1 ? 8 : 0) + ' lịch · ' + r.sub,
     bk: mai && i === 1 ? [0, 1, 2, 3].map(h => ({ start: (8 + h) + ':00', mins: 45, buf: 15, title: [people[1], people[5], people[9], people[3]][h].name, sub: services[1].name, sub2: 'BS. Mai · Đặt hẹn', svc: 1 })) : [],
-    slots: []
+    slots: mai && i === 1 ? [] : [0, 1, 2, 3, 4, 5, 6, 7].map(k => ({ start: hm(480 + k * 30), mins: 30 })) // every free half hour is a "Đặt lịch" cell
   }))
 });
 // 7 empty days of the week from 1/12/2026: day title, "0 lịch", the empty text and the add button (the week grid block has no empty-day text)
@@ -154,8 +154,8 @@ const wb2New = (id, note, form, line) => dlg(id, 'Đặt lịch hẹn', WEB + no
   row({ g: 8 }, primary('Xác nhận đặt lịch'), secondary('Tìm giờ trống')),
   errLine(line)
 ], { eyebrow: 'Pema · vận hành', w: 720, nav: 'today', behind: wbTodayBehind() });
-// the details dialog: status chip, three action buttons, form, cancel part; `line` is the inline line at the end (omit for none)
-const wb2Detail = (id, note, status, line) => dlg(id, 'Chi tiết lịch hẹn', WEB + note, [
+// the details dialog: status chip, three action buttons, form, cancel part; line is the inline line at the end (omit for none); toast is the page toast that the previous action raised
+const wb2Detail = (id, note, status, line, toast) => dlg(id, 'Chi tiết lịch hẹn', WEB + note, [
   row({ g: 8, ai: 'center' }, badge(status, status === 'Đặt hẹn' ? 'neutral' : 'info'), secondary('Xác nhận lịch'), secondary('Check-in'), secondary('Patient 360 →')),
   ...wb2Booking({ time: '08:00', note: 'Lịch giả lập để thử điều phối', tail: ' · theo lịch đã đặt' }),
   row({ g: 8 }, primary('Lưu thay đổi'), secondary('Tìm giờ trống')),
@@ -163,7 +163,7 @@ const wb2Detail = (id, note, status, line) => dlg(id, 'Chi tiết lịch hẹn',
   input('Lý do hủy', ''),
   row({ g: 8 }, btn('Hủy lịch hẹn', 'danger')),
   line ? errLine(line) : null
-], { eyebrow: 'Pema · vận hành', w: 720, nav: 'schedule', behind: wbScheduleBehind() });
+], { eyebrow: 'Pema · vận hành', w: 720, nav: 'schedule', behind: wbScheduleBehind(), toast });
 
 const WB = [
   page('WB1', 'Tổng quan', WEB + 'dashboard · bố cục như app I1/A1 ở cỡ web; web có thêm KPI "Quá ngày dự kiến", "Liệu trình bỏ dở" và hai khối "Hiệu quả CSKH", "Vòng đời khách hàng"; tên và số liệu là dữ liệu tổng hợp', 'dashboard', [
@@ -282,22 +282,22 @@ const WB = [
   // WB21-WB24 · details dialog of a booking (WB8): missing cancel reason, stale booking, confirmed and arrived chips
   wb2Detail('WB21', 'dialog · "Hủy lịch hẹn" khi ô "Lý do hủy" còn trống; dòng lỗi dưới nút hủy, lịch giữ nguyên (xem WB8 cho dialog đầy đủ)', 'Đặt hẹn', 'Cần lý do hủy cho lịch đang hoạt động.'),
   wb2Detail('WB22', 'dialog · lịch đã được đổi ở cửa sổ khác (đã hủy) nên "Xác nhận lịch" báo lỗi; chip vẫn "Đặt hẹn" vì dialog chưa tải lại', 'Đặt hẹn', 'Không thể chuyển trạng thái lịch này.'),
-  wb2Detail('WB23', 'dialog · sau "Xác nhận lịch" (thông báo "Đã cập nhật trạng thái lịch") mở lại: chip "Đã xác nhận"; các trạng thái của lịch: Đặt hẹn (WB8), Đã xác nhận, Đã đến (WB24)', 'Đã xác nhận'),
-  wb2Detail('WB24', 'dialog · sau "Check-in" mở lại: chip "Đã đến"; lịch hủy hoặc vắng không hiện trên lịch điều phối', 'Đã đến'),
+  wb2Detail('WB23', 'dialog · sau "Xác nhận lịch" (thông báo "Đã cập nhật trạng thái lịch") mở lại: chip "Đã xác nhận"; các trạng thái của lịch: Đặt hẹn (WB8), Đã xác nhận, Đã đến (WB24)', 'Đã xác nhận', null, 'Đã cập nhật trạng thái lịch'),
+  wb2Detail('WB24', 'dialog · sau "Check-in" mở lại: chip "Đã đến"; lịch hủy hoặc vắng không hiện trên lịch điều phối', 'Đã đến', null, 'Đã cập nhật trạng thái lịch'),
 
   // WB25-WB29 · Hôm nay filtered to one status of the demo patient (31 bookings: the other 30 are "Chưa đến")
   page('WB25', 'Hôm nay · Đang chờ (đã check-in)', WEB + 'today · sau Check-in dòng đầu và bấm ô "Đang chờ": bộ lọc Trạng thái = Đang chờ, "Đã đến" 1, "Chưa đến" 30, hàng chỉ còn nút "Mời vào phòng"; mọi phần khác như WB3', 'today', wb2Today({
     total: 31, arrived: 1, counts: [30, 1, 0, 0, 0, 0], invoice: true, status: 'Đang chờ', rows: wb2One(['Đang chờ', 'warning'], [primary('Mời vào phòng')])
-  }), { state: true }),
+  }), { state: true, toast: 'Đã cập nhật hàng đợi' }),
   page('WB26', 'Hôm nay · Đang khám / điều trị', WEB + 'today · sau "Bắt đầu" và ô "Đang khám/điều trị": bộ lọc Trạng thái = Đang khám/điều trị, hàng chỉ còn nút "Mở 360"; mọi phần khác như WB3', 'today', wb2Today({
     total: 31, arrived: 1, counts: [30, 0, 1, 0, 0, 0], invoice: true, status: 'Đang khám/điều trị', rows: wb2One(['Đang khám/điều trị', 'brand'], [secondary('Mở 360')])
-  }), { state: true }),
+  }), { state: true, toast: 'Đã cập nhật hàng đợi' }),
   page('WB27', 'Hôm nay · Hoàn tất', WEB + 'today · sau khi lưu buổi điều trị trong Patient 360 và ô "Hoàn tất": bộ lọc Trạng thái = Hoàn tất, hàng chỉ còn nút "Mở 360"; hoàn tất không suy ra từ thanh toán', 'today', wb2Today({
     total: 31, arrived: 1, counts: [30, 0, 0, 1, 0, 0], invoice: true, status: 'Hoàn tất', rows: wb2One(['Hoàn tất', 'success'], [secondary('Mở 360')])
   }), { state: true }),
   page('WB28', 'Hôm nay · Vắng hẹn', WEB + 'today · sau "Vắng" và ô "Vắng hẹn": bộ lọc Trạng thái = Vắng hẹn, "Đã đến" 0, hàng chỉ còn nút "Mở 360"; mọi phần khác như WB3', 'today', wb2Today({
     total: 31, arrived: 0, counts: [30, 0, 0, 0, 0, 1], invoice: true, status: 'Vắng hẹn', rows: wb2One(['Vắng hẹn', 'danger'], [secondary('Mở 360')])
-  }), { state: true }),
+  }), { state: true, toast: 'Đã cập nhật hàng đợi' }),
   page('WB29', 'Hôm nay · Đã hủy (có lịch hủy)', WEB + 'today · sau khi hủy một lịch trong Điều phối lịch (thông báo "Đã hủy lịch, giữ lại lịch sử") và ô "Đã hủy": bộ lọc Trạng thái = Đã hủy, danh sách không còn trống như WB4, hàng chỉ còn nút "Mở 360"', 'today', wb2Today({
     total: 31, arrived: 0, counts: [30, 0, 0, 0, 1, 0], invoice: true, status: 'Đã hủy', rows: wb2One(['Đã hủy', 'neutral'], [secondary('Mở 360')])
   }), { state: true })
