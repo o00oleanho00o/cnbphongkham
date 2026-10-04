@@ -42,7 +42,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -79,7 +79,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Tile label="Vắng hẹn" value="0" />
   </Grid>
   <Row gap="10px" wrap>
-    <Text strong>"13.500.000 ₫"</Text>
+    <Text strong>"13.500.000 ₫"</Text>
     <Text small>"Phát sinh hóa đơn hôm nay"</Text>
   </Row>
   <Card>
@@ -109,17 +109,34 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
           <Text small>"Lễ tân"</Text>
         </Cell>
         <Cell column="Giá lịch dự kiến">
-          <Text>"300.000 ₫"</Text>
+          <Text>"300.000 ₫"</Text>
         </Cell>
         <Cell column="Tiếp đón">
           <Button variant="primary">"Bắt đầu"</Button>
+        </Cell>
+      </Row>
+      <Row sample="row 2 of 4: only the actions and statuses that the rows above do not show">
+        <Cell column="Trạng thái">
+          <Badge tone="warning">"Đang chờ"</Badge>
+        </Cell>
+        <Cell column="Tiếp đón">
+          <Button variant="primary">"Mời vào phòng"</Button>
+        </Cell>
+      </Row>
+      <Row sample="row 3 of 4: only the actions and statuses that the rows above do not show">
+        <Cell column="Trạng thái">
+          <Badge tone="neutral">"Chưa đến"</Badge>
+        </Cell>
+        <Cell column="Tiếp đón">
+          <Button variant="primary">"Check-in"</Button>
+          <Button variant="secondary">"Vắng"</Button>
         </Cell>
       </Row>
     </TableShell>
   </Card>
 </AppShell>
 ```
-Kit components used: Tile×8, Field×5, Button×5, Sidebar×1, TopBar×1, PageHeading×1, Card×1, TableShell×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Button×8, Tile×8, Field×5, Badge×3, Sidebar×1, TopBar×1, PageHeading×1, Card×1, TableShell×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WA4-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).

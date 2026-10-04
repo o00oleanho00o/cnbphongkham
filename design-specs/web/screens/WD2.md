@@ -41,6 +41,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
 ```tsx
 // opens over the page "CSKH hôm nay" (dimmed); the page behind it is not part of this screen
 <Dialog title="Chăm sóc · Nguyễn Thu Hà" width="760px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
   <Card variant="soft">
     <Row gap="18px" justify="space-between" wrap>
       <Stack>

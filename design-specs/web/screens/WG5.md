@@ -54,7 +54,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -87,7 +87,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
   <Tabs items={["Tổng quan","Tiền thủ thuật","Chính sách tỷ lệ","Phiếu thu & thông báo"]} selected="Phiếu thu & thông báo" />
   <Grid cols="minmax(0,1.5fr) minmax(0,1fr)" gap="16px">
     <Card title="Thu tiền khách hàng">
-      <Field label="Hóa đơn còn nợ" type="select" default="P001 · 150.000 ₫ · FIN-HD-1" />
+      <Field label="Hóa đơn còn nợ" type="select" default="P001 · 150.000 ₫ · FIN-HD-1" />
       <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
         <Field label="Số thu" type="number" required default="150000" />
         <Field label="Phương thức" type="select" default="Tiền mặt" hint="Tiền mặt · Chuyển khoản" />
@@ -97,19 +97,19 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
       <Heading level={3}>"Giao dịch trong kỳ"</Heading>
       <List>
         <ListItem title="P012" sub="2026-09-12 · Chuyển khoản">
-          <Text strong>"1.200.000 ₫"</Text>
+          <Text strong>"1.200.000 ₫"</Text>
         </ListItem>
         <ListItem title="P011" sub="2026-09-11 · Tiền mặt">
-          <Text strong>"2.400.000 ₫"</Text>
+          <Text strong>"2.400.000 ₫"</Text>
         </ListItem>
         <ListItem title="P010" sub="2026-09-10 · Chuyển khoản">
-          <Text strong>"250.000 ₫"</Text>
+          <Text strong>"250.000 ₫"</Text>
         </ListItem>
         <ListItem title="P009" sub="2026-09-09 · Tiền mặt">
-          <Text strong>"300.000 ₫"</Text>
+          <Text strong>"300.000 ₫"</Text>
         </ListItem>
         <ListItem title="P008" sub="2026-09-08 · Chuyển khoản">
-          <Text strong>"1.200.000 ₫"</Text>
+          <Text strong>"1.200.000 ₫"</Text>
         </ListItem>
       </List>
       <Text small>"Khi chưa có phiếu thu: \"Chưa có phiếu thu.\" và nút \"Xác nhận thu\" bị tắt."</Text>
@@ -120,10 +120,10 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
       <Divider />
       <Text small>"Khi đã có thông báo: tiêu đề, nội dung, giờ; nút \"Đã đọc\" cho thông báo chưa đọc, chữ \"Đã đọc\" cho thông báo đã đọc."</Text>
       <List>
-        <ListItem title="Thanh toán thành công" sub="Phiếu thu P012 · 1.200.000 ₫ · Chuyển khoản" sub2="2026-09-12 10:30">
+        <ListItem title="Thanh toán thành công" sub="Phiếu thu P012 · 1.200.000 ₫ · Chuyển khoản" sub2="2026-09-12 10:30">
           <Button variant="secondary">"Đã đọc"</Button>
         </ListItem>
-        <ListItem title="Thanh toán thành công" sub="Phiếu thu P011 · 2.400.000 ₫ · Tiền mặt" sub2="2026-09-11 15:05">
+        <ListItem title="Thanh toán thành công" sub="Phiếu thu P011 · 2.400.000 ₫ · Tiền mặt" sub2="2026-09-11 15:05">
           <Text small>"Đã đọc"</Text>
         </ListItem>
       </List>
@@ -171,6 +171,7 @@ Kit components used: Field×6, Button×6, Card×2, Sidebar×1, TopBar×1, Tabs×
 - The tab content refreshes every 10 s (`setInterval`) unless an input has focus or the entry form is open; a pending form is never overwritten (`dirty` flag).
 - Without the API the page shows "Chưa kết nối dữ liệu tài chính: <error>. Chạy python prototype/finance_server.py rồi thử lại." in `#error` (see WG9).
 - The right panel states (empty message, unread with the button "Đã đọc", read with the text "Đã đọc"), the accountant text "Kế toán không đọc inbox của chủ." and the empty "Chưa có phiếu thu." are drawn together in one frame; the live page shows one of them.
+- Canvas sample content: The two sample notifications are illustrative: the old shot shows only the empty message.
 
 ## Web canvas
 - Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WG5 · Tài chính · Phiếu thu & thông báo`.

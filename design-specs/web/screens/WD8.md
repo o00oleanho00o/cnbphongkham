@@ -82,13 +82,15 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     </Card>
     <Card title="Danh sách cần chăm sóc" subtitle="0 việc · không gửi tin tự động">
       <Row gap="12px" wrap>
-        <Field label="Tìm khách / lý do" type="search" default="zzzz" />
+        <Field label="Tìm khách / lý do" type="search" placeholder="Tên hoặc mã hồ sơ…" default="zzzz" />
         <Field label="Phụ trách" type="select" default="Tất cả nhân viên" options={["Tất cả nhân viên","CSKH Mai Anh","CSKH Thu","BS. Tâm","BS. Mai","BS. An","BS. Lan"]} />
         <Field label="Thời hạn" type="select" default="Đến hạn + sinh nhật tuần" options={["Đến hạn + sinh nhật tuần","Tất cả, gồm đã hẹn lại"]} />
       </Row>
       <TableShell columns={["Khách hàng / bối cảnh","Lý do & bước đề xuất","Hạn xử lý","Phụ trách",""]} rows={0}  /* cards at 390 */>
       </TableShell>
-      <EmptyState title="Không có việc phù hợp. Thử nhóm khác hoặc xem các việc đã hẹn lại." />
+      <EmptyState>
+        <Heading level={3}>"Không có việc phù hợp. Thử nhóm khác hoặc xem các việc đã hẹn lại."</Heading>
+      </EmptyState>
       <Row gap="12px" justify="space-between" wrap>
         <Text>"0 việc · Trang 1/1"</Text>
         <Row gap="8px" wrap>

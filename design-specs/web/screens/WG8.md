@@ -58,7 +58,6 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
     <Field label="Tài khoản demo" type="select" default="Kế toán · Đối soát & thu ngân" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
     <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
-    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
     <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
   </TopBar>
   <Row gap="20px" justify="space-between" wrap>
@@ -78,24 +77,24 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Badge tone="neutral" dot={false}>"Đang đối soát"</Badge>
   </Hero>
   <Grid cols="repeat(4, 1fr)" cols-390="repeat(2, 1fr)">
-    <Tile label="Doanh số thực hiện" value="13.200.000 ₫" note="Theo ngày hoàn tất thủ thuật" />
-    <Tile label="Thực thu trong tháng" value="11.000.000 ₫" note="Theo ngày phiếu thu" />
-    <Tile label="Công nợ hiện tại" value="1.250.000 ₫" note="Tất cả hóa đơn, không chỉ trong tháng" />
-    <Tile label="Tiền thủ thuật đã duyệt" value="2.187.000 ₫" note="Không phải lợi nhuận phòng khám" />
+    <Tile label="Doanh số thực hiện" value="13.200.000 ₫" note="Theo ngày hoàn tất thủ thuật" />
+    <Tile label="Thực thu trong tháng" value="11.000.000 ₫" note="Theo ngày phiếu thu" />
+    <Tile label="Công nợ hiện tại" value="1.250.000 ₫" note="Tất cả hóa đơn, không chỉ trong tháng" />
+    <Tile label="Tiền thủ thuật đã duyệt" value="2.187.000 ₫" note="Không phải lợi nhuận phòng khám" />
   </Grid>
   <Grid cols="minmax(0,1.5fr) minmax(0,1fr)" gap="16px">
     <Card title="Đóng góp của đội ngũ">
-      <StatusBars items={[["BS. Tâm · 3 lượt · Tiền thủ thuật 90.000 ₫","900.000 ₫"],["BS. Mai · 3 lượt · Tiền thủ thuật 225.000 ₫","1.500.000 ₫"],["BS. An · 3 lượt · Tiền thủ thuật 1.440.000 ₫","7.200.000 ₫"],["BS. Lan · 3 lượt · Tiền thủ thuật 432.000 ₫","3.600.000 ₫"]]} />
+      <StatusBars items={[["BS. Tâm · 3 lượt · Tiền thủ thuật 90.000 ₫","900.000 ₫"],["BS. Mai · 3 lượt · Tiền thủ thuật 225.000 ₫","1.500.000 ₫"],["BS. An · 3 lượt · Tiền thủ thuật 1.440.000 ₫","7.200.000 ₫"],["BS. Lan · 3 lượt · Tiền thủ thuật 432.000 ₫","3.600.000 ₫"]]} />
     </Card>
     <Card title="Việc cần đối soát">
-      <Facts items={[["Lượt chờ kế toán duyệt","0"],["Tiền chờ duyệt","0 ₫"]]} />
+      <Facts items={[["Lượt chờ kế toán duyệt","0"],["Tiền chờ duyệt","0 ₫"]]} />
       <Text small>"Tỷ lệ lưu theo từng lượt. Đổi chính sách không tính lại lịch sử. Khoản theo thực thu được đóng băng khi chốt kỳ."</Text>
       <Button variant="secondary">"Mở bảng tiền thủ thuật →"</Button>
     </Card>
   </Grid>
 </AppShell>
 ```
-Kit components used: Button×4, Tile×4, Field×3, Card×2, Sidebar×1, TopBar×1, Tabs×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Tile×4, Field×3, Button×3, Card×2, Sidebar×1, TopBar×1, Tabs×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WG8-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).

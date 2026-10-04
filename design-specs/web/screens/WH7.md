@@ -42,7 +42,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -82,7 +82,14 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
             <ListItem title="Vào Dịch vụ để sửa tên, giá, thời lượng, thời gian chuẩn bị hoặc tạm ngưng." />
           </List>
         </Stack>
-        <Notice tone="info" text="Thông tin đi tiếp như thế nào? Thông số dịch vụ mới áp dụng cho lịch mới. Khi chỉ dời giờ/phòng, lịch cũ giữ thông số đã chốt; đổi dịch vụ trong lịch lấy thông số của dịch vụ mới. Điểm cần nhớ Hiện ca bác sĩ là ca cố định, chưa có màn chỉnh ca hoặc nghỉ phép. Khóa phòng là thao tác điều phối, không phải hủy tự động các lịch đã đặt." />
+        <Notice tone="info" title="Thông tin đi tiếp như thế nào?">
+          <Text>"Thông số dịch vụ mới áp dụng cho lịch mới. Khi chỉ dời giờ/phòng, lịch cũ giữ thông số đã chốt; đổi dịch vụ trong lịch lấy thông số của dịch vụ mới."</Text>
+          <Text><Strong>"Điểm cần nhớ"</Strong></Text>
+          <ul>
+            <li>"Hiện ca bác sĩ là ca cố định, chưa có màn chỉnh ca hoặc nghỉ phép."</li>
+            <li>"Khóa phòng là thao tác điều phối, không phải hủy tự động các lịch đã đặt."</li>
+          </ul>
+        </Notice>
       </Grid>
       <Row gap="8px" wrap>
         <Button variant="primary">"Mở bác sĩ & phòng →"</Button>

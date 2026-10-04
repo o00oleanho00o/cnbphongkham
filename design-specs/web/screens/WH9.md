@@ -42,7 +42,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -82,7 +82,14 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
             <ListItem title="Kiểm tra phản hồi trong tin nhắn người bệnh và sự kiện tương ứng ở Patient 360." />
           </List>
         </Stack>
-        <Notice tone="info" text="Thông tin đi tiếp như thế nào? Gửi cập nhật tạo việc cần xử lý. Duyệt và phản hồi mới hoàn tất vòng theo dõi; gửi thành công không đồng nghĩa bác sĩ đã xem. Điểm cần nhớ Tin nhắn không phải kênh cấp cứu. CRM01 tự lập task D1/D3/D7 cho session có protocol Laser CO2. Nhân viên xử lý; không tự gửi tin hoặc tự review lâm sàng." />
+        <Notice tone="info" title="Thông tin đi tiếp như thế nào?">
+          <Text>"Gửi cập nhật tạo việc cần xử lý. Duyệt và phản hồi mới hoàn tất vòng theo dõi; gửi thành công không đồng nghĩa bác sĩ đã xem."</Text>
+          <Text><Strong>"Điểm cần nhớ"</Strong></Text>
+          <ul>
+            <li>"Tin nhắn không phải kênh cấp cứu."</li>
+            <li>"CRM01 tự lập task D1/D3/D7 cho session có protocol Laser CO2. Nhân viên xử lý; không tự gửi tin hoặc tự review lâm sàng."</li>
+          </ul>
+        </Notice>
       </Grid>
       <Row gap="8px" wrap>
         <Button variant="primary">"Mở theo dõi →"</Button>

@@ -43,7 +43,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -83,7 +83,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
             <ListItem title="Người điều phối: xem tải bác sĩ/phòng → xử lý khoảng khóa → sắp lại lịch trước khi thay đổi khả năng phục vụ." />
           </List>
         </Stack>
-        <Notice tone="info" text="Thông tin đi tiếp như thế nào? Đây là hướng dẫn phân công công việc; phiên bản hiện tại phân vai bằng tài khoản demo, chưa có xác thực và phân quyền server." />
+        <Notice tone="info" title="Thông tin đi tiếp như thế nào?" text="Đây là hướng dẫn phân công công việc; phiên bản hiện tại phân vai bằng tài khoản demo, chưa có xác thực và phân quyền server." />
       </Grid>
       <Row gap="8px" wrap>
         <Button variant="primary">"Hàng đợi hôm nay →"</Button>

@@ -20,7 +20,7 @@ const WA = [
         chips([['Tất cả · 72', 'sel'], ['Sau thủ thuật D+1', '', 6], ['D+3 cần ảnh', '', 4]], { vert: true }),
         tabs(['Tổng quan', ['Tiền thủ thuật', 3], 'Chính sách tỷ lệ', 'Phiếu thu'], 1), tabs(['Ngày', '7 ngày'], 0, { seg: true })),
       card({ title: 'Notices and facts' },
-        notice('info notice with the old web text verbatim', 'info'), notice('warning notice', 'warning', { title: 'Title line' }),
+        notice('info notice with the old web text verbatim', 'info'), notice('warning notice', 'warning', { title: 'Title line' }), notice('notice with a title, text and bullets', 'info', { title: 'Notice title', items: ['First bullet', 'Second bullet'], itemsTitle: 'Bullet list title' }),
         notice('danger notice', 'danger'), notice('success notice with actions', 'success', { actions: [primary('Tìm hồ sơ →'), secondary('Xem lịch →')] }),
         facts(['Mối quan tâm', 'Nám · tăng sắc tố'], ['Liên hệ thành công', '75%', { sub: '3/4 lần liên hệ' }], ['Đồng ý ảnh', 'Đã xác nhận']))),
     card({ title: 'Fields', sub: 'input, select (open), date, time, month, number, textarea, check, radio, search, file, range' },
@@ -47,9 +47,10 @@ const WA = [
     empty('empty title', 'empty hint with the action that fixes it', { icon: 'inbox', actions: [primary('Hồ sơ mới', { icon: 'add' })] })
   ]),
   page('WA903', 'Blocks · board, weekGrid, photos, a5, hero, img, containers', 'week/board rooms × time, weekGrid, photos (placeholders), a5 print preview, hero, img, box, disc, split', 'dashboard', [
-    panel('board (alias week)', '08:00–12:00 · bước 30 phút', [badge('Theo phòng')], board({ from: 8, to: 12, hh: 64, rooms: rooms.map((r, i) => ({ ...r, bk: [{ start: '08:00', mins: 30, title: people[i].name, sub: doctors[i].name + ' · Đặt hẹn', svc: i }, { start: '09:30', mins: 60, title: people[i + 4].name, sub: doctors[(i + 1) % 4].name + ' · +15′ đệm', svc: (i + 1) % 4 }] })) })),
+    panel('board (alias week)', '08:00–12:00 · bước 30 phút', [badge('Theo phòng')], board({ from: 8, to: 12, hh: 64, rooms: rooms.map((r, i) => ({ ...r, bk: [{ start: '08:00', mins: 30, title: people[i].name, sub: services[i].name, sub2: doctors[i].name + ' · Đặt hẹn', svc: i }, { start: '09:30', mins: 45, buf: 15, title: people[i + 4].name, sub: services[(i + 1) % 4].name, sub2: doctors[(i + 1) % 4].name + ' · Đặt hẹn', svc: (i + 1) % 4 }], slots: [{ start: '08:30', mins: 30 }] })) })),
     panel('weekGrid', '', [], weekGrid({ days: ['CN, 20/09', 'T2, 21/09', 'T3, 22/09', 'T4, 23/09', 'T5, 24/09', 'T6, 25/09', 'T7, 26/09'].map((d, i) => ({ title: d, sub: (i + 2) + ' lịch', add: 'Đặt lịch', items: [{ time: '08:00–08:30', title: people[i].name, sub: 'Tái khám & đánh giá', svc: i % 4 }] })) })),
     grid(3,
+      panel('card tint', 'tint: 0-3 = service, or a tone name', [], card({ tint: 1, title: 'tint 1 (brand)' }, txt('a service card')), card({ tint: 2, title: 'tint 2 (success)' }, txt('a service card')), card({ tint: 'warning', title: 'tint warning' }, txt('a service card'))),
       panel('photos', 'placeholders only', [], photos([{ label: 'Trước buổi 1', meta: '23/07' }, { label: 'Chưa có ảnh', empty: true }], { n: 2 }), photos([{ label: 'So sánh trượt', slider: true }], { n: 1 })),
       panel('a5', 'order print preview', [], a5({ title: 'ĐƠN THUỐC', draft: 'BẢN NHÁP — CHỜ BÁC SĨ DUYỆT', rows: [['Họ tên:', pt.name], ['Tuổi:', pt.age + ' · Nữ'], ['Mã hồ sơ:', pt.id], ['Ngày:', '20/9/2026'], ['Chẩn đoán:', 'Nám · tăng sắc tố', true]], items: [{ t: '1. Desloratadine 5 mg Hộp 30 Viên', qty: '× 1 Viên', use: 'Bôi lớp mỏng, sáng và tối, 14 ngày' }], note: 'Mang theo đơn này khi tái khám.', signDate: 'Ngày 20/9/2026', signRole: 'Bác sĩ khám', signName: 'BS. Tâm' })),
       stack({ g: 16 }, hero('Hero title', 'Hero subtitle', 'spa', { actions: [secondary('Action')] }), img('img placeholder', { h: 120 }),

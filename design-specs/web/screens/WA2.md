@@ -54,7 +54,6 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Button variant="quiet" href="../finance/" as="link">"Tài chính đã đồng bộ"</Button>
     <Field label="Tài khoản demo" type="select" default="Mai Anh · CSKH" options={["BS. Tâm · Chủ phòng khám","BS. Tâm · Bác sĩ điều trị","BS. Mai · Bác sĩ điều trị","BS. An · Bác sĩ điều trị","BS. Lan · Bác sĩ điều trị","Mai Anh · CSKH","Thu · CSKH","Kế toán · Đối soát & thu ngân"]} />
     <Field label="Tìm kiếm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
-    <Button variant="secondary" aria-label="Thông báo" icon="notifications" icon-only></Button>
     <Button variant="secondary" aria-label="Đặt lại dữ liệu demo" icon="restart_alt" icon-only></Button>
   </TopBar>
   <PageHeading title="CSKH hôm nay" subtitle="Từ dữ liệu khám đến việc cần làm · ngày demo 20/09/2026">
@@ -69,7 +68,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
   <Img placeholder label="Nhóm công việc, bộ lọc và danh sách việc: vẽ ở nhóm WD" />
 </AppShell>
 ```
-Kit components used: Button×4, Tile×4, Field×2, Sidebar×1, TopBar×1, PageHeading×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Tile×4, Button×3, Field×2, Sidebar×1, TopBar×1, PageHeading×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WA2-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -102,7 +101,7 @@ Kit components used: Button×4, Tile×4, Field×2, Sidebar×1, TopBar×1, PageHe
 
 ## Web canvas
 - Frames: 1440x900 (inventory: 1440x900); screen label `WA2 · Khung · CSKH (trang chủ CSKH hôm nay)`.
-- Canvas note: Web › app shell · vai CSKH (Mai Anh, Thu): sidebar 4 mục (Điều phối lịch, Tìm bệnh nhân, CSKH hôm nay, Hướng dẫn), có liên kết tài chính, không có chuông (khung vẽ chuông ở mọi vai: xem open items); liên kết "Đến nội dung chính" hiện khi focus; vào thẳng "CSKH hôm nay". Nội dung đầy đủ của trang vẽ ở nhóm WD
+- Canvas note: Web › app shell · vai CSKH (Mai Anh, Thu): sidebar 4 mục (Điều phối lịch, Tìm bệnh nhân, CSKH hôm nay, Hướng dẫn), có liên kết tài chính, không có chuông (chuông chỉ có ở chủ phòng khám và bác sĩ); liên kết "Đến nội dung chính" hiện khi focus; vào thẳng "CSKH hôm nay". Nội dung đầy đủ của trang vẽ ở nhóm WD
 
 ## Old web snapshot (for comparison)
 The old web's own layout, with its demo values.

@@ -53,7 +53,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item active icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -97,34 +97,38 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
         <Badge tone="neutral">"Theo phòng"</Badge>
       </Card.Aside>
       <ScheduleBoard rooms={[["Khám da liễu","8 lịch · phòng 1"],["Tư vấn chuyên sâu","8 lịch · phòng 2"],["Laser & thủ thuật","7 lịch · phòng 3"],["Chăm sóc da","8 lịch · phòng 4"]]} corner="GIỜ">
-        <Booking room="Khám da liễu" time="08:00–08:30" title="Nguyễn Thu Hà" sub="BS. Tâm · Đặt hẹn" service={0} />
-        <Booking room="Khám da liễu" time="09:00–09:30" title="Trần Minh Anh" sub="BS. Mai · Đặt hẹn" service={1} />
-        <Booking room="Khám da liễu" time="10:00–10:30" title="Lê Hoàng Yến" sub="BS. An · Đặt hẹn" service={2} />
-        <Booking room="Khám da liễu" time="11:00–11:30" title="Phạm Quốc Bảo" sub="BS. Lan · Đặt hẹn" service={3} />
-        <Booking room="Tư vấn chuyên sâu" time="08:00–08:45" title="Võ Ngọc Trâm" sub="BS. Mai · Đặt hẹn" service={1} />
-        <Booking room="Tư vấn chuyên sâu" time="08:45–09:00" title="15′ chuẩn bị phòng" service={1} />
-        <Booking room="Tư vấn chuyên sâu" time="09:00–09:45" title="Đặng Gia Linh" sub="BS. An · Đặt hẹn" service={2} />
-        <Booking room="Tư vấn chuyên sâu" time="09:45–10:00" title="15′ chuẩn bị phòng" service={1} />
-        <Booking room="Tư vấn chuyên sâu" time="10:00–10:45" title="Bùi Khánh Vy" sub="BS. Lan · Đặt hẹn" service={3} />
-        <Booking room="Tư vấn chuyên sâu" time="10:45–11:00" title="15′ chuẩn bị phòng" service={1} />
-        <Booking room="Tư vấn chuyên sâu" time="11:00–11:45" title="Hồ Thanh Tùng" sub="BS. Tâm · Đặt hẹn" service={0} />
-        <Booking room="Tư vấn chuyên sâu" time="11:45–12:00" title="15′ chuẩn bị phòng" service={1} />
-        <Booking room="Laser & thủ thuật" time="08:00–08:45" title="Ngô Mỹ Duyên" sub="BS. An · Đặt hẹn" service={2} />
-        <Booking room="Laser & thủ thuật" time="08:45–09:00" title="15′ chuẩn bị phòng" service={1} />
-        <Booking room="Laser & thủ thuật" time="09:00–09:45" title="Đỗ Phương Thảo" sub="BS. Lan · Đặt hẹn" service={3} />
-        <Booking room="Laser & thủ thuật" time="09:45–10:00" title="15′ chuẩn bị phòng" service={1} />
-        <Booking room="Laser & thủ thuật" time="10:00–10:45" title="Lý Tuấn Kiệt" sub="BS. Tâm · Đặt hẹn" service={0} />
-        <Booking room="Laser & thủ thuật" time="10:45–11:00" title="15′ chuẩn bị phòng" service={1} />
-        <Booking room="Laser & thủ thuật" time="11:00–11:45" title="Mai Hải Yến" sub="BS. Mai · Đặt hẹn" service={1} />
-        <Booking room="Laser & thủ thuật" time="11:45–12:00" title="15′ chuẩn bị phòng" service={1} />
-        <Booking room="Chăm sóc da" time="08:00–08:45" title="Nguyễn Thu Hà" sub="BS. Lan · Đặt hẹn" service={3} />
-        <Booking room="Chăm sóc da" time="08:45–09:00" title="15′ chuẩn bị phòng" service={1} />
-        <Booking room="Chăm sóc da" time="09:00–09:45" title="Trần Minh Anh" sub="BS. Tâm · Đặt hẹn" service={0} />
-        <Booking room="Chăm sóc da" time="09:45–10:00" title="15′ chuẩn bị phòng" service={1} />
-        <Booking room="Chăm sóc da" time="10:00–10:45" title="Lê Hoàng Yến" sub="BS. Mai · Đặt hẹn" service={1} />
-        <Booking room="Chăm sóc da" time="10:45–11:00" title="15′ chuẩn bị phòng" service={1} />
-        <Booking room="Chăm sóc da" time="11:00–11:45" title="Phạm Quốc Bảo" sub="BS. An · Đặt hẹn" service={2} />
-        <Booking room="Chăm sóc da" time="11:45–12:00" title="15′ chuẩn bị phòng" service={1} />
+        <Booking room="Khám da liễu" label="08:00–08:30 Nguyễn Thu Hà Tái khám & đánh giá BS. Tâm · Đặt hẹn" service={0} />
+        <Booking room="Khám da liễu" label="09:00–09:30 Trần Minh Anh Tư vấn da liễu BS. Mai · Đặt hẹn" service={1} />
+        <Booking room="Khám da liễu" label="10:00–10:30 Lê Hoàng Yến Laser theo chỉ định BS. An · Đặt hẹn" service={2} />
+        <Booking room="Khám da liễu" label="11:00–11:30 Phạm Quốc Bảo Chăm sóc theo chỉ định BS. Lan · Đặt hẹn" service={3} />
+        <DropSlot room="Khám da liễu" aria-label="Đặt lịch Khám da liễu 08:30">"Đặt lịch"</DropSlot>
+        <DropSlot room="Khám da liễu" aria-label="Đặt lịch Khám da liễu 09:30">"Đặt lịch"</DropSlot>
+        <DropSlot room="Khám da liễu" aria-label="Đặt lịch Khám da liễu 10:30">"Đặt lịch"</DropSlot>
+        <DropSlot room="Khám da liễu" aria-label="Đặt lịch Khám da liễu 11:30">"Đặt lịch"</DropSlot>
+        <Booking room="Tư vấn chuyên sâu" label="08:00–08:45 · +15′ đệm Võ Ngọc Trâm Tư vấn da liễu BS. Mai · Đặt hẹn" service={1} />
+        <Buffer room="Tư vấn chuyên sâu" service={1}>"15′ chuẩn bị phòng"</Buffer>
+        <Booking room="Tư vấn chuyên sâu" label="09:00–09:45 · +15′ đệm Đặng Gia Linh Laser theo chỉ định BS. An · Đặt hẹn" service={2} />
+        <Buffer room="Tư vấn chuyên sâu" service={2}>"15′ chuẩn bị phòng"</Buffer>
+        <Booking room="Tư vấn chuyên sâu" label="10:00–10:45 · +15′ đệm Bùi Khánh Vy Chăm sóc theo chỉ định BS. Lan · Đặt hẹn" service={3} />
+        <Buffer room="Tư vấn chuyên sâu" service={3}>"15′ chuẩn bị phòng"</Buffer>
+        <DropSlot room="Tư vấn chuyên sâu" aria-label="Đặt lịch Tư vấn chuyên sâu 11:00">"Đặt lịch"</DropSlot>
+        <DropSlot room="Tư vấn chuyên sâu" aria-label="Đặt lịch Tư vấn chuyên sâu 11:30">"Đặt lịch"</DropSlot>
+        <Booking room="Laser & thủ thuật" label="08:00–08:45 · +15′ đệm Ngô Mỹ Duyên Laser theo chỉ định BS. An · Đặt hẹn" service={2} />
+        <Buffer room="Laser & thủ thuật" service={2}>"15′ chuẩn bị phòng"</Buffer>
+        <Booking room="Laser & thủ thuật" label="09:00–09:45 · +15′ đệm Đỗ Phương Thảo Chăm sóc theo chỉ định BS. Lan · Đặt hẹn" service={3} />
+        <Buffer room="Laser & thủ thuật" service={3}>"15′ chuẩn bị phòng"</Buffer>
+        <Booking room="Laser & thủ thuật" label="10:00–10:45 · +15′ đệm Lý Tuấn Kiệt Tái khám & đánh giá BS. Tâm · Đặt hẹn" service={0} />
+        <Buffer room="Laser & thủ thuật" service={0}>"15′ chuẩn bị phòng"</Buffer>
+        <Booking room="Laser & thủ thuật" label="11:00–11:45 · +15′ đệm Mai Hải Yến Tư vấn da liễu BS. Mai · Đặt hẹn" service={1} />
+        <Buffer room="Laser & thủ thuật" service={1}>"15′ chuẩn bị phòng"</Buffer>
+        <Booking room="Chăm sóc da" label="08:00–08:45 · +15′ đệm Nguyễn Thu Hà Chăm sóc theo chỉ định BS. Lan · Đặt hẹn" service={3} />
+        <Buffer room="Chăm sóc da" service={3}>"15′ chuẩn bị phòng"</Buffer>
+        <Booking room="Chăm sóc da" label="09:00–09:45 · +15′ đệm Trần Minh Anh Tái khám & đánh giá BS. Tâm · Đặt hẹn" service={0} />
+        <Buffer room="Chăm sóc da" service={0}>"15′ chuẩn bị phòng"</Buffer>
+        <Booking room="Chăm sóc da" label="10:00–10:45 · +15′ đệm Lê Hoàng Yến Tư vấn da liễu BS. Mai · Đặt hẹn" service={1} />
+        <Buffer room="Chăm sóc da" service={1}>"15′ chuẩn bị phòng"</Buffer>
+        <Booking room="Chăm sóc da" label="11:00–11:45 · +15′ đệm Phạm Quốc Bảo Laser theo chỉ định BS. An · Đặt hẹn" service={2} />
+        <Buffer room="Chăm sóc da" service={2}>"15′ chuẩn bị phòng"</Buffer>
         <LegendItem service={0}>"Tái khám & đánh giá"</LegendItem>
         <LegendItem service={1}>"Tư vấn da liễu"</LegendItem>
         <LegendItem service={2}>"Laser theo chỉ định"</LegendItem>
@@ -186,11 +190,12 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
         <Text small>"Tư vấn da liễu"</Text>
         <Button variant="secondary">"Xếp lịch →"</Button>
       </Card>
+      <Notice tone="info" text="Màu thẻ phân biệt dịch vụ. Lịch hủy được giữ trong nhật ký; thời gian đệm vẫn chiếm phòng." />
     </Card>
   </Grid>
 </AppShell>
 ```
-Kit components used: Button×12, Card×8, Field×5, Tile×4, Sidebar×1, TopBar×1, PageHeading×1, Tabs×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Button×12, Card×8, Field×5, Tile×4, Sidebar×1, TopBar×1, PageHeading×1, Tabs×1, Badge×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - 1440×900 is the reference (Frame, Layout).
@@ -229,7 +234,7 @@ Kit components used: Button×12, Card×8, Field×5, Tile×4, Sidebar×1, TopBar�
 
 ## Web canvas
 - Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WB5 · Điều phối lịch`.
-- Canvas note: Web › schedule · app I3/A2 là dải tuần và danh sách ngày; web là lưới phòng × giờ (kéo thả bằng chuột), chú giải 4 màu dịch vụ và khối "Chờ xếp lịch"; khoảng đệm "15′ chuẩn bị phòng" vẽ như một thẻ lịch vì canvas chưa có khối đệm gạch chéo; bác sĩ đăng nhập bị khóa bộ lọc bác sĩ
+- Canvas note: Web › schedule · app I3/A2 là dải tuần và danh sách ngày; web là lưới phòng × giờ (kéo thả bằng chuột), chú giải 4 màu dịch vụ và khối "Chờ xếp lịch"; khoảng đệm "15′ chuẩn bị phòng" là khối gạch chéo dưới thẻ lịch, ô trống có nút "Đặt lịch" nét đứt, ghi chú về màu thẻ nằm dưới "Chờ xếp lịch"; bác sĩ đăng nhập bị khóa bộ lọc bác sĩ
 
 ## Old web snapshot (for comparison)
 The old web's own layout, with its demo values.

@@ -38,6 +38,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
 ```tsx
 // opens over the page "Điều phối lịch" (dimmed); the page behind it is not part of this screen
 <Dialog eyebrow="Pema · vận hành" title="Đặt lịch hẹn" width="720px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
   <Field label="Bệnh nhân" type="select" default="Nguyễn Thu Hà" options={["Nguyễn Thu Hà","Trần Minh Anh","Lê Hoàng Yến","Phạm Quốc Bảo","Võ Ngọc Trâm","Đặng Gia Linh","Bùi Khánh Vy","Hồ Thanh Tùng"]} />
   <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
     <Field label="Dịch vụ" type="select" default="Tái khám & đánh giá" options={["Tái khám & đánh giá","Tư vấn da liễu","Laser theo chỉ định","Chăm sóc theo chỉ định"]} />
@@ -47,7 +48,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Field label="Giờ" type="time" default="10:00" />
     <Field label="Ghi chú" type="text" default="Có thể đến trong ngày" />
   </Grid>
-  <Notice tone="info" text="30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫" />
+  <Notice tone="info" text="30 phút điều trị + 0 phút chuẩn bị · 300.000 ₫" />
   <Row gap="8px" wrap>
     <Button variant="primary">"Xác nhận đặt lịch"</Button>
     <Button variant="secondary">"Tìm giờ trống"</Button>

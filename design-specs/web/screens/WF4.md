@@ -39,6 +39,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
 ```tsx
 // opens over the page "Thu ngân" (dimmed); the page behind it is not part of this screen
 <Dialog eyebrow="Lên đơn từ danh mục Excel" title="Tạo đơn thuốc / phiếu tư vấn" width="1040px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
   <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
     <Field label="Bệnh nhân" type="select" default="Nguyễn Thu Hà · P001" />
     <Field label="Bác sĩ phụ trách" type="select" default="BS. Tâm" options={["BS. Tâm","BS. Mai","BS. An","BS. Lan"]} />
@@ -50,22 +51,22 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
       <Notice tone="info" text="115 sản phẩm · 30 thuốc · 78 sản phẩm tư vấn · 7 cần phân loại" />
       <List boxed>
         <ListItem title="Desloratadine/Genepharm (Desloratadine 5 mg) Hộp 30 Viên - Viên - A" sub="H002 · Viên · Thuốc · Đơn thuốc">
-          <Text strong>"5.500 ₫"</Text>
+          <Text strong>"5.500 ₫"</Text>
         </ListItem>
         <ListItem title="Cicaderm Cream 40ml - Kem làm mềm da, dưỡng ẩm, hỗ trợ làm đều màu da, mờ sẹo 40 ml - A" sub="H005 · Hộp · Mỹ Phẩm · Phiếu tư vấn">
-          <Text strong>"715.000 ₫"</Text>
+          <Text strong>"715.000 ₫"</Text>
         </ListItem>
         <ListItem title="Heliocare Luminance Oral 60 Caps/ Viên uống sáng da - P" sub="H006 · Hộp · TPCN · Phiếu tư vấn">
-          <Text strong>"2.808.000 ₫"</Text>
+          <Text strong>"2.808.000 ₫"</Text>
         </ListItem>
         <ListItem title="Bio Phyto -1 Mild Facial Cleanser - Sữa rửa mặt làm sạch sâu 100ml - A" sub="H007 · Chai · Mỹ Phẩm · Phiếu tư vấn">
-          <Text strong>"660.000 ₫"</Text>
+          <Text strong>"660.000 ₫"</Text>
         </ListItem>
         <ListItem title="Kem trị mụn NV ACTIPUR 3 EN 1 CARE 30ML - P" sub="H008 · Hộp · Mỹ Phẩm · Phiếu tư vấn">
-          <Text strong>"635.000 ₫"</Text>
+          <Text strong>"635.000 ₫"</Text>
         </ListItem>
         <ListItem title="Bio Phyto -1 Mild Facial Cleanser - Sữa rửa mặt làm sạch sâu 500 ml - A" sub="H010 · Tuýp · Mỹ Phẩm · Phiếu tư vấn">
-          <Text strong>"2.390.000 ₫"</Text>
+          <Text strong>"2.390.000 ₫"</Text>
         </ListItem>
       </List>
     </Stack>
@@ -75,12 +76,12 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
           <Text strong>"1. Desloratadine/Genepharm (Desloratadine 5 mg) Hộp 30 Viên - Viên - A"</Text>
           <Button variant="secondary">"×"</Button>
         </Grid>
-        <Text small>"H002 · Viên · 5.500 ₫"</Text>
+        <Text small>"H002 · Viên · 5.500 ₫"</Text>
         <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
           <Field label="Số lượng (Viên)" type="number" required default="1" />
           <Field label="Loại phiếu" type="select" default="Đơn thuốc" options={["Đơn thuốc","Phiếu tư vấn","Không in","Cần phân loại"]} />
         </Grid>
-        <Field label="Cách dùng / tần suất / thời gian" type="textarea" default="Bôi lớp mỏng, sáng và tối, 14 ngày" />
+        <Field label="Cách dùng / tần suất / thời gian" type="textarea" placeholder="Nhập hướng dẫn đã được bác sĩ chỉ định" default="Bôi lớp mỏng, sáng và tối, 14 ngày" />
         <Field label="Ghi chú sản phẩm" type="text" />
         <Field label="Lý do đổi phân loại (nếu có)" type="text" />
       </Stack>
@@ -89,18 +90,18 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
           <Text strong>"2. Cicaderm Cream 40ml - Kem làm mềm da, dưỡng ẩm, hỗ trợ làm đều màu da, mờ sẹo 40 ml - A"</Text>
           <Button variant="secondary">"×"</Button>
         </Grid>
-        <Text small>"H005 · Hộp · 715.000 ₫"</Text>
+        <Text small>"H005 · Hộp · 715.000 ₫"</Text>
         <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
           <Field label="Số lượng (Hộp)" type="number" required default="1" />
           <Field label="Loại phiếu" type="select" default="Phiếu tư vấn" options={["Đơn thuốc","Phiếu tư vấn","Không in","Cần phân loại"]} />
         </Grid>
-        <Field label="Cách dùng / tần suất / thời gian" type="textarea" default="Bôi lớp mỏng, sáng và tối, 14 ngày" />
+        <Field label="Cách dùng / tần suất / thời gian" type="textarea" placeholder="Nhập hướng dẫn đã được bác sĩ chỉ định" default="Bôi lớp mỏng, sáng và tối, 14 ngày" />
         <Field label="Ghi chú sản phẩm" type="text" />
         <Field label="Lý do đổi phân loại (nếu có)" type="text" />
       </Stack>
       <Row gap="8px" justify="space-between" wrap>
         <Text small>"Tổng tiền dự kiến"</Text>
-        <Text strong>"720.500 ₫"</Text>
+        <Text strong>"720.500 ₫"</Text>
       </Row>
     </Card>
   </Grid>

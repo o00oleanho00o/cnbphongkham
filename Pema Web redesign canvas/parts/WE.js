@@ -27,7 +27,7 @@ const WE_RESOURCES = [
 // Services: price, duration and buffer of the sample services; the 4th is paused to show both statuses.
 const WE_BUFFER = [0, 15, 15, 15];
 const WE_SERVICE_CARDS = grid({ cols: 'repeat(auto-fill,minmax(380px,1fr))', colsn: '1fr', g: 20 }, ...services.map((s, i) =>
-  card({ title: s.name, aside: [ico('favorite', { size: 22, tone: 'info' }), i === 3 ? badge('Tạm ngưng', 'warning') : badge('Đang dùng', 'success')] },
+  card({ title: s.name, tint: s.svc, aside: [ico('favorite', { size: 22, tone: 'info' }), i === 3 ? badge('Tạm ngưng', 'warning') : badge('Đang dùng', 'success')] },
     h2(money(s.price)),
     list([{ t: s.mins + ' phút điều trị', sub: WE_BUFFER[i] + ' phút chuẩn bị phòng', actions: [secondary('Chỉnh dịch vụ')] }], { plain: true }))));
 const WE_SERVICES = [

@@ -37,6 +37,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
 ```tsx
 // opens over the page "Tổng quan" (dimmed); the page behind it is not part of this screen
 <Dialog title="Đang điều trị" width="760px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
   <List>
     <ListItem title="Nguyễn Thu Hà">
       <Button variant="secondary">"Mở hồ sơ"</Button>

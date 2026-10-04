@@ -93,7 +93,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
         <Row sample="first row; demo values, the other rows have the same cells">
           <Cell column="Khách hàng / bối cảnh">
             <Button variant="quiet">"Nguyễn Thu Hà"</Button>
-            <Text small>"P001 · Còn 2 buổi · 2.100.000 ₫ đã thu"</Text>
+            <Text small>"P001 · Còn 2 buổi · 2.100.000 ₫ đã thu"</Text>
             <Badge tone="neutral" dot={false}>"08 · Sinh nhật tuần này"</Badge>
           </Cell>
           <Cell column="Lý do & bước đề xuất">
@@ -113,6 +113,31 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
             <Button variant="primary">"Xử lý →"</Button>
           </Cell>
         </Row>
+        <Row sample="row 2 of 7: only the actions and statuses that the rows above do not show">
+          <Cell column="Khách hàng / bối cảnh">
+            <Badge tone="neutral" dot={false}>"D+7 bác sĩ review"</Badge>
+          </Cell>
+        </Row>
+        <Row sample="row 4 of 7: only the actions and statuses that the rows above do not show">
+          <Cell column="Khách hàng / bối cảnh">
+            <Badge tone="neutral" dot={false}>"02 · D+3 gửi ảnh"</Badge>
+          </Cell>
+        </Row>
+        <Row sample="row 5 of 7: only the actions and statuses that the rows above do not show">
+          <Cell column="Khách hàng / bối cảnh">
+            <Badge tone="neutral" dot={false}>"01 · Sau Laser CO2 D+1"</Badge>
+          </Cell>
+        </Row>
+        <Row sample="row 6 of 7: only the actions and statuses that the rows above do not show">
+          <Cell column="Khách hàng / bối cảnh">
+            <Badge tone="neutral" dot={false}>"D+3 cần ảnh"</Badge>
+          </Cell>
+        </Row>
+        <Row sample="row 7 of 7: only the actions and statuses that the rows above do not show">
+          <Cell column="Khách hàng / bối cảnh">
+            <Badge tone="neutral" dot={false}>"Sau thủ thuật D+1"</Badge>
+          </Cell>
+        </Row>
       </TableShell>
       <Row gap="12px" justify="space-between" wrap>
         <Text>"72 việc · Trang 1/6"</Text>
@@ -125,7 +150,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
   </Grid>
 </AppShell>
 ```
-Kit components used: Button×7, Field×5, Tile×4, Card×2, Badge×2, Sidebar×1, TopBar×1, PageHeading×1, TableShell×1; shared pieces: FilterChip×1, Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Button×7, Badge×7, Field×5, Tile×4, Card×2, Sidebar×1, TopBar×1, PageHeading×1, TableShell×1; shared pieces: FilterChip×1, Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - 1440×900 is the reference (Frame, Layout).

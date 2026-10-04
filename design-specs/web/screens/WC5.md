@@ -55,7 +55,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item active icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -129,13 +129,13 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
       <Card variant="soft">
         <Eyebrow>"LIỆU TRÌNH HIỆN TẠI · LP-P001"</Eyebrow>
         <Heading level={3}>"Laser theo chỉ định"</Heading>
-        <Text><Strong>"2/5 buổi"</Strong> " · 12.000.000 ₫ sau giảm"</Text>
+        <Text><Strong>"2/5 buổi"</Strong> " · 12.000.000 ₫ sau giảm"</Text>
         <Badge tone="info" dot={false}>"Đang thực hiện"</Badge>
         <Progress value="40%" />
-        <Text>"Đã thu " <Strong>"5.350.000 ₫"</Strong></Text>
-        <Text small>"Còn 6.650.000 ₫"</Text>
+        <Text>"Đã thu " <Strong>"5.350.000 ₫"</Strong></Text>
+        <Text small>"Còn 6.650.000 ₫"</Text>
       </Card>
-      <Text>"Tiền cọc đã phân bổ " <Strong>"4.000.000 ₫"</Strong></Text>
+      <Text>"Tiền cọc đã phân bổ " <Strong>"4.000.000 ₫"</Strong></Text>
       <Button variant="quiet">"Mở thu ngân →"</Button>
     </Card>
     <Card title="Đơn thuốc" subtitle="Chỉ đơn đã duyệt mới xuất hiện trên Patient Mobile">
@@ -158,7 +158,9 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     </Card>
   </Grid>
   <Card title="Đơn thuốc & phiếu tư vấn" subtitle="Nháp → bác sĩ duyệt → in và hiển thị trên app">
-    <EmptyState title="Chưa có đơn từ catalog." icon="receipt_long" />
+    <EmptyState icon="receipt_long">
+      <Heading level={3}>"Chưa có đơn từ catalog."</Heading>
+    </EmptyState>
   </Card>
 </AppShell>
 ```

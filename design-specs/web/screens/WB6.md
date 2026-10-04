@@ -50,7 +50,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item active icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -95,39 +95,39 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
       </Card.Aside>
       <WeekGrid>
         <Day title="CN, 20/09" sub="31 lịch" add="Đặt lịch">
-          <Booking time="08:00–08:30" title="Nguyễn Thu Hà" sub="Tái khám & đánh giá" service={0} />
-          <Booking time="09:00–09:45" title="Phạm Quốc Bảo" sub="Tư vấn da liễu" service={1} />
-          <Booking time="10:00–10:45" title="Bùi Khánh Vy" sub="Laser theo chỉ định" service={2} />
+          <Booking label="08:00–08:30 Nguyễn Thu Hà Tái khám & đánh giá" service={0} />
+          <Booking label="09:00–09:45 Phạm Quốc Bảo Tư vấn da liễu" service={1} />
+          <Booking label="10:00–10:45 Bùi Khánh Vy Laser theo chỉ định" service={2} />
         </Day>
         <Day title="Thứ 2, 21/09" sub="8 lịch" add="Đặt lịch">
-          <Booking time="08:00–08:30" title="Trần Minh Anh" sub="Tư vấn da liễu" service={1} />
-          <Booking time="09:00–09:45" title="Võ Ngọc Trâm" sub="Laser theo chỉ định" service={2} />
-          <Booking time="10:00–10:45" title="Hồ Thanh Tùng" sub="Chăm sóc theo chỉ định" service={3} />
+          <Booking label="08:00–08:30 Trần Minh Anh Tư vấn da liễu" service={1} />
+          <Booking label="09:00–09:45 Võ Ngọc Trâm Laser theo chỉ định" service={2} />
+          <Booking label="10:00–10:45 Hồ Thanh Tùng Chăm sóc theo chỉ định" service={3} />
         </Day>
         <Day title="Thứ 3, 22/09" sub="8 lịch" add="Đặt lịch">
-          <Booking time="08:00–08:30" title="Lê Hoàng Yến" sub="Laser theo chỉ định" service={2} />
-          <Booking time="09:00–09:45" title="Đặng Gia Linh" sub="Chăm sóc theo chỉ định" service={3} />
-          <Booking time="10:00–10:45" title="Ngô Mỹ Duyên" sub="Tái khám & đánh giá" service={0} />
+          <Booking label="08:00–08:30 Lê Hoàng Yến Laser theo chỉ định" service={2} />
+          <Booking label="09:00–09:45 Đặng Gia Linh Chăm sóc theo chỉ định" service={3} />
+          <Booking label="10:00–10:45 Ngô Mỹ Duyên Tái khám & đánh giá" service={0} />
         </Day>
         <Day title="Thứ 4, 23/09" sub="8 lịch" add="Đặt lịch">
-          <Booking time="08:00–08:30" title="Phạm Quốc Bảo" sub="Chăm sóc theo chỉ định" service={3} />
-          <Booking time="09:00–09:45" title="Bùi Khánh Vy" sub="Tái khám & đánh giá" service={0} />
-          <Booking time="10:00–10:45" title="Đỗ Phương Thảo" sub="Tư vấn da liễu" service={1} />
+          <Booking label="08:00–08:30 Phạm Quốc Bảo Chăm sóc theo chỉ định" service={3} />
+          <Booking label="09:00–09:45 Bùi Khánh Vy Tái khám & đánh giá" service={0} />
+          <Booking label="10:00–10:45 Đỗ Phương Thảo Tư vấn da liễu" service={1} />
         </Day>
         <Day title="Thứ 5, 24/09" sub="6 lịch" add="Đặt lịch">
-          <Booking time="08:00–08:30" title="Võ Ngọc Trâm" sub="Tái khám & đánh giá" service={0} />
-          <Booking time="09:00–09:45" title="Hồ Thanh Tùng" sub="Tư vấn da liễu" service={1} />
-          <Booking time="10:00–10:45" title="Lý Tuấn Kiệt" sub="Laser theo chỉ định" service={2} />
+          <Booking label="08:00–08:30 Võ Ngọc Trâm Tái khám & đánh giá" service={0} />
+          <Booking label="09:00–09:45 Hồ Thanh Tùng Tư vấn da liễu" service={1} />
+          <Booking label="10:00–10:45 Lý Tuấn Kiệt Laser theo chỉ định" service={2} />
         </Day>
         <Day title="Thứ 6, 25/09" sub="5 lịch" add="Đặt lịch">
-          <Booking time="08:00–08:30" title="Đặng Gia Linh" sub="Tư vấn da liễu" service={1} />
-          <Booking time="09:00–09:45" title="Ngô Mỹ Duyên" sub="Laser theo chỉ định" service={2} />
-          <Booking time="10:00–10:45" title="Mai Hải Yến" sub="Chăm sóc theo chỉ định" service={3} />
+          <Booking label="08:00–08:30 Đặng Gia Linh Tư vấn da liễu" service={1} />
+          <Booking label="09:00–09:45 Ngô Mỹ Duyên Laser theo chỉ định" service={2} />
+          <Booking label="10:00–10:45 Mai Hải Yến Chăm sóc theo chỉ định" service={3} />
         </Day>
         <Day title="Thứ 7, 26/09" sub="4 lịch" add="Đặt lịch">
-          <Booking time="08:00–08:30" title="Bùi Khánh Vy" sub="Laser theo chỉ định" service={2} />
-          <Booking time="09:00–09:45" title="Đỗ Phương Thảo" sub="Chăm sóc theo chỉ định" service={3} />
-          <Booking time="10:00–10:45" title="Nguyễn Thu Hà" sub="Tái khám & đánh giá" service={0} />
+          <Booking label="08:00–08:30 Bùi Khánh Vy Laser theo chỉ định" service={2} />
+          <Booking label="09:00–09:45 Đỗ Phương Thảo Chăm sóc theo chỉ định" service={3} />
+          <Booking label="10:00–10:45 Nguyễn Thu Hà Tái khám & đánh giá" service={0} />
         </Day>
         <LegendItem service={0}>"Tái khám & đánh giá"</LegendItem>
         <LegendItem service={1}>"Tư vấn da liễu"</LegendItem>
@@ -190,11 +190,12 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
         <Text small>"Tư vấn da liễu"</Text>
         <Button variant="secondary">"Xếp lịch →"</Button>
       </Card>
+      <Notice tone="info" text="Màu thẻ phân biệt dịch vụ. Lịch hủy được giữ trong nhật ký; thời gian đệm vẫn chiếm phòng." />
     </Card>
   </Grid>
 </AppShell>
 ```
-Kit components used: Button×12, Card×8, Field×5, Tile×4, Sidebar×1, TopBar×1, PageHeading×1, Tabs×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Button×12, Card×8, Field×5, Tile×4, Sidebar×1, TopBar×1, PageHeading×1, Tabs×1, Badge×1; shared pieces: Notice×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WB6-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).

@@ -6,7 +6,7 @@ const WA = [
   ], { state: true, pickerOpen: true, skip: true }),
 
   // Care shell: 4 menu items (Điều phối lịch, Tìm bệnh nhân, CSKH hôm nay, Hướng dẫn), finance link (as in the old shot), no bell in the old web, lands on "CSKH hôm nay".
-  page('WA2', 'Khung · CSKH (trang chủ CSKH hôm nay)', WEB + 'app shell · vai CSKH (Mai Anh, Thu): sidebar 4 mục (Điều phối lịch, Tìm bệnh nhân, CSKH hôm nay, Hướng dẫn), có liên kết tài chính, không có chuông (khung vẽ chuông ở mọi vai: xem open items); liên kết "Đến nội dung chính" hiện khi focus; vào thẳng "CSKH hôm nay". Nội dung đầy đủ của trang vẽ ở nhóm WD', 'crm', [
+  page('WA2', 'Khung · CSKH (trang chủ CSKH hôm nay)', WEB + 'app shell · vai CSKH (Mai Anh, Thu): sidebar 4 mục (Điều phối lịch, Tìm bệnh nhân, CSKH hôm nay, Hướng dẫn), có liên kết tài chính, không có chuông (chuông chỉ có ở chủ phòng khám và bác sĩ); liên kết "Đến nội dung chính" hiện khi focus; vào thẳng "CSKH hôm nay". Nội dung đầy đủ của trang vẽ ở nhóm WD', 'crm', [
     sp(36),
     pageHead('CSKH hôm nay', 'Từ dữ liệu khám đến việc cần làm · ngày demo 20/09/2026', [secondary('Xem protocol')]),
     kpis(
@@ -18,7 +18,7 @@ const WA = [
   ], { role: 'care-maianh', state: true, skip: true, fin: 'Tài chính đã đồng bộ' }),
 
   // Accountant shell: 4 menu items (Tìm bệnh nhân, Thu ngân, Tài chính & tiền thủ thuật, Hướng dẫn), finance link, no bell, lands on "Thu ngân".
-  page('WA3', 'Khung · Kế toán (trang chủ Thu ngân)', WEB + 'app shell · vai Kế toán: sidebar 4 mục (Tìm bệnh nhân, Thu ngân, Tài chính & tiền thủ thuật, Hướng dẫn), có liên kết tài chính, không có chuông (khung vẽ chuông ở mọi vai); liên kết "Đến nội dung chính" hiện khi focus; vào thẳng "Thu ngân". Nội dung đầy đủ của trang vẽ ở nhóm WF', 'cashier', [
+  page('WA3', 'Khung · Kế toán (trang chủ Thu ngân)', WEB + 'app shell · vai Kế toán: sidebar 4 mục (Tìm bệnh nhân, Thu ngân, Tài chính & tiền thủ thuật, Hướng dẫn), có liên kết tài chính, không có chuông (chuông chỉ có ở chủ phòng khám và bác sĩ); liên kết "Đến nội dung chính" hiện khi focus; vào thẳng "Thu ngân". Nội dung đầy đủ của trang vẽ ở nhóm WF', 'cashier', [
     sp(36),
     pageHead('Thu ngân', 'Thu tiền và lên đơn nhanh theo mẫu PEMA.', [primary('Lên đơn nhanh', { icon: 'add' })]),
     kpis(

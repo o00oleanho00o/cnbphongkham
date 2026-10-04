@@ -48,7 +48,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -84,7 +84,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     </Grid>
     <Divider />
     <Row gap="14px" wrap>
-      <Text strong>"13.500.000 ₫"</Text>
+      <Text strong>"13.500.000 ₫"</Text>
       <Text small>"Phát sinh hóa đơn hôm nay"</Text>
     </Row>
   </Card>
@@ -121,11 +121,47 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
           <Text>"Lễ tân"</Text>
         </Cell>
         <Cell column="Giá lịch dự kiến">
-          <Text>"300.000 ₫"</Text>
+          <Text>"300.000 ₫"</Text>
         </Cell>
         <Cell column="Tiếp đón">
           <Button variant="primary">"Check-in"</Button>
           <Button variant="secondary">"Vắng"</Button>
+        </Cell>
+      </Row>
+      <Row sample="row 3 of 8: only the actions and statuses that the rows above do not show">
+        <Cell column="Trạng thái">
+          <Badge tone="info">"Đã xác nhận"</Badge>
+        </Cell>
+      </Row>
+      <Row sample="row 4 of 8: only the actions and statuses that the rows above do not show">
+        <Cell column="Trạng thái">
+          <Badge tone="warning">"Đang chờ"</Badge>
+        </Cell>
+        <Cell column="Tiếp đón">
+          <Button variant="primary">"Mời vào phòng"</Button>
+        </Cell>
+      </Row>
+      <Row sample="row 5 of 8: only the actions and statuses that the rows above do not show">
+        <Cell column="Trạng thái">
+          <Badge tone="brand">"Đang khám/điều trị"</Badge>
+        </Cell>
+        <Cell column="Tiếp đón">
+          <Button variant="secondary">"Mở 360"</Button>
+        </Cell>
+      </Row>
+      <Row sample="row 6 of 8: only the actions and statuses that the rows above do not show">
+        <Cell column="Trạng thái">
+          <Badge tone="success">"Hoàn tất"</Badge>
+        </Cell>
+      </Row>
+      <Row sample="row 7 of 8: only the actions and statuses that the rows above do not show">
+        <Cell column="Trạng thái">
+          <Badge tone="neutral">"Đã hủy"</Badge>
+        </Cell>
+      </Row>
+      <Row sample="row 8 of 8: only the actions and statuses that the rows above do not show">
+        <Cell column="Trạng thái">
+          <Badge tone="danger">"Vắng hẹn"</Badge>
         </Cell>
       </Row>
     </TableShell>
@@ -139,7 +175,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
   </Card>
 </AppShell>
 ```
-Kit components used: Button×14, Field×5, Card×2, Sidebar×1, TopBar×1, PageHeading×1, TableShell×1, Badge×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
+Kit components used: Button×16, Badge×7, Field×5, Card×2, Sidebar×1, TopBar×1, PageHeading×1, TableShell×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.
 
 ## Responsive
 - 1440×900 is the reference (Frame, Layout).

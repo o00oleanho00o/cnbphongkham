@@ -36,6 +36,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
 ```tsx
 // opens over the page "Tìm bệnh nhân" (dimmed); the page behind it is not part of this screen
 <Dialog eyebrow="Hồ sơ mới · demo" title="Thêm người bệnh" width="640px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
   <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
     <Field label="Họ và tên" type="text" placeholder="Nguyễn ..." />
     <Field label="Tuổi" type="number" default="28" />

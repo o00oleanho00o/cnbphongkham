@@ -51,7 +51,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -88,17 +88,17 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Badge tone="neutral" dot={false}>"Đang đối soát"</Badge>
   </Hero>
   <Grid cols="repeat(4, 1fr)" cols-390="repeat(2, 1fr)">
-    <Tile label="Doanh số thực hiện" value="13.200.000 ₫" note="Theo ngày hoàn tất thủ thuật" />
-    <Tile label="Thực thu trong tháng" value="11.000.000 ₫" note="Theo ngày phiếu thu" />
-    <Tile label="Công nợ hiện tại" value="1.250.000 ₫" note="Tất cả hóa đơn, không chỉ trong tháng" />
-    <Tile label="Tiền thủ thuật đã duyệt" value="2.187.000 ₫" note="Không phải lợi nhuận phòng khám" />
+    <Tile label="Doanh số thực hiện" value="13.200.000 ₫" note="Theo ngày hoàn tất thủ thuật" />
+    <Tile label="Thực thu trong tháng" value="11.000.000 ₫" note="Theo ngày phiếu thu" />
+    <Tile label="Công nợ hiện tại" value="1.250.000 ₫" note="Tất cả hóa đơn, không chỉ trong tháng" />
+    <Tile label="Tiền thủ thuật đã duyệt" value="2.187.000 ₫" note="Không phải lợi nhuận phòng khám" />
   </Grid>
   <Grid cols="minmax(0,1.5fr) minmax(0,1fr)" gap="16px">
     <Card title="Đóng góp của đội ngũ">
-      <StatusBars items={[["BS. Tâm · 3 lượt · Tiền thủ thuật 90.000 ₫","900.000 ₫"],["BS. Mai · 3 lượt · Tiền thủ thuật 225.000 ₫","1.500.000 ₫"],["BS. An · 3 lượt · Tiền thủ thuật 1.440.000 ₫","7.200.000 ₫"],["BS. Lan · 3 lượt · Tiền thủ thuật 432.000 ₫","3.600.000 ₫"]]} />
+      <StatusBars items={[["BS. Tâm · 3 lượt · Tiền thủ thuật 90.000 ₫","900.000 ₫"],["BS. Mai · 3 lượt · Tiền thủ thuật 225.000 ₫","1.500.000 ₫"],["BS. An · 3 lượt · Tiền thủ thuật 1.440.000 ₫","7.200.000 ₫"],["BS. Lan · 3 lượt · Tiền thủ thuật 432.000 ₫","3.600.000 ₫"]]} />
     </Card>
     <Card title="Việc cần đối soát">
-      <Facts items={[["Lượt chờ kế toán duyệt","0"],["Tiền chờ duyệt","0 ₫"]]} />
+      <Facts items={[["Lượt chờ kế toán duyệt","0"],["Tiền chờ duyệt","0 ₫"]]} />
       <Text small>"Tỷ lệ lưu theo từng lượt. Đổi chính sách không tính lại lịch sử. Khoản theo thực thu được đóng băng khi chốt kỳ."</Text>
       <Button variant="secondary">"Mở bảng tiền thủ thuật →"</Button>
     </Card>

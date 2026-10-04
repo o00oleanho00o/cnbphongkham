@@ -35,6 +35,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
 ```tsx
 // opens over the page "CSKH hôm nay" (dimmed); the page behind it is not part of this screen
 <Dialog title="Protocol chăm sóc mẫu" width="760px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
   <Text small>"Hoàn tất Laser CO2 → D+1 hỏi tình trạng → D+3 yêu cầu ảnh → D+7 bác sĩ review → D+30 dự kiến tái khám."</Text>
   <List>
     <ListItem title="Sau thủ thuật D+1" sub="Hỏi tình trạng sau thủ thuật" sub2="Hoàn tất buổi → 1 ngày → tạo việc cho CSKH" />

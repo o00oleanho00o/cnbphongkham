@@ -43,7 +43,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item active icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -67,12 +67,14 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Button variant="primary" icon="add">"Hồ sơ mới"</Button>
   </PageHeading>
   <Row gap="12px" wrap>
-    <Field label="Tìm tên, mã hoặc số điện thoại" type="search" default="zzzz" />
+    <Field label="Tìm tên, mã hoặc số điện thoại" type="search" placeholder="Ví dụ: Nguyễn Thu Hà, P001, nám..." default="zzzz" />
     <Badge tone="neutral" dot={false}>"0 hồ sơ"</Badge>
   </Row>
   <FilterChipGroup items={["Tất cả","Đang điều trị","Tái khám tuần này","Có cảnh báo"]} selected={["Tất cả"]} />
   <Card>
-    <EmptyState title="Không tìm thấy hồ sơ" hint="Thử tên, mã hồ sơ hoặc mối quan tâm khác." icon="search">
+    <EmptyState icon="search">
+      <Heading level={3}>"Không tìm thấy hồ sơ"</Heading>
+      <Text>"Thử tên, mã hồ sơ hoặc mối quan tâm khác."</Text>
       <Button variant="secondary">"Xóa tìm kiếm"</Button>
     </EmptyState>
   </Card>

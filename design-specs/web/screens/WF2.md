@@ -36,7 +36,8 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
 ```tsx
 // opens over the page "Thu ngân" (dimmed); the page behind it is not part of this screen
 <Dialog eyebrow="Pema · vận hành" title="Thu tiền · Nguyễn Thu Hà" width="640px">
-  <Notice tone="info" text="HD-DEMO-001 · Còn lại 150.000 ₫" />
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
+  <Notice tone="info" text="HD-DEMO-001 · Còn lại 150.000 ₫" />
   <Field label="Số tiền (VND)" type="number" default="150000" />
   <Field label="Phương thức" type="select" default="Tiền mặt" options={["Tiền mặt","Chuyển khoản"]} />
   <Row gap="8px" wrap>

@@ -46,7 +46,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
     <Sidebar.Item icon="forum">"CSKH hôm nay"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item icon="stethoscope">"Bác sĩ & phòng"</Sidebar.Item>
@@ -120,14 +120,14 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
           <Text small>"BS. Tâm"</Text>
         </Cell>
         <Cell column="Doanh số phân bổ">
-          <Text>"300.000 ₫"</Text>
+          <Text>"300.000 ₫"</Text>
         </Cell>
         <Cell column="Cơ sở × tỷ lệ">
-          <Text>"300.000 ₫ × 10%"</Text>
+          <Text>"300.000 ₫ × 10%"</Text>
           <Text small>"Giá sau giảm"</Text>
         </Cell>
         <Cell column="Tiền thủ thuật">
-          <Text strong>"30.000 ₫"</Text>
+          <Text strong>"30.000 ₫"</Text>
         </Cell>
         <Cell column="Trạng thái">
           <Badge tone="success" dot={false}>"Đã duyệt"</Badge>

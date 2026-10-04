@@ -8,7 +8,8 @@
 // Sample data (synthetic). Same patients, care groups and money format as the app canvas, so both canvases
 // show the same people and numbers. The old web's demo values are not copied; its labels and texts are.
 // ---------------------------------------------------------------------------------------------------------
-const money = v => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ₫';
+// the space before the currency sign is a no-break space, so a money value never wraps before "₫"
+const money = v => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '\u00a0₫';
 const GROUPS = { d1: 'Sau thủ thuật · D+1', d3: 'Ảnh tiến triển · D+3', d7: 'Bác sĩ review · D+7', due: 'Đến hạn tái khám', overdue: 'Quá hạn tái khám', no_show: 'Vắng hẹn', abandoned: 'Tiếp tục liệu trình', dormant90: 'Kết nối lại · 90 ngày', dormant180: 'Kết nối lại · 180 ngày', birthday: 'Sinh nhật trong tuần' };
 const people = [
   ['P001', 'Nguyễn Thu Hà', 'BS. Tâm', 'd1'], ['P002', 'Trần Minh Anh', 'BS. Mai', 'd3'],
@@ -80,8 +81,9 @@ const tags = (...bs) => ({ k: 'tags', items: bs.flat().map(b => ({ text: b.text,
 // tabs(['Tổng quan', ['Tư vấn', 3], ...], activeIndex, { seg }): tab bar (underline) or segmented control.
 const tabs = (items, on = 0, o = {}) => ({ k: 'tabs', n: items.length, cls: o.seg ? 'tbs tbs-seg' : 'tbs', items: items.map((x, i) => { const [text, count = ''] = Array.isArray(x) ? x : [x]; return { text, count: count === '' ? '' : String(count), cls: 'tbi' + (i === on ? ' tbi-on' : '') }; }) });
 const NT_ICON = { info: 'info', warning: 'warning', danger: 'error', success: 'check_circle' };
-// notice(text, tone, { title, actions }): info / warning / danger / success box with the old web's text verbatim.
-const notice = (text, tone = 'info', o = {}) => ({ k: 'notice', tone, text, title: o.title || '', icon: o.icon || NT_ICON[tone], actions: o.actions || [], cls: 'nt nt-' + tone });
+// notice(text, tone, { title, actions, items, itemsTitle }): info / warning / danger / success box with the old web's text verbatim.
+// `title` is a bold first line; `items` (with an optional bold `itemsTitle`, e.g. "Điểm cần nhớ") is a bullet list under the text.
+const notice = (text, tone = 'info', o = {}) => ({ k: 'notice', tone, text, title: o.title || '', icon: o.icon || NT_ICON[tone], actions: o.actions || [], items: o.items || [], itemsTitle: o.itemsTitle || '', cls: 'nt nt-' + tone });
 // facts(['Mối quan tâm', 'Nám'], ['Bác sĩ', 'BS. Tâm', { sub }], ...): label left, value right, divider rows.
 const facts = (...rows) => ({ k: 'facts', rows: rows.map(([l, v, o = {}]) => ({ l, v, sub: o.sub || '', cls: 'fa-vv' })) });
 const empty = (title, hint = '', o = {}) => ({ k: 'empty', title, hint, icon: o.icon || '', actions: o.actions || [] });
@@ -107,7 +109,7 @@ const field = (label, o = {}) => {
   const box = !['check', 'radio', 'range', 'file'].includes(ty);
   const opts = (o.opts || []).map(x => { const [t, on] = Array.isArray(x) ? x : [x, String(x) === val]; return { t, on, cls: ty === 'radio' ? 'rd-dot' + (on ? ' rd-on' : '') : 'lb-o' + (on ? ' lb-on' : '') }; });
   return {
-    k: 'field', ty, label: ty === 'check' ? '' : label, text: label, req: !!o.req, hint: o.hint || '', err: o.err || '', w: o.w ? o.w + 'px' : '220px',
+    k: 'field', ty, label: ty === 'check' ? '' : label, text: label, ph: o.ph || '', fcls: o.w ? 'fd fd-w' : 'fd', req: !!o.req, hint: o.hint || '', err: o.err || '', w: o.w ? o.w + 'px' : '220px',
     box, cls: 'fc' + (ty === 'textarea' ? ' fc-ta' : '') + (o.err ? ' fc-err' : '') + (o.dis ? ' fc-dis' : ''), lh: (o.lines || 3) * 24 + 16,
     pre: ty === 'search' ? 'search' : '', suf: o.suf !== undefined ? o.suf : (SUFFIX[ty] || ''), vc: val ? 'fc-v' : 'fc-ph', shown: ty === 'file' ? (o.text || 'Chọn tệp') : (val || o.ph || ''),
     cb: 'ck-b' + (o.on ? ' ck-on' : ''), opts, open: !!o.open, pct: o.pct === undefined ? 0 : o.pct
@@ -146,10 +148,22 @@ const table = (cols, rows, o = {}) => {
 const pad2 = n => String(n).padStart(2, '0');
 const hm = m => pad2(Math.floor(m / 60)) + ':' + pad2(m % 60);
 const toMin = s => { const [a, b] = String(s).split(':'); return Number(a) * 60 + Number(b); };
-// board({ rooms: [{ name, sub, bk: [{ start: '08:00', mins: 30, title, sub, svc: 0..3 }] }], from, to, hh, legend }): rooms × time (day view).
+// board({ rooms: [{ name, sub, bk: [{ start: '08:00', mins: 30, title, sub, sub2, svc: 0..3, buf: 15 }], slots: [{ start: '08:30', mins: 30 }] }], from, to, hh, legend }): rooms × time (day view).
+// `buf` (minutes) adds "· +15′ đệm" to the time line and a hatched block "15′ chuẩn bị phòng" right after the booking; `slots` are the free
+// time ranges, drawn as dashed "Đặt lịch" buttons (the old web has one invisible drop-slot button per 30 minutes, label "Đặt lịch <phòng> <giờ>").
 const board = (o = {}) => {
   const from = o.from ?? 8, to = o.to ?? 18, hh = o.hh ?? 80;
-  const rms = (o.rooms || rooms).map(r => ({ name: r.name, sub: r.sub || '', bk: (r.bk || []).map(b => ({ time: hm(toMin(b.start)) + '–' + hm(toMin(b.start) + b.mins), top: (toMin(b.start) - from * 60) / 60 * hh + 1, hgt: Math.max(b.mins / 60 * hh - 2, 28), sz: b.mins / 60 * hh < 56 ? 'bk-s' : '', title: b.title, sub: b.sub || '', svc: b.svc || 0 })) }));
+  const topOf = m => (m - from * 60) / 60 * hh + 1;
+  const rms = (o.rooms || rooms).map(r => {
+    const items = [];
+    (r.bk || []).forEach(b => {
+      const s = toMin(b.start), e = s + b.mins, svc = b.svc || 0, bh = b.mins / 60 * hh;
+      items.push({ kind: 'booking', time: hm(s) + '–' + hm(e) + (b.buf ? ' · +' + b.buf + '′ đệm' : ''), top: topOf(s), hgt: Math.max(bh - 2, 28), cls: 'bk bk-' + svc + (bh < 56 ? ' bk-s' : bh < 66 ? ' bk-m' : ''), fcls: 'bk bk-' + svc + ' bk-flat', title: b.title, sub: b.sub || '', sub2: b.sub2 || '', svc, slot: '', label: '' });
+      if (b.buf) items.push({ kind: 'buffer', time: '', top: topOf(e), hgt: Math.max(b.buf / 60 * hh - 2, 22), cls: 'bk bk-buf bk-s', fcls: 'bk bk-buf bk-flat', title: b.buf + '′ chuẩn bị phòng', sub: '', sub2: '', svc, slot: '', label: '' });
+    });
+    (r.slots || []).forEach(sl => { const s = toMin(sl.start); items.push({ kind: 'slot', time: '', top: topOf(s), hgt: Math.max((sl.mins || 30) / 60 * hh - 2, 22), cls: 'bk bk-slot bk-s', fcls: 'bk bk-slot bk-flat', title: o.slotText || 'Đặt lịch', sub: '', sub2: '', svc: 0, slot: 'add', label: 'Đặt lịch ' + r.name + ' ' + hm(s) }); });
+    return { name: r.name, sub: r.sub || '', bk: items };
+  });
   const hours = []; for (let t = from; t < to; t++) hours.push({ t: t + ':00', top: (t - from) * hh });
   return { k: 'board', rooms: rms, nc: rms.length, hh, h: (to - from) * hh, hours, corner: o.corner || 'GIỜ', legend: (o.legend || SVC_LEGEND).map(([t, svc]) => ({ t, svc })) };
 };
@@ -185,10 +199,14 @@ const grid = (cols, ...a) => {
   return cont('grid', { cls: 'k-grid', st: '--g:' + (o.g ?? 16) + 'px;--cols:' + c + ';--colsn:' + cn, cols: c, colsn: cn, kids: flat(k) });
 };
 // card({ title, sub, eyebrow, aside: [inline], v, g }, ...kids); v: panel soft ai plain flush hero. panel(title, sub, aside, ...kids) is the short form.
+// `tint` colours the card like a service or a tone: a tone name (info brand success warning danger) or a service number 0-3
+// (0 = none, 1 = brand, 2 = success, 3 = warning: the old web's service cards S0-S3); title and headings take the tone's text colour.
+const TINT = ['', 'brand', 'success', 'warning'];
 const card = (o0, ...k) => {
   const o = typeof o0 === 'string' ? { title: o0 } : (o0 || {});
   const aside = o.aside || [];
-  return cont('card', { title: o.title || '', sub: o.sub || '', eyebrow: o.eyebrow || '', aside, hasHead: !!(o.title || o.sub || o.eyebrow || aside.length), hcls: 'cd-h', tcls: 'cd-t', cls: 'cd cd-' + (o.v || 'panel'), icls: 'k-stack', ist: '--g:' + (o.g ?? 12) + 'px', kids: flat(k) });
+  const tint = typeof o.tint === 'number' ? TINT[o.tint] || '' : o.tint || '';
+  return cont('card', { title: o.title || '', sub: o.sub || '', eyebrow: o.eyebrow || '', aside, tint, hasHead: !!(o.title || o.sub || o.eyebrow || aside.length), hcls: 'cd-h', tcls: 'cd-t', cls: 'cd cd-' + (o.v || 'panel') + (tint ? ' cd-tn-' + tint : ''), icls: 'k-stack', ist: '--g:' + (o.g ?? 12) + 'px', kids: flat(k) });
 };
 const panel = (title, sub, aside, ...k) => card({ title, sub, aside: aside || [] }, ...k);
 // box(tone, ...kids): notice-coloured container for rich callouts (kids may be fields and badges). box({ tone, title }, ...kids).
@@ -232,12 +250,13 @@ const shellOf = (accId, navKey, o = {}) => {
   const acc = accountOf(accId);
   const pages = PAGES[acc.role];
   const label = (key, def) => (key === 'finance' && acc.role === 'doctor' ? 'Doanh số của tôi' : def);
-  const sections = NAV.map(([title, items]) => ({ title, items: items.filter(([key]) => pages.includes(key)).map(([key, def, icon]) => ({ key, icon, label: label(key, def), cls: 'sb-it' + (key === navKey ? ' sb-it-on' : ''), badge: key === 'followups' ? (o.badge ?? '3') : '' })) })).filter(s => s.items.length);
+  const sections = NAV.map(([title, items]) => ({ title, items: items.filter(([key]) => pages.includes(key)).map(([key, def, icon]) => ({ key, icon, label: label(key, def), cls: 'sb-it' + (key === navKey ? ' sb-it-on' : ''), badge: key === 'followups' ? (o.badge ?? '5') : '' })) })).filter(s => s.items.length);
   const tabs = TAB_KEYS[acc.role].filter(k => pages.includes(k)).map(k => ({ label: TAB_SHORT[k], icon: NAV_FLAT.find(n => n[0] === k)[2], cls: 'tabbar-i' + (k === navKey ? ' tabbar-on' : '') }));
   tabs.push({ label: 'Menu', icon: 'menu', cls: 'tabbar-i' });
   const crumbOf = key => label(key, (NAV_FLAT.find(n => n[0] === key) || [0, 'Tổng quan'])[1]);
   return {
     sections, tabs, user: { init: acc.init, name: acc.name, role: acc.label }, account: acc.name + ' · ' + acc.label, accountId: acc.id, crumb: o.crumb || crumbOf(navKey),
+    bell: ['owner', 'doctor'].includes(acc.role), // the old web draws the notification bell for the owner and the doctors only
     fin: o.fin === undefined ? (['owner', 'doctor', 'accountant'].includes(acc.role) ? 'Tài chính đã đồng bộ' : '') : o.fin, pickerOpen: !!o.pickerOpen, skip: !!o.skip,
     accounts: ACCOUNTS.map(a => ({ t: a.name + ' · ' + a.label, cls: 'lb-o' + (a.id === acc.id ? ' lb-on' : '') }))
   };

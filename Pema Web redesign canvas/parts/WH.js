@@ -165,8 +165,8 @@ const WH = (() => {
       id === 'system' && grid(5, CARE_MAP.map(([n, name]) => secondary(n + ' ' + name + ' →', { full: true }))),
       grid('repeat(auto-fit,minmax(min(100%,520px),1fr))',
         stack({ g: 12 }, txt(a.why), h3('Cách thực hiện'), list(a.steps, { plain: true, ordered: true })),
-        // The old aside (handoff, "Điểm cần nhớ" and its bullets) is one notice block in the web DOM, so it is one notice here.
-        notice('Thông tin đi tiếp như thế nào? ' + a.handoff + (a.rules ? ' Điểm cần nhớ ' + a.rules.join(' ') : ''), 'info')),
+        // The old aside (handoff, "Điểm cần nhớ" and its bullets) is one notice block in the web DOM, so it is one notice here: bold title, text, bold list title and bullets.
+        notice(a.handoff, 'info', { title: 'Thông tin đi tiếp như thế nào?', items: a.rules || [], itemsTitle: a.rules ? 'Điểm cần nhớ' : '' })),
       a.links.length > 0 && row({ g: 8 }, a.links.map(([l]) => primary(l + ' →'))),
       hr(),
       h3('Đọc tiếp'),

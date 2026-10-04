@@ -36,7 +36,10 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
 ```tsx
 // opens over the page "CSKH hôm nay" (dimmed); the page behind it is not part of this screen
 <Dialog title="Kết quả chăm sóc đã ghi" width="760px">
-  <EmptyState title="Chưa có kết quả. Bắt đầu từ CSKH hôm nay." />
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
+  <EmptyState>
+    <Heading level={3}>"Chưa có kết quả. Bắt đầu từ CSKH hôm nay."</Heading>
+  </EmptyState>
 </Dialog>
 ```
 Kit components used: Dialog×1, EmptyState×1. Everything else (Row, Grid, Stack, Text, Heading, Progress, Avatar, Facts, Repeat, Cell…) is a plain element styled with tokens; W3 turns the recurring ones into web blocks.

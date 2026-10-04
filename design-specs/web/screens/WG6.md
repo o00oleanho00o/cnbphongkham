@@ -46,7 +46,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Sidebar.Item icon="today">"Hôm nay"</Sidebar.Item>
     <Sidebar.Item icon="calendar_month">"Điều phối lịch"</Sidebar.Item>
     <Sidebar.Item icon="group">"Tìm bệnh nhân"</Sidebar.Item>
-    <Sidebar.Item icon="inbox">"Theo dõi 3"</Sidebar.Item>
+    <Sidebar.Item icon="inbox">"Theo dõi 5"</Sidebar.Item>
     <Sidebar.Item icon="photo_library">"Ảnh trước / sau"</Sidebar.Item>
     <Text old="nav-section">"Quản lý"</Text>
     <Sidebar.Item active icon="account_balance_wallet">"Doanh số của tôi"</Sidebar.Item>
@@ -79,16 +79,16 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Badge tone="neutral" dot={false}>"Đang đối soát"</Badge>
   </Hero>
   <Grid cols="repeat(3, 1fr)" cols-390="repeat(2, 1fr)">
-    <Tile label="Doanh số của tôi" value="1.500.000 ₫" note="Theo ngày hoàn tất thủ thuật" />
-    <Tile label="Tiền chờ duyệt" value="0 ₫" note="Chưa tính vào khoản đã duyệt" />
-    <Tile label="Tiền thủ thuật đã duyệt" value="225.000 ₫" note="Không phải lợi nhuận phòng khám" />
+    <Tile label="Doanh số của tôi" value="1.500.000 ₫" note="Theo ngày hoàn tất thủ thuật" />
+    <Tile label="Tiền chờ duyệt" value="0 ₫" note="Chưa tính vào khoản đã duyệt" />
+    <Tile label="Tiền thủ thuật đã duyệt" value="225.000 ₫" note="Không phải lợi nhuận phòng khám" />
   </Grid>
   <Grid cols="minmax(0,1.5fr) minmax(0,1fr)" gap="16px">
     <Card title="Chi tiết của tôi">
-      <StatusBars items={[["BS. Mai · 3 lượt · Tiền thủ thuật 225.000 ₫","1.500.000 ₫"]]} />
+      <StatusBars items={[["BS. Mai · 3 lượt · Tiền thủ thuật 225.000 ₫","1.500.000 ₫"]]} />
     </Card>
     <Card title="Việc cần đối soát">
-      <Facts items={[["Lượt chờ kế toán duyệt","0"],["Tiền chờ duyệt","0 ₫"]]} />
+      <Facts items={[["Lượt chờ kế toán duyệt","0"],["Tiền chờ duyệt","0 ₫"]]} />
       <Text small>"Tỷ lệ lưu theo từng lượt. Đổi chính sách không tính lại lịch sử. Khoản theo thực thu được đóng băng khi chốt kỳ."</Text>
       <Button variant="secondary">"Mở bảng tiền thủ thuật →"</Button>
     </Card>
