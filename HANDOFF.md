@@ -1,7 +1,8 @@
-# HANDOFF — Pema Agent (clinic CSKH agent + CRM), repo `E:\Desktop\cnbphongkham`
+# HANDOFF — Pema Agent (clinic CSKH agent + CRM), repo `E:\Desktop\cnbphongkham` (old machine) and
+`C:\Users\phanx\Documents\Codex\2026-09-11\create-an-image-of\cnbphongkham` (fresh clone, 2026-10-04, **no U4**)
 
 Language of the user: Vietnamese. Reply in Vietnamese.
-Last updated: 2026-10-03 (package M section added). **Two parallel branches** (user decision): `feat/ai-agent-backend` (multi-tenant, tip
+Last updated: 2026-10-04 (package U log; package W planned; U4 missing on the fresh clone, see the U4 row). **Two parallel branches** (user decision): `feat/ai-agent-backend` (multi-tenant, tip
 `294e4dc`, frozen) and `feat/single-tenant` (one system = one clinic, the branch to work on; new features go here first).
 Status: **single-tenant conversion and the three multi-user fixes are built, merged and tested** on
 `feat/single-tenant`. Wait for the user's next instruction before starting anything.
@@ -278,7 +279,7 @@ incl. evals + ruff + pyright + import-linter, 0 attribution lines; merged into `
 | U2 dashboard + schedule | `ui/u2` `0c326b0` | `2cf3cc1` | FE vitest 672 (first run 11 files did not report under load; rerun green), visual 200/0; BE 5282 / 10 / 0 | no migration; open: check-in only on the visit's day?, dashboard for reception/CSKH?, at-risk/abandoned KPIs need a read model |
 | U3 Patient 360 five tabs | `ui/u3` → retry 1 `ui/u3-fix` `c41d622` + merge `d743145` | `1c734b2` | attempt 1 FAILED (M2c test downgraded "-1"); retry: FE vitest 753, visual 220/0; BE 5315 / 10 / 0 | migration `u3_0010`; open: photo retention, consent wording, manager photo access, storage location |
 | U7 guide / ask / CRM | `ui/u7` → retry 1 `1e19f34` → retry 2 `ui/u7-fix2` `5488d3f` | `81057ed` | attempts 1–2 FAILED (relative downgrade; then two alembic heads); retry 2: FE vitest 820, visual 235/0; BE 5359 / 10 / 0 | migration `u7_0001` restacked on `u3_0010`; "Hỏi Pema" = passage search (no LLM); label changed "Ask Pema" → "Hỏi Pema" |
-| U4 services / resources / studio | `ui/u4` → retry 1 `ui/u4-fix` `24dfd1c` | (gate running) | attempt 1 FAILED (two heads after merge); retry 1: FE vitest 875, inventory 48, visual 250/0; BE pending | migration `u4_0010` restacked on `u7_0001` (chain m_0002 → u3_0010 → u7_0001 → u4_0010, one head) |
+| U4 services / resources / studio | `ui/u4` → retry 1 `ui/u4-fix` `24dfd1c` | (gate running) | attempt 1 FAILED (two heads after merge); retry 1: FE vitest 875, inventory 48, visual 250/0; BE pending | migration `u4_0010` restacked on `u7_0001` (chain m_0002 → u3_0010 → u7_0001 → u4_0010, one head). **2026-10-04: U4 is NOT on origin and NOT on the fresh clone** (`24dfd1c` unknown there, no `ui/u4*` branch, no `/studio` `/resources` `/services`, no `u4_0010`); it exists only on the old machine `E:\Desktop\cnbphongkham`. Push `ui/u4-fix` from there, or redo U4 from its recipe on top of `u7_0001`. BE gate result never recorded. |
 | U5 cashier / orders | — | — | — | waits for U4 merge |
 | U6 finance | — | — | — | waits for U5 |
 | U8 parity audit | — | — | — | waits for all; PARITY-AI01-U.md |
@@ -310,6 +311,67 @@ installation id. Return the report in _REPORT-TEMPLATE.md format." Order U0 → 
 Gates before merging a worktree: FE vitest ≥ 407 and `pnpm inventory`/`pnpm visual` green (from U1 on), lint/tsc/build,
 BE pytest/ruff/pyright/import-linter, no attribution in `git log --format=%B`, report filed. Migrations use prefix
 `u<step>_`; U8 adds the merge head. Photos: upload/view with consent only, no image analysis (scope unchanged).
+
+## Package W — design of the old Pema web: screenshots, screen specs, web canvas (PLANNED 2026-10-04, awaiting owner approval)
+
+Why: the app has a canvas (`Pema App.dc.html`, 82 mobile screens), generated specs (`design-specs/screens/`), the MCP
+server `pema-design` and two skills. The old web has only its code in `prototype/`. Package U ports the old web by
+reading that code directly, and `pema-agent/frontend/visual-ref/old/` is empty on this clone. The capture script
+`prototype/review-desktop.cjs` requires Playwright from another machine's path.
+
+Owner request 2026-10-04: build all three layers with subagents following recipes:
+1. Screenshots of every old-web screen at 5 viewports.
+2. Specs per web screen, served by the MCP server.
+3. A web canvas on claude.ai/design whose blocks map 1:1 to `pema-agent/frontend/src/ui`, plus a skill
+   `pema-web-design`.
+
+**Owner rule (2026-10-04, final, replaces an earlier "app first" reading): the result must contain EVERY piece of
+UI the old web has** — every page, tab, modal, dialog, state, field, action, status, filter and text. Nothing is
+filtered or dropped. The app design supplies only the look: tokens, block shapes, kit components, sample data.
+Where old web and app disagree on wording or a step, keep the old web's UI and record the app's version in
+`design-specs/web/notes.json` (`differences`); the owner decides later (D8). `app_canvas` is a cross-reference,
+never a filter.
+
+Plan: `pema-agent/docs/PLAN-AI01-W.md` (scope, paths, gate, acceptance, decisions D1–D8). Recipes:
+`pema-agent/recipes/W/` (`00-README.md`, `_REPORT-TEMPLATE.md`, `01-W0` … `07-W5`).
+- Order: `W0 inventory → (W1 shots ‖ W2 specs+MCP) → W3a canvas foundation → W3b canvas screens → W4 skill/docs/audit
+  → W5 push`.
+- W5 is done by the director with the user (`/design-sync`). It is not a subagent step.
+- Screen ids are `W<A-H><n>`, frozen in `design-specs/web/inventory.json` by W0.
+
+Decisions waiting for the owner, with the plan's defaults:
+- D1: write outside `pema-agent/` (only `design-specs/web/`, `Pema Web redesign canvas/`,
+  `.claude/skills/pema-web-design/`, an additive MCP change, a pointer section in `CLAUDE.md`).
+- D2: branch `feat/web-design` from `feat/ui-parity` `821f813`.
+- D3: no Next.js-only screens in the canvas yet.
+- D4: frames are 1440×900, plus 1920 and 390 for pages.
+- D5: PNGs are not committed; `manifest.json` is committed.
+- D6: the web canvas becomes the design-first source for Next.js, with a change-log rule.
+- D7: new claude.ai/design project.
+- D8: on a disagreement, keep the old web's UI, note the app's version in `notes.json`.
+
+How to run, once approved:
+1. Create the branch.
+2. Start the shared services: old web on 4173, finance on 4174, design-viewer on 4180.
+3. Per step, make a hand-made worktree (`git worktree add C:/wt/pema-<step> -b design/<step> feat/web-design`).
+4. Spawn one `pema-builder` per step with `PLAYWRIGHT_MODULE` set to the main checkout's
+   `pema-agent/frontend/node_modules/playwright` (Chromium installed 2026-10-03).
+5. Gate per plan §5 before each `--no-ff` merge.
+6. Never push until the user says so.
+
+Machine note (2026-10-04): this checkout is `C:\Users\phanx\Documents\Codex\2026-09-11\create-an-image-of\cnbphongkham`,
+a fresh clone, not `E:\Desktop\cnbphongkham`.
+- It has no U4 commits: `ui/u4-fix` `24dfd1c` exists only on the old machine.
+- `feat/ui-parity` IS on origin (`821f813`).
+- The real Docker stack was started here: `pema-agent/infra/.env` was generated (git-ignored), and `seed_demo` was
+  loaded (users `owner@example.test` and others; the password was given in the session, not stored here). The stack
+  runs on ports 3000/8000.
+
+### Progress log
+
+| Step | Branch / commit | Merged as | Gate result | Notes |
+|---|---|---|---|---|
+| (none yet) | | | | |
 
 ## Next Steps (only when the user asks)
 
