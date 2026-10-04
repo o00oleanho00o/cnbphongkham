@@ -6,12 +6,18 @@
 //   node web-inventory.cjs --verbose   also print every screen and every unused `covers` token
 //   node web-inventory.cjs --tokens    print every UI entry point found in the live web (to extend the catalog)
 //   node web-inventory.cjs --only=WB6,WF6   debug: walk only these ids (never writes, never checks)
+//   node web-inventory.cjs --guard     static completeness guard only (no browser): lists every UI item of prototype/
+//                                      that no entry claims (see lib/guard.cjs); exit 1 when the list is not empty
 //
 // What the walk proves
 //   1. every catalog entry reaches its screen from a fresh page with 0 page errors (and shows its `expect`);
 //   2. every entry point the live web offers (data-nav, data-tab, data-modal, data-finance-tab, data-ops, data-crm,
 //      data-action, ... and the CLINIC_DIALOGS buttons of dump-web.cjs) is claimed by some entry's `covers`,
 //      so a new button or tab in the web fails this script until it gets an id.
+//   3. the static guard (lib/guard.cjs) finds nothing in prototype/ that no entry claims: data-* hooks, ids ending in
+//      -error/-empty/-toast, "Không có / Chưa có / Đã sạch / Không còn / Lỗi / không thể" strings, HTML-building functions.
+//      Claims of `text:` and `id:` are also checked against the live page of the entry that makes them, and native
+//      confirm/prompt/print/download/select-popup states are fired once to check the recorded dialog.
 //
 // Needs the old web on http://127.0.0.1:4173 (serve root = prototype/) and the finance API on :4174.
 // Env: PLAYWRIGHT_MODULE (see lib/pw.cjs), PEMA_WEB_BASE to override the base url.
@@ -23,11 +29,13 @@ const { execFileSync } = require('child_process');
 const { loadPlaywright, REPO } = require('./lib/pw.cjs');
 const ow = require('./lib/old-web.cjs');
 const catalog = require('./lib/catalog.cjs');
+const guard = require('./lib/guard.cjs');
 
 const argv = process.argv.slice(2);
 const CHECK = argv.includes('--check');
 const VERBOSE = argv.includes('--verbose');
 const TOKENS = argv.includes('--tokens');
+const GUARD_ONLY = argv.includes('--guard');
 const ONLY = (argv.find((a) => a.startsWith('--only=')) || '').slice(7).split(',').filter(Boolean);
 const BASE = (process.env.PEMA_WEB_BASE || 'http://127.0.0.1:4173').replace(/\/$/, '');
 const FINANCE_API = 'http://127.0.0.1:4174';
@@ -76,9 +84,11 @@ function build() {
     next_status: s.next_status,
     app_canvas: s.app_canvas,
     legacy_shot: s.legacy_shot || null,
-    frames: FRAMES[s.kind],
+    frames: s.frames || FRAMES[s.kind],
     covers: s.covers || [],
     notes: s.notes || '',
+    ...(s.viewport ? { viewport: s.viewport } : {}),
+    ...(s.native ? { native: true, native_dialog: s.native } : {}),
   }));
   const count = (key) => screens.reduce((a, s) => ((a[s[key]] = (a[s[key]] || 0) + 1), a), {});
   const sorted = (o) => Object.fromEntries(Object.entries(o).sort(([a], [b]) => a.localeCompare(b, 'en', { numeric: true })));
@@ -94,6 +104,7 @@ function build() {
     counts: { total: screens.length, by_kind: sorted(count('kind')), by_group: sorted(count('group')) },
     screens,
     non_screens: catalog.non_screens,
+    helpers: catalog.helpers,
   };
 }
 
@@ -102,12 +113,14 @@ function validateCatalog() {
   const ids = new Set();
   const groups = new Set(catalog.groups.map((g) => g.code));
   for (const s of catalog.screens) {
-    if (!/^W[A-H]\d+$/.test(s.id)) problems.push(`${s.id}: id must match ^W[A-H]\\d+$`);
+    if (!/^W[A-I]\d+$/.test(s.id)) problems.push(`${s.id}: id must match ^W[A-I]\\d+$`);
     if (ids.has(s.id)) problems.push(`${s.id}: duplicate id`);
     ids.add(s.id);
     if (!s.id.startsWith(s.group) || !groups.has(s.group)) problems.push(`${s.id}: group ${s.group} does not match`);
     if (!FRAMES[s.kind]) problems.push(`${s.id}: unknown kind ${s.kind}`);
     if (!Array.isArray(s.reach) || !s.reach.length) problems.push(`${s.id}: empty reach`);
+    if (s.native && !['confirm', 'prompt', 'print', 'download', 'select'].includes(s.native.type)) problems.push(`${s.id}: unknown native type`);
+    if (s.native && s.kind !== 'state') problems.push(`${s.id}: native entries must be kind state`);
   }
   for (const g of catalog.groups) {
     const nums = catalog.screens.filter((s) => s.group === g.code).map((s) => Number(s.id.slice(2)));
@@ -135,7 +148,7 @@ async function collectTokens(page) {
     for (const el of document.querySelectorAll('*')) {
       const d = el.dataset;
       if (!d) continue;
-      for (const key of ['nav', 'tab', 'modal', 'financeTab', 'ops', 'crm', 'action', 'careAction', 'careNav', 'guide', 'patientFilter', 'followupFilter', 'todayFilter', 'print']) {
+      for (const key of ['nav', 'tab', 'modal', 'screen', 'financeTab', 'ops', 'crm', 'action', 'careAction', 'careNav', 'guide', 'patientFilter', 'followupFilter', 'todayFilter', 'print', 'command']) {
         if (d[key] !== undefined && d[key] !== '') out.add(`${key}:${d[key]}`);
       }
       if (d.question !== undefined) out.add('question:chip');
@@ -162,14 +175,21 @@ async function walkOne(browser, entry, role) {
 }
 
 async function walkAttempt(browser, entry, role) {
-  const page = await ow.newPage(browser, { viewport: { width: 1440, height: 900 } });
+  const [w, h] = entry.viewport || [1440, 900];
+  const page = await ow.newPage(browser, { viewport: { width: w, height: h } });
   const result = { id: entry.id, ok: true, problem: '', tokens: [] };
   try {
     const shown = await ow.open(page, entry, { base: BASE, role });
     await ow.settle(shown, 400);
     const bad = await ow.verify(shown, entry);
     if (bad) throw new Error(bad);
+    const claimBad = await verifyClaims(shown, entry);
+    if (claimBad) throw new Error(claimBad);
     result.tokens = await collectTokens(shown);
+    if (entry.native) {
+      const nativeBad = await verifyNative(shown, entry, role);
+      if (nativeBad) throw new Error(nativeBad);
+    }
     if (page.errors.length) throw new Error('page errors: ' + page.errors.slice(0, 2).join(' | '));
   } catch (e) {
     result.ok = false;
@@ -178,6 +198,49 @@ async function walkAttempt(browser, entry, role) {
     await page.context().close();
   }
   return result;
+}
+
+const squash = (t) => t.toLowerCase().replace(/\s+/g, ' ').replace(/[.!?…:]+$/, '').trim();
+
+/** `text:` and `id:` claims of an entry must be true on the page the entry reaches. */
+async function verifyClaims(page, entry) {
+  const claims = (entry.covers || []).filter((c) => c.startsWith('text:') || c.startsWith('id:'));
+  if (!claims.length) return '';
+  const body = squash(await page.evaluate(() => document.body.innerText));
+  for (const c of claims) {
+    if (c.startsWith('id:')) {
+      const n = await page.locator('#' + c.slice(3)).count();
+      if (!n) return `claimed id not on the page: ${c}`;
+      continue;
+    }
+    let want = squash(c.slice(5));
+    if (want.endsWith('*')) want = want.slice(0, -1).trim();
+    if (!body.includes(want)) return `claimed text not on the page: ${c}`;
+  }
+  return '';
+}
+
+/** Fire a native confirm/prompt/print/download or open the select popup once and compare with the recorded dialog. */
+async function verifyNative(page, entry, role) {
+  const n = entry.native;
+  if (n.type === 'select') {
+    const options = await page.$$eval(n.selector + ' option', (els) => els.map((e) => e.textContent.trim()));
+    return JSON.stringify(options) === JSON.stringify(n.options) ? '' : `select options differ: ${JSON.stringify(options)}`;
+  }
+  if (n.type === 'download') {
+    const [download] = await Promise.all([page.waitForEvent('download', { timeout: 8000 }), ow.run(page, n.trigger, { base: BASE, role })]);
+    return download.suggestedFilename() === n.filename ? '' : `download name ${download.suggestedFilename()} != ${n.filename}`;
+  }
+  const target = await ow.run(page, n.trigger, { base: BASE, role });
+  if (n.type === 'print') {
+    const printed = await target.evaluate(() => window.__printed || 0);
+    return printed === 1 ? '' : `window.print called ${printed} times`;
+  }
+  const got = (target.dialogs || []).at(-1);
+  if (!got) return `no native ${n.type} fired`;
+  if (got.type !== n.type) return `native dialog is a ${got.type}, expected ${n.type}`;
+  if (got.message !== n.message) return `native message differs: ${got.message}`;
+  return '';
 }
 
 /** Visit every allowed page and Patient 360 tab for one account to collect entry points. */
@@ -252,8 +315,25 @@ function stable(obj) {
   return JSON.stringify(obj, null, 2) + '\n';
 }
 
+function runGuard(label) {
+  const items = guard.scan(REPO);
+  const result = guard.evaluate(items, catalog);
+  const byKind = {};
+  result.unclaimed.forEach((i) => (byKind[i.kind] = (byKind[i.kind] || 0) + 1));
+  const summary = Object.entries(byKind).map(([k, v]) => `${k}=${v}`).join(' ') || 'none';
+  console.log(`${label}: ${result.unclaimed.length} unclaimed of ${result.total} UI items in prototype/ (${summary})`);
+  return result;
+}
+
 (async () => {
   const problems = validateCatalog();
+  if (GUARD_ONLY) {
+    const r = runGuard('guard');
+    r.unclaimed.forEach((i) => console.log(`UNCLAIMED ${i.key}  @ ${i.where[0]}`));
+    if (VERBOSE) r.unusedClaims.forEach((c) => console.log(`note   claim matches no literal in the code: ${c}`));
+    problems.forEach((p) => console.error('FAILED ' + p));
+    process.exit(problems.length || r.unclaimed.length ? 1 : 0);
+  }
   const baseStatus = await http(`${BASE}/clinic-web/`);
   if (baseStatus !== 200) problems.push(`old web not answering on ${BASE} (status ${baseStatus})`);
   const financeStatus = await http(`${FINANCE_API}/`);
@@ -306,6 +386,8 @@ function stable(obj) {
     }
   }
 
+  const guarded = runGuard('guard');
+  guarded.unclaimed.forEach((i) => failures.push(`UNCLAIMED ${i.key}  @ ${i.where[0]}`));
   const text = stable(inventory);
   if (failures.length) {
     failures.forEach((f) => console.error(f));

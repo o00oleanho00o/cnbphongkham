@@ -12,7 +12,15 @@
 //   {"check": "css"}                           tick a checkbox
 //   {"wait": "css"}                            wait until visible
 //   {"block": "url-glob"}                      abort requests to that URL (network down)
-//   {"dialog": "accept"|"dismiss"}             answer the next native confirm()/prompt()
+//   {"dialog": "accept"|"dismiss"}             answer the next native confirm()/prompt(); the message is kept in page.dialogs
+//   {"hold": "url-glob"}                       never answer requests to that URL (loading state)
+//   {"ifVisible": ["css", [steps]]}            run the steps only when the css is visible (idempotent set-up of a state)
+//   {"upload": ["css", "png"|"txt"|"big"]}     choose a synthetic file in a file input (png = 1x1 image, txt = not an image,
+//                                              big = 2.4 MB image-looking file)
+//   {"hookPrint": true}                        count window.print() calls in page.printed instead of opening the print dialog
+//   {"key": "Tab"}                             press a key on the page (focus states)
+//   {"hover": "css"}                           move the mouse over the first visible match
+//   {"setValue": ["css", "value"]}             set a value and fire input + change (date and month inputs)
 // `expect` ({selector, text}) says what must be visible once the steps are done.
 
 const DEFAULT_CLOCK = '2026-09-20T09:00:00+07:00';
@@ -122,10 +130,53 @@ async function runStep(step, state, { base, vars }) {
   } else if (step.block !== undefined) {
     await cur.context().route(step.block, (route) => route.abort());
   } else if (step.dialog !== undefined) {
-    cur.once('dialog', (d) => (step.dialog === 'accept' ? d.accept('Demo') : d.dismiss()));
+    cur.once('dialog', (d) => {
+      cur.dialogs = cur.dialogs || [];
+      cur.dialogs.push({ type: d.type(), message: d.message() });
+      return step.dialog === 'accept' ? d.accept('Demo') : d.dismiss();
+    });
+  } else if (step.hold !== undefined) {
+    await cur.context().route(step.hold, () => {
+      // never fulfilled: the page stays in its loading state
+    });
+  } else if (step.ifVisible !== undefined) {
+    const shown = await cur.locator(step.ifVisible[0]).locator('visible=true').count();
+    if (shown) for (const inner of step.ifVisible[1]) await runStep(inner, state, { base, vars });
+  } else if (step.upload !== undefined) {
+    await cur.locator(step.upload[0]).first().setInputFiles(syntheticFile(step.upload[1]));
+    await settle(cur, 400);
+  } else if (step.hookPrint !== undefined) {
+    await cur.evaluate(() => {
+      window.__printed = 0;
+      window.print = () => {
+        window.__printed += 1;
+      };
+    });
+  } else if (step.key !== undefined) {
+    await cur.keyboard.press(step.key);
+    await settle(cur, 150);
+  } else if (step.hover !== undefined) {
+    await visible(cur, step.hover).hover({ timeout: STEP_TIMEOUT });
+    await settle(cur, 150);
+  } else if (step.setValue !== undefined) {
+    await cur.evaluate(([css, value]) => {
+      const el = document.querySelector(css);
+      el.value = value;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }, step.setValue);
+    await settle(cur, 250);
   } else {
     throw new Error('unknown reach step ' + JSON.stringify(step));
   }
+}
+
+// 1x1 transparent PNG and plain text, so no real photo is ever involved
+const PNG_1X1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
+function syntheticFile(kind) {
+  if (kind === 'txt') return { name: 'ghi-chu.txt', mimeType: 'text/plain', buffer: Buffer.from('not an image') };
+  if (kind === 'big') return { name: 'anh-lon.png', mimeType: 'image/png', buffer: Buffer.concat([PNG_1X1, Buffer.alloc(2_600_000)]) };
+  return { name: 'anh-demo.png', mimeType: 'image/png', buffer: PNG_1X1 };
 }
 
 /** Steps that only wait or look are safe to run again after a slow first try. */
@@ -148,6 +199,20 @@ async function open(page, entry, { base, role } = {}) {
         await state.current.waitForTimeout(700);
         await runStep(step, state, { base, vars });
       }
+    } catch (e) {
+      throw new Error(`step ${JSON.stringify(step)}: ${String(e.message).split('\n')[0]}`);
+    }
+  }
+  return state.current;
+}
+
+/** Run extra steps (for example a native-dialog trigger) on a page that `open` already reached. */
+async function run(page, steps, { base, role } = {}) {
+  const vars = { role };
+  const state = { main: page, current: page };
+  for (const step of steps) {
+    try {
+      await runStep(step, state, { base, vars });
     } catch (e) {
       throw new Error(`step ${JSON.stringify(step)}: ${String(e.message).split('\n')[0]}`);
     }
@@ -190,6 +255,7 @@ module.exports = {
   settle,
   clearStorage,
   open,
+  run,
   verify,
   closeAll,
 };

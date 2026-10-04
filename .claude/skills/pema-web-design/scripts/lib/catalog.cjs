@@ -456,4 +456,4 @@ const non_screens = [
   { what: 'role picker option list', why: 'Native select popup; the closed picker is part of WA1.' },
 ];
 
-module.exports = { OWNER, DOCTOR, CARE, ACCOUNTANT, groups, screens, actions, non_screens };
+module.exports = { OWNER, DOCTOR, CARE, ACCOUNTANT, groups, screens, actions, non_screens, helpers: [] };
