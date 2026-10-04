@@ -540,12 +540,24 @@
         "\"Không thu trùng\": the remaining amount is amount minus received; paying twice is refused by `pay()`."
       ],
       "differences": [
-        "App I10/F11/D1 show 3 tiles and a short list; the web adds the product catalog tile (\"Catalog sản phẩm\"), the quick-order banner and the order history."
+        "App I10/F11/D1 show 3 tiles and a short list; the web adds the product catalog tile (\"Catalog sản phẩm\"), the quick-order banner and the order history.",
+        "The canvas draws the order-history rows (Xem / in, Sửa nháp, status line) and, below them, the empty state \"Chưa có đơn từ catalog.\" that the old shot shows when no order exists; the old web shows one or the other."
+      ],
+      "demo_data": [
+        "Tên bệnh nhân (Nguyễn Minh Linh, Trần Ngọc Anh, Lê Hoàng Nam) thay bằng people của canvas",
+        "Số liệu ô tổng (48, 61.650.000 ₫, 11.250.000 ₫, 115) giữ như web cũ; 6 dòng hóa đơn mẫu lấy giá từ services; hai dòng lịch sử đơn là mẫu để thấy nút Xem / in và Sửa nháp"
       ]
     },
     "WF2": {
       "logic": [
         "`handle('pay')` dialog: amount, method; `PemaOps.pay()` needs capability `billing`."
+      ],
+      "demo_data": [
+        "Tên bệnh nhân thay bằng people[0]",
+        "Thu tiền · Nguyễn Minh Linh"
+      ],
+      "differences": [
+        "\"Xác nhận thu tiền\" stays under the fields as in the old dialog, not in a right-aligned footer. The ops-error line under it (#ops-error, empty) and the toast \"Đã ghi phiếu thu và cập nhật hóa đơn\" are not drawn."
       ]
     },
     "WF3": {
@@ -557,7 +569,15 @@
         "\"Sản phẩm chưa có loại trong Excel cần được phân loại. “Không in” chỉ loại khỏi phiếu, vẫn tính trong hóa đơn. Đơn nháp chưa xuất hiện trên app.\""
       ],
       "gotchas": [
-        "The doctor cannot approve a line without its usage text (\"Cách dùng\"); the reach steps of the inventory fill it."
+        "The doctor cannot approve a line without its usage text (\"Cách dùng\"); the reach steps of the inventory fill it.",
+        "The picker lists 115 products in a scroll box; the canvas draws the first 6. The error line #quick-error (empty; shows \"Chọn ít nhất một sản phẩm.\" or \"Chọn bác sĩ trong danh sách.\") is not drawn."
+      ],
+      "demo_data": [
+        "Tên bệnh nhân thay bằng people[0]; mã, tên, đơn vị, giá sản phẩm là dữ liệu catalog, giữ như web cũ",
+        "Desloratadine/Genepharm (Desloratadine 5 mg) Hộp 30 Viên - Viên - A H002 · Viên · Thuốc · Đơn thuốc 5.500 ₫"
+      ],
+      "differences": [
+        "Product pick rows are drawn as list rows (name, code · unit · group · route, price) instead of one button label; the whole row is the click target in the old web."
       ]
     },
     "WF5": {
@@ -569,22 +589,42 @@
         "\"Đơn nháp cần bác sĩ duyệt trước khi in.\": the print buttons stay disabled until the order is approved and its snapshot is valid."
       ],
       "differences": [
-        "App F6/F7 show the A5 slip as a mobile preview; the web page is a two-column review (prescription and consultation sheets side by side) with a toolbar."
+        "App F6/F7 show the A5 slip as a mobile preview; the web page is a two-column review (prescription and consultation sheets side by side) with a toolbar.",
+        "The old page is standalone (/order-review/, no sidebar, new tab); the canvas draws it in the app shell because the Next.js target /orders/[id] sits in AppShell.",
+        "The print-media capture of a draft shows only \"BẢN NHÁP — chưa được bác sĩ duyệt để phát hành.\" (class print-blocked): the toolbar, section labels and sheets are hidden. The canvas shows it in the card \"Bản in (print media)\". Conditional lines not drawn: \"Địa chỉ:\" row (only when the patient has an address), \"Ghi chú:\" under an item, and the \"Không in (n): …\" paragraph for excluded lines."
+      ],
+      "demo_data": [
+        "Tên bệnh nhân thay bằng people[0] (tuổi 28 thay vì 32)"
       ]
     },
     "WF6": {
       "logic": [
         "`o.status === 'approved'`: the draft mark is gone, the status line reads \"Đã duyệt bởi <bác sĩ>\" and the print buttons are enabled (`body[data-approved=true]`)."
+      ],
+      "differences": [
+        "Print-media capture of an approved order: the two sheets stack on one white page, no toolbar, black text and rules, logo in grayscale, one document set per page (break-after). Drawn as the card \"Bản in (print media)\"."
+      ],
+      "demo_data": [
+        "Tên bệnh nhân thay bằng people[0]"
       ]
     },
     "WF7": {
       "logic": [
         "`current.unresolved`: products with no class are listed in a warning paragraph \"Cần phân loại <n> sản phẩm: …\" and cannot be printed."
+      ],
+      "demo_data": [
+        "Tên bệnh nhân thay bằng people[0]; sản phẩm Triluma là dữ liệu catalog"
+      ],
+      "gotchas": [
+        "The approve button is visible but disabled while products need a class; only the prescription sheet exists because the consultation list is empty."
       ]
     },
     "WF8": {
       "logic": [
         "Missing patient or order id in the URL: `refresh()` throws `Error('Thiếu mã bệnh nhân hoặc mã đơn.')` and the page shows it in a status paragraph; the print buttons stay disabled."
+      ],
+      "gotchas": [
+        "The old page shows the error as red text in the page body; the canvas uses a danger notice. No approve button on this state (hidden)."
       ]
     },
     "WF9": {
@@ -594,11 +634,18 @@
       "rules": [
         "\"Đơn đã thu tiền hoặc thiếu hóa đơn; không thể sửa.\"",
         "\"Đơn cũ cần mở Sửa nháp để đối chiếu lại catalog trước khi duyệt.\""
+      ],
+      "demo_data": [
+        "Tên bệnh nhân thay bằng people[0]",
+        "Desloratadine/Genepharm (Desloratadine 5 mg) Hộp 30 Viên - Viên - A H002 · Viên · Thuốc · Đơn thuốc 5.500 ₫"
       ]
     },
     "WF10": {
       "logic": [
         "Product search with no match: the list column shows the empty state \"Không tìm thấy sản phẩm phù hợp.\"; the cart keeps \"Chọn sản phẩm ở danh sách.\"."
+      ],
+      "demo_data": [
+        "Tên bệnh nhân thay bằng people[0]"
       ]
     },
     "WG1": {
@@ -720,6 +767,15 @@
     "WH14": {
       "logic": [
         "The guide search finds no topic: the index shows the notice \"Không tìm thấy. Thử “lịch”, “thu tiền” hoặc tên vai trò.\" and the article column keeps the default article."
+      ]
+    },
+    "WF4": {
+      "logic": [
+        "Cart lines keep the catalog route as default (H002 Đơn thuốc, H005 Phiếu tư vấn); the total is quantity × unit price (5.500 ₫ + 715.000 ₫ = 720.500 ₫)."
+      ],
+      "demo_data": [
+        "Tên bệnh nhân thay bằng people[0]; dữ liệu catalog giữ nguyên",
+        "Desloratadine/Genepharm (Desloratadine 5 mg) Hộp 30 Viên - Viên - A H002 · Viên · Thuốc · Đơn thuốc 5.500 ₫"
       ]
     }
   }
