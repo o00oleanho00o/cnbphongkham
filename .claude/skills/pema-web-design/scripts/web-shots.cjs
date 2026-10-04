@@ -63,15 +63,21 @@ async function metrics(page) {
 }
 
 /** One entry at one viewport: returns [{file, media, ...metrics, page_errors}] or throws. */
-async function captureOne(browser, inv, entry, viewport, outDir) {
+async function captureOne(browser, inv, entry, viewport, outDir, lenient) {
   const [w, h] = viewport;
   const page = await ow.newPage(browser, { viewport: { width: w, height: h }, clock: inv.clock });
   try {
     const shown = await ow.open(page, entry, { base: BASE, role: inv.role });
-    await shown.waitForLoadState('networkidle', { timeout: 6000 }).catch(() => {});
-    await ow.settle(shown, 300);
+    // a toast lives 2.8 s: shoot it straight after `reach`, without waiting for network idle
+    const transient = entry.expect && entry.expect.selector === '.toast';
+    if (!transient) {
+      await shown.waitForLoadState('networkidle', { timeout: 6000 }).catch(() => {});
+      await ow.settle(shown, 300);
+    }
     const why = await ow.verify(shown, entry);
-    if (why) throw new Error(`expect: ${why}`);
+    // `expect` not met: the first try fails (and is retried once); the retry still shoots the screen and records why,
+    // because a responsive layout may legitimately hide the element (the 390px sidebar has no brand logo)
+    if (why && !lenient) throw new Error(`expect: ${why}`);
     const base = `${entry.id}-${vpName(viewport)}`;
     const shots = [{ file: `${base}.png`, media: 'screen' }];
     if (PRINT_IDS.includes(entry.id)) shots.push({ file: `${base}-print.png`, media: 'print' });
@@ -83,7 +89,7 @@ async function captureOne(browser, inv, entry, viewport, outDir) {
       }
       const m = await metrics(shown);
       await shown.screenshot({ path: path.join(outDir, s.file) });
-      out.push({ ...s, page_width: m.page_width, content_width: m.content_width, overflow: m.page_width > w });
+      out.push({ ...s, page_width: m.page_width, content_width: m.content_width, overflow: m.page_width > w, expect_unmet: why || null });
     }
     // page errors raised while the screen was reached and shot (collected by freeze on every page of the context)
     const errors = [...page.errors];
@@ -97,13 +103,13 @@ async function captureWithRetry(browser, inv, entry, viewport, outDir) {
   let lastError = '';
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      return await captureOne(browser, inv, entry, viewport, outDir);
+      return await captureOne(browser, inv, entry, viewport, outDir, attempt === 1);
     } catch (e) {
       lastError = String(e.message || e).split('\n')[0].slice(0, 200);
       await new Promise((r) => setTimeout(r, 800));
     }
   }
-  return [{ file: `${entry.id}-${vpName(viewport)}.png`, media: 'screen', page_width: null, content_width: null, overflow: false, page_errors: [`capture failed: ${lastError}`] }];
+  return [{ file: `${entry.id}-${vpName(viewport)}.png`, media: 'screen', page_width: null, content_width: null, overflow: false, expect_unmet: null, page_errors: [`capture failed: ${lastError}`] }];
 }
 
 function entryRows(inv, entry, viewport, results, outDir) {
@@ -121,6 +127,7 @@ function entryRows(inv, entry, viewport, results, outDir) {
       page_width: r.page_width,
       content_width: r.content_width,
       overflow: r.overflow,
+      expect_unmet: r.expect_unmet,
       page_errors: r.page_errors,
     });
     if (exists && r.media === 'screen' && entry.legacy_shot) {
@@ -135,6 +142,7 @@ function entryRows(inv, entry, viewport, results, outDir) {
         page_width: r.page_width,
         content_width: r.content_width,
         overflow: r.overflow,
+        expect_unmet: null,
         page_errors: [],
       });
     }
@@ -166,6 +174,7 @@ async function captureAll(inv, ids, outDir) {
 function buildManifest(inv, rows) {
   const order = new Map(inv.screens.map((s, i) => [s.id, i]));
   const mediaOrder = { screen: 0, print: 1, 'legacy-copy': 2 };
+  for (const r of rows) r.expect_unmet = r.expect_unmet ?? null;
   rows.sort((a, b) => order.get(a.id) - order.get(b.id) || parseInt(b.viewport, 10) - parseInt(a.viewport, 10) || mediaOrder[a.media] - mediaOrder[b.media]);
   return {
     generated_from: inv.generated_from,
@@ -179,6 +188,7 @@ function buildManifest(inv, rows) {
       print: rows.filter((r) => r.media === 'print').length,
       legacy_copies: rows.filter((r) => r.media === 'legacy-copy').length,
       overflow: rows.filter((r) => r.overflow && r.media !== 'legacy-copy').length,
+      expect_unmet: rows.filter((r) => r.expect_unmet).length,
     },
     images: rows,
   };
@@ -213,7 +223,7 @@ function writeGallery(inv, manifest, outDir) {
 
 function summary(manifest) {
   const c = manifest.counts;
-  return `${c.ids} ids, ${c.screens} screen shots, ${c.print} print shots, ${c.legacy_copies} legacy copies, ${c.overflow} overflowing`;
+  return `${c.ids} ids, ${c.screens} screen shots, ${c.print} print shots, ${c.legacy_copies} legacy copies, ${c.overflow} overflowing, ${c.expect_unmet} with unmet expect`;
 }
 
 async function preflight() {
@@ -242,6 +252,7 @@ async function runCapture(inv) {
   writeGallery(inv, manifest, outDir);
   const failed = rows.filter((r) => r.page_errors.length);
   failed.forEach((r) => console.error(`FAILED ${r.file}: ${r.page_errors.join(' | ')}`));
+  rows.filter((r) => r.expect_unmet).forEach((r) => console.log(`unmet expect ${r.file}: ${r.expect_unmet}`));
   console.log(`wrote ${path.relative(REPO, manifestPath)}: ${summary(manifest)} in ${Math.round((Date.now() - started) / 1000)}s`);
   process.exit(failed.length ? 1 : 0);
 }
@@ -269,6 +280,10 @@ async function runCheck(inv) {
   for (const f of was.keys()) if (!now.has(f)) problems.push(`file set: ${f} is in the manifest but was not captured now`);
   for (const f of now.keys()) if (!was.has(f)) problems.push(`file set: ${f} was captured now but is not in the manifest`);
   for (const r of rows) if (r.page_errors.length) problems.push(`recapture ${r.file}: ${r.page_errors.join(' | ')}`);
+  for (const r of rows) {
+    const before = was.get(r.file);
+    if (r.expect_unmet && before && !before.expect_unmet) problems.push(`recapture ${r.file}: expect unmet now (${r.expect_unmet})`);
+  }
   const changed = [];
   for (const [f, r] of now) {
     const before = was.get(f);
