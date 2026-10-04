@@ -1,6 +1,6 @@
 {
   "generator": ".claude/skills/pema-web-design/scripts/web-specs.cjs",
-  "snapshot": "bb00d61541332cc1",
+  "snapshot": "6a082e1cdafa6a64",
   "counts": {
     "total": 81,
     "by_kind": {
@@ -1160,9 +1160,9 @@
       "spec": "screens/WE1.md",
       "counts": {
         "actions": 3,
-        "fields": 1,
+        "fields": 2,
         "chips_tabs": 0,
-        "statuses": 0,
+        "statuses": 1,
         "kpis": 0,
         "notices": 5,
         "tables": 0

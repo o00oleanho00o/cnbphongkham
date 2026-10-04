@@ -36,6 +36,7 @@ const problems = [];
 const snapIds = Object.keys(model.snapshot.screens);
 for (const id of ids) if (!snapIds.includes(id)) problems.push(`${id}: not in snapshot.json (run web-snapshot.cjs)`);
 for (const id of snapIds) if (!ids.includes(id)) problems.push(`${id}: in snapshot.json but not in inventory.json`);
+if (model.snapshot.meta.inventory_sha !== lib.inventorySha()) problems.push('snapshot.json was made from another inventory.json (run web-snapshot.cjs)');
 if (problems.length) {
   problems.forEach((p) => console.error('FAILED ' + p));
   process.exit(1);

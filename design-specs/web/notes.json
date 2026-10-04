@@ -2,331 +2,725 @@
   "_comment": "Hand-written notes for the specs of the OLD Pema web, merged into each screen's spec by web-specs.cjs and the pema-design MCP (record_web_note). groups.<WA..WH> applies to every screen of the group; screens.<ID> to one screen. Keys: logic, rules, differences, gotchas, todo (string arrays). Write in English; keep Vietnamese UI text and business wording verbatim in quotes. Differences never remove UI: the old web is the reference, the owner decides later (plan D8). Quick add: MCP tool record_web_note, or edit this file then run node .claude/skills/pema-web-design/scripts/web-specs.cjs.",
   "groups": {
     "WA": {
-      "logic": ["The shell is drawn once by `clinic.js › shell(content)`: `.sidebar` (menu filtered by `PemaStaff.allowed(page)`), `.topbar` (breadcrumbs, demo account picker, global search, bell, reset), then the page body."],
-      "rules": ["The account picker is a demo identity boundary, \"NOT authentication or production RBAC\" (header comment of `staff-context.js`)."],
-      "gotchas": ["Role and page are kept in `sessionStorage` (`pema-staff`); a fresh browser context always starts as `owner-tam` unless `?staff=<id>` is in the URL."]
+      "logic": [
+        "The shell is drawn once by `clinic.js › shell(content)`: `.sidebar` (menu filtered by `PemaStaff.allowed(page)`), `.topbar` (breadcrumbs, demo account picker, global search, bell, reset), then the page body."
+      ],
+      "rules": [
+        "The account picker is a demo identity boundary, \"NOT authentication or production RBAC\" (header comment of `staff-context.js`)."
+      ],
+      "gotchas": [
+        "Role and page are kept in `sessionStorage` (`pema-staff`); a fresh browser context always starts as `owner-tam` unless `?staff=<id>` is in the URL."
+      ]
     },
     "WB": {
-      "logic": ["Operations pages are drawn by `crm-ui.js` (dashboard, today) and `operations-ui.js` (schedule and the booking dialogs); calculations live in `PemaCRM` and `PemaOps` (`operations-data.js`)."],
-      "gotchas": ["The demo day is fixed: 2026-09-20 09:00 (`DAY` in `operations-data.js` and `crm-automation.js`). Dates before that day cannot be booked."]
+      "logic": [
+        "Operations pages are drawn by `crm-ui.js` (dashboard, today) and `operations-ui.js` (schedule and the booking dialogs); calculations live in `PemaCRM` and `PemaOps` (`operations-data.js`)."
+      ],
+      "gotchas": [
+        "The demo day is fixed: 2026-09-20 09:00 (`DAY` in `operations-data.js` and `crm-automation.js`). Dates before that day cannot be booked."
+      ]
     },
     "WC": {
-      "logic": ["Patient 360 is `clinic.js › patient360()`: hero, tab bar (`data-tab`), then one body per tab. `care-finance.js` injects the linked service/prescription panels under every tab except `crm` and `history`."],
-      "rules": ["Clinical actions need the `clinical` capability (owner, doctor); without it `action()` answers \"Cần tài khoản bác sĩ để thực hiện.\" and `staff-context.js › apply()` removes the controls."],
-      "gotchas": ["Opening a patient from the list is a row click (`tr[data-patient]`) or the \"Mở →\" button; the tab is kept in the module variable `tab`, so a re-render keeps it."]
+      "logic": [
+        "Patient 360 is `clinic.js › patient360()`: hero, tab bar (`data-tab`), then one body per tab. `care-finance.js` injects the linked service/prescription panels under every tab except `crm` and `history`."
+      ],
+      "rules": [
+        "Clinical actions need the `clinical` capability (owner, doctor); without it `action()` answers \"Cần tài khoản bác sĩ để thực hiện.\" and `staff-context.js › apply()` removes the controls."
+      ],
+      "gotchas": [
+        "Opening a patient from the list is a row click (`tr[data-patient]`) or the \"Mở →\" button; the tab is kept in the module variable `tab`, so a re-render keeps it."
+      ]
     },
     "WD": {
-      "logic": ["CSKH screens are drawn by `crm-ui.js` (queue, task and expected-date dialogs, protocol, activity, segments); commands live in `crm-automation.js` (`PemaCRM`)."],
-      "rules": ["\"Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH.\" (a booking after CSKH is not a returned patient until a check-in)."],
-      "gotchas": ["Every CSKH dialog uses `crm-modal` with its own `#crm-error` line; errors of the commands are shown there, not in a toast."]
+      "logic": [
+        "CSKH screens are drawn by `crm-ui.js` (queue, task and expected-date dialogs, protocol, activity, segments); commands live in `crm-automation.js` (`PemaCRM`)."
+      ],
+      "rules": [
+        "\"Khách đặt lịch chưa được tính là đã quay lại. Chỉ ghi nhận quay lại khi check-in sau CSKH.\" (a booking after CSKH is not a returned patient until a check-in)."
+      ],
+      "gotchas": [
+        "Every CSKH dialog uses `crm-modal` with its own `#crm-error` line; errors of the commands are shown there, not in a toast."
+      ]
     },
     "WE": {
-      "logic": ["Studio is `clinic.js › studio()/photos()`; resources and services are `operations-ui.js › resources()/services()` with the dialogs `block` and `service`."]
+      "logic": [
+        "Studio is `clinic.js › studio()/photos()`; resources and services are `operations-ui.js › resources()/services()` with the dialogs `block` and `service`."
+      ]
     },
     "WF": {
-      "logic": ["Cashier is `operations-ui.js › cashier()`; the quick-order dialog and the order history are `order-ui.js`; the A5 review page is `order-review/index.html` + `order-review.js`; data and rules are `order-data.js`."],
-      "rules": ["\"AI chỉ là bản nháp\" principle for orders: a draft needs the responsible doctor's approval before it is printed or shown in the patient app (\"Đơn nháp cần bác sĩ duyệt trước khi in.\")."]
+      "logic": [
+        "Cashier is `operations-ui.js › cashier()`; the quick-order dialog and the order history are `order-ui.js`; the A5 review page is `order-review/index.html` + `order-review.js`; data and rules are `order-data.js`."
+      ],
+      "rules": [
+        "\"AI chỉ là bản nháp\" principle for orders: a draft needs the responsible doctor's approval before it is printed or shown in the patient app (\"Đơn nháp cần bác sĩ duyệt trước khi in.\")."
+      ]
     },
     "WG": {
-      "logic": ["Finance PB02 is `prototype/finance/finance.js` (`PemaFinance.html()` + `mount(root)`), mounted inside the clinic shell; data comes from the Python API `finance_server.py` on 127.0.0.1:4174 with the headers `X-Pema-Role` and `X-Pema-Doctor`."],
-      "rules": ["Revenue (\"Doanh số thực hiện\") follows the completion date of the procedure; cash (\"Thực thu\") follows the receipt date; they are tracked separately.", "\"Tiền thủ thuật đã duyệt\": \"Không phải lợi nhuận phòng khám\"."],
-      "gotchas": ["The tab content refreshes every 10 s (`setInterval`) unless an input has focus or the entry form is open; a pending form is never overwritten (`dirty` flag).", "Without the API the page shows \"Chưa kết nối dữ liệu tài chính: <error>. Chạy python prototype/finance_server.py rồi thử lại.\" in `#error` (see WG9)."]
+      "logic": [
+        "Finance PB02 is `prototype/finance/finance.js` (`PemaFinance.html()` + `mount(root)`), mounted inside the clinic shell; data comes from the Python API `finance_server.py` on 127.0.0.1:4174 with the headers `X-Pema-Role` and `X-Pema-Doctor`."
+      ],
+      "rules": [
+        "Revenue (\"Doanh số thực hiện\") follows the completion date of the procedure; cash (\"Thực thu\") follows the receipt date; they are tracked separately.",
+        "\"Tiền thủ thuật đã duyệt\": \"Không phải lợi nhuận phòng khám\"."
+      ],
+      "gotchas": [
+        "The tab content refreshes every 10 s (`setInterval`) unless an input has focus or the entry form is open; a pending form is never overwritten (`dirty` flag).",
+        "Without the API the page shows \"Chưa kết nối dữ liệu tài chính: <error>. Chạy python prototype/finance_server.py rồi thử lại.\" in `#error` (see WG9)."
+      ]
     },
     "WH": {
-      "logic": ["\"Ask Pema\" is `clinic.js › ask()` (a scripted query over the demo state, no model); the guide is `guide.js` (`PemaGuide.render()` and its navigation)."]
+      "logic": [
+        "\"Ask Pema\" is `clinic.js › ask()` (a scripted query over the demo state, no model); the guide is `guide.js` (`PemaGuide.render()` and its navigation)."
+      ]
     }
   },
   "screens": {
     "WA1": {
-      "logic": ["`clinic.js › shell()` draws sidebar and topbar; `staff-context.js › picker()` draws the demo account select; `finance-bridge.js` adds the finance sync link in the topbar."],
-      "rules": ["The sidebar shows only the pages of the role (`pages` in `staff-context.js`); a section title with no visible item is removed."],
-      "differences": ["The old web shell is a left sidebar of 13 items in 3 sections; the app (A5, A6) uses a bottom navigation per role plus \"Đổi không gian làm việc\"."],
-      "gotchas": ["\"Đặt lại dữ liệu demo\" (`#reset-demo`) asks a native `confirm('Đặt lại dữ liệu demo?')`, then toasts \"Đã khôi phục dữ liệu demo\".", "The global search answers Enter only: it sets the patient search and opens \"Tìm bệnh nhân\".", "The bell button is a link to \"Theo dõi\" (`data-nav=followups`)."]
+      "logic": [
+        "`clinic.js › shell()` draws sidebar and topbar; `staff-context.js › picker()` draws the demo account select; `finance-bridge.js` adds the finance sync link in the topbar."
+      ],
+      "rules": [
+        "The sidebar shows only the pages of the role (`pages` in `staff-context.js`); a section title with no visible item is removed."
+      ],
+      "differences": [
+        "The old web shell is a left sidebar of 13 items in 3 sections; the app (A5, A6) uses a bottom navigation per role plus \"Đổi không gian làm việc\"."
+      ],
+      "gotchas": [
+        "\"Đặt lại dữ liệu demo\" (`#reset-demo`) asks a native `confirm('Đặt lại dữ liệu demo?')`, then toasts \"Đã khôi phục dữ liệu demo\".",
+        "The global search answers Enter only: it sets the patient search and opens \"Tìm bệnh nhân\".",
+        "The bell button is a link to \"Theo dõi\" (`data-nav=followups`)."
+      ]
     },
     "WA2": {
-      "logic": ["`staff-context.js › home()`: care lands on `crm`, accountant on `cashier`, everyone else on `dashboard`."],
-      "gotchas": ["Care sees 4 menu items only (Điều phối lịch, Tìm bệnh nhân, CSKH hôm nay, Hướng dẫn)."]
+      "logic": [
+        "`staff-context.js › home()`: care lands on `crm`, accountant on `cashier`, everyone else on `dashboard`."
+      ],
+      "gotchas": [
+        "Care sees 4 menu items only (Điều phối lịch, Tìm bệnh nhân, CSKH hôm nay, Hướng dẫn)."
+      ]
     },
     "WA3": {
-      "logic": ["Accountant menu: Tài chính, Thu ngân, Tìm bệnh nhân, Hướng dẫn; capabilities `billing` and `readFinance`."]
+      "logic": [
+        "Accountant menu: Tài chính, Thu ngân, Tìm bệnh nhân, Hướng dẫn; capabilities `billing` and `readFinance`."
+      ]
     },
     "WA4": {
-      "logic": ["`clinic.js › toast(msg)` removes any existing `.toast`, appends a `div.toast` to `body` and removes it after 2800 ms."],
-      "gotchas": ["The toast is outside `#app`; the snapshot adds any visible `.toast` to the tree of every screen."]
+      "logic": [
+        "`clinic.js › toast(msg)` removes any existing `.toast`, appends a `div.toast` to `body` and removes it after 2800 ms."
+      ],
+      "gotchas": [
+        "The toast is outside `#app`; the snapshot adds any visible `.toast` to the tree of every screen."
+      ]
     },
     "WB1": {
-      "logic": ["`crm-ui.js › dashboard()` (owner and care-less roles); the doctor sees `doctorHome()` instead (WB2). KPI numbers come from `PemaCRM.metrics()` and the appointments of `DAY`.", "Every KPI button is a `data-crm=\"queue\"` entry that opens \"CSKH hôm nay\" with a filter (`all`, `no_show`, `overdue`, `at_risk`, `abandoned`)."],
-      "rules": ["\"Hóa đơn, không phải thực thu\": \"Phát sinh hôm nay\" counts invoices dated today, not money received.", "Lifecycle groups (\"Khách mới\", \"Khách quay lại\", \"Đang điều trị\", \"Lâu chưa quay lại\", \"Đã quay lại sau CSKH\") open the segment dialog WD5."],
-      "differences": ["App I1 shows 3 CSKH metrics (\"Cần CSKH\", \"Quá hạn\", \"Nguy cơ mất\"); the web has 4 KPI buttons (\"Khách cần CSKH\", \"Quá ngày dự kiến\", \"Nguy cơ mất khách\", \"Liệu trình bỏ dở\") plus the panels \"Hiệu quả CSKH\" and \"Vòng đời khách hàng\" that the app does not show.", "The web page eyebrow is \"Pema · chăm sóc xuyên suốt\" and the subtitle ends with \"mốc demo 20/09/2026\"; the app shows 22/09/2026.", "App I1 puts \"Phát sinh hôm nay\" in one tile with the sentence; the web uses a metric card with the quiet button \"Hóa đơn, không phải thực thu →\"."]
+      "logic": [
+        "`crm-ui.js › dashboard()` (owner and care-less roles); the doctor sees `doctorHome()` instead (WB2). KPI numbers come from `PemaCRM.metrics()` and the appointments of `DAY`.",
+        "Every KPI button is a `data-crm=\"queue\"` entry that opens \"CSKH hôm nay\" with a filter (`all`, `no_show`, `overdue`, `at_risk`, `abandoned`)."
+      ],
+      "rules": [
+        "\"Hóa đơn, không phải thực thu\": \"Phát sinh hôm nay\" counts invoices dated today, not money received.",
+        "Lifecycle groups (\"Khách mới\", \"Khách quay lại\", \"Đang điều trị\", \"Lâu chưa quay lại\", \"Đã quay lại sau CSKH\") open the segment dialog WD5."
+      ],
+      "differences": [
+        "App I1 shows 3 CSKH metrics (\"Cần CSKH\", \"Quá hạn\", \"Nguy cơ mất\"); the web has 4 KPI buttons (\"Khách cần CSKH\", \"Quá ngày dự kiến\", \"Nguy cơ mất khách\", \"Liệu trình bỏ dở\") plus the panels \"Hiệu quả CSKH\" and \"Vòng đời khách hàng\" that the app does not show.",
+        "The web page eyebrow is \"Pema · chăm sóc xuyên suốt\" and the subtitle ends with \"mốc demo 20/09/2026\"; the app shows 22/09/2026.",
+        "App I1 puts \"Phát sinh hôm nay\" in one tile with the sentence; the web uses a metric card with the quiet button \"Hóa đơn, không phải thực thu →\"."
+      ]
     },
     "WB2": {
-      "logic": ["`crm-ui.js › doctorHome()`: title \"Không gian bác sĩ · <name>\", three KPI buttons (`doctor-today`, `doctor-patients`, `doctor-followups`), table \"Lịch khám của tôi\". Own visits only (`PemaStaff.owns`)."],
-      "rules": ["\"Không bao gồm dashboard CSKH hoặc tài chính toàn phòng khám\" (subtitle of \"Lịch khám của tôi\")."],
-      "differences": ["App B1/B2 are the doctor workspace in mobile shape; the web adds the link \"Doanh số của tôi →\" to finance."]
+      "logic": [
+        "`crm-ui.js › doctorHome()`: title \"Không gian bác sĩ · <name>\", three KPI buttons (`doctor-today`, `doctor-patients`, `doctor-followups`), table \"Lịch khám của tôi\". Own visits only (`PemaStaff.owns`)."
+      ],
+      "rules": [
+        "\"Không bao gồm dashboard CSKH hoặc tài chính toàn phòng khám\" (subtitle of \"Lịch khám của tôi\")."
+      ],
+      "differences": [
+        "App B1/B2 are the doctor workspace in mobile shape; the web adds the link \"Doanh số của tôi →\" to finance."
+      ]
     },
     "WB3": {
-      "logic": ["`crm-ui.js › today()`: reception list of the appointments of `DAY`, 25 per page, filters `todayStatus`, `todayDoctor`, `todayQuery`; the status tiles are `data-crm=\"today-status\"` buttons.", "Row buttons run `PemaCRM.reception(id, status)` (check-in `arrive`, `start`, `missed`) and toast \"Đã cập nhật hàng đợi\"."],
-      "rules": ["Status words: booked \"Chưa đến\" (also counts confirmed), arrived \"Đang chờ\", in_progress \"Đang khám/điều trị\", completed \"Hoàn tất\", cancelled \"Đã hủy\", missed \"Vắng hẹn\".", "Doctors see only their own visits and no invoice total (\"Phát sinh hóa đơn hôm nay\" is hidden for role doctor)."],
-      "differences": ["App I2 lists \"Tổng lịch\", \"Đang chờ\", \"Hoàn tất\" and a status chip row; the web has 8 reception tiles that act as filters, a doctor select, a search field and paging (\"← Trước\", \"Sau →\")."],
-      "gotchas": ["The money tile \"Phát sinh hóa đơn hôm nay\" is missing for the doctor role (WB4 and WB2 use other roles)."]
+      "logic": [
+        "`crm-ui.js › today()`: reception list of the appointments of `DAY`, 25 per page, filters `todayStatus`, `todayDoctor`, `todayQuery`; the status tiles are `data-crm=\"today-status\"` buttons.",
+        "Row buttons run `PemaCRM.reception(id, status)` (check-in `arrive`, `start`, `missed`) and toast \"Đã cập nhật hàng đợi\"."
+      ],
+      "rules": [
+        "Status words: booked \"Chưa đến\" (also counts confirmed), arrived \"Đang chờ\", in_progress \"Đang khám/điều trị\", completed \"Hoàn tất\", cancelled \"Đã hủy\", missed \"Vắng hẹn\".",
+        "Doctors see only their own visits and no invoice total (\"Phát sinh hóa đơn hôm nay\" is hidden for role doctor)."
+      ],
+      "differences": [
+        "App I2 lists \"Tổng lịch\", \"Đang chờ\", \"Hoàn tất\" and a status chip row; the web has 8 reception tiles that act as filters, a doctor select, a search field and paging (\"← Trước\", \"Sau →\")."
+      ],
+      "gotchas": [
+        "The money tile \"Phát sinh hóa đơn hôm nay\" is missing for the doctor role (WB4 and WB2 use other roles)."
+      ]
     },
     "WB4": {
-      "logic": ["Same `today()` with a search that matches nothing; the table body becomes one empty row."]
+      "logic": [
+        "Same `today()` with a search that matches nothing; the table body becomes one empty row."
+      ]
     },
     "WB5": {
-      "logic": ["`operations-ui.js › schedule()`: day board by room (half-hour `drop-slot` buttons, 30 px per slot, `positioned-booking` cards) or 7-day list; filters `ops-date`, `ops-doctor`, `ops-room`; view toggle `data-ops=\"view\"` (`day`, `week`).", "Dragging a `.booking` onto a `.drop-slot` opens the booking dialog with the new date, time and room (`ondrop` → `edit({...a, date, time, room})`); opening a card opens the details dialog."],
-      "rules": ["A doctor account has the doctor filter locked to its own doctor (`PemaStaff.apply()` disables `#ops-doctor`).", "Doctor shifts 08:00–18:00 with a break 12:00–13:00; \"Ngoài ca bác sĩ hoặc trùng giờ nghỉ 12:00–13:00.\""],
-      "differences": ["App I3/A2 show a week strip and a day list; the web board is a room-by-time grid with drag and drop, the legend of the four service colours and the side panel \"Chờ xếp lịch\"."],
-      "gotchas": ["The 4 service colours are the classes `service-S0..S3` (calendar legend and booking cards).", "Drag and drop is mouse only (`draggable=true`); keyboard users open the card and use the dialog."]
+      "logic": [
+        "`operations-ui.js › schedule()`: day board by room (half-hour `drop-slot` buttons, 60 px per half hour, `positioned-booking` cards) or 7-day list; filters `ops-date`, `ops-doctor`, `ops-room`; view toggle `data-ops=\"view\"` (`day`, `week`).",
+        "Dragging a `.booking` onto a `.drop-slot` opens the booking dialog with the new date, time and room (`ondrop` → `edit({...a, date, time, room})`); opening a card opens the details dialog."
+      ],
+      "rules": [
+        "A doctor account has the doctor filter locked to its own doctor (`PemaStaff.apply()` disables `#ops-doctor`).",
+        "Doctor shifts 08:00–18:00 with a break 12:00–13:00; \"Ngoài ca bác sĩ hoặc trùng giờ nghỉ 12:00–13:00.\""
+      ],
+      "differences": [
+        "App I3/A2 show a week strip and a day list; the web board is a room-by-time grid with drag and drop, the legend of the four service colours and the side panel \"Chờ xếp lịch\"."
+      ],
+      "gotchas": [
+        "The 4 service colours are the classes `service-S0..S3` (calendar legend and booking cards).",
+        "Drag and drop is mouse only (`draggable=true`); keyboard users open the card and use the dialog."
+      ]
     },
     "WB6": {
-      "logic": ["Same `schedule()` with `view = 'week'`: seven `week-day` columns starting at the chosen date, each with a title \"CN, 20/09\" and the day's bookings."]
+      "logic": [
+        "Same `schedule()` with `view = 'week'`: seven `week-day` columns starting at the chosen date, each with a title \"CN, 20/09\" and the day's bookings."
+      ]
     },
     "WB7": {
-      "logic": ["`operations-ui.js › edit()` with no id: title \"Đặt lịch hẹn\", form `#booking-form`, live preview line `#booking-preview` (\"<n> phút điều trị + <m> phút chuẩn bị · <price>\"), error line `#ops-error`.", "Submit calls `PemaOps.saveAppointment` and toasts \"Đã lưu lịch và cập nhật Patient 360\"; the button \"Tìm giờ trống\" runs `suggest` (tries 15-minute steps from 08:00 to 17:45)."],
-      "rules": ["\"Hãy chọn bệnh nhân, dịch vụ, bác sĩ và phòng.\"", "\"Phòng không phù hợp với dịch vụ đã chọn.\"", "\"Dịch vụ hoặc phòng đang tạm ngưng.\"", "\"Ngoài ca bác sĩ hoặc trùng giờ nghỉ 12:00–13:00.\"", "\"Trùng thời gian khóa: <lý do>\" when a room or doctor block overlaps.", "\"Trùng bệnh nhân|bác sĩ với lịch <giờ> của <tên>.\" and \"Phòng đang bận hoặc đang chuẩn bị sau lịch <giờ>.\"", "\"Chỉ xếp lịch cho bác sĩ đang đăng nhập demo.\" (doctor role).", "\"Không có giờ trống cho lựa chọn này. Hãy đổi ngày, bác sĩ hoặc phòng.\""],
-      "differences": ["App I4/F8 book with a bottom sheet and a week strip; the web is one dialog with 8 fields, the preview and \"Tìm giờ trống\"."]
+      "logic": [
+        "`operations-ui.js › edit()` with no id: title \"Đặt lịch hẹn\", form `#booking-form`, live preview line `#booking-preview` (\"<n> phút điều trị + <m> phút chuẩn bị · <price>\"), error line `#ops-error`.",
+        "Submit calls `PemaOps.saveAppointment` and toasts \"Đã lưu lịch và cập nhật Patient 360\"; the button \"Tìm giờ trống\" runs `suggest` (tries 15-minute steps from 08:00 to 17:45)."
+      ],
+      "rules": [
+        "\"Hãy chọn bệnh nhân, dịch vụ, bác sĩ và phòng.\"",
+        "\"Phòng không phù hợp với dịch vụ đã chọn.\"",
+        "\"Dịch vụ hoặc phòng đang tạm ngưng.\"",
+        "\"Ngoài ca bác sĩ hoặc trùng giờ nghỉ 12:00–13:00.\"",
+        "\"Trùng thời gian khóa: <lý do>\" when a room or doctor block overlaps.",
+        "\"Trùng bệnh nhân|bác sĩ với lịch <giờ> của <tên>.\" and \"Phòng đang bận hoặc đang chuẩn bị sau lịch <giờ>.\"",
+        "\"Chỉ xếp lịch cho bác sĩ đang đăng nhập demo.\" (doctor role).",
+        "\"Không có giờ trống cho lựa chọn này. Hãy đổi ngày, bác sĩ hoặc phòng.\""
+      ],
+      "differences": [
+        "App I4/F8 book with a bottom sheet and a week strip; the web is one dialog with 8 fields, the preview and \"Tìm giờ trống\"."
+      ],
+      "gotchas": [
+        "Every ops dialog ends with an empty `<p id=\"ops-error\" role=\"alert\">`; it has no text until a rule error is thrown, so it is not drawn in the layout."
+      ]
     },
     "WB8": {
-      "logic": ["`edit(a)` with an id: title \"Chi tiết lịch hẹn\", a status chip, buttons \"Xác nhận lịch\", \"Check-in\", \"Patient 360 →\" and the cancel section (reason required)."],
-      "rules": ["\"Cần lý do hủy cho lịch đang hoạt động.\"", "\"Không thể chuyển trạng thái lịch này.\" (only confirmed and arrived are allowed targets)."]
+      "logic": [
+        "`operations-ui.js › edit(a)` with an id: title \"Chi tiết lịch hẹn\", a status chip, the buttons \"Xác nhận lịch\" (`ops=confirm`), \"Check-in\" (`ops=arrive`), \"Patient 360 →\" (`ops=profile`), the same booking form (\"Lưu thay đổi\", \"Tìm giờ trống\") and below it \"Lý do hủy\" with \"Hủy lịch hẹn\" (`ops=cancel`)."
+      ],
+      "rules": [
+        "\"Cần lý do hủy cho lịch đang hoạt động.\"",
+        "\"Không thể chuyển trạng thái lịch này.\" (only confirmed and arrived are allowed targets)."
+      ]
     },
     "WB9": {
-      "logic": ["`data-ops=\"wait\"` on a waiting-list card opens the booking dialog with the waiting patient, service and note; the form carries `data-wait=<waitlist id>` so the entry leaves the list when saved."]
+      "logic": [
+        "`data-ops=\"wait\"` on a waiting-list card opens the booking dialog with the waiting patient, service and note; the form carries `data-wait=<waitlist id>` so the entry leaves the list when saved."
+      ]
     },
     "WC1": {
-      "logic": ["`clinic.js › patients()`: search `#patient-search` (name, code, concern, phone), filter chips `data-patient-filter` (`all`, `active`, `next`, `alerts`), table 46 rows, \"＋ Hồ sơ mới\" opens the create dialog WC3. Only patients the account owns are listed (`Staff.owns`)."],
-      "rules": ["\"Tái khám tuần này\" = next visit between 2026-09-20 and 2026-09-27; \"Đang điều trị\" = completed < total; \"Có cảnh báo\" = alerts not empty."],
-      "differences": ["App A3 is titled \"Hồ sơ người bệnh\" with 12 sample rows; the web title is \"Tìm bệnh nhân\", the count chip \"46 hồ sơ\" and 4 filter chips."],
-      "gotchas": ["Phone numbers are masked in the demo (\"09•• ••• 100\")."]
+      "logic": [
+        "`clinic.js › patients()`: search `#patient-search` (name, code, concern, phone), filter chips `data-patient-filter` (`all`, `active`, `next`, `alerts`), table 46 rows, \"＋ Hồ sơ mới\" opens the create dialog WC3. Only patients the account owns are listed (`Staff.owns`)."
+      ],
+      "rules": [
+        "\"Tái khám tuần này\" = next visit between 2026-09-20 and 2026-09-27; \"Đang điều trị\" = completed < total; \"Có cảnh báo\" = alerts not empty."
+      ],
+      "differences": [
+        "App A3 is titled \"Hồ sơ người bệnh\" with 12 sample rows; the web title is \"Tìm bệnh nhân\", the count chip \"46 hồ sơ\" and 4 filter chips."
+      ],
+      "gotchas": [
+        "Phone numbers are masked in the demo (\"09•• ••• 100\")."
+      ]
     },
     "WC2": {
-      "logic": ["Empty state of `patients()`: \"Không tìm thấy hồ sơ\", \"Thử tên, mã hồ sơ hoặc mối quan tâm khác.\" and a clear-search button."]
+      "logic": [
+        "Empty state of `patients()`: \"Không tìm thấy hồ sơ\", \"Thử tên, mã hồ sơ hoặc mối quan tâm khác.\" and a clear-search button."
+      ]
     },
     "WC3": {
-      "logic": ["`data-modal=\"patient\"` → `modalHtml('patient')`; `action('create-patient')` saves a synthetic profile and toasts \"Đã tạo hồ sơ demo\"; an empty name toasts \"Nhập tên người bệnh\"."]
+      "logic": [
+        "`data-modal=\"patient\"` → `modalHtml('patient')`; `action('create-patient')` saves a synthetic profile and toasts \"Đã tạo hồ sơ demo\"; an empty name toasts \"Nhập tên người bệnh\"."
+      ]
     },
     "WC4": {
-      "logic": ["`clinic.js › overview(p)` after `PemaCRMUI.summary(p)`; below it `care-finance.js` adds \"Dịch vụ & liệu trình\", \"Đơn thuốc\" and \"Đơn thuốc & phiếu tư vấn\".", "Hero buttons: \"AI brief\" (`data-modal=note`), \"Nhắn tin\" (`data-modal=message`), \"Ghi buổi điều trị\" (`data-tab=session`)."],
-      "rules": ["\"Chỉ đơn đã duyệt mới xuất hiện trên Patient Mobile\" (subtitle of \"Đơn thuốc\").", "\"Ảnh minh họa tổng hợp cho prototype. Ảnh lâm sàng thật cần gắn vùng chụp, tư thế, thời điểm và đồng ý sử dụng.\""],
-      "differences": ["App F1 is a vertical list of cards (care, session, next visit, tiền thủ thuật, links to tabs); the web hero, tab bar, three summary figures, journey timeline, milestone photos, AI brief, facts and linked panels are all on one wide page."],
-      "gotchas": ["The brief on this tab is the text of the AI brief dialog (WC13); \"AI chỉ là bản nháp\": the doctor must edit and approve it."]
+      "logic": [
+        "`clinic.js › overview(p)` after `PemaCRMUI.summary(p)`; below it `care-finance.js` adds \"Dịch vụ & liệu trình\", \"Đơn thuốc\" and \"Đơn thuốc & phiếu tư vấn\".",
+        "Hero buttons: \"AI brief\" (`data-modal=note`), \"Nhắn tin\" (`data-modal=message`), \"Ghi buổi điều trị\" (`data-tab=session`)."
+      ],
+      "rules": [
+        "\"Chỉ đơn đã duyệt mới xuất hiện trên Patient Mobile\" (subtitle of \"Đơn thuốc\").",
+        "\"Ảnh minh họa tổng hợp cho prototype. Ảnh lâm sàng thật cần gắn vùng chụp, tư thế, thời điểm và đồng ý sử dụng.\""
+      ],
+      "differences": [
+        "App F1 is a vertical list of cards (care, session, next visit, tiền thủ thuật, links to tabs); the web hero, tab bar, three summary figures, journey timeline, milestone photos, AI brief, facts and linked panels are all on one wide page."
+      ],
+      "gotchas": [
+        "The brief on this tab is the text of the AI brief dialog (WC13); \"AI chỉ là bản nháp\": the doctor must edit and approve it."
+      ]
     },
     "WC5": {
-      "logic": ["`PemaCRMUI.clinical(p)` (history and diagnosis form `#crm-clinical-form`) then `clinic.js › consult(p)` (note area + AI draft)."],
-      "rules": ["\"AI chỉ tạo bản nháp. Bác sĩ cần xem, sửa và xác nhận trước khi lưu vào hồ sơ.\"", "\"Bác sĩ ghi nhận, không dùng AI tự chẩn đoán\" (subtitle of \"Tiền sử & chẩn đoán\").", "\"Nhập tiền sử và nhận định/chẩn đoán do bác sĩ xác nhận.\" when saving empty.", "Draft flow: \"Tạo bản nháp ghi chú\" (toast \"Đã tạo bản nháp — hãy kiểm tra trước khi duyệt\") then \"Duyệt & lưu vào Patient 360\" (toast \"Đã duyệt và nối vào Patient 360\")."],
-      "differences": ["App J1/F2 shows the same flow in one column; the web has two columns \"Tư vấn lâm sàng\" and \"Bản nháp của Pema AI\"."]
+      "logic": [
+        "`PemaCRMUI.clinical(p)` (history and diagnosis form `#crm-clinical-form`) then `clinic.js › consult(p)` (note area + AI draft)."
+      ],
+      "rules": [
+        "\"AI chỉ tạo bản nháp. Bác sĩ cần xem, sửa và xác nhận trước khi lưu vào hồ sơ.\"",
+        "\"Bác sĩ ghi nhận, không dùng AI tự chẩn đoán\" (subtitle of \"Tiền sử & chẩn đoán\").",
+        "\"Nhập tiền sử và nhận định/chẩn đoán do bác sĩ xác nhận.\" when saving empty.",
+        "Draft flow: \"Tạo bản nháp ghi chú\" (toast \"Đã tạo bản nháp — hãy kiểm tra trước khi duyệt\") then \"Duyệt & lưu vào Patient 360\" (toast \"Đã duyệt và nối vào Patient 360\")."
+      ],
+      "differences": [
+        "App J1/F2 shows the same flow in one column; the web has two columns \"Tư vấn lâm sàng\" and \"Bản nháp của Pema AI\"."
+      ]
     },
     "WC6": {
-      "logic": ["Same tab after \"Tạo bản nháp ghi chú\": the callout title becomes \"Bản nháp đã tạo · chờ duyệt\" and the textarea `#editable-draft` and the approve button appear."],
-      "gotchas": ["An empty draft toasts \"Bản nháp không được để trống\"; an empty input toasts \"Hãy nhập vài ý chính trước\"."]
+      "logic": [
+        "Same tab after \"Tạo bản nháp ghi chú\": the callout title becomes \"Bản nháp đã tạo · chờ duyệt\" and the textarea `#editable-draft` and the approve button appear."
+      ],
+      "gotchas": [
+        "An empty draft toasts \"Bản nháp không được để trống\"; an empty input toasts \"Hãy nhập vài ý chính trước\"."
+      ]
     },
     "WC7": {
-      "logic": ["`clinic.js › plan(p)`: plan name, goal text, one list item per planned session (`Buổi n · Đã hoàn tất | Tiếp theo | Dự kiến`), side panel \"Bộ tiêu chí theo dõi\" and the question callout. \"Chỉnh sửa\" opens WC17."],
-      "differences": ["App J3 lists sessions only; the web adds the tracking criteria facts (\"Ảnh mốc\", \"Patient reported outcome\", \"Người duyệt\", \"Nhắc hẹn\")."]
+      "logic": [
+        "`clinic.js › plan(p)`: plan name, goal text, one list item per planned session (`Buổi n · Đã hoàn tất | Tiếp theo | Dự kiến`), side panel \"Bộ tiêu chí theo dõi\" and the question callout. \"Chỉnh sửa\" opens WC17."
+      ],
+      "differences": [
+        "App J3 lists sessions only; the web adds the tracking criteria facts (\"Ảnh mốc\", \"Patient reported outcome\", \"Người duyệt\", \"Nhắc hẹn\")."
+      ]
     },
     "WC8": {
-      "logic": ["`clinic.js › session(p)`: form to record a session (date, type, protocol, next date, assessment, aftercare, region, angle, photo, consent) then the list of recorded sessions; `action('save-session')` validates and toasts \"Đã lưu buổi điều trị và cập nhật hành trình\"."],
-      "rules": ["\"Hãy ghi đánh giá trước buổi\", \"Hãy nhập hướng dẫn chăm sóc sau buổi\".", "\"Ngày buổi phải hợp lệ, từ buổi trước đến ngày demo 20/09/2026.\"", "\"Kế hoạch đã đủ buổi. Hãy điều chỉnh kế hoạch trước khi thêm buổi mới.\"", "\"Gắn ảnh với buổi điều trị và đồng ý ảnh\" / \"Cần xác nhận đồng ý ảnh khi lưu ảnh mốc\".", "\"Prototype tự kiểm tra loại tệp và kích thước.\" (png, jpeg, webp)."],
-      "gotchas": ["The tab is removed for the care and accountant roles (`staff-context.js`)."]
+      "logic": [
+        "`clinic.js › session(p)`: form to record a session (date, type, protocol, next date, assessment, aftercare, region, angle, photo, consent) then the list of recorded sessions; `action('save-session')` validates and toasts \"Đã lưu buổi điều trị và cập nhật hành trình\"."
+      ],
+      "rules": [
+        "\"Hãy ghi đánh giá trước buổi\", \"Hãy nhập hướng dẫn chăm sóc sau buổi\".",
+        "\"Ngày buổi phải hợp lệ, từ buổi trước đến ngày demo 20/09/2026.\"",
+        "\"Kế hoạch đã đủ buổi. Hãy điều chỉnh kế hoạch trước khi thêm buổi mới.\"",
+        "\"Gắn ảnh với buổi điều trị và đồng ý ảnh\" / \"Cần xác nhận đồng ý ảnh khi lưu ảnh mốc\".",
+        "\"Prototype tự kiểm tra loại tệp và kích thước.\" (png, jpeg, webp)."
+      ],
+      "gotchas": [
+        "The tab is removed for the care and accountant roles (`staff-context.js`)."
+      ]
     },
     "WC9": {
-      "logic": ["`clinic.js › photos(p)`: Before / After Studio inside Patient 360; the angle select `#studio-view`, the mode button (\"Đặt cạnh nhau\" / \"So sánh trượt\") and \"＋ Thêm ảnh\" (`data-action=capture`)."],
-      "rules": ["\"Chưa kiểm định căn chỉnh ảnh; bác sĩ kiểm tra điều kiện chụp trước khi so sánh.\" (notice of the studio).", "Illustrative photos do not score efficacy: the faces are marked \"MINH HỌA TỔNG HỢP\"."]
+      "logic": [
+        "`clinic.js › photos(p)`: Before / After Studio inside Patient 360; the angle select `#studio-view`, the mode button (\"Đặt cạnh nhau\" / \"So sánh trượt\") and \"＋ Thêm ảnh\" (`data-action=capture`)."
+      ],
+      "rules": [
+        "\"Chưa kiểm định căn chỉnh ảnh; bác sĩ kiểm tra điều kiện chụp trước khi so sánh.\" (notice of the studio).",
+        "Illustrative photos do not score efficacy: the faces are marked \"MINH HỌA TỔNG HỢP\"."
+      ]
     },
     "WC10": {
-      "logic": ["`PemaCRMUI.financial(p)` (invoice table) and the `care-finance.js` plan panels."],
-      "rules": ["\"Giá trị phát sinh, tiền đã thu và dư nợ; không suy hoàn tất điều trị\" (subtitle): completed treatment is never inferred from payment.", "\"Tiền cọc còn chưa phân bổ: <số tiền>\" notice below the table."]
+      "logic": [
+        "`PemaCRMUI.financial(p)` (invoice table) and the `care-finance.js` plan panels."
+      ],
+      "rules": [
+        "\"Giá trị phát sinh, tiền đã thu và dư nợ; không suy hoàn tất điều trị\" (subtitle): completed treatment is never inferred from payment.",
+        "\"Tiền cọc còn chưa phân bổ: <số tiền>\" notice below the table."
+      ]
     },
     "WC11": {
-      "logic": ["`PemaCRMUI.patient(p)`: summary, \"Bối cảnh chăm sóc\" facts, open tasks, clinical context; buttons \"Sửa ngày dự kiến\" (WC18) and the care actions."],
-      "rules": ["\"Nếu đã có lịch thực tế, Patient 360 ưu tiên ngày lịch đó. Khuyến nghị vẫn được giữ khi hủy lịch.\""],
-      "gotchas": ["The tab is hidden for the accountant role."]
+      "logic": [
+        "`PemaCRMUI.patient(p)`: summary, \"Bối cảnh chăm sóc\" facts, open tasks, clinical context; buttons \"Sửa ngày dự kiến\" (WC18) and the care actions."
+      ],
+      "rules": [
+        "\"Nếu đã có lịch thực tế, Patient 360 ưu tiên ngày lịch đó. Khuyến nghị vẫn được giữ khi hủy lịch.\""
+      ],
+      "gotchas": [
+        "The tab is hidden for the accountant role."
+      ]
     },
     "WC12": {
-      "logic": ["`PemaCRMUI.timeline(p)`: \"Lịch sử hợp nhất\" (events, source and person), or \"Lịch sử CSKH\" when opened from the CRM tab."]
+      "logic": [
+        "`PemaCRMUI.timeline(p)`: \"Lịch sử hợp nhất\" (events, source and person), or \"Lịch sử CSKH\" when opened from the CRM tab."
+      ]
     },
     "WC13": {
-      "logic": ["`data-modal=\"note\"`: the brief is built from the events of the profile (`briefText`), the doctor edits `#brief-edit`; \"Duyệt & lưu brief\" saves it with the source events (toast \"Đã lưu brief có bác sĩ duyệt và nguồn sự kiện\"), \"Sao chép\" copies it (toast \"Đã sao chép brief\")."],
-      "rules": ["\"Nguồn: Patient 360, events đã ghi nhận, follow-up đang mở. Bác sĩ cần xác nhận trước khi dùng trong chăm sóc.\"", "\"Brief không được để trống\"."],
-      "gotchas": ["\"Không truy cập được clipboard; hãy chọn và sao chép văn bản.\" when the clipboard is blocked."]
+      "logic": [
+        "`data-modal=\"note\"`: the brief is built from the events of the profile (`briefText`), the doctor edits `#brief-edit`; \"Duyệt & lưu brief\" saves it with the source events (toast \"Đã lưu brief có bác sĩ duyệt và nguồn sự kiện\"), \"Sao chép\" copies it (toast \"Đã sao chép brief\")."
+      ],
+      "rules": [
+        "\"Nguồn: Patient 360, events đã ghi nhận, follow-up đang mở. Bác sĩ cần xác nhận trước khi dùng trong chăm sóc.\"",
+        "\"Brief không được để trống\"."
+      ],
+      "gotchas": [
+        "\"Không truy cập được clipboard; hãy chọn và sao chép văn bản.\" when the clipboard is blocked."
+      ]
     },
     "WC14": {
-      "logic": ["`data-modal=\"message\"`: write a message to the patient; sending adds an event and toasts \"Đã gửi tin nhắn\".", "Removed for care and accountant (`staff-context.js`)."],
-      "rules": ["Messages are not an emergency channel: the dialog says so in its notice (see Required text)."]
+      "logic": [
+        "`data-modal=\"message\"` (`modalHtml('message')`): textarea `#message-input` pre-filled with a draft for the patient and the button \"Gửi tin nhắn\" (`data-action=send-message`); sending adds an event to the profile and toasts \"Đã gửi tin nhắn\".",
+        "Removed for the care and accountant roles (`staff-context.js › apply()`)."
+      ],
+      "rules": [
+        "The dialog shows no emergency-channel sentence in the old web; the rule \"messages are not an emergency channel\" lives in the patient apps (see app groups E and G), not here."
+      ],
+      "differences": [
+        "Title \"Gửi cập nhật\" with the eyebrow \"Tin nhắn · <tên>\"; the Next.js target is the inbox reply box (`/inbox`)."
+      ]
     },
     "WC15": {
-      "logic": ["`data-modal=\"edit\"` (\"Thông tin cần nhớ\"): alerts (one per line) and the photo-consent checkbox; `save-facts` toasts \"Đã lưu thông tin\"."]
+      "logic": [
+        "`data-modal=\"edit\"` (\"Thông tin cần nhớ\"): alerts (one per line) and the photo-consent checkbox; `save-facts` toasts \"Đã lưu thông tin\"."
+      ]
     },
     "WC16": {
-      "logic": ["`data-modal=\"care\"` (\"Chăm sóc tại nhà\"): aftercare text `#care-edit`; `save-care` sets `aftercareSent` and toasts \"Đã gửi hướng dẫn vào patient app\"; empty text toasts \"Hãy nhập hướng dẫn\"."]
+      "logic": [
+        "`data-modal=\"care\"` (\"Chăm sóc tại nhà\"): aftercare text `#care-edit`; `save-care` sets `aftercareSent` and toasts \"Đã gửi hướng dẫn vào patient app\"; empty text toasts \"Hãy nhập hướng dẫn\"."
+      ]
     },
     "WC17": {
-      "logic": ["`modalHtml('plan-edit')`: plan name and total sessions; `save-plan` is refused with \"Tên và số buổi chưa hợp lệ\" when the name is empty, the total is below the completed sessions or above 20; success toasts \"Đã cập nhật kế hoạch và patient app\"."]
+      "logic": [
+        "`modalHtml('plan-edit')`: plan name and total sessions; `save-plan` is refused with \"Tên và số buổi chưa hợp lệ\" when the name is empty, the total is below the completed sessions or above 20; success toasts \"Đã cập nhật kế hoạch và patient app\"."
+      ]
     },
     "WC18": {
-      "logic": ["`crm-ui.js › handle('expected')`: `PemaCRM.expected(patientId, {date, reason, source})`; the source list excludes `appointment`."],
-      "rules": ["\"Nhập ngày hợp lệ, lý do và nguồn khuyến nghị.\"", "\"Nếu đã có lịch thực tế, Patient 360 ưu tiên ngày lịch đó. Khuyến nghị vẫn được giữ khi hủy lịch.\""]
+      "logic": [
+        "`crm-ui.js › handle('expected')`: `PemaCRM.expected(patientId, {date, reason, source})`; the source list excludes `appointment`."
+      ],
+      "rules": [
+        "\"Nhập ngày hợp lệ, lý do và nguồn khuyến nghị.\"",
+        "\"Nếu đã có lịch thực tế, Patient 360 ưu tiên ngày lịch đó. Khuyến nghị vẫn được giữ khi hủy lịch.\""
+      ]
     },
     "WC19": {
-      "logic": ["`care-finance.js` dialog `linked-modal-card`: service select (price per session), sessions 1–20, discount; the price is fixed on the plan at save time."],
-      "rules": ["\"Giá đã chốt được lưu trên hồ sơ; thay đổi danh mục sau này không làm đổi liệu trình đã đăng ký.\""],
-      "gotchas": ["The close button of this dialog is a bare \"×\" without an aria-label, unlike the other dialogs (\"Đóng hộp thoại\")."]
+      "logic": [
+        "`care-finance.js` dialog `linked-modal-card`: service select (price per session), sessions 1–20, discount; the price is fixed on the plan at save time."
+      ],
+      "rules": [
+        "\"Giá đã chốt được lưu trên hồ sơ; thay đổi danh mục sau này không làm đổi liệu trình đã đăng ký.\""
+      ],
+      "gotchas": [
+        "The close button of this dialog is a bare \"×\" without an aria-label, unlike the other dialogs (\"Đóng hộp thoại\")."
+      ]
     },
     "WC20": {
-      "logic": ["A profile created in WC3 opens straight on this tab with empty lists, zero sessions and no plan: the screen of a patient without history."]
+      "logic": [
+        "A profile created in WC3 opens straight on this tab with empty lists, zero sessions and no plan: the screen of a patient without history."
+      ]
     },
     "WC21": {
-      "logic": ["`PemaCRMUI.timeline(p)` with no events: the empty text \"Chưa có hoạt động CSKH được ghi nhận.\""]
+      "logic": [
+        "`PemaCRMUI.timeline(p)` with no events: the empty text \"Chưa có hoạt động CSKH được ghi nhận.\""
+      ]
     },
     "WD1": {
-      "logic": ["`crm-ui.js › queue()` (doctors get `doctorHome()` instead): 4 KPI buttons, left panel \"Nhóm công việc\" (one button per automation rule with its count), right panel \"Danh sách cần chăm sóc\" with search `#crm-search`, owner select `#crm-owner-filter`, mode select `#crm-mode` (due today or all dates), table 12 rows per page.", "\"Xử lý →\" opens the task dialog (`handle('task')`); \"Xem protocol\" opens WD3; the KPI \"Đã hoàn tất\" and \"Đặt lịch sau CSKH\" open WD4."],
-      "rules": ["\"Theo dõi lâm sàng và CSKH là hai hàng đợi riêng.\" (notice of the groups panel).", "\"Việc đã được xử lý hoặc không còn hợp lệ. Tải lại danh sách.\"", "\"Chọn kênh, kết quả, người phụ trách và nhập ghi chú.\" (task form).", "Booking after a call: the outcome \"Đặt lịch\" turns the submit button into \"Tiếp tục → Đặt lịch\" and opens the booking dialog; the task is closed only when the appointment is saved (\"Cần lưu lịch hẹn hợp lệ trước khi hoàn tất việc.\")."],
-      "differences": ["App C1-C4 show 3 buckets and a short list; the web adds 4 KPI buttons, the rule group list, a mode select, an owner select, paging and the protocol/activity dialogs."],
-      "gotchas": ["The owner filter starts as the account's own care owner (\"CSKH Mai Anh\"), so the care account sees only its tasks; the owner account sees all."]
+      "logic": [
+        "`crm-ui.js › queue()` (doctors get `doctorHome()` instead): 4 KPI buttons, left panel \"Nhóm công việc\" (one button per automation rule with its count), right panel \"Danh sách cần chăm sóc\" with search `#crm-search`, owner select `#crm-owner-filter`, mode select `#crm-mode` (due today or all dates), table 12 rows per page.",
+        "\"Xử lý →\" opens the task dialog (`handle('task')`); \"Xem protocol\" opens WD3; the KPI \"Đã hoàn tất\" and \"Đặt lịch sau CSKH\" open WD4."
+      ],
+      "rules": [
+        "\"Theo dõi lâm sàng và CSKH là hai hàng đợi riêng.\" (notice of the groups panel).",
+        "\"Việc đã được xử lý hoặc không còn hợp lệ. Tải lại danh sách.\"",
+        "\"Chọn kênh, kết quả, người phụ trách và nhập ghi chú.\" (task form).",
+        "Booking after a call: the outcome \"Đặt lịch\" turns the submit button into \"Tiếp tục → Đặt lịch\" and opens the booking dialog; the task is closed only when the appointment is saved (\"Cần lưu lịch hẹn hợp lệ trước khi hoàn tất việc.\")."
+      ],
+      "differences": [
+        "App C1-C4 show 3 buckets and a short list; the web adds 4 KPI buttons, the rule group list, a mode select, an owner select, paging and the protocol/activity dialogs."
+      ],
+      "gotchas": [
+        "The owner filter starts as the account's own care owner (\"CSKH Mai Anh\"), so the care account sees only its tasks; the owner account sees all."
+      ]
     },
     "WD2": {
-      "logic": ["`crm-ui.js › task(id)`: context block, native-looking form `#crm-task-form` (channel, outcome, note, next date and type, owner, priority), error line `#crm-error`."],
-      "rules": ["\"Ghi nhận cuộc gọi/tin nhắn mô phỏng. Không gửi Zalo/SMS hoặc thực hiện cuộc gọi thật.\" (no real message is sent).", "\"Cần ngày giờ gọi lại.\" and \"Bước tiếp theo phải sau 09:00 ngày demo, đúng ngày giờ.\" for the callback outcome.", "\"Tài khoản bác sĩ chỉ xử lý review D+7 của hồ sơ phụ trách.\"", "Success toasts \"Đã lưu kết quả và cập nhật hàng đợi\"."],
-      "differences": ["App C6 \"Chăm sóc khách hàng\" is a full screen; the web is a dialog."]
+      "logic": [
+        "`crm-ui.js › task(id)`: context block, native-looking form `#crm-task-form` (channel, outcome, note, next date and type, owner, priority), error line `#crm-error`."
+      ],
+      "rules": [
+        "\"Ghi nhận cuộc gọi/tin nhắn mô phỏng. Không gửi Zalo/SMS hoặc thực hiện cuộc gọi thật.\" (no real message is sent).",
+        "\"Cần ngày giờ gọi lại.\" and \"Bước tiếp theo phải sau 09:00 ngày demo, đúng ngày giờ.\" for the callback outcome.",
+        "\"Tài khoản bác sĩ chỉ xử lý review D+7 của hồ sơ phụ trách.\"",
+        "Success toasts \"Đã lưu kết quả và cập nhật hàng đợi\"."
+      ],
+      "differences": [
+        "App C6 \"Chăm sóc khách hàng\" is a full screen; the web is a dialog."
+      ]
     },
     "WD3": {
-      "logic": ["`handle('protocol')`: sample protocol \"Hoàn tất Laser CO2 → D+1 hỏi tình trạng → D+3 yêu cầu ảnh → D+7 bác sĩ review → D+30 dự kiến tái khám.\" and one article per rule of `crmAutomationRules`."],
-      "rules": ["\"Ngưỡng và nội dung là mẫu cần chủ phòng khám duyệt trước pilot. Không tự gửi tin hoặc tự duyệt y khoa.\""]
+      "logic": [
+        "`handle('protocol')`: sample protocol \"Hoàn tất Laser CO2 → D+1 hỏi tình trạng → D+3 yêu cầu ảnh → D+7 bác sĩ review → D+30 dự kiến tái khám.\" and one article per rule of `crmAutomationRules`."
+      ],
+      "rules": [
+        "\"Ngưỡng và nội dung là mẫu cần chủ phòng khám duyệt trước pilot. Không tự gửi tin hoặc tự duyệt y khoa.\""
+      ]
     },
     "WD4": {
-      "logic": ["`handle('activity')`: the saved CSKH results (patient, outcome, note, actor, time, related appointment); empty text \"Chưa có kết quả. Bắt đầu từ CSKH hôm nay.\""]
+      "logic": [
+        "`handle('activity')`: the saved CSKH results (patient, outcome, note, actor, time, related appointment); empty text \"Chưa có kết quả. Bắt đầu từ CSKH hôm nay.\""
+      ]
     },
     "WD5": {
-      "logic": ["`handle('segment')`: dialog titled with the lifecycle stage label and one row per patient of the stage with \"Mở hồ sơ\" (opens the CRM tab); empty text \"Chưa có khách trong nhóm.\""]
+      "logic": [
+        "`handle('segment')`: dialog titled with the lifecycle stage label and one row per patient of the stage with \"Mở hồ sơ\" (opens the CRM tab); empty text \"Chưa có khách trong nhóm.\""
+      ]
     },
     "WD6": {
-      "logic": ["`clinic.js › followups()`: title \"Follow-up Inbox\" (the menu says \"Theo dõi\"), three metrics, filter chips (`data-followup-filter`: all, image, urgent, overdue), cards with \"Mở\" and \"✓ Xử lý\" (both `view-followup`)."],
-      "rules": ["Priority classes: `urgent` and `review` need a doctor; `missing` and `overdue` are forgotten milestones.", "\"Inbox đã sạch. Không có follow-up đang mở.\" appears when nothing is open."],
-      "differences": ["App I6/A4 are titled \"Theo dõi\" with the subtitle \"Ảnh, triệu chứng và mốc bị bỏ sót\"; the web title is \"Follow-up Inbox\" and the third metric is \"Mốc bị bỏ sót\" (app: \"Bỏ sót\")."]
+      "logic": [
+        "`clinic.js › followups()`: title \"Follow-up Inbox\" (the menu says \"Theo dõi\"), three metrics, filter chips (`data-followup-filter`: all, image, urgent, overdue), cards with \"Mở\" and \"✓ Xử lý\" (both `view-followup`)."
+      ],
+      "rules": [
+        "Priority classes: `urgent` and `review` need a doctor; `missing` and `overdue` are forgotten milestones.",
+        "\"Inbox đã sạch. Không có follow-up đang mở.\" appears when nothing is open."
+      ],
+      "differences": [
+        "App I6/A4 are titled \"Theo dõi\" with the subtitle \"Ảnh, triệu chứng và mốc bị bỏ sót\"; the web title is \"Follow-up Inbox\" and the third metric is \"Mốc bị bỏ sót\" (app: \"Bỏ sót\")."
+      ]
     },
     "WD7": {
-      "logic": ["`action('view-followup')`: dialog with the symptom, the patient's photo, a reply textarea `#review-reply` (pre-filled for urgent items) and the resolve button; success toasts \"Đã xử lý, gửi phản hồi và cập nhật Patient 360\" or \"Đã gửi phản hồi và đóng mục theo dõi\"."],
-      "rules": ["\"Ảnh / phản hồi chưa duyệt\" eyebrow: the image is unreviewed; the reply is edited by the doctor (\"Phản hồi sau khi xem · bác sĩ cần chỉnh sửa\"); \"Hãy nhập phản hồi\" when empty."]
+      "logic": [
+        "`action('view-followup')`: dialog with the symptom, the patient's photo, a reply textarea `#review-reply` (pre-filled for urgent items) and the resolve button; success toasts \"Đã xử lý, gửi phản hồi và cập nhật Patient 360\" or \"Đã gửi phản hồi và đóng mục theo dõi\"."
+      ],
+      "rules": [
+        "\"Ảnh / phản hồi chưa duyệt\" eyebrow: the image is unreviewed; the reply is edited by the doctor (\"Phản hồi sau khi xem · bác sĩ cần chỉnh sửa\"); \"Hãy nhập phản hồi\" when empty."
+      ]
     },
     "WD8": {
-      "logic": ["`queue()` with a filter or search that leaves no row: the table shows its empty row."]
+      "logic": [
+        "`queue()` with a search that matches nothing: the table keeps its head and shows one empty row \"Không có việc phù hợp. Thử nhóm khác hoặc xem các việc đã hẹn lại.\"; the pager reads \"0 việc · Trang 1/1\"."
+      ]
     },
     "WE1": {
-      "logic": ["`clinic.js › studio()` = page head + `photos(p)` for the selected patient (`Pema.patient()`)."],
-      "rules": ["\"Chưa kiểm định căn chỉnh ảnh; bác sĩ kiểm tra điều kiện chụp trước khi so sánh.\""],
-      "differences": ["App I7 adds the sentence \"Không suy ra hiệu quả y khoa từ ảnh minh họa.\" and a metadata line; the web shows the alignment sentence only."]
+      "logic": [
+        "`clinic.js › studio()` = page head + `photos(p)` for the selected patient (`Pema.patient()`)."
+      ],
+      "rules": [
+        "\"Chưa kiểm định căn chỉnh ảnh; bác sĩ kiểm tra điều kiện chụp trước khi so sánh.\""
+      ],
+      "differences": [
+        "App I7 adds the sentence \"Không suy ra hiệu quả y khoa từ ảnh minh họa.\" and a metadata line; the web shows the alignment sentence only."
+      ]
     },
     "WE2": {
-      "logic": ["`studioMode = 'slider'`: one image with a clip-path overlay and a range input; the chip \"Trước\" marks the clipped half."]
+      "logic": [
+        "`studioMode = 'slider'` (button \"So sánh trượt\"): one image with a clip-path overlay of the \"before\" image, a zoom range `#studio-zoom` and a position range `#comparison-slider`; the chip \"Trước ← → Sau\" labels the two halves."
+      ]
     },
     "WE3": {
-      "logic": ["`operations-ui.js › resources()`: doctor cards (shift, break, load for the chosen day), room cards with `room-track`, blocked intervals with \"Gỡ khóa\", \"＋ Khóa phòng\" opens WE4, \"Xem lịch bác sĩ\" jumps to the schedule filtered by that doctor."],
-      "rules": ["\"Ca làm việc và khoảng khóa được kiểm tra khi đặt hoặc dời lịch.\" (subtitle)."],
-      "differences": ["App F14 \"Nguồn lực phòng khám\" lists doctors and one blocked room line; the sentence \"Khóa phòng phức tạp duyệt ở web.\" says complex blocks stay on the web."]
+      "logic": [
+        "`operations-ui.js › resources()`: doctor cards (shift, break, load for the chosen day), room cards with `room-track`, blocked intervals with \"Gỡ khóa\", \"＋ Khóa phòng\" opens WE4, \"Xem lịch bác sĩ\" jumps to the schedule filtered by that doctor."
+      ],
+      "rules": [
+        "\"Ca làm việc và khoảng khóa được kiểm tra khi đặt hoặc dời lịch.\" (subtitle)."
+      ],
+      "differences": [
+        "App F14 \"Nguồn lực phòng khám\" lists doctors and one blocked room line; the sentence \"Khóa phòng phức tạp duyệt ở web.\" says complex blocks stay on the web."
+      ]
     },
     "WE4": {
-      "logic": ["`block()` command, capability `config` (owner only); fields room, date, start, end, reason."],
-      "rules": ["Blocks live between 08:00 and 18:00 on a valid date with a reason; overlapping bookings are refused by the booking rules of WB7."]
+      "logic": [
+        "`block()` command, capability `config` (owner only); fields room, date, start, end, reason."
+      ],
+      "rules": [
+        "Blocks live between 08:00 and 18:00 on a valid date with a reason; overlapping bookings are refused by the booking rules of WB7."
+      ]
     },
     "WE5": {
-      "logic": ["`operations-ui.js › services()`: service cards (price, duration, buffer, rooms, active) with \"Chỉnh dịch vụ\"."],
-      "rules": ["\"Giá và thời lượng dùng cho lịch mới. Lịch đã đặt giữ giá và thời lượng tại lúc đặt.\""],
-      "differences": ["App F13 shows the same four services read-only with \"300.000 ₫ · 30 phút\"; the web can edit them (owner)."]
+      "logic": [
+        "`operations-ui.js › services()`: service cards (price, duration, buffer, rooms, active) with \"Chỉnh dịch vụ\"."
+      ],
+      "rules": [
+        "\"Giá và thời lượng dùng cho lịch mới. Lịch đã đặt giữ giá và thời lượng tại lúc đặt.\""
+      ],
+      "differences": [
+        "App F13 shows the same four services read-only with \"300.000 ₫ · 30 phút\"; the web can edit them (owner)."
+      ]
     },
     "WE6": {
-      "logic": ["`updateService(id, input)`, capability `config`: name, price, duration 15–180, buffer, active flag."]
+      "logic": [
+        "`updateService(id, input)`, capability `config`: name, price, duration 15–180, buffer, active flag."
+      ]
     },
     "WF1": {
-      "logic": ["`operations-ui.js › cashier()`: 4 stat tiles, the banner \"Lên đơn theo mẫu PEMA\", the invoice list (filters `invoice-filter` all, due, paid; 12 per page; \"Thu tiền\" per row) and the order history from `order-ui.js › history`."],
-      "rules": ["\"Thuốc vào Đơn thuốc; mỹ phẩm, TPCN và loại khác vào Phiếu tư vấn. Bản in A5 dọc.\"", "\"Không thu trùng\": the remaining amount is amount minus received; paying twice is refused by `pay()`."],
-      "differences": ["App I10/F11/D1 show 3 tiles and a short list; the web adds the product catalog tile (\"Catalog sản phẩm\"), the quick-order banner and the order history."]
+      "logic": [
+        "`operations-ui.js › cashier()`: 4 stat tiles, the banner \"Lên đơn theo mẫu PEMA\", the invoice list (filters `invoice-filter` all, due, paid; 12 per page; \"Thu tiền\" per row) and the order history from `order-ui.js › history`."
+      ],
+      "rules": [
+        "\"Thuốc vào Đơn thuốc; mỹ phẩm, TPCN và loại khác vào Phiếu tư vấn. Bản in A5 dọc.\"",
+        "\"Không thu trùng\": the remaining amount is amount minus received; paying twice is refused by `pay()`."
+      ],
+      "differences": [
+        "App I10/F11/D1 show 3 tiles and a short list; the web adds the product catalog tile (\"Catalog sản phẩm\"), the quick-order banner and the order history."
+      ]
     },
     "WF2": {
-      "logic": ["`handle('pay')` dialog: amount, method; `PemaOps.pay()` needs capability `billing`."]
+      "logic": [
+        "`handle('pay')` dialog: amount, method; `PemaOps.pay()` needs capability `billing`."
+      ]
     },
     "WF3": {
-      "logic": ["`order-ui.js › open()`: quick-order dialog. Product search over the catalog (`product-catalog.js`, 115 products), cart `quick-cart`, a usage field per line, total, general note; saving creates a draft and opens the A5 review page (toast \"Đã lưu nháp. Kiểm tra hai phiếu trước khi duyệt.\")."],
-      "rules": ["\"Chọn ít nhất một sản phẩm.\" and \"Chọn bác sĩ trong danh sách.\"", "\"Sản phẩm chưa có loại trong Excel cần được phân loại. “Không in” chỉ loại khỏi phiếu, vẫn tính trong hóa đơn. Đơn nháp chưa xuất hiện trên app.\""],
-      "gotchas": ["The doctor cannot approve a line without its usage text (\"Cách dùng\"); the reach steps of the inventory fill it."]
+      "logic": [
+        "`order-ui.js › open()`: quick-order dialog. Product search over the catalog (`product-catalog.js`, 115 products), cart `quick-cart`, a usage field per line, total, general note; saving creates a draft and opens the A5 review page (toast \"Đã lưu nháp. Kiểm tra hai phiếu trước khi duyệt.\")."
+      ],
+      "rules": [
+        "\"Chọn ít nhất một sản phẩm.\" and \"Chọn bác sĩ trong danh sách.\"",
+        "\"Sản phẩm chưa có loại trong Excel cần được phân loại. “Không in” chỉ loại khỏi phiếu, vẫn tính trong hóa đơn. Đơn nháp chưa xuất hiện trên app.\""
+      ],
+      "gotchas": [
+        "The doctor cannot approve a line without its usage text (\"Cách dùng\"); the reach steps of the inventory fill it."
+      ]
     },
     "WF5": {
-      "logic": ["`order-review/index.html`: opens in a new tab with `?patient=<id>&order=<id>`; `order-review.js` renders the sheets from `PemaOps.orderPrintData`."],
-      "rules": ["\"BẢN NHÁP — CHỜ BÁC SĨ DUYỆT\" is printed on every draft sheet.", "\"Đơn nháp cần bác sĩ duyệt trước khi in.\": the print buttons stay disabled until the order is approved and its snapshot is valid."],
-      "differences": ["App F6/F7 show the A5 slip as a mobile preview; the web page is a two-column review (prescription and consultation sheets side by side) with a toolbar."]
+      "logic": [
+        "`order-review/index.html`: opens in a new tab with `?patient=<id>&order=<id>`; `order-review.js` renders the sheets from `PemaOps.orderPrintData`."
+      ],
+      "rules": [
+        "\"BẢN NHÁP — CHỜ BÁC SĨ DUYỆT\" is printed on every draft sheet.",
+        "\"Đơn nháp cần bác sĩ duyệt trước khi in.\": the print buttons stay disabled until the order is approved and its snapshot is valid."
+      ],
+      "differences": [
+        "App F6/F7 show the A5 slip as a mobile preview; the web page is a two-column review (prescription and consultation sheets side by side) with a toolbar."
+      ]
     },
     "WF6": {
-      "logic": ["`o.status === 'approved'`: the draft mark is gone, the status line reads \"Đã duyệt bởi <bác sĩ>\" and the print buttons are enabled (`body[data-approved=true]`)."]
+      "logic": [
+        "`o.status === 'approved'`: the draft mark is gone, the status line reads \"Đã duyệt bởi <bác sĩ>\" and the print buttons are enabled (`body[data-approved=true]`)."
+      ]
     },
     "WF7": {
-      "logic": ["`current.unresolved`: products with no class are listed in a warning paragraph \"Cần phân loại <n> sản phẩm: …\" and cannot be printed."]
+      "logic": [
+        "`current.unresolved`: products with no class are listed in a warning paragraph \"Cần phân loại <n> sản phẩm: …\" and cannot be printed."
+      ]
     },
     "WF8": {
-      "logic": ["Missing patient or order id: `throw Error('Thiếu mã bệnh nhân hoặc mã đơn.')` shown in the page."]
+      "logic": [
+        "Missing patient or order id in the URL: `refresh()` throws `Error('Thiếu mã bệnh nhân hoặc mã đơn.')` and the page shows it in a status paragraph; the print buttons stay disabled."
+      ]
     },
     "WF9": {
-      "logic": ["\"Sửa nháp\" in the order history reopens the quick-order dialog with the draft lines (`PemaOrderUI.open(host, patientId, orderId)`)."],
-      "rules": ["\"Đơn đã thu tiền hoặc thiếu hóa đơn; không thể sửa.\"", "\"Đơn cũ cần mở Sửa nháp để đối chiếu lại catalog trước khi duyệt.\""]
+      "logic": [
+        "\"Sửa nháp\" in the order history reopens the quick-order dialog with the draft lines (`PemaOrderUI.open(host, patientId, orderId)`)."
+      ],
+      "rules": [
+        "\"Đơn đã thu tiền hoặc thiếu hóa đơn; không thể sửa.\"",
+        "\"Đơn cũ cần mở Sửa nháp để đối chiếu lại catalog trước khi duyệt.\""
+      ]
     },
     "WF10": {
-      "logic": ["Product search with no match: the list shows the not-found text of the catalog panel."]
+      "logic": [
+        "Product search with no match: the list column shows the empty state \"Không tìm thấy sản phẩm phù hợp.\"; the cart keeps \"Chọn sản phẩm ở danh sách.\"."
+      ]
     },
     "WG1": {
-      "logic": ["`finance.js › overview()`: hero with the period status badge, 4 metrics, \"Đóng góp của đội ngũ\" (per doctor revenue bar) and \"Việc cần đối soát\".", "The role header is derived from the staff account: owner or doctor tab set; the doctor sees only \"Tổng quan\" and \"Tiền thủ thuật\" (WG6, WG7)."],
-      "rules": ["\"Tỷ lệ lưu theo từng lượt. Đổi chính sách không tính lại lịch sử. Khoản theo thực thu được đóng băng khi chốt kỳ.\""],
-      "differences": ["App H1 shows 186.400.000 ₫ sample figures and a short text; the web page holds the team contribution bars and the reconciliation panel."]
+      "logic": [
+        "`finance.js › overview()`: hero with the period status badge, 4 metrics, \"Đóng góp của đội ngũ\" (per doctor revenue bar) and \"Việc cần đối soát\".",
+        "The role header is derived from the staff account: owner or doctor tab set; the doctor sees only \"Tổng quan\" and \"Tiền thủ thuật\" (WG6, WG7)."
+      ],
+      "rules": [
+        "\"Tỷ lệ lưu theo từng lượt. Đổi chính sách không tính lại lịch sử. Khoản theo thực thu được đóng băng khi chốt kỳ.\""
+      ],
+      "differences": [
+        "App H1 shows 186.400.000 ₫ sample figures and a short text; the web page holds the team contribution bars and the reconciliation panel."
+      ]
     },
     "WG2": {
-      "logic": ["`finance.js › work()` + `table(rows)`: the table of procedure entries with \"Duyệt\" and \"Hủy\" per pending row, \"Xuất CSV cho Excel\", \"Chốt tháng đã kết thúc\" (period open) or \"Xác nhận đã chi\" (period closed)."],
-      "rules": ["Void asks a native `prompt('Lý do hủy lượt chưa thu tiền')`; close asks `confirm('Chốt số liệu tháng <tháng>? Các lượt trong kỳ sẽ bị khóa.')`; paid asks `prompt('Mã chứng từ chi')`.", "\"Chưa có lượt thủ thuật trong kỳ này.\" when the table is empty."],
-      "gotchas": ["The CSV export is a download (`Pema-tien-thu-thuat-<tháng>.csv`), not a page."]
+      "logic": [
+        "`finance.js › work()` + `table(rows)`: the table of procedure entries with \"Duyệt\" and \"Hủy\" per pending row, \"Xuất CSV cho Excel\", \"Chốt tháng đã kết thúc\" (period open) or \"Xác nhận đã chi\" (period closed)."
+      ],
+      "rules": [
+        "Void asks a native `prompt('Lý do hủy lượt chưa thu tiền')`; close asks `confirm('Chốt số liệu tháng <tháng>? Các lượt trong kỳ sẽ bị khóa.')`; paid asks `prompt('Mã chứng từ chi')`.",
+        "\"Chưa có lượt thủ thuật trong kỳ này.\" when the table is empty."
+      ],
+      "gotchas": [
+        "The CSV export is a download (`Pema-tien-thu-thuat-<tháng>.csv`), not a page."
+      ]
     },
     "WG3": {
-      "logic": ["`entryForm()`: the `<details>` block \"+ Ghi nhận lượt thủ thuật đã hoàn tất\" opened: patient, procedure, date (max today), list price, discount, invoice link, note and up to two people with share and rate."],
-      "rules": ["\"Tổng tỷ trọng doanh số 100%. Tỷ lệ tiền của mỗi người tính trực tiếp trên cơ sở chính sách; tổng không quá 100%.\""],
-      "gotchas": ["The block is collapsed by default: its fields exist in the DOM but are not visible until the summary is clicked, and the auto refresh pauses while it is open."]
+      "logic": [
+        "`entryForm()`: the `<details>` block \"+ Ghi nhận lượt thủ thuật đã hoàn tất\" opened: patient, procedure, date (max today), list price, discount, invoice link, note and up to two people with share and rate."
+      ],
+      "rules": [
+        "\"Tổng tỷ trọng doanh số 100%. Tỷ lệ tiền của mỗi người tính trực tiếp trên cơ sở chính sách; tổng không quá 100%.\""
+      ],
+      "gotchas": [
+        "The block is collapsed by default: its fields exist in the DOM but are not visible until the summary is clicked, and the auto refresh pauses while it is open."
+      ]
     },
     "WG4": {
-      "logic": ["`finance.js › rates()`: one form per procedure (basis select, rate %, \"Lưu tỷ lệ\"); `command('rate')` stores the rate in hundredths."],
-      "rules": ["\"Áp dụng cho lượt tạo sau khi lưu. Người phối hợp có thể được kế toán phân bổ riêng tại lượt thực hiện.\"", "Doctors see \"Bác sĩ xem tỷ lệ trên các lượt của mình; chính sách chung thuộc kế toán.\" instead of the forms."]
+      "logic": [
+        "`finance.js › rates()`: one form per procedure (basis select, rate %, \"Lưu tỷ lệ\"); `command('rate')` stores the rate in hundredths."
+      ],
+      "rules": [
+        "\"Áp dụng cho lượt tạo sau khi lưu. Người phối hợp có thể được kế toán phân bổ riêng tại lượt thực hiện.\"",
+        "Doctors see \"Bác sĩ xem tỷ lệ trên các lượt của mình; chính sách chung thuộc kế toán.\" instead of the forms."
+      ]
     },
     "WG5": {
-      "logic": ["`finance.js › receipts()`: \"Thu tiền khách hàng\" form (invoice, amount, method; idempotency key `paymentKey`), the list of payments of the period and \"Thông báo của chủ phòng khám\"."],
-      "rules": ["\"Phiếu thu mới đồng bộ với app khi đang mở. Hóa đơn web cũ thu tại Thu ngân Clinic; không thu lại ở đây.\"", "Doctors: \"Tài khoản bác sĩ không xem thu tiền toàn phòng khám.\""]
+      "logic": [
+        "`finance.js › receipts()`: \"Thu tiền khách hàng\" form (invoice, amount, method; idempotency key `paymentKey`), the list of payments of the period and \"Thông báo của chủ phòng khám\"."
+      ],
+      "rules": [
+        "\"Phiếu thu mới đồng bộ với app khi đang mở. Hóa đơn web cũ thu tại Thu ngân Clinic; không thu lại ở đây.\"",
+        "Doctors: \"Tài khoản bác sĩ không xem thu tiền toàn phòng khám.\""
+      ]
     },
     "WG6": {
-      "logic": ["`finance.js › overview()` with `state.role = 'doctor'`: title \"Doanh số của tôi\", hero \"Công việc được ghi nhận, thu nhập rõ ràng\", metrics \"Doanh số của tôi\", \"Tiền chờ duyệt\", \"Tiền thủ thuật đã duyệt\"."]
+      "logic": [
+        "`finance.js › overview()` with `state.role = 'doctor'`: title \"Doanh số của tôi\", hero \"Công việc được ghi nhận, thu nhập rõ ràng\", metrics \"Doanh số của tôi\", \"Tiền chờ duyệt\", \"Tiền thủ thuật đã duyệt\"."
+      ]
     },
     "WG7": {
-      "logic": ["`work()` for the doctor: own rows only, no entry form, no approve, void, close or export commands except the export button."]
+      "logic": [
+        "`work()` for the doctor: own rows only, no entry form, no approve, void, close or export commands except the export button."
+      ]
     },
     "WG8": {
-      "logic": ["Accountant role header \"KẾ TOÁN • ĐỐI SOÁT\"; sees overview, work, rates and receipts."],
-      "differences": ["App D1 \"Đối soát & thu ngân\" is the accountant home with 3 tiles; the web lands the accountant on \"Thu ngân\" (WF1) and reaches finance from the menu."]
+      "logic": [
+        "Accountant role header \"KẾ TOÁN • ĐỐI SOÁT\"; sees overview, work, rates and receipts."
+      ],
+      "differences": [
+        "App D1 \"Đối soát & thu ngân\" is the accountant home with 3 tiles; the web lands the accountant on \"Thu ngân\" (WF1) and reaches finance from the menu."
+      ]
     },
     "WG9": {
-      "logic": ["The finance API is blocked: `load()` writes the error sentence into `#error`; the content area keeps \"Đang tải dữ liệu…\"."],
-      "rules": ["\"Chưa kết nối dữ liệu tài chính: <lỗi>. Chạy python prototype/finance_server.py rồi thử lại.\""],
-      "gotchas": ["The topbar link of `finance-bridge.js` shows \"Tài chính chờ kết nối · thử lại\" in this state."]
+      "logic": [
+        "The finance API is blocked: `load()` writes the error sentence into `#error`; the content area keeps \"Đang tải dữ liệu…\"."
+      ],
+      "rules": [
+        "\"Chưa kết nối dữ liệu tài chính: <lỗi>. Chạy python prototype/finance_server.py rồi thử lại.\""
+      ],
+      "gotchas": [
+        "The topbar link of `finance-bridge.js` shows \"Tài chính chờ kết nối · thử lại\" in this state."
+      ]
     },
     "WH1": {
-      "logic": ["`clinic.js › ask()`: input `#ask-input`, button \"Hỏi\" (`data-action=ask`), three sample chips (`data-question`), the result card `#ask-result`; \"Gợi ý câu hỏi\" cycles the samples. Empty input toasts \"Nhập câu hỏi\"."],
-      "rules": ["\"Bộ truy vấn mô phỏng trên 46 hồ sơ tổng hợp · chưa tích hợp mô hình AI.\"", "\"Pema hiển thị nguồn dữ liệu và câu trả lời có thể kiểm tra lại.\"", "Every answer shows how it was computed and the source records."],
-      "differences": ["App I12/F15 show \"Ask Pema\" with \"Truy vấn mô phỏng · chưa tích hợp mô hình AI\"; the web page has two columns with the result card."]
+      "logic": [
+        "`clinic.js › ask()`: input `#ask-input`, button \"Hỏi\" (`data-action=ask`), three sample chips (`data-question`), the result card `#ask-result`; \"Gợi ý câu hỏi\" cycles the samples. Empty input toasts \"Nhập câu hỏi\"."
+      ],
+      "rules": [
+        "\"Bộ truy vấn mô phỏng trên 46 hồ sơ tổng hợp · chưa tích hợp mô hình AI.\"",
+        "\"Pema hiển thị nguồn dữ liệu và câu trả lời có thể kiểm tra lại.\"",
+        "Every answer shows how it was computed and the source records."
+      ],
+      "differences": [
+        "App I12/F15 show \"Ask Pema\" with \"Truy vấn mô phỏng · chưa tích hợp mô hình AI\"; the web page has two columns with the result card."
+      ]
     },
     "WH2": {
-      "logic": ["After a question the result card shows the answer, \"Cách tính\" and the source patients."]
+      "logic": [
+        "After a question the result card shows the answer, \"Cách tính\" and the source patients."
+      ]
     },
     "WH3": {
-      "logic": ["`guide.js › render()` and `navigation()`: left index (search `Tìm chủ đề hoặc vai trò`, topic buttons `data-guide`), right article; the default article is \"Hiểu hệ thống Pema\" with the five-step map (01 Hồ sơ, 02 Lịch hẹn, 03 Điều trị, 04 Chăm sóc, 05 Tái khám)."],
-      "rules": ["\"Đây là hướng dẫn phân công công việc; phiên bản hiện tại phân vai bằng tài khoản demo, chưa có xác thực và phân quyền server.\""],
-      "differences": ["App F16 shows a one-column \"Hướng dẫn sử dụng Pema\" with 5 handoff cards; the web has a topic index, 10 articles, related links and per-article action buttons."]
+      "logic": [
+        "`guide.js › render()` and `navigation()`: left index (search `Tìm chủ đề hoặc vai trò`, topic buttons `data-guide`), right article; the default article is \"Hiểu hệ thống Pema\" with the five-step map (01 Hồ sơ, 02 Lịch hẹn, 03 Điều trị, 04 Chăm sóc, 05 Tái khám)."
+      ],
+      "rules": [
+        "\"Đây là hướng dẫn phân công công việc; phiên bản hiện tại phân vai bằng tài khoản demo, chưa có xác thực và phân quyền server.\""
+      ],
+      "differences": [
+        "App F16 shows a one-column \"Hướng dẫn sử dụng Pema\" with 5 handoff cards; the web has a topic index, 10 articles, related links and per-article action buttons."
+      ]
     },
     "WH4": {
-      "logic": ["Article \"roles\" (`data-guide=roles`): lead, instructions list, context notice with two action buttons, related links."]
+      "logic": [
+        "Article \"roles\" (`data-guide=roles`): lead, instructions list, context notice with two action buttons, related links."
+      ]
     },
     "WH14": {
-      "logic": ["The guide search finds no topic: the index shows its empty message."]
+      "logic": [
+        "The guide search finds no topic: the index shows the notice \"Không tìm thấy. Thử “lịch”, “thu tiền” hoặc tên vai trò.\" and the article column keeps the default article."
+      ]
     }
   }
 }

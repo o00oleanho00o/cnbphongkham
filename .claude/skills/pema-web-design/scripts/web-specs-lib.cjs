@@ -632,7 +632,7 @@ function appInfo(model, entry, e) {
     lines.push(`- [${code}](../../screens/${code}.md) · ${s.name} (group ${s.group}, ${s.kmp && s.kmp.composable ? s.kmp.composable : 'web-only logic'}): blocks reused: ${blocks.length ? blocks.map((b) => `\`${b}\``).join(', ') : '—'}`);
     appTexts.push(...(s.texts || []), ...(s.constraints || []));
   }
-  const web = e.notices.map((n) => n.text);
+  const web = [...new Set(e.notices.map((n) => n.text))];
   const missing = web.filter((t) => !appTexts.some((a) => a.includes(t) || t.includes(a)));
   return { text: lines.join('\n'), missing };
 }
@@ -799,4 +799,9 @@ function coverageAll(model) {
   return out;
 }
 
-module.exports = { ROOT, WEB, SCREENS, NOTES, INVENTORY, SNAPSHOT, IMG_REL, NOTE_KEYS, rel, loadModel, loadNotes, saveNotes, addNote, specMarkdown, promptOf, indexMarkdown, indexJson, buildFiles, coverage, coverageAll, layoutOf, lf };
+/** sha of inventory.json as the snapshot generator wrote it into snapshot.json meta. */
+function inventorySha() {
+  return sha(fs.readFileSync(INVENTORY, 'utf8'));
+}
+
+module.exports = { inventorySha, ROOT, WEB, SCREENS, NOTES, INVENTORY, SNAPSHOT, IMG_REL, NOTE_KEYS, rel, loadModel, loadNotes, saveNotes, addNote, specMarkdown, promptOf, indexMarkdown, indexJson, buildFiles, coverage, coverageAll, layoutOf, lf };
