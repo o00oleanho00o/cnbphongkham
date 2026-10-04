@@ -9,6 +9,7 @@ Mỗi màn của design canvas `Pema App redesign canvas/Pema App.dc.html` (A1 �
 | `BLOCKS.md` | Bảng tra helper block canvas → component Compose | Sinh tự động |
 | `index.json` | Toàn bộ dữ liệu trên dạng JSON | Sinh tự động |
 | `notes.json` | Ghi chú chuyển đổi: nguồn web, quy tắc nghiệp vụ, khác biệt được chấp nhận, bẫy đã gặp, việc còn lại | **Người / agent** |
+| `web/` | Spec của 81 màn web cũ (`WA1` … `WH14`) cho Next.js: `inventory.json`, `snapshot.json`, `notes.json`, `INDEX.md`, `BLOCKS.md`, `index.json`, `screens/<ID>.md` (xem đoạn dưới) | Sinh tự động, trừ `web/notes.json` (**người / agent**) |
 
 Mỗi spec gồm (tiêu đề mục trong spec viết bằng tiếng Anh để AI đọc ít token hơn; chữ trên giao diện vẫn giữ tiếng Việt):
 - **Logic source** (nguồn logic): composable KMP đang cài đặt (A–H) hoặc trang/tab/modal web (I–K).
@@ -18,6 +19,8 @@ Mỗi spec gồm (tiêu đề mục trong spec viết bằng tiếng Anh để A
 - **Prompt** sẵn dùng.
 
 Phần tự sinh đọc thẳng từ canvas và code nên không bao giờ lệch; phần hiểu biết (vì sao, quy tắc, bẫy) nằm trong `notes.json`. Ghi chú trong `notes.json` viết bằng tiếng Anh, còn chữ trên giao diện và câu nghiệp vụ thì giữ nguyên tiếng Việt trong ngoặc kép.
+
+**Web cũ (`web/`).** Phần trên là app (canvas `Pema App redesign canvas`). Web Clinic cũ (`prototype/clinic-web`) có bộ riêng với cùng cách làm: canvas `Pema Web redesign canvas/Pema Web.dc.html` (81 màn, khung 1440 · 1920 · 390), spec `web/screens/<ID>.md`, ảnh chụp ở `pema-agent/frontend/visual-ref/old/`, và các tool MCP `list_web_screens`, `get_web_screen`, `get_web_screen_image`, `record_web_note`. Spec này chứa mọi phần UI của web cũ theo ngôn ngữ thiết kế của app; chỗ web cũ và app khác nhau nằm ở `differences` trong `web/notes.json`, không bỏ UI nào. Quy trình làm mới, thêm màn, dựng màn Next.js và quy tắc nhật ký thay đổi: skill `.claude/skills/pema-web-design/SKILL.md`. Phần app ở trên giữ nguyên.
 
 ## Cập nhật
 ```powershell
