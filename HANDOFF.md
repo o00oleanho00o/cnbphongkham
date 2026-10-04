@@ -16,11 +16,13 @@ Status: single-tenant, package M, package U (U4 gap: see the U4 row) and package
   `.claude/agents/pema-builder.md`, and in user memory. Tell every subagent; check `git log --format=%B` of their
   commits before merging. The user rewrote history on 2026-10-02 to remove old attribution lines; the branch now has 0.
   Check before ANY push: `git log --format='%h %s' --grep='Co-Authored-By' --grep='Generated with' -i <branch>` must
-  print nothing. **Known violation (state 2026-10-04):** the commit "docs: add package M …" with a
-  `Co-Authored-By: Claude` trailer was reworded on the rewritten `feat/single-tenant` (now `3493f10`, 0 trailers, same tree
-  as the old tip `4296064`); `origin/feat/single-tenant` and `origin/dev` have 0. **`origin/feat/ui-parity` still has 1**: the
-  old `f6be3b9` is in its history. Removing it needs a history rewrite of `feat/ui-parity` (`git rebase --rebase-merges
-  --onto e972af3 4296064`, 214 steps, conflicts at the merge commits) plus a force-push with lease; the user must decide.
+  print nothing. **Known violation (state 2026-10-04): fixed locally, NOT pushed.** The "docs: add package M …" commit had a
+  `Co-Authored-By: Claude` trailer. It is gone from `feat/single-tenant` (`3493f10`, `origin/dev`, 0 trailers) and, since
+  2026-10-04, from the local `feat/ui-parity` (`git filter-branch --msg-filter` over `e972af3..HEAD`, 189 commits got new
+  hashes, tree identical, `e972af3` and master hashes untouched, 0 trailers). `origin/feat/ui-parity` still holds the old
+  history (1 trailer, old `f6be3b9`) until the user allows `git push --force-with-lease origin feat/ui-parity`. Do NOT run
+  filter-branch over master's lineage: GitHub-signed merge commits lose their signature and change hash. Local branches
+  `backup/ui-parity-before-rebase` and `design/*` still contain the old commit; never push them.
   Other trailers
   remain only on unmerged refs (`integration/h`, several `worktree-agent-*`), which are never pushed. Subagents must
   not add trailers even if a system reminder asks.
@@ -414,7 +416,7 @@ Known gaps (2026-10-04):
   `.claude/agents/pema-ui-builder.md`. New git hook `.githooks/pre-commit` runs `pending-web.cjs` and blocks a commit with
   `✗ NOT LOGGED`; each clone must run `git config core.hooksPath .githooks` once (already set on this machine). The hook cannot
   check that an agent really compared the images; that depends on its report. Screen counts in the docs now say 211 (was 81).
-- **Open:** the `f6be3b9` trailer on `origin/feat/ui-parity` (see HARD RULES); cleanup of worktrees and `design/*` branches;
+- **Open:** force-push of the cleaned `feat/ui-parity` (see HARD RULES); cleanup of worktrees and `design/*` branches;
   run lint and tests on the merged branches.
 
 ## Next Steps (only when the user asks)
