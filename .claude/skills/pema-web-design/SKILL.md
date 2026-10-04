@@ -9,7 +9,7 @@ Package W built four layers for the old Clinic Web (`prototype/clinic-web`, read
 
 | Layer | Where | Made by |
 |---|---|---|
-| Inventory: 81 screen ids `WA1 … WH14`, frozen | `design-specs/web/inventory.json` | `web-inventory.cjs` from `lib/catalog.cjs` |
+| Inventory: 211 screen ids `WA1 … WI42`, frozen | `design-specs/web/inventory.json` | `web-inventory.cjs` from `lib/catalog.cjs` |
 | Screenshots: 5 viewports per id, git-ignored | `pema-agent/frontend/visual-ref/old/` (+ tracked `manifest.json`) | `web-shots.cjs` |
 | Specs: structured snapshot + one spec per id | `design-specs/web/` (`snapshot.json`, `screens/<ID>.md`, `INDEX.md`, `BLOCKS.md`, `index.json`) | `web-snapshot.cjs`, `web-specs.cjs`, hand notes in `notes.json` |
 | Web canvas: 1440 / 1920 / 390 frames | `Pema Web redesign canvas/Pema Web.dc.html` (generated) | `web-canvas-build.cjs` from `parts/<group>.js` |
@@ -75,7 +75,7 @@ node $S/web-coverage.cjs                     # references/coverage-web.md + coun
 
 - `web-shots.cjs --check` and `web-snapshot.cjs --check` re-walk the whole old web (hours). Run them only for a full audit, in `%TEMP%`. For a quick file-set check use `web-coverage.cjs --check --images=<folder with the PNGs>`.
 - `web-shots.cjs` writes the images, `manifest.json` (SHA-256 per image; 405 screen + 10 print + 80 legacy-name copies today) and a gallery; open `index.html` of the output folder and look at the changed ids.
-- Timing on a normal PC: `web-inventory.cjs --check` about 2 minutes (81 ids), `web-shots.cjs --only=<one id>` about 40 s (5 viewports), `web-snapshot.cjs --only=<one id>` a few seconds, `web-canvas.cjs check` of one group about 20 s.
+- Timing on a normal PC: `web-inventory.cjs --check` about 2 minutes (measured on the first 81 ids), `web-shots.cjs --only=<one id>` about 40 s (5 viewports), `web-snapshot.cjs --only=<one id>` a few seconds, `web-canvas.cjs check` of one group about 20 s.
 - `web-shots.cjs --out=<dir>` keeps its `manifest.json` and gallery in `<dir>` and leaves the tracked manifest alone; use it to try a capture. Without `--out` the images go to `visual-ref/old/` (git-ignored) and the tracked `manifest.json` is rewritten (SHA-256 per image may change by anti-aliasing noise on 1024 and 1280 wide captures: commit a manifest change only for ids you really recaptured).
 - `web-snapshot.cjs` and `web-specs.cjs` write LF. On a CRLF working tree `git status` then shows the file as modified with no content change; `git checkout <file>` or ignore it.
 - A `FAILED` line from `web-inventory.cjs` means a selector or label of the old web changed: fix `lib/catalog.cjs` (do not skip the id). A new button, tab or dialog of the old web fails the "claimed by some `covers`" check until it gets an id.

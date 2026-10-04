@@ -54,7 +54,7 @@ while ids of the group have no frame yet. `Pema Web blocks.dc.html` (build with 
 - `web-specs.cjs` compares labels only: every run of digits is one number ("0 Khách mới" matches "12 Khách mới"), person names are one placeholder
   on both sides ("Hóa đơn của Nguyễn Minh Linh" matches "Hóa đơn của Nguyễn Thu Hà", "Hành trình của Linh" matches "… của Hà"), booking-card labels
   compare the same way, and a notice, an empty state or an action made of several pieces (title + text + bullets + button) matches when the layout
-  holds the pieces in order. All 81 ids pass with no exemption. If a label of your screen still needs one, add `"demo_data": ["…"]` under your id in
+  holds the pieces in order. All 211 ids pass with no exemption. If a label of your screen still needs one, add `"demo_data": ["…"]` under your id in
   `design-specs/web/notes.json` and say why in the report.
 
 ## 3. Sample data (parts/base.js)

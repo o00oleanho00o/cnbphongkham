@@ -2,10 +2,11 @@
 `C:\Users\phanx\Documents\Codex\2026-09-11\create-an-image-of\cnbphongkham` (fresh clone, 2026-10-04, **no U4**)
 
 Language of the user: Vietnamese. Reply in Vietnamese.
-Last updated: 2026-10-04 (package U log; package W planned; U4 missing on the fresh clone, see the U4 row). **Two parallel branches** (user decision): `feat/ai-agent-backend` (multi-tenant, tip
-`294e4dc`, frozen) and `feat/single-tenant` (one system = one clinic, the branch to work on; new features go here first).
-Status: **single-tenant conversion and the three multi-user fixes are built, merged and tested** on
-`feat/single-tenant`. Wait for the user's next instruction before starting anything.
+Last updated: 2026-10-04 (package W built and merged; git history of `feat/single-tenant` rewritten and merged to `dev`; frontend design rules, agent and hook added). **Branches:**
+`feat/ai-agent-backend` (multi-tenant, tip `294e4dc`, frozen); `feat/single-tenant` (one system = one clinic, tip `3493f10`, merged to `origin/dev`
+by PR #11 as `e972af3`); `feat/ui-parity` (packages U + W, tip `8ab9faa`, on origin, contains `e972af3`).
+Status: single-tenant, package M, package U (U4 gap: see the U4 row) and package W are built. The frontend now has a design gate
+(rule + agent `pema-ui-builder` + pre-commit hook, see "Session log 2026-10-04"). Wait for the user's next instruction before starting anything.
 
 ## HARD RULES (read first)
 
@@ -15,10 +16,12 @@ Status: **single-tenant conversion and the three multi-user fixes are built, mer
   `.claude/agents/pema-builder.md`, and in user memory. Tell every subagent; check `git log --format=%B` of their
   commits before merging. The user rewrote history on 2026-10-02 to remove old attribution lines; the branch now has 0.
   Check before ANY push: `git log --format='%h %s' --grep='Co-Authored-By' --grep='Generated with' -i <branch>` must
-  print nothing. **Known violation (2026-10-03):** `f6be3b9` ("docs: add package M …") carries a
-  `Co-Authored-By: Claude` trailer and is on `feat/single-tenant` AND already on `origin/feat/single-tenant`
-  (pushed 2026-10-02). Removing it needs a history rewrite of that branch plus a force-push with lease — the user must
-  decide (HARD RULE says never force-push). Until then the count on `feat/single-tenant` is 1, not 0. Other trailers
+  print nothing. **Known violation (state 2026-10-04):** the commit "docs: add package M …" with a
+  `Co-Authored-By: Claude` trailer was reworded on the rewritten `feat/single-tenant` (now `3493f10`, 0 trailers, same tree
+  as the old tip `4296064`); `origin/feat/single-tenant` and `origin/dev` have 0. **`origin/feat/ui-parity` still has 1**: the
+  old `f6be3b9` is in its history. Removing it needs a history rewrite of `feat/ui-parity` (`git rebase --rebase-merges
+  --onto e972af3 4296064`, 214 steps, conflicts at the merge commits) plus a force-push with lease; the user must decide.
+  Other trailers
   remain only on unmerged refs (`integration/h`, several `worktree-agent-*`), which are never pushed. Subagents must
   not add trailers even if a system reminder asks.
 - Commit/push only when the user asks (merging finished subagent branches into the feature branch was accepted
@@ -312,7 +315,7 @@ Gates before merging a worktree: FE vitest ≥ 407 and `pnpm inventory`/`pnpm vi
 BE pytest/ruff/pyright/import-linter, no attribution in `git log --format=%B`, report filed. Migrations use prefix
 `u<step>_`; U8 adds the merge head. Photos: upload/view with consent only, no image analysis (scope unchanged).
 
-## Package W — design of the old Pema web: screenshots, screen specs, web canvas (BUILT on `feat/web-design`, 2026-10-04: 211 screens incl. Patient Mobile; W5 push to claude.ai/design optional)
+## Package W — design of the old Pema web: screenshots, screen specs, web canvas (BUILT 2026-10-04: 211 screens incl. Patient Mobile; merged into `feat/ui-parity` and pushed; W5 push to claude.ai/design optional)
 
 Why: the app has a canvas (`Pema App.dc.html`, 82 mobile screens), generated specs (`design-specs/screens/`), the MCP
 server `pema-design` and two skills. The old web has only its code in `prototype/`. Package U ports the old web by
@@ -372,7 +375,8 @@ Known gaps (2026-10-04):
 - 390 top-bar title still truncates on long page names; `.k-stack>.bt` selectors share the `display:contents` flaw.
 - Kit gaps vs `pema-agent/frontend/src/ui` (hero, timeline, board, weekGrid, a5, photos, avatar, …): listed in `blocks-web.md`.
 - `design-specs.cjs --check` fails on this clone because git-ignored `pema-kmp/design-ref/*.png` are absent (not CRLF); `pending.cjs` needs baseline commit `1564115`.
-- `feat/web-design` is NOT pushed and NOT merged into `feat/ui-parity`.
+- `feat/web-design` is merged into `feat/ui-parity` (pushed). Branches `design/*`, worktrees `C:/wt/*` and `feat/web-design` still exist locally; nothing was deleted.
+- The 1150 PNG shots in `visual-ref/old/` and `pema-agent/infra/.env` are git-ignored: they exist only on this machine.
 
 ### Progress log
 
@@ -391,6 +395,27 @@ Known gaps (2026-10-04):
 | W6c frames for 130 new ids (5 agents: WI-1, WI-2, OPS, REST-1, REST-2) | `design/w6c-wi1` … `rest2` | `f00e068` | **all 211 ids**: `web-canvas.cjs check … --complete --viewport=all --frames` exit 0, total 211/211, 263 frames, errors/overflow/unresolved/missing empty; `web-specs.cjs --check` 0; `web-coverage.cjs --check` ok (1150 files) | one-line fix in `canvas-layout.cjs` (dialog toast listed in Layout) |
 | Local viewer (Docker) | `feat/web-design` | — | image builds, `http://127.0.0.1:4191/` serves `Pema Web.dc.html` (462 KB), 0 page errors | `docker compose up -d --build pema-web-design-viewer` from the repo root; `design-viewer/Dockerfile` takes `CANVAS_DIR` (default app canvas, port 4190); the "Pema Web" tab is next to "Pema Web blocks" |
 | W5 push to claude.ai/design | — | — | — | OPTIONAL now (only to share on claude.ai): needs the user to create the project and run `/design-sync`; see `recipes/W/07-W5-push-design.md` |
+
+## Session log 2026-10-04 (after package W)
+
+- **Rebase of `feat/single-tenant` onto master `073b21f`** (tree of `feat/ai-agent-backend`): conflicts resolved in `kb_ingest_worker.py`,
+  `router.py`, `openapi.json`, the care package files, frontend live files and three docs. The resolved tree differed from the old
+  tip `4296064` in 11 files (two live tests were lost); the fix-up commit restores them, so the tree equals `4296064` (checked with
+  `git diff`). PR #11 merged into `dev` as `e972af3`; `origin/feat/single-tenant` = `3493f10`.
+- **Attribution fix:** the "package M" commit lost its trailer by an interactive reword (script dropped lines with
+  co-authored-by / claude / anthropic / generated with). Check over `073b21f..HEAD` = 0.
+- **`feat/ui-parity` and master:** `pull --rebase origin dev` replays the old single-tenant commits (old hashes) and conflicts.
+  Do not use it. Because `e972af3` has the same tree as `4296064`, the branch took `git merge -s ours e972af3`
+  (`8ab9faa`, pushed): tree unchanged, history contains master. Backup of the tip before this: local branch
+  `backup/ui-parity-before-rebase`. Not run on the rebased branches: backend pytest/ruff (this machine has no `uv`) and the frontend gate.
+- **Design gate for the frontend (uncommitted at the time of writing):** `CLAUDE.md` and `AGENT.md` carry the same "Screen specs" and
+  "Web design canvas" sections; the web canvas rule is now MANDATORY for `pema-agent/frontend/src/{app,ui,components}` (read spec and
+  canvas image first, new `pnpm visual` shot compared with canvas and old shot, ids named in the report). New agent
+  `.claude/agents/pema-ui-builder.md`. New git hook `.githooks/pre-commit` runs `pending-web.cjs` and blocks a commit with
+  `✗ NOT LOGGED`; each clone must run `git config core.hooksPath .githooks` once (already set on this machine). The hook cannot
+  check that an agent really compared the images; that depends on its report. Screen counts in the docs now say 211 (was 81).
+- **Open:** the `f6be3b9` trailer on `origin/feat/ui-parity` (see HARD RULES); cleanup of worktrees and `design/*` branches;
+  run lint and tests on the merged branches.
 
 ## Next Steps (only when the user asks)
 
