@@ -1,0 +1,3688 @@
+{
+  "generated_from": "07ddd8e",
+  "base_url": "http://127.0.0.1:4173",
+  "finance_api": "http://127.0.0.1:4174",
+  "clock": "2026-09-20T09:00:00+07:00",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "role": "owner-tam",
+  "viewports": [
+    [
+      1920,
+      1020
+    ],
+    [
+      1440,
+      900
+    ],
+    [
+      1280,
+      720
+    ],
+    [
+      1024,
+      768
+    ],
+    [
+      390,
+      844
+    ]
+  ],
+  "groups": [
+    {
+      "code": "WA",
+      "name": "Khung & điều hướng"
+    },
+    {
+      "code": "WB",
+      "name": "Vận hành: tổng quan, hôm nay, lịch"
+    },
+    {
+      "code": "WC",
+      "name": "Hồ sơ & Patient 360"
+    },
+    {
+      "code": "WD",
+      "name": "CSKH & theo dõi"
+    },
+    {
+      "code": "WE",
+      "name": "Ảnh, bác sĩ & phòng, dịch vụ"
+    },
+    {
+      "code": "WF",
+      "name": "Thu ngân & lên đơn"
+    },
+    {
+      "code": "WG",
+      "name": "Tài chính PB02"
+    },
+    {
+      "code": "WH",
+      "name": "Ask Pema & Hướng dẫn"
+    }
+  ],
+  "counts": {
+    "total": 81,
+    "by_kind": {
+      "dialog": 13,
+      "modal": 6,
+      "page": 14,
+      "state": 37,
+      "tab": 11
+    },
+    "by_group": {
+      "WA": 4,
+      "WB": 9,
+      "WC": 21,
+      "WD": 8,
+      "WE": 6,
+      "WF": 10,
+      "WG": 9,
+      "WH": 14
+    }
+  },
+  "screens": [
+    {
+      "id": "WA1",
+      "group": "WA",
+      "name": "Khung ứng dụng · Chủ phòng khám",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "wait": ".sidebar"
+        }
+      ],
+      "expect": {
+        "selector": ".sidebar .brand-logo",
+        "text": "Không gian làm việc"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#shell",
+        "prototype/shared/staff-context.js#picker",
+        "prototype/shared/workspace-layout.css"
+      ],
+      "next_route": "(app shell)",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "A5",
+        "A6"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "staff:owner-tam"
+      ],
+      "notes": "Sidebar (3 sections, 13 items, nav badge, user card), topbar (breadcrumbs, account picker, demo label, global search, bell, reset). The account picker is a native select; its open list is not capturable. Reset asks a native confirm(). finance-bridge.js adds a small link in the topbar (\"Tài chính đã đồng bộ\", \"Đang đồng bộ tài chính…\", \"Tài chính chờ kết nối · thử lại\") that follows the finance API. A skip link \"Đến nội dung chính\" shows on keyboard focus."
+    },
+    {
+      "id": "WA2",
+      "group": "WA",
+      "name": "Khung · CSKH (trang chủ CSKH hôm nay)",
+      "kind": "state",
+      "role": "care-maianh",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "wait": ".sidebar"
+        }
+      ],
+      "expect": {
+        "text": "CSKH hôm nay"
+      },
+      "sources": [
+        "prototype/shared/staff-context.js#pages",
+        "prototype/shared/clinic.js#shell"
+      ],
+      "next_route": "(app shell)",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "C1",
+        "A6"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "staff:care-maianh",
+        "staff:care-thu"
+      ],
+      "notes": "Role shell: 4 nav items (schedule, patients, crm, guide), lands on crm. The doctor shell is WB2, the owner shell is WA1."
+    },
+    {
+      "id": "WA3",
+      "group": "WA",
+      "name": "Khung · Kế toán (trang chủ Thu ngân)",
+      "kind": "state",
+      "role": "accountant",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "wait": ".sidebar"
+        }
+      ],
+      "expect": {
+        "text": "Thu ngân"
+      },
+      "sources": [
+        "prototype/shared/staff-context.js#pages",
+        "prototype/shared/clinic.js#shell"
+      ],
+      "next_route": "(app shell)",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "D1",
+        "A6"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "staff:accountant"
+      ],
+      "notes": "Role shell: 4 nav items (patients, cashier, finance, guide), lands on cashier."
+    },
+    {
+      "id": "WA4",
+      "group": "WA",
+      "name": "Thông báo nổi (toast)",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"today\"]"
+        },
+        {
+          "click": "[data-crm=\"arrive\"]"
+        },
+        {
+          "wait": ".toast"
+        }
+      ],
+      "expect": {
+        "selector": ".toast",
+        "text": "Đã cập nhật hàng đợi"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#toast",
+        "prototype/shared/crm-ui.js#handle"
+      ],
+      "next_route": "(app shell)",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "A7"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "crm:arrive",
+        "crm:missed",
+        "crm:start",
+        "dialog:today→Check-in"
+      ],
+      "notes": "Check-in and Vắng in the reception list act at once and show this toast; they open no dialog. After Check-in the row offers \"Bắt đầu\" (crm:start). The toast disappears after 2.8 s."
+    },
+    {
+      "id": "WB1",
+      "group": "WB",
+      "name": "Tổng quan",
+      "kind": "page",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"dashboard\"]"
+        }
+      ],
+      "expect": {
+        "selector": ".page-title",
+        "text": "Tổng quan"
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#dashboard",
+        "prototype/shared/clinic.js#metric"
+      ],
+      "next_route": "/dashboard",
+      "next_status": "built (U2)",
+      "app_canvas": [
+        "I1",
+        "A1"
+      ],
+      "legacy_shot": "dashboard",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "nav:dashboard",
+        "crm:queue",
+        "crm:filter"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WB2",
+      "group": "WB",
+      "name": "Tổng quan · Bác sĩ",
+      "kind": "state",
+      "role": "doctor-mai",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"dashboard\"]"
+        }
+      ],
+      "expect": {
+        "text": "Doanh số của tôi"
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#doctorHome"
+      ],
+      "next_route": "/dashboard",
+      "next_status": "built (U2)",
+      "app_canvas": [
+        "B1",
+        "B2"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "staff:doctor-tam",
+        "staff:doctor-mai",
+        "staff:doctor-an",
+        "staff:doctor-lan",
+        "crm:doctor-today",
+        "crm:doctor-patients",
+        "crm:doctor-followups"
+      ],
+      "notes": "Doctor role: sidebar of 8 items; dashboard is doctorHome, not the owner dashboard."
+    },
+    {
+      "id": "WB3",
+      "group": "WB",
+      "name": "Hôm nay",
+      "kind": "page",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"today\"]"
+        }
+      ],
+      "expect": {
+        "selector": "#crm-today-search"
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#today"
+      ],
+      "next_route": "/today",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "I2",
+        "A1"
+      ],
+      "legacy_shot": "today",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "nav:today",
+        "crm:today-status",
+        "crm:today-page",
+        "crm:profile"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WB4",
+      "group": "WB",
+      "name": "Hôm nay · lọc không có kết quả",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"today\"]"
+        },
+        {
+          "click": "[data-crm=\"today-status\"][data-id=\"cancelled\"]"
+        }
+      ],
+      "expect": {
+        "selector": "#crm-today-search"
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#today"
+      ],
+      "next_route": "/today",
+      "next_status": "restyle (U1)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Status tile \"Đã hủy\" selected: the list shows its empty message."
+    },
+    {
+      "id": "WB5",
+      "group": "WB",
+      "name": "Điều phối lịch",
+      "kind": "page",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"schedule\"]"
+        }
+      ],
+      "expect": {
+        "selector": "#ops-date"
+      },
+      "sources": [
+        "prototype/shared/operations-ui.js#schedule",
+        "prototype/shared/operations-data.js"
+      ],
+      "next_route": "/schedule",
+      "next_status": "built (U2)",
+      "app_canvas": [
+        "I3",
+        "A2"
+      ],
+      "legacy_shot": "schedule",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "nav:schedule",
+        "ops:previous",
+        "ops:next",
+        "ops:today",
+        "ops:view",
+        "ops:doctor",
+        "ops:profile"
+      ],
+      "notes": "Room columns by half hour, doctor and room filters, waiting list with \"Xếp lịch →\". Dragging a booking onto a free slot opens the booking dialog (WB8)."
+    },
+    {
+      "id": "WB6",
+      "group": "WB",
+      "name": "Điều phối lịch · 7 ngày",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"schedule\"]"
+        },
+        {
+          "click": "[data-ops=\"view\"][data-value=\"week\"]"
+        }
+      ],
+      "expect": {
+        "selector": ".week-grid"
+      },
+      "sources": [
+        "prototype/shared/operations-ui.js#schedule"
+      ],
+      "next_route": "/schedule",
+      "next_status": "built (U2)",
+      "app_canvas": [
+        "I3"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Seven day columns, each with its count, cards and \"＋ Đặt lịch\". Every day of the demo week has bookings, so the empty-day text \"Chưa có lịch\" exists in code only."
+    },
+    {
+      "id": "WB7",
+      "group": "WB",
+      "name": "Đặt lịch hẹn",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"today\"]"
+        },
+        {
+          "click": "[data-ops=\"new\"]"
+        },
+        {
+          "wait": "#booking-form"
+        }
+      ],
+      "expect": {
+        "selector": "#booking-form",
+        "text": "Đặt lịch hẹn"
+      },
+      "sources": [
+        "prototype/shared/operations-ui.js#edit",
+        "prototype/shared/operations-ui.js#preview"
+      ],
+      "next_route": "/schedule",
+      "next_status": "built (U2)",
+      "app_canvas": [
+        "I4",
+        "F8"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "ops:new",
+        "ops:suggest",
+        "dialog:today→Đặt lịch mới",
+        "dialog:schedule→Đặt lịch",
+        "modal:appointment"
+      ],
+      "notes": "Opened from Hôm nay (Đặt lịch mới), Điều phối lịch (Đặt lịch, an empty slot) and, after the CSKH outcome \"Đã đặt lịch\", from the Xử lý dialog. Same form each time. \"Tìm giờ trống\" fills the first free time."
+    },
+    {
+      "id": "WB8",
+      "group": "WB",
+      "name": "Chi tiết lịch hẹn",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"schedule\"]"
+        },
+        {
+          "click": "[data-ops=\"edit\"]"
+        },
+        {
+          "wait": "#booking-form"
+        }
+      ],
+      "expect": {
+        "selector": ".cancel-section",
+        "text": "Chi tiết lịch hẹn"
+      },
+      "sources": [
+        "prototype/shared/operations-ui.js#edit"
+      ],
+      "next_route": "/schedule",
+      "next_status": "built (U2)",
+      "app_canvas": [
+        "F9"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "ops:edit",
+        "ops:confirm",
+        "ops:arrive",
+        "ops:cancel"
+      ],
+      "notes": "Status chip, Xác nhận lịch, Check-in, Patient 360 →, the booking form and the cancel section with reason."
+    },
+    {
+      "id": "WB9",
+      "group": "WB",
+      "name": "Xếp lịch từ danh sách chờ",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"schedule\"]"
+        },
+        {
+          "click": "[data-ops=\"wait\"]"
+        },
+        {
+          "wait": "#booking-form"
+        }
+      ],
+      "expect": {
+        "selector": "#booking-form",
+        "text": "Đặt lịch hẹn"
+      },
+      "sources": [
+        "prototype/shared/operations-ui.js#handle"
+      ],
+      "next_route": "/schedule",
+      "next_status": "built (U2)",
+      "app_canvas": [
+        "F8"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "ops:wait"
+      ],
+      "notes": "Booking dialog prefilled from a waiting-list row (patient, service, note)."
+    },
+    {
+      "id": "WC1",
+      "group": "WC",
+      "name": "Tìm bệnh nhân",
+      "kind": "page",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        }
+      ],
+      "expect": {
+        "selector": "#patient-search"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#patients"
+      ],
+      "next_route": "/patients",
+      "next_status": "built (U1)",
+      "app_canvas": [
+        "A3",
+        "I5"
+      ],
+      "legacy_shot": "patients",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "nav:patients",
+        "patientFilter:all",
+        "patientFilter:active",
+        "patientFilter:next",
+        "patientFilter:alerts",
+        "patient:row"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WC2",
+      "group": "WC",
+      "name": "Tìm bệnh nhân · không có hồ sơ",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "fill": [
+            "#patient-search",
+            "zzzz"
+          ]
+        },
+        {
+          "wait": "#clear-search"
+        }
+      ],
+      "expect": {
+        "selector": "#clear-search",
+        "text": "Không tìm thấy hồ sơ"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#patients"
+      ],
+      "next_route": "/patients",
+      "next_status": "built (U1)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": ""
+    },
+    {
+      "id": "WC3",
+      "group": "WC",
+      "name": "Thêm người bệnh",
+      "kind": "modal",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "[data-modal=\"patient\"]"
+        },
+        {
+          "wait": ".modal-backdrop .modal"
+        }
+      ],
+      "expect": {
+        "selector": "#new-name",
+        "text": "Thêm người bệnh"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#modalHtml"
+      ],
+      "next_route": null,
+      "next_status": "none",
+      "app_canvas": [
+        "I5"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "modal:patient",
+        "action:create-patient",
+        "dialog:patients→Hồ sơ mới"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WC4",
+      "group": "WC",
+      "name": "Patient 360 · Tổng quan",
+      "kind": "tab",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        }
+      ],
+      "expect": {
+        "selector": ".patient-hero",
+        "text": "Hồ sơ P001"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#patient360",
+        "prototype/shared/clinic.js#overview",
+        "prototype/shared/crm-ui.js#summary",
+        "prototype/shared/care-finance.js#planPanel"
+      ],
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "F1"
+      ],
+      "legacy_shot": "patient-overview",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "tab:overview",
+        "patient:row",
+        "crm:patient-crm",
+        "careNav:cashier",
+        "careAction:approve-prescription",
+        "careAction:add-prescription"
+      ],
+      "notes": "Hero (avatar, chips, AI brief, Nhắn tin, Ghi buổi điều trị), tab bar, summary cards, plus the linked workspace panels (Dịch vụ & liệu trình, Đơn thuốc, order history) that care-finance.js injects under every tab except crm and history."
+    },
+    {
+      "id": "WC5",
+      "group": "WC",
+      "name": "Patient 360 · Tư vấn",
+      "kind": "tab",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-tab=\"consult\"]"
+        }
+      ],
+      "expect": {
+        "selector": "#consult-input"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#consult",
+        "prototype/shared/crm-ui.js#clinical"
+      ],
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "J1",
+        "F2"
+      ],
+      "legacy_shot": "patient-consult",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "tab:consult",
+        "action:generate-note"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WC6",
+      "group": "WC",
+      "name": "Patient 360 · Tư vấn · bản nháp ghi chú",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-tab=\"consult\"]"
+        },
+        {
+          "fill": [
+            "#consult-input",
+            "Đáp ứng tốt, da dịu hơn."
+          ]
+        },
+        {
+          "click": "[data-action=\"generate-note\"]"
+        },
+        {
+          "wait": "#editable-draft"
+        }
+      ],
+      "expect": {
+        "selector": "#editable-draft"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#consult"
+      ],
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "F2"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "action:approve-note"
+      ],
+      "notes": "AI draft state: editable draft with Duyệt (the rule \"AI chỉ là bản nháp\" must stay)."
+    },
+    {
+      "id": "WC7",
+      "group": "WC",
+      "name": "Patient 360 · Kế hoạch",
+      "kind": "tab",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-tab=\"plan\"]"
+        }
+      ],
+      "expect": {
+        "selector": "[data-modal=\"plan-edit\"]"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#plan"
+      ],
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "J3"
+      ],
+      "legacy_shot": "patient-plan",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "tab:plan"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WC8",
+      "group": "WC",
+      "name": "Patient 360 · Buổi điều trị",
+      "kind": "tab",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-tab=\"session\"]"
+        }
+      ],
+      "expect": {
+        "selector": "#session-note"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#session"
+      ],
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "J5",
+        "F3"
+      ],
+      "legacy_shot": "patient-session",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "tab:session",
+        "action:save-session"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WC9",
+      "group": "WC",
+      "name": "Patient 360 · Ảnh trước / sau",
+      "kind": "tab",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-tab=\"photos\"]"
+        }
+      ],
+      "expect": {
+        "selector": "#studio-view"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#photos"
+      ],
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "I7"
+      ],
+      "legacy_shot": "patient-photos",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "tab:photos",
+        "action:studio-mode",
+        "action:capture"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WC10",
+      "group": "WC",
+      "name": "Patient 360 · Dịch vụ & tài chính",
+      "kind": "tab",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-tab=\"finance\"]"
+        }
+      ],
+      "expect": {
+        "text": "Dịch vụ & liệu trình"
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#financial",
+        "prototype/shared/care-finance.js#planPanel"
+      ],
+      "next_route": null,
+      "next_status": "none",
+      "app_canvas": [
+        "J6"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "tab:finance",
+        "careAction:add-service"
+      ],
+      "notes": "No Next.js target yet: invoices, deposits and service plans of one patient (U5/U6 decide)."
+    },
+    {
+      "id": "WC11",
+      "group": "WC",
+      "name": "Patient 360 · CRM & CSKH",
+      "kind": "tab",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-tab=\"crm\"]"
+        }
+      ],
+      "expect": {
+        "selector": "[data-crm=\"expected\"]"
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#patient"
+      ],
+      "next_route": "/patients/[id]",
+      "next_status": "built (U1)",
+      "app_canvas": [
+        "J7",
+        "C5"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "tab:crm"
+      ],
+      "notes": "Mapped to the care cards of the Tổng quan tab in the Next.js app."
+    },
+    {
+      "id": "WC12",
+      "group": "WC",
+      "name": "Patient 360 · Lịch sử",
+      "kind": "tab",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-tab=\"history\"]"
+        }
+      ],
+      "expect": {
+        "text": "Lịch sử"
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#timeline"
+      ],
+      "next_route": "/patients/[id]",
+      "next_status": "built (U1)",
+      "app_canvas": [
+        "J8"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "tab:history"
+      ],
+      "notes": "Mapped to the timeline card of the Tổng quan tab in the Next.js app."
+    },
+    {
+      "id": "WC13",
+      "group": "WC",
+      "name": "Brief trước buổi hẹn",
+      "kind": "modal",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-modal=\"note\"]"
+        },
+        {
+          "wait": ".modal-backdrop .modal"
+        }
+      ],
+      "expect": {
+        "selector": "#brief-edit",
+        "text": "Brief trước buổi hẹn"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#modalHtml"
+      ],
+      "next_route": null,
+      "next_status": "none",
+      "app_canvas": [
+        "J2"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "modal:note",
+        "action:copy-brief",
+        "action:approve-brief"
+      ],
+      "notes": "AI draft modal: \"Pema AI · bản nháp\", source line, Sao chép, Duyệt & lưu brief."
+    },
+    {
+      "id": "WC14",
+      "group": "WC",
+      "name": "Gửi cập nhật cho người bệnh",
+      "kind": "modal",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-modal=\"message\"]"
+        },
+        {
+          "wait": ".modal-backdrop .modal"
+        }
+      ],
+      "expect": {
+        "selector": "#message-input",
+        "text": "Gửi cập nhật"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#modalHtml"
+      ],
+      "next_route": "/inbox",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "J9"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "modal:message",
+        "action:send-message"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WC15",
+      "group": "WC",
+      "name": "Thông tin cần nhớ",
+      "kind": "modal",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-modal=\"edit\"]"
+        },
+        {
+          "wait": ".modal-backdrop .modal"
+        }
+      ],
+      "expect": {
+        "selector": "#alerts-edit",
+        "text": "Thông tin cần nhớ"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#modalHtml"
+      ],
+      "next_route": null,
+      "next_status": "none",
+      "app_canvas": [
+        "J10"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "modal:edit",
+        "action:save-facts"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WC16",
+      "group": "WC",
+      "name": "Chăm sóc tại nhà",
+      "kind": "modal",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-modal=\"care\"]"
+        },
+        {
+          "wait": ".modal-backdrop .modal"
+        }
+      ],
+      "expect": {
+        "selector": "#care-edit",
+        "text": "Chăm sóc tại nhà"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#modalHtml"
+      ],
+      "next_route": null,
+      "next_status": "none",
+      "app_canvas": [
+        "J11"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "modal:care",
+        "action:save-care"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WC17",
+      "group": "WC",
+      "name": "Điều chỉnh kế hoạch",
+      "kind": "modal",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-tab=\"plan\"]"
+        },
+        {
+          "click": "[data-modal=\"plan-edit\"]"
+        },
+        {
+          "wait": ".modal-backdrop .modal"
+        }
+      ],
+      "expect": {
+        "selector": "#plan-name",
+        "text": "Điều chỉnh kế hoạch"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#modalHtml"
+      ],
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "J4"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "modal:plan-edit",
+        "action:save-plan"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WC18",
+      "group": "WC",
+      "name": "Ngày dự kiến quay lại",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-crm=\"expected\"]"
+        },
+        {
+          "wait": "#crm-expected-form"
+        }
+      ],
+      "expect": {
+        "selector": "#crm-expected-form",
+        "text": "Ngày dự kiến quay lại"
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#handle"
+      ],
+      "next_route": null,
+      "next_status": "none",
+      "app_canvas": [
+        "J7"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "crm:expected"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WC19",
+      "group": "WC",
+      "name": "Thêm dịch vụ vào liệu trình",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "tr[data-patient=\"P001\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-care-action=\"add-service\"]"
+        },
+        {
+          "wait": "#linked-service-form"
+        }
+      ],
+      "expect": {
+        "selector": "#linked-service-form",
+        "text": "Thêm dịch vụ vào liệu trình"
+      },
+      "sources": [
+        "prototype/shared/care-finance.js#addService"
+      ],
+      "next_route": null,
+      "next_status": "none",
+      "app_canvas": [
+        "J6"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "careAction:add-service"
+      ],
+      "notes": "Only roles with the billing capability (owner, accountant) get the button."
+    },
+    {
+      "id": "WC20",
+      "group": "WC",
+      "name": "Patient 360 · hồ sơ vừa tạo",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "[data-modal=\"patient\"]"
+        },
+        {
+          "fill": [
+            "#new-name",
+            "Nguyễn Thử Nghiệm"
+          ]
+        },
+        {
+          "click": "[data-action=\"create-patient\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        }
+      ],
+      "expect": {
+        "selector": ".patient-hero",
+        "text": "Chờ bác sĩ thiết lập kế hoạch"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#action",
+        "prototype/shared/clinic.js#overview",
+        "prototype/shared/crm-ui.js#summary"
+      ],
+      "next_route": "/patients/[id]",
+      "next_status": "built (U3)",
+      "app_canvas": [
+        "F1"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Right after \"Tạo hồ sơ\": a patient with no plan, sessions or invoices (empty variants of the cards, \"Cần khai thác tiền sử\" alert, \"Chờ bác sĩ thiết lập kế hoạch\"). The new record is added to the demo data of the browser only."
+    },
+    {
+      "id": "WC21",
+      "group": "WC",
+      "name": "Patient 360 · Lịch sử · chưa có hoạt động",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"patients\"]"
+        },
+        {
+          "click": "[data-modal=\"patient\"]"
+        },
+        {
+          "fill": [
+            "#new-name",
+            "Nguyễn Thử Nghiệm"
+          ]
+        },
+        {
+          "click": "[data-action=\"create-patient\"]"
+        },
+        {
+          "wait": ".patient-hero"
+        },
+        {
+          "click": "[data-tab=\"history\"]"
+        },
+        {
+          "wait": ".content"
+        }
+      ],
+      "expect": {
+        "text": "Chưa có hoạt động CSKH được ghi nhận."
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#timeline"
+      ],
+      "next_route": "/patients/[id]",
+      "next_status": "built (U1)",
+      "app_canvas": [
+        "J8"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Empty variant of the history tab."
+    },
+    {
+      "id": "WD1",
+      "group": "WD",
+      "name": "CSKH hôm nay",
+      "kind": "page",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"crm\"]"
+        }
+      ],
+      "expect": {
+        "selector": "#crm-search"
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#queue"
+      ],
+      "next_route": "/crm",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "nav:crm",
+        "crm:queue-page",
+        "crm:filter",
+        "crm:queue"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WD2",
+      "group": "WD",
+      "name": "Ghi nhận CSKH (Xử lý)",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"crm\"]"
+        },
+        {
+          "click": "[data-crm=\"task\"]"
+        },
+        {
+          "wait": "#crm-task-form"
+        }
+      ],
+      "expect": {
+        "selector": "#crm-task-form",
+        "text": "Chăm sóc"
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#task"
+      ],
+      "next_route": "/today",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "I13",
+        "C6"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "crm:task",
+        "dialog:crm→Xử lý"
+      ],
+      "notes": "The submit button reads \"Tiếp tục → Đặt lịch\" when the outcome is \"Đã đặt lịch\" and then opens the booking dialog (WB7). The Xử lý button of Theo dõi opens WD7, not this dialog."
+    },
+    {
+      "id": "WD3",
+      "group": "WD",
+      "name": "Protocol chăm sóc mẫu",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"crm\"]"
+        },
+        {
+          "click": "[data-crm=\"protocol\"]"
+        },
+        {
+          "wait": ".modal-backdrop .modal"
+        }
+      ],
+      "expect": {
+        "text": "Protocol chăm sóc mẫu"
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#handle"
+      ],
+      "next_route": "/crm",
+      "next_status": "built (U7)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "crm:protocol"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WD4",
+      "group": "WD",
+      "name": "Kết quả chăm sóc đã ghi",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"crm\"]"
+        },
+        {
+          "click": "[data-crm=\"activity\"]"
+        },
+        {
+          "wait": ".modal-backdrop .modal"
+        }
+      ],
+      "expect": {
+        "text": "Kết quả chăm sóc đã ghi"
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#handle"
+      ],
+      "next_route": "/crm",
+      "next_status": "built (U7)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "crm:activity"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WD5",
+      "group": "WD",
+      "name": "Nhóm khách (vòng đời)",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"dashboard\"]"
+        },
+        {
+          "click": "[data-crm=\"segment\"][data-id=\"treating\"]"
+        },
+        {
+          "wait": ".modal-backdrop .modal"
+        }
+      ],
+      "expect": {
+        "text": "Đang điều trị"
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#handle",
+        "prototype/shared/crm-ui.js#dashboard"
+      ],
+      "next_route": "/crm",
+      "next_status": "built (U7)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "crm:segment"
+      ],
+      "notes": "Opened from a lifecycle tile of the dashboard; the title is the stage label (5 stages)."
+    },
+    {
+      "id": "WD6",
+      "group": "WD",
+      "name": "Theo dõi",
+      "kind": "page",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"followups\"]"
+        }
+      ],
+      "expect": {
+        "selector": ".followup-card"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#followups"
+      ],
+      "next_route": "/inbox",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "I6",
+        "A4"
+      ],
+      "legacy_shot": "followups",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "nav:followups",
+        "followupFilter:all",
+        "followupFilter:image",
+        "followupFilter:urgent",
+        "followupFilter:overdue",
+        "patient:link"
+      ],
+      "notes": "The bell icon in the topbar opens this page. The empty message \"Inbox đã sạch\" appears only when every item is resolved (not scripted)."
+    },
+    {
+      "id": "WD7",
+      "group": "WD",
+      "name": "Duyệt phản hồi follow-up",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"followups\"]"
+        },
+        {
+          "click": "[data-action=\"view-followup\"]"
+        },
+        {
+          "wait": ".modal-backdrop .modal"
+        }
+      ],
+      "expect": {
+        "selector": "#review-reply"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#action"
+      ],
+      "next_route": "/review",
+      "next_status": "restyle (U1)",
+      "app_canvas": [
+        "F10"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "action:view-followup",
+        "action:review-submit",
+        "dialog:followups→Xử lý"
+      ],
+      "notes": "Shows the patient image when the item has one; the reply is edited before \"Duyệt, phản hồi & đóng mục\"."
+    },
+    {
+      "id": "WD8",
+      "group": "WD",
+      "name": "CSKH hôm nay · không có việc phù hợp",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"crm\"]"
+        },
+        {
+          "fill": [
+            "#crm-search",
+            "zzzz"
+          ]
+        },
+        {
+          "press": [
+            "#crm-search",
+            "Enter"
+          ]
+        },
+        {
+          "wait": "#crm-search"
+        }
+      ],
+      "expect": {
+        "text": "Không có việc phù hợp"
+      },
+      "sources": [
+        "prototype/shared/crm-ui.js#queue"
+      ],
+      "next_route": "/crm",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "C4"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Search with no match: the list shows its empty message. Other empty variants not scripted: \"Không còn việc CSKH mở\", \"Inbox đã sạch\", \"Đã xếp hết danh sách chờ\"."
+    },
+    {
+      "id": "WE1",
+      "group": "WE",
+      "name": "Ảnh trước / sau",
+      "kind": "page",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"studio\"]"
+        }
+      ],
+      "expect": {
+        "selector": "#studio-view"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#studio",
+        "prototype/shared/clinic.js#photos"
+      ],
+      "next_route": "/studio",
+      "next_status": "planned (U4)",
+      "app_canvas": [
+        "I7"
+      ],
+      "legacy_shot": "studio",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "nav:studio"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WE2",
+      "group": "WE",
+      "name": "Ảnh trước / sau · so sánh trượt",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"studio\"]"
+        },
+        {
+          "click": "[data-action=\"studio-mode\"]"
+        },
+        {
+          "wait": "#comparison-slider"
+        }
+      ],
+      "expect": {
+        "selector": "#comparison-slider"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#photos"
+      ],
+      "next_route": "/studio",
+      "next_status": "planned (U4)",
+      "app_canvas": [
+        "I7"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Illustrative photos only; no efficacy score."
+    },
+    {
+      "id": "WE3",
+      "group": "WE",
+      "name": "Bác sĩ & phòng",
+      "kind": "page",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"resources\"]"
+        }
+      ],
+      "expect": {
+        "selector": "[data-ops=\"block\"]"
+      },
+      "sources": [
+        "prototype/shared/operations-ui.js#resources"
+      ],
+      "next_route": "/resources",
+      "next_status": "planned (U4)",
+      "app_canvas": [
+        "F14"
+      ],
+      "legacy_shot": "resources",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "nav:resources",
+        "ops:doctor",
+        "ops:unblock"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WE4",
+      "group": "WE",
+      "name": "Khóa thời gian phòng",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"resources\"]"
+        },
+        {
+          "click": "[data-ops=\"block\"]"
+        },
+        {
+          "wait": ".modal-backdrop .modal"
+        }
+      ],
+      "expect": {
+        "text": "Khóa thời gian phòng"
+      },
+      "sources": [
+        "prototype/shared/operations-ui.js#handle"
+      ],
+      "next_route": "/resources",
+      "next_status": "planned (U4)",
+      "app_canvas": [
+        "I8"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "ops:block",
+        "ops:save-block",
+        "dialog:resources→Khóa phòng"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WE5",
+      "group": "WE",
+      "name": "Dịch vụ",
+      "kind": "page",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"services\"]"
+        }
+      ],
+      "expect": {
+        "selector": "[data-ops=\"service\"]"
+      },
+      "sources": [
+        "prototype/shared/operations-ui.js#services"
+      ],
+      "next_route": "/services",
+      "next_status": "planned (U4)",
+      "app_canvas": [
+        "F13"
+      ],
+      "legacy_shot": "services",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "nav:services"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WE6",
+      "group": "WE",
+      "name": "Chỉnh dịch vụ",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"services\"]"
+        },
+        {
+          "click": "[data-ops=\"service\"]"
+        },
+        {
+          "wait": ".modal-backdrop .modal"
+        }
+      ],
+      "expect": {
+        "text": "Chỉnh dịch vụ"
+      },
+      "sources": [
+        "prototype/shared/operations-ui.js#handle"
+      ],
+      "next_route": "/services",
+      "next_status": "planned (U4)",
+      "app_canvas": [
+        "I9"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "ops:service",
+        "ops:save-service",
+        "dialog:services→Chỉnh dịch vụ"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WF1",
+      "group": "WF",
+      "name": "Thu ngân",
+      "kind": "page",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"cashier\"]"
+        }
+      ],
+      "expect": {
+        "selector": "[data-ops=\"quick-order\"]"
+      },
+      "sources": [
+        "prototype/shared/operations-ui.js#cashier",
+        "prototype/shared/operations-ui.js#invoices",
+        "prototype/shared/order-ui.js#history"
+      ],
+      "next_route": "/cashier",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "I10",
+        "F11",
+        "D1"
+      ],
+      "legacy_shot": "cashier",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "nav:cashier",
+        "ops:invoice-filter",
+        "ops:invoice-page",
+        "ops:print-order",
+        "careNav:cashier",
+        "order:preview"
+      ],
+      "notes": "Invoice list (filters Tất cả, Còn phải thu, Đã thanh toán, paging) and the order history panel (Xem / in, Sửa nháp)."
+    },
+    {
+      "id": "WF2",
+      "group": "WF",
+      "name": "Thu tiền",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"cashier\"]"
+        },
+        {
+          "click": "[data-ops=\"pay\"]"
+        },
+        {
+          "wait": ".modal-backdrop .modal"
+        }
+      ],
+      "expect": {
+        "text": "Thu tiền"
+      },
+      "sources": [
+        "prototype/shared/operations-ui.js#handle"
+      ],
+      "next_route": "/cashier",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "I11",
+        "F12"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "ops:pay",
+        "ops:save-pay",
+        "dialog:cashier→Thu tiền"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WF3",
+      "group": "WF",
+      "name": "Tạo đơn thuốc / phiếu tư vấn",
+      "kind": "dialog",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"cashier\"]"
+        },
+        {
+          "click": "[data-ops=\"quick-order\"]"
+        },
+        {
+          "wait": "#catalog-order-form"
+        }
+      ],
+      "expect": {
+        "selector": "#catalog-order-form",
+        "text": "Tạo đơn thuốc / phiếu tư vấn"
+      },
+      "sources": [
+        "prototype/shared/order-ui.js#open"
+      ],
+      "next_route": "/cashier",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "F4"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "ops:quick-order",
+        "dialog:cashier→Mở form lên đơn nhanh",
+        "careAction:add-prescription"
+      ],
+      "notes": "Product search over the 115-item Excel catalog, empty cart, total, general note, the rule that \"Không in\" only removes a line from the sheets."
+    },
+    {
+      "id": "WF4",
+      "group": "WF",
+      "name": "Lên đơn · đã chọn sản phẩm",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"cashier\"]"
+        },
+        {
+          "click": "[data-ops=\"quick-order\"]"
+        },
+        {
+          "wait": "#catalog-order-form"
+        },
+        {
+          "click": "[data-quick-add=\"H002\"]"
+        },
+        {
+          "click": "[data-quick-add=\"H005\"]"
+        },
+        {
+          "fill": [
+            "#usage-0",
+            "Bôi lớp mỏng, sáng và tối, 14 ngày"
+          ]
+        },
+        {
+          "fill": [
+            "#usage-1",
+            "Bôi lớp mỏng, sáng và tối, 14 ngày"
+          ]
+        },
+        {
+          "wait": "[data-line]"
+        }
+      ],
+      "expect": {
+        "selector": "[data-line]"
+      },
+      "sources": [
+        "prototype/shared/order-ui.js#open"
+      ],
+      "next_route": "/cashier",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "F5"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Cart lines with quantity, sheet type (Đơn thuốc, Phiếu tư vấn, Không in, Cần phân loại), usage, note and reason for a changed type. Lines: one prescription product and one consultation product."
+    },
+    {
+      "id": "WF5",
+      "group": "WF",
+      "name": "Tách đơn · bản nháp",
+      "kind": "page",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"cashier\"]"
+        },
+        {
+          "click": "[data-ops=\"quick-order\"]"
+        },
+        {
+          "wait": "#catalog-order-form"
+        },
+        {
+          "click": "[data-quick-add=\"H002\"]"
+        },
+        {
+          "click": "[data-quick-add=\"H005\"]"
+        },
+        {
+          "fill": [
+            "#usage-0",
+            "Bôi lớp mỏng, sáng và tối, 14 ngày"
+          ]
+        },
+        {
+          "fill": [
+            "#usage-1",
+            "Bôi lớp mỏng, sáng và tối, 14 ngày"
+          ]
+        },
+        {
+          "clickPopup": "#quick-save"
+        },
+        {
+          "wait": ".order-sheet"
+        }
+      ],
+      "expect": {
+        "selector": ".order-sheet",
+        "text": "BẢN NHÁP"
+      },
+      "sources": [
+        "prototype/shared/order-review.js#sheet",
+        "prototype/order-review/index.html",
+        "prototype/shared/order-review.css"
+      ],
+      "next_route": "/orders/[id]",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "F6",
+        "F7"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "order:review-page",
+        "order:print",
+        "order:approve",
+        "print:PRESCRIPTION",
+        "print:CONSULTATION",
+        "print:all"
+      ],
+      "notes": "Standalone page /order-review/ opened in a new tab: toolbar (print buttons disabled until approved), draft mark, A5 portrait sheets \"ĐƠN THUỐC\" and \"PHIẾU TƯ VẤN\". The A5 print layout is the print media of the same page."
+    },
+    {
+      "id": "WF6",
+      "group": "WF",
+      "name": "Tách đơn · đã duyệt",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"cashier\"]"
+        },
+        {
+          "click": "[data-ops=\"quick-order\"]"
+        },
+        {
+          "wait": "#catalog-order-form"
+        },
+        {
+          "click": "[data-quick-add=\"H002\"]"
+        },
+        {
+          "click": "[data-quick-add=\"H005\"]"
+        },
+        {
+          "fill": [
+            "#usage-0",
+            "Bôi lớp mỏng, sáng và tối, 14 ngày"
+          ]
+        },
+        {
+          "fill": [
+            "#usage-1",
+            "Bôi lớp mỏng, sáng và tối, 14 ngày"
+          ]
+        },
+        {
+          "clickPopup": "#quick-save"
+        },
+        {
+          "wait": "#approve"
+        },
+        {
+          "click": "#approve"
+        },
+        {
+          "wait": "body[data-approved=\"true\"]"
+        }
+      ],
+      "expect": {
+        "selector": "body[data-approved=\"true\"]",
+        "text": "Đã duyệt"
+      },
+      "sources": [
+        "prototype/shared/order-review.js#refresh"
+      ],
+      "next_route": "/orders/[id]/print",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "F7"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "order:approve"
+      ],
+      "notes": "Approved: print buttons enabled, draft mark gone, signature block shows the reviewer. window.print() is a native dialog."
+    },
+    {
+      "id": "WF7",
+      "group": "WF",
+      "name": "Tách đơn · sản phẩm cần phân loại",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"cashier\"]"
+        },
+        {
+          "click": "[data-ops=\"quick-order\"]"
+        },
+        {
+          "wait": "#catalog-order-form"
+        },
+        {
+          "click": "[data-quick-add=\"H002\"]"
+        },
+        {
+          "click": "[data-quick-add=\"H095\"]"
+        },
+        {
+          "clickPopup": "#quick-save"
+        },
+        {
+          "wait": "#review-excluded .warning"
+        }
+      ],
+      "expect": {
+        "selector": "#review-excluded .warning",
+        "text": "Cần phân loại"
+      },
+      "sources": [
+        "prototype/shared/order-review.js#refresh"
+      ],
+      "next_route": "/orders/[id]",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "F5"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "A product without a type in the Excel catalog: warning above the sheets, approve button disabled."
+    },
+    {
+      "id": "WF8",
+      "group": "WF",
+      "name": "Tách đơn · thiếu mã đơn",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/order-review/"
+        },
+        {
+          "wait": "#review-error"
+        }
+      ],
+      "expect": {
+        "selector": "#review-error",
+        "text": "Thiếu mã bệnh nhân hoặc mã đơn."
+      },
+      "sources": [
+        "prototype/shared/order-review.js#refresh"
+      ],
+      "next_route": "/orders/[id]",
+      "next_status": "planned (U5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Error state of the standalone page opened without patient and order codes."
+    },
+    {
+      "id": "WF9",
+      "group": "WF",
+      "name": "Sửa đơn nháp",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"cashier\"]"
+        },
+        {
+          "click": "[data-ops=\"quick-order\"]"
+        },
+        {
+          "wait": "#catalog-order-form"
+        },
+        {
+          "click": "[data-quick-add=\"H002\"]"
+        },
+        {
+          "fill": [
+            "#usage-0",
+            "Bôi lớp mỏng, sáng và tối, 14 ngày"
+          ]
+        },
+        {
+          "clickPopup": "#quick-save"
+        },
+        {
+          "wait": ".order-sheet"
+        },
+        {
+          "main": true
+        },
+        {
+          "goto": "/clinic-web/?staff={role}&screen=cashier"
+        },
+        {
+          "click": "[data-order-edit]"
+        },
+        {
+          "wait": "#catalog-order-form"
+        }
+      ],
+      "expect": {
+        "selector": "#catalog-order-form",
+        "text": "Sửa đơn nháp"
+      },
+      "sources": [
+        "prototype/shared/order-ui.js#open",
+        "prototype/shared/order-ui.js#history"
+      ],
+      "next_route": "/cashier",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "F5"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "order:edit"
+      ],
+      "notes": "The quick-order dialog opened on an existing draft: title \"Sửa đơn nháp\", patient locked."
+    },
+    {
+      "id": "WF10",
+      "group": "WF",
+      "name": "Lên đơn · không tìm thấy sản phẩm",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"cashier\"]"
+        },
+        {
+          "click": "[data-ops=\"quick-order\"]"
+        },
+        {
+          "wait": "#catalog-order-form"
+        },
+        {
+          "fill": [
+            "#quick-product-search",
+            "zzzz"
+          ]
+        },
+        {
+          "wait": "#quick-results .empty"
+        }
+      ],
+      "expect": {
+        "selector": "#quick-results .empty",
+        "text": "Không tìm thấy sản phẩm phù hợp."
+      },
+      "sources": [
+        "prototype/shared/order-ui.js#open"
+      ],
+      "next_route": "/cashier",
+      "next_status": "planned (U5)",
+      "app_canvas": [
+        "F4"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": ""
+    },
+    {
+      "id": "WG1",
+      "group": "WG",
+      "name": "Tài chính & tiền thủ thuật · Tổng quan",
+      "kind": "page",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"finance\"]"
+        },
+        {
+          "wait": ".finance-workspace .metric, .finance-workspace .hero"
+        }
+      ],
+      "expect": {
+        "selector": ".finance-workspace .hero",
+        "text": "Một màn hình, nắm rõ dòng tiền"
+      },
+      "sources": [
+        "prototype/finance/finance.js#overview",
+        "prototype/shared/finance-bridge.js"
+      ],
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H1"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "nav:finance",
+        "financeTab:overview",
+        "role:finance-owner"
+      ],
+      "notes": "Header tools: month picker, Làm mới. Needs the finance API (4174). prototype/finance/index.html is only a redirect stub to this page."
+    },
+    {
+      "id": "WG2",
+      "group": "WG",
+      "name": "Tài chính · Tiền thủ thuật",
+      "kind": "tab",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"finance\"]"
+        },
+        {
+          "wait": ".finance-workspace .metric, .finance-workspace .hero"
+        },
+        {
+          "click": "[data-finance-tab=\"work\"]"
+        },
+        {
+          "wait": "#export"
+        }
+      ],
+      "expect": {
+        "selector": "#export",
+        "text": "Bảng tiền thủ thuật"
+      },
+      "sources": [
+        "prototype/finance/finance.js#work",
+        "prototype/finance/finance.js#table"
+      ],
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H3",
+        "H4"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "financeTab:work"
+      ],
+      "notes": "Duyệt, Hủy (native prompt for the reason), Chốt tháng đã kết thúc (native confirm), Xác nhận đã chi (native prompt for the voucher), Xuất CSV (download)."
+    },
+    {
+      "id": "WG3",
+      "group": "WG",
+      "name": "Tài chính · Ghi lượt thủ thuật đã hoàn tất",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"finance\"]"
+        },
+        {
+          "wait": ".finance-workspace .metric, .finance-workspace .hero"
+        },
+        {
+          "click": "[data-finance-tab=\"work\"]"
+        },
+        {
+          "click": "#content details > summary"
+        },
+        {
+          "wait": "#entry"
+        }
+      ],
+      "expect": {
+        "selector": "#entry"
+      },
+      "sources": [
+        "prototype/finance/finance.js#entryForm"
+      ],
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H9"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "The collapsible form (patient, service, date, list price, discount, invoice, note, two people with share and rate)."
+    },
+    {
+      "id": "WG4",
+      "group": "WG",
+      "name": "Tài chính · Chính sách tỷ lệ",
+      "kind": "tab",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"finance\"]"
+        },
+        {
+          "wait": ".finance-workspace .metric, .finance-workspace .hero"
+        },
+        {
+          "click": "[data-finance-tab=\"rates\"]"
+        }
+      ],
+      "expect": {
+        "selector": "form.rate"
+      },
+      "sources": [
+        "prototype/finance/finance.js#rates"
+      ],
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H8"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "financeTab:rates"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WG5",
+      "group": "WG",
+      "name": "Tài chính · Phiếu thu & thông báo",
+      "kind": "tab",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"finance\"]"
+        },
+        {
+          "wait": ".finance-workspace .metric, .finance-workspace .hero"
+        },
+        {
+          "click": "[data-finance-tab=\"receipts\"]"
+        }
+      ],
+      "expect": {
+        "selector": "#payment"
+      },
+      "sources": [
+        "prototype/finance/finance.js#receipts"
+      ],
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H5",
+        "H6"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "financeTab:receipts"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WG6",
+      "group": "WG",
+      "name": "Doanh số của tôi · Tổng quan (bác sĩ)",
+      "kind": "state",
+      "role": "doctor-mai",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"finance\"]"
+        },
+        {
+          "wait": ".finance-workspace .metric, .finance-workspace .hero"
+        }
+      ],
+      "expect": {
+        "text": "Công việc được ghi nhận, thu nhập rõ ràng"
+      },
+      "sources": [
+        "prototype/finance/finance.js#overview"
+      ],
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H2"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "role:finance-doctor"
+      ],
+      "notes": "Doctor projection: personal hero, tiles \"Doanh số của tôi\", \"Tiền chờ duyệt\", only two tabs (Tổng quan, Tiền thủ thuật)."
+    },
+    {
+      "id": "WG7",
+      "group": "WG",
+      "name": "Doanh số của tôi · Tiền thủ thuật (bác sĩ)",
+      "kind": "state",
+      "role": "doctor-mai",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"finance\"]"
+        },
+        {
+          "wait": ".finance-workspace .metric, .finance-workspace .hero"
+        },
+        {
+          "click": "[data-finance-tab=\"work\"]"
+        },
+        {
+          "wait": "#export"
+        }
+      ],
+      "expect": {
+        "selector": "#export"
+      },
+      "sources": [
+        "prototype/finance/finance.js#work"
+      ],
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H2",
+        "H3"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Doctor projection of the work table: no entry form, no approve or void buttons, no period buttons. The rates and receipts tabs are hidden for a doctor (their placeholder panels are unreachable)."
+    },
+    {
+      "id": "WG8",
+      "group": "WG",
+      "name": "Tài chính · Tổng quan (kế toán)",
+      "kind": "state",
+      "role": "accountant",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"finance\"]"
+        },
+        {
+          "wait": ".finance-workspace .metric, .finance-workspace .hero"
+        }
+      ],
+      "expect": {
+        "text": "KẾ TOÁN • ĐỐI SOÁT"
+      },
+      "sources": [
+        "prototype/finance/finance.js#overview"
+      ],
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "D1",
+        "H1"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "role:finance-accountant"
+      ],
+      "notes": "Accountant projection: hero reads \"KẾ TOÁN • ĐỐI SOÁT\"; four tabs; the notification box says the accountant does not read the owner inbox."
+    },
+    {
+      "id": "WG9",
+      "group": "WG",
+      "name": "Tài chính · Chưa kết nối dữ liệu",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "block": "http://127.0.0.1:4174/**"
+        },
+        {
+          "click": ".sidebar [data-nav=\"finance\"]"
+        },
+        {
+          "wait": "#error"
+        }
+      ],
+      "expect": {
+        "selector": "#error",
+        "text": "Chưa kết nối dữ liệu tài chính"
+      },
+      "sources": [
+        "prototype/finance/finance.js#load"
+      ],
+      "next_route": "/finance",
+      "next_status": "planned (U6)",
+      "app_canvas": [
+        "H7"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Reached by blocking the finance API; the page keeps \"Đang tải dữ liệu…\" under the error line and the topbar sync link reads \"Tài chính chờ kết nối · thử lại\"."
+    },
+    {
+      "id": "WH1",
+      "group": "WH",
+      "name": "Ask Pema",
+      "kind": "page",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"ask\"]"
+        }
+      ],
+      "expect": {
+        "selector": "#ask-input"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#ask"
+      ],
+      "next_route": "/ask",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "I12",
+        "F15"
+      ],
+      "legacy_shot": "ask",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "nav:ask",
+        "action:ask-sample",
+        "action:ask",
+        "question:chip"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WH2",
+      "group": "WH",
+      "name": "Ask Pema · có câu trả lời",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"ask\"]"
+        },
+        {
+          "click": "[data-question]"
+        },
+        {
+          "click": "[data-action=\"ask\"]"
+        },
+        {
+          "wait": "#ask-result"
+        }
+      ],
+      "expect": {
+        "selector": "#ask-result"
+      },
+      "sources": [
+        "prototype/shared/clinic.js#action"
+      ],
+      "next_route": "/ask",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "I12",
+        "F15"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Answer card with how it was counted and the source records. \"Bộ truy vấn mô phỏng ... chưa tích hợp mô hình AI\"."
+    },
+    {
+      "id": "WH3",
+      "group": "WH",
+      "name": "Hướng dẫn sử dụng",
+      "kind": "page",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"guide\"]"
+        }
+      ],
+      "expect": {
+        "selector": "#guide-search",
+        "text": "Hiểu hệ thống Pema"
+      },
+      "sources": [
+        "prototype/shared/guide.js#render",
+        "prototype/shared/guide.js#navigation",
+        "prototype/shared/guide.css"
+      ],
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "legacy_shot": "guide",
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [
+        "nav:guide",
+        "guide:system"
+      ],
+      "notes": "Default article \"Hiểu hệ thống Pema\" with the five-step care map. Each other article is its own state (WH4..WH13); the article text is content, the layout is this one."
+    },
+    {
+      "id": "WH4",
+      "group": "WH",
+      "name": "Hướng dẫn · Bắt đầu theo vai trò",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"guide\"]"
+        },
+        {
+          "click": "[data-guide=\"roles\"]"
+        },
+        {
+          "wait": "#guide-title"
+        }
+      ],
+      "expect": {
+        "selector": "#guide-title",
+        "text": "Bắt đầu theo vai trò"
+      },
+      "sources": [
+        "prototype/shared/guide.js#topics",
+        "prototype/shared/guide.js#render"
+      ],
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "guide:roles"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WH5",
+      "group": "WH",
+      "name": "Hướng dẫn · Hồ sơ & Patient 360",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"guide\"]"
+        },
+        {
+          "click": "[data-guide=\"records\"]"
+        },
+        {
+          "wait": "#guide-title"
+        }
+      ],
+      "expect": {
+        "selector": "#guide-title",
+        "text": "Hồ sơ & Patient 360"
+      },
+      "sources": [
+        "prototype/shared/guide.js#topics",
+        "prototype/shared/guide.js#render"
+      ],
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "guide:records"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WH6",
+      "group": "WH",
+      "name": "Hướng dẫn · Lịch hẹn & tiếp đón",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"guide\"]"
+        },
+        {
+          "click": "[data-guide=\"schedule\"]"
+        },
+        {
+          "wait": "#guide-title"
+        }
+      ],
+      "expect": {
+        "selector": "#guide-title",
+        "text": "Lịch hẹn & tiếp đón"
+      },
+      "sources": [
+        "prototype/shared/guide.js#topics",
+        "prototype/shared/guide.js#render"
+      ],
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "guide:schedule"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WH7",
+      "group": "WH",
+      "name": "Hướng dẫn · Bác sĩ, phòng & dịch vụ",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"guide\"]"
+        },
+        {
+          "click": "[data-guide=\"resources\"]"
+        },
+        {
+          "wait": "#guide-title"
+        }
+      ],
+      "expect": {
+        "selector": "#guide-title",
+        "text": "Bác sĩ, phòng & dịch vụ"
+      },
+      "sources": [
+        "prototype/shared/guide.js#topics",
+        "prototype/shared/guide.js#render"
+      ],
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "guide:resources"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WH8",
+      "group": "WH",
+      "name": "Hướng dẫn · Từ tư vấn đến buổi điều trị",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"guide\"]"
+        },
+        {
+          "click": "[data-guide=\"clinical\"]"
+        },
+        {
+          "wait": "#guide-title"
+        }
+      ],
+      "expect": {
+        "selector": "#guide-title",
+        "text": "Từ tư vấn đến buổi điều trị"
+      },
+      "sources": [
+        "prototype/shared/guide.js#topics",
+        "prototype/shared/guide.js#render"
+      ],
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "guide:clinical"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WH9",
+      "group": "WH",
+      "name": "Hướng dẫn · Chăm sóc & phản hồi tại nhà",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"guide\"]"
+        },
+        {
+          "click": "[data-guide=\"care\"]"
+        },
+        {
+          "wait": "#guide-title"
+        }
+      ],
+      "expect": {
+        "selector": "#guide-title",
+        "text": "Chăm sóc & phản hồi tại nhà"
+      },
+      "sources": [
+        "prototype/shared/guide.js#topics",
+        "prototype/shared/guide.js#render"
+      ],
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "guide:care"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WH10",
+      "group": "WH",
+      "name": "Hướng dẫn · Hóa đơn & thu tiền",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"guide\"]"
+        },
+        {
+          "click": "[data-guide=\"billing\"]"
+        },
+        {
+          "wait": "#guide-title"
+        }
+      ],
+      "expect": {
+        "selector": "#guide-title",
+        "text": "Hóa đơn & thu tiền"
+      },
+      "sources": [
+        "prototype/shared/guide.js#topics",
+        "prototype/shared/guide.js#render"
+      ],
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "guide:billing"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WH11",
+      "group": "WH",
+      "name": "Hướng dẫn · Khi cần kiểm tra lại",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"guide\"]"
+        },
+        {
+          "click": "[data-guide=\"exceptions\"]"
+        },
+        {
+          "wait": "#guide-title"
+        }
+      ],
+      "expect": {
+        "selector": "#guide-title",
+        "text": "Khi cần kiểm tra lại"
+      },
+      "sources": [
+        "prototype/shared/guide.js#topics",
+        "prototype/shared/guide.js#render"
+      ],
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "guide:exceptions"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WH12",
+      "group": "WH",
+      "name": "Hướng dẫn · CSKH chủ động & tài khoản nhân viên",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"guide\"]"
+        },
+        {
+          "click": "[data-guide=\"crm01\"]"
+        },
+        {
+          "wait": "#guide-title"
+        }
+      ],
+      "expect": {
+        "selector": "#guide-title",
+        "text": "CSKH chủ động & tài khoản nhân viên"
+      },
+      "sources": [
+        "prototype/shared/guide.js#topics",
+        "prototype/shared/guide.js#render"
+      ],
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "guide:crm01"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WH13",
+      "group": "WH",
+      "name": "Hướng dẫn · Mobile, CSKH & tài chính theo vai trò",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"guide\"]"
+        },
+        {
+          "click": "[data-guide=\"mobile-finance\"]"
+        },
+        {
+          "wait": "#guide-title"
+        }
+      ],
+      "expect": {
+        "selector": "#guide-title",
+        "text": "Mobile, CSKH & tài chính theo vai trò"
+      },
+      "sources": [
+        "prototype/shared/guide.js#topics",
+        "prototype/shared/guide.js#render"
+      ],
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [
+        "F16"
+      ],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [
+        "guide:mobile-finance"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "WH14",
+      "group": "WH",
+      "name": "Hướng dẫn · không tìm thấy chủ đề",
+      "kind": "state",
+      "role": "owner-tam",
+      "reach": [
+        {
+          "goto": "/clinic-web/?staff={role}"
+        },
+        {
+          "click": ".sidebar [data-nav=\"guide\"]"
+        },
+        {
+          "fill": [
+            "#guide-search",
+            "zzzz"
+          ]
+        },
+        {
+          "wait": "#guide-topics .notice"
+        }
+      ],
+      "expect": {
+        "selector": "#guide-topics .notice",
+        "text": "Không tìm thấy"
+      },
+      "sources": [
+        "prototype/shared/guide.js#navigation"
+      ],
+      "next_route": "/guide",
+      "next_status": "built (U7)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": ""
+    }
+  ],
+  "non_screens": [
+    {
+      "what": "prototype/patient-mobile/**",
+      "why": "Patient Mobile web: out of scope, covered by app canvas groups E, G, K (plan section 1)."
+    },
+    {
+      "what": "prototype/finance/index.html",
+      "why": "Redirect stub (\"Đang mở tài chính trong Pema Clinic…\") that sends the browser to clinic-web/?screen=finance (WG1)."
+    },
+    {
+      "what": "data-modal=\"appointment\" (clinic.js#modalHtml \"Đặt lịch nhanh\")",
+      "why": "Dead code: no button opens it; the click handler routes it to the booking dialog (WB7)."
+    },
+    {
+      "what": "clinic.js#modalHtml fallback \"Chưa có form trong demo\"",
+      "why": "Dead code: every data-modal value in the UI has a form."
+    },
+    {
+      "what": "native confirm()/prompt()/print()",
+      "why": "Reset demo, void a finance entry, close month, pay out, print an order: browser dialogs, not capturable as a page; named in the notes of WA1, WG2, WF6."
+    },
+    {
+      "what": "role picker option list",
+      "why": "Native select popup; the closed picker is part of WA1."
+    }
+  ]
+}
