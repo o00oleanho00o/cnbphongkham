@@ -36,7 +36,7 @@ const wj1UsersFilters = q => [
   chips([['Mọi trạng thái', 'sel'], 'Đang hoạt động', 'Đã khóa'])
 ];
 const wj1UsersTable = manage => table(
-  manage ? ['Nhân viên', ['Vai trò', '140px'], ['Trạng thái', '150px'], ['Đăng nhập cuối', '150px'], ['Ngày tạo', '110px'], ['Thao tác', '1.1fr']] : ['Nhân viên', 'Vai trò', 'Trạng thái', 'Đăng nhập cuối', 'Ngày tạo'],
+  manage ? [['Nhân viên', '1.7fr'], ['Vai trò', '140px'], ['Trạng thái', '150px'], ['Đăng nhập cuối', '150px'], ['Ngày tạo', '110px'], ['Thao tác', '1.1fr']] : [['Nhân viên', '1.7fr'], 'Vai trò', 'Trạng thái', 'Đăng nhập cuối', 'Ngày tạo'],
   wj1Staff.map(s => wj1StaffRow(s, manage)));
 const wj1UsersPage = () => [wj1UsersHead(true), ...wj1UsersFilters(''), wj1UsersTable(true)];
 
@@ -62,10 +62,10 @@ const wj1Sessions = [
   ['Trần Minh Anh', 'u-demo-002', 'Pema CSKH (Zalo Bot)', 'Chat riêng', '7', '20/09 08:35', false],
   ['Khách chưa gắn hồ sơ', 'u-demo-004', 'Pema CSKH (Zalo Bot)', 'Chat riêng', '2', '20/09 07:00', true],
   ['Lễ tân Trâm', 'u-demo-021', 'Zalo lễ tân (cá nhân)', 'Chat riêng', '64', '20/09 06:00', true],
-  ['Nhóm điều phối phòng khám', 'g-demo-001', 'Zalo lễ tân (cá nhân)', 'Nhóm', '240', '19/09 09:00', true]
+  ['Nhóm điều phối', 'g-demo-001', 'Zalo lễ tân (cá nhân)', 'Nhóm', '240', '19/09 09:00', true]
 ];
 const wj1SessionsHead = () => pageHead('Phiên chat AI', 'Mỗi cuộc trò chuyện (chat riêng hoặc nhóm) là một phiên; ngữ cảnh trò chuyện của trợ lý AI giữ ở đây. Có thể chứa dữ liệu bệnh nhân: chỉ nhân viên được phân quyền xem.');
-const wj1SessionCols = ['Tên', 'Account', 'Loại', 'Tin nhắn', 'Tin cuối', 'Bot', ['', '120px']];
+const wj1SessionCols = [['Tên', '1.7fr'], 'Account', 'Loại', 'Tin nhắn', 'Tin cuối', 'Bot', ['', '120px']];
 const wj1SessionRow = ([name, id, acc, kind, n, last, on]) => [
   wj1Who(name, id), [badge(acc, 'neutral', { dot: false })], [badge(kind, kind === 'Nhóm' ? 'warning' : 'info', { dot: false })], n, last,
   [wj1Toggle(on ? 'Bot đang bật - bấm để tắt' : 'Bot đang tắt - bấm để bật', on)],
@@ -91,10 +91,10 @@ const wj1Contacts = [
   ['Trần Minh Anh', 'Pema CSKH (Zalo Bot)', 'u-demo-002', '7', '02/09 10:15', '20/09 08:35'],
   ['Khách chưa gắn hồ sơ', 'Pema CSKH (Zalo Bot)', 'u-demo-004', '2', '20/09 06:50', '20/09 07:00'],
   ['Lễ tân Trâm', 'Zalo lễ tân (cá nhân)', 'u-demo-021', '64', '01/08 08:00', '20/09 06:00'],
-  ['Nhóm điều phối phòng khám', 'Zalo lễ tân (cá nhân)', 'g-demo-001', '240', '01/08 08:05', '19/09 09:00']
+  ['Nhóm điều phối', 'Zalo lễ tân (cá nhân)', 'g-demo-001', '240', '01/08 08:05', '19/09 09:00']
 ];
 const wj1ContactsHead = () => pageHead('Danh bạ', 'Tự thu thập từ mọi tin nhắn đến, kể cả người trợ lý AI không trả lời');
-const wj1ContactCols = ['Tên', 'Account', 'User ID', 'Số tin', 'Lần đầu', 'Gần nhất', ['', '60px']];
+const wj1ContactCols = [['Tên', '1.7fr'], 'Account', 'User ID', 'Số tin', 'Lần đầu', 'Gần nhất', ['', '60px']];
 const wj1ContactsPage = () => [wj1ContactsHead(), wj1Toolbar('Tìm theo tên hoặc user ID...'), table(wj1ContactCols, wj1Contacts.map(([n, a, u, c, f, l]) => [
   wj1Who(n, ''), [badge(a, 'neutral', { dot: false })], u, c, f, l, [btn('', 'danger', { ico: true, icon: 'delete', aria: 'Xóa danh bạ', sm: true })]]))];
 const wj1FriendsHead = () => pageHead('Bạn bè', 'Duyệt yêu cầu kết bạn và xem danh sách bạn (chỉ nick cá nhân đang chạy)');
@@ -142,7 +142,7 @@ const wj1MemoryHead = () => pageHead('Trí nhớ', 'Điều trợ lý AI ghi nh�
 
 // ---- Kho tri thức ----
 const wj1KbHead = () => pageHead('Kho tri thức', 'Tài liệu nạp ở đây được cắt đoạn để agent tra cứu qua công cụ kb_search - nạp xong phải GÁN cho agent thì bot mới đọc được', [secondary('Thử tìm'), secondary('Hướng dẫn'), primary('Thêm nguồn')]);
-const wj1KbCols = ['Tên', ['Định dạng', '90px'], ['Trạng thái', '110px'], ['Agent đang dùng', '130px'], ['Bác sĩ duyệt', '170px'], ['Số đoạn', '70px'], ['Dung lượng', '90px'], ['Ngày', '100px'], ['', '1.1fr']];
+const wj1KbCols = [['Tên', '1.4fr'], ['Định dạng', '64px'], ['Trạng thái', '96px'], ['Agent đang dùng', '96px'], ['Bác sĩ duyệt', '130px'], ['Số đoạn', '56px'], ['Dung lượng', '76px'], ['Ngày', '86px'], ['', '310px']];
 const wj1KbSrc = [
   ['Hướng dẫn chăm sóc da sau laser', 'docx', 'Sẵn sàng', '2 agent', true, '3', '47,1 KB', '31/08 09:00'],
   ['Dấu hiệu cần liên hệ phòng khám', 'Gõ tay', 'Sẵn sàng', '1 agent', true, '2', '1,2 KB', '02/09 10:00'],
@@ -159,7 +159,7 @@ const wj1KbRow = ([name, fmt, st, ag, ok, n, size, date, guide], o = {}) => {
   const nameCell = [strong(name), failed ? txt('Không đọc được nội dung file (định dạng không hỗ trợ).', { size: 'l', tone: 'danger' }) : null, failed ? sm('Đã thử 1 lần') : null, guide ? badge(guide, 'info', { dot: false }) : null].filter(Boolean);
   const approve = o.doctor ? [txt(ok ? 'Đã duyệt' : 'Chưa duyệt', { size: 'l' })]
     : [btn('', 'quiet', { ico: true, icon: ok ? 'toggle_on' : 'toggle_off', aria: ok ? 'Bỏ chữ ký duyệt của bác sĩ' : 'Bác sĩ xác nhận nguồn này đúng để trợ lý trả lời bệnh nhân' }), txt(ok ? 'Đã duyệt' : 'Chưa duyệt', { size: 'l' })];
-  const acts = [failed || o.retry ? quiet('Xử lý lại', { icon: 'refresh', sm: true }) : null, o.doctor ? null : quiet('Nhãn hướng dẫn', { sm: true, aria: 'Nhãn hướng dẫn' }), quiet('Xem đoạn', { icon: 'visibility', sm: true }), danger('Xóa', { sm: true })].filter(Boolean);
+  const acts = [failed || o.retry ? quiet('Xử lý lại', { sm: true }) : null, o.doctor ? null : quiet('Nhãn hướng dẫn', { sm: true, aria: 'Nhãn hướng dẫn' }), quiet('Xem đoạn', { sm: true }), danger('Xóa', { sm: true })].filter(Boolean);
   return [nameCell, fmt, [badge(status, status === 'Hỏng' ? 'danger' : status === 'Sẵn sàng' ? 'success' : 'warning')],
     [quiet(o.doctor ? '-' : ag === 'Chưa gán' ? 'Chưa gán' : ag, { icon: ag === 'Chưa gán' && !o.doctor ? 'warning' : 'group', sm: true, aria: 'Đổi agent đọc được nguồn này' })],
     cell(approve, { row: true }), n, size, date, cell(acts, { row: true })];
