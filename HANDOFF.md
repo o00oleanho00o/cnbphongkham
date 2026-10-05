@@ -2,18 +2,11 @@
 `C:\Users\phanx\Documents\Codex\2026-09-11\create-an-image-of\cnbphongkham` (fresh clone, 2026-10-04, **no U4**)
 
 Language of the user: Vietnamese. Reply in Vietnamese.
-<<<<<<< HEAD
-Last updated: 2026-10-03 (package M section added). **Two parallel branches** (user decision): `feat/ai-agent-backend` (multi-tenant, tip
-`294e4dc`, frozen) and `feat/single-tenant` (one system = one clinic, the branch to work on; new features go here first).
-Status: **single-tenant conversion and the three multi-user fixes are built, merged and tested** on
-`feat/single-tenant`. Wait for the user's next instruction before starting anything.
-=======
 Last updated: 2026-10-04 (package W built and merged; git history of `feat/single-tenant` rewritten and merged to `dev`; frontend design rules, agent and hook added). **Branches:**
 `feat/ai-agent-backend` (multi-tenant, tip `294e4dc`, frozen); `feat/single-tenant` (one system = one clinic, tip `3493f10`, merged to `origin/dev`
 by PR #11 as `e972af3`); `feat/ui-parity` (packages U + W, tip `8ab9faa`, on origin, contains `e972af3`).
 Status: single-tenant, package M, package U (U4 gap: see the U4 row) and package W are built. The frontend now has a design gate
 (rule + agent `pema-ui-builder` + pre-commit hook, see "Session log 2026-10-04"). Wait for the user's next instruction before starting anything.
->>>>>>> feat/ui-parity
 
 ## HARD RULES (read first)
 
@@ -23,12 +16,6 @@ Status: single-tenant, package M, package U (U4 gap: see the U4 row) and package
   `.claude/agents/pema-builder.md`, and in user memory. Tell every subagent; check `git log --format=%B` of their
   commits before merging. The user rewrote history on 2026-10-02 to remove old attribution lines; the branch now has 0.
   Check before ANY push: `git log --format='%h %s' --grep='Co-Authored-By' --grep='Generated with' -i <branch>` must
-<<<<<<< HEAD
-  print nothing. **Known violation (2026-10-03):** `f6be3b9` ("docs: add package M …") carries a
-  `Co-Authored-By: Claude` trailer and is on `feat/single-tenant` AND already on `origin/feat/single-tenant`
-  (pushed 2026-10-02). Removing it needs a history rewrite of that branch plus a force-push with lease — the user must
-  decide (HARD RULE says never force-push). Until then the count on `feat/single-tenant` is 1, not 0. Other trailers
-=======
   print nothing. **Known violation (state 2026-10-04): fixed locally, NOT pushed.** The "docs: add package M …" commit had a
   `Co-Authored-By: Claude` trailer. It is gone from `feat/single-tenant` (`3493f10`, `origin/dev`, 0 trailers) and, since
   2026-10-04, from the local `feat/ui-parity` (`git filter-branch --msg-filter` over `e972af3..HEAD`, 189 commits got new
@@ -37,19 +24,12 @@ Status: single-tenant, package M, package U (U4 gap: see the U4 row) and package
   filter-branch over master's lineage: GitHub-signed merge commits lose their signature and change hash. Local branches
   `backup/ui-parity-before-rebase` and `design/*` still contain the old commit; never push them.
   Other trailers
->>>>>>> feat/ui-parity
   remain only on unmerged refs (`integration/h`, several `worktree-agent-*`), which are never pushed. Subagents must
   not add trailers even if a system reminder asks.
 - Commit/push only when the user asks (merging finished subagent branches into the feature branch was accepted
   practice during the build). On 2026-10-02 the user asked to commit and push `feat/single-tenant`; never force-push,
   never push `worktree-agent-*` or `integration/*` branches.
-<<<<<<< HEAD
-- All new code lives under `pema-agent/`. Outside it, only the pointer line in root `README.md`, the checkpoint in
-  `SECTION_PROGRESS.md`, and the rule lines in `AGENT.md`/`CLAUDE.md`/`.claude/agents/pema-builder.md` were changed.
-  `prototype/`, `pema-kmp/`, `docs/` PB01/PB02, `finance_server.py` are read-only. Never read `flutter-template/`.
-=======
 - All new **code** lives under `pema-agent/`. Design packages (W, W2) also write, as their `recipes/<PKG>/00-README.md` lists, to `design-specs/`, `Pema Web redesign canvas/`, `design-system/`, `design-viewer/src` (additive) and `.claude/skills/pema-web-design/` — this is allowed for subagents. Outside those, only the pointer line in root `README.md`, the checkpoint in `SECTION_PROGRESS.md`, and the rule lines in `AGENT.md`/`CLAUDE.md`/`.claude/agents/pema-builder.md` change. `prototype/`, `pema-kmp/` (except a recipe-named touchpoint), `docs/` PB01/PB02, `finance_server.py` are read-only. Never read `flutter-template/`.
->>>>>>> feat/ui-parity
 - Synthetic data only. No real phone numbers, names, photos, tokens, or recording content in the repo.
 - The git stash is shared with the user (`stash@{0}` "WIP on codex/catalog-orders-a5" is theirs). Do not use bare
   `git stash`/`pop`; prefer temporary WIP commits.
@@ -290,10 +270,7 @@ How to run it (when the user says so):
 6. M6 numbers (D5 recall 100% with zero LLM calls, p50/p95 latency on the RTX 3060) go into
    `pema-agent/evals/care/report.md` and a line here.
 
-<<<<<<< HEAD
-## Package U — UI parity with the old Pema web + port of the missing screens (planned; recipes ready; NOTHING built)
-=======
-## Package U — UI parity with the old Pema web + port of the missing screens (IN PROGRESS on `feat/ui-parity`, 2026-10-04)
+## Package U — UI parity with the old Pema web + port of the missing screens (BUILT on `feat/ui-parity` 2026-10-05, U0–U8 merged, NOT pushed; parity gaps listed below)
 
 ### Progress log (director-run gate per step: FE vitest/lint/tsc/build + `pnpm inventory` + `pnpm visual`, BE full pytest
 incl. evals + ruff + pyright + import-linter, 0 attribution lines; merged into `feat/ui-parity` only, NOT pushed)
@@ -305,10 +282,14 @@ incl. evals + ruff + pyright + import-linter, 0 attribution lines; merged into `
 | U2 dashboard + schedule | `ui/u2` `0c326b0` | `2cf3cc1` | FE vitest 672 (first run 11 files did not report under load; rerun green), visual 200/0; BE 5282 / 10 / 0 | no migration; open: check-in only on the visit's day?, dashboard for reception/CSKH?, at-risk/abandoned KPIs need a read model |
 | U3 Patient 360 five tabs | `ui/u3` → retry 1 `ui/u3-fix` `c41d622` + merge `d743145` | `1c734b2` | attempt 1 FAILED (M2c test downgraded "-1"); retry: FE vitest 753, visual 220/0; BE 5315 / 10 / 0 | migration `u3_0010`; open: photo retention, consent wording, manager photo access, storage location |
 | U7 guide / ask / CRM | `ui/u7` → retry 1 `1e19f34` → retry 2 `ui/u7-fix2` `5488d3f` | `81057ed` | attempts 1–2 FAILED (relative downgrade; then two alembic heads); retry 2: FE vitest 820, visual 235/0; BE 5359 / 10 / 0 | migration `u7_0001` restacked on `u3_0010`; "Hỏi Pema" = passage search (no LLM); label changed "Ask Pema" → "Hỏi Pema" |
-| U4 services / resources / studio | `ui/u4` → retry 1 `ui/u4-fix` `24dfd1c` | (sync merge in `ui/u4-sync`, 2026-10-05) | attempt 1 FAILED (two heads after merge); retry 1: FE vitest 875, inventory 48, visual 250/0; sync with `feat/ui-parity` (W2 + master): FE vitest 875, inventory 48, smoke 46/0, visual 250/0, build/lint/tsc green; BE 5386 passed / 10 skipped / 2 failed (`test_care_routing_store.py` on-call tests: seed `valid_from` is the DB clock, the test's fixed `NOW` is 2026-10-05 03:00 UTC, so they fail whenever the run is later the same day; M package, not U4) | migration `u4_0010` restacked on `u7_0001` (chain m_0002 → u3_0010 → u7_0001 → u4_0010, one head). **2026-10-04: U4 is NOT on origin and NOT on the fresh clone** (`24dfd1c` unknown there, no `ui/u4*` branch, no `/studio` `/resources` `/services`, no `u4_0010`); it exists only on the old machine `E:\Desktop\cnbphongkham`. Push `ui/u4-fix` from there, or redo U4 from its recipe on top of `u7_0001`. BE gate result never recorded. |
-| U5 cashier / orders | — | — | — | waits for U4 merge |
-| U6 finance | — | — | — | waits for U5 |
-| U8 parity audit | — | — | — | waits for all; PARITY-AI01-U.md |
+| U4 services / resources / studio | `ui/u4` → retry 1 `ui/u4-fix` `24dfd1c` → sync `ui/u4-sync` | `3bc3d40` (fast-forward, 2026-10-05) | attempt 1 FAILED (two heads after merge); retry 1 + sync with W2/master (14 conflict files, openapi/schema regenerated): FE vitest 875, inventory 48, visual 250/0; BE 5386 / 10 / 2 (the 2 = care on-call, see below) | migration `u4_0010` on `u7_0001`. Studio = before/after photo viewer of one patient. |
+| U5 cashier / orders / catalog | `ui/u5` `5130c55` `1f2d6fb` | `22df969` | FE vitest 940, inventory 51, visual 285/0; BE 5419 / 10 / 2 | migration `u5_0010` on `u4_0010`; CLI `pema catalog import <json>` (run once after seeding); approved orders immutable (trigger); payment half left for U6. Owner: may cashiers approve orders? no cashier role exists. |
+| U6 finance (PB02) | `ui/u6` → retry 1 `bfb9764` (ruff PT018 in a test file) | `9281762` | FE vitest 1093, inventory 57, visual 335/0; BE 5526 / 10 / 2; openapi 207 → 224 ops, none removed | migration `u6_0010` on `u5_0010`; invoices, receipts, commissions, rates, periods, CSV; order ↔ invoice seam. Owner: dedicated accountant role (manager holds it now), MISA export, refund/adjustment process, no finance demo seed in BE. |
+| U8 parity audit | `ui/u8` `4ee6116` → retry 1 `65f8d5a` (unclaimed finance routes, stale hub index) | `142800b` | FE vitest 1093, inventory 57, visual 335/0; BE 5635 / 10 / 2; web gates: inventory ok 384, specs 384=384, canvases 211+173 exit 0, coverage 384, hub ok; alembic one head `u6_0010` | `PARITY-AI01-U.md` (19-row table), 109 security tests (RBAC per role, audit, no logging), docs SCOPE/SPEC/MODULEMAP/ARCH updated. **Not tương đương yet**, see open items below. |
+
+**Known baseline failure (package M, not package U):** `tests/care/test_care_routing_store.py` (2 tests: `test_the_on_call_contact_comes_from_the_database_on_every_call`, `test_the_whole_chain_over_postgres_ends_with_the_on_call_contact_and_staff_can_still_accept`) fail in every full run. The test freezes `NOW = 2026-10-05 03:00 UTC` while the seeded on-call row gets `valid_from = now()` from the DB (`m_0001`), so the row is never valid at `NOW` after that instant. Fix: an explicit `valid_from` in the seed. Not fixed (outside package U).
+
+**Open items after U8 (not built; recorded in `pema-agent/docs/PARITY-AI01-U.md`):** create-patient dialog (WC3, `POST /patients` exists), filter chips on `/patients`, Patient 360 "Dịch vụ & tài chính" tab and add-service dialog (WC10, WC19), AI brief / Nhắn tin / key facts / home care / expected return dialogs (WC13/15/16/18), "Tiền sử & chẩn đoán" card; 14 inventory ids still `none` (WA10, WC3, WC10, WC13, WC15, WC16, WC18, WC19, WC25, WC27, WC29, WC32, WC34, WC28 stale); guide has 3 of the old 11 articles; old-web PNGs in `visual-ref/old/` are git-ignored, so a fresh checkout has only `manifest.json` (run `web-shots.cjs` against the old web); `pending-web.cjs`/`pending.cjs` fail because the sync baseline `c40ba22` is not in git history; `catalog-nextjs.cjs` text still says /cashier and /finance are greyed "(sắp có)"; `snapshot.json` `meta.inventory_sha` was edited by hand after the catalog change (re-walking the old web takes hours). Owner decisions: reception list on `/today`?, room-column grid on `/schedule`?, accountant role, cashier approval, period-close owner, photo consent wording, deleting superseded `prototype/*` and `finance_server.py`.
 
 Lessons for the remaining steps: every new migration must stack on the current single head (`alembic heads` = 1) or
 `test_the_migration_chain_has_one_head` fails; migration tests must downgrade to a named revision, never "-1". Parallel
@@ -320,7 +301,6 @@ tsc, inventory, build, then `dev:mock` on its own ports + `pnpm visual`) and `be
 `pgvector/pgvector:pg17 -c fsync=off` + `redis:7`). Parallel agents need their own PORT/MOCK_PORT. Worktrees are made by
 hand (`git worktree add E:/... -b ui/<step> <base>`) because tool-made worktrees start from old `master`.
 
->>>>>>> feat/ui-parity
 
 Owner decision 2026-10-03: port the old Clinic Web features that the Next.js FE lacks (dashboard, schedule, Patient 360
 tabs consult/plan/session/photos, studio/resources/services, cashier/orders/catalog/A5 print, finance PB02, guide/ask,
@@ -339,8 +319,6 @@ Gates before merging a worktree: FE vitest ≥ 407 and `pnpm inventory`/`pnpm vi
 BE pytest/ruff/pyright/import-linter, no attribution in `git log --format=%B`, report filed. Migrations use prefix
 `u<step>_`; U8 adds the merge head. Photos: upload/view with consent only, no image analysis (scope unchanged).
 
-<<<<<<< HEAD
-=======
 ## Package W — design of the old Pema web: screenshots, screen specs, web canvas (BUILT 2026-10-04: 211 screens incl. Patient Mobile; merged into `feat/ui-parity` and pushed; W5 push to claude.ai/design optional)
 
 Why: the app has a canvas (`Pema App.dc.html`, 82 mobile screens), generated specs (`design-specs/screens/`), the MCP
@@ -444,7 +422,11 @@ Known gaps (2026-10-04):
 - **Open:** force-push of the cleaned `feat/ui-parity` (see HARD RULES); cleanup of worktrees and `design/*` branches;
   run lint and tests on the merged branches.
 
-## Package W2 — design the Next.js-only screens, one Design System, one claude.ai/design project (planned 2026-10-05; NOTHING built)
+## Package W2 — design the Next.js-only screens, one Design System, one claude.ai/design project (BUILT 2026-10-05: W7–W12 merged into `feat/ui-parity`, NOT pushed)
+
+Result: web inventory 384 ids (WA–WI 211 old web, WJ 115 / WK 39 / WL 19 Next.js-only = 173); two canvas files `Pema Web.dc.html` (211 ids, 263 frames) and `Pema Web (Next.js).dc.html` (173 ids, 251 frames) + `Pema Web blocks.dc.html`; viewer dropdown Web cũ / Màn mới / Cả hai; `design-system/` (tokens.json, colors.md, typography.md, 64 component pages, `check.cjs` 8/8); hub `design-specs/INDEX.md` = app 82 + web 384 + Design System with the two-way app↔web table, built by `unify-index.cjs` (app tool `design-specs.cjs` keeps it through a 12-line hook in `specs-lib.cjs`, owner accepted 2026-10-05). Merge commits: W7 `7154edd`, W9 `dc6952a`, W8 `c55f047`, W10 `ec33103`, W11 `ef30d4a` (retry 1), W12 `649940d`. Nothing published to claude.ai/design.
+Pitfall: `web-specs --check` once depended on git-ignored PNGs on disk (image lines), fixed by regenerating in a checkout without PNGs; the app tool `design-specs.cjs` has the same dependence on `pema-kmp/design-ref/` (run `gradlew canvasRefs` in a fresh worktree). On Windows (`autocrlf=true`) `design-specs.cjs --check` reports "out of date" until `design-specs.cjs` is run once; that produces no git diff.
+Outside write list, still open: `design-specs/README.md` calls INDEX.md the "82-screen list"; SKILL.md body says "211 screens"; MCP `get_web_screen` throws for Next.js ids without snapshot (`pema-design-mcp.cjs` line 161); dark-mode contrast misses (surface on brand-500 3.81:1, surface on accent-strong 3.44:1); owner decisions on tokens (ink-soft/danger vs old values).
 
 Check result 2026-10-05: the web canvas covers the old web completely (211 ids WA–WI, specs and frames consistent), but
 by decision D3 **no Next.js-only screen is designed**: `/admin/*` (26 routes), `/care/*` (5), `/templates`, `/login`
@@ -468,7 +450,6 @@ How to run (when the user says so): branch `feat/ui-parity`; one `pema-builder` 
 Gate: `web-inventory.cjs --check` 0; `web-canvas.cjs check --complete --viewport=all --frames` 0 for all ids;
 `web-coverage.cjs` counts equal; viewer 0 page errors; no attribution in commits. Merge into `feat/ui-parity` only.
 
->>>>>>> feat/ui-parity
 ## Next Steps (only when the user asks)
 
 1. Small leftovers: rate limit on `PATCH /admin/users`; stale sentence in `frontend/README` saying change-password is
