@@ -1,6 +1,6 @@
 # PARITY-AI01-U — Package U parity audit (step U8)
 
-Date: 2026-10-05. Branch `ui/u8` on `feat/ui-parity` at `9281762` (U0..U7 merged). Plan: [PLAN-AI01-U](PLAN-AI01-U.md) section 5.
+Date: 2026-10-05. Branch `ui/u8` on `feat/ui-parity` at `fa3a6a2` (U0..U7 merged). Plan: [PLAN-AI01-U](PLAN-AI01-U.md) section 5.
 Recipe: `recipes/U/09-U8-parity-audit.md`. Everything here was run on this checkout; numbers are from that run.
 
 ## 1. Final numbers
