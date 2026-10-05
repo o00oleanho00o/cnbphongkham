@@ -215,9 +215,9 @@ Quoted in the brief but not found verbatim in the front-end source (built from p
 - Canvas note: Next.js › /admin/care/on-call · tab 2: số Zalo trực 24/24, điểm cuối của chuỗi chuyển giao; một thẻ mỗi số
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WK4-1440x900.png`
-- `pema-agent/frontend/visual-ref/old/WK4-1920x1020.png`
-- `pema-agent/frontend/visual-ref/old/WK4-390x844.png`
+- `pema-agent/frontend/visual-ref/old/WK4-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
+- `pema-agent/frontend/visual-ref/old/WK4-1920x1020.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
+- `pema-agent/frontend/visual-ref/old/WK4-390x844.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

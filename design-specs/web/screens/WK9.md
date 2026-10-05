@@ -293,9 +293,9 @@ Kit components used: Button×30, Field×15, Card×2, Sidebar×1, TopBar×1, Page
 - Canvas note: Next.js › /admin/care/matrix · tab 3: ma trận độ sâu × mức tự chủ, đang chờ bác sĩ duyệt; bác sĩ thấy nút "Bác sĩ duyệt"
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WK9-1440x900.png`
-- `pema-agent/frontend/visual-ref/old/WK9-1920x1020.png`
-- `pema-agent/frontend/visual-ref/old/WK9-390x844.png`
+- `pema-agent/frontend/visual-ref/old/WK9-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
+- `pema-agent/frontend/visual-ref/old/WK9-1920x1020.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
+- `pema-agent/frontend/visual-ref/old/WK9-390x844.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

@@ -257,9 +257,9 @@ Kit components used: Button×39, Badge×7, Field×2, Sidebar×1, TopBar×1, Page
 - Canvas note: Next.js › /admin/users · danh sách tài khoản đăng nhập, bộ lọc vai trò và trạng thái, thao tác của chủ phòng khám
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WJ1-1440x900.png`
-- `pema-agent/frontend/visual-ref/old/WJ1-1920x1020.png`
-- `pema-agent/frontend/visual-ref/old/WJ1-390x844.png`
+- `pema-agent/frontend/visual-ref/old/WJ1-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
+- `pema-agent/frontend/visual-ref/old/WJ1-1920x1020.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
+- `pema-agent/frontend/visual-ref/old/WJ1-390x844.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

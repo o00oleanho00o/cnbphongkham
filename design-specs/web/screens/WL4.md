@@ -302,9 +302,9 @@ Quoted in the brief but not found verbatim in the front-end source (built from p
 - Canvas note: Next.js › /templates · chủ phòng khám: soạn, sửa, bật/tắt; mẫu mới chờ bác sĩ duyệt
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WL4-1440x900.png`
-- `pema-agent/frontend/visual-ref/old/WL4-1920x1020.png`
-- `pema-agent/frontend/visual-ref/old/WL4-390x844.png`
+- `pema-agent/frontend/visual-ref/old/WL4-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
+- `pema-agent/frontend/visual-ref/old/WL4-1920x1020.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
+- `pema-agent/frontend/visual-ref/old/WL4-390x844.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

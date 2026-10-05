@@ -186,7 +186,7 @@ Kit components used: Button×7, Badge×7, Field×4, PageHeading×1, TableShell×
 - Canvas note: Next.js › /admin/users · hộp thoại sửa họ tên và vai trò; email không đổi được, nút Lưu tắt khi chưa thay đổi
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WJ6-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WJ6-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

@@ -189,7 +189,7 @@ Kit components used: Button×35, Sidebar×1, TopBar×1, Field×1, PageHeading×1
 - Canvas note: Next.js › /templates · danh sách trống
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WL6-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WL6-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

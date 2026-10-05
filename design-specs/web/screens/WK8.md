@@ -141,7 +141,7 @@ Kit components used: Field×5, Button×4, Badge×2, PageHeading×1, Tabs×1, Car
 - Canvas note: Next.js › /admin/care/on-call · hộp thoại Sửa số trực của số mẫu: thông báo "số mẫu để thử", người phụ trách và giờ hiệu lực đã có; trang Số trực 24/24 nằm phía sau
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WK8-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WK8-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

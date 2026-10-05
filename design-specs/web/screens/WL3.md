@@ -97,7 +97,7 @@ Kit components used: Field×2, Button×2, Card×1.
 - Canvas note: Next.js › /login · câu báo lỗi "Sai email hoặc mật khẩu." dưới ô mật khẩu, nút đăng nhập bật lại
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WL3-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WL3-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

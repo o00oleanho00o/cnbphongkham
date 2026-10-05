@@ -185,7 +185,7 @@ Kit components used: Button×34, Sidebar×1, TopBar×1, Field×1, PageHeading×1
 - Canvas note: Next.js › /admin/care/staff · chưa có hồ sơ nhân viên: trạng thái trống thay cho các thẻ
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WK2-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WK2-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

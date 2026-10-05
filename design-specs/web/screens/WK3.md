@@ -289,7 +289,7 @@ Kit components used: Field×21, Button×18, Card×11, Badge×10, PageHeading×1,
 - Canvas note: Next.js › /admin/care/staff · hộp thoại Sửa hồ sơ: kỹ năng, sức chứa, ngôn ngữ và ca trực theo tuần; trang Kỹ năng và ca trực nằm phía sau
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WK3-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WK3-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text
