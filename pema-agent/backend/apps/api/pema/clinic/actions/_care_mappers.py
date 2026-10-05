@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from pema.clinic.models import ConsultNote, Media, TreatmentPlan, TreatmentSession
+from pema.clinic.rbac import has_permission
+from pema_contracts.actions import ActionContext
 from pema_contracts.patient_care import (
     ConsultNoteOut,
     ConsultNoteStatus,
@@ -12,9 +14,12 @@ from pema_contracts.patient_care import (
     SessionDetailOut,
 )
 from pema_contracts.patients import TreatmentPlanOut, TreatmentSessionOut
+from pema_contracts.roles import Permission
 
 
-def plan_out(row: TreatmentPlan) -> TreatmentPlanOut:
+def plan_out(row: TreatmentPlan, *, money: bool = False) -> TreatmentPlanOut:
+    """``money`` shows the price fixed on the plan; only a caller with a finance permission gets it
+    (``plan_money_visible``), so care staff see the sessions and never the amounts."""
     return TreatmentPlanOut(
         id=row.id,
         episode_id=row.episode_id,
@@ -26,6 +31,18 @@ def plan_out(row: TreatmentPlan) -> TreatmentPlanOut:
         goal=row.goal,
         doctor_id=row.doctor_id,
         version=row.version,
+        unit_price_vnd=row.unit_price_vnd if money else None,
+        discount_vnd=row.discount_vnd if money else None,
+        agreed_price_vnd=row.agreed_price_vnd if money else None,
+        service_terms_version=row.service_terms_version if money else None,
+    )
+
+
+def plan_money_visible(ctx: ActionContext) -> bool:
+    """True for a caller who reads, collects or writes finance: owner, manager (and the accountant of U11)."""
+    return any(
+        has_permission(ctx, permission)
+        for permission in (Permission.FINANCE_READ, Permission.FINANCE_COLLECT, Permission.FINANCE_WRITE)
     )
 
 

@@ -62,10 +62,10 @@ async def list_users(
     status_code=status.HTTP_201_CREATED,
     summary="Owner creates a staff account",
     description=(
-        "Owner only (`admin.users`). Role is one of owner, manager, doctor, cs_staff, reception (never "
-        "`patient`). The e-mail is the sign-in name, unique per clinic (409 when taken). The initial "
-        "password has the same 8-character floor as a password change. Limited to 5 creations per minute "
-        "per owner. The audit entry never holds the password, the name or the e-mail."
+        "Owner only (`admin.users`). Role is one of owner, manager, doctor, cs_staff, reception, "
+        "accountant (never `patient`). The e-mail is the sign-in name, unique per clinic (409 when taken). "
+        "The initial password has the same 8-character floor as a password change. Limited to 5 creations "
+        "per minute per owner. The audit entry never holds the password, the name or the e-mail."
     ),
 )
 async def create_user(body: StaffUserCreate, db: auth.Database, ctx: auth.Ctx) -> StaffUserOut:
