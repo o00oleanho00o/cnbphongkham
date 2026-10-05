@@ -75,181 +75,6 @@
       "name": "Đăng nhập, khung & mẫu tin (Next.js)"
     }
   ],
-  "pending_nextjs": [
-    "WJ1",
-    "WJ2",
-    "WJ3",
-    "WJ4",
-    "WJ5",
-    "WJ6",
-    "WJ7",
-    "WJ8",
-    "WJ9",
-    "WJ10",
-    "WJ11",
-    "WJ12",
-    "WJ13",
-    "WJ14",
-    "WJ15",
-    "WJ16",
-    "WJ17",
-    "WJ18",
-    "WJ19",
-    "WJ20",
-    "WJ21",
-    "WJ22",
-    "WJ23",
-    "WJ24",
-    "WJ25",
-    "WJ26",
-    "WJ27",
-    "WJ28",
-    "WJ29",
-    "WJ30",
-    "WJ31",
-    "WJ32",
-    "WJ33",
-    "WJ34",
-    "WJ35",
-    "WJ36",
-    "WJ37",
-    "WJ38",
-    "WJ39",
-    "WJ40",
-    "WJ41",
-    "WJ42",
-    "WJ43",
-    "WJ44",
-    "WJ45",
-    "WJ46",
-    "WJ47",
-    "WJ48",
-    "WJ49",
-    "WJ50",
-    "WJ51",
-    "WJ52",
-    "WJ53",
-    "WJ54",
-    "WJ55",
-    "WJ56",
-    "WJ57",
-    "WJ58",
-    "WJ59",
-    "WJ60",
-    "WJ61",
-    "WJ62",
-    "WJ63",
-    "WJ64",
-    "WJ65",
-    "WJ66",
-    "WJ67",
-    "WJ68",
-    "WJ69",
-    "WJ70",
-    "WJ71",
-    "WJ72",
-    "WJ73",
-    "WJ74",
-    "WJ75",
-    "WJ76",
-    "WJ77",
-    "WJ78",
-    "WJ79",
-    "WJ80",
-    "WJ81",
-    "WJ82",
-    "WJ83",
-    "WJ84",
-    "WJ85",
-    "WJ86",
-    "WJ87",
-    "WJ88",
-    "WJ89",
-    "WJ90",
-    "WJ91",
-    "WJ92",
-    "WJ93",
-    "WJ94",
-    "WJ95",
-    "WJ96",
-    "WJ97",
-    "WJ98",
-    "WJ99",
-    "WJ100",
-    "WJ101",
-    "WJ102",
-    "WJ103",
-    "WJ104",
-    "WJ105",
-    "WJ106",
-    "WJ107",
-    "WJ108",
-    "WJ109",
-    "WJ110",
-    "WJ111",
-    "WJ112",
-    "WJ113",
-    "WJ114",
-    "WJ115",
-    "WK1",
-    "WK2",
-    "WK3",
-    "WK4",
-    "WK5",
-    "WK6",
-    "WK7",
-    "WK8",
-    "WK9",
-    "WK10",
-    "WK11",
-    "WK12",
-    "WK13",
-    "WK14",
-    "WK15",
-    "WK16",
-    "WK17",
-    "WK18",
-    "WK19",
-    "WK20",
-    "WK21",
-    "WK22",
-    "WK23",
-    "WK24",
-    "WK25",
-    "WK26",
-    "WK27",
-    "WK28",
-    "WK29",
-    "WK30",
-    "WK31",
-    "WK32",
-    "WK33",
-    "WK34",
-    "WK35",
-    "WK36",
-    "WK37",
-    "WK38",
-    "WK39",
-    "WL1",
-    "WL2",
-    "WL3",
-    "WL4",
-    "WL5",
-    "WL6",
-    "WL7",
-    "WL8",
-    "WL9",
-    "WL10",
-    "WL11",
-    "WL12",
-    "WL13",
-    "WL14",
-    "WL15",
-    "WL16",
-    "WL17",
-    "WL18",
-    "WL19"
-  ],
   "screens": [
     {
       "id": "WA1",
@@ -257,6 +82,7 @@
       "group": "WA",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "(app shell)",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -267,6 +93,7 @@
         "1440x900"
       ],
       "spec": "screens/WA1.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 17,
         "fields": 2,
@@ -283,6 +110,7 @@
       "group": "WA",
       "kind": "state",
       "role": "care-maianh",
+      "source": "old-web",
       "next_route": "(app shell)",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -293,6 +121,7 @@
         "1440x900"
       ],
       "spec": "screens/WA2.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 2,
@@ -309,6 +138,7 @@
       "group": "WA",
       "kind": "state",
       "role": "accountant",
+      "source": "old-web",
       "next_route": "(app shell)",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -319,6 +149,7 @@
         "1440x900"
       ],
       "spec": "screens/WA3.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 2,
@@ -335,6 +166,7 @@
       "group": "WA",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "(app shell)",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -344,6 +176,7 @@
         "1440x900"
       ],
       "spec": "screens/WA4.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 0,
         "fields": 0,
@@ -360,6 +193,7 @@
       "group": "WA",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "(app shell)",
       "next_status": "restyle (U1)",
       "app_canvas": [],
@@ -367,6 +201,7 @@
         "1440x900"
       ],
       "spec": "screens/WA5.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 17,
         "fields": 2,
@@ -383,6 +218,7 @@
       "group": "WA",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "(app shell)",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -392,6 +228,7 @@
         "1440x900"
       ],
       "spec": "screens/WA6.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 17,
         "fields": 2,
@@ -408,6 +245,7 @@
       "group": "WA",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "(app shell)",
       "next_status": "restyle (U1)",
       "app_canvas": [],
@@ -415,6 +253,7 @@
         "1440x900"
       ],
       "spec": "screens/WA7.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 17,
         "fields": 2,
@@ -431,6 +270,7 @@
       "group": "WA",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "(app shell)",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -440,6 +280,7 @@
         "1440x900"
       ],
       "spec": "screens/WA8.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 17,
         "fields": 2,
@@ -456,6 +297,7 @@
       "group": "WA",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "(app shell)",
       "next_status": "restyle (U1)",
       "app_canvas": [],
@@ -463,6 +305,7 @@
         "1440x900"
       ],
       "spec": "screens/WA9.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 17,
         "fields": 2,
@@ -479,6 +322,7 @@
       "group": "WA",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "none",
       "app_canvas": [],
@@ -488,6 +332,7 @@
         "390x844"
       ],
       "spec": "screens/WA10.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 1,
         "fields": 1,
@@ -504,6 +349,7 @@
       "group": "WB",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/dashboard",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -516,6 +362,7 @@
         "390x844"
       ],
       "spec": "screens/WB1.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 12,
         "fields": 0,
@@ -532,6 +379,7 @@
       "group": "WB",
       "kind": "state",
       "role": "doctor-mai",
+      "source": "old-web",
       "next_route": "/dashboard",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -542,6 +390,7 @@
         "1440x900"
       ],
       "spec": "screens/WB2.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 4,
         "fields": 0,
@@ -558,6 +407,7 @@
       "group": "WB",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/today",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -570,6 +420,7 @@
         "390x844"
       ],
       "spec": "screens/WB3.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 14,
         "fields": 3,
@@ -586,6 +437,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/today",
       "next_status": "restyle (U1)",
       "app_canvas": [],
@@ -593,6 +445,7 @@
         "1440x900"
       ],
       "spec": "screens/WB4.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 3,
@@ -609,6 +462,7 @@
       "group": "WB",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -621,6 +475,7 @@
         "390x844"
       ],
       "spec": "screens/WB5.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 11,
         "fields": 3,
@@ -637,6 +492,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -646,6 +502,7 @@
         "1440x900"
       ],
       "spec": "screens/WB6.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 10,
         "fields": 3,
@@ -662,6 +519,7 @@
       "group": "WB",
       "kind": "dialog",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -672,6 +530,7 @@
         "1440x900"
       ],
       "spec": "screens/WB7.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 7,
@@ -688,6 +547,7 @@
       "group": "WB",
       "kind": "dialog",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -697,6 +557,7 @@
         "1440x900"
       ],
       "spec": "screens/WB8.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 8,
@@ -713,6 +574,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -722,6 +584,7 @@
         "1440x900"
       ],
       "spec": "screens/WB9.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 7,
@@ -738,6 +601,7 @@
       "group": "WB",
       "kind": "state",
       "role": "doctor-mai",
+      "source": "old-web",
       "next_route": "/today",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -747,6 +611,7 @@
         "1440x900"
       ],
       "spec": "screens/WB10.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 14,
         "fields": 3,
@@ -763,6 +628,7 @@
       "group": "WB",
       "kind": "state",
       "role": "doctor-mai",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -772,6 +638,7 @@
         "1440x900"
       ],
       "spec": "screens/WB11.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 3,
@@ -788,6 +655,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -797,6 +665,7 @@
         "1440x900"
       ],
       "spec": "screens/WB12.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 3,
@@ -813,6 +682,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -822,6 +692,7 @@
         "1440x900"
       ],
       "spec": "screens/WB13.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 3,
@@ -838,6 +709,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -847,6 +719,7 @@
         "1440x900"
       ],
       "spec": "screens/WB14.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 3,
@@ -863,6 +736,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -872,6 +746,7 @@
         "1440x900"
       ],
       "spec": "screens/WB15.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 7,
@@ -888,6 +763,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -897,6 +773,7 @@
         "1440x900"
       ],
       "spec": "screens/WB16.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 7,
@@ -913,6 +790,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -922,6 +800,7 @@
         "1440x900"
       ],
       "spec": "screens/WB17.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 7,
@@ -938,6 +817,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -947,6 +827,7 @@
         "1440x900"
       ],
       "spec": "screens/WB18.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 7,
@@ -963,6 +844,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -972,6 +854,7 @@
         "1440x900"
       ],
       "spec": "screens/WB19.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 7,
@@ -988,6 +871,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -997,6 +881,7 @@
         "1440x900"
       ],
       "spec": "screens/WB20.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 7,
@@ -1013,6 +898,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -1022,6 +908,7 @@
         "1440x900"
       ],
       "spec": "screens/WB21.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 8,
@@ -1038,6 +925,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -1047,6 +935,7 @@
         "1440x900"
       ],
       "spec": "screens/WB22.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 8,
@@ -1063,6 +952,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -1072,6 +962,7 @@
         "1440x900"
       ],
       "spec": "screens/WB23.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 8,
@@ -1088,6 +979,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/schedule",
       "next_status": "built (U2)",
       "app_canvas": [
@@ -1097,6 +989,7 @@
         "1440x900"
       ],
       "spec": "screens/WB24.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 8,
@@ -1113,6 +1006,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/today",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -1122,6 +1016,7 @@
         "1440x900"
       ],
       "spec": "screens/WB25.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 12,
         "fields": 3,
@@ -1138,6 +1033,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/today",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -1147,6 +1043,7 @@
         "1440x900"
       ],
       "spec": "screens/WB26.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 12,
         "fields": 3,
@@ -1163,6 +1060,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/today",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -1172,6 +1070,7 @@
         "1440x900"
       ],
       "spec": "screens/WB27.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 12,
         "fields": 3,
@@ -1188,6 +1087,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/today",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -1197,6 +1097,7 @@
         "1440x900"
       ],
       "spec": "screens/WB28.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 12,
         "fields": 3,
@@ -1213,6 +1114,7 @@
       "group": "WB",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/today",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -1222,6 +1124,7 @@
         "1440x900"
       ],
       "spec": "screens/WB29.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 12,
         "fields": 3,
@@ -1238,6 +1141,7 @@
       "group": "WC",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients",
       "next_status": "built (U1)",
       "app_canvas": [
@@ -1250,6 +1154,7 @@
         "390x844"
       ],
       "spec": "screens/WC1.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 1,
@@ -1266,6 +1171,7 @@
       "group": "WC",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients",
       "next_status": "built (U1)",
       "app_canvas": [],
@@ -1273,6 +1179,7 @@
         "1440x900"
       ],
       "spec": "screens/WC2.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 1,
@@ -1289,6 +1196,7 @@
       "group": "WC",
       "kind": "modal",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "none",
       "app_canvas": [
@@ -1298,6 +1206,7 @@
         "1440x900"
       ],
       "spec": "screens/WC3.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 3,
@@ -1314,6 +1223,7 @@
       "group": "WC",
       "kind": "tab",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -1325,6 +1235,7 @@
         "390x844"
       ],
       "spec": "screens/WC4.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 13,
         "fields": 0,
@@ -1341,6 +1252,7 @@
       "group": "WC",
       "kind": "tab",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -1353,6 +1265,7 @@
         "390x844"
       ],
       "spec": "screens/WC5.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 3,
@@ -1369,6 +1282,7 @@
       "group": "WC",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -1378,6 +1292,7 @@
         "1440x900"
       ],
       "spec": "screens/WC6.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 10,
         "fields": 4,
@@ -1394,6 +1309,7 @@
       "group": "WC",
       "kind": "tab",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -1405,6 +1321,7 @@
         "390x844"
       ],
       "spec": "screens/WC7.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -1421,6 +1338,7 @@
       "group": "WC",
       "kind": "tab",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -1433,6 +1351,7 @@
         "390x844"
       ],
       "spec": "screens/WC8.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 10,
@@ -1449,6 +1368,7 @@
       "group": "WC",
       "kind": "tab",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -1460,6 +1380,7 @@
         "390x844"
       ],
       "spec": "screens/WC9.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 2,
@@ -1476,6 +1397,7 @@
       "group": "WC",
       "kind": "tab",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "none",
       "app_canvas": [
@@ -1487,6 +1409,7 @@
         "390x844"
       ],
       "spec": "screens/WC10.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -1503,6 +1426,7 @@
       "group": "WC",
       "kind": "tab",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U1)",
       "app_canvas": [
@@ -1515,6 +1439,7 @@
         "390x844"
       ],
       "spec": "screens/WC11.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -1531,6 +1456,7 @@
       "group": "WC",
       "kind": "tab",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U1)",
       "app_canvas": [
@@ -1542,6 +1468,7 @@
         "390x844"
       ],
       "spec": "screens/WC12.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 4,
         "fields": 0,
@@ -1558,6 +1485,7 @@
       "group": "WC",
       "kind": "modal",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "none",
       "app_canvas": [
@@ -1567,6 +1495,7 @@
         "1440x900"
       ],
       "spec": "screens/WC13.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 1,
@@ -1583,6 +1512,7 @@
       "group": "WC",
       "kind": "modal",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/inbox",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -1592,6 +1522,7 @@
         "1440x900"
       ],
       "spec": "screens/WC14.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 1,
@@ -1608,6 +1539,7 @@
       "group": "WC",
       "kind": "modal",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "none",
       "app_canvas": [
@@ -1617,6 +1549,7 @@
         "1440x900"
       ],
       "spec": "screens/WC15.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 2,
@@ -1633,6 +1566,7 @@
       "group": "WC",
       "kind": "modal",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "none",
       "app_canvas": [
@@ -1642,6 +1576,7 @@
         "1440x900"
       ],
       "spec": "screens/WC16.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 1,
@@ -1658,6 +1593,7 @@
       "group": "WC",
       "kind": "modal",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -1667,6 +1603,7 @@
         "1440x900"
       ],
       "spec": "screens/WC17.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 2,
@@ -1683,6 +1620,7 @@
       "group": "WC",
       "kind": "dialog",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "none",
       "app_canvas": [
@@ -1692,6 +1630,7 @@
         "1440x900"
       ],
       "spec": "screens/WC18.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 3,
@@ -1708,6 +1647,7 @@
       "group": "WC",
       "kind": "dialog",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "none",
       "app_canvas": [
@@ -1717,6 +1657,7 @@
         "1440x900"
       ],
       "spec": "screens/WC19.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 3,
@@ -1733,6 +1674,7 @@
       "group": "WC",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -1742,6 +1684,7 @@
         "1440x900"
       ],
       "spec": "screens/WC20.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 13,
         "fields": 0,
@@ -1758,6 +1701,7 @@
       "group": "WC",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U1)",
       "app_canvas": [
@@ -1767,6 +1711,7 @@
         "1440x900"
       ],
       "spec": "screens/WC21.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 4,
         "fields": 0,
@@ -1783,6 +1728,7 @@
       "group": "WC",
       "kind": "state",
       "role": "doctor-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -1792,6 +1738,7 @@
         "1440x900"
       ],
       "spec": "screens/WC22.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 11,
         "fields": 0,
@@ -1808,6 +1755,7 @@
       "group": "WC",
       "kind": "state",
       "role": "care-maianh",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -1818,6 +1766,7 @@
         "1440x900"
       ],
       "spec": "screens/WC23.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 0,
@@ -1834,6 +1783,7 @@
       "group": "WC",
       "kind": "state",
       "role": "care-maianh",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -1843,6 +1793,7 @@
         "1440x900"
       ],
       "spec": "screens/WC24.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 1,
         "fields": 0,
@@ -1859,6 +1810,7 @@
       "group": "WC",
       "kind": "state",
       "role": "care-maianh",
+      "source": "old-web",
       "next_route": null,
       "next_status": "none",
       "app_canvas": [
@@ -1868,6 +1820,7 @@
         "1440x900"
       ],
       "spec": "screens/WC25.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 1,
         "fields": 0,
@@ -1884,6 +1837,7 @@
       "group": "WC",
       "kind": "state",
       "role": "accountant",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -1894,6 +1848,7 @@
         "1440x900"
       ],
       "spec": "screens/WC26.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 0,
@@ -1910,6 +1865,7 @@
       "group": "WC",
       "kind": "state",
       "role": "accountant",
+      "source": "old-web",
       "next_route": null,
       "next_status": "none",
       "app_canvas": [
@@ -1920,6 +1876,7 @@
         "1440x900"
       ],
       "spec": "screens/WC27.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 4,
         "fields": 0,
@@ -1936,6 +1893,7 @@
       "group": "WC",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "none",
       "app_canvas": [
@@ -1945,6 +1903,7 @@
         "1440x900"
       ],
       "spec": "screens/WC28.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 14,
         "fields": 0,
@@ -1961,6 +1920,7 @@
       "group": "WC",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "none",
       "app_canvas": [
@@ -1970,6 +1930,7 @@
         "1440x900"
       ],
       "spec": "screens/WC29.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 13,
         "fields": 0,
@@ -1986,6 +1947,7 @@
       "group": "WC",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -1995,6 +1957,7 @@
         "1440x900"
       ],
       "spec": "screens/WC30.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 10,
@@ -2011,6 +1974,7 @@
       "group": "WC",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -2020,6 +1984,7 @@
         "1440x900"
       ],
       "spec": "screens/WC31.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 3,
@@ -2036,6 +2001,7 @@
       "group": "WC",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "none",
       "app_canvas": [
@@ -2045,6 +2011,7 @@
         "1440x900"
       ],
       "spec": "screens/WC32.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 1,
@@ -2061,6 +2028,7 @@
       "group": "WC",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U1)",
       "app_canvas": [
@@ -2070,6 +2038,7 @@
         "1440x900"
       ],
       "spec": "screens/WC33.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -2086,6 +2055,7 @@
       "group": "WC",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "none",
       "app_canvas": [
@@ -2095,6 +2065,7 @@
         "1440x900"
       ],
       "spec": "screens/WC34.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 3,
@@ -2111,6 +2082,7 @@
       "group": "WC",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/patients/[id]",
       "next_status": "built (U3)",
       "app_canvas": [
@@ -2120,6 +2092,7 @@
         "1440x900"
       ],
       "spec": "screens/WC35.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 2,
@@ -2136,6 +2109,7 @@
       "group": "WD",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/crm",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -2150,6 +2124,7 @@
         "390x844"
       ],
       "spec": "screens/WD1.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 6,
         "fields": 3,
@@ -2166,6 +2141,7 @@
       "group": "WD",
       "kind": "dialog",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/today",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -2176,6 +2152,7 @@
         "1440x900"
       ],
       "spec": "screens/WD2.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 7,
@@ -2192,6 +2169,7 @@
       "group": "WD",
       "kind": "dialog",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/crm",
       "next_status": "built (U7)",
       "app_canvas": [],
@@ -2199,6 +2177,7 @@
         "1440x900"
       ],
       "spec": "screens/WD3.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 1,
         "fields": 0,
@@ -2215,6 +2194,7 @@
       "group": "WD",
       "kind": "dialog",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/crm",
       "next_status": "built (U7)",
       "app_canvas": [],
@@ -2222,6 +2202,7 @@
         "1440x900"
       ],
       "spec": "screens/WD4.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 1,
         "fields": 0,
@@ -2238,6 +2219,7 @@
       "group": "WD",
       "kind": "dialog",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/crm",
       "next_status": "built (U7)",
       "app_canvas": [],
@@ -2245,6 +2227,7 @@
         "1440x900"
       ],
       "spec": "screens/WD5.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 0,
@@ -2261,6 +2244,7 @@
       "group": "WD",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/inbox",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -2273,6 +2257,7 @@
         "390x844"
       ],
       "spec": "screens/WD6.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 0,
@@ -2289,6 +2274,7 @@
       "group": "WD",
       "kind": "dialog",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/review",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -2298,6 +2284,7 @@
         "1440x900"
       ],
       "spec": "screens/WD7.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 1,
@@ -2314,6 +2301,7 @@
       "group": "WD",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/crm",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -2323,6 +2311,7 @@
         "1440x900"
       ],
       "spec": "screens/WD8.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 3,
@@ -2339,6 +2328,7 @@
       "group": "WD",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/crm",
       "next_status": "built (U7)",
       "app_canvas": [],
@@ -2346,6 +2336,7 @@
         "1440x900"
       ],
       "spec": "screens/WD9.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 1,
         "fields": 0,
@@ -2362,6 +2353,7 @@
       "group": "WD",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/crm",
       "next_status": "built (U7)",
       "app_canvas": [],
@@ -2369,6 +2361,7 @@
         "1440x900"
       ],
       "spec": "screens/WD10.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 1,
         "fields": 0,
@@ -2385,6 +2378,7 @@
       "group": "WD",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/today",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -2395,6 +2389,7 @@
         "1440x900"
       ],
       "spec": "screens/WD11.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 7,
@@ -2411,6 +2406,7 @@
       "group": "WD",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/today",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -2421,6 +2417,7 @@
         "1440x900"
       ],
       "spec": "screens/WD12.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 7,
@@ -2437,6 +2434,7 @@
       "group": "WD",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/today",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -2447,6 +2445,7 @@
         "1440x900"
       ],
       "spec": "screens/WD13.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 7,
@@ -2463,6 +2462,7 @@
       "group": "WD",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/today",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -2472,6 +2472,7 @@
         "1440x900"
       ],
       "spec": "screens/WD14.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 7,
@@ -2488,6 +2489,7 @@
       "group": "WD",
       "kind": "state",
       "role": "doctor-lan",
+      "source": "old-web",
       "next_route": "/inbox",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -2498,6 +2500,7 @@
         "1440x900"
       ],
       "spec": "screens/WD15.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 0,
         "fields": 0,
@@ -2514,6 +2517,7 @@
       "group": "WD",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/inbox",
       "next_status": "restyle (U1)",
       "app_canvas": [
@@ -2523,6 +2527,7 @@
         "1440x900"
       ],
       "spec": "screens/WD16.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 0,
@@ -2539,6 +2544,7 @@
       "group": "WE",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/studio",
       "next_status": "planned (U4)",
       "app_canvas": [
@@ -2550,6 +2556,7 @@
         "390x844"
       ],
       "spec": "screens/WE1.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 2,
@@ -2566,6 +2573,7 @@
       "group": "WE",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/studio",
       "next_status": "planned (U4)",
       "app_canvas": [
@@ -2575,6 +2583,7 @@
         "1440x900"
       ],
       "spec": "screens/WE2.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 3,
@@ -2591,6 +2600,7 @@
       "group": "WE",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/resources",
       "next_status": "planned (U4)",
       "app_canvas": [
@@ -2602,6 +2612,7 @@
         "390x844"
       ],
       "spec": "screens/WE3.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 1,
@@ -2618,6 +2629,7 @@
       "group": "WE",
       "kind": "dialog",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/resources",
       "next_status": "planned (U4)",
       "app_canvas": [
@@ -2627,6 +2639,7 @@
         "1440x900"
       ],
       "spec": "screens/WE4.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 5,
@@ -2643,6 +2656,7 @@
       "group": "WE",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/services",
       "next_status": "planned (U4)",
       "app_canvas": [
@@ -2654,6 +2668,7 @@
         "390x844"
       ],
       "spec": "screens/WE5.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 0,
@@ -2670,6 +2685,7 @@
       "group": "WE",
       "kind": "dialog",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/services",
       "next_status": "planned (U4)",
       "app_canvas": [
@@ -2679,6 +2695,7 @@
         "1440x900"
       ],
       "spec": "screens/WE6.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 5,
@@ -2695,6 +2712,7 @@
       "group": "WE",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/resources",
       "next_status": "planned (U4)",
       "app_canvas": [
@@ -2704,6 +2722,7 @@
         "1440x900"
       ],
       "spec": "screens/WE7.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 1,
@@ -2720,6 +2739,7 @@
       "group": "WE",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/resources",
       "next_status": "planned (U4)",
       "app_canvas": [
@@ -2729,6 +2749,7 @@
         "1440x900"
       ],
       "spec": "screens/WE8.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 5,
@@ -2745,6 +2766,7 @@
       "group": "WE",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/resources",
       "next_status": "planned (U4)",
       "app_canvas": [
@@ -2754,6 +2776,7 @@
         "1440x900"
       ],
       "spec": "screens/WE9.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 5,
@@ -2770,6 +2793,7 @@
       "group": "WE",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/services",
       "next_status": "planned (U4)",
       "app_canvas": [
@@ -2779,6 +2803,7 @@
         "1440x900"
       ],
       "spec": "screens/WE10.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 5,
@@ -2795,6 +2820,7 @@
       "group": "WE",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/services",
       "next_status": "planned (U4)",
       "app_canvas": [
@@ -2804,6 +2830,7 @@
         "1440x900"
       ],
       "spec": "screens/WE11.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 0,
@@ -2820,6 +2847,7 @@
       "group": "WF",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/cashier",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -2833,6 +2861,7 @@
         "390x844"
       ],
       "spec": "screens/WF1.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -2849,6 +2878,7 @@
       "group": "WF",
       "kind": "dialog",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/cashier",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -2859,6 +2889,7 @@
         "1440x900"
       ],
       "spec": "screens/WF2.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 2,
@@ -2875,6 +2906,7 @@
       "group": "WF",
       "kind": "dialog",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/cashier",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -2884,6 +2916,7 @@
         "1440x900"
       ],
       "spec": "screens/WF3.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 4,
         "fields": 5,
@@ -2900,6 +2933,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/cashier",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -2909,6 +2943,7 @@
         "1440x900"
       ],
       "spec": "screens/WF4.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 6,
         "fields": 15,
@@ -2925,6 +2960,7 @@
       "group": "WF",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/orders/[id]",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -2937,6 +2973,7 @@
         "390x844"
       ],
       "spec": "screens/WF5.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 0,
@@ -2953,6 +2990,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/orders/[id]/print",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -2962,6 +3000,7 @@
         "1440x900"
       ],
       "spec": "screens/WF6.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 4,
         "fields": 0,
@@ -2978,6 +3017,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/orders/[id]",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -2987,6 +3027,7 @@
         "1440x900"
       ],
       "spec": "screens/WF7.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 0,
@@ -3003,6 +3044,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/orders/[id]",
       "next_status": "planned (U5)",
       "app_canvas": [],
@@ -3010,6 +3052,7 @@
         "1440x900"
       ],
       "spec": "screens/WF8.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 4,
         "fields": 0,
@@ -3026,6 +3069,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/cashier",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3035,6 +3079,7 @@
         "1440x900"
       ],
       "spec": "screens/WF9.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 10,
@@ -3051,6 +3096,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/cashier",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3060,6 +3106,7 @@
         "1440x900"
       ],
       "spec": "screens/WF10.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 5,
@@ -3076,6 +3123,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/cashier",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3085,6 +3133,7 @@
         "1440x900"
       ],
       "spec": "screens/WF11.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 4,
         "fields": 5,
@@ -3101,6 +3150,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/orders/[id]",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3110,6 +3160,7 @@
         "1440x900"
       ],
       "spec": "screens/WF12.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 0,
@@ -3126,6 +3177,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/orders/[id]",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3135,6 +3187,7 @@
         "1440x900"
       ],
       "spec": "screens/WF13.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 0,
@@ -3151,6 +3204,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/orders/[id]",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3160,6 +3214,7 @@
         "1440x900"
       ],
       "spec": "screens/WF14.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 0,
@@ -3176,6 +3231,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/orders/[id]",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3185,6 +3241,7 @@
         "1440x900"
       ],
       "spec": "screens/WF15.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 0,
@@ -3201,6 +3258,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/orders/[id]",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3210,6 +3268,7 @@
         "1440x900"
       ],
       "spec": "screens/WF16.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 0,
@@ -3226,6 +3285,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/orders/[id]",
       "next_status": "planned (U5)",
       "app_canvas": [],
@@ -3233,6 +3293,7 @@
         "1440x900"
       ],
       "spec": "screens/WF17.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 4,
         "fields": 0,
@@ -3249,6 +3310,7 @@
       "group": "WF",
       "kind": "state",
       "role": "accountant",
+      "source": "old-web",
       "next_route": "/orders/[id]",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3258,6 +3320,7 @@
         "1440x900"
       ],
       "spec": "screens/WF18.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 4,
         "fields": 0,
@@ -3274,6 +3337,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/orders/[id]/print",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3283,6 +3347,7 @@
         "1440x900"
       ],
       "spec": "screens/WF19.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 4,
         "fields": 0,
@@ -3299,6 +3364,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/cashier",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3308,6 +3374,7 @@
         "1440x900"
       ],
       "spec": "screens/WF20.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 10,
@@ -3324,6 +3391,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/cashier",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3333,6 +3401,7 @@
         "1440x900"
       ],
       "spec": "screens/WF21.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 13,
         "fields": 0,
@@ -3349,6 +3418,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/cashier",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3358,6 +3428,7 @@
         "1440x900"
       ],
       "spec": "screens/WF22.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 12,
         "fields": 0,
@@ -3374,6 +3445,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/cashier",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3383,6 +3455,7 @@
         "1440x900"
       ],
       "spec": "screens/WF23.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 2,
@@ -3399,6 +3472,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/cashier",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3408,6 +3482,7 @@
         "1440x900"
       ],
       "spec": "screens/WF24.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -3424,6 +3499,7 @@
       "group": "WF",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/cashier",
       "next_status": "planned (U5)",
       "app_canvas": [
@@ -3433,6 +3509,7 @@
         "1440x900"
       ],
       "spec": "screens/WF25.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 0,
@@ -3449,6 +3526,7 @@
       "group": "WG",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3460,6 +3538,7 @@
         "390x844"
       ],
       "spec": "screens/WG1.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 1,
@@ -3476,6 +3555,7 @@
       "group": "WG",
       "kind": "tab",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3488,6 +3568,7 @@
         "390x844"
       ],
       "spec": "screens/WG2.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 14,
@@ -3504,6 +3585,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3513,6 +3595,7 @@
         "1440x900"
       ],
       "spec": "screens/WG3.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 14,
@@ -3529,6 +3612,7 @@
       "group": "WG",
       "kind": "tab",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3540,6 +3624,7 @@
         "390x844"
       ],
       "spec": "screens/WG4.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 9,
@@ -3556,6 +3641,7 @@
       "group": "WG",
       "kind": "tab",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3568,6 +3654,7 @@
         "390x844"
       ],
       "spec": "screens/WG5.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 4,
@@ -3584,6 +3671,7 @@
       "group": "WG",
       "kind": "state",
       "role": "doctor-mai",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3593,6 +3681,7 @@
         "1440x900"
       ],
       "spec": "screens/WG6.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 1,
@@ -3609,6 +3698,7 @@
       "group": "WG",
       "kind": "state",
       "role": "doctor-mai",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3619,6 +3709,7 @@
         "1440x900"
       ],
       "spec": "screens/WG7.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 1,
@@ -3635,6 +3726,7 @@
       "group": "WG",
       "kind": "state",
       "role": "accountant",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3645,6 +3737,7 @@
         "1440x900"
       ],
       "spec": "screens/WG8.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 1,
@@ -3661,6 +3754,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3670,6 +3764,7 @@
         "1440x900"
       ],
       "spec": "screens/WG9.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 1,
         "fields": 1,
@@ -3686,6 +3781,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3695,6 +3791,7 @@
         "1440x900"
       ],
       "spec": "screens/WG10.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 1,
         "fields": 1,
@@ -3711,6 +3808,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3720,6 +3818,7 @@
         "1440x900"
       ],
       "spec": "screens/WG11.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 14,
@@ -3736,6 +3835,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3745,6 +3845,7 @@
         "1440x900"
       ],
       "spec": "screens/WG12.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 4,
@@ -3761,6 +3862,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3771,6 +3873,7 @@
         "1440x900"
       ],
       "spec": "screens/WG13.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 1,
@@ -3787,6 +3890,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3797,6 +3901,7 @@
         "1440x900"
       ],
       "spec": "screens/WG14.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 1,
@@ -3813,6 +3918,7 @@
       "group": "WG",
       "kind": "state",
       "role": "accountant",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3823,6 +3929,7 @@
         "1440x900"
       ],
       "spec": "screens/WG15.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 4,
@@ -3839,6 +3946,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3848,6 +3956,7 @@
         "1440x900"
       ],
       "spec": "screens/WG16.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 14,
@@ -3864,6 +3973,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3873,6 +3983,7 @@
         "1440x900"
       ],
       "spec": "screens/WG17.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 14,
@@ -3889,6 +4000,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3898,6 +4010,7 @@
         "1440x900"
       ],
       "spec": "screens/WG18.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 1,
@@ -3914,6 +4027,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3923,6 +4037,7 @@
         "1440x900"
       ],
       "spec": "screens/WG19.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 14,
@@ -3939,6 +4054,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3948,6 +4064,7 @@
         "1440x900"
       ],
       "spec": "screens/WG20.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 14,
@@ -3964,6 +4081,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3973,6 +4091,7 @@
         "1440x900"
       ],
       "spec": "screens/WG21.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 14,
@@ -3989,6 +4108,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -3998,6 +4118,7 @@
         "1440x900"
       ],
       "spec": "screens/WG22.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 14,
@@ -4014,6 +4135,7 @@
       "group": "WG",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/finance",
       "next_status": "planned (U6)",
       "app_canvas": [
@@ -4024,6 +4146,7 @@
         "1440x900"
       ],
       "spec": "screens/WG23.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 4,
@@ -4040,6 +4163,7 @@
       "group": "WH",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/ask",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4052,6 +4176,7 @@
         "390x844"
       ],
       "spec": "screens/WH1.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 1,
@@ -4068,6 +4193,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/ask",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4078,6 +4204,7 @@
         "1440x900"
       ],
       "spec": "screens/WH2.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 1,
@@ -4094,6 +4221,7 @@
       "group": "WH",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/guide",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4105,6 +4233,7 @@
         "390x844"
       ],
       "spec": "screens/WH3.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 11,
         "fields": 1,
@@ -4121,6 +4250,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/guide",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4130,6 +4260,7 @@
         "1440x900"
       ],
       "spec": "screens/WH4.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 1,
@@ -4146,6 +4277,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/guide",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4155,6 +4287,7 @@
         "1440x900"
       ],
       "spec": "screens/WH5.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 4,
         "fields": 1,
@@ -4171,6 +4304,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/guide",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4180,6 +4314,7 @@
         "1440x900"
       ],
       "spec": "screens/WH6.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 1,
@@ -4196,6 +4331,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/guide",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4205,6 +4341,7 @@
         "1440x900"
       ],
       "spec": "screens/WH7.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 1,
@@ -4221,6 +4358,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/guide",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4230,6 +4368,7 @@
         "1440x900"
       ],
       "spec": "screens/WH8.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 4,
         "fields": 1,
@@ -4246,6 +4385,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/guide",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4255,6 +4395,7 @@
         "1440x900"
       ],
       "spec": "screens/WH9.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 4,
         "fields": 1,
@@ -4271,6 +4412,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/guide",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4280,6 +4422,7 @@
         "1440x900"
       ],
       "spec": "screens/WH10.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 1,
@@ -4296,6 +4439,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/guide",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4305,6 +4449,7 @@
         "1440x900"
       ],
       "spec": "screens/WH11.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 1,
@@ -4321,6 +4466,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/guide",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4330,6 +4476,7 @@
         "1440x900"
       ],
       "spec": "screens/WH12.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 6,
         "fields": 1,
@@ -4346,6 +4493,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/guide",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4355,6 +4503,7 @@
         "1440x900"
       ],
       "spec": "screens/WH13.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 5,
         "fields": 1,
@@ -4371,6 +4520,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/guide",
       "next_status": "built (U7)",
       "app_canvas": [],
@@ -4378,6 +4528,7 @@
         "1440x900"
       ],
       "spec": "screens/WH14.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 11,
         "fields": 1,
@@ -4394,6 +4545,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/ask",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4404,6 +4556,7 @@
         "1440x900"
       ],
       "spec": "screens/WH15.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 1,
@@ -4420,6 +4573,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/ask",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4430,6 +4584,7 @@
         "1440x900"
       ],
       "spec": "screens/WH16.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 1,
@@ -4446,6 +4601,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/ask",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4455,6 +4611,7 @@
         "1440x900"
       ],
       "spec": "screens/WH17.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 1,
@@ -4471,6 +4628,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/ask",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4480,6 +4638,7 @@
         "1440x900"
       ],
       "spec": "screens/WH18.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 2,
         "fields": 1,
@@ -4496,6 +4655,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/ask",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4505,6 +4665,7 @@
         "1440x900"
       ],
       "spec": "screens/WH19.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 3,
         "fields": 1,
@@ -4521,6 +4682,7 @@
       "group": "WH",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": "/guide",
       "next_status": "built (U7)",
       "app_canvas": [
@@ -4530,6 +4692,7 @@
         "1440x900"
       ],
       "spec": "screens/WH20.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 11,
         "fields": 1,
@@ -4546,6 +4709,7 @@
       "group": "WI",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4555,6 +4719,7 @@
         "390x844"
       ],
       "spec": "screens/WI1.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -4571,6 +4736,7 @@
       "group": "WI",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4581,6 +4747,7 @@
         "390x844"
       ],
       "spec": "screens/WI2.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -4597,6 +4764,7 @@
       "group": "WI",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4607,6 +4775,7 @@
         "390x844"
       ],
       "spec": "screens/WI3.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 11,
         "fields": 0,
@@ -4623,6 +4792,7 @@
       "group": "WI",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4632,6 +4802,7 @@
         "390x844"
       ],
       "spec": "screens/WI4.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -4648,6 +4819,7 @@
       "group": "WI",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4658,6 +4830,7 @@
         "390x844"
       ],
       "spec": "screens/WI5.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 2,
@@ -4674,6 +4847,7 @@
       "group": "WI",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4683,6 +4857,7 @@
         "390x844"
       ],
       "spec": "screens/WI6.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -4699,6 +4874,7 @@
       "group": "WI",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4708,6 +4884,7 @@
         "390x844"
       ],
       "spec": "screens/WI7.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -4724,6 +4901,7 @@
       "group": "WI",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4733,6 +4911,7 @@
         "390x844"
       ],
       "spec": "screens/WI8.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 3,
@@ -4749,6 +4928,7 @@
       "group": "WI",
       "kind": "page",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4759,6 +4939,7 @@
         "390x844"
       ],
       "spec": "screens/WI9.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -4775,6 +4956,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4784,6 +4966,7 @@
         "390x844"
       ],
       "spec": "screens/WI10.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -4800,6 +4983,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4809,6 +4993,7 @@
         "390x844"
       ],
       "spec": "screens/WI11.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -4825,6 +5010,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4834,6 +5020,7 @@
         "390x844"
       ],
       "spec": "screens/WI12.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -4850,6 +5037,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4859,6 +5047,7 @@
         "390x844"
       ],
       "spec": "screens/WI13.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -4875,6 +5064,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4884,6 +5074,7 @@
         "390x844"
       ],
       "spec": "screens/WI14.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -4900,6 +5091,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4909,6 +5101,7 @@
         "390x844"
       ],
       "spec": "screens/WI15.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -4925,6 +5118,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4934,6 +5128,7 @@
         "390x844"
       ],
       "spec": "screens/WI16.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -4950,6 +5145,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4959,6 +5155,7 @@
         "390x844"
       ],
       "spec": "screens/WI17.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -4975,6 +5172,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -4984,6 +5182,7 @@
         "390x844"
       ],
       "spec": "screens/WI18.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -5000,6 +5199,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5009,6 +5209,7 @@
         "390x844"
       ],
       "spec": "screens/WI19.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -5025,6 +5226,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5034,6 +5236,7 @@
         "390x844"
       ],
       "spec": "screens/WI20.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 11,
         "fields": 0,
@@ -5050,6 +5253,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5059,6 +5263,7 @@
         "390x844"
       ],
       "spec": "screens/WI21.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 11,
         "fields": 0,
@@ -5075,6 +5280,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5084,6 +5290,7 @@
         "390x844"
       ],
       "spec": "screens/WI22.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -5100,6 +5307,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5110,6 +5318,7 @@
         "390x844"
       ],
       "spec": "screens/WI23.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -5126,6 +5335,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5136,6 +5346,7 @@
         "390x844"
       ],
       "spec": "screens/WI24.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 11,
         "fields": 0,
@@ -5152,6 +5363,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5162,6 +5374,7 @@
         "390x844"
       ],
       "spec": "screens/WI25.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 11,
         "fields": 0,
@@ -5178,6 +5391,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5187,6 +5401,7 @@
         "390x844"
       ],
       "spec": "screens/WI26.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 7,
         "fields": 0,
@@ -5203,6 +5418,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5212,6 +5428,7 @@
         "390x844"
       ],
       "spec": "screens/WI27.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -5228,6 +5445,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5238,6 +5456,7 @@
         "390x844"
       ],
       "spec": "screens/WI28.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -5254,6 +5473,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5263,6 +5483,7 @@
         "390x844"
       ],
       "spec": "screens/WI29.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -5279,6 +5500,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5288,6 +5510,7 @@
         "390x844"
       ],
       "spec": "screens/WI30.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 0,
@@ -5304,6 +5527,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5313,6 +5537,7 @@
         "390x844"
       ],
       "spec": "screens/WI31.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 3,
@@ -5329,6 +5554,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5338,6 +5564,7 @@
         "390x844"
       ],
       "spec": "screens/WI32.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 3,
@@ -5354,6 +5581,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5363,6 +5591,7 @@
         "390x844"
       ],
       "spec": "screens/WI33.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 3,
@@ -5379,6 +5608,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5388,6 +5618,7 @@
         "390x844"
       ],
       "spec": "screens/WI34.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 3,
@@ -5404,6 +5635,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5414,6 +5646,7 @@
         "390x844"
       ],
       "spec": "screens/WI35.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -5430,6 +5663,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5439,6 +5673,7 @@
         "390x844"
       ],
       "spec": "screens/WI36.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -5455,6 +5690,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5465,6 +5701,7 @@
         "390x844"
       ],
       "spec": "screens/WI37.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -5481,6 +5718,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5491,6 +5729,7 @@
         "390x844"
       ],
       "spec": "screens/WI38.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 2,
@@ -5507,6 +5746,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5517,6 +5757,7 @@
         "390x844"
       ],
       "spec": "screens/WI39.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 2,
@@ -5533,6 +5774,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5542,6 +5784,7 @@
         "390x844"
       ],
       "spec": "screens/WI40.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 2,
@@ -5558,6 +5801,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5568,6 +5812,7 @@
         "390x844"
       ],
       "spec": "screens/WI41.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 9,
         "fields": 2,
@@ -5584,6 +5829,7 @@
       "group": "WI",
       "kind": "state",
       "role": "owner-tam",
+      "source": "old-web",
       "next_route": null,
       "next_status": "served by KMP/Zalo",
       "app_canvas": [
@@ -5593,6 +5839,7 @@
         "390x844"
       ],
       "spec": "screens/WI42.md",
+      "has_snapshot": true,
       "counts": {
         "actions": 8,
         "fields": 0,
@@ -5600,6 +5847,4409 @@
         "statuses": 1,
         "kpis": 0,
         "notices": 1,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ1",
+      "name": "Nhân viên",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/users",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ1.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ2",
+      "name": "Nhân viên · chỉ xem (quản lý)",
+      "group": "WJ",
+      "kind": "state",
+      "role": "manager",
+      "source": "nextjs",
+      "next_route": "/admin/users",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ2.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ3",
+      "name": "Nhân viên · không có kết quả lọc",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/users",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ3.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ4",
+      "name": "Nhân viên · Thêm nhân viên",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/users",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ4.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ5",
+      "name": "Nhân viên · Thêm nhân viên · email đã dùng",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/users",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ5.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ6",
+      "name": "Nhân viên · Sửa nhân viên",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/users",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ6.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ7",
+      "name": "Nhân viên · Sửa tài khoản của mình",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/users",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ7.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ8",
+      "name": "Nhân viên · Đặt lại mật khẩu",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/users",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ8.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ9",
+      "name": "Nhân viên · Khóa tài khoản",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/users",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ9.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ10",
+      "name": "Nhân viên · Mở khóa tài khoản",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/users",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ10.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ11",
+      "name": "Tài khoản của tôi",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/auth",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ11.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ12",
+      "name": "Tổng quan AI",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/overview",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ12.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ13",
+      "name": "Tổng quan AI · chưa cấu hình LLM",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/overview",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ13.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ14",
+      "name": "Tổng quan AI · chưa có số liệu sử dụng",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/overview",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ14.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ15",
+      "name": "Phiên chat AI",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/threads",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ15.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ16",
+      "name": "Phiên chat AI · Session detail · Hội thoại",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/threads",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ16.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ17",
+      "name": "Phiên chat AI · Session detail · Trace agent",
+      "group": "WJ",
+      "kind": "tab",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/threads",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ17.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ18",
+      "name": "Phiên chat AI · Trace agent trống",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/threads",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ18.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ19",
+      "name": "Phiên chat AI · Xóa cuộc trò chuyện",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/threads",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ19.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ20",
+      "name": "Phiên chat AI · Xóa bản tóm tắt",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/threads",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ20.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ21",
+      "name": "Phiên chat AI · Xóa sạch ngữ cảnh",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/threads",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ21.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ22",
+      "name": "Phiên chat AI · chưa có phiên",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/threads",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ22.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ23",
+      "name": "Danh bạ",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/contacts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ23.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ24",
+      "name": "Danh bạ · Xóa danh bạ",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/contacts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ24.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ25",
+      "name": "Danh bạ · chưa có danh bạ",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/contacts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ25.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ26",
+      "name": "Bạn bè",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/friends",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ26.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ27",
+      "name": "Bạn bè · Từ chối kết bạn",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/friends",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ27.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ28",
+      "name": "Bạn bè · chưa có tài khoản cá nhân",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/friends",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ28.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ29",
+      "name": "Bạn bè · không lấy được danh sách bạn",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/friends",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ29.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ30",
+      "name": "Lịch hẹn của bot",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/schedules",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ30.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ31",
+      "name": "Lịch hẹn của bot · chưa có lịch",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/schedules",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ31.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ32",
+      "name": "Lịch hẹn của bot · job lỗi hoặc bị chặn",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/schedules",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ32.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ33",
+      "name": "Lịch hẹn của bot · Thêm lịch hẹn",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/schedules",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ33.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ34",
+      "name": "Lịch hẹn của bot · Thêm lịch hẹn · tài khoản Kênh bệnh nhân",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/schedules",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ34.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ35",
+      "name": "Lịch hẹn của bot · Sửa lịch hẹn",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/schedules",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ35.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ36",
+      "name": "Lịch hẹn của bot · Lịch sử chạy",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/schedules",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ36.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ37",
+      "name": "Lịch hẹn của bot · Xóa lịch hẹn",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/schedules",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ37.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ38",
+      "name": "Trí nhớ",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/memory",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ38.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ39",
+      "name": "Trí nhớ · chưa ghi nhớ gì",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/memory",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ39.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ40",
+      "name": "Kho tri thức",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/kb",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ40.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ41",
+      "name": "Kho tri thức · chưa có nguồn",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/kb",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ41.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ42",
+      "name": "Kho tri thức · không có kết quả tìm",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/kb",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ42.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ43",
+      "name": "Kho tri thức · kéo file vào bảng",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/kb",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ43.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ44",
+      "name": "Kho tri thức · nguồn hỏng và đang xử lý",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/kb",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ44.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ45",
+      "name": "Kho tri thức · vai trò không có quyền quản lý",
+      "group": "WJ",
+      "kind": "state",
+      "role": "doctor",
+      "source": "nextjs",
+      "next_route": "/admin/kb",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ45.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ46",
+      "name": "Kho tri thức · Thêm nguồn · tải file",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/kb",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ46.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ47",
+      "name": "Kho tri thức · Thêm nguồn · gõ nội dung",
+      "group": "WJ",
+      "kind": "tab",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/kb",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ47.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ48",
+      "name": "Kho tri thức · Agent nào đọc được nguồn này",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/kb",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ48.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ49",
+      "name": "Kho tri thức · Đoạn đã cắt",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/kb",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ49.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ50",
+      "name": "Kho tri thức · Dùng Kho tri thức thế nào",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/kb",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ50.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ51",
+      "name": "Kho tri thức · Hiện trong Hướng dẫn",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/kb",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ51.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ52",
+      "name": "Kho tri thức · Thử tìm trong kho",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/kb",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ52.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ53",
+      "name": "Kho tri thức · Xóa nguồn",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/kb",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ53.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ54",
+      "name": "Tài khoản Zalo",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ54.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ55",
+      "name": "Tài khoản Zalo · chưa có account",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ55.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ56",
+      "name": "Tài khoản Zalo · công tắc khẩn đang bật",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ56.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ57",
+      "name": "Tài khoản Zalo · cấu hình kênh bị thay đổi",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ57.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ58",
+      "name": "Tài khoản Zalo · Bật công tắc khẩn",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ58.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ59",
+      "name": "Tài khoản Zalo · Tắt công tắc khẩn",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ59.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ60",
+      "name": "Tài khoản Zalo · Thêm account · tài khoản cá nhân",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ60.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ61",
+      "name": "Tài khoản Zalo · Thêm account · tài khoản bot",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ61.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ62",
+      "name": "Tài khoản Zalo · Sửa account",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ62.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ63",
+      "name": "Tài khoản Zalo · Login QR",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ63.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ64",
+      "name": "Tài khoản Zalo · Login QR · đã quét",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ64.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ65",
+      "name": "Tài khoản Zalo · Login QR · lỗi hoặc hết hạn",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ65.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ66",
+      "name": "Tài khoản Zalo · Xóa account",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ66.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ67",
+      "name": "Agents",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/agents",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ67.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ68",
+      "name": "Agents · dạng danh sách",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/agents",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ68.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ69",
+      "name": "Agents · không có kết quả tìm",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/agents",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ69.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ70",
+      "name": "Agents · chưa có agent",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/agents",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ70.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ71",
+      "name": "Agents · Tạo agent mới",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/agents",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ71.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ72",
+      "name": "Agents · Xóa agent",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/agents",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ72.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ73",
+      "name": "Agent mới",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/agents/new",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ73.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ74",
+      "name": "Agent mới · Bỏ agent đang tạo",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/agents/new",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ74.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ75",
+      "name": "Agent mới · lỗi nhập hoặc lỗi tải công cụ",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/agents/new",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ75.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ76",
+      "name": "Chi tiết agent",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/agents/[id]",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ76.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ77",
+      "name": "Chi tiết agent · không tìm thấy",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/agents/[id]",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ77.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ78",
+      "name": "Chi tiết agent · Rời trang mà chưa lưu",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/agents/[id]",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ78.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ79",
+      "name": "Tools",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tools",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ79.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ80",
+      "name": "Tools · chưa có account",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tools",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ80.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ81",
+      "name": "Tools · chỉ đọc được lớp tài khoản",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tools",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ81.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ82",
+      "name": "Tools · web_search · chuỗi nguồn",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tools",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ82.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ83",
+      "name": "Tools · web_fetch · chuỗi nguồn",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tools",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ83.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ84",
+      "name": "Tools · Xóa API key Brave",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tools",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ84.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ85",
+      "name": "Tools · Đọc ảnh · chuỗi nguồn",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tools",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ85.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ86",
+      "name": "Tools · Vẽ ảnh AI",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tools",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ86.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ87",
+      "name": "MCP",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/mcp",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ87.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ88",
+      "name": "MCP · chưa có server",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/mcp",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ88.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ89",
+      "name": "MCP · lỗi và chờ duyệt lại",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/mcp",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ89.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ90",
+      "name": "MCP · Thêm server MCP",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/mcp",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ90.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ91",
+      "name": "MCP · Sửa server MCP",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/mcp",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ91.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ92",
+      "name": "MCP · Agent nào được dùng server này",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/mcp",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ92.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ93",
+      "name": "MCP · Xóa server",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/mcp",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ93.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ94",
+      "name": "Trace agent",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/traces",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ94.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ95",
+      "name": "Trace agent · chưa có trace",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/traces",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ95.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ96",
+      "name": "Trace agent · lượt đã mở",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/traces",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ96.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ97",
+      "name": "Trace agent · hết lượt có trace",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/traces",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ97.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ98",
+      "name": "Logs",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/logs",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ98.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ99",
+      "name": "Logs · Nhật ký thao tác",
+      "group": "WJ",
+      "kind": "tab",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/logs",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ99.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ100",
+      "name": "Logs · ghi log ra file đang tắt",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/logs",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ100.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ101",
+      "name": "Logs · không có dòng log",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/logs",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ101.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ102",
+      "name": "Hồ sơ chính sách",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/policy",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ102.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ103",
+      "name": "Hồ sơ chính sách · Chuyển sang Trợ lý nội bộ",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/policy",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ103.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ104",
+      "name": "Hồ sơ chính sách · chưa có tài khoản hay agent",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/policy",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ104.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ105",
+      "name": "Mô hình & cấu hình",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tuning",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ105.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ106",
+      "name": "Mô hình & cấu hình · Agent và model",
+      "group": "WJ",
+      "kind": "tab",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tuning",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ106.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ107",
+      "name": "Mô hình & cấu hình · Trí nhớ và ngữ cảnh",
+      "group": "WJ",
+      "kind": "tab",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tuning",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ107.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ108",
+      "name": "Mô hình & cấu hình · Kho tri thức",
+      "group": "WJ",
+      "kind": "tab",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tuning",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ108.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ109",
+      "name": "Mô hình & cấu hình · Tin chủ động và lịch",
+      "group": "WJ",
+      "kind": "tab",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tuning",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ109.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ110",
+      "name": "Mô hình & cấu hình · Chung",
+      "group": "WJ",
+      "kind": "tab",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tuning",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ110.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ111",
+      "name": "Mô hình & cấu hình · Đặt lại toàn bộ cấu hình",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tuning",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ111.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ112",
+      "name": "Mô hình & cấu hình · Xóa cấu hình LLM",
+      "group": "WJ",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tuning",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ112.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ113",
+      "name": "Mô hình & cấu hình · Base URL là lớp giả của Google",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tuning",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ113.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ114",
+      "name": "Mô hình & cấu hình · không có tham số khớp",
+      "group": "WJ",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tuning",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WJ114.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WJ115",
+      "name": "Cấu hình · nhóm (liên kết trực tiếp)",
+      "group": "WJ",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/tuning/[group]",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WJ115.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK1",
+      "name": "Kỹ năng và ca trực",
+      "group": "WK",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/care/staff",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WK1.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK2",
+      "name": "Kỹ năng và ca trực · chưa có hồ sơ",
+      "group": "WK",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/care/staff",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK2.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK3",
+      "name": "Kỹ năng và ca trực · Sửa hồ sơ",
+      "group": "WK",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/care/staff",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK3.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK4",
+      "name": "Số trực 24/24",
+      "group": "WK",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/care/on-call",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WK4.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK5",
+      "name": "Số trực 24/24 · chưa có số trực",
+      "group": "WK",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/care/on-call",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK5.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK6",
+      "name": "Số trực 24/24 · không có số nào đang bật",
+      "group": "WK",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/care/on-call",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK6.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK7",
+      "name": "Số trực 24/24 · Thêm số trực",
+      "group": "WK",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/care/on-call",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK7.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK8",
+      "name": "Số trực 24/24 · Sửa số trực",
+      "group": "WK",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/care/on-call",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK8.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK9",
+      "name": "Ma trận ngưỡng",
+      "group": "WK",
+      "kind": "page",
+      "role": "doctor",
+      "source": "nextjs",
+      "next_route": "/admin/care/matrix",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WK9.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK10",
+      "name": "Ma trận ngưỡng · đã được bác sĩ duyệt",
+      "group": "WK",
+      "kind": "state",
+      "role": "doctor",
+      "source": "nextjs",
+      "next_route": "/admin/care/matrix",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK10.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK11",
+      "name": "Ma trận ngưỡng · chỉ xem",
+      "group": "WK",
+      "kind": "state",
+      "role": "doctor",
+      "source": "nextjs",
+      "next_route": "/admin/care/matrix",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK11.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK12",
+      "name": "Ma trận ngưỡng · số không hợp lệ",
+      "group": "WK",
+      "kind": "state",
+      "role": "doctor",
+      "source": "nextjs",
+      "next_route": "/admin/care/matrix",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK12.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK13",
+      "name": "Ma trận ngưỡng · Duyệt ma trận này",
+      "group": "WK",
+      "kind": "dialog",
+      "role": "doctor",
+      "source": "nextjs",
+      "next_route": "/admin/care/matrix",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK13.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK14",
+      "name": "Ma trận ngưỡng · Đặt lại về chờ duyệt",
+      "group": "WK",
+      "kind": "dialog",
+      "role": "doctor",
+      "source": "nextjs",
+      "next_route": "/admin/care/matrix",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK14.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK15",
+      "name": "SLA và khung giờ",
+      "group": "WK",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/care/timing",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WK15.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK16",
+      "name": "SLA và khung giờ · chỉ xem",
+      "group": "WK",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/care/timing",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK16.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK17",
+      "name": "SLA và khung giờ · số không hợp lệ",
+      "group": "WK",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/care/timing",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK17.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK18",
+      "name": "Cảnh báo agent",
+      "group": "WK",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/care/alerts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WK18.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK19",
+      "name": "Cảnh báo agent · chưa có cảnh báo",
+      "group": "WK",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/care/alerts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK19.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK20",
+      "name": "Cảnh báo agent · mất kết nối trực tiếp",
+      "group": "WK",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/care/alerts",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK20.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK21",
+      "name": "Yêu cầu đang chờ tôi",
+      "group": "WK",
+      "kind": "page",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/handoffs",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WK21.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK22",
+      "name": "Yêu cầu đang chờ tôi · tất cả đang mở",
+      "group": "WK",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/handoffs",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK22.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK23",
+      "name": "Yêu cầu đang chờ tôi · chưa có yêu cầu",
+      "group": "WK",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/handoffs",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK23.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK24",
+      "name": "Yêu cầu đang chờ tôi · thẻ khẩn đã tới số trực",
+      "group": "WK",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/handoffs",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK24.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK25",
+      "name": "Yêu cầu đang chờ tôi · thẻ báo lỗi",
+      "group": "WK",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/handoffs",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK25.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK26",
+      "name": "Yêu cầu đang chờ tôi · Từ chối nhận cuộc trò chuyện",
+      "group": "WK",
+      "kind": "dialog",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/handoffs",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK26.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK27",
+      "name": "Yêu cầu đang chờ tôi · mất kết nối trực tiếp",
+      "group": "WK",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/handoffs",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK27.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK28",
+      "name": "Agent chăm sóc của bệnh nhân · Dòng thời gian",
+      "group": "WK",
+      "kind": "page",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/patients/[id]/timeline",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WK28.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK29",
+      "name": "Agent chăm sóc của bệnh nhân · agent phụ trách, đang hạ mức",
+      "group": "WK",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/patients/[id]/timeline",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK29.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK30",
+      "name": "Agent chăm sóc của bệnh nhân · đang tìm người nhận",
+      "group": "WK",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/patients/[id]/timeline",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK30.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK31",
+      "name": "Agent chăm sóc của bệnh nhân · mục chưa có dữ liệu",
+      "group": "WK",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/patients/[id]/timeline",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK31.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK32",
+      "name": "Agent chăm sóc của bệnh nhân · lỗi tải",
+      "group": "WK",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/patients/[id]/timeline",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK32.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK33",
+      "name": "Agent chăm sóc của bệnh nhân · Trả lại cho agent",
+      "group": "WK",
+      "kind": "page",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/patients/[id]/release",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WK33.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK34",
+      "name": "Trả lại cho agent · hạ mức có hệ quả",
+      "group": "WK",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/patients/[id]/release",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK34.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK35",
+      "name": "Trả lại cho agent · Xác nhận trả lại",
+      "group": "WK",
+      "kind": "dialog",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/patients/[id]/release",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK35.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK36",
+      "name": "Trả lại cho agent · không phải người đang giữ",
+      "group": "WK",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/patients/[id]/release",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK36.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK37",
+      "name": "Trả lại cho agent · agent đang phụ trách",
+      "group": "WK",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/patients/[id]/release",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK37.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK38",
+      "name": "Agent chăm sóc của bệnh nhân · Nói với agent",
+      "group": "WK",
+      "kind": "page",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/patients/[id]/tell-agent",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WK38.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WK39",
+      "name": "Nói với agent · chưa có lời dặn",
+      "group": "WK",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/care/patients/[id]/tell-agent",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WK39.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL1",
+      "name": "Đăng nhập CSKH",
+      "group": "WL",
+      "kind": "page",
+      "role": "anonymous",
+      "source": "nextjs",
+      "next_route": "/login",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WL1.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL2",
+      "name": "Đăng nhập CSKH · đang đăng nhập",
+      "group": "WL",
+      "kind": "state",
+      "role": "anonymous",
+      "source": "nextjs",
+      "next_route": "/login",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL2.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL3",
+      "name": "Đăng nhập CSKH · sai mật khẩu",
+      "group": "WL",
+      "kind": "state",
+      "role": "anonymous",
+      "source": "nextjs",
+      "next_route": "/login",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL3.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL4",
+      "name": "Tin nhắn mẫu đã duyệt",
+      "group": "WL",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/templates",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WL4.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL5",
+      "name": "Tin nhắn mẫu đã duyệt · chỉ xem",
+      "group": "WL",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/templates",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL5.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL6",
+      "name": "Tin nhắn mẫu đã duyệt · chưa có mẫu",
+      "group": "WL",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/templates",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL6.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL7",
+      "name": "Tin nhắn mẫu đã duyệt · Soạn mẫu tin nhắn",
+      "group": "WL",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/templates",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL7.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL8",
+      "name": "Tin nhắn mẫu đã duyệt · Sửa mẫu tin nhắn",
+      "group": "WL",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/templates",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL8.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL9",
+      "name": "Tin nhắn mẫu đã duyệt · Duyệt mẫu này",
+      "group": "WL",
+      "kind": "dialog",
+      "role": "doctor",
+      "source": "nextjs",
+      "next_route": "/templates",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL9.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL10",
+      "name": "Khung · menu quản trị (chủ phòng khám)",
+      "group": "WL",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "(app shell)",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL10.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL11",
+      "name": "Khung · menu bác sĩ",
+      "group": "WL",
+      "kind": "state",
+      "role": "doctor",
+      "source": "nextjs",
+      "next_route": "(app shell)",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL11.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL12",
+      "name": "Khung · menu CSKH",
+      "group": "WL",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "(app shell)",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL12.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL13",
+      "name": "Khung · menu lễ tân",
+      "group": "WL",
+      "kind": "state",
+      "role": "reception",
+      "source": "nextjs",
+      "next_route": "(app shell)",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL13.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL14",
+      "name": "Khung · menu trống (bệnh nhân)",
+      "group": "WL",
+      "kind": "state",
+      "role": "patient",
+      "source": "nextjs",
+      "next_route": "(app shell)",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL14.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL15",
+      "name": "Khung · đang tải phiên",
+      "group": "WL",
+      "kind": "state",
+      "role": "anonymous",
+      "source": "nextjs",
+      "next_route": "(app shell)",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL15.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL16",
+      "name": "Khung · không tải được phiên",
+      "group": "WL",
+      "kind": "state",
+      "role": "anonymous",
+      "source": "nextjs",
+      "next_route": "(app shell)",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL16.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL17",
+      "name": "Khung · không có quyền xem màn này",
+      "group": "WL",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "(app shell)",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WL17.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL18",
+      "name": "Khung · điện thoại · thanh tab",
+      "group": "WL",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "(app shell)",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "390x844"
+      ],
+      "spec": "screens/WL18.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WL19",
+      "name": "Khung · điện thoại · ngăn menu",
+      "group": "WL",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "(app shell)",
+      "next_status": "exists (design W2)",
+      "app_canvas": [],
+      "frames": [
+        "390x844"
+      ],
+      "spec": "screens/WL19.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
         "tables": 0
       }
     }

@@ -1,5 +1,5 @@
 {
-  "_comment": "Hand-written notes for the specs of the OLD Pema web, merged into each screen's spec by web-specs.cjs and the pema-design MCP (record_web_note). groups.<WA..WH> applies to every screen of the group; screens.<ID> to one screen. Keys: logic, rules, differences, gotchas, todo (string arrays). Write in English; keep Vietnamese UI text and business wording verbatim in quotes. Differences never remove UI: the old web is the reference, the owner decides later (plan D8). Quick add: MCP tool record_web_note, or edit this file then run node .claude/skills/pema-web-design/scripts/web-specs.cjs.",
+  "_comment": "Hand-written notes for the specs of the OLD Pema web, merged into each screen's spec by web-specs.cjs and the pema-design MCP (record_web_note). groups.<WA..WH> applies to every screen of the group; screens.<ID> to one screen. Keys: logic, rules, differences, gotchas, todo (string arrays). Write in English; keep Vietnamese UI text and business wording verbatim in quotes. Differences never remove UI: the old web is the reference, the owner decides later (plan D8). Next.js-only ids (groups WJ, WK, WL, source \"nextjs\") also read `routes.<route>` (purpose, gate, roles, actions, context, related, plus the usual keys) merged between the group and the screen, and `screens.<ID>` keys purpose and related (\"<ID> short reason\"). Quick add: MCP tool record_web_note, or edit this file then run node .claude/skills/pema-web-design/scripts/web-specs.cjs.",
   "groups": {
     "WA": {
       "logic": [
@@ -90,6 +90,40 @@
         "Icon glyphs typed as characters in the code (✓ ✦ ⚙ ▤ ▧ ＋ › ▢) are swapped for lucide icons at render (`PemaUI.enhance`) and are not part of the labels in the snapshot (the label of \"＋ Gửi tin nhắn\" is \"Gửi tin nhắn\"); the web canvas draws icons from the kit.",
         "Accessible names that are not visible text: the avatar button \"Mở hồ sơ demo của <tên>\", the session rail \"<n> trên <total> buổi hoàn tất\", the progress bar \"Số buổi điều trị đã hoàn tất\", the quick action \"Xem hướng dẫn\", the faces \"Trước — minh họa tổng hợp, không phải ảnh bệnh nhân\" and \"Gần nhất — …\", the file input \"Ảnh cập nhật cho Pema\", the consent box \"Đồng ý để Pema xem ảnh cập nhật\" and the preview \"Xem trước ảnh cập nhật\" (alt \"Ảnh cập nhật đã chọn — bản demo\").",
         "Patient data is the synthetic store (46 patients; the default profile is P001, phone masked as \"09•• ••• 100\"). Screens of a toast (WI23, WI28, WI29, WI31, WI33, WI34, WI38-WI40) are captured while the toast is up (2.8 s) and list it as a `notice` with role \"status\"."
+      ]
+    },
+    "WJ": {
+      "logic": [
+        "Agent administration ported from the zalo-agent dashboard (its SECTIONS array, see PORT-MAP.md): the Next.js pages keep that information architecture and use the Pema shell, tokens and `src/ui` kit. Menu section \"Quản trị agent\" of `src/lib/nav.tsx`.",
+        "Reached against the mock BE (`pnpm dev:mock`): `mock/auth.ts` simulates the role to permission table of ARCH-PB01; the real back end decides and every request is authorised there (deny by default). The menu only hides entries."
+      ],
+      "rules": [
+        "Patient safety is a policy profile, never a removed feature: `patient_channel` (the default: messages to patients go to the review queue and a person sends them; memory from patient content is off; image, video, document and web tools are off; a red flag goes to a doctor before any model call; personal data is masked before the model; identity of a Zalo user is confirmed before the assistant names a patient) and `staff_assistant` (internal, staff-only accounts). The profile is set per Zalo account and per agent, the stricter of the two applies (PLAN-AI01 section 5)."
+      ],
+      "gotchas": [
+        "Several WJ pages have no UI test; their briefs come from reading the components (W7). Texts that the brief quotes are checked against the sources by `web-specs.cjs`; \"Texts to re-check against the code\" in a spec lists the ones it could not find verbatim."
+      ]
+    },
+    "WK": {
+      "logic": [
+        "Screens of package M (PLAN-AI01-M): every patient is paired with one care agent that follows the treatment journey, decides whether to answer or hand over, picks the right staff member and changes person when nobody answers. Staff move from \"controlling\" to \"supervising\": two actions are left, accept or decline a handoff, and return the conversation to the agent.",
+        "Two areas: care administration under `/admin/care/*` (menu section \"Care agent\": skills and shifts, 24/24 on-call numbers, depth matrix, SLA and send window, alerts) and per-patient supervision under `/care/*` (handoff queue, timeline, return to agent, tell the agent)."
+      ],
+      "rules": [
+        "Control state per patient: AUTO (the agent answers or acts by its autonomy level L0 to L2; staff supervise the timeline and approve drafts) → HANDOFF_ROUTING (the agent is silent towards the patient except one template holding message, summarises for the candidate, runs the routing loop) → STAFF (the agent does not react, sends no scheduled reminders; it observes and drafts suggestions that are not sent). Only a staff member returns a conversation to AUTO (PLAN-AI01-M section 5).",
+        "The agent decides to hand over by itself (skill `handoff`): depth D1 administrative, D2 standard care, D3 mild expected symptom, D4 medical judgement, D5 red flag. Defaults: D1 answers from L1, D2 answers from L2 with a source, D3 draft plus approval, D4 always calls a person, D5 calls a doctor at once without calling the model. The matrix that holds these numbers is configuration and carries \"Chờ bác sĩ duyệt\" until a doctor approves it (section 6).",
+        "The candidate chain is 3 to 5 people and its last element is always the 24/24 on-call Zalo number, kept in the database, never in code. Default SLA: urgent 5 minutes, normal 30 minutes, outside working hours until the start of the next shift (section 7)."
+      ],
+      "gotchas": [
+        "Care texts quote backend words (consequence of a release, reasons, depth names): the mock BE and `src/lib/care/labels.ts` hold them; a spec lists them as required text only when the code contains them verbatim."
+      ]
+    },
+    "WL": {
+      "logic": [
+        "Sign-in, the Next.js shell (sidebar, top bar, phone tab bar, empty and forbidden states) and the approved message templates. The shell is the Next.js one (`src/ui` app shell), not the old-web shell of WA1-WA4."
+      ],
+      "rules": [
+        "Sign-in is by email and password only: no clinic code (one install = one clinic), the account is looked up by email; the session cookie is HttpOnly, with a sliding and an absolute limit (ARCH-AI01 section 8)."
       ]
     }
   },
@@ -2645,6 +2679,756 @@
       ],
       "gotchas": [
         "\"Đã đặt lịch\" with an empty list of bookings is an inconsistency of the old web; keep it, the owner decides."
+      ]
+    },
+    "WJ1": {
+      "related": [
+        "WJ11 the same person changes their own password",
+        "WK1 skills and shifts of these staff"
+      ]
+    },
+    "WJ2": {
+      "related": [
+        "WL17 the shell forbidden card shown to roles without the gate"
+      ]
+    },
+    "WJ8": {
+      "related": [
+        "WJ11 the signed-in person's own password page"
+      ]
+    },
+    "WJ13": {
+      "related": [
+        "WJ115 the provider group this state links to",
+        "WJ105 configuration page"
+      ]
+    },
+    "WJ17": {
+      "related": [
+        "WJ94 the same steps on the traces page"
+      ]
+    },
+    "WJ34": {
+      "related": [
+        "WJ102 profile that causes this restriction",
+        "WL4 approved templates used by a message job"
+      ]
+    },
+    "WJ36": {
+      "related": [
+        "WJ94 a run links to its trace by `?turnId=`"
+      ]
+    },
+    "WJ45": {
+      "related": [
+        "WL5 the same limitation on the templates page"
+      ]
+    },
+    "WJ60": {
+      "related": [
+        "WJ102 the profile select is the same setting",
+        "WJ61 the bot variant of this drawer"
+      ]
+    },
+    "WJ103": {
+      "related": [
+        "WJ60 the same warning when an account is created as staff_assistant"
+      ]
+    },
+    "WJ110": {
+      "related": [
+        "WJ11 the password card of this group"
+      ]
+    },
+    "WK1": {
+      "related": [
+        "WJ1 the staff accounts"
+      ]
+    },
+    "WK2": {
+      "related": [
+        "WJ1 add the account first, then its profile"
+      ]
+    },
+    "WK5": {
+      "related": [
+        "WK24 a request that reached the on-call number"
+      ]
+    },
+    "WK6": {
+      "related": [
+        "WK5 the empty state when no number exists at all"
+      ]
+    },
+    "WK10": {
+      "related": [
+        "WK13 the confirm dialog that leads here"
+      ]
+    },
+    "WK11": {
+      "related": [
+        "WL17 shell forbidden card for roles without care.matrix"
+      ]
+    },
+    "WK13": {
+      "related": [
+        "WK10 the approved state"
+      ]
+    },
+    "WK21": {
+      "related": [
+        "WK28 the care timeline a card opens",
+        "WC4 old-web Patient 360 (clinical record)",
+        "WD6 old-web \"Theo dõi\" inbox (the nearest old counterpart of a patient conversation)"
+      ]
+    },
+    "WK22": {
+      "related": [
+        "WK21 default chip \"Chờ tôi\""
+      ]
+    },
+    "WK24": {
+      "related": [
+        "WK5 the on-call numbers behind the badge"
+      ]
+    },
+    "WK26": {
+      "related": [
+        "WK21 the card it was opened from"
+      ]
+    },
+    "WK29": {
+      "related": [
+        "WK33 lowered autonomy ends here or by its date"
+      ]
+    },
+    "WK30": {
+      "related": [
+        "WK21 the request that is waiting for a person"
+      ]
+    },
+    "WK33": {
+      "related": [
+        "WK35 the confirm dialog"
+      ]
+    },
+    "WK34": {
+      "related": [
+        "WK35 the confirm dialog"
+      ]
+    },
+    "WK36": {
+      "related": [
+        "WK21 accept the conversation first"
+      ]
+    },
+    "WK37": {
+      "related": [
+        "WK28 timeline of an agent-held conversation"
+      ]
+    },
+    "WK38": {
+      "related": [
+        "WK28 where the saved instructions are summarised as memory"
+      ]
+    },
+    "WL1": {
+      "related": [
+        "WL15 shell state while the session loads"
+      ]
+    },
+    "WL5": {
+      "related": [
+        "WJ45 the same limitation on the knowledge base"
+      ]
+    },
+    "WL9": {
+      "related": [
+        "WL4 the page that lists the template"
+      ]
+    },
+    "WL10": {
+      "related": [
+        "WA1 old-web shell for the owner"
+      ]
+    },
+    "WL12": {
+      "related": [
+        "WA2 old-web shell for the CSKH role"
+      ]
+    },
+    "WL17": {
+      "related": [
+        "WJ2 and WK11 are pages that show their own read-only note instead"
+      ]
+    }
+  },
+  "routes": {
+    "/admin/users": {
+      "purpose": "Staff accounts of the clinic: who can sign in to the dashboard, with which role, and whether the account is locked. Filters by name or email, role and status; add, edit, lock or unlock, reset a password.",
+      "gate": "`admin.users.read` to see the list (owner, manager); `admin.users` to add, edit, lock or unlock and reset passwords (owner only).",
+      "roles": "owner (manages); manager (read only, WJ2); doctor, cs_staff and reception have no menu entry and see the forbidden card of the shell (WL17).",
+      "actions": [
+        "\"Thêm nhân viên\" (owner): create an account with a first password of 8 characters or more",
+        "\"Sửa\": change name and role (the role of the own account is locked)",
+        "\"Đặt lại mật khẩu\": owner sets a new password, every session of that person ends",
+        "\"Khóa\" / \"Mở khóa\": the exit path, there is no hard delete",
+        "Search by name or email; chip groups \"Vai trò\" and \"Trạng thái\""
+      ],
+      "context": [
+        "A locked account cannot sign in and all its sessions end at once; changing a role also ends the sessions. The owner cannot lock or change the role of their own account (422) and the clinic always keeps at least one active owner (422). Audit records field names, roles and ids, never name, email or password.",
+        "These accounts are the people the care agent hands conversations to: their skills and shifts are edited on the care administration page (WK1)."
+      ],
+      "related": [
+        "WK1 skills and shifts of the same people",
+        "WJ11 the signed-in person changes their own password",
+        "WL17 what a role without the gate sees"
+      ]
+    },
+    "/admin/auth": {
+      "purpose": "The signed-in person's own account page: shows name, role and clinic and holds the \"change my password\" card.",
+      "gate": "No gate beyond being signed in; not a menu entry.",
+      "roles": "Every signed-in staff role.",
+      "actions": [
+        "\"Đổi mật khẩu\" (disabled today: the back end does not offer it yet, `CHANGE_PASSWORD_SUPPORTED = false`; the owner resets it from WJ8)"
+      ],
+      "context": [
+        "The permanent state today is the amber banner saying the feature waits for the server. The error and success sentences exist in code but cannot be reached until the flag flips."
+      ],
+      "related": [
+        "WJ8 the owner resets a password for someone else",
+        "WJ110 the same card is reused in the \"Chung\" group of the configuration page"
+      ]
+    },
+    "/admin/overview": {
+      "purpose": "Health and usage of the AI assistant at a glance: today's message, agent-turn and token counts, system status (uptime, accounts online, channels) and a usage chart for 7, 14 or 30 days.",
+      "gate": "`admin.usage`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "Segmented \"Lượt dùng\" / \"Token\"",
+        "Select \"7 ngày qua\" / \"14 ngày qua\" / \"30 ngày qua\"",
+        "Hover a bar for both numbers of the day (no click action)"
+      ],
+      "context": [
+        "Token usage and traces can contain message text, so they are staff-only (permission `admin.usage`). Loading is the plain text \"Đang tải...\" and a failed load stays on it (no error text)."
+      ],
+      "related": [
+        "WJ115 the \"LLM not configured\" state links to the provider group of the configuration page",
+        "WJ94 per-turn traces",
+        "WJ54 channels and accounts shown in the status card"
+      ]
+    },
+    "/admin/threads": {
+      "purpose": "Chat sessions of the assistant: one per conversation (private or group), with their context, summary, per-step traces and a per-session bot switch.",
+      "gate": "`admin.agents` (the account filter also needs `admin.accounts`).",
+      "roles": "owner, manager.",
+      "actions": [
+        "Search by name or thread id; account filter; pager",
+        "Bot switch per session (\"Bot đang bật - bấm để tắt\")",
+        "\"Xem\": detail drawer with the tabs \"Hội thoại\" and \"Trace agent\"",
+        "Delete the conversation, delete the summary, clear the whole context (three confirm dialogs)"
+      ],
+      "context": [
+        "The per-session bot switch is the zalo-agent `bot_enabled` flag. In the care design it is extended into the control-state machine AUTO → HANDOFF_ROUTING → STAFF (PLAN-AI01-M section 5); the per-patient timeline (WK28) shows that state, this page only the raw switch.",
+        "Sessions may hold patient data: only staff who are authorised see them."
+      ],
+      "related": [
+        "WJ94 the same step data as a page of its own",
+        "WJ38 what the assistant remembered from these sessions",
+        "WK28 the care timeline of a patient"
+      ]
+    },
+    "/admin/contacts": {
+      "purpose": "Address book the assistant collects from every incoming message, including people it does not answer.",
+      "gate": "`admin.agents`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "Search by name or user id; account filter; pager",
+        "Trash icon \"Xóa danh bạ\" (confirm dialog)"
+      ],
+      "context": [
+        "A contact is a Zalo user id seen on an account, not a patient record. Linking a Zalo user to a patient is a separate, confirmed step on the policy page (WJ102)."
+      ],
+      "related": [
+        "WJ15 the sessions of the same people",
+        "WJ102 identity links waiting for confirmation"
+      ]
+    },
+    "/admin/friends": {
+      "purpose": "Friend requests and friend list of a personal Zalo account: accept or decline pending requests and see who the account already talks to.",
+      "gate": "`admin.accounts`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "Select a personal account",
+        "\"Chấp nhận\" (acts at once) and \"Từ chối\" (confirm dialog) on a pending request",
+        "\"Làm mới\" on the friend list"
+      ],
+      "context": [
+        "Zalo does not return old requests: only those received since the feature was switched on and while the bot runs are shown. The pending requests poll every 7 seconds."
+      ],
+      "related": [
+        "WJ54 the account list and its \"Login QR\"",
+        "WJ63 login by QR"
+      ]
+    },
+    "/admin/schedules": {
+      "purpose": "Schedules of the bot: automatic messages or one agent turn on a timetable (once, every N minutes, cron). View, edit, try now, see the run history.",
+      "gate": "`admin.schedules`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "\"Thêm lịch hẹn\"; account filter",
+        "Switch on or off; \"Chạy thử ngay\"; \"Lịch sử\"; \"Sửa\"; \"Xóa\""
+      ],
+      "context": [
+        "On a `patient_channel` account a schedule can only send a message made from a doctor-approved template (kind \"Nhắn tin\"); an agent job only drafts text for a reviewer and never sends by itself (WJ34). Proactive sending stays inside the send window and the daily cap of the channel."
+      ],
+      "related": [
+        "WJ54 channels, daily cap and send window",
+        "WJ102 the policy profile that restricts schedules",
+        "WL4 the approved templates a message job uses",
+        "WK15 send window as the care agent sees it"
+      ]
+    },
+    "/admin/memory": {
+      "purpose": "What the assistant remembered through its `save_memory` tool: facts, about whom, learned in which kind of chat, and when.",
+      "gate": "`admin.agents`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "Search; account filter; pager",
+        "Text button \"Xóa\" (acts at once, no confirm)"
+      ],
+      "context": [
+        "A fact learned in a private chat is never used in a group. With the `patient_channel` profile content that comes from a patient is not saved automatically; only a doctor or care staff write it. This is zalo-agent memory; what staff tell the care agent about one patient is a different store (care memory, WK38)."
+      ],
+      "related": [
+        "WJ102 the rule that switches patient memory off",
+        "WK38 instructions staff give to the care agent",
+        "WJ15 sessions"
+      ]
+    },
+    "/admin/kb": {
+      "purpose": "Knowledge base: documents are cut into passages that the assistant searches with its `kb_search` tool. Upload files or type text, assign sources to agents, let a doctor approve, test a search, tag guide articles.",
+      "gate": "`kb.read` to open (owner, manager, doctor, cs_staff, reception); `kb.manage` for the approval switch and guide tags (owner, manager).",
+      "roles": "All five staff roles read; owner and manager manage; doctor sees WJ45 (no manage rights).",
+      "actions": [
+        "\"Thêm nguồn\" (upload a file, or type text)",
+        "\"Thử tìm\", \"Hướng dẫn\"",
+        "Row: \"Xử lý lại\", \"Nhãn hướng dẫn\", \"Xem đoạn\", \"Xóa\"",
+        "Switch \"Bác sĩ duyệt\" (kb.manage); the agent cell shows which agents read the source"
+      ],
+      "context": [
+        "A source is read by an agent only after it is assigned to that agent (default: none) and, for patient-facing use, approved by a doctor (\"Chưa duyệt\" is amber). Staff read the same sources in the Guide (`/guide`) when a source carries a guide tag."
+      ],
+      "related": [
+        "WJ67 assign sources to agents",
+        "WJ76 the per-agent source switches"
+      ]
+    },
+    "/admin/accounts": {
+      "purpose": "Zalo accounts of the bot: one card per account with its agent (\"brain\"), policy profile and status; the channel panel with enable switches, daily cap, send window and the emergency switch; add, edit, QR login, delete.",
+      "gate": "`admin.accounts`; the \"Kênh gửi tin\" panel needs `admin.channels`, the emergency switch `admin.kill_switch`, the policy select `admin.policy`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "\"Thêm account\" (personal QR account, official bot token, OA not supported yet)",
+        "Per account: switch, \"Login QR\" (personal only), \"Sửa\", \"Xóa\"",
+        "Channel panel: enable, daily proactive cap, minimum and maximum gap, send window from/to, \"Lưu cấu hình\", \"Công tắc khẩn\""
+      ],
+      "context": [
+        "The channel panel is the clinic-wide limit for proactive messages: daily cap, spacing and send window; the emergency switch (a reason is required and goes to the audit log) STOPS every proactive message of that channel (reminders, care, scheduled) until it is switched off, while replies to a patient who has just written are not blocked. A personal Zalo account carries an amber lock-risk warning.",
+        "The default policy profile of a new account is `patient_channel`; switching it to `staff_assistant` shows a red warning because the account then sends directly, without a reviewer (WJ60)."
+      ],
+      "related": [
+        "WJ102 policy profiles per account and agent",
+        "WJ67 the agents an account points to",
+        "WJ26 friends of a personal account",
+        "WJ79 tools per account"
+      ]
+    },
+    "/admin/agents": {
+      "purpose": "Agents: each one is a \"brain\" = persona + own model + policy profile, attached to Zalo accounts on the accounts page. List or grid, search, sort, create, edit, delete.",
+      "gate": "`admin.agents`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "\"Tạo agent\" (create dialog, then the \"Agent mới\" page)",
+        "Search, sort, grid or list",
+        "Card: \"Xem chi tiết\", \"Sửa\", menu \"Xóa agent\" (the default agent cannot be deleted)"
+      ],
+      "context": [
+        "The care agent of each patient is not managed on this page: it is a record plus memory in the database, run by a worker pool (PLAN-AI01-M section 2). The agents here are the assistants attached to Zalo accounts."
+      ],
+      "related": [
+        "WJ73 new agent",
+        "WJ76 agent detail",
+        "WJ54 accounts",
+        "WJ102 policy profile per agent"
+      ]
+    },
+    "/admin/agents/new": {
+      "purpose": "Create an agent: identity (icon, name, id, policy profile, persona), model settings and the tools it may use. Reached only through the create dialog.",
+      "gate": "`admin.agents`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "\"Hủy\"; \"Tạo agent\"",
+        "Radios for the policy profile",
+        "Persona with a counter (8,000 characters)",
+        "Max steps, context window, thinking level; tool switches by group \"Tra cứu\" and \"Hành động\""
+      ],
+      "context": [
+        "A tool blocked by the chosen policy profile shows \"Bị chặn bởi hồ sơ chính sách\" and cannot be switched on: the profile limits the agent, the agent never limits the profile."
+      ],
+      "related": [
+        "WJ67 list",
+        "WJ76 detail (adds the knowledge-base section)",
+        "WJ79 tools per account"
+      ]
+    },
+    "/admin/agents/[id]": {
+      "purpose": "Agent detail: the same sections as \"Agent mới\" with a read-only id, plus the knowledge-base sources this agent may read; save with a dirty check.",
+      "gate": "`admin.agents`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "\"Quay lại\"; \"Lưu thay đổi\" (disabled until something changed)",
+        "Switch per knowledge-base source and \"Lưu nguồn đã chọn\""
+      ],
+      "context": [
+        "An agent reads only the sources ticked here (default none); a source not yet approved by a doctor shows \"chưa được bác sĩ duyệt\"."
+      ],
+      "related": [
+        "WJ67 list",
+        "WJ40 knowledge base"
+      ]
+    },
+    "/admin/tools": {
+      "purpose": "Tools per Zalo account: switch each tool on or off; the model receives a tool only when both the account and its agent enable it. Settings for web search, web fetch, image reading and image drawing.",
+      "gate": "`admin.tools`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "Select an account",
+        "Switch per tool (groups \"Đọc & tra cứu\" and \"Hành động\")",
+        "\"Settings\" for web_search, web_fetch, read_image, create_image"
+      ],
+      "context": [
+        "Under `patient_channel` the image, video, document and web tools are off and show \"Bị chặn bởi hồ sơ chính sách\"; a patient who sends a photo is flagged to a person instead of being analysed (PLAN-AI01 section 5). The tools are ported, not deleted."
+      ],
+      "related": [
+        "WJ67 per-agent tool switches",
+        "WJ102 policy profile"
+      ]
+    },
+    "/admin/mcp": {
+      "purpose": "External MCP servers that give agents more tools; adding one is not enough, it must be assigned to an agent before the bot can call it.",
+      "gate": "`admin.mcp`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "\"Thêm server\"",
+        "Row: \"Duyệt lại\", \"Sửa\", \"Xóa\"; assign agents",
+        "Status \"Đã kết nối\" / \"Lỗi\" / \"Chờ duyệt lại\" / \"Chờ kết nối\" (polled every 4 seconds)"
+      ],
+      "context": [
+        "A server whose tool set changed shows \"Chờ duyệt lại\": a person confirms the current tool set before agents use it again."
+      ],
+      "related": [
+        "WJ67 agents that use a server"
+      ]
+    },
+    "/admin/traces": {
+      "purpose": "Agent traces: for each bot turn, which steps ran, what the model said, which tool it called with which arguments.",
+      "gate": "`admin.usage`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "\"Xem\" / \"Thu gọn\" on a turn",
+        "\"Xem thêm lượt cũ hơn\"",
+        "Deep link `?turnId=N` from a schedule history"
+      ],
+      "context": [
+        "Traces can hold message text, so the permission is `admin.usage` (staff only)."
+      ],
+      "related": [
+        "WJ12 usage numbers",
+        "WJ17 the same data inside a session",
+        "WJ36 schedule history links here"
+      ]
+    },
+    "/admin/logs": {
+      "purpose": "System log read from file (system log tab) and the audit log of staff actions (second tab).",
+      "gate": "`admin.logs`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "Tabs \"Log hệ thống\" | \"Nhật ký thao tác\"",
+        "Level and scope selects, search, \"Tải lại\"",
+        "\"Chi tiết\" / \"Thu gọn\" on a row; \"Xem thêm 150 dòng cũ hơn\""
+      ],
+      "context": [
+        "Audit entries record field names, roles and ids, not names, emails or passwords. File logging can be switched off on the server; the page then says \"Ghi log ra file đang tắt\"."
+      ],
+      "related": []
+    },
+    "/admin/policy": {
+      "purpose": "Policy profiles: the screen where patient safety is a setting. It compares the two profiles rule by rule, assigns a profile to each Zalo account and agent, and confirms or rejects Zalo identity links.",
+      "gate": "`admin.policy` (the account list needs `admin.accounts`, the agent list `admin.agents`).",
+      "roles": "owner, manager.",
+      "actions": [
+        "Select the profile of each account or agent (\"Trợ lý nội bộ\" / \"Kênh bệnh nhân\")",
+        "\"Xác nhận\" / \"Từ chối\" a pending Zalo identity link",
+        "Dialog \"Chuyển sang Trợ lý nội bộ\" when a stricter profile is relaxed"
+      ],
+      "context": [
+        "`patient_channel` (default): outgoing patient messages go to the review queue, only template messages are scheduled, patient content is not auto-memorised, red flags go to a doctor before any model call, PII is masked, marketing opt-out and birthdays are respected, and identity is verified before names, appointments or medicines are mentioned. `staff_assistant` is the original zalo-agent behaviour for staff-only accounts.",
+        "When an agent runs inside an account, the stricter profile of the two applies.",
+        "The assistant may mention a patient only after staff confirmed that the Zalo account is that patient (identity link)."
+      ],
+      "related": [
+        "WJ54 profile badge on each account",
+        "WJ67 profile on each agent",
+        "WJ34 how the profile limits a schedule",
+        "WL4 the template rules that follow from it"
+      ]
+    },
+    "/admin/tuning": {
+      "purpose": "Model and configuration: LLM provider (kind, base URL, model, API key, test), and every tuning parameter in groups, each field autosaving.",
+      "gate": "`admin.model`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "Search the configuration; left list of groups",
+        "Provider form: \"Lưu\", \"Test kết nối\", \"Xóa cấu hình LLM\"",
+        "Per field: edit (autosave) or \"Về mặc định\"; per group \"Đặt lại nhóm này\"; \"Đặt lại toàn bộ cấu hình\""
+      ],
+      "context": [
+        "The API key is encrypted at rest (AES-256-GCM) and never returned in full. A change applies from the next agent turn, no restart.",
+        "Care thresholds (depth matrix, SLA) are not here: they live on the care administration pages because a doctor approves them."
+      ],
+      "related": [
+        "WK9 depth matrix (not part of this page)",
+        "WJ13 the overview state that links here",
+        "WJ11 the \"Chung\" group reuses the password card"
+      ]
+    },
+    "/admin/tuning/[group]": {
+      "purpose": "Direct link to one group of the configuration page (for example `/admin/tuning/providers`). It re-exports the page of `/admin/tuning`; an unknown group redirects to the first one.",
+      "gate": "`admin.model`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "Same as the configuration page"
+      ],
+      "context": [],
+      "related": [
+        "WJ105 the page it re-exports",
+        "WJ13 the overview state that links to it"
+      ]
+    },
+    "/admin/care/staff": {
+      "purpose": "Care administration, tab 1: skills and shifts of the staff the care agent can route to; one card per person with role, current load against capacity, skill badges and weekly shifts.",
+      "gate": "`care.admin`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "\"Sửa\" on a card: skills and shifts",
+        "The tab bar of all /admin/care pages: \"Kỹ năng và ca trực\" | \"Số trực 24/24\" | \"Ma trận ngưỡng\" | \"SLA và khung giờ\" | \"Cảnh báo\""
+      ],
+      "context": [
+        "The staff profile (role, skills such as laser, acne, melasma, booking, payment, complaints, shifts, current load) is what the agent filters on when it picks a person: first by required skill and urgency (D5 only a doctor, D4 the responsible or on-duty doctor), then the person already in charge of this patient, then someone on shift with spare capacity; the chain ends with the 24/24 number. The choice is deterministic, no model is called."
+      ],
+      "related": [
+        "WJ1 the staff accounts these profiles belong to",
+        "WK4 the last element of the chain",
+        "WK21 where a chosen person receives the request"
+      ]
+    },
+    "/admin/care/on-call": {
+      "purpose": "Care administration, tab 2: the 24/24 on-call Zalo numbers that end every candidate chain and receive urgent and out-of-hours requests.",
+      "gate": "`care.admin`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "\"Thêm số trực\"; \"Sửa\" on a card",
+        "Badge \"Đang bật\" / \"Đã tắt\""
+      ],
+      "context": [
+        "The numbers live in the database (`clinic.on_call_contacts`: Zalo number, person in charge, validity window) and never in code or the repository; every agent reads them on every turn, so a change applies at once. Each use of the on-call number is logged and raises an alert (WK18). For D5 out of hours the patient receives a template message with the on-call number and general emergency guidance, never model-written medical text.",
+        "A fixture number carries the amber badge \"Số mẫu để thử\"."
+      ],
+      "related": [
+        "WK6 no number enabled is a gap in the safety net",
+        "WK24 a handoff card that reached the on-call number",
+        "WK18 alerts"
+      ]
+    },
+    "/admin/care/matrix": {
+      "purpose": "Care administration, tab 3: the depth and autonomy matrix: from which depth the agent asks a person, per signal, and what the agent may send by itself (how many unedited approvals before a message type reaches level L2).",
+      "gate": "`care.matrix` to read and edit; the approve button needs `care.approve`.",
+      "roles": "owner, manager, doctor (cs_staff and reception cannot open it).",
+      "actions": [
+        "Edit thresholds, depth per signal, promotion counts per message type",
+        "\"Lưu ma trận\", \"Bỏ thay đổi\"",
+        "\"Bác sĩ duyệt\" (doctor, owner, manager) and the reset to pending"
+      ],
+      "context": [
+        "This is the clinical decision of the clinic: the numbers are shipped as defaults marked \"Chờ bác sĩ duyệt\". The agent runs on them meanwhile but they are not treated as approved. Saving returns the matrix to pending; approving needs a doctor-level permission.",
+        "Rules that must always be a person (for example red flags) are shown disabled with \"Luôn do người quyết định, không chỉnh được\"."
+      ],
+      "related": [
+        "WK15 SLA and send window follow the same approval badge",
+        "WK21 depth labels D1-D5 as the staff see them",
+        "WK28 the autonomy level shown on a patient"
+      ]
+    },
+    "/admin/care/timing": {
+      "purpose": "Care administration, tab 4: SLA per urgency, out-of-hours rule and the send window of proactive messages.",
+      "gate": "`care.admin`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "Fields \"Khẩn (phút)\", \"Thường (phút)\", \"Chuỗi tối đa (người)\"",
+        "Select the depth from which out-of-hours requests go straight to the on-call number",
+        "\"Lưu\"; link to the channel settings for the send window"
+      ],
+      "context": [
+        "Past the SLA the request moves to the next candidate in the chain. Out of hours, requests at or above the chosen depth go straight to the on-call number; lighter ones wait for the start of the next shift. The send window itself is edited on the Zalo channel settings, not here. Like the matrix it shows \"Chờ bác sĩ duyệt\" until approved and saving returns it to pending."
+      ],
+      "related": [
+        "WK9 the matrix with the same approval badge",
+        "WJ54 where the send window is edited",
+        "WK21 the SLA countdown on a handoff card"
+      ]
+    },
+    "/admin/care/alerts": {
+      "purpose": "Care administration, tab 5: alerts about the care agents: red flags, use of the 24/24 number, agents lowered in autonomy, patients who keep not replying.",
+      "gate": "`care.admin`.",
+      "roles": "owner, manager.",
+      "actions": [
+        "Patient-name link to the care timeline",
+        "Refreshes when `care.changed` arrives"
+      ],
+      "context": [
+        "The four alert kinds are the ones PLAN-AI01-M section 12 lists for the administration area; a system-wide alert has no patient (\"Toàn hệ thống\")."
+      ],
+      "related": [
+        "WK28 timeline a name link opens",
+        "WK4 use of the on-call number is logged here"
+      ]
+    },
+    "/care/handoffs": {
+      "purpose": "The staff member's queue of care handoffs: requests where the agent asks a person to take over a conversation. Accept or decline; see depth, reason, summary, SLA countdown and who suggested whom.",
+      "gate": "`care.read` to see; `care.act` to accept or decline (the buttons follow flags from the back end).",
+      "roles": "owner, manager, doctor, cs_staff.",
+      "actions": [
+        "Chips \"Chờ tôi\" / \"Tất cả đang mở\"",
+        "\"Nhận cuộc trò chuyện\" (then opens the timeline)",
+        "\"Từ chối\" (dialog with a reason and an optional suggestion of another person)"
+      ],
+      "context": [
+        "This is the human half of HANDOFF_ROUTING: the agent has gone quiet towards the patient (one template holding message) and routes the request to a candidate with a masked summary and the reason. Accept moves the conversation to STAFF; decline or a missed SLA moves it to the next candidate, and the chain always ends at the 24/24 number (\"Đã tới số trực 24/24\").",
+        "The summary is masked of personal data; the card title links to the care timeline of the patient."
+      ],
+      "related": [
+        "WK28 timeline of the patient",
+        "WK33 return to the agent after accepting",
+        "WK1 skills used to pick the candidate",
+        "WK4 the on-call number at the end of the chain",
+        "WC4 Patient 360 of the old web, the clinical record the timeline links to",
+        "WC11 old-web \"CRM & CSKH\" tab, the nearest old counterpart of the care context"
+      ]
+    },
+    "/care/patients/[id]/timeline": {
+      "purpose": "Care agent of one patient, tab 1: who holds the conversation now, why the agent asked for a person, drafts waiting for approval, reminders that are paused, what the agent did, and what it remembers about the patient.",
+      "gate": "`care.read` (checked by the layout of `/care`; not a menu entry).",
+      "roles": "owner, manager, doctor, cs_staff.",
+      "actions": [
+        "Link \"Hồ sơ bệnh nhân\" to Patient 360",
+        "Tab bar \"Dòng thời gian\" | \"Trả lại cho agent\" | \"Nói với agent\"",
+        "Draft rows link to the review queue (`/review?i=`)",
+        "\"Sao chép để gửi tay\" on a paused reminder"
+      ],
+      "context": [
+        "The page shows the control state: \"Agent phụ trách\" (AUTO), \"Đang tìm người nhận\" (HANDOFF_ROUTING), \"Nhân viên phụ trách\" (STAFF), and the autonomy level now and the agent's base level (L0 only drafts, L1 approved template messages, L2 answers with a source). When a person holds the conversation, scheduled reminders are paused, not sent; the card \"Nhắc đang tạm dừng\" lets staff copy the prepared text and send it by hand.",
+        "\"Nháp đang chờ người duyệt\": the agent never sends these while a person has not approved them (patient_channel). \"Agent nhớ gì về khách\" holds habits and instructions, no medical record."
+      ],
+      "related": [
+        "WK21 queue that leads here",
+        "WK33 return the conversation to the agent",
+        "WK38 tell the agent something",
+        "WC4 Patient 360 (old web) linked from the header",
+        "WK18 alerts link here"
+      ]
+    },
+    "/care/patients/[id]/release": {
+      "purpose": "Care agent of one patient, tab 2: \"Trả lại cho agent\": return a conversation held by staff to the care agent, with a handover note and an optional temporary lower autonomy level.",
+      "gate": "`care.read` for the layout; only the person who holds the conversation can return it (otherwise the note WK36).",
+      "roles": "owner, manager, doctor, cs_staff (care.act).",
+      "actions": [
+        "Textarea \"Ghi chú bàn giao\" (500 characters)",
+        "Radios \"Mức tự chủ sau khi trả lại\": keep the current level, or lower it for N days (never higher than the agent's own)",
+        "\"Trả lại cho agent\" and a confirm dialog"
+      ],
+      "context": [
+        "This is the only way back to AUTO: only staff return a conversation, it never expires on its own. The note is masked of personal data before saving and read by the agent in later turns. The consequence line comes from the back end in its own words."
+      ],
+      "related": [
+        "WK28 timeline",
+        "WK21 queue where the person accepted the conversation"
+      ]
+    },
+    "/care/patients/[id]/tell-agent": {
+      "purpose": "Care agent of one patient, tab 3: \"Nói với agent\": free-text instructions staff leave for the agent of this patient (habits, preferences), saved as care memory with source staff.",
+      "gate": "`care.read` for the layout (the code does not check `care.act` here, as the brief of W7 notes).",
+      "roles": "owner, manager, doctor, cs_staff.",
+      "actions": [
+        "Textarea \"Lời dặn cho agent\" (500 characters)",
+        "\"Lưu lời dặn\"; list \"Lời dặn đã lưu\" with the badge \"Nhân viên dặn\""
+      ],
+      "context": [
+        "An instruction cannot change the autonomy level or skip approval: it is a habit or priority of the patient. Personal data is masked before it is stored."
+      ],
+      "related": [
+        "WK28 timeline shows the same memory (\"Agent nhớ gì về khách\")",
+        "WJ38 zalo-agent memory is a different store"
+      ]
+    },
+    "/login": {
+      "purpose": "Sign-in page of the CSKH dashboard: email and password.",
+      "gate": "Public.",
+      "roles": "Anyone; after sign-in the person goes to `?next=` (same-origin path only), else the home of the role, else back to sign-in.",
+      "actions": [
+        "Field \"Email\" (autofocus), \"Mật khẩu\" with show or hide",
+        "\"Đăng nhập\" (disabled while a field is empty or the request is busy)"
+      ],
+      "context": [
+        "Email and password only, no clinic code; the session cookie is HttpOnly with a sliding and an absolute limit, the password hashed per person (ARCH-AI01 section 8)."
+      ],
+      "related": [
+        "WL15 the shell while the session loads",
+        "WL16 the shell when the session fails to load"
+      ]
+    },
+    "/templates": {
+      "purpose": "Approved message templates: texts a doctor approved for proactive care messages (reminders, check-ins after a procedure, progress photos, promotions). Compose, edit, approve, switch off or on.",
+      "gate": "`kb.read` to open the page; `kb.manage` to compose and edit; `review.decide_clinical` to approve.",
+      "roles": "All five staff roles read (cs_staff and reception view only, WL5); owner and manager manage; doctor approves (WL9) but does not edit.",
+      "actions": [
+        "\"Soạn mẫu mới\"",
+        "Card: \"Sửa\", \"Duyệt\" (unapproved), \"Tắt mẫu\" / \"Bật mẫu\" (approved)"
+      ],
+      "context": [
+        "A new or edited template is not used until a doctor approves it. These are the only texts that a `patient_channel` schedule may send by itself (kind \"Nhắn tin\"). Promotions are not sent to patients who opted out, and birthday messages are never sent automatically."
+      ],
+      "related": [
+        "WJ34 a schedule on a patient channel uses these templates",
+        "WJ102 the profile rules these follow from",
+        "WK21 the holding message the agent sends is also a template"
+      ]
+    },
+    "(app shell)": {
+      "purpose": "The Next.js shell around every signed-in page: sidebar with the menu filtered by permission, top bar, phone tab bar and the empty, loading and forbidden states.",
+      "gate": "Signed-in session; each menu entry is shown when the role holds any permission of its `needs` (a convenience, the back end authorises every request).",
+      "roles": "owner and manager see every entry; doctor, cs_staff and reception see fewer; a patient account has no staff menu.",
+      "actions": [
+        "Menu entries by section: \"Không gian làm việc\", \"Quản lý\", \"Phân tích\", \"Zalo & CSKH\", \"Care agent\", \"Quản trị agent\"",
+        "Theme toggle, sign out, global patient search, bell (link to the inbox)",
+        "Phone: bottom tab bar and menu drawer"
+      ],
+      "context": [
+        "Care and agent administration entries appear only for roles that hold their permissions (care.read, care.admin, care.matrix, admin.*). Planned old screens are listed as grey text with the tooltip \"Màn này sẽ có ở bản sau\" and are not links."
+      ],
+      "related": [
+        "WA1 old-web shell for the owner (different shell)",
+        "WA2 old-web shell for the CSKH role"
       ]
     }
   }

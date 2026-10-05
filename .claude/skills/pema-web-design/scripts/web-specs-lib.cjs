@@ -35,6 +35,12 @@ const readJson = (p) => JSON.parse(read(p));
 const sha = (s) => crypto.createHash('sha256').update(lf(s)).digest('hex').slice(0, 16);
 const q = (s) => JSON.stringify(String(s));
 
+// W9: ids that exist only in the Next.js front end (groups WJ, WK, WL; inventory `source: "nextjs"`)
+const NEXT_STATUS = 'exists (design W2)';
+const isNextjs = (entry) => entry.source === 'nextjs';
+const statusOf = (entry) => (isNextjs(entry) ? NEXT_STATUS : entry.next_status);
+const NAV = path.join(ROOT, 'pema-agent', 'frontend', 'src', 'lib', 'nav.tsx');
+
 // ---------- the kit (target vocabulary) ----------
 const KIT = new Set(['AppShell', 'Sidebar', 'TopBar', 'Workspace', 'PageHeading', 'Card', 'Tile', 'TableShell', 'Tabs', 'TabPanel', 'Badge', 'Button', 'Field', 'Dialog', 'Sheet', 'EmptyState', 'GuardedLink']);
 const SHARED = new Set(['Notice', 'FilterChip']); // pieces of the app code that sit next to the kit (src/ui/README.md)
@@ -78,10 +84,50 @@ function loadFeatureRows() {
   return rows;
 }
 
+/** page.tsx of a route under src/app; route groups such as (admin) are transparent. '' when there is none. */
 function routePage(route) {
   if (!route || route.startsWith('(')) return '';
-  const file = path.join(FRONTEND, 'src', 'app', '(admin)', route.replace(/^\//, ''), 'page.tsx');
-  return fs.existsSync(file) ? rel(file) : '';
+  const segs = route.split('/').filter(Boolean);
+  const walk = (dir, i) => {
+    if (i === segs.length) {
+      const f = path.join(dir, 'page.tsx');
+      return fs.existsSync(f) ? f : '';
+    }
+    let entries;
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return '';
+    }
+    for (const e of entries) {
+      if (!e.isDirectory()) continue;
+      if (/^\(.*\)$/.test(e.name)) {
+        const hit = walk(path.join(dir, e.name), i);
+        if (hit) return hit;
+      }
+      if (e.name === segs[i]) {
+        const hit = walk(path.join(dir, e.name), i + 1);
+        if (hit) return hit;
+      }
+    }
+    return '';
+  };
+  const file = walk(path.join(FRONTEND, 'src', 'app'), 0);
+  return file ? rel(file) : '';
+}
+
+/** Menu entries of the Next.js shell (src/lib/nav.tsx): route → { label, section, needs[], planned }. */
+function loadNav() {
+  const out = {};
+  if (!fs.existsSync(NAV)) return out;
+  let section = '';
+  const src = read(NAV);
+  const re = /title:\s*"([^"]+)",\s*items:|\{\s*to:\s*"([^"]+)",\s*label:\s*"([^"]+)",[^{}]*?needs:\s*\[([^\]]*)\]([^{}]*?)\}/g;
+  for (const m of src.matchAll(re)) {
+    if (m[1]) section = m[1];
+    else out[m[2]] = { label: m[3], section, needs: [...m[4].matchAll(/"([^"]+)"/g)].map((x) => x[1]), planned: /\bplanned:\s*true\b/.test(m[0]) };
+  }
+  return out;
 }
 
 function loadModel() {
@@ -90,12 +136,10 @@ function loadModel() {
   const snapshot = snapText ? JSON.parse(snapText) : { meta: {}, screens: {} };
   const notes = fs.existsSync(NOTES) ? readJson(NOTES) : { groups: {}, screens: {} };
   const app = fs.existsSync(APP_INDEX) ? readJson(APP_INDEX) : { screens: [] };
-  // W7: Next.js-only ids (source "nextjs") have no snapshot and no spec until W9; they are kept out of the spec model and
-  // listed in INDEX.md ("Next.js-only screens, specs pending") so that a route can still be looked up.
-  const pendingNextjs = inventory.screens.filter((s) => s.source === 'nextjs' && !snapshot.screens[s.id]);
-  inventory.screens = inventory.screens.filter((s) => !pendingNextjs.includes(s));
+  // W9: Next.js-only ids (source "nextjs") are specified without a snapshot too: their spec is built from the inventory row,
+  // notes.json (groups, routes, screens) and a check of the quoted texts against the front-end source; a snapshot of the
+  // mock-BE page (W8, `web-snapshot.cjs`) adds the measured layout, tokens and responsive notes when it exists.
   return {
-    pendingNextjs,
     inventory,
     snapshot,
     snapshotHash: snapText ? sha(snapText) : 'none',
@@ -103,6 +147,7 @@ function loadModel() {
     app,
     appById: Object.fromEntries(app.screens.map((s) => [s.id, s])),
     staff: loadStaff(),
+    nav: loadNav(),
     feature: loadFeatureRows(),
     groups: Object.fromEntries(inventory.groups.map((g) => [g.code, g])),
     canvas: canvasLayout.loadCanvasScreens(),
@@ -136,9 +181,10 @@ function addNote(id, kind, text) {
 
 function notesFor(model, entry) {
   const g = (model.notes.groups || {})[entry.group] || {};
+  const r = (isNextjs(entry) && (model.notes.routes || {})[entry.next_route]) || {};
   const s = (model.notes.screens || {})[entry.id] || {};
   const out = {};
-  for (const k of NOTE_KEYS) out[k] = [...(g[k] || []), ...(s[k] || [])];
+  for (const k of NOTE_KEYS) out[k] = [...(g[k] || []), ...(r[k] || []), ...(s[k] || [])];
   return out;
 }
 
@@ -683,8 +729,8 @@ function permissionLines(model, entry, e) {
 
 function targetLines(model, entry) {
   const route = entry.next_route;
-  const status = entry.next_status;
-  const step = (/\((U\d)\)/.exec(status) || [])[1] || (/U\d/.exec(status) || [])[0] || '—';
+  const status = statusOf(entry);
+  const step = (/\((U\d)\)/.exec(entry.next_status) || [])[1] || (/U\d/.exec(entry.next_status) || [])[0] || '—';
   const row = route && model.feature[route];
   const page = routePage(route);
   const lines = [`- Route: ${route ? `\`${route}\`` : 'none yet (no page in the Next.js app)'} · status: **${status}** · U step: ${step}`];
@@ -733,7 +779,292 @@ function promptOf(entry, model) {
   ].join('\n');
 }
 
+// ---------- Next.js-only ids (groups WJ, WK, WL) ----------
+// Their "old web" is the front end itself (pema-agent/frontend, mock BE). Content comes from three layers:
+//   1. the inventory row (W7): reach, expect, sources and `notes`, a brief read from the code with every UI text in quotes;
+//   2. notes.json: groups.<WJ|WK|WL>, routes.<route> (purpose, gate, roles, actions, context, related, rules, ...) and screens.<ID>;
+//   3. snapshot.json (W8, web-snapshot.cjs), when it holds the id: measured layout tree, tokens, responsive notes.
+// Without a snapshot the Layout is the brief, and every quoted text of it is checked against the front-end source.
+
+const FE_ROOT = 'pema-agent/frontend';
+const feCache = new Map();
+function feFiles(p) {
+  const abs = path.join(ROOT, p);
+  if (!fs.existsSync(abs)) return [];
+  if (fs.statSync(abs).isFile()) return [abs];
+  return fs.readdirSync(abs).sort().flatMap((f) => feFiles(`${p}/${f}`));
+}
+const isCode = (f) => /\.(tsx?|json)$/.test(f) && !/\.test\.tsx?$/.test(f);
+function feText(files) {
+  return files
+    .filter(isCode)
+    .map((f) => {
+      // whitespace is collapsed: JSX wraps long sentences over several lines
+      if (!feCache.has(f)) feCache.set(f, lf(fs.readFileSync(f, 'utf8')).replace(/\s+/g, ' '));
+      return feCache.get(f);
+    })
+    .join('\n');
+}
+let feAllCache = null;
+const feAll = () => (feAllCache ??= feText([...feFiles(`${FE_ROOT}/src`), ...feFiles(`${FE_ROOT}/mock`)]));
+
+/** The brief of an id (inventory `notes`) cut into sentences; a full stop inside a quoted text does not end a sentence. */
+function briefSentences(entry) {
+  const text = String(entry.notes || '').trim();
+  const out = [];
+  let cur = '';
+  let inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    cur += c;
+    if (c === '"') inQ = !inQ;
+    if (!inQ && c === '.' && (i === text.length - 1 || text[i + 1] === ' ') && !/\d$/.test(cur.slice(0, -1))) {
+      out.push(cur.trim());
+      cur = '';
+    }
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
+const isTestSentence = (s) => /^(Tests?\b|No (page |UI )?tests?\b)/i.test(s);
+
+function wrapText(text, width) {
+  const out = [];
+  let cur = '';
+  for (const w of text.split(' ')) {
+    if (cur && cur.length + 1 + w.length > width) {
+      out.push(cur);
+      cur = w;
+    } else cur = cur ? `${cur} ${w}` : w;
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+
+// A quoted text may be a template: {name}, "N phút", a table header "A | B | C". Its literal fragments are what the code must contain.
+// (a number in the brief may be a constant the code interpolates, "ít nhất 8 ký tự" = `ít nhất ${MIN} ký tự`)
+const PLACEHOLDER = /\{[^}]*\}|…|\.\.\.|\s\|\s|\d+(?:[.,]\d+)*|(?<![\p{L}\p{N}])(?:N|H|M)(?![\p{L}\p{N}])/gu;
+const fragmentsOf = (text) =>
+  text
+    .split(PLACEHOLDER)
+    .map((f) => f.replace(/\s+/g, ' ').replace(/^[\s.,:;·%()/-]+|[\s.,:;·%()/-]+$/g, ''))
+    .filter((f) => f.length >= 3 && /\p{L}/u.test(f));
+
+/** Texts the brief quotes (verbatim UI text), each checked against the sources of the id, then the whole front end (src and mock, no tests). */
+function quotedTexts(entry) {
+  const texts = new Set();
+  const add = (t) => {
+    const s = String(t).trim();
+    if (s.length < 3 || s.length > 400 || !/\p{L}/u.test(s) || /^[a-z_]+(\.[a-z_]+)+$/.test(s)) return;
+    if (fragmentsOf(s).length) texts.add(s);
+  };
+  if (entry.expect && entry.expect.text) add(entry.expect.text);
+  for (const st of entry.reach || []) {
+    if (st.button) add(st.button);
+    if (st.text) add(st.text);
+  }
+  for (const sent of briefSentences(entry)) {
+    if (isTestSentence(sent)) continue;
+    for (const m of sent.matchAll(/"([^"]+)"/g)) add(m[1]);
+  }
+  const own = feText(entry.sources.flatMap(feFiles));
+  const has = (hay, f) => hay.includes(f) || hay.includes(f.replace(/"/g, '\\"'));
+  const res = { in_source: [], elsewhere: [], not_found: [] };
+  for (const t of texts) {
+    const frags = fragmentsOf(t);
+    if (frags.every((f) => has(own, f))) res.in_source.push(t);
+    else if (frags.every((f) => has(feAll(), f))) res.elsewhere.push(t);
+    else res.not_found.push(t);
+  }
+  return res;
+}
+
+const pageOf = (model, entry) => model.inventory.screens.find((s) => isNextjs(s) && s.next_route === entry.next_route && s.kind === 'page' && s.id !== entry.id);
+const sameRoute = (model, entry) => model.inventory.screens.filter((s) => isNextjs(s) && s.next_route === entry.next_route && s.id !== entry.id);
+const nameOf = (model, id) => (model.inventory.screens.find((s) => s.id === id) || {}).name || '';
+const idLink = (model, id) => `[${id}](${id}.md)${nameOf(model, id) ? ` · ${nameOf(model, id)}` : ''}`;
+const kindWord = { page: 'page', tab: 'tab of a page', dialog: 'dialog or drawer', modal: 'dialog', state: 'state' };
+
+function reachWords(steps) {
+  return (steps || [])
+    .map((st) => {
+      if (st.login) return `sign in as the mock account \`${st.login}\``;
+      if (st.goto) return `open \`${st.goto}\``;
+      if (st.button) return `click the button or link ${q(st.button)}`;
+      if (st.text) return `click the text ${q(st.text)}`;
+      if (st.fill) return `type ${q(st.fill[1])} into the field ${q(st.fill[0])}`;
+      if (st.wait) return `wait for ${q(st.wait)}`;
+      if (st.note) return `condition: ${st.note}`;
+      return JSON.stringify(st);
+    })
+    .join(' → ');
+}
+
+const asList = (v) => (Array.isArray(v) ? v : v ? [v] : []);
+/** A note key at the three levels (group, route, screen), concatenated in that order. */
+function extraList(model, entry, key) {
+  const g = (model.notes.groups || {})[entry.group] || {};
+  const r = (model.notes.routes || {})[entry.next_route] || {};
+  const s = (model.notes.screens || {})[entry.id] || {};
+  return [...asList(g[key]), ...asList(r[key]), ...asList(s[key])];
+}
+/** A single-text note key: the most specific level wins (screen, then route, then group). */
+function extraStr(model, entry, key) {
+  const g = (model.notes.groups || {})[entry.group] || {};
+  const r = (model.notes.routes || {})[entry.next_route] || {};
+  const s = (model.notes.screens || {})[entry.id] || {};
+  return s[key] || r[key] || g[key] || '';
+}
+
+function nextLayoutBrief(entry) {
+  const out = [];
+  if (entry.kind === 'dialog' || entry.kind === 'modal') out.push('// opens over the page (a drawer or a dialog); the page and the backdrop behind it are not part of this screen');
+  const shell = entry.next_route === '/login' ? 'public page, no shell' : `inside <AppShell role=${q(entry.role)}>`;
+  out.push(`<Screen id=${q(entry.id)} kind=${q(entry.kind)} route=${q(entry.next_route)} account=${q(entry.role)}>  // ${shell}`);
+  for (const s of briefSentences(entry)) for (const [i, l] of wrapText(s, 108).entries()) out.push(`  ${i ? '//    ' : '// '}${l}`);
+  out.push('</Screen>');
+  return out;
+}
+
+function nextSpecMarkdown(entry, model) {
+  const e = model.snapshot.screens[entry.id];
+  const g = model.groups[entry.group];
+  const notes = notesFor(model, entry);
+  const cs = model.canvas && model.canvas.screens[entry.id];
+  const snap = e ? layoutOf(e) : { lines: nextLayoutBrief(entry), used: {} };
+  const lay = cs ? canvasLayout.layout(cs) : snap;
+  const kitUsed = Object.entries(lay.used).filter(([k]) => KIT.has(k)).sort((a, b) => b[1] - a[1]);
+  const page = entry.kind === 'page' ? null : pageOf(model, entry);
+  const siblings = sameRoute(model, entry);
+  const nav = model.nav[entry.next_route];
+  const gate = extraStr(model, entry, 'gate');
+  const roles = extraStr(model, entry, 'roles');
+  const suffix = entry.name.includes(' · ') ? entry.name.slice(entry.name.indexOf(' · ') + 3) : entry.name;
+  const routePurpose = (((model.notes.routes || {})[entry.next_route] || {}).purpose || '').trim();
+  const ownPurpose = (((model.notes.screens || {})[entry.id] || {}).purpose || '').trim();
+  const kindText = kindWord[entry.kind] || entry.kind;
+  const purpose = ownPurpose || (entry.kind === 'page' ? routePurpose : `${kindText[0].toUpperCase()}${kindText.slice(1)} of ${page ? idLink(model, page.id) : 'the shell'}: ${suffix}.${routePurpose ? ` Page: ${routePurpose}` : ''}`);
+  const quoted = quotedTexts(entry);
+  const tests = briefSentences(entry).filter(isTestSentence);
+  const ownActions = asList(((model.notes.screens || {})[entry.id] || {}).actions);
+  const actions = entry.kind === 'page' || ownActions.length ? extraList(model, entry, 'actions') : ['(actions of the page; this state or dialog adds the controls its Layout lists)', ...extraList(model, entry, 'actions')];
+  const context = extraList(model, entry, 'context');
+  const relNotes = Object.fromEntries(extraList(model, entry, 'related').map((r) => [r.split(' ')[0], r.includes(' ') ? r.slice(r.indexOf(' ') + 1) : '']));
+  const relText = (id) => `- ${idLink(model, id)}${relNotes[id] ? ` — ${relNotes[id]}` : ''}`;
+  const known = (id) => model.inventory.screens.some((s) => s.id === id);
+  const sameIds = new Set(siblings.map((s) => s.id));
+  const cross = Object.keys(relNotes).filter((id) => known(id) && id !== entry.id && !sameIds.has(id) && !(page && page.id === id));
+  const relLines = [
+    ...(siblings.length && entry.kind === 'page' ? ['States, dialogs and tabs of this page:', ...siblings.map((s) => `- ${idLink(model, s.id)} (${s.kind})`)] : []),
+    ...(page ? ['The page of this route:', relText(page.id), ...(siblings.length > 1 ? ['Other states and dialogs of the same page:', ...siblings.filter((s) => s.id !== page.id).map((s) => `- ${idLink(model, s.id)} (${s.kind})`)] : [])] : []),
+    ...(cross.length ? ['Other screens:', ...cross.map(relText)] : []),
+  ];
+  const noticeTexts = e ? [...new Set(e.notices.map((n) => n.text))] : [];
+  const required = [...quoted.in_source, ...quoted.elsewhere];
+  const rules = [...noticeTexts.map((t) => `- (notice on the page) ${q(t)}`), ...(notes.rules.length ? [bullet(notes.rules)] : [])].join('\n') || '- (none recorded)';
+  const diffs = notes.differences;
+  const hash = e ? `, snapshot.json (${model.snapshotHash})` : '';
+  const responsive = e
+    ? responsiveLines(e, entry)
+    : [
+        ...briefSentences(entry)
+          .filter((s) => !isTestSentence(s) && /\b(md|lg|xl)\b|\d\s?px\b|\bcolumns?\b|cards? below|on a phone|phone:|segmented|max-w-/i.test(s))
+          .map((s) => `- ${s}`),
+        `- Measured behaviour at 1920, 1280, 1024 and 390 comes with the snapshot of the mock-BE page (W8, \`web-snapshot.cjs\`); frames to build: ${entry.frames.join(', ')}.`,
+      ].join('\n');
+  const requiredAll = [...required, ...noticeTexts, ...(e ? e.empty_states.map((t) => `${t} (empty state)`) : [])];
+  const frame = e
+    ? frameLines(e, entry)
+    : [
+        `- Frames to build: ${entry.frames.join(', ')} (${entry.frames.length > 1 ? '1440×900 primary, 1920×1020 and 390×844 for a page or tab' : 'a state or dialog is drawn at 1440×900 only'}), account \`${entry.role}\`.`,
+        `- Shell: ${entry.next_route === '/login' ? 'none (public page, full-height canvas)' : 'the Next.js shell (WL10-WL19): sidebar, top bar from lg, bottom tab bar on a phone'}.`,
+      ].join('\n');
+  const layoutHead = cs
+    ? `## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of \`Pema Web redesign canvas/Pema Web.dc.html\` (frame ${entry.id}); labels, actions, statuses and notices are the front end's, verbatim.`
+    : e
+      ? `## Layout (top to bottom, region → src/ui component)
+Measured from the running page (snapshot of the mock BE): every field, action, status, filter and text is listed; repeating rows show the first one and their count.`
+      : `## Layout (brief from the code, region by region)
+No structure snapshot yet (W8): this is the inventory brief of W7, read from the page components, with every UI text in quotes. Run \`web-snapshot.cjs\` and \`web-specs.cjs\` to replace it with the measured tree.`;
+  return `<!-- Generated by ${GENERATOR} from inventory.json, design-specs/web/notes.json${hash}. Edit notes.json, not this file. -->
+# ${entry.id} · ${entry.name}
+
+Group **${entry.group} · ${g.name}** · ${entry.kind} · Next.js: **${statusOf(entry)}**${entry.next_route ? ` (\`${entry.next_route}\`)` : ''} · account \`${entry.role}\`
+
+## Purpose
+${purpose || '- (not written yet)'}
+${context.length ? `\n## Agent and care context\n${bullet(context)}\n` : ''}
+## Who may see it
+- Account in this frame: \`${entry.role}\` (a mock account of \`mock/auth.ts\`; the back end decides the real matrix, the menu is a convenience).
+- Gate: ${gate || '(none recorded)'}
+- Roles that can open the page: ${roles || '(none recorded)'}
+- Menu entry: ${nav ? `${q(nav.label)} in the section ${q(nav.section)}, shown when the role holds any of ${nav.needs.map((n) => `\`${n}\``).join(', ')}${nav.planned ? ' (planned: not a link yet)' : ''}` : 'not a menu entry (reached by link, redirect or the shell itself)'}.
+
+## Key actions
+${actions.length ? bullet(actions) : '- (the Layout lists every control)'}
+
+## Related screens
+${relLines.join('\n') || '- (none)'}
+
+## Logic source
+${[...entry.sources.map((s) => `- Source: \`${s}\``), ...tests.map((t) => `- ${t}`), notes.logic.length ? bullet(notes.logic) : ''].filter(Boolean).join('\n')}
+- How to reach it (mock BE, \`pnpm dev:mock\`): ${reachWords(entry.reach)}; it must show ${entry.expect && entry.expect.text ? q(entry.expect.text) : 'the screen'}.
+
+## Next.js target
+${targetLines(model, entry)}
+
+## App canvas
+- (none: this screen exists only in the Next.js front end, \`app_canvas\` is null; the app canvas only lends tokens and blocks, see \`design-specs/web/BLOCKS.md\`)
+
+## Frame
+${frame}
+
+${layoutHead}
+\`\`\`tsx
+${lay.lines.join('\n')}
+\`\`\`
+${e || cs ? `Kit components used: ${kitUsed.length ? kitUsed.map(([k, v]) => `${k}×${v}`).join(', ') : '—'}.\n` : ''}
+## Responsive
+${responsive}
+${e ? `\n## Tokens\n${tokensLines(e)}\n` : ''}
+## Required text (keep verbatim)
+${requiredAll.length ? requiredAll.map((t) => `- ${t}`).join('\n') : '- (none quoted)'}
+${quoted.not_found.length ? `\n## Texts to re-check against the code\nQuoted in the brief but not found verbatim in the front-end source (built from parts, sent by the back end, or worded differently in the code):\n${quoted.not_found.map((t) => `- ${t}`).join('\n')}\n` : ''}
+## Business rules
+${rules}
+
+## Differences from the app design
+${diffs.length ? bullet(diffs) : '- (none: there is no app counterpart to differ from)'}
+
+## Gotchas
+${bullet(notes.gotchas)}
+${notes.todo.length ? `\n## Still to do\n${bullet(notes.todo)}\n` : ''}
+${cs ? `## Web canvas
+- Frames: ${cs.frames.map((f) => f.size).join(', ')} (inventory: ${entry.frames.join(', ')}); screen label \`${cs.id} · ${cs.name}\`.
+- Canvas note: ${String(cs.note).replace(/\s+/g, ' ')}
+
+` : ''}## Images
+${imageLines(entry)}
+
+## Prompt
+\`\`\`text
+${nextPromptOf(entry, model)}
+\`\`\`
+`;
+}
+
+function nextPromptOf(entry, model) {
+  const g = model.groups[entry.group];
+  return [
+    `Restyle web screen ${entry.id} "${entry.name}" (group ${entry.group} · ${g.name}, ${entry.kind}) in pema-agent/frontend using only src/ui (tokens.json and the kit: Card, Tile, Badge, Button, Field, Dialog, Sheet, Tabs, TableShell, EmptyState; Notice and FilterChip where the layout names them). Route ${entry.next_route} (${statusOf(entry)}): the page already exists, the step restyles it to the canvas frame and does not change its behaviour.`,
+    `Every field, action, status, filter and text in "Layout" and "Required text" must stay; nothing may be dropped (owner rule). The rules under "Agent and care context" and "Business rules" (policy profile, control states, human approval) are product rules, not decoration.`,
+    `Look comes from the web canvas frame ${entry.id} and the tokens; the app canvas has no counterpart. Do not re-read the page components for content: this spec was generated from them. Verify against the shots in "Images" at the frames listed in "Frame".`,
+  ].join('\n');
+}
+
 function specMarkdown(entry, model) {
+  if (isNextjs(entry)) return nextSpecMarkdown(entry, model);
   const e = model.snapshot.screens[entry.id];
   if (!e) throw new Error(`no snapshot for ${entry.id}: run web-snapshot.cjs`);
   const g = model.groups[entry.group];
@@ -828,7 +1159,6 @@ function indexJson(model) {
     snapshot: model.snapshotHash,
     counts: model.inventory.counts,
     groups: model.inventory.groups,
-    pending_nextjs: (model.pendingNextjs || []).map((s) => s.id),
     screens: model.inventory.screens.map((s) => {
       const e = model.snapshot.screens[s.id] || {};
       return {
@@ -837,11 +1167,13 @@ function indexJson(model) {
         group: s.group,
         kind: s.kind,
         role: s.role,
+        source: isNextjs(s) ? 'nextjs' : 'old-web',
         next_route: s.next_route,
-        next_status: s.next_status,
+        next_status: statusOf(s),
         app_canvas: s.app_canvas,
         frames: s.frames,
         spec: `screens/${s.id}.md`,
+        has_snapshot: Boolean(model.snapshot.screens[s.id]),
         counts: { actions: (e.actions || []).length, fields: (e.fields || []).length, chips_tabs: (e.chips_tabs || []).length, statuses: (e.badges_status || []).length, kpis: (e.kpis || []).length, notices: (e.notices || []).length, tables: (e.tables || []).length },
       };
     }),
@@ -850,32 +1182,18 @@ function indexJson(model) {
 
 function indexMarkdown(model) {
   const rows = model.inventory.screens.map((s) => {
-    const e = model.snapshot.screens[s.id] || {};
-    return `| [${s.id}](screens/${s.id}.md) | ${s.name} | ${s.kind} | ${model.groups[s.group].name} | ${s.next_route ? `\`${s.next_route}\`` : '—'} | ${s.next_status} | ${s.app_canvas.length ? s.app_canvas.join(', ') : '—'} | ${(e.actions || []).length}/${(e.fields || []).length}/${(e.badges_status || []).length}/${(e.notices || []).length} |`;
+    const e = model.snapshot.screens[s.id];
+    const counts = e ? `${e.actions.length}/${e.fields.length}/${e.badges_status.length}/${e.notices.length}` : '—';
+    return `| [${s.id}](screens/${s.id}.md) | ${s.name} | ${s.kind} | ${model.groups[s.group].name} | ${isNextjs(s) ? 'Next.js' : 'old web'} | ${s.next_route ? `\`${s.next_route}\`` : '—'} | ${statusOf(s)} | ${s.app_canvas.length ? s.app_canvas.join(', ') : '—'} | ${counts} |`;
   });
+  const nx = model.inventory.screens.filter(isNextjs).length;
   return `<!-- Generated by ${GENERATOR}. Edit notes.json, not this file. -->
-# Old web screen index (${model.inventory.screens.length})
+# Web screen index (${model.inventory.screens.length})
 
-Source: \`design-specs/web/inventory.json\` (W0), snapshot \`${model.snapshotHash}\`. One spec per screen in \`screens/\`; the old web is the reference, the app canvas only lends the look. Counts are actions/fields/statuses/notices of the snapshot.
+Source: \`design-specs/web/inventory.json\` (W0, and W7 for the ${nx} Next.js-only ids), snapshot \`${model.snapshotHash}\`. One spec per screen in \`screens/\`. Old-web ids (groups WA-WI): the old web is the reference, the app canvas only lends the look. Next.js-only ids (groups WJ, WK, WL: agent admin, care agent, sign-in, shell and templates; status "${NEXT_STATUS}"): specified from the inventory brief, \`notes.json\` and the front-end source, with the measured snapshot added when it exists. Counts are actions/fields/statuses/notices of the snapshot (\`—\` = no snapshot for the id yet).
 
-| Code | Screen | Kind | Group | Next.js route | Next.js status | App canvas | A/F/S/N |
-|---|---|---|---|---|---|---|---|
-${rows.join('\n')}
-${pendingNextjsMarkdown(model)}`;
-}
-
-/** Ids that exist only in the Next.js front end and have no spec yet (W9 adds them). */
-function pendingNextjsMarkdown(model) {
-  const list = model.pendingNextjs || [];
-  if (!list.length) return '';
-  const rows = list.map((s) => `| ${s.id} | ${s.name} | ${s.kind} | ${model.groups[s.group].name} | \`${s.next_route}\` | ${s.role} | ${s.frames.join(', ')} |`);
-  return `
-## Next.js-only screens, specs pending (${list.length})
-
-Source: \`design-specs/web/inventory.json\` (W7, \`source: "nextjs"\`). These ids exist only in \`pema-agent/frontend\`; their shots, specs and canvas frames come with W8-W10. The inventory row (\`reach\`, \`expect\`, \`sources\`, \`notes\`) is the brief until then.
-
-| Code | Screen | Kind | Group | Next.js route | Role | Frames |
-|---|---|---|---|---|---|---|
+| Code | Screen | Kind | Group | Source | Next.js route | Next.js status | App canvas | A/F/S/N |
+|---|---|---|---|---|---|---|---|---|
 ${rows.join('\n')}
 `;
 }
@@ -924,7 +1242,8 @@ function coverageAll(model) {
   for (const s of model.inventory.screens) {
     const e = model.snapshot.screens[s.id];
     if (!e) {
-      out[s.id] = [{ kind: 'snapshot', text: 'no snapshot entry' }];
+      // a Next.js-only id may have no snapshot: its spec is built from the inventory brief and notes.json
+      if (!isNextjs(s)) out[s.id] = [{ kind: 'snapshot', text: 'no snapshot entry' }];
       continue;
     }
     const cs = model.canvas && model.canvas.screens[s.id];
@@ -940,4 +1259,8 @@ function inventorySha() {
   return sha(fs.readFileSync(INVENTORY, 'utf8'));
 }
 
-module.exports = { canvasCoverage, blocksMarkdown, inventorySha, ROOT, WEB, SCREENS, NOTES, INVENTORY, SNAPSHOT, IMG_REL, NOTE_KEYS, rel, loadModel, loadNotes, saveNotes, addNote, specMarkdown, promptOf, indexMarkdown, indexJson, buildFiles, coverage, coverageAll, layoutOf, lf };
+module.exports = {
+  isNextjs,
+  statusOf,
+  quotedTexts,
+  briefSentences, canvasCoverage, blocksMarkdown, inventorySha, ROOT, WEB, SCREENS, NOTES, INVENTORY, SNAPSHOT, IMG_REL, NOTE_KEYS, rel, loadModel, loadNotes, saveNotes, addNote, specMarkdown, promptOf, indexMarkdown, indexJson, buildFiles, coverage, coverageAll, layoutOf, lf };
