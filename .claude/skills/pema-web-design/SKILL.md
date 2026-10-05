@@ -111,6 +111,7 @@ The web canvas, the specs and the shots contain **every** piece of UI of the old
 |---|---|
 | Which screens, fields, actions, statuses, texts exist | the old web, completely |
 | Colours, type, radius, spacing, shapes of blocks | `pema-agent/frontend/src/ui/tokens.json` and the app canvas blocks |
+| Colour roles, type scale, spacing, one page per block (anatomy, variants, states, do/don't) | `design-system/` (W11): `tokens.json` is the design source, kept equal to `src/ui/tokens.json`; `node design-system/scripts/check.cjs` |
 | Sample data (names, numbers, money) | the canvas `people`, `GROUPS`, `money()`; the old web's demo values are not copied |
 | Business-rule sentences, button labels | verbatim from the old web, Vietnamese |
 
