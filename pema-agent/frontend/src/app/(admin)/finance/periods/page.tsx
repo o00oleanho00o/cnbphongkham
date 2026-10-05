@@ -34,7 +34,7 @@ function stateLine(row: PeriodRow): string {
 }
 
 export default function FinancePeriodsPage() {
-  const { canWrite, scope, refreshKey, reload } = useFinance();
+  const { canWrite, canClose, scope, refreshKey, reload } = useFinance();
   const toast = useToast();
   const [dialog, setDialog] = useState<Dialog>(null);
   const load = useCallback(
@@ -82,7 +82,7 @@ export default function FinancePeriodsPage() {
                     >
                       Mở bảng
                     </Link>
-                    {canWrite && row.closable && (
+                    {canClose && row.closable && (
                       <Button
                         onClick={() => setDialog({ kind: "close", month: row.month })}
                         aria-label={`Chốt tháng ${row.month}`}

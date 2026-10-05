@@ -255,6 +255,11 @@ export function homeFor(can: (needs: readonly Permission[]) => boolean): string 
   if (can(["crm.task.resolve"]) && !can(["appointment.write"]) && can(["crm.task.read"])) {
     return "/today";
   }
+  // The accountant ("Đối soát & thu ngân") opens on the cashier, as in the old web's `home()`: it collects and
+  // reads the clinic finance but has no schedule, so no role with `appointment.read` lands here.
+  if (can(["finance.collect"]) && can(["finance.read"]) && !can(["appointment.read"])) {
+    return "/cashier";
+  }
   const first = NAV_SECTIONS.flatMap((s) => s.items).find((i) => !i.planned && can(i.needs));
   return first?.to ?? "/login";
 }

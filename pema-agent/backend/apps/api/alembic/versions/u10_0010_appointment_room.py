@@ -15,7 +15,7 @@ Nothing else changes: the table already carries the ``be_app`` grants of the oth
 (``st_0009_single_tenant``): no row level security.
 
 Revision ID: u10_0010_appointment_room
-Revises: u6_0010_finance
+Revises: u11_0010_accountant_role
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision = "u10_0010_appointment_room"
-down_revision = "u6_0010_finance"
+down_revision = "u11_0010_accountant_role"
 branch_labels = None
 depends_on = None
 

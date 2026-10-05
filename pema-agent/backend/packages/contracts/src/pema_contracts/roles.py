@@ -1,8 +1,9 @@
 """Roles, actor types and permission codes.
 
-The six roles are fixed (docs/CONTRACTS-AI01.md). Authorization is deny-by-default and is enforced in
-``pema.clinic.actions`` only; FE and AI never decide access. The role-to-permission matrix is implemented by
-the BE core package (B1) from ARCH-PB01; the permission *codes* below are the stable vocabulary.
+The seven roles are fixed (docs/CONTRACTS-AI01.md; ``accountant`` was added by package U, step U11).
+Authorization is deny-by-default and is enforced in ``pema.clinic.actions`` only; FE and AI never decide
+access. The role-to-permission matrix is implemented by the BE core package (B1) from ARCH-PB01; the
+permission *codes* below are the stable vocabulary.
 """
 
 from __future__ import annotations
@@ -16,11 +17,14 @@ class Role(StrEnum):
     DOCTOR = "doctor"
     CS_STAFF = "cs_staff"
     RECEPTION = "reception"
+    ACCOUNTANT = "accountant"
+    """Reconciliation and cashier ("Đối soát & thu ngân"): finance, the cashier desk and the billing side
+    of a patient. No Inbox, no CRM queue, no clinical content; never approves an order (U11)."""
     PATIENT = "patient"
 
 
 STAFF_ROLES: frozenset[Role] = frozenset(
-    {Role.OWNER, Role.MANAGER, Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION}
+    {Role.OWNER, Role.MANAGER, Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.ACCOUNTANT}
 )
 """Roles that sign in to the staff dashboard (everything except the patient)."""
 
@@ -56,26 +60,30 @@ class Permission(StrEnum):
     """Read quick orders (prescriptions and consultation sheets) and the product catalog (a doctor is narrowed
     to own patients by the action; reception and manager see the clinic)."""
     ORDER_WRITE = "order.write"
-    """Create and edit DRAFT orders (cashier work: reception, manager, doctor, owner). A draft is not shown on
-    the patient app and cannot be printed."""
+    """Create and edit DRAFT orders (cashier work: reception, accountant, manager, doctor, owner). A draft is
+    not shown on the patient app and cannot be printed."""
     ORDER_APPROVE = "order.approve"
     """Approve an order so it can be printed and shown: the responsible doctor (the owner may approve for any
-    doctor). Never reception or a manager: the order carries a clinical text."""
+    doctor). Never reception, the accountant or a manager: the order carries a clinical text (a
+    prescription is a clinical act; the old web enforced the same rule, ``approveOrder`` needs the doctor)."""
     FINANCE_READ = "finance.read"
     """Read the clinic-wide finance projection (PB02): revenue performed, cash collected, debt, the commission
-    table of every doctor, invoices and receipts. Owner and the accountant (the manager role)."""
+    table of every doctor, invoices and receipts. Owner, manager and the accountant."""
     FINANCE_READ_OWN = "finance.read_own"
     """Read the personal finance projection: only the rows of the caller as a performer, never invoices,
     receipts, debt or the clinic totals. Doctor (and the owner, who is the clinic's doctor)."""
     FINANCE_WRITE = "finance.write"
-    """Record performed procedures, approve or void them, close a month and confirm its payout. Owner and the
+    """Record performed procedures, approve or void them and confirm a month's payout. Owner, manager and the
     accountant. The commission rates and bases live on the service terms (``admin.rules``)."""
+    FINANCE_PERIOD_CLOSE = "finance_period.close"
+    """Close (freeze) a finance month. The accountant closes it; owner and manager may close it too (override,
+    audited with the actor: ``finance.period.close``). There is no re-open in this version (U11)."""
     FINANCE_COLLECT = "finance.collect"
     """Raise the invoice of an order and record a receipt on an invoice (cashier work: reception, accountant,
-    owner). Holds no read access to the finance projection."""
+    manager, owner). Holds no read access to the finance projection."""
     FINANCE_NOTIFICATIONS = "finance.notifications"
-    """Read the owner's payment notifications and mark them read. Owner only: the accountant does not read the
-    owner's inbox."""
+    """Read the owner's payment notifications and mark them read. Owner only: neither the manager nor the
+    accountant reads the owner's inbox."""
     CRM_TASK_READ = "crm.task.read"
     CRM_TASK_RESOLVE = "crm.task.resolve"
     CRM_ACTIVITY_WRITE = "crm.activity.write"

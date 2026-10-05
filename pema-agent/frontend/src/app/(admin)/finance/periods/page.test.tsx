@@ -97,12 +97,20 @@ describe("the months", () => {
   });
 
   it("gives_a_reader_the_list_without_any_button_that_changes_a_month", async () => {
-    renderFinance(<FinancePeriodsPage />, { shell: { canWrite: false } });
+    renderFinance(<FinancePeriodsPage />, { shell: { canWrite: false, canClose: false } });
     await screen.findByText("Chốt kỳ");
 
     expect(screen.queryByRole("button", { name: /^Chốt tháng / })).toBeNull();
     expect(screen.queryByRole("button", { name: /^Xác nhận đã chi/ })).toBeNull();
     expect(screen.getAllByRole("link", { name: /^Mở bảng/ }).length).toBeGreaterThan(0);
+  });
+
+  it("shows_the_close_button_by_finance_period_close_and_the_payout_button_by_finance_write", async () => {
+    renderFinance(<FinancePeriodsPage />, { shell: { canWrite: false, canClose: true } });
+    await screen.findByText("Chốt kỳ");
+
+    expect(screen.getByRole("button", { name: "Chốt tháng 2026-08" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Xác nhận đã chi/ })).toBeNull();
   });
 });
 

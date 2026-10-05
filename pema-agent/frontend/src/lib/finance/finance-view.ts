@@ -242,11 +242,18 @@ export function canAct(period: FinancePeriod, canWrite: boolean, status: EntrySt
 
 export type PeriodAction = "close" | "pay";
 
-/** The button under the table: close an open month, confirm the payout of a closed one, nothing for a paid one. */
-export function periodAction(status: PeriodStatus, canWrite: boolean): PeriodAction | null {
-  if (!canWrite) return null;
-  if (status === "open") return "close";
-  if (status === "closed") return "pay";
+/**
+ * The button under the table: close an open month (`finance_period.close`: the accountant, with owner and manager as
+ * override), confirm the payout of a closed one (`finance.write`), nothing for a paid one. `canClose` follows
+ * `canWrite` when a caller does not tell them apart.
+ */
+export function periodAction(
+  status: PeriodStatus,
+  canWrite: boolean,
+  canClose: boolean = canWrite,
+): PeriodAction | null {
+  if (status === "open") return canClose ? "close" : null;
+  if (status === "closed") return canWrite ? "pay" : null;
   return null;
 }
 

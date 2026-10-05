@@ -141,6 +141,40 @@ describe("visibleSections", () => {
   });
 });
 
+const ACCOUNTANT_PERMISSIONS = [
+  "patient.read",
+  "consent.read",
+  "order.read",
+  "order.write",
+  "finance.read",
+  "finance.write",
+  "finance_period.close",
+  "finance.collect",
+  "kb.read",
+] as const;
+
+describe("the accountant menu", () => {
+  it("shows_the_pages_of_the_old_accountant_and_none_of_the_inbox_the_crm_or_the_queue", () => {
+    const granted = new Set<string>(ACCOUNTANT_PERMISSIONS);
+    const paths = visibleSections((needs) => needs.some((p) => granted.has(p)))
+      .flatMap((s) => s.items)
+      .map((i) => i.to);
+
+    expect(paths).toEqual(expect.arrayContaining(["/patients", "/cashier", "/finance", "/guide"]));
+    for (const hidden of [
+      "/today",
+      "/inbox",
+      "/crm",
+      "/dashboard",
+      "/schedule",
+      "/studio",
+      "/review",
+    ]) {
+      expect(paths).not.toContain(hidden);
+    }
+  });
+});
+
 describe("homeFor", () => {
   it("opens_the_first_screen_that_exists_and_is_allowed", () => {
     expect(homeFor((needs) => needs.includes("crm.task.read"))).toBe("/dashboard");
@@ -155,6 +189,18 @@ describe("homeFor", () => {
 
   it("opens_finance_for_a_role_that_holds_only_the_personal_finance_view", () => {
     expect(homeFor((needs) => needs.includes("finance.read_own"))).toBe("/finance");
+  });
+
+  it("opens_the_cashier_for_the_accountant_like_the_old_web", () => {
+    const accountant = new Set<string>(ACCOUNTANT_PERMISSIONS);
+
+    expect(homeFor((needs) => needs.some((p) => accountant.has(p)))).toBe("/cashier");
+  });
+
+  it("does_not_send_a_role_with_a_schedule_to_the_cashier", () => {
+    const manager = new Set<string>([...ACCOUNTANT_PERMISSIONS, "appointment.read"]);
+
+    expect(homeFor((needs) => needs.some((p) => manager.has(p)))).toBe("/dashboard");
   });
 
   it("has_no_planned_screen_left_to_skip", () => {

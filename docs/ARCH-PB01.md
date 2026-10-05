@@ -88,16 +88,20 @@ Bảng domain có tenantId, stable id, timestamps, actor và version; PII/clinic
 
 ## Authorization matrix
 
-| Action | Lễ tân | Bác sĩ | Chăm sóc | Thu ngân | Người bệnh |
+| Action | Lễ tân | Bác sĩ | Chăm sóc | Thu ngân (vai trò `accountant`, U11) | Người bệnh |
 |---|---:|---:|---:|---:|---:|
 | Xem identity/lịch | ✓ | ✓ | ✓ | giới hạn | của mình |
 | Sửa lịch/check-in | ✓ | giới hạn | ✗ | ✗ | yêu cầu |
 | Ghi session | ✗ | ✓ | theo phân công | ✗ | ✗ |
 | Duyệt prescription/AI draft | ✗ | ✓ | ✗ | ✗ | ✗ |
+| Lên/sửa đơn nháp (`order.write`) | ✓ | ✓ | ✗ | ✓ | ✗ |
 | Xem/phản hồi follow-up | ✗ | ✓ | ✓ | ✗ | gửi/xem của mình |
 | Sửa invoice/thu tiền | ✗ | xem | ✗ | ✓ | xem |
+| Chốt kỳ tài chính (`finance_period.close`) | ✗ | ✗ | ✗ | ✓ (chủ/quản lý ghi đè, có audit) | ✗ |
 | Xem ảnh clinical | theo consent | ✓ | theo phân công | ✗ | ảnh được chia sẻ |
 | Quản trị catalog/role | quản lý | quản lý | ✗ | ✗ | ✗ |
+
+Cột "Thu ngân" là vai trò `accountant` từ package U bước U11 ("Đối soát & thu ngân" của web cũ). Lễ tân, quản lý và chủ vẫn làm được việc thu ngân (`finance.collect`). Vai trò này không có Inbox, hàng đợi CRM, hồ sơ lâm sàng, ảnh hay `admin.users`, và không nằm trong `ASSIGNABLE_ROLES`. Duyệt đơn thuốc vẫn chỉ bác sĩ và chủ (quy tắc an toàn lâm sàng của web cũ: `approveOrder` cần bác sĩ).
 
 Prototype chưa enforce matrix bằng login; đây là contract pilot cần deny-by-default tests.
 
