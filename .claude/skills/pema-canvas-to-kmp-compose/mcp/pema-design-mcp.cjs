@@ -157,19 +157,18 @@ const webInvalidate = () => (webCache = { at: 0, model: null });
 function findWebScreen(id) {
   const m = webModel();
   const s = m.inventory.screens.find((x) => x.id.toLowerCase() === String(id || '').trim().toLowerCase());
-  if (!s) throw new Error(`No web screen "${id}". Use list_web_screens to see the ids (WA1 … WH14).`);
-  if (!m.snapshot.screens[s.id]) throw new Error(`No snapshot for ${s.id}: run .claude/skills/pema-web-design/scripts/web-snapshot.cjs`);
+  if (!s) throw new Error(`No web screen "${id}". Use list_web_screens to see the ids (WA1 … WL, old web and Next.js-only).`);
   return s;
 }
 
 const WEB_TOOLS = [
   {
     name: 'list_web_screens',
-    description: 'List the screens of the OLD Pema web (Clinic Web in prototype/): id, name, kind, group, Next.js route and status, app canvas cross-reference. Filter by group (WA–WH) or keyword.',
+    description: 'List the screens of the OLD Pema web (Clinic Web in prototype/): id, name, kind, group, Next.js route and status, app canvas cross-reference. Filter by group (WA–WL) or keyword.',
     inputSchema: {
       type: 'object',
       properties: {
-        group: { type: 'string', description: 'Group code WA–WH, e.g. "WB"' },
+        group: { type: 'string', description: 'Group code WA–WL, e.g. "WB"' },
         query: { type: 'string', description: 'Search id, name, route, kind' },
       },
     },
@@ -196,7 +195,14 @@ const WEB_TOOLS = [
     run: ({ id, format }) => {
       const s = findWebScreen(id);
       const m = webModel();
-      return text(format === 'json' ? JSON.stringify({ entry: s, snapshot: m.snapshot.screens[s.id] }, null, 2) : webLib().specMarkdown(s, m));
+      const snap = m.snapshot.screens[s.id];
+      if (format === 'json') return text(JSON.stringify({ entry: s, snapshot: snap || null }, null, 2));
+      // A Next.js-only id may have no snapshot yet (its spec is written from the inventory brief and notes.json): serve the spec file as it is.
+      if (!snap) {
+        const file = path.join(webLib().SCREENS, `${s.id}.md`);
+        if (fs.existsSync(file)) return text(fs.readFileSync(file, 'utf8'));
+      }
+      return text(webLib().specMarkdown(s, m));
     },
   },
   {

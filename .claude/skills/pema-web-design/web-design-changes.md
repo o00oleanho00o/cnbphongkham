@@ -1,6 +1,6 @@
 # Web design canvas change log
 
-Sync baseline: `c40ba22`
+Sync baseline: `0c454cc`
 
 Every time something **visible** in the Next.js front end (`pema-agent/frontend/src/app/**`, `src/ui/**`, `src/components/**`) is added, changed or removed (a page, tab, dialog, field, button, filter, status, flow, business-rule wording, or a design token in `src/ui/tokens.json` or `tokens.css`), add an entry under **Pending** and commit it in the same commit as the code. The `pema-web-design` skill reads these entries and only redraws the affected frames instead of re-checking all 81 screens. This is the Next.js counterpart of `.claude/skills/pema-web-to-canvas/web-changes.md` (which logs the old web `prototype/` for the app canvas); the old web itself is frozen and is not logged here.
 
@@ -20,6 +20,12 @@ Template (newest entry on top):
 If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/skills/pema-web-design/references/coverage-web.md`. Keep Vietnamese UI labels and wording exactly as they appear in the UI. `pending-web.cjs` accepts an entry as the log of a file when the entry names the file path (without `pema-agent/frontend/`) or, for files other than `page.tsx`/`layout.tsx`, its file name.
 
 ## Pending
+
+### 2026-10-05 · change · Dark-mode tokens brand-500 and accent-strong (contrast)
+- Where: `pema-agent/frontend/src/ui/tokens.css` (`.dark`), `src/ui/tokens.json`, `design-system/tokens.json`
+- Change: dark `--color-brand-500` #2b7fc9 -> #3b8dd5 and `--color-accent-strong` #b5594a -> #c17467 so the `surface` label on them is 4.56:1 and 4.57:1 (was 3.81:1 and 3.44:1, below AA 4.5:1). Light mode unchanged. Affects primary button, active chip/tab, progress bar and avatar fills in dark mode.
+- Web canvas target: token block of both web canvases (rebuilt by `web-canvas-build.cjs`) + every dark frame
+- Logged by: U12
 
 ### 2026-10-05 · add · Tài chính & tiền thủ thuật: shell, Tổng quan, Chốt kỳ, Xuất CSV
 - Where: `pema-agent/frontend/src/app/(admin)/finance/layout.tsx`, `src/app/(admin)/finance/page.tsx`, `src/app/(admin)/finance/periods/page.tsx`, `src/app/(admin)/finance/export/page.tsx`, `src/components/finance/finance-context.tsx`, `src/components/finance/finance-ui.tsx`, `src/components/finance/finance-dialogs.tsx`, `src/components/finance/test-support.tsx`, `src/lib/nav.tsx` · routes `/finance`, `/finance/periods`, `/finance/export`
@@ -70,7 +76,7 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 - Logged by: U5
 
 ### 2026-10-05 · add · Dịch vụ (catalog, history, protocols)
-- Where: `pema-agent/frontend/src/app/(admin)/services/page.tsx`, `src/components/catalog/{service-sheet,service-history-dialog,protocol-sheet}.tsx` · route `/services`
+- Where: `pema-agent/frontend/src/app/(admin)/services/page.tsx`, `src/components/catalog/service-sheet.tsx`, `src/components/catalog/service-history-dialog.tsx`, `src/components/catalog/protocol-sheet.tsx` · route `/services`
 - Change: the menu item "Dịch vụ" is no longer planned. Catalog cards (price, treatment and room preparation minutes, rooms, protocol, Đang dùng / Tạm ngưng, terms version), add and edit sheet, history of price and rate versions, follow-up protocols (D+1, D+3, D+7, review day); commission rate and basis only for `admin.rules`; 1/2/3/4 columns (4 from 1600).
 - Web canvas target: WE5, WE6
 - Logged by: U4 sync
@@ -93,4 +99,4 @@ The skill moves entries from "Pending" down here with their result, then updates
 
 ### 2026-10-04 · full sync · baseline
 - Package W (W0–W4): inventory of the old web (81 ids), 405 screenshots at 5 viewports, 81 specs in `design-specs/web/`, MCP web tools, web canvas with 81 screens (`Pema Web redesign canvas/Pema Web.dc.html`).
-- Result: the log starts here. Baseline `c40ba22` is the commit that holds W0–W3c (the front end was not touched by package W). Not pushed to claude.ai/design yet (W5).
+- Result: the log starts here. Baseline `0c454cc` is the commit that holds W0–W3c (the front end was not touched by package W). Not pushed to claude.ai/design yet (W5).

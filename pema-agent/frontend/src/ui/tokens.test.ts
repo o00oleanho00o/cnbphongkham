@@ -119,6 +119,8 @@ describe("contrast (WCAG AA 4.5:1 for normal text)", () => {
     ["heading", "surface", "page title"],
     ["brand-700", "brand-50", "active menu item"],
     ["link", "surface", "link and selected tab text"],
+    ["surface", "brand-500", "primary button label"],
+    ["surface", "accent-strong", "badge and avatar label"],
     ["success", "success-soft", "success badge"],
     ["info", "info-soft", "info badge"],
     ["warning", "warning-soft", "warning badge"],

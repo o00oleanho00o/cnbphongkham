@@ -12,7 +12,7 @@
 //   6 colours       every --color-* the canvas sources and built canvases use is a token and is listed in colors.md;
 //                   no hex colour in template.html, nodes.html or a part
 //   7 canvases      the three web canvas files point to design-system/
-//   8 contrast      the text pairs of colors.md are at least 4.5:1 in light mode (dark-mode misses are reported, not failed)
+//   8 contrast      the text pairs of colors.md are at least 4.5:1 in light and dark mode (U12: dark misses now fail)
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
@@ -210,8 +210,8 @@ const blocks = build.parseBlocks();
     const d = build.contrast(at('dark', fg), at('dark', bg));
     if (d < 4.5) dark.push(`${fg} on ${bg} ${d.toFixed(2)}:1`);
   }
-  if (dark.length) notes.push(`dark mode below 4.5:1 (reported, not a failure of this step): ${dark.join('; ')}`);
-  if (!bad) ok('contrast', `${pairs.length} text pairs are at least 4.5:1 in light mode`);
+  if (dark.length) { bad += 1; fail('contrast', `dark mode below 4.5:1: ${dark.join('; ')}`); }
+  if (!bad) ok('contrast', `${pairs.length} text pairs are at least 4.5:1 in light and dark mode`);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
