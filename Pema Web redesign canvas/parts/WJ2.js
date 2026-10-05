@@ -243,6 +243,37 @@ const wj2AuditPage = () => [wj2LogHead(), wj2LogTabs(1),
   table(['Lúc', 'Người thực hiện', 'Hành động', 'Đối tượng', ['Chi tiết', '1.6fr']], wj2AuditRows.map(([who, act, obj, id], i) => ['20/09 0' + (9 - i) + ':00', [badge(who, who === 'agent' ? 'brand' : 'neutral', { dot: false })], act, [txt(obj), sm(id)], sm('{"clinic_id":"00000000-0000-4000-8000-000000000001","via":"mock"}')])),
   sm('Nhật ký chỉ thêm, không sửa hay xóa được. Nội dung tin nhắn của bệnh nhân không được ghi ở đây.')];
 
+
+// ---- Hồ sơ chính sách (/admin/policy) ----
+const wj2PolicyRules = [
+  ['Tin gửi ra khách', 'Vào hàng đợi duyệt, một người duyệt rồi mới gửi', 'Gửi thẳng cho khách'],
+  ['Tin theo lịch', 'Chỉ tin từ mẫu bác sĩ đã duyệt; job agent chỉ soạn nháp', 'Cho phép tin có sẵn và job chạy agent'],
+  ['Ghi nhớ (save_memory)', 'Tắt với nội dung từ bệnh nhân; chỉ bác sĩ hoặc CSKH ghi', 'Cho phép ghi nhớ'],
+  ['Ảnh khách gửi', 'Gắn cờ Inbox và chuyển nhân viên; không phân tích ảnh', 'Xử lý bình thường'],
+  ['Công cụ ảnh, video, tài liệu, web', 'Tắt (8 công cụ)', 'Theo cấu hình từng tài khoản'],
+  ['Cờ đỏ (chảy máu, sốt, mưng mủ, khó thở)', 'Chuyển bác sĩ trước khi gọi mô hình', 'Không áp dụng'],
+  ['Che thông tin cá nhân', 'Bắt buộc che trước mọi lời gọi mô hình', 'Che tùy chọn'],
+  ['Trần tin chủ động', 'Theo từng bệnh nhân và tài khoản mỗi ngày', 'Theo từng cuộc trò chuyện mỗi ngày'],
+  ['Khách từ chối tin quảng bá', 'Chặn tin quảng bá', 'Chặn tin quảng bá'],
+  ['Sinh nhật', 'Không tự gửi, là việc của nhân viên', 'Không tự gửi, là việc của nhân viên'],
+  ['Xác minh danh tính Zalo với hồ sơ', 'Bắt buộc trước khi nhắc tên, lịch hẹn hay thuốc', 'Không cần']
+];
+const wj2PolicyOwners = [['Pema CSKH (Zalo Bot)', 'Zalo Bot', 'Kênh bệnh nhân'], ['Zalo lễ tân (cá nhân)', 'Zalo cá nhân', 'Trợ lý nội bộ'], ['CSKH Da liễu', 'Agent', 'Kênh bệnh nhân'], ['Trợ lý nội bộ', 'Agent', 'Trợ lý nội bộ'], ['Báo cáo tuần', 'Agent', 'Kênh bệnh nhân']];
+const wj2PolicyPage = (o = {}) => [
+  pageHead('Hồ sơ chính sách', 'An toàn bệnh nhân là cài đặt, không phải tính năng bị xóa: cùng một trợ lý chạy với hồ sơ khác nhau'),
+  h2('Hai hồ sơ'),
+  table(['Quy tắc', 'Kênh bệnh nhânpatient_channel', 'Trợ lý nội bộstaff_assistant'], wj2PolicyRules),
+  sm('Khi một agent chạy trong một tài khoản, hồ sơ nghiêm hơn của hai bên được áp dụng. Mặc định của cả hai là Kênh bệnh nhân.'),
+  h2('Hồ sơ của từng tài khoản và agent'),
+  o.empty ? sm('Chưa có tài khoản hay agent nào')
+    : list(wj2PolicyOwners.map(([t, k, p]) => ({ t, sub: k, actions: [secondary(p, { aria: 'Hồ sơ chính sách của ' + t, ric: 'expand_more' })] })), { box: true }),
+  h2('Liên kết danh tính Zalo chờ xác nhận (3)'),
+  notice('Trợ lý chỉ được nhắc tên, lịch hẹn hay thuốc của một bệnh nhân sau khi tài khoản Zalo đó được nhân viên xác nhận là đúng người. Đối chiếu bằng hồ sơ hoặc gọi xác minh trước khi xác nhận.', 'info'),
+  list([{ t: 'Hồ sơ P007', sub: 'Zalo Bot · u-demo-004', actions: [badge('Chờ xác nhận', 'warning'), primary('Xác nhận'), secondary('Từ chối')] },
+    { t: 'Hồ sơ P009', sub: 'Zalo Bot · u-demo-009', actions: [badge('Chờ xác nhận', 'warning'), primary('Xác nhận'), secondary('Từ chối')] },
+    { t: 'Chưa có hồ sơ gợi ý', sub: 'Zalo cá nhân · u-demo-011', actions: [badge('Chưa liên kết', 'neutral')] }], { box: true })
+];
+
 // @@DEFS
 const WJ2 = [
   // ---- Tài khoản Zalo: công tắc khẩn, thêm, sửa, QR, xóa ----
@@ -380,6 +411,12 @@ const WJ2 = [
   npage('WJ99', 'Logs · Nhật ký thao tác', wj2NXW + '/admin/logs · tab "Nhật ký thao tác": bảng người thực hiện, hành động, đối tượng, chi tiết; phân trang', '/admin/logs', wj2AuditPage(), { nx: 'owner' }),
   npage('WJ100', 'Logs · ghi log ra file đang tắt', wj2NXW + '/admin/logs · LOG_TO_FILE chưa bật: dòng báo thay cho danh sách', '/admin/logs', [wj2LogHead(), wj2LogTabs(0), notice('Ghi log ra file đang tắt. Bật LOG_TO_FILE=true rồi khởi động lại backend để xem nhật ký ứng dụng ở đây.', 'warning'), wj2LogFilters()], { nx: 'owner', state: true }),
   npage('WJ101', 'Logs · không có dòng log', wj2NXW + '/admin/logs · bộ lọc không khớp dòng nào', '/admin/logs', [wj2LogHead(), wj2LogTabs(0), wj2LogFilters(), empty('Không có dòng log nào khớp.', '', { flat: true, icon: 'search_off' })], { nx: 'owner', state: true }),
+
+  npage('WJ102', 'Hồ sơ chính sách', wj2NXW + '/admin/policy · bảng so sánh hai hồ sơ, hồ sơ của từng tài khoản và agent, liên kết danh tính Zalo chờ xác nhận', '/admin/policy', wj2PolicyPage(), { nx: 'owner' }),
+  ndlg('WJ103', 'Chuyển "Pema CSKH (Zalo Bot)" sang Trợ lý nội bộ?', wj2NXW + '/admin/policy · hộp xác nhận khi đổi tài khoản sang hồ sơ Trợ lý nội bộ (tin gửi thẳng, không qua duyệt)', [
+    txt('Tin gửi ra ngoài sẽ đi thẳng, không qua hàng đợi duyệt; cờ đỏ không còn chuyển bác sĩ tự động và thông tin cá nhân không bắt buộc che. Chỉ dùng cho trợ lý của nhân viên, không dùng để trả lời bệnh nhân.', { size: 's', tone: 'soft' })
+  ], { nx: 'owner', nav: '/admin/policy', behind: wj2PolicyPage(), w: 520, footer: [secondary('Hủy'), danger('Chuyển sang Trợ lý nội bộ')] }),
+  npage('WJ104', 'Hồ sơ chính sách · chưa có tài khoản hay agent', wj2NXW + '/admin/policy · phần "Hồ sơ của từng tài khoản và agent" chỉ còn dòng báo chưa có', '/admin/policy', wj2PolicyPage({ empty: true }), { nx: 'owner', state: true }),
 
   // @@ENTRIES
 ];
