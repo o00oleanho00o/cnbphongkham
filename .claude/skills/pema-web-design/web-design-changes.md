@@ -21,6 +21,12 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-05 · add · Vai trò Kế toán (staff role, menu and Chốt kỳ)
+- Where: `pema-agent/frontend/src/lib/ops/staff-view.ts`, `src/lib/session/session-context.tsx`, `src/lib/nav.tsx`, `src/components/admin/layout/app-shell.tsx`, `src/components/finance/finance-context.tsx`, `src/app/(admin)/finance/layout.tsx`, `src/app/(admin)/finance/periods/page.tsx`, `src/app/(admin)/finance/entries/page.tsx`, `src/lib/finance/finance-view.ts` · routes `/admin/users`, `/finance/periods`, `/finance/entries`, sign-in landing
+- Change: a seventh role "Kế toán" in the role picker and filter of "Nhân viên" (hint "Kế toán: đối soát và thu ngân, tài chính, chốt kỳ; không duyệt đơn thuốc, không xem hồ sơ lâm sàng.") and in the user chip. The account opens on "Thu ngân" (`/cashier`) and its menu holds Tìm bệnh nhân, Thu ngân, Tài chính & tiền thủ thuật, Hướng dẫn (no Hôm nay, Theo dõi, Vòng đời khách hàng, Tổng quan, Điều phối lịch). "Chốt tháng" in Chốt kỳ and under the table of Tiền thủ thuật is shown by `finance_period.close` (accountant, manager, owner), "Xác nhận đã chi" stays with `finance.write`. A role that opens `/today` without the CSKH queue is moved to its own home instead of the "Bạn không có quyền xem màn này" card.
+- Web canvas target: WI-series staff screen (Nhân viên), WG10 (Chốt kỳ), WG2 (Tiền thủ thuật); menu: block "sidebar"
+- Logged by: U11
+
 ### 2026-10-05 · add · Hồ sơ bệnh nhân: the four chips and "＋ Hồ sơ mới"
 - Where: `pema-agent/frontend/src/app/(admin)/patients/page.tsx`, `src/components/ops/patient/new-patient-dialog.tsx` · route `/patients`
 - Change: chips "Tất cả", "Đang điều trị", "Tái khám tuần này", "Có cảnh báo" under the search box (one selected, the list is asked for that view); button "＋ Hồ sơ mới" in the page header with `patient.write` opens the sheet "Thêm người bệnh" (eyebrow "Hồ sơ mới"; fields Họ và tên, Ngày sinh instead of Tuổi, Số điện thoại, Nguồn khách; no "Mối quan tâm"; button "Tạo hồ sơ"; error "Nhập tên người bệnh"), toast "Đã tạo hồ sơ" and the new record opens.

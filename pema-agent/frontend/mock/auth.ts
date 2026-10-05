@@ -96,6 +96,17 @@ export const USERS: MockUser[] = [
     version: 1,
   },
   {
+    id: uuid(8, 1),
+    email: "accountant@pema.test",
+    password: "demo1234",
+    role: "accountant",
+    display_name: "Kế toán Hoa",
+    active: true,
+    created_at: isoFromNow(-100 * DAY),
+    last_login_at: isoFromNow(-1 * DAY),
+    version: 1,
+  },
+  {
     id: uuid(11, 1),
     email: "bsan@pema.test",
     password: "demo1234",
@@ -147,6 +158,7 @@ const ALL: Permission[] = [
   // personal projection and the owner's payment notifications are added to the owner below.
   "finance.read",
   "finance.write",
+  "finance_period.close",
   "finance.collect",
   "crm.task.read",
   "crm.task.resolve",
@@ -252,6 +264,19 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "appointment.check_in",
     "crm.task.read",
     "conversation.read",
+    "kb.read",
+  ],
+  // U11: the old web's "Đối soát & thu ngân" account: finance, the cashier desk, patient identity, the guide.
+  // Never `order.approve` (the doctor signs an order), nothing clinical, no schedule, no CRM queue, no Inbox.
+  accountant: [
+    "patient.read",
+    "consent.read",
+    "order.read",
+    "order.write",
+    "finance.read",
+    "finance.write",
+    "finance_period.close",
+    "finance.collect",
     "kb.read",
   ],
   patient: [],

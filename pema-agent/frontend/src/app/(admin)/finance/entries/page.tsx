@@ -42,7 +42,7 @@ type EntriesData = {
 type Dialog = { kind: "void"; row: FinanceRow } | { kind: "close" } | { kind: "pay" } | null;
 
 export default function FinanceEntriesPage() {
-  const { month, scope, canWrite, refreshKey, reload } = useFinance();
+  const { month, scope, canWrite, canClose, refreshKey, reload } = useFinance();
   const toast = useToast();
   const params = useSearchParams();
   const [dialog, setDialog] = useState<Dialog>(null);
@@ -102,7 +102,9 @@ export default function FinanceEntriesPage() {
   }
 
   const table = data?.table;
-  const action = table ? periodAction(table.period.status, canWrite && table.can_write) : null;
+  const action = table
+    ? periodAction(table.period.status, canWrite && table.can_write, canClose && table.can_write)
+    : null;
   return (
     <div className="space-y-4">
       <LoadState error={error} loading={loading} hasData={data !== undefined} onRetry={retry} />

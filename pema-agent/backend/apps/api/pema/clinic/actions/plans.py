@@ -29,7 +29,7 @@ from pema.clinic.actions._care_mappers import plan_money_visible, plan_out
 from pema.clinic.actions._clinical_scope import CLINICIAN_ROLES
 from pema.clinic.actions._common import check_version, lost_race_is_conflict, not_found
 from pema.clinic.actions._scope import require_patient_access
-from pema.clinic.actions.patients import load_patient
+from pema.clinic.actions.patients import load_patient, patient_to_out
 from pema.clinic.actions.services import terms_snapshot
 from pema.clinic.models import Episode, Service, TreatmentPlan
 from pema.clinic.rbac import is_role, require
@@ -37,7 +37,7 @@ from pema.core.db import ClinicDatabase
 from pema_contracts.actions import ActionContext
 from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.patient_care import PlanCreate, PlanStatus, PlanUpdate
-from pema_contracts.patient_profile import ServicePlanCreate
+from pema_contracts.patient_profile import PatientFinanceTabOut, ServicePlanCreate
 from pema_contracts.patients import TreatmentPlanOut
 from pema_contracts.roles import Permission
 
@@ -215,3 +215,25 @@ async def add_service_plan(
             },
         )
         return plan_out(row, money=plan_money_visible(ctx))
+
+
+async def finance_tab(db: ClinicDatabase, ctx: ActionContext, patient_id: UUID) -> PatientFinanceTabOut:
+    """The 'Dịch vụ & tài chính' tab for a caller who reads finance but has no Patient 360 (the accountant):
+    identity and the courses with the price fixed on them.
+    Holds no session text, note, photo or diagnosis. Needs ``finance.read`` and ``patient.read``."""
+    require(ctx, Permission.FINANCE_READ)
+    require(ctx, Permission.PATIENT_READ)
+    async with db.session() as session:
+        patient = await load_patient(session, ctx, patient_id)
+        await require_patient_access(session, ctx, patient_id)
+        rows = (
+            await session.scalars(
+                select(TreatmentPlan)
+                .where(TreatmentPlan.clinic_id == ctx.clinic_id, TreatmentPlan.patient_id == patient_id)
+                .order_by(TreatmentPlan.created_at.desc(), TreatmentPlan.id)
+            )
+        ).all()
+        return PatientFinanceTabOut(
+            patient=await patient_to_out(session, ctx, patient),
+            plans=[plan_out(row, money=True) for row in rows],
+        )

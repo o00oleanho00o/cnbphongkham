@@ -11,8 +11,11 @@ two request headers):
   performed, and never the collected cash, the debt, the invoices or the receipts. The owner may ask for the
   personal projection with ``scope=own`` ("BS. Tâm · Bác sĩ điều trị"); a doctor can never ask for the
   clinic one;
-* the accountant has no role of its own in this system: the manager holds ``finance.read`` /
-  ``finance.write``;
+* the accountant has a role of its own since package U step U11 (``Role.ACCOUNTANT``, the old web's "Đối soát
+  & thu ngân" account; this reverses the earlier "the manager holds finance.read / finance.write" decision).
+  It holds ``finance.read``, ``finance.write`` and ``finance_period.close``; the manager and the owner hold
+  the same three, so they can still close a month as an override. Every close is audited with its actor.
+  There is no re-open of a closed month in this version (the prototype had none either: close, then paid);
 * performers are user accounts of role doctor or owner; the prototype's fixed ``D0``..``D3`` are gone;
 * a month is serialized with a Postgres advisory lock, taken by every action that changes an entry of the
   month and by the close, so an entry can never slip into a month while it is being frozen; the database
@@ -703,8 +706,8 @@ async def list_periods(db: ClinicDatabase, ctx: ActionContext) -> PeriodListOut:
 async def close_period(db: ClinicDatabase, ctx: ActionContext, month: str) -> FinancePeriodOut:
     """``mutate('close')``: freeze the commission table of a month that ended. Refused while an entry waits
     for approval or an entry on the collected basis is not paid in full (its fee would be lost to the next
-    month)."""
-    require(ctx, Permission.FINANCE_WRITE)
+    month). The accountant closes it; owner and manager may too (``finance_period.close``)."""
+    require(ctx, Permission.FINANCE_PERIOD_CLOSE)
     first = domain.parse_month(month)
     after = domain.next_month_start(first)
     async with db.session() as session:

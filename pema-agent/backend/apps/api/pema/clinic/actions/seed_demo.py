@@ -72,6 +72,7 @@ USERS: tuple[tuple[str, str, Role], ...] = (
     ("cs.maianh", "CSKH Mai Anh (mẫu)", Role.CS_STAFF),
     ("cs.thu", "CSKH Thu (mẫu)", Role.CS_STAFF),
     ("reception.lan", "Lễ tân Lan (mẫu)", Role.RECEPTION),
+    ("accountant.hoa", "Kế toán Hoa (mẫu)", Role.ACCOUNTANT),
 )
 
 # code, label of the CRM01 case, days since the last session (None: no session), total/completed sessions

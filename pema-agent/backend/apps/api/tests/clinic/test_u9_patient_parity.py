@@ -374,3 +374,51 @@ async def test_adding_a_service_is_refused_for_the_wrong_role_and_for_bad_input(
     assert off.status_code == 200
     inactive = await owner.post(f"/api/v1/patients/{patient}/service-plans", json=ok_body)
     assert inactive.status_code == 422
+
+
+# --------------------------------------------------------------------------------------- the accountant
+ACCOUNTANT = "accountant.hoa"
+
+
+async def test_the_accountant_gets_the_finance_tab_and_adds_a_service_but_reads_nothing_clinical(
+    client_factory: ClientFactory, world: SeedResult
+) -> None:
+    accountant = await client_factory(ACCOUNTANT)
+    patient = world.patients["P027"]
+    laser = await _laser(accountant)  # GET /services is open to finance.write
+    tab = await accountant.get(f"/api/v1/patients/{patient}/finance-tab")
+    assert tab.status_code == 200, tab.text
+    assert tab.json()["patient"]["code"] == "P027"
+    added = await accountant.post(
+        f"/api/v1/patients/{patient}/service-plans", json={"service_id": laser["id"], "sessions": 2}
+    )
+    assert added.status_code == 201, added.text
+    plans = (await accountant.get(f"/api/v1/patients/{patient}/finance-tab")).json()["plans"]
+    assert any(p["agreed_price_vnd"] == laser["price_vnd"] * 2 for p in plans)
+    assert (
+        await accountant.get("/api/v1/finance/invoices", params={"patient_id": str(patient)})
+    ).status_code == 200
+    assert (await accountant.get("/api/v1/orders", params={"patient_id": str(patient)})).status_code == 200
+
+    clinical = (
+        ("GET", f"/api/v1/patients/{patient}/360"),
+        ("GET", f"/api/v1/patients/{patient}/clinical-note"),
+        ("GET", f"/api/v1/patients/{patient}/brief"),
+        ("GET", f"/api/v1/patients/{patient}/sessions"),
+        ("GET", f"/api/v1/patients/{patient}/consult-notes"),
+        ("GET", f"/api/v1/patients/{patient}/media"),
+        ("GET", f"/api/v1/patients/{patient}/app-updates"),
+    )
+    for method, path in clinical:
+        assert (await accountant.request(method, path)).status_code == 403, path
+    refused = await accountant.put(f"/api/v1/patients/{patient}/alerts", json={"alerts": ["x"]})
+    assert refused.status_code == 403
+
+
+async def test_the_finance_tab_is_closed_to_roles_without_finance_read(
+    client_factory: ClientFactory, world: SeedResult
+) -> None:
+    patient = world.patients["P027"]
+    for who in (DOCTOR, CS, RECEPTION):
+        client = await client_factory(who)
+        assert (await client.get(f"/api/v1/patients/{patient}/finance-tab")).status_code == 403, who

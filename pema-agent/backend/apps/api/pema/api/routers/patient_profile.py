@@ -24,6 +24,7 @@ from pema_contracts.patient_profile import (
     ClinicalNoteUpdate,
     ExpectedReturnOut,
     ExpectedReturnUpdate,
+    PatientFinanceTabOut,
     ServicePlanCreate,
 )
 from pema_contracts.patients import TreatmentPlanOut
@@ -121,3 +122,12 @@ async def add_service_plan(
     patient_id: UUID, body: ServicePlanCreate, db: Database, ctx: Ctx
 ) -> TreatmentPlanOut:
     return await plans.add_service_plan(db, ctx, patient_id, body)
+
+
+@router.get(
+    "/patients/{patient_id}/finance-tab",
+    response_model=PatientFinanceTabOut,
+    summary="Courses and prices of a patient for the finance tab; no clinical record (finance.read)",
+)
+async def get_finance_tab(patient_id: UUID, db: Database, ctx: Ctx) -> PatientFinanceTabOut:
+    return await plans.finance_tab(db, ctx, patient_id)

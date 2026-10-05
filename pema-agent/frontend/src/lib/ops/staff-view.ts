@@ -16,6 +16,7 @@ export const STAFF_ROLES: readonly StaffRole[] = [
   "doctor",
   "cs_staff",
   "reception",
+  "accountant",
 ];
 
 /** The list never holds a patient (the backend filters them out); `reception`, the role with the fewest
@@ -37,6 +38,8 @@ export const ROLE_HINT: Record<StaffRole, string> = {
   doctor: "Hồ sơ bệnh nhân mình phụ trách, duyệt nội dung lâm sàng.",
   cs_staff: "Chăm sóc khách hàng: việc hôm nay, Inbox, duyệt tin thường.",
   reception: "Lễ tân: danh tính bệnh nhân, đặt lịch và check-in.",
+  accountant:
+    "Kế toán: đối soát và thu ngân, tài chính, chốt kỳ; không duyệt đơn thuốc, không xem hồ sơ lâm sàng.",
 };
 
 export const STATUS_FILTER_LABEL: Record<StatusFilter, string> = {

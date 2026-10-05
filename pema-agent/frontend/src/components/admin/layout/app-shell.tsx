@@ -15,7 +15,7 @@ import { AccountsProvider } from "@/lib/admin/shared/accounts-context";
 import type { AccountInfo } from "@/lib/admin/shared/account-info";
 import { coCanHoiTruocKhiRoi, xinPhepRoiTrang } from "@/lib/admin/shared/unsaved-changes-guard";
 import { ApiError, errorMessage, http, unwrap } from "@/lib/api/client";
-import { currentNavItem, visibleSections, type NavItem, type NavSection } from "@/lib/nav";
+import { currentNavItem, homeFor, visibleSections, type NavItem, type NavSection } from "@/lib/nav";
 import {
   SessionProvider,
   useSession,
@@ -94,6 +94,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     [permissions],
   );
   const sections = useMemo(() => visibleSections(allows), [allows]);
+
+  // `/` redirects to `/today`, the CSKH queue. A role without it (the accountant) goes to its own home instead
+  // of a "no permission" card; every other path keeps the card.
+  useEffect(() => {
+    if (!me || pathname !== "/today" || allows(["crm.task.read"])) return;
+    const home = homeFor(allows);
+    if (home !== "/login" && home !== "/today") router.replace(home);
+  }, [me, pathname, allows, router]);
   const tabs = useMemo<NavItem[]>(
     () => sections.flatMap((s) => s.items).filter((i) => i.tab && !i.planned),
     [sections],

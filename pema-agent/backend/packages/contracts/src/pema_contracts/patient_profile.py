@@ -25,6 +25,7 @@ from pydantic import Field
 
 from pema_contracts.common import ApiModel, VnDatetime
 from pema_contracts.patient_care import MAX_PLAN_SESSIONS
+from pema_contracts.patients import PatientOut, TreatmentPlanOut
 
 MAX_ALERTS: Final = 20
 MAX_ALERT_CHARS: Final = 200
@@ -149,6 +150,15 @@ class BriefApprove(ApiModel):
 
 
 # ------------------------------------------------------------------ Thêm dịch vụ vào liệu trình
+class PatientFinanceTabOut(ApiModel):
+    """The data of the 'Dịch vụ & tài chính' tab without any clinical record (``finance.read``): who the
+    patient is and the courses with sessions used and the price fixed on them. The accountant has no
+    Patient 360; this is its tab. The catalog for 'Thêm dịch vụ' is ``GET /services`` (``finance.write``)."""
+
+    patient: PatientOut
+    plans: list[TreatmentPlanOut]
+
+
 class ServicePlanCreate(ApiModel):
     """Old ``linked-service-form``: service, number of sessions (1 to 20), discount. The price is read
     from the catalog by the action and fixed on the plan."""

@@ -147,6 +147,7 @@ ROUTES: tuple[Route, ...] = (
         (P.SESSION_WRITE,),
         lambda w: {"text": "Brief mẫu"},
     ),
+    Route("get_finance_tab", "GET", "/patients/{P025}/finance-tab", (P.FINANCE_READ,)),
     Route(
         "add_service_plan",
         "POST",
