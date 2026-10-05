@@ -3431,5 +3431,53 @@
         "WA2 old-web shell for the CSKH role"
       ]
     }
+  },
+  "served_by": {
+    "scope": "Group WI (Patient Mobile web, 42 ids). Owner decision 2026-10-05: not a Next.js target; the designs stay as reference for the KMP app and Zalo.",
+    "revisit": "Revisit when the clinic has a Zalo OA: a lightweight web page opened from Zalo (patient identity from the Zalo user) is the only case where a patient web would be rebuilt. Until then status stays \"served by KMP/Zalo\".",
+    "reasons": {
+      "WI1": "The patient home is built in the KMP app; the next step and reminders reach the patient through the app and Zalo: app E1; no Next.js page.",
+      "WI2": "Appointments and booking confirmation are built in the KMP app; reminders go out through Zalo: app K1, G3; no Next.js page.",
+      "WI3": "The treatment journey is built in the KMP app: app E2, K3; no Next.js page.",
+      "WI4": "Patient messaging is built in the KMP app; once the clinic has a Zalo OA the thread moves to Zalo: app E3; no Next.js page.",
+      "WI5": "Profile, consent and identity are built in the KMP app: app E4, G8; no Next.js page.",
+      "WI6": "Session progress and photos are built in the KMP app: app G5; no Next.js page.",
+      "WI7": "Home-care instructions are built in the KMP app and are sent as Zalo messages: app G1; no Next.js page.",
+      "WI8": "Sending a photo or note to the clinic is built in the KMP app: app G2; no Next.js page.",
+      "WI9": "Documents and invoices are built in the KMP app: app K2, G7; no Next.js page.",
+      "WI10": "The patient home is built in the KMP app; the next step and reminders reach the patient through the app and Zalo (state: Sau thủ thuật D+1): app E1; no Next.js page.",
+      "WI11": "The patient home is built in the KMP app; the next step and reminders reach the patient through the app and Zalo (state: D+3 cần ảnh): app E1; no Next.js page.",
+      "WI12": "The patient home is built in the KMP app; the next step and reminders reach the patient through the app and Zalo (state: D+7 bác sĩ review): app E1; no Next.js page.",
+      "WI13": "The patient home is built in the KMP app; the next step and reminders reach the patient through the app and Zalo (state: Quá hạn tái khám): app E1; no Next.js page.",
+      "WI14": "The patient home is built in the KMP app; the next step and reminders reach the patient through the app and Zalo (state: Vắng/hủy chưa đặt lại): app E1; no Next.js page.",
+      "WI15": "The patient home is built in the KMP app; the next step and reminders reach the patient through the app and Zalo (state: Nguy cơ bỏ liệu trình): app E1; no Next.js page.",
+      "WI16": "The patient home is built in the KMP app; the next step and reminders reach the patient through the app and Zalo (state: 90 ngày chưa quay lại): app E1; no Next.js page.",
+      "WI17": "The patient home is built in the KMP app; the next step and reminders reach the patient through the app and Zalo (state: 180 ngày chưa quay lại): app E1; no Next.js page.",
+      "WI18": "The patient home is built in the KMP app; the next step and reminders reach the patient through the app and Zalo (state: Sinh nhật trong tuần): app E1; no Next.js page.",
+      "WI19": "The patient home is built in the KMP app; the next step and reminders reach the patient through the app and Zalo (state: đơn thuốc chờ duyệt (chưa hiện trên app)): app E1; no Next.js page.",
+      "WI20": "The patient home is built in the KMP app; the next step and reminders reach the patient through the app and Zalo (state: việc hôm nay (không còn việc CSKH)): app E1; no Next.js page.",
+      "WI21": "The patient home is built in the KMP app; the next step and reminders reach the patient through the app and Zalo (state: hồ sơ vừa tạo): app E1; no Next.js page.",
+      "WI22": "Appointments and booking confirmation are built in the KMP app; reminders go out through Zalo (state: chưa có lịch): app K1; no Next.js page.",
+      "WI23": "Appointments and booking confirmation are built in the KMP app; reminders go out through Zalo (state: đã xác nhận): app K1, G3; no Next.js page.",
+      "WI24": "The treatment journey is built in the KMP app (state: đã mở thêm lịch sử): app E2, K3; no Next.js page.",
+      "WI25": "The treatment journey is built in the KMP app (state: mở chi tiết một mốc): app E2, K3; no Next.js page.",
+      "WI26": "The treatment journey is built in the KMP app (state: chưa có sự kiện): app E2; no Next.js page.",
+      "WI27": "Patient messaging is built in the KMP app; once the clinic has a Zalo OA the thread moves to Zalo (state: chưa có tin): app E3; no Next.js page.",
+      "WI28": "Patient messaging is built in the KMP app; once the clinic has a Zalo OA the thread moves to Zalo (state: đã gửi cập nhật): app E3, G2; no Next.js page.",
+      "WI29": "Home-care instructions are built in the KMP app and are sent as Zalo messages (state: đã đọc hướng dẫn): app G1; no Next.js page.",
+      "WI30": "Home-care instructions are built in the KMP app and are sent as Zalo messages (state: chưa có hướng dẫn): app G1; no Next.js page.",
+      "WI31": "Sending a photo or note to the clinic is built in the KMP app (state: chưa nhập nội dung): app G2; no Next.js page.",
+      "WI32": "Sending a photo or note to the clinic is built in the KMP app (state: đã chọn ảnh): app G2; no Next.js page.",
+      "WI33": "Sending a photo or note to the clinic is built in the KMP app (state: thiếu đồng ý xem ảnh): app G2; no Next.js page.",
+      "WI34": "Sending a photo or note to the clinic is built in the KMP app (state: tệp không phải ảnh): app G2; no Next.js page.",
+      "WI35": "Documents and invoices are built in the KMP app (state: chờ thanh toán): app K2, G7; no Next.js page.",
+      "WI36": "Documents and invoices are built in the KMP app (state: chưa có hóa đơn): app K2; no Next.js page.",
+      "WI37": "Documents and invoices are built in the KMP app (state: đơn và phiếu đã duyệt từ thu ngân): app K2, G7; no Next.js page.",
+      "WI38": "Profile, consent and identity are built in the KMP app (state: đã tắt đồng ý ảnh): app G8, E4; no Next.js page.",
+      "WI39": "Profile, consent and identity are built in the KMP app (state: đã bật lại đồng ý ảnh): app G8, E4; no Next.js page.",
+      "WI40": "Profile, consent and identity are built in the KMP app (state: đã đổi hồ sơ demo): app E4; no Next.js page.",
+      "WI41": "Profile, consent and identity are built in the KMP app (state: hồ sơ vừa tạo): app E4, G8; no Next.js page.",
+      "WI42": "Appointments and booking confirmation are built in the KMP app; reminders go out through Zalo (state: hồ sơ vừa tạo (chưa có lịch đã đặt)): app K1; no Next.js page."
+    }
   }
 }

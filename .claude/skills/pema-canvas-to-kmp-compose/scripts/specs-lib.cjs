@@ -413,7 +413,19 @@ ${screenPrompt(s)}
 `;
 }
 
+// design-specs/INDEX.md is the hub of app, web and Design System (package W2 step W12); the pema-web-design skill builds it
+// and embeds this app table. Without that skill the plain app index is written.
 function indexMarkdown(model) {
+  let hub = null;
+  try {
+    hub = require('../../pema-web-design/scripts/lib/hub.cjs');
+  } catch (err) {
+    if (err.code !== 'MODULE_NOT_FOUND') throw err;
+  }
+  return hub ? hub.hubMarkdown(model) : appIndexMarkdown(model);
+}
+
+function appIndexMarkdown(model) {
   const rows = model.screens.map((s) => `| [${s.id}](screens/${s.id}.md) | ${s.name} | ${s.source.kind === 'web' ? 'web' : 'KMP'} | ${s.kmp.composable ? `\`${s.kmp.composable}\`` : '—'} | ${s.kmp.module || '—'} | ${s.status === 'ported' ? '✓' : '—'} |`);
   return `<!-- Generated — see README.md -->
 # Screen index (${model.screens.length})

@@ -3,6 +3,13 @@ name: pema-web-to-canvas
 description: Compare the Pema web (Clinic Web, Patient Mobile web, Finance) with the claude.ai/design canvas "Pema App.dc.html" — starting from the web-changes.md log and the git diff since the sync baseline instead of re-scanning everything — find web screens/tabs/dialogs that are missing or changed, build them into the canvas using the mobile app patterns (blocks implemented in KMP `core:ui`), check the render, then push to claude.ai/design. Use when asked "check which web screens are missing from the design", "convert web templates to the mobile design", "update the canvas from the web". Does not write app code.
 ---
 
+> **Canonical skill (decision, package W2 step W12, 2026-10-05): not this one for the front end.** The canonical skill for "keep
+> the canvases in step with the front end" is `pema-web-design` (`.claude/skills/pema-web-design/SKILL.md`), because the Next.js
+> front end in `pema-agent/frontend` is now the product. This skill stays valid for its own job only: the **app** canvas
+> `Pema App.dc.html` (82 screens) and the log `web-changes.md` for changes of `prototype/` (legacy web); treat it as app-only /
+> legacy for anything about web canvases or the Next.js front end. The cross-index of app and web ids is
+> `design-specs/INDEX.md`. No script was deleted.
+
 # Pema web → mobile design canvas
 
 The canvas `Pema App redesign canvas/Pema App.dc.html` is the design of the mobile app (`pema-kmp/`) and the place where new screens are designed first. This skill adds web screens the canvas lacks, **at the design level only**. App code is not touched; if needed, build the screen separately with the `pema-canvas-to-kmp-compose` skill.
