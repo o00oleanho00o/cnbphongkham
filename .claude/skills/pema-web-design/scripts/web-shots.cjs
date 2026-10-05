@@ -20,6 +20,13 @@
 //
 // Run ONE browser at a time: python's http.server refuses connections above two parallel clients.
 // Needs the old web on http://127.0.0.1:4173 and the finance API on :4174. Env: PLAYWRIGHT_MODULE, PEMA_WEB_BASE.
+//
+// Inventory entries with `source: "nextjs"` (groups WJ, WK, WL; W8) are shot from the Next.js front end instead
+// (lib/next-web.cjs, per-id states in lib/next-states.cjs): http://localhost:3480 by default (env PEMA_NEXT_BASE) in front
+// of the mock back end started with lib/frozen-time.cjs, so the data and the browser share one clock. They are shot at the
+// `frames` of the entry (1440x900; pages also 1920x1020 and 390x844), not at the five old-web viewports. A state that the
+// mock cannot give is not faked: its row has `state_unreachable` and no image. `--ref=DIR` makes --check read the
+// manifest and images from DIR (PNGs are git-ignored, they live outside the repo).
 
 const fs = require('fs');
 const os = require('os');
@@ -27,14 +34,17 @@ const path = require('path');
 const crypto = require('crypto');
 const { loadPlaywright, REPO } = require('./lib/pw.cjs');
 const ow = require('./lib/old-web.cjs');
+const nw = require('./lib/next-web.cjs');
+const STATES = require('./lib/next-states.cjs');
 
 const argv = process.argv.slice(2);
 const CHECK = argv.includes('--check');
 const ONLY = (argv.find((a) => a.startsWith('--only=')) || '').slice(7).split(',').filter(Boolean);
 const OUT_ARG = (argv.find((a) => a.startsWith('--out=')) || '').slice(6);
+const REF_ARG = (argv.find((a) => a.startsWith('--ref=')) || '').slice(6);
 const BASE = (process.env.PEMA_WEB_BASE || 'http://127.0.0.1:4173').replace(/\/$/, '');
 const INVENTORY = path.join(REPO, 'design-specs', 'web', 'inventory.json');
-const REF_DIR = path.join(REPO, 'pema-agent', 'frontend', 'visual-ref', 'old');
+const REF_DIR = REF_ARG ? path.resolve(REF_ARG) : path.join(REPO, 'pema-agent', 'frontend', 'visual-ref', 'old');
 const CHANGED_LIMIT = 0.05;
 // the A5 order review is printed from the same page: also capture it under print media
 // WF19 is the print call of an approved order: the print media draws its A5 sheets (WF12-WF14 are drafts, which print nothing)
@@ -43,6 +53,17 @@ const PRINT_IDS = ['WF5', 'WF6', 'WF19'];
 const loadInventory = () => JSON.parse(fs.readFileSync(INVENTORY, 'utf8'));
 const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const vpName = ([w, h]) => `${w}x${h}`;
+const isNext = (entry) => entry.source === 'nextjs';
+const isNextId = (inv, id) => inv.screens.some((s) => s.id === id && isNext(s));
+function sourceHashNext() {
+  try {
+    return require('child_process').execFileSync('git', ['log', '-1', '--format=%h', '--', 'pema-agent/frontend'], { cwd: REPO, encoding: 'utf8' }).trim();
+  } catch {
+    return 'unknown';
+  }
+}
+/** Old-web entries are shot at the five inventory viewports; Next.js entries at their own frames. */
+const viewportsOf = (inv, entry) => (isNext(entry) ? entry.frames.map((f) => f.split('x').map(Number)) : inv.viewports);
 
 async function http(url) {
   try {
@@ -127,8 +148,31 @@ async function fireNative(page, entry, role) {
   return { dialog: { type: n.type, message }, errors };
 }
 
+/** A Next.js entry at one viewport (W8): same row shape as captureOne. */
+async function captureNext(browser, inv, entry, viewport, outDir, lenient) {
+  const [w, h] = viewport;
+  const page = await nw.newPage(browser, { viewport: { width: w, height: h }, clock: inv.clock });
+  try {
+    await nw.open(page, entry, STATES, viewport);
+    await nw.ready(page, 300);
+    const why = await nw.verify(page, entry);
+    // `expect` not met: the first try fails (and is retried once); the retry still shoots the screen and records why
+    if (why && !lenient) throw new Error(`expect: ${why}`);
+    const m = await page.evaluate(() => {
+      const main = document.querySelector('main');
+      return { page_width: document.documentElement.scrollWidth, content_width: main ? main.clientWidth : null };
+    });
+    const file = `${entry.id}-${vpName(viewport)}.png`;
+    await page.screenshot({ path: path.join(outDir, file) });
+    return [{ file, media: 'screen', ...m, overflow: m.page_width > w, expect_unmet: why || null, page_errors: [...page.errors] }];
+  } finally {
+    await page.context().close();
+  }
+}
+
 /** One entry at one viewport: returns [{file, media, ...metrics, page_errors}] or throws. */
 async function captureOne(browser, inv, entry, viewport, outDir, lenient) {
+  if (isNext(entry)) return captureNext(browser, inv, entry, viewport, outDir, lenient);
   const [w, h] = viewport;
   const page = await ow.newPage(browser, { viewport: { width: w, height: h }, clock: inv.clock });
   try {
@@ -208,8 +252,8 @@ function entryRows(inv, entry, viewport, results, outDir) {
   const rows = [];
   const [w] = viewport;
   for (const r of results) {
-    const full = path.join(outDir, r.file);
-    const exists = fs.existsSync(full);
+    const full = r.file ? path.join(outDir, r.file) : '';
+    const exists = !!r.file && fs.existsSync(full);
     rows.push({
       id: entry.id,
       viewport: vpName(viewport),
@@ -221,6 +265,7 @@ function entryRows(inv, entry, viewport, results, outDir) {
       overflow: r.overflow,
       expect_unmet: r.expect_unmet,
       ...(r.native_dialog ? { native_dialog: r.native_dialog } : {}),
+      ...(r.state_unreachable ? { state_unreachable: r.state_unreachable } : {}),
       page_errors: r.page_errors,
     });
     if (exists && r.media === 'screen' && entry.legacy_shot) {
@@ -250,7 +295,7 @@ async function captureAll(inv, ids, outDir) {
   const rows = [];
   try {
     for (const entry of inv.screens.filter((s) => !ids.length || ids.includes(s.id))) {
-      for (const viewport of inv.viewports) {
+      for (const viewport of viewportsOf(inv, entry)) {
         const results = await captureWithRetry(browser, inv, entry, viewport, outDir);
         rows.push(...entryRows(inv, entry, viewport, results, outDir));
       }
@@ -267,7 +312,8 @@ async function captureAll(inv, ids, outDir) {
 function buildManifest(inv, rows) {
   const order = new Map(inv.screens.map((s, i) => [s.id, i]));
   const mediaOrder = { screen: 0, print: 1, 'legacy-copy': 2 };
-  for (const r of rows) r.expect_unmet = r.expect_unmet ?? null;
+  // new rows get the key; rows that are already in the tracked manifest are left exactly as they are
+  for (const r of rows) if (isNextId(inv, r.id)) r.expect_unmet = r.expect_unmet ?? null;
   rows.sort((a, b) => order.get(a.id) - order.get(b.id) || parseInt(b.viewport, 10) - parseInt(a.viewport, 10) || mediaOrder[a.media] - mediaOrder[b.media]);
   return {
     generated_from: inv.generated_from,
@@ -277,12 +323,22 @@ function buildManifest(inv, rows) {
     viewports: inv.viewports.map(vpName),
     counts: {
       ids: inv.screens.length,
-      screens: rows.filter((r) => r.media === 'screen').length,
+      screens: rows.filter((r) => r.media === 'screen' && r.file).length,
+      state_unreachable: rows.filter((r) => r.state_unreachable).length,
       print: rows.filter((r) => r.media === 'print').length,
       legacy_copies: rows.filter((r) => r.media === 'legacy-copy').length,
       overflow: rows.filter((r) => r.overflow && r.media !== 'legacy-copy').length,
       expect_unmet: rows.filter((r) => r.expect_unmet).length,
     },
+    ...(rows.some((r) => isNextId(inv, r.id))
+      ? {
+          nextjs: {
+            note: 'Ids with source "nextjs" (WJ, WK, WL): shot from pema-agent/frontend against its mock back end (lib/frozen-time.cjs, same clock), at the frames of the inventory entry. A row with state_unreachable has no image: the mock cannot give that state.',
+            frontend: sourceHashNext(),
+            viewports_per_entry: 'frames',
+          },
+        }
+      : {}),
     images: rows,
   };
 }
@@ -316,13 +372,21 @@ function writeGallery(inv, manifest, outDir) {
 
 function summary(manifest) {
   const c = manifest.counts;
-  return `${c.ids} ids, ${c.screens} screen shots, ${c.print} print shots, ${c.legacy_copies} legacy copies, ${c.overflow} overflowing, ${c.expect_unmet} with unmet expect`;
+  return `${c.ids} ids, ${c.screens} screen shots, ${c.state_unreachable || 0} unreachable states, ${c.print} print shots, ${c.legacy_copies} legacy copies, ${c.overflow} overflowing, ${c.expect_unmet} with unmet expect`;
 }
 
-async function preflight() {
+async function preflight(inv) {
   const bad = [];
-  if ((await http(`${BASE}/clinic-web/`)) !== 200) bad.push(`old web not answering on ${BASE}`);
-  if (!(await http('http://127.0.0.1:4174/'))) bad.push('finance API not answering on http://127.0.0.1:4174');
+  const chosen = inv.screens.filter((s) => !ONLY.length || ONLY.includes(s.id));
+  if (chosen.some((s) => !isNext(s))) {
+    if ((await http(`${BASE}/clinic-web/`)) !== 200) bad.push(`old web not answering on ${BASE}`);
+    if (!(await http('http://127.0.0.1:4174/'))) bad.push('finance API not answering on http://127.0.0.1:4174');
+  }
+  if (chosen.some(isNext)) {
+    // the front end answers /login; /api/v1/me answers 401 only when the proxy reaches the mock back end
+    if ((await http(`${nw.BASE}/login`)) !== 200) bad.push(`Next.js front end not answering on ${nw.BASE}`);
+    else if ((await http(`${nw.BASE}/api/v1/me`)) !== 401) bad.push(`mock back end not reachable through ${nw.BASE}/api/v1`);
+  }
   if (bad.length) {
     bad.forEach((b) => console.error('FAILED ' + b));
     process.exit(1);
@@ -330,7 +394,7 @@ async function preflight() {
 }
 
 async function runCapture(inv) {
-  await preflight();
+  await preflight(inv);
   const outDir = OUT_ARG ? path.resolve(OUT_ARG) : REF_DIR;
   const started = Date.now();
   const rows = await captureAll(inv, ONLY, outDir);
@@ -351,7 +415,7 @@ async function runCapture(inv) {
 }
 
 async function runCheck(inv) {
-  await preflight();
+  await preflight(inv);
   const manifestPath = path.join(REF_DIR, 'manifest.json');
   if (!fs.existsSync(manifestPath)) {
     console.error('FAILED manifest.json missing; run without --check first');
@@ -364,12 +428,17 @@ async function runCheck(inv) {
   const have = new Set(manifest.images.map((r) => r.id));
   for (const id of expectedIds) if (!have.has(id)) problems.push(`manifest has no entry for ${id}`);
   for (const r of manifest.images) {
+    if (!r.file) continue;
     if (!fs.existsSync(path.join(REF_DIR, r.file))) problems.push(`missing image ${r.file}`);
     if (r.page_errors.length) problems.push(`manifest ${r.file} has page errors: ${r.page_errors.join(' | ')}`);
   }
   const rows = await captureAll(inv, ONLY, tmp);
-  const now = new Map(rows.map((r) => [r.file, r]));
-  const was = new Map(manifest.images.filter((r) => !ONLY.length || ONLY.includes(r.id)).map((r) => [r.file, r]));
+  const now = new Map(rows.filter((r) => r.file).map((r) => [r.file, r]));
+  const was = new Map(manifest.images.filter((r) => r.file && (!ONLY.length || ONLY.includes(r.id))).map((r) => [r.file, r]));
+  const goneNow = new Set(rows.filter((r) => r.state_unreachable).map((r) => `${r.id}|${r.viewport}`));
+  const goneWas = new Set(manifest.images.filter((r) => r.state_unreachable && (!ONLY.length || ONLY.includes(r.id))).map((r) => `${r.id}|${r.viewport}`));
+  for (const k of goneNow) if (!goneWas.has(k)) problems.push(`${k.split('|')[0]} ${k.split('|')[1]}: state unreachable now, the manifest has an image`);
+  for (const k of goneWas) if (!goneNow.has(k)) problems.push(`${k.split('|')[0]} ${k.split('|')[1]}: the manifest says state unreachable, it was captured now`);
   for (const f of was.keys()) if (!now.has(f)) problems.push(`file set: ${f} is in the manifest but was not captured now`);
   for (const f of now.keys()) if (!was.has(f)) problems.push(`file set: ${f} was captured now but is not in the manifest`);
   for (const r of rows) if (r.page_errors.length) problems.push(`recapture ${r.file}: ${r.page_errors.join(' | ')}`);
@@ -378,9 +447,12 @@ async function runCheck(inv) {
     if (r.expect_unmet && before && !before.expect_unmet) problems.push(`recapture ${r.file}: expect unmet now (${r.expect_unmet})`);
   }
   const changed = [];
+  const nextIds = new Set(inv.screens.filter(isNext).map((x) => x.id));
   for (const [f, r] of now) {
     const before = was.get(f);
-    if (before && before.sha256 !== r.sha256) changed.push(f);
+    // Next.js shots: file set, page errors and unmet expects are checked; the pixels follow the mock data and the front
+    // end, which change with every package, so a SHA difference is not a structural change there
+    if (before && before.sha256 !== r.sha256 && !nextIds.has(r.id)) changed.push(f);
   }
   const share = was.size ? changed.length / was.size : 0;
   if (changed.length) console.log(`changed images (${changed.length} of ${was.size}, ${(share * 100).toFixed(1)}%):\n  ${changed.join('\n  ')}`);
