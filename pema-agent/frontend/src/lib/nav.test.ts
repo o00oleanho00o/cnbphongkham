@@ -21,9 +21,25 @@ const pageRoutes = listPageRoutes(APP_DIR);
 /**
  * Pages that are deliberately not menu entries: the redirect at `/`, sign-in, the index of the care tabs, the
  * create form reached from the agent list, the change-password page (the original dashboard had no menu entry
- * for it either; the same section sits in the tuning page) and the dev-only kit examples.
+ * for it either; the same section sits in the tuning page), the dev-only kit examples and the tabs of the finance
+ * area (one menu entry, "Tài chính & tiền thủ thuật"; the tab bar of its layout links the pages).
  */
-const NOT_IN_MENU = ["/", "/login", "/admin/care", "/admin/agents/new", "/admin/auth", "/dev/kit"];
+const FINANCE_TABS = [
+  "/finance/entries",
+  "/finance/rates",
+  "/finance/payments",
+  "/finance/periods",
+  "/finance/export",
+];
+const NOT_IN_MENU = [
+  "/",
+  "/login",
+  "/admin/care",
+  "/admin/agents/new",
+  "/admin/auth",
+  "/dev/kit",
+  ...FINANCE_TABS,
+];
 
 describe("menu order of the old Pema Clinic Web", () => {
   it("opens_with_the_old_workspace_section_in_the_old_order", () => {
@@ -137,10 +153,12 @@ describe("homeFor", () => {
     expect(homeFor((needs) => needs.some((p) => care.has(p)))).toBe("/today");
   });
 
-  it("skips_planned_screens_even_when_they_come_first", () => {
-    const plannedNeeds = items.filter((i) => i.planned).map((i) => i.needs);
+  it("opens_finance_for_a_role_that_holds_only_the_personal_finance_view", () => {
+    expect(homeFor((needs) => needs.includes("finance.read_own"))).toBe("/finance");
+  });
 
-    expect(homeFor((needs) => plannedNeeds.includes(needs))).toBe("/login");
+  it("has_no_planned_screen_left_to_skip", () => {
+    expect(items.filter((i) => i.planned).map((i) => i.to)).toEqual([]);
   });
 
   it("goes_to_login_when_nothing_is_allowed", () => {
@@ -155,6 +173,11 @@ describe("currentNavItem", () => {
 
   it("belongs_a_detail_page_to_its_list_entry", () => {
     expect(currentNavItem("/patients/abc")?.label).toBe("Tìm bệnh nhân");
+  });
+
+  it("belongs_every_finance_screen_to_the_finance_entry", () => {
+    expect(currentNavItem("/finance")?.label).toBe("Tài chính & tiền thủ thuật");
+    expect(currentNavItem("/finance/periods")?.label).toBe("Tài chính & tiền thủ thuật");
   });
 
   it("belongs_the_order_review_and_print_pages_to_the_cashier_entry", () => {

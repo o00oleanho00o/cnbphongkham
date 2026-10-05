@@ -53,6 +53,13 @@ export function concreteRoute(route: string): string {
   return sample;
 }
 
+/** `YYYY-MM` of the clinic's month `n` months ago (Vietnam time), for the finance screens of a closed or paid month. */
+function monthsAgo(n: number): string {
+  const now = new Date(Date.now() + 7 * 3_600_000);
+  const index = now.getUTCFullYear() * 12 + now.getUTCMonth() - n;
+  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
+}
+
 /** Screens that are a state of one route, not a route of their own (a tab kept in `?tab=`): the visual harness opens them too. */
 export const EXTRA_VISUAL_ROUTES: readonly string[] = [
   ...["consult", "plan", "session", "photos"].map(
@@ -64,4 +71,10 @@ export const EXTRA_VISUAL_ROUTES: readonly string[] = [
   "/orders/00000000-0000-4000-8041-000000000002",
   "/orders/00000000-0000-4000-8041-000000000001/print",
   "/orders/00000000-0000-4000-8041-000000000002/print?sheet=CONSULTATION",
+  // Finance (U6): the entry form open (WG3), a closed month (WG13) and a paid one (WG14), the personal view of the
+  // owner (WG6); the other tabs are routes of their own. A doctor's views (WG6, WG7) need `VISUAL_ROLE=doctor`.
+  "/finance/entries?form=open",
+  `/finance/entries?month=${monthsAgo(2)}`,
+  `/finance/entries?month=${monthsAgo(3)}`,
+  "/finance?scope=own",
 ];

@@ -108,6 +108,8 @@ make down
 
 Không có profile `worker` thì API nhận webhook và xếp lượt nhưng không ai chạy lượt. Tham số mô hình (`LLM_BASE_URL`, `LLM_MODEL=pema-chat`) và tuỳ chọn mạng (`PEMA_*_BIND`, chỉ loopback theo mặc định) ở `infra/.env.example`. Dữ liệu mẫu hư cấu cho phòng khám của bản cài: `uv run python -m pema.clinic.actions.seed_demo` (xem docstring của module; không có mật khẩu mặc định trong repo). Danh mục sản phẩm của phòng khám (115 dòng, dữ liệu thật, không phải dữ liệu mẫu) nạp một lần bằng `uv run pema catalog import <đường dẫn>/product-catalog.json [--source-name danhsach.xlsx] [--source-sha256 <SHA-256 của file Excel>]` (idempotent: chạy lại cùng file không đổi gì); ứng dụng không đọc thư mục `prototype/` khi chạy. Bot Zalo, QR cho tài khoản cá nhân, persona và KB cấu hình ở trang quản trị AI của FE.
 
+Tài chính PB02 (U6) chạy trong cùng API: `/api/v1/finance/*` (tổng quan theo vai trò, lượt thủ thuật và người thực hiện, duyệt/hủy, chốt tháng và xác nhận đã chi, phiếu thu có mã chống thu trùng, thông báo của chủ, CSV) trên các bảng `clinic.invoice|payment|procedure_entry|procedure_entry_person|finance_period|finance_notification` (migration `u6_0010_finance`). Vai trò lấy từ phiên đăng nhập, không có header giả lập; kế toán chưa có vai trò riêng nên do `manager` đảm nhiệm. `prototype/finance_server.py` và `prototype/finance/` vẫn nằm trong repo nhưng FE mới không dùng; MISA/hóa đơn điện tử chưa làm.
+
 Ảnh Docker của cầu nối (`bridge` profile) và của FE đã dựng thật và khởi động thử (không cần Zalo thật); cầu nối chạy bằng tsx, không có bước build, và chỉ lắng nghe trong mạng compose.
 
 ## Cập nhật trực tiếp và hiện diện (gói ST-R)

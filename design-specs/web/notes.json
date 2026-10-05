@@ -61,11 +61,20 @@
       ],
       "rules": [
         "Revenue (\"Doanh số thực hiện\") follows the completion date of the procedure; cash (\"Thực thu\") follows the receipt date; they are tracked separately.",
-        "\"Tiền thủ thuật đã duyệt\": \"Không phải lợi nhuận phòng khám\"."
+        "\"Tiền thủ thuật đã duyệt\": \"Không phải lợi nhuận phòng khám\".",
+        "Mock and backend (U6): money is whole VND, shares and rates are basis points; commission `(base * rate + 5000) // 10000`; the revenue of a procedure is split by share with the remainder on the last performer; a closed month reads its frozen rows and refuses new entries, Duyệt, Hủy and a second close; blockers in order \"Chỉ chốt tháng đã kết thúc\", \"Kỳ không có dữ liệu\", \"Còn lượt tính theo thực thu chưa thu đủ; chưa thể chốt để tránh mất tiền kỳ sau\", \"Còn lượt chờ duyệt\"; a receipt carries an idempotency key (same key and content returns the first receipt, other content is \"Mã giao dịch đã dùng cho nội dung khác\"; over the balance is \"Số thu vượt công nợ\")."
       ],
       "gotchas": [
         "The tab content refreshes every 10 s (`setInterval`) unless an input has focus or the entry form is open; a pending form is never overwritten (`dirty` flag).",
-        "Without the API the page shows \"Chưa kết nối dữ liệu tài chính: <error>. Chạy python prototype/finance_server.py rồi thử lại.\" in `#error` (see WG9)."
+        "Without the API the page shows \"Chưa kết nối dữ liệu tài chính: <error>. Chạy python prototype/finance_server.py rồi thử lại.\" in `#error` (see WG9).",
+        "`<input type=\"number\">` cannot hold the comma of \"12,5\": the rate boxes of the entry and rate forms use `bpToInputText` (a dot); `percentTextToBp` still accepts both."
+      ],
+      "differences": [
+        "Next.js (U6): the four tabs of `finance.js` are routes (`/finance`, `/finance/entries`, `/finance/rates`, `/finance/payments`) under one shell with the month picker \"Kỳ báo cáo\" in `?month=` and \"Làm mới\"; two screens have no old page: `/finance/periods` (\"Chốt kỳ\": 12 months, why a month cannot close, \"Chốt tháng\", \"Xác nhận đã chi\") and `/finance/export` (\"Tải CSV cho Excel\"). Both are Next.js-only (D3).",
+        "Next.js (U6): there is no role/doctor picker; the projection comes from the signed-in session (`finance.read` clinic, `finance.read_own` personal). The owner flips \"Toàn phòng khám\" and \"Cá nhân\" with `?scope=own`; a doctor never sees the clinic scope. The hero line of the owner reads \"CHỦ PHÒNG KHÁM • TỔNG QUAN ĐIỀU HÀNH\" instead of \"BS. TÂM • …\".",
+        "Next.js (U6): the native `prompt()` and `confirm()` of Hủy, Chốt tháng and Xác nhận đã chi are kit dialogs with the same questions (\"Lý do hủy lượt chưa thu tiền\", \"Chốt số liệu tháng <tháng>? Các lượt trong kỳ sẽ bị khóa.\", \"Mã chứng từ chi\"); the backend sentence shows inside the dialog and nothing closes until it agrees.",
+        "Next.js (U6): \"Hồ sơ\" of the entry form is a search box plus a select fed by the patients API (the old one listed fixed codes P001-P999); \"Gắn hóa đơn đã có\" lists only the invoices of the chosen patient; the table scrolls sideways inside its frame on a phone instead of turning into cards; the page does not refresh itself every 10 s (reload with \"Làm mới\" and after every change).",
+        "Next.js (U6): \"Phiếu thu mới đồng bộ với app khi đang mở. Hóa đơn web cũ thu tại Thu ngân Clinic; không thu lại ở đây.\" is replaced by a line about the anti-duplicate key and no collection over the balance, because every invoice (procedure or quick order) is collected in this app; the notification empty line no longer names \"BS. Tâm\" and \"app\"."
       ]
     },
     "WH": {
@@ -676,7 +685,8 @@
       ],
       "differences": [
         "App I10/F11/D1 show 3 tiles and a short list; the web adds the product catalog tile (\"Catalog sản phẩm\"), the quick-order banner and the order history.",
-        "The canvas draws the order-history rows (Xem / in, Sửa nháp, status line) and, below them, the empty state \"Chưa có đơn từ catalog.\" that the old shot shows when no order exists; the old web shows one or the other."
+        "The canvas draws the order-history rows (Xem / in, Sửa nháp, status line) and, below them, the empty state \"Chưa có đơn từ catalog.\" that the old shot shows when no order exists; the old web shows one or the other.",
+        "Next.js (U6): the card \"Hóa đơn & thanh toán\" is `InvoicePanel` (needs `finance.read` or `finance.collect`): filters Tất cả / Còn phải thu / Đã thanh toán are applied on the newest 200 invoices, a line gives Tổng hóa đơn, Đã thu, Còn phải thu (the three tiles of the old page are not repeated: the page keeps the order tiles of U5), \"Hóa đơn của đơn\" shows \"Đơn sản phẩm\" with \"In tách đơn\", and under the table the orders without an invoice get \"Lập hóa đơn\" (the old web rewrote an invoice with every save)."
       ],
       "gotchas": [
         "Canvas sample content: Số liệu ô tổng (48, 61.650.000 ₫, 11.250.000 ₫, 115) giữ như web cũ; 6 dòng hóa đơn mẫu lấy giá từ services; hai dòng lịch sử đơn là mẫu để thấy nút Xem / in và Sửa nháp"
@@ -687,7 +697,8 @@
         "`handle('pay')` dialog: amount, method; `PemaOps.pay()` needs capability `billing`."
       ],
       "differences": [
-        "\"Xác nhận thu tiền\" stays under the fields as in the old dialog, not in a right-aligned footer. The ops-error line under it (#ops-error, empty) and the toast \"Đã ghi phiếu thu và cập nhật hóa đơn\" are not drawn."
+        "\"Xác nhận thu tiền\" stays under the fields as in the old dialog, not in a right-aligned footer. The ops-error line under it (#ops-error, empty) and the toast \"Đã ghi phiếu thu và cập nhật hóa đơn\" are not drawn.",
+        "Next.js (U6): \"Thu tiền · <patient>\" is `PaymentDialog` shared with `/finance/payments` (`PaymentFields`); one idempotency key per attempt, kept on a failed retry and renewed after a success."
       ]
     },
     "WF3": {
@@ -827,6 +838,9 @@
       "logic": [
         "`finance.js › overview()` with `state.role = 'doctor'`: title \"Doanh số của tôi\", hero \"Công việc được ghi nhận, thu nhập rõ ràng\", metrics \"Doanh số của tôi\", \"Tiền chờ duyệt\", \"Tiền thủ thuật đã duyệt\".",
         "The doctor account gets two tabs; the page title stays \"Tài chính & tiền thủ thuật\" while the menu and breadcrumb read \"Doanh số của tôi\"."
+      ],
+      "differences": [
+        "Next.js (U6): the personal view also covers the owner on \"Cá nhân\"; it has no \"Công nợ\" or \"Thực thu\" because the backend sends none."
       ]
     },
     "WG7": {
@@ -1844,7 +1858,8 @@
         "The reach sets \"Số tiền (VND)\" to 0 (`setValue`) and presses \"Xác nhận thu tiền\". The method must be \"Tiền mặt\" or \"Chuyển khoản\", else \"Phương thức không hợp lệ.\"."
       ],
       "differences": [
-        "App I11 (payment sheet with the method choice) keeps the rule in the domain; its spec draws no error line. The web error is the red `#ops-error` line under the form."
+        "App I11 (payment sheet with the method choice) keeps the rule in the domain; its spec draws no error line. The web error is the red `#ops-error` line under the form.",
+        "Next.js (U6): an amount of 0 gets \"Số tiền phải lớn hơn 0 và không vượt số còn lại.\" before anything is sent; an amount over the balance is sent and the backend answers \"Số thu vượt công nợ\", shown in the same place."
       ],
       "gotchas": [
         "The dialog opens with the whole balance (150.000) prefilled; nothing is stored on error."
@@ -2095,7 +2110,8 @@
         "`finance.js › receipts()` form `#payment`: the amount is posted with an idempotency key (`paymentKey`); when it exceeds the open balance the server answers \"Số thu vượt công nợ\" and `command()` writes it into `#error`. The reach sets \"Số thu\" to 99999999 and presses \"Xác nhận thu\"."
       ],
       "differences": [
-        "App H5 collects cash with one button per invoice (no amount field), so an over-payment cannot be typed there."
+        "App H5 collects cash with one button per invoice (no amount field), so an over-payment cannot be typed there.",
+        "Next.js (U6): \"Số thu vượt công nợ\" is the backend sentence for an amount over the balance; the form is the shared `PaymentFields`."
       ],
       "gotchas": [
         "The invoice select and the prefilled amount depend on the shared finance database: the snapshot masks them (`<varies>`).",

@@ -117,6 +117,34 @@ def test_every_permission_code_is_granted_to_someone() -> None:
             {Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT},
         ),
         (P.KB_MANAGE, {Role.MANAGER, Role.OWNER, Role.DOCTOR}, {Role.CS_STAFF, Role.RECEPTION, Role.PATIENT}),
+        # package U, step U6 (PB02 finance): the accountant has no role of its own, the manager holds it. The clinic
+        # projection and every write are the owner's and the manager's; a doctor reads only the personal one;
+        # reception only collects; the owner's payment notifications are the owner's alone.
+        (
+            P.FINANCE_READ,
+            {Role.OWNER, Role.MANAGER},
+            {Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT},
+        ),
+        (
+            P.FINANCE_READ_OWN,
+            {Role.OWNER, Role.DOCTOR},
+            {Role.MANAGER, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT},
+        ),
+        (
+            P.FINANCE_WRITE,
+            {Role.OWNER, Role.MANAGER},
+            {Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT},
+        ),
+        (
+            P.FINANCE_COLLECT,
+            {Role.OWNER, Role.MANAGER, Role.RECEPTION},
+            {Role.DOCTOR, Role.CS_STAFF, Role.PATIENT},
+        ),
+        (
+            P.FINANCE_NOTIFICATIONS,
+            {Role.OWNER},
+            {Role.MANAGER, Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT},
+        ),
     ],
 )
 def test_matrix_row(permission: Permission, allowed: set[Role], denied: set[Role]) -> None:

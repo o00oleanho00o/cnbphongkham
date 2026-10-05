@@ -6,6 +6,14 @@ from pema.clinic.models.care import Consent, Episode, Patient, TreatmentPlan, Tr
 from pema.clinic.models.catalog import Protocol, Room, RoomBlock, Service, ServiceVersion
 from pema.clinic.models.clinical import ConsultNote, Media
 from pema.clinic.models.crm import CrmActivity, CrmRule, CrmTask, MessageTemplate
+from pema.clinic.models.finance import (
+    FinanceNotification,
+    FinancePeriod,
+    Invoice,
+    Payment,
+    ProcedureEntry,
+    ProcedureEntryPerson,
+)
 from pema.clinic.models.inbox import ChannelIdentity, Conversation, Message, ReviewItem
 from pema.clinic.models.orders import CatalogImport, Order, OrderItem, Product
 from pema.clinic.models.scheduling import Appointment
@@ -27,12 +35,18 @@ __all__ = [
     "CrmRule",
     "CrmTask",
     "Episode",
+    "FinanceNotification",
+    "FinancePeriod",
+    "Invoice",
     "Media",
     "Message",
     "MessageTemplate",
     "Order",
     "OrderItem",
     "Patient",
+    "Payment",
+    "ProcedureEntry",
+    "ProcedureEntryPerson",
     "Product",
     "Protocol",
     "ReviewItem",

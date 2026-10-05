@@ -8,9 +8,10 @@ Forced deviations from the JavaScript (everything lived in ``localStorage`` per 
   and price per line); ``version`` is the optimistic lock and also what the prototype counted: 1 at
   creation, +1 on every save and on the approval;
 * the prototype created an invoice with every save and refused an edit "Đơn đã thu tiền hoặc thiếu hóa đơn".
-  Invoices belong to step U6: the order carries ``invoice_id`` (empty for now) and the mirror
-  ``received_vnd`` / ``paid`` that U6 sets through ``set_payment_state``. An edit is refused as soon as
-  money is received;
+  Invoices belong to step U6 (``actions.finance_cash``): the order carries ``invoice_id`` (set when the
+  cashier raises the invoice) and the mirror ``received_vnd`` / ``paid`` that a receipt sets through
+  ``set_payment_state``; a saved draft rewrites the amount of its invoice (``_invoices.sync_order_invoice``).
+  An edit is refused as soon as money is received;
 * the prototype let the page approve for ``order.doctor`` whoever held the "clinical" capability (owner or
   doctor). Here ``order.approve`` is held by the doctor and the owner; a doctor may approve only the orders of
   which he is the responsible doctor ("Bác sĩ duyệt phải là bác sĩ phụ trách đơn."), the owner any order;
@@ -40,6 +41,7 @@ from sqlalchemy.orm import attributes
 
 from pema.clinic import audit
 from pema.clinic.actions._common import lost_race_is_conflict, not_found, now
+from pema.clinic.actions._invoices import sync_order_invoice
 from pema.clinic.actions._scope import patient_scope, require_patient_access
 from pema.clinic.actions.catalog import load_products
 from pema.clinic.actions.patients import load_patient
@@ -335,13 +337,19 @@ async def update_draft(
         attributes.flag_modified(order, "note")  # every save counts as a version, as in the prototype
         with lost_race_is_conflict():
             await session.flush()
+        invoice_synced = await sync_order_invoice(session, ctx, order)  # the invoice follows the total (U6)
         await audit.record(
             session,
             ctx,
             "order.update_draft",
             "order",
             order.id,
-            {"item_count": len(lines), "total_vnd": order.total_vnd, "version": order.version},
+            {
+                "item_count": len(lines),
+                "total_vnd": order.total_vnd,
+                "version": order.version,
+                "invoice_synced": invoice_synced,
+            },
         )
         return await _order_out(session, ctx, order)
 

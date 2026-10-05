@@ -182,12 +182,14 @@ function answers({ orders = [], order = full() }: Answers = {}) {
         if (path === "/api/v1/patients") return ok(page([PATIENT]));
         if (path === "/api/v1/patients/{patient_id}") return ok(PATIENT);
         if (path === "/api/v1/resources") return ok(RESOURCES);
+        if (path === "/api/v1/finance/invoices") return ok(page([]));
+        if (path === "/api/v1/finance/billable-orders") return ok([]);
         return refused(404, "not_found", "?");
       },
     );
 }
 
-const RECEPTION: Permission[] = ["patient.read", "order.read", "order.write"];
+const RECEPTION: Permission[] = ["patient.read", "order.read", "order.write", "finance.collect"];
 const READER: Permission[] = ["order.read"];
 
 function renderPage(permissions: Permission[] = RECEPTION) {
@@ -241,7 +243,9 @@ describe("what the page shows", () => {
     expect(screen.getByText("Từ danhsach.xlsx")).toBeTruthy();
     expect(screen.getByText("Lên đơn theo mẫu PEMA")).toBeTruthy();
     expect(screen.getByText("Chưa có đơn từ catalog.")).toBeTruthy();
-    expect(screen.getByText(/Hóa đơn và thu tiền nằm ở bước Tài chính/)).toBeTruthy();
+    expect(screen.getByText("Hóa đơn & thanh toán")).toBeTruthy();
+    expect(await screen.findByText("Không có hóa đơn.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Còn phải thu" })).toBeTruthy();
   });
 
   it("lists_orders_with_view_and_edit_for_a_draft_and_view_only_for_an_approved_one", async () => {
@@ -274,6 +278,9 @@ describe("what the page shows", () => {
     expect(screen.queryByRole("button", { name: "Lên đơn nhanh" })).toBeNull();
     expect(screen.queryByRole("button", { name: /Sửa nháp/ })).toBeNull();
     expect(screen.getByRole("link", { name: /Xem \/ in đơn/ })).toBeTruthy();
+    expect(
+      screen.getByText(/Hóa đơn và thu tiền do lễ tân, kế toán hoặc chủ phòng khám/),
+    ).toBeTruthy();
   });
 });
 

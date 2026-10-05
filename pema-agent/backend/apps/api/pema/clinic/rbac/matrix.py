@@ -47,6 +47,9 @@ MANAGER_PERMISSIONS: frozenset[Permission] = frozenset(
         P.APPOINTMENT_CHECK_IN,
         P.ORDER_READ,
         P.ORDER_WRITE,  # not ORDER_APPROVE: the doctor of the order signs it, a manager is not a clinician
+        P.FINANCE_READ,  # PB02 "Ke toan": no accountant role exists, the manager holds it (open item)
+        P.FINANCE_WRITE,
+        P.FINANCE_COLLECT,  # not FINANCE_NOTIFICATIONS: the owner's inbox is the owner's
         P.CRM_TASK_READ,
         P.CRM_TASK_RESOLVE,
         P.CRM_ACTIVITY_WRITE,
@@ -94,6 +97,7 @@ DOCTOR_PERMISSIONS: frozenset[Permission] = frozenset(
         P.ORDER_READ,  # narrowed to own / scheduled patients by the action
         P.ORDER_WRITE,
         P.ORDER_APPROVE,  # only the orders of which the caller is the responsible doctor (action)
+        P.FINANCE_READ_OWN,  # PB02: the rows where the caller is a performer, nothing clinic-wide
         P.CRM_TASK_READ,  # D+7 review of own patients only (action)
         P.CRM_TASK_RESOLVE,  # idem
         P.CRM_ACTIVITY_WRITE,  # own patients only (action)
@@ -150,6 +154,7 @@ RECEPTION_PERMISSIONS: frozenset[Permission] = frozenset(
         P.APPOINTMENT_CHECK_IN,
         P.ORDER_READ,  # "Thu ngân lên đơn": the cashier work of the clinic has no role of its own (open item)
         P.ORDER_WRITE,
+        P.FINANCE_COLLECT,  # the cashier records receipts; it reads no finance totals
         P.KB_READ,
     }
 )
