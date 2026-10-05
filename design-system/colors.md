@@ -7,7 +7,7 @@ Source: `tokens.json` (`color.light`, `color.dark`). A colour is always used by 
 
 | Role | Token | Light | Dark |
 |---|---|---|---|
-| Primary | `brand-500` | `#0b4f94` | `#2b7fc9` |
+| Primary | `brand-500` | `#0b4f94` | `#3b8dd5` |
 | Navy | `brand-600` | `#083a6e` | `#5aaef0` |
 | Sky | `brand-400` | `#3caae5` | `#3caae5` |
 | Ink | `ink` | `#17324d` | `#e6eef6` |
@@ -31,7 +31,7 @@ Hierarchy: light canvas, white surface, ink text, one prominent action. Sky is d
 | `brand-100` | `--color-brand-100` | `#cfe6f6` | `#163a5f` | Brand line | Border of brand-50 surfaces, light button on a hero, selected chip count |
 | `brand-200` | `--color-brand-200` | `#9fcdee` | `#235688` | Brand soft stroke | Unlit rail segments on a hero (35% opacity) |
 | `brand-400` | `--color-brand-400` | `#3caae5` | `#3caae5` | Sky | Graphic details only; never a background for small white text |
-| `brand-500` | `--color-brand-500` | `#0b4f94` | `#2b7fc9` | Primary | Main button, selected chip, active tab bar item, checkbox/radio on, progress bar, ids on the canvas |
+| `brand-500` | `--color-brand-500` | `#0b4f94` | `#3b8dd5` | Primary | Main button, selected chip, active tab bar item, checkbox/radio on, progress bar, ids on the canvas |
 | `brand-600` | `--color-brand-600` | `#083a6e` | `#5aaef0` | Navy | Primary button hover/pressed, hero gradient start, toast background |
 | `brand-700` | `--color-brand-700` | `#083a6e` | `#9cd3f7` | Text on brand-50 | Brand badge text, avatar initials, selected sidebar label |
 
@@ -88,7 +88,7 @@ Hierarchy: light canvas, white surface, ink text, one prominent action. Sky is d
 | Token | CSS variable | Light | Dark | Role | Used for |
 |---|---|---|---|---|---|
 | `accent` | `--color-accent` | `#c56d5c` | `#d98a7a` | Coral | Decoration only |
-| `accent-strong` | `--color-accent-strong` | `#a8503f` | `#b5594a` | Coral strong | Sidebar count badge background (white text 5.4:1) |
+| `accent-strong` | `--color-accent-strong` | `#a8503f` | `#c17467` | Coral strong | Sidebar count badge and avatar background (label `surface`: 5.4:1 light, 4.6:1 dark) |
 
 Status colours come in triples: `<tone>` is text and icon, `<tone>-soft` the background, `<tone>-line` the border. Tones: success, info, warning, danger.
 
@@ -105,10 +105,10 @@ Target 4.5:1 for normal text.
 | `ink-soft` on `tile` | Metadata on a tile or neutral badge | 4.68:1 | 6.04:1 |
 | `heading` on `surface` | Titles and KPI values | 11.41:1 | 10.01:1 |
 | `link` on `surface` | Links and selected tab | 8.20:1 | 6.70:1 |
-| `surface` on `brand-500` | Primary button label | 8.20:1 | 3.81:1 (below 4.5) |
+| `surface` on `brand-500` | Primary button label | 8.20:1 | 4.56:1 |
 | `surface` on `brand-600` | Primary hover, toast, hero start | 11.41:1 | 6.70:1 |
 | `brand-700` on `brand-50` | Brand badge, selected menu item | 10.19:1 | 9.54:1 |
-| `surface` on `accent-strong` | Sidebar count badge | 5.41:1 | 3.44:1 (below 4.5) |
+| `surface` on `accent-strong` | Sidebar count badge | 5.41:1 | 4.57:1 |
 | `success` on `success-soft` | Success badge or notice | 4.95:1 | 8.03:1 |
 | `info` on `info-soft` | Info badge or notice | 4.99:1 | 7.73:1 |
 | `warning` on `warning-soft` | Warning badge or notice | 4.78:1 | 8.44:1 |

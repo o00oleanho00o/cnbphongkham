@@ -39,7 +39,7 @@ const COLOR = {
   'danger-soft': ['Status', 'Danger fill', 'Background of a danger badge, notice'],
   'danger-line': ['Status', 'Danger border', 'Border of danger surfaces and of the outlined danger button'],
   accent: ['Accent', 'Coral', 'Decoration only'],
-  'accent-strong': ['Accent', 'Coral strong', 'Sidebar count badge background (white text 5.4:1)'],
+  'accent-strong': ['Accent', 'Coral strong', 'Sidebar count badge and avatar background (label `surface`: 5.4:1 light, 4.6:1 dark)'],
 };
 
 // Text scale: [role, weight, line height, where it is used]. The canvas CSS (Pema Web redesign canvas/template.html) is the reference for weight and leading.

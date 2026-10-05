@@ -1,6 +1,6 @@
 ---
 name: pema-web-design
-description: Keep the design of the Pema web in step — the frozen inventory of the old web (211 screens: Clinic Web, Finance and the Patient Mobile web, every state), its screenshots, generated screen specs (design-specs/web/, served by the MCP tools get_web_screen / list_web_screens) and the web canvas "Pema Web redesign canvas/Pema Web.dc.html" (web-size frames in the app design language). Use when asked "which web screens are missing from the web canvas", "build / port a Next.js screen from the web canvas" (read the spec first), "refresh old-web screenshots / specs", "add or change a web screen in the web canvas", or when a visible change in pema-agent/frontend needs a log entry (web-design-changes.md). Does not edit the old web (prototype/) or the app canvas; for the app use pema-web-to-canvas and pema-canvas-to-kmp-compose.
+description: Keep the design of the Pema web in step — the frozen inventory of the web (384 screens: 211 of the old Clinic Web, Finance and Patient Mobile web, every state, plus 173 Next.js-only), its screenshots, generated screen specs (design-specs/web/, served by the MCP tools get_web_screen / list_web_screens) and the web canvas "Pema Web redesign canvas/Pema Web.dc.html" (web-size frames in the app design language). Use when asked "which web screens are missing from the web canvas", "build / port a Next.js screen from the web canvas" (read the spec first), "refresh old-web screenshots / specs", "add or change a web screen in the web canvas", or when a visible change in pema-agent/frontend needs a log entry (web-design-changes.md). Does not edit the old web (prototype/) or the app canvas; for the app use pema-web-to-canvas and pema-canvas-to-kmp-compose.
 ---
 
 > **Canonical skill (decision, package W2 step W12, 2026-10-05).** This skill, `pema-web-design`, is the canonical one for
@@ -17,7 +17,7 @@ Package W built four layers for the old Clinic Web (`prototype/clinic-web`, read
 
 | Layer | Where | Made by |
 |---|---|---|
-| Inventory: 211 screen ids `WA1 … WI42`, frozen | `design-specs/web/inventory.json` | `web-inventory.cjs` from `lib/catalog.cjs` |
+| Inventory: 384 screen ids (211 old web `WA1 … WI42` + 173 Next.js-only `WJ … WL`), frozen | `design-specs/web/inventory.json` | `web-inventory.cjs` from `lib/catalog.cjs` |
 | Screenshots: 5 viewports per id, git-ignored | `pema-agent/frontend/visual-ref/old/` (+ tracked `manifest.json`) | `web-shots.cjs` |
 | Specs: structured snapshot + one spec per id | `design-specs/web/` (`snapshot.json`, `screens/<ID>.md`, `INDEX.md`, `BLOCKS.md`, `index.json`) | `web-snapshot.cjs`, `web-specs.cjs`, hand notes in `notes.json` |
 | Web canvas: 1440 / 1920 / 390 frames | `Pema Web redesign canvas/Pema Web.dc.html` (old web, WA-WI) and `Pema Web (Next.js).dc.html` (Next.js-only, WJ-WL), both generated | `web-canvas-build.cjs` from `parts/<group>.js` |
@@ -65,7 +65,7 @@ pema-agent/frontend/visual-ref/old/        <ID>-<W>x<H>.png, <ID>-…-print.png,
 
 Hand-written: `lib/catalog.cjs`, `notes.json`, `parts/*.js`, `web-design-changes.md`, `references/blocks-web.md`. Everything else is generated: never edit it, regenerate it. Every generator has `--check` (exit 1 when the committed output differs from a fresh run).
 
-Ids come only from `inventory.json` (`^W[A-I]\d+$`), never renumber; a new screen is appended at the end of its group (add it to `lib/catalog.cjs`). Groups: WA shell, WB operations, WC patients and Patient 360, WD CSKH, WE studio/resources/services, WF cashier and orders, WG finance, WH Ask Pema and guide.
+Ids come only from `inventory.json` (`^W[A-L]\d+$`), never renumber; a new screen is appended at the end of its group (add it to `lib/catalog.cjs`). Groups: WA shell, WB operations, WC patients and Patient 360, WD CSKH, WE studio/resources/services, WF cashier and orders, WG finance, WH Ask Pema and guide, WI Patient Mobile web (old web); WJ-WL are the Next.js-only groups below.
 
 **Two canvas files (W10, owner decision 2026-10-05).** `Pema Web.dc.html` holds only WA-WI (211 ids) and never a WJ/WK/WL frame; `Pema Web (Next.js).dc.html` holds WJ/WK/WL (173 ids). Both are built from the same `template.html`, `nodes.html`, `parts/base.js`, `blocks.js` and `tail.js` (`lib/web-canvas-lib.cjs` `OUTPUTS` maps file → groups; a group that is not in a file gets empty parts). `web-canvas-build.cjs` writes and `--check`s both (`--file="<name>"` for one; it fails when the old file holds a WJ/WK/WL frame), `web-canvas.cjs check --file "<name>" [groups] [outDir] --viewport=all --complete --frames` checks one file for its own ids and fails on a "foreign" group (`foreignIds`); specs and coverage read both files (`canvasFile` per screen). In the design viewer a dropdown "Web" (shown when the folder holds both files) switches "Web cũ" (default), "Màn mới" or "Cả hai" (both side by side, hash `#both`).
 

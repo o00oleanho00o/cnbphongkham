@@ -1,5 +1,5 @@
 {
-  "generated_from": "07ddd8e",
+  "generated_from": "07ddd8e8",
   "base_url": "http://127.0.0.1:4173",
   "finance_api": "http://127.0.0.1:4174",
   "clock": "2026-09-20T09:00:00+07:00",
@@ -17677,7 +17677,7 @@
         "1440x900"
       ],
       "covers": [],
-      "notes": "Next.js shell, not the old-web shell (WA1-WA4). Sidebar sections in order: \"Không gian làm việc\", \"Quản lý\", \"Phân tích\", \"Zalo & CSKH\", \"Care agent\", \"Quản trị agent\"; owner and manager see every entry; planned entries (/studio \"Ảnh trước / sau\", /resources \"Bác sĩ & phòng\", /services \"Dịch vụ\", /cashier \"Thu ngân\", /finance \"Tài chính & tiền thủ thuật\") show as greyed text with the tooltip \"Màn này sẽ có ở bản sau\" and sr-only \"(sắp có)\", never links. Logo \"PHÒNG KHÁM DA LIỄU\" (link title \"Về trang chính\"); footer dot + \"Đã kết nối · v{version}\" (green, an account running), \"Ngoại tuyến · v{version}\" (grey), or only \"v{version}\" without admin.accounts; user chip (first letter, name, \"{role label} · {clinic}\"; roles Chủ phòng khám, Quản lý, Bác sĩ, CSKH, Lễ tân, Bệnh nhân), theme toggle \"Đổi giao diện sáng/tối\", \"Đăng xuất\". Top bar (lg+): breadcrumb \"Không gian phòng khám / {nav label}\" (label omitted outside the nav), search \"Tìm bệnh nhân...\" (patient.read; goes to /patients?q=), bell \"Mở thông báo\" (conversation.read; plain link to /inbox, no badge). Skip link \"Đến nội dung chính\". The page does not scroll at lg+, only main. Home of owner and manager: /dashboard. Tests: src/ui/app-shell.test.tsx, sidebar.test.tsx, top-bar.test.tsx, lib/nav.test.ts.",
+      "notes": "Next.js shell, not the old-web shell (WA1-WA4). Sidebar sections in order: \"Không gian làm việc\", \"Quản lý\", \"Phân tích\", \"Zalo & CSKH\", \"Care agent\", \"Quản trị agent\"; owner and manager see every entry; every entry is a real link since U6 (/studio \"Ảnh trước / sau\" and /resources \"Bác sĩ & phòng\" and /services \"Dịch vụ\" from U4, /cashier \"Thu ngân\" from U5, /finance \"Tài chính & tiền thủ thuật\" from U6), no entry is greyed out; an item flagged `planned` in lib/nav.tsx would show as greyed text with the tooltip \"Màn này sẽ có ở bản sau\" and sr-only \"(sắp có)\", never a link, but none is flagged. Logo \"PHÒNG KHÁM DA LIỄU\" (link title \"Về trang chính\"); footer dot + \"Đã kết nối · v{version}\" (green, an account running), \"Ngoại tuyến · v{version}\" (grey), or only \"v{version}\" without admin.accounts; user chip (first letter, name, \"{role label} · {clinic}\"; roles Chủ phòng khám, Quản lý, Bác sĩ, CSKH, Lễ tân, Bệnh nhân), theme toggle \"Đổi giao diện sáng/tối\", \"Đăng xuất\". Top bar (lg+): breadcrumb \"Không gian phòng khám / {nav label}\" (label omitted outside the nav), search \"Tìm bệnh nhân...\" (patient.read; goes to /patients?q=), bell \"Mở thông báo\" (conversation.read; plain link to /inbox, no badge). Skip link \"Đến nội dung chính\". The page does not scroll at lg+, only main. Home of owner and manager: /dashboard. Tests: src/ui/app-shell.test.tsx, sidebar.test.tsx, top-bar.test.tsx, lib/nav.test.ts.",
       "source": "nextjs"
     },
     {

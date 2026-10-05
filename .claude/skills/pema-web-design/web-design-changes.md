@@ -1,6 +1,6 @@
 # Web design canvas change log
 
-Sync baseline: `c40ba22`
+Sync baseline: `0c454cc`
 
 Every time something **visible** in the Next.js front end (`pema-agent/frontend/src/app/**`, `src/ui/**`, `src/components/**`) is added, changed or removed (a page, tab, dialog, field, button, filter, status, flow, business-rule wording, or a design token in `src/ui/tokens.json` or `tokens.css`), add an entry under **Pending** and commit it in the same commit as the code. The `pema-web-design` skill reads these entries and only redraws the affected frames instead of re-checking all 81 screens. This is the Next.js counterpart of `.claude/skills/pema-web-to-canvas/web-changes.md` (which logs the old web `prototype/` for the app canvas); the old web itself is frozen and is not logged here.
 
@@ -21,6 +21,12 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-05 · change · Dark-mode tokens brand-500 and accent-strong (contrast)
+- Where: `pema-agent/frontend/src/ui/tokens.css` (`.dark`), `src/ui/tokens.json`, `design-system/tokens.json`
+- Change: dark `--color-brand-500` #2b7fc9 -> #3b8dd5 and `--color-accent-strong` #b5594a -> #c17467 so the `surface` label on them is 4.56:1 and 4.57:1 (was 3.81:1 and 3.44:1, below AA 4.5:1). Light mode unchanged. Affects primary button, active chip/tab, progress bar and avatar fills in dark mode.
+- Web canvas target: token block of both web canvases (rebuilt by `web-canvas-build.cjs`) + every dark frame
+- Logged by: U12
+
 ### 2026-10-05 · add · Hôm nay: bảng tiếp đón
 - Where: `pema-agent/frontend/src/app/(admin)/today/page.tsx`, `src/components/ops/today/reception-table.tsx` · route `/today`
 - Change: above the CSKH queue (kept, now under the heading "Việc CSKH hôm nay") the old reception table "Hôm nay tại Pema" for roles that read the schedule: subtitle "Tiếp đón theo từng lịch hẹn · <ngày>", button "＋ Đặt lịch mới" (`appointment.write`), tiles "Tổng lịch" and "Đã đến" plus six tiles that filter (Chưa đến with the confirmed visits, Đang chờ, Đang khám/điều trị, Hoàn tất, Đã hủy, Vắng hẹn), fields "Tên / mã KH / liên hệ" ("Tìm nhanh khách…"), "Trạng thái" ("Tất cả trạng thái", "Chưa đến (gồm đã xác nhận)" and the seven statuses) and "Bác sĩ" (none for a doctor), table columns Giờ, Mã KH · bệnh nhân, Liên hệ (phone and age), Nội dung, Trạng thái, Bác sĩ, Phòng and Người tạo (both from 1280px), Tiếp đón with Check-in and Vắng (Chưa đến, Đã xác nhận), Mời vào phòng (Đang chờ), Mở 360 (other statuses), "Không có lịch phù hợp.", paging "N lịch · Trang a/b · 25 dòng/trang" with "← Trước" and "Sau →"; below 768px the rows are the cards of the schedule board. Not built: column "Giá lịch dự kiến" and tile "Phát sinh hóa đơn hôm nay" (an appointment has no price or invoice here).
@@ -38,6 +44,12 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 - Change: a seventh role "Kế toán" in the role picker and filter of "Nhân viên" (hint "Kế toán: đối soát và thu ngân, tài chính, chốt kỳ; không duyệt đơn thuốc, không xem hồ sơ lâm sàng.") and in the user chip. The account opens on "Thu ngân" (`/cashier`) and its menu holds Tìm bệnh nhân, Thu ngân, Tài chính & tiền thủ thuật, Hướng dẫn (no Hôm nay, Theo dõi, Vòng đời khách hàng, Tổng quan, Điều phối lịch). "Chốt tháng" in Chốt kỳ and under the table of Tiền thủ thuật is shown by `finance_period.close` (accountant, manager, owner), "Xác nhận đã chi" stays with `finance.write`. A role that opens `/today` without the CSKH queue is moved to its own home instead of the "Bạn không có quyền xem màn này" card.
 - Web canvas target: WI-series staff screen (Nhân viên), WG10 (Chốt kỳ), WG2 (Tiền thủ thuật); menu: block "sidebar"
 - Logged by: U11
+
+### 2026-10-05 · add · Hồ sơ bệnh nhân for the accountant (billing tab only)
+- Where: `pema-agent/frontend/src/app/(admin)/patients/[id]/page.tsx`, `src/components/ops/patient/finance-only-view.tsx` · route `/patients/[id]`
+- Change: a role that has `finance.read` but no Patient 360 (Kế toán) no longer gets the "no access" notice on a patient page: it sees the header (avatar, name, code, age) and the tab "Dịch vụ & tài chính" alone, from a projection without clinical data; every other role is unchanged.
+- Web canvas target: WC27 (tab "Dịch vụ & tài chính"), header of WC4
+- Logged by: U11 (entry added at the U12 merge)
 
 ### 2026-10-05 · add · Hồ sơ bệnh nhân: the four chips and "＋ Hồ sơ mới"
 - Where: `pema-agent/frontend/src/app/(admin)/patients/page.tsx`, `src/components/ops/patient/new-patient-dialog.tsx` · route `/patients`
@@ -112,7 +124,7 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 - Logged by: U5
 
 ### 2026-10-05 · add · Dịch vụ (catalog, history, protocols)
-- Where: `pema-agent/frontend/src/app/(admin)/services/page.tsx`, `src/components/catalog/{service-sheet,service-history-dialog,protocol-sheet}.tsx` · route `/services`
+- Where: `pema-agent/frontend/src/app/(admin)/services/page.tsx`, `src/components/catalog/service-sheet.tsx`, `src/components/catalog/service-history-dialog.tsx`, `src/components/catalog/protocol-sheet.tsx` · route `/services`
 - Change: the menu item "Dịch vụ" is no longer planned. Catalog cards (price, treatment and room preparation minutes, rooms, protocol, Đang dùng / Tạm ngưng, terms version), add and edit sheet, history of price and rate versions, follow-up protocols (D+1, D+3, D+7, review day); commission rate and basis only for `admin.rules`; 1/2/3/4 columns (4 from 1600).
 - Web canvas target: WE5, WE6
 - Logged by: U4 sync
@@ -135,4 +147,4 @@ The skill moves entries from "Pending" down here with their result, then updates
 
 ### 2026-10-04 · full sync · baseline
 - Package W (W0–W4): inventory of the old web (81 ids), 405 screenshots at 5 viewports, 81 specs in `design-specs/web/`, MCP web tools, web canvas with 81 screens (`Pema Web redesign canvas/Pema Web.dc.html`).
-- Result: the log starts here. Baseline `c40ba22` is the commit that holds W0–W3c (the front end was not touched by package W). Not pushed to claude.ai/design yet (W5).
+- Result: the log starts here. Baseline `0c454cc` is the commit that holds W0–W3c (the front end was not touched by package W). Not pushed to claude.ai/design yet (W5).

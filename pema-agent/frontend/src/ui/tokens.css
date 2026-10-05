@@ -122,7 +122,7 @@
   --color-brand-100: #163a5f;
   --color-brand-200: #235688;
   --color-brand-400: #3caae5;
-  --color-brand-500: #2b7fc9; /* lighter than light mode so it stands out on dark */
+  --color-brand-500: #3b8dd5; /* lighter than light mode so it stands out on dark; surface text on it 4.56:1 (U12) */
   --color-brand-600: #5aaef0;
   --color-brand-700: #9cd3f7;
 
@@ -132,7 +132,7 @@
   --color-ink: #e6eef6;
   --color-ink-soft: #9db0c3;
   --color-heading: #9cd3f7;
-  --color-link: #5aaef0; /* brand-500 is too dark for text on the dark surface (3.8:1) */
+  --color-link: #5aaef0; /* brand-500 as text on the dark surface is only 4.6:1; link keeps more margin (6.7:1) */
   --color-line: #1f3550;
   --color-line-strong: #2a4666;
   --color-tile: #18304a;
@@ -155,5 +155,5 @@
   --color-danger-soft: #3a1a20;
   --color-danger-line: #5e2a32;
   --color-accent: #d98a7a;
-  --color-accent-strong: #b5594a;
+  --color-accent-strong: #c17467; /* surface text on it 4.57:1 (U12) */
 }
