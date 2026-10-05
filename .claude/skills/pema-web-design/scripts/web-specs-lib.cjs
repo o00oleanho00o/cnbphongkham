@@ -90,7 +90,12 @@ function loadModel() {
   const snapshot = snapText ? JSON.parse(snapText) : { meta: {}, screens: {} };
   const notes = fs.existsSync(NOTES) ? readJson(NOTES) : { groups: {}, screens: {} };
   const app = fs.existsSync(APP_INDEX) ? readJson(APP_INDEX) : { screens: [] };
+  // W7: Next.js-only ids (source "nextjs") have no snapshot and no spec until W9; they are kept out of the spec model and
+  // listed in INDEX.md ("Next.js-only screens, specs pending") so that a route can still be looked up.
+  const pendingNextjs = inventory.screens.filter((s) => s.source === 'nextjs' && !snapshot.screens[s.id]);
+  inventory.screens = inventory.screens.filter((s) => !pendingNextjs.includes(s));
   return {
+    pendingNextjs,
     inventory,
     snapshot,
     snapshotHash: snapText ? sha(snapText) : 'none',
@@ -823,6 +828,7 @@ function indexJson(model) {
     snapshot: model.snapshotHash,
     counts: model.inventory.counts,
     groups: model.inventory.groups,
+    pending_nextjs: (model.pendingNextjs || []).map((s) => s.id),
     screens: model.inventory.screens.map((s) => {
       const e = model.snapshot.screens[s.id] || {};
       return {
@@ -854,6 +860,22 @@ Source: \`design-specs/web/inventory.json\` (W0), snapshot \`${model.snapshotHas
 
 | Code | Screen | Kind | Group | Next.js route | Next.js status | App canvas | A/F/S/N |
 |---|---|---|---|---|---|---|---|
+${rows.join('\n')}
+${pendingNextjsMarkdown(model)}`;
+}
+
+/** Ids that exist only in the Next.js front end and have no spec yet (W9 adds them). */
+function pendingNextjsMarkdown(model) {
+  const list = model.pendingNextjs || [];
+  if (!list.length) return '';
+  const rows = list.map((s) => `| ${s.id} | ${s.name} | ${s.kind} | ${model.groups[s.group].name} | \`${s.next_route}\` | ${s.role} | ${s.frames.join(', ')} |`);
+  return `
+## Next.js-only screens, specs pending (${list.length})
+
+Source: \`design-specs/web/inventory.json\` (W7, \`source: "nextjs"\`). These ids exist only in \`pema-agent/frontend\`; their shots, specs and canvas frames come with W8-W10. The inventory row (\`reach\`, \`expect\`, \`sources\`, \`notes\`) is the brief until then.
+
+| Code | Screen | Kind | Group | Next.js route | Role | Frames |
+|---|---|---|---|---|---|---|
 ${rows.join('\n')}
 `;
 }

@@ -1,14 +1,14 @@
 {
   "generator": ".claude/skills/pema-web-design/scripts/web-specs.cjs",
-  "snapshot": "71c62e1403b2c602",
+  "snapshot": "552950fccb171702",
   "counts": {
-    "total": 211,
+    "total": 384,
     "by_kind": {
-      "dialog": 13,
+      "dialog": 66,
       "modal": 6,
-      "page": 24,
-      "state": 157,
-      "tab": 11
+      "page": 55,
+      "state": 238,
+      "tab": 19
     },
     "by_group": {
       "WA": 10,
@@ -19,7 +19,10 @@
       "WF": 25,
       "WG": 23,
       "WH": 20,
-      "WI": 42
+      "WI": 42,
+      "WJ": 115,
+      "WK": 39,
+      "WL": 19
     }
   },
   "groups": [
@@ -58,7 +61,194 @@
     {
       "code": "WI",
       "name": "Patient Mobile web"
+    },
+    {
+      "code": "WJ",
+      "name": "Quản trị agent (Next.js)"
+    },
+    {
+      "code": "WK",
+      "name": "Agent chăm sóc (Next.js)"
+    },
+    {
+      "code": "WL",
+      "name": "Đăng nhập, khung & mẫu tin (Next.js)"
     }
+  ],
+  "pending_nextjs": [
+    "WJ1",
+    "WJ2",
+    "WJ3",
+    "WJ4",
+    "WJ5",
+    "WJ6",
+    "WJ7",
+    "WJ8",
+    "WJ9",
+    "WJ10",
+    "WJ11",
+    "WJ12",
+    "WJ13",
+    "WJ14",
+    "WJ15",
+    "WJ16",
+    "WJ17",
+    "WJ18",
+    "WJ19",
+    "WJ20",
+    "WJ21",
+    "WJ22",
+    "WJ23",
+    "WJ24",
+    "WJ25",
+    "WJ26",
+    "WJ27",
+    "WJ28",
+    "WJ29",
+    "WJ30",
+    "WJ31",
+    "WJ32",
+    "WJ33",
+    "WJ34",
+    "WJ35",
+    "WJ36",
+    "WJ37",
+    "WJ38",
+    "WJ39",
+    "WJ40",
+    "WJ41",
+    "WJ42",
+    "WJ43",
+    "WJ44",
+    "WJ45",
+    "WJ46",
+    "WJ47",
+    "WJ48",
+    "WJ49",
+    "WJ50",
+    "WJ51",
+    "WJ52",
+    "WJ53",
+    "WJ54",
+    "WJ55",
+    "WJ56",
+    "WJ57",
+    "WJ58",
+    "WJ59",
+    "WJ60",
+    "WJ61",
+    "WJ62",
+    "WJ63",
+    "WJ64",
+    "WJ65",
+    "WJ66",
+    "WJ67",
+    "WJ68",
+    "WJ69",
+    "WJ70",
+    "WJ71",
+    "WJ72",
+    "WJ73",
+    "WJ74",
+    "WJ75",
+    "WJ76",
+    "WJ77",
+    "WJ78",
+    "WJ79",
+    "WJ80",
+    "WJ81",
+    "WJ82",
+    "WJ83",
+    "WJ84",
+    "WJ85",
+    "WJ86",
+    "WJ87",
+    "WJ88",
+    "WJ89",
+    "WJ90",
+    "WJ91",
+    "WJ92",
+    "WJ93",
+    "WJ94",
+    "WJ95",
+    "WJ96",
+    "WJ97",
+    "WJ98",
+    "WJ99",
+    "WJ100",
+    "WJ101",
+    "WJ102",
+    "WJ103",
+    "WJ104",
+    "WJ105",
+    "WJ106",
+    "WJ107",
+    "WJ108",
+    "WJ109",
+    "WJ110",
+    "WJ111",
+    "WJ112",
+    "WJ113",
+    "WJ114",
+    "WJ115",
+    "WK1",
+    "WK2",
+    "WK3",
+    "WK4",
+    "WK5",
+    "WK6",
+    "WK7",
+    "WK8",
+    "WK9",
+    "WK10",
+    "WK11",
+    "WK12",
+    "WK13",
+    "WK14",
+    "WK15",
+    "WK16",
+    "WK17",
+    "WK18",
+    "WK19",
+    "WK20",
+    "WK21",
+    "WK22",
+    "WK23",
+    "WK24",
+    "WK25",
+    "WK26",
+    "WK27",
+    "WK28",
+    "WK29",
+    "WK30",
+    "WK31",
+    "WK32",
+    "WK33",
+    "WK34",
+    "WK35",
+    "WK36",
+    "WK37",
+    "WK38",
+    "WK39",
+    "WL1",
+    "WL2",
+    "WL3",
+    "WL4",
+    "WL5",
+    "WL6",
+    "WL7",
+    "WL8",
+    "WL9",
+    "WL10",
+    "WL11",
+    "WL12",
+    "WL13",
+    "WL14",
+    "WL15",
+    "WL16",
+    "WL17",
+    "WL18",
+    "WL19"
   ],
   "screens": [
     {
@@ -4357,7 +4547,7 @@
       "kind": "page",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E1"
       ],
@@ -4382,7 +4572,7 @@
       "kind": "page",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "K1",
         "G3"
@@ -4408,7 +4598,7 @@
       "kind": "page",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E2",
         "K3"
@@ -4434,7 +4624,7 @@
       "kind": "page",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E3"
       ],
@@ -4459,7 +4649,7 @@
       "kind": "page",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E4",
         "G8"
@@ -4485,7 +4675,7 @@
       "kind": "page",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "G5"
       ],
@@ -4510,7 +4700,7 @@
       "kind": "page",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "G1"
       ],
@@ -4535,7 +4725,7 @@
       "kind": "page",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "G2"
       ],
@@ -4560,7 +4750,7 @@
       "kind": "page",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "K2",
         "G7"
@@ -4586,7 +4776,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E1"
       ],
@@ -4611,7 +4801,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E1"
       ],
@@ -4636,7 +4826,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E1"
       ],
@@ -4661,7 +4851,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E1"
       ],
@@ -4686,7 +4876,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E1"
       ],
@@ -4711,7 +4901,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E1"
       ],
@@ -4736,7 +4926,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E1"
       ],
@@ -4761,7 +4951,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E1"
       ],
@@ -4786,7 +4976,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E1"
       ],
@@ -4811,7 +5001,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E1"
       ],
@@ -4836,7 +5026,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E1"
       ],
@@ -4861,7 +5051,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E1"
       ],
@@ -4886,7 +5076,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "K1"
       ],
@@ -4911,7 +5101,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "K1",
         "G3"
@@ -4937,7 +5127,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E2",
         "K3"
@@ -4963,7 +5153,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E2",
         "K3"
@@ -4989,7 +5179,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E2"
       ],
@@ -5014,7 +5204,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E3"
       ],
@@ -5039,7 +5229,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E3",
         "G2"
@@ -5065,7 +5255,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "G1"
       ],
@@ -5090,7 +5280,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "G1"
       ],
@@ -5115,7 +5305,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "G2"
       ],
@@ -5140,7 +5330,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "G2"
       ],
@@ -5165,7 +5355,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "G2"
       ],
@@ -5190,7 +5380,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "G2"
       ],
@@ -5215,7 +5405,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "K2",
         "G7"
@@ -5241,7 +5431,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "K2"
       ],
@@ -5266,7 +5456,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "K2",
         "G7"
@@ -5292,7 +5482,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "G8",
         "E4"
@@ -5318,7 +5508,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "G8",
         "E4"
@@ -5344,7 +5534,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E4"
       ],
@@ -5369,7 +5559,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "E4",
         "G8"
@@ -5395,7 +5585,7 @@
       "kind": "state",
       "role": "owner-tam",
       "next_route": null,
-      "next_status": "none",
+      "next_status": "served by KMP/Zalo",
       "app_canvas": [
         "K1"
       ],

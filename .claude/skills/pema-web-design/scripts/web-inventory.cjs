@@ -87,6 +87,7 @@ function build() {
     frames: s.frames || FRAMES[s.kind],
     covers: s.covers || [],
     notes: s.notes || '',
+    ...(s.source ? { source: s.source } : {}),
     ...(s.viewport ? { viewport: s.viewport } : {}),
     ...(s.native ? { native: true, native_dialog: s.native } : {}),
   }));
@@ -108,12 +109,43 @@ function build() {
   };
 }
 
+// W7: the Next.js-only entries (source "nextjs") are not walked against the old web. They are checked statically:
+//   1. next_route is a page.tsx route of pema-agent/frontend/src/app (or "(app shell)");
+//   2. every page.tsx route of the front end is claimed by some entry's next_route or by a non_screens entry with
+//      `route`; /dev/kit is listed in non_screens as development-only.
+const FE_APP = path.join(REPO, 'pema-agent', 'frontend', 'src', 'app');
+
+function frontendRoutes() {
+  const routes = [];
+  const walk = (dir, segs) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (e.isDirectory()) walk(path.join(dir, e.name), /^\(.*\)$/.test(e.name) ? segs : [...segs, e.name]);
+      else if (e.name === 'page.tsx') routes.push('/' + segs.join('/'));
+    }
+  };
+  if (fs.existsSync(FE_APP)) walk(FE_APP, []);
+  return routes.sort();
+}
+
+function validateNextjs() {
+  const problems = [];
+  const routes = frontendRoutes();
+  const claimed = new Set([...catalog.screens.map((s) => s.next_route).filter(Boolean), ...catalog.non_screens.map((n) => n.route).filter(Boolean)]);
+  for (const s of catalog.screens.filter((x) => x.source === 'nextjs')) {
+    if (s.next_route !== '(app shell)' && !routes.includes(s.next_route)) problems.push(`${s.id}: next_route ${s.next_route} is not a page.tsx route of pema-agent/frontend`);
+    if (!s.expect || !s.expect.text) problems.push(`${s.id}: a Next.js entry needs expect.text`);
+    if (!s.notes) problems.push(`${s.id}: a Next.js entry needs notes (gate, tests, verbatim texts)`);
+  }
+  for (const r of routes) if (!claimed.has(r)) problems.push(`UNCLAIMED route ${r}: no inventory entry (next_route) and no non_screens entry (route) claims it`);
+  return problems;
+}
+
 function validateCatalog() {
   const problems = [];
   const ids = new Set();
   const groups = new Set(catalog.groups.map((g) => g.code));
   for (const s of catalog.screens) {
-    if (!/^W[A-I]\d+$/.test(s.id)) problems.push(`${s.id}: id must match ^W[A-I]\\d+$`);
+    if (!/^W[A-L]\d+$/.test(s.id)) problems.push(`${s.id}: id must match ^W[A-L]\\d+$`);
     if (ids.has(s.id)) problems.push(`${s.id}: duplicate id`);
     ids.add(s.id);
     if (!s.id.startsWith(s.group) || !groups.has(s.group)) problems.push(`${s.id}: group ${s.group} does not match`);
@@ -122,6 +154,7 @@ function validateCatalog() {
     if (s.native && !['confirm', 'prompt', 'print', 'download', 'select'].includes(s.native.type)) problems.push(`${s.id}: unknown native type`);
     if (s.native && s.kind !== 'state') problems.push(`${s.id}: native entries must be kind state`);
   }
+  problems.push(...validateNextjs());
   for (const g of catalog.groups) {
     const nums = catalog.screens.filter((s) => s.group === g.code).map((s) => Number(s.id.slice(2)));
     nums.forEach((n, i) => {
@@ -350,7 +383,9 @@ function runGuard(label) {
   const seen = new Set();
   let todoCount = 0;
   try {
-    const todo = ONLY.length ? catalog.screens.filter((s) => ONLY.includes(s.id)) : catalog.screens;
+    // Next.js-only entries (source "nextjs") are not reachable on the old web: they are validated statically (validateNextjs)
+    const walkable = catalog.screens.filter((s) => s.source !== 'nextjs');
+    const todo = ONLY.length ? walkable.filter((s) => ONLY.includes(s.id)) : walkable;
     todoCount = todo.length;
     const results = await pool(todo, POOL, (entry) => walkOne(browser, entry, inventory.role));
     for (const r of results) {
