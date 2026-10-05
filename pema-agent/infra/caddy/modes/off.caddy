@@ -1,0 +1,12 @@
+# TLS mode `off` (PEMA_PROXY_TLS=off): plain HTTP, for a link that is already encrypted end to end (Tailscale or
+# WireGuard only). Set PEMA_PUBLIC_DOMAIN to `http://<tailscale-ip-or-name>` (the http:// prefix turns TLS and the
+# redirect off), PEMA_PROXY_BIND to the Tailscale IP of this machine (never 0.0.0.0) and PEMA_SESSION_COOKIE_SECURE
+# to false: a Secure cookie is not sent over http, so the login would loop. Never use this on the public internet.
+
+(pema_tls) {
+	# empty on purpose: no TLS
+}
+
+(pema_hsts) {
+	# empty on purpose
+}

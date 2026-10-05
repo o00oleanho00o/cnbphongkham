@@ -77,14 +77,14 @@ MVP PB01 gồm patient identity, shared state, consent/audit shape, Patient 360,
 |---|---|---|
 | App shell, theme, navigation, các màn | `flutter-template/lib/app.dart`, `lib/core/`, `lib/features/*/presentation/screens/` | Material 3; named route qua `AppRouter`; `ref.watch` provider, ghi qua notifier |
 | CSKH mobile | `flutter-template/lib/features/customer_care/presentation/widgets/care_queue.dart` | Ba trạng thái, tìm kiếm, lọc nhóm trong sheet và mở tác vụ đúng patient |
-| Tài khoản mẫu | `flutter-template/assets/patients.json`, `prototype/export-native-patients.cjs` | Snapshot 46 hồ sơ/10 nhóm từ fresh fixture; kiểm đồng nhất bằng `--check` |
+| Tài khoản mẫu | `pema-kmp/shared/src/commonMain/composeResources/files/patients.json`, `prototype/export-native-patients.cjs` | Snapshot 46 hồ sơ/10 nhóm từ fresh fixture; kiểm đồng nhất bằng `--check` |
 | State và đơn hàng | `flutter-template/lib/features/*/presentation/providers/*.dart` (+ `*.g.dart` sinh tự động), model trong `domain/models/` | Riverpod `@riverpod`; catalog, session/selection, state theo patient + cart, order snapshot, receipt totals, finance; memory only trừ finance HTTP |
-| Catalog | `flutter-template/assets/products.json` | Bản sao `prototype/shared/product-catalog.json`; import Excel ở web trước rồi đồng bộ bundle |
+| Catalog | `pema-kmp/shared/src/commonMain/composeResources/files/products.json` | Bản sao `prototype/shared/product-catalog.json`; import Excel ở web trước rồi đồng bộ bundle |
 | Nhận diện | `flutter-template/assets/` | Logo, Be Vietnam Pro và giấy phép OFL; dùng chung ngôn ngữ thiết kế web |
 | Review shell | `prototype/native-review/index.html` | Chọn khung iframe; không sở hữu nghiệp vụ Flutter |
 | Build và kiểm tra | `flutter-template/build-preview.ps1`, `test/` | build_runner, build/copy preview và 39 test (template, finance, mobile roles, architecture, camera); generated output không sửa trực tiếp |
 
-Thứ tự phát triển sau duyệt: chốt identity + per-patient model → repository/API + persistence → phân quyền/audit → nghiệp vụ lịch/đơn/ledger/follow-up → plugin media/PDF/notification → device acceptance. Không thêm màn để che thiếu nền. Phân định web/native theo [ma trận parity](22_NATIVE_PARITY_AND_VALIDATION.md).
+Thứ tự phát triển sau duyệt: chốt identity + per-patient model → repository/API + persistence → phân quyền/audit → nghiệp vụ lịch/đơn/ledger/follow-up → plugin media/PDF/notification → device acceptance. Không thêm màn để che thiếu nền. Phân định web/native theo [trạng thái app mobile](../pema-kmp/README.md).
 
 ## Dependency order
 

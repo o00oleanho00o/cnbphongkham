@@ -36,21 +36,21 @@ Ngày chăm sóc mẫu cố định **20/09/2026**. Mỗi hồ sơ có task th�
 
 Trang chủ ưu tiên một bước tiếp theo, hành trình và lịch gần nhất; không lặp lại nhóm shortcut khi đã có việc ưu tiên. Không hiển thị nhãn rủi ro, ghi chú liên hệ hoặc activity nội bộ cho người bệnh. Identity Mobile riêng với selected của nhân viên. Nháp chưa duyệt vẫn bị ẩn; thu tiền không làm hoàn tất buổi điều trị.
 
-## Flutter Clinic / Care
+## App mobile Clinic / Care (`pema-kmp`)
 
-Ở header, mở bộ chọn không gian: Chủ phòng khám, Bác sĩ Tâm/Mai, CSKH Mai Anh, Kế toán, Người bệnh. Chủ giữ màn tổng quan; bác sĩ có công việc/hồ sơ phụ trách và doanh số cá nhân; CSKH có hàng đợi nhóm chăm sóc; kế toán có đối soát/thu ngân. Tài chính nhận vai trò từ workspace, không đổi sang chủ ngay trong màn tài chính. Chuông/nhắc thanh toán chỉ hiện cho chủ khi Clinic đang mở.
+Ở thanh trên, mở bộ chọn không gian: Chủ phòng khám, Bác sĩ Tâm/Mai, CSKH Mai Anh, Kế toán, Người bệnh. Chủ giữ màn tổng quan; bác sĩ có công việc/hồ sơ phụ trách và doanh số cá nhân; CSKH có hàng đợi nhóm chăm sóc; kế toán có đối soát/thu ngân. Tài chính nhận vai trò từ workspace, không đổi sang chủ ngay trong màn tài chính. Chuông/nhắc thanh toán chỉ hiện cho chủ khi Clinic đang mở.
 
 Care → Hồ sơ có bộ chọn 46 người bệnh và 10 nhóm tương ứng web. Tên/ID/case xuất từ fresh fixture bằng `node prototype/export-native-patients.cjs`; kiểm đồng nhất bằng `--check`. Đây là snapshot để duyệt, **không đồng bộ trạng thái CRM với browser web**.
 
 Lịch, note, số buổi, xác nhận, aftercare acknowledgment, giỏ/đơn đang sửa, cập nhật, phản hồi, ghi chú CSKH và bàn giao được lưu riêng theo patient ID trong bộ nhớ. Care và Clinic nhớ người bệnh đang chọn riêng. CSKH lưu kết quả liên hệ nội bộ, mở form hỗ trợ đặt lịch hoặc chuyển bác sĩ; bàn giao vào hàng chờ bác sĩ và không xuất hiện như tin nhắn người bệnh. Chỉ phản hồi do bác sĩ gửi mới hiện ở Care.
 
-Giới hạn: CRM Flutter là template với snapshot hàng đợi và trạng thái liên hệ trong phiên, chưa có rule engine động/idempotency task/SLA đầy đủ như web, chưa persistence/auth/sync clinical. Lịch vẫn chưa có engine xung đột thật. PB02 tài chính dùng API riêng, thông báo foreground; chưa FCM/APNs. Chưa kiểm Android/iOS thật, camera, bàn phím hệ thống hoặc in PDF native.
+Giới hạn: CRM trên app mobile là snapshot hàng đợi và trạng thái liên hệ trong phiên, chưa có rule engine động/idempotency task/SLA đầy đủ như web, chưa persistence/auth/sync clinical. Lịch vẫn chưa có engine xung đột thật. PB02 tài chính dùng API riêng, thông báo foreground; chưa FCM/APNs. Trạng thái kiểm trên thiết bị (Android, iOS, camera, in) ghi ở [pema-kmp/README.md](../pema-kmp/README.md).
 
 ## Kiểm chứng
 
 - `node prototype/mobile-crm-test.cjs`: link cũ/cùng shell, vai trò, 20 layout tài chính, 10 nhóm mobile, gửi đúng người bệnh, ẩn nội bộ, migration idempotent. [Kết quả và ảnh](../demo-assets/screenshots/mobile-crm02/results.json).
 - `node prototype/crm-test.cjs`, `crm-browser-test.cjs`, `operations-test.cjs`, `review-desktop.cjs` và API finance regression.
-- `flutter analyze`, `flutter test --reporter expanded`, build preview. Test mới ở `flutter-template/test/mobile_roles_test.dart`: 10 case/rules, state isolation và chuyển các vai trò ở 360/390/430/768 × 844.
+- App mobile: trong `pema-kmp` chạy `.\gradlew.bat jvmTest` (vai trò, state isolation, ảnh so sánh canvas) và `:androidApp:assembleDebug`.
 - Nghiệm thu từng lượt chạy và giới hạn evidence ghi ở `SECTION_PROGRESS.md`; test viewport không thay kiểm thiết bị thật.
 
 

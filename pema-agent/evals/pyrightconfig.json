@@ -1,0 +1,9 @@
+{
+  "include": ["."],
+  "exclude": ["**/__pycache__"],
+  "typeCheckingMode": "strict",
+  "pythonVersion": "3.12",
+  "venvPath": "../backend",
+  "venv": ".venv",
+  "extraPaths": ["..", "../backend/packages/contracts/src", "../backend/apps/api"]
+}

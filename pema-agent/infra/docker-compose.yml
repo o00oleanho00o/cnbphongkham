@@ -1,0 +1,410 @@
+# Pema Agent stack: postgres, redis, migrate, api, worker, frontend and the Node bridge.
+# ONE STACK = ONE CLINIC (single tenant, branch feat/single-tenant): its own postgres, redis, secrets, Zalo accounts and
+# domain. A second clinic is a second, completely separate stack (other `name:`/-p project, other .env, other host
+# ports, other volumes); see infra/README.md "One system, one clinic".
+# The LLM is a third-party API (LLM_PROVIDER / LLM_BASE_URL / LLM_API_KEY), as in zalo-agent.
+#
+#   default (no profile)  postgres, redis, migrate (one-shot), api
+#   profile worker        agent turns + scheduler + KB ingest (`python -m pema.workers.main`). Without it the
+#                         API answers webhooks and queues turns, but nobody runs them.
+#   profile frontend      Next.js dashboard (output: "standalone"; it forwards /api/v1 to PEMA_API_INTERNAL_URL, read at
+#                         RUNTIME, so one image serves any API address).
+#   profile proxy         Caddy reverse proxy (TLS, security headers) plus the dashboard behind it. The only service
+#                         that publishes 80/443. Run it with the override file docker-compose.proxy.yml, which turns
+#                         the loopback ports of api and frontend into `expose` (see infra/README.md, "Reverse proxy").
+#   profile bridge        Node zca-js bridge (personal Zalo account, risk of account lock). Internal only.
+#   profile ollama        TẠM TẮT LLM LOCAL (2026-10-02): the `ollama` and `ollama-pull` services are commented out
+#                         at the end of this file. Ollama with an NVIDIA GPU, or natively on the GPU PC
+#                         (see infra/ubuntu/HUONG-DAN-UBUNTU.md).
+#   profile app           worker + frontend together (convenience)
+#
+# Run from pema-agent/ (the Makefile does this):
+#   docker compose -f infra/docker-compose.yml --env-file infra/.env up -d
+#   docker compose -f infra/docker-compose.yml --env-file infra/.env --profile app up -d
+#
+# Network exposure: every published port binds to a loopback address by default. Change PEMA_*_BIND to a
+# Tailscale IP to reach a service from the other machine; never to 0.0.0.0 on a machine with a public IP.
+# (Docker publishes ports around ufw, so the bind address is the control that counts.)
+name: pema-agent
+
+x-backend-build: &backend-build
+  context: ..
+  dockerfile: infra/docker/api.Dockerfile
+
+# Variables every Python process reads (pema.config.env.Settings, prefix PEMA_). Inside the compose network
+# the hosts are service names, so the URLs are composed here from the passwords in .env, not copied from it.
+# The database URL is NOT here: each process gets only the role it may use (below). The worker must not hold
+# the `be_app` password, because its role (`agent_worker`) has no privilege on `clinic.*` on purpose.
+x-backend-env: &backend-env
+  PEMA_ENVIRONMENT: ${PEMA_ENVIRONMENT:-prod}
+  PEMA_LOG_LEVEL: ${PEMA_LOG_LEVEL:-INFO}
+  PEMA_LOG_FILE_ENABLED: ${PEMA_LOG_FILE_ENABLED:-false}
+  PEMA_LOG_FILE_KEEP_DAYS: ${PEMA_LOG_FILE_KEEP_DAYS:-14}
+  PEMA_DATA_DIR: /var/lib/pema
+  # The one clinic of this installation (single tenant). Name: shown in the dashboard, used only when the database has
+  # no clinic yet (the migration creates it once, never renames). Id: optional fixed installation id (UUID); empty =
+  # generated once by the migration and read from clinic.clinic afterwards.
+  PEMA_CLINIC_NAME: ${PEMA_CLINIC_NAME:-Pema Clinic}
+  PEMA_CLINIC_ID: ${PEMA_CLINIC_ID:-}
+  PEMA_BOT_TIMEZONE: ${PEMA_BOT_TIMEZONE:-Asia/Ho_Chi_Minh}
+  PEMA_REDIS_URL: redis://:${PEMA_REDIS_PASSWORD:?set it in infra/.env}@redis:6379/0
+  PEMA_JWT_SECRET: ${PEMA_JWT_SECRET:?set it in infra/.env}
+  PEMA_SECRET_ENCRYPTION_KEY: ${PEMA_SECRET_ENCRYPTION_KEY:?set it in infra/.env}
+  PEMA_ZALO_PERSONAL_ENABLED: ${PEMA_ZALO_PERSONAL_ENABLED:-false}
+  PEMA_ZALO_BRIDGE_URL: http://zalo-personal-bridge:8200
+  PEMA_ZALO_BRIDGE_SECRET: ${PEMA_ZALO_BRIDGE_SECRET:-}
+  # LLM endpoint seed (original unprefixed names; the dashboard value in agent.runtime_settings wins).
+  # Third-party API (OpenRouter, OpenAI, DeepSeek, a 9Router/LiteLLM router, Anthropic, Gemini): see .env.example.
+  LLM_PROVIDER: ${LLM_PROVIDER:-openai-compatible}
+  LLM_BASE_URL: ${LLM_BASE_URL:-}
+  LLM_API_KEY: ${LLM_API_KEY:-}
+  LLM_MODEL: ${LLM_MODEL:-}
+  # Zalo Bot API: `polling` (the worker listens) or `webhook` (the API listens; needs the public https URL).
+  PEMA_ZALO_BOT_MODE: ${PEMA_ZALO_BOT_MODE:-polling}
+  PEMA_ZALO_BOT_WEBHOOK_BASE_URL: ${PEMA_ZALO_BOT_WEBHOOK_BASE_URL:-}
+  # Knowledge-base embeddings (bge-m3 through an OpenAI-compatible endpoint). Off = keyword search only.
+  # TẠM TẮT LLM LOCAL (2026-10-02): bge-m3 runs on the local Ollama, so embeddings default to off (keyword
+  # search, as in zalo-agent). Re-enable: default `true` and uncomment the two lines below.
+  PEMA_EMBEDDING_ENABLED: ${PEMA_EMBEDDING_ENABLED:-false}
+  # PEMA_EMBEDDING_BASE_URL: ${PEMA_EMBEDDING_BASE_URL:-http://ollama:11434/v1}
+  # PEMA_EMBEDDING_MODEL: ${PEMA_EMBEDDING_MODEL:-bge-m3}
+  PEMA_CRM_RUNNER_INTERVAL_SECONDS: ${PEMA_CRM_RUNNER_INTERVAL_SECONDS:-900}
+
+# Data retention (pema.retention; the periods are the clinic owner's decision, defaults as in the code: 0 keeps
+# the group forever). Each process gets the groups of ITS scope: the API (role be_app) runs `clinic`, the worker
+# (role agent_worker) runs `agent`. Both get the cadence. TRACE_DAYS / MEDIA_DAYS empty = follow the dashboard
+# tuning keys AGENT_TRACE_RETENTION_DAYS / MEDIA_RETENTION_DAYS.
+x-retention-common-env: &retention-common-env
+  PEMA_RETENTION_INTERVAL_SECONDS: ${PEMA_RETENTION_INTERVAL_SECONDS:-86400}
+  PEMA_RETENTION_BATCH_SIZE: ${PEMA_RETENTION_BATCH_SIZE:-500}
+
+x-retention-clinic-env: &retention-clinic-env
+  PEMA_RETENTION_MESSAGE_DAYS: ${PEMA_RETENTION_MESSAGE_DAYS:-0}
+  PEMA_RETENTION_AUTH_SESSION_DAYS: ${PEMA_RETENTION_AUTH_SESSION_DAYS:-1}
+  PEMA_RETENTION_LINK_CODE_DAYS: ${PEMA_RETENTION_LINK_CODE_DAYS:-7}
+  PEMA_RETENTION_LINK_ATTEMPT_DAYS: ${PEMA_RETENTION_LINK_ATTEMPT_DAYS:-30}
+
+x-retention-agent-env: &retention-agent-env
+  PEMA_RETENTION_HISTORY_DAYS: ${PEMA_RETENTION_HISTORY_DAYS:-0}
+  PEMA_RETENTION_MEMORY_DAYS: ${PEMA_RETENTION_MEMORY_DAYS:-0}
+  PEMA_RETENTION_USAGE_DAYS: ${PEMA_RETENTION_USAGE_DAYS:-0}
+  PEMA_RETENTION_TRACE_DAYS: ${PEMA_RETENTION_TRACE_DAYS:-}
+  PEMA_RETENTION_MEDIA_DAYS: ${PEMA_RETENTION_MEDIA_DAYS:-}
+  PEMA_RETENTION_JOB_RUN_DAYS: ${PEMA_RETENTION_JOB_RUN_DAYS:-30}
+
+x-api-database: &api-database
+  PEMA_DATABASE_URL: postgresql+psycopg://be_app:${PEMA_BE_APP_PASSWORD:?set it in infra/.env}@postgres:5432/pema
+
+x-worker-database: &worker-database
+  PEMA_WORKER_DATABASE_URL: postgresql+psycopg://agent_worker:${PEMA_AGENT_WORKER_PASSWORD:?set it in infra/.env}@postgres:5432/pema
+
+services:
+  postgres:
+    image: pgvector/pgvector:${PEMA_PGVECTOR_TAG:-pg17}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${PEMA_PG_SUPERUSER_PASSWORD:?set it in infra/.env (see .env.example)}
+      POSTGRES_DB: pema
+      # data checksums catch silent disk corruption (relevant on a single clinic PC); scram for every TCP login.
+      # The local socket inside the container stays `trust` (image default): whoever can `docker exec` is
+      # already root on the host, and the backup/restore scripts rely on it.
+      POSTGRES_INITDB_ARGS: --data-checksums --auth-host=scram-sha-256
+    command:
+      - postgres
+      - -c
+      - shared_buffers=${PEMA_PG_SHARED_BUFFERS:-512MB}
+      - -c
+      - effective_cache_size=${PEMA_PG_EFFECTIVE_CACHE_SIZE:-1536MB}
+      - -c
+      - max_connections=100
+      - -c
+      - password_encryption=scram-sha-256
+    ports:
+      - "${PEMA_PG_BIND:-127.0.0.1}:${PEMA_PG_PORT:-5432}:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    shm_size: 256mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pema"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:${PEMA_REDIS_TAG:-7-alpine}
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${PEMA_REDIS_PASSWORD:?set it in infra/.env (see .env.example)}
+      REDISCLI_AUTH: ${PEMA_REDIS_PASSWORD:-}
+    # The password reaches redis-server through the environment, not through the compose command line,
+    # so it does not show up in `docker inspect` args. AOF on: the turn queue and thread locks survive a restart.
+    command:
+      - sh
+      - -c
+      - exec redis-server --requirepass "$$REDIS_PASSWORD" --appendonly yes --save 300 10 --maxmemory ${PEMA_REDIS_MAXMEMORY:-256mb} --maxmemory-policy noeviction
+    ports:
+      - "${PEMA_REDIS_BIND:-127.0.0.1}:${PEMA_REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # One-shot: create/refresh roles and passwords, then `alembic upgrade heads` as the owner role. The migration
+  # `st_0009_single_tenant` creates the ONE clinic row from PEMA_CLINIC_NAME / PEMA_CLINIC_ID on an empty database;
+  # the script then checks that clinic.clinic holds exactly one row and prints its name.
+  migrate:
+    build: *backend-build
+    image: pema-agent-api:${PEMA_IMAGE_TAG:-local}
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PEMA_MIGRATION_DATABASE_URL: postgresql+psycopg://postgres:${PEMA_PG_SUPERUSER_PASSWORD:?set it in infra/.env}@postgres:5432/pema
+      PEMA_BE_APP_PASSWORD: ${PEMA_BE_APP_PASSWORD:?set it in infra/.env}
+      PEMA_AGENT_WORKER_PASSWORD: ${PEMA_AGENT_WORKER_PASSWORD:?set it in infra/.env}
+      PEMA_CLINIC_NAME: ${PEMA_CLINIC_NAME:-Pema Clinic}
+      PEMA_CLINIC_ID: ${PEMA_CLINIC_ID:-}
+    command: ["/opt/pema/scripts/migrate.sh"]
+
+  api:
+    build: *backend-build
+    image: pema-agent-api:${PEMA_IMAGE_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    environment:
+      <<: [*backend-env, *api-database, *retention-common-env, *retention-clinic-env]
+      # Hard ceiling of a dashboard session counted from the login (1-30 days; out of range refuses to start).
+      PEMA_SESSION_ABSOLUTE_DAYS: ${PEMA_SESSION_ABSOLUTE_DAYS:-7}
+      # Client address for the login rate limit. X-Forwarded-For is believed ONLY when the TCP peer is one of
+      # PEMA_TRUSTED_PROXIES: by default the fixed address of the Caddy container on the `edge` network (below).
+      # Anyone else, including the frontend and the bridge, is taken at its socket address. See client_ip.py.
+      PEMA_DASHBOARD_BEHIND_PROXY: ${PEMA_DASHBOARD_BEHIND_PROXY:-true}
+      PEMA_TRUSTED_PROXIES: ${PEMA_TRUSTED_PROXIES:-${PEMA_PROXY_IP:-172.29.80.2}}
+      # The session cookie is Secure (browsers send it only over https; localhost counts as secure). Set false
+      # ONLY for the plain-HTTP-over-Tailscale mode (PEMA_PROXY_TLS=off), or the login loops.
+      PEMA_SESSION_COOKIE_SECURE: ${PEMA_SESSION_COOKIE_SECURE:-true}
+    networks:
+      - default
+      - edge
+    command:
+      - uvicorn
+      - --factory
+      - pema.bootstrap:create_app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --workers
+      - "1"
+      # behind tailscale serve / a reverse proxy
+      - --proxy-headers
+    ports:
+      - "${PEMA_API_BIND:-127.0.0.1}:${PEMA_API_PORT:-8000}:8000"
+    volumes:
+      - pema-data:/var/lib/pema
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3).status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+  # Agent turns, scheduler loop, KB ingest. Same image as the API. Talks to the LLM over HTTP only, so it can
+  # run on the server (LLM_BASE_URL points at the GPU PC over Tailscale) or on the GPU PC itself.
+  worker:
+    profiles: ["worker", "app"]
+    build: *backend-build
+    image: pema-agent-api:${PEMA_IMAGE_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    environment:
+      <<: [*backend-env, *worker-database, *retention-common-env, *retention-agent-env]
+    command: ["python", "-m", "pema.workers.main"]
+    volumes:
+      - pema-data:/var/lib/pema
+
+  frontend:
+    profiles: ["frontend", "app", "proxy"]
+    build:
+      context: ..
+      dockerfile: infra/docker/frontend.Dockerfile
+    image: pema-agent-frontend:${PEMA_IMAGE_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+      # Where the dashboard server forwards /api/v1 and /healthz. Read on every request (route handler), not at
+      # build time: change it here and `docker compose up -d frontend`, no rebuild.
+      PEMA_API_INTERNAL_URL: ${PEMA_API_INTERNAL_URL:-http://api:8000}
+    networks:
+      - default
+      - edge
+    ports:
+      - "${PEMA_FRONTEND_BIND:-127.0.0.1}:${PEMA_FRONTEND_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  # The one public door (TLS, security headers, body ceiling). Attached ONLY to `edge`, where only api and frontend
+  # are, so it cannot reach Postgres, Redis or the Zalo bridge even by mistake. Config: infra/caddy/ (the TLS mode
+  # file is chosen by PEMA_PROXY_TLS: auto | internal | off).
+  caddy:
+    profiles: ["proxy"]
+    image: caddy:${PEMA_CADDY_TAG:-2-alpine}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    environment:
+      PEMA_PUBLIC_DOMAIN: ${PEMA_PUBLIC_DOMAIN:-localhost}
+    networks:
+      edge:
+        ipv4_address: ${PEMA_PROXY_IP:-172.29.80.2}
+    # Loopback by default, like every other port. A public site needs PEMA_PROXY_BIND=0.0.0.0 (or the public IP):
+    # the certificate challenge and the visitors must reach 80 and 443.
+    ports:
+      - "${PEMA_PROXY_BIND:-127.0.0.1}:${PEMA_PROXY_HTTP_PORT:-80}:80"
+      - "${PEMA_PROXY_BIND:-127.0.0.1}:${PEMA_PROXY_HTTPS_PORT:-443}:443"
+      - "${PEMA_PROXY_BIND:-127.0.0.1}:${PEMA_PROXY_HTTPS_PORT:-443}:443/udp"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/modes/${PEMA_PROXY_TLS:-auto}.caddy:/etc/caddy/mode.caddy:ro
+      # certificates and the local CA: losing them means a new certificate request (rate limited by the CA)
+      - caddy-data:/data
+      - caddy-config:/config
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  zalo-personal-bridge:
+    profiles: ["bridge"]
+    build:
+      context: ..
+      dockerfile: infra/docker/bridge.Dockerfile
+    image: pema-agent-bridge:${PEMA_IMAGE_TAG:-local}
+    restart: unless-stopped
+    environment:
+      # Same flag as the API (default off): disabled, the bridge serves only GET /health and never loads zca-js.
+      PEMA_ZALO_PERSONAL_ENABLED: ${PEMA_ZALO_PERSONAL_ENABLED:-false}
+      # HMAC secret shared with the API (inbound events + outbound calls)
+      PEMA_ZALO_BRIDGE_SECRET: ${PEMA_ZALO_BRIDGE_SECRET:?set it when the bridge profile is on}
+      # Listen on every interface OF THE CONTAINER so the api service can reach it over the compose network.
+      # This is not exposure: the port is only `expose`d below, never published to the host.
+      PEMA_ZALO_BRIDGE_HOST: 0.0.0.0
+      PEMA_ZALO_BRIDGE_PORT: "8200"
+      # Events go to {base}/webhooks/zalo-bridge/{account_id} (no clinic segment: one installation = one clinic)
+      PEMA_API_BASE_URL: http://api:8000/api/v1
+      PEMA_BOT_TIMEZONE: ${PEMA_BOT_TIMEZONE:-Asia/Ho_Chi_Minh}
+      ZALO_BRIDGE_LOG_LEVEL: ${ZALO_BRIDGE_LOG_LEVEL:-info}
+    # Internal only: the API reaches it at http://zalo-personal-bridge:8200. Never publish this port.
+    expose:
+      - "8200"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8200/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+  # TẠM TẮT LLM LOCAL (2026-10-02): local LLM services. Re-enable: remove the leading `# ` of this block and
+  # of the `ollama-models` volume, then `make up-ollama`.
+  # ollama:
+  #   profiles: ["ollama"]
+  #   image: ollama/ollama:${PEMA_OLLAMA_TAG:-latest}
+  #   restart: unless-stopped
+  #   environment:
+  #     OLLAMA_HOST: 0.0.0.0:11434
+  #     OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-30m}
+  #     OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-2}
+  #     OLLAMA_MAX_LOADED_MODELS: ${OLLAMA_MAX_LOADED_MODELS:-2}
+  #     OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-16384}
+  #     OLLAMA_FLASH_ATTENTION: "1"
+  #     OLLAMA_KV_CACHE_TYPE: ${OLLAMA_KV_CACHE_TYPE:-q8_0}
+  #   # Needs the NVIDIA Container Toolkit on the host (see the Ubuntu guide). Without a GPU, drop this block.
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu]
+  #   ports:
+  #     - "${PEMA_OLLAMA_BIND:-127.0.0.1}:${PEMA_OLLAMA_PORT:-11434}:11434"
+  #   volumes:
+  #     - ollama-models:/root/.ollama
+  #   healthcheck:
+  #     test: ["CMD", "ollama", "list"]
+  #     interval: 15s
+  #     timeout: 10s
+  #     retries: 10
+  #     start_period: 20s
+  #
+  # # One-shot: download the chat and embedding models into the ollama volume.
+  # ollama-pull:
+  #   profiles: ["ollama"]
+  #   image: ollama/ollama:${PEMA_OLLAMA_TAG:-latest}
+  #   restart: "no"
+  #   depends_on:
+  #     ollama:
+  #       condition: service_healthy
+  #   environment:
+  #     OLLAMA_HOST: http://ollama:11434
+  #     PEMA_LLM_MODEL_PULL: ${PEMA_LLM_MODEL_PULL:-hf.co/Qwen/Qwen3-8B-GGUF:Q5_K_M}
+  #     PEMA_EMBED_MODEL_PULL: ${PEMA_EMBED_MODEL_PULL:-bge-m3}
+  #     OLLAMA_CONTEXT_LENGTH: ${OLLAMA_CONTEXT_LENGTH:-16384}
+  #   # Also creates the short alias `pema-chat` with an explicit num_ctx: without it Ollama loads the GGUF's own
+  #   # (very large) context and spills layers to the CPU on a 12 GB card (measured, see the Ubuntu guide).
+  #   entrypoint:
+  #     - /bin/sh
+  #     - -c
+  #     - |
+  #       set -e
+  #       ollama pull "$$PEMA_LLM_MODEL_PULL"
+  #       ollama pull "$$PEMA_EMBED_MODEL_PULL"
+  #       { echo "FROM $$PEMA_LLM_MODEL_PULL"; echo "PARAMETER num_ctx $$OLLAMA_CONTEXT_LENGTH"; } > /tmp/Modelfile
+  #       ollama create pema-chat -f /tmp/Modelfile
+
+# `default` joins postgres, redis, migrate, worker, the bridge and everything else (unchanged). `edge` is the only
+# network Caddy is on: api and frontend are on both, nothing else is on it. Its fixed subnet lets the API name the
+# proxy by address (PEMA_TRUSTED_PROXIES). Docker hands out the other containers' addresses only from `ip_range`
+# (the upper half), so the fixed address of Caddy (`.2`) can never be taken by api or frontend, whatever order they
+# start in. Change PEMA_PROXY_SUBNET, PEMA_PROXY_IP_RANGE and PEMA_PROXY_IP together if it collides with a network
+# of yours; the IP must be inside the subnet and outside the range.
+networks:
+  edge:
+    ipam:
+      config:
+        - subnet: ${PEMA_PROXY_SUBNET:-172.29.80.0/24}
+          ip_range: ${PEMA_PROXY_IP_RANGE:-172.29.80.128/25}
+
+volumes:
+  pg-data:
+  redis-data:
+  pema-data:
+  caddy-data:
+  caddy-config:
+  # ollama-models:  # TẠM TẮT LLM LOCAL (2026-10-02)

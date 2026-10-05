@@ -1,0 +1,196 @@
+// ported from: web/src/pages/agent-model-section.tsx
+"use client";
+
+import { useState } from "react";
+import type { Schemas } from "@/lib/api";
+import { kiemSoBuoc, kiemTranContext } from "@/lib/admin/agents/agent-field-validators";
+import { SelectMenu } from "@/components/admin/shared/select-menu";
+import {
+  AgentFormField,
+  AgentFormRow,
+  AgentFormSection,
+} from "@/components/admin/agents/agent-form-field";
+// Cùng danh sách mốc với trang Cấu hình (bản sao FE của tuning-number-presets, xem file đó).
+import { dangNhapTayCuaSo, MOC_CUA_SO_NGU_CANH } from "@/lib/admin/tuning/tuning-number-presets";
+
+type ReasoningEffort = Schemas["ReasoningEffort"];
+
+/** Mục cuối của menu cửa sổ ngữ cảnh - chọn nó thì hiện ô nhập số */
+const TUY_CHINH_CTX = "custom";
+
+export type AgentModelForm = {
+  /** "" = theo Cấu hình chung */
+  maxSteps: string;
+  /** "" = theo Cấu hình chung */
+  reasoningEffort: "" | ReasoningEffort;
+  /** "" = theo Cấu hình chung */
+  contextWindow: string;
+};
+
+const MUC_SUY_NGHI: { value: "" | ReasoningEffort; label: string }[] = [
+  { value: "", label: "Theo Cấu hình chung" },
+  { value: "off", label: "Tắt" },
+  { value: "low", label: "Thấp" },
+  { value: "medium", label: "Vừa" },
+  { value: "high", label: "Cao" },
+  { value: "xhigh", label: "Rất cao" },
+];
+
+/**
+ * Nhóm "Model" của trang sửa agent.
+ *
+ * Cả ba trường đều mang nghĩa "để trống = theo cấu hình chung", nên placeholder
+ * của mỗi ô ghi thẳng "theo Cấu hình" thay vì để trống trơn - nhìn ô rỗng mà
+ * không biết nó đang chạy theo cái gì là câu hỏi hay gặp nhất ở màn này.
+ *
+ * Nhà cung cấp và tên model KHÔNG còn đặt riêng được ở đây - xem lý do ở khối
+ * chú thích trong phần thân.
+ */
+export function AgentModelSection({
+  form,
+  onChange,
+}: {
+  form: AgentModelForm;
+  onChange: (patch: Partial<AgentModelForm>) => void;
+}) {
+  const loiSoBuoc = kiemSoBuoc(form.maxSteps);
+  const loiTran = kiemTranContext(form.contextWindow);
+  const [epNhapTayCtx, setEpNhapTayCtx] = useState(false);
+  // Luật chọn chế độ dùng CHUNG với trang Cấu hình - xem chú thích của hàm.
+  const nhapTayCtx = dangNhapTayCuaSo(MOC_CUA_SO_NGU_CANH, form.contextWindow, epNhapTayCtx);
+  return (
+    <AgentFormSection
+      title="Model"
+      hint="Để trống mọi ô ở đây thì agent chạy đúng cấu hình chung. Chỉ đặt riêng khi agent này cần giới hạn hoặc mức suy nghĩ khác phần còn lại. Nhà cung cấp và tên model luôn lấy từ trang Cấu hình."
+    >
+      {/*
+        Đã BỎ hai ô "Nhà cung cấp" và "Model".
+
+        Nhà cung cấp: mọi lựa chọn khác cấu hình chung đều bị khóa (đổi được thì
+        mới có nghĩa khi agent có API key riêng, mà chưa có) - một ô chọn chỉ
+        chọn được đúng thứ nó đang là thì chỉ tổ chiếm chỗ.
+
+        Model: bỏ theo luôn cho khỏi nửa vời - đặt tên model riêng trong khi nhà
+        cung cấp buộc phải theo chung là đường dễ ra 400 hơn là hữu ích.
+
+        Giá trị cũ trong DB được `thanhPatch` dọn: nó luôn gửi null cho hai cột
+        này, nên lần Lưu kế tiếp là sạch. Trang danh sách agent vẫn hiện badge
+        tên model nếu còn sót, đó là chỗ duy nhất thấy được.
+      */}
+      <AgentFormRow>
+        <AgentFormField
+          ngang
+          label="Số bước tối đa"
+          htmlFor="ag-d-steps"
+          hint="Một bước là một lần bot nói chuyện với model, có thể gọi nhiều công cụ cùng lúc. Bỏ trống là theo trang Cấu hình."
+        >
+          {/*
+            CỐ Ý dùng type="text" + inputMode numeric chứ không phải type="number".
+            Với type="number", trình duyệt tự nuốt ký tự rác thành chuỗi rỗng
+            (`e.target.value === ""`), mà rỗng ở đây MANG NGHĨA "theo Cấu hình
+            chung" - nên gõ nhầm một chữ là âm thầm xoá mất giới hạn bước của
+            agent, trong khi ô vẫn hiện chữ vừa gõ. Đổi sang text thì chữ rác ở
+            lại đúng chỗ và `loiSoBuoc` bắt được.
+          */}
+          {/* Đơn vị cùng dòng với ô nhập, khoảng giá trị xuống dòng dưới -
+              đúng nhịp của `TuningFieldControl` bên trang Cấu hình */}
+          <div className="flex items-center gap-2">
+            <input
+              id="ag-d-steps"
+              type="text"
+              inputMode="numeric"
+              className="gc-input w-32 shrink-0"
+              value={form.maxSteps}
+              onChange={(e) => onChange({ maxSteps: e.target.value })}
+              placeholder="theo Cấu hình"
+              aria-invalid={loiSoBuoc !== ""}
+            />
+            <span className="text-small whitespace-nowrap text-ink-soft">bước</span>
+          </div>
+          <div className="mt-1 text-micro whitespace-nowrap text-ink-soft/70">(1 - 30)</div>
+          {loiSoBuoc && <p className="mt-2 text-label text-danger">{loiSoBuoc}</p>}
+        </AgentFormField>
+      </AgentFormRow>
+
+      <AgentFormRow>
+        <AgentFormField
+          ngang
+          label="Cửa sổ ngữ cảnh (Context window)"
+          htmlFor="ag-d-ctx"
+          hint="Lượng token tối đa bot gửi đi trong MỘT lần gọi model. Đặt riêng khi agent này chạy model có cửa sổ khác, và đừng đặt lớn hơn cửa sổ thật của model đó. Bỏ trống là theo trang Cấu hình."
+        >
+          {/* `w-full` chứ KHÔNG đặt bề ngang cứng: cột phải của hàng này hẹp
+              hơn 20.5rem, đặt cứng là ô tràn khỏi thẻ và đẻ thanh cuộn ngang
+              cho cả trang - đã dính thật. Ô "Mức suy nghĩ" ngay dưới cũng
+              `w-full`, giữ cho hai ô thẳng mép. */}
+          <div className="w-full">
+            <SelectMenu
+              id={nhapTayCtx ? undefined : "ag-d-ctx"}
+              size="md"
+              value={nhapTayCtx ? TUY_CHINH_CTX : form.contextWindow}
+              options={[
+                { value: "", label: "Theo Cấu hình chung" },
+                ...MOC_CUA_SO_NGU_CANH.map((m) => ({
+                  value: String(m.value),
+                  label: m.label,
+                  hint: m.hint,
+                })),
+                { value: TUY_CHINH_CTX, label: "Tùy chỉnh" },
+              ]}
+              onChange={(v) => {
+                if (v === TUY_CHINH_CTX) {
+                  setEpNhapTayCtx(true);
+                  return;
+                }
+                setEpNhapTayCtx(false);
+                onChange({ contextWindow: v });
+              }}
+            />
+          </div>
+          {nhapTayCtx && (
+            <>
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  id="ag-d-ctx"
+                  type="text"
+                  inputMode="numeric"
+                  className="gc-input w-32 shrink-0"
+                  value={form.contextWindow}
+                  onChange={(e) => onChange({ contextWindow: e.target.value })}
+                  placeholder="theo Cấu hình"
+                  aria-invalid={loiTran !== ""}
+                />
+                <span className="text-small whitespace-nowrap text-ink-soft">token</span>
+              </div>
+              <div className="mt-1 text-micro whitespace-nowrap text-ink-soft/70">
+                (4.000 - 2.000.000)
+              </div>
+            </>
+          )}
+          {loiTran && <p className="mt-2 text-label text-danger">{loiTran}</p>}
+        </AgentFormField>
+      </AgentFormRow>
+
+      <AgentFormRow>
+        <AgentFormField
+          ngang
+          label="Mức suy nghĩ"
+          htmlFor="ag-d-effort"
+          hint="Nghĩ càng kỹ thì trả lời càng chắc nhưng chậm hơn và tốn token hơn. Việc đối chiếu số liệu, dò bảng nên để mức cao; trò chuyện thường để vừa là đủ."
+        >
+          <div className="w-full">
+            <SelectMenu
+              id="ag-d-effort"
+              size="md"
+              value={form.reasoningEffort}
+              options={MUC_SUY_NGHI.map((m) => ({ value: m.value, label: m.label }))}
+              onChange={(v) =>
+                onChange({ reasoningEffort: v as AgentModelForm["reasoningEffort"] })
+              }
+            />
+          </div>
+        </AgentFormField>
+      </AgentFormRow>
+    </AgentFormSection>
+  );
+}

@@ -1,11 +1,18 @@
 ---
 name: pema-web-to-canvas
-description: Compare the Pema web (Clinic Web, Patient Mobile web, Finance) with the claude.ai/design canvas "Pema App.dc.html" — starting from the web-changes.md log and the git diff since the sync baseline instead of re-scanning everything — find web screens/tabs/dialogs that are missing or changed, build them into the canvas using the Flutter mobile patterns, check the render, then push to claude.ai/design. Use when asked "check which web screens are missing from the design", "convert web templates to the Flutter design", "update the canvas from the web". Does not write .dart code.
+description: Compare the Pema web (Clinic Web, Patient Mobile web, Finance) with the claude.ai/design canvas "Pema App.dc.html" — starting from the web-changes.md log and the git diff since the sync baseline instead of re-scanning everything — find web screens/tabs/dialogs that are missing or changed, build them into the canvas using the mobile app patterns (blocks implemented in KMP `core:ui`), check the render, then push to claude.ai/design. Use when asked "check which web screens are missing from the design", "convert web templates to the mobile design", "update the canvas from the web". Does not write app code.
 ---
 
-# Pema web → Flutter design canvas
+> **Canonical skill (decision, package W2 step W12, 2026-10-05): not this one for the front end.** The canonical skill for "keep
+> the canvases in step with the front end" is `pema-web-design` (`.claude/skills/pema-web-design/SKILL.md`), because the Next.js
+> front end in `pema-agent/frontend` is now the product. This skill stays valid for its own job only: the **app** canvas
+> `Pema App.dc.html` (82 screens) and the log `web-changes.md` for changes of `prototype/` (legacy web); treat it as app-only /
+> legacy for anything about web canvases or the Next.js front end. The cross-index of app and web ids is
+> `design-specs/INDEX.md`. No script was deleted.
 
-The canvas `Pema App redesign canvas/Pema App.dc.html` is the mobile design of the Flutter template and the place where new screens are designed first. This skill adds web screens the canvas lacks, **at the design level only**. Flutter code (`flutter-template/lib/`) is not touched; if needed, do that separately following `AGENT.md` › "Flutter template rules".
+# Pema web → mobile design canvas
+
+The canvas `Pema App redesign canvas/Pema App.dc.html` is the design of the mobile app (`pema-kmp/`) and the place where new screens are designed first. This skill adds web screens the canvas lacks, **at the design level only**. App code is not touched; if needed, build the screen separately with the `pema-canvas-to-kmp-compose` skill.
 
 Read first: `AGENT.md` (synthetic data, Patient 360, AI drafts need doctor review) and `.agents/skills/pema-design/references/visual-system.md` (Pema colors, type, radius).
 
@@ -49,7 +56,7 @@ Compare the dump (per log entry, or full) with [references/coverage.md](referenc
 
 - **Covered**: the canvas has a screen with the same purpose **and** the same main fields/actions. A matching title is not enough; e.g. C6 is a reduced version, so the full CSKH form on the web still became I13.
 - **Missing**: a web page, tab, modal or dialog with actions or data the canvas does not show.
-- **Skip**: desktop-only parts (sidebar, demo account picker, calendar drag-and-drop) and Flutter-only screens (end of coverage.md).
+- **Skip**: desktop-only parts (sidebar, demo account picker, calendar drag-and-drop) and app-only screens (end of coverage.md).
 
 List for the user: web screen → why it is missing → planned canvas code, then continue. No need to stop for approval unless the scope is unusually large.
 
@@ -57,8 +64,8 @@ List for the user: web screen → why it is missing → planned canvas code, the
 
 Add data in the canvas `build()`, right before `const groups = [`. Block usage is in [references/blocks.md](references/blocks.md).
 
-- **Groups**: keep A–H intact (Flutter mirror). Append to I (Clinic operations), J (Patient 360), K (Pema Care), continuing the numbering (I14, J12…). Only open a new group (L…) for a genuinely new area; add it to `groups` and to the options of the `group` prop.
-- **Only use existing blocks**, so every screen can be built with existing Flutter widgets. Don't edit the HTML template unless a block is truly missing (see blocks.md).
+- **Groups**: keep A–H intact (core app screens). Append to I (Clinic operations), J (Patient 360), K (Pema Care), continuing the numbering (I14, J12…). Only open a new group (L…) for a genuinely new area; add it to `groups` and to the options of the `group` prop.
+- **Only use existing blocks**, so every screen can be built with existing KMP `core:ui` components. Don't edit the HTML template unless a block is truly missing (see blocks.md).
 - **Desktop to mobile** (per `pema-design`: child screens, short sheets, no desktop tables):
 
   | Web | Canvas |
@@ -99,6 +106,6 @@ Never delete remote files, never create `.design-sync/config.json`, never run th
 - The Docker viewer (localhost:4190) bundles the canvas at build time: `docker compose up -d --build pema-design-viewer`.
 - Update [references/coverage.md](references/coverage.md) (date, total screen count, new rows).
 - Update [web-changes.md](web-changes.md): move each finished entry from "Pending" to the top of "Done", adding `- Result: <canvas codes added/changed>, pushed/not pushed to claude.ai/design`. Change **Sync baseline** to the web commit you compared against (`git rev-parse --short HEAD`, or the commit created below if the web change is not committed yet). Leave unfinished entries under "Pending" with the reason. Rerun `pending.cjs`: it must report 0 pending entries and 0 `✗` files.
-- Per `AGENT.md` for UI-only changes: append a checkpoint to `SECTION_PROGRESS.md` (screens added, viewport 390×844, how it was checked). Don't record Flutter features as existing just because the canvas has the screen.
+- Per `AGENT.md` for UI-only changes: append a checkpoint to `SECTION_PROGRESS.md` (screens added, viewport 390×844, how it was checked). Don't record app features as existing just because the canvas has the screen.
 - `git diff --check`, then commit the canvas + coverage + web-changes files, e.g. `design: add web-only screens to Pema App canvas`. Never commit dumps or screenshots.
 - Report: screens added per group, the `check` result, pushed/not pushed to claude.ai/design, and what remains (e.g. the clickable `Pema Prototype.dc.html` doesn't have the new screens yet).

@@ -1,0 +1,199 @@
+// ported from: web/src/shared/select-menu.tsx
+"use client";
+
+import { useEffect, useId, useRef, useState, type ComponentType, type SVGProps } from "react";
+import { IconChevronDown } from "@/components/admin/shared/dashboard-icons";
+import { SelectMenuPopup } from "@/components/admin/shared/select-menu-popup";
+
+/**
+ * Dropdown tự dựng thay cho `<select>` native: popup của OS không style được
+ * (trên Windows ra highlight xanh hệ thống, phông chữ hệ thống, lệch hẳn với
+ * phần còn lại của UI). Đóng khi bấm ra ngoài hoặc Escape.
+ *
+ * Danh sách dài thì popup tự có ô tìm kiếm và tự cuộn - xem
+ * `select-menu-popup.tsx`. Đây là điều kiện để thay được ô chọn múi giờ: 418
+ * mục mà không tìm được thì cuộn tay còn tệ hơn `<select>` native (native ít
+ * nhất còn gõ chữ để nhảy tới).
+ */
+
+export type SelectOption = {
+  value: string;
+  label: string;
+  /** Chấm trạng thái bên trái, vd bg-success */
+  dotClass?: string;
+  /** Chữ phụ bên phải, vd "online" */
+  hint?: string;
+  /** Hiện ra nhưng không chọn được - dùng cho lựa chọn cần điều kiện chưa có */
+  disabled?: boolean;
+};
+
+type IconComponent = ComponentType<SVGProps<SVGSVGElement> & { size?: number }>;
+
+export function SelectMenu({
+  value,
+  options,
+  onChange,
+  ariaLabel,
+  id,
+  disabled,
+  icon: Icon,
+  size = "sm",
+  placeholder = "-",
+  prefix,
+}: {
+  value: string;
+  options: SelectOption[];
+  onChange: (value: string) => void;
+  ariaLabel?: string;
+  /** Gắn với `<label htmlFor>` - `button` là phần tử labelable, bấm nhãn là mở được menu */
+  id?: string;
+  disabled?: boolean;
+  /** Icon nằm trong ô, bên trái - cho ô mà nhãn không tự nói lên nó là gì (múi giờ) */
+  icon?: IconComponent;
+  /** "md" khớp cỡ chữ và padding của `.gc-input` để đứng cạnh ô nhập không bị lệch */
+  size?: "sm" | "md";
+  placeholder?: string;
+  /**
+   * Chữ mô tả đứng trước giá trị đang chọn, vd "Sắp xếp:". Chỉ hiện ở ô đóng,
+   * KHÔNG lẫn vào từng dòng trong popup - nhét vào `label` thì mở ra thấy
+   * "Sắp xếp:" lặp lại ở mọi dòng, và ô tìm trong popup phải gõ cả tiền tố mới
+   * khớp. Có tiền tố thì cả cụm thu về 13px: nhãn dài ra nên phải nhường chỗ.
+   */
+  prefix?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [moLen, setMoLen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const idPopup = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const raNgoai = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", raNgoai);
+    return () => document.removeEventListener("mousedown", raNgoai);
+  }, [open]);
+
+  function moMenu() {
+    // Đo TRƯỚC khi bung: popup cao tối đa ~300px, ô chọn nằm cuối trang mà cứ
+    // bung xuống thì danh sách chạy ra ngoài khung nhìn và người dùng phải cuộn
+    // cả trang mới thấy. Dưới không đủ chỗ mà trên rộng hơn thì bung ngược lên.
+    const o = rootRef.current?.getBoundingClientRect();
+    if (o) {
+      const duoi = window.innerHeight - o.bottom;
+      setMoLen(duoi < CAO_POPUP_UOC_LUONG && o.top > duoi);
+    }
+    setOpen(true);
+  }
+
+  const current = options.find((o) => o.value === value);
+  const md = size === "md";
+
+  return (
+    <div ref={rootRef} className="relative">
+      {Icon && (
+        <Icon
+          size={md ? 17 : 15}
+          className={`pointer-events-none absolute top-1/2 z-10 -translate-y-1/2 text-ink-soft ${
+            md ? "left-3.5" : "left-2.5"
+          } ${disabled ? "opacity-50" : ""}`}
+        />
+      )}
+      <button
+        id={id}
+        type="button"
+        disabled={disabled}
+        aria-label={ariaLabel}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => (open ? setOpen(false) : moMenu())}
+        onKeyDown={(e) => {
+          // Mở bằng mũi tên/Enter/Space như `<select>` native. Control tự dựng
+          // mà chỉ bấm được bằng chuột thì người dùng bàn phím kẹt hẳn.
+          if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            moMenu();
+          }
+        }}
+        className={`flex w-full items-center gap-2 rounded-control border bg-surface text-left text-ink transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+          // pr rộng hơn pl một nhịp: mũi tên sát mép ô trông như bị tràn ra
+          // ngoài viền, đây đúng là chỗ `<select>` native làm xấu nhất.
+          md ? "px-3 py-2 pr-3.5 text-body-lg" : "px-2.5 py-2 pr-3 text-small"
+        } ${Icon ? (md ? "pl-10" : "pl-8") : ""} ${
+          open ? "border-brand-500 ring-2 ring-brand-100 dark:ring-brand-200/60" : "border-line"
+        } ${disabled ? "" : "hover:bg-tile/50"}`}
+      >
+        {current?.dotClass && (
+          <span className={`h-2 w-2 shrink-0 rounded-full ${current.dotClass}`} />
+        )}
+        {/* `leading-[22px]`: chữ nhỏ đi nhưng ô phải cao y như `.gc-input` bên
+            cạnh, không thì ba control trên cùng một hàng lệch nhau vài pixel */}
+        {prefix && (
+          <span className="shrink-0 text-small leading-[22px] font-normal text-ink-soft">
+            {prefix}
+          </span>
+        )}
+        {/* Nhãn KHÔNG co (`shrink-0`), hint co hết phần thiếu. Ba bản trước
+            đều hỏng theo kiểu khác nhau, ghi lại để đừng quay vòng:
+
+            - `flex-1` trần (`flex:1 1 0%`): nhãn có phần gốc BẰNG 0 nên chỉ
+              nhận chỗ còn thừa. Ô 176px ra "1... phổ thông, an toàn".
+            - `flex-[1_1_auto]` + hint `shrink-[999]`: nhãn vẫn gánh 0,06% phần
+              co. Đo được hộp nhãn 61,46px trong khi chữ 61,49px - thiếu ĐÚNG
+              0,03px, mà `text-overflow` thì nuốt nguyên một chữ số cho khoản
+              đó: "128.000" hiện thành "128.00...". Sai lệch dưới 1px nên
+              `scrollWidth`/`clientWidth` làm tròn bằng nhau, đo bằng số nguyên
+              KHÔNG thấy - phải đo bằng `Range.getBoundingClientRect()`.
+
+            `grow` PHẢI giữ: nó là thứ đẩy MŨI TÊN ra sát mép phải của ô. Bản
+            vá chỉ để `shrink-0` (không `grow`) làm nhãn co về đúng bề rộng chữ,
+            mũi tên dính luôn vào sau chữ và bỏ trống cả khoảng bên phải - hỏng
+            ở MỌI dropdown trong app chứ không riêng ô này.
+
+            Tổ hợp cuối là `flex: 1 0 auto`: nở khi dư chỗ, không co khi thiếu.
+
+            `max-w-full` là lưới đỡ cho ca ngược lại: nhãn dài hơn cả ô thì
+            `shrink-0` sẽ đẩy nó tràn ra ngoài nút, trần này kéo nó về rồi
+            `truncate` lo phần thừa. */}
+        <span
+          className={`max-w-full min-w-0 shrink-0 grow basis-auto truncate ${
+            prefix ? "text-small leading-[22px] font-semibold" : "font-medium"
+          } ${current ? "" : "text-ink-soft"}`}
+        >
+          {current?.label ?? placeholder}
+        </span>
+        {/* Hint gánh TOÀN BỘ phần thiếu, co được tới 0. Đây là chú thích, mất
+            chữ thì vẫn còn tooltip `title`. Từng để `shrink-0` ở đây - hint
+            không co tí nào - làm nhãn "Tài khoản bot chính thức" bị cắt thành
+            "Tài khoản bot ..." trong drawer hẹp. */}
+        {current?.hint && (
+          <span className="min-w-0 shrink truncate text-micro text-ink-soft" title={current.hint}>
+            {current.hint}
+          </span>
+        )}
+        <IconChevronDown
+          size={md ? 17 : 15}
+          className={`shrink-0 text-ink-soft transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <SelectMenuPopup
+          options={options}
+          value={value}
+          idPopup={idPopup}
+          moLen={moLen}
+          onPick={(v) => {
+            onChange(v);
+            setOpen(false);
+          }}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+/** Ước lượng chiều cao popup lúc bung hết cỡ (ô tìm + danh sách max-h-64 + viền) */
+const CAO_POPUP_UOC_LUONG = 300;

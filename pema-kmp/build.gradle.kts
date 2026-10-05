@@ -29,7 +29,7 @@ val canvasRefs by tasks.registering(Exec::class) {
 
 /**
  * Per-screen conversion specs (`design-specs/screens/<ID>.md`, index, block catalog) built from the
- * canvas, the KMP/Flutter code and `design-specs/notes.json`; also served live by the `pema-design`
+ * canvas, the KMP code and `design-specs/notes.json`; also served live by the `pema-design`
  * MCP server. Cheap (no browser) and up to date while its inputs are unchanged.
  */
 val designSpecs by tasks.registering(Exec::class) {
@@ -40,7 +40,6 @@ val designSpecs by tasks.registering(Exec::class) {
     val specs = File(repo, "design-specs")
     inputs.files(fileTree(scripts), File(repo, "Pema App redesign canvas/Pema App.dc.html"), File(specs, "notes.json"))
     inputs.files(fileTree(rootDir) { include("**/*.kt"); exclude("**/build/**", "build-logic/**") })
-    inputs.files(fileTree(File(repo, "flutter-template/lib")) { include("**/*.dart") })
     outputs.dir(File(specs, "screens"))
     outputs.files(File(specs, "index.json"), File(specs, "INDEX.md"), File(specs, "BLOCKS.md"))
     onlyIf("script present") { File(scripts, "design-specs.cjs").exists() }

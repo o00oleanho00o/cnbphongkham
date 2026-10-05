@@ -1,11 +1,11 @@
 {
-  "canvasHash": "5ff2b84206e016c6",
+  "canvasHash": "a4091a5ee4871e7f",
   "canvas": "Pema App redesign canvas/Pema App.dc.html",
   "groups": [
     {
       "code": "A",
       "title": "Clinic · Chủ phòng khám",
-      "sub": "staffRole = owner · 5 tab · main.dart › Workspace",
+      "sub": "staffRole = owner · 5 tab · WorkspaceScreen",
       "count": 7
     },
     {
@@ -17,7 +17,7 @@
     {
       "code": "C",
       "title": "CSKH",
-      "sub": "staffRole = care · Mai Anh · care_workspace.dart › CareQueue",
+      "sub": "staffRole = care · Mai Anh · feature:care › CareQueue",
       "count": 6
     },
     {
@@ -35,7 +35,7 @@
     {
       "code": "F",
       "title": "Nghiệp vụ Clinic",
-      "sub": "main.dart › Detail(route) · góc nhìn chủ phòng khám",
+      "sub": "DetailScaffold(route) · góc nhìn chủ phòng khám",
       "count": 17
     },
     {
@@ -47,25 +47,25 @@
     {
       "code": "H",
       "title": "Tài chính",
-      "sub": "finance.dart › FinanceScreen, RateScreen, ProcedureForm",
+      "sub": "feature:finance › FinanceScreen, RateScreen, ProcedureFormScreen",
       "count": 9
     },
     {
       "code": "I",
       "title": "Vận hành Clinic · bổ sung từ web",
-      "sub": "prototype/clinic-web · chưa có trong Flutter · dựng lại theo mẫu mobile",
+      "sub": "prototype/clinic-web · dựng lại theo mẫu mobile",
       "count": 13
     },
     {
       "code": "J",
       "title": "Patient 360 đầy đủ · bổ sung từ web",
-      "sub": "clinic.js › patient360 tab & modal · chưa có trong Flutter",
+      "sub": "clinic.js › patient360 tab & modal",
       "count": 11
     },
     {
       "code": "K",
       "title": "Pema Care · bổ sung từ web",
-      "sub": "prototype/patient-mobile · màn web chưa có trong Flutter",
+      "sub": "prototype/patient-mobile",
       "count": 3
     }
   ],
@@ -80,9 +80,9 @@
       "role": "Clinic",
       "tab": "Hôm nay",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -102,7 +102,7 @@
         "shotTest": "pema-kmp/core/ui/src/jvmTest/kotlin/com/pema/clinic/core/ui/BlocksShotTest.kt:51",
         "shotImage": "pema-kmp/feature/workspace/build/shots/A1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/A1.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Clinic\", unread = 1)",
         "PemaBottomNav: Hôm nay* | Lịch hẹn | Hồ sơ | Theo dõi | Thêm"
@@ -143,7 +143,7 @@
         "Xem ảnh và phản hồi từ người bệnh"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`)."
       ],
       "rules": [
         "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
@@ -153,7 +153,8 @@
         "Real sample data (46 records) instead of illustrative names."
       ],
       "gotchas": [
-        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0."
+        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0.",
+        "The Workspace body is one `LazyColumn` for every tab/role (`ownerItems`/`staffItems`/`careItems` in WorkspaceGraph.kt): add blocks as `item { … }` and tiles with the `tile(...)` helper, never a scrolling `Column` + `forEach` (all rows were composed on each tab switch: ~2 s on a Redmi Note 9 debug build). The `LazyListState` is saved per tab (`rememberSaveable(role, tab)`), so each tab opens at its top and keeps its position after a pushed route."
       ],
       "todo": [],
       "status": "ported"
@@ -168,9 +169,9 @@
       "role": "Clinic",
       "tab": "Lịch hẹn",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -190,7 +191,7 @@
         "shotTest": "pema-kmp/core/ui/src/jvmTest/kotlin/com/pema/clinic/core/ui/BlocksShotTest.kt:80",
         "shotImage": "pema-kmp/feature/workspace/build/shots/A2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/A2.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Clinic\", unread = 1)",
         "PemaBottomNav: Hôm nay | Lịch hẹn* | Hồ sơ | Theo dõi | Thêm"
@@ -232,18 +233,19 @@
         "Đặt / dời lịch"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`)."
       ],
       "rules": [
         "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav.",
-        "Static WeekStrip like Flutter (`const WeekStrip`): tapping a day does nothing — correct 1:1."
+        "Static WeekStrip: tapping a day does nothing — intended."
       ],
       "differences": [
         "Real Pema logo instead of the canvas \"pema\" text.",
         "Real sample data (46 records) instead of illustrative names."
       ],
       "gotchas": [
-        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0."
+        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0.",
+        "The Workspace body is one `LazyColumn` for every tab/role (`ownerItems`/`staffItems`/`careItems` in WorkspaceGraph.kt): add blocks as `item { … }` and tiles with the `tile(...)` helper, never a scrolling `Column` + `forEach` (all rows were composed on each tab switch: ~2 s on a Redmi Note 9 debug build). The `LazyListState` is saved per tab (`rememberSaveable(role, tab)`), so each tab opens at its top and keeps its position after a pushed route."
       ],
       "todo": [],
       "status": "ported"
@@ -258,9 +260,9 @@
       "role": "Clinic",
       "tab": "Hồ sơ",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "patientSearchItems",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientSearch.kt"
       },
       "kmp": {
         "route": {
@@ -268,15 +270,15 @@
           "id": "workspace",
           "title": "Không gian làm việc"
         },
-        "composable": "PatientSearch",
+        "composable": "patientSearchItems",
         "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientSearch.kt",
         "module": "pema-kmp/feature/patients",
         "graph": [],
         "domain": [],
-        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:68",
+        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:67",
         "shotImage": "pema-kmp/feature/patients/build/shots/A3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/A3.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Clinic\", unread = 1)",
         "PemaBottomNav: Hôm nay | Lịch hẹn | Hồ sơ* | Theo dõi | Thêm"
@@ -329,8 +331,8 @@
         "P012 · Đang điều trị"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`).",
-        "Embeds `PatientSearch` from feature:patients (dependency exception, as in Flutter)."
+        "`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`).",
+        "Embeds PatientSearch from feature:patients (dependency exception) as lazy items: `rememberPatientSearchState(deps)` (saved query + rows filtered in `remember`) and `LazyListScope.patientSearchItems(state, onOpen)` (search field, then one `PemaTile` per profile keyed by its code). Same API for the staff \"Hồ sơ mẫu\" tab (B2, C5, D2)."
       ],
       "rules": [
         "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
@@ -340,7 +342,9 @@
         "Real sample data (46 records) instead of illustrative names."
       ],
       "gotchas": [
-        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0."
+        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0.",
+        "The Workspace body is one `LazyColumn` for every tab/role (`ownerItems`/`staffItems`/`careItems` in WorkspaceGraph.kt): add blocks as `item { … }` and tiles with the `tile(...)` helper, never a scrolling `Column` + `forEach` (all rows were composed on each tab switch: ~2 s on a Redmi Note 9 debug build). The `LazyListState` is saved per tab (`rememberSaveable(role, tab)`), so each tab opens at its top and keeps its position after a pushed route.",
+        "The owner sees all 46 profiles: keep the list lazy (only the ~7 on-screen tiles are composed). Measured on the emulator (debug build), first open went from 728 ms to 269 ms per tab switch; screenshots stayed pixel-identical."
       ],
       "todo": [],
       "status": "ported"
@@ -355,9 +359,9 @@
       "role": "Clinic",
       "tab": "Theo dõi",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -377,7 +381,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:77",
         "shotImage": "pema-kmp/feature/workspace/build/shots/A4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/A4.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Clinic\", unread = 1)",
         "PemaBottomNav: Hôm nay | Lịch hẹn | Hồ sơ | Theo dõi* | Thêm"
@@ -401,7 +405,7 @@
         "Hồ sơ mẫu · triệu chứng tăng"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`)."
       ],
       "rules": [
         "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
@@ -411,7 +415,8 @@
         "Real sample data (46 records) instead of illustrative names."
       ],
       "gotchas": [
-        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0."
+        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0.",
+        "The Workspace body is one `LazyColumn` for every tab/role (`ownerItems`/`staffItems`/`careItems` in WorkspaceGraph.kt): add blocks as `item { … }` and tiles with the `tile(...)` helper, never a scrolling `Column` + `forEach` (all rows were composed on each tab switch: ~2 s on a Redmi Note 9 debug build). The `LazyListState` is saved per tab (`rememberSaveable(role, tab)`), so each tab opens at its top and keeps its position after a pushed route."
       ],
       "todo": [],
       "status": "ported"
@@ -426,9 +431,9 @@
       "role": "Clinic",
       "tab": "Thêm",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -448,7 +453,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:88",
         "shotImage": "pema-kmp/feature/workspace/build/shots/A5-vs.png"
       },
-      "reference": "pema-kmp/design-ref/A5.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Clinic\", unread = 1)",
         "PemaBottomNav: Hôm nay | Lịch hẹn | Hồ sơ | Theo dõi | Thêm*"
@@ -490,7 +495,7 @@
         "Template tương tác • dữ liệu mẫu trong phiên. Chuyển Clinic/Care ở góc trên để duyệt bàn giao."
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`)."
       ],
       "rules": [
         "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
@@ -500,7 +505,8 @@
         "Real sample data (46 records) instead of illustrative names."
       ],
       "gotchas": [
-        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0."
+        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0.",
+        "The Workspace body is one `LazyColumn` for every tab/role (`ownerItems`/`staffItems`/`careItems` in WorkspaceGraph.kt): add blocks as `item { … }` and tiles with the `tile(...)` helper, never a scrolling `Column` + `forEach` (all rows were composed on each tab switch: ~2 s on a Redmi Note 9 debug build). The `LazyListState` is saved per tab (`rememberSaveable(role, tab)`), so each tab opens at its top and keeps its position after a pushed route."
       ],
       "todo": [],
       "status": "ported"
@@ -515,9 +521,9 @@
       "role": "Clinic",
       "tab": "Hôm nay",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -537,7 +543,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:93",
         "shotImage": "pema-kmp/feature/workspace/build/shots/A6-vs.png"
       },
-      "reference": "pema-kmp/design-ref/A6.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Clinic\", unread = 1)",
         "PemaBottomNav: Hôm nay* | Lịch hẹn | Hồ sơ | Theo dõi | Thêm",
@@ -593,7 +599,7 @@
         "Người bệnh · Pema Care"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`)."
+        "`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`)."
       ],
       "rules": [
         "The clinic owner has 5 tabs: \"Hôm nay\" / \"Lịch hẹn\" / \"Hồ sơ\" / \"Theo dõi\" / \"Thêm\". The bottom nav belongs to Workspace, not a global nav."
@@ -604,6 +610,7 @@
       ],
       "gotchas": [
         "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0.",
+        "The Workspace body is one `LazyColumn` for every tab/role (`ownerItems`/`staffItems`/`careItems` in WorkspaceGraph.kt): add blocks as `item { … }` and tiles with the `tile(...)` helper, never a scrolling `Column` + `forEach` (all rows were composed on each tab switch: ~2 s on a Redmi Note 9 debug build). The `LazyListState` is saved per tab (`rememberSaveable(role, tab)`), so each tab opens at its top and keeps its position after a pushed route.",
         "Don't nest `verticalScroll` inside `PemaBottomSheet`/`ModalBottomSheet` (crash); the scroll layer is in the overlay."
       ],
       "todo": [],
@@ -619,9 +626,9 @@
       "role": "Clinic",
       "tab": "Hôm nay",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -641,7 +648,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:121",
         "shotImage": "pema-kmp/feature/workspace/build/shots/A7-vs.png"
       },
-      "reference": "pema-kmp/design-ref/A7.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Clinic\", unread = 1)",
         "PemaBottomNav: Hôm nay* | Lịch hẹn | Hồ sơ | Theo dõi | Thêm",
@@ -683,7 +690,7 @@
         "Xem ảnh và phản hồi từ người bệnh"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › OwnerBody per tab; shell `App.kt` (NavHost, `_RouteGuard`, `PaymentAlerts`).",
+        "`WorkspaceScreen` (`feature/workspace/WorkspaceGraph.kt`) › owner body per tab; shell `App.kt` (NavHost, route guard, `PaymentAlerts`).",
         "`PaymentAlerts` wraps the whole app (feature:finance): SnackBar when the unread payment count increases, even on child screens; \"Xem\" opens Finance on the notifications tab (3)."
       ],
       "rules": [
@@ -694,7 +701,8 @@
         "Real sample data (46 records) instead of illustrative names."
       ],
       "gotchas": [
-        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0."
+        "The selected tab must be `rememberSaveable`: NavHost drops `remember` when pushing a child route, so coming back would reset to tab 0.",
+        "The Workspace body is one `LazyColumn` for every tab/role (`ownerItems`/`staffItems`/`careItems` in WorkspaceGraph.kt): add blocks as `item { … }` and tiles with the `tile(...)` helper, never a scrolling `Column` + `forEach` (all rows were composed on each tab switch: ~2 s on a Redmi Note 9 debug build). The `LazyListState` is saved per tab (`rememberSaveable(role, tab)`), so each tab opens at its top and keeps its position after a pushed route."
       ],
       "todo": [],
       "status": "ported"
@@ -709,9 +717,9 @@
       "role": "Bác sĩ",
       "tab": "Công việc",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -731,7 +739,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:104",
         "shotImage": "pema-kmp/feature/workspace/build/shots/B1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/B1.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Bác sĩ\")",
         "PemaBottomNav: Công việc* | Hồ sơ mẫu"
@@ -760,7 +768,7 @@
         "Lê Hoàng Yến"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › staffBody() (doctor)."
+        "`WorkspaceScreen` › staff body (doctor)."
       ],
       "rules": [
         "Doctors have 2 tabs (\"Công việc\", \"Hồ sơ mẫu\") and only see records they own (`Session.owns`)."
@@ -780,9 +788,9 @@
       "role": "Bác sĩ",
       "tab": "Hồ sơ mẫu",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "patientSearchItems",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientSearch.kt"
       },
       "kmp": {
         "route": {
@@ -790,15 +798,15 @@
           "id": "workspace",
           "title": "Không gian làm việc"
         },
-        "composable": "PatientSearch",
+        "composable": "patientSearchItems",
         "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientSearch.kt",
         "module": "pema-kmp/feature/patients",
         "graph": [],
         "domain": [],
-        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:84",
+        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:83",
         "shotImage": "pema-kmp/feature/patients/build/shots/B2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/B2.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Bác sĩ\")",
         "PemaBottomNav: Công việc | Hồ sơ mẫu*"
@@ -830,7 +838,7 @@
         "P011 · Đang điều trị"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › staffBody() (doctor)."
+        "`WorkspaceScreen` › staff body (doctor)."
       ],
       "rules": [
         "Doctors have 2 tabs (\"Công việc\", \"Hồ sơ mẫu\") and only see records they own (`Session.owns`)."
@@ -850,9 +858,9 @@
       "role": "CSKH",
       "tab": "Công việc",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "CareQueueContent",
+        "file": "pema-kmp/feature/care/src/commonMain/kotlin/com/pema/clinic/feature/care/CareQueue.kt"
       },
       "kmp": {
         "route": {
@@ -868,7 +876,7 @@
         "shotTest": "pema-kmp/feature/care/src/jvmTest/kotlin/com/pema/clinic/feature/care/CareShotsTest.kt:39",
         "shotImage": "pema-kmp/feature/care/build/shots/C1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/C1.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"CSKH\")",
         "PemaBottomNav: Công việc* | Hồ sơ mẫu"
@@ -933,7 +941,7 @@
         "P010 · BS. Mai"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
+        "CareQueue (`feature/care/CareQueue.kt`, state `shared/care/CareQueue.kt`) embedded in Workspace."
       ],
       "rules": [
         "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
@@ -955,9 +963,9 @@
       "role": "CSKH",
       "tab": "Công việc",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "CareQueueContent",
+        "file": "pema-kmp/feature/care/src/commonMain/kotlin/com/pema/clinic/feature/care/CareQueue.kt"
       },
       "kmp": {
         "route": {
@@ -973,7 +981,7 @@
         "shotTest": "pema-kmp/feature/care/src/jvmTest/kotlin/com/pema/clinic/feature/care/CareShotsTest.kt:59",
         "shotImage": "pema-kmp/feature/care/build/shots/C2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/C2.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"CSKH\")",
         "PemaBottomNav: Công việc* | Hồ sơ mẫu",
@@ -1056,7 +1064,7 @@
         "Ảnh tiến triển · D+3"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
+        "CareQueue (`feature/care/CareQueue.kt`, state `shared/care/CareQueue.kt`) embedded in Workspace."
       ],
       "rules": [
         "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
@@ -1078,9 +1086,9 @@
       "role": "CSKH",
       "tab": "Công việc",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "CareQueueContent",
+        "file": "pema-kmp/feature/care/src/commonMain/kotlin/com/pema/clinic/feature/care/CareQueue.kt"
       },
       "kmp": {
         "route": {
@@ -1096,7 +1104,7 @@
         "shotTest": "pema-kmp/feature/care/src/jvmTest/kotlin/com/pema/clinic/feature/care/CareShotsTest.kt:81",
         "shotImage": "pema-kmp/feature/care/build/shots/C3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/C3.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"CSKH\")",
         "PemaBottomNav: Công việc* | Hồ sơ mẫu"
@@ -1127,7 +1135,7 @@
         "P005 · BS. Tâm"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
+        "CareQueue (`feature/care/CareQueue.kt`, state `shared/care/CareQueue.kt`) embedded in Workspace."
       ],
       "rules": [
         "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
@@ -1149,9 +1157,9 @@
       "role": "CSKH",
       "tab": "Công việc",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "CareQueueContent",
+        "file": "pema-kmp/feature/care/src/commonMain/kotlin/com/pema/clinic/feature/care/CareQueue.kt"
       },
       "kmp": {
         "route": {
@@ -1167,7 +1175,7 @@
         "shotTest": "pema-kmp/feature/care/src/jvmTest/kotlin/com/pema/clinic/feature/care/CareShotsTest.kt:101",
         "shotImage": "pema-kmp/feature/care/build/shots/C4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/C4.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"CSKH\")",
         "PemaBottomNav: Công việc* | Hồ sơ mẫu"
@@ -1195,7 +1203,7 @@
         "Không có khách trong bộ lọc này"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
+        "CareQueue (`feature/care/CareQueue.kt`, state `shared/care/CareQueue.kt`) embedded in Workspace."
       ],
       "rules": [
         "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
@@ -1217,9 +1225,9 @@
       "role": "CSKH",
       "tab": "Hồ sơ mẫu",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "patientSearchItems",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientSearch.kt"
       },
       "kmp": {
         "route": {
@@ -1227,15 +1235,15 @@
           "id": "workspace",
           "title": "Không gian làm việc"
         },
-        "composable": "PatientSearch",
+        "composable": "patientSearchItems",
         "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientSearch.kt",
         "module": "pema-kmp/feature/patients",
         "graph": [],
         "domain": [],
-        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:99",
+        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:98",
         "shotImage": "pema-kmp/feature/patients/build/shots/C5-vs.png"
       },
-      "reference": "pema-kmp/design-ref/C5.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"CSKH\")",
         "PemaBottomNav: Công việc | Hồ sơ mẫu*"
@@ -1288,7 +1296,7 @@
         "P012 · Đang điều trị"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`."
+        "CareQueue (`feature/care/CareQueue.kt`, state `shared/care/CareQueue.kt`) embedded in Workspace."
       ],
       "rules": [
         "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet."
@@ -1310,9 +1318,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "CustomerCareContactScreen",
-        "file": "flutter-template/lib/features/customer_care/presentation/screens/customer_care_contact_screen.dart"
+        "kind": "kmp",
+        "class": "CustomerCareContactContent",
+        "file": "pema-kmp/feature/care/src/commonMain/kotlin/com/pema/clinic/feature/care/CareGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1330,7 +1338,7 @@
         "shotTest": "pema-kmp/feature/care/src/jvmTest/kotlin/com/pema/clinic/feature/care/CareShotsTest.kt:122",
         "shotImage": "pema-kmp/feature/care/build/shots/C6-vs.png"
       },
-      "reference": "pema-kmp/design-ref/C6.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Chăm sóc khách hàng\")  // back button, padding 20"
       ],
@@ -1359,8 +1367,8 @@
         "Chuyển bác sĩ xem"
       ],
       "logic": [
-        "Flutter `customer_care` › CareQueue (`care_queue_provider.dart`) embedded in Workspace; KMP `feature/care/CareQueue.kt`.",
-        "Link \"Ghi nhận CSKH đầy đủ\" → I13 (optional callback, hidden by default so the Flutter shot stays the same)."
+        "CareQueue (`feature/care/CareQueue.kt`, state `shared/care/CareQueue.kt`) embedded in Workspace.",
+        "Link \"Ghi nhận CSKH đầy đủ\" → I13 (optional callback, hidden by default so the C6 shot stays the same)."
       ],
       "rules": [
         "3 states: \"Chưa liên hệ\" / \"Đã liên hệ\" / \"Chờ bác sĩ\"; 10 CSKH groups filtered in a bottom sheet.",
@@ -1383,9 +1391,9 @@
       "role": "Kế toán",
       "tab": "Công việc",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1405,7 +1413,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:115",
         "shotImage": "pema-kmp/feature/workspace/build/shots/D1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/D1.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Kế toán\")",
         "PemaBottomNav: Công việc* | Hồ sơ mẫu"
@@ -1425,7 +1433,7 @@
         "Nguyễn Thu Hà"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › staffBody() (accountant)."
+        "`WorkspaceScreen` › staff body (accountant)."
       ],
       "rules": [
         "Accountants have 2 tabs; allowed routes: \"Thu ngân\", \"Hóa đơn\", \"Hướng dẫn\" (+ web: \"Thu ngân · hóa đơn\", \"Dịch vụ & tài chính\", \"Lịch sử hợp nhất\", \"Hồ sơ mới\")."
@@ -1445,9 +1453,9 @@
       "role": "Kế toán",
       "tab": "Hồ sơ mẫu",
       "source": {
-        "kind": "flutter",
-        "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "kind": "kmp",
+        "class": "patientSearchItems",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientSearch.kt"
       },
       "kmp": {
         "route": {
@@ -1455,15 +1463,15 @@
           "id": "workspace",
           "title": "Không gian làm việc"
         },
-        "composable": "PatientSearch",
+        "composable": "patientSearchItems",
         "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientSearch.kt",
         "module": "pema-kmp/feature/patients",
         "graph": [],
         "domain": [],
-        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:114",
+        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:113",
         "shotImage": "pema-kmp/feature/patients/build/shots/D2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/D2.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Kế toán\")",
         "PemaBottomNav: Công việc | Hồ sơ mẫu*"
@@ -1516,7 +1524,7 @@
         "P012 · Đang điều trị"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › staffBody() (accountant)."
+        "`WorkspaceScreen` › staff body (accountant)."
       ],
       "rules": [
         "Accountants have 2 tabs; allowed routes: \"Thu ngân\", \"Hóa đơn\", \"Hướng dẫn\" (+ web: \"Thu ngân · hóa đơn\", \"Dịch vụ & tài chính\", \"Lịch sử hợp nhất\", \"Hồ sơ mới\")."
@@ -1536,9 +1544,9 @@
       "role": "Care",
       "tab": "Trang chủ",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1558,7 +1566,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:124",
         "shotImage": "pema-kmp/feature/workspace/build/shots/E1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/E1.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Care\")",
         "PemaBottomNav: Trang chủ* | Hành trình | Tin nhắn | Hồ sơ"
@@ -1594,7 +1602,7 @@
         "Bác sĩ đã gửi hướng dẫn cho bạn"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › CareBody (careMode = true)."
+        "`WorkspaceScreen` › care body (care mode)."
       ],
       "rules": [
         "Patients have 4 tabs: \"Trang chủ\" / \"Hành trình\" / \"Tin nhắn\" / \"Hồ sơ\"; only care routes are allowed (`Session.allows`)."
@@ -1616,9 +1624,9 @@
       "role": "Care",
       "tab": "Hành trình",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1638,7 +1646,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:129",
         "shotImage": "pema-kmp/feature/workspace/build/shots/E2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/E2.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Care\")",
         "PemaBottomNav: Trang chủ | Hành trình* | Tin nhắn | Hồ sơ"
@@ -1665,7 +1673,7 @@
         "Đơn thuốc & tư vấn"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › CareBody (careMode = true)."
+        "`WorkspaceScreen` › care body (care mode)."
       ],
       "rules": [
         "Patients have 4 tabs: \"Trang chủ\" / \"Hành trình\" / \"Tin nhắn\" / \"Hồ sơ\"; only care routes are allowed (`Session.allows`)."
@@ -1687,9 +1695,9 @@
       "role": "Care",
       "tab": "Tin nhắn",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1709,7 +1717,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:144",
         "shotImage": "pema-kmp/feature/workspace/build/shots/E3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/E3.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Care\")",
         "PemaBottomNav: Trang chủ | Hành trình | Tin nhắn* | Hồ sơ"
@@ -1735,7 +1743,7 @@
         "Gửi cập nhật"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › CareBody (careMode = true)."
+        "`WorkspaceScreen` › care body (care mode)."
       ],
       "rules": [
         "Patients have 4 tabs: \"Trang chủ\" / \"Hành trình\" / \"Tin nhắn\" / \"Hồ sơ\"; only care routes are allowed (`Session.allows`)."
@@ -1757,9 +1765,9 @@
       "role": "Care",
       "tab": "Hồ sơ",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "WorkspaceScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/workspace_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1779,7 +1787,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:160",
         "shotImage": "pema-kmp/feature/workspace/build/shots/E4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/E4.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Care\")",
         "PemaBottomNav: Trang chủ | Hành trình | Tin nhắn | Hồ sơ*"
@@ -1810,7 +1818,7 @@
         "Hướng dẫn"
       ],
       "logic": [
-        "Flutter `workspace_screen.dart` › CareBody (careMode = true)."
+        "`WorkspaceScreen` › care body (care mode)."
       ],
       "rules": [
         "Patients have 4 tabs: \"Trang chủ\" / \"Hành trình\" / \"Tin nhắn\" / \"Hồ sơ\"; only care routes are allowed (`Session.allows`)."
@@ -1832,9 +1840,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "Patient360Screen",
-        "file": "flutter-template/lib/features/patients/presentation/screens/patient_360_screen.dart"
+        "kind": "kmp",
+        "class": "Patient360Route",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientsGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1849,10 +1857,10 @@
           "patientsGraph"
         ],
         "domain": [],
-        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:126",
+        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:125",
         "shotImage": "pema-kmp/feature/patients/build/shots/F1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F1.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Patient 360\")  // back button, padding 20"
       ],
@@ -1895,7 +1903,7 @@
         "Check-in người bệnh"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace.",
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace.",
         "The \"Patient 360 đầy đủ\" items (J1–J11) are added at the end, filtered by `Session.allows`."
       ],
       "rules": [],
@@ -1916,9 +1924,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "ConsultationScreen",
-        "file": "flutter-template/lib/features/patients/presentation/screens/consultation_screen.dart"
+        "kind": "kmp",
+        "class": "ConsultationRoute",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientsGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1933,10 +1941,10 @@
           "patientsGraph"
         ],
         "domain": [],
-        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:127",
+        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:126",
         "shotImage": "pema-kmp/feature/patients/build/shots/F2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F2.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tư vấn\")  // back button, padding 20"
       ],
@@ -1956,7 +1964,7 @@
         "Xem tóm tắt AI"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -1976,9 +1984,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "TreatmentSessionScreen",
-        "file": "flutter-template/lib/features/patients/presentation/screens/treatment_session_screen.dart"
+        "kind": "kmp",
+        "class": "TreatmentSessionRoute",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientsGraph.kt"
       },
       "kmp": {
         "route": {
@@ -1993,10 +2001,10 @@
           "patientsGraph"
         ],
         "domain": [],
-        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:128",
+        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:127",
         "shotImage": "pema-kmp/feature/patients/build/shots/F3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F3.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Buổi điều trị\")  // back button, padding 20"
       ],
@@ -2016,7 +2024,7 @@
         "Hoàn tất buổi"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2036,9 +2044,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "QuickOrderScreen",
-        "file": "flutter-template/lib/features/orders/presentation/screens/quick_order_screen.dart"
+        "file": "pema-kmp/feature/orders/src/commonMain/kotlin/com/pema/clinic/feature/orders/OrdersGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2056,7 +2064,7 @@
         "shotTest": "pema-kmp/feature/orders/src/jvmTest/kotlin/com/pema/clinic/feature/orders/OrdersShotTest.kt:13",
         "shotImage": "pema-kmp/feature/orders/build/shots/F4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F4.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Lên đơn nhanh\")  // back button, padding 20"
       ],
@@ -2093,7 +2101,7 @@
         "SP060 · Chai · 400.000 ₫\nCần phân loại"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2113,9 +2121,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "OrderReviewScreen",
-        "file": "flutter-template/lib/features/orders/presentation/screens/order_review_screen.dart"
+        "file": "pema-kmp/feature/orders/src/commonMain/kotlin/com/pema/clinic/feature/orders/OrdersGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2133,7 +2141,7 @@
         "shotTest": "pema-kmp/feature/orders/src/jvmTest/kotlin/com/pema/clinic/feature/orders/OrdersShotTest.kt:34",
         "shotImage": "pema-kmp/feature/orders/build/shots/F5-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F5.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Kiểm tra đơn\")  // back button, padding 20"
       ],
@@ -2163,7 +2171,7 @@
         "Bác sĩ duyệt đơn"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2183,9 +2191,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "PrescriptionsScreen",
-        "file": "flutter-template/lib/features/orders/presentation/screens/prescriptions_screen.dart"
+        "file": "pema-kmp/feature/orders/src/commonMain/kotlin/com/pema/clinic/feature/orders/OrdersGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2203,7 +2211,7 @@
         "shotTest": "pema-kmp/feature/orders/src/jvmTest/kotlin/com/pema/clinic/feature/orders/OrdersShotTest.kt:59",
         "shotImage": "pema-kmp/feature/orders/build/shots/F6-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F6.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Đơn thuốc & tư vấn\")  // back button, padding 20"
       ],
@@ -2231,7 +2239,7 @@
         "Xem bố cục hai phiếu A5"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2251,9 +2259,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "A5PrintPreviewScreen",
-        "file": "flutter-template/lib/features/orders/presentation/screens/a5_print_preview_screen.dart"
+        "file": "pema-kmp/feature/orders/src/commonMain/kotlin/com/pema/clinic/feature/orders/OrdersGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2271,7 +2279,7 @@
         "shotTest": "pema-kmp/feature/orders/src/jvmTest/kotlin/com/pema/clinic/feature/orders/OrdersShotTest.kt:71",
         "shotImage": "pema-kmp/feature/orders/build/shots/F7-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F7.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Phiếu A5\")  // back button, padding 20"
       ],
@@ -2294,7 +2302,7 @@
         "Mang theo phiếu này · Kiểm tra sản phẩm\nBác sĩ tư vấn"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2314,9 +2322,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "BookingScreen",
-        "file": "flutter-template/lib/features/schedule/presentation/screens/booking_screen.dart"
+        "file": "pema-kmp/feature/schedule/src/commonMain/kotlin/com/pema/clinic/feature/schedule/ScheduleGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2334,7 +2342,7 @@
         "shotTest": "pema-kmp/feature/schedule/src/jvmTest/kotlin/com/pema/clinic/feature/schedule/ScheduleShotsTest.kt:10",
         "shotImage": "pema-kmp/feature/schedule/build/shots/F8-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F8.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Đặt lịch\")  // back button, padding 20"
       ],
@@ -2377,7 +2385,7 @@
         "Xác nhận lịch"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2397,9 +2405,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "AppointmentDetailScreen",
-        "file": "flutter-template/lib/features/schedule/presentation/screens/appointment_detail_screen.dart"
+        "kind": "kmp",
+        "class": "AppointmentScreen",
+        "file": "pema-kmp/feature/schedule/src/commonMain/kotlin/com/pema/clinic/feature/schedule/ScheduleGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2417,7 +2425,7 @@
         "shotTest": "pema-kmp/feature/schedule/src/jvmTest/kotlin/com/pema/clinic/feature/schedule/ScheduleShotsTest.kt:28",
         "shotImage": "pema-kmp/feature/schedule/build/shots/F9-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F9.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Chi tiết lịch\")  // back button, padding 20"
       ],
@@ -2443,7 +2451,7 @@
         "Mở Patient 360"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2463,9 +2471,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FollowUpReplyScreen",
-        "file": "flutter-template/lib/features/aftercare/presentation/screens/follow_up_reply_screen.dart"
+        "file": "pema-kmp/feature/aftercare/src/commonMain/kotlin/com/pema/clinic/feature/aftercare/AftercareScreens.kt"
       },
       "kmp": {
         "route": {
@@ -2481,7 +2489,7 @@
         "shotTest": "pema-kmp/feature/aftercare/src/jvmTest/kotlin/com/pema/clinic/feature/aftercare/AftercareShotTest.kt:55",
         "shotImage": "pema-kmp/feature/aftercare/build/shots/F10-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F10.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Phản hồi\")  // back button, padding 20"
       ],
@@ -2505,7 +2513,7 @@
         "Duyệt và phản hồi"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace.",
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace.",
         "Shows photos sent by the patient (`PatientState.photos`) with `LocalPhoto`."
       ],
       "rules": [],
@@ -2526,9 +2534,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "CashierScreen",
-        "file": "flutter-template/lib/features/billing/presentation/screens/cashier_screen.dart"
+        "file": "pema-kmp/feature/billing/src/commonMain/kotlin/com/pema/clinic/feature/billing/BillingGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2546,7 +2554,7 @@
         "shotTest": "pema-kmp/feature/billing/src/jvmTest/kotlin/com/pema/clinic/feature/billing/BillingShotTest.kt:14",
         "shotImage": "pema-kmp/feature/billing/build/shots/F11-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F11.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Thu ngân\")  // back button, padding 20"
       ],
@@ -2569,7 +2577,7 @@
         "Lên đơn mới"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2589,9 +2597,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "CashierScreen",
-        "file": "flutter-template/lib/features/billing/presentation/screens/cashier_screen.dart"
+        "file": "pema-kmp/feature/billing/src/commonMain/kotlin/com/pema/clinic/feature/billing/BillingGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2609,7 +2617,7 @@
         "shotTest": "pema-kmp/feature/billing/src/jvmTest/kotlin/com/pema/clinic/feature/billing/BillingShotTest.kt:21",
         "shotImage": "pema-kmp/feature/billing/build/shots/F12-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F12.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Thu ngân\")  // back button, padding 20",
         "PemaBottomSheet(title = \"Xác nhận thu tiền\", sub = \"580.000 ₫\")",
@@ -2640,7 +2648,7 @@
         "Xác nhận tiền mặt"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2660,9 +2668,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "ServicesScreen",
-        "file": "flutter-template/lib/features/schedule/presentation/screens/services_screen.dart"
+        "file": "pema-kmp/feature/schedule/src/commonMain/kotlin/com/pema/clinic/feature/schedule/ScheduleGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2680,7 +2688,7 @@
         "shotTest": "pema-kmp/feature/schedule/src/jvmTest/kotlin/com/pema/clinic/feature/schedule/ScheduleShotsTest.kt:48",
         "shotImage": "pema-kmp/feature/schedule/build/shots/F13-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F13.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Dịch vụ\")  // back button, padding 20"
       ],
@@ -2705,7 +2713,7 @@
         "1.200.000 ₫ · 45 + 15 phút"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace.",
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace.",
         "The clinic owner also sees \"Chỉnh dịch vụ\" → I9 `service-edit?id=S<index>` (optional callback)."
       ],
       "rules": [],
@@ -2726,9 +2734,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "ResourcesScreen",
-        "file": "flutter-template/lib/features/schedule/presentation/screens/resources_screen.dart"
+        "file": "pema-kmp/feature/schedule/src/commonMain/kotlin/com/pema/clinic/feature/schedule/ScheduleGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2746,7 +2754,7 @@
         "shotTest": "pema-kmp/feature/schedule/src/jvmTest/kotlin/com/pema/clinic/feature/schedule/ScheduleShotsTest.kt:55",
         "shotImage": "pema-kmp/feature/schedule/build/shots/F14-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F14.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Bác sĩ & phòng\")  // back button, padding 20"
       ],
@@ -2772,7 +2780,7 @@
         "Laser & thủ thuật · Bảo trì 14:00–15:00 ngày 23/09. Khóa phòng phức tạp duyệt ở web."
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace.",
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace.",
         "The clinic owner also sees the \"Khóa thời gian phòng\" button → I8 (optional callback)."
       ],
       "rules": [],
@@ -2793,9 +2801,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "AskPemaScreen",
-        "file": "flutter-template/lib/features/patients/presentation/screens/ask_pema_screen.dart"
+        "kind": "kmp",
+        "class": "AskPemaRoute",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientsGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2810,10 +2818,10 @@
           "patientsGraph"
         ],
         "domain": [],
-        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:129",
+        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:128",
         "shotImage": "pema-kmp/feature/patients/build/shots/F15-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F15.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Ask Pema\")  // back button, padding 20"
       ],
@@ -2838,7 +2846,7 @@
         "Mở ghi chú để bác sĩ sửa"
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [],
       "differences": [],
@@ -2858,9 +2866,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "GuideScreen",
-        "file": "flutter-template/lib/features/workspace/presentation/screens/guide_screen.dart"
+        "file": "pema-kmp/feature/workspace/src/commonMain/kotlin/com/pema/clinic/feature/workspace/WorkspaceGraph.kt"
       },
       "kmp": {
         "route": {
@@ -2880,7 +2888,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:164",
         "shotImage": "pema-kmp/feature/workspace/build/shots/F16-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F16.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Hướng dẫn\")  // back button, padding 20"
       ],
@@ -2908,7 +2916,7 @@
         "Duyệt Clinic/Care qua nút góc trên. Thao tác mẫu lưu trong bộ nhớ, tải lại sẽ bắt đầu phiên mới."
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [
         "Unknown routes open GuideScreen(route) (fallback of `resolveRoute`)."
@@ -2930,9 +2938,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "_RouteGuard",
-        "file": "flutter-template/lib/core/router/app_router.dart"
+        "kind": "kmp",
+        "class": "DeniedScreen",
+        "file": "pema-kmp/composeApp/src/commonMain/kotlin/com/pema/clinic/App.kt"
       },
       "kmp": {
         "route": {
@@ -2948,7 +2956,7 @@
         "shotTest": "pema-kmp/composeApp/src/jvmTest/kotlin/com/pema/clinic/ShellShotTest.kt:11",
         "shotImage": "pema-kmp/composeApp/build/shots/F17-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F17.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Thu ngân\")  // back button, padding 20"
       ],
@@ -2962,7 +2970,7 @@
         "Tác vụ không thuộc không gian hiện tại. Quay lại để chọn đúng công việc."
       ],
       "logic": [
-        "Flutter `Detail(route)` via `AppRouter._screen(route)`; screens are pushed on top of Workspace."
+        "Detail routes registered by each feature graph in the `App.kt` NavHost; screens are pushed on top of Workspace."
       ],
       "rules": [
         "Permission-blocked screen (`_RouteGuard`): \"Tác vụ không thuộc không gian hiện tại. Quay lại để chọn đúng công việc.\"; KMP `DeniedScreen` in composeApp, route `Routes.denied(title)`."
@@ -2984,9 +2992,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "HomeCareScreen",
-        "file": "flutter-template/lib/features/aftercare/presentation/screens/home_care_screen.dart"
+        "file": "pema-kmp/feature/aftercare/src/commonMain/kotlin/com/pema/clinic/feature/aftercare/AftercareScreens.kt"
       },
       "kmp": {
         "route": {
@@ -3002,7 +3010,7 @@
         "shotTest": "pema-kmp/feature/aftercare/src/jvmTest/kotlin/com/pema/clinic/feature/aftercare/AftercareShotTest.kt:13",
         "shotImage": "pema-kmp/feature/aftercare/build/shots/G1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G1.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Chăm sóc tại nhà\")  // back button, padding 20"
       ],
@@ -3026,7 +3034,7 @@
         "Gửi cập nhật cho Pema"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only."
+        "Care-mode detail routes only (`Session.allows`)."
       ],
       "rules": [],
       "differences": [],
@@ -3044,9 +3052,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "SendUpdateScreen",
-        "file": "flutter-template/lib/features/aftercare/presentation/screens/send_update_screen.dart"
+        "file": "pema-kmp/feature/aftercare/src/commonMain/kotlin/com/pema/clinic/feature/aftercare/AftercareScreens.kt"
       },
       "kmp": {
         "route": {
@@ -3062,7 +3070,7 @@
         "shotTest": "pema-kmp/feature/aftercare/src/jvmTest/kotlin/com/pema/clinic/feature/aftercare/AftercareShotTest.kt:31",
         "shotImage": "pema-kmp/feature/aftercare/build/shots/G2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G2.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Gửi cập nhật\")  // back button, padding 20"
       ],
@@ -3088,7 +3096,7 @@
         "Gửi cập nhật"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only.",
+        "Care-mode detail routes only (`Session.allows`).",
         "Camera: `deps.platform.camera.capture()` (system camera app, no CAMERA permission), photo 1600px JPEG 85 with EXIF/GPS stripped in `cache/photos`."
       ],
       "rules": [
@@ -3113,9 +3121,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "AppointmentDetailScreen",
-        "file": "flutter-template/lib/features/schedule/presentation/screens/appointment_detail_screen.dart"
+        "kind": "kmp",
+        "class": "AppointmentScreen",
+        "file": "pema-kmp/feature/schedule/src/commonMain/kotlin/com/pema/clinic/feature/schedule/ScheduleGraph.kt"
       },
       "kmp": {
         "route": {
@@ -3133,7 +3141,7 @@
         "shotTest": "pema-kmp/feature/schedule/src/jvmTest/kotlin/com/pema/clinic/feature/schedule/ScheduleShotsTest.kt:62",
         "shotImage": "pema-kmp/feature/schedule/build/shots/G3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G3.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Lịch của tôi\")  // back button, padding 20"
       ],
@@ -3155,7 +3163,7 @@
         "Xác nhận tham dự"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only."
+        "Care-mode detail routes only (`Session.allows`)."
       ],
       "rules": [],
       "differences": [],
@@ -3173,9 +3181,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "TreatmentPlanScreen",
-        "file": "flutter-template/lib/features/patients/presentation/screens/treatment_plan_screen.dart"
+        "kind": "kmp",
+        "class": "TreatmentPlanRoute",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientsGraph.kt"
       },
       "kmp": {
         "route": {
@@ -3190,10 +3198,10 @@
           "patientsGraph"
         ],
         "domain": [],
-        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:130",
+        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:129",
         "shotImage": "pema-kmp/feature/patients/build/shots/G4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G4.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Kế hoạch điều trị\")  // back button, padding 20"
       ],
@@ -3223,7 +3231,7 @@
         "Xem chăm sóc tại nhà"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only."
+        "Care-mode detail routes only (`Session.allows`)."
       ],
       "rules": [],
       "differences": [],
@@ -3241,9 +3249,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "ProgressPhotosScreen",
-        "file": "flutter-template/lib/features/patients/presentation/screens/progress_photos_screen.dart"
+        "kind": "kmp",
+        "class": "ProgressPhotosRoute",
+        "file": "pema-kmp/feature/patients/src/commonMain/kotlin/com/pema/clinic/feature/patients/PatientsGraph.kt"
       },
       "kmp": {
         "route": {
@@ -3258,10 +3266,10 @@
           "patientsGraph"
         ],
         "domain": [],
-        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:131",
+        "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:130",
         "shotImage": "pema-kmp/feature/patients/build/shots/G5-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G5.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Ảnh tiến triển\")  // back button, padding 20"
       ],
@@ -3283,7 +3291,7 @@
         "Gửi ảnh cập nhật"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only.",
+        "Care-mode detail routes only (`Session.allows`).",
         "\"Trước\" = first photo (when there are ≥ 2 photos), \"Gần nhất\" = last photo, from `PatientState.photos`."
       ],
       "rules": [],
@@ -3302,9 +3310,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "PrescriptionsScreen",
-        "file": "flutter-template/lib/features/orders/presentation/screens/prescriptions_screen.dart"
+        "file": "pema-kmp/feature/orders/src/commonMain/kotlin/com/pema/clinic/feature/orders/OrdersGraph.kt"
       },
       "kmp": {
         "route": {
@@ -3322,7 +3330,7 @@
         "shotTest": "pema-kmp/feature/orders/src/jvmTest/kotlin/com/pema/clinic/feature/orders/OrdersShotTest.kt:84",
         "shotImage": "pema-kmp/feature/orders/build/shots/G6-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G6.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Đơn thuốc & tư vấn\")  // back button, padding 20"
       ],
@@ -3348,7 +3356,7 @@
         "1 Tuýp · Thoa mỗi sáng, thoa lại sau 2–3 giờ"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only."
+        "Care-mode detail routes only (`Session.allows`)."
       ],
       "rules": [],
       "differences": [],
@@ -3366,9 +3374,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "CashierScreen",
-        "file": "flutter-template/lib/features/billing/presentation/screens/cashier_screen.dart"
+        "file": "pema-kmp/feature/billing/src/commonMain/kotlin/com/pema/clinic/feature/billing/BillingGraph.kt"
       },
       "kmp": {
         "route": {
@@ -3386,7 +3394,7 @@
         "shotTest": "pema-kmp/feature/billing/src/jvmTest/kotlin/com/pema/clinic/feature/billing/BillingShotTest.kt:28",
         "shotImage": "pema-kmp/feature/billing/build/shots/G7-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G7.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Hóa đơn\")  // back button, padding 20"
       ],
@@ -3405,7 +3413,7 @@
         "DN-1"
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only."
+        "Care-mode detail routes only (`Session.allows`)."
       ],
       "rules": [],
       "differences": [],
@@ -3423,9 +3431,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "PrivacyScreen",
-        "file": "flutter-template/lib/features/aftercare/presentation/screens/privacy_screen.dart"
+        "file": "pema-kmp/feature/aftercare/src/commonMain/kotlin/com/pema/clinic/feature/aftercare/AftercareScreens.kt"
       },
       "kmp": {
         "route": {
@@ -3441,7 +3449,7 @@
         "shotTest": "pema-kmp/feature/aftercare/src/jvmTest/kotlin/com/pema/clinic/feature/aftercare/AftercareShotTest.kt:46",
         "shotImage": "pema-kmp/feature/aftercare/build/shots/G8-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G8.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Quyền riêng tư\")  // back button, padding 20"
       ],
@@ -3459,7 +3467,7 @@
         "Cài đặt đang được minh họa trong phiên duyệt."
       ],
       "logic": [
-        "Flutter `Detail(route, care: true)`; careMode routes only."
+        "Care-mode detail routes only (`Session.allows`)."
       ],
       "rules": [],
       "differences": [],
@@ -3477,9 +3485,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FinanceScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/finance_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/FinanceScreen.kt"
       },
       "kmp": {
         "route": {
@@ -3495,7 +3503,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:41",
         "shotImage": "pema-kmp/feature/finance/build/shots/H1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H1.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
@@ -3551,7 +3559,7 @@
         "Chính sách tỷ lệ thủ thuật"
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -3573,9 +3581,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FinanceScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/finance_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/FinanceScreen.kt"
       },
       "kmp": {
         "route": {
@@ -3591,7 +3599,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:47",
         "shotImage": "pema-kmp/feature/finance/build/shots/H2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H2.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
@@ -3623,7 +3631,7 @@
         "Tiền thủ thuật không phải lợi nhuận. Công nợ là toàn bộ số còn phải thu."
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -3645,9 +3653,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FinanceScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/finance_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/FinanceScreen.kt"
       },
       "kmp": {
         "route": {
@@ -3663,7 +3671,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:57",
         "shotImage": "pema-kmp/feature/finance/build/shots/H3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H3.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20",
         "PemaExtendedFab(\"Ghi lượt\")"
@@ -3744,7 +3752,7 @@
         "Chốt tháng đã kết thúc"
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -3766,9 +3774,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FinanceScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/finance_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/FinanceScreen.kt"
       },
       "kmp": {
         "route": {
@@ -3784,7 +3792,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:63",
         "shotImage": "pema-kmp/feature/finance/build/shots/H4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H4.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20",
         "PemaExtendedFab(\"Ghi lượt\")",
@@ -3866,7 +3874,7 @@
         "Chốt tháng đã kết thúc"
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -3888,9 +3896,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FinanceScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/finance_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/FinanceScreen.kt"
       },
       "kmp": {
         "route": {
@@ -3906,7 +3914,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:80",
         "shotImage": "pema-kmp/feature/finance/build/shots/H5-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H5.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
@@ -3947,7 +3955,7 @@
         "1.200.000 ₫"
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -3969,9 +3977,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FinanceScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/finance_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/FinanceScreen.kt"
       },
       "kmp": {
         "route": {
@@ -3987,7 +3995,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:86",
         "shotImage": "pema-kmp/feature/finance/build/shots/H6-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H6.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
@@ -4027,7 +4035,7 @@
         "Đồng bộ khi ứng dụng đang mở; push nền chưa được cấu hình."
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -4049,9 +4057,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "FinanceScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/finance_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/FinanceScreen.kt"
       },
       "kmp": {
         "route": {
@@ -4067,7 +4075,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:92",
         "shotImage": "pema-kmp/feature/finance/build/shots/H7-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H7.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
@@ -4088,7 +4096,7 @@
         "Thử lại"
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\".",
@@ -4111,9 +4119,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
+        "kind": "kmp",
         "class": "RateScreen",
-        "file": "flutter-template/lib/features/finance/presentation/screens/rate_screen.dart"
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/RateScreen.kt"
       },
       "kmp": {
         "route": {
@@ -4129,7 +4137,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:105",
         "shotImage": "pema-kmp/feature/finance/build/shots/H8-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H8.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Chính sách thủ thuật\")  // back button, padding 20"
       ],
@@ -4153,7 +4161,7 @@
         "5.0% · collected · phiên bản 1"
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -4175,9 +4183,9 @@
       "role": "",
       "tab": "",
       "source": {
-        "kind": "flutter",
-        "class": "ProcedureForm",
-        "file": "flutter-template/lib/features/finance/presentation/screens/procedure_form_screen.dart"
+        "kind": "kmp",
+        "class": "ProcedureFormScreen",
+        "file": "pema-kmp/feature/finance/src/commonMain/kotlin/com/pema/clinic/feature/finance/ProcedureFormScreen.kt"
       },
       "kmp": {
         "route": {
@@ -4193,7 +4201,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:111",
         "shotImage": "pema-kmp/feature/finance/build/shots/H9-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H9.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Ghi lượt đã thực hiện\")  // back button, padding 20"
       ],
@@ -4249,7 +4257,7 @@
         "Ghi nhận • Chờ kế toán duyệt"
       ],
       "logic": [
-        "Flutter `finance.dart` › FinanceScreen / RateScreen / ProcedureForm; KMP `feature/finance`, `FinanceStore` (polling)."
+        "`feature/finance` › FinanceScreen / RateScreen / ProcedureFormScreen; `FinanceStore` (polling)."
       ],
       "rules": [
         "Calls the finance API `http://127.0.0.1:4174` (`python prototype/finance_server.py`, `adb reverse tcp:4174 tcp:4174`). API down → error screen + \"Thử lại\"."
@@ -4307,7 +4315,7 @@
         "shotTest": "pema-kmp/feature/operations/src/jvmTest/kotlin/com/pema/clinic/feature/operations/OperationsShotTest.kt:14",
         "shotImage": "pema-kmp/feature/operations/build/shots/I1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I1.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tổng quan\")  // back button, padding 20"
       ],
@@ -4421,7 +4429,7 @@
         "shotTest": "pema-kmp/feature/operations/src/jvmTest/kotlin/com/pema/clinic/feature/operations/OperationsShotTest.kt:21",
         "shotImage": "pema-kmp/feature/operations/build/shots/I2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I2.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tiếp đón hôm nay\")  // back button, padding 20",
         "PemaExtendedFab(\"Đặt lịch mới\")"
@@ -4535,7 +4543,7 @@
         "shotTest": "pema-kmp/feature/operations/src/jvmTest/kotlin/com/pema/clinic/feature/operations/OperationsShotTest.kt:28",
         "shotImage": "pema-kmp/feature/operations/build/shots/I3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I3.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Điều phối theo phòng\")  // back button, padding 20"
       ],
@@ -4591,7 +4599,7 @@
       ],
       "differences": [
         "Web seed data (DAY = 2026-09-20, P001 Nguyễn Minh Linh) instead of the canvas's illustrative names/dates.",
-        "Unlike Flutter A2, this WeekStrip can pick a day (7 days seeded from DAY, weekday labels computed from real dates)."
+        "Unlike A2, this WeekStrip can pick a day (7 days seeded from DAY, weekday labels computed from real dates)."
       ],
       "gotchas": [],
       "todo": [],
@@ -4643,7 +4651,7 @@
         "shotTest": "pema-kmp/feature/operations/src/jvmTest/kotlin/com/pema/clinic/feature/operations/OperationsShotTest.kt:35",
         "shotImage": "pema-kmp/feature/operations/build/shots/I4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I4.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Đặt lịch hẹn\")  // back button, padding 20"
       ],
@@ -4734,7 +4742,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/ClinicToolsShotTest.kt:13",
         "shotImage": "pema-kmp/feature/patients/build/shots/I5-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I5.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Hồ sơ mới\")  // back button, padding 20"
       ],
@@ -4805,7 +4813,7 @@
         "shotTest": "pema-kmp/feature/aftercare/src/jvmTest/kotlin/com/pema/clinic/feature/aftercare/FollowUpInboxShotTest.kt:13",
         "shotImage": "pema-kmp/feature/aftercare/build/shots/I6-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I6.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Follow-up Inbox\")  // back button, padding 20"
       ],
@@ -4891,7 +4899,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/ClinicToolsShotTest.kt:27",
         "shotImage": "pema-kmp/feature/patients/build/shots/I7-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I7.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Ảnh trước / sau\")  // back button, padding 20"
       ],
@@ -4988,7 +4996,7 @@
         "shotTest": "pema-kmp/feature/operations/src/jvmTest/kotlin/com/pema/clinic/feature/operations/OperationsShotTest.kt:54",
         "shotImage": "pema-kmp/feature/operations/build/shots/I8-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I8.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Khóa thời gian phòng\")  // back button, padding 20"
       ],
@@ -5084,7 +5092,7 @@
         "shotTest": "pema-kmp/feature/operations/src/jvmTest/kotlin/com/pema/clinic/feature/operations/OperationsShotTest.kt:72",
         "shotImage": "pema-kmp/feature/operations/build/shots/I9-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I9.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Chỉnh dịch vụ\")  // back button, padding 20"
       ],
@@ -5168,7 +5176,7 @@
         "shotTest": "pema-kmp/feature/billing/src/jvmTest/kotlin/com/pema/clinic/feature/billing/InvoiceCashierShotTest.kt:13",
         "shotImage": "pema-kmp/feature/billing/build/shots/I10-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I10.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Thu ngân · hóa đơn\")  // back button, padding 20"
       ],
@@ -5269,7 +5277,7 @@
         "shotTest": "pema-kmp/feature/billing/src/jvmTest/kotlin/com/pema/clinic/feature/billing/InvoiceCashierShotTest.kt:20",
         "shotImage": "pema-kmp/feature/billing/build/shots/I11-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I11.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Thu ngân · hóa đơn\")  // back button, padding 20",
         "PemaBottomSheet(title = \"Thu tiền · Nguyễn Thu Hà\", sub = \"HD-DEMO-001 · Còn lại 150.000 ₫\")",
@@ -5386,7 +5394,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/ClinicToolsShotTest.kt:42",
         "shotImage": "pema-kmp/feature/patients/build/shots/I12-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I12.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Ask Pema · hỏi đáp\")  // back button, padding 20"
       ],
@@ -5467,7 +5475,7 @@
         "shotTest": "pema-kmp/feature/care/src/jvmTest/kotlin/com/pema/clinic/feature/care/CareRecordShotTest.kt:19",
         "shotImage": "pema-kmp/feature/care/build/shots/I13-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I13.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Ghi nhận CSKH\")  // back button, padding 20"
       ],
@@ -5565,7 +5573,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360ClinicalShotTest.kt:19",
         "shotImage": "pema-kmp/feature/patients/build/shots/J1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J1.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tiền sử & chẩn đoán\")  // back button, padding 20"
       ],
@@ -5654,7 +5662,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360ClinicalShotTest.kt:43",
         "shotImage": "pema-kmp/feature/patients/build/shots/J2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J2.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"AI brief trước buổi hẹn\")  // back button, padding 20"
       ],
@@ -5737,7 +5745,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360ClinicalShotTest.kt:57",
         "shotImage": "pema-kmp/feature/patients/build/shots/J3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J3.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Kế hoạch điều trị\")  // back button, padding 20"
       ],
@@ -5795,7 +5803,7 @@
         "Web seed data instead of illustrative names/dates."
       ],
       "gotchas": [
-        "Title clashes with Flutter \"Kế hoạch điều trị\": route `Routes.PlanOverview` has the unique key \"Kế hoạch điều trị · Clinic\", the app bar title comes from `Routes.appBarTitleOf`."
+        "Title clashes with the existing \"Kế hoạch điều trị\" route: route `Routes.PlanOverview` has the unique key \"Kế hoạch điều trị · Clinic\", the app bar title comes from `Routes.appBarTitleOf`."
       ],
       "todo": [],
       "status": "ported"
@@ -5841,7 +5849,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360ClinicalShotTest.kt:64",
         "shotImage": "pema-kmp/feature/patients/build/shots/J4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J4.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Điều chỉnh kế hoạch\")  // back button, padding 20"
       ],
@@ -5920,7 +5928,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360ClinicalShotTest.kt:78",
         "shotImage": "pema-kmp/feature/patients/build/shots/J5-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J5.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Ghi buổi điều trị\")  // back button, padding 20"
       ],
@@ -6019,7 +6027,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360AdminShotTest.kt:13",
         "shotImage": "pema-kmp/feature/patients/build/shots/J6-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J6.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Dịch vụ & tài chính\")  // back button, padding 20"
       ],
@@ -6116,7 +6124,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360AdminShotTest.kt:15",
         "shotImage": "pema-kmp/feature/patients/build/shots/J7-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J7.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"CRM & CSKH hồ sơ\")  // back button, padding 20"
       ],
@@ -6213,7 +6221,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360AdminShotTest.kt:17",
         "shotImage": "pema-kmp/feature/patients/build/shots/J8-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J8.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Lịch sử hợp nhất\")  // back button, padding 20"
       ],
@@ -6296,7 +6304,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360AdminShotTest.kt:19",
         "shotImage": "pema-kmp/feature/patients/build/shots/J9-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J9.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Nhắn tin người bệnh\")  // back button, padding 20"
       ],
@@ -6371,7 +6379,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360AdminShotTest.kt:21",
         "shotImage": "pema-kmp/feature/patients/build/shots/J10-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J10.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Thông tin cần nhớ\")  // back button, padding 20"
       ],
@@ -6444,7 +6452,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360AdminShotTest.kt:23",
         "shotImage": "pema-kmp/feature/patients/build/shots/J11-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J11.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Gửi chăm sóc tại nhà\")  // back button, padding 20"
       ],
@@ -6484,13 +6492,13 @@
       "name": "Lịch hẹn",
       "group": "K",
       "groupTitle": "Pema Care · bổ sung từ web",
-      "note": "Web › patient-mobile › appointments · Flutter chưa có tab này; mở từ Trang chủ",
+      "note": "Web › patient-mobile › appointments · không phải tab chính của app; mở từ Trang chủ",
       "kind": "detail",
       "role": "",
       "tab": "",
       "source": {
         "kind": "web",
-        "hint": "patient-mobile › appointments · Flutter chưa có tab này; mở từ Trang chủ"
+        "hint": "patient-mobile › appointments · không phải tab chính của app; mở từ Trang chủ"
       },
       "kmp": {
         "route": {
@@ -6512,7 +6520,7 @@
         "shotTest": "pema-kmp/feature/schedule/src/jvmTest/kotlin/com/pema/clinic/feature/schedule/PatientAppointmentsShotTest.kt:9",
         "shotImage": "pema-kmp/feature/schedule/build/shots/K1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/K1.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Lịch hẹn\")  // back button, padding 20"
       ],
@@ -6595,7 +6603,7 @@
         "shotTest": "pema-kmp/feature/billing/src/jvmTest/kotlin/com/pema/clinic/feature/billing/PatientDocumentsShotTest.kt:9",
         "shotImage": "pema-kmp/feature/billing/build/shots/K2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/K2.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài liệu & hóa đơn\")  // back button, padding 20"
       ],
@@ -6667,7 +6675,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:136",
         "shotImage": "pema-kmp/feature/workspace/build/shots/K3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/K3.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Care\")",
         "PemaBottomNav: Trang chủ | Hành trình* | Tin nhắn | Hồ sơ"
@@ -6705,7 +6713,7 @@
       "rules": [],
       "differences": [
         "Web seed data instead of illustrative names/dates.",
-        "Merged into the \"Hành trình\" tab (E2): keeps Flutter's 4 items and adds the \"Cập nhật gần đây\" timeline + the sentence \"tiến độ số buổi, không phải mức cải thiện da\"."
+        "Merged into the \"Hành trình\" tab (E2): keeps E2's 4 items and adds the \"Cập nhật gần đây\" timeline + the sentence \"tiến độ số buổi, không phải mức cải thiện da\"."
       ],
       "gotchas": [],
       "todo": [],

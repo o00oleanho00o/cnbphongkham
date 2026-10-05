@@ -1,0 +1,12 @@
+[Unit]
+Description=Nightly Pema Agent Postgres backup
+
+[Timer]
+# 02:30 local time (set the machine timezone to Asia/Ho_Chi_Minh): after the last scheduled messages of the day.
+OnCalendar=*-*-* 02:30:00
+# run once at boot if the machine was off at 02:30 (power cut): do not skip a night silently
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

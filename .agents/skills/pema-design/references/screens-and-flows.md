@@ -8,7 +8,7 @@ This is a design model; it does not mean every step is already implemented. Pati
 
 ## Platform split
 
-| Context | Web | Flutter/mobile |
+| Context | Web | Mobile app |
 |---|---|---|
 | Overview | KPIs with paths to work that needs handling | Next work, nearest appointment, short shortcuts |
 | Patient 360 | Context + content tabs, using horizontal space | Compact identity + open each business screen |
@@ -17,7 +17,7 @@ This is a design model; it does not mean every step is already implemented. Pati
 | Follow-up | Queue and handoff status | Task list → separate response |
 | Management | Services, doctors/rooms, cashier | Lookup/short tasks; complex administration prefers web |
 
-Flutter Clinic: **Hôm nay / Lịch hẹn / Hồ sơ / Theo dõi / Thêm**. Care: **Trang chủ / Hành trình / Tin nhắn / Hồ sơ**. Do not increase main tabs just because a module is added; place the task in the correct context. The current Clinic/Care switch is a review tool, not login.
+App Clinic: **Hôm nay / Lịch hẹn / Hồ sơ / Theo dõi / Thêm**. Care: **Trang chủ / Hành trình / Tin nhắn / Hồ sơ**. Do not increase main tabs just because a module is added; place the task in the correct context. The current Clinic/Care switch is a review tool, not login.
 
 Current child screens: Patient 360; Đặt lịch/Chi tiết lịch/Lịch của tôi; Tư vấn/Kế hoạch điều trị/Buổi điều trị; Chăm sóc tại nhà/Gửi cập nhật/Phản hồi; Lên đơn nhanh/Kiểm tra đơn/Đơn thuốc & tư vấn/Phiếu A5; Hóa đơn/Thu ngân; Dịch vụ/Bác sĩ & phòng; Ảnh tiến triển/Ask Pema/Quyền riêng tư/Hướng dẫn.
 
@@ -33,7 +33,7 @@ Current child screens: Patient 360; Đặt lịch/Chi tiết lịch/Lịch của
 
 **Service/treatment:** service catalog → confirmed price and session count → plan → appointment → session with complete information → aftercare/follow-up → Care. In a complete implementation, invoice/plan must be reconciled, but care must not be completed from payment.
 
-**Orders:** catalog → quantity/instructions → draft → classification check → doctor approval → Care/slip. Product source is the supplied Excel file; current snapshot has 115 rows (30 medicines, 78 advice items, 7 UNRESOLVED). Do not infer medicine from the name; missing type/usage must be handled before approval. Draft must not appear as instructions for the patient. Web has override reasons/NONE/separate A5 print; do not assume Flutter has them by default.
+**Orders:** catalog → quantity/instructions → draft → classification check → doctor approval → Care/slip. Product source is the supplied Excel file; current snapshot has 115 rows (30 medicines, 78 advice items, 7 UNRESOLVED). Do not infer medicine from the name; missing type/usage must be handled before approval. Draft must not appear as instructions for the patient. Web has override reasons/NONE/separate A5 print; do not assume the app has them by default.
 
 **Photos/responses:** content → consent if there are photos → submit → review queue → respond/resolve/escalate → Care. Separate consent, files, and task status; the label “ảnh đính kèm” does not replace storing a real photo. AI is a human-reviewed draft, not autonomous diagnosis/task closure.
 
@@ -41,14 +41,14 @@ Current child screens: Patient 360; Đặt lịch/Chi tiết lịch/Lịch của
 
 ## Current boundaries to check before editing
 
-Web Clinic/Patient Mobile use localStorage with the same origin/profile. Flutter is independent and memory-only; order/receipt, schedule/note/session/follow-up/cart are patient-scoped; Care/Clinic have separate selection. Flutter 09:00 schedule is hardcoded; A5 is only cards grouping approved orders; photos/AI/privacy are simulated; cashier still counts drafts and has no invoice entity/ledger. Do not hide these gaps with a production-like UI.
+Web Clinic/Patient Mobile use localStorage with the same origin/profile. The mobile app is independent and keeps demo data in memory per process; state is patient-scoped; Care/Clinic have separate selection. Its current limits are listed in `pema-kmp/README.md` (status). Do not hide these gaps with a production-like UI.
 
-Read `docs/22_NATIVE_PARITY_AND_VALIDATION.md` for current state, `docs/20_CATALOG_ORDERS.md` for web orders/printing, `docs/06_CLINIC_WORKFLOW.md` and PB01 for the system contract. If assigned to complete business behavior, fix the data foundation and tests together with the UI, then update the matrix; do not treat template limits as permanent requirements.
+Read `pema-kmp/README.md` for the app's current state, `docs/20_CATALOG_ORDERS.md` for web orders/printing, `docs/06_CLINIC_WORKFLOW.md` and PB01 for the system contract. If assigned to complete business behavior, fix the data foundation and tests together with the UI, then update the README; do not treat template limits as permanent requirements.
 
 
 ## PB02 finance exception
 
-The clinic-owner overview, revenue/reconciliation, and procedure fees newly use shared web/Flutter API/SQLite. Keep revenue, cash received, debt, and doctor fee distinct; rate snapshots, closing periods, role-based projections, and foreground notifications. Read `docs/24_FINANCE_AND_PROCEDURE_FEES.md` and the PB02 set before editing; the PB01 memory-only finance limit does not apply to the new module. Run `python prototype/finance_test.py` when changing formulas/ledger.
+The clinic-owner overview, revenue/reconciliation, and procedure fees newly use the shared web/app API/SQLite. Keep revenue, cash received, debt, and doctor fee distinct; rate snapshots, closing periods, role-based projections, and foreground notifications. Read `docs/24_FINANCE_AND_PROCEDURE_FEES.md` and the PB02 set before editing; the PB01 memory-only finance limit does not apply to the new module. Run `python prototype/finance_test.py` when changing formulas/ledger.
 
 
 ## CRM01 — staff-specific workspaces

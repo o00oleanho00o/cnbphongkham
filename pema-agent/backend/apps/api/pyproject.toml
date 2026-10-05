@@ -1,0 +1,56 @@
+[project]
+name = "pema-api"
+version = "0.1.0"
+description = "Pema CSKH agent: FastAPI app, clinic actions, agent engine, channels, scheduler, workers (schemas clinic.* and agent.*)."
+requires-python = ">=3.12"
+# Every dependency the 12 parallel packages are expected to need is declared here once, so they do not
+# edit this file concurrently. A package that needs another library appends ONE line, says so in its
+# report, and package G regenerates uv.lock.
+dependencies = [
+    "pema-contracts",
+    # web + config
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "pydantic-settings>=2.6",
+    "python-multipart>=0.0.12",
+    "httpx>=0.27",
+    # database
+    "sqlalchemy[asyncio]>=2.0.36",
+    "alembic>=1.14",
+    "psycopg[binary]>=3.2",
+    "pgvector>=0.3",
+    "redis>=5.2",
+    # auth and secrets (B1, C1, C2, D5)
+    "pyjwt>=2.9",
+    "argon2-cffi>=23.1",
+    "cryptography>=43",
+    # LLM and MCP (D1, D5)
+    "openai>=1.54",
+    "anthropic>=0.40",
+    "google-genai>=0.3",
+    "mcp>=2.2",
+    # scheduler time handling (S, B2): cron-parser -> croniter, luxon -> zoneinfo + tzdata
+    "croniter>=3.0",
+    "tzdata>=2024.2",
+    # documents, parsing, web tools (D3, D4): docx/exceljs/unpdf/saxes/html -> Python equivalents
+    "python-docx>=1.1",
+    "openpyxl>=3.1",
+    "pypdf>=5.1",
+    "defusedxml>=0.7",
+    "beautifulsoup4>=4.12",
+    "brotli>=1.2",
+]
+
+[tool.uv.sources]
+pema-contracts = { workspace = true }
+
+[project.scripts]
+pema = "pema.cli:main"
+pema-export-openapi = "pema.api.export_openapi:main_cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["pema"]

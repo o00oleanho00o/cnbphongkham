@@ -1,0 +1,68 @@
+/* ported from: web/src/styles.css
+ *
+ * Deviations: Tailwind v4 through PostCSS (not the Vite plugin); the Zalo blue `zalo-*` scale became the
+ * Pema `brand-*` scale (primary #0B4F94, navy #083A6E, sky #3CAAE5); font Be Vietnam Pro (local, OFL,
+ * loaded by next/font in layout.tsx) instead of Plus Jakarta Sans. The class names `gc-card`, `gc-tile`,
+ * `gc-input` and the semantic tokens (canvas, surface, ink, ink-soft, line, tile) are kept so the ported
+ * dashboard markup stays identical to the original.
+ */
+@import "tailwindcss";
+
+/*
+ * Design tokens live in src/ui/tokens.css (`@theme static` + the `.dark` overrides); tokens.json is generated
+ * from it for the KMP app. Pema identity: docs .agents/skills/pema-design/references/visual-system.md.
+ */
+@import "../ui/tokens.css";
+
+/* Bật dark mode theo class `.dark` trên <html> thay vì chỉ nghe media query:
+   người dùng phải TỰ CHỌN được sáng/tối bất kể hệ điều hành đang đặt gì. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --font-sans: var(--font-be-vietnam-pro), system-ui, sans-serif;
+}
+
+body {
+  @apply bg-canvas font-sans text-ink antialiased;
+  font-size: var(--text-body);
+}
+
+/*
+ * Tailwind v4 đổi preflight: button nhận cursor:default (v3 là pointer).
+ * Trả lại pointer cho mọi thứ bấm được thay vì rắc cursor-pointer khắp JSX.
+ */
+button:not(:disabled),
+select:not(:disabled),
+summary,
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+/* Keyboard focus must stay visible on every interactive element (WCAG 2.4.7). */
+:focus-visible {
+  outline: 2px solid var(--color-brand-400);
+  outline-offset: 2px;
+}
+
+/*
+ * COMPATIBILITY CLASSES for the ported zalo-agent admin pages (`/admin/*`), which still say `gc-card`,
+ * `gc-tile` and `gc-input`. They are now one-line aliases of the design kit (src/ui: Card, Tile, FIELD_CONTROL_CLASS)
+ * and sit on its tokens. Marked for removal: when a page is rebuilt with the kit components it drops them, and the
+ * last one to go deletes this block. Do not use them in new code.
+ */
+@layer components {
+  /* = ui/card.tsx */
+  .gc-card {
+    @apply rounded-card border border-line bg-surface shadow-card;
+  }
+
+  /* = a muted tile inside a panel */
+  .gc-tile {
+    @apply rounded-tile border border-line bg-tile/40 p-3;
+  }
+
+  /* = FIELD_CONTROL_CLASS (ui/field.tsx) without the full-width default */
+  .gc-input {
+    @apply rounded-field border border-line-strong bg-field px-3 py-2 text-body-lg text-ink outline-none placeholder:text-ink-soft/60 focus:border-brand-500 focus:ring-2 focus:ring-brand-100;
+  }
+}

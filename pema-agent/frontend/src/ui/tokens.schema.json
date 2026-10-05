@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pema design tokens (exported from tokens.css)",
+  "type": "object",
+  "required": [
+    "$schema",
+    "version",
+    "source",
+    "color",
+    "radius",
+    "shadow",
+    "text",
+    "space",
+    "layout",
+    "breakpoint",
+    "z",
+    "font"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "source": { "type": "string" },
+    "color": {
+      "type": "object",
+      "required": ["light", "dark"],
+      "additionalProperties": false,
+      "properties": {
+        "light": { "$ref": "#/$defs/colorMap" },
+        "dark": { "$ref": "#/$defs/colorMap" }
+      }
+    },
+    "radius": { "$ref": "#/$defs/pxMap" },
+    "shadow": { "$ref": "#/$defs/shadowMap" },
+    "text": { "$ref": "#/$defs/pxMap" },
+    "space": { "$ref": "#/$defs/pxMap" },
+    "layout": { "$ref": "#/$defs/pxMap" },
+    "breakpoint": { "$ref": "#/$defs/remMap" },
+    "z": { "$ref": "#/$defs/intMap" },
+    "font": { "$ref": "#/$defs/stringMap" }
+  },
+  "$defs": {
+    "name": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "colorMap": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^(#[0-9a-f]{6}|rgb\\([0-9]{1,3} [0-9]{1,3} [0-9]{1,3} / [0-9]{1,3}%\\))$"
+      }
+    },
+    "pxMap": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+      "additionalProperties": { "type": "string", "pattern": "^[0-9]+px$" }
+    },
+    "remMap": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+      "additionalProperties": { "type": "string", "pattern": "^[0-9]+rem$" }
+    },
+    "intMap": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+      "additionalProperties": { "type": "string", "pattern": "^[0-9]+$" }
+    },
+    "shadowMap": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "stringMap": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    }
+  }
+}

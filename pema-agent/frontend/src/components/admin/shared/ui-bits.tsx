@@ -1,0 +1,344 @@
+// ported from: web/src/shared/ui-bits.tsx
+"use client";
+
+import type { ReactNode, SVGProps } from "react";
+import { IconSearch } from "@/components/admin/shared/dashboard-icons";
+import { Badge as KitBadge, type BadgeTone as KitBadgeTone } from "@/ui/badge";
+import { Card } from "@/ui/card";
+import { FIELD_CONTROL_CLASS } from "@/ui/field";
+
+/** Mảnh UI dùng chung theo mẫu GoClaw: badge chấm màu, stat card + sparkline, tile, bảng */
+
+/**
+ * Núm gạt bật/tắt - phần hình của mọi toggle (drawer account, trang Tools).
+ *
+ * `inline-block` là bắt buộc: span mặc định là display:inline, mà width/height
+ * KHÔNG áp dụng cho inline element - núm chỉ có kích thước khi cha tình cờ là
+ * flex container, đặt trong nút thường thì co về 0 và biến mất hẳn.
+ */
+export function ToggleKnob({ on }: { on: boolean }) {
+  return (
+    <span
+      className={`relative inline-block h-5 w-9 shrink-0 rounded-full transition-colors ${on ? "bg-brand-500" : "bg-ink-soft/40"}`}
+    >
+      <span
+        className={`absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow-sm transition-all ${on ? "left-[18px]" : "left-0.5"}`}
+      />
+    </span>
+  );
+}
+
+/** Tones of the ported dashboard, kept as names; the chip itself is the kit's `Badge` (status tokens). */
+const BADGE_TONE: Record<"blue" | "gray" | "green" | "red" | "amber", KitBadgeTone> = {
+  blue: "brand",
+  gray: "neutral",
+  green: "success",
+  red: "danger",
+  amber: "warning",
+};
+
+export function Badge({
+  tone,
+  dot = true,
+  children,
+}: {
+  tone: "blue" | "gray" | "green" | "red" | "amber";
+  dot?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <KitBadge tone={BADGE_TONE[tone]} dot={dot}>
+      {children}
+    </KitBadge>
+  );
+}
+
+/** Sparkline SVG thuần từ 1 dãy số - đường mảnh + fill nhạt như mẫu */
+export function Sparkline({ values, className }: { values: number[]; className?: string }) {
+  const w = 120;
+  const h = 28;
+  if (values.length < 2 || values.every((v) => v === 0)) {
+    return (
+      <svg viewBox={`0 0 ${w} ${h}`} className={className} preserveAspectRatio="none">
+        <line x1="0" y1={h - 1} x2={w} y2={h - 1} stroke="currentColor" strokeOpacity="0.25" />
+      </svg>
+    );
+  }
+  const max = Math.max(...values);
+  const pts = values.map((v, i) => ({
+    x: (i / (values.length - 1)) * w,
+    y: h - 2 - (v / max) * (h - 6),
+  }));
+  const line = pts
+    .map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`)
+    .join(" ");
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className={className} preserveAspectRatio="none">
+      <path
+        d={`${line} L${w},${h} L0,${h} Z`}
+        fill="currentColor"
+        fillOpacity="0.1"
+        stroke="none"
+      />
+      <path d={line} fill="none" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+/** Stat card theo mẫu: icon box 32px góc trên, label nhỏ, số to, sparkline đáy */
+export function StatCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  series,
+}: {
+  icon: (p: SVGProps<SVGSVGElement> & { size?: number }) => ReactNode;
+  label: string;
+  value: string;
+  sub?: ReactNode;
+  series?: number[];
+}) {
+  return (
+    <div className="flex min-w-0 flex-col rounded-card border border-line bg-surface p-4 shadow-card sm:p-5">
+      <div className="flex items-start gap-3">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-tile text-ink">
+          <Icon size={17} />
+        </span>
+        <div className="min-w-0">
+          <div className="text-small leading-tight text-ink-soft">{label}</div>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="text-metric leading-none font-semibold text-ink">{value}</span>
+            {sub}
+          </div>
+        </div>
+      </div>
+      {series && <Sparkline values={series} className="mt-4 h-7 w-full text-brand-500" />}
+    </div>
+  );
+}
+
+/** Panel lớn có header title (+ subtitle) + slot phải: the kit's `Card` (old `.panel`). */
+export function SectionCard({
+  title,
+  subtitle,
+  aside,
+  children,
+}: {
+  title: string;
+  /** Câu phụ dưới tiêu đề - nói panel này đang cho xem cái gì */
+  subtitle?: string;
+  aside?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Card title={title} subtitle={subtitle} aside={aside}>
+      {children}
+    </Card>
+  );
+}
+
+/**
+ * Tile nhỏ trong panel: icon + label + value (+ mô tả phụ).
+ *
+ * Giá trị đứng TRÊN mô tả: đọc lướt một bảng số thì mắt bắt số trước, câu giải
+ * thích chỉ cần khi người ta dừng lại ở đúng ô đó.
+ */
+export function InfoTile({
+  icon: Icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: (p: SVGProps<SVGSVGElement> & { size?: number }) => ReactNode;
+  label: string;
+  value: ReactNode;
+  hint?: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-tile border border-line bg-tile/40 p-3">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-tile bg-surface text-brand-500">
+        <Icon size={17} />
+      </span>
+      <div className="min-w-0">
+        <div className="text-label text-ink-soft">{label}</div>
+        <div className="truncate text-body-lg font-semibold text-ink">{value}</div>
+        {hint && <div className="truncate text-micro text-ink-soft/80">{hint}</div>}
+      </div>
+    </div>
+  );
+}
+
+export function Pager({
+  page,
+  hasMore,
+  onPage,
+}: {
+  page: number;
+  hasMore: boolean;
+  onPage: (p: number) => void;
+}) {
+  const btn =
+    "rounded-control border border-line bg-surface px-3 py-1.5 text-small font-medium text-ink disabled:opacity-40 hover:bg-tile";
+  return (
+    <div className="flex items-center gap-2">
+      <button className={btn} disabled={page === 0} onClick={() => onPage(page - 1)}>
+        Trước
+      </button>
+      <span className="text-small text-ink-soft">Trang {page + 1}</span>
+      <button className={btn} disabled={!hasMore} onClick={() => onPage(page + 1)}>
+        Sau
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Bảng cuộn ngang trên màn hẹp thay vì bóp cột cho vỡ chữ.
+ * minWidth đặt theo số cột để mobile luôn có thanh cuộn thay vì wrap xấu.
+ */
+export function TableShell({
+  headers,
+  minWidth = 720,
+  ghimCotCuoi = false,
+  children,
+}: {
+  headers: string[];
+  minWidth?: number;
+  /**
+   * GHIM cột cuối vào mép phải khi bảng phải cuộn ngang. Bật cho bảng mà cột
+   * cuối là NÚT THAO TÁC: cột thao tác bị đẩy ra ngoài khung là tính năng biến
+   * mất với người dùng - họ không có lý do gì để đoán rằng phải cuộn ngang mới
+   * thấy. Đã xảy ra thật ở trang Kho tri thức ("không thấy chỗ xem nội dung đã
+   * nạp" trong khi nút vẫn luôn được render).
+   *
+   * Cột được ghim PHẢI có nền đục (`bg-surface` dưới đây) - nếu không thì chữ
+   * của các cột đang cuộn bên dưới xuyên qua.
+   */
+  ghimCotCuoi?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div className="overflow-x-auto rounded-card border border-line bg-surface shadow-card">
+      <table className="w-full text-left text-body" style={{ minWidth }}>
+        <thead>
+          <tr className="border-b border-line bg-table-head text-micro tracking-wider text-ink-soft uppercase">
+            {headers.map((h, i) => (
+              <th
+                key={i}
+                className={`px-4 py-3 font-semibold whitespace-nowrap ${
+                  ghimCotCuoi && i === headers.length - 1 ? "sticky right-0 z-10 bg-surface" : ""
+                }`}
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>{children}</tbody>
+      </table>
+    </div>
+  );
+}
+
+/**
+ * Lớp CSS cho ô cuối của một DÒNG trong bảng bật `ghimCotCuoi`. Xuất ra hằng số
+ * thay vì để mỗi dòng tự chép: chép tay thì header ghim mà thân bảng không, hoặc
+ * ngược lại - lệch một bên là cột ghim trong suốt và chữ chồng lên nhau.
+ */
+export const O_GHIM_PHAI = "sticky right-0 z-10 bg-surface";
+
+/** Thanh công cụ trên bảng: tìm kiếm + bộ lọc (vd account) + phân trang */
+export function ListToolbar({
+  query,
+  onQuery,
+  placeholder,
+  filter,
+  page,
+  hasMore,
+  onPage,
+}: {
+  query: string;
+  onQuery: (v: string) => void;
+  placeholder: string;
+  /** Slot bộ lọc cạnh ô search - pattern GoClaw: lọc ở đâu, hiệu lực ở đó */
+  filter?: ReactNode;
+  page: number;
+  hasMore: boolean;
+  onPage: (p: number) => void;
+}) {
+  return (
+    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative w-full sm:w-72">
+          <IconSearch
+            size={15}
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-soft/60"
+          />
+          <input
+            value={query}
+            onChange={(e) => onQuery(e.target.value)}
+            placeholder={placeholder}
+            className={`${FIELD_CONTROL_CLASS} pl-9`}
+          />
+        </div>
+        {filter && <div className="w-full sm:w-56">{filter}</div>}
+      </div>
+      <Pager page={page} hasMore={hasMore} onPage={onPage} />
+    </div>
+  );
+}
+
+export function EmptyRow({ colSpan, text }: { colSpan: number; text: string }) {
+  return (
+    <tr>
+      <td colSpan={colSpan} className="px-4 py-12 text-center text-body text-ink-soft/60">
+        {text}
+      </td>
+    </tr>
+  );
+}
+
+/** Avatar tròn chữ cái đầu - màu sinh từ tên để ổn định */
+export function InitialAvatar({ name }: { name: string }) {
+  const palette = [
+    "bg-brand-500",
+    "bg-info",
+    "bg-success",
+    "bg-accent-strong",
+    "bg-danger",
+    "bg-warning",
+  ];
+  const hash = [...name].reduce((a, ch) => a + ch.charCodeAt(0), 0);
+  const initial = (name.trim()[0] ?? "?").toUpperCase();
+  return (
+    <span
+      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-small font-semibold text-surface ${palette[hash % palette.length]}`}
+    >
+      {initial}
+    </span>
+  );
+}
+
+/** "25/07 14:30" từ ISO UTC - hiển thị theo giờ máy người xem */
+export function formatTime(iso: string | null | undefined): string {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "-";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+export function formatNumber(n: number): string {
+  return n.toLocaleString("vi-VN");
+}
+
+/** "120d 1h 48m" từ giây */
+export function formatUptime(seconds: number): string {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m ${seconds % 60}s`;
+}

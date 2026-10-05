@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+next-env.d.ts
+*.tsbuildinfo
+.env
+.env.local
+shots/
+playwright-report/
+
+# Visual harness output: images and summaries stay local, only the READMEs are committed
+visual-ref/old/*
+visual-ref/new/*
+!visual-ref/old/README.md
+!visual-ref/old/manifest.json
+!visual-ref/new/README.md

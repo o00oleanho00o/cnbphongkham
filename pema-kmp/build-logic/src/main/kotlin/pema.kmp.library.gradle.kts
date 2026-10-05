@@ -29,7 +29,8 @@ kotlin {
     }
     android {
         namespace = defaultNamespace()
-        compileSdk = 37
+        // SDK Manager installs API 37 as `platforms;android-37.0`; a plain `37` resolves to `android-37`.
+        compileSdk { version = release(37) { minorApiLevel = 0 } }
         minSdk = 24
         withHostTest { }
         // Required so composeResources (fonts, logo, seed JSON) are packaged into the APK.

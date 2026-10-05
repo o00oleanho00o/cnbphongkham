@@ -1,19 +1,19 @@
 # Web ↔ canvas coverage
 
-Baseline: 2026-09-23 · canvas `Pema App.dc.html` has 82 screens (A–H mirror Flutter, I–K added from the web).
+Baseline: 2026-09-23 · canvas `Pema App.dc.html` has 82 screens (A–H core app screens, I–K added from the web).
 When rerunning the skill, compare the new web dump with this table; any new or changed web screen/tab/dialog is a candidate to add or update. Update the table after every run.
 
 ## Clinic Web (`prototype/clinic-web`, `shared/clinic.js`, `operations-ui.js`, `crm-ui.js`)
 
 | Web | Canvas |
 |---|---|
-| `dashboard` Tổng quan | I1 (A1 is the reduced Flutter home) |
+| `dashboard` Tổng quan | I1 (A1 is the reduced app home) |
 | `today` Hôm nay · tiếp đón, Check-in / Vắng / Mời vào phòng | I2 |
-| `schedule` Điều phối lịch theo phòng | I3 (A2 is the Flutter schedule) |
-| Dialog Đặt lịch hẹn (bệnh nhân, dịch vụ, bác sĩ, phòng, giờ) | I4 (F8 is the Flutter version) |
+| `schedule` Điều phối lịch theo phòng | I3 (A2 is the app schedule) |
+| Dialog Đặt lịch hẹn (bệnh nhân, dịch vụ, bác sĩ, phòng, giờ) | I4 (F8 is the app version) |
 | `patients` + Hồ sơ mới | A3 · I5 |
 | `crm` CSKH hôm nay | C1–C4 |
-| `crm` › Xử lý (kênh, kết quả, bước tiếp, phụ trách, ưu tiên) | I13 (C6 is the Flutter version) |
+| `crm` › Xử lý (kênh, kết quả, bước tiếp, phụ trách, ưu tiên) | I13 (C6 is the app version) |
 | `followups` Follow-up Inbox + filter | I6 · handled in: F10 |
 | `studio` Ảnh trước / sau | I7 |
 | `resources` Bác sĩ & phòng · Khóa phòng | F14 · I8 |
@@ -43,7 +43,7 @@ When rerunning the skill, compare the new web dump with this table; any new or c
 | Web | Canvas |
 |---|---|
 | `home` | E1 |
-| `appointments` (separate tab on web, not in Flutter) | K1 · G3 |
+| `appointments` (separate tab on web, not in the core app tabs) | K1 · G3 |
 | `journey` + recent updates | E2 · K3 |
 | `progress` / Ảnh trước & sau | G5 |
 | `care` Chăm sóc tại nhà | G1 |
@@ -52,6 +52,6 @@ When rerunning the skill, compare the new web dump with this table; any new or c
 | `docs` Tài liệu & hóa đơn | K2 · G7 |
 | `profile` + Quyền riêng tư | E4 · G8 |
 
-## Canvas-only (Flutter), no web comparison needed
+## Canvas-only (app), no web comparison needed
 
 A5 "Thêm", A6 switch workspace, A7 payment SnackBar, B1–B2 doctor, D1–D2 accountant, F17 access denied, H7 connection lost.

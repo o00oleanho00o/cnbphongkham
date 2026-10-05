@@ -1,0 +1,98 @@
+// ported from: web/src/pages/schedule-run-history-drawer.tsx
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import type { Schemas } from "@/lib/api";
+import { http, unwrap } from "@/lib/api/client";
+
+type ScheduledJobItem = Schemas["ScheduledJob"];
+type ScheduledJobRunItem = Schemas["JobRunRecord"];
+import { useChotNen } from "@/lib/admin/shared/backdrop-close-guard";
+import { formatBotTime } from "@/lib/admin/shared/format-bot-time";
+import { Badge } from "@/components/admin/shared/ui-bits";
+
+function runTone(
+  status: ScheduledJobRunItem["status"],
+): "blue" | "gray" | "green" | "red" | "amber" {
+  if (status === "ok") return "green";
+  if (status === "silent") return "blue";
+  if (status === "skipped" || status === "interrupted" || status === "running") return "amber";
+  return "red"; // error
+}
+
+/**
+ * Drawer lịch sử chạy của 1 job - khác `scheduled_jobs.last_status` (chỉ nói
+ * lần CUỐI), đây là TỪNG lần đã xảy ra gì, kể cả lý do khi `skipped` (chạm
+ * trần ngày, bỏ lượt vì trễ quá grace...). Job kind='agent' có `turnId` thì
+ * bấm thẳng sang trang Trace - tận dụng đúng thứ dự án đã đầu tư nhiều nhất.
+ */
+export function ScheduleRunHistoryDrawer({
+  job,
+  timezone,
+  onClose,
+}: {
+  job: ScheduledJobItem;
+  timezone: string;
+  onClose: () => void;
+}) {
+  const [runs, setRuns] = useState<ScheduledJobRunItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const nen = useChotNen(onClose);
+
+  useEffect(() => {
+    unwrap(
+      http.GET("/api/v1/admin/schedules/{job_id}/runs", { params: { path: { job_id: job.id } } }),
+    )
+      .then(setRuns)
+      .catch(() => setRuns([]))
+      .finally(() => setLoading(false));
+  }, [job.id]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-ink/25 backdrop-blur-[2px]" {...nen}>
+      <div className="flex h-full w-full max-w-lg flex-col border-l border-line bg-surface">
+        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+          <div>
+            <div className="font-semibold text-ink">Lịch sử chạy - {job.name}</div>
+            <div className="text-label text-ink-soft">{runs.length} lần gần nhất</div>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-control border border-line px-3 py-1 text-small text-ink-soft hover:bg-tile"
+          >
+            Đóng
+          </button>
+        </div>
+
+        <div className="flex-1 space-y-2 overflow-y-auto bg-canvas px-5 py-4">
+          {loading && <p className="text-small text-ink-soft">Đang tải...</p>}
+          {!loading && runs.length === 0 && (
+            <p className="py-10 text-center text-small leading-relaxed text-ink-soft/60">
+              Chưa có lần chạy nào
+            </p>
+          )}
+          {runs.map((run) => (
+            <div key={run.id} className="gc-tile space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge tone={runTone(run.status)}>{run.status}</Badge>
+                <span className="text-label text-ink-soft">
+                  {formatBotTime(run.started_at, timezone)}
+                </span>
+                {job.kind === "agent" && run.turn_id && (
+                  <Link
+                    href={`/admin/traces?turnId=${run.turn_id}`}
+                    className="text-label font-medium text-brand-600 hover:underline"
+                  >
+                    Xem trace
+                  </Link>
+                )}
+              </div>
+              {run.detail && <p className="text-label leading-[1.6] text-ink-soft">{run.detail}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
