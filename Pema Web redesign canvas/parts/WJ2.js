@@ -274,6 +274,59 @@ const wj2PolicyPage = (o = {}) => [
     { t: 'Chưa có hồ sơ gợi ý', sub: 'Zalo cá nhân · u-demo-011', actions: [badge('Chưa liên kết', 'neutral')] }], { box: true })
 ];
 
+
+// ---- Mô hình & cấu hình (/admin/tuning, /admin/tuning/[group]) ----
+const wj2TuneGroups = [['Nhà cung cấp LLM', 'Model, base URL, API key'], ['Agent và model', 'Bước, token, suy nghĩ'], ['Trí nhớ và ngữ cảnh', 'Lịch sử, tóm tắt'], ['Kho tri thức', 'Dung lượng, số lần thử'],
+  ['Tin chủ động và lịch', 'Trần ngày, khoảng cách'], ['Chung', 'Múi giờ, trace, lưu trữ']];
+// TuningNav (kit: Card list; `tuning-nav.tsx`): the six groups, the active one tinted
+const wj2TuneNav = (on) => stack({ g: 6 }, ...wj2TuneGroups.map(([t, s], i) => card({ comp: 'TuningNavItem', title: t, v: i === on ? 'soft' : 'flush', tint: i === on ? 'info' : '' }, sm(s))));
+// TuningParam (kit: Field + Badge; `tuning-param.tsx`): description, "mặc định" badge and the control with its label and range hint
+const wj2Param = (ty, label, val, desc, o = {}) => grid({ cols: 'minmax(0,1fr) minmax(0,260px)', g: 24 },
+  stack({ g: 6 }, sm(desc), tags(badge(o.custom ? 'Tùy chỉnh' : 'mặc định', o.custom ? 'brand' : 'info', { dot: false }))),
+  field(label, { ty, val, hint: o.hint }));
+const wj2TuneGroup = (title, sub, params, extra) => card({ comp: 'TuningGroup', title, sub },
+  ...params.flatMap((p, i) => (i ? [hr(), wj2Param(...p)] : [wj2Param(...p)])), extra || null);
+const wj2TuneHead = (q) => [pageHead('Cấu hình', 'Thiết lập và tùy chỉnh bot để phù hợp với nhu cầu sử dụng của bạn.'), row({ jc: 'flex-end' }, search('Tìm kiếm cấu hình...', { val: q || '', w: 320 }))];
+const wj2TuneShell = (on, body, q) => [wj2TuneHead(q), grid({ cols: 'minmax(0,300px) minmax(0,1fr)', g: 20 }, wj2TuneNav(on), body)];
+const wj2ProviderBody = (o = {}) => card({ comp: 'TuningGroup', title: 'Nhà cung cấp LLM', sub: 'Model trả lời khách. Thiếu mục này thì trợ lý không trả lời được tin nào.' },
+  select('Kiểu kết nối', 'OpenAI-compatible'),
+  o.google ? notice('Base URL này là lớp giả OpenAI của Google. Chat chay chạy được, nhưng mọi lượt bot gọi công cụ sẽ lỗi. Đổi Kiểu kết nối sang Google (Gemini) - key và tên model giữ nguyên.', 'warning') : null,
+  select('Chọn nhanh', o.google ? 'Tự nhập' : 'OpenRouter https://openrouter.ai/api/v1'),
+  input('Base URL', o.google ? 'https://generativelanguage.googleapis.com/v1beta/openai' : 'https://openrouter.ai/api/v1', { ph: 'https://api.example.com/v1' }),
+  input('Model', 'qwen3-8b'),
+  input('API key (hiện tại: )', '', { ph: 'Bỏ trống để giữ key hiện tại', suf: 'visibility' }), iconBtn('visibility', { aria: 'Hiện nội dung' }),
+  sm('Key được mã hóa AES-256-GCM khi lưu, không bao giờ trả lại đầy đủ.'),
+  row({ g: 12 }, primary('Lưu'), secondary('Test kết nối'), danger('Xóa cấu hình LLM')));
+const wj2TuneAgent = () => wj2TuneGroup('Agent và model', 'Số bước, mức suy nghĩ và ngân sách token của mỗi lượt trả lời.', [
+  ['select', 'Cửa sổ ngữ cảnh', '128.000 phổ thông, an toàn', 'Trần token cho phần VÀO của một lần gọi model.'],
+  ['select', 'Trần token viết ra', '16.384', 'Số token tối đa model viết ra trong một bước.'],
+  ['select', 'Mức suy nghĩ mặc định', 'Tắt', 'Agent nào không đặt riêng sẽ theo mức này.'],
+  ['number', 'Số bước tối đa mỗi lượt', '8', 'Một bước là một lần model gọi công cụ rồi đọc kết quả.', { hint: '(1 - 30)' }]]);
+const wj2TuneMemory = () => wj2TuneGroup('Trí nhớ và ngữ cảnh', 'Bao nhiêu tin nhắn cũ được giữ lại và tóm tắt cho mỗi cuộc trò chuyện.', [
+  ['number', 'Tin nhắn giữ lại mỗi cuộc trò chuyện', '200', 'Quá số này tin cũ nhất bị tóm tắt rồi xóa.', { hint: '(20 - 2.000)' }],
+  ['select', 'Tóm tắt cuộn', 'Bật', 'Tóm tắt tin cũ để giữ ngữ cảnh mà không tốn token.'],
+  ['number', 'Trần ký tự tài liệu tạo ra', '20000', 'Độ dài tối đa nội dung một tệp do bot tạo.', { hint: '(1.000 - 60.000) · khoảng 8.000 token' }]]);
+const wj2TuneKb = () => wj2TuneGroup('Kho tri thức', 'Giới hạn khi nạp và xử lý tài liệu.', [
+  ['number', 'Dung lượng tối đa mỗi tệp (MB)', '7', 'Tệp lớn hơn bị từ chối ngay khi tải lên.', { hint: '(1 - 50)' }],
+  ['number', 'Số lần thử lại một nguồn', '3', 'Quá số này nguồn chuyển sang Hỏng cho tới khi bấm Xử lý lại.', { hint: '(1 - 10)' }]]);
+const wj2TuneSched = () => wj2TuneGroup('Tin chủ động và lịch', 'Trần tin chủ động mỗi ngày và khoảng cách giữa các tin.', [
+  ['number', 'Trần tin chủ động mỗi ngày', '10', 'Theo từng cuộc trò chuyện (staff_assistant) hoặc từng bệnh nhân (patient_channel).', { hint: '(1 - 100)' }],
+  ['number', 'Khoảng cách tối thiểu giữa hai tin (giây)', '20', 'Tránh gửi dồn dập nhiều tin liên tiếp.', { hint: '(0 - 600)' }]]);
+const wj2TuneGeneral = () => wj2TuneGroup('Chung', 'Múi giờ, ghi vết và thời hạn lưu dữ liệu.', [
+  ['select', 'Múi giờ', 'Asia/Ho_Chi_Minh (GMT+07:00)', 'Ngày, giờ gửi và trần mỗi ngày tính theo múi giờ này.'],
+  ['select', 'Ghi vết từng bước agent', 'Bật', 'Cần để xem trang Trace. Vết có thể chứa nội dung tin nhắn.'],
+  ['number', 'Giữ vết (ngày)', '30', 'Quá hạn vết bị xóa. Chủ phòng khám quyết định thời hạn này.', { hint: '(1 - 365)' }],
+  ['number', 'Giữ ảnh và tệp (ngày)', '30', 'Thời hạn lưu ảnh khách gửi. Chủ phòng khám quyết định.', { hint: '(1 - 365)' }]],
+  [hr(), h3('Mật khẩu dashboard', 'Đổi mật khẩu đăng nhập trang này. Đổi xong, mọi thiết bị khác đang đăng nhập sẽ bị đăng xuất.'),
+    notice('Chức năng đổi mật khẩu đang chờ máy chủ cung cấp. Trong lúc này, nhờ chủ phòng khám đặt lại mật khẩu.', 'info'),
+    input('Mật khẩu hiện tại', '', { ph: 'Nhập mật khẩu hiện tại', suf: 'visibility' }), iconBtn('visibility', { aria: 'Hiện nội dung' }),
+    grid(2, input('Mật khẩu mớiTối thiểu 8 ký tự.', '', { ph: 'Nhập mật khẩu mới', suf: 'visibility' }), input('Nhập lại mật khẩu mới', '', { ph: 'Nhập lại mật khẩu mới', suf: 'visibility' })),
+    iconBtn('visibility', { aria: 'Hiện nội dung' }), primary('Đổi mật khẩu', { dis: true }), hr(),
+    row({ jc: 'space-between', g: 16 }, stack({ g: 2 }, strong('Đặt lại toàn bộ cấu hình'), sm('Trả mọi tham số ở tất cả các nhóm về mặc định. Mật khẩu dashboard không bị ảnh hưởng. Hành động này không thể hoàn tác. Hiện chưa có tham số nào được chỉnh.')), secondary('Đặt lại', { dis: true }))]);
+const wj2TunePage = () => wj2TuneShell(0, wj2ProviderBody());
+const wj2TuneDlg = (id, title, note, behind, text, btnText) => ndlg(id, title, wj2NXW + '/admin/tuning · ' + note, [txt(text, { size: 's', tone: 'soft' })],
+  { nx: 'owner', nav: '/admin/tuning', behind, w: 480, footer: [secondary('Hủy'), danger(btnText)] });
+
 // @@DEFS
 const WJ2 = [
   // ---- Tài khoản Zalo: công tắc khẩn, thêm, sửa, QR, xóa ----
@@ -417,6 +470,18 @@ const WJ2 = [
     txt('Tin gửi ra ngoài sẽ đi thẳng, không qua hàng đợi duyệt; cờ đỏ không còn chuyển bác sĩ tự động và thông tin cá nhân không bắt buộc che. Chỉ dùng cho trợ lý của nhân viên, không dùng để trả lời bệnh nhân.', { size: 's', tone: 'soft' })
   ], { nx: 'owner', nav: '/admin/policy', behind: wj2PolicyPage(), w: 520, footer: [secondary('Hủy'), danger('Chuyển sang Trợ lý nội bộ')] }),
   npage('WJ104', 'Hồ sơ chính sách · chưa có tài khoản hay agent', wj2NXW + '/admin/policy · phần "Hồ sơ của từng tài khoản và agent" chỉ còn dòng báo chưa có', '/admin/policy', wj2PolicyPage({ empty: true }), { nx: 'owner', state: true }),
+
+  npage('WJ105', 'Mô hình & cấu hình', wj2NXW + '/admin/tuning · trang "Cấu hình": ô tìm, sáu nhóm bên trái, nhóm "Nhà cung cấp LLM" đang mở', '/admin/tuning', wj2TunePage(), { nx: 'owner' }),
+  npage('WJ106', 'Mô hình & cấu hình · Agent và model', wj2NXW + '/admin/tuning · nhóm "Agent và model": cửa sổ ngữ cảnh, token viết ra, mức suy nghĩ, số bước', '/admin/tuning', wj2TuneShell(1, wj2TuneAgent()), { nx: 'owner' }),
+  npage('WJ107', 'Mô hình & cấu hình · Trí nhớ và ngữ cảnh', wj2NXW + '/admin/tuning · nhóm "Trí nhớ và ngữ cảnh"', '/admin/tuning', wj2TuneShell(2, wj2TuneMemory()), { nx: 'owner' }),
+  npage('WJ108', 'Mô hình & cấu hình · Kho tri thức', wj2NXW + '/admin/tuning · nhóm "Kho tri thức"', '/admin/tuning', wj2TuneShell(3, wj2TuneKb()), { nx: 'owner' }),
+  npage('WJ109', 'Mô hình & cấu hình · Tin chủ động và lịch', wj2NXW + '/admin/tuning · nhóm "Tin chủ động và lịch"', '/admin/tuning', wj2TuneShell(4, wj2TuneSched()), { nx: 'owner' }),
+  npage('WJ110', 'Mô hình & cấu hình · Chung', wj2NXW + '/admin/tuning · nhóm "Chung": múi giờ, ghi vết, thời hạn lưu, đổi mật khẩu dashboard, đặt lại toàn bộ cấu hình', '/admin/tuning', wj2TuneShell(5, wj2TuneGeneral()), { nx: 'owner' }),
+  wj2TuneDlg('WJ111', 'Đặt lại toàn bộ cấu hình?', 'hộp xác nhận đặt lại mọi tham số về mặc định', wj2TuneShell(5, wj2TuneGeneral()), '1 tham số bạn đã chỉnh trên dashboard sẽ trở về mặc định. Mật khẩu dashboard KHÔNG bị ảnh hưởng.', 'Đặt lại'),
+  wj2TuneDlg('WJ112', 'Xóa toàn bộ cấu hình LLM?', 'hộp xác nhận xóa cấu hình LLM đã lưu', wj2TunePage(), 'API key, base URL và tên model đã lưu sẽ bị xóa. Nếu máy chủ không đặt sẵn cấu hình LLM bằng biến môi trường thì bot ngừng trả lời cho tới khi bạn nhập lại.', 'Xóa'),
+  npage('WJ113', 'Mô hình & cấu hình · Base URL là lớp giả của Google', wj2NXW + '/admin/tuning · Base URL của Google ở kiểu OpenAI-compatible: dòng cảnh báo gợi ý đổi sang Google (Gemini)', '/admin/tuning', wj2TuneShell(0, wj2ProviderBody({ google: true })), { nx: 'owner', state: true }),
+  npage('WJ114', 'Mô hình & cấu hình · không có tham số khớp', wj2NXW + '/admin/tuning · tìm "zzz" không khớp tham số nào', '/admin/tuning', wj2TuneShell(0, card({ comp: 'TuningGroup', title: 'Nhà cung cấp LLM', sub: 'Model trả lời khách. Thiếu mục này thì trợ lý không trả lời được tin nào.' }, sm('Không có tham số nào khớp từ khóa đang tìm.')), 'zzz'), { nx: 'owner', state: true }),
+  npage('WJ115', 'Cấu hình · nhóm (liên kết trực tiếp)', wj2NXW + '/admin/tuning/[group] · liên kết trực tiếp tới một nhóm; cùng trang với nhóm đó, menu giữ "Mô hình & cấu hình"', '/admin/tuning', wj2TunePage(), { nx: 'owner' }),
 
   // @@ENTRIES
 ];
