@@ -61,6 +61,21 @@ class Permission(StrEnum):
     ORDER_APPROVE = "order.approve"
     """Approve an order so it can be printed and shown: the responsible doctor (the owner may approve for any
     doctor). Never reception or a manager: the order carries a clinical text."""
+    FINANCE_READ = "finance.read"
+    """Read the clinic-wide finance projection (PB02): revenue performed, cash collected, debt, the commission
+    table of every doctor, invoices and receipts. Owner and the accountant (the manager role)."""
+    FINANCE_READ_OWN = "finance.read_own"
+    """Read the personal finance projection: only the rows of the caller as a performer, never invoices,
+    receipts, debt or the clinic totals. Doctor (and the owner, who is the clinic's doctor)."""
+    FINANCE_WRITE = "finance.write"
+    """Record performed procedures, approve or void them, close a month and confirm its payout. Owner and the
+    accountant. The commission rates and bases live on the service terms (``admin.rules``)."""
+    FINANCE_COLLECT = "finance.collect"
+    """Raise the invoice of an order and record a receipt on an invoice (cashier work: reception, accountant,
+    owner). Holds no read access to the finance projection."""
+    FINANCE_NOTIFICATIONS = "finance.notifications"
+    """Read the owner's payment notifications and mark them read. Owner only: the accountant does not read the
+    owner's inbox."""
     CRM_TASK_READ = "crm.task.read"
     CRM_TASK_RESOLVE = "crm.task.resolve"
     CRM_ACTIVITY_WRITE = "crm.activity.write"
