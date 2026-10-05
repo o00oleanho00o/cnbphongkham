@@ -7,14 +7,17 @@ the routes it must not reach, and checks the audit row of a close."""
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import text
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import create_engine, text
 
-from pema.api.clinic_testing import ClientFactory
+from pema.api.clinic_testing import API_INI, BE_PASSWORD, WORKER_PASSWORD, ClientFactory
 from pema.clinic.actions import catalog
 from pema.clinic.actions.seed_demo import DEMO_DAY, SeedResult
 from pema.clinic.domain.orders import parse_catalog_rows
@@ -232,3 +235,28 @@ async def test_the_accountant_raises_a_draft_order_but_cannot_approve_it(
     assert refused.status_code == 403
     assert refused.json()["error"]["code"] == "forbidden"
     assert "order.approve" in refused.text
+
+
+@pytest.mark.db
+def test_a_downgrade_through_the_role_migration_keeps_an_existing_accountant(
+    pg_url: str, world: SeedResult
+) -> None:
+    """Narrowing the role CHECKs would fail (and lose or change data) while an accountant exists, so the
+    downgrade keeps them wide: the account, its role and the audit trail survive a round trip."""
+    os.environ["PEMA_MIGRATION_DATABASE_URL"] = pg_url
+    os.environ["PEMA_BE_APP_PASSWORD"] = BE_PASSWORD
+    os.environ["PEMA_AGENT_WORKER_PASSWORD"] = WORKER_PASSWORD
+    config = Config(str(API_INI))
+    engine = create_engine(pg_url)
+    query = text("SELECT role FROM clinic.user_account WHERE id = :id")
+    try:
+        with engine.connect() as conn:
+            assert conn.execute(query, {"id": world.users[KEY]}).scalar() == "accountant"
+        command.downgrade(config, "u6_0010_finance")
+        with engine.connect() as conn:
+            assert conn.execute(query, {"id": world.users[KEY]}).scalar() == "accountant"
+        command.upgrade(config, "heads")
+        with engine.connect() as conn:
+            assert conn.execute(query, {"id": world.users[KEY]}).scalar() == "accountant"
+    finally:
+        engine.dispose()
