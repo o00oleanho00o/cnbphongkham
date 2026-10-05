@@ -48,7 +48,7 @@ function canvasTarget(f) {
   const m = /^pema-agent\/frontend\/src\/(app|ui|components)\/(.*)$/.exec(f);
   if (!m) return 'unknown';
   if (m[1] === 'ui') {
-    if (/tokens\.(json|css)$/.test(f)) return 'token block of Pema Web.dc.html (web-canvas-build.cjs --check) + every frame';
+    if (/tokens\.(json|css)$/.test(f)) return 'token block of both web canvases (web-canvas-build.cjs --check) + every frame';
     return 'block of references/blocks-web.md for this kit component; every frame that uses it (design-specs/web/BLOCKS.md "Used in the canvas")';
   }
   if (m[1] === 'components') return 'unknown: find the screens that render this component (grep its name in src/app)';

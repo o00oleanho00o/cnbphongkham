@@ -1,5 +1,5 @@
 import { memo, type Dispatch, type ReactNode, type SetStateAction } from 'react';
-import { displayName } from './docs';
+import { WEB_NEW, WEB_OLD, displayName, hasWebPair, type WebSource } from './docs';
 import { Icon, IconButton } from './Icon';
 import type { Tool } from './useCanvasInput';
 
@@ -9,6 +9,9 @@ type ToolbarProps = {
   files: string[];
   file: string;
   onFile: (file: string) => void;
+  /** Which web canvas is open: the old web, the Next.js-only screens, or both side by side. Shown only when the folder holds the pair. */
+  webSource: WebSource;
+  onWebSource: (source: WebSource) => void;
   tool: Tool;
   onTool: (tool: Tool) => void;
   zoom: number;
@@ -34,11 +37,27 @@ export const Toolbar = memo(function Toolbar(p: ToolbarProps) {
       </div>
 
       <nav className="tabs" aria-label="Tài liệu design">
-        {p.files.map((f) => (
-          <button key={f} type="button" className="tab" aria-pressed={f === p.file} onClick={() => p.onFile(f)}>
-            {displayName(f)}
-          </button>
-        ))}
+        {hasWebPair && (
+          <label className="web-source" data-active={p.file === WEB_OLD || p.file === WEB_NEW || undefined}>
+            <span className="web-source-label">Web</span>
+            <select
+              aria-label="Canvas web: Web cũ, Màn mới hoặc Cả hai"
+              value={p.webSource}
+              onChange={(e) => p.onWebSource(e.target.value as WebSource)}
+            >
+              <option value="old">Web cũ</option>
+              <option value="new">Màn mới</option>
+              <option value="both">Cả hai</option>
+            </select>
+          </label>
+        )}
+        {p.files
+          .filter((f) => !hasWebPair || (f !== WEB_OLD && f !== WEB_NEW))
+          .map((f) => (
+            <button key={f} type="button" className="tab" aria-pressed={f === p.file} onClick={() => p.onFile(f)}>
+              {displayName(f)}
+            </button>
+          ))}
       </nav>
 
       <div className="toolbar-group" role="group" aria-label="Công cụ">

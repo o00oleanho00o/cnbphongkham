@@ -47,18 +47,21 @@ Other screens:
 - Viewport 1440×900, clock 2026-09-20 09:00 (Asia/Ho_Chi_Minh), account `anonymous`; snapshot scope: body.
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Measured from the running page (snapshot of the mock BE): every field, action, status, filter and text is listed; repeating rows show the first one and their count.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web (Next.js).dc.html` (frame WL2); labels, actions, statuses and notices are the front end's, verbatim.
 ```tsx
-<Img alt="Pema" size="151x80" />
-<Heading level={1}>"Đăng nhập CSKH"</Heading>
-<Text>"Chăm sóc khách hàng và trợ lý AI"</Text>
-<Field label="Email" type="email" default="owner@pema.test" id="email" />
-<Field label="Mật khẩu" type="password" default="demo1234" id="password" />
-<Button variant="quiet" aria-label="Hiện nội dung" title="Hiện" icon-only></Button>
-<Button variant="primary" disabled>"Đang đăng nhập..."</Button>
+<Stack>
+  <Card>
+    <Img placeholder label="Pema clinic & spa" />
+    <Heading level={2} sub="Chăm sóc khách hàng và trợ lý AI">"Đăng nhập CSKH"</Heading>
+    <Field label="Email" type="text" default="owner@pema.test" />
+    <Field label="Mật khẩu" type="text" default="••••••••" />
+    <Button variant="quiet" aria-label="Hiện nội dung" icon-only></Button>  // inside the field box
+    <Button variant="primary" disabled>"Đang đăng nhập..."</Button>
+  </Card>
+</Stack>
 ```
-Kit components used: Field×2, Button×2.
+Kit components used: Field×2, Button×2, Card×1.
 
 ## Responsive
 - Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WL2-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -84,6 +87,10 @@ Kit components used: Field×2, Button×2.
 
 ## Gotchas
 - (none recorded)
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WL2 · Đăng nhập CSKH · đang đăng nhập`.
+- Canvas note: Next.js › /login · đã nhập email và mật khẩu, nút chuyển thành "Đang đăng nhập..." và tắt
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WL2-1440x900.png`

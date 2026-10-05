@@ -64,68 +64,134 @@ Other screens:
 - Layout `.region` 342×39 px: flex row, space-between, gap 8px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Measured from the running page (snapshot of the mock BE): every field, action, status, filter and text is listed; repeating rows show the first one and their count.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web (Next.js).dc.html` (frame WL5); labels, actions, statuses and notices are the front end's, verbatim.
 ```tsx
-<AppShell role="cs_staff">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Mẫu tin", page key ""
-  <Row gap="12px" justify="space-between" wrap>
-    <Heading level={1}>"Tin nhắn mẫu đã duyệt"</Heading>
-    <Text>"Văn bản bác sĩ đã duyệt, được dùng cho tin chăm sóc chủ động"</Text>
-  </Row>
-  <Notice tone="info" role="note">"Mẫu mới hoặc vừa sửa chưa được dùng cho đến khi bác sĩ duyệt. Tin quảng bá không gửi cho khách đã từ chối quảng bá, và sinh nhật không bao giờ tự động gửi."</Notice>
-  <ul>
-    <li>
-      <Row gap="8px" justify="space-between">
-        <Heading level={2}>"Nhắc lịch tái khám"</Heading>
-        <Text>"nhac-tai-kham"</Text>
-        <Badge tone="neutral">"Bác sĩ đã duyệt"</Badge>
+<AppShell role="cs_staff" active="Mẫu tin">
+  <Sidebar old="sidebar">  // menu of role `cs_staff` (lib/nav.tsx); at 390 a header with the menu button and a bottom tab bar ("Việc", "Hồ sơ", "Inbox", "Duyệt", "Chờ tôi", "Menu") replace it
+    <Button variant="quiet" href="/" title="Về trang chính" as="link">"PHÒNG KHÁM DA LIỄU"</Button>
+    <Button variant="quiet" aria-label="Đóng menu" icon-only></Button>  // phone drawer only
+    <nav aria-label="Chức năng">
+      <Text transform="uppercase">"Không gian làm việc"</Text>
+      <Button variant="quiet" href="/dashboard" as="link">"Tổng quan"</Button>
+      <Button variant="quiet" href="/today" as="link">"Hôm nay"</Button>
+      <Button variant="quiet" href="/schedule" as="link">"Điều phối lịch"</Button>
+      <Button variant="quiet" href="/patients" as="link">"Tìm bệnh nhân"</Button>
+      <Button variant="quiet" href="/inbox" as="link">"Theo dõi"</Button>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Ảnh trước / sau"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Text transform="uppercase">"Quản lý"</Text>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Bác sĩ & phòng"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Dịch vụ"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Thu ngân"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Text transform="uppercase">"Phân tích"</Text>
+      <Button variant="quiet" href="/ask" as="link">"Hỏi Pema"</Button>
+      <Button variant="quiet" href="/guide" as="link">"Hướng dẫn"</Button>
+      <Button variant="quiet" href="/crm" as="link">"Vòng đời khách hàng"</Button>
+      <Text transform="uppercase">"Zalo & CSKH"</Text>
+      <Button variant="quiet" href="/review" as="link">"Hàng đợi duyệt"</Button>
+      <Button variant="quiet" href="/templates" as="link" aria-current="page">"Mẫu tin"</Button>
+      <Text transform="uppercase">"Care agent"</Text>
+      <Button variant="quiet" href="/care/handoffs" as="link">"Yêu cầu chuyển giao"</Button>
+      <Text transform="uppercase">"Quản trị agent"</Text>
+      <Button variant="quiet" href="/admin/kb" as="link">"Kho tri thức"</Button>
+    </nav>
+    <Row gap="10px"><Avatar>"M"</Avatar> <Text>"Mai Anh"</Text> <Text>"CSKH · Phòng khám Pema (dữ liệu mẫu)"</Text></Row>
+    <Row justify="space-between"><Text>"Đã kết nối · v0.1.0"</Text> <Button variant="quiet" aria-label="Đổi giao diện sáng/tối" icon-only></Button> <Button variant="quiet" aria-label="Đăng xuất" icon-only></Button></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <nav aria-label="Vị trí"><Text>"Không gian phòng khám"</Text> <Text>"/"</Text> <Text strong>"Mẫu tin"</Text></nav>
+    <Field label="Tìm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="quiet" href="/inbox" aria-label="Mở thông báo" icon-only as="link"></Button>
+  </TopBar>
+  <Row gap="12px">  // phone header
+  <Button variant="quiet" aria-label="Mở menu" icon-only></Button>
+  <Button variant="quiet" href="/" title="Về trang chính" as="link">"Phòng khám Pema (dữ liệu mẫu)"</Button>
+</Row>
+  <nav aria-label="Điều hướng nhanh">
+  <Button variant="quiet" as="link">"Việc"</Button>
+  <Button variant="quiet" as="link">"Hồ sơ"</Button>
+  <Button variant="quiet" as="link">"Inbox"</Button>
+  <Button variant="quiet" as="link">"Duyệt"</Button>
+  <Button variant="quiet" as="link">"Chờ tôi"</Button>
+  <Button variant="quiet">"Menu"</Button>
+</nav>
+  <PageHeading title="Tin nhắn mẫu đã duyệt" subtitle="Văn bản bác sĩ đã duyệt, được dùng cho tin chăm sóc chủ động" />
+  <Notice tone="info" text="Mẫu mới hoặc vừa sửa chưa được dùng cho đến khi bác sĩ duyệt. Tin quảng bá không gửi cho khách đã từ chối quảng bá, và sinh nhật không bao giờ tự động gửi." />
+  <Card component="TemplateCard">
+    <Row gap="8px" justify="space-between" wrap>
+      <Heading level={2}>"Nhắc lịch tái khám"</Heading>
+      <Text small>"nhac-tai-kham"</Text>
+      <Badge tone="success">"Bác sĩ đã duyệt"</Badge>
+    </Row>
+    <Text>"Chào {ten_khach}, phòng khám Pema nhắc chị đã đến hạn tái khám. Chị rảnh khung giờ nào trong tuần này để em sắp xếp lịch với bác sĩ ạ?"</Text>
+    <Row gap="8px" justify="space-between" wrap>
+      <Text small>"Duyệt 21/08/2026 · Đang bật"</Text>
+    </Row>
+  </Card>
+  <Card component="TemplateCard">
+    <Row gap="8px" justify="space-between" wrap>
+      <Heading level={2}>"Hỏi thăm sau thủ thuật (D+1)"</Heading>
+      <Text small>"hoi-tham-sau-thu-thuat"</Text>
+      <Badge tone="success">"Bác sĩ đã duyệt"</Badge>
+    </Row>
+    <Text>"Chào {ten_khach}, hôm qua chị vừa làm thủ thuật tại Pema. Hôm nay da chị thế nào ạ? Nếu thấy đỏ rát tăng hoặc có chảy dịch, chị nhắn ngay để bác sĩ xem nhé."</Text>
+    <Row gap="8px" justify="space-between" wrap>
+      <Text small>"Duyệt 21/08/2026 · Đang bật"</Text>
+    </Row>
+  </Card>
+  <Card component="TemplateCard">
+    <Row gap="8px" justify="space-between" wrap>
+      <Heading level={2}>"Nhắc gửi ảnh tiến triển (D+3)"</Heading>
+      <Text small>"nhac-gui-anh-tien-trien"</Text>
+      <Badge tone="success">"Bác sĩ đã duyệt"</Badge>
+    </Row>
+    <Text>"Chào {ten_khach}, đã 3 ngày kể từ buổi làm da. Chị chụp 1 ảnh vùng da nơi đủ sáng và gửi lại để bác sĩ theo dõi nhé ạ."</Text>
+    <Row gap="8px" justify="space-between" wrap>
+      <Text small>"Duyệt 08/09/2026 · Đang bật"</Text>
+    </Row>
+  </Card>
+  <Card component="TemplateCard">
+    <Row gap="8px" justify="space-between" wrap>
+      <Heading level={2}>"Ưu đãi chăm sóc da tháng 10"</Heading>
+      <Text small>"uu-dai-thang-10"</Text>
+      <Row gap="6px" wrap>
+        <Badge tone="warning">"Chờ bác sĩ duyệt"</Badge>
+        <Badge tone="info">"Quảng bá"</Badge>
       </Row>
-      <Text>"Chào {ten_khach}, phòng khám Pema nhắc chị đã đến hạn tái khám. Chị rảnh khung giờ nào trong tuần này để em sắp xếp lịch với bác sĩ ạ?"</Text>
-      <Text>"Duyệt 21/08/2026 · Đang bật"</Text>
-    </li>
-    <li>
-      <Row gap="8px" justify="space-between">
-        <Heading level={2}>"Hỏi thăm sau thủ thuật (D+1)"</Heading>
-        <Text>"hoi-tham-sau-thu-thuat"</Text>
-        <Badge tone="neutral">"Bác sĩ đã duyệt"</Badge>
+    </Row>
+    <Text>"Chào {ten_khach}, tháng này Pema có chương trình soi da miễn phí cho khách cũ. Chị muốn em giữ lịch không ạ?"</Text>
+    <Row gap="8px" justify="space-between" wrap>
+      <Text small>"Chưa duyệt · Đang tắt"</Text>
+    </Row>
+  </Card>
+  <Card component="TemplateCard">
+    <Row gap="8px" justify="space-between" wrap>
+      <Heading level={2}>"Nhắc lịch hẹn ngày mai"</Heading>
+      <Text small>"nhac-lich-hen"</Text>
+      <Row gap="6px" wrap>
+        <Badge tone="warning">"Chờ bác sĩ duyệt"</Badge>
       </Row>
-      <Text>"Chào {ten_khach}, hôm qua chị vừa làm thủ thuật tại Pema. Hôm nay da chị thế nào ạ? Nếu thấy đỏ rát tăng hoặc có chảy dịch, chị nhắn ngay để bác sĩ xem nhé."</Text>
-      <Text>"Duyệt 21/08/2026 · Đang bật"</Text>
-    </li>
-    <li>
-      <Row gap="8px" justify="space-between">
-        <Heading level={2}>"Nhắc gửi ảnh tiến triển (D+3)"</Heading>
-        <Text>"nhac-gui-anh-tien-trien"</Text>
-        <Badge tone="neutral">"Bác sĩ đã duyệt"</Badge>
-      </Row>
-      <Text>"Chào {ten_khach}, đã 3 ngày kể từ buổi làm da. Chị chụp 1 ảnh vùng da nơi đủ sáng và gửi lại để bác sĩ theo dõi nhé ạ."</Text>
-      <Text>"Duyệt 08/09/2026 · Đang bật"</Text>
-    </li>
-    <li>
-      <Row gap="8px" justify="space-between">
-        <Heading level={2}>"Ưu đãi chăm sóc da tháng 10"</Heading>
-        <Text>"uu-dai-thang-10"</Text>
-        <Row gap="6px" justify="flex-end" wrap>
-          <Badge tone="neutral">"Chờ bác sĩ duyệt"</Badge>
-          <Badge tone="neutral">"Quảng bá"</Badge>
-        </Row>
-      </Row>
-      <Text>"Chào {ten_khach}, tháng này Pema có chương trình soi da miễn phí cho khách cũ. Chị muốn em giữ lịch không ạ?"</Text>
-      <Text>"Chưa duyệt · Đang tắt"</Text>
-    </li>
-    <li>
-      <Row gap="8px" justify="space-between">
-        <Heading level={2}>"Nhắc lịch hẹn ngày mai"</Heading>
-        <Text>"nhac-lich-hen"</Text>
-        <Badge tone="neutral">"Chờ bác sĩ duyệt"</Badge>
-      </Row>
-      <Text>"Chào {ten_khach}, phòng khám Pema nhắc chị có lịch hẹn vào {gio_hen} ngày mai. Chị nhắn em nếu cần đổi lịch nhé."</Text>
-      <Text>"Chưa duyệt · Đang tắt"</Text>
-    </li>
-  </ul>
+    </Row>
+    <Text>"Chào {ten_khach}, phòng khám Pema nhắc chị có lịch hẹn vào {gio_hen} ngày mai. Chị nhắn em nếu cần đổi lịch nhé."</Text>
+    <Row gap="8px" justify="space-between" wrap>
+      <Text small>"Chưa duyệt · Đang tắt"</Text>
+    </Row>
+  </Card>
 </AppShell>
 ```
-Kit components used: Badge×6.
+Kit components used: Button×14, Badge×6, Card×5, Sidebar×1, TopBar×1, Field×1, PageHeading×1.
 
 ## Responsive
 - Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WL5-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -156,6 +222,10 @@ Kit components used: Badge×6.
 
 ## Gotchas
 - (none recorded)
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WL5 · Tin nhắn mẫu đã duyệt · chỉ xem`.
+- Canvas note: Next.js › /templates · vai trò CSKH chỉ đọc: không có nút "Soạn mẫu mới", "Tắt mẫu", "Duyệt", "Sửa"
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WL5-1440x900.png`

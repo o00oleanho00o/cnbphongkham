@@ -68,17 +68,77 @@ Other screens:
 - Layout `.region` 672×65 px: flex row, flex-end, gap 8px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Measured from the running page (snapshot of the mock BE): every field, action, status, filter and text is listed; repeating rows show the first one and their count.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web (Next.js).dc.html` (frame WK3); labels, actions, statuses and notices are the front end's, verbatim.
 ```tsx
-// opens over the page; the backdrop and the page behind it are not part of this screen
-<Card role="dialog" layout="flex row">
-  <Row gap="12px" justify="space-between">
-    <Heading level={2}>"Mai Anh"</Heading>
-    <Text>"Kỹ năng, ca trực và sức chứa dùng để chọn người nhận"</Text>
-    <Button variant="quiet" aria-label="Đóng" icon-only></Button>
-  </Row>
-  <Text>"Kỹ năng"</Text>
+<AppShell role="owner" active="Kỹ năng và ca trực">  // the page behind the dialog (dimmed)
+  <PageHeading title="Agent chăm sóc" subtitle="Người nhận yêu cầu, số trực, ngưỡng độ sâu và thời hạn trả lời" />
+  <Tabs items={["Kỹ năng và ca trực","Số trực 24/24","Ma trận ngưỡng","SLA và khung giờ","Cảnh báo"]} selected="Kỹ năng và ca trực" />
+  <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
+    <Card component="StaffCard">
+      <Row gap="8px" justify="space-between" wrap>
+        <Stack>
+          <Heading level={3}>"Mai Anh"</Heading>
+          <Text small>"CSKH · đang giữ 1/6 cuộc trò chuyện"</Text>
+        </Stack>
+        <Button variant="secondary">"Sửa"</Button>
+      </Row>
+      <Row gap="6px" wrap>
+        <Badge tone="info">"Đặt lịch"</Badge>
+        <Badge tone="info">"Khiếu nại"</Badge>
+        <Badge tone="info">"Thanh toán"</Badge>
+      </Row>
+      <Text small>"T2 08:00-17:00 · T3 08:00-17:00 · T4 08:00-17:00 · T5 08:00-17:00 · T6 08:00-17:00"</Text>
+    </Card>
+    <Card component="StaffCard">
+      <Row gap="8px" justify="space-between" wrap>
+        <Stack>
+          <Heading level={3}>"Đặng Minh Thư"</Heading>
+          <Text small>"CSKH · đang giữ 0/5 cuộc trò chuyện"</Text>
+        </Stack>
+        <Button variant="secondary">"Sửa"</Button>
+      </Row>
+      <Row gap="6px" wrap>
+        <Badge tone="info">"Đặt lịch"</Badge>
+        <Badge tone="info">"Mụn"</Badge>
+        <Badge tone="info">"Nám"</Badge>
+      </Row>
+      <Text small>"T2 08:00-12:00 · T3 08:00-12:00 · T4 08:00-12:00 · T5 08:00-12:00 · T6 08:00-12:00 · T7 08:00-12:00"</Text>
+    </Card>
+    <Card component="StaffCard">
+      <Row gap="8px" justify="space-between" wrap>
+        <Stack>
+          <Heading level={3}>"BS. Lê Minh Tâm"</Heading>
+          <Text small>"Bác sĩ · đang giữ 1/3 cuộc trò chuyện"</Text>
+        </Stack>
+        <Button variant="secondary">"Sửa"</Button>
+      </Row>
+      <Row gap="6px" wrap>
+        <Badge tone="info">"Y khoa (bác sĩ)"</Badge>
+        <Badge tone="info">"Laser"</Badge>
+        <Badge tone="info">"Mụn"</Badge>
+      </Row>
+      <Text small>"T2 08:00-17:00 · T3 08:00-17:00 · T4 08:00-17:00 · T5 08:00-17:00 · T6 08:00-17:00"</Text>
+    </Card>
+    <Card component="StaffCard">
+      <Row gap="8px" justify="space-between" wrap>
+        <Stack>
+          <Heading level={3}>"Nguyễn Thanh Hà"</Heading>
+          <Text small>"Chủ phòng khám · đang giữ 0/2 cuộc trò chuyện"</Text>
+        </Stack>
+        <Button variant="secondary">"Sửa"</Button>
+      </Row>
+      <Row gap="6px" wrap>
+        <Badge tone="info">"Khiếu nại"</Badge>
+      </Row>
+      <Text small>"T2 08:00-17:00 · T3 08:00-17:00 · T4 08:00-17:00 · T5 08:00-17:00 · T6 08:00-17:00"</Text>
+    </Card>
+  </Grid>
+</AppShell>
+// opens over the page "Kỹ năng và ca trực" (dimmed); the page behind it is not part of this screen
+<Dialog title="Mai Anh" subtitle="Kỹ năng, ca trực và sức chứa dùng để chọn người nhận" width="720px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
+  <Text strong>"Kỹ năng"</Text>
   <Row gap="8px" wrap>
     <Field label="Chung" type="checkbox" />
     <Field label="Y khoa (bác sĩ)" type="checkbox" />
@@ -89,92 +149,94 @@ Measured from the running page (snapshot of the mock BE): every field, action, s
     <Field label="Nám" type="checkbox" />
     <Field label="Laser" type="checkbox" />
   </Row>
-  <Field label="Thêm kỹ năng khác" type="text" id="_r_2_" />
-  <Text>"Mã viết thường, không dấu, cách nhau bằng dấu phẩy (ví dụ: tiem_filler)."</Text>
-  <Grid cols="308px 308px" gap="16px">
-    <Field label="Số cuộc trò chuyện cùng lúc" type="text" default="6" id="_r_0_" />
-    <Field label="Ngôn ngữ" type="text" default="vi" id="_r_1_" />
-    <Text>"Mã ngôn ngữ, ví dụ: vi, en"</Text>
+  <Field label="Thêm kỹ năng khác" type="text" hint="Mã viết thường, không dấu, cách nhau bằng dấu phẩy (ví dụ: tiem_filler)." />
+  <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
+    <Field label="Số cuộc trò chuyện cùng lúc" type="text" default="6" />
+    <Field label="Ngôn ngữ" type="text" default="vi" hint="Mã ngôn ngữ, ví dụ: vi, en" />
   </Grid>
-  <Text>"Ca trực trong tuần"</Text>
-  <Text>"Giờ theo múi giờ phòng khám. Giờ kết thúc sớm hơn giờ bắt đầu nghĩa là ca kéo sang sáng hôm sau."</Text>
-  <Row gap="8px" justify="space-between">
-    <Text>"Thứ hai"</Text>
-    <Button variant="quiet">"Thêm ca"</Button>
-  </Row>
-  <ul>
-    <li>
+  <Text strong>"Ca trực trong tuần"</Text>
+  <Text small>"Giờ theo múi giờ phòng khám. Giờ kết thúc sớm hơn giờ bắt đầu nghĩa là ca kéo sang sáng hôm sau."</Text>
+  <Card variant="soft">
+    <Row gap="8px" justify="space-between" wrap>
+      <Text strong>"Thứ hai"</Text>
+      <Button variant="quiet">"Thêm ca"</Button>
+    </Row>
+    <Row gap="8px" wrap>
       <Field label="Thứ hai, ca 1, bắt đầu" type="time" default="08:00" />
       <Text>"đến"</Text>
       <Field label="Thứ hai, ca 1, kết thúc" type="time" default="17:00" />
       <Button variant="danger">"Xóa"</Button>
-    </li>
-  </ul>
-  <Row gap="8px" justify="space-between">
-    <Text>"Thứ ba"</Text>
-    <Button variant="quiet">"Thêm ca"</Button>
-  </Row>
-  <ul>
-    <li>
+    </Row>
+  </Card>
+  <Card variant="soft">
+    <Row gap="8px" justify="space-between" wrap>
+      <Text strong>"Thứ ba"</Text>
+      <Button variant="quiet">"Thêm ca"</Button>
+    </Row>
+    <Row gap="8px" wrap>
       <Field label="Thứ ba, ca 1, bắt đầu" type="time" default="08:00" />
       <Text>"đến"</Text>
       <Field label="Thứ ba, ca 1, kết thúc" type="time" default="17:00" />
       <Button variant="danger">"Xóa"</Button>
-    </li>
-  </ul>
-  <Row gap="8px" justify="space-between">
-    <Text>"Thứ tư"</Text>
-    <Button variant="quiet">"Thêm ca"</Button>
-  </Row>
-  <ul>
-    <li>
+    </Row>
+  </Card>
+  <Card variant="soft">
+    <Row gap="8px" justify="space-between" wrap>
+      <Text strong>"Thứ tư"</Text>
+      <Button variant="quiet">"Thêm ca"</Button>
+    </Row>
+    <Row gap="8px" wrap>
       <Field label="Thứ tư, ca 1, bắt đầu" type="time" default="08:00" />
       <Text>"đến"</Text>
       <Field label="Thứ tư, ca 1, kết thúc" type="time" default="17:00" />
       <Button variant="danger">"Xóa"</Button>
-    </li>
-  </ul>
-  <Row gap="8px" justify="space-between">
-    <Text>"Thứ năm"</Text>
-    <Button variant="quiet">"Thêm ca"</Button>
-  </Row>
-  <ul>
-    <li>
+    </Row>
+  </Card>
+  <Card variant="soft">
+    <Row gap="8px" justify="space-between" wrap>
+      <Text strong>"Thứ năm"</Text>
+      <Button variant="quiet">"Thêm ca"</Button>
+    </Row>
+    <Row gap="8px" wrap>
       <Field label="Thứ năm, ca 1, bắt đầu" type="time" default="08:00" />
       <Text>"đến"</Text>
       <Field label="Thứ năm, ca 1, kết thúc" type="time" default="17:00" />
       <Button variant="danger">"Xóa"</Button>
-    </li>
-  </ul>
-  <Row gap="8px" justify="space-between">
-    <Text>"Thứ sáu"</Text>
-    <Button variant="quiet">"Thêm ca"</Button>
-  </Row>
-  <ul>
-    <li>
+    </Row>
+  </Card>
+  <Card variant="soft">
+    <Row gap="8px" justify="space-between" wrap>
+      <Text strong>"Thứ sáu"</Text>
+      <Button variant="quiet">"Thêm ca"</Button>
+    </Row>
+    <Row gap="8px" wrap>
       <Field label="Thứ sáu, ca 1, bắt đầu" type="time" default="08:00" />
       <Text>"đến"</Text>
       <Field label="Thứ sáu, ca 1, kết thúc" type="time" default="17:00" />
       <Button variant="danger">"Xóa"</Button>
-    </li>
-  </ul>
-  <Row gap="8px" justify="space-between">
-    <Text>"Thứ bảy"</Text>
-    <Button variant="quiet">"Thêm ca"</Button>
-  </Row>
-  <Text>"Nghỉ"</Text>
-  <Row gap="8px" justify="space-between">
-    <Text>"Chủ nhật"</Text>
-    <Button variant="quiet">"Thêm ca"</Button>
-  </Row>
-  <Text>"Nghỉ"</Text>
-  <Row gap="8px" justify="flex-end">
+    </Row>
+  </Card>
+  <Card variant="soft">
+    <Row gap="8px" justify="space-between" wrap>
+      <Text strong>"Thứ bảy"</Text>
+      <Button variant="quiet">"Thêm ca"</Button>
+    </Row>
+    <Text small>"Nghỉ"</Text>
+  </Card>
+  <Card variant="soft">
+    <Row gap="8px" justify="space-between" wrap>
+      <Text strong>"Chủ nhật"</Text>
+      <Button variant="quiet">"Thêm ca"</Button>
+    </Row>
+    <Text small>"Nghỉ"</Text>
+  </Card>
+  <Dialog.Footer>
     <Button variant="secondary">"Hủy"</Button>
     <Button variant="primary">"Lưu"</Button>
-  </Row>
-</Card>
+  </Dialog.Footer>
+</Dialog>
 ```
-Kit components used: Field×21, Button×15, Card×1.
+Kit components used: Field×21, Button×18, Card×11, Badge×10, PageHeading×1, Tabs×1, Dialog×1.
 
 ## Responsive
 - Not probed: this dialog has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WK3-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -221,6 +283,10 @@ Kit components used: Field×21, Button×15, Card×1.
 
 ## Gotchas
 - Care texts quote backend words (consequence of a release, reasons, depth names): the mock BE and `src/lib/care/labels.ts` hold them; a spec lists them as required text only when the code contains them verbatim.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WK3 · Mai Anh`.
+- Canvas note: Next.js › /admin/care/staff · hộp thoại Sửa hồ sơ: kỹ năng, sức chứa, ngôn ngữ và ca trực theo tuần; trang Kỹ năng và ca trực nằm phía sau
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WK3-1440x900.png`

@@ -1,9 +1,12 @@
 #!/usr/bin/env node
-// W3a: lists and checks the web canvas ("Pema Web redesign canvas/Pema Web.dc.html"), like canvas.cjs does for the app canvas.
+// W3a: lists and checks the web canvases ("Pema Web redesign canvas/Pema Web.dc.html", W10: and "Pema Web (Next.js).dc.html"), like canvas.cjs does for the app canvas.
 //
 //   node web-canvas.cjs list  [file]                       "ID · name · note" per screen (no browser needed)
 //   node web-canvas.cjs check [file] [groups] [outDir] [--viewport=1440x900|1920x1020|390x844|all] [--canvas-dir <dir>]
 //                             [--viewer-url <url>] [--theme=light|dark] [--frames] [--complete] [--ids=WI3,WI4]
+//   --file "<name>.dc.html"   which canvas file to read; the positional [file] then drops out (`check [groups] [outDir]`, groups optional).
+//                             Default groups are the ones the file holds: WA-WI for "Pema Web.dc.html", WJ/WK/WL for "Pema Web (Next.js).dc.html".
+//                             A frame of a group that belongs in the other file ("foreign") fails the check, so the old-web canvas stays free of WJ/WK/WL.
 //
 // check renders the canvas through design-viewer (see below) and reports, as JSON:
 //   total / expected / missing   screens rendered vs inventory.json ids of the requested groups (--complete fails on `missing`)
@@ -39,22 +42,37 @@ function take(name) {
   argv.splice(i, 1);
   return true;
 }
+// --frames and --complete are plain flags: they must never swallow the next positional argument (the output folder)
+const flag = (name) => {
+  const i = argv.indexOf(`--${name}`);
+  if (i < 0) return false;
+  argv.splice(i, 1);
+  return true;
+};
 let VIEWPORT = take('viewport') || '';
 const CANVAS_DIR_ARG = take('canvas-dir');
 const VIEWER = String(take('viewer-url') || process.env.CANVAS_URL || 'http://localhost:4181').replace(/\/$/, '');
 const THEME = take('theme') || 'light';
-const FRAMES = take('frames') === true;
-const COMPLETE = take('complete') === true;
+const FRAMES = flag('frames');
+const COMPLETE = flag('complete');
 const IDS = String(take('ids') || '').split(',').map((c) => c.trim()).filter(Boolean); // --ids=WI3,WI4: judge only these screens (an agent that owns some ids of a group)
 
-const [mode = 'list', fileArg = '', codesArg = '', outDir = '.'] = argv;
+const FILE_OPT = take('file');
+const [mode = 'list', ...pos] = argv;
+let [fileArg = '', codesArg = '', outDir = '.'] = typeof FILE_OPT === 'string' ? ['', ...pos] : pos;
+// with --file the groups are optional: a first argument that is not a list of group codes is the output folder
+if (typeof FILE_OPT === 'string' && codesArg && !/^W[A-L](,W[A-L])*$/.test(codesArg)) {
+  outDir = codesArg;
+  codesArg = '';
+}
 // the phone group WI has 390x844 frames only (inventory D4): without --viewport a WI-only check renders that size, every other check 1440x900
 if (!VIEWPORT) VIEWPORT = codesArg.split(',').map((c) => c.trim()).filter(Boolean).every((c) => c === 'WI') && codesArg ? '390x844' : '1440x900';
 const canvasDir = path.resolve(CANVAS_DIR_ARG || lib.CANVAS_DIR);
-const fileName = path.basename(fileArg || lib.CANVAS_FILE);
+const fileName = path.basename((typeof FILE_OPT === 'string' && FILE_OPT) || fileArg || lib.CANVAS_FILE);
 const GALLERY = fileName === lib.BLOCKS_FILE; // the block gallery has scratch ids WA9xx that are not in the inventory
+const ALLOWED = lib.groupsOfFile(fileName); // groups this canvas file holds
 const filePath = path.join(canvasDir, fileName);
-const SCREEN_ID = '^W[A-I]\\d+(-\\d+)?$';
+const SCREEN_ID = '^W[A-L]\\d+(-\\d+)?$';
 
 /** Evaluate the built canvas script in Node, like specs-lib loadCanvas does for the app canvas. */
 function loadGroups(file) {
@@ -70,7 +88,7 @@ function loadGroups(file) {
 }
 
 function staticProblems(src, groups) {
-  const out = { tokens: lib.compareTokens(src), hexInBlocks: [], frameMismatch: [], unknown: [] };
+  const out = { tokens: lib.compareTokens(src), hexInBlocks: [], frameMismatch: [], unknown: [], foreign: [] };
   // hex colours anywhere outside the generated token blocks
   const stripped = src.replace(/:root\{[^}]*\}/, '').replace(/\[data-theme=dark\]\{[^}]*\}/, '');
   const hex = stripped.match(/#[0-9a-fA-F]{3,8}\b/g);
@@ -81,6 +99,7 @@ function staticProblems(src, groups) {
     for (const sc of g.screens) {
       const e = byId[sc.id];
       if (GALLERY) continue;
+      if (!ALLOWED.includes(g.code) || (e && !ALLOWED.includes(e.group))) out.foreign.push(`${sc.id} (group ${e ? e.group : g.code})`);
       if (!e) {
         out.unknown.push(sc.id);
         continue;
@@ -114,7 +133,7 @@ function staticProblems(src, groups) {
 
   const { out: st, inv } = staticProblems(src, groups);
   const wanted = codesArg.split(',').map((c) => c.trim()).filter(Boolean);
-  const codes = wanted.length ? wanted : lib.GROUP_CODES;
+  const codes = wanted.length ? wanted : ALLOWED;
   const expectedIds = GALLERY ? [] : inv.screens.filter((s) => codes.includes(s.group) && (!IDS.length || IDS.includes(s.id))).map((s) => s.id);
 
   const { chromium } = loadPlaywright();
@@ -174,6 +193,7 @@ function staticProblems(src, groups) {
     frames: frames.filter((f) => inScope(f.id)).length,
     frameMismatch: st.frameMismatch,
     unknownIds: st.unknown,
+    foreignIds: st.foreign,
     errors,
     unresolved: bad.filter((f) => f.unresolved).map((f) => f.id),
     overflow: bad.filter((f) => f.overflow.length).map((f) => `${f.id} (${f.overflow.join(', ')})`),
@@ -205,7 +225,7 @@ function staticProblems(src, groups) {
       console.log(`screenshot ${png}`);
     }
   }
-  const failed = errors.length || report.unresolved.length || report.overflow.length || report.badIcons.length || report.tokens.length || report.hexInBlocks.length || report.frameMismatch.length || report.unknownIds.length || (COMPLETE && missing.length) || !icons.font;
+  const failed = errors.length || report.unresolved.length || report.overflow.length || report.badIcons.length || report.tokens.length || report.hexInBlocks.length || report.frameMismatch.length || report.unknownIds.length || report.foreignIds.length || (COMPLETE && missing.length) || !icons.font;
   process.exitCode = failed ? 1 : 0;
   await browser.close();
 })().catch((e) => {

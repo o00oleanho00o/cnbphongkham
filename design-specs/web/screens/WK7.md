@@ -62,34 +62,47 @@ Other screens:
 - Layout `.region` 512×65 px: flex row, flex-end, gap 8px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Measured from the running page (snapshot of the mock BE): every field, action, status, filter and text is listed; repeating rows show the first one and their count.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web (Next.js).dc.html` (frame WK7); labels, actions, statuses and notices are the front end's, verbatim.
 ```tsx
-// opens over the page; the backdrop and the page behind it are not part of this screen
-<Card role="dialog" layout="flex row">
-  <Row gap="12px" justify="space-between">
-    <Heading level={2}>"Thêm số trực"</Heading>
-    <Text>"Số Zalo trực 24/24 luôn là điểm cuối của chuỗi chuyển giao"</Text>
-    <Button variant="quiet" aria-label="Đóng" icon-only></Button>
+<AppShell role="owner" active="Số trực 24/24">  // the page behind the dialog (dimmed)
+  <PageHeading title="Agent chăm sóc" subtitle="Người nhận yêu cầu, số trực, ngưỡng độ sâu và thời hạn trả lời" />
+  <Tabs items={["Kỹ năng và ca trực","Số trực 24/24","Ma trận ngưỡng","SLA và khung giờ","Cảnh báo"]} selected="Số trực 24/24" />
+  <Row gap="8px" justify="flex-end" wrap>
+    <Button variant="primary">"Thêm số trực"</Button>
   </Row>
-  <Field label="Số Zalo trực" type="text" id="_r_0_" />
-  <Text>"8 đến 15 chữ số, có thể bắt đầu bằng +."</Text>
-  <Field label="Người phụ trách" type="text" id="_r_1_" />
-  <Grid cols="228px 228px" gap="16px">
-    <Field label="Có hiệu lực từ" type="datetime-local" id="_r_2_" />
-    <Field label="Đến (để trống: không giới hạn)" type="datetime-local" id="_r_3_" />
+  <Card component="OnCallCard">
+    <Row gap="8px" justify="space-between" wrap>
+      <Stack>
+        <Heading level={3}>"Điều dưỡng trực (mẫu)"</Heading>
+        <Text>"0000000001"</Text>
+        <Text small>"Từ 21/08 09:00, không giới hạn"</Text>
+      </Stack>
+      <Row gap="8px" wrap>
+        <Badge tone="success">"Đang bật"</Badge>
+        <Badge tone="warning">"Số mẫu để thử"</Badge>
+        <Button variant="secondary">"Sửa"</Button>
+      </Row>
+    </Row>
+  </Card>
+</AppShell>
+// opens over the page "Số trực 24/24" (dimmed); the page behind it is not part of this screen
+<Dialog title="Thêm số trực" subtitle="Số Zalo trực 24/24 luôn là điểm cuối của chuỗi chuyển giao" width="560px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
+  <Field label="Số Zalo trực" type="text" hint="8 đến 15 chữ số, có thể bắt đầu bằng +." />
+  <Field label="Người phụ trách" type="text" />
+  <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
+    <Field label="Có hiệu lực từ" type="text" placeholder="mm/dd/yyyy --:-- --" />
+    <Field label="Đến (để trống: không giới hạn)" type="text" placeholder="mm/dd/yyyy --:-- --" />
   </Grid>
-  <Row gap="12px">
-    <Field label="Đang bật" type="checkbox" checked />
-    <Text>"Đang bật"</Text>
-  </Row>
-  <Row gap="8px" justify="flex-end">
+  <Field label="Đang bật" type="checkbox" checked />
+  <Dialog.Footer>
     <Button variant="secondary">"Hủy"</Button>
     <Button variant="primary">"Lưu"</Button>
-  </Row>
-</Card>
+  </Dialog.Footer>
+</Dialog>
 ```
-Kit components used: Field×5, Button×3, Card×1.
+Kit components used: Field×5, Button×4, Badge×2, PageHeading×1, Tabs×1, Card×1, Dialog×1.
 
 ## Responsive
 - Not probed: this dialog has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WK7-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -129,6 +142,10 @@ Kit components used: Field×5, Button×3, Card×1.
 
 ## Gotchas
 - Care texts quote backend words (consequence of a release, reasons, depth names): the mock BE and `src/lib/care/labels.ts` hold them; a spec lists them as required text only when the code contains them verbatim.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WK7 · Thêm số trực`.
+- Canvas note: Next.js › /admin/care/on-call · hộp thoại Thêm số trực: các ô trống, "Đang bật" đã chọn; trang Số trực 24/24 nằm phía sau
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WK7-1440x900.png`

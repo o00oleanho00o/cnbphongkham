@@ -9,11 +9,21 @@ const ROOT = path.resolve(__dirname, '../../../../..');
 const CANVAS_DIR = path.join(ROOT, 'Pema Web redesign canvas');
 const CANVAS_FILE = 'Pema Web.dc.html';
 const BLOCKS_FILE = 'Pema Web blocks.dc.html';
+const NEXT_FILE = 'Pema Web (Next.js).dc.html';
 const TOKENS = path.join(ROOT, 'pema-agent', 'frontend', 'src', 'ui', 'tokens.json');
 const INVENTORY = path.join(ROOT, 'design-specs', 'web', 'inventory.json');
-const GROUP_CODES = ['WA', 'WB', 'WC', 'WD', 'WE', 'WF', 'WG', 'WH', 'WI'];
+const GROUP_CODES = ['WA', 'WB', 'WC', 'WD', 'WE', 'WF', 'WG', 'WH', 'WI', 'WJ', 'WK', 'WL'];
 // part files of a group: WI is written in two files (parts/WI.js, parts/WI2.js) that the canvas merges into the single group WI
-const GROUP_PARTS = { WI: ['WI', 'WI2'] };
+// WJ (agent admin, 115 ids) is written in two files as well: parts/WJ.js (WJ1-WJ57) and parts/WJ2.js (WJ58-WJ115)
+// W10 (owner decision 2026-10-05): two canvas files from the same base.js, blocks.js and tail.js. The old-web canvas holds WA-WI only,
+// the Next.js-only groups WJ/WK/WL are built into their own file.
+const OUTPUTS = {
+  [CANVAS_FILE]: ['WA', 'WB', 'WC', 'WD', 'WE', 'WF', 'WG', 'WH', 'WI'],
+  [NEXT_FILE]: ['WJ', 'WK', 'WL']
+};
+/** Group codes a canvas file holds (the block gallery holds the scratch group WA). */
+const groupsOfFile = (fileName) => (fileName === BLOCKS_FILE ? ['WA'] : OUTPUTS[fileName] || GROUP_CODES);
+const GROUP_PARTS = { WI: ['WI', 'WI2'], WJ: ['WJ', 'WJ2'] };
 const GROUP_SUB = {
   WA: 'Sidebar, thanh trên, tài khoản demo, thông báo nổi · AppShell',
   WB: 'Tổng quan, hôm nay, điều phối lịch, đặt lịch, chi tiết lịch hẹn',
@@ -23,7 +33,10 @@ const GROUP_SUB = {
   WF: 'Thu ngân, thu tiền, lên đơn nhanh, tách đơn và bản in A5',
   WG: 'Tài chính & tiền thủ thuật theo vai trò: chủ phòng khám, kế toán, bác sĩ',
   WH: 'Ask Pema và Hướng dẫn sử dụng',
-  WI: 'Patient Mobile web: trang chủ, lịch hẹn, hành trình, tin nhắn, hồ sơ và mọi trạng thái · khung điện thoại 390×844'
+  WI: 'Patient Mobile web: trang chủ, lịch hẹn, hành trình, tin nhắn, hồ sơ và mọi trạng thái · khung điện thoại 390×844',
+  WJ: 'Quản trị agent (Next.js): nhân viên, phiên chat, danh bạ, kho tri thức, tài khoản Zalo, agents, tools, MCP, trace, logs, chính sách, cấu hình · khung Next.js',
+  WK: 'Care agent (Next.js): kỹ năng và ca trực, số trực, ma trận ngưỡng, SLA, cảnh báo, yêu cầu chuyển giao, dòng thời gian, trả lại, nói với agent',
+  WL: 'Đăng nhập, khung ứng dụng Next.js (menu theo vai trò, trạng thái tải, quyền, điện thoại) và Tin nhắn mẫu đã duyệt'
 };
 
 const lf = (s) => s.replace(/\r\n/g, '\n');
@@ -117,9 +130,9 @@ function nodeMarkup(S, L) {
 
 const squeeze = (s) => s.replace(/<!--[\s\S]*?-->/g, '').replace(/>\s+</g, '><').replace(/\n\s*/g, ' ').replace(/\s{2,}/g, ' ');
 
-function groupDefs() {
+function groupDefs(codes = GROUP_CODES) {
   const inv = JSON.parse(read(INVENTORY));
-  return GROUP_CODES.map((code) => {
+  return codes.map((code) => {
     const g = inv.groups.find((x) => x.code === code);
     const ids = inv.screens.filter((x) => x.group === code).map((x) => x.id); // inventory order: the canvas lists a group's screens in this order
     return { code, title: g ? g.name : code, sub: GROUP_SUB[code], ids };
@@ -153,11 +166,14 @@ const RENDER_VALS = `
   }`;
 
 function buildScript(defs, blocks) {
-  // the block gallery replaces WA with parts/blocks.js and leaves the other groups empty
+  // the block gallery replaces WA with parts/blocks.js and leaves the other groups empty; a group that is not in `defs` (it lives in the other
+  // canvas file) gets empty parts, so tail.js still evaluates and lists only the groups of this file
   const names = ['base'];
+  const held = defs.map((d) => d.code);
   for (const code of GROUP_CODES) {
     for (const part of GROUP_PARTS[code] || [code]) {
       if (blocks) names.push(code === 'WA' ? 'blocks' : `@const ${part} = [];`);
+      else if (!held.includes(code)) names.push(`@const ${part} = [];`);
       else names.push(part);
     }
   }
@@ -170,9 +186,9 @@ function buildScript(defs, blocks) {
   return `class Component extends DCLogic {\n  build() {\n${body}\n  }\n${RENDER_VALS}\n}`;
 }
 
-/** The text of "Pema Web.dc.html". */
+/** The text of "Pema Web.dc.html" (opts.file = another canvas file name: "Pema Web (Next.js).dc.html" holds WJ/WK/WL). */
 function buildCanvas(opts = {}) {
-  const defs = groupDefs();
+  const defs = groupDefs(groupsOfFile(opts.blocks ? BLOCKS_FILE : opts.file || CANVAS_FILE));
   const S = parseNodes(read(path.join(CANVAS_DIR, 'nodes.html')));
   const tpl = read(path.join(CANVAS_DIR, 'template.html'));
   const tok = tokenCss(JSON.parse(read(TOKENS)));
@@ -196,4 +212,4 @@ function buildCanvas(opts = {}) {
   return out;
 }
 
-module.exports = { ROOT, CANVAS_DIR, CANVAS_FILE, BLOCKS_FILE, TOKENS, INVENTORY, GROUP_CODES, GROUP_PARTS, lf, read, sha, tokenVars, tokenCss, tokenVarsOfCanvas, compareTokens, buildCanvas, buildScript, groupDefs };
+module.exports = { ROOT, CANVAS_DIR, CANVAS_FILE, BLOCKS_FILE, NEXT_FILE, OUTPUTS, groupsOfFile, TOKENS, INVENTORY, GROUP_CODES, GROUP_PARTS, lf, read, sha, tokenVars, tokenCss, tokenVarsOfCanvas, compareTokens, buildCanvas, buildScript, groupDefs };

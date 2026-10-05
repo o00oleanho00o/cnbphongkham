@@ -71,31 +71,83 @@ Other screens:
 - Layout `.region` 512×65 px: flex row, flex-end, gap 8px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Measured from the running page (snapshot of the mock BE): every field, action, status, filter and text is listed; repeating rows show the first one and their count.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web (Next.js).dc.html` (frame WJ8); labels, actions, statuses and notices are the front end's, verbatim.
 ```tsx
-// opens over the page; the backdrop and the page behind it are not part of this screen
-<Card role="dialog" layout="flex row">
-  <Row gap="12px" justify="space-between">
-    <Heading level={2}>"Đặt lại mật khẩu"</Heading>
-    <Text>"BS. Lê Minh Tâm · doctor@pema.test"</Text>
-    <Button variant="quiet" aria-label="Đóng" icon-only></Button>
-  </Row>
-  <form id="reset-password-form">
-    <Notice tone="info" role="note">"BS. Lê Minh Tâm sẽ bị đăng xuất khỏi mọi thiết bị ngay và phải đăng nhập bằng mật khẩu mới. Hãy báo mật khẩu cho họ qua kênh riêng."</Notice>
-    <Field label="Mật khẩu mới" type="password" id="reset-password" />
-    <Button variant="quiet" aria-label="Hiện nội dung" title="Hiện" icon-only></Button>
-    <Text>"Ít nhất 8 ký tự."</Text>
-    <Field label="Nhập lại mật khẩu mới" type="password" id="reset-password-again" />
-    <Button variant="quiet" aria-label="Hiện nội dung" title="Hiện" icon-only></Button>
-  </form>
-  <Row gap="8px" justify="flex-end">
+<AppShell role="owner" active="Nhân viên">  // the page behind the dialog (dimmed)
+  <PageHeading title="Nhân viên" subtitle="Tài khoản đăng nhập của phòng khám: vai trò, trạng thái và mật khẩu">
+    <Button variant="primary" icon="add">"Thêm nhân viên"</Button>
+  </PageHeading>
+  <Field label="Tìm nhân viên" type="search" placeholder="Tìm theo họ tên hoặc email" />
+  <FilterChipGroup items={["Mọi vai trò","Chủ phòng khám","Quản lý","Bác sĩ","CSKH","Lễ tân"]} selected={["Mọi vai trò"]} />
+  <FilterChipGroup items={["Mọi trạng thái","Đang hoạt động","Đã khóa"]} selected={["Mọi trạng thái"]} />
+  <TableShell columns={["Nhân viên","Vai trò","Trạng thái","Đăng nhập cuối","Ngày tạo","Thao tác"]} rows={8}  /* cards at 390 */>
+    <Row sample="first row; demo values, the other rows have the same cells">
+      <Cell column="Nhân viên">
+        <Avatar>"L"</Avatar>
+        <Text><Strong>"BS. Lê Minh Tâm"</Strong> "\n" <Small>"doctor@pema.test"</Small></Text>
+      </Cell>
+      <Cell column="Vai trò">
+        <Badge tone="info" dot={false}>"Bác sĩ"</Badge>
+      </Cell>
+      <Cell column="Trạng thái">
+        <Badge tone="success">"Đang hoạt động"</Badge>
+      </Cell>
+      <Cell column="Đăng nhập cuối">
+        <Text>"20/09 09:00"</Text>
+      </Cell>
+      <Cell column="Ngày tạo">
+        <Text>"24/03/2026"</Text>
+      </Cell>
+      <Cell column="Thao tác">
+        <Button variant="secondary" aria-label="Sửa BS. Lê Minh Tâm">"Sửa"</Button>
+        <Button variant="secondary" aria-label="Đặt lại mật khẩu của BS. Lê Minh Tâm">"Đặt lại mật khẩu"</Button>
+        <Button variant="danger" aria-label="Khóa tài khoản của BS. Lê Minh Tâm">"Khóa"</Button>
+      </Cell>
+    </Row>
+    <Row sample="row 3 of 8: only the actions and statuses that the rows above do not show">
+      <Cell column="Vai trò">
+        <Badge tone="info" dot={false}>"Lễ tân"</Badge>
+      </Cell>
+      <Cell column="Trạng thái">
+        <Badge tone="danger">"Đã khóa"</Badge>
+      </Cell>
+      <Cell column="Thao tác">
+        <Button variant="secondary" aria-label="Mở khóa tài khoản của Bùi Ngọc Lan">"Mở khóa"</Button>
+      </Cell>
+    </Row>
+    <Row sample="row 4 of 8: only the actions and statuses that the rows above do not show">
+      <Cell column="Vai trò">
+        <Badge tone="info" dot={false}>"CSKH"</Badge>
+      </Cell>
+    </Row>
+    <Row sample="row 6 of 8: only the actions and statuses that the rows above do not show">
+      <Cell column="Vai trò">
+        <Badge tone="info" dot={false}>"Chủ phòng khám"</Badge>
+      </Cell>
+    </Row>
+    <Row sample="row 7 of 8: only the actions and statuses that the rows above do not show">
+      <Cell column="Vai trò">
+        <Badge tone="info" dot={false}>"Quản lý"</Badge>
+      </Cell>
+    </Row>
+  </TableShell>
+</AppShell>
+// opens over the page "Nhân viên" (dimmed); the page behind it is not part of this screen
+<Dialog title="Đặt lại mật khẩu" subtitle="BS. Lê Minh Tâm · doctor@pema.test" width="520px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
+  <Notice tone="info" text="BS. Lê Minh Tâm sẽ bị đăng xuất khỏi mọi thiết bị ngay và phải đăng nhập bằng mật khẩu mới. Hãy báo mật khẩu cho họ qua kênh riêng." />
+  <Field label="Mật khẩu mới" type="text" hint="Ít nhất 8 ký tự." />
+  <Button variant="quiet" aria-label="Hiện nội dung" icon-only></Button>  // inside the field box
+  <Field label="Nhập lại mật khẩu mới" type="text" />
+  <Button variant="quiet" aria-label="Hiện nội dung" icon-only></Button>  // inside the field box
+  <Dialog.Footer>
     <Button variant="secondary">"Hủy"</Button>
     <Button variant="primary" disabled>"Đặt lại mật khẩu"</Button>
-  </Row>
-</Card>
+  </Dialog.Footer>
+</Dialog>
 ```
-Kit components used: Button×5, Field×2, Card×1.
+Kit components used: Button×9, Badge×7, Field×3, PageHeading×1, TableShell×1, Dialog×1.
 
 ## Responsive
 - Not probed: this dialog has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WJ8-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -129,6 +181,10 @@ Kit components used: Button×5, Field×2, Card×1.
 
 ## Gotchas
 - Several WJ pages have no UI test; their briefs come from reading the components (W7). Texts that the brief quotes are checked against the sources by `web-specs.cjs`; "Texts to re-check against the code" in a spec lists the ones it could not find verbatim.
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WJ8 · Đặt lại mật khẩu`.
+- Canvas note: Next.js › /admin/users · hộp thoại đặt lại mật khẩu của một nhân viên, nút tắt khi chưa nhập đủ
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WJ8-1440x900.png`

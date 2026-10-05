@@ -43,8 +43,9 @@ const eyebrow = text => ({ k: 'txt', cls: 't eb', parts: partsOf(text) });
 // kv('Họ tên:', 'Nguyễn Thu Hà'): bold label then value on one line.
 const kv = (label, value, o = {}) => txt([[label, 'b'], ' ' + value], o);
 
-// btn(text, variant, { icon, ric, dis, sm, full, ico }); variant: primary secondary danger dangers quiet link light.
-const btn = (text, v = 'secondary', o = {}) => ({ k: 'btn', v, text: o.ico ? '' : text, icon: o.icon || '', ric: o.ric || '', cls: ['bt', 'bt-' + v, o.sm ? 'bt-sm' : '', o.dis ? 'bt-dis' : '', o.ico ? 'bt-ico' : '', o.full ? 'bt-full' : ''].filter(Boolean).join(' ') });
+// btn(text, variant, { icon, ric, dis, sm, full, ico, aria }); variant: primary secondary danger dangers quiet link light. `aria` = the accessible name (aria-label) when it differs from the text
+// or the button is icon-only (iconBtn('visibility', { aria: 'Hiện nội dung' })); the spec lists it and the coverage check reads it.
+const btn = (text, v = 'secondary', o = {}) => ({ k: 'btn', v, text: o.ico ? '' : text, icon: o.icon || '', ric: o.ric || '', aria: o.aria || '', cls: ['bt', 'bt-' + v, o.sm ? 'bt-sm' : '', o.dis ? 'bt-dis' : '', o.ico ? 'bt-ico' : '', o.full ? 'bt-full' : ''].filter(Boolean).join(' ') });
 const primary = (text, o) => btn(text, 'primary', o);
 const secondary = (text, o) => btn(text, 'secondary', o);
 const quiet = (text, o) => btn(text, 'quiet', o);
@@ -108,14 +109,14 @@ const legend = (items = SVC_LEGEND) => ({ k: 'legend', items: items.map(([t, svc
 
 // ---- fields ----
 const SUFFIX = { select: 'expand_more', date: 'calendar_month', month: 'calendar_month', time: 'schedule' };
-// field(label, { ty, val, ph, hint, err, req, lines, opts, open, on, dis, w, text }); the helpers below set `ty`.
+// field(label, { ty, val, ph, hint, err, req, lines, opts, open, on, dis, w, text, desc }); `sufAria` = accessible name of the icon button inside the box (a password field's "Hiện nội dung"); `desc` (checkbox only) is the grey description under the label; the accessible name of the checkbox is label + desc, as the browser computes it (the spec lists it that way); the helpers below set `ty`.
 const field = (label, o = {}) => {
   const ty = o.ty || 'text';
   const val = o.val === undefined || o.val === null ? '' : String(o.val);
   const box = !['check', 'radio', 'range', 'file'].includes(ty);
   const opts = (o.opts || []).map(x => { const [t, on] = Array.isArray(x) ? x : [x, String(x) === val]; return { t, on, cls: ty === 'radio' ? 'rd-dot' + (on ? ' rd-on' : '') : 'lb-o' + (on ? ' lb-on' : '') }; });
   return {
-    k: 'field', ty, label: ty === 'check' ? '' : label, text: label, ph: o.ph || '', fcls: o.w ? 'fd fd-w' : 'fd', req: !!o.req, hint: o.hint || '', err: o.err || '', w: o.w ? o.w + 'px' : '220px',
+    k: 'field', ty, label: ty === 'check' ? '' : label, text: label, desc: o.desc || '', sufAria: o.sufAria || '', ph: o.ph || '', fcls: o.w ? 'fd fd-w' : 'fd', req: !!o.req, hint: o.hint || '', err: o.err || '', w: o.w ? o.w + 'px' : '220px',
     box, cls: 'fc' + (ty === 'textarea' ? ' fc-ta' : '') + (o.err ? ' fc-err' : '') + (o.dis ? ' fc-dis' : ''), lh: (o.lines || 3) * 24 + 16,
     pre: ty === 'search' ? 'search' : '', suf: o.suf !== undefined ? o.suf : (SUFFIX[ty] || ''), vc: val ? 'fc-v' : 'fc-ph', shown: ty === 'file' ? (o.text || 'Chọn tệp') : (val || o.ph || ''),
     cb: 'ck-b' + (o.on ? ' ck-on' : ''), opts, open: !!o.open, pct: o.pct === undefined ? 0 : o.pct
@@ -192,8 +193,9 @@ const appt = (o = {}) => ({ k: 'appt', day: o.none ? '' : o.day || '', month: o.
 // `open` expands that row and shows `detail` under it; a collapsed row hides its detail, as the old page does.
 const EV_ICON = { followup: 'chat_bubble', photo: 'photo_library', done: 'check', aftercare: 'check', appointment: 'event' };
 const events = (...items) => ({ k: 'events', items: items.map(e => ({ icon: EV_ICON[e.kind] || e.icon || 'check', date: e.date, title: e.title, detail: e.detail || '', open: !!e.open, chev: e.open ? 'expand_more' : 'chevron_right' })) });
-// bubbles({ text, time, mine }, ...): care-team message bubbles; `mine` = the patient's own message, right aligned.
-const bubbles = (...items) => ({ k: 'bubbles', items: items.map(m => ({ text: m.text, time: m.time || '', cls: 'bu-b' + (m.mine ? ' bu-me' : '') })) });
+// bubbles({ text, time, mine, who, note }, ...): message bubbles; `mine` = the patient's own message, right aligned. `who` = sender name over the text, `note` = small italic line
+// under it (e.g. "[1 ảnh đính kèm - không hiển thị ở màn này]"). Agent admin chat: the customer on the left, the bot (`mine: true`) on the right.
+const bubbles = (...items) => ({ k: 'bubbles', items: items.map(m => ({ text: m.text, time: m.time || '', who: m.who || '', note: m.note || '', cls: 'bu-b' + (m.mine ? ' bu-me' : '') })) });
 // upload({ text, btn, file, status, preview, icon }): the send-update file chooser (dashed box: icon, hint, "Chọn ảnh" button, chosen file name, status line, preview placeholder).
 //   `file` also writes the status "Đã chọn: <file> (đã giữ trong phiên demo)" unless `status` is given. `preview` draws the (synthetic) preview placeholder.
 const upload = (o = {}) => ({ k: 'upload', icon: o.icon || 'photo_camera', text: o.text || 'Thêm ảnh nếu bạn muốn đội ngũ xem vùng da cụ thể.', btn: o.btn || 'Chọn ảnh', file: o.file || '', status: o.status !== undefined ? o.status : o.file ? 'Đã chọn: ' + o.file + ' (đã giữ trong phiên demo)' : '', preview: !!o.preview, tag: 'MINH HỌA TỔNG HỢP' });
@@ -211,6 +213,33 @@ const rx = (o = {}) => {
 // errLine(text): inline error line (old `.ops-error`, `.crm-error`, `#review-error`, `<p role="alert">`): danger-coloured text with an error icon, no box. Goes at the end of a
 // dialog body or form, under the field or tabs it belongs to. Use `notice(text, 'danger')` only when the old web draws a boxed notice.
 const errLine = text => ({ k: 'errLine', text });
+// ---- Next.js agent-admin blocks (package W2 step W10; kit gaps listed in BLOCKS.md) ----
+// matrix(cols, rows, { foot }): a table whose cells may hold fields (threshold matrix, SLA, tuning parameters). cols as in table(): 'Label' | ['Label', '1.4fr', 'r'].
+// A cell is 'text' (a "\n" starts the small grey line), mxIn(label, value, { ph, suf }) a text/number field box, mxSel(label, value) a select, mxCk(label, on) a checkbox
+// (`label` is the accessible name, e.g. "Mở cho D3, Nhắc lịch theo mẫu"), or an array of inline blocks (btn, badge, chip). At 390 every row becomes a card like table().
+const mxIn = (label, val = '', o = {}) => ({ mx: 'input', ty: 'text', label, val: String(val), ph: o.ph || '', suf: o.suf || '' });
+const mxSel = (label, val = '', o = {}) => ({ mx: 'input', ty: 'select', label, val: String(val), ph: o.ph || '', suf: 'expand_more' });
+const mxCk = (label, on = false) => ({ mx: 'check', ty: 'check', label, on });
+const matrix = (cols, rows, o = {}) => {
+  const C = cols.map(c => (Array.isArray(c) ? c : [c]));
+  const blank = { cls: 'tw-c', text: '', tcls: 'mx-t', sub: '', input: false, check: false, vc: '', shown: '', suf: '', cb: '', items: [], ty: '', label: '' };
+  return {
+    k: 'matrix', cols: C.map(c => c[1] || '1fr').join(' '), foot: o.foot || '',
+    head: C.map(c => ({ h: c[0], cls: 'tw-hc' + (c[2] === 'r' ? ' al-r' : '') })),
+    rows: rows.map(r => ({ cells: r.map((x, i) => {
+      const b = { ...blank, h: i === 0 ? '' : C[i][0] };
+      if (x && x.mx === 'input') return { ...b, input: true, ty: x.ty, label: x.label, vc: x.val ? 'fc-v' : 'fc-ph', shown: x.val || x.ph, suf: x.suf };
+      if (x && x.mx === 'check') return { ...b, check: true, ty: 'check', label: x.label, cb: 'ck-b' + (x.on ? ' ck-on' : '') };
+      if (typeof x === 'string') { const [t, ...rest] = x.split('\n'); return { ...b, text: t, sub: rest.join(' ') }; }
+      return { ...b, items: [].concat(x) };
+    }) }))
+  };
+};
+// trace(run, ...): the agent's runs, one header button per run and, for an open run, its steps. run = { label, toggle: 'Xem' | 'Thu gọn', open, steps: [{ n: 'Step 1', finish: 'tool-calls',
+// tokens: '700 vào / 60 ra', parts: [{ label: 'Gọi tool: kb_search', text, mono: true }] }] }. `label` is the header text as the old button reads, e.g. "Nguyễn Thu Hà 20/09 08:55 - 2 step - 1.680 token";
+// a part with `mono` is a code block (tool arguments), without it plain text (model text, tool answer).
+const trace = (...runs) => ({ k: 'trace', runs: runs.map(r => ({ label: r.label, toggle: r.toggle || (r.open ? 'Thu gọn' : 'Xem'), open: !!r.open, cls: 'trc-run' + (r.open ? ' trc-on' : ''), steps: (r.steps || []).map(s => ({ n: s.n, finish: s.finish || '', tokens: s.tokens || '', parts: (s.parts || []).map(p => ({ label: p.label, text: p.text, mono: !!p.mono, plain: !p.mono })) })) })) });
+
 // mobTitle(title, greeting): Patient Mobile page title; the optional greeting ("Chào Linh") sits above it in small grey.
 const mobTitle = (title, greeting = '') => (greeting ? stack({ g: 2 }, sm(greeting), h1(title)) : h1(title));
 
@@ -243,7 +272,7 @@ const card = (o0, ...k) => {
   const o = typeof o0 === 'string' ? { title: o0 } : (o0 || {});
   const aside = o.aside || [];
   const tint = typeof o.tint === 'number' ? TINT[o.tint] || '' : o.tint || '';
-  return cont('card', { title: o.title || '', sub: o.sub || '', eyebrow: o.eyebrow || '', aside, tint, hasHead: !!(o.title || o.sub || o.eyebrow || aside.length), hcls: 'cd-h', tcls: 'cd-t', cls: 'cd cd-' + (o.v || 'panel') + (tint ? ' cd-tn-' + tint : ''), icls: 'k-stack', ist: '--g:' + (o.g ?? 12) + 'px', kids: flat(k) });
+  return cont('card', { comp: o.comp || '', title: o.title || '', sub: o.sub || '', eyebrow: o.eyebrow || '', aside, tint, hasHead: !!(o.title || o.sub || o.eyebrow || aside.length), hcls: 'cd-h', tcls: 'cd-t', cls: 'cd cd-' + (o.v || 'panel') + (tint ? ' cd-tn-' + tint : ''), icls: 'k-stack', ist: '--g:' + (o.g ?? 12) + 'px', kids: flat(k) });
 };
 const panel = (title, sub, aside, ...k) => card({ title, sub, aside: aside || [] }, ...k);
 // box(tone, ...kids): notice-coloured container for rich callouts (kids may be fields and badges). box({ tone, title }, ...kids).
@@ -287,15 +316,58 @@ const shellOf = (accId, navKey, o = {}) => {
   const acc = accountOf(accId);
   const pages = PAGES[acc.role];
   const label = (key, def) => (key === 'finance' && acc.role === 'doctor' ? 'Doanh số của tôi' : def);
-  const sections = NAV.map(([title, items]) => ({ title, items: items.filter(([key]) => pages.includes(key)).map(([key, def, icon]) => ({ key, icon, label: label(key, def), cls: 'sb-it' + (key === navKey ? ' sb-it-on' : ''), badge: key === 'followups' ? (o.badge ?? '5') : '' })) })).filter(s => s.items.length);
+  const sections = NAV.map(([title, items]) => ({ title, items: items.filter(([key]) => pages.includes(key)).map(([key, def, icon]) => ({ key, icon, label: label(key, def), cls: 'sb-it' + (key === navKey ? ' sb-it-on' : ''), badge: key === 'followups' ? (o.badge ?? '5') : '', tag: '' })) })).filter(s => s.items.length);
   const tabs = TAB_KEYS[acc.role].filter(k => pages.includes(k)).map(k => ({ label: TAB_SHORT[k], icon: NAV_FLAT.find(n => n[0] === k)[2], cls: 'tabbar-i' + (k === navKey ? ' tabbar-on' : '') }));
   tabs.push({ label: 'Menu', icon: 'menu', cls: 'tabbar-i' });
   const crumbOf = key => label(key, (NAV_FLAT.find(n => n[0] === key) || [0, 'Tổng quan'])[1]);
   return {
     sections, tabs, user: { init: acc.init, name: acc.name, role: acc.label }, account: acc.name + ' · ' + acc.label, accountId: acc.id, crumb: o.crumb || crumbOf(navKey),
+    nx: false, tabAria: 'Điều hướng nhanh', clinic: '', search: true, ver: '',
     bell: ['owner', 'doctor'].includes(acc.role), // the old web draws the notification bell for the owner and the doctors only
     fin: o.fin === undefined ? (['owner', 'doctor', 'accountant'].includes(acc.role) ? 'Tài chính đã đồng bộ' : '') : o.fin, pickerOpen: !!o.pickerOpen, skip: !!o.skip,
     accounts: ACCOUNTS.map(a => ({ t: a.name + ' · ' + a.label, cls: 'lb-o' + (a.id === acc.id ? ' lb-on' : '') }))
+  };
+};
+
+// ---------------------------------------------------------------------------------------------------------
+// Next.js shell (package W2): sidebar menu by permission (lib/nav.tsx), top bar, phone tab bar. The Next.js screens (groups WJ, WK, WL) pass
+// `{ nx: '<role>' }` to page(), dlg() or bare(); `nav` is the path of the active entry ('/admin/users'). Planned entries (old screens not built yet) are grey
+// text with "(sắp có)" and no link. `ver` is the connection line of the sidebar footer ("Đã kết nối · v0.1.0"; the phone drawer shows "v0.1.0" only).
+// ---------------------------------------------------------------------------------------------------------
+const NX_CLINIC = 'Phòng khám Pema (dữ liệu mẫu)';
+const NX_USERS = {
+  owner: { name: 'Nguyễn Thanh Hà', label: 'Chủ phòng khám', init: 'N' }, manager: { name: 'Phạm Quốc Việt', label: 'Quản lý', init: 'P' }, doctor: { name: 'BS. Lê Minh Tâm', label: 'Bác sĩ', init: 'B' },
+  cs_staff: { name: 'Mai Anh', label: 'CSKH', init: 'M' }, reception: { name: 'Võ Ngọc Trâm', label: 'Lễ tân', init: 'V' }, patient: { name: 'Bệnh nhân (mẫu)', label: 'Bệnh nhân', init: 'B' }
+};
+// [path, label, icon, tab label ('' = not in the phone tab bar), planned, roles: O owner, M manager, D doctor, C cs_staff, R reception]
+const NX_NAV = [
+  ['Không gian làm việc', [['/dashboard', 'Tổng quan', 'space_dashboard', '', 0, 'OMDCR'], ['/today', 'Hôm nay', 'today', 'Việc', 0, 'OMDCR'], ['/schedule', 'Điều phối lịch', 'calendar_month', '', 0, 'OMDCR'],
+    ['/patients', 'Tìm bệnh nhân', 'person_search', 'Hồ sơ', 0, 'OMDCR'], ['/inbox', 'Theo dõi', 'inbox', 'Inbox', 0, 'OMDCR'], ['/studio', 'Ảnh trước / sau', 'photo_library', '', 1, 'OMDC']]],
+  ['Quản lý', [['/resources', 'Bác sĩ & phòng', 'stethoscope', '', 1, 'OMDCR'], ['/services', 'Dịch vụ', 'spa', '', 1, 'OMDCR'], ['/cashier', 'Thu ngân', 'receipt_long', '', 1, 'OMDCR'],
+    ['/finance', 'Tài chính & tiền thủ thuật', 'account_balance_wallet', '', 1, 'OM']]],
+  ['Phân tích', [['/ask', 'Hỏi Pema', 'auto_awesome', '', 0, 'OMDCR'], ['/guide', 'Hướng dẫn', 'menu_book', '', 0, 'OMDCR'], ['/crm', 'Vòng đời khách hàng', 'group', '', 0, 'OMDCR']]],
+  ['Zalo & CSKH', [['/review', 'Hàng đợi duyệt', 'fact_check', 'Duyệt', 0, 'OMDC'], ['/templates', 'Mẫu tin', 'description', '', 0, 'OMDCR']]],
+  ['Care agent', [['/care/handoffs', 'Yêu cầu chuyển giao', 'support_agent', 'Chờ tôi', 0, 'OMDC'], ['/admin/care/staff', 'Kỹ năng và ca trực', 'badge', '', 0, 'OM'],
+    ['/admin/care/on-call', 'Số trực 24/24', 'phone_in_talk', '', 0, 'OM'], ['/admin/care/matrix', 'Ma trận ngưỡng', 'tune', '', 0, 'OMD'], ['/admin/care/timing', 'SLA và khung giờ', 'timer', '', 0, 'OM'],
+    ['/admin/care/alerts', 'Cảnh báo agent', 'notifications_active', '', 0, 'OM']]],
+  ['Quản trị agent', [['/admin/overview', 'Tổng quan AI', 'space_dashboard', '', 0, 'OM'], ['/admin/traces', 'Trace agent', 'account_tree', '', 0, 'OM'], ['/admin/threads', 'Phiên chat', 'forum', '', 0, 'OM'],
+    ['/admin/contacts', 'Danh bạ', 'contacts', '', 0, 'OM'], ['/admin/friends', 'Bạn bè', 'group_add', '', 0, 'OM'], ['/admin/schedules', 'Lịch tự động', 'schedule', '', 0, 'OM'], ['/admin/memory', 'Trí nhớ', 'psychology', '', 0, 'OM'],
+    ['/admin/kb', 'Kho tri thức', 'database', '', 0, 'OMDCR'], ['/admin/accounts', 'Tài khoản Zalo', 'sensors', '', 0, 'OM'], ['/admin/users', 'Nhân viên', 'manage_accounts', '', 0, 'OM'], ['/admin/agents', 'Agents', 'smart_toy', '', 0, 'OM'],
+    ['/admin/tools', 'Tools', 'build', '', 0, 'OM'], ['/admin/mcp', 'MCP', 'hub', '', 0, 'OM'], ['/admin/policy', 'Hồ sơ chính sách', 'policy', '', 0, 'OM'], ['/admin/logs', 'Logs', 'terminal', '', 0, 'OM'],
+    ['/admin/tuning', 'Mô hình & cấu hình', 'settings', '', 0, 'OM']]]
+];
+const NX_LETTER = { owner: 'O', manager: 'M', doctor: 'D', cs_staff: 'C', reception: 'R', patient: '-' };
+const NX_ITEMS = NX_NAV.flatMap(([, items]) => items);
+// shellNx(role, nav, { crumb, drawer, skip }): data the template needs; `crumb` defaults to the label of the active entry.
+const shellNx = (role, nav, o = {}) => {
+  const u = NX_USERS[role] || NX_USERS.owner, ch = NX_LETTER[role] || '-';
+  const sections = NX_NAV.map(([title, items]) => ({ title, items: items.filter(it => it[5].includes(ch)).map(([to, label, icon, , planned]) => ({ key: to, icon, label, cls: 'sb-it' + (to === nav ? ' sb-it-on' : '') + (planned ? ' sb-it-pl' : ''), badge: '', tag: planned ? '(sắp có)' : '' })) })).filter(s => s.items.length);
+  const tabs = NX_ITEMS.filter(it => it[3] && it[5].includes(ch)).map(([to, , icon, tl]) => ({ label: tl, icon, cls: 'tabbar-i' + (to === nav ? ' tabbar-on' : '') }));
+  tabs.push({ label: 'Menu', icon: 'menu', cls: 'tabbar-i' });
+  const item = NX_ITEMS.find(it => it[0] === nav);
+  return {
+    nx: true, sections, tabs, user: { init: u.init, name: u.name, role: u.label + ' · ' + NX_CLINIC }, account: '', accountId: role, crumb: o.crumb || (item ? item[1] : ''), bell: role !== 'patient', search: role !== 'patient', fin: '',
+    pickerOpen: false, skip: !!o.skip, accounts: [], tabAria: 'Điều hướng nhanh', clinic: NX_CLINIC, ver: o.drawer ? 'v0.1.0' : 'Đã kết nối · v0.1.0'
   };
 };
 
@@ -308,7 +380,12 @@ const ONE_FRAME = ['1440x900'];
 const PHONE_FRAME = ['390x844'];
 const KIND_LABEL = { page: 'trang', tab: 'tab Patient 360', dlg: 'hộp thoại', fin: 'tài chính', state: 'trạng thái', mob: 'trang điện thoại', mobState: 'trạng thái điện thoại' };
 // A Patient Mobile frame (`o.phone`) has no clinic sidebar or top bar: `fr.phone` draws the phone top bar and bottom navigation instead.
-const frameOf = (key, o = {}) => { const s = SIZES[key], ph = !!o.phone; return { size: key, w: s.w, h: s.h, cls: s.cls + (ph ? ' wf-ph' : ''), wide: !ph && s.w > 600, narrow: !ph && s.w <= 600, phone: ph, sb: !ph && (s.w > 600 || !!o.drawer), sbCls: s.w > 600 ? 'sb' : 'sb sb-dr', drawer: !ph && s.w <= 600 && !!o.drawer, id: '', label: '' }; };
+const frameOf = (key, o = {}) => {
+  const s = SIZES[key], ph = !!o.phone, nx = !!o.nx, bare = !!o.bare, wide = !ph && s.w > 600, narrow = !ph && s.w <= 600;
+  // `bare` frames (sign-in, session loading) have no sidebar, top bar or tab bar; `nx` frames use the Next.js shell, the others the old web's
+  return { size: key, w: s.w, h: s.h, cls: s.cls + (ph ? ' wf-ph' : ''), wide, narrow, phone: ph, sb: !ph && !bare && (s.w > 600 || !!o.drawer), sbCls: s.w > 600 ? 'sb' : 'sb sb-dr', drawer: !ph && !bare && s.w <= 600 && !!o.drawer, nxDrawer: nx && !bare && narrow && !!o.drawer,
+    oldWide: wide && !nx && !bare, oldNarrow: narrow && !nx && !bare, nxWide: wide && nx && !bare, nxNarrow: narrow && nx && !bare, shNarrow: narrow && !bare, id: '', label: '' };
+};
 // native(type, message, { value, options, buttons }): a native browser dialog drawn over the page, with the exact text the shots manifest captured (`native_dialog`).
 //   type: confirm (message + OK/Cancel), prompt (message + input showing `value` + OK/Cancel), alert (message + OK), print (print dialog with a sheet preview, no message),
 //   download (download bubble with the file name as `message`), select (the open option list of the account picker; `options` = every option, the first is current).
@@ -322,9 +399,9 @@ const nativeOf = n => !n ? { has: false, cls: 'nd', tag: '', message: '', value:
 };
 const baseScreen = (kind, id, name, note, nav, blocks, o) => {
   const sc = {
-    id, name, note, kind, kindLabel: KIND_LABEL[o.state ? 'state' : kind], nav, role: o.role || 'owner-tam', state: !!o.state, phone: !!o.phone,
+    id, name, note, kind, kindLabel: KIND_LABEL[o.state ? 'state' : kind], nav, role: o.nx || o.role || 'owner-tam', state: !!o.state, phone: !!o.phone, bare: !!o.bare, ctCls: o.bare ? 'ct-bare' : '',
     frames: (o.frames || (kind === 'dlg' || o.state ? ONE_FRAME : ALL_FRAMES)).map(f => frameOf(f, o)),
-    shell: { ...shellOf(o.role || 'owner-tam', nav, o), pickerTag: '' }, blocks: flat(blocks), hasDialog: false, dialog: { blocks: [], footer: [], w: 640, title: '', sub: '', eyebrow: '', ovCls: 'ov', dgCls: 'dg', close: true },
+    shell: o.nx ? { ...shellNx(o.nx, nav, o), pickerTag: '' } : { ...shellOf(o.role || 'owner-tam', nav, o), pickerTag: '' }, blocks: flat(blocks), hasDialog: false, dialog: { blocks: [], footer: [], w: 640, title: '', sub: '', eyebrow: '', ovCls: 'ov', dgCls: 'dg', close: true },
     hasToast: !!o.toast, toast: o.toast || '', toastCls: o.phone ? 'ts mtoast' : 'ts', toastIcon: !o.phone, hasNative: false, native: nativeOf(null), mob: { name: '', init: '', tabs: [] }
   };
   if (o.native) {
@@ -342,6 +419,15 @@ const baseScreen = (kind, id, name, note, nav, blocks, o) => {
 // page(id, name, note, navKey, blocks, { role, state, frames, toast, drawer, crumb, fin, pickerOpen, skip, native }): a page inside the app shell.
 // Pages and Patient 360 tabs get 1440, 1920 and 390 frames; pass `state: true` for the screens the inventory lists as `state` (1440 only).
 const page = (id, name, note, nav, blocks, o = {}) => baseScreen('page', id, name, note, nav, blocks, o);
+// Next.js screens (groups WJ, WK, WL): `o.nx` is the role of the signed-in account (owner manager doctor cs_staff reception patient), `nav` the path of the active menu entry.
+//   npage(id, name, note, '/admin/users', blocks, { nx: 'owner', state: true })  ·  ndlg(id, title, note, blocks, { nx: 'owner', nav: '/admin/users', behind: [...] })
+const npage = (id, name, note, nav, blocks, o = {}) => page(id, name, note, nav, blocks, { nx: 'owner', ...o });
+// bare(id, name, note, blocks, { state, frames, toast }): a frame without any shell (sign-in, "đang tải phiên", "không tải được phiên"): the content is centred, 440 px wide at most.
+const bare = (id, name, note, blocks, o = {}) => {
+  const sc = baseScreen('page', id, name, note, '', [cont('stack', { cls: 'k-stack k-narrow', st: '--g:16px', kids: flat(blocks) })], { ...o, bare: true, role: o.role || 'anonymous' });
+  sc.shell = { ...sc.shell, crumb: name };
+  return sc;
+};
 // Patient 360 header (back link, hero card with avatar, name, chips, actions, tab bar) for tab().
 const P360_TABS = ['Tổng quan', 'Tư vấn', 'Kế hoạch', 'Buổi điều trị', 'Ảnh trước / sau', 'Dịch vụ & tài chính', 'CRM & CSKH', 'Lịch sử'];
 const patientHead = (p, tabIndex, o = {}) => [
@@ -373,6 +459,7 @@ const dlg = (id, title, note, blocks, o = {}) => {
   sc.dialog = { ...sc.dialog, blocks: flat(blocks), footer: o.footer || [], w: o.w || 640, title, sub: o.sub || '', eyebrow: o.eyebrow || '' };
   return sc;
 };
+const ndlg = (id, title, note, blocks, o = {}) => dlg(id, title, note, blocks, { nx: 'owner', nav: '/dashboard', ...o }); // dialog of a Next.js screen, see npage()
 // mob(id, name, note, active, blocks, { patient, toast, sheet, native, state }): a Patient Mobile page (old `prototype/patient-mobile`) in a 390×844 phone frame: top bar (logo + avatar button
 // "ML" that opens Hồ sơ), `blocks` as the content, the bottom navigation of five tabs (Trang chủ, Lịch hẹn, Hành trình, Tin nhắn, Hồ sơ) and optional overlays. There is no clinic sidebar.
 //   active: the lit tab, as the old web lights it: 'home', 'appointments', 'journey', 'messages', 'profile'; the sub-screens light their parent ('progress', 'care', 'send' -> journey,

@@ -58,21 +58,104 @@ Other screens:
 - Layout `.region` 1152×70 px: flex row wrap, space-between, gap 12px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Measured from the running page (snapshot of the mock BE): every field, action, status, filter and text is listed; repeating rows show the first one and their count.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web (Next.js).dc.html` (frame WL6); labels, actions, statuses and notices are the front end's, verbatim.
 ```tsx
-<AppShell role="owner">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Mẫu tin", page key ""
-  <Row gap="12px" justify="space-between" wrap>
-    <Heading level={1}>"Tin nhắn mẫu đã duyệt"</Heading>
-    <Text>"Văn bản bác sĩ đã duyệt, được dùng cho tin chăm sóc chủ động"</Text>
+<AppShell role="owner" active="Mẫu tin">
+  <Sidebar old="sidebar">  // menu of role `owner` (lib/nav.tsx); at 390 a header with the menu button and a bottom tab bar ("Việc", "Hồ sơ", "Inbox", "Duyệt", "Chờ tôi", "Menu") replace it
+    <Button variant="quiet" href="/" title="Về trang chính" as="link">"PHÒNG KHÁM DA LIỄU"</Button>
+    <Button variant="quiet" aria-label="Đóng menu" icon-only></Button>  // phone drawer only
+    <nav aria-label="Chức năng">
+      <Text transform="uppercase">"Không gian làm việc"</Text>
+      <Button variant="quiet" href="/dashboard" as="link">"Tổng quan"</Button>
+      <Button variant="quiet" href="/today" as="link">"Hôm nay"</Button>
+      <Button variant="quiet" href="/schedule" as="link">"Điều phối lịch"</Button>
+      <Button variant="quiet" href="/patients" as="link">"Tìm bệnh nhân"</Button>
+      <Button variant="quiet" href="/inbox" as="link">"Theo dõi"</Button>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Ảnh trước / sau"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Text transform="uppercase">"Quản lý"</Text>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Bác sĩ & phòng"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Dịch vụ"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Thu ngân"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Tài chính & tiền thủ thuật"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Text transform="uppercase">"Phân tích"</Text>
+      <Button variant="quiet" href="/ask" as="link">"Hỏi Pema"</Button>
+      <Button variant="quiet" href="/guide" as="link">"Hướng dẫn"</Button>
+      <Button variant="quiet" href="/crm" as="link">"Vòng đời khách hàng"</Button>
+      <Text transform="uppercase">"Zalo & CSKH"</Text>
+      <Button variant="quiet" href="/review" as="link">"Hàng đợi duyệt"</Button>
+      <Button variant="quiet" href="/templates" as="link" aria-current="page">"Mẫu tin"</Button>
+      <Text transform="uppercase">"Care agent"</Text>
+      <Button variant="quiet" href="/care/handoffs" as="link">"Yêu cầu chuyển giao"</Button>
+      <Button variant="quiet" href="/admin/care/staff" as="link">"Kỹ năng và ca trực"</Button>
+      <Button variant="quiet" href="/admin/care/on-call" as="link">"Số trực 24/24"</Button>
+      <Button variant="quiet" href="/admin/care/matrix" as="link">"Ma trận ngưỡng"</Button>
+      <Button variant="quiet" href="/admin/care/timing" as="link">"SLA và khung giờ"</Button>
+      <Button variant="quiet" href="/admin/care/alerts" as="link">"Cảnh báo agent"</Button>
+      <Text transform="uppercase">"Quản trị agent"</Text>
+      <Button variant="quiet" href="/admin/overview" as="link">"Tổng quan AI"</Button>
+      <Button variant="quiet" href="/admin/traces" as="link">"Trace agent"</Button>
+      <Button variant="quiet" href="/admin/threads" as="link">"Phiên chat"</Button>
+      <Button variant="quiet" href="/admin/contacts" as="link">"Danh bạ"</Button>
+      <Button variant="quiet" href="/admin/friends" as="link">"Bạn bè"</Button>
+      <Button variant="quiet" href="/admin/schedules" as="link">"Lịch tự động"</Button>
+      <Button variant="quiet" href="/admin/memory" as="link">"Trí nhớ"</Button>
+      <Button variant="quiet" href="/admin/kb" as="link">"Kho tri thức"</Button>
+      <Button variant="quiet" href="/admin/accounts" as="link">"Tài khoản Zalo"</Button>
+      <Button variant="quiet" href="/admin/users" as="link">"Nhân viên"</Button>
+      <Button variant="quiet" href="/admin/agents" as="link">"Agents"</Button>
+      <Button variant="quiet" href="/admin/tools" as="link">"Tools"</Button>
+      <Button variant="quiet" href="/admin/mcp" as="link">"MCP"</Button>
+      <Button variant="quiet" href="/admin/policy" as="link">"Hồ sơ chính sách"</Button>
+      <Button variant="quiet" href="/admin/logs" as="link">"Logs"</Button>
+      <Button variant="quiet" href="/admin/tuning" as="link">"Mô hình & cấu hình"</Button>
+    </nav>
+    <Row gap="10px"><Avatar>"N"</Avatar> <Text>"Nguyễn Thanh Hà"</Text> <Text>"Chủ phòng khám · Phòng khám Pema (dữ liệu mẫu)"</Text></Row>
+    <Row justify="space-between"><Text>"Đã kết nối · v0.1.0"</Text> <Button variant="quiet" aria-label="Đổi giao diện sáng/tối" icon-only></Button> <Button variant="quiet" aria-label="Đăng xuất" icon-only></Button></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <nav aria-label="Vị trí"><Text>"Không gian phòng khám"</Text> <Text>"/"</Text> <Text strong>"Mẫu tin"</Text></nav>
+    <Field label="Tìm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="quiet" href="/inbox" aria-label="Mở thông báo" icon-only as="link"></Button>
+  </TopBar>
+  <Row gap="12px">  // phone header
+  <Button variant="quiet" aria-label="Mở menu" icon-only></Button>
+  <Button variant="quiet" href="/" title="Về trang chính" as="link">"Phòng khám Pema (dữ liệu mẫu)"</Button>
+</Row>
+  <nav aria-label="Điều hướng nhanh">
+  <Button variant="quiet" as="link">"Việc"</Button>
+  <Button variant="quiet" as="link">"Hồ sơ"</Button>
+  <Button variant="quiet" as="link">"Inbox"</Button>
+  <Button variant="quiet" as="link">"Duyệt"</Button>
+  <Button variant="quiet" as="link">"Chờ tôi"</Button>
+  <Button variant="quiet">"Menu"</Button>
+</nav>
+  <PageHeading title="Tin nhắn mẫu đã duyệt" subtitle="Văn bản bác sĩ đã duyệt, được dùng cho tin chăm sóc chủ động">
     <Button variant="primary">"Soạn mẫu mới"</Button>
-  </Row>
-  <Notice tone="info" role="note">"Mẫu mới hoặc vừa sửa chưa được dùng cho đến khi bác sĩ duyệt. Tin quảng bá không gửi cho khách đã từ chối quảng bá, và sinh nhật không bao giờ tự động gửi."</Notice>
-  <Text>"Chưa có mẫu nào"</Text>
-  <Text>"Soạn mẫu đầu tiên và nhờ bác sĩ duyệt."</Text>
+  </PageHeading>
+  <Notice tone="info" text="Mẫu mới hoặc vừa sửa chưa được dùng cho đến khi bác sĩ duyệt. Tin quảng bá không gửi cho khách đã từ chối quảng bá, và sinh nhật không bao giờ tự động gửi." />
+  <EmptyState icon="description">
+    <Heading level={3}>"Chưa có mẫu nào"</Heading>
+    <Text>"Soạn mẫu đầu tiên và nhờ bác sĩ duyệt."</Text>
+  </EmptyState>
 </AppShell>
 ```
-Kit components used: Button×1.
+Kit components used: Button×35, Sidebar×1, TopBar×1, Field×1, PageHeading×1, EmptyState×1.
 
 ## Responsive
 - Not probed: this state has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WL6-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -100,6 +183,10 @@ Kit components used: Button×1.
 
 ## Gotchas
 - (none recorded)
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WL6 · Tin nhắn mẫu đã duyệt · chưa có mẫu`.
+- Canvas note: Next.js › /templates · danh sách trống
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WL6-1440x900.png`

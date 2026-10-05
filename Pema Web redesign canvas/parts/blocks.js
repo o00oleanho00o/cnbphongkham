@@ -95,5 +95,20 @@ const WA = [
   ], { eyebrow: 'Pema · vận hành', footer: [secondary('Hủy'), primary('Xác nhận')], native: native('prompt', 'Mã chứng từ chi', { value: '' }) }),
   page('WA913', 'Blocks · native print', 'native("print"): the browser print dialog (no message text can be captured); the A5 sheets are drawn by the print screens', 'cashier', [pageHead('Thu ngân', 'page behind the print dialog')], { state: true, native: native('print') }),
   page('WA914', 'Blocks · native download', 'native("download", fileName): the browser download bubble with the file name', 'finance', [pageHead('Tài chính & tiền thủ thuật', 'page behind the download bubble')], { state: true, native: native('download', 'Pema-tien-thu-thuat-2026-09.csv') }),
-  page('WA915', 'Blocks · native select (account list)', 'native("select", "", { options }): the open option list of the account picker, first option = current', 'dashboard', [pageHead('Tổng quan', 'page behind the native option list')], { state: true, native: native('select', '', { options: ACCOUNTS.map(a => a.name + ' · ' + a.label) }) })
+  page('WA915', 'Blocks · native select (account list)', 'native("select", "", { options }): the open option list of the account picker, first option = current', 'dashboard', [pageHead('Tổng quan', 'page behind the native option list')], { state: true, native: native('select', '', { options: ACCOUNTS.map(a => a.name + ' · ' + a.label) }) }),
+  page('WA916', 'Blocks · Next.js: matrix, trace, bubbles who/note, aria', 'matrix(cols, rows) with mxIn / mxSel / mxCk / inline cells; trace(run, ...) with a closed and an open run; bubbles({ who, note }); btn aria; npage(...) = page in the Next.js shell', '/admin/care/matrix', [
+    pageHead('Ma trận ngưỡng', 'matrix, trace and the chat bubbles of the agent admin', [primary('Lưu ma trận', { dis: true })]),
+    matrix(['Loại tin', ['Lên L2 sau (lần)', '160px'], ['Mở cho D3', '120px'], ['Trạng thái', '160px']], [
+      ['Nhắc lịch theo mẫu', mxIn('Lên L2 sau bao nhiêu lần, Nhắc lịch theo mẫu', '3'), mxCk('Mở cho D3, Nhắc lịch theo mẫu', true), [badge('Đang bật', 'success')]],
+      ['Hỏi thăm sau thủ thuật\nD+1', mxIn('Lên L2 sau bao nhiêu lần, Hỏi thăm sau thủ thuật', '', { ph: '5' }), mxCk('Mở cho D3, Hỏi thăm sau thủ thuật'), [badge('Chờ duyệt', 'warning')]],
+      ['Xác nhận lịch', mxSel('Độ sâu', 'D2 · Chăm sóc chuẩn'), mxCk('Mở cho D3, Xác nhận lịch'), [secondary('Sửa')]]
+    ], { foot: '3 loại tin' }),
+    trace({ label: 'Nguyễn Thu Hà 20/09 08:55 - 2 step - 1.680 token', open: true, steps: [
+      { n: 'Step 1', finish: 'tool-calls', tokens: '700 vào / 60 ra', parts: [{ label: 'Gọi tool: kb_search', text: '{ "query": "chăm sóc da sau laser" }', mono: true }, { label: 'Tool trả về: kb_search', text: '3 đoạn từ 2 nguồn đã được bác sĩ duyệt.' }] },
+      { n: 'Step 2', finish: 'stop', tokens: '900 vào / 90 ra', parts: [{ label: 'Model nói', text: 'Em đã soạn nháp trả lời kèm nguồn, chờ nhân viên duyệt.' }] }] },
+    { label: 'Lễ tân Trâm 20/09 08:08 - 3 step - 1.822 token' }),
+    bubbles({ who: pt.name, text: 'Da em hơi đỏ, em chụp gửi ạ.', note: '[1 ảnh đính kèm - không hiển thị ở màn này]', time: '20/09 08:48' }, { text: 'Chào chị, em là trợ lý của phòng khám.', time: '20/09 08:49', mine: true }),
+    row(iconBtn('visibility', { aria: 'Hiện nội dung' }), btn('Sửa', 'secondary', { aria: 'Sửa BS. Lê Minh Tâm' }))
+  ], { nx: 'owner' }),
+  bare('WA917', 'Blocks · Next.js: bare frame (sign-in)', 'bare(id, name, note, blocks): no sidebar, top bar or tab bar; the content is centred, 440 px at most', [card({}, h2('Đăng nhập CSKH', 'Chăm sóc khách hàng và trợ lý AI'), input('Email', ''), primary('Đăng nhập', { full: true }))]),
 ];
