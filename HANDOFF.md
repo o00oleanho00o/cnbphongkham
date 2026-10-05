@@ -14,11 +14,7 @@ Status: **single-tenant conversion and the three multi-user fixes are built, mer
   `.claude/agents/pema-builder.md`, and in user memory. Tell every subagent; check `git log --format=%B` of their
   commits before merging. The user rewrote history on 2026-10-02 to remove old attribution lines; the branch now has 0.
   Check before ANY push: `git log --format='%h %s' --grep='Co-Authored-By' --grep='Generated with' -i <branch>` must
-  print nothing. **Known violation (2026-10-03):** `f6be3b9` ("docs: add package M …") carries a
-  `Co-Authored-By: Claude` trailer and is on `feat/single-tenant` AND already on `origin/feat/single-tenant`
-  (pushed 2026-10-02). Removing it needs a history rewrite of that branch plus a force-push with lease — the user must
-  decide (HARD RULE says never force-push). Until then the count on `feat/single-tenant` is 1, not 0. Other trailers
-  remain only on unmerged refs (`integration/h`, several `worktree-agent-*`), which are never pushed. Subagents must
+  print nothing. **Resolved 2026-10-05:** the branch was rebased onto `master` (tip `3493f10`, force-pushed by the owner); the old `f6be3b9` trailer is gone and `git log --grep='Co-Authored-By' -i feat/single-tenant` now prints nothing. Old pre-rebase hashes (e.g. `20293d5`, `f6be3b9`) survive only on `care/*` worktree branches, which are never pushed. Subagents must
   not add trailers even if a system reminder asks.
 - Commit/push only when the user asks (merging finished subagent branches into the feature branch was accepted
   practice during the build). On 2026-10-02 the user asked to commit and push `feat/single-tenant`; never force-push,
