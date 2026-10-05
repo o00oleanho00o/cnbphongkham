@@ -3,6 +3,14 @@ name: pema-web-design
 description: Keep the design of the Pema web in step — the frozen inventory of the old web (211 screens: Clinic Web, Finance and the Patient Mobile web, every state), its screenshots, generated screen specs (design-specs/web/, served by the MCP tools get_web_screen / list_web_screens) and the web canvas "Pema Web redesign canvas/Pema Web.dc.html" (web-size frames in the app design language). Use when asked "which web screens are missing from the web canvas", "build / port a Next.js screen from the web canvas" (read the spec first), "refresh old-web screenshots / specs", "add or change a web screen in the web canvas", or when a visible change in pema-agent/frontend needs a log entry (web-design-changes.md). Does not edit the old web (prototype/) or the app canvas; for the app use pema-web-to-canvas and pema-canvas-to-kmp-compose.
 ---
 
+> **Canonical skill (decision, package W2 step W12, 2026-10-05).** This skill, `pema-web-design`, is the canonical one for
+> "keep the canvases in step with the front end": the Next.js front end in `pema-agent/frontend` is the product, so web
+> canvases (old web WA-WI and Next.js-only WJ-WL), specs, the change log `web-design-changes.md` and the hub
+> `design-specs/INDEX.md` (app 82 + web 384 + Design System, `scripts/unify-index.cjs`) live here. `pema-web-to-canvas` is now
+> app-only (app canvas fed from `prototype/` changes) and `pema-canvas-to-kmp-compose` builds the app from the app canvas.
+> Group WI (Patient Mobile web) is not a Next.js target: it is `served by KMP/Zalo`, revisit when a Zalo OA exists.
+> Nothing was deleted; every script of the other skills still works.
+
 # Pema web design (old web → inventory → shots → specs → web canvas → Next.js)
 
 Package W built four layers for the old Clinic Web (`prototype/clinic-web`, read-only), the way the app has them:
