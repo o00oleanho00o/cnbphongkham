@@ -126,7 +126,7 @@ class CrmRulesRunner:
         await self._store.ensure_rules(clinic_id)
         data = await self._store.load(clinic_id, moment)
 
-        outcome = run_rules(data.patients, data.rules, data.existing_tasks, moment)
+        outcome = run_rules(data.patients, data.rules, data.existing_tasks, moment, data.protocols)
         inserted = await self._store.apply(
             clinic_id,
             StoreChanges(

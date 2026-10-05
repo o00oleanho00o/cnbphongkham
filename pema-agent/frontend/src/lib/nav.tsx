@@ -109,7 +109,6 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Ảnh trước / sau",
         icon: IconImages,
         needs: ["patient.read_360"],
-        planned: true,
       },
     ],
   },
@@ -121,14 +120,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Bác sĩ & phòng",
         icon: IconStethoscope,
         needs: ["appointment.read"],
-        planned: true,
       },
       {
         to: "/services",
         label: "Dịch vụ",
         icon: IconHeart,
         needs: ["appointment.read"],
-        planned: true,
       },
       {
         to: "/cashier",

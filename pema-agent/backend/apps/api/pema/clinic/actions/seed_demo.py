@@ -35,6 +35,7 @@ from uuid import UUID, uuid5
 from sqlalchemy import select
 
 from pema.clinic import audit
+from pema.clinic.actions.catalog_seed import seed_default_catalog
 from pema.clinic.actions.seed_guide import seed_guide_articles
 from pema.clinic.models import (
     Appointment,
@@ -112,12 +113,13 @@ async def seed_demo(db: ClinicDatabase, *, password: str, today: date = DEMO_DAY
     conversation_id = _id("conversation", slug, "P025")
     async with db.session() as probe:
         already = await probe.scalar(select(UserAccount.id).where(UserAccount.id == users["owner"]))
-    if already is not None:
-        return SeedResult(clinic_id, False, users, patient_ids, conversation_id)
-
     ctx = ActionContext(
         clinic_id=clinic_id, actor_type=ActorType.SYSTEM, source=ActionSource.SYSTEM, request_id="seed-demo"
     )
+    if already is not None:
+        await seed_default_catalog(db, ctx)  # a demo database from before the catalog gets it on a re-run
+        return SeedResult(clinic_id, False, users, patient_ids, conversation_id)
+
     password_hash = passwords.hash_password(password)
     stamp = _at(today, 9)
     async with db.session() as session:
@@ -412,6 +414,7 @@ async def seed_demo(db: ClinicDatabase, *, password: str, today: date = DEMO_DAY
         await audit.record(
             session, ctx, "seed.demo", "clinic", clinic_id, {"patients": len(CASES), "users": len(USERS)}
         )
+    await seed_default_catalog(db, ctx)
     return SeedResult(clinic_id, True, users, patient_ids, conversation_id)
 
 

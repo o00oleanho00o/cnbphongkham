@@ -99,6 +99,9 @@ const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
   "/admin/policy": { heading: "Hồ sơ chính sách", action: { role: "button", name: "" } },
   "/admin/tuning": { heading: "Cấu hình", action: { role: "textbox", name: "" } },
   "/admin/tuning/[group]": { heading: "Cấu hình", action: { role: "button", name: "" } },
+  "/services": { heading: "Danh mục dịch vụ", action: { role: "button", name: "Thêm dịch vụ" } },
+  "/resources": { heading: "Bác sĩ & phòng", action: { role: "button", name: "Khóa phòng" } },
+  "/studio": { heading: "Ảnh trước / sau", action: { role: "textbox", name: "Tìm bệnh nhân" } },
 };
 
 /** Routes the smoke test does not open: sign-in has its own form, the kit examples are development only. */

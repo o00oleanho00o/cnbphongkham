@@ -9,6 +9,8 @@ One Next.js app (App Router, TypeScript, Tailwind v4, Vietnamese UI, mobile-firs
 
 - **Agent chăm sóc** (package M, step M5): staff supervise the per-patient care agents instead of driving them. `/care/handoffs` ("Yêu cầu chờ tôi": Nhận, or Từ chối with a reason and an optional colleague), `/care/patients/[id]/timeline` (what the agent sent, holds and waits for, why it asked for a person, paused reminders, what it remembers), `/care/patients/[id]/release` (return the conversation with a note and an optional LOWER level for N days, with the consequence in the backend's own words) and `/care/patients/[id]/tell-agent` (free text saved as care memory, source `staff`). Owner and manager also get `/admin/care/{staff,on-call,matrix,timing,alerts}` (skills and shifts, the 24/7 contact, the depth and autonomy matrix with the badge "Chờ bác sĩ duyệt" that only doctor, manager and owner clear, SLA, alerts). Every rule, level and permission comes from `GET/POST /api/v1/care/**` (`pema_contracts/care.py`); the pages only follow `can_accept`, `can_release`, `release_levels`, `can_edit`, `can_approve`. Handoffs and the timeline refresh on `handoff.changed` / `care.changed`.
 
+- **Cấu hình danh mục** (package U, step U4): `/services` ("Danh mục dịch vụ": price, minutes of treatment and room preparation, rooms, the history of every price and rate version, and the follow-up protocols the CRM rules read), `/resources` ("Bác sĩ & phòng": doctors with the shift of the day from the care staff profile and the load of the day, rooms, room blocks), `/studio` ("Ảnh trước / sau": the before/after photo studio of one patient, kept in `?patient=&view=`). Everybody who sees the schedule reads the catalog and the resources; the owner and the manager (`admin.rules`) change them, and only they see the commission rate and basis (`rate_bp`, `basis` are `null` for the other roles). A change of price, rate, basis, duration or buffer starts the next terms version on the backend (`/api/v1/services`, `/protocols`, `/resources`, `/rooms`, `/room-blocks`, `/studio/{patient_id}`); the pure rules of the three screens are in `lib/catalog/catalog-view.ts`. The studio shows illustrative placeholders until the Patient 360 step adds the photo store.
+
 It is UI only. Every business rule, permission and audit is the backend's (`backend/apps/api`). The menu is filtered by the permission list of `GET /api/v1/me`, which is a convenience, never a control.
 
 ## Run
@@ -61,6 +63,7 @@ src/components/care/, src/lib/care/   its components, labels (codes to Vietnames
 src/app/(admin)/admin/<area>/page.tsx  AI administration, one route per page of the original dashboard
 src/components/admin/<area>/          ported components (paths fixed by docs/PORT-MAP.md)
 src/components/ops/                   clinic operation components (new, no zalo-agent original)
+src/components/catalog/, src/lib/catalog/   service catalog, protocols, doctors and rooms, photo studio (U4)
 src/lib/admin/<area>/                 ported pure logic and its tests (vitest, same titles as the originals)
 src/lib/api/                          client.ts (typed openapi-fetch + ApiError), schema.d.ts (generated)
 src/lib/session/, src/lib/nav.tsx     session context, menu and permission filter

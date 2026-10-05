@@ -14,14 +14,18 @@ Pure functions of a ``PatientSnapshot`` and ``today`` (the clinic-local day of `
   not yet produced a recommendation, ``recommendation_at`` becomes that session + 30 days (source
   ``service_protocol``). The session id is remembered so a doctor's later edit of the date is never
   overwritten; the original kept it in ``p.crm.lastProtocolSession``.
+  The protocol and its ``followup_days`` are data now (``ProtocolConfig``): any active protocol that has a
+  ``followup_days`` recommends it, and with no configuration Laser CO2 keeps its 30 days.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import replace
 from datetime import date
 
 from pema.clinic.crm_rules.dates import add_days, days_between
+from pema.clinic.crm_rules.protocols import ProtocolConfig, protocol_for
 from pema.clinic.crm_rules.records import (
     AppointmentSnapshot,
     AppointmentStatus,
@@ -32,12 +36,8 @@ from pema.clinic.crm_rules.records import (
     RiskLevel,
     SessionSnapshot,
 )
-from pema.clinic.crm_rules.rules import LASER_PROTOCOL_ID
 from pema_contracts.crm import CrmProfile
 
-PROTOCOL_FOLLOWUP_DAYS = 30
-"""Laser CO2 suggests the next assessment 30 days after the session (D+30)."""
-PROTOCOL_FOLLOWUP_REASON = "Đánh giá D+30 sau Laser CO2"
 APPOINTMENT_VISIT_REASON = "Lịch hẹn đã xác nhận với phòng khám"
 SERVICE_PROTOCOL_SOURCE = "service_protocol"
 APPOINTMENT_SOURCE = "appointment"
@@ -115,21 +115,27 @@ def to_profile_dto(view: ProfileView) -> CrmProfile:
     )
 
 
-def refresh_patient(patient: PatientSnapshot) -> tuple[PatientSnapshot, PatientCrmUpdate | None]:
-    """The patient part of ``refresh()``: D+30 recommendation after a new Laser CO2 session.
+def refresh_patient(
+    patient: PatientSnapshot, protocols: Mapping[str, ProtocolConfig] | None = None
+) -> tuple[PatientSnapshot, PatientCrmUpdate | None]:
+    """The patient part of ``refresh()``: the follow-up recommendation after a new session of a protocol that
+    has one (Laser CO2: D+30).
 
     Returns the patient with the recommendation applied and the update to persist (None when nothing changed).
     """
     latest = latest_session(patient)
-    if latest is None or latest.protocol_id != LASER_PROTOCOL_ID:
+    if latest is None:
+        return patient, None
+    config = protocol_for(protocols, latest.protocol_id)
+    if config is None or not config.active or config.followup_days is None:
         return patient, None
     if patient.last_protocol_session_id == latest.id:
         return patient, None
     update = PatientCrmUpdate(
         patient_id=patient.id,
-        recommendation_at=add_days(latest.day, PROTOCOL_FOLLOWUP_DAYS),
+        recommendation_at=add_days(latest.day, config.followup_days),
         expected_visit_source=SERVICE_PROTOCOL_SOURCE,
-        expected_visit_reason=PROTOCOL_FOLLOWUP_REASON,
+        expected_visit_reason=f"Đánh giá D+{config.followup_days} sau {config.name}",
         last_protocol_session_id=latest.id,
     )
     refreshed = replace(

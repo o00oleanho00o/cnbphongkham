@@ -121,12 +121,6 @@ describe("visibleSections", () => {
   it("shows_a_planned_item_in_its_place_when_the_role_has_the_permission", () => {
     const sections = visibleSections((needs) => needs.includes("appointment.read"));
 
-    expect(
-      sections
-        .flatMap((s) => s.items)
-        .filter((i) => i.planned)
-        .map((i) => i.to),
-    ).toContain("/resources");
     expect(sections[0]?.items.map((i) => i.to)).toContain("/schedule");
   });
 });
@@ -144,7 +138,9 @@ describe("homeFor", () => {
   });
 
   it("skips_planned_screens_even_when_they_come_first", () => {
-    expect(homeFor((needs) => needs.includes("patient.read"))).toBe("/patients");
+    const plannedNeeds = items.filter((i) => i.planned).map((i) => i.needs);
+
+    expect(homeFor((needs) => plannedNeeds.includes(needs))).toBe("/login");
   });
 
   it("goes_to_login_when_nothing_is_allowed", () => {

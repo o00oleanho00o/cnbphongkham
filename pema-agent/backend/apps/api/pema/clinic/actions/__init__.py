@@ -22,8 +22,12 @@ from pema.clinic.actions import (
     patient_360,
     patients,
     plans,
+    protocols,
+    resources,
     review_items,
+    services,
     sessions,
+    studio,
     templates,
 )
 from pema.clinic.actions.agent_facing import ClinicAgentFacingActions
@@ -49,7 +53,11 @@ __all__ = [
     "patient_360",
     "patients",
     "plans",
+    "protocols",
+    "resources",
     "review_items",
+    "services",
     "sessions",
+    "studio",
     "templates",
 ]

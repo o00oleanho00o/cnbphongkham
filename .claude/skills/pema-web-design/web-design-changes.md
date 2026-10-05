@@ -21,6 +21,24 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-05 · add · Dịch vụ (catalog, history, protocols)
+- Where: `pema-agent/frontend/src/app/(admin)/services/page.tsx`, `src/components/catalog/{service-sheet,service-history-dialog,protocol-sheet}.tsx` · route `/services`
+- Change: the menu item "Dịch vụ" is no longer planned. Catalog cards (price, treatment and room preparation minutes, rooms, protocol, Đang dùng / Tạm ngưng, terms version), add and edit sheet, history of price and rate versions, follow-up protocols (D+1, D+3, D+7, review day); commission rate and basis only for `admin.rules`; 1/2/3/4 columns (4 from 1600).
+- Web canvas target: WE5, WE6
+- Logged by: U4 sync
+
+### 2026-10-05 · add · Bác sĩ & phòng (doctors, rooms, room blocks)
+- Where: `pema-agent/frontend/src/app/(admin)/resources/page.tsx`, `src/components/catalog/room-sheets.tsx` · route `/resources`
+- Change: the menu item "Bác sĩ & phòng" is no longer planned. Doctor cards with the shift and load of the chosen day, rooms (add, edit, deactivate), room blocks list, "Khóa phòng" dialog (08:00-18:00, reason) and "Gỡ khóa" after a confirmation.
+- Web canvas target: WE3, WE4, WE7, WE8
+- Logged by: U4 sync
+
+### 2026-10-05 · add · Ảnh trước / sau (studio)
+- Where: `pema-agent/frontend/src/app/(admin)/studio/page.tsx`, `src/components/catalog/studio-view.tsx` · route `/studio`
+- Change: the menu item "Ảnh trước / sau" is no longer planned. Patient search kept in `?patient=`, view select (Chính diện, Má trái, Má phải) in `?view=`, side-by-side or slider comparison, zoom, illustrative placeholders while no photo exists, notices and consent metadata, "Thêm ảnh" goes to the patient record.
+- Web canvas target: WE1, WE2
+- Logged by: U4 sync
+
 ## Done
 
 The skill moves entries from "Pending" down here with their result, then updates **Sync baseline** to the commit it compared against. Keep about the 20 most recent entries; older ones are in git history.

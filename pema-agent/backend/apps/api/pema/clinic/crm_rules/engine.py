@@ -24,11 +24,14 @@ Deliberate differences from the JavaScript (all invisible at the test clock 2026
 plan;
   ``related_plan_id`` is None in that case (the column is a foreign key to ``clinic.treatment_plan``).
 * ``d1/d3/d7`` read the protocol from the rule (``conditions.protocol``), defaulting to Laser CO2.
+* The protocol itself is data (package U, step U4): the day offset of ``d1``/``d3``/``d7`` and the window of
+  45 days come from ``clinic.protocol`` (``ProtocolConfig``); with no configuration the constants of the
+  original apply, so Laser CO2 behaves exactly as before. An inactive protocol creates no chain task.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import date, datetime, time, timedelta
 
 from pema.clinic.crm_rules.dates import add_days, days_between, next_birthday
@@ -39,6 +42,7 @@ from pema.clinic.crm_rules.profile import (
     refresh_patient,
     upcoming,
 )
+from pema.clinic.crm_rules.protocols import ProtocolConfig, protocol_for
 from pema.clinic.crm_rules.records import (
     OPEN_STATUSES,
     AppointmentSnapshot,
@@ -58,7 +62,7 @@ from pema_contracts.crm import RuleKey
 DUE_HOUR = 9
 """Every task is due at 09:00 +07:00 of its due day."""
 PROTOCOL_WINDOW_DAYS = 45
-"""d1/d3/d7 only look at a Laser CO2 session that is 0 to 45 days old."""
+"""d1/d3/d7 only look at a Laser CO2 session that is 0 to 45 days old (the default of ``ProtocolConfig``)."""
 NO_SHOW_MIN_AGE = timedelta(hours=24)
 """A cancellation or no-show becomes a recall only when it is at least 24 hours old (real hours, not days)."""
 LONG_DORMANT_AFTER_DAYS = 180
@@ -142,6 +146,7 @@ def _candidates_for(
     today: date,
     now: datetime,
     view: ProfileView,
+    protocols: Mapping[str, ProtocolConfig] | None = None,
 ) -> Iterable[TaskCandidate | None]:
     future = upcoming(patient, today)
     latest = latest_session(patient)
@@ -149,12 +154,16 @@ def _candidates_for(
         key = rule.key
         if key in (RuleKey.D1, RuleKey.D3, RuleKey.D7):
             protocol = rule.protocol or LASER_PROTOCOL_ID
+            config = protocol_for(protocols, protocol)
+            window = config.window_days if config is not None else PROTOCOL_WINDOW_DAYS
+            delay = config.delay_for(key, rule.delay_days) if config is not None else rule.delay_days
             if (
                 latest is not None
                 and latest.protocol_id == protocol
-                and 0 <= days_between(latest.day, today) <= PROTOCOL_WINDOW_DAYS
+                and (config is None or config.active)
+                and 0 <= days_between(latest.day, today) <= window
             ):
-                yield _candidate(rule, patient, latest.id, add_days(latest.day, rule.delay_days), now)
+                yield _candidate(rule, patient, latest.id, add_days(latest.day, delay), now)
         elif key is RuleKey.DUE:
             arrived_today = any(
                 a.day == today and a.status in (AppointmentStatus.ARRIVED, AppointmentStatus.IN_PROGRESS)
@@ -223,14 +232,17 @@ def _candidates_for(
 
 
 def build_candidates(
-    patients: Sequence[PatientSnapshot], rules: Sequence[RuleConfig], now: datetime
+    patients: Sequence[PatientSnapshot],
+    rules: Sequence[RuleConfig],
+    now: datetime,
+    protocols: Mapping[str, ProtocolConfig] | None = None,
 ) -> list[TaskCandidate]:
     """The ``candidates`` of ``run()``. ``patients`` must already be refreshed (see ``run_rules``)."""
     today = clinic_today(now)
     found: list[TaskCandidate] = []
     for patient in patients:
         view = compute_profile(patient, today)
-        for candidate in _candidates_for(patient, rules, today, now, view):
+        for candidate in _candidates_for(patient, rules, today, now, view, protocols):
             if candidate is not None:
                 found.append(candidate)
     return found
@@ -258,17 +270,18 @@ def run_rules(
     rules: Sequence[RuleConfig],
     existing: Sequence[ExistingTask],
     now: datetime,
+    protocols: Mapping[str, ProtocolConfig] | None = None,
 ) -> RulesOutcome:
     """``run()`` as a pure function. Persisting the outcome is the caller's job (``runner``)."""
     today = clinic_today(now)
     refreshed: list[PatientSnapshot] = []
     updates: list[PatientCrmUpdate] = []
     for patient in patients:
-        fresh, update = refresh_patient(patient)
+        fresh, update = refresh_patient(patient, protocols)
         refreshed.append(fresh)
         if update is not None:
             updates.append(update)
-    candidates = build_candidates(refreshed, rules, now)
+    candidates = build_candidates(refreshed, rules, now, protocols)
     merged = reconcile(candidates, existing)
     return RulesOutcome(
         today=today,
