@@ -1,8 +1,8 @@
 "use client";
 
 // Book or open an appointment (old modal "Đặt lịch hẹn" / "Chi tiết lịch hẹn" of operations-ui.js, `edit`). The
-// fields are the ones the BE stores (patient, doctor, start, duration, note); service and room come with the
-// resources step. Every rule (hours, break, double booking, who may do what) is the BE's: its sentence is shown
+// fields are the ones the BE stores (patient, doctor, room, start, duration, note); the service comes with a
+// later step. Every rule (hours, break, double booking, who may do what) is the BE's: its sentence is shown
 // as it is. "Tìm giờ trống" asks the BE for the first free start instead of guessing here.
 import { useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
@@ -33,9 +33,18 @@ import { Button } from "@/ui/button";
 import { Field, FIELD_CONTROL_CLASS } from "@/ui/field";
 
 type Doctor = Schemas["ScheduleDoctor"];
+type Room = Schemas["RoomOut"];
 
 export type SheetTarget =
-  { kind: "create"; day: string; doctorId: string | null } | { kind: "edit"; item: ScheduleItem };
+  | {
+      kind: "create";
+      day: string;
+      doctorId: string | null;
+      /** An empty slot of the room grid names the room and the start it was clicked at. */
+      roomId?: string | null;
+      clock?: string;
+    }
+  | { kind: "edit"; item: ScheduleItem };
 
 const DURATIONS = [15, 30, 45, 60, 90, 120];
 
@@ -45,6 +54,7 @@ function initialValues(target: SheetTarget) {
     const { item } = target;
     return {
       doctorId: item.doctor_id ?? "",
+      roomId: item.room_id ?? "",
       day: dayOf(item.starts_at),
       clock: clockOf(item.starts_at),
       duration: String(item.duration_min),
@@ -53,8 +63,9 @@ function initialValues(target: SheetTarget) {
   }
   return {
     doctorId: target.doctorId ?? "",
+    roomId: target.roomId ?? "",
     day: target.day,
-    clock: "09:00",
+    clock: target.clock ?? "09:00",
     duration: "30",
     note: "",
   };
@@ -70,12 +81,15 @@ function staleSentence(err: unknown): string {
 export function AppointmentSheet({
   target,
   doctors,
+  rooms = [],
   patients,
   onClose,
   onSaved,
 }: {
   target: SheetTarget;
   doctors: readonly Doctor[];
+  /** Rooms of the clinic; without any the room field is not shown. */
+  rooms?: readonly Room[];
   patients: PatientIndex;
   onClose: () => void;
   /** Called after the BE accepted a change; the page reloads the board. */
@@ -95,6 +109,7 @@ export function AppointmentSheet({
   const [doctorId, setDoctorId] = useState(
     ownDoctorOnly && initial.doctorId === "" ? user.id : initial.doctorId,
   );
+  const [roomId, setRoomId] = useState(initial.roomId);
   const [day, setDay] = useState(initial.day);
   const [clock, setClock] = useState(initial.clock);
   const [duration, setDuration] = useState(initial.duration);
@@ -109,6 +124,8 @@ export function AppointmentSheet({
     [patients],
   );
   const doctorChoices = ownDoctorOnly ? doctors.filter((d) => d.id === user.id) : doctors;
+  // A paused room is still shown when the visit already holds it, so the form never silently drops it.
+  const roomChoices = rooms.filter((r) => r.active || r.id === initial.roomId);
 
   async function findSlot() {
     setError("");
@@ -158,6 +175,7 @@ export function AppointmentSheet({
             body: {
               patient_id: patientId,
               doctor_id: doctorId === "" ? null : doctorId,
+              room_id: roomId === "" ? null : roomId,
               starts_at: startsAt,
               duration_min: Number(duration),
               note: note.trim() === "" ? null : note.trim(),
@@ -173,6 +191,9 @@ export function AppointmentSheet({
               version: editing.version,
               ...(doctorId !== (editing.doctor_id ?? "")
                 ? { doctor_id: doctorId === "" ? null : doctorId }
+                : {}),
+              ...(roomId !== (editing.room_id ?? "")
+                ? { room_id: roomId === "" ? null : roomId }
                 : {}),
               ...(startsAt !== editing.starts_at ? { starts_at: startsAt } : {}),
               ...(Number(duration) !== editing.duration_min
@@ -314,6 +335,27 @@ export function AppointmentSheet({
               </select>
             )}
           </Field>
+          {roomChoices.length > 0 && (
+            <Field label="Phòng">
+              {(control) => (
+                <select
+                  {...control}
+                  className={FIELD_CONTROL_CLASS}
+                  value={roomId}
+                  disabled={locked}
+                  onChange={(e) => setRoomId(e.target.value)}
+                >
+                  <option value="">Chưa xếp phòng</option>
+                  {roomChoices.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                      {r.active ? "" : " (tạm ngưng)"}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </Field>
+          )}
           <Field label="Thời lượng">
             {(control) => (
               <select

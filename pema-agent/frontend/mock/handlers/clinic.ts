@@ -1,8 +1,10 @@
 // Mock of the clinic operations API: patients (+360), consents, appointments, CRM tasks and activities,
 // conversations (Inbox) and the review queue. State lives in module variables (see mock/data/clinic.ts).
 import { foldForSearch } from "../../src/lib/admin/shared/fold-for-search";
+import { blocks, rooms } from "../data/catalog";
 import {
   DOCTOR_NAMES,
+  OWNER_NAMES,
   activities,
   appointments,
   clinicToday,
@@ -236,6 +238,67 @@ function findClash(
   return `Trùng lịch của ${hit.who} lúc ${at.slice(8, 10)}/${at.slice(5, 7)} ${at.slice(11, 16)}.`;
 }
 
+const clockOf = (minute: number): string =>
+  `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
+
+type RoomIssue = {
+  status: number;
+  code: "validation_failed" | "appointment_conflict";
+  message: string;
+};
+
+/**
+ * The BE's room rules (`_check_room`), same sentences: the room exists and is active, no block of it overlaps
+ * the window ("Trùng thời gian khóa: <lý do>"), no other active visit holds it ("Phòng đang bận ...").
+ */
+function roomProblem(
+  roomId: string | null | undefined,
+  startsAt: string,
+  duration: number,
+  ignoreId: string | null,
+): RoomIssue | null {
+  if (!roomId) return null;
+  const room = rooms.find((r) => r.id === roomId);
+  if (!room)
+    return { status: 422, code: "validation_failed", message: "Hãy chọn một phòng hợp lệ." };
+  if (!room.active)
+    return { status: 422, code: "validation_failed", message: "Phòng đang tạm ngưng." };
+  const start = clinicMinutes(startsAt);
+  const end = start + duration;
+  const day = startsAt.slice(0, 10);
+  const block = blocks.find(
+    (b) =>
+      b.room_id === roomId &&
+      b.day === day &&
+      start < clinicMinutes(`${day}T${b.end}`) &&
+      end > clinicMinutes(`${day}T${b.start}`),
+  );
+  if (block) {
+    return {
+      status: 409,
+      code: "appointment_conflict",
+      message: `Trùng thời gian khóa: ${block.reason}`,
+    };
+  }
+  const busy = appointments.find(
+    (a) =>
+      a.id !== ignoreId &&
+      a.room_id === roomId &&
+      !FREE.includes(a.status) &&
+      a.starts_at.slice(0, 10) === day &&
+      start < clinicMinutes(a.starts_at) + a.duration_min &&
+      end > clinicMinutes(a.starts_at),
+  );
+  if (busy) {
+    return {
+      status: 409,
+      code: "appointment_conflict",
+      message: `Phòng đang bận hoặc đang chuẩn bị sau lịch ${clockOf(clinicMinutes(busy.starts_at))}.`,
+    };
+  }
+  return null;
+}
+
 function createAppointment(input: S["AppointmentCreate"], by: string): S["AppointmentOut"] {
   const p = patientById(input.patient_id);
   if (!p) fail(404, "not_found", "Không tìm thấy bệnh nhân.");
@@ -243,6 +306,8 @@ function createAppointment(input: S["AppointmentCreate"], by: string): S["Appoin
   const duration = input.duration_min ?? 45;
   const problem = slotProblem(input.starts_at, duration);
   if (problem) fail(422, "validation_failed", problem);
+  const roomIssue = roomProblem(input.room_id, input.starts_at, duration, null);
+  if (roomIssue) fail(roomIssue.status, roomIssue.code, roomIssue.message);
   const clash = findClash(p.id, doctorId, Date.parse(input.starts_at), duration, null);
   if (clash) fail(409, "appointment_conflict", clash);
   const created: S["AppointmentOut"] = {
@@ -250,6 +315,7 @@ function createAppointment(input: S["AppointmentCreate"], by: string): S["Appoin
     patient_id: p.id,
     patient_code: p.code,
     doctor_id: input.doctor_id ?? p.doctor_id ?? null,
+    room_id: input.room_id ?? null,
     starts_at: input.starts_at,
     duration_min: input.duration_min ?? 45,
     status: "booked",
@@ -305,6 +371,8 @@ function scheduleRoute(ctx: Ctx): Reply {
       ...a,
       patient_name: names ? (patientById(a.patient_id)?.full_name ?? null) : null,
       doctor_name: a.doctor_id ? (DOCTOR_NAMES[a.doctor_id] ?? null) : null,
+      room_name: rooms.find((r) => r.id === a.room_id)?.name ?? null,
+      created_by_name: a.created_by ? (OWNER_NAMES[a.created_by] ?? null) : null,
     }));
   const doctors = Object.entries(DOCTOR_NAMES)
     .filter(([id]) => !own || id === user.userId)
@@ -318,6 +386,8 @@ function scheduleRoute(ctx: Ctx): Reply {
       doctor_id: wanted ?? null,
       items,
       doctors,
+      rooms: rooms.toSorted((a, b) => a.name.localeCompare(b.name, "vi")),
+      blocks: blocks.filter((b) => b.day >= day && b.day <= addDaysKey(day, days - 1)),
     } satisfies S["ScheduleOut"],
   };
 }
@@ -653,16 +723,23 @@ export function register(r: Router): void {
       fail(409, "invalid_state", "Lịch đã bắt đầu, hoàn tất, hủy hoặc vắng; hãy tạo lịch mới.");
     }
     const cleaned = Object.fromEntries(
-      Object.entries(patch).filter(([, v]) => v !== undefined && v !== null),
+      Object.entries(patch).filter(([k, v]) => v !== undefined && v !== null && k !== "room_id"),
     ) as Partial<S["AppointmentOut"]>;
     const startsAt = cleaned.starts_at ?? appt.starts_at;
     const duration = cleaned.duration_min ?? appt.duration_min;
     const doctorId = "doctor_id" in patch ? (patch.doctor_id ?? null) : appt.doctor_id;
+    const roomId = "room_id" in patch ? (patch.room_id ?? null) : (appt.room_id ?? null);
     const problem = slotProblem(startsAt, duration);
     if (problem) fail(422, "validation_failed", problem);
+    const roomIssue = roomProblem(roomId, startsAt, duration, appt.id);
+    if (roomIssue) fail(roomIssue.status, roomIssue.code, roomIssue.message);
     const clash = findClash(appt.patient_id, doctorId, Date.parse(startsAt), duration, appt.id);
     if (clash) fail(409, "appointment_conflict", clash);
-    Object.assign(appt, cleaned, { doctor_id: doctorId, version: appt.version + 1 });
+    Object.assign(appt, cleaned, {
+      doctor_id: doctorId,
+      room_id: roomId,
+      version: appt.version + 1,
+    });
     return { body: appt };
   });
   r.post(

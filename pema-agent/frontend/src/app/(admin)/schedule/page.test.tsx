@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ToastProvider } from "@/components/ops/toast";
 import type { Schemas } from "@/lib/api";
+import { clinicDateKey } from "@/lib/ops/format";
 import type { Permission } from "@/lib/session/session-context";
 import { SessionProvider } from "@/lib/session/session-context";
 
@@ -308,6 +309,115 @@ describe("schedule page", () => {
       await user.click(screen.getByRole("button", { name: /Hiện lịch hủy/ }));
 
       expect(screen.getAllByRole("article")).toHaveLength(3);
+    });
+  });
+
+  describe("given the room columns (package U step U10)", () => {
+    const ROOMS: Schemas["RoomOut"][] = [
+      { id: "r-1", name: "Khám da liễu", capacity: 1, active: true, version: 1 },
+      { id: "r-2", name: "Laser & thủ thuật", capacity: 1, active: true, version: 1 },
+    ];
+    const BLOCK: Schemas["RoomBlockOut"] = {
+      id: "b-1",
+      room_id: "r-2",
+      day: clinicDateKey(),
+      start: "14:00",
+      end: "15:00",
+      reason: "Bảo trì thiết bị laser",
+    };
+
+    function answerWithRooms(items: ScheduleItem[]) {
+      api.get.mockImplementation((path: string) => {
+        if (path === "/api/v1/appointments/schedule") {
+          return ok({ ...board(items), rooms: ROOMS, blocks: [BLOCK] });
+        }
+        return ok({ items: [], total: 0, limit: 200, offset: 0 });
+      });
+    }
+
+    beforeEach(() => {
+      window.localStorage.removeItem("pema.schedule.columns");
+    });
+
+    it("keeps_the_doctor_board_by_default_and_offers_the_switch", async () => {
+      answerWithRooms([visit({ room_id: "r-1", room_name: "Khám da liễu" })]);
+      renderPage("reception", RECEPTION);
+
+      expect(await screen.findByRole("button", { name: "Theo bác sĩ" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Theo phòng" })).toBeTruthy();
+      expect(screen.queryByRole("region", { name: "Lưới lịch theo phòng" })).toBeNull();
+    });
+
+    it("draws_a_column_per_room_a_card_in_its_room_and_the_block_with_its_reason", async () => {
+      answerWithRooms([
+        visit({ id: "a-1", room_id: "r-1", room_name: "Khám da liễu" }),
+        visit({ id: "a-2", status: "confirmed", patient_name: "Trần Minh Anh" }),
+      ]);
+      renderPage("reception", RECEPTION);
+      const user = userEvent.setup();
+
+      await user.click(await screen.findByRole("button", { name: "Theo phòng" }));
+
+      const grid = await screen.findByRole("region", { name: "Lưới lịch theo phòng" });
+      expect(within(grid).getByText("Khám da liễu")).toBeTruthy();
+      expect(within(grid).getByText("Laser & thủ thuật")).toBeTruthy();
+      expect(within(grid).getByText("Bảo trì thiết bị laser")).toBeTruthy();
+      const first = grid.querySelector('[data-room="r-1"]') as HTMLElement;
+      expect(within(first).getByText(/Nguyễn Thu Hà/)).toBeTruthy();
+      // the visit with no room is listed apart, not dropped
+      expect(screen.getByText("Chưa xếp phòng")).toBeTruthy();
+      expect(screen.getByText("Trần Minh Anh")).toBeTruthy();
+    });
+
+    it("remembers_the_choice_in_this_browser", async () => {
+      answerWithRooms([visit({ room_id: "r-1" })]);
+      const first = renderPage("reception", RECEPTION);
+      const user = userEvent.setup();
+      await user.click(await screen.findByRole("button", { name: "Theo phòng" }));
+      expect(window.localStorage.getItem("pema.schedule.columns")).toBe("room");
+      first.unmount();
+
+      renderPage("reception", RECEPTION);
+
+      expect(await screen.findByRole("region", { name: "Lưới lịch theo phòng" })).toBeTruthy();
+    });
+
+    it("an_empty_half_hour_opens_the_booking_sheet_with_that_room_and_time", async () => {
+      answerWithRooms([]);
+      renderPage("reception", RECEPTION);
+      const user = userEvent.setup();
+      await user.click(await screen.findByRole("button", { name: "Theo phòng" }));
+
+      await user.click(
+        await screen.findByRole("button", { name: "Đặt lịch Laser & thủ thuật 10:30" }),
+      );
+
+      expect(await screen.findByRole("heading", { name: "Đặt lịch hẹn" })).toBeTruthy();
+      expect((screen.getByLabelText("Phòng") as HTMLSelectElement).value).toBe("r-2");
+      expect((screen.getByLabelText(/Giờ/) as HTMLInputElement).value).toBe("10:30");
+    });
+
+    it("a_role_that_cannot_write_gets_no_empty_slot_buttons", async () => {
+      answerWithRooms([visit({ room_id: "r-1" })]);
+      renderPage("cs_staff", ["appointment.read", "patient.read"]);
+      const user = userEvent.setup();
+      await user.click(await screen.findByRole("button", { name: "Theo phòng" }));
+
+      await screen.findByRole("region", { name: "Lưới lịch theo phòng" });
+      expect(screen.queryByRole("button", { name: /^Đặt lịch Khám da liễu/ })).toBeNull();
+    });
+
+    it("shows_the_block_button_to_catalog_managers_only", async () => {
+      answerWithRooms([]);
+      const manager = renderPage("manager", [...RECEPTION, "admin.rules"]);
+      const user = userEvent.setup();
+      await user.click(await screen.findByRole("button", { name: "Theo phòng" }));
+      expect(await screen.findByRole("button", { name: "＋ Khóa phòng" })).toBeTruthy();
+      manager.unmount();
+
+      renderPage("reception", RECEPTION);
+      await screen.findByRole("button", { name: "Theo phòng" });
+      expect(screen.queryByRole("button", { name: "＋ Khóa phòng" })).toBeNull();
     });
   });
 });

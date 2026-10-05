@@ -4,11 +4,12 @@
 // (Đặt hẹn, Đã xác nhận, Đang chờ, Đang điều trị, Hoàn tất; Vắng hẹn and Đã hủy close a visit). Behaviour source:
 // prototype/shared/operations-ui.js (`schedule`) and crm-automation.js (`reception`); data from
 // `GET /api/v1/appointments/schedule`, every change is a BE action (hours, double booking, who may do what).
-// Differences from the old board, on purpose: columns are doctors (the schema has no rooms or services yet, they
-// come with the resources step), no waiting list or room blocks, no drag to move (open the card and change the
-// time). On a phone the board is one list per day. Several people work the same board: an `appointments.changed`
+// Two ways to read the day, switched by "Cột theo" and remembered per browser: doctor columns (the board of
+// package U step U2) and room columns (the old half-hour grid with room blocks, step U10). Differences from the
+// old board, on purpose: no service colours or waiting list, no drag to move (open the card and change the room
+// or the time). On a phone the board is one list per day. Several people work the same board: an `appointments.changed`
 // event reloads it quietly, the open sheet and the filters stay as they are.
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
 import {
@@ -19,8 +20,10 @@ import {
   RetryNotice,
 } from "@/components/ops/ops-ui";
 import { LiveStatus } from "@/components/ops/live-status";
+import { BlockSheet } from "@/components/catalog/room-sheets";
 import { AppointmentCard } from "@/components/ops/schedule/appointment-card";
 import { AppointmentSheet, type SheetTarget } from "@/components/ops/schedule/appointment-sheet";
+import { RoomGrid } from "@/components/ops/schedule/room-grid";
 import { useToast } from "@/components/ops/toast";
 import type { Schemas } from "@/lib/api";
 import { http, unwrap } from "@/lib/api/client";
@@ -54,6 +57,27 @@ import { Tile } from "@/ui/tile";
 
 type View = Schemas["ScheduleView"];
 type StatusFilter = Schemas["AppointmentStatus"] | "all";
+type Columns = "doctor" | "room";
+
+const COLUMNS_KEY = "pema.schedule.columns";
+const COLUMNS_LABEL: Record<Columns, string> = { doctor: "Theo bác sĩ", room: "Theo phòng" };
+
+/** The choice is per browser (not per account); storage can be blocked, then the doctor board is used. */
+function readColumns(): Columns {
+  try {
+    return window.localStorage.getItem(COLUMNS_KEY) === "room" ? "room" : "doctor";
+  } catch {
+    return "doctor";
+  }
+}
+
+function saveColumns(value: Columns): void {
+  try {
+    window.localStorage.setItem(COLUMNS_KEY, value);
+  } catch {
+    // private window or blocked storage: the choice just is not remembered
+  }
+}
 
 const LIVE_TYPES: readonly LiveEventType[] = ["appointments.changed"];
 
@@ -68,8 +92,15 @@ export default function SchedulePage() {
   const [showClosed, setShowClosed] = useState(false);
   const [sheet, setSheet] = useState<SheetTarget | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [columns, setColumns] = useState<Columns>("doctor");
+  const [blocking, setBlocking] = useState(false);
 
   const ownBoard = user.role === "doctor";
+
+  // The saved choice exists only in the browser (the server render has no storage), so it is read after mount.
+  useEffect(() => {
+    setColumns(readColumns());
+  }, []);
 
   const load = useCallback(
     (signal: AbortSignal) =>
@@ -88,6 +119,8 @@ export default function SchedulePage() {
 
   const items = useMemo(() => data?.items ?? [], [data]);
   const doctors = useMemo(() => data?.doctors ?? [], [data]);
+  const rooms = useMemo(() => data?.rooms ?? [], [data]);
+  const blocks = useMemo(() => data?.blocks ?? [], [data]);
   const summary = useMemo(() => summarize(items), [items]);
   const visible = useMemo(
     () =>
@@ -99,6 +132,13 @@ export default function SchedulePage() {
 
   const days = view === "week" ? 7 : 1;
   const mayWrite = can("appointment.write");
+  const mayBlock = can("admin.rules");
+  const roomView = columns === "room" && view === "day";
+
+  const chooseColumns = (next: Columns) => {
+    setColumns(next);
+    saveColumns(next);
+  };
 
   const changeDay = (next: string) => {
     if (isDayKey(next)) setDay(next);
@@ -208,6 +248,20 @@ export default function SchedulePage() {
             7 ngày
           </FilterChip>
         </div>
+        {view === "day" && (
+          <div role="group" aria-label="Cột theo" className="flex gap-2">
+            {(Object.keys(COLUMNS_LABEL) as Columns[]).map((key) => (
+              <FilterChip key={key} selected={columns === key} onClick={() => chooseColumns(key)}>
+                {COLUMNS_LABEL[key]}
+              </FilterChip>
+            ))}
+          </div>
+        )}
+        {roomView && mayBlock && rooms.length > 0 && (
+          <Button variant="secondary" onClick={() => setBlocking(true)}>
+            ＋ Khóa phòng
+          </Button>
+        )}
         {!ownBoard && (
           <label className="block text-label font-semibold text-ink-soft">
             Bác sĩ
@@ -253,14 +307,39 @@ export default function SchedulePage() {
       {error !== "" && <RetryNotice message={error} onRetry={reload} />}
       {loading && data === undefined && <ListSkeleton rows={5} />}
 
-      {data !== undefined && visible.length === 0 && (
+      {data !== undefined && visible.length === 0 && !roomView && (
         <EmptyState
           title="Chưa có lịch hẹn"
           hint="Không có lịch nào khớp bộ lọc trong khoảng đã chọn."
         />
       )}
 
-      {data !== undefined && view === "day" && visible.length > 0 && (
+      {data !== undefined && roomView && (
+        <RoomGrid
+          day={day}
+          items={visible}
+          rooms={rooms}
+          blocks={blocks}
+          can={can}
+          busyId={busyId}
+          onOpen={(it) => setSheet({ kind: "edit", item: it })}
+          onQuick={(it, action) => void onQuick(it, action)}
+          onBookSlot={
+            mayWrite
+              ? (room, clock) =>
+                  setSheet({
+                    kind: "create",
+                    day,
+                    doctorId: doctorId === "" ? null : doctorId,
+                    roomId: room.id,
+                    clock,
+                  })
+              : undefined
+          }
+        />
+      )}
+
+      {data !== undefined && view === "day" && !roomView && visible.length > 0 && (
         <DayBoard
           items={visible}
           doctors={doctors}
@@ -303,9 +382,22 @@ export default function SchedulePage() {
         <AppointmentSheet
           target={sheet}
           doctors={doctors}
+          rooms={rooms}
           patients={patients}
           onClose={() => setSheet(null)}
           onSaved={onSaved}
+        />
+      )}
+
+      {blocking && (
+        <BlockSheet
+          rooms={rooms}
+          defaultDay={day}
+          onClose={() => setBlocking(false)}
+          onSaved={() => {
+            setBlocking(false);
+            reload();
+          }}
         />
       )}
     </div>
