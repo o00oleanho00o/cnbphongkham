@@ -59,6 +59,8 @@ Hand-written: `lib/catalog.cjs`, `notes.json`, `parts/*.js`, `web-design-changes
 
 Ids come only from `inventory.json` (`^W[A-I]\d+$`), never renumber; a new screen is appended at the end of its group (add it to `lib/catalog.cjs`). Groups: WA shell, WB operations, WC patients and Patient 360, WD CSKH, WE studio/resources/services, WF cashier and orders, WG finance, WH Ask Pema and guide.
 
+Package W2 (W7) added the Next.js-only screens, ids `^W[A-L]d+$`: `WJ` agent admin (`/admin/*` except care), `WK` care agent (`/admin/care/*`, `/care/*`), `WL` sign-in, app shell and message templates (`/login`, `/templates`, `(app shell)`). They are hand-kept in `scripts/lib/catalog-nextjs.cjs` (merged by `lib/catalog.cjs`), carry `source: "nextjs"`, are NOT walked against the old web and are validated statically by `web-inventory.cjs` (each `next_route` is a real `page.tsx`; every `page.tsx` of `pema-agent/frontend` is claimed by an entry or by a `non_screens` entry with `route`). Their `reach` uses the Next.js vocabulary listed at the top of `catalog-nextjs.cjs` (login, goto, button, text, fill, wait, note) and runs against `pnpm dev:mock`. Until W9 they have no snapshot or spec: `web-specs.cjs` lists them in INDEX.md under "Next.js-only screens, specs pending". The Patient Mobile web (WI) is `served by KMP/Zalo` (owner decision 1), not a Next.js target.
+
 ## 3. Refresh (old web → inventory → shots → snapshot → specs)
 
 Only needed when the old web changed, a catalog entry was added, or a check says a file is stale. Order matters; run the `--check` of a stage before the next one.

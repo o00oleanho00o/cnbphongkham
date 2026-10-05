@@ -1184,4 +1184,13 @@ const helperFns = [
 ];
 const helpers = helperFns.map(([name, why]) => ({ key: `fn:${name}`, why }));
 
+// W7: the screens that exist only in the Next.js front end (groups WJ, WK, WL), appended after the old-web groups, and the
+// decision of owner decision 1 (2026-10-05): the Patient Mobile web (WI) is not a Next.js target, it is served by KMP / Zalo.
+// Data change only: no id, route or app_canvas value of an existing entry changes.
+const nextjs = require('./catalog-nextjs.cjs');
+for (const s of screens) if (s.group === 'WI') s.next_status = 'served by KMP/Zalo';
+groups.push(...nextjs.groups);
+screens.push(...nextjs.screens);
+non_screens.push(...nextjs.non_screens_nextjs);
+
 module.exports = { OWNER, DOCTOR, CARE, ACCOUNTANT, groups, screens, actions, non_screens, helpers };
