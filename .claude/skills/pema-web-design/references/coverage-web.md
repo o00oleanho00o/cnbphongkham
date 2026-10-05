@@ -223,176 +223,176 @@ counterpart; the id is still complete). Differences from the app are in `design-
 | [WI40](../../../../design-specs/web/screens/WI40.md) | Hồ sơ · đã đổi hồ sơ demo | state | open /patient-mobile/ › screen=profile | 390x844 | E4 | — | served by KMP/Zalo | — | 5 |
 | [WI41](../../../../design-specs/web/screens/WI41.md) | Hồ sơ · hồ sơ vừa tạo | state | nav=patients › modal=patient › fill #new-name › action=create-patient › open /patient-mobile/ › screen=profile | 390x844 | E4, G8 | — | served by KMP/Zalo | — | 5 |
 | [WI42](../../../../design-specs/web/screens/WI42.md) | Lịch hẹn · hồ sơ vừa tạo (chưa có lịch đã đặt) | state | nav=patients › modal=patient › fill #new-name › action=create-patient › open /patient-mobile/ › screen=profile › screen=appointments | 390x844 | K1 | — | served by KMP/Zalo | — | 5 |
-| [WJ1](../../../../design-specs/web/screens/WJ1.md) | Nhân viên | page | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 0 |
-| [WJ2](../../../../design-specs/web/screens/WJ2.md) | Nhân viên · chỉ xem (quản lý) | state | as manager: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 0 |
-| [WJ3](../../../../design-specs/web/screens/WJ3.md) | Nhân viên · không có kết quả lọc | state | as owner: open /admin/users › fill Tìm nhân viên | — | — | `/admin/users` | restyle (U1) | yes | 0 |
-| [WJ4](../../../../design-specs/web/screens/WJ4.md) | Nhân viên · Thêm nhân viên | dialog | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 0 |
-| [WJ5](../../../../design-specs/web/screens/WJ5.md) | Nhân viên · Thêm nhân viên · email đã dùng | state | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 0 |
-| [WJ6](../../../../design-specs/web/screens/WJ6.md) | Nhân viên · Sửa nhân viên | dialog | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 0 |
-| [WJ7](../../../../design-specs/web/screens/WJ7.md) | Nhân viên · Sửa tài khoản của mình | state | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 0 |
-| [WJ8](../../../../design-specs/web/screens/WJ8.md) | Nhân viên · Đặt lại mật khẩu | dialog | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 0 |
-| [WJ9](../../../../design-specs/web/screens/WJ9.md) | Nhân viên · Khóa tài khoản | dialog | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 0 |
-| [WJ10](../../../../design-specs/web/screens/WJ10.md) | Nhân viên · Mở khóa tài khoản | dialog | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 0 |
-| [WJ11](../../../../design-specs/web/screens/WJ11.md) | Tài khoản của tôi | page | as owner: open /admin/auth | — | — | `/admin/auth` | restyle (U1) | yes | 0 |
-| [WJ12](../../../../design-specs/web/screens/WJ12.md) | Tổng quan AI | page | as owner: open /admin/overview | — | — | `/admin/overview` | restyle (U1) | yes | 0 |
-| [WJ13](../../../../design-specs/web/screens/WJ13.md) | Tổng quan AI · chưa cấu hình LLM | state | as owner: open /admin/overview | — | — | `/admin/overview` | restyle (U1) | yes | 0 |
-| [WJ14](../../../../design-specs/web/screens/WJ14.md) | Tổng quan AI · chưa có số liệu sử dụng | state | as owner: open /admin/overview | — | — | `/admin/overview` | restyle (U1) | yes | 0 |
-| [WJ15](../../../../design-specs/web/screens/WJ15.md) | Phiên chat AI | page | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 0 |
-| [WJ16](../../../../design-specs/web/screens/WJ16.md) | Phiên chat AI · Session detail · Hội thoại | dialog | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 0 |
-| [WJ17](../../../../design-specs/web/screens/WJ17.md) | Phiên chat AI · Session detail · Trace agent | tab | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 0 |
-| [WJ18](../../../../design-specs/web/screens/WJ18.md) | Phiên chat AI · Trace agent trống | state | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 0 |
-| [WJ19](../../../../design-specs/web/screens/WJ19.md) | Phiên chat AI · Xóa cuộc trò chuyện | dialog | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 0 |
-| [WJ20](../../../../design-specs/web/screens/WJ20.md) | Phiên chat AI · Xóa bản tóm tắt | dialog | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 0 |
-| [WJ21](../../../../design-specs/web/screens/WJ21.md) | Phiên chat AI · Xóa sạch ngữ cảnh | dialog | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 0 |
-| [WJ22](../../../../design-specs/web/screens/WJ22.md) | Phiên chat AI · chưa có phiên | state | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 0 |
-| [WJ23](../../../../design-specs/web/screens/WJ23.md) | Danh bạ | page | as owner: open /admin/contacts | — | — | `/admin/contacts` | restyle (U1) | yes | 0 |
-| [WJ24](../../../../design-specs/web/screens/WJ24.md) | Danh bạ · Xóa danh bạ | dialog | as owner: open /admin/contacts | — | — | `/admin/contacts` | restyle (U1) | yes | 0 |
-| [WJ25](../../../../design-specs/web/screens/WJ25.md) | Danh bạ · chưa có danh bạ | state | as owner: open /admin/contacts | — | — | `/admin/contacts` | restyle (U1) | yes | 0 |
-| [WJ26](../../../../design-specs/web/screens/WJ26.md) | Bạn bè | page | as owner: open /admin/friends | — | — | `/admin/friends` | restyle (U1) | yes | 0 |
-| [WJ27](../../../../design-specs/web/screens/WJ27.md) | Bạn bè · Từ chối kết bạn | dialog | as owner: open /admin/friends | — | — | `/admin/friends` | restyle (U1) | yes | 0 |
-| [WJ28](../../../../design-specs/web/screens/WJ28.md) | Bạn bè · chưa có tài khoản cá nhân | state | as owner: open /admin/friends | — | — | `/admin/friends` | restyle (U1) | yes | 0 |
-| [WJ29](../../../../design-specs/web/screens/WJ29.md) | Bạn bè · không lấy được danh sách bạn | state | as owner: open /admin/friends | — | — | `/admin/friends` | restyle (U1) | yes | 0 |
-| [WJ30](../../../../design-specs/web/screens/WJ30.md) | Lịch hẹn của bot | page | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 0 |
-| [WJ31](../../../../design-specs/web/screens/WJ31.md) | Lịch hẹn của bot · chưa có lịch | state | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 0 |
-| [WJ32](../../../../design-specs/web/screens/WJ32.md) | Lịch hẹn của bot · job lỗi hoặc bị chặn | state | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 0 |
-| [WJ33](../../../../design-specs/web/screens/WJ33.md) | Lịch hẹn của bot · Thêm lịch hẹn | dialog | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 0 |
-| [WJ34](../../../../design-specs/web/screens/WJ34.md) | Lịch hẹn của bot · Thêm lịch hẹn · tài khoản Kênh bệnh nhân | state | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 0 |
-| [WJ35](../../../../design-specs/web/screens/WJ35.md) | Lịch hẹn của bot · Sửa lịch hẹn | dialog | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 0 |
-| [WJ36](../../../../design-specs/web/screens/WJ36.md) | Lịch hẹn của bot · Lịch sử chạy | dialog | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 0 |
-| [WJ37](../../../../design-specs/web/screens/WJ37.md) | Lịch hẹn của bot · Xóa lịch hẹn | dialog | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 0 |
-| [WJ38](../../../../design-specs/web/screens/WJ38.md) | Trí nhớ | page | as owner: open /admin/memory | — | — | `/admin/memory` | restyle (U1) | yes | 0 |
-| [WJ39](../../../../design-specs/web/screens/WJ39.md) | Trí nhớ · chưa ghi nhớ gì | state | as owner: open /admin/memory | — | — | `/admin/memory` | restyle (U1) | yes | 0 |
-| [WJ40](../../../../design-specs/web/screens/WJ40.md) | Kho tri thức | page | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 0 |
-| [WJ41](../../../../design-specs/web/screens/WJ41.md) | Kho tri thức · chưa có nguồn | state | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 0 |
-| [WJ42](../../../../design-specs/web/screens/WJ42.md) | Kho tri thức · không có kết quả tìm | state | as owner: open /admin/kb › fill Tìm theo tên nguồn... | — | — | `/admin/kb` | restyle (U1) | yes | 0 |
-| [WJ43](../../../../design-specs/web/screens/WJ43.md) | Kho tri thức · kéo file vào bảng | state | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 0 |
-| [WJ44](../../../../design-specs/web/screens/WJ44.md) | Kho tri thức · nguồn hỏng và đang xử lý | state | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 0 |
-| [WJ45](../../../../design-specs/web/screens/WJ45.md) | Kho tri thức · vai trò không có quyền quản lý | state | as doctor: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 0 |
-| [WJ46](../../../../design-specs/web/screens/WJ46.md) | Kho tri thức · Thêm nguồn · tải file | dialog | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 0 |
-| [WJ47](../../../../design-specs/web/screens/WJ47.md) | Kho tri thức · Thêm nguồn · gõ nội dung | tab | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 0 |
-| [WJ48](../../../../design-specs/web/screens/WJ48.md) | Kho tri thức · Agent nào đọc được nguồn này | dialog | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 0 |
-| [WJ49](../../../../design-specs/web/screens/WJ49.md) | Kho tri thức · Đoạn đã cắt | dialog | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 0 |
-| [WJ50](../../../../design-specs/web/screens/WJ50.md) | Kho tri thức · Dùng Kho tri thức thế nào | dialog | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 0 |
-| [WJ51](../../../../design-specs/web/screens/WJ51.md) | Kho tri thức · Hiện trong Hướng dẫn | dialog | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 0 |
-| [WJ52](../../../../design-specs/web/screens/WJ52.md) | Kho tri thức · Thử tìm trong kho | dialog | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 0 |
-| [WJ53](../../../../design-specs/web/screens/WJ53.md) | Kho tri thức · Xóa nguồn | dialog | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 0 |
-| [WJ54](../../../../design-specs/web/screens/WJ54.md) | Tài khoản Zalo | page | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 0 |
-| [WJ55](../../../../design-specs/web/screens/WJ55.md) | Tài khoản Zalo · chưa có account | state | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 0 |
-| [WJ56](../../../../design-specs/web/screens/WJ56.md) | Tài khoản Zalo · công tắc khẩn đang bật | state | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 0 |
-| [WJ57](../../../../design-specs/web/screens/WJ57.md) | Tài khoản Zalo · cấu hình kênh bị thay đổi | state | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 0 |
-| [WJ58](../../../../design-specs/web/screens/WJ58.md) | Tài khoản Zalo · Bật công tắc khẩn | dialog | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 0 |
-| [WJ59](../../../../design-specs/web/screens/WJ59.md) | Tài khoản Zalo · Tắt công tắc khẩn | dialog | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 0 |
-| [WJ60](../../../../design-specs/web/screens/WJ60.md) | Tài khoản Zalo · Thêm account · tài khoản cá nhân | dialog | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 0 |
-| [WJ61](../../../../design-specs/web/screens/WJ61.md) | Tài khoản Zalo · Thêm account · tài khoản bot | state | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 0 |
-| [WJ62](../../../../design-specs/web/screens/WJ62.md) | Tài khoản Zalo · Sửa account | dialog | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 0 |
-| [WJ63](../../../../design-specs/web/screens/WJ63.md) | Tài khoản Zalo · Login QR | dialog | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 0 |
-| [WJ64](../../../../design-specs/web/screens/WJ64.md) | Tài khoản Zalo · Login QR · đã quét | state | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 0 |
-| [WJ65](../../../../design-specs/web/screens/WJ65.md) | Tài khoản Zalo · Login QR · lỗi hoặc hết hạn | state | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 0 |
-| [WJ66](../../../../design-specs/web/screens/WJ66.md) | Tài khoản Zalo · Xóa account | dialog | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 0 |
-| [WJ67](../../../../design-specs/web/screens/WJ67.md) | Agents | page | as owner: open /admin/agents | — | — | `/admin/agents` | restyle (U1) | yes | 0 |
-| [WJ68](../../../../design-specs/web/screens/WJ68.md) | Agents · dạng danh sách | state | as owner: open /admin/agents | — | — | `/admin/agents` | restyle (U1) | yes | 0 |
-| [WJ69](../../../../design-specs/web/screens/WJ69.md) | Agents · không có kết quả tìm | state | as owner: open /admin/agents › fill Tìm agent... | — | — | `/admin/agents` | restyle (U1) | yes | 0 |
-| [WJ70](../../../../design-specs/web/screens/WJ70.md) | Agents · chưa có agent | state | as owner: open /admin/agents | — | — | `/admin/agents` | restyle (U1) | yes | 0 |
-| [WJ71](../../../../design-specs/web/screens/WJ71.md) | Agents · Tạo agent mới | dialog | as owner: open /admin/agents | — | — | `/admin/agents` | restyle (U1) | yes | 0 |
-| [WJ72](../../../../design-specs/web/screens/WJ72.md) | Agents · Xóa agent | dialog | as owner: open /admin/agents | — | — | `/admin/agents` | restyle (U1) | yes | 0 |
-| [WJ73](../../../../design-specs/web/screens/WJ73.md) | Agent mới | page | as owner: open /admin/agents › fill Tên hiển thị | — | — | `/admin/agents/new` | restyle (U1) | yes | 0 |
-| [WJ74](../../../../design-specs/web/screens/WJ74.md) | Agent mới · Bỏ agent đang tạo | dialog | as owner: open /admin/agents › fill Tên hiển thị | — | — | `/admin/agents/new` | restyle (U1) | yes | 0 |
-| [WJ75](../../../../design-specs/web/screens/WJ75.md) | Agent mới · lỗi nhập hoặc lỗi tải công cụ | state | as owner: open /admin/agents › fill Tên hiển thị | — | — | `/admin/agents/new` | restyle (U1) | yes | 0 |
-| [WJ76](../../../../design-specs/web/screens/WJ76.md) | Chi tiết agent | page | as owner: open /admin/agents/default | — | — | `/admin/agents/[id]` | restyle (U1) | yes | 0 |
-| [WJ77](../../../../design-specs/web/screens/WJ77.md) | Chi tiết agent · không tìm thấy | state | as owner: open /admin/agents/khong-co | — | — | `/admin/agents/[id]` | restyle (U1) | yes | 0 |
-| [WJ78](../../../../design-specs/web/screens/WJ78.md) | Chi tiết agent · Rời trang mà chưa lưu | dialog | as owner: open /admin/agents/default | — | — | `/admin/agents/[id]` | restyle (U1) | yes | 0 |
-| [WJ79](../../../../design-specs/web/screens/WJ79.md) | Tools | page | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 0 |
-| [WJ80](../../../../design-specs/web/screens/WJ80.md) | Tools · chưa có account | state | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 0 |
-| [WJ81](../../../../design-specs/web/screens/WJ81.md) | Tools · chỉ đọc được lớp tài khoản | state | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 0 |
-| [WJ82](../../../../design-specs/web/screens/WJ82.md) | Tools · web_search · chuỗi nguồn | dialog | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 0 |
-| [WJ83](../../../../design-specs/web/screens/WJ83.md) | Tools · web_fetch · chuỗi nguồn | state | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 0 |
-| [WJ84](../../../../design-specs/web/screens/WJ84.md) | Tools · Xóa API key Brave | dialog | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 0 |
-| [WJ85](../../../../design-specs/web/screens/WJ85.md) | Tools · Đọc ảnh · chuỗi nguồn | dialog | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 0 |
-| [WJ86](../../../../design-specs/web/screens/WJ86.md) | Tools · Vẽ ảnh AI | dialog | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 0 |
-| [WJ87](../../../../design-specs/web/screens/WJ87.md) | MCP | page | as owner: open /admin/mcp | — | — | `/admin/mcp` | restyle (U1) | yes | 0 |
-| [WJ88](../../../../design-specs/web/screens/WJ88.md) | MCP · chưa có server | state | as owner: open /admin/mcp | — | — | `/admin/mcp` | restyle (U1) | yes | 0 |
-| [WJ89](../../../../design-specs/web/screens/WJ89.md) | MCP · lỗi và chờ duyệt lại | state | as owner: open /admin/mcp | — | — | `/admin/mcp` | restyle (U1) | yes | 0 |
-| [WJ90](../../../../design-specs/web/screens/WJ90.md) | MCP · Thêm server MCP | dialog | as owner: open /admin/mcp | — | — | `/admin/mcp` | restyle (U1) | yes | 0 |
-| [WJ91](../../../../design-specs/web/screens/WJ91.md) | MCP · Sửa server MCP | dialog | as owner: open /admin/mcp | — | — | `/admin/mcp` | restyle (U1) | yes | 0 |
-| [WJ92](../../../../design-specs/web/screens/WJ92.md) | MCP · Agent nào được dùng server này | dialog | as owner: open /admin/mcp | — | — | `/admin/mcp` | restyle (U1) | yes | 0 |
-| [WJ93](../../../../design-specs/web/screens/WJ93.md) | MCP · Xóa server | dialog | as owner: open /admin/mcp | — | — | `/admin/mcp` | restyle (U1) | yes | 0 |
-| [WJ94](../../../../design-specs/web/screens/WJ94.md) | Trace agent | page | as owner: open /admin/traces | — | — | `/admin/traces` | restyle (U1) | yes | 0 |
-| [WJ95](../../../../design-specs/web/screens/WJ95.md) | Trace agent · chưa có trace | state | as owner: open /admin/traces | — | — | `/admin/traces` | restyle (U1) | yes | 0 |
-| [WJ96](../../../../design-specs/web/screens/WJ96.md) | Trace agent · lượt đã mở | state | as owner: open /admin/traces | — | — | `/admin/traces` | restyle (U1) | yes | 0 |
-| [WJ97](../../../../design-specs/web/screens/WJ97.md) | Trace agent · hết lượt có trace | state | as owner: open /admin/traces | — | — | `/admin/traces` | restyle (U1) | yes | 0 |
-| [WJ98](../../../../design-specs/web/screens/WJ98.md) | Logs | page | as owner: open /admin/logs | — | — | `/admin/logs` | restyle (U1) | yes | 0 |
-| [WJ99](../../../../design-specs/web/screens/WJ99.md) | Logs · Nhật ký thao tác | tab | as owner: open /admin/logs | — | — | `/admin/logs` | restyle (U1) | yes | 0 |
-| [WJ100](../../../../design-specs/web/screens/WJ100.md) | Logs · ghi log ra file đang tắt | state | as owner: open /admin/logs | — | — | `/admin/logs` | restyle (U1) | yes | 0 |
-| [WJ101](../../../../design-specs/web/screens/WJ101.md) | Logs · không có dòng log | state | as owner: open /admin/logs | — | — | `/admin/logs` | restyle (U1) | yes | 0 |
-| [WJ102](../../../../design-specs/web/screens/WJ102.md) | Hồ sơ chính sách | page | as owner: open /admin/policy | — | — | `/admin/policy` | restyle (U1) | yes | 0 |
-| [WJ103](../../../../design-specs/web/screens/WJ103.md) | Hồ sơ chính sách · Chuyển sang Trợ lý nội bộ | dialog | as owner: open /admin/policy | — | — | `/admin/policy` | restyle (U1) | yes | 0 |
-| [WJ104](../../../../design-specs/web/screens/WJ104.md) | Hồ sơ chính sách · chưa có tài khoản hay agent | state | as owner: open /admin/policy | — | — | `/admin/policy` | restyle (U1) | yes | 0 |
-| [WJ105](../../../../design-specs/web/screens/WJ105.md) | Mô hình & cấu hình | page | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 0 |
-| [WJ106](../../../../design-specs/web/screens/WJ106.md) | Mô hình & cấu hình · Agent và model | tab | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 0 |
-| [WJ107](../../../../design-specs/web/screens/WJ107.md) | Mô hình & cấu hình · Trí nhớ và ngữ cảnh | tab | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 0 |
-| [WJ108](../../../../design-specs/web/screens/WJ108.md) | Mô hình & cấu hình · Kho tri thức | tab | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 0 |
-| [WJ109](../../../../design-specs/web/screens/WJ109.md) | Mô hình & cấu hình · Tin chủ động và lịch | tab | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 0 |
-| [WJ110](../../../../design-specs/web/screens/WJ110.md) | Mô hình & cấu hình · Chung | tab | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 0 |
-| [WJ111](../../../../design-specs/web/screens/WJ111.md) | Mô hình & cấu hình · Đặt lại toàn bộ cấu hình | dialog | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 0 |
-| [WJ112](../../../../design-specs/web/screens/WJ112.md) | Mô hình & cấu hình · Xóa cấu hình LLM | dialog | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 0 |
-| [WJ113](../../../../design-specs/web/screens/WJ113.md) | Mô hình & cấu hình · Base URL là lớp giả của Google | state | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 0 |
-| [WJ114](../../../../design-specs/web/screens/WJ114.md) | Mô hình & cấu hình · không có tham số khớp | state | as owner: open /admin/tuning › fill Tìm kiếm cấu hình... | — | — | `/admin/tuning` | restyle (U1) | yes | 0 |
-| [WJ115](../../../../design-specs/web/screens/WJ115.md) | Cấu hình · nhóm (liên kết trực tiếp) | page | as owner: open /admin/tuning/providers | — | — | `/admin/tuning/[group]` | restyle (U1) | yes | 0 |
-| [WK1](../../../../design-specs/web/screens/WK1.md) | Kỹ năng và ca trực | page | as owner: open /admin/care/staff | — | — | `/admin/care/staff` | restyle (U1) | yes | 0 |
-| [WK2](../../../../design-specs/web/screens/WK2.md) | Kỹ năng và ca trực · chưa có hồ sơ | state | as owner: open /admin/care/staff | — | — | `/admin/care/staff` | restyle (U1) | yes | 0 |
-| [WK3](../../../../design-specs/web/screens/WK3.md) | Kỹ năng và ca trực · Sửa hồ sơ | dialog | as owner: open /admin/care/staff | — | — | `/admin/care/staff` | restyle (U1) | yes | 0 |
-| [WK4](../../../../design-specs/web/screens/WK4.md) | Số trực 24/24 | page | as owner: open /admin/care/on-call | — | — | `/admin/care/on-call` | restyle (U1) | yes | 0 |
-| [WK5](../../../../design-specs/web/screens/WK5.md) | Số trực 24/24 · chưa có số trực | state | as owner: open /admin/care/on-call | — | — | `/admin/care/on-call` | restyle (U1) | yes | 0 |
-| [WK6](../../../../design-specs/web/screens/WK6.md) | Số trực 24/24 · không có số nào đang bật | state | as owner: open /admin/care/on-call | — | — | `/admin/care/on-call` | restyle (U1) | yes | 0 |
-| [WK7](../../../../design-specs/web/screens/WK7.md) | Số trực 24/24 · Thêm số trực | dialog | as owner: open /admin/care/on-call | — | — | `/admin/care/on-call` | restyle (U1) | yes | 0 |
-| [WK8](../../../../design-specs/web/screens/WK8.md) | Số trực 24/24 · Sửa số trực | dialog | as owner: open /admin/care/on-call | — | — | `/admin/care/on-call` | restyle (U1) | yes | 0 |
-| [WK9](../../../../design-specs/web/screens/WK9.md) | Ma trận ngưỡng | page | as doctor: open /admin/care/matrix | — | — | `/admin/care/matrix` | restyle (U1) | yes | 0 |
-| [WK10](../../../../design-specs/web/screens/WK10.md) | Ma trận ngưỡng · đã được bác sĩ duyệt | state | as doctor: open /admin/care/matrix | — | — | `/admin/care/matrix` | restyle (U1) | yes | 0 |
-| [WK11](../../../../design-specs/web/screens/WK11.md) | Ma trận ngưỡng · chỉ xem | state | as doctor: open /admin/care/matrix | — | — | `/admin/care/matrix` | restyle (U1) | yes | 0 |
-| [WK12](../../../../design-specs/web/screens/WK12.md) | Ma trận ngưỡng · số không hợp lệ | state | as doctor: open /admin/care/matrix › fill Ngưỡng tin cậy của agent | — | — | `/admin/care/matrix` | restyle (U1) | yes | 0 |
-| [WK13](../../../../design-specs/web/screens/WK13.md) | Ma trận ngưỡng · Duyệt ma trận này | dialog | as doctor: open /admin/care/matrix | — | — | `/admin/care/matrix` | restyle (U1) | yes | 0 |
-| [WK14](../../../../design-specs/web/screens/WK14.md) | Ma trận ngưỡng · Đặt lại về chờ duyệt | dialog | as doctor: open /admin/care/matrix | — | — | `/admin/care/matrix` | restyle (U1) | yes | 0 |
-| [WK15](../../../../design-specs/web/screens/WK15.md) | SLA và khung giờ | page | as owner: open /admin/care/timing | — | — | `/admin/care/timing` | restyle (U1) | yes | 0 |
-| [WK16](../../../../design-specs/web/screens/WK16.md) | SLA và khung giờ · chỉ xem | state | as owner: open /admin/care/timing | — | — | `/admin/care/timing` | restyle (U1) | yes | 0 |
-| [WK17](../../../../design-specs/web/screens/WK17.md) | SLA và khung giờ · số không hợp lệ | state | as owner: open /admin/care/timing › fill Khẩn (phút) | — | — | `/admin/care/timing` | restyle (U1) | yes | 0 |
-| [WK18](../../../../design-specs/web/screens/WK18.md) | Cảnh báo agent | page | as owner: open /admin/care/alerts | — | — | `/admin/care/alerts` | restyle (U1) | yes | 0 |
-| [WK19](../../../../design-specs/web/screens/WK19.md) | Cảnh báo agent · chưa có cảnh báo | state | as owner: open /admin/care/alerts | — | — | `/admin/care/alerts` | restyle (U1) | yes | 0 |
-| [WK20](../../../../design-specs/web/screens/WK20.md) | Cảnh báo agent · mất kết nối trực tiếp | state | as owner: open /admin/care/alerts | — | — | `/admin/care/alerts` | restyle (U1) | yes | 0 |
-| [WK21](../../../../design-specs/web/screens/WK21.md) | Yêu cầu đang chờ tôi | page | as cs_staff: open /care/handoffs | — | — | `/care/handoffs` | restyle (U1) | yes | 0 |
-| [WK22](../../../../design-specs/web/screens/WK22.md) | Yêu cầu đang chờ tôi · tất cả đang mở | state | as cs_staff: open /care/handoffs | — | — | `/care/handoffs` | restyle (U1) | yes | 0 |
-| [WK23](../../../../design-specs/web/screens/WK23.md) | Yêu cầu đang chờ tôi · chưa có yêu cầu | state | as cs_staff: open /care/handoffs | — | — | `/care/handoffs` | restyle (U1) | yes | 0 |
-| [WK24](../../../../design-specs/web/screens/WK24.md) | Yêu cầu đang chờ tôi · thẻ khẩn đã tới số trực | state | as cs_staff: open /care/handoffs | — | — | `/care/handoffs` | restyle (U1) | yes | 0 |
-| [WK25](../../../../design-specs/web/screens/WK25.md) | Yêu cầu đang chờ tôi · thẻ báo lỗi | state | as cs_staff: open /care/handoffs | — | — | `/care/handoffs` | restyle (U1) | yes | 0 |
-| [WK26](../../../../design-specs/web/screens/WK26.md) | Yêu cầu đang chờ tôi · Từ chối nhận cuộc trò chuyện | dialog | as cs_staff: open /care/handoffs | — | — | `/care/handoffs` | restyle (U1) | yes | 0 |
-| [WK27](../../../../design-specs/web/screens/WK27.md) | Yêu cầu đang chờ tôi · mất kết nối trực tiếp | state | as cs_staff: open /care/handoffs | — | — | `/care/handoffs` | restyle (U1) | yes | 0 |
-| [WK28](../../../../design-specs/web/screens/WK28.md) | Agent chăm sóc của bệnh nhân · Dòng thời gian | page | as cs_staff: open /care/patients/7/timeline | — | — | `/care/patients/[id]/timeline` | restyle (U1) | yes | 0 |
-| [WK29](../../../../design-specs/web/screens/WK29.md) | Agent chăm sóc của bệnh nhân · agent phụ trách, đang hạ mức | state | as cs_staff: open /care/patients/1/timeline | — | — | `/care/patients/[id]/timeline` | restyle (U1) | yes | 0 |
-| [WK30](../../../../design-specs/web/screens/WK30.md) | Agent chăm sóc của bệnh nhân · đang tìm người nhận | state | as cs_staff: open /care/patients/7/timeline | — | — | `/care/patients/[id]/timeline` | restyle (U1) | yes | 0 |
-| [WK31](../../../../design-specs/web/screens/WK31.md) | Agent chăm sóc của bệnh nhân · mục chưa có dữ liệu | state | as cs_staff: open /care/patients/1/timeline | — | — | `/care/patients/[id]/timeline` | restyle (U1) | yes | 0 |
-| [WK32](../../../../design-specs/web/screens/WK32.md) | Agent chăm sóc của bệnh nhân · lỗi tải | state | as cs_staff: open /care/patients/999/timeline | — | — | `/care/patients/[id]/timeline` | restyle (U1) | yes | 0 |
-| [WK33](../../../../design-specs/web/screens/WK33.md) | Agent chăm sóc của bệnh nhân · Trả lại cho agent | page | as cs_staff: open /care/patients/7/release | — | — | `/care/patients/[id]/release` | restyle (U1) | yes | 0 |
-| [WK34](../../../../design-specs/web/screens/WK34.md) | Trả lại cho agent · hạ mức có hệ quả | state | as cs_staff: open /care/patients/7/release | — | — | `/care/patients/[id]/release` | restyle (U1) | yes | 0 |
-| [WK35](../../../../design-specs/web/screens/WK35.md) | Trả lại cho agent · Xác nhận trả lại | dialog | as cs_staff: open /care/patients/7/release | — | — | `/care/patients/[id]/release` | restyle (U1) | yes | 0 |
-| [WK36](../../../../design-specs/web/screens/WK36.md) | Trả lại cho agent · không phải người đang giữ | state | as cs_staff: open /care/patients/8/release | — | — | `/care/patients/[id]/release` | restyle (U1) | yes | 0 |
-| [WK37](../../../../design-specs/web/screens/WK37.md) | Trả lại cho agent · agent đang phụ trách | state | as cs_staff: open /care/patients/1/release | — | — | `/care/patients/[id]/release` | restyle (U1) | yes | 0 |
-| [WK38](../../../../design-specs/web/screens/WK38.md) | Agent chăm sóc của bệnh nhân · Nói với agent | page | as cs_staff: open /care/patients/7/tell-agent | — | — | `/care/patients/[id]/tell-agent` | restyle (U1) | yes | 0 |
-| [WK39](../../../../design-specs/web/screens/WK39.md) | Nói với agent · chưa có lời dặn | state | as cs_staff: open /care/patients/1/tell-agent | — | — | `/care/patients/[id]/tell-agent` | restyle (U1) | yes | 0 |
-| [WL1](../../../../design-specs/web/screens/WL1.md) | Đăng nhập CSKH | page | as anonymous: open /login | — | — | `/login` | restyle (U1) | yes | 0 |
-| [WL2](../../../../design-specs/web/screens/WL2.md) | Đăng nhập CSKH · đang đăng nhập | state | as anonymous: open /login › fill Email › fill Mật khẩu | — | — | `/login` | restyle (U1) | yes | 0 |
-| [WL3](../../../../design-specs/web/screens/WL3.md) | Đăng nhập CSKH · sai mật khẩu | state | as anonymous: open /login › fill Email › fill Mật khẩu | — | — | `/login` | restyle (U1) | yes | 0 |
-| [WL4](../../../../design-specs/web/screens/WL4.md) | Tin nhắn mẫu đã duyệt | page | as owner: open /templates | — | — | `/templates` | restyle (U1) | yes | 0 |
-| [WL5](../../../../design-specs/web/screens/WL5.md) | Tin nhắn mẫu đã duyệt · chỉ xem | state | as cs_staff: open /templates | — | — | `/templates` | restyle (U1) | yes | 0 |
-| [WL6](../../../../design-specs/web/screens/WL6.md) | Tin nhắn mẫu đã duyệt · chưa có mẫu | state | as owner: open /templates | — | — | `/templates` | restyle (U1) | yes | 0 |
-| [WL7](../../../../design-specs/web/screens/WL7.md) | Tin nhắn mẫu đã duyệt · Soạn mẫu tin nhắn | dialog | as owner: open /templates | — | — | `/templates` | restyle (U1) | yes | 0 |
-| [WL8](../../../../design-specs/web/screens/WL8.md) | Tin nhắn mẫu đã duyệt · Sửa mẫu tin nhắn | dialog | as owner: open /templates | — | — | `/templates` | restyle (U1) | yes | 0 |
-| [WL9](../../../../design-specs/web/screens/WL9.md) | Tin nhắn mẫu đã duyệt · Duyệt mẫu này | dialog | as doctor: open /templates | — | — | `/templates` | restyle (U1) | yes | 0 |
-| [WL10](../../../../design-specs/web/screens/WL10.md) | Khung · menu quản trị (chủ phòng khám) | state | as owner: open /dashboard | — | — | `(app shell)` | restyle (U1) | — | 0 |
-| [WL11](../../../../design-specs/web/screens/WL11.md) | Khung · menu bác sĩ | state | as doctor: open /dashboard | — | — | `(app shell)` | restyle (U1) | — | 0 |
-| [WL12](../../../../design-specs/web/screens/WL12.md) | Khung · menu CSKH | state | as cs_staff: open /today | — | — | `(app shell)` | restyle (U1) | — | 0 |
-| [WL13](../../../../design-specs/web/screens/WL13.md) | Khung · menu lễ tân | state | as reception: open /dashboard | — | — | `(app shell)` | restyle (U1) | — | 0 |
-| [WL14](../../../../design-specs/web/screens/WL14.md) | Khung · menu trống (bệnh nhân) | state | as patient: open /today | — | — | `(app shell)` | restyle (U1) | — | 0 |
-| [WL15](../../../../design-specs/web/screens/WL15.md) | Khung · đang tải phiên | state | as anonymous: home page | — | — | `(app shell)` | restyle (U1) | — | 0 |
-| [WL16](../../../../design-specs/web/screens/WL16.md) | Khung · không tải được phiên | state | as anonymous: home page | — | — | `(app shell)` | restyle (U1) | — | 0 |
-| [WL17](../../../../design-specs/web/screens/WL17.md) | Khung · không có quyền xem màn này | state | as cs_staff: open /admin/users | — | — | `(app shell)` | restyle (U1) | — | 0 |
-| [WL18](../../../../design-specs/web/screens/WL18.md) | Khung · điện thoại · thanh tab | state | as cs_staff: open /today | — | — | `(app shell)` | restyle (U1) | — | 0 |
-| [WL19](../../../../design-specs/web/screens/WL19.md) | Khung · điện thoại · ngăn menu | state | as cs_staff: open /today | — | — | `(app shell)` | restyle (U1) | — | 0 |
+| [WJ1](../../../../design-specs/web/screens/WJ1.md) | Nhân viên | page | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 3 |
+| [WJ2](../../../../design-specs/web/screens/WJ2.md) | Nhân viên · chỉ xem (quản lý) | state | as manager: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 1 |
+| [WJ3](../../../../design-specs/web/screens/WJ3.md) | Nhân viên · không có kết quả lọc | state | as owner: open /admin/users › fill Tìm nhân viên | — | — | `/admin/users` | restyle (U1) | yes | 1 |
+| [WJ4](../../../../design-specs/web/screens/WJ4.md) | Nhân viên · Thêm nhân viên | dialog | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 1 |
+| [WJ5](../../../../design-specs/web/screens/WJ5.md) | Nhân viên · Thêm nhân viên · email đã dùng | state | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 1 |
+| [WJ6](../../../../design-specs/web/screens/WJ6.md) | Nhân viên · Sửa nhân viên | dialog | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 1 |
+| [WJ7](../../../../design-specs/web/screens/WJ7.md) | Nhân viên · Sửa tài khoản của mình | state | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 1 |
+| [WJ8](../../../../design-specs/web/screens/WJ8.md) | Nhân viên · Đặt lại mật khẩu | dialog | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 1 |
+| [WJ9](../../../../design-specs/web/screens/WJ9.md) | Nhân viên · Khóa tài khoản | dialog | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 1 |
+| [WJ10](../../../../design-specs/web/screens/WJ10.md) | Nhân viên · Mở khóa tài khoản | dialog | as owner: open /admin/users | — | — | `/admin/users` | restyle (U1) | yes | 1 |
+| [WJ11](../../../../design-specs/web/screens/WJ11.md) | Tài khoản của tôi | page | as owner: open /admin/auth | — | — | `/admin/auth` | restyle (U1) | yes | 3 |
+| [WJ12](../../../../design-specs/web/screens/WJ12.md) | Tổng quan AI | page | as owner: open /admin/overview | — | — | `/admin/overview` | restyle (U1) | yes | 3 |
+| [WJ13](../../../../design-specs/web/screens/WJ13.md) | Tổng quan AI · chưa cấu hình LLM | state | as owner: open /admin/overview | — | — | `/admin/overview` | restyle (U1) | yes | 1 |
+| [WJ14](../../../../design-specs/web/screens/WJ14.md) | Tổng quan AI · chưa có số liệu sử dụng | state | as owner: open /admin/overview | — | — | `/admin/overview` | restyle (U1) | yes | 1 |
+| [WJ15](../../../../design-specs/web/screens/WJ15.md) | Phiên chat AI | page | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 3 |
+| [WJ16](../../../../design-specs/web/screens/WJ16.md) | Phiên chat AI · Session detail · Hội thoại | dialog | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 1 |
+| [WJ17](../../../../design-specs/web/screens/WJ17.md) | Phiên chat AI · Session detail · Trace agent | tab | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 3 |
+| [WJ18](../../../../design-specs/web/screens/WJ18.md) | Phiên chat AI · Trace agent trống | state | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 1 |
+| [WJ19](../../../../design-specs/web/screens/WJ19.md) | Phiên chat AI · Xóa cuộc trò chuyện | dialog | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 1 |
+| [WJ20](../../../../design-specs/web/screens/WJ20.md) | Phiên chat AI · Xóa bản tóm tắt | dialog | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 1 |
+| [WJ21](../../../../design-specs/web/screens/WJ21.md) | Phiên chat AI · Xóa sạch ngữ cảnh | dialog | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 1 |
+| [WJ22](../../../../design-specs/web/screens/WJ22.md) | Phiên chat AI · chưa có phiên | state | as owner: open /admin/threads | — | — | `/admin/threads` | restyle (U1) | yes | 1 |
+| [WJ23](../../../../design-specs/web/screens/WJ23.md) | Danh bạ | page | as owner: open /admin/contacts | — | — | `/admin/contacts` | restyle (U1) | yes | 3 |
+| [WJ24](../../../../design-specs/web/screens/WJ24.md) | Danh bạ · Xóa danh bạ | dialog | as owner: open /admin/contacts | — | — | `/admin/contacts` | restyle (U1) | yes | 1 |
+| [WJ25](../../../../design-specs/web/screens/WJ25.md) | Danh bạ · chưa có danh bạ | state | as owner: open /admin/contacts | — | — | `/admin/contacts` | restyle (U1) | yes | 1 |
+| [WJ26](../../../../design-specs/web/screens/WJ26.md) | Bạn bè | page | as owner: open /admin/friends | — | — | `/admin/friends` | restyle (U1) | yes | 3 |
+| [WJ27](../../../../design-specs/web/screens/WJ27.md) | Bạn bè · Từ chối kết bạn | dialog | as owner: open /admin/friends | — | — | `/admin/friends` | restyle (U1) | yes | 1 |
+| [WJ28](../../../../design-specs/web/screens/WJ28.md) | Bạn bè · chưa có tài khoản cá nhân | state | as owner: open /admin/friends | — | — | `/admin/friends` | restyle (U1) | yes | 1 |
+| [WJ29](../../../../design-specs/web/screens/WJ29.md) | Bạn bè · không lấy được danh sách bạn | state | as owner: open /admin/friends | — | — | `/admin/friends` | restyle (U1) | yes | 1 |
+| [WJ30](../../../../design-specs/web/screens/WJ30.md) | Lịch hẹn của bot | page | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 3 |
+| [WJ31](../../../../design-specs/web/screens/WJ31.md) | Lịch hẹn của bot · chưa có lịch | state | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 1 |
+| [WJ32](../../../../design-specs/web/screens/WJ32.md) | Lịch hẹn của bot · job lỗi hoặc bị chặn | state | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 1 |
+| [WJ33](../../../../design-specs/web/screens/WJ33.md) | Lịch hẹn của bot · Thêm lịch hẹn | dialog | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 1 |
+| [WJ34](../../../../design-specs/web/screens/WJ34.md) | Lịch hẹn của bot · Thêm lịch hẹn · tài khoản Kênh bệnh nhân | state | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 1 |
+| [WJ35](../../../../design-specs/web/screens/WJ35.md) | Lịch hẹn của bot · Sửa lịch hẹn | dialog | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 1 |
+| [WJ36](../../../../design-specs/web/screens/WJ36.md) | Lịch hẹn của bot · Lịch sử chạy | dialog | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 1 |
+| [WJ37](../../../../design-specs/web/screens/WJ37.md) | Lịch hẹn của bot · Xóa lịch hẹn | dialog | as owner: open /admin/schedules | — | — | `/admin/schedules` | restyle (U1) | yes | 1 |
+| [WJ38](../../../../design-specs/web/screens/WJ38.md) | Trí nhớ | page | as owner: open /admin/memory | — | — | `/admin/memory` | restyle (U1) | yes | 3 |
+| [WJ39](../../../../design-specs/web/screens/WJ39.md) | Trí nhớ · chưa ghi nhớ gì | state | as owner: open /admin/memory | — | — | `/admin/memory` | restyle (U1) | yes | 1 |
+| [WJ40](../../../../design-specs/web/screens/WJ40.md) | Kho tri thức | page | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 3 |
+| [WJ41](../../../../design-specs/web/screens/WJ41.md) | Kho tri thức · chưa có nguồn | state | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 1 |
+| [WJ42](../../../../design-specs/web/screens/WJ42.md) | Kho tri thức · không có kết quả tìm | state | as owner: open /admin/kb › fill Tìm theo tên nguồn... | — | — | `/admin/kb` | restyle (U1) | yes | 1 |
+| [WJ43](../../../../design-specs/web/screens/WJ43.md) | Kho tri thức · kéo file vào bảng | state | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 1 |
+| [WJ44](../../../../design-specs/web/screens/WJ44.md) | Kho tri thức · nguồn hỏng và đang xử lý | state | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 1 |
+| [WJ45](../../../../design-specs/web/screens/WJ45.md) | Kho tri thức · vai trò không có quyền quản lý | state | as doctor: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 1 |
+| [WJ46](../../../../design-specs/web/screens/WJ46.md) | Kho tri thức · Thêm nguồn · tải file | dialog | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 1 |
+| [WJ47](../../../../design-specs/web/screens/WJ47.md) | Kho tri thức · Thêm nguồn · gõ nội dung | tab | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 3 |
+| [WJ48](../../../../design-specs/web/screens/WJ48.md) | Kho tri thức · Agent nào đọc được nguồn này | dialog | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 1 |
+| [WJ49](../../../../design-specs/web/screens/WJ49.md) | Kho tri thức · Đoạn đã cắt | dialog | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 1 |
+| [WJ50](../../../../design-specs/web/screens/WJ50.md) | Kho tri thức · Dùng Kho tri thức thế nào | dialog | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 1 |
+| [WJ51](../../../../design-specs/web/screens/WJ51.md) | Kho tri thức · Hiện trong Hướng dẫn | dialog | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 1 |
+| [WJ52](../../../../design-specs/web/screens/WJ52.md) | Kho tri thức · Thử tìm trong kho | dialog | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 1 |
+| [WJ53](../../../../design-specs/web/screens/WJ53.md) | Kho tri thức · Xóa nguồn | dialog | as owner: open /admin/kb | — | — | `/admin/kb` | restyle (U1) | yes | 1 |
+| [WJ54](../../../../design-specs/web/screens/WJ54.md) | Tài khoản Zalo | page | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 3 |
+| [WJ55](../../../../design-specs/web/screens/WJ55.md) | Tài khoản Zalo · chưa có account | state | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 1 |
+| [WJ56](../../../../design-specs/web/screens/WJ56.md) | Tài khoản Zalo · công tắc khẩn đang bật | state | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 1 |
+| [WJ57](../../../../design-specs/web/screens/WJ57.md) | Tài khoản Zalo · cấu hình kênh bị thay đổi | state | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 1 |
+| [WJ58](../../../../design-specs/web/screens/WJ58.md) | Tài khoản Zalo · Bật công tắc khẩn | dialog | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 1 |
+| [WJ59](../../../../design-specs/web/screens/WJ59.md) | Tài khoản Zalo · Tắt công tắc khẩn | dialog | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 1 |
+| [WJ60](../../../../design-specs/web/screens/WJ60.md) | Tài khoản Zalo · Thêm account · tài khoản cá nhân | dialog | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 1 |
+| [WJ61](../../../../design-specs/web/screens/WJ61.md) | Tài khoản Zalo · Thêm account · tài khoản bot | state | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 1 |
+| [WJ62](../../../../design-specs/web/screens/WJ62.md) | Tài khoản Zalo · Sửa account | dialog | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 1 |
+| [WJ63](../../../../design-specs/web/screens/WJ63.md) | Tài khoản Zalo · Login QR | dialog | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 1 |
+| [WJ64](../../../../design-specs/web/screens/WJ64.md) | Tài khoản Zalo · Login QR · đã quét | state | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 1 |
+| [WJ65](../../../../design-specs/web/screens/WJ65.md) | Tài khoản Zalo · Login QR · lỗi hoặc hết hạn | state | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 1 |
+| [WJ66](../../../../design-specs/web/screens/WJ66.md) | Tài khoản Zalo · Xóa account | dialog | as owner: open /admin/accounts | — | — | `/admin/accounts` | restyle (U1) | yes | 1 |
+| [WJ67](../../../../design-specs/web/screens/WJ67.md) | Agents | page | as owner: open /admin/agents | — | — | `/admin/agents` | restyle (U1) | yes | 3 |
+| [WJ68](../../../../design-specs/web/screens/WJ68.md) | Agents · dạng danh sách | state | as owner: open /admin/agents | — | — | `/admin/agents` | restyle (U1) | yes | 1 |
+| [WJ69](../../../../design-specs/web/screens/WJ69.md) | Agents · không có kết quả tìm | state | as owner: open /admin/agents › fill Tìm agent... | — | — | `/admin/agents` | restyle (U1) | yes | 1 |
+| [WJ70](../../../../design-specs/web/screens/WJ70.md) | Agents · chưa có agent | state | as owner: open /admin/agents | — | — | `/admin/agents` | restyle (U1) | yes | 1 |
+| [WJ71](../../../../design-specs/web/screens/WJ71.md) | Agents · Tạo agent mới | dialog | as owner: open /admin/agents | — | — | `/admin/agents` | restyle (U1) | yes | 1 |
+| [WJ72](../../../../design-specs/web/screens/WJ72.md) | Agents · Xóa agent | dialog | as owner: open /admin/agents | — | — | `/admin/agents` | restyle (U1) | yes | 1 |
+| [WJ73](../../../../design-specs/web/screens/WJ73.md) | Agent mới | page | as owner: open /admin/agents › fill Tên hiển thị | — | — | `/admin/agents/new` | restyle (U1) | yes | 3 |
+| [WJ74](../../../../design-specs/web/screens/WJ74.md) | Agent mới · Bỏ agent đang tạo | dialog | as owner: open /admin/agents › fill Tên hiển thị | — | — | `/admin/agents/new` | restyle (U1) | yes | 1 |
+| [WJ75](../../../../design-specs/web/screens/WJ75.md) | Agent mới · lỗi nhập hoặc lỗi tải công cụ | state | as owner: open /admin/agents › fill Tên hiển thị | — | — | `/admin/agents/new` | restyle (U1) | yes | 1 |
+| [WJ76](../../../../design-specs/web/screens/WJ76.md) | Chi tiết agent | page | as owner: open /admin/agents/default | — | — | `/admin/agents/[id]` | restyle (U1) | yes | 3 |
+| [WJ77](../../../../design-specs/web/screens/WJ77.md) | Chi tiết agent · không tìm thấy | state | as owner: open /admin/agents/khong-co | — | — | `/admin/agents/[id]` | restyle (U1) | yes | 1 |
+| [WJ78](../../../../design-specs/web/screens/WJ78.md) | Chi tiết agent · Rời trang mà chưa lưu | dialog | as owner: open /admin/agents/default | — | — | `/admin/agents/[id]` | restyle (U1) | yes | 1 |
+| [WJ79](../../../../design-specs/web/screens/WJ79.md) | Tools | page | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 3 |
+| [WJ80](../../../../design-specs/web/screens/WJ80.md) | Tools · chưa có account | state | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 1 |
+| [WJ81](../../../../design-specs/web/screens/WJ81.md) | Tools · chỉ đọc được lớp tài khoản | state | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 1 |
+| [WJ82](../../../../design-specs/web/screens/WJ82.md) | Tools · web_search · chuỗi nguồn | dialog | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 1 |
+| [WJ83](../../../../design-specs/web/screens/WJ83.md) | Tools · web_fetch · chuỗi nguồn | state | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 1 |
+| [WJ84](../../../../design-specs/web/screens/WJ84.md) | Tools · Xóa API key Brave | dialog | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 1 |
+| [WJ85](../../../../design-specs/web/screens/WJ85.md) | Tools · Đọc ảnh · chuỗi nguồn | dialog | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 1 |
+| [WJ86](../../../../design-specs/web/screens/WJ86.md) | Tools · Vẽ ảnh AI | dialog | as owner: open /admin/tools | — | — | `/admin/tools` | restyle (U1) | yes | 1 |
+| [WJ87](../../../../design-specs/web/screens/WJ87.md) | MCP | page | as owner: open /admin/mcp | — | — | `/admin/mcp` | restyle (U1) | yes | 3 |
+| [WJ88](../../../../design-specs/web/screens/WJ88.md) | MCP · chưa có server | state | as owner: open /admin/mcp | — | — | `/admin/mcp` | restyle (U1) | yes | 1 |
+| [WJ89](../../../../design-specs/web/screens/WJ89.md) | MCP · lỗi và chờ duyệt lại | state | as owner: open /admin/mcp | — | — | `/admin/mcp` | restyle (U1) | yes | 1 |
+| [WJ90](../../../../design-specs/web/screens/WJ90.md) | MCP · Thêm server MCP | dialog | as owner: open /admin/mcp | — | — | `/admin/mcp` | restyle (U1) | yes | 1 |
+| [WJ91](../../../../design-specs/web/screens/WJ91.md) | MCP · Sửa server MCP | dialog | as owner: open /admin/mcp | — | — | `/admin/mcp` | restyle (U1) | yes | 1 |
+| [WJ92](../../../../design-specs/web/screens/WJ92.md) | MCP · Agent nào được dùng server này | dialog | as owner: open /admin/mcp | — | — | `/admin/mcp` | restyle (U1) | yes | 1 |
+| [WJ93](../../../../design-specs/web/screens/WJ93.md) | MCP · Xóa server | dialog | as owner: open /admin/mcp | — | — | `/admin/mcp` | restyle (U1) | yes | 1 |
+| [WJ94](../../../../design-specs/web/screens/WJ94.md) | Trace agent | page | as owner: open /admin/traces | — | — | `/admin/traces` | restyle (U1) | yes | 3 |
+| [WJ95](../../../../design-specs/web/screens/WJ95.md) | Trace agent · chưa có trace | state | as owner: open /admin/traces | — | — | `/admin/traces` | restyle (U1) | yes | 1 |
+| [WJ96](../../../../design-specs/web/screens/WJ96.md) | Trace agent · lượt đã mở | state | as owner: open /admin/traces | — | — | `/admin/traces` | restyle (U1) | yes | 1 |
+| [WJ97](../../../../design-specs/web/screens/WJ97.md) | Trace agent · hết lượt có trace | state | as owner: open /admin/traces | — | — | `/admin/traces` | restyle (U1) | yes | 1 |
+| [WJ98](../../../../design-specs/web/screens/WJ98.md) | Logs | page | as owner: open /admin/logs | — | — | `/admin/logs` | restyle (U1) | yes | 3 |
+| [WJ99](../../../../design-specs/web/screens/WJ99.md) | Logs · Nhật ký thao tác | tab | as owner: open /admin/logs | — | — | `/admin/logs` | restyle (U1) | yes | 3 |
+| [WJ100](../../../../design-specs/web/screens/WJ100.md) | Logs · ghi log ra file đang tắt | state | as owner: open /admin/logs | — | — | `/admin/logs` | restyle (U1) | yes | 1 |
+| [WJ101](../../../../design-specs/web/screens/WJ101.md) | Logs · không có dòng log | state | as owner: open /admin/logs | — | — | `/admin/logs` | restyle (U1) | yes | 1 |
+| [WJ102](../../../../design-specs/web/screens/WJ102.md) | Hồ sơ chính sách | page | as owner: open /admin/policy | — | — | `/admin/policy` | restyle (U1) | yes | 3 |
+| [WJ103](../../../../design-specs/web/screens/WJ103.md) | Hồ sơ chính sách · Chuyển sang Trợ lý nội bộ | dialog | as owner: open /admin/policy | — | — | `/admin/policy` | restyle (U1) | yes | 1 |
+| [WJ104](../../../../design-specs/web/screens/WJ104.md) | Hồ sơ chính sách · chưa có tài khoản hay agent | state | as owner: open /admin/policy | — | — | `/admin/policy` | restyle (U1) | yes | 1 |
+| [WJ105](../../../../design-specs/web/screens/WJ105.md) | Mô hình & cấu hình | page | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 3 |
+| [WJ106](../../../../design-specs/web/screens/WJ106.md) | Mô hình & cấu hình · Agent và model | tab | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 3 |
+| [WJ107](../../../../design-specs/web/screens/WJ107.md) | Mô hình & cấu hình · Trí nhớ và ngữ cảnh | tab | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 3 |
+| [WJ108](../../../../design-specs/web/screens/WJ108.md) | Mô hình & cấu hình · Kho tri thức | tab | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 3 |
+| [WJ109](../../../../design-specs/web/screens/WJ109.md) | Mô hình & cấu hình · Tin chủ động và lịch | tab | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 3 |
+| [WJ110](../../../../design-specs/web/screens/WJ110.md) | Mô hình & cấu hình · Chung | tab | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 3 |
+| [WJ111](../../../../design-specs/web/screens/WJ111.md) | Mô hình & cấu hình · Đặt lại toàn bộ cấu hình | dialog | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 1 |
+| [WJ112](../../../../design-specs/web/screens/WJ112.md) | Mô hình & cấu hình · Xóa cấu hình LLM | dialog | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 1 |
+| [WJ113](../../../../design-specs/web/screens/WJ113.md) | Mô hình & cấu hình · Base URL là lớp giả của Google | state | as owner: open /admin/tuning | — | — | `/admin/tuning` | restyle (U1) | yes | 1 |
+| [WJ114](../../../../design-specs/web/screens/WJ114.md) | Mô hình & cấu hình · không có tham số khớp | state | as owner: open /admin/tuning › fill Tìm kiếm cấu hình... | — | — | `/admin/tuning` | restyle (U1) | yes | 1 |
+| [WJ115](../../../../design-specs/web/screens/WJ115.md) | Cấu hình · nhóm (liên kết trực tiếp) | page | as owner: open /admin/tuning/providers | — | — | `/admin/tuning/[group]` | restyle (U1) | yes | 3 |
+| [WK1](../../../../design-specs/web/screens/WK1.md) | Kỹ năng và ca trực | page | as owner: open /admin/care/staff | — | — | `/admin/care/staff` | restyle (U1) | yes | 3 |
+| [WK2](../../../../design-specs/web/screens/WK2.md) | Kỹ năng và ca trực · chưa có hồ sơ | state | as owner: open /admin/care/staff | — | — | `/admin/care/staff` | restyle (U1) | yes | 1 |
+| [WK3](../../../../design-specs/web/screens/WK3.md) | Kỹ năng và ca trực · Sửa hồ sơ | dialog | as owner: open /admin/care/staff | — | — | `/admin/care/staff` | restyle (U1) | yes | 1 |
+| [WK4](../../../../design-specs/web/screens/WK4.md) | Số trực 24/24 | page | as owner: open /admin/care/on-call | — | — | `/admin/care/on-call` | restyle (U1) | yes | 3 |
+| [WK5](../../../../design-specs/web/screens/WK5.md) | Số trực 24/24 · chưa có số trực | state | as owner: open /admin/care/on-call | — | — | `/admin/care/on-call` | restyle (U1) | yes | 1 |
+| [WK6](../../../../design-specs/web/screens/WK6.md) | Số trực 24/24 · không có số nào đang bật | state | as owner: open /admin/care/on-call | — | — | `/admin/care/on-call` | restyle (U1) | yes | 1 |
+| [WK7](../../../../design-specs/web/screens/WK7.md) | Số trực 24/24 · Thêm số trực | dialog | as owner: open /admin/care/on-call | — | — | `/admin/care/on-call` | restyle (U1) | yes | 1 |
+| [WK8](../../../../design-specs/web/screens/WK8.md) | Số trực 24/24 · Sửa số trực | dialog | as owner: open /admin/care/on-call | — | — | `/admin/care/on-call` | restyle (U1) | yes | 1 |
+| [WK9](../../../../design-specs/web/screens/WK9.md) | Ma trận ngưỡng | page | as doctor: open /admin/care/matrix | — | — | `/admin/care/matrix` | restyle (U1) | yes | 3 |
+| [WK10](../../../../design-specs/web/screens/WK10.md) | Ma trận ngưỡng · đã được bác sĩ duyệt | state | as doctor: open /admin/care/matrix | — | — | `/admin/care/matrix` | restyle (U1) | yes | 1 |
+| [WK11](../../../../design-specs/web/screens/WK11.md) | Ma trận ngưỡng · chỉ xem | state | as doctor: open /admin/care/matrix | — | — | `/admin/care/matrix` | restyle (U1) | yes | 1 |
+| [WK12](../../../../design-specs/web/screens/WK12.md) | Ma trận ngưỡng · số không hợp lệ | state | as doctor: open /admin/care/matrix › fill Ngưỡng tin cậy của agent | — | — | `/admin/care/matrix` | restyle (U1) | yes | 1 |
+| [WK13](../../../../design-specs/web/screens/WK13.md) | Ma trận ngưỡng · Duyệt ma trận này | dialog | as doctor: open /admin/care/matrix | — | — | `/admin/care/matrix` | restyle (U1) | yes | 1 |
+| [WK14](../../../../design-specs/web/screens/WK14.md) | Ma trận ngưỡng · Đặt lại về chờ duyệt | dialog | as doctor: open /admin/care/matrix | — | — | `/admin/care/matrix` | restyle (U1) | yes | 1 |
+| [WK15](../../../../design-specs/web/screens/WK15.md) | SLA và khung giờ | page | as owner: open /admin/care/timing | — | — | `/admin/care/timing` | restyle (U1) | yes | 3 |
+| [WK16](../../../../design-specs/web/screens/WK16.md) | SLA và khung giờ · chỉ xem | state | as owner: open /admin/care/timing | — | — | `/admin/care/timing` | restyle (U1) | yes | 1 |
+| [WK17](../../../../design-specs/web/screens/WK17.md) | SLA và khung giờ · số không hợp lệ | state | as owner: open /admin/care/timing › fill Khẩn (phút) | — | — | `/admin/care/timing` | restyle (U1) | yes | 1 |
+| [WK18](../../../../design-specs/web/screens/WK18.md) | Cảnh báo agent | page | as owner: open /admin/care/alerts | — | — | `/admin/care/alerts` | restyle (U1) | yes | 3 |
+| [WK19](../../../../design-specs/web/screens/WK19.md) | Cảnh báo agent · chưa có cảnh báo | state | as owner: open /admin/care/alerts | — | — | `/admin/care/alerts` | restyle (U1) | yes | 1 |
+| [WK20](../../../../design-specs/web/screens/WK20.md) | Cảnh báo agent · mất kết nối trực tiếp | state | as owner: open /admin/care/alerts | — | — | `/admin/care/alerts` | restyle (U1) | yes | 1 |
+| [WK21](../../../../design-specs/web/screens/WK21.md) | Yêu cầu đang chờ tôi | page | as cs_staff: open /care/handoffs | — | — | `/care/handoffs` | restyle (U1) | yes | 3 |
+| [WK22](../../../../design-specs/web/screens/WK22.md) | Yêu cầu đang chờ tôi · tất cả đang mở | state | as cs_staff: open /care/handoffs | — | — | `/care/handoffs` | restyle (U1) | yes | 1 |
+| [WK23](../../../../design-specs/web/screens/WK23.md) | Yêu cầu đang chờ tôi · chưa có yêu cầu | state | as cs_staff: open /care/handoffs | — | — | `/care/handoffs` | restyle (U1) | yes | 1 |
+| [WK24](../../../../design-specs/web/screens/WK24.md) | Yêu cầu đang chờ tôi · thẻ khẩn đã tới số trực | state | as cs_staff: open /care/handoffs | — | — | `/care/handoffs` | restyle (U1) | yes | 1 |
+| [WK25](../../../../design-specs/web/screens/WK25.md) | Yêu cầu đang chờ tôi · thẻ báo lỗi | state | as cs_staff: open /care/handoffs | — | — | `/care/handoffs` | restyle (U1) | yes | 1 |
+| [WK26](../../../../design-specs/web/screens/WK26.md) | Yêu cầu đang chờ tôi · Từ chối nhận cuộc trò chuyện | dialog | as cs_staff: open /care/handoffs | — | — | `/care/handoffs` | restyle (U1) | yes | 1 |
+| [WK27](../../../../design-specs/web/screens/WK27.md) | Yêu cầu đang chờ tôi · mất kết nối trực tiếp | state | as cs_staff: open /care/handoffs | — | — | `/care/handoffs` | restyle (U1) | yes | 1 |
+| [WK28](../../../../design-specs/web/screens/WK28.md) | Agent chăm sóc của bệnh nhân · Dòng thời gian | page | as cs_staff: open /care/patients/7/timeline | — | — | `/care/patients/[id]/timeline` | restyle (U1) | yes | 3 |
+| [WK29](../../../../design-specs/web/screens/WK29.md) | Agent chăm sóc của bệnh nhân · agent phụ trách, đang hạ mức | state | as cs_staff: open /care/patients/1/timeline | — | — | `/care/patients/[id]/timeline` | restyle (U1) | yes | 1 |
+| [WK30](../../../../design-specs/web/screens/WK30.md) | Agent chăm sóc của bệnh nhân · đang tìm người nhận | state | as cs_staff: open /care/patients/7/timeline | — | — | `/care/patients/[id]/timeline` | restyle (U1) | yes | 1 |
+| [WK31](../../../../design-specs/web/screens/WK31.md) | Agent chăm sóc của bệnh nhân · mục chưa có dữ liệu | state | as cs_staff: open /care/patients/1/timeline | — | — | `/care/patients/[id]/timeline` | restyle (U1) | yes | 1 |
+| [WK32](../../../../design-specs/web/screens/WK32.md) | Agent chăm sóc của bệnh nhân · lỗi tải | state | as cs_staff: open /care/patients/999/timeline | — | — | `/care/patients/[id]/timeline` | restyle (U1) | yes | 1 |
+| [WK33](../../../../design-specs/web/screens/WK33.md) | Agent chăm sóc của bệnh nhân · Trả lại cho agent | page | as cs_staff: open /care/patients/7/release | — | — | `/care/patients/[id]/release` | restyle (U1) | yes | 3 |
+| [WK34](../../../../design-specs/web/screens/WK34.md) | Trả lại cho agent · hạ mức có hệ quả | state | as cs_staff: open /care/patients/7/release | — | — | `/care/patients/[id]/release` | restyle (U1) | yes | 1 |
+| [WK35](../../../../design-specs/web/screens/WK35.md) | Trả lại cho agent · Xác nhận trả lại | dialog | as cs_staff: open /care/patients/7/release | — | — | `/care/patients/[id]/release` | restyle (U1) | yes | 1 |
+| [WK36](../../../../design-specs/web/screens/WK36.md) | Trả lại cho agent · không phải người đang giữ | state | as cs_staff: open /care/patients/8/release | — | — | `/care/patients/[id]/release` | restyle (U1) | yes | 1 |
+| [WK37](../../../../design-specs/web/screens/WK37.md) | Trả lại cho agent · agent đang phụ trách | state | as cs_staff: open /care/patients/1/release | — | — | `/care/patients/[id]/release` | restyle (U1) | yes | 1 |
+| [WK38](../../../../design-specs/web/screens/WK38.md) | Agent chăm sóc của bệnh nhân · Nói với agent | page | as cs_staff: open /care/patients/7/tell-agent | — | — | `/care/patients/[id]/tell-agent` | restyle (U1) | yes | 3 |
+| [WK39](../../../../design-specs/web/screens/WK39.md) | Nói với agent · chưa có lời dặn | state | as cs_staff: open /care/patients/1/tell-agent | — | — | `/care/patients/[id]/tell-agent` | restyle (U1) | yes | 1 |
+| [WL1](../../../../design-specs/web/screens/WL1.md) | Đăng nhập CSKH | page | as anonymous: open /login | — | — | `/login` | restyle (U1) | yes | 3 |
+| [WL2](../../../../design-specs/web/screens/WL2.md) | Đăng nhập CSKH · đang đăng nhập | state | as anonymous: open /login › fill Email › fill Mật khẩu | — | — | `/login` | restyle (U1) | yes | 1 |
+| [WL3](../../../../design-specs/web/screens/WL3.md) | Đăng nhập CSKH · sai mật khẩu | state | as anonymous: open /login › fill Email › fill Mật khẩu | — | — | `/login` | restyle (U1) | yes | 1 |
+| [WL4](../../../../design-specs/web/screens/WL4.md) | Tin nhắn mẫu đã duyệt | page | as owner: open /templates | — | — | `/templates` | restyle (U1) | yes | 3 |
+| [WL5](../../../../design-specs/web/screens/WL5.md) | Tin nhắn mẫu đã duyệt · chỉ xem | state | as cs_staff: open /templates | — | — | `/templates` | restyle (U1) | yes | 1 |
+| [WL6](../../../../design-specs/web/screens/WL6.md) | Tin nhắn mẫu đã duyệt · chưa có mẫu | state | as owner: open /templates | — | — | `/templates` | restyle (U1) | yes | 1 |
+| [WL7](../../../../design-specs/web/screens/WL7.md) | Tin nhắn mẫu đã duyệt · Soạn mẫu tin nhắn | dialog | as owner: open /templates | — | — | `/templates` | restyle (U1) | yes | 1 |
+| [WL8](../../../../design-specs/web/screens/WL8.md) | Tin nhắn mẫu đã duyệt · Sửa mẫu tin nhắn | dialog | as owner: open /templates | — | — | `/templates` | restyle (U1) | yes | 1 |
+| [WL9](../../../../design-specs/web/screens/WL9.md) | Tin nhắn mẫu đã duyệt · Duyệt mẫu này | dialog | as doctor: open /templates | — | — | `/templates` | restyle (U1) | yes | 1 |
+| [WL10](../../../../design-specs/web/screens/WL10.md) | Khung · menu quản trị (chủ phòng khám) | state | as owner: open /dashboard | — | — | `(app shell)` | restyle (U1) | — | 1 |
+| [WL11](../../../../design-specs/web/screens/WL11.md) | Khung · menu bác sĩ | state | as doctor: open /dashboard | — | — | `(app shell)` | restyle (U1) | — | 1 |
+| [WL12](../../../../design-specs/web/screens/WL12.md) | Khung · menu CSKH | state | as cs_staff: open /today | — | — | `(app shell)` | restyle (U1) | — | 1 |
+| [WL13](../../../../design-specs/web/screens/WL13.md) | Khung · menu lễ tân | state | as reception: open /dashboard | — | — | `(app shell)` | restyle (U1) | — | 1 |
+| [WL14](../../../../design-specs/web/screens/WL14.md) | Khung · menu trống (bệnh nhân) | state | as patient: open /today | — | — | `(app shell)` | restyle (U1) | — | 1 |
+| [WL15](../../../../design-specs/web/screens/WL15.md) | Khung · đang tải phiên | state | as anonymous: home page | — | — | `(app shell)` | restyle (U1) | — | 1 |
+| [WL16](../../../../design-specs/web/screens/WL16.md) | Khung · không tải được phiên | state | as anonymous: home page | — | — | `(app shell)` | restyle (U1) | — | 1 |
+| [WL17](../../../../design-specs/web/screens/WL17.md) | Khung · không có quyền xem màn này | state | as cs_staff: open /admin/users | — | — | `(app shell)` | restyle (U1) | — | 1 |
+| [WL18](../../../../design-specs/web/screens/WL18.md) | Khung · điện thoại · thanh tab | state | as cs_staff: open /today | — | — | `(app shell)` | restyle (U1) | — | 1 |
+| [WL19](../../../../design-specs/web/screens/WL19.md) | Khung · điện thoại · ngăn menu | state | as cs_staff: open /today | — | — | `(app shell)` | restyle (U1) | — | 1 |

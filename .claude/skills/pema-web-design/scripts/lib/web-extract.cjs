@@ -3,7 +3,9 @@
 // Both functions are serialised by Playwright (`page.evaluate(fn, arg)`), so each one must be self-contained:
 // no closure over Node variables and no require().
 //
-//   extractInPage({roots, mode})  one structured pass over the open screen: tree + categorised lists + raw style counts
+//   extractInPage({roots, mode, profile})  one structured pass over the open screen: tree + categorised lists + raw style counts
+//     profile "next" (W8) reads the Next.js front end (Tailwind classes, role=dialog/note/alert, the kit's Badge and cards)
+//     instead of the old web's class names; without it the behaviour is the old-web one, unchanged.
 //   probeInPage()                 layout probe of the tagged elements, run again at other viewports
 //
 // Tree node kinds (key `n`): see web-specs-lib.cjs, the renderer, for how each one becomes a kit component call.
@@ -16,11 +18,18 @@ function extractInPage(cfg) {
   const INLINE = new Set(['SPAN', 'SMALL', 'STRONG', 'B', 'I', 'EM', 'U', 'SUP', 'SUB', 'BR', 'CODE', 'MARK', 'A', 'S', 'ABBR', 'TIME']);
   const CHIP_BTN = (el) =>
     el.matches('.chip, .tab, .guide-topic, [aria-pressed], [role="tab"], .finance-tabs button, .tabbar button, .ops-toggle button, .crm-groups button');
-  const BADGE_SEL = '.status, .badge, .rx-status, .nav-badge, .priority, .crm-case, .chip:not(button), .approved, .draft-mark, .urgent, .overdue, .missing';
-  const KPI_SEL = '.metric-card, .crm-kpi, .metric, .ops-stat';
-  const NOTICE_SEL = '.notice, .alert-strip, .ops-error, .crm-error, .photo-disclaimer, .quick-catalog-note, .studio-note, .linked-rx-note, .print-blocked, .draft-mark, .toast, [role="alert"], [role="status"], .guide-context, .guide-handoff, .warning';
-  const CARD_SEL = '.panel, .callout, .ai-card, .followup-card, .resource-card, .service-card, .session-card, .wait-card, .crm-case-card, .mobile-card, .linked-plan, .linked-modal-card, .order-sheet, .hero, .modal, .crm-summary, .patient-hero, .guide-article, .upload-box, .quick-cart, .compare';
-  const REPEAT = ['quick-product-row', 'drop-slot', 'booking', 'positioned-booking', 'crm-task-row', 'wait-card', 'timeline-item', 'list-item', 'followup-card', 'resource-card', 'service-card', 'care-row', 'order-history-row', 'crm-case-card', 'item-line', 'event-disclosure', 'room-track', 'time-track', 'week-day'];
+  const NEXT = cfg.profile === 'next';
+  const BADGE_SEL = NEXT
+    ? 'span.rounded-pill'
+    : '.status, .badge, .rx-status, .nav-badge, .priority, .crm-case, .chip:not(button), .approved, .draft-mark, .urgent, .overdue, .missing';
+  const KPI_SEL = NEXT ? '.kpi-none' : '.metric-card, .crm-kpi, .metric, .ops-stat';
+  const NOTICE_SEL = NEXT
+    ? '[role="alert"], [role="note"], [role="status"]'
+    : '.notice, .alert-strip, .ops-error, .crm-error, .photo-disclaimer, .quick-catalog-note, .studio-note, .linked-rx-note, .print-blocked, .draft-mark, .toast, [role="alert"], [role="status"], .guide-context, .guide-handoff, .warning';
+  const CARD_SEL = NEXT
+    ? '.gc-card, .gc-tile, [role="dialog"]'
+    : '.panel, .callout, .ai-card, .followup-card, .resource-card, .service-card, .session-card, .wait-card, .crm-case-card, .mobile-card, .linked-plan, .linked-modal-card, .order-sheet, .hero, .modal, .crm-summary, .patient-hero, .guide-article, .upload-box, .quick-cart, .compare';
+  const REPEAT = NEXT ? [] : ['quick-product-row', 'drop-slot', 'booking', 'positioned-booking', 'crm-task-row', 'wait-card', 'timeline-item', 'list-item', 'followup-card', 'resource-card', 'service-card', 'care-row', 'order-history-row', 'crm-case-card', 'item-line', 'event-disclosure', 'room-track', 'time-track', 'week-day'];
   const REPEAT_MIN = 3;
   const NOISE_CLASS = new Set(['active', 'selected', 'clickable', 'ui-icon', 'icon-wrap', 'ico', 'current']);
 
@@ -34,6 +43,7 @@ function extractInPage(cfg) {
     iconMap[holder.innerHTML.replace(/\s+/g, '')] = name;
   }
   const iconName = (host) => {
+    if (NEXT) return ''; // the kit's icons are not the old web's registry: a name would only say "unknown"
     const svg = host.tagName.toLowerCase() === 'svg' ? host : host.querySelector('svg');
     if (!svg) return '';
     const r = svg.getBoundingClientRect();
@@ -103,7 +113,9 @@ function extractInPage(cfg) {
   };
 
   // ---------- classes ----------
-  const classOf = (el) => [...el.classList].filter((c) => !NOISE_CLASS.has(c)).join(' ');
+  // Tailwind utility classes are not names of the design: only the kit's own component classes are kept
+  const KIT_CLASS = /^gc-/;
+  const classOf = (el) => [...el.classList].filter((c) => !NOISE_CLASS.has(c) && (!NEXT || KIT_CLASS.test(c))).join(' ');
   const hook = (el) => {
     const out = [];
     for (const [k, v] of Object.entries(el.dataset)) {
@@ -165,6 +177,14 @@ function extractInPage(cfg) {
   };
   const variantOf = (el) => {
     const c = el.className || '';
+    if (NEXT) {
+      const cl = (typeof el.className === 'string' ? el.className : '').split(/\s+/);
+      const has = (re) => cl.some((k) => re.test(k));
+      if (has(/^bg-brand-(500|600)$/) && has(/^text-(white|surface)$/)) return 'primary';
+      if (has(/^(bg|text)-danger/) || has(/^hover:bg-danger/)) return 'danger';
+      if (cl.includes('border')) return 'secondary';
+      return 'quiet';
+    }
     if (/\bbtn-primary\b|\bprimary\b/.test(c)) return 'primary';
     if (/danger|destructive/.test(c)) return 'danger';
     if (/btn-quiet|\bquiet\b/.test(c)) return 'quiet';
@@ -217,7 +237,9 @@ function extractInPage(cfg) {
   };
   const fieldNode = (el) => {
     const t = el.tagName.toLowerCase();
-    const type = t === 'select' ? 'select' : t === 'textarea' ? 'textarea' : el.type || 'text';
+    // the Next.js kit's SelectMenu is a button (aria-haspopup=listbox) labelled by a <label for>: a select to the designer
+    const menu = NEXT && t === 'button';
+    const type = t === 'select' || menu ? 'select' : t === 'textarea' ? 'textarea' : el.type || 'text';
     const n = { n: 'field', type, label: controlLabel(el) };
     const ph = el.getAttribute('placeholder');
     if (ph) n.placeholder = ph;
@@ -232,6 +254,8 @@ function extractInPage(cfg) {
       n.options = opts.length > 12 ? opts.slice(0, 8) : opts;
       const sel = el.selectedOptions[0];
       if (sel) n.default = norm(sel.textContent);
+    } else if (menu) {
+      n.default = textOf(el);
     } else if (type === 'checkbox' || type === 'radio') {
       n.checked = el.checked;
       if (el.name) n.group = el.name;
@@ -479,6 +503,8 @@ function extractInPage(cfg) {
     if (NO_WALK.has(T) || el.tagName.toLowerCase() === 'svg') return [];
     if (!vis(el)) return [];
     seen.add(el);
+    // Next.js: a spinner is a role=status element whose only text is its aria-label (the loading frame, WL15)
+    if (NEXT && el.getAttribute('role') === 'status' && !textOf(el) && el.getAttribute('aria-label')) return [{ n: 'progress', pct: '', aria: el.getAttribute('aria-label') }];
     const cls = el.classList;
     const lc = el.tagName.toLowerCase();
 
@@ -719,7 +745,7 @@ function extractInPage(cfg) {
     // the root itself is a container: keep its own wrapper info (modal, content)
     const kids = walkNode(r);
     // #main-content and body are wrappers, not UI: their children are the tree; a dialog or toast keeps its own node
-    if (r.matches('#main-content, body') && kids.length === 1 && Array.isArray(kids[0].children)) tree.push(...kids[0].children);
+    if (r.matches('#main-content, #main, body') && kids.length === 1 && Array.isArray(kids[0].children)) tree.push(...kids[0].children);
     else tree.push(...kids);
   }
   // visible toast anywhere (a state of its own, WA4)
@@ -763,6 +789,8 @@ function extractInPage(cfg) {
   for (const r of rootEls) {
     for (const c of r.querySelectorAll(CTRL)) {
       if (!vis(c) || seen.has(c) || consumed.has(c)) continue;
+      // a button inside a hidden responsive twin (the phone cards at desktop width) is not a control of this frame
+      if (NEXT && !c.getClientRects().length) continue;
       let data = false;
       for (let e = c.parentElement; e; e = e.parentElement) if (skipData.has(e)) data = true;
       if (data || c.closest('details:not([open])') && c.tagName !== 'SUMMARY') continue;
@@ -812,12 +840,32 @@ function extractInPage(cfg) {
       regions.push({ name, sel, box: box(el) });
     }
   };
-  addRegion('sidebar', '.sidebar');
-  addRegion('topbar', '.topbar');
-  addRegion('content', '#main-content');
-  addRegion('modal', '.modal-backdrop .modal');
-  addRegion('page-heading', '.page-heading');
+  if (NEXT) {
+    addRegion('sidebar', 'aside');
+    addRegion('topbar', 'header');
+    addRegion('content', '#main');
+    addRegion('modal', '[role="dialog"]');
+  } else {
+    addRegion('sidebar', '.sidebar');
+    addRegion('topbar', '.topbar');
+    addRegion('content', '#main-content');
+    addRegion('modal', '.modal-backdrop .modal');
+    addRegion('page-heading', '.page-heading');
+  }
   const shell = {};
+  if (NEXT) {
+    const side = document.querySelector('aside');
+    if (side && vis(side)) {
+      shell.nav_items = [...side.querySelectorAll('nav a, nav [aria-disabled="true"]')].filter(vis).map((b) => textOf(b));
+      const cur = side.querySelector('a[aria-current]');
+      if (cur) shell.active = textOf(cur);
+    }
+    const crumbs = document.querySelector('header nav');
+    if (crumbs && vis(crumbs)) shell.breadcrumbs = textOf(crumbs);
+    shell.body = { page: '', role: '', patient_tab: '' };
+    shell.title = document.title;
+    return { tree, lists, texts, raw, regions, shell, unseen, tagged: idSeq, url: location.pathname + location.search };
+  }
   const nav = document.querySelector('.sidebar');
   if (nav && vis(nav)) {
     shell.nav_items = [...nav.querySelectorAll('.nav-item')].filter(vis).map((b) => textOf(b));
@@ -861,7 +909,7 @@ function probeInPage() {
     }
     out.els[el.dataset.w2id] = o;
   }
-  for (const sel of ['.sidebar', '.topbar', '.main', '#main-content', '.modal-backdrop .modal', '.tabbar', '.page-heading']) {
+  for (const sel of ['.sidebar', '.topbar', '.main', '#main-content', '.modal-backdrop .modal', '.tabbar', '.page-heading', 'aside', 'header', '#main', '[role="dialog"]']) {
     const el = document.querySelector(sel);
     if (el) {
       const cs = getComputedStyle(el);

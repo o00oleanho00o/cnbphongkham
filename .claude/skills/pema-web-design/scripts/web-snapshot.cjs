@@ -15,6 +15,13 @@
 // Needs the old web on http://127.0.0.1:4173 and the finance API on :4174 (never started or stopped here).
 // One browser, one page at a time: the static server drops connections under parallel load.
 // Env: PLAYWRIGHT_MODULE (lib/pw.cjs), PEMA_WEB_BASE.
+//
+// Inventory entries with `source: "nextjs"` (WJ, WK, WL; W8) are walked on the Next.js front end instead (lib/next-web.cjs and
+// lib/next-states.cjs, the same states as web-shots.cjs; env PEMA_NEXT_BASE, default http://localhost:3480, in front of the mock
+// back end started with lib/frozen-time.cjs) and read with the extractor's "next" profile. The viewport is the entry's own
+// (1440x900; the phone-only shell frames WL18, WL19 at 390x844); pages are probed at the other widths like the old ones. A state the
+// mock cannot give has no snapshot entry (the run reports it and exits 1); nothing is invented. The old web is not needed
+// when only Next.js ids are walked (--only=WJ1,WK3).
 
 const fs = require('fs');
 const path = require('path');
@@ -22,6 +29,8 @@ const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 const { loadPlaywright, REPO } = require('./lib/pw.cjs');
 const ow = require('./lib/old-web.cjs');
+const nw = require('./lib/next-web.cjs');
+const STATES = require('./lib/next-states.cjs');
 const { extractInPage, probeInPage } = require('./lib/web-extract.cjs');
 const tm = require('./lib/token-map.cjs');
 
@@ -57,6 +66,14 @@ async function scopeOf(page, entry) {
   if (['WA1', 'WA2', 'WA3', 'WA5', 'WA6', 'WA7', 'WA8', 'WA9'].includes(entry.id)) return { scope: 'shell', roots: ['.skip-link', '.sidebar', '.topbar'] };
   const hasMain = await page.locator('#main-content').count();
   return hasMain ? { scope: 'content', roots: ['#main-content'] } : { scope: 'body', roots: ['body'] };
+}
+
+/** Same decision for a Next.js entry: dialog over the page, the shell frames (WL10-WL14, WL18, WL19), the content of `main`, or the bare body. */
+const NEXT_SHELL_IDS = ['WL10', 'WL11', 'WL12', 'WL13', 'WL14', 'WL18', 'WL19'];
+async function scopeOfNext(page, entry) {
+  if (await page.locator('[role="dialog"]').locator('visible=true').count()) return { scope: 'dialog', roots: ['[role="dialog"]'] };
+  if (NEXT_SHELL_IDS.includes(entry.id)) return { scope: 'shell', roots: ['aside', 'header', 'nav[aria-label="Điều hướng nhanh"]'] };
+  return (await page.locator('main#main').count()) ? { scope: 'content', roots: ['main#main'] } : { scope: 'body', roots: ['body'] };
 }
 
 // ---------- post-processing ----------
@@ -144,7 +161,7 @@ function responsiveOf(base, probes, desc) {
         if (was.thead !== undefined && was.thead !== now.thead) changes.push(`${name}: table header row ${now.thead ? 'shown' : 'hidden'}`);
         if (was.d !== now.d && !(was.d.includes('grid') && now.d.includes('grid')) && !(was.d.includes('flex') && now.d.includes('flex'))) changes.push(`${name}: display ${was.d} → ${now.d}`);
         if (was.pos !== undefined && was.pos !== now.pos) changes.push(`${name}: position ${was.pos} → ${now.pos}`);
-        if (id.startsWith('sel:') && ['.sidebar', '.modal-backdrop .modal'].includes(id.slice(4)) && was.w !== now.w) changes.push(`${name}: width ${was.w} → ${now.w}px`);
+        if (id.startsWith('sel:') && ['.sidebar', '.modal-backdrop .modal', 'aside', '[role="dialog"]'].includes(id.slice(4)) && was.w !== now.w) changes.push(`${name}: width ${was.w} → ${now.w}px`);
       }
     }
     const baseSet = new Set(base.texts);
@@ -265,7 +282,38 @@ function maskGeneratedIds(e) {
   return masked === text ? e : JSON.parse(masked);
 }
 
+async function snapshotNext(browser, entry, tokens, index) {
+  const [w, h] = entry.viewport || [1440, 900];
+  const page = await nw.newPage(browser, { viewport: { width: w, height: h }, clock: readJson(INVENTORY).clock });
+  try {
+    await nw.open(page, entry, STATES, [w, h]);
+    await nw.ready(page, 500);
+    const bad = await nw.verify(page, entry);
+    if (bad) throw new Error(bad);
+    const scope = await scopeOfNext(page, entry);
+    const data = await page.evaluate(extractInPage, { roots: scope.roots, mode: '', icons: {}, profile: 'next' });
+    let probes = null;
+    if (!NO_PROBE && entry.frames.includes('390x844') && !entry.viewport) {
+      const base = await page.evaluate(probeInPage);
+      const list = {};
+      for (const [pw, ph] of PROBE_VIEWPORTS) {
+        await page.setViewportSize({ width: pw, height: ph });
+        await nw.ready(page, 350);
+        list[`${pw}x${ph}`] = await page.evaluate(probeInPage);
+      }
+      probes = { base, list };
+    }
+    if (page.errors.length) throw new Error('page errors: ' + page.errors.slice(0, 2).join(' | '));
+    const e = buildEntry(entry, data, scope, probes, tokens, index);
+    e.viewport = `${w}x${h}`;
+    return e;
+  } finally {
+    await page.context().close();
+  }
+}
+
 async function snapshotOne(browser, entry, tokens, index) {
+  if (entry.source === 'nextjs') return snapshotNext(browser, entry, tokens, index);
   const page = await ow.newPage(browser, { viewport: { width: 1440, height: 900 } });
   try {
     const shown = await ow.open(page, entry, { base: BASE, role: ow_role(entry) });
@@ -369,10 +417,21 @@ function tokensSummary(screens) {
     console.log(`merged ${MERGE.length} files: ${metaM.count} of ${inventory.screens.length} inventory ids`);
     return;
   }
-  const status = await fetch(`${BASE}/clinic-web/`, { signal: AbortSignal.timeout(4000) }).then((r) => r.status, () => 0);
-  if (status !== 200) {
-    console.error(`FAILED old web not answering on ${BASE} (status ${status})`);
-    process.exit(1);
+  const chosen = inventory.screens.filter((x) => !ONLY.length || ONLY.includes(x.id));
+  if (chosen.some((x) => x.source !== 'nextjs')) {
+    const status = await fetch(`${BASE}/clinic-web/`, { signal: AbortSignal.timeout(4000) }).then((r) => r.status, () => 0);
+    if (status !== 200) {
+      console.error(`FAILED old web not answering on ${BASE} (status ${status})`);
+      process.exit(1);
+    }
+  }
+  if (chosen.some((x) => x.source === 'nextjs')) {
+    const front = await fetch(`${nw.BASE}/login`, { signal: AbortSignal.timeout(4000) }).then((r) => r.status, () => 0);
+    const back = await fetch(`${nw.BASE}/api/v1/me`, { signal: AbortSignal.timeout(4000) }).then((r) => r.status, () => 0);
+    if (front !== 200 || back !== 401) {
+      console.error(`FAILED Next.js front end (${nw.BASE}) or its mock back end not answering (login ${front}, /api/v1/me ${back})`);
+      process.exit(1);
+    }
   }
   const tokens = tm.loadTokens();
   const index = tm.colorIndex(tokens);

@@ -83,6 +83,24 @@ node $S/web-coverage.cjs                     # references/coverage-web.md + coun
 - A `FAILED` line from `web-inventory.cjs` means a selector or label of the old web changed: fix `lib/catalog.cjs` (do not skip the id). A new button, tab or dialog of the old web fails the "claimed by some `covers`" check until it gets an id.
 - The specs read the **built canvas** (`Pema Web.dc.html`), so after `web-snapshot.cjs` regenerate the canvas first if you changed a part (section 4), then `web-specs.cjs`.
 
+### 3a. Shots and snapshots of the Next.js ids (WJ, WK, WL)
+
+These ids (`source: "nextjs"` in `inventory.json`) are shot and snapshotted from `pema-agent/frontend`, not from the old web.
+They need the front end with its mock back end, not the old web on 4173:
+
+```sh
+cd pema-agent/frontend
+MOCK_PORT=4480 MOCK_LIVE_PERIOD_MS=0 NODE_OPTIONS="--require <repo>/.claude/skills/pema-web-design/scripts/lib/frozen-time.cjs" pnpm mock
+PEMA_API_URL=http://127.0.0.1:4480 PORT=3480 pnpm dev        # open it as http://localhost:3480 (Next blocks 127.0.0.1 in dev)
+node $S/web-shots.cjs    --out=<scratch dir> --only=WJ1,WK3   # PNGs (git-ignored) go to the scratch dir; seed it with a copy of the tracked manifest.json
+node $S/web-snapshot.cjs --only=WJ1,WK3
+```
+
+- `lib/frozen-time.cjs` freezes the clock of the mock process at the inventory clock (2026-09-20 09:00 +07) so the data and the browser agree and a capture repeats. The mock keeps its state in memory: restart it before a full run (a sign-in updates "last login"), and run the ids in inventory order.
+- `lib/next-web.cjs` drives the page (`login`, `goto`, `button`, `text`, `fill`, `wait`); `lib/next-states.cjs` turns the inventory's `note` steps (empty list, error answer, role without permissions, stream down) into code by answering the page's own `/api/v1` calls in the browser. Nothing of the front end or the mock is edited, and no capture writes to the mock (non-GET calls are answered by the capture itself).
+- Shots are taken at the entry's `frames` (pages 1440x900, 1920x1020, 390x844; states and dialogs 1440x900; WL18 and WL19 390x844). A state the mock cannot give gets `state_unreachable` in `manifest.json` and no image; do not fake one.
+- `web-shots.cjs --check` skips the SHA comparison for Next.js ids (mock data and front end change with every package); it still checks file set, page errors and unmet `expect`.
+
 ### 3b. The owner rule (final)
 
 The web canvas, the specs and the shots contain **every** piece of UI of the old web (every page, tab, modal, dialog, visible state, field, action, status, filter, text), drawn in the **app's design language** (tokens, block shapes, sample data). Nothing is filtered out.

@@ -78,12 +78,14 @@ function routeOnDisk(route) {
 const shots = {};
 for (const im of manifest.images) {
   const s = (shots[im.id] = shots[im.id] || { screen: 0, print: 0, legacy: 0, files: [] });
+  if (!im.file) continue; // a state the mock cannot give (state_unreachable): a fact in the manifest, no image
   if (im.media === 'legacy-copy') s.legacy++;
   else if (im.media === 'print') s.print++;
   else s.screen++;
   s.files.push(im.file);
 }
 
+const wantShots = (s) => (s.source === 'nextjs' ? (s.frames || []).length : inv.viewports.length);
 const rows = [];
 const countsFrames = { ids: 0 };
 for (const s of inv.screens) {
@@ -98,7 +100,8 @@ for (const s of inv.screens) {
   if (!cs) problems.push(`${s.id}: no frame in Pema Web redesign canvas/${lib.CANVAS_FILE}`);
   else if (frames.join(',') !== wantFrames.join(',')) problems.push(`${s.id}: canvas frames ${frames.join(', ')} != inventory frames ${wantFrames.join(', ')}`);
   if (!specOk) problems.push(`${s.id}: no spec design-specs/web/screens/${s.id}.md`);
-  if (sh.screen !== inv.viewports.length) problems.push(`${s.id}: ${sh.screen} screen shots in manifest.json, expected ${inv.viewports.length}`);
+  // old-web ids are shot at the five inventory viewports; Next.js ids (W8) at their own frames
+  if (sh.screen !== wantShots(s)) problems.push(`${s.id}: ${sh.screen} screen shots in manifest.json, expected ${wantShots(s)}`);
   if (s.legacy_shot && !sh.legacy) problems.push(`${s.id}: inventory has legacy_shot "${s.legacy_shot}" but manifest.json has no legacy copy`);
   if (disk === true && /^planned/.test(status)) problems.push(`${s.id}: status "${status}" but route ${s.next_route} exists in src/app; update the status in the catalog (lib/catalog.cjs)`);
   if (disk === false && /^built/.test(status)) problems.push(`${s.id}: status "${status}" but route ${s.next_route} has no page.tsx in src/app`);
@@ -142,7 +145,7 @@ ${rows.map((r) => `| [${r.id}](../../../../design-specs/web/screens/${r.id}.md) 
 const mc = manifest.counts || {};
 const specFiles = fs.existsSync(SPEC_DIR) ? fs.readdirSync(SPEC_DIR).filter((f) => /^W[A-I]\d+\.md$/.test(f)).length : 0;
 const canvasCount = canvas ? Object.keys(canvas.screens).length : 0;
-const screenShots = manifest.images.filter((i) => i.media === 'screen').length;
+const screenShots = manifest.images.filter((i) => i.media === 'screen' && i.file).length;
 const legacyShots = manifest.images.filter((i) => i.media === 'legacy-copy').length;
 let missingItems = '?';
 try {
@@ -157,7 +160,7 @@ const n = inv.screens.length;
 const table = [
   ['Item', 'Expected', 'Found'],
   ['inventory ids', n, n],
-  ['screenshots (id x viewport)', `${n} x ${inv.viewports.length} = ${n * inv.viewports.length}`, screenShots],
+  ['screenshots (id x viewport; Next.js ids x frames)', `${inv.screens.filter((s) => s.source !== 'nextjs').length} x ${inv.viewports.length} + ${inv.screens.filter((s) => s.source === 'nextjs').reduce((a, s) => a + (s.frames || []).length, 0)} = ${inv.screens.reduce((a, s) => a + wantShots(s), 0)}`, screenShots],
   ['legacy-name copies (ids with legacy_shot x viewports)', `${inv.screens.filter((s) => s.legacy_shot).length} x ${inv.viewports.length} = ${inv.screens.filter((s) => s.legacy_shot).length * inv.viewports.length}`, legacyShots],
   ['specs', n, specFiles],
   ['canvas screens', n, canvasCount],
