@@ -4606,7 +4606,7 @@
         "prototype/shared/clinic.js#photos"
       ],
       "next_route": "/studio",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "I7"
       ],
@@ -4648,7 +4648,7 @@
         "prototype/shared/clinic.js#photos"
       ],
       "next_route": "/studio",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "I7"
       ],
@@ -4680,7 +4680,7 @@
         "prototype/shared/operations-ui.js#resources"
       ],
       "next_route": "/resources",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "F14"
       ],
@@ -4724,7 +4724,7 @@
         "prototype/shared/operations-ui.js#handle"
       ],
       "next_route": "/resources",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "I8"
       ],
@@ -4761,7 +4761,7 @@
         "prototype/shared/operations-ui.js#services"
       ],
       "next_route": "/services",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "F13"
       ],
@@ -4803,7 +4803,7 @@
         "prototype/shared/operations-ui.js#handle"
       ],
       "next_route": "/services",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "I9"
       ],
@@ -4847,7 +4847,7 @@
         "prototype/shared/operations-ui.js#resources"
       ],
       "next_route": "/resources",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "F14"
       ],
@@ -4897,7 +4897,7 @@
         "prototype/shared/operations-ui.js#handle"
       ],
       "next_route": "/resources",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "I8"
       ],
@@ -4941,7 +4941,7 @@
         "prototype/shared/operations-data.js#block"
       ],
       "next_route": "/resources",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "I8"
       ],
@@ -4991,7 +4991,7 @@
         "prototype/shared/operations-ui.js#handle"
       ],
       "next_route": "/services",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "I9"
       ],
@@ -5044,7 +5044,7 @@
         "prototype/shared/operations-ui.js#services"
       ],
       "next_route": "/services",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "F13"
       ],
@@ -5078,7 +5078,7 @@
         "prototype/shared/order-ui.js#history"
       ],
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "I10",
         "F11",
@@ -5128,7 +5128,7 @@
         "prototype/shared/operations-ui.js#handle"
       ],
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "I11",
         "F12"
@@ -5175,7 +5175,7 @@
         "prototype/shared/operations-ui.js#openQuickOrder"
       ],
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F4"
       ],
@@ -5242,7 +5242,7 @@
         "prototype/shared/order-ui.js#lines"
       ],
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F5"
       ],
@@ -5308,7 +5308,7 @@
         "prototype/shared/order-review.js#lines"
       ],
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F6",
         "F7"
@@ -5387,7 +5387,7 @@
         "prototype/shared/order-review.js#refresh"
       ],
       "next_route": "/orders/[id]/print",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F7"
       ],
@@ -5440,7 +5440,7 @@
         "prototype/shared/order-review.js#refresh"
       ],
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F5"
       ],
@@ -5473,7 +5473,7 @@
         "prototype/shared/order-review.js#refresh"
       ],
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [],
       "legacy_shot": null,
       "frames": [
@@ -5540,7 +5540,7 @@
         "prototype/shared/order-ui.js#history"
       ],
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F5"
       ],
@@ -5590,7 +5590,7 @@
         "prototype/shared/order-ui.js#open"
       ],
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F4"
       ],
@@ -5632,7 +5632,7 @@
         "prototype/shared/order-ui.js#open"
       ],
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F4"
       ],
@@ -5691,7 +5691,7 @@
         "prototype/shared/order-review.js#sheet"
       ],
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F6"
       ],
@@ -5748,7 +5748,7 @@
         "prototype/shared/order-review.js#sheet"
       ],
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F7"
       ],
@@ -5826,7 +5826,7 @@
         "prototype/shared/order-review.js#refresh"
       ],
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F5"
       ],
@@ -5881,7 +5881,7 @@
         "prototype/shared/order-data.js#approveOrder"
       ],
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F5"
       ],
@@ -5955,7 +5955,7 @@
         "prototype/shared/order-data.js#approveOrder"
       ],
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F5"
       ],
@@ -5991,7 +5991,7 @@
         "prototype/shared/order-review.js#refresh"
       ],
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [],
       "legacy_shot": null,
       "frames": [
@@ -6057,7 +6057,7 @@
         "prototype/shared/order-review.js#refresh"
       ],
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F6"
       ],
@@ -6129,7 +6129,7 @@
         "prototype/shared/order-review.js#refresh"
       ],
       "next_route": "/orders/[id]/print",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F7"
       ],
@@ -6230,7 +6230,7 @@
         "prototype/shared/order-data.js#saveOrder"
       ],
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F5"
       ],
@@ -6299,7 +6299,7 @@
         "prototype/shared/order-ui.js#history"
       ],
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "I10"
       ],
@@ -6381,7 +6381,7 @@
         "prototype/shared/operations-ui.js#printOrder"
       ],
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "I10"
       ],
@@ -6431,7 +6431,7 @@
         "prototype/shared/operations-data.js#pay"
       ],
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "I11"
       ],
@@ -6469,7 +6469,7 @@
         "prototype/shared/operations-ui.js#cashier"
       ],
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "I10"
       ],
@@ -6736,7 +6736,7 @@
         "prototype/shared/operations-ui.js#cashier"
       ],
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "I10"
       ],
@@ -6776,7 +6776,7 @@
         "prototype/finance/finance.js#html"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H1"
       ],
@@ -6825,7 +6825,7 @@
         "prototype/finance/finance.js#table"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H3",
         "H4"
@@ -6874,7 +6874,7 @@
         "prototype/finance/finance.js#entryForm"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H9"
       ],
@@ -6912,7 +6912,7 @@
         "prototype/finance/finance.js#rates"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H8"
       ],
@@ -6954,7 +6954,7 @@
         "prototype/finance/finance.js#receipts"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H5",
         "H6"
@@ -6994,7 +6994,7 @@
         "prototype/finance/finance.js#overview"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H2"
       ],
@@ -7037,7 +7037,7 @@
         "prototype/finance/finance.js#work"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H2",
         "H3"
@@ -7073,7 +7073,7 @@
         "prototype/finance/finance.js#overview"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "D1",
         "H1"
@@ -7115,7 +7115,7 @@
         "prototype/finance/finance.js#load"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H7"
       ],
@@ -7155,7 +7155,7 @@
         "prototype/finance/finance.js#load"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H7"
       ],
@@ -7203,7 +7203,7 @@
         "prototype/finance/finance.js#table"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H3"
       ],
@@ -7253,7 +7253,7 @@
         "prototype/finance/finance.js#receipts"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H5"
       ],
@@ -7376,7 +7376,7 @@
         "prototype/finance/finance.js#table"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H3",
         "H4"
@@ -7516,7 +7516,7 @@
         "prototype/finance/finance.js#table"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H3",
         "H4"
@@ -7556,7 +7556,7 @@
         "prototype/finance/finance.js#receipts"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "D1",
         "H5"
@@ -7599,7 +7599,7 @@
         "prototype/finance/finance.js#bind"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H4"
       ],
@@ -7659,7 +7659,7 @@
         "prototype/finance/finance.js#bind"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H4"
       ],
@@ -7792,7 +7792,7 @@
         "prototype/finance/finance.js#bind"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H4"
       ],
@@ -7847,7 +7847,7 @@
         "prototype/finance/finance.js#bind"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H3"
       ],
@@ -7908,7 +7908,7 @@
         "prototype/finance/finance.js#bind"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H7"
       ],
@@ -7968,7 +7968,7 @@
         "prototype/finance/finance.js#entryForm"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H9"
       ],
@@ -8022,7 +8022,7 @@
         "prototype/finance/finance.js#entryForm"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H9"
       ],
@@ -8070,7 +8070,7 @@
         "prototype/finance/finance.js#receipts"
       ],
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H5",
         "H6"
@@ -18077,6 +18077,41 @@
       "route": "/care/patients/[id]",
       "why": "Server redirect to /care/patients/{id}/timeline (WK).",
       "proof": "pema-agent/frontend/src/app/(admin)/care/patients/[id]/page.tsx: redirect(\".../timeline\")",
+      "covers": []
+    },
+    {
+      "what": "route /finance/entries",
+      "route": "/finance/entries",
+      "why": "Sub-route of the finance shell: the tab \"Tiền thủ thuật\" of finance.js (financeTab:work) is a route in the app; the old-web screens that cover it (WG2, WG3, WG13, WG14, WG16-WG18) carry next_route /finance.",
+      "proof": "pema-agent/frontend/src/app/(admin)/finance/entries/page.tsx; notes.json WG1 (U6): the four tabs of finance.js are routes under one shell.",
+      "covers": []
+    },
+    {
+      "what": "route /finance/rates",
+      "route": "/finance/rates",
+      "why": "Sub-route of the finance shell: the tab \"Chính sách tỷ lệ\" of finance.js (financeTab:rates) is a route in the app; WG4 is its old-web screen.",
+      "proof": "pema-agent/frontend/src/app/(admin)/finance/rates/page.tsx; notes.json WG1 (U6).",
+      "covers": []
+    },
+    {
+      "what": "route /finance/payments",
+      "route": "/finance/payments",
+      "why": "Sub-route of the finance shell: the tab \"Phiếu thu & thông báo\" of finance.js (financeTab:receipts) is a route in the app; the old-web screens that cover it are WG5, WG12, WG15 and WG23.",
+      "proof": "pema-agent/frontend/src/app/(admin)/finance/payments/page.tsx; notes.json WG1 (U6).",
+      "covers": []
+    },
+    {
+      "what": "route /finance/periods",
+      "route": "/finance/periods",
+      "why": "Next.js-only screen (D3): \"Chốt kỳ\" lists the last twelve months with their state and the next action. The old web had only the two buttons \"Chốt tháng đã kết thúc\" and \"Xác nhận đã chi\" under the table of WG2 (WG17 and WG18 are their dialogs), so there is no old screen to draw.",
+      "proof": "pema-agent/frontend/src/app/(admin)/finance/periods/page.tsx; notes.json WG1 (U6): two screens have no old page.",
+      "covers": []
+    },
+    {
+      "what": "route /finance/export",
+      "route": "/finance/export",
+      "why": "Next.js-only screen (D3): \"Xuất CSV\" is the page of the old button \"Xuất CSV cho Excel\" under the table of WG2 (the download and its error are WG19 and WG20).",
+      "proof": "pema-agent/frontend/src/app/(admin)/finance/export/page.tsx; notes.json WG1 (U6): two screens have no old page.",
       "covers": []
     },
     {

@@ -118,9 +118,9 @@ Inventory: `web/inventory.json`. Per-screen specs: `web/screens/<ID>.md`. Full i
 | WB | Vận hành: tổng quan, hôm nay, lịch | 29 | [Pema Web.dc.html](../Pema%20Web%20redesign%20canvas/Pema%20Web.dc.html) | 28 | built (U2) 21, restyle (U1) 8 |
 | WC | Hồ sơ & Patient 360 | 35 | [Pema Web.dc.html](../Pema%20Web%20redesign%20canvas/Pema%20Web.dc.html) | 34 | built (U1) 6, none 13, built (U3) 15, restyle (U1) 1 |
 | WD | CSKH & theo dõi | 16 | [Pema Web.dc.html](../Pema%20Web%20redesign%20canvas/Pema%20Web.dc.html) | 11 | built (U7) 7, restyle (U1) 9 |
-| WE | Ảnh, bác sĩ & phòng, dịch vụ | 11 | [Pema Web.dc.html](../Pema%20Web%20redesign%20canvas/Pema%20Web.dc.html) | 11 | planned (U4) 11 |
-| WF | Thu ngân & lên đơn | 25 | [Pema Web.dc.html](../Pema%20Web%20redesign%20canvas/Pema%20Web.dc.html) | 23 | planned (U5) 25 |
-| WG | Tài chính PB02 | 23 | [Pema Web.dc.html](../Pema%20Web%20redesign%20canvas/Pema%20Web.dc.html) | 23 | planned (U6) 23 |
+| WE | Ảnh, bác sĩ & phòng, dịch vụ | 11 | [Pema Web.dc.html](../Pema%20Web%20redesign%20canvas/Pema%20Web.dc.html) | 11 | built (U4) 11 |
+| WF | Thu ngân & lên đơn | 25 | [Pema Web.dc.html](../Pema%20Web%20redesign%20canvas/Pema%20Web.dc.html) | 23 | built (U5) 25 |
+| WG | Tài chính PB02 | 23 | [Pema Web.dc.html](../Pema%20Web%20redesign%20canvas/Pema%20Web.dc.html) | 23 | built (U6) 23 |
 | WH | Ask Pema & Hướng dẫn | 20 | [Pema Web.dc.html](../Pema%20Web%20redesign%20canvas/Pema%20Web.dc.html) | 19 | built (U7) 20 |
 | WI | Patient Mobile web | 42 | [Pema Web.dc.html](../Pema%20Web%20redesign%20canvas/Pema%20Web.dc.html) | 42 | served by KMP/Zalo 42 |
 | WJ | Quản trị agent (Next.js) | 115 | [Pema Web (Next.js).dc.html](../Pema%20Web%20redesign%20canvas/Pema%20Web%20%28Next.js%29.dc.html) | 0 | exists (design W2) 115 |
@@ -272,65 +272,65 @@ Group WI (Patient Mobile web, 42 ids). Owner decision 2026-10-05: not a Next.js 
 | [WD14](web/screens/WD14.md) | Ghi nhận CSKH · việc đã được xử lý ở cửa sổ khác | state | WD CSKH & theo dõi | `/today` | restyle (U1) | [I13](screens/I13.md) |
 | [WD15](web/screens/WD15.md) | Theo dõi · inbox đã sạch | state | WD CSKH & theo dõi | `/inbox` | restyle (U1) | [I6](screens/I6.md), [A4](screens/A4.md) |
 | [WD16](web/screens/WD16.md) | Theo dõi · thiếu ảnh mốc sau buổi điều trị | state | WD CSKH & theo dõi | `/inbox` | restyle (U1) | [I6](screens/I6.md) |
-| [WE1](web/screens/WE1.md) | Ảnh trước / sau | page | WE Ảnh, bác sĩ & phòng, dịch vụ | `/studio` | planned (U4) | [I7](screens/I7.md) |
-| [WE2](web/screens/WE2.md) | Ảnh trước / sau · so sánh trượt | state | WE Ảnh, bác sĩ & phòng, dịch vụ | `/studio` | planned (U4) | [I7](screens/I7.md) |
-| [WE3](web/screens/WE3.md) | Bác sĩ & phòng | page | WE Ảnh, bác sĩ & phòng, dịch vụ | `/resources` | planned (U4) | [F14](screens/F14.md) |
-| [WE4](web/screens/WE4.md) | Khóa thời gian phòng | dialog | WE Ảnh, bác sĩ & phòng, dịch vụ | `/resources` | planned (U4) | [I8](screens/I8.md) |
-| [WE5](web/screens/WE5.md) | Dịch vụ | page | WE Ảnh, bác sĩ & phòng, dịch vụ | `/services` | planned (U4) | [F13](screens/F13.md) |
-| [WE6](web/screens/WE6.md) | Chỉnh dịch vụ | dialog | WE Ảnh, bác sĩ & phòng, dịch vụ | `/services` | planned (U4) | [I9](screens/I9.md) |
-| [WE7](web/screens/WE7.md) | Bác sĩ & phòng · không có khoảng khóa | state | WE Ảnh, bác sĩ & phòng, dịch vụ | `/resources` | planned (U4) | [F14](screens/F14.md) |
-| [WE8](web/screens/WE8.md) | Khóa thời gian phòng · lỗi | state | WE Ảnh, bác sĩ & phòng, dịch vụ | `/resources` | planned (U4) | [I8](screens/I8.md) |
-| [WE9](web/screens/WE9.md) | Khóa thời gian phòng · trùng lịch hẹn | state | WE Ảnh, bác sĩ & phòng, dịch vụ | `/resources` | planned (U4) | [I8](screens/I8.md) |
-| [WE10](web/screens/WE10.md) | Chỉnh dịch vụ · lỗi | state | WE Ảnh, bác sĩ & phòng, dịch vụ | `/services` | planned (U4) | [I9](screens/I9.md) |
-| [WE11](web/screens/WE11.md) | Dịch vụ · có dịch vụ tạm ngưng | state | WE Ảnh, bác sĩ & phòng, dịch vụ | `/services` | planned (U4) | [F13](screens/F13.md) |
-| [WF1](web/screens/WF1.md) | Thu ngân | page | WF Thu ngân & lên đơn | `/cashier` | planned (U5) | [I10](screens/I10.md), [F11](screens/F11.md), [D1](screens/D1.md) |
-| [WF2](web/screens/WF2.md) | Thu tiền | dialog | WF Thu ngân & lên đơn | `/cashier` | planned (U5) | [I11](screens/I11.md), [F12](screens/F12.md) |
-| [WF3](web/screens/WF3.md) | Tạo đơn thuốc / phiếu tư vấn | dialog | WF Thu ngân & lên đơn | `/cashier` | planned (U5) | [F4](screens/F4.md) |
-| [WF4](web/screens/WF4.md) | Lên đơn · đã chọn sản phẩm | state | WF Thu ngân & lên đơn | `/cashier` | planned (U5) | [F5](screens/F5.md) |
-| [WF5](web/screens/WF5.md) | Tách đơn · bản nháp | page | WF Thu ngân & lên đơn | `/orders/[id]` | planned (U5) | [F6](screens/F6.md), [F7](screens/F7.md) |
-| [WF6](web/screens/WF6.md) | Tách đơn · đã duyệt | state | WF Thu ngân & lên đơn | `/orders/[id]/print` | planned (U5) | [F7](screens/F7.md) |
-| [WF7](web/screens/WF7.md) | Tách đơn · sản phẩm cần phân loại | state | WF Thu ngân & lên đơn | `/orders/[id]` | planned (U5) | [F5](screens/F5.md) |
-| [WF8](web/screens/WF8.md) | Tách đơn · thiếu mã đơn | state | WF Thu ngân & lên đơn | `/orders/[id]` | planned (U5) | — |
-| [WF9](web/screens/WF9.md) | Sửa đơn nháp | state | WF Thu ngân & lên đơn | `/cashier` | planned (U5) | [F5](screens/F5.md) |
-| [WF10](web/screens/WF10.md) | Lên đơn · không tìm thấy sản phẩm | state | WF Thu ngân & lên đơn | `/cashier` | planned (U5) | [F4](screens/F4.md) |
-| [WF11](web/screens/WF11.md) | Lên đơn · chưa chọn sản phẩm | state | WF Thu ngân & lên đơn | `/cashier` | planned (U5) | [F4](screens/F4.md) |
-| [WF12](web/screens/WF12.md) | Tách đơn · chỉ có đơn thuốc | state | WF Thu ngân & lên đơn | `/orders/[id]` | planned (U5) | [F6](screens/F6.md) |
-| [WF13](web/screens/WF13.md) | Tách đơn · chỉ có phiếu tư vấn | state | WF Thu ngân & lên đơn | `/orders/[id]` | planned (U5) | [F7](screens/F7.md) |
-| [WF14](web/screens/WF14.md) | Tách đơn · có sản phẩm "Không in" | state | WF Thu ngân & lên đơn | `/orders/[id]` | planned (U5) | [F5](screens/F5.md) |
-| [WF15](web/screens/WF15.md) | Tách đơn · lỗi khi duyệt (thiếu cách dùng) | state | WF Thu ngân & lên đơn | `/orders/[id]` | planned (U5) | [F5](screens/F5.md) |
-| [WF16](web/screens/WF16.md) | Tách đơn · không có sản phẩm để phát hành | state | WF Thu ngân & lên đơn | `/orders/[id]` | planned (U5) | [F5](screens/F5.md) |
-| [WF17](web/screens/WF17.md) | Tách đơn · không tìm thấy đơn | state | WF Thu ngân & lên đơn | `/orders/[id]` | planned (U5) | — |
-| [WF18](web/screens/WF18.md) | Tách đơn · bản nháp · tài khoản không phải bác sĩ | state | WF Thu ngân & lên đơn | `/orders/[id]` | planned (U5) | [F6](screens/F6.md) |
-| [WF19](web/screens/WF19.md) | In đơn thuốc (hộp thoại in của trình duyệt) | state | WF Thu ngân & lên đơn | `/orders/[id]/print` | planned (U5) | [F7](screens/F7.md) |
-| [WF20](web/screens/WF20.md) | Sửa đơn nháp · đơn đã thu tiền, không thể sửa | state | WF Thu ngân & lên đơn | `/cashier` | planned (U5) | [F5](screens/F5.md) |
-| [WF21](web/screens/WF21.md) | Thu ngân · có đơn nháp | state | WF Thu ngân & lên đơn | `/cashier` | planned (U5) | [I10](screens/I10.md) |
-| [WF22](web/screens/WF22.md) | Thu ngân · có đơn đã duyệt | state | WF Thu ngân & lên đơn | `/cashier` | planned (U5) | [I10](screens/I10.md) |
-| [WF23](web/screens/WF23.md) | Thu tiền · lỗi số tiền | state | WF Thu ngân & lên đơn | `/cashier` | planned (U5) | [I11](screens/I11.md) |
-| [WF24](web/screens/WF24.md) | Thu ngân · lọc "Còn phải thu" | state | WF Thu ngân & lên đơn | `/cashier` | planned (U5) | [I10](screens/I10.md) |
-| [WF25](web/screens/WF25.md) | Thu ngân · không có hóa đơn | state | WF Thu ngân & lên đơn | `/cashier` | planned (U5) | [I10](screens/I10.md) |
-| [WG1](web/screens/WG1.md) | Tài chính & tiền thủ thuật · Tổng quan | page | WG Tài chính PB02 | `/finance` | planned (U6) | [H1](screens/H1.md) |
-| [WG2](web/screens/WG2.md) | Tài chính · Tiền thủ thuật | tab | WG Tài chính PB02 | `/finance` | planned (U6) | [H3](screens/H3.md), [H4](screens/H4.md) |
-| [WG3](web/screens/WG3.md) | Tài chính · Ghi lượt thủ thuật đã hoàn tất | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H9](screens/H9.md) |
-| [WG4](web/screens/WG4.md) | Tài chính · Chính sách tỷ lệ | tab | WG Tài chính PB02 | `/finance` | planned (U6) | [H8](screens/H8.md) |
-| [WG5](web/screens/WG5.md) | Tài chính · Phiếu thu & thông báo | tab | WG Tài chính PB02 | `/finance` | planned (U6) | [H5](screens/H5.md), [H6](screens/H6.md) |
-| [WG6](web/screens/WG6.md) | Doanh số của tôi · Tổng quan (bác sĩ) | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H2](screens/H2.md) |
-| [WG7](web/screens/WG7.md) | Doanh số của tôi · Tiền thủ thuật (bác sĩ) | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H2](screens/H2.md), [H3](screens/H3.md) |
-| [WG8](web/screens/WG8.md) | Tài chính · Tổng quan (kế toán) | state | WG Tài chính PB02 | `/finance` | planned (U6) | [D1](screens/D1.md), [H1](screens/H1.md) |
-| [WG9](web/screens/WG9.md) | Tài chính · Chưa kết nối dữ liệu | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H7](screens/H7.md) |
-| [WG10](web/screens/WG10.md) | Tài chính · đang tải dữ liệu | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H7](screens/H7.md) |
-| [WG11](web/screens/WG11.md) | Tài chính · tháng không có lượt thủ thuật | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H3](screens/H3.md) |
-| [WG12](web/screens/WG12.md) | Tài chính · phiếu thu · tháng không có giao dịch | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H5](screens/H5.md) |
-| [WG13](web/screens/WG13.md) | Tài chính · kỳ đã chốt | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H3](screens/H3.md), [H4](screens/H4.md) |
-| [WG14](web/screens/WG14.md) | Tài chính · kỳ đã chi | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H3](screens/H3.md), [H4](screens/H4.md) |
-| [WG15](web/screens/WG15.md) | Tài chính · Phiếu thu & thông báo (kế toán) | state | WG Tài chính PB02 | `/finance` | planned (U6) | [D1](screens/D1.md), [H5](screens/H5.md) |
-| [WG16](web/screens/WG16.md) | Hủy lượt thủ thuật (nhập lý do) | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H4](screens/H4.md) |
-| [WG17](web/screens/WG17.md) | Chốt tháng (hộp xác nhận) | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H4](screens/H4.md) |
-| [WG18](web/screens/WG18.md) | Xác nhận đã chi (nhập mã chứng từ) | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H4](screens/H4.md) |
-| [WG19](web/screens/WG19.md) | Xuất CSV cho Excel (tải tệp) | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H3](screens/H3.md) |
-| [WG20](web/screens/WG20.md) | Xuất CSV · lỗi | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H7](screens/H7.md) |
-| [WG21](web/screens/WG21.md) | Ghi nhận lượt · lỗi tỷ trọng | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H9](screens/H9.md) |
-| [WG22](web/screens/WG22.md) | Ghi nhận lượt · thiếu ghi chú hoàn tất | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H9](screens/H9.md) |
-| [WG23](web/screens/WG23.md) | Phiếu thu · số thu vượt công nợ | state | WG Tài chính PB02 | `/finance` | planned (U6) | [H5](screens/H5.md), [H6](screens/H6.md) |
+| [WE1](web/screens/WE1.md) | Ảnh trước / sau | page | WE Ảnh, bác sĩ & phòng, dịch vụ | `/studio` | built (U4) | [I7](screens/I7.md) |
+| [WE2](web/screens/WE2.md) | Ảnh trước / sau · so sánh trượt | state | WE Ảnh, bác sĩ & phòng, dịch vụ | `/studio` | built (U4) | [I7](screens/I7.md) |
+| [WE3](web/screens/WE3.md) | Bác sĩ & phòng | page | WE Ảnh, bác sĩ & phòng, dịch vụ | `/resources` | built (U4) | [F14](screens/F14.md) |
+| [WE4](web/screens/WE4.md) | Khóa thời gian phòng | dialog | WE Ảnh, bác sĩ & phòng, dịch vụ | `/resources` | built (U4) | [I8](screens/I8.md) |
+| [WE5](web/screens/WE5.md) | Dịch vụ | page | WE Ảnh, bác sĩ & phòng, dịch vụ | `/services` | built (U4) | [F13](screens/F13.md) |
+| [WE6](web/screens/WE6.md) | Chỉnh dịch vụ | dialog | WE Ảnh, bác sĩ & phòng, dịch vụ | `/services` | built (U4) | [I9](screens/I9.md) |
+| [WE7](web/screens/WE7.md) | Bác sĩ & phòng · không có khoảng khóa | state | WE Ảnh, bác sĩ & phòng, dịch vụ | `/resources` | built (U4) | [F14](screens/F14.md) |
+| [WE8](web/screens/WE8.md) | Khóa thời gian phòng · lỗi | state | WE Ảnh, bác sĩ & phòng, dịch vụ | `/resources` | built (U4) | [I8](screens/I8.md) |
+| [WE9](web/screens/WE9.md) | Khóa thời gian phòng · trùng lịch hẹn | state | WE Ảnh, bác sĩ & phòng, dịch vụ | `/resources` | built (U4) | [I8](screens/I8.md) |
+| [WE10](web/screens/WE10.md) | Chỉnh dịch vụ · lỗi | state | WE Ảnh, bác sĩ & phòng, dịch vụ | `/services` | built (U4) | [I9](screens/I9.md) |
+| [WE11](web/screens/WE11.md) | Dịch vụ · có dịch vụ tạm ngưng | state | WE Ảnh, bác sĩ & phòng, dịch vụ | `/services` | built (U4) | [F13](screens/F13.md) |
+| [WF1](web/screens/WF1.md) | Thu ngân | page | WF Thu ngân & lên đơn | `/cashier` | built (U5) | [I10](screens/I10.md), [F11](screens/F11.md), [D1](screens/D1.md) |
+| [WF2](web/screens/WF2.md) | Thu tiền | dialog | WF Thu ngân & lên đơn | `/cashier` | built (U5) | [I11](screens/I11.md), [F12](screens/F12.md) |
+| [WF3](web/screens/WF3.md) | Tạo đơn thuốc / phiếu tư vấn | dialog | WF Thu ngân & lên đơn | `/cashier` | built (U5) | [F4](screens/F4.md) |
+| [WF4](web/screens/WF4.md) | Lên đơn · đã chọn sản phẩm | state | WF Thu ngân & lên đơn | `/cashier` | built (U5) | [F5](screens/F5.md) |
+| [WF5](web/screens/WF5.md) | Tách đơn · bản nháp | page | WF Thu ngân & lên đơn | `/orders/[id]` | built (U5) | [F6](screens/F6.md), [F7](screens/F7.md) |
+| [WF6](web/screens/WF6.md) | Tách đơn · đã duyệt | state | WF Thu ngân & lên đơn | `/orders/[id]/print` | built (U5) | [F7](screens/F7.md) |
+| [WF7](web/screens/WF7.md) | Tách đơn · sản phẩm cần phân loại | state | WF Thu ngân & lên đơn | `/orders/[id]` | built (U5) | [F5](screens/F5.md) |
+| [WF8](web/screens/WF8.md) | Tách đơn · thiếu mã đơn | state | WF Thu ngân & lên đơn | `/orders/[id]` | built (U5) | — |
+| [WF9](web/screens/WF9.md) | Sửa đơn nháp | state | WF Thu ngân & lên đơn | `/cashier` | built (U5) | [F5](screens/F5.md) |
+| [WF10](web/screens/WF10.md) | Lên đơn · không tìm thấy sản phẩm | state | WF Thu ngân & lên đơn | `/cashier` | built (U5) | [F4](screens/F4.md) |
+| [WF11](web/screens/WF11.md) | Lên đơn · chưa chọn sản phẩm | state | WF Thu ngân & lên đơn | `/cashier` | built (U5) | [F4](screens/F4.md) |
+| [WF12](web/screens/WF12.md) | Tách đơn · chỉ có đơn thuốc | state | WF Thu ngân & lên đơn | `/orders/[id]` | built (U5) | [F6](screens/F6.md) |
+| [WF13](web/screens/WF13.md) | Tách đơn · chỉ có phiếu tư vấn | state | WF Thu ngân & lên đơn | `/orders/[id]` | built (U5) | [F7](screens/F7.md) |
+| [WF14](web/screens/WF14.md) | Tách đơn · có sản phẩm "Không in" | state | WF Thu ngân & lên đơn | `/orders/[id]` | built (U5) | [F5](screens/F5.md) |
+| [WF15](web/screens/WF15.md) | Tách đơn · lỗi khi duyệt (thiếu cách dùng) | state | WF Thu ngân & lên đơn | `/orders/[id]` | built (U5) | [F5](screens/F5.md) |
+| [WF16](web/screens/WF16.md) | Tách đơn · không có sản phẩm để phát hành | state | WF Thu ngân & lên đơn | `/orders/[id]` | built (U5) | [F5](screens/F5.md) |
+| [WF17](web/screens/WF17.md) | Tách đơn · không tìm thấy đơn | state | WF Thu ngân & lên đơn | `/orders/[id]` | built (U5) | — |
+| [WF18](web/screens/WF18.md) | Tách đơn · bản nháp · tài khoản không phải bác sĩ | state | WF Thu ngân & lên đơn | `/orders/[id]` | built (U5) | [F6](screens/F6.md) |
+| [WF19](web/screens/WF19.md) | In đơn thuốc (hộp thoại in của trình duyệt) | state | WF Thu ngân & lên đơn | `/orders/[id]/print` | built (U5) | [F7](screens/F7.md) |
+| [WF20](web/screens/WF20.md) | Sửa đơn nháp · đơn đã thu tiền, không thể sửa | state | WF Thu ngân & lên đơn | `/cashier` | built (U5) | [F5](screens/F5.md) |
+| [WF21](web/screens/WF21.md) | Thu ngân · có đơn nháp | state | WF Thu ngân & lên đơn | `/cashier` | built (U5) | [I10](screens/I10.md) |
+| [WF22](web/screens/WF22.md) | Thu ngân · có đơn đã duyệt | state | WF Thu ngân & lên đơn | `/cashier` | built (U5) | [I10](screens/I10.md) |
+| [WF23](web/screens/WF23.md) | Thu tiền · lỗi số tiền | state | WF Thu ngân & lên đơn | `/cashier` | built (U5) | [I11](screens/I11.md) |
+| [WF24](web/screens/WF24.md) | Thu ngân · lọc "Còn phải thu" | state | WF Thu ngân & lên đơn | `/cashier` | built (U5) | [I10](screens/I10.md) |
+| [WF25](web/screens/WF25.md) | Thu ngân · không có hóa đơn | state | WF Thu ngân & lên đơn | `/cashier` | built (U5) | [I10](screens/I10.md) |
+| [WG1](web/screens/WG1.md) | Tài chính & tiền thủ thuật · Tổng quan | page | WG Tài chính PB02 | `/finance` | built (U6) | [H1](screens/H1.md) |
+| [WG2](web/screens/WG2.md) | Tài chính · Tiền thủ thuật | tab | WG Tài chính PB02 | `/finance` | built (U6) | [H3](screens/H3.md), [H4](screens/H4.md) |
+| [WG3](web/screens/WG3.md) | Tài chính · Ghi lượt thủ thuật đã hoàn tất | state | WG Tài chính PB02 | `/finance` | built (U6) | [H9](screens/H9.md) |
+| [WG4](web/screens/WG4.md) | Tài chính · Chính sách tỷ lệ | tab | WG Tài chính PB02 | `/finance` | built (U6) | [H8](screens/H8.md) |
+| [WG5](web/screens/WG5.md) | Tài chính · Phiếu thu & thông báo | tab | WG Tài chính PB02 | `/finance` | built (U6) | [H5](screens/H5.md), [H6](screens/H6.md) |
+| [WG6](web/screens/WG6.md) | Doanh số của tôi · Tổng quan (bác sĩ) | state | WG Tài chính PB02 | `/finance` | built (U6) | [H2](screens/H2.md) |
+| [WG7](web/screens/WG7.md) | Doanh số của tôi · Tiền thủ thuật (bác sĩ) | state | WG Tài chính PB02 | `/finance` | built (U6) | [H2](screens/H2.md), [H3](screens/H3.md) |
+| [WG8](web/screens/WG8.md) | Tài chính · Tổng quan (kế toán) | state | WG Tài chính PB02 | `/finance` | built (U6) | [D1](screens/D1.md), [H1](screens/H1.md) |
+| [WG9](web/screens/WG9.md) | Tài chính · Chưa kết nối dữ liệu | state | WG Tài chính PB02 | `/finance` | built (U6) | [H7](screens/H7.md) |
+| [WG10](web/screens/WG10.md) | Tài chính · đang tải dữ liệu | state | WG Tài chính PB02 | `/finance` | built (U6) | [H7](screens/H7.md) |
+| [WG11](web/screens/WG11.md) | Tài chính · tháng không có lượt thủ thuật | state | WG Tài chính PB02 | `/finance` | built (U6) | [H3](screens/H3.md) |
+| [WG12](web/screens/WG12.md) | Tài chính · phiếu thu · tháng không có giao dịch | state | WG Tài chính PB02 | `/finance` | built (U6) | [H5](screens/H5.md) |
+| [WG13](web/screens/WG13.md) | Tài chính · kỳ đã chốt | state | WG Tài chính PB02 | `/finance` | built (U6) | [H3](screens/H3.md), [H4](screens/H4.md) |
+| [WG14](web/screens/WG14.md) | Tài chính · kỳ đã chi | state | WG Tài chính PB02 | `/finance` | built (U6) | [H3](screens/H3.md), [H4](screens/H4.md) |
+| [WG15](web/screens/WG15.md) | Tài chính · Phiếu thu & thông báo (kế toán) | state | WG Tài chính PB02 | `/finance` | built (U6) | [D1](screens/D1.md), [H5](screens/H5.md) |
+| [WG16](web/screens/WG16.md) | Hủy lượt thủ thuật (nhập lý do) | state | WG Tài chính PB02 | `/finance` | built (U6) | [H4](screens/H4.md) |
+| [WG17](web/screens/WG17.md) | Chốt tháng (hộp xác nhận) | state | WG Tài chính PB02 | `/finance` | built (U6) | [H4](screens/H4.md) |
+| [WG18](web/screens/WG18.md) | Xác nhận đã chi (nhập mã chứng từ) | state | WG Tài chính PB02 | `/finance` | built (U6) | [H4](screens/H4.md) |
+| [WG19](web/screens/WG19.md) | Xuất CSV cho Excel (tải tệp) | state | WG Tài chính PB02 | `/finance` | built (U6) | [H3](screens/H3.md) |
+| [WG20](web/screens/WG20.md) | Xuất CSV · lỗi | state | WG Tài chính PB02 | `/finance` | built (U6) | [H7](screens/H7.md) |
+| [WG21](web/screens/WG21.md) | Ghi nhận lượt · lỗi tỷ trọng | state | WG Tài chính PB02 | `/finance` | built (U6) | [H9](screens/H9.md) |
+| [WG22](web/screens/WG22.md) | Ghi nhận lượt · thiếu ghi chú hoàn tất | state | WG Tài chính PB02 | `/finance` | built (U6) | [H9](screens/H9.md) |
+| [WG23](web/screens/WG23.md) | Phiếu thu · số thu vượt công nợ | state | WG Tài chính PB02 | `/finance` | built (U6) | [H5](screens/H5.md), [H6](screens/H6.md) |
 | [WH1](web/screens/WH1.md) | Ask Pema | page | WH Ask Pema & Hướng dẫn | `/ask` | built (U7) | [I12](screens/I12.md), [F15](screens/F15.md) |
 | [WH2](web/screens/WH2.md) | Ask Pema · có câu trả lời | state | WH Ask Pema & Hướng dẫn | `/ask` | built (U7) | [I12](screens/I12.md), [F15](screens/F15.md) |
 | [WH3](web/screens/WH3.md) | Hướng dẫn sử dụng | page | WH Ask Pema & Hướng dẫn | `/guide` | built (U7) | [F16](screens/F16.md) |

@@ -1,6 +1,6 @@
 {
   "generator": ".claude/skills/pema-web-design/scripts/web-specs.cjs",
-  "snapshot": "255bfcc1d47ff8cc",
+  "snapshot": "947a5df0ead280f4",
   "counts": {
     "total": 384,
     "by_kind": {
@@ -2546,7 +2546,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/studio",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "I7"
       ],
@@ -2575,7 +2575,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/studio",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "I7"
       ],
@@ -2602,7 +2602,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/resources",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "F14"
       ],
@@ -2631,7 +2631,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/resources",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "I8"
       ],
@@ -2658,7 +2658,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/services",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "F13"
       ],
@@ -2687,7 +2687,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/services",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "I9"
       ],
@@ -2714,7 +2714,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/resources",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "F14"
       ],
@@ -2741,7 +2741,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/resources",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "I8"
       ],
@@ -2768,7 +2768,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/resources",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "I8"
       ],
@@ -2795,7 +2795,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/services",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "I9"
       ],
@@ -2822,7 +2822,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/services",
-      "next_status": "planned (U4)",
+      "next_status": "built (U4)",
       "app_canvas": [
         "F13"
       ],
@@ -2849,7 +2849,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "I10",
         "F11",
@@ -2880,7 +2880,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "I11",
         "F12"
@@ -2908,7 +2908,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F4"
       ],
@@ -2935,7 +2935,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F5"
       ],
@@ -2962,7 +2962,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F6",
         "F7"
@@ -2992,7 +2992,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/orders/[id]/print",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F7"
       ],
@@ -3019,7 +3019,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F5"
       ],
@@ -3046,7 +3046,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [],
       "frames": [
         "1440x900"
@@ -3071,7 +3071,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F5"
       ],
@@ -3098,7 +3098,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F4"
       ],
@@ -3125,7 +3125,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F4"
       ],
@@ -3152,7 +3152,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F6"
       ],
@@ -3179,7 +3179,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F7"
       ],
@@ -3206,7 +3206,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F5"
       ],
@@ -3233,7 +3233,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F5"
       ],
@@ -3260,7 +3260,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F5"
       ],
@@ -3287,7 +3287,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [],
       "frames": [
         "1440x900"
@@ -3312,7 +3312,7 @@
       "role": "accountant",
       "source": "old-web",
       "next_route": "/orders/[id]",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F6"
       ],
@@ -3339,7 +3339,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/orders/[id]/print",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F7"
       ],
@@ -3366,7 +3366,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "F5"
       ],
@@ -3393,7 +3393,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "I10"
       ],
@@ -3420,7 +3420,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "I10"
       ],
@@ -3447,7 +3447,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "I11"
       ],
@@ -3474,7 +3474,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "I10"
       ],
@@ -3501,7 +3501,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/cashier",
-      "next_status": "planned (U5)",
+      "next_status": "built (U5)",
       "app_canvas": [
         "I10"
       ],
@@ -3528,7 +3528,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H1"
       ],
@@ -3557,7 +3557,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H3",
         "H4"
@@ -3587,7 +3587,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H9"
       ],
@@ -3614,7 +3614,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H8"
       ],
@@ -3643,7 +3643,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H5",
         "H6"
@@ -3673,7 +3673,7 @@
       "role": "doctor-mai",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H2"
       ],
@@ -3700,7 +3700,7 @@
       "role": "doctor-mai",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H2",
         "H3"
@@ -3728,7 +3728,7 @@
       "role": "accountant",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "D1",
         "H1"
@@ -3756,7 +3756,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H7"
       ],
@@ -3783,7 +3783,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H7"
       ],
@@ -3810,7 +3810,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H3"
       ],
@@ -3837,7 +3837,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H5"
       ],
@@ -3864,7 +3864,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H3",
         "H4"
@@ -3892,7 +3892,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H3",
         "H4"
@@ -3920,7 +3920,7 @@
       "role": "accountant",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "D1",
         "H5"
@@ -3948,7 +3948,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H4"
       ],
@@ -3975,7 +3975,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H4"
       ],
@@ -4002,7 +4002,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H4"
       ],
@@ -4029,7 +4029,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H3"
       ],
@@ -4056,7 +4056,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H7"
       ],
@@ -4083,7 +4083,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H9"
       ],
@@ -4110,7 +4110,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H9"
       ],
@@ -4137,7 +4137,7 @@
       "role": "owner-tam",
       "source": "old-web",
       "next_route": "/finance",
-      "next_status": "planned (U6)",
+      "next_status": "built (U6)",
       "app_canvas": [
         "H5",
         "H6"

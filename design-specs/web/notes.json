@@ -201,7 +201,8 @@
       "differences": [
         "App I1 shows 3 CSKH metrics (\"Cần CSKH\", \"Quá hạn\", \"Nguy cơ mất\"); the web has 4 KPI buttons (\"Khách cần CSKH\", \"Quá ngày dự kiến\", \"Nguy cơ mất khách\", \"Liệu trình bỏ dở\") plus the panels \"Hiệu quả CSKH\" and \"Vòng đời khách hàng\" that the app does not show.",
         "The web page eyebrow is \"Pema · chăm sóc xuyên suốt\" and the subtitle ends with \"mốc demo 20/09/2026\"; the app shows 22/09/2026.",
-        "App I1 puts \"Phát sinh hôm nay\" in one tile with the sentence; the web uses a metric card with the quiet button \"Hóa đơn, không phải thực thu →\"."
+        "App I1 puts \"Phát sinh hôm nay\" in one tile with the sentence; the web uses a metric card with the quiet button \"Hóa đơn, không phải thực thu →\".",
+        "Next.js /dashboard (U2): range tabs and a by-status list; the old CRM blocks (priority list, Hiệu quả CSKH, lifecycle strip) live on /today and /crm. Audit: PARITY-AI01-U."
       ]
     },
     "WB2": {
@@ -226,7 +227,8 @@
       ],
       "differences": [
         "App I2 lists \"Tổng lịch\", \"Đang chờ\", \"Hoàn tất\" and a status chip row; the web has 8 reception tiles that act as filters, a doctor select, a search field and paging (\"← Trước\", \"Sau →\").",
-        "Canvas WB3: the six status tiles are drawn as buttons \"31 Chưa đến\" … \"0 Vắng hẹn\" in a 4-column grid beside \"Tổng lịch\" and \"Đã đến\"; the old web shows all 8 in one row. Sample rows show every status with its action: Check-in + Vắng (Chưa đến, Đã xác nhận), \"Mời vào phòng\" (Đang chờ), \"Mở 360\" (all others), as in crm-ui.js."
+        "Canvas WB3: the six status tiles are drawn as buttons \"31 Chưa đến\" … \"0 Vắng hẹn\" in a 4-column grid beside \"Tổng lịch\" and \"Đã đến\"; the old web shows all 8 in one row. Sample rows show every status with its action: Check-in + Vắng (Chưa đến, Đã xác nhận), \"Mời vào phòng\" (Đang chờ), \"Mở 360\" (all others), as in crm-ui.js.",
+        "Next.js: the old reception table with Check-in / Vắng / Mời vào phòng is on /schedule (day cards); /today is the CSKH task queue (old WD1). Owner to confirm. Audit: PARITY-AI01-U."
       ],
       "gotchas": [
         "The money tile \"Phát sinh hóa đơn hôm nay\" is missing for the doctor role (WB4 and WB2 use other roles)."
@@ -251,7 +253,8 @@
       ],
       "differences": [
         "App I3/A2 show a week strip and a day list; the web board is a room-by-time grid with drag and drop, the legend of the four service colours and the side panel \"Chờ xếp lịch\".",
-        "Canvas WB5: booking cards show time, patient and \"BS. · Đặt hẹn\" (the service is the card colour, named in the legend); the old card also repeats the service name and \"· +15′ đệm\" in the time line. The hatched \"15′ chuẩn bị phòng\" blocks are drawn as small cards of the board block, which has no hatched buffer kind (open item). The 60 empty half-hour slots (buttons \"Đặt lịch <phòng> <giờ>\", ops=new) are not drawn: the board block has no empty-slot buttons (open item). The canvas shows 08:00–12:00 with one booking per hour per room; the old grid scrolls 08:00–18:00."
+        "Canvas WB5: booking cards show time, patient and \"BS. · Đặt hẹn\" (the service is the card colour, named in the legend); the old card also repeats the service name and \"· +15′ đệm\" in the time line. The hatched \"15′ chuẩn bị phòng\" blocks are drawn as small cards of the board block, which has no hatched buffer kind (open item). The 60 empty half-hour slots (buttons \"Đặt lịch <phòng> <giờ>\", ops=new) are not drawn: the board block has no empty-slot buttons (open item). The canvas shows 08:00–12:00 with one booking per hour per room; the old grid scrolls 08:00–18:00.",
+        "Next.js /schedule: doctor columns of cards instead of the room-column time grid; no drag on a grid. Same booking, week view, statuses and waitlist. Audit: PARITY-AI01-U."
       ],
       "gotchas": [
         "The 4 service colours are the classes `service-S0..S3` (calendar legend and booking cards).",
@@ -317,7 +320,8 @@
         "\"Tái khám tuần này\" = next visit between 2026-09-20 and 2026-09-27; \"Đang điều trị\" = completed < total; \"Có cảnh báo\" = alerts not empty."
       ],
       "differences": [
-        "App A3 is titled \"Hồ sơ người bệnh\" with 12 sample rows; the web title is \"Tìm bệnh nhân\", the count chip \"46 hồ sơ\" and 4 filter chips."
+        "App A3 is titled \"Hồ sơ người bệnh\" with 12 sample rows; the web title is \"Tìm bệnh nhân\", the count chip \"46 hồ sơ\" and 4 filter chips.",
+        "Next.js /patients: search only. Missing against the old web: filter chips (Tất cả, Đang điều trị, Tài khám tuần này, Có cảnh báo), the ＋ Hồ sơ mới dialog (WC3; POST /patients exists) and the journey and next-visit columns. Fix needed, PARITY-AI01-U section 5."
       ],
       "gotchas": [
         "Phone numbers are masked in the demo (\"09•• ••• 100\").",
@@ -338,6 +342,9 @@
       ],
       "gotchas": [
         "Canvas: the dialog close button (old aria-label \"Đóng hộp thoại\") is drawn by the dlg helper as an icon; the generated Layout does not name it, so the label is exempted through demo_data."
+      ],
+      "differences": [
+        "No Next.js dialog yet although the API POST /patients exists. Fix needed, PARITY-AI01-U section 5."
       ]
     },
     "WC4": {
@@ -350,7 +357,8 @@
         "\"Ảnh minh họa tổng hợp cho prototype. Ảnh lâm sàng thật cần gắn vùng chụp, tư thế, thời điểm và đồng ý sử dụng.\""
       ],
       "differences": [
-        "App F1 is a vertical list of cards (care, session, next visit, tiền thủ thuật, links to tabs); the web hero, tab bar, three summary figures, journey timeline, milestone photos, AI brief, facts and linked panels are all on one wide page."
+        "App F1 is a vertical list of cards (care, session, next visit, tiền thủ thuật, links to tabs); the web hero, tab bar, three summary figures, journey timeline, milestone photos, AI brief, facts and linked panels are all on one wide page.",
+        "Next.js Tổng quan: no AI brief and Nhắn tin header buttons, no Thông tin cần nhớ card; the CRM & CSKH and Lịch sử tabs (WC11, WC12) are merged into this tab. Audit: PARITY-AI01-U."
       ],
       "gotchas": [
         "The brief on this tab is the text of the AI brief dialog (WC13); \"AI chỉ là bản nháp\": the doctor must edit and approve it."
@@ -367,7 +375,8 @@
         "Draft flow: \"Tạo bản nháp ghi chú\" (toast \"Đã tạo bản nháp — hãy kiểm tra trước khi duyệt\") then \"Duyệt & lưu vào Patient 360\" (toast \"Đã duyệt và nối vào Patient 360\")."
       ],
       "differences": [
-        "App J1/F2 shows the same flow in one column; the web has two columns \"Tư vấn lâm sàng\" and \"Bản nháp của Pema AI\"."
+        "App J1/F2 shows the same flow in one column; the web has two columns \"Tư vấn lâm sàng\" and \"Bản nháp của Pema AI\".",
+        "Next.js Tư vấn: the Tiền sử & chẩn đoán card is missing. Audit: PARITY-AI01-U."
       ]
     },
     "WC6": {
@@ -420,6 +429,9 @@
       "rules": [
         "\"Giá trị phát sinh, tiền đã thu và dư nợ; không suy hoàn tất điều trị\" (subtitle): completed treatment is never inferred from payment.",
         "\"Tiền cọc còn chưa phân bổ: <số tiền>\" notice below the table."
+      ],
+      "differences": [
+        "No Dịch vụ & tài chính tab in the Next.js Patient 360 (five tabs); services and invoices are reached from /services, /cashier and /finance. WC19 and its states have no screen. Fix needed, PARITY-AI01-U section 5."
       ]
     },
     "WC11": {
@@ -579,7 +591,8 @@
       ],
       "differences": [
         "App I6/A4 are titled \"Theo dõi\" with the subtitle \"Ảnh, triệu chứng và mốc bị bỏ sót\"; the web title is \"Follow-up Inbox\" and the third metric is \"Mốc bị bỏ sót\" (app: \"Bỏ sót\").",
-        "Canvas drops the outer panel around the five follow-up cards (4-level nesting limit); each card keeps title, text, date, assignee, attachment chip, \"Mở\" and \"Xử lý\". \"Inbox đã sạch. Không có follow-up đang mở.\" is not drawn (no scripted state)."
+        "Canvas drops the outer panel around the five follow-up cards (4-level nesting limit); each card keeps title, text, date, assignee, attachment chip, \"Mở\" and \"Xử lý\". \"Inbox đã sạch. Không có follow-up đang mở.\" is not drawn (no scripted state).",
+        "Next.js: the Zalo conversation inbox (/inbox) and the review queue (/review) replace the old follow-up task cards and its three KPI tiles. Audit: PARITY-AI01-U."
       ]
     },
     "WD7": {
@@ -902,7 +915,8 @@
         "\"Đây là hướng dẫn phân công công việc; phiên bản hiện tại phân vai bằng tài khoản demo, chưa có xác thực và phân quyền server.\""
       ],
       "differences": [
-        "App F16 shows a one-column \"Hướng dẫn sử dụng Pema\" with 5 handoff cards; the web has a topic index, 10 articles, related links and per-article action buttons."
+        "App F16 shows a one-column \"Hướng dẫn sử dụng Pema\" with 5 handoff cards; the web has a topic index, 10 articles, related links and per-article action buttons.",
+        "Next.js /guide is KB-driven: three synthetic articles are seeded against the eleven of the old guide. Content is for the clinic to write. Audit: PARITY-AI01-U."
       ],
       "gotchas": [
         "From 1600px (guide.css) the article splits into a text column and a context column; the canvas grid does the same with auto-fit, and keeps the action buttons under both columns because of the container nesting limit. The topic index is a vertical chip group whose labels read \"role title\".",

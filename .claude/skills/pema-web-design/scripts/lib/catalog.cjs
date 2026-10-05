@@ -288,128 +288,128 @@ const screens = [
   // ---------------------------------------------------------------- WE studio, resources, services
   S('WE1', 'WE', 'Ảnh trước / sau', 'page', [START, nav('studio')], { selector: '#studio-view' }, {
     sources: ['prototype/shared/clinic.js#studio', 'prototype/shared/clinic.js#photos'],
-    next_route: '/studio', next_status: 'planned (U4)', app_canvas: ['I7'], legacy_shot: 'studio', covers: ['nav:studio'],
+    next_route: '/studio', next_status: 'built (U4)', app_canvas: ['I7'], legacy_shot: 'studio', covers: ['nav:studio'],
   }),
   S('WE2', 'WE', 'Ảnh trước / sau · so sánh trượt', 'state', [START, nav('studio'), { click: '[data-action="studio-mode"]' }, { wait: '#comparison-slider' }], { selector: '#comparison-slider' }, {
     sources: ['prototype/shared/clinic.js#photos'],
-    next_route: '/studio', next_status: 'planned (U4)', app_canvas: ['I7'],
+    next_route: '/studio', next_status: 'built (U4)', app_canvas: ['I7'],
     notes: 'Illustrative photos only; no efficacy score.',
   }),
   S('WE3', 'WE', 'Bác sĩ & phòng', 'page', [START, nav('resources')], { selector: '[data-ops="block"]' }, {
     sources: ['prototype/shared/operations-ui.js#resources'],
-    next_route: '/resources', next_status: 'planned (U4)', app_canvas: ['F14'], legacy_shot: 'resources',
+    next_route: '/resources', next_status: 'built (U4)', app_canvas: ['F14'], legacy_shot: 'resources',
     covers: ['nav:resources', 'ops:doctor', 'ops:unblock'],
   }),
   S('WE4', 'WE', 'Khóa thời gian phòng', 'dialog', [START, nav('resources'), { click: '[data-ops="block"]' }, { wait: MODAL }], { text: 'Khóa thời gian phòng' }, {
     sources: ['prototype/shared/operations-ui.js#handle'],
-    next_route: '/resources', next_status: 'planned (U4)', app_canvas: ['I8'], covers: ['ops:block', 'ops:save-block', 'dialog:resources→Khóa phòng'],
+    next_route: '/resources', next_status: 'built (U4)', app_canvas: ['I8'], covers: ['ops:block', 'ops:save-block', 'dialog:resources→Khóa phòng'],
   }),
   S('WE5', 'WE', 'Dịch vụ', 'page', [START, nav('services')], { selector: '[data-ops="service"]' }, {
     sources: ['prototype/shared/operations-ui.js#services'],
-    next_route: '/services', next_status: 'planned (U4)', app_canvas: ['F13'], legacy_shot: 'services', covers: ['nav:services'],
+    next_route: '/services', next_status: 'built (U4)', app_canvas: ['F13'], legacy_shot: 'services', covers: ['nav:services'],
   }),
   S('WE6', 'WE', 'Chỉnh dịch vụ', 'dialog', [START, nav('services'), { click: '[data-ops="service"]' }, { wait: MODAL }], { text: 'Chỉnh dịch vụ' }, {
     sources: ['prototype/shared/operations-ui.js#handle'],
-    next_route: '/services', next_status: 'planned (U4)', app_canvas: ['I9'], covers: ['ops:service', 'ops:save-service', 'dialog:services→Chỉnh dịch vụ'],
+    next_route: '/services', next_status: 'built (U4)', app_canvas: ['I9'], covers: ['ops:service', 'ops:save-service', 'dialog:services→Chỉnh dịch vụ'],
   }),
 
   // ---------------------------------------------------------------- WF cashier and orders
   S('WF1', 'WF', 'Thu ngân', 'page', [START, nav('cashier')], { selector: '[data-ops="quick-order"]' }, {
     sources: ['prototype/shared/operations-ui.js#cashier', 'prototype/shared/operations-ui.js#invoices', 'prototype/shared/order-ui.js#history'],
-    next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['I10', 'F11', 'D1'], legacy_shot: 'cashier',
+    next_route: '/cashier', next_status: 'built (U5)', app_canvas: ['I10', 'F11', 'D1'], legacy_shot: 'cashier',
     covers: ['nav:cashier', 'ops:invoice-filter', 'ops:invoice-page', 'ops:print-order', 'careNav:cashier', 'order:preview'],
     notes: 'Invoice list (filters Tất cả, Còn phải thu, Đã thanh toán, paging) and the order history panel (Xem / in, Sửa nháp).',
   }),
   S('WF2', 'WF', 'Thu tiền', 'dialog', [START, nav('cashier'), { click: '[data-ops="pay"]' }, { wait: MODAL }], { text: 'Thu tiền' }, {
     sources: ['prototype/shared/operations-ui.js#handle'],
-    next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['I11', 'F12'], covers: ['ops:pay', 'ops:save-pay', 'dialog:cashier→Thu tiền'],
+    next_route: '/cashier', next_status: 'built (U5)', app_canvas: ['I11', 'F12'], covers: ['ops:pay', 'ops:save-pay', 'dialog:cashier→Thu tiền'],
   }),
   S('WF3', 'WF', 'Tạo đơn thuốc / phiếu tư vấn', 'dialog', [START, nav('cashier'), { click: '[data-ops="quick-order"]' }, { wait: '#catalog-order-form' }], { selector: '#catalog-order-form', text: 'Tạo đơn thuốc / phiếu tư vấn' }, {
     sources: ['prototype/shared/order-ui.js#open'],
-    next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['F4'],
+    next_route: '/cashier', next_status: 'built (U5)', app_canvas: ['F4'],
     covers: ['ops:quick-order', 'dialog:cashier→Mở form lên đơn nhanh', 'careAction:add-prescription'],
     notes: 'Product search over the 115-item Excel catalog, empty cart, total, general note, the rule that "Không in" only removes a line from the sheets.',
   }),
   S('WF4', 'WF', 'Lên đơn · đã chọn sản phẩm', 'state', [START, ...draftSteps(['H002', 'H005']), { wait: '[data-line]' }], { selector: '[data-line]' }, {
     sources: ['prototype/shared/order-ui.js#open'],
-    next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['F5'],
+    next_route: '/cashier', next_status: 'built (U5)', app_canvas: ['F5'],
     notes: 'Cart lines with quantity, sheet type (Đơn thuốc, Phiếu tư vấn, Không in, Cần phân loại), usage, note and reason for a changed type. Lines: one prescription product and one consultation product.',
   }),
   S('WF5', 'WF', 'Tách đơn · bản nháp', 'page', [START, ...draftSteps(['H002', 'H005']), { clickPopup: '#quick-save' }, { wait: '.order-sheet' }], { selector: '.order-sheet', text: 'BẢN NHÁP' }, {
     sources: ['prototype/shared/order-review.js#sheet', 'prototype/order-review/index.html', 'prototype/shared/order-review.css'],
-    next_route: '/orders/[id]', next_status: 'planned (U5)', app_canvas: ['F6', 'F7'],
+    next_route: '/orders/[id]', next_status: 'built (U5)', app_canvas: ['F6', 'F7'],
     covers: ['order:review-page', 'order:print', 'order:approve', 'print:PRESCRIPTION', 'print:CONSULTATION', 'print:all'],
     notes: 'Standalone page /order-review/ opened in a new tab: toolbar (print buttons disabled until approved), draft mark, A5 portrait sheets "ĐƠN THUỐC" and "PHIẾU TƯ VẤN". The A5 print layout is the print media of the same page.',
   }),
   S('WF6', 'WF', 'Tách đơn · đã duyệt', 'state', [START, ...draftSteps(['H002', 'H005']), { clickPopup: '#quick-save' }, { wait: '#approve' }, { click: '#approve' }, { wait: 'body[data-approved="true"]' }], { selector: 'body[data-approved="true"]', text: 'Đã duyệt' }, {
     sources: ['prototype/shared/order-review.js#refresh'],
-    next_route: '/orders/[id]/print', next_status: 'planned (U5)', app_canvas: ['F7'], covers: ['order:approve'],
+    next_route: '/orders/[id]/print', next_status: 'built (U5)', app_canvas: ['F7'], covers: ['order:approve'],
     notes: 'Approved: print buttons enabled, draft mark gone, signature block shows the reviewer. window.print() is a native dialog.',
   }),
   S('WF7', 'WF', 'Tách đơn · sản phẩm cần phân loại', 'state', [START, ...draftSteps(['H002', 'H095'], false), { clickPopup: '#quick-save' }, { wait: '#review-excluded .warning' }], { selector: '#review-excluded .warning', text: 'Cần phân loại' }, {
     sources: ['prototype/shared/order-review.js#refresh'],
-    next_route: '/orders/[id]', next_status: 'planned (U5)', app_canvas: ['F5'],
+    next_route: '/orders/[id]', next_status: 'built (U5)', app_canvas: ['F5'],
     notes: 'A product without a type in the Excel catalog: warning above the sheets, approve button disabled.',
   }),
   S('WF8', 'WF', 'Tách đơn · thiếu mã đơn', 'state', [{ goto: '/order-review/' }, { wait: '#review-error' }], { selector: '#review-error', text: 'Thiếu mã bệnh nhân hoặc mã đơn.' }, {
     sources: ['prototype/shared/order-review.js#refresh'],
-    next_route: '/orders/[id]', next_status: 'planned (U5)', app_canvas: [],
+    next_route: '/orders/[id]', next_status: 'built (U5)', app_canvas: [],
     notes: 'Error state of the standalone page opened without patient and order codes.',
   }),
   S('WF9', 'WF', 'Sửa đơn nháp', 'state', [START, ...draftSteps(['H002']), { clickPopup: '#quick-save' }, { wait: '.order-sheet' }, { main: true }, { goto: '/clinic-web/?staff={role}&screen=cashier' }, { click: '[data-order-edit]' }, { wait: '#catalog-order-form' }], { selector: '#catalog-order-form', text: 'Sửa đơn nháp' }, {
     sources: ['prototype/shared/order-ui.js#open', 'prototype/shared/order-ui.js#history'],
-    next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['F5'], covers: ['order:edit'],
+    next_route: '/cashier', next_status: 'built (U5)', app_canvas: ['F5'], covers: ['order:edit'],
     notes: 'The quick-order dialog opened on an existing draft: title "Sửa đơn nháp", patient locked.',
   }),
 
   S('WF10', 'WF', 'Lên đơn · không tìm thấy sản phẩm', 'state', [START, nav('cashier'), { click: '[data-ops="quick-order"]' }, { wait: '#catalog-order-form' }, { fill: ['#quick-product-search', 'zzzz'] }, { wait: '#quick-results .empty' }], { selector: '#quick-results .empty', text: 'Không tìm thấy sản phẩm phù hợp.' }, {
     sources: ['prototype/shared/order-ui.js#open'],
-    next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['F4'],
+    next_route: '/cashier', next_status: 'built (U5)', app_canvas: ['F4'],
   }),
 
   // ---------------------------------------------------------------- WG finance
   S('WG1', 'WG', 'Tài chính & tiền thủ thuật · Tổng quan', 'page', [START, ...FIN], { selector: '.finance-workspace .hero', text: 'Một màn hình, nắm rõ dòng tiền' }, {
     sources: ['prototype/finance/finance.js#overview', 'prototype/shared/finance-bridge.js'],
-    next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H1'],
+    next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H1'],
     covers: ['nav:finance', 'financeTab:overview', 'role:finance-owner'],
     notes: 'Header tools: month picker, Làm mới. Needs the finance API (4174). prototype/finance/index.html is only a redirect stub to this page.',
   }),
   S('WG2', 'WG', 'Tài chính · Tiền thủ thuật', 'tab', [START, ...FIN, finTab('work'), { wait: '#export' }], { selector: '#export', text: 'Bảng tiền thủ thuật' }, {
     sources: ['prototype/finance/finance.js#work', 'prototype/finance/finance.js#table'],
-    next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H3', 'H4'], covers: ['financeTab:work'],
+    next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H3', 'H4'], covers: ['financeTab:work'],
     notes: 'Duyệt, Hủy (native prompt for the reason), Chốt tháng đã kết thúc (native confirm), Xác nhận đã chi (native prompt for the voucher), Xuất CSV (download).',
   }),
   S('WG3', 'WG', 'Tài chính · Ghi lượt thủ thuật đã hoàn tất', 'state', [START, ...FIN, finTab('work'), { click: '#content details > summary' }, { wait: '#entry' }], { selector: '#entry' }, {
     sources: ['prototype/finance/finance.js#entryForm'],
-    next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H9'],
+    next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H9'],
     notes: 'The collapsible form (patient, service, date, list price, discount, invoice, note, two people with share and rate).',
   }),
   S('WG4', 'WG', 'Tài chính · Chính sách tỷ lệ', 'tab', [START, ...FIN, finTab('rates')], { selector: 'form.rate' }, {
     sources: ['prototype/finance/finance.js#rates'],
-    next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H8'], covers: ['financeTab:rates'],
+    next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H8'], covers: ['financeTab:rates'],
   }),
   S('WG5', 'WG', 'Tài chính · Phiếu thu & thông báo', 'tab', [START, ...FIN, finTab('receipts')], { selector: '#payment' }, {
     sources: ['prototype/finance/finance.js#receipts'],
-    next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H5', 'H6'], covers: ['financeTab:receipts'],
+    next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H5', 'H6'], covers: ['financeTab:receipts'],
   }),
   S('WG6', 'WG', 'Doanh số của tôi · Tổng quan (bác sĩ)', 'state', [START, ...FIN], { text: 'Công việc được ghi nhận, thu nhập rõ ràng' }, {
     role: DOCTOR, sources: ['prototype/finance/finance.js#overview'],
-    next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H2'], covers: ['role:finance-doctor'],
+    next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H2'], covers: ['role:finance-doctor'],
     notes: 'Doctor projection: personal hero, tiles "Doanh số của tôi", "Tiền chờ duyệt", only two tabs (Tổng quan, Tiền thủ thuật).',
   }),
   S('WG7', 'WG', 'Doanh số của tôi · Tiền thủ thuật (bác sĩ)', 'state', [START, ...FIN, finTab('work'), { wait: '#export' }], { selector: '#export' }, {
     role: DOCTOR, sources: ['prototype/finance/finance.js#work'],
-    next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H2', 'H3'],
+    next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H2', 'H3'],
     notes: 'Doctor projection of the work table: no entry form, no approve or void buttons, no period buttons. The rates and receipts tabs are hidden for a doctor (their placeholder panels are unreachable).',
   }),
   S('WG8', 'WG', 'Tài chính · Tổng quan (kế toán)', 'state', [START, ...FIN], { text: 'KẾ TOÁN • ĐỐI SOÁT' }, {
     role: ACCOUNTANT, sources: ['prototype/finance/finance.js#overview'],
-    next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['D1', 'H1'], covers: ['role:finance-accountant'],
+    next_route: '/finance', next_status: 'built (U6)', app_canvas: ['D1', 'H1'], covers: ['role:finance-accountant'],
     notes: 'Accountant projection: hero reads "KẾ TOÁN • ĐỐI SOÁT"; four tabs; the notification box says the accountant does not read the owner inbox.',
   }),
   S('WG9', 'WG', 'Tài chính · Chưa kết nối dữ liệu', 'state', [START, { block: 'http://127.0.0.1:4174/**' }, nav('finance'), { wait: '#error' }], { selector: '#error', text: 'Chưa kết nối dữ liệu tài chính' }, {
     sources: ['prototype/finance/finance.js#load'],
-    next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H7'],
+    next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H7'],
     notes: 'Reached by blocking the finance API; the page keeps "Đang tải dữ liệu…" under the error line and the topbar sync link reads "Tài chính chờ kết nối · thử lại".',
   }),
 
@@ -720,142 +720,142 @@ const added = {
   ],
   WE: [
     S('WE7', 'WE', 'Bác sĩ & phòng · không có khoảng khóa', 'state', [START, nav('resources'), { click: '[data-ops="unblock"]' }, { wait: '.table' }], { selector: '.table', text: 'Không có khoảng khóa.' }, {
-      sources: ['prototype/shared/operations-ui.js#resources'], next_route: '/resources', next_status: 'planned (U4)', app_canvas: ['F14'], covers: ['text:Không có khoảng khóa'],
+      sources: ['prototype/shared/operations-ui.js#resources'], next_route: '/resources', next_status: 'built (U4)', app_canvas: ['F14'], covers: ['text:Không có khoảng khóa'],
       notes: 'After "Gỡ khóa" of the only demo block the table shows "Không có khoảng khóa."',
     }),
     S('WE8', 'WE', 'Khóa thời gian phòng · lỗi', 'state', [START, nav('resources'), { click: '[data-ops="block"]' }, { wait: '#block-reason' }, { fill: ['#block-reason', ''] }, { click: '[data-ops="save-block"]' }], { selector: '#ops-error', text: 'Khoảng khóa phải hợp lệ trong 08:00–18:00 và có lý do.' }, {
-      sources: ['prototype/shared/operations-ui.js#handle'], next_route: '/resources', next_status: 'planned (U4)', app_canvas: ['I8'], covers: ['id:ops-error'],
+      sources: ['prototype/shared/operations-ui.js#handle'], next_route: '/resources', next_status: 'built (U4)', app_canvas: ['I8'], covers: ['id:ops-error'],
     }),
     S('WE9', 'WE', 'Khóa thời gian phòng · trùng lịch hẹn', 'state', [START, nav('resources'), { click: '[data-ops="block"]' }, { wait: '#block-reason' }, { click: '[data-ops="save-block"]' }], { selector: '#ops-error', text: 'Có lịch hẹn trong khoảng này. Hãy dời lịch trước khi khóa phòng.' }, {
-      sources: ['prototype/shared/operations-data.js#block'], next_route: '/resources', next_status: 'planned (U4)', app_canvas: ['I8'], covers: ['id:ops-error'],
+      sources: ['prototype/shared/operations-data.js#block'], next_route: '/resources', next_status: 'built (U4)', app_canvas: ['I8'], covers: ['id:ops-error'],
     }),
     S('WE10', 'WE', 'Chỉnh dịch vụ · lỗi', 'state', [START, nav('services'), { click: '[data-ops="service"]' }, { wait: '#service-name' }, { fill: ['#service-name', ''] }, { click: '[data-ops="save-service"]' }], { selector: '#ops-error', text: 'Kiểm tra tên, thời lượng 15–180 phút, đệm 0–60 phút và giá không âm.' }, {
-      sources: ['prototype/shared/operations-ui.js#handle'], next_route: '/services', next_status: 'planned (U4)', app_canvas: ['I9'], covers: ['id:ops-error'],
+      sources: ['prototype/shared/operations-ui.js#handle'], next_route: '/services', next_status: 'built (U4)', app_canvas: ['I9'], covers: ['id:ops-error'],
     }),
     S('WE11', 'WE', 'Dịch vụ · có dịch vụ tạm ngưng', 'state', [START, nav('services'), { click: '[data-ops="service"]' }, { wait: '#service-active' }, { select: ['#service-active', 'no'] }, { click: '[data-ops="save-service"]' }, { wait: '.service-grid' }], { selector: '.service-top .status-yellow', text: 'Tạm ngưng' }, {
-      sources: ['prototype/shared/operations-ui.js#services'], next_route: '/services', next_status: 'planned (U4)', app_canvas: ['F13'],
+      sources: ['prototype/shared/operations-ui.js#services'], next_route: '/services', next_status: 'built (U4)', app_canvas: ['F13'],
       notes: 'Service card with the yellow status "Tạm ngưng" (the others read "Đang dùng", green).',
     }),
   ],
   WF: [
     S('WF11', 'WF', 'Lên đơn · chưa chọn sản phẩm', 'state', [START, ...QUICK_FORM, { click: '#quick-save' }], { selector: '#quick-error', text: 'Chọn ít nhất một sản phẩm.' }, {
-      sources: ['prototype/shared/order-ui.js#open'], next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['F4'], covers: ['id:quick-error'],
+      sources: ['prototype/shared/order-ui.js#open'], next_route: '/cashier', next_status: 'built (U5)', app_canvas: ['F4'], covers: ['id:quick-error'],
     }),
     S('WF12', 'WF', 'Tách đơn · chỉ có đơn thuốc', 'state', [...draftBlocked(['H002']), ...SAVE_ORDER], { selector: '.order-sheet', text: 'ĐƠN THUỐC' }, {
-      sources: ['prototype/shared/order-review.js#sheet'], next_route: '/orders/[id]', next_status: 'planned (U5)', app_canvas: ['F6'],
+      sources: ['prototype/shared/order-review.js#sheet'], next_route: '/orders/[id]', next_status: 'built (U5)', app_canvas: ['F6'],
       notes: 'One sheet only (a prescription product): no "PHIẾU TƯ VẤN" sheet is drawn. Created with the finance API blocked so no invoice is mirrored into the shared finance data.',
     }),
     S('WF13', 'WF', 'Tách đơn · chỉ có phiếu tư vấn', 'state', [...draftBlocked(['H005']), ...SAVE_ORDER], { selector: '.order-sheet', text: 'PHIẾU TƯ VẤN' }, {
-      sources: ['prototype/shared/order-review.js#sheet'], next_route: '/orders/[id]', next_status: 'planned (U5)', app_canvas: ['F7'],
+      sources: ['prototype/shared/order-review.js#sheet'], next_route: '/orders/[id]', next_status: 'built (U5)', app_canvas: ['F7'],
     }),
     S('WF14', 'WF', 'Tách đơn · có sản phẩm "Không in"', 'state', [...draftBlocked(['H002', 'H005']), { select: ['#route-0', 'NONE'] }, { fill: ['#reason-0', 'Không cần in'] }, ...SAVE_ORDER], { selector: '#review-excluded', text: 'Không in (1)' }, {
-      sources: ['prototype/shared/order-review.js#refresh'], next_route: '/orders/[id]', next_status: 'planned (U5)', app_canvas: ['F5'],
+      sources: ['prototype/shared/order-review.js#refresh'], next_route: '/orders/[id]', next_status: 'built (U5)', app_canvas: ['F5'],
       notes: 'A line set to "Không in" with its reason: listed above the sheets ("… Vẫn tính trong hóa đơn.") and removed from both sheets.',
     }),
     S('WF15', 'WF', 'Tách đơn · lỗi khi duyệt (thiếu cách dùng)', 'state', [...draftBlocked(['H002'], false), ...SAVE_ORDER, { click: '#approve' }], { selector: '#review-error', text: 'Dòng 1: cần cách dùng trước khi duyệt.' }, {
-      sources: ['prototype/shared/order-review.js#refresh', 'prototype/shared/order-data.js#approveOrder'], next_route: '/orders/[id]', next_status: 'planned (U5)', app_canvas: ['F5'], covers: ['id:review-error'],
+      sources: ['prototype/shared/order-review.js#refresh', 'prototype/shared/order-data.js#approveOrder'], next_route: '/orders/[id]', next_status: 'built (U5)', app_canvas: ['F5'], covers: ['id:review-error'],
       notes: 'Error line #review-error of the review page after "Bác sĩ duyệt & gửi app" with a line that has no usage text.',
     }),
     S('WF16', 'WF', 'Tách đơn · không có sản phẩm để phát hành', 'state', [...draftBlocked(['H002']), { select: ['#route-0', 'NONE'] }, { fill: ['#reason-0', 'Không cần in'] }, { clickPopup: '#quick-save' }, { wait: '#approve' }, { click: '#approve' }], { selector: '#review-error', text: 'Đơn không có sản phẩm để phát hành.' }, {
-      sources: ['prototype/shared/order-data.js#approveOrder'], next_route: '/orders/[id]', next_status: 'planned (U5)', app_canvas: ['F5'], covers: ['text:Đơn không có sản phẩm để phát hành*', 'id:review-error'],
+      sources: ['prototype/shared/order-data.js#approveOrder'], next_route: '/orders/[id]', next_status: 'built (U5)', app_canvas: ['F5'], covers: ['text:Đơn không có sản phẩm để phát hành*', 'id:review-error'],
     }),
     S('WF17', 'WF', 'Tách đơn · không tìm thấy đơn', 'state', [{ goto: '/order-review/?patient=P001&order=NOPE' }, { wait: '#review-error' }], { selector: '#review-error', text: 'Không tìm thấy đơn.' }, {
-      sources: ['prototype/shared/order-review.js#refresh'], next_route: '/orders/[id]', next_status: 'planned (U5)', app_canvas: [], covers: ['id:review-error'],
+      sources: ['prototype/shared/order-review.js#refresh'], next_route: '/orders/[id]', next_status: 'built (U5)', app_canvas: [], covers: ['id:review-error'],
       notes: 'Patient code present, order code unknown (a stale link). WF8 is the page opened without codes.',
     }),
     S('WF18', 'WF', 'Tách đơn · bản nháp · tài khoản không phải bác sĩ', 'state', [...draftBlocked(['H002', 'H005']), ...SAVE_ORDER], { selector: '#review-status', text: 'Bản nháp' }, {
-      role: ACCOUNTANT, sources: ['prototype/shared/order-review.js#refresh'], next_route: '/orders/[id]', next_status: 'planned (U5)', app_canvas: ['F6'],
+      role: ACCOUNTANT, sources: ['prototype/shared/order-review.js#refresh'], next_route: '/orders/[id]', next_status: 'built (U5)', app_canvas: ['F6'],
       notes: 'Accountant opens a draft order: the toolbar has no "Bác sĩ duyệt & gửi app" button (clinical capability) and the print buttons stay disabled.',
     }),
     S('WF19', 'WF', 'In đơn thuốc (hộp thoại in của trình duyệt)', 'state', [...draftBlocked(['H002', 'H005']), ...SAVE_ORDER, { click: '#approve' }, { wait: 'body[data-approved="true"]' }], { selector: '[data-print="PRESCRIPTION"]:enabled', text: 'In đơn thuốc' }, {
-      sources: ['prototype/shared/order-review.js#refresh'], next_route: '/orders/[id]/print', next_status: 'planned (U5)', app_canvas: ['F7'],
+      sources: ['prototype/shared/order-review.js#refresh'], next_route: '/orders/[id]/print', next_status: 'built (U5)', app_canvas: ['F7'],
       native: { type: 'print', message: null, trigger: [{ hookPrint: true }, { click: '[data-print="PRESCRIPTION"]' }] },
       notes: 'window.print() after "In đơn thuốc", "In phiếu tư vấn" or "In tất cả" (body data-print-filter selects the sheets). The browser print dialog is native and cannot be captured; the A5 sheets are drawn by the print media of WF5/WF6.',
     }),
     S('WF20', 'WF', 'Sửa đơn nháp · đơn đã thu tiền, không thể sửa', 'state', [...draftBlocked(['H002']), { clickPopup: '#quick-save' }, { wait: '.order-sheet' }, { main: true }, { goto: '/clinic-web/?staff={role}&screen=cashier' }, { wait: '.order-history-row' },
       { click: 'tr:has-text("Đơn sản phẩm") [data-ops="pay"]' }, { wait: '#pay-amount' }, { click: '[data-ops="save-pay"]' }, { wait: '.toast' }, { click: '[data-order-edit]' }, { wait: '#catalog-order-form' }, { click: '#quick-save' }], { selector: '#quick-error', text: 'Đơn đã thu tiền hoặc thiếu hóa đơn; không thể sửa.' }, {
-      sources: ['prototype/shared/order-ui.js#open', 'prototype/shared/order-data.js#saveOrder'], next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['F5'], covers: ['text:Đơn đã thu tiền hoặc thiếu hóa đơn; không thể sửa*', 'id:quick-error'],
+      sources: ['prototype/shared/order-ui.js#open', 'prototype/shared/order-data.js#saveOrder'], next_route: '/cashier', next_status: 'built (U5)', app_canvas: ['F5'], covers: ['text:Đơn đã thu tiền hoặc thiếu hóa đơn; không thể sửa*', 'id:quick-error'],
       notes: 'The draft\'s invoice was paid in Thu ngân, then "Sửa nháp" → "Lưu nháp" is refused. Finance API blocked so the payment is not mirrored.',
     }),
     S('WF21', 'WF', 'Thu ngân · có đơn nháp', 'state', [...draftBlocked(['H002']), { clickPopup: '#quick-save' }, { wait: '.order-sheet' }, { main: true }, { goto: '/clinic-web/?staff={role}&screen=cashier' }, { wait: '.order-history-row' }], { selector: '.order-history-row', text: 'Bản nháp' }, {
-      sources: ['prototype/shared/order-ui.js#history'], next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['I10'],
+      sources: ['prototype/shared/order-ui.js#history'], next_route: '/cashier', next_status: 'built (U5)', app_canvas: ['I10'],
       notes: 'Order history row with "Xem / in" and "Sửa nháp", and the new invoice row "Đơn sản phẩm" in the invoice table (WF1 shows the empty history "Chưa có đơn từ catalog.").',
     }),
     S('WF22', 'WF', 'Thu ngân · có đơn đã duyệt', 'state', [...draftBlocked(['H002', 'H005']), { clickPopup: '#quick-save' }, { wait: '#approve' }, { click: '#approve' }, { wait: 'body[data-approved="true"]' }, { main: true }, { goto: '/clinic-web/?staff={role}&screen=cashier' }, { wait: '.order-history-row' }], { selector: '.order-history-row', text: 'Đã duyệt' }, {
-      sources: ['prototype/shared/order-ui.js#history', 'prototype/shared/operations-ui.js#printOrder'], next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['I10'], covers: ['ops:print-order'],
+      sources: ['prototype/shared/order-ui.js#history', 'prototype/shared/operations-ui.js#printOrder'], next_route: '/cashier', next_status: 'built (U5)', app_canvas: ['I10'], covers: ['ops:print-order'],
       notes: 'Approved order: only "Xem / in" (no "Sửa nháp"); the invoice row carries the order code and "In tách đơn" (data-ops print-order, opens the review page in a new tab).',
     }),
     S('WF23', 'WF', 'Thu tiền · lỗi số tiền', 'state', [START, nav('cashier'), { click: '[data-ops="pay"]' }, { wait: '#pay-amount' }, { setValue: ['#pay-amount', '0'] }, { click: '[data-ops="save-pay"]' }], { selector: '#ops-error', text: 'Số tiền phải lớn hơn 0 và không vượt số còn lại.' }, {
-      sources: ['prototype/shared/operations-data.js#pay'], next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['I11'], covers: ['id:ops-error'],
+      sources: ['prototype/shared/operations-data.js#pay'], next_route: '/cashier', next_status: 'built (U5)', app_canvas: ['I11'], covers: ['id:ops-error'],
     }),
     S('WF24', 'WF', 'Thu ngân · lọc "Còn phải thu"', 'state', [START, nav('cashier'), { click: '[data-ops="invoice-filter"][data-value="due"]' }], { selector: '.invoice-pagination', text: '12 hóa đơn' }, {
-      sources: ['prototype/shared/operations-ui.js#cashier'], next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['I10'],
+      sources: ['prototype/shared/operations-ui.js#cashier'], next_route: '/cashier', next_status: 'built (U5)', app_canvas: ['I10'],
       notes: 'Invoice list filtered to the 12 invoices with an open balance (every row has "Thu tiền"). The filter "Đã thanh toán" and the paging buttons ("← Trước", "Sau →") change only the rows.',
     }),
     S('WF25', 'WF', 'Thu ngân · không có hóa đơn', 'state', [BLOCK_FIN, START, nav('cashier'), { click: '[data-ops="invoice-filter"][data-value="due"]' },
       ...Array.from({ length: 12 }, () => ({ ifVisible: ['[data-ops="pay"]', [{ click: '[data-ops="pay"]' }, { wait: '#pay-amount' }, { click: '[data-ops="save-pay"]' }, { gone: '.modal' }]] }))], { selector: '.table', text: 'Không có hóa đơn.' }, {
-      sources: ['prototype/shared/operations-ui.js#cashier'], next_route: '/cashier', next_status: 'planned (U5)', app_canvas: ['I10'], covers: ['text:Không có hóa đơn'],
+      sources: ['prototype/shared/operations-ui.js#cashier'], next_route: '/cashier', next_status: 'built (U5)', app_canvas: ['I10'], covers: ['text:Không có hóa đơn'],
       notes: 'After the twelve unpaid invoices are paid in the browser (finance API blocked so nothing reaches the shared finance data) the filter "Còn phải thu" shows "Không có hóa đơn."',
     }),
   ],
   WG: [
     S('WG10', 'WG', 'Tài chính · đang tải dữ liệu', 'state', [START, HOLD_FIN, nav('finance'), { wait: '#content' }], { selector: '#content', text: 'Đang tải dữ liệu…' }, {
-      sources: ['prototype/finance/finance.js#html', 'prototype/finance/finance.js#load'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H7'],
+      sources: ['prototype/finance/finance.js#html', 'prototype/finance/finance.js#load'], next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H7'],
       notes: 'Finance API request pending: header, tabs and "Đang tải dữ liệu…" (WG9 is the same page after the request fails).',
     }),
     S('WG11', 'WG', 'Tài chính · tháng không có lượt thủ thuật', 'state', [START, ...FIN_WORK, { setValue: ['#month', '2026-06'] }, { wait: '#export' }], { selector: '#content', text: 'Chưa có lượt thủ thuật trong kỳ này.' }, {
-      sources: ['prototype/finance/finance.js#table'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H3'], covers: ['text:Chưa có lượt thủ thuật trong kỳ này'],
+      sources: ['prototype/finance/finance.js#table'], next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H3'], covers: ['text:Chưa có lượt thủ thuật trong kỳ này'],
       notes: 'Month picker set to a month without entries: empty table row, the entry form and "Chốt tháng đã kết thúc" stay.',
     }),
     S('WG12', 'WG', 'Tài chính · phiếu thu · tháng không có giao dịch', 'state', [START, ...FIN_RECEIPTS, { setValue: ['#month', '2026-06'] }, { wait: '#payment' }], { selector: '#content', text: 'Chưa có phiếu thu.' }, {
-      sources: ['prototype/finance/finance.js#receipts'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H5'], covers: ['text:Chưa có phiếu thu'],
+      sources: ['prototype/finance/finance.js#receipts'], next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H5'], covers: ['text:Chưa có phiếu thu'],
       notes: 'Owner notification box: "Thanh toán thành công sẽ xuất hiện tại đây và trên app BS. Tâm." (no notification yet; the unread/read list needs a real payment and is not scripted because it would write to the shared finance data).',
     }),
     S('WG13', 'WG', 'Tài chính · kỳ đã chốt', 'state', [START, ...FIN_CLOSED], { selector: '.finance-workspace .badge', text: 'Đã chốt tháng' }, {
-      sources: ['prototype/finance/finance.js#work', 'prototype/finance/finance.js#table'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H3', 'H4'], covers: ['command:paid'],
+      sources: ['prototype/finance/finance.js#work', 'prototype/finance/finance.js#table'], next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H3', 'H4'], covers: ['command:paid'],
       notes: 'Period 2026-08: badge "Đã chốt tháng", rows without Duyệt/Hủy, no entry form, button "Xác nhận đã chi". Set-up caveat: the finance server closes only a month that has an approved row, so the reach adds one approved entry (P002, linked to the existing invoice WEB:P002:HD-0002, so no invoice or debt is added) to 2026-08 on the first run and closes it; every step is guarded, later runs change nothing. Month 2026-09 stays open.',
     }),
     S('WG14', 'WG', 'Tài chính · kỳ đã chi', 'state', [START, ...FIN_PAID], { selector: '.finance-workspace .badge', text: 'Đã chi' }, {
-      sources: ['prototype/finance/finance.js#work', 'prototype/finance/finance.js#table'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H3', 'H4'],
+      sources: ['prototype/finance/finance.js#work', 'prototype/finance/finance.js#table'], next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H3', 'H4'],
       notes: 'Period 2026-07: badge "Đã chi", no period button. Same guarded set-up as WG13 (entry P003 linked to WEB:P003:HD-0003), then "Xác nhận đã chi" with a voucher code.',
     }),
     S('WG15', 'WG', 'Tài chính · Phiếu thu & thông báo (kế toán)', 'state', [START, ...FIN_RECEIPTS], { selector: '#content', text: 'Kế toán không đọc inbox của chủ.' }, {
-      role: ACCOUNTANT, sources: ['prototype/finance/finance.js#receipts'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['D1', 'H5'],
+      role: ACCOUNTANT, sources: ['prototype/finance/finance.js#receipts'], next_route: '/finance', next_status: 'built (U6)', app_canvas: ['D1', 'H5'],
       notes: 'Accountant projection of the receipts tab: the notification box is replaced by "Kế toán không đọc inbox của chủ."',
     }),
     S('WG16', 'WG', 'Hủy lượt thủ thuật (nhập lý do)', 'state', [START, ...FIN_WORK, { wait: '[data-command="void"]' }], { selector: '[data-command="void"]', text: 'Hủy' }, {
-      sources: ['prototype/finance/finance.js#bind'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H4'], covers: ['command:void', 'command:approve', 'command:close', 'command:read'],
+      sources: ['prototype/finance/finance.js#bind'], next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H4'], covers: ['command:void', 'command:approve', 'command:close', 'command:read'],
       native: { type: 'prompt', message: 'Lý do hủy lượt chưa thu tiền', trigger: [{ dialog: 'dismiss' }, { click: '[data-command="void"]' }] },
       notes: 'Native prompt() for the void reason (cancelled in the walk, so nothing is written). A void only sticks with a non-empty reason.',
     }),
     S('WG17', 'WG', 'Chốt tháng (hộp xác nhận)', 'state', [START, ...FIN_WORK, { wait: '[data-command="close"]' }], { selector: '[data-command="close"]', text: 'Chốt tháng đã kết thúc' }, {
-      sources: ['prototype/finance/finance.js#bind'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H4'],
+      sources: ['prototype/finance/finance.js#bind'], next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H4'],
       native: { type: 'confirm', message: 'Chốt số liệu tháng 2026-09? Các lượt trong kỳ sẽ bị khóa.', trigger: [{ dialog: 'dismiss' }, { click: '[data-command="close"]' }] },
       notes: 'Native confirm() before closing the period (cancelled in the walk). The month in the text is the picker month (2026-09 on the frozen clock).',
     }),
     S('WG18', 'WG', 'Xác nhận đã chi (nhập mã chứng từ)', 'state', [START, ...FIN_CLOSED], { selector: '[data-command="paid"]', text: 'Xác nhận đã chi' }, {
-      sources: ['prototype/finance/finance.js#bind'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H4'],
+      sources: ['prototype/finance/finance.js#bind'], next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H4'],
       native: { type: 'prompt', message: 'Mã chứng từ chi', trigger: [{ dialog: 'dismiss' }, { click: '[data-command="paid"]' }] },
       notes: 'Native prompt() for the payout voucher code on a closed period (cancelled in the walk). Uses the closed period of WG13.',
     }),
     S('WG19', 'WG', 'Xuất CSV cho Excel (tải tệp)', 'state', [START, ...FIN_WORK, { wait: '#export' }], { selector: '#export', text: 'Xuất CSV cho Excel' }, {
-      sources: ['prototype/finance/finance.js#bind'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H3'],
+      sources: ['prototype/finance/finance.js#bind'], next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H3'],
       native: { type: 'download', filename: 'Pema-tien-thu-thuat-2026-09.csv', trigger: [{ click: '#export' }] },
       notes: 'The button downloads Pema-tien-thu-thuat-<month>.csv (BOM, columns Ngay, Ho so, Thu thuat, Bac si, Doanh so, Co so, Ty le %, Tien thu thuat, Trang thai). The browser\'s download UI is native.',
     }),
     S('WG20', 'WG', 'Xuất CSV · lỗi', 'state', [START, ...FIN_WORK, { wait: '#export' }, { status: ['http://127.0.0.1:4174/export*', 500] }, { click: '#export' }], { selector: '#error', text: 'Không xuất được bảng' }, {
-      sources: ['prototype/finance/finance.js#bind'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H7'],
+      sources: ['prototype/finance/finance.js#bind'], next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H7'],
       notes: 'Export answers with an HTTP error: the red #error line reads "Không xuất được bảng" (a network failure shows the browser own text, for example "Failed to fetch").',
     }),
     S('WG21', 'WG', 'Ghi nhận lượt · lỗi tỷ trọng', 'state', [START, ...FIN_WORK, { click: '#content details > summary' }, { wait: '#entry' }, { fill: ['#entry [name=note]', 'Đã thực hiện'] }, { setValue: ['#entry [name=share0]', '50'] }, { click: '#entry [type=submit]' }], { selector: '#error', text: 'Tổng tỷ trọng doanh số phải là 100%' }, {
-      sources: ['prototype/finance/finance.js#entryForm'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H9'],
+      sources: ['prototype/finance/finance.js#entryForm'], next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H9'],
       notes: 'Validation error of the "Ghi nhận lượt thủ thuật đã hoàn tất" form, returned by the finance server and shown in #error. Nothing is stored.',
     }),
     S('WG22', 'WG', 'Ghi nhận lượt · thiếu ghi chú hoàn tất', 'state', [START, ...FIN_WORK, { click: '#content details > summary' }, { wait: '#entry' }, { fill: ['#entry [name=note]', '   '] }, { click: '#entry [type=submit]' }], { selector: '#error', text: 'Ghi chú xác nhận hoàn tất là bắt buộc' }, {
-      sources: ['prototype/finance/finance.js#entryForm'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H9'],
+      sources: ['prototype/finance/finance.js#entryForm'], next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H9'],
     }),
     S('WG23', 'WG', 'Phiếu thu · số thu vượt công nợ', 'state', [START, ...FIN_RECEIPTS, { setValue: ['#payment [name=amount]', '99999999'] }, { click: '#payment .primary' }], { selector: '#error', text: 'Số thu vượt công nợ' }, {
-      sources: ['prototype/finance/finance.js#receipts'], next_route: '/finance', next_status: 'planned (U6)', app_canvas: ['H5', 'H6'],
+      sources: ['prototype/finance/finance.js#receipts'], next_route: '/finance', next_status: 'built (U6)', app_canvas: ['H5', 'H6'],
     }),
   ],
   WH: [

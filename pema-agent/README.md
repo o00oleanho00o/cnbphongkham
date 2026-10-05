@@ -110,6 +110,14 @@ Không có profile `worker` thì API nhận webhook và xếp lượt nhưng kh�
 
 Tài chính PB02 (U6) chạy trong cùng API: `/api/v1/finance/*` (tổng quan theo vai trò, lượt thủ thuật và người thực hiện, duyệt/hủy, chốt tháng và xác nhận đã chi, phiếu thu có mã chống thu trùng, thông báo của chủ, CSV) trên các bảng `clinic.invoice|payment|procedure_entry|procedure_entry_person|finance_period|finance_notification` (migration `u6_0010_finance`). Vai trò lấy từ phiên đăng nhập, không có header giả lập; kế toán chưa có vai trò riêng nên do `manager` đảm nhiệm. `prototype/finance_server.py` và `prototype/finance/` vẫn nằm trong repo nhưng FE mới không dùng; MISA/hóa đơn điện tử chưa làm.
 
+## Ứng dụng nhân viên hợp nhất (gói U)
+
+Một FE Next.js (`frontend/`) thay cho `prototype/clinic-web`: cùng thứ tự menu và nhãn tiếng Việt của web cũ (Tổng quan, Hôm nay, Điều phối lịch, Tìm bệnh nhân, Theo dõi, Ảnh trước / sau, Bác sĩ & phòng, Dịch vụ, Thu ngân, Tài chính & tiền thủ thuật, Hỏi Pema, Hướng dẫn), thêm Zalo & CSKH, Care agent và Quản trị agent giữ nguyên. Chạy thử không cần dịch vụ nào: `cd frontend && pnpm dev:mock`, đăng nhập `owner@pema.test` / `demo1234` (mock có dữ liệu mẫu của mọi màn). Chạy thật: `make up-app` (backend + worker + FE); nạp danh mục sản phẩm một lần bằng `pema catalog import` (đoạn trên) và dữ liệu mẫu bằng `seed_demo`; đổi tài khoản mẫu trước khi dùng.
+
+Kiểm trước khi báo xong một thay đổi giao diện: `cd frontend && pnpm check` (lint, typecheck, format, vitest, `pnpm inventory`, rồi `pnpm smoke` và `pnpm visual` với `pnpm dev:mock` đang chạy; `CHECK_SKIP_BROWSER=1` bỏ hai bước trình duyệt và báo cáo phải nói rõ). Màu và cỡ chữ lấy từ `src/ui/tokens.css` (`pnpm tokens` sinh `tokens.json` cho KMP); `FEATURE-INVENTORY.md` là danh sách tính năng đóng băng. Ảnh đối chiếu với web cũ: `frontend/visual-ref/{old,new}` (git-ignored; sinh lại bằng `web-shots.cjs` và `pnpm visual`). Bằng chứng và khoảng trống còn lại: [docs/PARITY-AI01-U.md](docs/PARITY-AI01-U.md).
+
+Còn nằm trong repo nhưng **không còn dùng** (quyết định xóa là của chủ phòng khám): `prototype/clinic-web`, `prototype/finance/*`, `prototype/finance_server.py` và `finance_test.py` (bản dịch Python của luật tài chính có test tương đương ở `backend/apps/api/tests/clinic/test_finance_equivalence.py`), `prototype/shared/*.js` của Clinic Web. Web Patient Mobile giữ nguyên cho ứng dụng bệnh nhân.
+
 Ảnh Docker của cầu nối (`bridge` profile) và của FE đã dựng thật và khởi động thử (không cần Zalo thật); cầu nối chạy bằng tsx, không có bước build, và chỉ lắng nghe trong mạng compose.
 
 ## Cập nhật trực tiếp và hiện diện (gói ST-R)
