@@ -2571,6 +2571,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/patients/{patient_id}/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save 'Thông tin cần nhớ' */
+        put: operations["patient_profile_save_alerts"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/app-updates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Notes on the patient app timeline, newest first */
+        get: operations["patient_profile_list_app_updates"];
+        put?: never;
+        /** Put a note ('Nhắn tin' or 'Chăm sóc tại nhà') on the patient app timeline; no channel is used */
+        post: operations["patient_profile_send_app_update"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/patients/{patient_id}/approved-orders": {
         parameters: {
             query?: never;
@@ -2581,6 +2616,58 @@ export interface paths {
         /** Approved orders as the patient app groups them (staff preview) */
         get: operations["orders_approved_orders"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/brief": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The templated brief of a patient (built from records, no model); a doctor edits and approves it */
+        get: operations["patient_profile_get_brief"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/brief/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A doctor approves the brief as edited */
+        post: operations["patient_profile_approve_brief"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/clinical-note": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 'Tiền sử & chẩn đoán' recorded by a doctor */
+        get: operations["patient_profile_get_clinical_note"];
+        /** A doctor saves 'Tiền sử & chẩn đoán' (both texts required) */
+        put: operations["patient_profile_save_clinical_note"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2618,6 +2705,23 @@ export interface paths {
         put?: never;
         /** Compose a draft from a few key points (replaces the open draft) */
         post: operations["patient_care_create_consult_draft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/expected-return": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save 'Ngày dự kiến quay lại' (date, reason, source) */
+        put: operations["patient_profile_save_expected_return"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2670,6 +2774,23 @@ export interface paths {
         put?: never;
         /** Create a treatment plan */
         post: operations["patient_care_create_plan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/service-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a catalog service to the course; its price is fixed on the plan */
+        post: operations["patient_profile_add_service_plan"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3382,6 +3503,22 @@ export interface components {
             policy_profile?: components["schemas"]["PolicyProfileKey"] | null;
             reasoning_effort?: components["schemas"]["ReasoningEffort"] | null;
         };
+        /** AlertsOut */
+        AlertsOut: {
+            /** Alerts */
+            alerts: string[];
+        };
+        /**
+         * AlertsUpdate
+         * @description Old ``alerts-edit``: one warning per line. Blank lines are dropped, each line is trimmed.
+         */
+        AlertsUpdate: {
+            /**
+             * Alerts
+             * @description One warning per entry.
+             */
+            alerts: string[];
+        };
         /** Allowlist */
         Allowlist: {
             /** @default all */
@@ -3394,6 +3531,40 @@ export interface components {
          * @enum {string}
          */
         AllowlistMode: "all" | "list";
+        /** AppUpdateCreate */
+        AppUpdateCreate: {
+            /** Body */
+            body: string;
+            kind: components["schemas"]["AppUpdateKind"];
+        };
+        /**
+         * AppUpdateKind
+         * @enum {string}
+         */
+        AppUpdateKind: "message" | "aftercare";
+        /**
+         * AppUpdateOut
+         * @description One note on the patient app timeline. Nothing is sent through Zalo or any channel.
+         */
+        AppUpdateOut: {
+            /** Body */
+            body: string;
+            /** By Name */
+            by_name?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["AppUpdateKind"];
+        };
         /** AppointmentCreate */
         AppointmentCreate: {
             /**
@@ -3676,6 +3847,47 @@ export interface components {
          * @enum {string}
          */
         BridgeState: "not_configured" | "awaiting_qr" | "connected" | "blocked" | "down";
+        /** BriefApprove */
+        BriefApprove: {
+            /**
+             * Text
+             * @description The brief as the doctor edited it.
+             */
+            text: string;
+        };
+        /** BriefApprovedOut */
+        BriefApprovedOut: {
+            /**
+             * Approved At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            approved_at: string;
+            /** Approved By Name */
+            approved_by_name?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Source Ids */
+            source_ids: string[];
+            /** Text */
+            text: string;
+        };
+        /**
+         * BriefDraftOut
+         * @description The templated brief of a patient: ``text`` is built from existing records (``source_ids`` names them as
+         *     ``kind:id`` like the timeline), never by a model. ``approved`` is the last version a doctor approved.
+         */
+        BriefDraftOut: {
+            approved?: components["schemas"]["BriefApprovedOut"] | null;
+            /** Source Ids */
+            source_ids: string[];
+            /** Text */
+            text: string;
+        };
         /**
          * CareAlertKind
          * @enum {string}
@@ -3997,6 +4209,40 @@ export interface components {
             send_window_start?: string | null;
             /** Version */
             version: number;
+        };
+        /** ClinicalNoteOut */
+        ClinicalNoteOut: {
+            /**
+             * Diagnosis
+             * @default
+             */
+            diagnosis: string;
+            /**
+             * History
+             * @default
+             */
+            history: string;
+            /** Reviewed At */
+            reviewed_at?: string | null;
+            /** Reviewed By Name */
+            reviewed_by_name?: string | null;
+        };
+        /**
+         * ClinicalNoteUpdate
+         * @description Old ``crm-history`` and ``crm-diagnosis``. Both are required (the action answers with
+         *     ``CLINICAL_NOTE_BLANK_MESSAGE``).
+         */
+        ClinicalNoteUpdate: {
+            /**
+             * Diagnosis
+             * @description Khám / chẩn đoán do bác sĩ xác nhận. Never written by a model.
+             */
+            diagnosis: string;
+            /**
+             * History
+             * @description Tiền sử đã khai thác.
+             */
+            history: string;
         };
         /** ConsentCreate */
         ConsentCreate: {
@@ -4808,6 +5054,34 @@ export interface components {
             kind: "every";
             /** Minutes */
             minutes: number;
+        };
+        /** ExpectedReturnOut */
+        ExpectedReturnOut: {
+            /** Date */
+            date: string;
+            /** Reason */
+            reason: string;
+            /** Source */
+            source: string;
+        };
+        /**
+         * ExpectedReturnUpdate
+         * @description Old ``crm-expected-date``, ``crm-expected-reason``, ``crm-expected-source``. The date is a string so
+         *     the action can answer an impossible date (``2026-02-30``) with the old sentence instead of a 422.
+         */
+        ExpectedReturnUpdate: {
+            /**
+             * Date
+             * @description YYYY-MM-DD
+             */
+            date: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Source
+             * @description One of EXPECTED_SOURCES.
+             */
+            source: string;
         };
         /** FinanceDoctorOut */
         FinanceDoctorOut: {
@@ -6738,6 +7012,11 @@ export interface components {
          * @description Read model joining context; the original records stay the source of truth.
          */
         Patient360: {
+            /**
+             * Alerts
+             * @description The 'Thông tin cần nhớ' lines of the hero (U9), one warning per entry.
+             */
+            alerts?: string[];
             /** Appointments */
             appointments?: components["schemas"]["AppointmentOut"][];
             /** Consents */
@@ -6832,6 +7111,12 @@ export interface components {
             /** Seen */
             seen: number;
         };
+        /**
+         * PatientListView
+         * @description Old ``patientFilter``: Tất cả, Đang điều trị, Tái khám tuần này, Có cảnh báo.
+         * @enum {string}
+         */
+        PatientListView: "all" | "active" | "next" | "alerts";
         /** PatientOut */
         PatientOut: {
             /** Birth Date */
@@ -7936,6 +8221,25 @@ export interface components {
             version: number;
         };
         /**
+         * ServicePlanCreate
+         * @description Old ``linked-service-form``: service, number of sessions (1 to 20), discount. The price is read
+         *     from the catalog by the action and fixed on the plan.
+         */
+        ServicePlanCreate: {
+            /**
+             * Discount Vnd
+             * @default 0
+             */
+            discount_vnd: number;
+            /**
+             * Service Id
+             * Format: uuid
+             */
+            service_id: string;
+            /** Sessions */
+            sessions: number;
+        };
+        /**
          * ServiceTermsOut
          * @description One snapshot of the terms of a service.
          */
@@ -8502,7 +8806,7 @@ export interface components {
             id: string;
             /**
              * Kind
-             * @description session, appointment, crm_activity, message, review, consent, consult
+             * @description session, appointment, crm_activity, message, review, consent, consult, app_event
              */
             kind: string;
             /** Source Id */
@@ -8685,8 +8989,18 @@ export interface components {
         };
         /** TreatmentPlanOut */
         TreatmentPlanOut: {
+            /**
+             * Agreed Price Vnd
+             * @description Price after discount (sessions x unit price - discount), fixed when the service was added: a later change of the catalog never moves it (same rules).
+             */
+            agreed_price_vnd?: number | null;
             /** Completed Sessions */
             completed_sessions: number;
+            /**
+             * Discount Vnd
+             * @description Discount fixed with the price (same rules).
+             */
+            discount_vnd?: number | null;
             /** Doctor Id */
             doctor_id?: string | null;
             /** Episode Id */
@@ -8700,12 +9014,22 @@ export interface components {
             id: string;
             /** Service Code */
             service_code: string;
+            /**
+             * Service Terms Version
+             * @description Number of the catalog price snapshot the price was taken from.
+             */
+            service_terms_version?: number | null;
             /** Status */
             status: string;
             /** Title */
             title: string;
             /** Total Sessions */
             total_sessions: number;
+            /**
+             * Unit Price Vnd
+             * @description Price of one session fixed when the service was added to the course (U9). Null for a plan made without a price and for a caller who holds no finance permission.
+             */
+            unit_price_vnd?: number | null;
             /**
              * Version
              * @default 1
@@ -24665,6 +24989,8 @@ export interface operations {
                 q?: string | null;
                 doctor_id?: string | null;
                 cs_owner_id?: string | null;
+                /** @description Chip of the list: all, active (sessions left), next (visit within a week), alerts. */
+                view?: components["schemas"]["PatientListView"];
                 /** @description Page size. */
                 limit?: number;
                 /** @description Rows to skip. */
@@ -25096,6 +25422,271 @@ export interface operations {
             };
         };
     };
+    patient_profile_save_alerts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertsOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_list_app_updates: {
+        parameters: {
+            query?: {
+                kind?: components["schemas"]["AppUpdateKind"] | null;
+            };
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppUpdateOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_send_app_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppUpdateCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppUpdateOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     orders_approved_orders: {
         parameters: {
             query?: never;
@@ -25114,6 +25705,354 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApprovedOrderGroupOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_get_brief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BriefDraftOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_approve_brief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BriefApprove"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BriefApprovedOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_get_clinical_note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClinicalNoteOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_save_clinical_note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClinicalNoteUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClinicalNoteOut"];
                 };
             };
             /** @description Not authenticated. */
@@ -25529,6 +26468,95 @@ export interface operations {
             };
         };
     };
+    patient_profile_save_expected_return: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedReturnUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpectedReturnOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     patient_care_list_media: {
         parameters: {
             query?: {
@@ -25802,6 +26830,95 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["PlanCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreatmentPlanOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_add_service_plan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServicePlanCreate"];
             };
         };
         responses: {

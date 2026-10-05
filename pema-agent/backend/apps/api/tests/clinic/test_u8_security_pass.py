@@ -108,6 +108,52 @@ ROUTES: tuple[Route, ...] = (
     Route("confirm_media", "POST", f"/media/{FAKE}/confirm", (P.MEDIA_WRITE,)),
     Route("read_media", "GET", f"/media/{FAKE}/content", (P.MEDIA_READ,)),
     Route("studio", "GET", "/studio/{P025}", (P.PATIENT_READ_360,)),
+    # U9: Patient 360 dialogs and cards
+    Route(
+        "save_alerts",
+        "PUT",
+        "/patients/{P025}/alerts",
+        (P.SESSION_WRITE,),
+        lambda w: {"alerts": ["Da nhạy cảm (mẫu)"]},
+    ),
+    Route("get_clinical_note", "GET", "/patients/{P025}/clinical-note", (P.SESSION_READ,)),
+    Route(
+        "save_clinical_note",
+        "PUT",
+        "/patients/{P025}/clinical-note",
+        (P.SESSION_WRITE,),
+        lambda w: {"history": "Tiền sử mẫu", "diagnosis": "Nhận định mẫu"},
+    ),
+    Route(
+        "save_expected_return",
+        "PUT",
+        "/patients/{P025}/expected-return",
+        (P.CRM_ACTIVITY_WRITE,),
+        lambda w: {"date": "2030-01-15", "reason": "Hẹn đánh giá (mẫu)", "source": "doctor_recommendation"},
+    ),
+    Route("list_app_updates", "GET", "/patients/{P025}/app-updates", (P.SESSION_READ,)),
+    Route(
+        "send_app_message",
+        "POST",
+        "/patients/{P025}/app-updates",
+        (P.CONVERSATION_REPLY,),
+        lambda w: {"kind": "message", "body": "Chào bạn (mẫu)"},
+    ),
+    Route("get_brief", "GET", "/patients/{P025}/brief", (P.SESSION_WRITE,)),
+    Route(
+        "approve_brief",
+        "POST",
+        "/patients/{P025}/brief/approve",
+        (P.SESSION_WRITE,),
+        lambda w: {"text": "Brief mẫu"},
+    ),
+    Route(
+        "add_service_plan",
+        "POST",
+        "/patients/{P025}/service-plans",
+        (P.FINANCE_WRITE,),
+        lambda w: {"service_id": FAKE, "sessions": 2, "discount_vnd": 0},
+    ),
     # U4
     Route("resources", "GET", "/resources", (P.APPOINTMENT_READ, P.ADMIN_RULES)),
     Route("create_room", "POST", "/rooms", (P.ADMIN_RULES,), lambda w: {"name": "Phòng mẫu"}),
@@ -316,8 +362,19 @@ U_ACTION_MODULES = (
     "patient_360",
     "guide",
     "crm_overview",
+    "patient_profile",
+    "patient_app",
 )
-U_ROUTERS = ("resources", "services", "orders", "finance", "guide", "patient_care", "dashboard")
+U_ROUTERS = (
+    "resources",
+    "services",
+    "orders",
+    "finance",
+    "guide",
+    "patient_care",
+    "dashboard",
+    "patient_profile",
+)
 GATES = {"require", "require_any", "resolve_scope", "has_permission"}
 
 

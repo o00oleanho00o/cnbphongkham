@@ -9,12 +9,24 @@
 //   plan      patient.read_360 (create and edit need session.write)
 //   session   session.read     (the form needs session.write)
 //   photos    media.read       (upload needs media.write)
+//   finance   patient.read_360 (amounts and buttons follow finance.* and order.*; U9)
+// The header carries "AI brief" (session.write: a template, a doctor approves it) and "Nhắn tin"
+// (conversation.reply); the cards of Tổng quan open "Thông tin cần nhớ", "Chăm sóc tại nhà" and
+// "Ngày dự kiến quay lại".
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { InitialAvatar, Badge } from "@/components/admin/shared/ui-bits";
 import { ConsultTab } from "@/components/ops/patient/consult-tab";
+import { FinanceTab } from "@/components/ops/patient/finance-tab";
+import {
+  AftercareDialog,
+  BriefDialog,
+  ExpectedReturnDialog,
+  FactsDialog,
+  MessageDialog,
+} from "@/components/ops/patient/patient-dialogs";
 import { OverviewTab } from "@/components/ops/patient/overview-tab";
 import { PhotosTab } from "@/components/ops/patient/photos-tab";
 import { PlanTab } from "@/components/ops/patient/plan-tab";
@@ -28,6 +40,7 @@ import { Button } from "@/ui/button";
 import { Tabs } from "@/ui/tabs";
 
 type P360 = Schemas["Patient360"];
+type DialogKey = "brief" | "message" | "facts" | "aftercare" | "expected";
 
 const ID_PREFIX = "p360";
 
@@ -41,6 +54,7 @@ export function Patient360View({ data, onChanged }: { data: P360; onChanged: () 
   const tabs = visiblePatientTabs(can);
   const requested = search.get("tab");
   const active: PatientTabKey = tabs.find((t) => t.id === requested)?.id ?? "overview";
+  const [dialog, setDialog] = useState<DialogKey | null>(null);
   const [opened, setOpened] = useState<ReadonlySet<PatientTabKey>>(new Set([active]));
   const mounted = new Set([...opened, active]);
 
@@ -76,6 +90,17 @@ export function Patient360View({ data, onChanged }: { data: P360; onChanged: () 
             {age !== null ? ` · ${age} tuổi` : ""}
             {patient.doctor_name ? ` · ${patient.doctor_name}` : ""}
           </p>
+          {(data.alerts ?? []).length > 0 && (
+            <ul aria-label="Thông tin cần nhớ" className="mt-1.5 flex flex-wrap gap-1.5">
+              {(data.alerts ?? []).map((alert) => (
+                <li key={alert}>
+                  <Badge tone="amber" dot={false}>
+                    ⚠ {alert}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto">
           <Badge tone="blue" dot={false}>
@@ -98,6 +123,16 @@ export function Patient360View({ data, onChanged }: { data: P360; onChanged: () 
             >
               Agent chăm sóc
             </Link>
+          )}
+          {can("session.write") && (
+            <Button variant="secondary" onClick={() => setDialog("brief")}>
+              ✦ AI brief
+            </Button>
+          )}
+          {can("conversation.reply") && (
+            <Button variant="secondary" onClick={() => setDialog("message")}>
+              Nhắn tin
+            </Button>
           )}
           {can("session.write") && (
             <Button onClick={() => select("session")}>＋ Ghi buổi điều trị</Button>
@@ -124,7 +159,14 @@ export function Patient360View({ data, onChanged }: { data: P360; onChanged: () 
             aria-labelledby={`${ID_PREFIX}-tab-${tab.id}`}
             hidden={tab.id !== active}
           >
-            {tab.id === "overview" && <OverviewTab data={data} />}
+            {tab.id === "overview" && (
+              <OverviewTab
+                data={data}
+                onEditFacts={can("session.write") ? () => setDialog("facts") : undefined}
+                onAftercare={can("session.write") ? () => setDialog("aftercare") : undefined}
+                onExpected={can("crm.activity.write") ? () => setDialog("expected") : undefined}
+              />
+            )}
             {tab.id === "consult" && (
               <ConsultTab
                 patientId={patient.id}
@@ -155,6 +197,7 @@ export function Patient360View({ data, onChanged }: { data: P360; onChanged: () 
                 onSaved={onChanged}
               />
             )}
+            {tab.id === "finance" && <FinanceTab data={data} onChanged={onChanged} />}
             {tab.id === "photos" && (
               <PhotosTab
                 patientId={patient.id}
@@ -167,6 +210,29 @@ export function Patient360View({ data, onChanged }: { data: P360; onChanged: () 
           </div>
         );
       })}
+
+      {dialog === "brief" && <BriefDialog data={data} onClose={() => setDialog(null)} />}
+      {dialog === "message" && (
+        <MessageDialog data={data} onClose={() => setDialog(null)} onSent={onChanged} />
+      )}
+      {dialog === "aftercare" && (
+        <AftercareDialog
+          patientId={patient.id}
+          onClose={() => setDialog(null)}
+          onSent={onChanged}
+        />
+      )}
+      {dialog === "facts" && (
+        <FactsDialog
+          data={data}
+          canRecordConsent={can("consent.write")}
+          onClose={() => setDialog(null)}
+          onSaved={onChanged}
+        />
+      )}
+      {dialog === "expected" && (
+        <ExpectedReturnDialog data={data} onClose={() => setDialog(null)} onSaved={onChanged} />
+      )}
     </div>
   );
 }

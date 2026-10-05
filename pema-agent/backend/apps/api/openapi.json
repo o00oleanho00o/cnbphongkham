@@ -716,6 +716,43 @@
         "title": "AgentUpdate",
         "type": "object"
       },
+      "AlertsOut": {
+        "additionalProperties": false,
+        "properties": {
+          "alerts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Alerts",
+            "type": "array"
+          }
+        },
+        "required": [
+          "alerts"
+        ],
+        "title": "AlertsOut",
+        "type": "object"
+      },
+      "AlertsUpdate": {
+        "additionalProperties": false,
+        "description": "Old ``alerts-edit``: one warning per line. Blank lines are dropped, each line is trimmed.",
+        "properties": {
+          "alerts": {
+            "description": "One warning per entry.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Alerts",
+            "type": "array"
+          }
+        },
+        "required": [
+          "alerts"
+        ],
+        "title": "AlertsUpdate",
+        "type": "object"
+      },
       "Allowlist": {
         "additionalProperties": false,
         "properties": {
@@ -741,6 +778,79 @@
         ],
         "title": "AllowlistMode",
         "type": "string"
+      },
+      "AppUpdateCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "maxLength": 2000,
+            "title": "Body",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AppUpdateKind"
+          }
+        },
+        "required": [
+          "kind",
+          "body"
+        ],
+        "title": "AppUpdateCreate",
+        "type": "object"
+      },
+      "AppUpdateKind": {
+        "enum": [
+          "message",
+          "aftercare"
+        ],
+        "title": "AppUpdateKind",
+        "type": "string"
+      },
+      "AppUpdateOut": {
+        "additionalProperties": false,
+        "description": "One note on the patient app timeline. Nothing is sent through Zalo or any channel.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By Name"
+          },
+          "created_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AppUpdateKind"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "body",
+          "created_at"
+        ],
+        "title": "AppUpdateOut",
+        "type": "object"
       },
       "AppointmentCreate": {
         "additionalProperties": false,
@@ -1473,6 +1583,104 @@
         ],
         "title": "BridgeState",
         "type": "string"
+      },
+      "BriefApprove": {
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "description": "The brief as the doctor edited it.",
+            "maxLength": 4000,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "BriefApprove",
+        "type": "object"
+      },
+      "BriefApprovedOut": {
+        "additionalProperties": false,
+        "properties": {
+          "approved_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Approved At",
+            "type": "string"
+          },
+          "approved_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By Name"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "source_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Source Ids",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "approved_at",
+          "source_ids"
+        ],
+        "title": "BriefApprovedOut",
+        "type": "object"
+      },
+      "BriefDraftOut": {
+        "additionalProperties": false,
+        "description": "The templated brief of a patient: ``text`` is built from existing records (``source_ids`` names them as\n``kind:id`` like the timeline), never by a model. ``approved`` is the last version a doctor approved.",
+        "properties": {
+          "approved": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BriefApprovedOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Source Ids",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "source_ids"
+        ],
+        "title": "BriefDraftOut",
+        "type": "object"
       },
       "CareAlertKind": {
         "enum": [
@@ -2338,6 +2546,74 @@
           "version"
         ],
         "title": "ChannelSettingsUpdate",
+        "type": "object"
+      },
+      "ClinicalNoteOut": {
+        "additionalProperties": false,
+        "properties": {
+          "diagnosis": {
+            "default": "",
+            "title": "Diagnosis",
+            "type": "string"
+          },
+          "history": {
+            "default": "",
+            "title": "History",
+            "type": "string"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+                "examples": [
+                  "2026-09-20T09:00:00+07:00"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "reviewed_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed By Name"
+          }
+        },
+        "title": "ClinicalNoteOut",
+        "type": "object"
+      },
+      "ClinicalNoteUpdate": {
+        "additionalProperties": false,
+        "description": "Old ``crm-history`` and ``crm-diagnosis``. Both are required (the action answers with\n``CLINICAL_NOTE_BLANK_MESSAGE``).",
+        "properties": {
+          "diagnosis": {
+            "description": "Khám / chẩn đoán do bác sĩ xác nhận. Never written by a model.",
+            "maxLength": 4000,
+            "title": "Diagnosis",
+            "type": "string"
+          },
+          "history": {
+            "description": "Tiền sử đã khai thác.",
+            "maxLength": 4000,
+            "title": "History",
+            "type": "string"
+          }
+        },
+        "required": [
+          "history",
+          "diagnosis"
+        ],
+        "title": "ClinicalNoteUpdate",
         "type": "object"
       },
       "ConsentCreate": {
@@ -4433,6 +4709,60 @@
           "minutes"
         ],
         "title": "EveryInput",
+        "type": "object"
+      },
+      "ExpectedReturnOut": {
+        "additionalProperties": false,
+        "properties": {
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "reason",
+          "source"
+        ],
+        "title": "ExpectedReturnOut",
+        "type": "object"
+      },
+      "ExpectedReturnUpdate": {
+        "additionalProperties": false,
+        "description": "Old ``crm-expected-date``, ``crm-expected-reason``, ``crm-expected-source``. The date is a string so\nthe action can answer an impossible date (``2026-02-30``) with the old sentence instead of a 422.",
+        "properties": {
+          "date": {
+            "description": "YYYY-MM-DD",
+            "maxLength": 10,
+            "title": "Date",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 200,
+            "title": "Reason",
+            "type": "string"
+          },
+          "source": {
+            "description": "One of EXPECTED_SOURCES.",
+            "maxLength": 40,
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "reason",
+          "source"
+        ],
+        "title": "ExpectedReturnUpdate",
         "type": "object"
       },
       "FinanceDoctorOut": {
@@ -8908,6 +9238,14 @@
         "additionalProperties": false,
         "description": "Read model joining context; the original records stay the source of truth.",
         "properties": {
+          "alerts": {
+            "description": "The 'Thông tin cần nhớ' lines of the hero (U9), one warning per entry.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Alerts",
+            "type": "array"
+          },
           "appointments": {
             "items": {
               "$ref": "#/components/schemas/AppointmentOut"
@@ -9203,6 +9541,17 @@
         ],
         "title": "PatientKpis",
         "type": "object"
+      },
+      "PatientListView": {
+        "description": "Old ``patientFilter``: Tất cả, Đang điều trị, Tái khám tuần này, Có cảnh báo.",
+        "enum": [
+          "all",
+          "active",
+          "next",
+          "alerts"
+        ],
+        "title": "PatientListView",
+        "type": "string"
       },
       "PatientOut": {
         "additionalProperties": false,
@@ -12187,6 +12536,36 @@
         "title": "ServiceOut",
         "type": "object"
       },
+      "ServicePlanCreate": {
+        "additionalProperties": false,
+        "description": "Old ``linked-service-form``: service, number of sessions (1 to 20), discount. The price is read\nfrom the catalog by the action and fixed on the plan.",
+        "properties": {
+          "discount_vnd": {
+            "default": 0,
+            "maximum": 10000000000.0,
+            "minimum": 0.0,
+            "title": "Discount Vnd",
+            "type": "integer"
+          },
+          "service_id": {
+            "format": "uuid",
+            "title": "Service Id",
+            "type": "string"
+          },
+          "sessions": {
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Sessions",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "service_id",
+          "sessions"
+        ],
+        "title": "ServicePlanCreate",
+        "type": "object"
+      },
       "ServiceTermsOut": {
         "additionalProperties": false,
         "description": "One snapshot of the terms of a service.",
@@ -13724,7 +14103,7 @@
             "type": "string"
           },
           "kind": {
-            "description": "session, appointment, crm_activity, message, review, consent, consult",
+            "description": "session, appointment, crm_activity, message, review, consent, consult, app_event",
             "title": "Kind",
             "type": "string"
           },
@@ -14121,9 +14500,33 @@
       "TreatmentPlanOut": {
         "additionalProperties": false,
         "properties": {
+          "agreed_price_vnd": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Price after discount (sessions x unit price - discount), fixed when the service was added: a later change of the catalog never moves it (same rules).",
+            "title": "Agreed Price Vnd"
+          },
           "completed_sessions": {
             "title": "Completed Sessions",
             "type": "integer"
+          },
+          "discount_vnd": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Discount fixed with the price (same rules).",
+            "title": "Discount Vnd"
           },
           "doctor_id": {
             "anyOf": [
@@ -14169,6 +14572,18 @@
             "title": "Service Code",
             "type": "string"
           },
+          "service_terms_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Number of the catalog price snapshot the price was taken from.",
+            "title": "Service Terms Version"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -14180,6 +14595,18 @@
           "total_sessions": {
             "title": "Total Sessions",
             "type": "integer"
+          },
+          "unit_price_vnd": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Price of one session fixed when the service was added to the course (U9). Null for a plan made without a price and for a caller who holds no finance permission.",
+            "title": "Unit Price Vnd"
           },
           "version": {
             "default": 1,
@@ -35607,6 +36034,17 @@
             }
           },
           {
+            "description": "Chip of the list: all, active (sessions left), next (visit within a week), alerts.",
+            "in": "query",
+            "name": "view",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PatientListView",
+              "default": "all",
+              "description": "Chip of the list: all, active (sessions left), next (visit within a week), alerts."
+            }
+          },
+          {
             "description": "Page size.",
             "in": "query",
             "name": "limit",
@@ -36163,6 +36601,368 @@
         ]
       }
     },
+    "/api/v1/patients/{patient_id}/alerts": {
+      "put": {
+        "operationId": "patient_profile_save_alerts",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Save 'Thông tin cần nhớ'",
+        "tags": [
+          "patient-profile"
+        ]
+      }
+    },
+    "/api/v1/patients/{patient_id}/app-updates": {
+      "get": {
+        "operationId": "patient_profile_list_app_updates",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AppUpdateKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AppUpdateOut"
+                  },
+                  "title": "Response Patient Profile List App Updates",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Notes on the patient app timeline, newest first",
+        "tags": [
+          "patient-profile"
+        ]
+      },
+      "post": {
+        "operationId": "patient_profile_send_app_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppUpdateCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppUpdateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Put a note ('Nhắn tin' or 'Chăm sóc tại nhà') on the patient app timeline; no channel is used",
+        "tags": [
+          "patient-profile"
+        ]
+      }
+    },
     "/api/v1/patients/{patient_id}/approved-orders": {
       "get": {
         "operationId": "orders_approved_orders",
@@ -36272,6 +37072,456 @@
         "summary": "Approved orders as the patient app groups them (staff preview)",
         "tags": [
           "orders"
+        ]
+      }
+    },
+    "/api/v1/patients/{patient_id}/brief": {
+      "get": {
+        "operationId": "patient_profile_get_brief",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefDraftOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "The templated brief of a patient (built from records, no model); a doctor edits and approves it",
+        "tags": [
+          "patient-profile"
+        ]
+      }
+    },
+    "/api/v1/patients/{patient_id}/brief/approve": {
+      "post": {
+        "operationId": "patient_profile_approve_brief",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BriefApprove"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefApprovedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "A doctor approves the brief as edited",
+        "tags": [
+          "patient-profile"
+        ]
+      }
+    },
+    "/api/v1/patients/{patient_id}/clinical-note": {
+      "get": {
+        "operationId": "patient_profile_get_clinical_note",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClinicalNoteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "'Tiền sử & chẩn đoán' recorded by a doctor",
+        "tags": [
+          "patient-profile"
+        ]
+      },
+      "put": {
+        "operationId": "patient_profile_save_clinical_note",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClinicalNoteUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClinicalNoteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "A doctor saves 'Tiền sử & chẩn đoán' (both texts required)",
+        "tags": [
+          "patient-profile"
         ]
       }
     },
@@ -36728,6 +37978,124 @@
         "summary": "Compose a draft from a few key points (replaces the open draft)",
         "tags": [
           "patient-care"
+        ]
+      }
+    },
+    "/api/v1/patients/{patient_id}/expected-return": {
+      "put": {
+        "operationId": "patient_profile_save_expected_return",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpectedReturnUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpectedReturnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Save 'Ngày dự kiến quay lại' (date, reason, source)",
+        "tags": [
+          "patient-profile"
         ]
       }
     },
@@ -37203,6 +38571,124 @@
         "summary": "Create a treatment plan",
         "tags": [
           "patient-care"
+        ]
+      }
+    },
+    "/api/v1/patients/{patient_id}/service-plans": {
+      "post": {
+        "operationId": "patient_profile_add_service_plan",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServicePlanCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TreatmentPlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Add a catalog service to the course; its price is fixed on the plan",
+        "tags": [
+          "patient-profile"
         ]
       }
     },
@@ -40379,6 +41865,10 @@
     {
       "description": "Plans, sessions, consult notes and clinical photos of a patient. (U3)",
       "name": "patient-care"
+    },
+    {
+      "description": "Patient 360 dialogs: warnings, history and diagnosis, expected return, patient app notes, templated brief, service added to a course. (U9)",
+      "name": "patient-profile"
     },
     {
       "description": "Scheduling and reception transitions. (B1)",
