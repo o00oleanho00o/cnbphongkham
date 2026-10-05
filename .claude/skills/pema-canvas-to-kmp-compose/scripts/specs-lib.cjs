@@ -1,8 +1,7 @@
 // Builds the per-screen conversion specs ("prompts") for the Pema app from:
 //  - the design canvas `Pema App redesign canvas/Pema App.dc.html` (its build() data = every block of
 //    every screen, evaluated in Node, no browser),
-//  - the KMP code (shot tests, composables, routes, domain functions used),
-//  - the Flutter router (A–H source screens),
+//  - the KMP code (shot tests, composables, routes, domain functions used; logic of A–H screens),
 //  - hand-written notes `design-specs/notes.json` (web sources, business rules, accepted differences).
 // Used by `design-specs.cjs` (writes design-specs/) and the `pema-design` MCP server (live).
 const fs = require('fs');
@@ -12,7 +11,6 @@ const crypto = require('crypto');
 const ROOT = path.resolve(__dirname, '../../../..');
 const CANVAS = path.join(ROOT, 'Pema App redesign canvas', 'Pema App.dc.html');
 const KMP = path.join(ROOT, 'pema-kmp');
-const FLUTTER = path.join(ROOT, 'flutter-template', 'lib');
 const SPECS = path.join(ROOT, 'design-specs');
 const NOTES = path.join(SPECS, 'notes.json');
 const REF_DIR = path.join(KMP, 'design-ref');
@@ -61,6 +59,8 @@ function kmpIndex() {
   for (const f of main) {
     const t = read(f);
     for (const [, name] of t.matchAll(/^(?:internal |private |public )?fun (?:[\w.]+\.)?([A-Z]\w*)\(/gm)) defs[name] ||= f;
+    // Lazy-list builders (`fun LazyListScope.patientSearchItems(`) render a screen's rows.
+    for (const [, name] of t.matchAll(/^(?:internal |public )?fun LazyListScope\.([a-z]\w*Items)\(/gm)) defs[name] ||= f;
     const domain = [...t.matchAll(/^import com\.pema\.clinic\.shared\.clinic\.([a-z]\w*)$/gm)].map((x) => x[1]);
     const graphs = [...t.matchAll(/fun NavGraphBuilder\.(\w+)\(/g)].map((x) => x[1]);
     fileInfo[f] = { domain, graphs };
@@ -82,8 +82,9 @@ function kmpIndex() {
       let composable = calls.find((n) => /(Screen|Content|Overlay|Body)$/.test(n)) || calls[0] || '';
       // Test helpers (`BillingShot(...)`, `PatientSearchWorkspace(...)`) wrap the real screen.
       if (composable && !defs[composable]) {
-        const inner = [...bodyOf(t, composable).matchAll(/\b([A-Z]\w*)\(/g)].map((x) => x[1]).filter((n) => defs[n]);
-        composable = inner.find((n) => /(Screen|Content)$/.test(n)) || inner.find((n) => !/^Pema/.test(n)) || inner[0] || composable;
+        const inner = [...bodyOf(t, composable).matchAll(/\b([A-Za-z]\w*)\(/g)].map((x) => x[1]).filter((n) => defs[n]);
+        composable = inner.find((n) => /(Screen|Content)$/.test(n)) || inner.find((n) => /^[a-z]\w*Items$/.test(n))
+          || inner.find((n) => /^[A-Z]/.test(n) && !/^Pema/.test(n)) || inner.find((n) => /^[A-Z]/.test(n)) || composable;
       }
       const shotRoutes = [...win.matchAll(/Routes\.(\w+)/g)].map((x) => x[1]).filter((r) => routes[r]);
       shots[m[1]] ||= { test: f, line: i + 1, composable, routes: [...new Set(shotRoutes)] };
@@ -97,20 +98,6 @@ function kmpIndex() {
   };
   return { routes, defs, fileInfo, shots, bodyRoutes, moduleOf: (f) => rel(f).split('/src/')[0] };
 }
-
-// ---------- Flutter ----------
-function flutterIndex() {
-  const files = walk(FLUTTER, (p) => p.endsWith('.dart') && !p.endsWith('.g.dart') && !p.endsWith('.freezed.dart'));
-  const classes = {};
-  for (const f of files) for (const [, c] of read(f).matchAll(/^class (\w+)\b/gm)) classes[c] ||= f;
-  const router = files.find((f) => f.endsWith('app_router.dart'));
-  const byRoute = {};
-  if (router) for (const [, keys, cls] of read(router).matchAll(/((?:AppRoutes\.\w+\s*\|\|\s*)*AppRoutes\.\w+)\s*=>\s*(?:const\s+)?(\w+)\(/g))
-    for (const [, k] of keys.matchAll(/AppRoutes\.(\w+)/g)) byRoute[k] = cls;
-  return { classes, byRoute };
-}
-
-const lowerFirst = (s) => s.charAt(0).toLowerCase() + s.slice(1);
 
 // ---------- canvas block → Compose ----------
 const q = (s) => JSON.stringify(String(s ?? ''));
@@ -235,7 +222,6 @@ function addNote(id, kind, text) {
 function buildModel() {
   const { groups, hash } = loadCanvas();
   const kmp = kmpIndex();
-  const flutter = flutterIndex();
   const notes = loadNotes();
   const titleToRoute = {};
   for (const r of Object.values(kmp.routes)) {
@@ -249,7 +235,7 @@ function buildModel() {
       const shot = kmp.shots[s.id];
       let composable = shot?.composable || '';
       // Workspace tabs (A–E, K3) all render through WorkspaceScreen, whatever helper the shot uses.
-      if (s.appMain && kmp.defs.WorkspaceScreen && !/CareQueue|PatientSearch/.test(composable)) composable = 'WorkspaceScreen';
+      if (s.appMain && kmp.defs.WorkspaceScreen && !/CareQueue|PatientSearch|patientSearch/.test(composable)) composable = 'WorkspaceScreen';
       const file = kmp.defs[composable];
       const financeRoute = { FinanceScreen: 'Finance', RateScreen: 'FinanceRates', ProcedureFormScreen: 'FinanceProcedure', DeniedScreen: '' }[composable];
       const routeName = s.appMain
@@ -261,20 +247,6 @@ function buildModel() {
         ? { name: 'denied', id: 'denied?route={route}', title: `${s.title} (permission blocked: Routes.denied(title))` }
         : kmp.routes[routeName];
       const webOnly = /^Web ›/.test(s.note || '') || ['I', 'J', 'K'].includes(g.code);
-      let flutterFile = '';
-      let flutterClass = '';
-      if (!webOnly) {
-        if (s.appMain) flutterClass = 'WorkspaceScreen';
-        else if (composable === 'DeniedScreen') flutterClass = '_RouteGuard';
-        else if (routeName && flutter.byRoute[lowerFirst(routeName)]) flutterClass = flutter.byRoute[lowerFirst(routeName)];
-        else if (routeName === 'Guide') flutterClass = 'GuideScreen';
-        // Same widget name in Flutter (FinanceScreen, RateScreen, ProcedureForm…).
-        if (!flutterClass || !flutter.classes[flutterClass]) {
-          const base = composable.replace(/(Screen|Content|Route)$/, '');
-          flutterClass = [composable, base, base + 'Screen'].find((c) => flutter.classes[c]) || flutterClass;
-        }
-        flutterFile = flutter.classes[flutterClass] || (flutterClass === '_RouteGuard' ? flutter.classes.AppRouter || '' : '');
-      }
       const groupNote = notes.groups?.[g.code] || {};
       const own = notes.screens?.[s.id] || {};
       const merge = (k) => [...(groupNote[k] || []), ...(own[k] || [])];
@@ -290,7 +262,7 @@ function buildModel() {
         tab: s.appMain ? (s.nav.find((n) => n.active)?.label || '') : '',
         source: webOnly
           ? { kind: 'web', hint: (s.note || '').replace(/^Web ›\s*/, '') }
-          : { kind: 'flutter', class: flutterClass, file: flutterFile ? rel(flutterFile) : '' },
+          : { kind: 'kmp', class: composable, file: file ? rel(file) : '' },
         kmp: {
           route: route ? { name: route.name, id: route.id, title: route.appBar || route.title } : null,
           composable,
@@ -384,7 +356,7 @@ ${BLOCK_CATALOG.map(([c, k, v]) => `| \`${c}\` | ${k} | ${v} |`).join('\n')}
 function screenPrompt(s) {
   const src = s.source.kind === 'web'
     ? `Logic comes from the Pema web (${s.source.hint}); see "Logic source".`
-    : `Logic is ported 1:1 from Flutter ${s.source.class || '(see "Logic source")'}${s.source.file ? ` (${s.source.file})` : ''}.`;
+    : `Logic lives in the KMP code ${s.source.class || '(see "Logic source")'}${s.source.file ? ` (${s.source.file})` : ''}; keep its behavior unless asked to change it.`;
   return [
     `Build screen ${s.id} "${s.name}" (group ${s.group} · ${s.groupTitle}) with Compose Multiplatform in pema-kmp, 1:1 with the canvas \`Pema App.dc.html\` (390×844dp frame).`,
     src,
@@ -395,7 +367,7 @@ function screenPrompt(s) {
 }
 
 function screenMarkdown(s, model) {
-  return `<!-- Generated by .claude/skills/pema-canvas-to-kmp-compose/scripts/design-specs.cjs from the canvas (${model.canvasHash}), KMP/Flutter code and design-specs/notes.json. Edit notes.json, not this file. -->
+  return `<!-- Generated by .claude/skills/pema-canvas-to-kmp-compose/scripts/design-specs.cjs from the canvas (${model.canvasHash}), KMP code and design-specs/notes.json. Edit notes.json, not this file. -->
 # ${s.id} · ${s.name}
 
 Group **${s.group} · ${s.groupTitle}** · ${s.kind === 'tab' ? `tab "${s.tab}" (${s.role})` : 'detail screen'} · status: **${s.status === 'ported' ? 'ported' : 'not ported'}**
@@ -403,7 +375,7 @@ Group **${s.group} · ${s.groupTitle}** · ${s.kind === 'tab' ? `tab "${s.tab}" 
 > ${s.note || '(no canvas note)'}
 
 ## Logic source
-${s.source.kind === 'web' ? `- Web: ${s.source.hint}` : `- Flutter: \`${s.source.class || '?'}\`${s.source.file ? ` — \`${s.source.file}\`` : ''}`}
+${s.source.kind === 'web' ? `- Web: ${s.source.hint}` : `- KMP: \`${s.source.class || '?'}\`${s.source.file ? ` — \`${s.source.file}\`` : ''}`}
 ${bullet(s.logic)}
 
 ## KMP
@@ -442,7 +414,7 @@ ${screenPrompt(s)}
 }
 
 function indexMarkdown(model) {
-  const rows = model.screens.map((s) => `| [${s.id}](screens/${s.id}.md) | ${s.name} | ${s.source.kind === 'web' ? 'web' : 'Flutter'} | ${s.kmp.composable ? `\`${s.kmp.composable}\`` : '—'} | ${s.kmp.module || '—'} | ${s.status === 'ported' ? '✓' : '—'} |`);
+  const rows = model.screens.map((s) => `| [${s.id}](screens/${s.id}.md) | ${s.name} | ${s.source.kind === 'web' ? 'web' : 'KMP'} | ${s.kmp.composable ? `\`${s.kmp.composable}\`` : '—'} | ${s.kmp.module || '—'} | ${s.status === 'ported' ? '✓' : '—'} |`);
   return `<!-- Generated — see README.md -->
 # Screen index (${model.screens.length})
 

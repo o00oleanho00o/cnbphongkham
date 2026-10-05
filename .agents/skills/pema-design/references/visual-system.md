@@ -1,6 +1,6 @@
 # Pema identity and visual system
 
-Baseline summarized from the web and Flutter cycle on 2026-09-22; this is the project's design convention, not a claim to be the official brand manual. When tokens/code intentionally change, update this reference together with the UI docs.
+Baseline summarized from the web and mobile cycle on 2026-09-22; this is the project's design convention, not a claim to be the official brand manual. When tokens/code intentionally change, update this reference together with the UI docs.
 
 ## Color and contrast
 
@@ -28,7 +28,7 @@ Hierarchy: light background → white surface → clear text → one prominent a
 
 ## Logo, images, and backgrounds
 
-Original web assets are in `prototype/shared/assets/`: `pema-logo.png`, font `be-vietnam-pro-*`, `care-waves.svg`, Lucide icons/license. Flutter uses `flutter-template/assets/` declared in pubspec. Reuse existing assets; do not duplicate a new brand kit inside the skill.
+Original web assets are in `prototype/shared/assets/`: `pema-logo.png`, font `be-vietnam-pro-*`, `care-waves.svg`, Lucide icons/license. The app bundles fonts/logo in `pema-kmp/core/ui/src/commonMain/composeResources/`. Reuse existing assets; do not duplicate a new brand kit inside the skill.
 
 Preserve logo ratio and breathing room; do not stretch it, recolor it, or place it on a low-contrast background. Light blue waves are only for hero/identity areas, not behind tables, prescriptions, or doctor notes. A beautiful background must help focus, not hide text or make home longer.
 

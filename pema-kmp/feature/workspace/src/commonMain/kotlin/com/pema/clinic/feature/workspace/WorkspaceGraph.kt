@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -60,7 +63,9 @@ import com.pema.clinic.core.ui.widgets.PemaSection
 import com.pema.clinic.core.ui.widgets.PemaTile
 import com.pema.clinic.core.ui.widgets.WeekStrip
 import com.pema.clinic.feature.care.CareQueue as CareQueueWidget
-import com.pema.clinic.feature.patients.PatientSearch as PatientSearchWidget
+import com.pema.clinic.feature.patients.PatientSearchState
+import com.pema.clinic.feature.patients.patientSearchItems
+import com.pema.clinic.feature.patients.rememberPatientSearchState
 import com.pema.clinic.shared.FeatureDeps
 import com.pema.clinic.shared.catalog.Catalog
 import com.pema.clinic.shared.catalog.PatientProfile
@@ -213,6 +218,12 @@ fun WorkspaceScreen(
 ) {
     val tabs = tabsFor(state.session)
     val selectedTab = state.selectedTab.coerceIn(0, tabs.lastIndex)
+    val patientSearch = if (deps != null && showsPatientSearch(state.session, selectedTab)) rememberPatientSearchState(deps) else null
+    // Lazy body: only the rows on screen are composed (the owner "Hồ sơ" tab lists all 46 profiles).
+    // One saved scroll position per tab: a tab opens at its top and comes back there after a pushed route.
+    val listState = rememberSaveable(state.session.careMode, state.session.staffRole, selectedTab, saver = LazyListState.Saver) {
+        LazyListState()
+    }
     Box(Modifier.fillMaxSize()) {
         PemaScaffold(
             topBar = {
@@ -232,17 +243,17 @@ fun WorkspaceScreen(
             },
         ) { inner ->
             Box(Modifier.fillMaxSize().padding(inner), contentAlignment = Alignment.TopCenter) {
-                Column(
+                LazyColumn(
                     Modifier
                         .widthIn(max = 720.dp)
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 24.dp),
+                        .fillMaxSize(),
+                    state = listState,
+                    contentPadding = PaddingValues(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 24.dp),
                 ) {
                     when {
-                        state.session.careMode -> CareBody(state, selectedTab, callbacks)
-                        state.session.staffRole != "owner" -> StaffBody(state, selectedTab, callbacks, deps)
-                        else -> OwnerBody(state, selectedTab, callbacks, deps)
+                        state.session.careMode -> careItems(state, selectedTab, callbacks)
+                        state.session.staffRole != "owner" -> staffItems(state, selectedTab, callbacks, deps, patientSearch)
+                        else -> ownerItems(state, selectedTab, callbacks, patientSearch)
                     }
                 }
             }
@@ -253,48 +264,56 @@ fun WorkspaceScreen(
     }
 }
 
-@Composable
-private fun OwnerBody(state: WorkspaceUiState, selectedTab: Int, callbacks: WorkspaceCallbacks, deps: FeatureDeps?) {
+/** One [PemaTile] row of the lazy workspace body. */
+private fun LazyListScope.tile(title: String, sub: String, icon: String, onClick: (() -> Unit)?) {
+    item(contentType = "tile") { PemaTile(title, sub, icon, onClick) }
+}
+
+private fun LazyListScope.ownerItems(
+    state: WorkspaceUiState,
+    selectedTab: Int,
+    callbacks: WorkspaceCallbacks,
+    patientSearch: PatientSearchState?,
+) {
     when (selectedTab) {
         1 -> {
-            PemaHeading("Điều phối lịch", "Thứ Ba, 22 tháng 9")
-            WeekStrip()
-            PemaTile("BS. Tâm · Phòng khám 01", "Ca sáng 08:00–12:00", "tune", { callbacks.onOpen(Routes.Resources) })
+            item { PemaHeading("Điều phối lịch", "Thứ Ba, 22 tháng 9") }
+            item { WeekStrip() }
+            tile("BS. Tâm · Phòng khám 01", "Ca sáng 08:00–12:00", "tune") { callbacks.onOpen(Routes.Resources) }
             listOf("09:00", state.patient.appointment, "14:00").forEach { time ->
-                PemaTile(
+                tile(
                     time,
                     if (time == state.patient.appointment) "${state.profile.name} · Tái khám" else "Khung giờ trống",
                     "schedule",
-                    { callbacks.onOpen(Routes.AppointmentDetail) },
-                )
+                ) { callbacks.onOpen(Routes.AppointmentDetail) }
             }
-            PemaPrimary("Đặt / dời lịch", onClick = { callbacks.onOpen(Routes.Booking) })
+            item { PemaPrimary("Đặt / dời lịch", onClick = { callbacks.onOpen(Routes.Booking) }) }
         }
         2 -> {
-            PemaHeading("Hồ sơ người bệnh", "${state.catalog.profiles.size} hồ sơ tổng hợp · Patient 360")
-            PatientSearchArea(deps, onOpen = { callbacks.onOpen(Routes.Patient360) })
+            item { PemaHeading("Hồ sơ người bệnh", "${state.catalog.profiles.size} hồ sơ tổng hợp · Patient 360") }
+            patientSearchArea(patientSearch, onOpen = { callbacks.onOpen(Routes.Patient360) })
         }
         3 -> {
-            PemaHeading("Theo dõi", "Ưu tiên phản hồi và bàn giao")
-            PemaNotice("${state.patient.updates.size} cập nhật · ${if (state.patient.response.isEmpty()) "1 cần phản hồi" else "Đã phản hồi"}")
+            item { PemaHeading("Theo dõi", "Ưu tiên phản hồi và bàn giao") }
+            item { PemaNotice("${state.patient.updates.size} cập nhật · ${if (state.patient.response.isEmpty()) "1 cần phản hồi" else "Đã phản hồi"}") }
             state.patient.updates.forEach { update ->
-                PemaTile(state.profile.name, update, "chat_bubble_outline", { callbacks.onOpen(Routes.FollowUpReply) })
+                tile(state.profile.name, update, "chat_bubble_outline") { callbacks.onOpen(Routes.FollowUpReply) }
             }
             state.reviewProfiles
                 .filterNot { it.id == state.profile.id }
                 .take(3)
                 .forEach { profile ->
-                    PemaTile(profile.name, "Review chăm sóc · hồ sơ phụ trách", "inbox", {
+                    tile(profile.name, "Review chăm sóc · hồ sơ phụ trách", "inbox") {
                         callbacks.onPatientSelected(state.catalog.indexOf(profile.id))
                         callbacks.onOpen(Routes.FollowUpReply)
-                    })
+                    }
                 }
-            PemaTile("Cần gọi lại", "Hồ sơ mẫu · triệu chứng tăng", "priority_high", { callbacks.onOpen(Routes.FollowUpReply) })
+            tile("Cần gọi lại", "Hồ sơ mẫu · triệu chứng tăng", "priority_high") { callbacks.onOpen(Routes.FollowUpReply) }
         }
         4 -> {
-            PemaHeading("Không gian làm việc", "Nghiệp vụ theo đúng hành trình Pema")
+            item { PemaHeading("Không gian làm việc", "Nghiệp vụ theo đúng hành trình Pema") }
             if (state.financeOn) {
-                PemaTile("Tài chính & tiền thủ thuật", "Chủ phòng khám · Kế toán · Bác sĩ", "account_balance_wallet", { callbacks.onOpenFinance(0) })
+                tile("Tài chính & tiền thủ thuật", "Chủ phòng khám · Kế toán · Bác sĩ", "account_balance_wallet") { callbacks.onOpenFinance(0) }
             }
             listOf(
                 "Lên đơn nhanh" to Routes.QuickOrder,
@@ -305,43 +324,55 @@ private fun OwnerBody(state: WorkspaceUiState, selectedTab: Int, callbacks: Work
                 "Ask Pema" to Routes.AskPema,
                 "Hướng dẫn" to Routes.Guide,
             ).forEach { (title, route) ->
-                PemaTile(title, "Mở ${title.lowercase()}", "chevron_right", { callbacks.onOpen(route) })
+                tile(title, "Mở ${title.lowercase()}", "chevron_right") { callbacks.onOpen(route) }
             }
-            PemaNotice("Template tương tác • dữ liệu mẫu trong phiên. Chuyển Clinic/Care ở góc trên để duyệt bàn giao.")
-            WebOperationsSection(state.session, callbacks)
+            item { PemaNotice("Template tương tác • dữ liệu mẫu trong phiên. Chuyển Clinic/Care ở góc trên để duyệt bàn giao.") }
+            webOperationsItems(state.session, callbacks)
         }
         else -> {
-            PemaHeading("Chào buổi sáng, BS. Tâm", "Thứ Ba · 22 tháng 09, 2026")
-            PemaHero("Một ngày chăm sóc\ntrọn vẹn hơn.", "${state.patient.updates.size} phản hồi cần theo dõi", "wb_sunny")
-            Spacer(Modifier.height(16.dp))
-            PemaMetrics("12" to "Lịch hôm nay", (if (state.patient.checkedIn) "04" else "03") to "Đang chờ")
-            if (state.financeOn) FinanceSummaryTile(state.financeState, onTap = { callbacks.onOpenFinance(0) })
-            PemaSection("Bắt đầu nhanh")
-            PemaActions(
-                listOf(
-                    PemaAction("Lên đơn", "note_add") { callbacks.onOpen(Routes.QuickOrder) },
-                    PemaAction("Đặt lịch", "calendar_month") { callbacks.onOpen(Routes.Booking) },
-                    PemaAction("Thu ngân", "payments") { callbacks.onOpen(Routes.Cashier) },
-                ),
-            )
-            PemaSection("Lượt khám tiếp theo")
-            PemaTile(
+            item { PemaHeading("Chào buổi sáng, BS. Tâm", "Thứ Ba · 22 tháng 09, 2026") }
+            item {
+                Column {
+                    PemaHero("Một ngày chăm sóc\ntrọn vẹn hơn.", "${state.patient.updates.size} phản hồi cần theo dõi", "wb_sunny")
+                    Spacer(Modifier.height(16.dp))
+                }
+            }
+            item { PemaMetrics("12" to "Lịch hôm nay", (if (state.patient.checkedIn) "04" else "03") to "Đang chờ") }
+            if (state.financeOn) {
+                item(contentType = "tile") { FinanceSummaryTile(state.financeState, onTap = { callbacks.onOpenFinance(0) }) }
+            }
+            item { PemaSection("Bắt đầu nhanh") }
+            item {
+                PemaActions(
+                    listOf(
+                        PemaAction("Lên đơn", "note_add") { callbacks.onOpen(Routes.QuickOrder) },
+                        PemaAction("Đặt lịch", "calendar_month") { callbacks.onOpen(Routes.Booking) },
+                        PemaAction("Thu ngân", "payments") { callbacks.onOpen(Routes.Cashier) },
+                    ),
+                )
+            }
+            item { PemaSection("Lượt khám tiếp theo") }
+            tile(
                 state.profile.name,
                 "${state.patient.appointment} · ${if (state.patient.checkedIn) "Đã check-in" else "Chờ tiếp nhận"} · Tái khám",
                 "person",
-                { callbacks.onOpen(Routes.Patient360) },
-            )
-            PemaTile("Theo dõi sau điều trị", "Xem ảnh và phản hồi từ người bệnh", "inbox", { callbacks.onJumpToTab(3) })
+            ) { callbacks.onOpen(Routes.Patient360) }
+            tile("Theo dõi sau điều trị", "Xem ảnh và phản hồi từ người bệnh", "inbox") { callbacks.onJumpToTab(3) }
         }
     }
 }
 
-@Composable
-private fun StaffBody(state: WorkspaceUiState, selectedTab: Int, callbacks: WorkspaceCallbacks, deps: FeatureDeps?) {
+private fun LazyListScope.staffItems(
+    state: WorkspaceUiState,
+    selectedTab: Int,
+    callbacks: WorkspaceCallbacks,
+    deps: FeatureDeps?,
+    patientSearch: PatientSearchState?,
+) {
     if (selectedTab == 1) {
-        PemaHeading("Hồ sơ phụ trách", state.session.staffName)
-        PatientSearchArea(
-            deps,
+        item { PemaHeading("Hồ sơ phụ trách", state.session.staffName) }
+        patientSearchArea(
+            patientSearch,
             onOpen = {
                 callbacks.onOpen(
                     when (state.session.staffRole) {
@@ -357,36 +388,38 @@ private fun StaffBody(state: WorkspaceUiState, selectedTab: Int, callbacks: Work
 
     when (state.session.staffRole) {
         "accountant" -> {
-            PemaHeading("Đối soát & thu ngân", "Kế toán · không gian riêng")
+            item { PemaHeading("Đối soát & thu ngân", "Kế toán · không gian riêng") }
             if (state.financeOn) {
-                PemaTile("Tài chính & tiền thủ thuật", "Đối soát, phiếu thu, chính sách và chốt kỳ", "account_balance_wallet", { callbacks.onOpenFinance(0) })
+                tile("Tài chính & tiền thủ thuật", "Đối soát, phiếu thu, chính sách và chốt kỳ", "account_balance_wallet") { callbacks.onOpenFinance(0) }
             }
-            PemaTile("Thu ngân theo hồ sơ", state.profile.name, "receipt_long", { callbacks.onOpen(Routes.Cashier) })
-            WebOperationsSection(state.session, callbacks)
+            tile("Thu ngân theo hồ sơ", state.profile.name, "receipt_long") { callbacks.onOpen(Routes.Cashier) }
+            webOperationsItems(state.session, callbacks)
         }
         "doctor" -> {
-            PemaHeading("Lịch & hồ sơ của tôi", state.session.staffName)
-            PemaTile("Hồ sơ đang phụ trách", state.profile.name, "person", { callbacks.onOpen(Routes.Patient360) })
-            PemaTile("Lịch của tôi", state.patient.day.ifEmpty { "Chưa có lịch" }, "calendar_month", { callbacks.onOpen(Routes.AppointmentDetail) })
+            item { PemaHeading("Lịch & hồ sơ của tôi", state.session.staffName) }
+            tile("Hồ sơ đang phụ trách", state.profile.name, "person") { callbacks.onOpen(Routes.Patient360) }
+            tile("Lịch của tôi", state.patient.day.ifEmpty { "Chưa có lịch" }, "calendar_month") { callbacks.onOpen(Routes.AppointmentDetail) }
             if (state.financeOn) {
-                PemaTile("Doanh số của tôi", "Chỉ số cá nhân và tiền thủ thuật", "account_balance_wallet", { callbacks.onOpenFinance(0) })
+                tile("Doanh số của tôi", "Chỉ số cá nhân và tiền thủ thuật", "account_balance_wallet") { callbacks.onOpenFinance(0) }
             }
-            PemaSection("Cập nhật cần bác sĩ xem")
+            item { PemaSection("Cập nhật cần bác sĩ xem") }
             state.reviewProfiles.forEach { profile ->
-                PemaTile(profile.name, "Review chăm sóc · hồ sơ phụ trách", "inbox", {
+                tile(profile.name, "Review chăm sóc · hồ sơ phụ trách", "inbox") {
                     callbacks.onPatientSelected(state.catalog.indexOf(profile.id))
                     callbacks.onOpen(Routes.FollowUpReply)
-                })
+                }
             }
-            WebOperationsSection(state.session, callbacks)
+            webOperationsItems(state.session, callbacks)
         }
         else -> {
-            if (deps != null) {
-                CareQueueWidget(deps, onOpen = { callbacks.onOpen(Routes.CustomerCare) })
-            } else {
-                PemaNotice("CareQueue – đang chuyển đổi")
+            item {
+                if (deps != null) {
+                    CareQueueWidget(deps, onOpen = { callbacks.onOpen(Routes.CustomerCare) })
+                } else {
+                    PemaNotice("CareQueue – đang chuyển đổi")
+                }
             }
-            WebOperationsSection(state.session, callbacks)
+            webOperationsItems(state.session, callbacks)
         }
     }
 }
@@ -395,8 +428,7 @@ private fun StaffBody(state: WorkspaceUiState, selectedTab: Int, callbacks: Work
  * Web-only clinic operations (canvas group I) the current role may open, listed after the
  * Flutter body. Order follows the web sidebar (`clinic.js` nav).
  */
-@Composable
-private fun WebOperationsSection(session: Session, callbacks: WorkspaceCallbacks) {
+private fun LazyListScope.webOperationsItems(session: Session, callbacks: WorkspaceCallbacks) {
     val entries = listOf(
         Routes.OpsDashboard to "space_dashboard",
         Routes.Reception to "how_to_reg",
@@ -411,53 +443,54 @@ private fun WebOperationsSection(session: Session, callbacks: WorkspaceCallbacks
         Routes.AskQuery to "manage_search",
     ).filter { session.allows(it.first) }
     if (entries.isEmpty()) return
-    PemaSection("Vận hành phòng khám")
+    item { PemaSection("Vận hành phòng khám") }
     entries.forEach { (route, icon) ->
         val title = Routes.appBarTitleOf(route)
-        PemaTile(title, "Mở ${title.lowercase()}", icon, { callbacks.onOpen(route) })
+        tile(title, "Mở ${title.lowercase()}", icon) { callbacks.onOpen(route) }
     }
 }
 
-@Composable
-private fun CareBody(state: WorkspaceUiState, selectedTab: Int, callbacks: WorkspaceCallbacks) {
+private fun LazyListScope.careItems(state: WorkspaceUiState, selectedTab: Int, callbacks: WorkspaceCallbacks) {
     val name = state.profile.name
     when (selectedTab) {
         1 -> {
             val journey = state.clinicPatient?.let { patientJourneyTimeline(it) }
-            PemaHeading("Hành trình của bạn", "Mỗi bước chăm sóc đều được ghi nhận")
-            PemaHero(
-                "Phục hồi & chăm sóc da",
-                journey?.heroSubText ?: "${state.patient.sessions}/${state.profile.totalSessions} buổi đã hoàn tất",
-                "spa",
-            )
+            item { PemaHeading("Hành trình của bạn", "Mỗi bước chăm sóc đều được ghi nhận") }
+            item {
+                PemaHero(
+                    "Phục hồi & chăm sóc da",
+                    journey?.heroSubText ?: "${state.patient.sessions}/${state.profile.totalSessions} buổi đã hoàn tất",
+                    "spa",
+                )
+            }
             listOf(
                 "Kế hoạch điều trị" to Routes.TreatmentPlan,
                 "Ảnh tiến triển" to Routes.ProgressPhotos,
                 "Chăm sóc tại nhà" to Routes.HomeCare,
                 "Đơn thuốc & tư vấn" to Routes.Prescriptions,
             ).forEach { (title, route) ->
-                PemaTile(title, "Xem chi tiết và hướng dẫn", "chevron_right", { callbacks.onOpen(route) })
+                tile(title, "Xem chi tiết và hướng dẫn", "chevron_right") { callbacks.onOpen(route) }
             }
             // Canvas K3 (patient-mobile journey): recent updates timeline.
             if (journey != null && journey.updates.isNotEmpty()) {
-                PemaSection(journey.sectionTitle)
-                journey.updates.forEach { update -> PemaTile(update.dateLabel, update.title, update.icon, null) }
+                item { PemaSection(journey.sectionTitle) }
+                journey.updates.forEach { update -> tile(update.dateLabel, update.title, update.icon, null) }
             }
         }
         2 -> {
-            PemaHeading("Tin nhắn", "Đội ngũ Pema luôn đồng hành")
-            PemaNotice("Nếu có dấu hiệu bất thường nặng, hãy liên hệ trực tiếp. Tin nhắn không phải kênh cấp cứu.")
+            item { PemaHeading("Tin nhắn", "Đội ngũ Pema luôn đồng hành") }
+            item { PemaNotice("Nếu có dấu hiệu bất thường nặng, hãy liên hệ trực tiếp. Tin nhắn không phải kênh cấp cứu.") }
             // Clinic messages sent from Patient 360 (canvas J9) as on patient-mobile web.
             state.clinicPatient?.messages?.filter { it.from == "clinic" }?.forEach { message ->
-                PemaTile("Đội ngũ Pema · ${message.date}", message.text, "forum", null)
+                tile("Đội ngũ Pema · ${message.date}", message.text, "forum", null)
             }
-            state.patient.updates.forEach { update -> PemaTile("Bạn", update, "chat_bubble_outline", null) }
-            if (state.patient.response.isNotEmpty()) PemaTile("Đội ngũ Pema", state.patient.response, "verified", null)
-            PemaPrimary("Gửi cập nhật", onClick = { callbacks.onOpen(Routes.SendUpdate) })
+            state.patient.updates.forEach { update -> tile("Bạn", update, "chat_bubble_outline", null) }
+            if (state.patient.response.isNotEmpty()) tile("Đội ngũ Pema", state.patient.response, "verified", null)
+            item { PemaPrimary("Gửi cập nhật", onClick = { callbacks.onOpen(Routes.SendUpdate) }) }
         }
         3 -> {
-            PemaHeading(name, "${state.profile.id} · Hồ sơ minh họa")
-            AccountPicker(state, callbacks)
+            item { PemaHeading(name, "${state.profile.id} · Hồ sơ minh họa") }
+            item { AccountPicker(state, callbacks) }
             listOf(
                 "Đơn thuốc & tư vấn" to Routes.Prescriptions,
                 "Hóa đơn" to Routes.Invoices,
@@ -465,39 +498,43 @@ private fun CareBody(state: WorkspaceUiState, selectedTab: Int, callbacks: Works
                 "Hướng dẫn" to Routes.Guide,
                 Routes.titleOf(Routes.PatientDocuments) to Routes.PatientDocuments,
             ).forEach { (title, route) ->
-                PemaTile(title, "Thông tin của bạn", "chevron_right", { callbacks.onOpen(route) })
+                tile(title, "Thông tin của bạn", "chevron_right") { callbacks.onOpen(route) }
             }
         }
         else -> {
-            PemaHeading("Chào ${name.substringAfterLast(' ')},", "Hôm nay, dành chút thời gian cho làn da")
-            PatientNext(state, callbacks)
-            PemaHero(
-                "Chăm sóc nhẹ nhàng.\nĐồng hành mỗi ngày.",
-                "Liệu trình phục hồi · Buổi ${state.patient.sessions}/${state.profile.totalSessions}",
-                "spa",
-            )
-            Spacer(Modifier.height(16.dp))
-            PemaActions(
-                listOf(
-                    PemaAction("Chăm sóc", "favorite_border") { callbacks.onOpen(Routes.HomeCare) },
-                    PemaAction("Gửi cập nhật", "add_a_photo") { callbacks.onOpen(Routes.SendUpdate) },
-                    PemaAction("Đơn đã duyệt", "receipt_long") { callbacks.onOpen(Routes.Prescriptions) },
-                ),
-            )
-            PemaSection("Lịch hẹn tiếp theo")
-            PemaTile(
+            item { PemaHeading("Chào ${name.substringAfterLast(' ')},", "Hôm nay, dành chút thời gian cho làn da") }
+            item { PatientNext(state, callbacks) }
+            item {
+                Column {
+                    PemaHero(
+                        "Chăm sóc nhẹ nhàng.\nĐồng hành mỗi ngày.",
+                        "Liệu trình phục hồi · Buổi ${state.patient.sessions}/${state.profile.totalSessions}",
+                        "spa",
+                    )
+                    Spacer(Modifier.height(16.dp))
+                }
+            }
+            item {
+                PemaActions(
+                    listOf(
+                        PemaAction("Chăm sóc", "favorite_border") { callbacks.onOpen(Routes.HomeCare) },
+                        PemaAction("Gửi cập nhật", "add_a_photo") { callbacks.onOpen(Routes.SendUpdate) },
+                        PemaAction("Đơn đã duyệt", "receipt_long") { callbacks.onOpen(Routes.Prescriptions) },
+                    ),
+                )
+            }
+            item { PemaSection("Lịch hẹn tiếp theo") }
+            tile(
                 if (state.patient.day.isEmpty()) "Chưa có lịch hẹn" else "${state.patient.appointment} · ${state.patient.day}",
                 "BS. Tâm · Khám da liễu",
                 "calendar_today",
-                { callbacks.onOpen(Routes.PatientAppointments) },
-            )
-            PemaSection("Việc cần làm")
-            PemaTile(
+            ) { callbacks.onOpen(Routes.PatientAppointments) }
+            item { PemaSection("Việc cần làm") }
+            tile(
                 if (state.patient.acknowledged) "Đã đọc hướng dẫn" else "Đọc hướng dẫn sau điều trị",
                 "Bác sĩ đã gửi hướng dẫn cho bạn",
                 if (state.patient.acknowledged) "check_circle_outline" else "favorite_border",
-                { callbacks.onOpen(Routes.HomeCare) },
-            )
+            ) { callbacks.onOpen(Routes.HomeCare) }
         }
     }
 }
@@ -567,14 +604,17 @@ private fun FinanceSummaryTile(financeState: FinanceState, onTap: () -> Unit) {
     PemaTile("Tài chính phòng khám", subtitle, "account_balance_wallet", onTap)
 }
 
-@Composable
-private fun PatientSearchArea(deps: FeatureDeps?, onOpen: () -> Unit) {
-    if (deps != null) {
-        PatientSearchWidget(deps, onOpen = onOpen)
+private fun LazyListScope.patientSearchArea(search: PatientSearchState?, onOpen: () -> Unit) {
+    if (search != null) {
+        patientSearchItems(search, onOpen)
     } else {
-        PemaNotice("PatientSearch – đang chuyển đổi")
+        item { PemaNotice("PatientSearch ? ?ang chuy?n ??i") }
     }
 }
+
+/** Tabs that list sample profiles: owner "H? s?", staff "H? s? m?u". */
+private fun showsPatientSearch(session: Session, tab: Int): Boolean =
+    !session.careMode && tab == if (session.staffRole == "owner") 2 else 1
 
 @Composable
 private fun AccountSheetOverlay(onSelect: (WorkspaceAccount) -> Unit) {

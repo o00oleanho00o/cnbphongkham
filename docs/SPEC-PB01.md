@@ -163,7 +163,7 @@ Các AC-01…06 của prototype web không phải tuyên bố Flutter đã đạ
 
 NFR vòng duyệt: dùng font/logo local, SafeArea và scroll; kiểm tra 360/390/430/768 logical pixels. Test hiện tại đều cao 844; các khung review 360×800 và 768×1024 là lựa chọn duyệt thủ công, chưa có bằng chứng test tương ứng. Reload xóa state là hành vi hiện tại, không phải cam kết lưu dữ liệu. Bàn phím, text scaling, screen reader, gesture và thiết bị thật là acceptance còn mở.
 
-Ma trận trạng thái và checklist kiểm tra: [22_NATIVE_PARITY_AND_VALIDATION](22_NATIVE_PARITY_AND_VALIDATION.md).
+Trạng thái và kiểm thử app mobile: [pema-kmp/README.md](../pema-kmp/README.md).
 
 ## Ngoại lệ của prototype web
 

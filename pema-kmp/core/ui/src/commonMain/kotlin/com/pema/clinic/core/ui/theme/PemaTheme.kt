@@ -14,10 +14,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.pema.clinic.core.ui.widgets.LocalPemaIconMeasurer
 import com.pema.clinic.core.ui.generated.resources.Res
 import com.pema.clinic.core.ui.generated.resources.be_vietnam_pro_bold
 import com.pema.clinic.core.ui.generated.resources.be_vietnam_pro_medium
@@ -180,9 +182,11 @@ fun rememberPemaFonts(): PemaFonts = PemaFonts(
 fun PemaTheme(content: @Composable () -> Unit) {
     val fonts = rememberPemaFonts()
     val typography = pemaTypography(fonts.text)
+    val iconMeasurer = rememberTextMeasurer(cacheSize = 128)
     MaterialTheme(colorScheme = PemaColorScheme, typography = typography) {
         CompositionLocalProvider(
             LocalPemaFonts provides fonts,
+            LocalPemaIconMeasurer provides iconMeasurer,
             LocalTextStyle provides typography.bodyMedium,
             LocalContentColor provides PemaColors.Ink,
             content = content,

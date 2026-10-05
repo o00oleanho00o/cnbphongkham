@@ -67,7 +67,7 @@ Clinic Web lấy viewport 1920×1020 CSS pixels ở zoom 100% làm chuẩn. Hư�
 
 ## Bổ sung Flutter template — 22/09/2026
 
-Baseline native hiện tại: Be Vietnam Pro local, logo Pema, primary #0B4F94, navy #083A6E, sky #3CAAE5, ink #17324D, muted #5D7184, paper #F4F8FB; card 18, hero 24, spacing 4/8/12/16/20/24. Các mô tả Manrope/teal cũ trong lịch sử không phải token native hiện hành. Clinic 5 tab, Care 4 tab; tác vụ dài ở màn con, sheet cho quyết định ngắn. [Mapping và checklist duyệt](NATIVE-TEMPLATE.md), [coverage viewport thực tế](22_NATIVE_PARITY_AND_VALIDATION.md).
+Baseline native hiện tại: Be Vietnam Pro local, logo Pema, primary #0B4F94, navy #083A6E, sky #3CAAE5, ink #17324D, muted #5D7184, paper #F4F8FB; card 18, hero 24, spacing 4/8/12/16/20/24. Các mô tả Manrope/teal cũ trong lịch sử không phải token native hiện hành. Clinic 5 tab, Care 4 tab; tác vụ dài ở màn con, sheet cho quyết định ngắn. [Spec từng màn](../design-specs/README.md), [trạng thái app mobile](../pema-kmp/README.md).
 
 
 ## Đóng gói phương pháp thiết kế — 22/09/2026

@@ -8,7 +8,7 @@ kotlin {
             implementation(project(":core:hardware"))
             implementation(project(":core:ui"))
             implementation(project(":shared"))
-            // Workspace tabs embed CareQueue (care) and PatientSearch (patients), as in Flutter.
+            // Workspace tabs embed CareQueue (care) and PatientSearch (patients).
             implementation(project(":feature:care"))
             implementation(project(":feature:patients"))
         }
