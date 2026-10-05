@@ -90,6 +90,10 @@ Source: U8's parity table (§4 "fix needed" rows) and open-items list. Owner ans
 | 6 | Delete superseded `prototype/*` and `finance_server.py`? | **No, keep them.** They stay read-only reference material (package W still generates screenshots and specs from them). | — (no action; already read-only by HARD RULES) |
 | 7 | Token/room-handoff/"Hỏi Pema"/photo-retention decisions? | **Left open** ("tạm để suy nghĩ"). | — (stays open, §6) |
 
+U11 as built: `Role.ACCOUNTANT`, permission `finance_period.close` (accountant, manager, owner), migration
+`u11_0010_accountant_role` (role is `text` with CHECK constraints, not a native enum), `order.approve` still doctor and
+owner only; details in the U11 report and `docs/ARCH-PB01.md` (authorization matrix).
+
 New steps (recipes `recipes/U/10-U9-*.md` … `13-U12-*.md`), order: `U8 → (U9 ‖ U10 ‖ U11 ‖ U12)`, merged one at a time
 by the director (same shared-file reasons as U2/U3/U4/U7). U11 changes a system invariant (`roles.py` docstring says
 "the six roles are fixed" — this becomes seven) and touches `docs/ARCH-PB01.md`'s permission table (allowed: it is a

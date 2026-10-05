@@ -108,6 +108,7 @@ def test_the_assignable_roles_follow_the_permission_matrix() -> None:
     """vai trò được giao việc = vai trò giữ quyền trả lời hội thoại hoặc xử lý việc CSKH"""
     assert {Role.OWNER, Role.MANAGER, Role.DOCTOR, Role.CS_STAFF} == ASSIGNABLE_ROLES
     assert Role.RECEPTION not in ASSIGNABLE_ROLES
+    assert Role.ACCOUNTANT not in ASSIGNABLE_ROLES
     assert Role.PATIENT not in ASSIGNABLE_ROLES
 
 

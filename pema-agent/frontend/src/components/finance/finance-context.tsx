@@ -9,8 +9,10 @@ import type { FinanceScope } from "@/lib/finance/finance-view";
 export type FinanceContextValue = {
   month: string;
   scope: FinanceScope;
-  /** `finance.write` and the clinic projection: records, approves, voids, closes and pays. */
+  /** `finance.write` and the clinic projection: records, approves, voids and confirms the payout. */
   canWrite: boolean;
+  /** `finance_period.close` and the clinic projection: closes a month (the accountant; owner and manager override). */
+  canClose: boolean;
   /** `finance.collect`: raises the invoice of an order and records receipts. */
   canCollect: boolean;
   isOwner: boolean;

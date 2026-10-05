@@ -1216,7 +1216,7 @@ export interface paths {
         put?: never;
         /**
          * Owner creates a staff account
-         * @description Owner only (`admin.users`). Role is one of owner, manager, doctor, cs_staff, reception (never `patient`). The e-mail is the sign-in name, unique per clinic (409 when taken). The initial password has the same 8-character floor as a password change. Limited to 5 creations per minute per owner. The audit entry never holds the password, the name or the e-mail.
+         * @description Owner only (`admin.users`). Role is one of owner, manager, doctor, cs_staff, reception, accountant (never `patient`). The e-mail is the sign-in name, unique per clinic (409 when taken). The initial password has the same 8-character floor as a password change. Limited to 5 creations per minute per owner. The audit entry never holds the password, the name or the e-mail.
          */
         post: operations["admin_users_create_user"];
         delete?: never;
@@ -7048,7 +7048,7 @@ export interface components {
          * Permission
          * @enum {string}
          */
-        Permission: "patient.read" | "patient.write" | "patient.read_360" | "consent.read" | "consent.write" | "appointment.read" | "appointment.write" | "appointment.check_in" | "session.write" | "session.read" | "media.read" | "media.write" | "order.read" | "order.write" | "order.approve" | "finance.read" | "finance.read_own" | "finance.write" | "finance.collect" | "finance.notifications" | "crm.task.read" | "crm.task.resolve" | "crm.activity.write" | "conversation.read" | "conversation.reply" | "review.read" | "review.decide" | "review.decide_clinical" | "kb.read" | "kb.manage" | "admin.rules" | "admin.channels" | "admin.kill_switch" | "admin.logs" | "admin.accounts" | "admin.users.read" | "admin.users" | "admin.agents" | "admin.model" | "admin.tools" | "admin.schedules" | "admin.mcp" | "admin.usage" | "admin.policy" | "care.read" | "care.act" | "care.admin" | "care.matrix" | "care.approve" | "agent.submit";
+        Permission: "patient.read" | "patient.write" | "patient.read_360" | "consent.read" | "consent.write" | "appointment.read" | "appointment.write" | "appointment.check_in" | "session.write" | "session.read" | "media.read" | "media.write" | "order.read" | "order.write" | "order.approve" | "finance.read" | "finance.read_own" | "finance.write" | "finance_period.close" | "finance.collect" | "finance.notifications" | "crm.task.read" | "crm.task.resolve" | "crm.activity.write" | "conversation.read" | "conversation.reply" | "review.read" | "review.decide" | "review.decide_clinical" | "kb.read" | "kb.manage" | "admin.rules" | "admin.channels" | "admin.kill_switch" | "admin.logs" | "admin.accounts" | "admin.users.read" | "admin.users" | "admin.agents" | "admin.model" | "admin.tools" | "admin.schedules" | "admin.mcp" | "admin.usage" | "admin.policy" | "care.read" | "care.act" | "care.admin" | "care.matrix" | "care.approve" | "agent.submit";
         /** PermissionsResponse */
         PermissionsResponse: {
             /** Permissions */
@@ -7484,7 +7484,7 @@ export interface components {
          * Role
          * @enum {string}
          */
-        Role: "owner" | "manager" | "doctor" | "cs_staff" | "reception" | "patient";
+        Role: "owner" | "manager" | "doctor" | "cs_staff" | "reception" | "accountant" | "patient";
         /** RoomBlockCreate */
         RoomBlockCreate: {
             /**

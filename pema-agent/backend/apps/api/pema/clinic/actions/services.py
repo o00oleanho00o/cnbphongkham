@@ -16,7 +16,9 @@ Forced deviations from the JavaScript:
 
 Permissions (ARCH-PB01, "Quản trị catalog/role": manager, owner): everybody who may see the schedule reads the
 list (``appointment.read``); changes need ``admin.rules``. The commission ``rate_bp`` and ``basis`` are
-payroll terms and are returned only to ``admin.rules`` holders.
+payroll terms and are returned only to ``admin.rules`` holders and to ``finance.write`` holders (the accountant,
+package U step U11: it records and approves the performed procedures with those rates, as in the old web, but
+cannot change them; the list is also open to ``finance.write`` for the entry form of "Tiền thủ thuật").
 """
 
 from __future__ import annotations
@@ -45,11 +47,11 @@ from pema_contracts.catalog import (
 from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.roles import Permission
 
-READ_PERMISSIONS = (Permission.APPOINTMENT_READ, Permission.ADMIN_RULES)
+READ_PERMISSIONS = (Permission.APPOINTMENT_READ, Permission.ADMIN_RULES, Permission.FINANCE_WRITE)
 
 
 def _payroll_visible(ctx: ActionContext) -> bool:
-    return has_permission(ctx, Permission.ADMIN_RULES)
+    return has_permission(ctx, Permission.ADMIN_RULES) or has_permission(ctx, Permission.FINANCE_WRITE)
 
 
 def terms_out(row: ServiceVersion, *, payroll: bool) -> ServiceTermsOut:
