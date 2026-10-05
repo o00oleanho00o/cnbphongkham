@@ -11,6 +11,8 @@ One Next.js app (App Router, TypeScript, Tailwind v4, Vietnamese UI, mobile-firs
 
 - **Cấu hình danh mục** (package U, step U4): `/services` ("Danh mục dịch vụ": price, minutes of treatment and room preparation, rooms, the history of every price and rate version, and the follow-up protocols the CRM rules read), `/resources` ("Bác sĩ & phòng": doctors with the shift of the day from the care staff profile and the load of the day, rooms, room blocks), `/studio` ("Ảnh trước / sau": the before/after photo studio of one patient, kept in `?patient=&view=`). Everybody who sees the schedule reads the catalog and the resources; the owner and the manager (`admin.rules`) change them, and only they see the commission rate and basis (`rate_bp`, `basis` are `null` for the other roles). A change of price, rate, basis, duration or buffer starts the next terms version on the backend (`/api/v1/services`, `/protocols`, `/resources`, `/rooms`, `/room-blocks`, `/studio/{patient_id}`); the pure rules of the three screens are in `lib/catalog/catalog-view.ts`. The studio shows illustrative placeholders until the Patient 360 step adds the photo store.
 
+- **Thu ngân và đơn thuốc** (package U, step U5): `/cashier` ("Thu ngân": the quick order dialog over the clinic's 115-row product catalog, the order history, `?patient=` opens it from Patient 360), `/orders/[id]` ("Tách đơn": the two A5 sheets, Đơn thuốc and Phiếu tư vấn, approval by the responsible doctor) and `/orders/[id]/print` (A5 print, a draft prints nothing). Reception, manager, doctor and owner make drafts (`order.write`); the doctor of the order or the owner approves (`order.approve`); a saved order keeps the name, unit and price it was saved with, an approved order never changes, and an order with money received cannot be edited. The catalog is loaded once by `pema catalog import <json>` (backend), never read from the prototype at run time. The Kế hoạch tab of Patient 360 gets a card with the patient's orders and the staff preview of what the app will show. Invoices and payment are step U6. The pure rules of the screens are in `lib/orders/order-view.ts`; the A5 look is `components/orders/order-sheet.css` (named page `order-a5`).
+
 It is UI only. Every business rule, permission and audit is the backend's (`backend/apps/api`). The menu is filtered by the permission list of `GET /api/v1/me`, which is a convenience, never a control.
 
 ## Run
@@ -64,6 +66,7 @@ src/app/(admin)/admin/<area>/page.tsx  AI administration, one route per page of 
 src/components/admin/<area>/          ported components (paths fixed by docs/PORT-MAP.md)
 src/components/ops/                   clinic operation components (new, no zalo-agent original)
 src/components/catalog/, src/lib/catalog/   service catalog, protocols, doctors and rooms, photo studio (U4)
+src/components/orders/, src/lib/orders/     quick order dialog, A5 sheets, Patient 360 orders card (U5)
 src/lib/admin/<area>/                 ported pure logic and its tests (vitest, same titles as the originals)
 src/lib/api/                          client.ts (typed openapi-fetch + ApiError), schema.d.ts (generated)
 src/lib/session/, src/lib/nav.tsx     session context, menu and permission filter

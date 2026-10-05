@@ -7,6 +7,7 @@ from pema.clinic.models.catalog import Protocol, Room, RoomBlock, Service, Servi
 from pema.clinic.models.clinical import ConsultNote, Media
 from pema.clinic.models.crm import CrmActivity, CrmRule, CrmTask, MessageTemplate
 from pema.clinic.models.inbox import ChannelIdentity, Conversation, Message, ReviewItem
+from pema.clinic.models.orders import CatalogImport, Order, OrderItem, Product
 from pema.clinic.models.scheduling import Appointment
 from pema.clinic.models.tenant import AuthSession, Clinic, UserAccount
 
@@ -16,6 +17,7 @@ __all__ = [
     "AuditLog",
     "AuthSession",
     "Base",
+    "CatalogImport",
     "ChannelIdentity",
     "Clinic",
     "Consent",
@@ -28,7 +30,10 @@ __all__ = [
     "Media",
     "Message",
     "MessageTemplate",
+    "Order",
+    "OrderItem",
     "Patient",
+    "Product",
     "Protocol",
     "ReviewItem",
     "Room",

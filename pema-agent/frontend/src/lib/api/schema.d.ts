@@ -1769,6 +1769,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/catalog/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search the product catalog */
+        get: operations["catalog_list_products"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Counts and provenance of the catalog */
+        get: operations["catalog_catalog_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/consult-notes/{note_id}/approve": {
         parameters: {
             query?: never;
@@ -2157,6 +2191,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Orders, newest first */
+        get: operations["orders_list_orders"];
+        put?: never;
+        /** Create a draft order from catalog products */
+        post: operations["orders_create_draft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One order with its lines */
+        get: operations["orders_get_order"];
+        /** Save a draft (the lines replace the previous ones); an approved order is immutable */
+        put: operations["orders_update_draft"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The responsible doctor approves the order so it can be printed */
+        post: operations["orders_approve_order"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}/print-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The order and its lines split into Đơn thuốc and Phiếu tư vấn */
+        get: operations["orders_print_data"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/patients": {
         parameters: {
             query?: never;
@@ -2202,6 +2306,23 @@ export interface paths {
         };
         /** Patient 360 read model (original records stay the source of truth) */
         get: operations["patients_get_patient_360"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/approved-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Approved orders as the patient app groups them (staff preview) */
+        get: operations["orders_approved_orders"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3147,6 +3268,34 @@ export interface components {
             version: number;
         };
         /**
+         * ApprovedOrderGroupOut
+         * @description One approved order as the patient app shows it (staff preview): lines grouped by sheet.
+         */
+        ApprovedOrderGroupOut: {
+            /** Approved At */
+            approved_at?: string | null;
+            /** Consultation */
+            consultation: components["schemas"]["OrderItemOut"][];
+            /** Diagnosis */
+            diagnosis: string;
+            /** Doctor Name */
+            doctor_name: string;
+            /** Note */
+            note: string;
+            /**
+             * Order Date
+             * Format: date
+             */
+            order_date: string;
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /** Prescription */
+            prescription: components["schemas"]["OrderItemOut"][];
+        };
+        /**
          * AssignableStaffOut
          * @description A colleague a task or a conversation can be handed to (``GET /staff/assignable``, every signed-in staff
          *     member may read it). The minimum a picker needs: no e-mail, phone, last sign-in or lock state (locked
@@ -3441,6 +3590,33 @@ export interface components {
          * @enum {string}
          */
         CareUrgency: "normal" | "urgent";
+        /**
+         * CatalogSummaryOut
+         * @description The line above the product list ("115 sản phẩm · 30 thuốc · 78 sản phẩm tư vấn · 7 cần phân loại")
+         *     and the provenance of the data.
+         */
+        CatalogSummaryOut: {
+            /** Consultation */
+            consultation: number;
+            /** Imported At */
+            imported_at?: string | null;
+            /** Prescription */
+            prescription: number;
+            /**
+             * Sha256
+             * @description SHA-256 of the canonical rows that were imported.
+             */
+            sha256: string | null;
+            /**
+             * Source Name
+             * @description File the catalog was imported from.
+             */
+            source_name: string | null;
+            /** Total */
+            total: number;
+            /** Unresolved */
+            unresolved: number;
+        };
         /**
          * ChangePasswordRequest
          * @description A signed-in user changes their OWN password (``POST /auth/password``). The floor of the new password
@@ -5427,6 +5603,274 @@ export interface components {
             summary: string;
             urgency: components["schemas"]["CareUrgency"];
         };
+        /** OrderApprove */
+        OrderApprove: {
+            /**
+             * Version
+             * @description The version the doctor reviewed; a newer one answers 409.
+             */
+            version: number;
+        };
+        /** OrderCreate */
+        OrderCreate: {
+            /**
+             * Diagnosis
+             * @default
+             */
+            diagnosis: string;
+            /**
+             * Doctor Id
+             * @description Omitted: the doctor of the patient.
+             */
+            doctor_id?: string | null;
+            /** Items */
+            items: components["schemas"]["OrderItemIn"][];
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+        };
+        /**
+         * OrderItemIn
+         * @description One line the cashier chose. Name, unit and price are NOT sent: they come from the catalog (or from the
+         *     snapshot the draft already holds).
+         */
+        OrderItemIn: {
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Product Code */
+            product_code: string;
+            /** Quantity */
+            quantity: number;
+            /** @description Omitted: the catalog route. */
+            route?: components["schemas"]["OrderRoute"] | null;
+            /**
+             * Route Reason
+             * @default
+             */
+            route_reason: string;
+            /**
+             * Usage
+             * @default
+             */
+            usage: string;
+        };
+        /** OrderItemOut */
+        OrderItemOut: {
+            catalog_route: components["schemas"]["OrderRoute"];
+            /** Line No */
+            line_no: number;
+            /** Name */
+            name: string;
+            /** Note */
+            note: string;
+            /** Product Code */
+            product_code: string;
+            /** Quantity */
+            quantity: number;
+            route: components["schemas"]["OrderRoute"];
+            /** Route Reason */
+            route_reason: string;
+            /** Source Type */
+            source_type: string;
+            /** Unit */
+            unit: string;
+            /** Unit Price Vnd */
+            unit_price_vnd: number;
+            /** Usage */
+            usage: string;
+        };
+        /** OrderOut */
+        OrderOut: {
+            /**
+             * Created At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            created_at: string;
+            /** Diagnosis */
+            diagnosis: string;
+            /**
+             * Doctor Id
+             * Format: uuid
+             */
+            doctor_id: string;
+            /** Doctor Name */
+            doctor_name: string;
+            /**
+             * Editable
+             * @description A draft with nothing received: it may still be edited.
+             */
+            editable: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Invoice Id */
+            invoice_id?: string | null;
+            /** Item Count */
+            item_count: number;
+            /** Items */
+            items: components["schemas"]["OrderItemOut"][];
+            /** Note */
+            note: string;
+            /**
+             * Order Date
+             * Format: date
+             */
+            order_date: string;
+            /** Paid */
+            paid: boolean;
+            /** Patient Code */
+            patient_code: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** Patient Name */
+            patient_name: string;
+            /**
+             * Ready To Approve
+             * @description Every line is classified with its usage, the diagnosis is there and something prints.
+             */
+            ready_to_approve: boolean;
+            /** Received Vnd */
+            received_vnd: number;
+            /** Reviewed At */
+            reviewed_at?: string | null;
+            /** Reviewed By Name */
+            reviewed_by_name?: string | null;
+            status: components["schemas"]["OrderStatus"];
+            /** Total Vnd */
+            total_vnd: number;
+            /** Unresolved Count */
+            unresolved_count: number;
+            /** Version */
+            version: number;
+        };
+        /** OrderPatientOut */
+        OrderPatientOut: {
+            /** Age */
+            age?: number | null;
+            /** Code */
+            code: string;
+            /** Full Name */
+            full_name: string;
+            /** @default unknown */
+            gender: components["schemas"]["Gender"];
+        };
+        /**
+         * OrderPrintOut
+         * @description What the review page and the A5 sheets draw: the order and its lines split by route.
+         */
+        OrderPrintOut: {
+            /** Consultation */
+            consultation: components["schemas"]["OrderItemOut"][];
+            /** Excluded */
+            excluded: components["schemas"]["OrderItemOut"][];
+            order: components["schemas"]["OrderOut"];
+            patient: components["schemas"]["OrderPatientOut"];
+            /** Prescription */
+            prescription: components["schemas"]["OrderItemOut"][];
+            /**
+             * Printable
+             * @description Approved, every line classified and complete: the sheets may be printed.
+             */
+            printable: boolean;
+            /** Unresolved */
+            unresolved: components["schemas"]["OrderItemOut"][];
+        };
+        /**
+         * OrderRoute
+         * @enum {string}
+         */
+        OrderRoute: "PRESCRIPTION" | "CONSULTATION" | "NONE" | "UNRESOLVED";
+        /**
+         * OrderStatus
+         * @enum {string}
+         */
+        OrderStatus: "draft" | "approved";
+        /** OrderSummaryOut */
+        OrderSummaryOut: {
+            /**
+             * Created At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            created_at: string;
+            /**
+             * Doctor Id
+             * Format: uuid
+             */
+            doctor_id: string;
+            /** Doctor Name */
+            doctor_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Item Count */
+            item_count: number;
+            /**
+             * Order Date
+             * Format: date
+             */
+            order_date: string;
+            /** Patient Code */
+            patient_code: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** Patient Name */
+            patient_name: string;
+            /** Reviewed At */
+            reviewed_at?: string | null;
+            /** Reviewed By Name */
+            reviewed_by_name?: string | null;
+            status: components["schemas"]["OrderStatus"];
+            /** Total Vnd */
+            total_vnd: number;
+            /** Version */
+            version: number;
+        };
+        /**
+         * OrderUpdate
+         * @description A draft is saved as a whole: the lines replace the previous ones.
+         */
+        OrderUpdate: {
+            /**
+             * Diagnosis
+             * @default
+             */
+            diagnosis: string;
+            /** Doctor Id */
+            doctor_id?: string | null;
+            /** Items */
+            items: components["schemas"]["OrderItemIn"][];
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Version */
+            version: number;
+        };
         /**
          * OutboundMode
          * @enum {string}
@@ -5528,10 +5972,32 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[OrderSummaryOut] */
+        Page_OrderSummaryOut_: {
+            /** Items */
+            items: components["schemas"]["OrderSummaryOut"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** Page[PatientOut] */
         Page_PatientOut_: {
             /** Items */
             items: components["schemas"]["PatientOut"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[ProductOut] */
+        Page_ProductOut_: {
+            /** Items */
+            items: components["schemas"]["ProductOut"][];
             /** Limit */
             limit: number;
             /** Offset */
@@ -5766,7 +6232,7 @@ export interface components {
          * Permission
          * @enum {string}
          */
-        Permission: "patient.read" | "patient.write" | "patient.read_360" | "consent.read" | "consent.write" | "appointment.read" | "appointment.write" | "appointment.check_in" | "session.write" | "session.read" | "media.read" | "media.write" | "crm.task.read" | "crm.task.resolve" | "crm.activity.write" | "conversation.read" | "conversation.reply" | "review.read" | "review.decide" | "review.decide_clinical" | "kb.read" | "kb.manage" | "admin.rules" | "admin.channels" | "admin.kill_switch" | "admin.logs" | "admin.accounts" | "admin.users.read" | "admin.users" | "admin.agents" | "admin.model" | "admin.tools" | "admin.schedules" | "admin.mcp" | "admin.usage" | "admin.policy" | "care.read" | "care.act" | "care.admin" | "care.matrix" | "care.approve" | "agent.submit";
+        Permission: "patient.read" | "patient.write" | "patient.read_360" | "consent.read" | "consent.write" | "appointment.read" | "appointment.write" | "appointment.check_in" | "session.write" | "session.read" | "media.read" | "media.write" | "order.read" | "order.write" | "order.approve" | "crm.task.read" | "crm.task.resolve" | "crm.activity.write" | "conversation.read" | "conversation.reply" | "review.read" | "review.decide" | "review.decide_clinical" | "kb.read" | "kb.manage" | "admin.rules" | "admin.channels" | "admin.kill_switch" | "admin.logs" | "admin.accounts" | "admin.users.read" | "admin.users" | "admin.agents" | "admin.model" | "admin.tools" | "admin.schedules" | "admin.mcp" | "admin.usage" | "admin.policy" | "care.read" | "care.act" | "care.admin" | "care.matrix" | "care.approve" | "agent.submit";
         /** PermissionsResponse */
         PermissionsResponse: {
             /** Permissions */
@@ -5887,6 +6353,36 @@ export interface components {
          * @enum {string}
          */
         ProactiveCapScope: "account_thread" | "patient_account";
+        /** ProductOut */
+        ProductOut: {
+            /** Active */
+            active: boolean;
+            /**
+             * Code
+             * @description The Excel code, e.g. 'H002'. It is the product id.
+             */
+            code: string;
+            /** Name */
+            name: string;
+            /**
+             * Price Vnd
+             * @description Price after tax.
+             */
+            price_vnd: number;
+            /** @description Where the catalog sends the product (the prototype's outputType). */
+            route: components["schemas"]["OrderRoute"];
+            /** Row Number */
+            row_number: number;
+            /**
+             * Source Type
+             * @description The Excel type: Thuốc, Mỹ Phẩm, TPCN or empty.
+             */
+            source_type: string;
+            /** Unit */
+            unit: string;
+            /** Vat */
+            vat: number;
+        };
         /** ProtocolCreate */
         ProtocolCreate: {
             /**
@@ -18814,6 +19310,179 @@ export interface operations {
             };
         };
     };
+    catalog_list_products: {
+        parameters: {
+            query?: {
+                /** @description Code, name or type; accents are ignored. */
+                q?: string;
+                /** @description Page size. */
+                limit?: number;
+                /** @description Rows to skip. */
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ProductOut_"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    catalog_catalog_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogSummaryOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     patient_care_approve_consult_note: {
         parameters: {
             query?: never;
@@ -21171,6 +21840,534 @@ export interface operations {
             };
         };
     };
+    orders_list_orders: {
+        parameters: {
+            query?: {
+                patient_id?: string | null;
+                status?: components["schemas"]["OrderStatus"] | null;
+                /** @description Page size. */
+                limit?: number;
+                /** @description Rows to skip. */
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_OrderSummaryOut_"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    orders_create_draft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    orders_get_order: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    orders_update_draft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    orders_approve_order: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderApprove"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    orders_print_data: {
+        parameters: {
+            query?: {
+                /** @description Refuse a draft or an incomplete order (the strict print check). */
+                require_approved?: boolean;
+            };
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderPrintOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     patients_list_patients: {
         parameters: {
             query?: {
@@ -21542,6 +22739,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Patient360"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    orders_approved_orders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovedOrderGroupOut"][];
                 };
             };
             /** @description Not authenticated. */

@@ -106,7 +106,7 @@ make up-ollama       # thêm container Ollama có GPU NVIDIA (hoặc cài Ollama
 make down
 ```
 
-Không có profile `worker` thì API nhận webhook và xếp lượt nhưng không ai chạy lượt. Tham số mô hình (`LLM_BASE_URL`, `LLM_MODEL=pema-chat`) và tuỳ chọn mạng (`PEMA_*_BIND`, chỉ loopback theo mặc định) ở `infra/.env.example`. Dữ liệu mẫu hư cấu cho phòng khám của bản cài: `uv run python -m pema.clinic.actions.seed_demo` (xem docstring của module; không có mật khẩu mặc định trong repo). Bot Zalo, QR cho tài khoản cá nhân, persona và KB cấu hình ở trang quản trị AI của FE.
+Không có profile `worker` thì API nhận webhook và xếp lượt nhưng không ai chạy lượt. Tham số mô hình (`LLM_BASE_URL`, `LLM_MODEL=pema-chat`) và tuỳ chọn mạng (`PEMA_*_BIND`, chỉ loopback theo mặc định) ở `infra/.env.example`. Dữ liệu mẫu hư cấu cho phòng khám của bản cài: `uv run python -m pema.clinic.actions.seed_demo` (xem docstring của module; không có mật khẩu mặc định trong repo). Danh mục sản phẩm của phòng khám (115 dòng, dữ liệu thật, không phải dữ liệu mẫu) nạp một lần bằng `uv run pema catalog import <đường dẫn>/product-catalog.json [--source-name danhsach.xlsx] [--source-sha256 <SHA-256 của file Excel>]` (idempotent: chạy lại cùng file không đổi gì); ứng dụng không đọc thư mục `prototype/` khi chạy. Bot Zalo, QR cho tài khoản cá nhân, persona và KB cấu hình ở trang quản trị AI của FE.
 
 Ảnh Docker của cầu nối (`bridge` profile) và của FE đã dựng thật và khởi động thử (không cần Zalo thật); cầu nối chạy bằng tsx, không có bước build, và chỉ lắng nghe trong mạng compose.
 

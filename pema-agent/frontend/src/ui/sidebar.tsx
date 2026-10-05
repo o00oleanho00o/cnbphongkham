@@ -14,7 +14,7 @@ import {
   IconSun,
 } from "@/components/admin/shared/dashboard-icons";
 import { useTheme } from "@/lib/admin/shared/use-theme";
-import { isActivePath, type NavSection } from "@/lib/nav";
+import { isItemActive, type NavSection } from "@/lib/nav";
 import { ROLE_LABEL, type UserSummary } from "@/lib/session/session-context";
 
 import { cx } from "./classnames";
@@ -55,13 +55,13 @@ export function Sidebar({
         <button
           aria-label="Đóng menu"
           onClick={onCloseMobile}
-          className="fixed inset-0 z-40 bg-ink/30 backdrop-blur-[2px] lg:hidden"
+          className="fixed inset-0 z-40 bg-ink/30 backdrop-blur-[2px] lg:hidden print:hidden"
         />
       )}
 
       <aside
         className={cx(
-          "fixed inset-y-0 left-0 z-(--z-drawer) flex w-72 flex-col border-r border-line bg-surface transition-transform duration-200 lg:static lg:z-auto lg:h-screen lg:w-(--layout-sidebar-w) lg:shrink-0 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-(--z-drawer) flex w-72 flex-col border-r border-line bg-surface transition-transform duration-200 lg:static lg:z-auto lg:h-screen lg:w-(--layout-sidebar-w) lg:shrink-0 lg:translate-x-0 print:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
         aria-label="Điều hướng chính"
@@ -110,7 +110,7 @@ export function Sidebar({
                     </span>
                   );
                 }
-                const active = isActivePath(pathname, item.to);
+                const active = isItemActive(pathname, item);
                 return (
                   <GuardedLink
                     key={item.to}

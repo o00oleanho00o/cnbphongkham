@@ -45,7 +45,7 @@ export function TopBar({
   }
 
   return (
-    <header className="sticky top-0 z-(--z-topbar) flex h-(--layout-topbar-h) shrink-0 items-center justify-between gap-3 border-b border-line bg-surface/90 px-4 backdrop-blur lg:px-(--layout-content-pad-x) wide:h-(--layout-topbar-h-wide)">
+    <header className="sticky top-0 z-(--z-topbar) flex h-(--layout-topbar-h) shrink-0 items-center justify-between gap-3 border-b border-line bg-surface/90 px-4 backdrop-blur lg:px-(--layout-content-pad-x) wide:h-(--layout-topbar-h-wide) print:hidden">
       <div className="flex min-w-0 items-center gap-3">
         <button
           onClick={onOpenMenu}

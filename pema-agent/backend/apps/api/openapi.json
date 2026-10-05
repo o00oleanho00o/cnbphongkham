@@ -1109,6 +1109,75 @@
         "title": "AppointmentUpdate",
         "type": "object"
       },
+      "ApprovedOrderGroupOut": {
+        "additionalProperties": false,
+        "description": "One approved order as the patient app shows it (staff preview): lines grouped by sheet.",
+        "properties": {
+          "approved_at": {
+            "anyOf": [
+              {
+                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+                "examples": [
+                  "2026-09-20T09:00:00+07:00"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "consultation": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemOut"
+            },
+            "title": "Consultation",
+            "type": "array"
+          },
+          "diagnosis": {
+            "title": "Diagnosis",
+            "type": "string"
+          },
+          "doctor_name": {
+            "title": "Doctor Name",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "order_date": {
+            "format": "date",
+            "title": "Order Date",
+            "type": "string"
+          },
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          },
+          "prescription": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemOut"
+            },
+            "title": "Prescription",
+            "type": "array"
+          }
+        },
+        "required": [
+          "order_id",
+          "order_date",
+          "doctor_name",
+          "diagnosis",
+          "note",
+          "prescription",
+          "consultation"
+        ],
+        "title": "ApprovedOrderGroupOut",
+        "type": "object"
+      },
       "AssignableStaffOut": {
         "additionalProperties": false,
         "description": "A colleague a task or a conversation can be handed to (``GET /staff/assignable``, every signed-in staff\nmember may read it). The minimum a picker needs: no e-mail, phone, last sign-in or lock state (locked\naccounts are never listed). ``role`` is only one of the roles that can handle conversations and tasks.",
@@ -1874,6 +1943,78 @@
         ],
         "title": "CareUrgency",
         "type": "string"
+      },
+      "CatalogSummaryOut": {
+        "additionalProperties": false,
+        "description": "The line above the product list (\"115 sản phẩm · 30 thuốc · 78 sản phẩm tư vấn · 7 cần phân loại\")\nand the provenance of the data.",
+        "properties": {
+          "consultation": {
+            "title": "Consultation",
+            "type": "integer"
+          },
+          "imported_at": {
+            "anyOf": [
+              {
+                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+                "examples": [
+                  "2026-09-20T09:00:00+07:00"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Imported At"
+          },
+          "prescription": {
+            "title": "Prescription",
+            "type": "integer"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "SHA-256 of the canonical rows that were imported.",
+            "title": "Sha256"
+          },
+          "source_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "File the catalog was imported from.",
+            "title": "Source Name"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "unresolved": {
+            "title": "Unresolved",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "prescription",
+          "consultation",
+          "unresolved",
+          "source_name",
+          "sha256"
+        ],
+        "title": "CatalogSummaryOut",
+        "type": "object"
       },
       "ChangePasswordRequest": {
         "additionalProperties": false,
@@ -6736,6 +6877,613 @@
         "title": "OpenHandoffOut",
         "type": "object"
       },
+      "OrderApprove": {
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "description": "The version the doctor reviewed; a newer one answers 409.",
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "OrderApprove",
+        "type": "object"
+      },
+      "OrderCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "diagnosis": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Diagnosis",
+            "type": "string"
+          },
+          "doctor_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Omitted: the doctor of the patient.",
+            "title": "Doctor Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemIn"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Note",
+            "type": "string"
+          },
+          "patient_id": {
+            "format": "uuid",
+            "title": "Patient Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patient_id",
+          "items"
+        ],
+        "title": "OrderCreate",
+        "type": "object"
+      },
+      "OrderItemIn": {
+        "additionalProperties": false,
+        "description": "One line the cashier chose. Name, unit and price are NOT sent: they come from the catalog (or from the\nsnapshot the draft already holds).",
+        "properties": {
+          "note": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Note",
+            "type": "string"
+          },
+          "product_code": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$",
+            "title": "Product Code",
+            "type": "string"
+          },
+          "quantity": {
+            "maximum": 9999.0,
+            "minimum": 1.0,
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "route": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrderRoute"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Omitted: the catalog route."
+          },
+          "route_reason": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Route Reason",
+            "type": "string"
+          },
+          "usage": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Usage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_code",
+          "quantity"
+        ],
+        "title": "OrderItemIn",
+        "type": "object"
+      },
+      "OrderItemOut": {
+        "additionalProperties": false,
+        "properties": {
+          "catalog_route": {
+            "$ref": "#/components/schemas/OrderRoute"
+          },
+          "line_no": {
+            "title": "Line No",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "product_code": {
+            "title": "Product Code",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          },
+          "route": {
+            "$ref": "#/components/schemas/OrderRoute"
+          },
+          "route_reason": {
+            "title": "Route Reason",
+            "type": "string"
+          },
+          "source_type": {
+            "title": "Source Type",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "unit_price_vnd": {
+            "title": "Unit Price Vnd",
+            "type": "integer"
+          },
+          "usage": {
+            "title": "Usage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "line_no",
+          "product_code",
+          "name",
+          "source_type",
+          "unit",
+          "catalog_route",
+          "route",
+          "route_reason",
+          "quantity",
+          "unit_price_vnd",
+          "usage",
+          "note"
+        ],
+        "title": "OrderItemOut",
+        "type": "object"
+      },
+      "OrderOut": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "diagnosis": {
+            "title": "Diagnosis",
+            "type": "string"
+          },
+          "doctor_id": {
+            "format": "uuid",
+            "title": "Doctor Id",
+            "type": "string"
+          },
+          "doctor_name": {
+            "title": "Doctor Name",
+            "type": "string"
+          },
+          "editable": {
+            "description": "A draft with nothing received: it may still be edited.",
+            "title": "Editable",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "invoice_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Id"
+          },
+          "item_count": {
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "order_date": {
+            "format": "date",
+            "title": "Order Date",
+            "type": "string"
+          },
+          "paid": {
+            "title": "Paid",
+            "type": "boolean"
+          },
+          "patient_code": {
+            "title": "Patient Code",
+            "type": "string"
+          },
+          "patient_id": {
+            "format": "uuid",
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "patient_name": {
+            "title": "Patient Name",
+            "type": "string"
+          },
+          "ready_to_approve": {
+            "description": "Every line is classified with its usage, the diagnosis is there and something prints.",
+            "title": "Ready To Approve",
+            "type": "boolean"
+          },
+          "received_vnd": {
+            "title": "Received Vnd",
+            "type": "integer"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+                "examples": [
+                  "2026-09-20T09:00:00+07:00"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "reviewed_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed By Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "total_vnd": {
+            "title": "Total Vnd",
+            "type": "integer"
+          },
+          "unresolved_count": {
+            "minimum": 0.0,
+            "title": "Unresolved Count",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "patient_id",
+          "patient_code",
+          "patient_name",
+          "doctor_id",
+          "doctor_name",
+          "status",
+          "order_date",
+          "item_count",
+          "total_vnd",
+          "created_at",
+          "version",
+          "diagnosis",
+          "note",
+          "items",
+          "received_vnd",
+          "paid",
+          "editable",
+          "unresolved_count",
+          "ready_to_approve"
+        ],
+        "title": "OrderOut",
+        "type": "object"
+      },
+      "OrderPatientOut": {
+        "additionalProperties": false,
+        "properties": {
+          "age": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "gender": {
+            "$ref": "#/components/schemas/Gender",
+            "default": "unknown"
+          }
+        },
+        "required": [
+          "code",
+          "full_name"
+        ],
+        "title": "OrderPatientOut",
+        "type": "object"
+      },
+      "OrderPrintOut": {
+        "additionalProperties": false,
+        "description": "What the review page and the A5 sheets draw: the order and its lines split by route.",
+        "properties": {
+          "consultation": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemOut"
+            },
+            "title": "Consultation",
+            "type": "array"
+          },
+          "excluded": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemOut"
+            },
+            "title": "Excluded",
+            "type": "array"
+          },
+          "order": {
+            "$ref": "#/components/schemas/OrderOut"
+          },
+          "patient": {
+            "$ref": "#/components/schemas/OrderPatientOut"
+          },
+          "prescription": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemOut"
+            },
+            "title": "Prescription",
+            "type": "array"
+          },
+          "printable": {
+            "description": "Approved, every line classified and complete: the sheets may be printed.",
+            "title": "Printable",
+            "type": "boolean"
+          },
+          "unresolved": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemOut"
+            },
+            "title": "Unresolved",
+            "type": "array"
+          }
+        },
+        "required": [
+          "order",
+          "patient",
+          "prescription",
+          "consultation",
+          "excluded",
+          "unresolved",
+          "printable"
+        ],
+        "title": "OrderPrintOut",
+        "type": "object"
+      },
+      "OrderRoute": {
+        "enum": [
+          "PRESCRIPTION",
+          "CONSULTATION",
+          "NONE",
+          "UNRESOLVED"
+        ],
+        "title": "OrderRoute",
+        "type": "string"
+      },
+      "OrderStatus": {
+        "enum": [
+          "draft",
+          "approved"
+        ],
+        "title": "OrderStatus",
+        "type": "string"
+      },
+      "OrderSummaryOut": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "doctor_id": {
+            "format": "uuid",
+            "title": "Doctor Id",
+            "type": "string"
+          },
+          "doctor_name": {
+            "title": "Doctor Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "item_count": {
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "order_date": {
+            "format": "date",
+            "title": "Order Date",
+            "type": "string"
+          },
+          "patient_code": {
+            "title": "Patient Code",
+            "type": "string"
+          },
+          "patient_id": {
+            "format": "uuid",
+            "title": "Patient Id",
+            "type": "string"
+          },
+          "patient_name": {
+            "title": "Patient Name",
+            "type": "string"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+                "examples": [
+                  "2026-09-20T09:00:00+07:00"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "reviewed_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed By Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "total_vnd": {
+            "title": "Total Vnd",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "patient_id",
+          "patient_code",
+          "patient_name",
+          "doctor_id",
+          "doctor_name",
+          "status",
+          "order_date",
+          "item_count",
+          "total_vnd",
+          "created_at",
+          "version"
+        ],
+        "title": "OrderSummaryOut",
+        "type": "object"
+      },
+      "OrderUpdate": {
+        "additionalProperties": false,
+        "description": "A draft is saved as a whole: the lines replace the previous ones.",
+        "properties": {
+          "diagnosis": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Diagnosis",
+            "type": "string"
+          },
+          "doctor_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doctor Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemIn"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Note",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "items"
+        ],
+        "title": "OrderUpdate",
+        "type": "object"
+      },
       "OutboundMode": {
         "enum": [
           "direct",
@@ -7053,6 +7801,42 @@
         "title": "Page[MessageOut]",
         "type": "object"
       },
+      "Page_OrderSummaryOut_": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderSummaryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Page[OrderSummaryOut]",
+        "type": "object"
+      },
       "Page_PatientOut_": {
         "additionalProperties": false,
         "properties": {
@@ -7087,6 +7871,42 @@
           "offset"
         ],
         "title": "Page[PatientOut]",
+        "type": "object"
+      },
+      "Page_ProductOut_": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProductOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Page[ProductOut]",
         "type": "object"
       },
       "Page_ReviewItemOut_": {
@@ -7789,6 +8609,9 @@
           "session.read",
           "media.read",
           "media.write",
+          "order.read",
+          "order.write",
+          "order.approve",
           "crm.task.read",
           "crm.task.resolve",
           "crm.activity.write",
@@ -8131,6 +8954,64 @@
         ],
         "title": "ProactiveCapScope",
         "type": "string"
+      },
+      "ProductOut": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "code": {
+            "description": "The Excel code, e.g. 'H002'. It is the product id.",
+            "title": "Code",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "price_vnd": {
+            "description": "Price after tax.",
+            "minimum": 0.0,
+            "title": "Price Vnd",
+            "type": "integer"
+          },
+          "route": {
+            "$ref": "#/components/schemas/OrderRoute",
+            "description": "Where the catalog sends the product (the prototype's outputType)."
+          },
+          "row_number": {
+            "title": "Row Number",
+            "type": "integer"
+          },
+          "source_type": {
+            "description": "The Excel type: Thuốc, Mỹ Phẩm, TPCN or empty.",
+            "title": "Source Type",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "vat": {
+            "title": "Vat",
+            "type": "number"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "unit",
+          "source_type",
+          "route",
+          "price_vnd",
+          "vat",
+          "row_number",
+          "active"
+        ],
+        "title": "ProductOut",
+        "type": "object"
       },
       "ProtocolCreate": {
         "additionalProperties": false,
@@ -27310,6 +28191,240 @@
         ]
       }
     },
+    "/api/v1/catalog/products": {
+      "get": {
+        "operationId": "catalog_list_products",
+        "parameters": [
+          {
+            "description": "Code, name or type; accents are ignored.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "description": "Code, name or type; accents are ignored.",
+              "maxLength": 120,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page size.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "description": "Page size.",
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Rows to skip.",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Rows to skip.",
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_ProductOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Search the product catalog",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/summary": {
+      "get": {
+        "operationId": "catalog_catalog_summary",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogSummaryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Counts and provenance of the catalog",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
     "/api/v1/consult-notes/{note_id}/approve": {
       "post": {
         "operationId": "patient_care_approve_consult_note",
@@ -30584,6 +31699,730 @@
         ]
       }
     },
+    "/api/v1/orders": {
+      "get": {
+        "operationId": "orders_list_orders",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "patient_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Patient Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OrderStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Page size.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "description": "Page size.",
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Rows to skip.",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Rows to skip.",
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_OrderSummaryOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Orders, newest first",
+        "tags": [
+          "orders"
+        ]
+      },
+      "post": {
+        "operationId": "orders_create_draft",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Create a draft order from catalog products",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{order_id}": {
+      "get": {
+        "operationId": "orders_get_order",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Order Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "One order with its lines",
+        "tags": [
+          "orders"
+        ]
+      },
+      "put": {
+        "operationId": "orders_update_draft",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Order Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Save a draft (the lines replace the previous ones); an approved order is immutable",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{order_id}/approve": {
+      "post": {
+        "operationId": "orders_approve_order",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Order Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderApprove"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "The responsible doctor approves the order so it can be printed",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{order_id}/print-data": {
+      "get": {
+        "operationId": "orders_print_data",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Order Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Refuse a draft or an incomplete order (the strict print check).",
+            "in": "query",
+            "name": "require_approved",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Refuse a draft or an incomplete order (the strict print check).",
+              "title": "Require Approved",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderPrintOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "The order and its lines split into Đơn thuốc and Phiếu tư vấn",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
     "/api/v1/patients": {
       "get": {
         "operationId": "patients_list_patients",
@@ -31195,6 +33034,118 @@
         "summary": "Patient 360 read model (original records stay the source of truth)",
         "tags": [
           "patients"
+        ]
+      }
+    },
+    "/api/v1/patients/{patient_id}/approved-orders": {
+      "get": {
+        "operationId": "orders_approved_orders",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovedOrderGroupOut"
+                  },
+                  "title": "Response Orders Approved Orders",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Approved orders as the patient app groups them (staff preview)",
+        "tags": [
+          "orders"
         ]
       }
     },
@@ -35318,6 +37269,14 @@
     {
       "description": "Follow-up protocols: milestone days the CRM rules read. (U4)",
       "name": "protocols"
+    },
+    {
+      "description": "Quick orders: draft, doctor approval, A5 sheets. (U5)",
+      "name": "orders"
+    },
+    {
+      "description": "Product catalog (the clinic's price list) for orders. (U5)",
+      "name": "catalog"
     },
     {
       "description": "Doctors, rooms and room blocks. (U4)",
