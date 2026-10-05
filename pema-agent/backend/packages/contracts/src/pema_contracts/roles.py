@@ -52,6 +52,15 @@ class Permission(StrEnum):
     patient's media consent is granted)."""
     MEDIA_WRITE = "media.write"
     """Upload clinical photos. Needs the patient's media consent (the action refuses without it)."""
+    ORDER_READ = "order.read"
+    """Read quick orders (prescriptions and consultation sheets) and the product catalog (a doctor is narrowed
+    to own patients by the action; reception and manager see the clinic)."""
+    ORDER_WRITE = "order.write"
+    """Create and edit DRAFT orders (cashier work: reception, manager, doctor, owner). A draft is not shown on
+    the patient app and cannot be printed."""
+    ORDER_APPROVE = "order.approve"
+    """Approve an order so it can be printed and shown: the responsible doctor (the owner may approve for any
+    doctor). Never reception or a manager: the order carries a clinical text."""
     CRM_TASK_READ = "crm.task.read"
     CRM_TASK_RESOLVE = "crm.task.resolve"
     CRM_ACTIVITY_WRITE = "crm.activity.write"

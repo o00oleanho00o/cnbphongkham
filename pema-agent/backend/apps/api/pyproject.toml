@@ -45,6 +45,7 @@ dependencies = [
 pema-contracts = { workspace = true }
 
 [project.scripts]
+pema = "pema.cli:main"
 pema-export-openapi = "pema.api.export_openapi:main_cli"
 
 [build-system]
