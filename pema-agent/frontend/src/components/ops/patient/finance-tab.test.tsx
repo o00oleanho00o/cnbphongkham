@@ -30,13 +30,7 @@ const priced = plan({
   service_terms_version: 1,
 });
 
-function card(plans: Schemas["TreatmentPlanOut"][]): Schemas["Patient360"] {
-  return {
-    patient: { id: PATIENT_ID, code: "P001", full_name: "Nguyễn Thu Hà", version: 1 },
-    profile: { lifecycle_stage: "treating", marketing_opt_out: false, risk_level: "normal" },
-    plans,
-  } as unknown as Schemas["Patient360"];
-}
+const PATIENT = { id: PATIENT_ID, full_name: "Nguyễn Thu Hà" };
 
 const SERVICES = [
   {
@@ -64,8 +58,10 @@ function route(path: string) {
   return ok([]);
 }
 
-function renderTab(permissions: Permission[], plans = [priced]) {
-  return render(asRole(permissions, <FinanceTab data={card(plans)} onChanged={() => undefined} />));
+function renderTab(permissions: Permission[], plans: Schemas["TreatmentPlanOut"][] = [priced]) {
+  return render(
+    asRole(permissions, <FinanceTab patient={PATIENT} plans={plans} onChanged={() => undefined} />),
+  );
 }
 
 beforeEach(() => {

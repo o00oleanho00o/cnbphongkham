@@ -2728,6 +2728,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/patients/{patient_id}/finance-tab": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Courses and prices of a patient for the finance tab; no clinical record (finance.read) */
+        get: operations["patient_profile_get_finance_tab"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/patients/{patient_id}/media": {
         parameters: {
             query?: never;
@@ -3587,6 +3604,11 @@ export interface components {
              */
             patient_id: string;
             /**
+             * Room Id
+             * @description Optional room; it must be active, free in the window and not blocked (U10).
+             */
+            room_id?: string | null;
+            /**
              * Starts At
              * Format: date-time
              * @description ISO 8601 timestamp with an explicit +07:00 offset.
@@ -3654,6 +3676,11 @@ export interface components {
              */
             patient_id: string;
             /**
+             * Room Id
+             * @description Treatment room (U10); none for visits booked without a room.
+             */
+            room_id?: string | null;
+            /**
              * Starts At
              * Format: date-time
              * @description ISO 8601 timestamp with an explicit +07:00 offset.
@@ -3690,6 +3717,11 @@ export interface components {
             duration_min?: number | null;
             /** Note */
             note?: string | null;
+            /**
+             * Room Id
+             * @description Send null to take the room off the visit.
+             */
+            room_id?: string | null;
             /** Starts At */
             starts_at?: string | null;
             /** Version */
@@ -7099,6 +7131,17 @@ export interface components {
             source?: string | null;
         };
         /**
+         * PatientFinanceTabOut
+         * @description The data of the 'Dịch vụ & tài chính' tab without any clinical record (``finance.read``): who the
+         *     patient is and the courses with sessions used and the price fixed on them. The accountant has no
+         *     Patient 360; this is its tab. The catalog for 'Thêm dịch vụ' is ``GET /services`` (``finance.write``).
+         */
+        PatientFinanceTabOut: {
+            patient: components["schemas"]["PatientOut"];
+            /** Plans */
+            plans: components["schemas"]["TreatmentPlanOut"][];
+        };
+        /**
          * PatientKpis
          * @description ``seen`` = distinct patients with a visit in the range; ``new`` of them had their first contact in the
          *     range (``patient.first_contact_at``), ``returning`` is the rest.
@@ -7864,6 +7907,41 @@ export interface components {
          * @enum {string}
          */
         RuleSendMode: "staff_task" | "auto_reminder" | "draft_for_review";
+        /**
+         * ScheduleBlock
+         * @description A room block inside the range of the board. Same fields as ``catalog.RoomBlockOut``.
+         */
+        ScheduleBlock: {
+            /** Created By */
+            created_by?: string | null;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * End
+             * @description HH:MM, clinic time.
+             */
+            end: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Room Id
+             * Format: uuid
+             */
+            room_id: string;
+            /**
+             * Start
+             * @description HH:MM, clinic time.
+             */
+            start: string;
+        };
         /** ScheduleCreate */
         ScheduleCreate: {
             /** Account Id */
@@ -7915,6 +7993,11 @@ export interface components {
             cancelled_at?: string | null;
             /** Created By */
             created_by?: string | null;
+            /**
+             * Created By Name
+             * @description "Người tạo" of the reception table: the staff account that booked it.
+             */
+            created_by_name?: string | null;
             /** Doctor Id */
             doctor_id: string | null;
             /** Doctor Name */
@@ -7940,6 +8023,13 @@ export interface components {
             /** Patient Name */
             patient_name?: string | null;
             /**
+             * Room Id
+             * @description Treatment room (U10); none for visits booked without a room.
+             */
+            room_id?: string | null;
+            /** Room Name */
+            room_name?: string | null;
+            /**
              * Starts At
              * Format: date-time
              * @description ISO 8601 timestamp with an explicit +07:00 offset.
@@ -7964,6 +8054,11 @@ export interface components {
          *     only that doctor's appointments.
          */
         ScheduleOut: {
+            /**
+             * Blocks
+             * @description Room blocks that fall inside the range.
+             */
+            blocks?: components["schemas"]["ScheduleBlock"][];
             /** Doctor Id */
             doctor_id?: string | null;
             /** Doctors */
@@ -7976,12 +8071,37 @@ export interface components {
             /** Items */
             items: components["schemas"]["ScheduleItem"][];
             /**
+             * Rooms
+             * @description Every room of the clinic: the columns of the room grid.
+             */
+            rooms?: components["schemas"]["ScheduleRoom"][];
+            /**
              * To Day
              * Format: date
              * @description Last day, inclusive (same as ``from_day`` for the day view).
              */
             to_day: string;
             view: components["schemas"]["ScheduleView"];
+        };
+        /**
+         * ScheduleRoom
+         * @description A room column of the room grid. Same fields as ``catalog.RoomOut``; declared here because ``catalog``
+         *     imports ``crm``, which imports this module.
+         */
+        ScheduleRoom: {
+            /** Active */
+            active: boolean;
+            /** Capacity */
+            capacity: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Version */
+            version: number;
         };
         /** ScheduleUpdate */
         ScheduleUpdate: {
@@ -26490,6 +26610,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExpectedReturnOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_get_finance_tab: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatientFinanceTabOut"];
                 };
             };
             /** @description Not authenticated. */

@@ -17,7 +17,7 @@ Source: ``prototype/shared/clinic.js`` (``p.alerts``, ``p.aftercare``, ``p.appro
 through ``clinic_agent``, whose views name their columns, so the new ``alerts`` column is not exposed).
 
 Revision ID: u9_0010_patient_parity
-Revises: u11_0010_accountant_role
+Revises: u10_0010_appointment_room
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision = "u9_0010_patient_parity"
-down_revision = "u11_0010_accountant_role"
+down_revision = "u10_0010_appointment_room"
 branch_labels = None
 depends_on = None
 

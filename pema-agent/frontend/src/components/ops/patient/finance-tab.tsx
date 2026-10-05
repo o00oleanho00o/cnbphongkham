@@ -42,7 +42,7 @@ import { Sheet } from "@/ui/dialog";
 import { Field, FIELD_CONTROL_CLASS } from "@/ui/field";
 import { EmptyRow, TableShell } from "@/ui/table-shell";
 
-type P360 = Schemas["Patient360"];
+type Who = { id: string; full_name: string };
 type Plan = Schemas["TreatmentPlanOut"];
 
 const INVOICE_HEADERS = ["Hóa đơn", "Dịch vụ", "Phát sinh", "Đã thu", "Còn lại"];
@@ -51,8 +51,8 @@ const ADDED_COPY =
   "Giá đã chốt được lưu trên hồ sơ; thay đổi danh mục sau này không làm đổi liệu trình đã đăng ký.";
 
 // ------------------------------------------------------------------------------------------- invoices
-function InvoicesCard({ data, canCashier }: { data: P360; canCashier: boolean }) {
-  const patientId = data.patient.id;
+function InvoicesCard({ patient, canCashier }: { patient: Who; canCashier: boolean }) {
+  const patientId = patient.id;
   const load = useCallback(
     (signal: AbortSignal) =>
       unwrap(
@@ -67,7 +67,7 @@ function InvoicesCard({ data, canCashier }: { data: P360; canCashier: boolean })
   const rows: readonly InvoiceRow[] = page?.items ?? [];
   return (
     <Card
-      title={`Hóa đơn của ${data.patient.full_name}`}
+      title={`Hóa đơn của ${patient.full_name}`}
       subtitle="Giá trị phát sinh, tiền đã thu và dư nợ; không suy hoàn tất điều trị"
       aside={
         canCashier ? (
@@ -277,18 +277,19 @@ function PlanLine({ plan }: { plan: Plan }) {
 }
 
 function PlansCard({
-  data,
+  patient,
+  plans,
   canAdd,
   canCashier,
   onChanged,
 }: {
-  data: P360;
+  patient: Who;
+  plans: readonly Plan[];
   canAdd: boolean;
   canCashier: boolean;
   onChanged: () => void;
 }) {
   const [adding, setAdding] = useState(false);
-  const plans = data.plans ?? [];
   return (
     <Card
       title="Dịch vụ & liệu trình"
@@ -310,7 +311,7 @@ function PlansCard({
       )}
       {adding && (
         <AddServiceDialog
-          patientId={data.patient.id}
+          patientId={patient.id}
           onClose={() => setAdding(false)}
           onSaved={onChanged}
         />
@@ -369,22 +370,36 @@ function PrescriptionsCard({ patientId, canDraft }: { patientId: string; canDraf
   );
 }
 
-export function FinanceTab({ data, onChanged }: { data: P360; onChanged: () => void }) {
+/**
+ * `plans` come from the Patient 360 for a caller who has it, or from `GET /patients/{id}/finance-tab` for the
+ * accountant, who has no Patient 360 (see `FinanceOnlyView`). The cards below ask for their own data and the
+ * backend decides each request.
+ */
+export function FinanceTab({
+  patient,
+  plans,
+  onChanged,
+}: {
+  patient: Who;
+  plans: readonly Plan[];
+  onChanged: () => void;
+}) {
   const { can } = useSession();
   const canCashier = can("finance.collect");
   const canInvoices = canCashier || can("finance.read");
   return (
     <div className="space-y-4">
-      {canInvoices && <InvoicesCard data={data} canCashier={canCashier} />}
+      {canInvoices && <InvoicesCard patient={patient} canCashier={canCashier} />}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <PlansCard
-          data={data}
+          patient={patient}
+          plans={plans}
           canAdd={can("finance.write")}
           canCashier={canCashier}
           onChanged={onChanged}
         />
         {can("order.read") && (
-          <PrescriptionsCard patientId={data.patient.id} canDraft={can("order.write")} />
+          <PrescriptionsCard patientId={patient.id} canDraft={can("order.write")} />
         )}
       </div>
       {!canInvoices && (

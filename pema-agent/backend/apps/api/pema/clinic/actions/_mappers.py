@@ -77,6 +77,7 @@ def appointment_out(row: Appointment, patient_code: str) -> AppointmentOut:
         patient_id=row.patient_id,
         patient_code=patient_code,
         doctor_id=row.doctor_id,
+        room_id=row.room_id,
         starts_at=row.starts_at,
         duration_min=row.duration_min,
         status=AppointmentStatus(row.status),

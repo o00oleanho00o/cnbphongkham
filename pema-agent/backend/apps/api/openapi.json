@@ -904,6 +904,19 @@
             "title": "Patient Id",
             "type": "string"
           },
+          "room_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional room; it must be active, free in the window and not blocked (U10).",
+            "title": "Room Id"
+          },
           "starts_at": {
             "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
             "examples": [
@@ -1081,6 +1094,19 @@
             "title": "Patient Id",
             "type": "string"
           },
+          "room_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Treatment room (U10); none for visits booked without a room.",
+            "title": "Room Id"
+          },
           "starts_at": {
             "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
             "examples": [
@@ -1191,6 +1217,19 @@
               }
             ],
             "title": "Note"
+          },
+          "room_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Send null to take the room off the visit.",
+            "title": "Room Id"
           },
           "starts_at": {
             "anyOf": [
@@ -9514,6 +9553,28 @@
         "title": "PatientCreate",
         "type": "object"
       },
+      "PatientFinanceTabOut": {
+        "additionalProperties": false,
+        "description": "The data of the 'Dịch vụ & tài chính' tab without any clinical record (``finance.read``): who the\npatient is and the courses with sessions used and the price fixed on them. The accountant has no\nPatient 360; this is its tab. The catalog for 'Thêm dịch vụ' is ``GET /services`` (``finance.write``).",
+        "properties": {
+          "patient": {
+            "$ref": "#/components/schemas/PatientOut"
+          },
+          "plans": {
+            "items": {
+              "$ref": "#/components/schemas/TreatmentPlanOut"
+            },
+            "title": "Plans",
+            "type": "array"
+          }
+        },
+        "required": [
+          "patient",
+          "plans"
+        ],
+        "title": "PatientFinanceTabOut",
+        "type": "object"
+      },
       "PatientKpis": {
         "additionalProperties": false,
         "description": "``seen`` = distinct patients with a visit in the range; ``new`` of them had their first contact in the\nrange (``patient.first_contact_at``), ``returning`` is the rest.",
@@ -11590,6 +11651,63 @@
         "title": "RuleSendMode",
         "type": "string"
       },
+      "ScheduleBlock": {
+        "additionalProperties": false,
+        "description": "A room block inside the range of the board. Same fields as ``catalog.RoomBlockOut``.",
+        "properties": {
+          "created_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "end": {
+            "description": "HH:MM, clinic time.",
+            "title": "End",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "room_id": {
+            "format": "uuid",
+            "title": "Room Id",
+            "type": "string"
+          },
+          "start": {
+            "description": "HH:MM, clinic time.",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "room_id",
+          "day",
+          "start",
+          "end",
+          "reason"
+        ],
+        "title": "ScheduleBlock",
+        "type": "object"
+      },
       "ScheduleCreate": {
         "additionalProperties": false,
         "properties": {
@@ -11733,6 +11851,18 @@
             ],
             "title": "Created By"
           },
+          "created_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "\"Người tạo\" of the reception table: the staff account that booked it.",
+            "title": "Created By Name"
+          },
           "doctor_id": {
             "anyOf": [
               {
@@ -11812,6 +11942,30 @@
             ],
             "title": "Patient Name"
           },
+          "room_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Treatment room (U10); none for visits booked without a room.",
+            "title": "Room Id"
+          },
+          "room_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room Name"
+          },
           "starts_at": {
             "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
             "examples": [
@@ -11856,6 +12010,14 @@
         "additionalProperties": false,
         "description": "The day (or the 7 days from ``from_day``) of the clinic board, oldest first. A doctor's own call lists\nonly that doctor's appointments.",
         "properties": {
+          "blocks": {
+            "description": "Room blocks that fall inside the range.",
+            "items": {
+              "$ref": "#/components/schemas/ScheduleBlock"
+            },
+            "title": "Blocks",
+            "type": "array"
+          },
           "doctor_id": {
             "anyOf": [
               {
@@ -11887,6 +12049,14 @@
             "title": "Items",
             "type": "array"
           },
+          "rooms": {
+            "description": "Every room of the clinic: the columns of the room grid.",
+            "items": {
+              "$ref": "#/components/schemas/ScheduleRoom"
+            },
+            "title": "Rooms",
+            "type": "array"
+          },
           "to_day": {
             "description": "Last day, inclusive (same as ``from_day`` for the day view).",
             "format": "date",
@@ -11905,6 +12075,42 @@
           "doctors"
         ],
         "title": "ScheduleOut",
+        "type": "object"
+      },
+      "ScheduleRoom": {
+        "additionalProperties": false,
+        "description": "A room column of the room grid. Same fields as ``catalog.RoomOut``; declared here because ``catalog``\nimports ``crm``, which imports this module.",
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "capacity": {
+            "title": "Capacity",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "capacity",
+          "active",
+          "version"
+        ],
+        "title": "ScheduleRoom",
         "type": "object"
       },
       "ScheduleUpdate": {
@@ -38096,6 +38302,114 @@
           }
         ],
         "summary": "Save 'Ngày dự kiến quay lại' (date, reason, source)",
+        "tags": [
+          "patient-profile"
+        ]
+      }
+    },
+    "/api/v1/patients/{patient_id}/finance-tab": {
+      "get": {
+        "operationId": "patient_profile_get_finance_tab",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "patient_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Patient Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientFinanceTabOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Courses and prices of a patient for the finance tab; no clinical record (finance.read)",
         "tags": [
           "patient-profile"
         ]

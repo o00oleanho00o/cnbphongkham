@@ -6,23 +6,24 @@ import type { Permission } from "@/lib/session/session-context";
 
 export type PatientTabKey = "overview" | "consult" | "plan" | "session" | "photos" | "finance";
 
-export type PatientTab = TabItem & { id: PatientTabKey; needs: Permission };
+/** `needs` is any-of: the tab shows when the caller holds at least one of the permissions. */
+export type PatientTab = TabItem & { id: PatientTabKey; needs: readonly Permission[] };
 
 export const PATIENT_TABS: readonly PatientTab[] = [
-  { id: "overview", label: "Tổng quan", shortLabel: "Tổng quan", needs: "patient.read_360" },
-  { id: "consult", label: "Tư vấn", shortLabel: "Tư vấn", needs: "session.read" },
-  { id: "plan", label: "Kế hoạch", shortLabel: "Kế hoạch", needs: "patient.read_360" },
-  { id: "session", label: "Buổi điều trị", shortLabel: "Buổi", needs: "session.read" },
-  { id: "photos", label: "Ảnh trước / sau", shortLabel: "Ảnh", needs: "media.read" },
+  { id: "overview", label: "Tổng quan", shortLabel: "Tổng quan", needs: ["patient.read_360"] },
+  { id: "consult", label: "Tư vấn", shortLabel: "Tư vấn", needs: ["session.read"] },
+  { id: "plan", label: "Kế hoạch", shortLabel: "Kế hoạch", needs: ["patient.read_360"] },
+  { id: "session", label: "Buổi điều trị", shortLabel: "Buổi", needs: ["session.read"] },
+  { id: "photos", label: "Ảnh trước / sau", shortLabel: "Ảnh", needs: ["media.read"] },
   {
     id: "finance",
     label: "Dịch vụ & tài chính",
     shortLabel: "Tài chính",
-    needs: "patient.read_360",
+    needs: ["patient.read_360", "finance.read"],
   },
 ];
 
 /** The tabs the caller may open, in order. `can` is `useSession().can`. */
 export function visiblePatientTabs(can: (permission: Permission) => boolean): PatientTab[] {
-  return PATIENT_TABS.filter((tab) => can(tab.needs));
+  return PATIENT_TABS.filter((tab) => tab.needs.some((permission) => can(permission)));
 }

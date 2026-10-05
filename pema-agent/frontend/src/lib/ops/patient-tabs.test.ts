@@ -32,6 +32,10 @@ describe("visiblePatientTabs", () => {
     expect(idsFor("patient.read_360", "session.read", "media.read")).toHaveLength(6);
   });
 
+  it("a_role_that_reads_finance_without_patient_360_sees_only_the_services_and_finance_tab", () => {
+    expect(idsFor("finance.read")).toEqual(["finance"]);
+  });
+
   it("a_role_without_patient_360_sees_no_tab", () => {
     expect(idsFor()).toEqual([]);
   });

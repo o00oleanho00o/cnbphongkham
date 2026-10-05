@@ -18,6 +18,7 @@ class Appointment(Base):
     clinic_id: Mapped[UUID]
     patient_id: Mapped[UUID]
     doctor_id: Mapped[UUID | None] = mapped_column(default=None)
+    room_id: Mapped[UUID | None] = mapped_column(default=None)
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     duration_min: Mapped[int] = mapped_column(Integer, default=30)
     status: Mapped[str] = mapped_column(Text, default="booked")

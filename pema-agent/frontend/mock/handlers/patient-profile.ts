@@ -295,6 +295,18 @@ export function register(r: Router): void {
     return { status: 201, body: out };
   });
 
+  r.get("/api/v1/patients/{patient_id}/finance-tab", "finance.read", (ctx): Reply => {
+    const patient = patientOr404(ctx);
+    return {
+      body: {
+        patient,
+        plans: plans
+          .filter((p) => p.patient_id === patient.id)
+          .map(({ patient_id: _patient, ...plan }) => plan),
+      },
+    };
+  });
+
   r.post("/api/v1/patients/{patient_id}/service-plans", "finance.write", (ctx): Reply => {
     const patient = patientOr404(ctx);
     const input = bodyOf<S["ServicePlanCreate"]>(ctx);

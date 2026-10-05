@@ -197,7 +197,9 @@ export function Patient360View({ data, onChanged }: { data: P360; onChanged: () 
                 onSaved={onChanged}
               />
             )}
-            {tab.id === "finance" && <FinanceTab data={data} onChanged={onChanged} />}
+            {tab.id === "finance" && (
+              <FinanceTab patient={patient} plans={plans} onChanged={onChanged} />
+            )}
             {tab.id === "photos" && (
               <PhotosTab
                 patientId={patient.id}

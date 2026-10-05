@@ -26,6 +26,9 @@ class AppointmentOut(ApiModel):
     patient_id: UUID
     patient_code: str
     doctor_id: UUID | None
+    room_id: UUID | None = Field(
+        default=None, description="Treatment room (U10); none for visits booked without a room."
+    )
     starts_at: VnDatetime
     duration_min: int
     status: AppointmentStatus
@@ -40,6 +43,10 @@ class AppointmentOut(ApiModel):
 class AppointmentCreate(ApiModel):
     patient_id: UUID
     doctor_id: UUID | None = None
+    room_id: UUID | None = Field(
+        default=None,
+        description="Optional room; it must be active, free in the window and not blocked (U10).",
+    )
     starts_at: VnDatetime
     duration_min: int = Field(default=30, ge=5, le=480)
     note: str | None = Field(default=None, max_length=1000)
@@ -52,6 +59,7 @@ class AppointmentCreate(ApiModel):
 class AppointmentUpdate(ApiModel):
     version: int
     doctor_id: UUID | None = None
+    room_id: UUID | None = Field(default=None, description="Send null to take the room off the visit.")
     starts_at: VnDatetime | None = None
     duration_min: int | None = Field(default=None, ge=5, le=480)
     note: str | None = Field(default=None, max_length=1000)
@@ -75,6 +83,10 @@ class ScheduleItem(AppointmentOut):
 
     patient_name: str | None = None
     doctor_name: str | None = None
+    room_name: str | None = None
+    created_by_name: str | None = Field(
+        default=None, description='"Người tạo" of the reception table: the staff account that booked it.'
+    )
 
 
 class ScheduleDoctor(ApiModel):
@@ -82,6 +94,29 @@ class ScheduleDoctor(ApiModel):
 
     id: UUID
     name: str
+
+
+class ScheduleRoom(ApiModel):
+    """A room column of the room grid. Same fields as ``catalog.RoomOut``; declared here because ``catalog``
+    imports ``crm``, which imports this module."""
+
+    id: UUID
+    name: str
+    capacity: int
+    active: bool
+    version: int
+
+
+class ScheduleBlock(ApiModel):
+    """A room block inside the range of the board. Same fields as ``catalog.RoomBlockOut``."""
+
+    id: UUID
+    room_id: UUID
+    day: date
+    start: str = Field(description="HH:MM, clinic time.")
+    end: str = Field(description="HH:MM, clinic time.")
+    reason: str
+    created_by: UUID | None = None
 
 
 class ScheduleOut(ApiModel):
@@ -94,6 +129,13 @@ class ScheduleOut(ApiModel):
     doctor_id: UUID | None = None
     items: list[ScheduleItem]
     doctors: list[ScheduleDoctor]
+    rooms: list[ScheduleRoom] = Field(
+        default_factory=list[ScheduleRoom],
+        description="Every room of the clinic: the columns of the room grid.",
+    )
+    blocks: list[ScheduleBlock] = Field(
+        default_factory=list[ScheduleBlock], description="Room blocks that fall inside the range."
+    )
 
 
 class FreeSlotOut(ApiModel):

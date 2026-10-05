@@ -9,7 +9,7 @@ Forced deviation: the prototype kept one plan per patient in ``localStorage`` (`
 U9 adds ``add_service_plan`` ("Thêm dịch vụ vào liệu trình", ``care-finance.js › addService``): a plan
 made from
 a catalog service whose price, discount and snapshot number are fixed on the row. It needs
-``finance.write`` (owner, manager; the accountant after U11), not ``session.write``: it sells a service, it
+``finance.write`` (owner, manager, accountant), not ``session.write``: it sells a service, it
 records no clinical fact. The amounts are shown only to a caller with a finance permission.
 
 Rules: ``session.write`` (doctor, owner) to create or edit, narrowed to the doctor's own patients; reading the
