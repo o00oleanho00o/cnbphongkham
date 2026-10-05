@@ -97,7 +97,8 @@ for (const s of inv.screens) {
   const disk = routeOnDisk(s.next_route);
   const status = s.next_status || 'none';
 
-  if (!cs) problems.push(`${s.id}: no frame in Pema Web redesign canvas/${lib.CANVAS_FILE}`);
+  if (!cs) problems.push(`${s.id}: no frame in Pema Web redesign canvas/${s.source === 'nextjs' ? lib.NEXT_FILE : lib.CANVAS_FILE}`);
+  else if (cs.canvasFile !== (s.source === 'nextjs' ? lib.NEXT_FILE : lib.CANVAS_FILE)) problems.push(`${s.id}: frame is in ${cs.canvasFile}, expected ${s.source === 'nextjs' ? lib.NEXT_FILE : lib.CANVAS_FILE}`);
   else if (frames.join(',') !== wantFrames.join(',')) problems.push(`${s.id}: canvas frames ${frames.join(', ')} != inventory frames ${wantFrames.join(', ')}`);
   if (!specOk) problems.push(`${s.id}: no spec design-specs/web/screens/${s.id}.md`);
   // old-web ids are shot at the five inventory viewports; Next.js ids (W8) at their own frames
@@ -132,7 +133,7 @@ nothing is filtered out. "App canvas" is a cross-reference for blocks and wordin
 counterpart; the id is still complete). Differences from the app are in \`design-specs/web/notes.json\` (\`differences\`).
 
 - **Old web reach**: how the id is reached from \`/clinic-web/?staff=<role>\` (nav, tab, modal, button selectors; see \`reach\` in the inventory).
-- **Web canvas frames**: frame sizes of the id in \`Pema Web redesign canvas/Pema Web.dc.html\` (pages, tabs and finance: 1440 · 1920 · 390; states, dialogs, modals: 1440).
+- **Web canvas frames**: frame sizes of the id in \`Pema Web redesign canvas/Pema Web.dc.html\` (WA-WI) or \`Pema Web (Next.js).dc.html\` (WJ-WL) (pages, tabs and finance: 1440 · 1920 · 390; states, dialogs, modals: 1440).
 - **Shots**: images in \`pema-agent/frontend/visual-ref/old/\` (git-ignored): 5 viewports, \`+Np\` print copies, \`+1L\` legacy-name copy.
 - **On disk**: whether the route has a \`page.tsx\` in \`pema-agent/frontend/src/app\` (\`—\` for the app shell and ids with no route). Checked against the status.
 

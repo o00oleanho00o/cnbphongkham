@@ -61,22 +61,106 @@ Other screens:
 - Layout `.region` 344×39 px: flex row, flex-end, gap 8px
 - Frames to build (inventory D4): 1440x900.
 
-## Layout (top to bottom, region → src/ui component)
-Measured from the running page (snapshot of the mock BE): every field, action, status, filter and text is listed; repeating rows show the first one and their count.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web (Next.js).dc.html` (frame WL9); labels, actions, statuses and notices are the front end's, verbatim.
 ```tsx
-// opens over the page; the backdrop and the page behind it are not part of this screen
-<Card role="dialog" layout="flex row">
-  <Row gap="14px">
-    <Heading level={2}>"Duyệt mẫu này?"</Heading>
-    <Text>"Bạn xác nhận nội dung mẫu \"Ưu đãi chăm sóc da tháng 10\" đúng và an toàn để gửi cho khách. Mẫu sẽ được bật ngay."</Text>
-  </Row>
-  <Row gap="8px" justify="flex-end">
+<AppShell role="doctor" active="Mẫu tin">  // the page behind the dialog (dimmed)
+  <PageHeading title="Tin nhắn mẫu đã duyệt" subtitle="Văn bản bác sĩ đã duyệt, được dùng cho tin chăm sóc chủ động">
+    <Button variant="primary">"Soạn mẫu mới"</Button>
+  </PageHeading>
+  <Notice tone="info" text="Mẫu mới hoặc vừa sửa chưa được dùng cho đến khi bác sĩ duyệt. Tin quảng bá không gửi cho khách đã từ chối quảng bá, và sinh nhật không bao giờ tự động gửi." />
+  <Card component="TemplateCard">
+    <Row gap="8px" justify="space-between" wrap>
+      <Heading level={2}>"Nhắc lịch tái khám"</Heading>
+      <Text small>"nhac-tai-kham"</Text>
+      <Badge tone="success">"Bác sĩ đã duyệt"</Badge>
+    </Row>
+    <Text>"Chào {ten_khach}, phòng khám Pema nhắc chị đã đến hạn tái khám. Chị rảnh khung giờ nào trong tuần này để em sắp xếp lịch với bác sĩ ạ?"</Text>
+    <Row gap="8px" justify="space-between" wrap>
+      <Text small>"Duyệt 21/08/2026 · Đang bật"</Text>
+      <Row gap="8px" wrap>
+        <Button variant="secondary">"Tắt mẫu"</Button>
+        <Button variant="secondary">"Sửa"</Button>
+      </Row>
+    </Row>
+  </Card>
+  <Card component="TemplateCard">
+    <Row gap="8px" justify="space-between" wrap>
+      <Heading level={2}>"Hỏi thăm sau thủ thuật (D+1)"</Heading>
+      <Text small>"hoi-tham-sau-thu-thuat"</Text>
+      <Badge tone="success">"Bác sĩ đã duyệt"</Badge>
+    </Row>
+    <Text>"Chào {ten_khach}, hôm qua chị vừa làm thủ thuật tại Pema. Hôm nay da chị thế nào ạ? Nếu thấy đỏ rát tăng hoặc có chảy dịch, chị nhắn ngay để bác sĩ xem nhé."</Text>
+    <Row gap="8px" justify="space-between" wrap>
+      <Text small>"Duyệt 21/08/2026 · Đang bật"</Text>
+      <Row gap="8px" wrap>
+        <Button variant="secondary">"Tắt mẫu"</Button>
+        <Button variant="secondary">"Sửa"</Button>
+      </Row>
+    </Row>
+  </Card>
+  <Card component="TemplateCard">
+    <Row gap="8px" justify="space-between" wrap>
+      <Heading level={2}>"Nhắc gửi ảnh tiến triển (D+3)"</Heading>
+      <Text small>"nhac-gui-anh-tien-trien"</Text>
+      <Badge tone="success">"Bác sĩ đã duyệt"</Badge>
+    </Row>
+    <Text>"Chào {ten_khach}, đã 3 ngày kể từ buổi làm da. Chị chụp 1 ảnh vùng da nơi đủ sáng và gửi lại để bác sĩ theo dõi nhé ạ."</Text>
+    <Row gap="8px" justify="space-between" wrap>
+      <Text small>"Duyệt 08/09/2026 · Đang bật"</Text>
+      <Row gap="8px" wrap>
+        <Button variant="secondary">"Tắt mẫu"</Button>
+        <Button variant="secondary">"Sửa"</Button>
+      </Row>
+    </Row>
+  </Card>
+  <Card component="TemplateCard">
+    <Row gap="8px" justify="space-between" wrap>
+      <Heading level={2}>"Ưu đãi chăm sóc da tháng 10"</Heading>
+      <Text small>"uu-dai-thang-10"</Text>
+      <Row gap="6px" wrap>
+        <Badge tone="warning">"Chờ bác sĩ duyệt"</Badge>
+        <Badge tone="info">"Quảng bá"</Badge>
+      </Row>
+    </Row>
+    <Text>"Chào {ten_khach}, tháng này Pema có chương trình soi da miễn phí cho khách cũ. Chị muốn em giữ lịch không ạ?"</Text>
+    <Row gap="8px" justify="space-between" wrap>
+      <Text small>"Chưa duyệt · Đang tắt"</Text>
+      <Row gap="8px" wrap>
+        <Button variant="primary">"Duyệt"</Button>
+        <Button variant="secondary">"Sửa"</Button>
+      </Row>
+    </Row>
+  </Card>
+  <Card component="TemplateCard">
+    <Row gap="8px" justify="space-between" wrap>
+      <Heading level={2}>"Nhắc lịch hẹn ngày mai"</Heading>
+      <Text small>"nhac-lich-hen"</Text>
+      <Row gap="6px" wrap>
+        <Badge tone="warning">"Chờ bác sĩ duyệt"</Badge>
+      </Row>
+    </Row>
+    <Text>"Chào {ten_khach}, phòng khám Pema nhắc chị có lịch hẹn vào {gio_hen} ngày mai. Chị nhắn em nếu cần đổi lịch nhé."</Text>
+    <Row gap="8px" justify="space-between" wrap>
+      <Text small>"Chưa duyệt · Đang tắt"</Text>
+      <Row gap="8px" wrap>
+        <Button variant="primary">"Duyệt"</Button>
+        <Button variant="secondary">"Sửa"</Button>
+      </Row>
+    </Row>
+  </Card>
+</AppShell>
+// opens over the page "Mẫu tin" (dimmed); the page behind it is not part of this screen
+<Dialog title="Duyệt mẫu này?" width="480px">
+  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>
+  <Text>"Bạn xác nhận nội dung mẫu \"Ưu đãi chăm sóc da tháng 10\" đúng và an toàn để gửi cho khách. Mẫu sẽ được bật ngay."</Text>
+  <Dialog.Footer>
     <Button variant="secondary">"Hủy"</Button>
     <Button variant="primary">"Duyệt mẫu"</Button>
-  </Row>
-</Card>
+  </Dialog.Footer>
+</Dialog>
 ```
-Kit components used: Button×2, Card×1.
+Kit components used: Button×13, Badge×6, Card×5, PageHeading×1, Dialog×1.
 
 ## Responsive
 - Not probed: this dialog has a 1440x900 frame only (plan D4). Look at `pema-agent/frontend/visual-ref/old/WL9-1440x900.png`; the dialog fits the viewport on a phone through `.modal` CSS (see Tokens for sizes).
@@ -104,6 +188,10 @@ Kit components used: Button×2, Card×1.
 
 ## Gotchas
 - (none recorded)
+
+## Web canvas
+- Frames: 1440x900 (inventory: 1440x900); screen label `WL9 · Duyệt mẫu này?`.
+- Canvas note: Next.js › /templates · hộp xác nhận của bác sĩ trước khi bật mẫu quảng bá
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WL9-1440x900.png`

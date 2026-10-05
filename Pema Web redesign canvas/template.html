@@ -620,7 +620,7 @@ a{color:var(--color-link);text-decoration:none}
             </sc-if>
             <div class="sc-f">
               <sc-for list="{{ sc.frames }}" as="fr" hint-placeholder-count="1">
-                <div id="{{ fr.id }}" data-screen-label="{{ fr.label }}" class="wf {{ fr.cls }}" style="width:{{ fr.w }}px;--fh:{{ fr.h }}px">
+                <div id="{{ fr.id }}" data-screen-label="{{ fr.label }}" data-fl="{{ fr.label }}" class="wf {{ fr.cls }}" style="width:{{ fr.w }}px;--fh:{{ fr.h }}px">
                   <div class="wf-l1">
                     <sc-if value="{{ fr.drawer }}"><div class="sb-sc"></div></sc-if>
                     <div class="sh">

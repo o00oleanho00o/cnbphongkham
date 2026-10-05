@@ -12,7 +12,7 @@ Package W built four layers for the old Clinic Web (`prototype/clinic-web`, read
 | Inventory: 211 screen ids `WA1 … WI42`, frozen | `design-specs/web/inventory.json` | `web-inventory.cjs` from `lib/catalog.cjs` |
 | Screenshots: 5 viewports per id, git-ignored | `pema-agent/frontend/visual-ref/old/` (+ tracked `manifest.json`) | `web-shots.cjs` |
 | Specs: structured snapshot + one spec per id | `design-specs/web/` (`snapshot.json`, `screens/<ID>.md`, `INDEX.md`, `BLOCKS.md`, `index.json`) | `web-snapshot.cjs`, `web-specs.cjs`, hand notes in `notes.json` |
-| Web canvas: 1440 / 1920 / 390 frames | `Pema Web redesign canvas/Pema Web.dc.html` (generated) | `web-canvas-build.cjs` from `parts/<group>.js` |
+| Web canvas: 1440 / 1920 / 390 frames | `Pema Web redesign canvas/Pema Web.dc.html` (old web, WA-WI) and `Pema Web (Next.js).dc.html` (Next.js-only, WJ-WL), both generated | `web-canvas-build.cjs` from `parts/<group>.js` |
 
 Read first: `AGENT.md` (synthetic data only, AI output is a draft), `pema-agent/docs/PLAN-AI01-W.md` (why and decisions D1–D8), `references/blocks-web.md` (the block manual).
 
@@ -58,6 +58,8 @@ pema-agent/frontend/visual-ref/old/        <ID>-<W>x<H>.png, <ID>-…-print.png,
 Hand-written: `lib/catalog.cjs`, `notes.json`, `parts/*.js`, `web-design-changes.md`, `references/blocks-web.md`. Everything else is generated: never edit it, regenerate it. Every generator has `--check` (exit 1 when the committed output differs from a fresh run).
 
 Ids come only from `inventory.json` (`^W[A-I]\d+$`), never renumber; a new screen is appended at the end of its group (add it to `lib/catalog.cjs`). Groups: WA shell, WB operations, WC patients and Patient 360, WD CSKH, WE studio/resources/services, WF cashier and orders, WG finance, WH Ask Pema and guide.
+
+**Two canvas files (W10, owner decision 2026-10-05).** `Pema Web.dc.html` holds only WA-WI (211 ids) and never a WJ/WK/WL frame; `Pema Web (Next.js).dc.html` holds WJ/WK/WL (173 ids). Both are built from the same `template.html`, `nodes.html`, `parts/base.js`, `blocks.js` and `tail.js` (`lib/web-canvas-lib.cjs` `OUTPUTS` maps file → groups; a group that is not in a file gets empty parts). `web-canvas-build.cjs` writes and `--check`s both (`--file="<name>"` for one; it fails when the old file holds a WJ/WK/WL frame), `web-canvas.cjs check --file "<name>" [groups] [outDir] --viewport=all --complete --frames` checks one file for its own ids and fails on a "foreign" group (`foreignIds`); specs and coverage read both files (`canvasFile` per screen). In the design viewer a dropdown "Web" (shown when the folder holds both files) switches "Web cũ" (default), "Màn mới" or "Cả hai" (both side by side, hash `#both`).
 
 Package W2 (W7) added the Next.js-only screens, ids `^W[A-L]d+$`: `WJ` agent admin (`/admin/*` except care), `WK` care agent (`/admin/care/*`, `/care/*`), `WL` sign-in, app shell and message templates (`/login`, `/templates`, `(app shell)`). They are hand-kept in `scripts/lib/catalog-nextjs.cjs` (merged by `lib/catalog.cjs`), carry `source: "nextjs"`, are NOT walked against the old web and are validated statically by `web-inventory.cjs` (each `next_route` is a real `page.tsx`; every `page.tsx` of `pema-agent/frontend` is claimed by an entry or by a `non_screens` entry with `route`). Their `reach` uses the Next.js vocabulary listed at the top of `catalog-nextjs.cjs` (login, goto, button, text, fill, wait, note) and runs against `pnpm dev:mock`. Since W9 every one has a spec (`design-specs/web/screens/WJ*.md`, `WK*.md`, `WL*.md`, status shown as `exists (design W2)`): `web-specs.cjs` builds it from the inventory row (the brief of W7), `notes.json` (`groups.<WJ|WK|WL>`, `routes.<route>` with purpose, gate, roles, actions, context, related, and `screens.<ID>` with purpose and related) and a check that every text the brief quotes exists in the front-end source ("Texts to re-check against the code" lists the rest); `web-specs.cjs --check` fails when a route lacks purpose, gate, roles or actions. When `snapshot.json` holds the id (W8), the spec uses the measured layout, tokens and responsive notes instead of the brief; no `snapshot` is required for a Next.js-only id. The Patient Mobile web (WI) is `served by KMP/Zalo` (owner decision 1), not a Next.js target.
 
@@ -121,9 +123,10 @@ Where the old web and the app disagree on a label, a step or a rule sentence: ke
 3. Build and look:
 
 ```sh
-node $S/web-canvas-build.cjs                  # parts → Pema Web.dc.html (deterministic); --check compares with the committed file
+node $S/web-canvas-build.cjs                  # parts → Pema Web.dc.html (WA-WI) and Pema Web (Next.js).dc.html (WJ-WL), deterministic; --check compares with the committed files
 # viewer running on 4181 (section 1)
 node $S/web-canvas.cjs check "Pema Web redesign canvas/Pema Web.dc.html" WB "$TEMP/wb" --viewport=all --frames   # exit 1 on errors
+node $S/web-canvas.cjs check --file "Pema Web (Next.js).dc.html" --complete --viewport=all "$TEMP/nx" --frames   # all WJ/WK/WL ids; --frames last
 node $S/web-specs.cjs --check --group=WB      # coverage of the group against the old-web snapshot
 ```
 

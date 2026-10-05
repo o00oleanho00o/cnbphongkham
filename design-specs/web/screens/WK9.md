@@ -67,124 +67,173 @@ Other screens:
 - Layout `.region` 1152×40 px: flex row, gap 8px
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Measured from the running page (snapshot of the mock BE): every field, action, status, filter and text is listed; repeating rows show the first one and their count.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web (Next.js).dc.html` (frame WK9); labels, actions, statuses and notices are the front end's, verbatim.
 ```tsx
-<AppShell role="doctor">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Ma trận ngưỡng", page key ""
-  <Row gap="12px" justify="space-between" wrap>
-    <Heading level={1}>"Agent chăm sóc"</Heading>
-    <Text>"Người nhận yêu cầu, số trực, ngưỡng độ sâu và thời hạn trả lời"</Text>
-  </Row>
-  <nav aria-label="Quản trị agent chăm sóc">
-    <Button variant="quiet" href="/admin/care/staff" as="link">"Kỹ năng và ca trực"</Button>
-    <Button variant="quiet" href="/admin/care/on-call" as="link">"Số trực 24/24"</Button>
-    <Button variant="quiet" href="/admin/care/matrix" as="link">"Ma trận ngưỡng"</Button>
-    <Button variant="quiet" href="/admin/care/timing" as="link">"SLA và khung giờ"</Button>
-    <Button variant="quiet" href="/admin/care/alerts" as="link">"Cảnh báo"</Button>
-  </nav>
-  <Row gap="12px" justify="space-between" wrap>
-    <Badge tone="neutral">"Chờ bác sĩ duyệt"</Badge>
+<AppShell role="doctor" active="Ma trận ngưỡng">
+  <Sidebar old="sidebar">  // menu of role `doctor` (lib/nav.tsx); at 390 a header with the menu button and a bottom tab bar ("Việc", "Hồ sơ", "Inbox", "Duyệt", "Chờ tôi", "Menu") replace it
+    <Button variant="quiet" href="/" title="Về trang chính" as="link">"PHÒNG KHÁM DA LIỄU"</Button>
+    <Button variant="quiet" aria-label="Đóng menu" icon-only></Button>  // phone drawer only
+    <nav aria-label="Chức năng">
+      <Text transform="uppercase">"Không gian làm việc"</Text>
+      <Button variant="quiet" href="/dashboard" as="link">"Tổng quan"</Button>
+      <Button variant="quiet" href="/today" as="link">"Hôm nay"</Button>
+      <Button variant="quiet" href="/schedule" as="link">"Điều phối lịch"</Button>
+      <Button variant="quiet" href="/patients" as="link">"Tìm bệnh nhân"</Button>
+      <Button variant="quiet" href="/inbox" as="link">"Theo dõi"</Button>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Ảnh trước / sau"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Text transform="uppercase">"Quản lý"</Text>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Bác sĩ & phòng"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Dịch vụ"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Thu ngân"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Text transform="uppercase">"Phân tích"</Text>
+      <Button variant="quiet" href="/ask" as="link">"Hỏi Pema"</Button>
+      <Button variant="quiet" href="/guide" as="link">"Hướng dẫn"</Button>
+      <Button variant="quiet" href="/crm" as="link">"Vòng đời khách hàng"</Button>
+      <Text transform="uppercase">"Zalo & CSKH"</Text>
+      <Button variant="quiet" href="/review" as="link">"Hàng đợi duyệt"</Button>
+      <Button variant="quiet" href="/templates" as="link">"Mẫu tin"</Button>
+      <Text transform="uppercase">"Care agent"</Text>
+      <Button variant="quiet" href="/care/handoffs" as="link">"Yêu cầu chuyển giao"</Button>
+      <Button variant="quiet" href="/admin/care/matrix" as="link" aria-current="page">"Ma trận ngưỡng"</Button>
+      <Text transform="uppercase">"Quản trị agent"</Text>
+      <Button variant="quiet" href="/admin/kb" as="link">"Kho tri thức"</Button>
+    </nav>
+    <Row gap="10px"><Avatar>"B"</Avatar> <Text>"BS. Lê Minh Tâm"</Text> <Text>"Bác sĩ · Phòng khám Pema (dữ liệu mẫu)"</Text></Row>
+    <Row justify="space-between"><Text>"Đã kết nối · v0.1.0"</Text> <Button variant="quiet" aria-label="Đổi giao diện sáng/tối" icon-only></Button> <Button variant="quiet" aria-label="Đăng xuất" icon-only></Button></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <nav aria-label="Vị trí"><Text>"Không gian phòng khám"</Text> <Text>"/"</Text> <Text strong>"Ma trận ngưỡng"</Text></nav>
+    <Field label="Tìm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="quiet" href="/inbox" aria-label="Mở thông báo" icon-only as="link"></Button>
+  </TopBar>
+  <Row gap="12px">  // phone header
+  <Button variant="quiet" aria-label="Mở menu" icon-only></Button>
+  <Button variant="quiet" href="/" title="Về trang chính" as="link">"Phòng khám Pema (dữ liệu mẫu)"</Button>
+</Row>
+  <nav aria-label="Điều hướng nhanh">
+  <Button variant="quiet" as="link">"Việc"</Button>
+  <Button variant="quiet" as="link">"Hồ sơ"</Button>
+  <Button variant="quiet" as="link">"Inbox"</Button>
+  <Button variant="quiet" as="link">"Duyệt"</Button>
+  <Button variant="quiet" as="link">"Chờ tôi"</Button>
+  <Button variant="quiet">"Menu"</Button>
+</nav>
+  <PageHeading title="Agent chăm sóc" subtitle="Người nhận yêu cầu, số trực, ngưỡng độ sâu và thời hạn trả lời" />
+  <Tabs items={["Kỹ năng và ca trực","Số trực 24/24","Ma trận ngưỡng","SLA và khung giờ","Cảnh báo"]} selected="Ma trận ngưỡng" />
+  <Row gap="8px" justify="space-between" wrap>
+    <Badge tone="warning">"Chờ bác sĩ duyệt"</Badge>
     <Button variant="primary">"Bác sĩ duyệt"</Button>
   </Row>
-  <Notice tone="info" role="note">"Các số dưới đây là mặc định tạm thời. Bác sĩ quyết định ngưỡng cuối cùng; trước đó agent vẫn chạy theo các số này nhưng không coi là đã được duyệt."</Notice>
-  <Stack tag="section">
-    <Row gap="12px" justify="space-between" wrap>
-      <Heading level={2}>"Khi nào agent nhờ người"</Heading>
-      <Text>"Từ độ sâu nào thì chuyển cho người, theo từng tín hiệu. Chọn mức thấp nhất áp dụng."</Text>
-    </Row>
-    <Grid cols="359.328px 359.328px 359.344px" gap="16px">
-      <Field label="Ngưỡng tin cậy của agent" type="text" default="0.6" id="_r_0_-hc" />
-      <Text>"Dưới ngưỡng thì chuyển cho người (0 đến 1)"</Text>
-      <Field label="Cửa sổ sau thủ thuật (giờ)" type="text" default="48" id="_r_0_-pw" />
-      <Field label="Số lần hỏi lặp lại" type="text" default="2" id="_r_0_-rq" />
-      <Text>"Hỏi cùng một câu từng này lần thì tính là lặp"</Text>
+  <Notice tone="warning" text="Các số dưới đây là mặc định tạm thời. Bác sĩ quyết định ngưỡng cuối cùng; trước đó agent vẫn chạy theo các số này nhưng không coi là đã được duyệt." />
+  <Card title="Khi nào agent nhờ người" subtitle="Từ độ sâu nào thì chuyển cho người, theo từng tín hiệu. Chọn mức thấp nhất áp dụng.">
+    <Grid cols="repeat(3,minmax(0,1fr))" gap="16px">
+      <Field label="Ngưỡng tin cậy của agent" type="text" default="0.6" hint="Dưới ngưỡng thì chuyển cho người (0 đến 1)" />
+      <Field label="Cửa sổ sau thủ thuật (giờ)" type="text" default="48" />
+      <Field label="Số lần hỏi lặp lại" type="text" default="2" hint="Hỏi cùng một câu từng này lần thì tính là lặp" />
     </Grid>
-    <Field label="Khách chưa xác minh danh tính chỉ được trả lời tới" type="select" default="D1 · Hành chính" id="_r_0_-um" />
-    <ul>
-      <li>
-        <Text>"Mặc định"</Text>
-        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Mặc định">"D4 · Phán đoán y khoa"</Button>
-      </li>
-      <li>
-        <Text>"Khách VIP"</Text>
-        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Khách VIP">"D2 · Chăm sóc chuẩn"</Button>
-      </li>
-      <li>
-        <Text>"Tiền sử phức tạp"</Text>
-        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Tiền sử phức tạp">"D3 · Triệu chứng nhẹ"</Button>
-      </li>
-      <li>
-        <Text>"Từng khiếu nại"</Text>
-        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Từng khiếu nại">"D3 · Triệu chứng nhẹ"</Button>
-      </li>
-      <li>
-        <Text>"Đang chờ việc của bác sĩ"</Text>
-        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Đang chờ việc của bác sĩ">"D3 · Triệu chứng nhẹ"</Button>
-      </li>
-      <li>
-        <Text>"Trong cửa sổ sau thủ thuật"</Text>
-        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Trong cửa sổ sau thủ thuật">"D3 · Triệu chứng nhẹ"</Button>
-      </li>
-      <li>
-        <Text>"Ngoài giờ làm việc"</Text>
-        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Ngoài giờ làm việc">"D3 · Triệu chứng nhẹ"</Button>
-      </li>
-      <li>
-        <Text>"Khách muốn gặp người"</Text>
-        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Khách muốn gặp người">"D2 · Chăm sóc chuẩn"</Button>
-      </li>
-      <li>
-        <Text>"Khách bực bội"</Text>
-        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Khách bực bội">"D2 · Chăm sóc chuẩn"</Button>
-      </li>
-      <li>
-        <Text>"Hỏi lặp lại"</Text>
-        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Hỏi lặp lại">"D2 · Chăm sóc chuẩn"</Button>
-      </li>
-      <li>
-        <Text>"Câu trả lời trước bị từ chối"</Text>
-        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Câu trả lời trước bị từ chối">"D2 · Chăm sóc chuẩn"</Button>
-      </li>
-      <li>
-        <Text>"Mức khẩn"</Text>
-        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Mức khẩn">"D4 · Phán đoán y khoa"</Button>
-      </li>
-    </ul>
-  </Stack>
-  <Stack tag="section">
-    <Row gap="12px" justify="space-between" wrap>
-      <Heading level={2}>"Agent được tự gửi gì"</Heading>
-      <Text>"Số lần bác sĩ duyệt mà không sửa trước khi một loại tin được lên L2"</Text>
-    </Row>
-    <Grid cols="547px 547px" gap="16px">
-      <Field label="Ngưỡng tin cậy để tự trả lời" type="text" default="0.85" id="_r_0_-ac" />
-      <Text>"L2 chỉ tự trả lời khi độ tin cậy từ ngưỡng này (0 đến 1)"</Text>
-      <Row gap="12px">
-        <Field label="Xác nhận lịch hẹn khách đã chọn chạy ở L1" type="checkbox" />
-        <Text>"Xác nhận lịch hẹn khách đã chọn chạy ở L1"</Text>
-      </Row>
+    <Field label="Khách chưa xác minh danh tính chỉ được trả lời tới" type="select" default="D1 · Hành chính" />
+    <List>
+      <ListItem title="Mặc định">
+        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Mặc định" icon-after="expand_more">"D4 · Phán đoán y khoa"</Button>
+      </ListItem>
+      <ListItem title="Khách VIP">
+        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Khách VIP" icon-after="expand_more">"D2 · Chăm sóc chuẩn"</Button>
+      </ListItem>
+      <ListItem title="Tiền sử phức tạp">
+        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Tiền sử phức tạp" icon-after="expand_more">"D3 · Triệu chứng nhẹ"</Button>
+      </ListItem>
+      <ListItem title="Từng khiếu nại">
+        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Từng khiếu nại" icon-after="expand_more">"D3 · Triệu chứng nhẹ"</Button>
+      </ListItem>
+      <ListItem title="Đang chờ việc của bác sĩ">
+        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Đang chờ việc của bác sĩ" icon-after="expand_more">"D3 · Triệu chứng nhẹ"</Button>
+      </ListItem>
+      <ListItem title="Trong cửa sổ sau thủ thuật">
+        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Trong cửa sổ sau thủ thuật" icon-after="expand_more">"D3 · Triệu chứng nhẹ"</Button>
+      </ListItem>
+      <ListItem title="Ngoài giờ làm việc">
+        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Ngoài giờ làm việc" icon-after="expand_more">"D3 · Triệu chứng nhẹ"</Button>
+      </ListItem>
+      <ListItem title="Khách muốn gặp người">
+        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Khách muốn gặp người" icon-after="expand_more">"D2 · Chăm sóc chuẩn"</Button>
+      </ListItem>
+      <ListItem title="Khách bực bội">
+        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Khách bực bội" icon-after="expand_more">"D2 · Chăm sóc chuẩn"</Button>
+      </ListItem>
+      <ListItem title="Hỏi lặp lại">
+        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Hỏi lặp lại" icon-after="expand_more">"D2 · Chăm sóc chuẩn"</Button>
+      </ListItem>
+      <ListItem title="Câu trả lời trước bị từ chối">
+        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Câu trả lời trước bị từ chối" icon-after="expand_more">"D2 · Chăm sóc chuẩn"</Button>
+      </ListItem>
+      <ListItem title="Mức khẩn">
+        <Button variant="secondary" aria-label="Chuyển cho người từ độ sâu, tín hiệu Mức khẩn" icon-after="expand_more">"D4 · Phán đoán y khoa"</Button>
+      </ListItem>
+    </List>
+  </Card>
+  <Card title="Agent được tự gửi gì" subtitle="Số lần bác sĩ duyệt mà không sửa trước khi một loại tin được lên L2">
+    <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
+      <Field label="Ngưỡng tin cậy để tự trả lời" type="text" default="0.85" hint="L2 chỉ tự trả lời khi độ tin cậy từ ngưỡng này (0 đến 1)" />
+      <Field label="Xác nhận lịch hẹn khách đã chọn chạy ở L1" type="checkbox" />
     </Grid>
-    <TableShell columns={["Loại tin","Lên L2 sau (lần)","Mở cho D3"]} rows={7}>
-      <Row sample="first of 7; demo values, the other rows have the same cells">
+    <TableShell columns={["Loại tin","Lên L2 sau (lần)","Mở cho D3"]} rows={4} foot="7 loại tin" fields  /* MatrixGrid: cells hold fields; cards at 390 */>
+      <Row sample="first row; demo values, the other rows have the same cells">
         <Cell column="Loại tin">
           <Text>"Nhắc lịch theo mẫu"</Text>
         </Cell>
         <Cell column="Lên L2 sau (lần)">
-          <Field label="Lên L2 sau bao nhiêu lần, Nhắc lịch theo mẫu" type="text" />
+          <Field label="Lên L2 sau bao nhiêu lần, Nhắc lịch theo mẫu" type="text" default="3" />
         </Cell>
         <Cell column="Mở cho D3">
           <Field label="Mở cho D3, Nhắc lịch theo mẫu" type="checkbox" />
         </Cell>
       </Row>
+      <Row sample="row 2 of 4: same cells">
+        <Cell column="Lên L2 sau (lần)">
+          <Field label="Lên L2 sau bao nhiêu lần, Hướng dẫn chăm sóc theo mẫu" type="text" default="4" />
+        </Cell>
+        <Cell column="Mở cho D3">
+          <Field label="Mở cho D3, Hướng dẫn chăm sóc theo mẫu" type="checkbox" checked />
+        </Cell>
+      </Row>
+      <Row sample="row 3 of 4: same cells">
+        <Cell column="Lên L2 sau (lần)">
+          <Field label="Lên L2 sau bao nhiêu lần, Xác nhận lịch hẹn" type="text" default="5" />
+        </Cell>
+        <Cell column="Mở cho D3">
+          <Field label="Mở cho D3, Xác nhận lịch hẹn" type="checkbox" />
+        </Cell>
+      </Row>
+      <Row sample="row 4 of 4: same cells">
+        <Cell column="Lên L2 sau (lần)">
+          <Field label="Lên L2 sau bao nhiêu lần, Trả lời từ kho tri thức" type="text" default="3" />
+        </Cell>
+        <Cell column="Mở cho D3">
+          <Field label="Mở cho D3, Trả lời từ kho tri thức" type="checkbox" />
+        </Cell>
+      </Row>
     </TableShell>
-  </Stack>
-  <Row gap="8px">
+  </Card>
+  <Row gap="8px" wrap>
     <Button variant="primary" disabled>"Lưu ma trận"</Button>
     <Button variant="secondary" disabled>"Bỏ thay đổi"</Button>
   </Row>
 </AppShell>
 ```
-Kit components used: Button×20, Field×8, Badge×1, TableShell×1.
+Kit components used: Button×30, Field×15, Card×2, Sidebar×1, TopBar×1, PageHeading×1, Tabs×1, Badge×1, TableShell×1.
 
 ## Responsive
 - 1440×900 is the reference (Frame, Layout).
@@ -238,6 +287,10 @@ Kit components used: Button×20, Field×8, Badge×1, TableShell×1.
 
 ## Gotchas
 - Care texts quote backend words (consequence of a release, reasons, depth names): the mock BE and `src/lib/care/labels.ts` hold them; a spec lists them as required text only when the code contains them verbatim.
+
+## Web canvas
+- Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WK9 · Ma trận ngưỡng`.
+- Canvas note: Next.js › /admin/care/matrix · tab 3: ma trận độ sâu × mức tự chủ, đang chờ bác sĩ duyệt; bác sĩ thấy nút "Bác sĩ duyệt"
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WK9-1440x900.png`

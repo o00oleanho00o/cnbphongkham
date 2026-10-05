@@ -62,78 +62,158 @@ Other screens:
 - Layout `.region` 536×41 px: flex row wrap, space-between, gap 8px
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Measured from the running page (snapshot of the mock BE): every field, action, status, filter and text is listed; repeating rows show the first one and their count.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web (Next.js).dc.html` (frame WK1); labels, actions, statuses and notices are the front end's, verbatim.
 ```tsx
-<AppShell role="owner">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Kỹ năng và ca trực", page key ""
-  <Row gap="12px" justify="space-between" wrap>
-    <Heading level={1}>"Agent chăm sóc"</Heading>
-    <Text>"Người nhận yêu cầu, số trực, ngưỡng độ sâu và thời hạn trả lời"</Text>
-  </Row>
-  <nav aria-label="Quản trị agent chăm sóc">
-    <Button variant="quiet" href="/admin/care/staff" as="link">"Kỹ năng và ca trực"</Button>
-    <Button variant="quiet" href="/admin/care/on-call" as="link">"Số trực 24/24"</Button>
-    <Button variant="quiet" href="/admin/care/matrix" as="link">"Ma trận ngưỡng"</Button>
-    <Button variant="quiet" href="/admin/care/timing" as="link">"SLA và khung giờ"</Button>
-    <Button variant="quiet" href="/admin/care/alerts" as="link">"Cảnh báo"</Button>
-  </nav>
-  <ul>
-    <li>
+<AppShell role="owner" active="Kỹ năng và ca trực">
+  <Sidebar old="sidebar">  // menu of role `owner` (lib/nav.tsx); at 390 a header with the menu button and a bottom tab bar ("Việc", "Hồ sơ", "Inbox", "Duyệt", "Chờ tôi", "Menu") replace it
+    <Button variant="quiet" href="/" title="Về trang chính" as="link">"PHÒNG KHÁM DA LIỄU"</Button>
+    <Button variant="quiet" aria-label="Đóng menu" icon-only></Button>  // phone drawer only
+    <nav aria-label="Chức năng">
+      <Text transform="uppercase">"Không gian làm việc"</Text>
+      <Button variant="quiet" href="/dashboard" as="link">"Tổng quan"</Button>
+      <Button variant="quiet" href="/today" as="link">"Hôm nay"</Button>
+      <Button variant="quiet" href="/schedule" as="link">"Điều phối lịch"</Button>
+      <Button variant="quiet" href="/patients" as="link">"Tìm bệnh nhân"</Button>
+      <Button variant="quiet" href="/inbox" as="link">"Theo dõi"</Button>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Ảnh trước / sau"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Text transform="uppercase">"Quản lý"</Text>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Bác sĩ & phòng"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Dịch vụ"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Thu ngân"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Tài chính & tiền thủ thuật"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Text transform="uppercase">"Phân tích"</Text>
+      <Button variant="quiet" href="/ask" as="link">"Hỏi Pema"</Button>
+      <Button variant="quiet" href="/guide" as="link">"Hướng dẫn"</Button>
+      <Button variant="quiet" href="/crm" as="link">"Vòng đời khách hàng"</Button>
+      <Text transform="uppercase">"Zalo & CSKH"</Text>
+      <Button variant="quiet" href="/review" as="link">"Hàng đợi duyệt"</Button>
+      <Button variant="quiet" href="/templates" as="link">"Mẫu tin"</Button>
+      <Text transform="uppercase">"Care agent"</Text>
+      <Button variant="quiet" href="/care/handoffs" as="link">"Yêu cầu chuyển giao"</Button>
+      <Button variant="quiet" href="/admin/care/staff" as="link" aria-current="page">"Kỹ năng và ca trực"</Button>
+      <Button variant="quiet" href="/admin/care/on-call" as="link">"Số trực 24/24"</Button>
+      <Button variant="quiet" href="/admin/care/matrix" as="link">"Ma trận ngưỡng"</Button>
+      <Button variant="quiet" href="/admin/care/timing" as="link">"SLA và khung giờ"</Button>
+      <Button variant="quiet" href="/admin/care/alerts" as="link">"Cảnh báo agent"</Button>
+      <Text transform="uppercase">"Quản trị agent"</Text>
+      <Button variant="quiet" href="/admin/overview" as="link">"Tổng quan AI"</Button>
+      <Button variant="quiet" href="/admin/traces" as="link">"Trace agent"</Button>
+      <Button variant="quiet" href="/admin/threads" as="link">"Phiên chat"</Button>
+      <Button variant="quiet" href="/admin/contacts" as="link">"Danh bạ"</Button>
+      <Button variant="quiet" href="/admin/friends" as="link">"Bạn bè"</Button>
+      <Button variant="quiet" href="/admin/schedules" as="link">"Lịch tự động"</Button>
+      <Button variant="quiet" href="/admin/memory" as="link">"Trí nhớ"</Button>
+      <Button variant="quiet" href="/admin/kb" as="link">"Kho tri thức"</Button>
+      <Button variant="quiet" href="/admin/accounts" as="link">"Tài khoản Zalo"</Button>
+      <Button variant="quiet" href="/admin/users" as="link">"Nhân viên"</Button>
+      <Button variant="quiet" href="/admin/agents" as="link">"Agents"</Button>
+      <Button variant="quiet" href="/admin/tools" as="link">"Tools"</Button>
+      <Button variant="quiet" href="/admin/mcp" as="link">"MCP"</Button>
+      <Button variant="quiet" href="/admin/policy" as="link">"Hồ sơ chính sách"</Button>
+      <Button variant="quiet" href="/admin/logs" as="link">"Logs"</Button>
+      <Button variant="quiet" href="/admin/tuning" as="link">"Mô hình & cấu hình"</Button>
+    </nav>
+    <Row gap="10px"><Avatar>"N"</Avatar> <Text>"Nguyễn Thanh Hà"</Text> <Text>"Chủ phòng khám · Phòng khám Pema (dữ liệu mẫu)"</Text></Row>
+    <Row justify="space-between"><Text>"Đã kết nối · v0.1.0"</Text> <Button variant="quiet" aria-label="Đổi giao diện sáng/tối" icon-only></Button> <Button variant="quiet" aria-label="Đăng xuất" icon-only></Button></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <nav aria-label="Vị trí"><Text>"Không gian phòng khám"</Text> <Text>"/"</Text> <Text strong>"Kỹ năng và ca trực"</Text></nav>
+    <Field label="Tìm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="quiet" href="/inbox" aria-label="Mở thông báo" icon-only as="link"></Button>
+  </TopBar>
+  <Row gap="12px">  // phone header
+  <Button variant="quiet" aria-label="Mở menu" icon-only></Button>
+  <Button variant="quiet" href="/" title="Về trang chính" as="link">"Phòng khám Pema (dữ liệu mẫu)"</Button>
+</Row>
+  <nav aria-label="Điều hướng nhanh">
+  <Button variant="quiet" as="link">"Việc"</Button>
+  <Button variant="quiet" as="link">"Hồ sơ"</Button>
+  <Button variant="quiet" as="link">"Inbox"</Button>
+  <Button variant="quiet" as="link">"Duyệt"</Button>
+  <Button variant="quiet" as="link">"Chờ tôi"</Button>
+  <Button variant="quiet">"Menu"</Button>
+</nav>
+  <PageHeading title="Agent chăm sóc" subtitle="Người nhận yêu cầu, số trực, ngưỡng độ sâu và thời hạn trả lời" />
+  <Tabs items={["Kỹ năng và ca trực","Số trực 24/24","Ma trận ngưỡng","SLA và khung giờ","Cảnh báo"]} selected="Kỹ năng và ca trực" />
+  <Grid cols="repeat(2,minmax(0,1fr))" gap="16px">
+    <Card component="StaffCard">
       <Row gap="8px" justify="space-between" wrap>
-        <Heading level={2}>"Mai Anh"</Heading>
-        <Text>"CSKH · đang giữ 1/6 cuộc trò chuyện"</Text>
+        <Stack>
+          <Heading level={3}>"Mai Anh"</Heading>
+          <Text small>"CSKH · đang giữ 1/6 cuộc trò chuyện"</Text>
+        </Stack>
         <Button variant="secondary">"Sửa"</Button>
       </Row>
       <Row gap="6px" wrap>
-        <Badge tone="neutral">"Đặt lịch"</Badge>
-        <Badge tone="neutral">"Khiếu nại"</Badge>
-        <Badge tone="neutral">"Thanh toán"</Badge>
+        <Badge tone="info">"Đặt lịch"</Badge>
+        <Badge tone="info">"Khiếu nại"</Badge>
+        <Badge tone="info">"Thanh toán"</Badge>
       </Row>
-      <Text>"T2 08:00-17:00 · T3 08:00-17:00 · T4 08:00-17:00 · T5 08:00-17:00 · T6 08:00-17:00"</Text>
-      <Text>"Thứ hai, Thứ ba, Thứ tư, Thứ năm, Thứ sáu, Thứ bảy, Chủ nhật"</Text>
-    </li>
-    <li>
+      <Text small>"T2 08:00-17:00 · T3 08:00-17:00 · T4 08:00-17:00 · T5 08:00-17:00 · T6 08:00-17:00"</Text>
+    </Card>
+    <Card component="StaffCard">
       <Row gap="8px" justify="space-between" wrap>
-        <Heading level={2}>"Đặng Minh Thư"</Heading>
-        <Text>"CSKH · đang giữ 0/5 cuộc trò chuyện"</Text>
+        <Stack>
+          <Heading level={3}>"Đặng Minh Thư"</Heading>
+          <Text small>"CSKH · đang giữ 0/5 cuộc trò chuyện"</Text>
+        </Stack>
         <Button variant="secondary">"Sửa"</Button>
       </Row>
       <Row gap="6px" wrap>
-        <Badge tone="neutral">"Đặt lịch"</Badge>
-        <Badge tone="neutral">"Mụn"</Badge>
-        <Badge tone="neutral">"Nám"</Badge>
+        <Badge tone="info">"Đặt lịch"</Badge>
+        <Badge tone="info">"Mụn"</Badge>
+        <Badge tone="info">"Nám"</Badge>
       </Row>
-      <Text>"T2 08:00-12:00 · T3 08:00-12:00 · T4 08:00-12:00 · T5 08:00-12:00 · T6 08:00-12:00 · T7 08:00-12:00"</Text>
-      <Text>"Thứ hai, Thứ ba, Thứ tư, Thứ năm, Thứ sáu, Thứ bảy, Chủ nhật"</Text>
-    </li>
-    <li>
+      <Text small>"T2 08:00-12:00 · T3 08:00-12:00 · T4 08:00-12:00 · T5 08:00-12:00 · T6 08:00-12:00 · T7 08:00-12:00"</Text>
+    </Card>
+    <Card component="StaffCard">
       <Row gap="8px" justify="space-between" wrap>
-        <Heading level={2}>"BS. Lê Minh Tâm"</Heading>
-        <Text>"Bác sĩ · đang giữ 1/3 cuộc trò chuyện"</Text>
+        <Stack>
+          <Heading level={3}>"BS. Lê Minh Tâm"</Heading>
+          <Text small>"Bác sĩ · đang giữ 1/3 cuộc trò chuyện"</Text>
+        </Stack>
         <Button variant="secondary">"Sửa"</Button>
       </Row>
       <Row gap="6px" wrap>
-        <Badge tone="neutral">"Y khoa (bác sĩ)"</Badge>
-        <Badge tone="neutral">"Laser"</Badge>
-        <Badge tone="neutral">"Mụn"</Badge>
+        <Badge tone="info">"Y khoa (bác sĩ)"</Badge>
+        <Badge tone="info">"Laser"</Badge>
+        <Badge tone="info">"Mụn"</Badge>
       </Row>
-      <Text>"T2 08:00-17:00 · T3 08:00-17:00 · T4 08:00-17:00 · T5 08:00-17:00 · T6 08:00-17:00"</Text>
-      <Text>"Thứ hai, Thứ ba, Thứ tư, Thứ năm, Thứ sáu, Thứ bảy, Chủ nhật"</Text>
-    </li>
-    <li>
+      <Text small>"T2 08:00-17:00 · T3 08:00-17:00 · T4 08:00-17:00 · T5 08:00-17:00 · T6 08:00-17:00"</Text>
+    </Card>
+    <Card component="StaffCard">
       <Row gap="8px" justify="space-between" wrap>
-        <Heading level={2}>"Nguyễn Thanh Hà"</Heading>
-        <Text>"Chủ phòng khám · đang giữ 0/2 cuộc trò chuyện"</Text>
+        <Stack>
+          <Heading level={3}>"Nguyễn Thanh Hà"</Heading>
+          <Text small>"Chủ phòng khám · đang giữ 0/2 cuộc trò chuyện"</Text>
+        </Stack>
         <Button variant="secondary">"Sửa"</Button>
       </Row>
-      <Badge tone="neutral">"Khiếu nại"</Badge>
-      <Text>"T2 08:00-17:00 · T3 08:00-17:00 · T4 08:00-17:00 · T5 08:00-17:00 · T6 08:00-17:00"</Text>
-      <Text>"Thứ hai, Thứ ba, Thứ tư, Thứ năm, Thứ sáu, Thứ bảy, Chủ nhật"</Text>
-    </li>
-  </ul>
+      <Row gap="6px" wrap>
+        <Badge tone="info">"Khiếu nại"</Badge>
+      </Row>
+      <Text small>"T2 08:00-17:00 · T3 08:00-17:00 · T4 08:00-17:00 · T5 08:00-17:00 · T6 08:00-17:00"</Text>
+    </Card>
+  </Grid>
 </AppShell>
 ```
-Kit components used: Badge×10, Button×9.
+Kit components used: Button×38, Badge×10, Card×4, Sidebar×1, TopBar×1, Field×1, PageHeading×1, Tabs×1.
 
 ## Responsive
 - 1440×900 is the reference (Frame, Layout).
@@ -182,6 +262,10 @@ Quoted in the brief but not found verbatim in the front-end source (built from p
 
 ## Gotchas
 - Care texts quote backend words (consequence of a release, reasons, depth names): the mock BE and `src/lib/care/labels.ts` hold them; a spec lists them as required text only when the code contains them verbatim.
+
+## Web canvas
+- Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WK1 · Kỹ năng và ca trực`.
+- Canvas note: Next.js › /admin/care/staff · tab 1 của quản trị agent chăm sóc: một thẻ mỗi nhân viên, 2 cột
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WK1-1440x900.png`

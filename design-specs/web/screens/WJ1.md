@@ -68,36 +68,110 @@ Other screens:
 - Layout `.region` 1152×40 px: flex row wrap, gap 8px
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Measured from the running page (snapshot of the mock BE): every field, action, status, filter and text is listed; repeating rows show the first one and their count.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web (Next.js).dc.html` (frame WJ1); labels, actions, statuses and notices are the front end's, verbatim.
 ```tsx
-<AppShell role="owner">  // sidebar and top bar are the same on every page (WA1-WA3); active menu item "Nhân viên", page key ""
-  <Row gap="12px" justify="space-between" wrap>
-    <Heading level={1}>"Nhân viên"</Heading>
-    <Text>"Tài khoản đăng nhập của phòng khám: vai trò, trạng thái và mật khẩu"</Text>
-    <Button variant="primary">"Thêm nhân viên"</Button>
-  </Row>
-  <Field label="Tìm nhân viên" type="text" placeholder="Tìm theo họ tên hoặc email" />
-  <Row gap="8px" wrap>
-    <FilterChipGroup items={["Mọi vai trò","Chủ phòng khám","Quản lý","Bác sĩ","CSKH","Lễ tân"]} selected={["Mọi vai trò"]} />
-  </Row>
-  <Row gap="8px" wrap>
-    <FilterChipGroup items={["Mọi trạng thái","Đang hoạt động","Đã khóa"]} selected={["Mọi trạng thái"]} />
-  </Row>
-  <TableShell columns={["Nhân viên","Vai trò","Trạng thái","Đăng nhập cuối","Ngày tạo","Thao tác"]} rows={8}>
-    <Row sample="first of 8; demo values, the other rows have the same cells">
+<AppShell role="owner" active="Nhân viên">
+  <Sidebar old="sidebar">  // menu of role `owner` (lib/nav.tsx); at 390 a header with the menu button and a bottom tab bar ("Việc", "Hồ sơ", "Inbox", "Duyệt", "Chờ tôi", "Menu") replace it
+    <Button variant="quiet" href="/" title="Về trang chính" as="link">"PHÒNG KHÁM DA LIỄU"</Button>
+    <Button variant="quiet" aria-label="Đóng menu" icon-only></Button>  // phone drawer only
+    <nav aria-label="Chức năng">
+      <Text transform="uppercase">"Không gian làm việc"</Text>
+      <Button variant="quiet" href="/dashboard" as="link">"Tổng quan"</Button>
+      <Button variant="quiet" href="/today" as="link">"Hôm nay"</Button>
+      <Button variant="quiet" href="/schedule" as="link">"Điều phối lịch"</Button>
+      <Button variant="quiet" href="/patients" as="link">"Tìm bệnh nhân"</Button>
+      <Button variant="quiet" href="/inbox" as="link">"Theo dõi"</Button>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Ảnh trước / sau"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Text transform="uppercase">"Quản lý"</Text>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Bác sĩ & phòng"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Dịch vụ"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Thu ngân"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"
+      <Text>"Tài chính & tiền thủ thuật"</Text>
+      <Text>"(sắp có)"</Text>
+    </Row>
+      <Text transform="uppercase">"Phân tích"</Text>
+      <Button variant="quiet" href="/ask" as="link">"Hỏi Pema"</Button>
+      <Button variant="quiet" href="/guide" as="link">"Hướng dẫn"</Button>
+      <Button variant="quiet" href="/crm" as="link">"Vòng đời khách hàng"</Button>
+      <Text transform="uppercase">"Zalo & CSKH"</Text>
+      <Button variant="quiet" href="/review" as="link">"Hàng đợi duyệt"</Button>
+      <Button variant="quiet" href="/templates" as="link">"Mẫu tin"</Button>
+      <Text transform="uppercase">"Care agent"</Text>
+      <Button variant="quiet" href="/care/handoffs" as="link">"Yêu cầu chuyển giao"</Button>
+      <Button variant="quiet" href="/admin/care/staff" as="link">"Kỹ năng và ca trực"</Button>
+      <Button variant="quiet" href="/admin/care/on-call" as="link">"Số trực 24/24"</Button>
+      <Button variant="quiet" href="/admin/care/matrix" as="link">"Ma trận ngưỡng"</Button>
+      <Button variant="quiet" href="/admin/care/timing" as="link">"SLA và khung giờ"</Button>
+      <Button variant="quiet" href="/admin/care/alerts" as="link">"Cảnh báo agent"</Button>
+      <Text transform="uppercase">"Quản trị agent"</Text>
+      <Button variant="quiet" href="/admin/overview" as="link">"Tổng quan AI"</Button>
+      <Button variant="quiet" href="/admin/traces" as="link">"Trace agent"</Button>
+      <Button variant="quiet" href="/admin/threads" as="link">"Phiên chat"</Button>
+      <Button variant="quiet" href="/admin/contacts" as="link">"Danh bạ"</Button>
+      <Button variant="quiet" href="/admin/friends" as="link">"Bạn bè"</Button>
+      <Button variant="quiet" href="/admin/schedules" as="link">"Lịch tự động"</Button>
+      <Button variant="quiet" href="/admin/memory" as="link">"Trí nhớ"</Button>
+      <Button variant="quiet" href="/admin/kb" as="link">"Kho tri thức"</Button>
+      <Button variant="quiet" href="/admin/accounts" as="link">"Tài khoản Zalo"</Button>
+      <Button variant="quiet" href="/admin/users" as="link" aria-current="page">"Nhân viên"</Button>
+      <Button variant="quiet" href="/admin/agents" as="link">"Agents"</Button>
+      <Button variant="quiet" href="/admin/tools" as="link">"Tools"</Button>
+      <Button variant="quiet" href="/admin/mcp" as="link">"MCP"</Button>
+      <Button variant="quiet" href="/admin/policy" as="link">"Hồ sơ chính sách"</Button>
+      <Button variant="quiet" href="/admin/logs" as="link">"Logs"</Button>
+      <Button variant="quiet" href="/admin/tuning" as="link">"Mô hình & cấu hình"</Button>
+    </nav>
+    <Row gap="10px"><Avatar>"N"</Avatar> <Text>"Nguyễn Thanh Hà"</Text> <Text>"Chủ phòng khám · Phòng khám Pema (dữ liệu mẫu)"</Text></Row>
+    <Row justify="space-between"><Text>"Đã kết nối · v0.1.0"</Text> <Button variant="quiet" aria-label="Đổi giao diện sáng/tối" icon-only></Button> <Button variant="quiet" aria-label="Đăng xuất" icon-only></Button></Row>
+  </Sidebar>
+  <TopBar old="topbar">
+    <nav aria-label="Vị trí"><Text>"Không gian phòng khám"</Text> <Text>"/"</Text> <Text strong>"Nhân viên"</Text></nav>
+    <Field label="Tìm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />
+    <Button variant="quiet" href="/inbox" aria-label="Mở thông báo" icon-only as="link"></Button>
+  </TopBar>
+  <Row gap="12px">  // phone header
+  <Button variant="quiet" aria-label="Mở menu" icon-only></Button>
+  <Button variant="quiet" href="/" title="Về trang chính" as="link">"Phòng khám Pema (dữ liệu mẫu)"</Button>
+</Row>
+  <nav aria-label="Điều hướng nhanh">
+  <Button variant="quiet" as="link">"Việc"</Button>
+  <Button variant="quiet" as="link">"Hồ sơ"</Button>
+  <Button variant="quiet" as="link">"Inbox"</Button>
+  <Button variant="quiet" as="link">"Duyệt"</Button>
+  <Button variant="quiet" as="link">"Chờ tôi"</Button>
+  <Button variant="quiet">"Menu"</Button>
+</nav>
+  <PageHeading title="Nhân viên" subtitle="Tài khoản đăng nhập của phòng khám: vai trò, trạng thái và mật khẩu">
+    <Button variant="primary" icon="add">"Thêm nhân viên"</Button>
+  </PageHeading>
+  <Field label="Tìm nhân viên" type="search" placeholder="Tìm theo họ tên hoặc email" />
+  <FilterChipGroup items={["Mọi vai trò","Chủ phòng khám","Quản lý","Bác sĩ","CSKH","Lễ tân"]} selected={["Mọi vai trò"]} />
+  <FilterChipGroup items={["Mọi trạng thái","Đang hoạt động","Đã khóa"]} selected={["Mọi trạng thái"]} />
+  <TableShell columns={["Nhân viên","Vai trò","Trạng thái","Đăng nhập cuối","Ngày tạo","Thao tác"]} rows={8}  /* cards at 390 */>
+    <Row sample="first row; demo values, the other rows have the same cells">
       <Cell column="Nhân viên">
-        <Row gap="12px">
-          <Text>"B"</Text>
-          <Text>"BS. Lê Minh Tâm"</Text>
-          <Text>"doctor@pema.test"</Text>
-        </Row>
+        <Avatar>"L"</Avatar>
+        <Text><Strong>"BS. Lê Minh Tâm"</Strong> "\n" <Small>"doctor@pema.test"</Small></Text>
       </Cell>
       <Cell column="Vai trò">
-        <Badge tone="neutral">"Bác sĩ"</Badge>
+        <Badge tone="info" dot={false}>"Bác sĩ"</Badge>
       </Cell>
       <Cell column="Trạng thái">
-        <Badge tone="neutral">"Đang hoạt động"</Badge>
+        <Badge tone="success">"Đang hoạt động"</Badge>
       </Cell>
       <Cell column="Đăng nhập cuối">
         <Text>"20/09 09:00"</Text>
@@ -106,18 +180,41 @@ Measured from the running page (snapshot of the mock BE): every field, action, s
         <Text>"24/03/2026"</Text>
       </Cell>
       <Cell column="Thao tác">
-        <Row gap="8px" wrap>
-          <Button variant="secondary" aria-label="Sửa BS. Lê Minh Tâm">"Sửa"</Button>
-          <Button variant="secondary" aria-label="Đặt lại mật khẩu của BS. Lê Minh Tâm">"Đặt lại mật khẩu"</Button>
-          <Button variant="danger" aria-label="Khóa tài khoản của BS. Lê Minh Tâm">"Khóa"</Button>
-        </Row>
+        <Button variant="secondary" aria-label="Sửa BS. Lê Minh Tâm">"Sửa"</Button>
+        <Button variant="secondary" aria-label="Đặt lại mật khẩu của BS. Lê Minh Tâm">"Đặt lại mật khẩu"</Button>
+        <Button variant="danger" aria-label="Khóa tài khoản của BS. Lê Minh Tâm">"Khóa"</Button>
       </Cell>
     </Row>
-    <RowVariants>actions "Sửa" (secondary) ×8, "Đặt lại mật khẩu" (secondary) ×7, "Khóa" (danger) ×6, "Mở khóa" (secondary) ×1 · statuses "Bác sĩ" ×2, "Đang hoạt động" ×7, "" ×8, "Lễ tân" ×2, "Đã khóa" ×1, "CSKH" ×2, "Chủ phòng khám" ×1, "Quản lý" ×1</RowVariants>
+    <Row sample="row 3 of 8: only the actions and statuses that the rows above do not show">
+      <Cell column="Vai trò">
+        <Badge tone="info" dot={false}>"Lễ tân"</Badge>
+      </Cell>
+      <Cell column="Trạng thái">
+        <Badge tone="danger">"Đã khóa"</Badge>
+      </Cell>
+      <Cell column="Thao tác">
+        <Button variant="secondary" aria-label="Mở khóa tài khoản của Bùi Ngọc Lan">"Mở khóa"</Button>
+      </Cell>
+    </Row>
+    <Row sample="row 4 of 8: only the actions and statuses that the rows above do not show">
+      <Cell column="Vai trò">
+        <Badge tone="info" dot={false}>"CSKH"</Badge>
+      </Cell>
+    </Row>
+    <Row sample="row 6 of 8: only the actions and statuses that the rows above do not show">
+      <Cell column="Vai trò">
+        <Badge tone="info" dot={false}>"Chủ phòng khám"</Badge>
+      </Cell>
+    </Row>
+    <Row sample="row 7 of 8: only the actions and statuses that the rows above do not show">
+      <Cell column="Vai trò">
+        <Badge tone="info" dot={false}>"Quản lý"</Badge>
+      </Cell>
+    </Row>
   </TableShell>
 </AppShell>
 ```
-Kit components used: Button×4, Badge×2, Field×1, TableShell×1.
+Kit components used: Button×39, Badge×7, Field×2, Sidebar×1, TopBar×1, PageHeading×1, TableShell×1.
 
 ## Responsive
 - 1440×900 is the reference (Frame, Layout).
@@ -154,6 +251,10 @@ Kit components used: Button×4, Badge×2, Field×1, TableShell×1.
 
 ## Gotchas
 - Several WJ pages have no UI test; their briefs come from reading the components (W7). Texts that the brief quotes are checked against the sources by `web-specs.cjs`; "Texts to re-check against the code" in a spec lists the ones it could not find verbatim.
+
+## Web canvas
+- Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WJ1 · Nhân viên`.
+- Canvas note: Next.js › /admin/users · danh sách tài khoản đăng nhập, bộ lọc vai trò và trạng thái, thao tác của chủ phòng khám
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WJ1-1440x900.png`

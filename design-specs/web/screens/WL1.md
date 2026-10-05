@@ -47,7 +47,7 @@ Other screens:
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
 ## Layout (top to bottom, from the web canvas frame, region → src/ui component)
-Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WL1); labels, actions, statuses and notices are the front end's, verbatim.
+Generated from the blocks of `Pema Web redesign canvas/Pema Web (Next.js).dc.html` (frame WL1); labels, actions, statuses and notices are the front end's, verbatim.
 ```tsx
 <Stack>
   <Card>
@@ -55,7 +55,7 @@ Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame 
     <Heading level={2} sub="Chăm sóc khách hàng và trợ lý AI">"Đăng nhập CSKH"</Heading>
     <Field label="Email" type="text" />
     <Field label="Mật khẩu" type="text" />
-    <Button variant="secondary" aria-label="Hiện nội dung" icon="visibility" icon-only></Button>
+    <Button variant="quiet" aria-label="Hiện nội dung" icon-only></Button>  // inside the field box
     <Button variant="primary" disabled>"Đăng nhập"</Button>
   </Card>
 </Stack>

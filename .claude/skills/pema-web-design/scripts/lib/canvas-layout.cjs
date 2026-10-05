@@ -14,22 +14,25 @@ const attrs = (o) =>
 const KIT = new Set(['AppShell', 'Sidebar', 'TopBar', 'Workspace', 'PageHeading', 'Card', 'Tile', 'TableShell', 'Tabs', 'TabPanel', 'Badge', 'Button', 'Field', 'Dialog', 'Sheet', 'EmptyState', 'GuardedLink']);
 const SHARED = new Set(['Notice', 'FilterChip']);
 
-/** { screens: { id: screen }, file } or null when the canvas has not been built. */
+/** { screens: { id: screen }, file, files } or null when the canvas has not been built. W10: reads every canvas file ("Pema Web.dc.html" WA-WI and "Pema Web (Next.js).dc.html" WJ-WL) and merges their screens; `file` is the first one, `files` all of them. */
 function loadCanvasScreens(dir) {
-  const file = path.join(dir || lib.CANVAS_DIR, lib.CANVAS_FILE);
-  if (!fs.existsSync(file)) return null;
-  const src = lib.read(file);
-  const m = /<script type="text\/x-dc" data-dc-script[^>]*>([\s\S]*?)<\/script>/.exec(src);
-  if (!m) return null;
+  const files = Object.keys(lib.OUTPUTS).map((f) => path.join(dir || lib.CANVAS_DIR, f)).filter((f) => fs.existsSync(f));
+  if (!files.length) return null;
   const DCLogic = class {
     constructor() {
       this.props = {};
     }
   };
-  const groups = new Function('DCLogic', `${m[1]}\nreturn new Component().build();`)(DCLogic);
   const screens = {};
-  for (const g of groups) for (const s of g.screens) screens[s.id] = { ...s, group: g.code };
-  return { screens, file };
+  for (const file of files) {
+    const src = lib.read(file);
+    const m = /<script type="text\/x-dc" data-dc-script[^>]*>([\s\S]*?)<\/script>/.exec(src);
+    if (!m) return null;
+    const groups = new Function('DCLogic', `${m[1]}
+return new Component().build();`)(DCLogic);
+    for (const g of groups) for (const s of g.screens) screens[s.id] = { ...s, group: g.code, canvasFile: path.basename(file) };
+  }
+  return { screens, file: files[0], files };
 }
 
 const partText = (parts) => parts.map((p) => (/\bp-b\b|\bp-x\b/.test(p.c) ? `<Strong>${q(p.t)}</Strong>` : /p-sm|p-soft/.test(p.c) ? `<Small>${q(p.t)}</Small>` : q(p.t))).join(' ');
