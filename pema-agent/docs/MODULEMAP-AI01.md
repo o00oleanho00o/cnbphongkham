@@ -34,10 +34,10 @@
 | `pema/core` | `ClinicDatabase.session()` (không còn đặt `app.clinic_id`; đối số `clinic_id` cũ bị bỏ qua), `get_installation_clinic_id(db)` (mã cài đặt: bộ nhớ đệm, `PEMA_CLINIC_ID`, `ctx.the_clinic_id()`), `installation.ensure_clinic` (tạo phòng khám duy nhất, idempotent), helper test `testing.ensure_test_clinic`; shim `resolve_clinic`/`list_active_clinic_ids` (deprecated, trả mã cài đặt), vòng lặp sự kiện selector cho Windows | Một bản cài một phòng khám, không RLS (CONTRACTS-AI01 mục 10) | A, ST-A |
 | `pema/shared` (27 file) | Logger che PII, giờ VN, múi giờ, bộ tuần tự lỗi an toàn, chặn địa chỉ riêng/SSRF, tải xuống an toàn, đọc zip/xml có trần, chờ có điều kiện | | A, D1, D2, D3, D4 |
 | `pema/config` (20 file) | `Settings` (`PEMA_*`), 72 tham số tuning, mã hóa bí mật, account/agent store, cài đặt LLM/ảnh/tool/thị giác, kho `agent.runtime_settings` | `get_tuning`, `bot_time_zone` | A, D1, D2, D4, G |
-| `backend/apps/api/alembic/versions` | `0001` clinic, `0002` agent, `0003` clinic_agent; `b1_0004` phiên + Inbox; `b2_0001` dấu giao thức CRM; `s_0004` runtime bộ lập lịch; `p0001` liên kết danh tính; `g_0005` gộp đầu nhánh; `h_0008` gộp tiếp; `st_0009_single_tenant` (một phòng khám, bỏ RLS; đầu duy nhất) | Không sửa `0001..0003`; bảng mới có `clinic_id` (khóa ngoại tới `clinic.clinic`) và grant, **không RLS, không policy** | A + từng gói + G |
+| `backend/apps/api/alembic/versions` | `0001` clinic, `0002` agent, `0003` clinic_agent; `b1_0004` phiên + Inbox; `b2_0001` dấu giao thức CRM; `s_0004` runtime bộ lập lịch; `p0001` liên kết danh tính; `g_0005` gộp đầu nhánh; `h_0008` gộp tiếp; `st_0009_single_tenant` (một phòng khám, bỏ RLS); `m_0001`, `m_0002` bảng care; gói U (đầu duy nhất hiện nay là `u6_0010_finance`): `u3_0010_sessions_plans_media` → `u7_0001_guide_tags` → `u4_0010_services_resources` → `u5_0010_orders_catalog` → `u6_0010_finance` (đã xếp thành một chuỗi nên không cần revision gộp; U8 kiểm `alembic heads` ra một đầu và `upgrade head`, `downgrade base` trên Postgres sạch) | Không sửa `0001..0003`; bảng mới có `clinic_id` (khóa ngoại tới `clinic.clinic`) và grant, **không RLS, không policy** | A + từng gói + G |
 | Role DB `be_app`, `agent_worker` | `be_app`: DML trên `clinic.*` và `agent.*`, `audit_log` chỉ chèn/đọc. `agent_worker`: DML `agent.*`, đọc view `clinic_agent`, EXECUTE hàm `clinic_agent`; **không có gì trên `clinic.*`** | Grant là ranh giới duy nhất của DB (không còn RLS: `be_app` đọc mọi dòng của một CSDL chỉ có một phòng khám) | A (tạo) + `infra/scripts/bootstrap-roles.sh` (F, mật khẩu) |
 
-## Lõi phòng khám (`pema/clinic`, 48 file)
+## Lõi phòng khám (`pema/clinic`, 81 file)
 
 | Module | Trách nhiệm | Gói |
 |---|---|---|
@@ -45,7 +45,9 @@
 | `clinic/domain` | Luật thuần: lịch (xung đột), hồ sơ, máy trạng thái `review_item` | B1 |
 | `clinic/rbac` | Ma trận vai trò → quyền, `authorize`, mật khẩu argon2 | B1 |
 | `clinic/audit` | Ghi audit và guard (mọi mutation có dòng audit) | B1 |
-| `clinic/actions` | Hành động dùng chung cho route **và** agent: patients, patient_360, appointments, consents, conversations, crm_tasks, review_items, templates, outbound, `agent_facing` (cửa của agent), `seed_demo` (dữ liệu hư cấu) | B1 |
+| `clinic/actions` | Hành động dùng chung cho route **và** agent: patients, patient_360, appointments, consents, conversations, crm_tasks, review_items, templates, outbound, `agent_facing` (cửa của agent), `seed_demo` (dữ liệu hư cấu). Gói U thêm: `dashboard`, `appointment_events` (U2); `sessions`, `plans`, `consult_notes`, `media` (U3); `services`, `resources`, `protocols`, `studio` (U4); `orders`, `catalog`, `catalog_seed` (U5); `finance`, `finance_cash`, `_invoices` (U6); `guide`, `guide_text`, `seed_guide`, `crm_overview` (U7) | B1, U |
+| `clinic/finance` | `domain.py`: luật thuần của PB02 (làm tròn nửa lên theo đồng, chia doanh thu cho tối đa bốn người thực hiện, bảng tiền thủ thuật, tổng kết tháng, lý do không chốt được, `csv_safe`); dịch từ `prototype/finance_server.py` và test từ `finance_test.py` | U6 |
+| `clinic/media_storage.py`, `clinic/media_signing.py` | Kho tệp ảnh (thư mục cục bộ hoặc bộ nhớ khi test, khóa không thoát khỏi gốc) và đường tải lên có chữ ký ràng buộc ảnh, kích thước, kiểu, thời hạn; kiểm chữ ký đầu tệp so với MIME khai báo. Không có mã nào mở hay phân tích ảnh | U3 |
 | `clinic/crm_rules` | Engine thuần mười luật, runner, sinh job, kho SQL, admin luật | B2 |
 
 Nguồn JS: `prototype/shared/crm-data.js` và `crm-automation.js` (không phải zalo-agent). Đây là module hành vi tương đương được test.
@@ -106,7 +108,7 @@ Gói P **thêm** `hooks`, `gateway`, `review`, `turn_guard`, `identity_admin`, `
 
 | Module | Trách nhiệm | Gói |
 |---|---|---|
-| `pema/api` (41 file) | `router.py` gom route, `deps`, `errors`, xuất OpenAPI; routers mỏng gọi actions hoặc store; xác thực dashboard; webhook Zalo | A (khung), mỗi router có một chủ (CONTRACTS-AI01 mục 2) |
+| `pema/api` (58 file) | `router.py` gom route, `deps`, `errors`, xuất OpenAPI; routers mỏng gọi actions hoặc store; xác thực dashboard; webhook Zalo | A (khung), mỗi router có một chủ (CONTRACTS-AI01 mục 2) |
 | `pema/composition` (8 file) | **Gốc ghép**: `runtime.build_runtime` tạo mọi đối tượng một lần mỗi tiến trình; `intake` (ngăn xếp Bot và cá nhân); `outbound` (gửi tin đã duyệt qua kênh đang chạy); `api_wiring` (lifespan, vòng CRM); `auth_bridge`; `adapters` | G |
 | `pema/bootstrap.py` | `create_app()` (rẻ, không cần Redis hay DB); lifespan dựng mọi thứ | A, G |
 | `pema/workers` (5 file) | `main` (điểm vào `python -m pema.workers.main`), `turn_worker`, `scheduler_worker`, `kb_ingest_worker` | G, C2, S, D3 |
@@ -125,9 +127,12 @@ Next.js App Router, TypeScript, Tailwind v4, Be Vietnam Pro, màu Pema (`brand-5
 
 | Vùng | Route |
 |---|---|
-| Vận hành | `/today`, `/inbox`, `/review`, `/patients`, `/patients/[id]`, `/templates` |
+| Vận hành (menu theo thứ tự web cũ) | `/dashboard` (Tổng quan, U2), `/today`, `/schedule` (U2), `/patients`, `/patients/[id]` (năm thẻ, U3), `/inbox` (Theo dõi), `/studio` (Ảnh trước/sau, U4), `/resources` (Bác sĩ & phòng, U4), `/services` (U4), `/cashier` (U5), `/orders/[id]`, `/orders/[id]/print` (đơn thuốc A5, U5), `/finance`, `/finance/{entries, rates, payments, periods, export}` (U6), `/ask` (Hỏi Pema), `/guide` (Hướng dẫn), `/crm` (Vòng đời khách hàng, U7), `/review`, `/templates` |
+| Care agent (gói M) | `/care/handoffs`, `/care/patients/[id]` (+ `/timeline`, `/release`, `/tell-agent`), `/admin/care/{staff, matrix, timing, on-call, alerts}` |
 | Quản trị AI | `/admin/{overview, accounts, agents, agents/new, agents/[id], contacts, friends, threads, memory, kb, schedules, mcp, tools, tuning, tuning/[group], traces, logs, policy, users, auth}` (`/admin/users` là màn **Nhân viên**: menu hiện khi có `admin.users.read` (chủ, quản lý); các nút thêm, sửa, khóa, đặt lại mật khẩu chỉ hiện khi có `admin.users` (chủ) và không hiện trên tài khoản của chính mình) |
-| Phiên | `/login` |
+| Phiên và công cụ | `/login`, `/` (chuyển tới trang chủ của vai trò), `/dev/kit` (ví dụ bộ thành phần; bản production trả 404) |
+
+Bộ token và thành phần của gói U: `src/ui/tokens.css` là nguồn (Tailwind `@theme`), `tokens.json` sinh ra từ đó (`pnpm tokens`) cho KMP; bộ thành phần `src/ui` (`AppShell`, `Sidebar`, `TopBar`, `Workspace`, `Card`, `Tile`, `Tabs`, `Badge`, `Button`, `Field`, `Dialog`, `Sheet`, `EmptyState`...). `FEATURE-INVENTORY.md` đóng băng route, khả năng và id test của từng màn; `pnpm inventory` fail khi một dòng mất hoặc một file test không được nêu tên. Bằng chứng hình ảnh: [PARITY-AI01-U](PARITY-AI01-U.md).
 
 `frontend/mock` là backend giả phục vụ cùng đường dẫn của `openapi.json`, có test hợp đồng để mock không lệch. Mã dịch từ `web/` của zalo-agent ở `src/components/admin/<vùng>` và `src/lib/admin/<vùng>`; mã Pema-only (không có bản gốc) ở `src/components/ops` và `src/lib/ops`, trang chính sách, công tắc kênh, cột ký duyệt KB, "Thử tìm".
 

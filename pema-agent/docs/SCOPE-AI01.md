@@ -1,6 +1,6 @@
 # Pema Agent — Scope AI01
 
-Trạng thái: mô tả hiện trạng mã trên nhánh `feat/ai-agent-backend` (commit tích hợp `1ce6cca`), viết ngày 2026-10-02 bởi gói F; **cập nhật cho nhánh `feat/single-tenant`: phạm vi là MỘT phòng khám mỗi bản cài** (mục 2, mục 7 quyết định 16, ARCH-AI01 mục 14 về hai nhánh song song). Luồng tài liệu: **SCOPE-AI01 → [SPEC-AI01](SPEC-AI01.md) → [MODULEMAP-AI01](MODULEMAP-AI01.md) → [ARCH-AI01](ARCH-AI01.md)**. Kế hoạch gốc là [PLAN-AI01](PLAN-AI01.md); hợp đồng giữa các gói là [CONTRACTS-AI01](CONTRACTS-AI01.md); bảng dịch file là [PORT-MAP](PORT-MAP.md).
+Trạng thái: mô tả hiện trạng mã trên nhánh `feat/ai-agent-backend` (commit tích hợp `1ce6cca`), viết ngày 2026-10-02 bởi gói F; **cập nhật cho nhánh `feat/single-tenant`: phạm vi là MỘT phòng khám mỗi bản cài** (mục 2, mục 7 quyết định 16, ARCH-AI01 mục 14 về hai nhánh song song); **cập nhật cho gói U (2026-10-05): một ứng dụng nhân viên Next.js có đủ màn của web Clinic cũ** (mục 2, mục 6, mục 7 quyết định 17, bằng chứng ở [PARITY-AI01-U](PARITY-AI01-U.md)). Luồng tài liệu: **SCOPE-AI01 → [SPEC-AI01](SPEC-AI01.md) → [MODULEMAP-AI01](MODULEMAP-AI01.md) → [ARCH-AI01](ARCH-AI01.md)**. Kế hoạch gốc là [PLAN-AI01](PLAN-AI01.md); hợp đồng giữa các gói là [CONTRACTS-AI01](CONTRACTS-AI01.md); bảng dịch file là [PORT-MAP](PORT-MAP.md).
 
 Bộ tài liệu này cùng cấp với bộ PB01/PB02 trong `docs/` và theo cùng quy tắc của `AGENT.md`: chỉ ghi điều mã làm được, tách rõ "đã có test với đồ giả" khỏi "đã chạy thật", và mọi dữ liệu trong repo là hư cấu. Nơi nào chưa kiểm chứng, tài liệu nói thẳng là chưa kiểm chứng; danh sách đầy đủ ở mục 8.
 
@@ -25,7 +25,7 @@ Mục tiêu an toàn đi trước mục tiêu tiện lợi: agent soạn nháp, 
 - **Luật CRM tự động**: mười luật của `crm-automation.js` thành engine Python sinh việc cho nhân viên và (khi cấu hình) job vào bộ lập lịch; `marketingOptOut` chặn tiếp thị; sinh nhật không bao giờ tự gửi.
 - **Bộ lập lịch**: job `message` (từ mẫu đã duyệt) và `agent`, trần tin chủ động mỗi ngày, công tắc khẩn (kill switch), cửa sổ giờ gửi, khoảng cách giữa các tin, phục hồi sau lỗi.
 - **Kho tri thức** tài liệu da liễu (tài liệu mẫu hư cấu trong `kb-samples/`) với tìm kiếm lai (từ khóa + vector) và dấu duyệt của bác sĩ.
-- **FE Next.js** (mobile-first, tiếng Việt): Việc hôm nay, Inbox, Hàng đợi duyệt, Hồ sơ bệnh nhân (chỉ đọc), Tin nhắn mẫu; và quản trị AI (accounts/QR, agents/persona, model/tuning, tools, KB, lịch, MCP, usage/trace, log, chính sách).
+- **FE Next.js** (mobile-first, tiếng Việt, một bộ token và một bộ thành phần `src/ui`): hợp nhất màn vận hành của web Clinic cũ và màn của agent. Vận hành: Tổng quan, Hôm nay, Điều phối lịch, Tìm bệnh nhân và Patient 360 (năm thẻ Tổng quan, Tư vấn, Kế hoạch, Buổi điều trị, Ảnh), Theo dõi (Inbox, Hàng đợi duyệt, Mẫu tin), Ảnh trước/sau, Bác sĩ & phòng, Dịch vụ, Thu ngân, Đơn thuốc A5, Tài chính PB02, Hỏi Pema, Hướng dẫn, Vòng đời khách hàng. Care agent và quản trị AI (accounts/QR, agents/persona, model/tuning, tools, KB, lịch, MCP, usage/trace, log, chính sách, nhân viên). Danh sách route: MODULEMAP-AI01 mục "Giao diện"; danh sách tính năng đã đóng băng: `frontend/FEATURE-INVENTORY.md`.
 - **Hạ tầng**: docker-compose (Postgres + pgvector, Redis, migrate, api, worker, frontend, bridge, Ollama, Caddy reverse proxy ở profile `proxy`), tác vụ xóa dữ liệu theo thời hạn lưu (`pema.retention`), role DB, sao lưu/khôi phục, hướng dẫn Ubuntu + Ollama + Tailscale.
 
 ## 3. Hai hồ sơ chính sách
@@ -51,7 +51,7 @@ Mọi cờ nằm trong dữ liệu `DEFAULT_PROFILES` (`pema_contracts.policy`);
 
 ## 4. Người dùng và vai trò
 
-Vai trò nhân viên theo `pema_contracts.roles`: chủ phòng khám (`owner`), quản lý (`manager`), bác sĩ (`doctor`), CSKH (`cs_staff`), lễ tân (`reception`). Vai trò `patient` hiện **không có quyền nào** trên các route nhân viên (chưa có liên kết phiên bệnh nhân với hồ sơ). Thu ngân/tài chính thuộc PB02, không nằm trong API này. Chi tiết phân quyền ở SPEC-AI01 mục 5. Bệnh nhân không dùng FE này: họ chỉ nhắn qua Zalo; ứng dụng bệnh nhân (web, KMP) của PB01 giữ nguyên và không đổi.
+Vai trò nhân viên theo `pema_contracts.roles`: chủ phòng khám (`owner`), quản lý (`manager`), bác sĩ (`doctor`), CSKH (`cs_staff`), lễ tân (`reception`). Vai trò `patient` hiện **không có quyền nào** trên các route nhân viên (chưa có liên kết phiên bệnh nhân với hồ sơ). Thu ngân và kế toán chưa có vai trò riêng: lễ tân làm việc thu ngân (lên đơn, thu tiền), quản lý giữ phần kế toán của PB02 (việc mở ở mục 9). Chi tiết phân quyền ở SPEC-AI01 mục 5. Bệnh nhân không dùng FE này: họ chỉ nhắn qua Zalo; ứng dụng bệnh nhân (web, KMP) của PB01 giữ nguyên và không đổi.
 
 ## 5. Kênh Zalo
 
@@ -63,8 +63,8 @@ Vai trò nhân viên theo `pema_contracts.roles`: chủ phòng khám (`owner`), 
 
 ## 6. Ngoài phạm vi
 
-- Ảnh lâm sàng, phân tích ảnh, video, bản ghi âm; mô hình thị giác trong `patient_channel`. Khách gửi ảnh thì chuyển người.
-- Thanh toán, hóa đơn, tài chính (PB02), Vitech/MISA.
+- Phân tích ảnh, tự động trước/sau, video, bản ghi âm; mô hình thị giác trong `patient_channel`. Khách gửi ảnh thì chuyển người. (Từ gói U, nhân viên **tải lên và xem** ảnh trước/sau của bệnh nhân khi có đồng ý ảnh còn hiệu lực; mã không mở, giải mã, đổi cỡ hay phân tích ảnh nào.)
+- Cổng thanh toán, hóa đơn điện tử, Vitech/MISA. (Từ gói U, phần tiền của phòng khám theo PB02 là việc của FE và API này: hóa đơn nội bộ, phiếu thu, tiền thủ thuật, chốt tháng, CSV; không kết nối ngân hàng hay máy POS.)
 - Tinh chỉnh (fine-tuning) mô hình.
 - **Tự gửi không có người duyệt** trong `patient_channel`; chẩn đoán tự động; tự đổi phác đồ; tự đặt lịch (agent chỉ *đề xuất*, nhân viên xác nhận).
 - Nhắn tin sinh nhật tự động.
@@ -92,6 +92,8 @@ Nguồn: PLAN-AI01 mục 8 (2026-10-01), CONTRACTS-AI01 mục 7, và ghi chú tr
 14. **Truy cập công khai qua Caddy** (profile `proxy`, ba chế độ TLS `auto`/`internal`/`off`); chỉ Caddy publish 80/443, API chỉ tin `X-Forwarded-For` từ `PEMA_TRUSTED_PROXIES`, cookie phiên `Secure`; FE đọc địa chỉ API lúc chạy (`PEMA_API_INTERNAL_URL`).
 15. **Màn Nhân viên** (`/admin/users`, vòng H4, 2026-10-02): chủ và quản lý xem danh sách nhân viên (`admin.users.read`); chỉ chủ thêm, sửa họ tên và vai trò, khóa hoặc mở khóa, đặt lại mật khẩu (`admin.users`). Không xóa hẳn nhân viên. Chủ không tự khóa hay tự đổi vai trò của mình, phòng khám luôn còn một chủ đang hoạt động, khóa hoặc đổi vai trò thì người đó bị đăng xuất khỏi mọi thiết bị. Chưa quyết: owner có được khóa hay đặt lại mật khẩu owner khác không (hiện được); có mở quyền xem danh sách cho CSKH và lễ tân (để ô "Phụ trách" dùng danh sách) không (chưa mở).
 16. **Một hệ thống một phòng khám** (single-tenant, nhánh `feat/single-tenant`, migration `st_0009_single_tenant`). Lý do: yêu cầu bảo mật cao của phòng khám, bệnh viện, ngân hàng: dữ liệu của hai tổ chức không chung CSDL, Redis, khóa hay tiến trình, thay vì tin vào một chốt phần mềm (RLS). Giữ cột `clinic_id` làm mã cài đặt cố định; `clinic.clinic` đúng một dòng (CSDL bảo đảm), tạo bởi migration từ `PEMA_CLINIC_NAME` (mặc định `Pema Clinic`, slug cố định `clinic`, mã từ `PEMA_CLINIC_ID` nếu đặt); gỡ RLS và các hàm chọn phòng khám; đăng nhập chỉ email và mật khẩu; đường webhook Zalo không có đoạn phòng khám; vẫn nhiều tài khoản Zalo trong một phòng khám; giữ role `be_app`/`agent_worker` và view `clinic_agent`. Hai nhánh song song (đa phòng khám và một phòng khám) được giữ; tính năng về sau làm trên single-tenant trước (ARCH-AI01 mục 14). Hệ quả bảo mật: SECURITY-REVIEW-AI01 mục 7.
+
+17. **Gói U (2026-10-03 đến 2026-10-05): một ứng dụng nhân viên giống web Clinic cũ, không mất tính năng nào.** Chủ phòng khám chốt: (1) chuyển các tính năng web cũ còn thiếu sang FE Next.js hiện có, (2) viết lại bằng Next.js và API, không nối web cũ (`localStorage`) vào API, (3) đổi giao diện toàn FE cho giống web cũ mà **không bỏ tính năng nào của FE mới** (CSKH, quản trị agent, giám sát care). Hệ quả: `treatment_plan` và `treatment_session` được mở rộng, bảng mới `consult_note`, `media` (U3), `service`, `service_version`, `room`, `room_block`, `protocol` (U4), `order`, `order_item`, `product`, `catalog_import` (U5), `invoice`, `payment`, `procedure_entry`, `procedure_entry_person`, `finance_period`, `finance_notification` (U6), thẻ `guide` của KB (U7); quyền mới `session.*`, `media.*`, `order.*`, `finance.*`; ảnh chỉ tải lên khi có đồng ý ảnh và theo MIME/kích thước giới hạn; tiền thủ thuật có luật làm tròn, chốt tháng và CSV chống công thức (`=`, `+`, `-`, `@`). Mã nguồn web cũ (`prototype/*`, `finance_server.py`) **còn nguyên trong repo nhưng không còn dùng**; xóa là quyết định của chủ (PARITY-AI01-U mục 6).
 
 ## 8. Điều chưa kiểm chứng
 
