@@ -22,7 +22,10 @@ reuses its tooling in `.claude/skills/pema-web-design/scripts/` (`web-inventory.
    lightweight web only when the clinic has a Zalo OA.
 2. **Publishing to claude.ai/design is deferred** (owner, 2026-10-05): W2 produces canvases and the Design System
    source in the repo only; no step pushes anything to claude.ai until the owner asks.
-3. Keep **two canvas files** (app, web); unify through one project, one Design System, one cross-index.
+3. Keep **two canvas files** (app, web); unify through one Design System and one cross-index.
+4. **(2026-10-05) The old-web canvas stays pure.** `Pema Web.dc.html` holds only WA–WI. The Next.js-only groups
+   WJ/WK/WL are built into a **separate file `Pema Web (Next.js).dc.html`** from the same `parts/` and `blocks.js`.
+   The local design viewer gets a **dropdown**: "Web cũ" (default) / "Màn mới" / "Cả hai" (loads one or both files).
 
 ## 3. Scope
 
@@ -40,7 +43,7 @@ reuses its tooling in `.claude/skills/pema-web-design/scripts/` (`web-inventory.
 | **W7** Next.js-only inventory | ids `WJ*`, `WK*`, `WL*` from FE routes + states/dialogs found in components and tests; `inventory.json` frozen | — |
 | **W8** Shots | `pnpm visual`-style Playwright shots of the new ids against the mock BE at 1440×900, 1920×1020, 390×844 → `manifest.json` (PNGs not committed) | W7 |
 | **W9** Specs | `web-specs.cjs` for the new ids → `design-specs/web/screens/WJ*.md…`, INDEX regenerated | W7 (W8 in parallel) |
-| **W10** Canvas frames + blocks | `parts/WJ.js`, `WK.js`, `WL.js`; new blocks in `blocks.js` + `BLOCKS.md`; `web-canvas-build.cjs`; `web-canvas.cjs check --complete --viewport=all --frames` for all ids | W8, W9 |
+| **W10** Canvas frames + blocks | `parts/WJ.js`, `WK.js`, `WL.js`; new blocks in `blocks.js` + `BLOCKS.md`; `web-canvas-build.cjs` builds **two outputs** (WA–WI → `Pema Web.dc.html`, WJ–WL → `Pema Web (Next.js).dc.html`); checks per file; viewer dropdown | W8, W9 |
 | **W11** Design System source | `design-system/` folder in the repo: tokens (from `frontend/src/ui/tokens.json` if U0 exists, else from BLOCKS/skill refs), color roles, type scale, spacing, radius, shadows, components with variants/states, usage notes; both canvases reference it | W10 (can start after W7) |
 | **W12** Unify | `design-specs/INDEX.md` cross-index app ↔ web; WI rows → `served by KMP/Zalo`; note which of `pema-web-to-canvas` / `pema-web-design` is the canonical skill | W11 |
 
@@ -59,6 +62,8 @@ Order: W7 → (W8 ‖ W9) → W10 → W11 → W12. Publishing to claude.ai/desig
 ## 6. Acceptance
 
 - Inventory = old 211 + every Next.js-only route and its states; nothing with `Next.js status = exists-undesigned`.
+- `Pema Web.dc.html` contains no WJ/WK/WL frame; `Pema Web (Next.js).dc.html` contains all of them; the viewer
+  dropdown switches between them and defaults to the old web.
 - Design System source complete enough that a reviewer can answer "what colour/type/spacing/component does this
   frame use" for every block.
 - Cross-index lets a reader go app id ↔ web id in one table; WI rows carry their KMP/Zalo mapping.

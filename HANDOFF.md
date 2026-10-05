@@ -430,7 +430,7 @@ reverse index.
 
 Owner decisions 2026-10-05: (1) Patient Mobile web (group WI, 42 screens) is dropped as a Next.js target — designs stay
 for KMP/Zalo, INDEX rows marked `served by KMP/Zalo`; revisit as a Zalo-opened web only when a Zalo OA exists.
-(2) Publishing to claude.ai/design is **deferred** until the owner asks; W2 stays in the repo. (3) Keep two canvas files; unify through one
+(2) Publishing to claude.ai/design is **deferred** until the owner asks; W2 stays in the repo. (4, 2026-10-05) **Old-web canvas stays pure**: WJ/WK/WL frames go to a separate `Pema Web (Next.js).dc.html`; the local viewer gets a dropdown "Web cũ" (default) / "Màn mới" / "Cả hai". W10 worktrees in flight keep writing `parts/*`; the director applies the two-file build and the viewer dropdown when merging W10 (recipe `04-W10` updated). (3) Keep two canvas files; unify through one
 Design System source and one cross-index (`design-specs/INDEX.md`).
 
 Where: plan `pema-agent/docs/PLAN-AI01-W2.md`; recipes `pema-agent/recipes/W2/` (`00-README.md`, `_REPORT-TEMPLATE.md`,

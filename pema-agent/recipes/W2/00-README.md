@@ -18,7 +18,8 @@ read `pema-agent/recipes/W/00-README.md` and `pema-agent/docs/PLAN-AI01-W.md` §
 design-specs/web/inventory.json · snapshot.json · notes.json · index.json · INDEX.md · BLOCKS.md · screens/WJ*.md WK*.md WL*.md
 design-specs/web/manifest.json                       shots manifest (PNGs are NOT committed)
 design-specs/INDEX.md                                 cross-index app ↔ web (W12)
-Pema Web redesign canvas/parts/{WJ,WK,WL}.js · blocks.js · Pema Web.dc.html · Pema Web blocks.dc.html
+Pema Web redesign canvas/parts/{WJ,WK,WL}.js · blocks.js · Pema Web.dc.html (WA–WI only) · Pema Web (Next.js).dc.html (WJ–WL) · Pema Web blocks.dc.html
+design-viewer/src/**                                  ADDITIVE only: canvas-file dropdown "Web cũ" / "Màn mới" / "Cả hai" (W10)
 design-system/                                        Design System source in the repo (W11)
 .claude/skills/pema-web-design/                       scripts and skill text (additive changes only)
 pema-agent/docs/PLAN-AI01-W2.md · pema-agent/recipes/W2/
