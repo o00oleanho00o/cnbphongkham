@@ -6,7 +6,7 @@ Last updated: 2026-10-04 (package W built and merged; git history of `feat/singl
 `feat/ai-agent-backend` (multi-tenant, tip `294e4dc`, frozen); `feat/single-tenant` (one system = one clinic, tip `3493f10`, merged to `origin/dev`
 by PR #11 as `e972af3`); `feat/ui-parity` (packages U + W, tip `8ab9faa`, on origin, contains `e972af3`).
 Status: single-tenant, package M, package U (U0–U12, merged into `feat/ui-parity`, NOT pushed; round 2 U9–U12 merged WITHOUT the merge gate, see "Round 2 progress") and packages W and W2 are built. The frontend now has a design gate
-(rule + agent `pema-ui-builder` + pre-commit hook, see "Session log 2026-10-04"). Wait for the user's next instruction before starting anything.
+(rule + agent `pema-ui-builder` + pre-commit hook, see "Session log 2026-10-04"). Package O (shared inbox) v2 is PLANNED on `feat/shared-inbox` (2026-10-06), not built. Wait for the user's next instruction before starting anything.
 
 ## HARD RULES (read first)
 
@@ -498,8 +498,42 @@ How to run (when the user says so): branch `feat/ui-parity`; one `pema-builder` 
 Gate: `web-inventory.cjs --check` 0; `web-canvas.cjs check --complete --viewport=all --frames` 0 for all ids;
 `web-coverage.cjs` counts equal; viewer 0 page errors; no attribution in commits. Merge into `feat/ui-parity` only.
 
+## Package O — one identity, many operators: shared inbox over Zalo (PLANNED v2 2026-10-06 on `feat/shared-inbox`; NOTHING built)
+
+Branch `feat/shared-inbox`, created 2026-10-06 from `feat/ui-parity` `0d7bfda7` (M, U0–U12, W, W2 included). v1 of
+the plan (branch `plan/package-o` `b2fecd6`, 2026-10-05) is superseded; keep that branch, never build from it.
+
+Owner decisions 2026-10-05 (unchanged): customers talk only to clinic identities ("Long" on Zalo; a Facebook Page
+later); staff never message customers from personal Zalo, they reply only inside Pema; personal Zalo is a notification
+bell. (1) Outgoing text shows only the identity. (2) Takeover allowed; previous and new operator both notified.
+(3) KMP push primary, personal Zalo fallback, Zalo team group broadcast. (4) The 24/7 on-call number stays.
+
+Why v2: v1 assumed tables and wiring that do not exist. Checked in the code (full list in `PLAN-AI01-O.md` §2):
+channel accounts already exist (`agent.accounts`, `/admin/accounts`); limits are per channel (`clinic.channel_setting`),
+so O1 adds per-identity overrides; `clinic.conversation` has `assigned_user_id` but no account id, so O1 adds
+`account_id`; `message.sender_user_id` already records the sender; package M is built but NOT wired, so O builds M's
+`StaffNotify`/`SlaScheduler` adapters and a claim↔`CareControl.accept` bridge while the care loop itself stays M7;
+`pema-kmp` has no push code, so the live chain in O is in-app → personal Zalo (internal notifier account) → team group,
+with push ready behind a fake provider until FCM/APNs credentials and a KMP step exist; UI must be design-first (AGENT.md),
+so O gets a design step (group WM) before the FE step.
+
+Where: plan `pema-agent/docs/PLAN-AI01-O.md`; recipes `pema-agent/recipes/O/`: `01-O1` identities, limits, roster →
+`02-O2` assignment, lock, takeover → (`03-O3` notifications ‖ `04-O4` outbound as identity ‖ `05-O5` design) →
+`06-O6` FE shared inbox (`pema-ui-builder`) → `07-O7` eval, docs, AGENT.md rule. Migrations `o<step>_*` on the single
+head. New BE package `pema/notify`; seams in `pema/clinic/actions`, wiring in `pema/composition`.
+
+Defaults until the owner answers (`PLAN-AI01-O.md` §7): roster entered in Pema; managers may read threads silently
+(presence "đang xem"); team group id and internal notifier account are config (step skipped and logged when unset);
+push provider fake; ack timeout 3 minutes; Facebook is package F.
+
+How to run (when the user says so): switch the main checkout to `feat/shared-inbox` (tree clean); first run the full
+gate once on the branch base and record it (U9–U12 were merged without a gate); then one subagent per recipe in its own
+worktree from the current branch head; gate before each `--no-ff` merge; merge into `feat/shared-inbox` only; never
+push unless asked. Expected baseline failures: the 3 clock-dependent tests in `tests/care/test_care_routing_store.py`.
+
 ## Next Steps (only when the user asks)
 
+0a. **Package O (shared inbox) v2 is planned** on `feat/shared-inbox` — see its section above; run it when the user says go.
 0. **Run next:** the merge gate on `feat/ui-parity` `58243e5` (full BE pytest on a throwaway Postgres + Redis, FE `pnpm test`/`lint`/`check:types`/`inventory`/`build`/`smoke`, `pnpm dev:mock` + `pnpm visual`, `alembic heads` = 1): package U round 2 (U9–U12) was merged on 2026-10-06 without it at the owner's request. Then: owner decisions still open (real pricing, guide content, consent wording, token values, room hand-off, "Hỏi Pema" label, photo retention, whether non-doctors may approve orders), and push when the owner asks.
 1. Small leftovers: rate limit on `PATCH /admin/users`; stale sentence in `frontend/README` saying change-password is
    disabled (`POST /auth/password` exists); `TableShell` missing space when `ghimCotCuoi` is on.
