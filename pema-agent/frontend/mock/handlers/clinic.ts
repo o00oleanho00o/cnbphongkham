@@ -33,6 +33,7 @@ import {
 import { lightSession, notes, plansOf, sessionsOf } from "../data/patient-care";
 import { assertAssignable } from "../assignable";
 import { viewersFor } from "../live-bus";
+import { decorate360, matchesView } from "./patient-profile";
 
 type S = Schemas;
 
@@ -633,7 +634,8 @@ export function register(r: Router): void {
     const found = patients
       .filter((p) => !q || matchesQuery(p, q))
       .filter((p) => !doctor || p.doctor_id === doctor)
-      .filter((p) => !owner || p.cs_owner_id === owner);
+      .filter((p) => !owner || p.cs_owner_id === owner)
+      .filter((p) => matchesView(p, ctx.query.get("view")));
     return { body: paginate(found, ctx.query) };
   });
   r.post("/api/v1/patients", "patient.write", (ctx): Reply => {
@@ -669,7 +671,10 @@ export function register(r: Router): void {
     return { body: p };
   });
   r.get("/api/v1/patients/{patient_id}/360", "patient.read_360", (ctx): Reply => ({
-    body: patient360(findOr404(patients, ctx.params.patient_id ?? "", "bệnh nhân")),
+    body: decorate360(
+      patient360(findOr404(patients, ctx.params.patient_id ?? "", "bệnh nhân")),
+      ctx.session,
+    ),
   }));
   r.get("/api/v1/patients/{patient_id}/consents", "consent.read", (ctx): Reply => {
     const p = findOr404(patients, ctx.params.patient_id ?? "", "bệnh nhân");

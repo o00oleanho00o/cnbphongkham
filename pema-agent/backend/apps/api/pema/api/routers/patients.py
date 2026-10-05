@@ -11,6 +11,7 @@ from pema.api.dashboard_auth import Ctx, Database
 from pema.api.deps import ERROR_RESPONSES, Limit, Offset, cookie_scheme
 from pema.clinic.actions import consents, patient_360, patients
 from pema_contracts.common import Page
+from pema_contracts.patient_profile import PatientListView
 from pema_contracts.patients import (
     ConsentCreate,
     ConsentOut,
@@ -34,11 +35,17 @@ async def list_patients(
     q: Annotated[str | None, Query(max_length=120, description="Name, phone or code.")] = None,
     doctor_id: UUID | None = None,
     cs_owner_id: UUID | None = None,
+    view: Annotated[
+        PatientListView,
+        Query(
+            description="Chip of the list: all, active (sessions left), next (visit within a week), alerts."
+        ),
+    ] = PatientListView.ALL,
     limit: Limit = 50,
     offset: Offset = 0,
 ) -> Page[PatientOut]:
     return await patients.list_patients(
-        db, ctx, q=q, doctor_id=doctor_id, cs_owner_id=cs_owner_id, limit=limit, offset=offset
+        db, ctx, q=q, doctor_id=doctor_id, cs_owner_id=cs_owner_id, view=view, limit=limit, offset=offset
     )
 
 

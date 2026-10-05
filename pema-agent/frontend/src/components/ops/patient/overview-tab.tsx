@@ -20,6 +20,7 @@ import {
   OUTCOME_LABEL,
   RULE_LABEL,
 } from "@/lib/ops/labels";
+import { Button } from "@/ui/button";
 import { Card } from "@/ui/card";
 import { Tile } from "@/ui/tile";
 
@@ -34,7 +35,20 @@ function leadPlan(plans: P360["plans"]): Schemas["TreatmentPlanOut"] | undefined
   return live.at(0) ?? list.at(0);
 }
 
-export function OverviewTab({ data }: { data: P360 }) {
+export function OverviewTab({
+  data,
+  onEditFacts,
+  onAftercare,
+  onExpected,
+}: {
+  data: P360;
+  /** "Thông tin cần nhớ" (session.write); undefined hides the button. */
+  onEditFacts?: () => void;
+  /** "Chăm sóc tại nhà" (session.write). */
+  onAftercare?: () => void;
+  /** "Sửa ngày dự kiến" (crm.activity.write). */
+  onExpected?: () => void;
+}) {
   const { patient, profile } = data;
   const upcoming = (data.appointments ?? [])
     .filter((a) => BOOKED_STATUSES.includes(a.status))
@@ -96,6 +110,49 @@ export function OverviewTab({ data }: { data: P360 }) {
             <Fact label="Quá hạn" value={`${profile.overdue_days ?? 0} ngày`} />
             <Fact label="Còn lại" value={`${profile.remaining_sessions ?? 0} buổi`} />
           </dl>
+          {(onExpected !== undefined || onAftercare !== undefined) && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {onExpected !== undefined && (
+                <Button variant="secondary" onClick={onExpected}>
+                  Sửa ngày dự kiến
+                </Button>
+              )}
+              {onAftercare !== undefined && (
+                <Button variant="secondary" onClick={onAftercare}>
+                  Chăm sóc tại nhà
+                </Button>
+              )}
+            </div>
+          )}
+        </Card>
+
+        <Card
+          title="Thông tin cần nhớ"
+          aside={
+            onEditFacts !== undefined ? (
+              <Button variant="secondary" onClick={onEditFacts}>
+                Sửa thông tin
+              </Button>
+            ) : undefined
+          }
+        >
+          {(data.alerts ?? []).length === 0 ? (
+            <Muted>Chưa có cảnh báo nào.</Muted>
+          ) : (
+            <ul className="space-y-1.5">
+              {(data.alerts ?? []).map((alert) => (
+                <li key={alert} className="text-small break-words text-ink">
+                  ⚠ {alert}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-3 text-label text-ink-soft">
+            Đồng ý sử dụng ảnh chăm sóc:{" "}
+            {(data.consents ?? []).find((c) => c.kind === "media")?.granted === true
+              ? "có"
+              : "chưa có"}
+          </p>
         </Card>
 
         <Card title={`Việc chăm sóc đang mở (${data.open_tasks?.length ?? 0})`}>

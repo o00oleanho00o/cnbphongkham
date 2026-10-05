@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // Patient 360 with five tabs: who sees which, how the tab is kept in the address, and that the overview still
 // carries everything the screen showed before the tabs.
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -81,7 +81,7 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe("Patient360View", () => {
-  it("a_doctor_sees_the_five_tabs_of_the_old_web", () => {
+  it("a_doctor_sees_the_six_tabs_of_the_old_web", () => {
     renderView(DOCTOR);
 
     expect(tabNames()).toEqual([
@@ -90,13 +90,14 @@ describe("Patient360View", () => {
       "Kế hoạch",
       "Buổi điều trị",
       "Ảnh trước / sau",
+      "Dịch vụ & tài chính",
     ]);
   });
 
-  it("a_manager_sees_only_the_overview_and_the_plan", () => {
+  it("a_manager_sees_the_overview_the_plan_and_the_services_and_finance_tab", () => {
     renderView(MANAGER);
 
-    expect(tabNames()).toEqual(["Tổng quan", "Kế hoạch"]);
+    expect(tabNames()).toEqual(["Tổng quan", "Kế hoạch", "Dịch vụ & tài chính"]);
   });
 
   it("the_overview_opens_first_and_carries_the_information_cards", () => {
@@ -166,5 +167,35 @@ describe("Patient360View", () => {
     expect(api.replace).toHaveBeenCalledWith(`/patients/${PATIENT_ID}?tab=session`, {
       scroll: false,
     });
+  });
+
+  it("ai_brief_is_for_whoever_writes_sessions_and_the_message_button_for_whoever_may_reply", () => {
+    renderView([...DOCTOR, "conversation.reply"]);
+
+    expect(screen.getByRole("button", { name: /AI brief/ })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Nhắn tin" })).not.toBeNull();
+  });
+
+  it("a_manager_gets_neither_the_brief_nor_the_message_button", () => {
+    renderView(MANAGER);
+
+    expect(screen.queryByRole("button", { name: /AI brief/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Nhắn tin" })).toBeNull();
+  });
+
+  it("the_warning_lines_are_chips_in_the_header", () => {
+    render(
+      asRole(
+        DOCTOR,
+        <Patient360View
+          data={{ ...DATA, alerts: ["Da nhạy cảm"] } as Schemas["Patient360"]}
+          onChanged={() => undefined}
+        />,
+      ),
+    );
+
+    expect(
+      within(screen.getByRole("list", { name: "Thông tin cần nhớ" })).getByText("⚠ Da nhạy cảm"),
+    ).not.toBeNull();
   });
 });

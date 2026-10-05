@@ -5,6 +5,7 @@
 // from a template by the BE (not by a model); nothing is part of the record until a clinician approves it.
 import { useCallback, useState } from "react";
 
+import { ClinicalNoteCard } from "@/components/ops/patient/clinical-note-card";
 import { FormError, Muted, TEXTAREA_CLASS } from "@/components/ops/patient/shared";
 import { ListSkeleton, Notice, PrimaryButton, RetryNotice } from "@/components/ops/ops-ui";
 import { useToast } from "@/components/ops/toast";
@@ -106,6 +107,7 @@ export function ConsultTab({
 
   return (
     <div className="space-y-4">
+      <ClinicalNoteCard patientId={patientId} canWrite={canWrite} onChanged={onChanged} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {canWrite && (
           <Card

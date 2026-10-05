@@ -6,6 +6,7 @@ import { Suspense, useCallback } from "react";
 
 import { IconChevronLeft } from "@/components/admin/shared/ops-icons";
 import { ListSkeleton, RetryNotice } from "@/components/ops/ops-ui";
+import { FinanceOnlyView } from "@/components/ops/patient/finance-only-view";
 import { Patient360View } from "@/components/ops/patient/patient-360-view";
 import { http, unwrap } from "@/lib/api/client";
 import { useSession } from "@/lib/session/session-context";
@@ -15,6 +16,8 @@ export default function Patient360Page() {
   const { id } = useParams<{ id: string }>();
   const { can } = useSession();
   const allowed = can("patient.read_360");
+  // the accountant has no Patient 360: it gets the billing tab alone, from a projection without clinical data
+  const financeOnly = !allowed && can("finance.read");
 
   const load = useCallback(
     (signal: AbortSignal) =>
@@ -37,7 +40,8 @@ export default function Patient360Page() {
         <IconChevronLeft size={18} />
         Danh sách hồ sơ
       </Link>
-      {!allowed && (
+      {financeOnly && <FinanceOnlyView patientId={id} />}
+      {!allowed && !financeOnly && (
         <p className="text-body text-ink-soft">Vai trò của bạn không được xem Patient 360.</p>
       )}
       {allowed && error && <RetryNotice message={error} onRetry={reload} />}
