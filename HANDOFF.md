@@ -29,9 +29,7 @@ Status: single-tenant, package M, package U (U4 gap: see the U4 row) and package
 - Commit/push only when the user asks (merging finished subagent branches into the feature branch was accepted
   practice during the build). On 2026-10-02 the user asked to commit and push `feat/single-tenant`; never force-push,
   never push `worktree-agent-*` or `integration/*` branches.
-- All new code lives under `pema-agent/`. Outside it, only the pointer line in root `README.md`, the checkpoint in
-  `SECTION_PROGRESS.md`, and the rule lines in `AGENT.md`/`CLAUDE.md`/`.claude/agents/pema-builder.md` were changed.
-  `prototype/`, `pema-kmp/`, `docs/` PB01/PB02, `finance_server.py` are read-only. Never read `flutter-template/`.
+- All new **code** lives under `pema-agent/`. Design packages (W, W2) also write, as their `recipes/<PKG>/00-README.md` lists, to `design-specs/`, `Pema Web redesign canvas/`, `design-system/`, `design-viewer/src` (additive) and `.claude/skills/pema-web-design/` — this is allowed for subagents. Outside those, only the pointer line in root `README.md`, the checkpoint in `SECTION_PROGRESS.md`, and the rule lines in `AGENT.md`/`CLAUDE.md`/`.claude/agents/pema-builder.md` change. `prototype/`, `pema-kmp/` (except a recipe-named touchpoint), `docs/` PB01/PB02, `finance_server.py` are read-only. Never read `flutter-template/`.
 - Synthetic data only. No real phone numbers, names, photos, tokens, or recording content in the repo.
 - The git stash is shared with the user (`stash@{0}` "WIP on codex/catalog-orders-a5" is theirs). Do not use bare
   `git stash`/`pop`; prefer temporary WIP commits.
