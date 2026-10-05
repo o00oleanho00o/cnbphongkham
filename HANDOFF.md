@@ -444,29 +444,6 @@ How to run (when the user says so): branch `feat/ui-parity`; one `pema-builder` 
 Gate: `web-inventory.cjs --check` 0; `web-canvas.cjs check --complete --viewport=all --frames` 0 for all ids;
 `web-coverage.cjs` counts equal; viewer 0 page errors; no attribution in commits. Merge into `feat/ui-parity` only.
 
-## Package O — one identity, many operators: shared inbox over Zalo and Facebook (planned 2026-10-05; NOTHING built)
-
-Owner decisions 2026-10-05: customers talk only to clinic identities ("Long" on Zalo, the Facebook Page); staff never
-message customers from personal Zalo — they reply inside Pema only, personal Zalo is a notification bell. (1) Outgoing
-text shows only the identity, no operator name. (2) Takeover of a handled thread is allowed; previous and new operator
-are both notified. (3) Notifications: KMP app push primary, personal Zalo fallback, Zalo team group broadcast so the team
-sees who holds what. (4) The 24/7 on-call Zalo number from package M stays unchanged.
-
-Concepts: channel account (clinic identity; kinds zalo_personal/zalo_bot/zalo_oa/fb_page/ig/zalo_internal; credentials
-only in BE/bridge, never reachable by staff), operator (Pema user with skills/shift), thread (customer × account),
-assignment (soft lock with history). One send queue, gap and cap **per channel account**, shared by agent and operators.
-
-Where: plan `pema-agent/docs/PLAN-AI01-O.md`; recipes `pema-agent/recipes/O/` (`00-README.md`, `_REPORT-TEMPLATE.md`,
-`01-O1` channel accounts & shifts → `02-O2` assignment/lock/takeover → `03-O3` notifications ‖ `04-O4` outbound as identity
-→ `05-O5` FE shared inbox → `06-O6` eval/docs/AGENT.md rule). Code lives in `pema/ops/*`, migrations `o<step>_*`.
-Depends on package M (routing, SLA, on-call, control), C1/C2 adapters, `pema/live`. Package F (Facebook lead agent,
-model A: operators reply inside Pema via Send API) builds on O; F is discussed but not yet planned as recipes.
-
-How to run (when the user says so): one `pema-builder` per recipe in its own worktree on the branch the user names;
-prompt "Follow pema-agent/recipes/O/<file>.md on branch <branch>. Single-tenant: no RLS, clinic_id = installation id.
-Return the report in _REPORT-TEMPLATE.md format." Gates: BE pytest/ruff/pyright/import-linter; credential-boundary and
-PII-free-notification tests present and green; FE gates from U1 when O5 runs; no attribution in commits.
-
 ## Next Steps (only when the user asks)
 
 1. Small leftovers: rate limit on `PATCH /admin/users`; stale sentence in `frontend/README` saying change-password is
