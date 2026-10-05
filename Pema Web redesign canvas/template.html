@@ -73,6 +73,16 @@ a{color:var(--color-link);text-decoration:none}
 .sb-us{border-top:1px solid var(--color-line);padding:12px 16px;display:flex;align-items:center;gap:10px}
 .sb-un{font-size:var(--text-label);font-weight:700;color:var(--color-ink);line-height:1.3}
 .sb-ur{font-size:var(--text-eyebrow);color:var(--color-ink-soft)}
+/* Next.js shell (package W2): planned entries, sidebar footer, phone drawer close, bare frames (sign-in, loading) */
+.sb-bt{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.sb-x{font-size:22px;color:var(--color-ink-soft)}
+.sb-it-pl{opacity:.7}
+.sb-pl{font-size:var(--text-micro);color:var(--color-ink-soft);white-space:nowrap}
+.sb-ft{border-top:1px solid var(--color-line);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:var(--text-micro);color:var(--color-ink-soft)}
+.sb-fi{display:flex;gap:2px}
+.sb-fi .ms{font-size:20px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:var(--radius-tile);color:var(--color-ink-soft)}
+.ct-bare{max-width:none;align-items:center;justify-content:center}
+.k-narrow{width:100%;max-width:440px}
 .skip{position:absolute;left:var(--cp);top:calc(var(--tbh) + 10px);z-index:5;background:var(--color-surface);color:var(--color-link);border:2px solid var(--color-focus);border-radius:var(--radius-control);padding:6px 12px;font-size:var(--text-small);font-weight:600}
 
 /* top bar */
@@ -517,6 +527,27 @@ a{color:var(--color-link);text-decoration:none}
 .bu-me{align-self:flex-end;background:var(--color-info-soft)}
 .bu-t{font-size:var(--text-body);line-height:1.5;color:var(--color-ink)}
 .bu-m{margin-top:4px;font-size:var(--text-micro);color:var(--color-ink-soft)}
+.bu-w{font-size:var(--text-label);font-weight:600;color:var(--color-ink-soft);margin-bottom:2px}
+.bu-n{margin-top:4px;font-size:var(--text-label);font-style:italic;color:var(--color-ink-soft)}
+/* matrix: a table whose cells may hold fields (depth x autonomy, SLA, tuning parameters) */
+.mx-in{min-height:34px;padding:4px 10px;font-size:var(--text-body);width:100%;max-width:200px}
+.mx-ck{display:flex;align-items:center;gap:8px}
+.mx-ck .ck-b{width:18px;height:18px}
+.mx-t{font-size:var(--text-body);color:var(--color-ink)}
+.mx-s{font-size:var(--text-label);color:var(--color-ink-soft)}
+/* trace: runs of the agent, each with its steps (model text, tool call, tool result) */
+.trc{display:flex;flex-direction:column;gap:10px}
+.trc-run{border:1px solid var(--color-line);border-radius:var(--radius-card);background:var(--color-surface);overflow:hidden}
+.trc-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;min-width:0}
+.trc-l{font-size:var(--text-body);font-weight:600;color:var(--color-ink);min-width:0}
+.trc-on .trc-hd{border-bottom:1px solid var(--color-line);background:var(--color-table-head)}
+.trc-b{padding:12px 14px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.trc-s{display:flex;flex-direction:column;gap:6px;min-width:0}
+.trc-sh{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:var(--text-label);color:var(--color-ink-soft)}
+.trc-sh b{font-size:var(--text-body);color:var(--color-ink)}
+.trc-pl{font-size:var(--text-micro);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-ink-soft)}
+.trc-c{margin:0;padding:10px 12px;background:var(--color-field);border:1px solid var(--color-line);border-radius:var(--radius-tile);font:var(--text-label)/1.5 ui-monospace,Menlo,Consolas,monospace;color:var(--color-ink);white-space:pre-wrap;overflow-wrap:anywhere}
+.trc-p{font-size:var(--text-body);color:var(--color-ink);overflow-wrap:anywhere}
 .up{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px;border:1.5px dashed var(--color-line-strong);border-radius:var(--radius-card);background:var(--color-field);text-align:center}
 .up-i{font-size:28px;color:var(--color-ink-soft)}
 .up-t{font-size:var(--text-small);color:var(--color-ink-soft)}
@@ -594,18 +625,19 @@ a{color:var(--color-link);text-decoration:none}
                     <div class="sh">
                       <sc-if value="{{ fr.sb }}">
                         <aside class="{{ fr.sbCls }}">
-                                                    <div class="sb-br"><div class="lgo">Pema<small>clinic &amp; spa</small></div><div class="lgo-s">PHÒNG KHÁM DA LIỄU</div></div>
+                                                    <div class="sb-br"><div class="sb-bt"><div class="lgo">Pema<small>clinic &amp; spa</small></div><sc-if value="{{ fr.nxDrawer }}"><span class="ms sb-x" role="button" aria-label="Đóng menu">close</span></sc-if></div><div class="lgo-s">PHÒNG KHÁM DA LIỄU</div></div>
                           <nav class="sb-nv">
                             <sc-for list="{{ sc.shell.sections }}" as="sec">
                               <div class="sb-sec">
                                 <div class="sb-st">{{ sec.title }}</div>
                                 <sc-for list="{{ sec.items }}" as="it">
-                                  <div class="{{ it.cls }}"><span class="ms">{{ it.icon }}</span><span class="sb-l">{{ it.label }}</span><sc-if value="{{ it.badge }}"><span class="sb-bd">{{ it.badge }}</span></sc-if></div>
+                                  <div class="{{ it.cls }}"><span class="ms">{{ it.icon }}</span><span class="sb-l">{{ it.label }}</span><sc-if value="{{ it.badge }}"><span class="sb-bd">{{ it.badge }}</span></sc-if><sc-if value="{{ it.tag }}"><span class="sb-pl">{{ it.tag }}</span></sc-if></div>
                                 </sc-for>
                               </div>
                             </sc-for>
                           </nav>
                           <div class="sb-us"><span class="av av-md">{{ sc.shell.user.init }}</span><div><div class="sb-un">{{ sc.shell.user.name }}</div><div class="sb-ur">{{ sc.shell.user.role }}</div></div></div>
+                          <sc-if value="{{ sc.shell.nx }}"><div class="sb-ft"><span class="sb-fv">{{ sc.shell.ver }}</span><div class="sb-fi"><span class="ms" role="img" aria-label="Đổi giao diện sáng/tối">dark_mode</span><span class="ms" role="img" aria-label="Đăng xuất">logout</span></div></div></sc-if>
                         </aside>
                       </sc-if>
                       <div class="mn">
@@ -613,7 +645,7 @@ a{color:var(--color-link);text-decoration:none}
                         <sc-if value="{{ fr.phone }}">
                           <header class="mt"><div class="lgo" role="img" aria-label="Pema clinic &amp; spa">Pema<small>clinic &amp; spa</small></div><div class="mt-av" role="img" aria-label="Mở hồ sơ demo của {{ sc.mob.name }}">{{ sc.mob.init }}</div></header>
                         </sc-if>
-                        <sc-if value="{{ fr.wide }}">
+                        <sc-if value="{{ fr.oldWide }}">
                           <header class="tp">
                             <div class="tp-bc"><span>Không gian phòng khám</span><span>/</span><b>{{ sc.shell.crumb }}</b></div>
                             <div class="tp-a">
@@ -627,7 +659,7 @@ a{color:var(--color-link);text-decoration:none}
                             </div>
                           </header>
                         </sc-if>
-                        <sc-if value="{{ fr.narrow }}">
+                        <sc-if value="{{ fr.oldNarrow }}">
                           <header class="tpm">
                             <div class="tpm-r"><div class="ib"><span class="ms">menu</span></div><span class="tpm-lg">Pema</span><span class="tpm-n">{{ sc.shell.crumb }}</span><sc-if value="{{ sc.shell.bell }}"><div class="ib" role="img" aria-label="Thông báo"><span class="ms">notifications</span></div></sc-if><div class="ib"><span class="ms">restart_alt</span></div></div>
                             <sc-if value="{{ sc.shell.fin }}"><div class="tp-fin" style="max-width:none;text-align:left">{{ sc.shell.fin }}</div></sc-if>
@@ -637,9 +669,20 @@ a{color:var(--color-link);text-decoration:none}
                             </div>
                           </header>
                         </sc-if>
-                        <div class="ct"><!--@nodes list="sc.blocks"--></div>
-                        <sc-if value="{{ fr.narrow }}">
-                          <nav class="tabbar"><sc-for list="{{ sc.shell.tabs }}" as="tt"><div class="{{ tt.cls }}"><span class="ms">{{ tt.icon }}</span><span>{{ tt.label }}</span></div></sc-for></nav>
+                        <sc-if value="{{ fr.nxWide }}">
+                          <header class="tp">
+                            <nav class="tp-bc" aria-label="Vị trí"><span>Không gian phòng khám</span><span>/</span><b>{{ sc.shell.crumb }}</b></nav>
+                            <sc-if value="{{ sc.shell.search }}"><div class="tp-a"><div class="tp-sr"><span class="ms">search</span><span class="fc-ph">Tìm bệnh nhân...</span></div><sc-if value="{{ sc.shell.bell }}"><div class="ib" role="img" aria-label="Mở thông báo"><span class="ms">notifications</span></div></sc-if></div></sc-if>
+                          </header>
+                        </sc-if>
+                        <sc-if value="{{ fr.nxNarrow }}">
+                          <header class="tpm">
+                            <div class="tpm-r"><div class="ib" role="img" aria-label="Mở menu"><span class="ms">menu</span></div><span class="tpm-n">{{ sc.shell.clinic }}</span></div>
+                          </header>
+                        </sc-if>
+                        <div class="ct {{ sc.ctCls }}"><!--@nodes list="sc.blocks"--></div>
+                        <sc-if value="{{ fr.shNarrow }}">
+                          <nav class="tabbar" aria-label="{{ sc.shell.tabAria }}"><sc-for list="{{ sc.shell.tabs }}" as="tt"><div class="{{ tt.cls }}"><span class="ms">{{ tt.icon }}</span><span>{{ tt.label }}</span></div></sc-for></nav>
                         </sc-if>
                         <sc-if value="{{ fr.phone }}">
                           <nav class="mnav"><sc-for list="{{ sc.mob.tabs }}" as="mtab"><div class="{{ mtab.cls }}"><span class="mnav-p"><span class="ms">{{ mtab.icon }}</span></span><span>{{ mtab.label }}</span></div></sc-for></nav>

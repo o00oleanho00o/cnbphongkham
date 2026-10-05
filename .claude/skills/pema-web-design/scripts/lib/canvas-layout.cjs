@@ -42,7 +42,7 @@ function inline(n, ctx, tail = '') {
     case 'txt':
       return `<${/\beb\b/.test(n.cls) ? 'Eyebrow' : 'Text'}${/t-s\b|t-l\b|t-m\b/.test(n.cls) ? ' small' : ''}${/w-[bx]/.test(n.cls) ? ' strong' : ''}>${partText(n.parts)}</${/\beb\b/.test(n.cls) ? 'Eyebrow' : 'Text'}>`;
     case 'btn':
-      return `<${use('Button')}${attrs({ variant: variantOf(n.cls), icon: n.icon, 'icon-after': n.ric, disabled: /bt-dis/.test(n.cls), 'icon-only': /bt-ico/.test(n.cls) })}>${n.text ? q(n.text) : ''}</Button>${tail}`;
+      return `<${use('Button')}${attrs({ variant: variantOf(n.cls), 'aria-label': n.aria, icon: n.icon, 'icon-after': n.ric, disabled: /bt-dis/.test(n.cls), 'icon-only': /bt-ico/.test(n.cls) })}>${n.text ? q(n.text) : ''}</Button>${tail}`;
     case 'badge':
       return `<${use('Badge')} tone=${q(n.tone)}${n.dot ? '' : ' dot={false}'}>${q(n.text)}</Badge>`;
     case 'avatar':
@@ -229,7 +229,7 @@ function renderNode(n, pad, out, ctx) {
       return push('</EventList>');
     case 'bubbles':
       push('<MessageList>');
-      n.items.forEach((m) => push(`  <Message${/bu-me/.test(m.cls) ? ' mine' : ''}>${q(m.text)}${m.time ? ` <Small>${q(m.time)}</Small>` : ''}</Message>`));
+      n.items.forEach((m) => push(`  <Message${/bu-me/.test(m.cls) ? ' mine' : ''}${m.who ? ` from=${q(m.who)}` : ''}>${q(m.text)}${m.note ? ` <Small>${q(m.note)}</Small>` : ''}${m.time ? ` <Small>${q(m.time)}</Small>` : ''}</Message>`));
       return push('</MessageList>');
     case 'upload':
       push('<Card old="upload-box">');
@@ -263,6 +263,42 @@ function renderNode(n, pad, out, ctx) {
         });
       });
       return push('</Card>');
+    case 'matrix': {
+      push(`<${use('TableShell')} columns={${JSON.stringify(n.head.map((h) => h.h))}} rows={${n.rows.length}}${n.foot ? ` foot=${q(n.foot)}` : ''} fields  /* MatrixGrid: cells hold fields; cards at 390 */>`);
+      n.rows.forEach((r, ri) => {
+        push(ri === 0 ? '  <Row sample="first row; demo values, the other rows have the same cells">' : `  <Row sample="row ${ri + 1} of ${n.rows.length}: same cells">`);
+        r.cells.forEach((c, i) => {
+          if (ri > 0 && !c.input && !c.check && !c.items.length) return;
+          push(`    <Cell column=${q(n.head[i] ? n.head[i].h : '')}>`);
+          if (c.text && ri === 0) push(`      <Text>${q(c.text)}</Text>${c.sub ? ` <Text small>${q(c.sub)}</Text>` : ''}`);
+          if (c.input || c.check) {
+            use('Field');
+            push(`      <Field${attrs({ label: c.label, type: c.check ? 'checkbox' : c.ty, default: c.input && c.vc === 'fc-v' ? c.shown : '', placeholder: c.input && c.vc !== 'fc-v' ? c.shown : '', checked: c.check && /ck-on/.test(c.cb) ? true : undefined })} />`);
+          }
+          inlines(c.items, pad + '      ', out, ctx);
+          push('    </Cell>');
+        });
+        push('  </Row>');
+      });
+      return push('</TableShell>');
+    }
+    case 'trace':
+      push('<TracePane>');
+      n.runs.forEach((r) => {
+        push(`  <${use('Button')} variant="secondary"${r.open ? ' expanded' : ''}>${q(r.label + ' ' + r.toggle)}</Button>`);
+        r.steps.forEach((st) => {
+          push(`  <Row gap="8px" wrap>  // ${st.n}`);
+          push(`    <Text>${q(st.n)}</Text>`);
+          if (st.finish) push(`    <Text>${q(st.finish)}</Text>`);
+          if (st.tokens) push(`    <Text>${q(st.tokens)}</Text>`);
+          push('  </Row>');
+          st.parts.forEach((p) => {
+            push(`  <Text transform="uppercase">${q(p.label)}</Text>`);
+            push(p.mono ? `  <Code>${q(p.text)}</Code>` : `  <Text>${q(p.text)}</Text>`);
+          });
+        });
+      });
+      return push('</TracePane>');
     case 'errLine':
       return push(`<Notice tone="danger" role="alert" old="error-line">${q(n.text)}</Notice>`);
     case 'img':
@@ -289,7 +325,7 @@ function renderNode(n, pad, out, ctx) {
       renderNodes(n.kids, pad + '  ', out, ctx);
       return push('</Grid>');
     case 'card':
-      push(`<${use('Card')}${attrs({ variant: (/cd cd-(\w+)/.exec(n.cls) || [0, 'panel'])[1] === 'panel' ? '' : (/cd cd-(\w+)/.exec(n.cls) || [0, ''])[1], tint: n.tint, eyebrow: n.eyebrow, title: n.title, subtitle: n.sub })}>`);
+      push(`<${use('Card')}${attrs({ component: n.comp, variant: (/cd cd-(\w+)/.exec(n.cls) || [0, 'panel'])[1] === 'panel' ? '' : (/cd cd-(\w+)/.exec(n.cls) || [0, ''])[1], tint: n.tint, eyebrow: n.eyebrow, title: n.title, subtitle: n.sub })}>`);
       if (n.aside.length) {
         push('  <Card.Aside>');
         inlines(n.aside, pad + '    ', out, ctx);
@@ -310,7 +346,38 @@ function renderNode(n, pad, out, ctx) {
   }
 }
 
+/** The Next.js shell (group WJ, WK, WL): sidebar by permission, top bar with breadcrumb, search and bell, phone header and tab bar. */
+function shellLinesNx(sc, ctx) {
+  const out = [];
+  const s = sc.shell;
+  const use = (c) => ((ctx.used[c] = (ctx.used[c] || 0) + 1), c);
+  if (s.skip) out.push(`<${use('Button')} variant="secondary" href="#main-content" as="link" old="skip-link">"Đến nội dung chính"</Button>`);
+  out.push(`<${use('Sidebar')} old="sidebar">  // menu of role \`${s.accountId}\` (lib/nav.tsx); at 390 a header with the menu button and a bottom tab bar (${s.tabs.map((t) => q(t.label)).join(', ')}) replace it`);
+  out.push(`  <${use('Button')} variant="quiet" href="/" title="Về trang chính" as="link">"PHÒNG KHÁM DA LIỄU"</Button>`);
+  out.push('  <nav aria-label="Chức năng">');
+  for (const sec of s.sections) {
+    out.push(`    <Text transform="uppercase">${q(sec.title)}</Text>`);
+    for (const it of sec.items) {
+      if (it.tag) out.push(`    <Row gap="10px">  // planned entry: not a link, tooltip "Màn này sẽ có ở bản sau"\n      <Text>${q(it.label)}</Text>\n      <Text>${q(it.tag)}</Text>\n    </Row>`);
+      else out.push(`    <${use('Button')} variant="quiet" href=${q(it.key)} as="link"${/sb-it-on/.test(it.cls) ? ' aria-current="page"' : ''}>${q(it.label)}</Button>`);
+    }
+  }
+  out.push('  </nav>');
+  out.push(`  <Row gap="10px"><Avatar>${q(s.user.init)}</Avatar> <Text>${q(s.user.name)}</Text> <Text>${q(s.user.role)}</Text></Row>`);
+  out.push(`  <Row justify="space-between"><Text>${q(s.ver)}</Text> <Button variant="quiet" aria-label="Đổi giao diện sáng/tối" icon-only></Button> <Button variant="quiet" aria-label="Đăng xuất" icon-only></Button></Row>`);
+  out.push('</Sidebar>');
+  out.push(`<${use('TopBar')} old="topbar">`);
+  out.push(`  <nav aria-label="Vị trí"><Text>"Không gian phòng khám"</Text> <Text>"/"</Text> <Text strong>${q(s.crumb)}</Text></nav>`);
+  if (s.search) out.push(`  <${use('Field')} label="Tìm bệnh nhân" type="text" placeholder="Tìm bệnh nhân..." />`);
+  if (s.bell) out.push(`  <${use('Button')} variant="quiet" href="/inbox" aria-label="Mở thông báo" icon-only as="link"></Button>`);
+  out.push('</TopBar>');
+  out.push(`<Row gap="12px">  // phone header\n  <Button variant="quiet" aria-label="Mở menu" icon-only></Button>\n  <Button variant="quiet" href="/" title="Về trang chính" as="link">${q(s.clinic)}</Button>\n</Row>`);
+  out.push(`<nav aria-label="${s.tabAria}">${s.tabs.map((t) => `\n  <Button variant="quiet"${t.label === 'Menu' ? '' : ' as="link"'}>${q(t.label)}</Button>`).join('')}\n</nav>`);
+  return out;
+}
+
 function shellLines(sc, ctx) {
+  if (sc.shell.nx) return shellLinesNx(sc, ctx);
   const out = [];
   const s = sc.shell;
   const use = (c) => ((ctx.used[c] = (ctx.used[c] || 0) + 1), c);
@@ -381,7 +448,18 @@ function layout(sc) {
   const ctx = { used: {} };
   const out = [];
   if (sc.phone) return { lines: phoneLines(sc, ctx), used: ctx.used };
+  if (sc.bare) {
+    renderNodes(sc.blocks, '', out, ctx);
+    if (sc.hasToast) out.push(`<Toast>${q(sc.toast)}</Toast>`);
+    return { lines: out, used: ctx.used };
+  }
   if (sc.hasDialog) {
+    // The Next.js dialogs are measured with the page that stays under them (a Sheet sits inside the content region), so their Layout lists that page first.
+    if (/^W[JKL]\d+$/.test(sc.id) && sc.blocks.length) {
+      out.push(`<AppShell role=${q(sc.role)} active=${q(sc.shell.crumb)}>  // the page behind the dialog (dimmed)`);
+      renderNodes(sc.blocks, '  ', out, ctx);
+      out.push('</AppShell>');
+    }
     out.push(`// opens over the page "${sc.shell.crumb}" (dimmed); the page behind it is not part of this screen`);
     out.push(`<${(ctx.used.Dialog = 1, 'Dialog')}${attrs({ eyebrow: sc.dialog.eyebrow, title: sc.dialog.title, subtitle: sc.dialog.sub, width: sc.dialog.w + 'px' })}>`);
     out.push('  <Dialog.Close aria-label="Đóng hộp thoại" icon="close">"×"</Dialog.Close>');
@@ -412,6 +490,10 @@ function usage(screens) {
   const count = (n, id) => {
     nodes[n.k] = (nodes[n.k] || 0) + 1;
     (where[n.k] ||= new Set()).add(id);
+    if (n.comp) {
+      nodes[n.comp] = (nodes[n.comp] || 0) + 1;
+      (where[n.comp] ||= new Set()).add(id);
+    }
     for (const k of n.kids || []) count(k, id);
     const inl = [...(n.aside || []), ...(n.actions || [])];
     for (const i of n.items || []) for (const k of [...(i.actions || []), ...(Array.isArray(i.items) ? i.items.filter((x) => x && x.k) : [])]) inl.push(k);

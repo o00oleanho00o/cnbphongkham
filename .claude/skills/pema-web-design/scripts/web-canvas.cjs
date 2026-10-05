@@ -54,7 +54,7 @@ const canvasDir = path.resolve(CANVAS_DIR_ARG || lib.CANVAS_DIR);
 const fileName = path.basename(fileArg || lib.CANVAS_FILE);
 const GALLERY = fileName === lib.BLOCKS_FILE; // the block gallery has scratch ids WA9xx that are not in the inventory
 const filePath = path.join(canvasDir, fileName);
-const SCREEN_ID = '^W[A-I]\\d+(-\\d+)?$';
+const SCREEN_ID = '^W[A-L]\\d+(-\\d+)?$';
 
 /** Evaluate the built canvas script in Node, like specs-lib loadCanvas does for the app canvas. */
 function loadGroups(file) {

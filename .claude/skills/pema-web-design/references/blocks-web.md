@@ -1,6 +1,6 @@
 # Web canvas blocks and helpers (`Pema Web redesign canvas`)
 
-This file is the whole manual for writing a group part (`parts/WA.js` … `WH.js`, and `parts/WI.js` + `parts/WI2.js` for the Patient Mobile group WI). A fresh agent does not need to read
+This file is the whole manual for writing a group part (`parts/WA.js` … `WH.js`, `parts/WI.js` + `parts/WI2.js` for the Patient Mobile group WI, and `parts/WJ.js` + `parts/WJ2.js`, `WK.js`, `WL.js` for the Next.js screens, section 6c). A fresh agent does not need to read
 `template.html`, `nodes.html` or `base.js`. Every block is drawn like the app canvas block of the same purpose (see
 `design-specs/BLOCKS.md`) at web size, with tokens only (`tokens.json`), and stands for one `pema-agent/frontend/src/ui`
 component. Blocks the app has no counterpart for are marked **web-only**. A block whose kit component does not exist yet is a
@@ -163,11 +163,13 @@ Columns: block kind, the helper(s) that make it, the `src/ui` component it rende
 | `prog` | `prog(pct, { label, tone })` | kit gap | none | Inline progress bar |
 | `appt` | `appt({ day, month, title, lines, none })` | web-only (kit gap) | `PemaTile` (K1 appointment tile) | Appointment card body: date tile ("20" / "THÁNG 09"), bold title, grey lines. `none: true` = no valid date, calendar icon and "Chọn lịch" in the tile. Put it in a `card` (home "Lịch hẹn tiếp theo", appointments "Sắp tới") |
 | `events` | `events({ date, title, detail, kind, open }, ...)` | web-only (kit gap) | `PemaTile` list (J8) | Journey "Cập nhật gần đây" rows (old `<details>`): icon by `kind` (`followup photo done`), date, bold title, chevron. `open: true` expands that row and shows `detail`; a collapsed row hides its detail like the old page |
-| `bubbles` | `bubbles({ text, time, mine }, ...)` | web-only (kit gap) | `PemaCardLine` (chat bubble) | Care-team messages, left; `mine: true` = the patient's message, right and tinted. Time line under the text |
+| `bubbles` | `bubbles({ text, time, mine }, ...)` | web-only (kit gap) | `PemaCardLine` (chat bubble) | Care-team messages, left; `mine: true` = the patient's message, right and tinted. Time line under the text. `who` (sender name over the text) and `note` (small italic line under it) are for the agent-admin chat (WJ16): the customer on the left, the bot (`mine: true`) on the right |
 | `upload` | `upload({ text, btn, file, status, preview })` | web-only (kit gap; `Field` type file is the nearest) | `PemaCheckRow` / photo tile | Send-update file chooser: dashed box, camera icon, hint, "Chọn ảnh" button, chosen file name, status "Đã chọn: … (đã giữ trong phiên demo)", synthetic preview placeholder with the "MINH HỌA TỔNG HỢP" tag when `preview` |
 | `stepper` | `stepper(label, pct, caption)` | web-only (kit gap) | none | Journey progress: "2/5 buổi" + bar + caption "Tiến độ số buổi, không phải mức cải thiện da." Session count only, never a skin-improvement score |
 | `quick` | `quick([icon, title, sub], ...)` | web-only (kit gap) | `PemaActions`, `PemaAction` | Quick-action tiles in one row (home "Việc hôm nay": Chăm sóc, Ảnh tiến trình, Gửi cập nhật) |
 | `rx` | `rx({ title, count, empty, sections: [{ title, sub, lines | groups: [{ heading, lines }] }] })` | web-only (kit gap) | `PemaCareRow` + `PemaNotice` | The card "Đơn & phiếu đã duyệt" with the chip "<n> đơn" and one section per approved prescription or cashier order (groups "Đơn thuốc" / "Phiếu tư vấn"). No `sections` = pending/empty state: chip "Chưa có" and "Đơn và phiếu sẽ xuất hiện sau khi bác sĩ duyệt." A pending (unapproved) prescription is never listed |
+| `matrix` | `matrix(cols, rows, { foot })`, cells `mxIn(label, value, { ph, suf })`, `mxSel(label, value)`, `mxCk(label, on)` | kit gap (`MatrixGrid`: `TableShell` whose cells hold `Field`s) | none | **web-only.** A table whose cells may hold fields: the threshold matrix (depth × autonomy, WK9), SLA and shift times (WK15), the tuning parameters (WJ105-WJ115). `cols` as in `table()`; a cell is a text (`\n` = small grey line), a field cell (`label` = its accessible name, which the spec lists and the coverage check reads), or inline blocks. 390: every row becomes a card like `table()` |
+| `trace` | `trace(run, ...)`, run `{ label, toggle, open, steps: [{ n, finish, tokens, parts: [{ label, text, mono }] }] }` | kit gap (`TracePane`: one `Button` per run, steps with labelled text and code) | none | **web-only.** The agent's runs: a header button per run (`label` is the old button text, `toggle` 'Xem' or 'Thu gọn') and, for an open run, its steps with the finish reason, tokens in / out, the tool call (`mono`: code), the tool answer and what the model said. Used by Trace agent (WJ94-WJ97) and the session detail (WJ17) |
 | `errLine` | `errLine(text)` | `Field` error line (`field.tsx`, `err`); no component for the dialog-level line | `PemaTextField` error text | Inline error line (old `.ops-error`, `.crm-error`, `#review-error`, `<p role="alert">`): danger text with an error icon, no box. End of a dialog body or form, or under the tabs it belongs to. Use `notice(text, 'danger')` only when the old web draws a boxed notice |
 
 Recipe names: `form` = `grid(2|3, field...)`; `cardGrid` = `grid(n, card...)`; `statusBars` = `bars`; `photoGrid` = `photos`;
@@ -265,6 +267,23 @@ Cards are the old `mobile-card`: `card({ title, aside: [badge/quiet] }, ...)` wi
 
 Look: tokens only, card radius and shadow of the app, the phone top bar and nav drawn like the app's `PemaMainTopBar` / `PemaBottomNav` (pill behind the lit icon). Sample data is the canvas data (`pt`, `people`,
 `doctors`, `services`, `money()`); dates and the Vietnamese texts stay as the old web has them.
+
+## 6c. Next.js frames (groups WJ, WK, WL; package W2 step W10)
+
+The ids `WJ` (agent admin), `WK` (care agent) and `WL` (sign-in, shell, templates) are Next.js-only screens: there is no old-web screen to copy, the **snapshot** of the real page
+(`design-specs/web/snapshot.json`, shown as the Layout of the spec `design-specs/web/screens/<ID>.md`) and the shot `visual-ref/old/<ID>-<W>x<H>.png` are the reference. Keep the page's
+information architecture and every label; draw it with the same blocks and tokens as every other frame. Names, numbers and dates are the shot's synthetic mock values or the canvas data.
+
+- **Shell**: `npage(id, name, note, '/admin/users', blocks, { nx: 'owner' })` is a page in the Next.js shell (sidebar by role from `lib/nav.tsx`, planned entries as grey "(sắp có)", footer with the connection line,
+  theme and sign-out; top bar with breadcrumb "Không gian phòng khám / <entry>", search "Tìm bệnh nhân..." and bell; at 390 a header with the menu button and the clinic name plus the tab bar Việc · Hồ sơ · Inbox · Duyệt · Chờ tôi · Menu).
+  `nx` is the role: `owner manager doctor cs_staff reception patient`. The second argument after the note is the **path of the active menu entry** (`/admin/users`, `/care/handoffs`; `/admin/care/matrix`).
+  `ndlg(id, title, note, blocks, { nx, nav, behind: [blocks of the page], footer, w })` is a dialog or sheet over that page (1440 only). `drawer: true` opens the phone menu (390 frames of the shell states).
+  `bare(id, name, note, blocks, { state })` has no shell at all (sign-in, "đang tải phiên"): the content is centred, 440 px at most.
+- **States and tabs**: a state is `npage(..., { nx, state: true })` (1440 only); a tab of a page is `npage(...)` with the 3 frames of the inventory.
+- **The page behind a dialog is part of the frame**: the snapshot of a Next.js dialog lists the page content and the dialog together, so pass the page's blocks as `behind` (build them once in a local function of your part and use them for the page, its states and its dialogs). The Layout of a dialog frame of WJ, WK and WL lists `behind` first, then the dialog.
+- **Accessible names**: an icon-only button or a button whose accessible name differs from its text takes `aria`: `iconBtn('visibility', { aria: 'Hiện nội dung', quiet })`, `btn('Sửa', 'secondary', { aria: 'Sửa BS. Lê Minh Tâm' })`. The spec lists it and the coverage check reads it, so copy the `aria-label` of the Layout.
+- **Compositions** (no own markup; local functions at the top of a part, named `wj…`, `wk…`, `wl…`): a card of several rows is `card({ comp: 'HandoffCard', ... })`; `comp` names the composition in the spec Layout and counts it in `BLOCKS.md`. Use it for repeated structures (handoff card, on-call card, KB source row, tool allow-list row, chat pane); list each one in your report with its `src/ui` name.
+- Check as always, plus `node web-specs.cjs --check --group=WJ` (0 snapshot labels missing from the Layout; the labels are matched with digits and person names masked).
 
 ## 7. 390 rules
 

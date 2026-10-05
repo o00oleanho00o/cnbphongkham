@@ -11,9 +11,10 @@ const CANVAS_FILE = 'Pema Web.dc.html';
 const BLOCKS_FILE = 'Pema Web blocks.dc.html';
 const TOKENS = path.join(ROOT, 'pema-agent', 'frontend', 'src', 'ui', 'tokens.json');
 const INVENTORY = path.join(ROOT, 'design-specs', 'web', 'inventory.json');
-const GROUP_CODES = ['WA', 'WB', 'WC', 'WD', 'WE', 'WF', 'WG', 'WH', 'WI'];
+const GROUP_CODES = ['WA', 'WB', 'WC', 'WD', 'WE', 'WF', 'WG', 'WH', 'WI', 'WJ', 'WK', 'WL'];
 // part files of a group: WI is written in two files (parts/WI.js, parts/WI2.js) that the canvas merges into the single group WI
-const GROUP_PARTS = { WI: ['WI', 'WI2'] };
+// WJ (agent admin, 115 ids) is written in two files as well: parts/WJ.js (WJ1-WJ57) and parts/WJ2.js (WJ58-WJ115)
+const GROUP_PARTS = { WI: ['WI', 'WI2'], WJ: ['WJ', 'WJ2'] };
 const GROUP_SUB = {
   WA: 'Sidebar, thanh trên, tài khoản demo, thông báo nổi · AppShell',
   WB: 'Tổng quan, hôm nay, điều phối lịch, đặt lịch, chi tiết lịch hẹn',
@@ -23,7 +24,10 @@ const GROUP_SUB = {
   WF: 'Thu ngân, thu tiền, lên đơn nhanh, tách đơn và bản in A5',
   WG: 'Tài chính & tiền thủ thuật theo vai trò: chủ phòng khám, kế toán, bác sĩ',
   WH: 'Ask Pema và Hướng dẫn sử dụng',
-  WI: 'Patient Mobile web: trang chủ, lịch hẹn, hành trình, tin nhắn, hồ sơ và mọi trạng thái · khung điện thoại 390×844'
+  WI: 'Patient Mobile web: trang chủ, lịch hẹn, hành trình, tin nhắn, hồ sơ và mọi trạng thái · khung điện thoại 390×844',
+  WJ: 'Quản trị agent (Next.js): nhân viên, phiên chat, danh bạ, kho tri thức, tài khoản Zalo, agents, tools, MCP, trace, logs, chính sách, cấu hình · khung Next.js',
+  WK: 'Care agent (Next.js): kỹ năng và ca trực, số trực, ma trận ngưỡng, SLA, cảnh báo, yêu cầu chuyển giao, dòng thời gian, trả lại, nói với agent',
+  WL: 'Đăng nhập, khung ứng dụng Next.js (menu theo vai trò, trạng thái tải, quyền, điện thoại) và Tin nhắn mẫu đã duyệt'
 };
 
 const lf = (s) => s.replace(/\r\n/g, '\n');

@@ -1,14 +1,14 @@
 // tail.js: groups and validation (framework part, frozen after W3a). GROUP_DEFS is written by web-canvas-build.cjs from
-// design-specs/web/inventory.json; WA ... WI are the group parts (WI is parts/WI.js + parts/WI2.js, merged). A group lists its screens
+// design-specs/web/inventory.json; WA ... WL are the group parts (WI is parts/WI.js + parts/WI2.js, WJ is parts/WJ.js + parts/WJ2.js, merged). A group lists its screens
 // in inventory order (ids the inventory does not know come last, in the order written), so parts can be filled in any order.
-const PARTS = { WA, WB, WC, WD, WE, WF, WG, WH, WI: [...WI, ...WI2] };
+const PARTS = { WA, WB, WC, WD, WE, WF, WG, WH, WI: [...WI, ...WI2], WJ: [...WJ, ...WJ2], WK, WL };
 const orderOf = (g, sc) => { const i = (g.ids || []).indexOf(sc.id); return i < 0 ? 1e6 : i; };
 const groups = GROUP_DEFS.map(g => ({ ...g, screens: PARTS[g.code].map((sc, i) => [sc, i]).sort((a, b) => orderOf(g, a[0]) - orderOf(g, b[0]) || a[1] - b[1]).map(x => x[0]) }));
 
 // A block that the markup cannot draw, a container nested too deep or a wrong id fails here, in the Node
 // loader and in the viewer alike, with the screen id in the message.
 const KIND_INLINE = ['txt', 'btn', 'badge', 'avatar', 'icon', 'chip', 'prog'];
-const KIND_LEAF = ['h', 'pageHead', 'hero', 'kpis', 'stat', 'chips', 'tags', 'tabs', 'notice', 'facts', 'field', 'table', 'empty', 'bars', 'timeline', 'list', 'board', 'weekGrid', 'photos', 'a5', 'img', 'legend', 'sp', 'hr', 'code', 'appt', 'events', 'bubbles', 'upload', 'stepper', 'quick', 'rx', 'errLine'];
+const KIND_LEAF = ['h', 'pageHead', 'hero', 'kpis', 'stat', 'chips', 'tags', 'tabs', 'notice', 'facts', 'field', 'table', 'empty', 'bars', 'timeline', 'list', 'board', 'weekGrid', 'photos', 'a5', 'img', 'legend', 'sp', 'hr', 'code', 'appt', 'events', 'bubbles', 'upload', 'stepper', 'quick', 'rx', 'errLine', 'matrix', 'trace'];
 const KIND_CONT = ['stack', 'row', 'grid', 'card', 'box', 'disc'];
 const MAX_CONTAINER_LEVEL = 3;
 const checkInline = (id, where, items) => (items || []).forEach(x => { if (!isNode(x) || !KIND_INLINE.includes(x.k)) throw new Error(`${id}: ${where} accepts only inline blocks (${KIND_INLINE.join(', ')}), got ${x && x.k}`); });
@@ -26,6 +26,7 @@ const checkNode = (id, n, level) => {
   if (n.k === 'kpis') n.items.forEach(i => checkInline(id, 'kpis item actions', i.actions));
   if (n.k === 'list') n.items.forEach(i => checkInline(id, 'list item actions', i.actions));
   if (n.k === 'table') n.rows.forEach(r => r.cells.forEach(c => checkInline(id, 'table cell', c.items)));
+  if (n.k === 'matrix') n.rows.forEach(r => r.cells.forEach(c => checkInline(id, 'matrix cell', c.items)));
 };
 const seen = {};
 groups.forEach(g => g.screens.forEach(sc => {

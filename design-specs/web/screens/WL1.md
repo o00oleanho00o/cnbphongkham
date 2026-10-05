@@ -46,18 +46,21 @@ Other screens:
 - Viewport 1440×900, clock 2026-09-20 09:00 (Asia/Ho_Chi_Minh), account `anonymous`; snapshot scope: body.
 - Frames to build (inventory D4): 1440x900, 1920x1020, 390x844.
 
-## Layout (top to bottom, region → src/ui component)
-Measured from the running page (snapshot of the mock BE): every field, action, status, filter and text is listed; repeating rows show the first one and their count.
+## Layout (top to bottom, from the web canvas frame, region → src/ui component)
+Generated from the blocks of `Pema Web redesign canvas/Pema Web.dc.html` (frame WL1); labels, actions, statuses and notices are the front end's, verbatim.
 ```tsx
-<Img alt="Pema" size="151x80" />
-<Heading level={1}>"Đăng nhập CSKH"</Heading>
-<Text>"Chăm sóc khách hàng và trợ lý AI"</Text>
-<Field label="Email" type="email" id="email" />
-<Field label="Mật khẩu" type="password" id="password" />
-<Button variant="quiet" aria-label="Hiện nội dung" title="Hiện" icon-only></Button>
-<Button variant="primary" disabled>"Đăng nhập"</Button>
+<Stack>
+  <Card>
+    <Img placeholder label="Pema clinic & spa" />
+    <Heading level={2} sub="Chăm sóc khách hàng và trợ lý AI">"Đăng nhập CSKH"</Heading>
+    <Field label="Email" type="text" />
+    <Field label="Mật khẩu" type="text" />
+    <Button variant="secondary" aria-label="Hiện nội dung" icon="visibility" icon-only></Button>
+    <Button variant="primary" disabled>"Đăng nhập"</Button>
+  </Card>
+</Stack>
 ```
-Kit components used: Field×2, Button×2.
+Kit components used: Field×2, Button×2, Card×1.
 
 ## Responsive
 - 1440×900 is the reference (Frame, Layout).
@@ -92,6 +95,10 @@ Kit components used: Field×2, Button×2.
 
 ## Gotchas
 - (none recorded)
+
+## Web canvas
+- Frames: 1440x900, 1920x1020, 390x844 (inventory: 1440x900, 1920x1020, 390x844); screen label `WL1 · Đăng nhập CSKH`.
+- Canvas note: Next.js › /login · trang đăng nhập, không có khung ứng dụng · chưa nhập gì: nút "Đăng nhập" tắt
 
 ## Images
 - `pema-agent/frontend/visual-ref/old/WL1-1440x900.png`
