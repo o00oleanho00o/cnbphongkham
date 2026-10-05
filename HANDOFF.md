@@ -430,12 +430,12 @@ reverse index.
 
 Owner decisions 2026-10-05: (1) Patient Mobile web (group WI, 42 screens) is dropped as a Next.js target — designs stay
 for KMP/Zalo, INDEX rows marked `served by KMP/Zalo`; revisit as a Zalo-opened web only when a Zalo OA exists.
-(2) Publishing (W5) is the owner's `/design-sync`, not a subagent step. (3) Keep two canvas files; unify through one
-project, one Design System, one cross-index (`design-specs/INDEX.md`).
+(2) Publishing to claude.ai/design is **deferred** until the owner asks; W2 stays in the repo. (3) Keep two canvas files; unify through one
+Design System source and one cross-index (`design-specs/INDEX.md`).
 
 Where: plan `pema-agent/docs/PLAN-AI01-W2.md`; recipes `pema-agent/recipes/W2/` (`00-README.md`, `_REPORT-TEMPLATE.md`,
 `01-W7` inventory → `02-W8` shots ‖ `03-W9` specs → `04-W10` frames+blocks → `05-W11` design-system source →
-`06-W12` unify/PUBLISH.md → `07-W5` owner publish). Reuses package-W scripts in `.claude/skills/pema-web-design/scripts/`.
+`06-W12` unify). No publish step. Reuses package-W scripts in `.claude/skills/pema-web-design/scripts/`.
 Writes only to `design-specs/`, `Pema Web redesign canvas/`, new `design-system/`, that skill folder, and `pema-agent/docs|recipes`.
 No FE/BE code changes; U0/U1 implement the new blocks from `BLOCKS.md`.
 

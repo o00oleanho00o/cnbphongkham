@@ -1,8 +1,7 @@
-# W12 — Unify: cross-index app ↔ web, WI rows, one project layout, canonical skill
+# W12 — Unify: cross-index app ↔ web, WI rows, canonical skill
 
 ## Goal
-One place to navigate app and web designs, the Patient Mobile web rows settled, and an exact publish layout for the
-owner's `/design-sync`.
+One place to navigate app and web designs, the Patient Mobile web rows settled, and one canonical sync skill.
 
 ## Read first
 1. `PLAN-AI01-W2.md` §2 (decisions), §6.
@@ -14,19 +13,15 @@ owner's `/design-sync`.
    app id ↔ web id generated from `notes.json` (`app_canvas`) plus a reverse map; link to each spec.
 2. WI rows: status `served by KMP/Zalo`, each with its app id or `—` and a one-line reason; add a "revisit when Zalo OA
    exists" note (owner decision 1).
-3. Write `design-specs/PUBLISH.md`: the exact `/design-sync` sequence for the owner — create one project, publish
-   Design System first, then app canvas, then web canvas; what each step needs (files, titles); how to verify
-   (artifact list shows three items; links recorded in HANDOFF).
-4. Skills: name the canonical skill for "keep canvases in sync with the FE" (recommend `pema-web-design`, since the FE
+3. Skills: name the canonical skill for "keep canvases in sync with the FE" (recommend `pema-web-design`, since the FE
    is now the product; `pema-web-to-canvas` becomes app-only or is marked legacy). Write the decision at the top of both
    SKILL.md files (additive note), do not delete scripts.
 
 ## Acceptance
-- Hub index renders all three sections with working relative links; every WI row has a status and mapping;
-  `PUBLISH.md` is complete enough for someone who has never run `/design-sync`.
+- Hub index renders all three sections with working relative links; every WI row has a status and mapping.
 
 ## Out of scope
-- Running `/design-sync`. Deleting canvases or skills.
+- Publishing to claude.ai/design (deferred). Deleting canvases or skills.
 
 ## Report
 Use `_REPORT-TEMPLATE.md`.

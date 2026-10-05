@@ -8,7 +8,8 @@ read `pema-agent/recipes/W/00-README.md` and `pema-agent/docs/PLAN-AI01-W.md` §
 
 ```
 01-W7-nextjs-inventory ─┬─► 02-W8-shots ──┐
-                        └─► 03-W9-specs ──┴─► 04-W10-canvas-frames-blocks ─► 05-W11-design-system ─► 06-W12-unify ─► 07-W5-owner-publish (owner)
+                        └─► 03-W9-specs ──┴─► 04-W10-canvas-frames-blocks ─► 05-W11-design-system ─► 06-W12-unify
+(publishing to claude.ai/design is deferred; not part of W2)
 ```
 
 ## Locations (write only here)
@@ -18,7 +19,7 @@ design-specs/web/inventory.json · snapshot.json · notes.json · index.json · 
 design-specs/web/manifest.json                       shots manifest (PNGs are NOT committed)
 design-specs/INDEX.md                                 cross-index app ↔ web (W12)
 Pema Web redesign canvas/parts/{WJ,WK,WL}.js · blocks.js · Pema Web.dc.html · Pema Web blocks.dc.html
-design-system/                                        Design System source for /design-sync (W11)
+design-system/                                        Design System source in the repo (W11)
 .claude/skills/pema-web-design/                       scripts and skill text (additive changes only)
 pema-agent/docs/PLAN-AI01-W2.md · pema-agent/recipes/W2/
 ```

@@ -20,9 +20,8 @@ reuses its tooling in `.claude/skills/pema-web-design/scripts/` (`web-inventory.
 1. **Patient Mobile web (group WI, 42 screens) is dropped as a Next.js target.** The designs stay as reference for the
    KMP app and Zalo; INDEX marks them `served by KMP/Zalo` and links the app-canvas ids. Revisit as a Zalo-opened
    lightweight web only when the clinic has a Zalo OA.
-2. **W5 (publishing to claude.ai/design) is done by the owner with `/design-sync`**, not by a subagent. W2 only
-   prepares everything so that one `/design-sync` publishes both canvases and the Design System into **one
-   claude.ai/design project**.
+2. **Publishing to claude.ai/design is deferred** (owner, 2026-10-05): W2 produces canvases and the Design System
+   source in the repo only; no step pushes anything to claude.ai until the owner asks.
 3. Keep **two canvas files** (app, web); unify through one project, one Design System, one cross-index.
 
 ## 3. Scope
@@ -31,7 +30,7 @@ reuses its tooling in `.claude/skills/pema-web-design/scripts/` (`web-inventory.
 |---|---|
 | Inventory, shots, specs and canvas frames for every Next.js-only route and its states/dialogs (new groups `WJ` agent admin, `WK` care, `WL` CSKH/auth) | Any FE or BE code change (U-package work) |
 | New blocks the agent screens need (chat/trace panes, matrix grid, SLA table, KB source list), documented in `BLOCKS.md` and mirrored as names in `src/ui` (names only, implementation is U0/U1) | Patient Mobile web rebuild |
-| A Design System source (tokens, color roles, type scale, spacing, radius, components with variants and states) in the form `/design-sync` needs | Publishing (owner) |
+| A Design System source (tokens, color roles, type scale, spacing, radius, components with variants and states) | Publishing to claude.ai/design (deferred) |
 | Cross-index app ↔ web ids; WI rows marked `served by KMP/Zalo`; skill consolidation note | Deleting old canvases or skills |
 
 ## 4. Steps (one recipe each)
@@ -42,11 +41,10 @@ reuses its tooling in `.claude/skills/pema-web-design/scripts/` (`web-inventory.
 | **W8** Shots | `pnpm visual`-style Playwright shots of the new ids against the mock BE at 1440×900, 1920×1020, 390×844 → `manifest.json` (PNGs not committed) | W7 |
 | **W9** Specs | `web-specs.cjs` for the new ids → `design-specs/web/screens/WJ*.md…`, INDEX regenerated | W7 (W8 in parallel) |
 | **W10** Canvas frames + blocks | `parts/WJ.js`, `WK.js`, `WL.js`; new blocks in `blocks.js` + `BLOCKS.md`; `web-canvas-build.cjs`; `web-canvas.cjs check --complete --viewport=all --frames` for all ids | W8, W9 |
-| **W11** Design System source | `design-system/` folder ready for `/design-sync`: tokens (from `frontend/src/ui/tokens.json` if U0 exists, else from BLOCKS/skill refs), color roles, type scale, spacing, radius, shadows, components with variants/states, usage notes; both canvases reference it | W10 (can start after W7) |
-| **W12** Unify | `design-specs/INDEX.md` cross-index app ↔ web; WI rows → `served by KMP/Zalo`; one project layout for `/design-sync` (what to publish, in which order); note which of `pema-web-to-canvas` / `pema-web-design` is the canonical skill | W11 |
-| **W5** Publish | Owner runs `/design-sync` following `recipes/W2/07-W5-owner-publish.md`; records the links in HANDOFF | W12 |
+| **W11** Design System source | `design-system/` folder in the repo: tokens (from `frontend/src/ui/tokens.json` if U0 exists, else from BLOCKS/skill refs), color roles, type scale, spacing, radius, shadows, components with variants/states, usage notes; both canvases reference it | W10 (can start after W7) |
+| **W12** Unify | `design-specs/INDEX.md` cross-index app ↔ web; WI rows → `served by KMP/Zalo`; note which of `pema-web-to-canvas` / `pema-web-design` is the canonical skill | W11 |
 
-Order: W7 → (W8 ‖ W9) → W10 → W11 → W12 → W5 (owner).
+Order: W7 → (W8 ‖ W9) → W10 → W11 → W12. Publishing to claude.ai/design is not part of W2 (deferred).
 
 ## 5. Gate per step (director runs it in the worktree before merging)
 
@@ -64,13 +62,13 @@ Order: W7 → (W8 ‖ W9) → W10 → W11 → W12 → W5 (owner).
 - Design System source complete enough that a reviewer can answer "what colour/type/spacing/component does this
   frame use" for every block.
 - Cross-index lets a reader go app id ↔ web id in one table; WI rows carry their KMP/Zalo mapping.
-- `/design-sync` run by the owner publishes app canvas, web canvas and Design System into one project without manual
-  fixes (W2 reports the exact commands).
+- Everything is reviewable locally (design viewer, specs, `design-system/`); publishing to claude.ai/design is a
+  separate, later request.
 
 ## 7. Known facts and risks
 
 - Account currently has **no published artifacts**; the earlier "pushed to claude.ai/design" note for the app canvas
-  (2026-09-23) may refer to another account or an unpublished local sync — verify at W5.
+  (2026-09-23) may refer to another account or an unpublished local sync — verify if publishing is requested later.
 - `_ds/novaestate-design-system-…` exists in the repo under an unrelated name; W11 inspects it and either reuses or
   retires it (do not guess).
 - Agent-admin screens are ports of the zalo-agent dashboard; their structure differs from clinic screens. Design
