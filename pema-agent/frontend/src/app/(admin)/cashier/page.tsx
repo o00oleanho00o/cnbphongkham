@@ -3,22 +3,18 @@
 // Thu ngân: the old web's `cashier` screen, the order half of it. The quick-order button and the banner open the
 // order dialog (`QuickOrderDialog`), the order history lists every order (Xem / in, Sửa nháp), and the tiles count
 // them next to the product catalog. `?patient=<id>` opens the dialog for that patient (entry from Patient 360),
-// `?edit=<order id>` opens a draft for editing. Invoices and "Thu tiền" are the finance step (U6): the old
-// "Hóa đơn & thanh toán" panel is replaced by a note until then. Who may do what is the BE's: `order.write` makes
-// and edits drafts, `order.read` only looks.
+// `?edit=<order id>` opens a draft for editing. "Hóa đơn & thanh toán" (package U, step U6, `InvoicePanel`) lists the
+// invoices (Tất cả, Còn phải thu, Đã thanh toán), takes the receipt in the "Thu tiền" dialog and raises the invoice of
+// an order that has none. Who may do what is the BE's: `order.write` makes and edits drafts, `order.read` only looks,
+// `finance.collect` collects.
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { IconPlus } from "@/components/admin/shared/dashboard-icons";
-import {
-  EmptyState,
-  ListSkeleton,
-  Notice,
-  PrimaryButton,
-  RetryNotice,
-} from "@/components/ops/ops-ui";
+import { InvoicePanel } from "@/components/finance/invoice-panel";
+import { EmptyState, ListSkeleton, PrimaryButton, RetryNotice } from "@/components/ops/ops-ui";
 import { useToast } from "@/components/ops/toast";
 import { QuickOrderDialog } from "@/components/orders/quick-order-dialog";
 import { http, unwrap } from "@/lib/api/client";
@@ -215,12 +211,7 @@ function CashierPage() {
             </Card>
           )}
 
-          <Card title="Hóa đơn & thanh toán">
-            <Notice>
-              Hóa đơn và thu tiền nằm ở bước Tài chính. Đơn đã lập ở đây là căn cứ để lập hóa đơn;
-              duyệt đơn không có nghĩa là đã cấp thuốc.
-            </Notice>
-          </Card>
+          <InvoicePanel onChanged={reload} />
 
           <Card
             title="Đơn thuốc & phiếu tư vấn"

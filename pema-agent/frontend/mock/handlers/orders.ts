@@ -7,6 +7,7 @@
 // approves, an approved order never changes and a draft cannot be printed.
 import { USERS } from "../auth";
 import { DOCTOR_NAMES, appointments, patientById } from "../data/clinic";
+import { invoiceOfOrder, syncOrderInvoice } from "../data/finance";
 import { CATALOG_SOURCE, orders, products, type OrderRecord } from "../data/orders";
 import {
   bodyOf,
@@ -118,7 +119,7 @@ function orderOut(order: OrderRecord): S["OrderOut"] {
     items: order.items,
     received_vnd: order.received_vnd,
     paid: order.paid,
-    invoice_id: null,
+    invoice_id: invoiceOfOrder(order.id)?.id ?? null,
     editable: order.status === "draft" && order.received_vnd === 0 && !order.paid,
     unresolved_count: order.items.filter((x) => x.route === "UNRESOLVED").length,
     ready_to_approve: order.diagnosis.trim() !== "" && problemWithLines(order.items) === null,
@@ -259,6 +260,7 @@ function registerOrders(r: Router): void {
     order.note = (input.note ?? "").trim();
     order.items = items;
     order.version += 1;
+    syncOrderInvoice(order);
     return { body: orderOut(order) };
   });
 

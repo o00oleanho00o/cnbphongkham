@@ -102,6 +102,30 @@ const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
   "/cashier": { heading: "Thu ngân", action: { role: "button", name: "Lên đơn nhanh" } },
   "/orders/[id]": { heading: "Tách đơn", action: { role: "link", name: "Về thu ngân" } },
   "/orders/[id]/print": { heading: "", action: { role: "button", name: "In tất cả" } },
+  "/finance": {
+    heading: "Tài chính & tiền thủ thuật",
+    action: { role: "link", name: "Mở bảng tiền thủ thuật" },
+  },
+  "/finance/entries": {
+    heading: "Tài chính & tiền thủ thuật",
+    action: { role: "button", name: "Xuất CSV cho Excel" },
+  },
+  "/finance/rates": {
+    heading: "Tài chính & tiền thủ thuật",
+    action: { role: "button", name: "Lưu tỷ lệ" },
+  },
+  "/finance/payments": {
+    heading: "Tài chính & tiền thủ thuật",
+    action: { role: "button", name: "Xác nhận thu" },
+  },
+  "/finance/periods": {
+    heading: "Tài chính & tiền thủ thuật",
+    action: { role: "link", name: "Mở bảng" },
+  },
+  "/finance/export": {
+    heading: "Tài chính & tiền thủ thuật",
+    action: { role: "button", name: "Tải CSV cho Excel" },
+  },
   "/services": { heading: "Danh mục dịch vụ", action: { role: "button", name: "Thêm dịch vụ" } },
   "/resources": { heading: "Bác sĩ & phòng", action: { role: "button", name: "Khóa phòng" } },
   "/studio": { heading: "Ảnh trước / sau", action: { role: "textbox", name: "Tìm bệnh nhân" } },

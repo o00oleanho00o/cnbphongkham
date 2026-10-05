@@ -143,6 +143,11 @@ const ALL: Permission[] = [
   "order.read",
   "order.write",
   "order.approve",
+  // Finance PB02 (U6): the manager is the accountant (clinic projection, entries, close and pay, receipts); the
+  // personal projection and the owner's payment notifications are added to the owner below.
+  "finance.read",
+  "finance.write",
+  "finance.collect",
   "crm.task.read",
   "crm.task.resolve",
   "crm.activity.write",
@@ -178,7 +183,15 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   // `admin.users` (reset another user's password) is the owner's alone; the manager does not get it.
   // Clinical reads and photos (package U3): owner, doctor and care staff; a manager is not a clinician and holds no
   // `session.write` either (the BE matrix), so the mock takes it out of the shared list.
-  owner: [...ALL, "admin.users", "session.read", "media.read", "media.write"],
+  owner: [
+    ...ALL,
+    "admin.users",
+    "session.read",
+    "media.read",
+    "media.write",
+    "finance.read_own",
+    "finance.notifications",
+  ],
   manager: ALL.filter(
     (permission) => permission !== "session.write" && permission !== "order.approve",
   ),
@@ -197,6 +210,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "order.read",
     "order.write",
     "order.approve",
+    "finance.read_own",
     "crm.task.read",
     "conversation.read",
     "review.read",
@@ -232,6 +246,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "patient.read",
     "order.read",
     "order.write",
+    "finance.collect",
     "appointment.read",
     "appointment.write",
     "appointment.check_in",
