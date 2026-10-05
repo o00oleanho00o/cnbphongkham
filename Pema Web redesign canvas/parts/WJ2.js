@@ -207,6 +207,42 @@ const wj2McpForm = (edit) => [
     : [sm('Không bắt buộc - chỉ điền nếu server yêu cầu xác thực. Ví dụ token:'), code('Authorization: Bearer sk-abc123def456...')]
 ];
 
+
+// ---- Trace agent (/admin/traces) ----
+const wj2TraceRuns = Array.from({ length: 12 }, (_, i) => {
+  const m = 8 * 60 + 55 - 47 * i, hh = String(Math.floor(m / 60)).padStart(2, '0'), mm = String(m % 60).padStart(2, '0');
+  const who = [3, 7, 11].includes(i) ? 'Lễ tân Trâm' : 'Nguyễn Thu Hà';
+  const tok = 1680 + 142 * i;
+  return { label: who + ' 20/09 ' + hh + ':' + mm + ' - ' + (2 + (i % 3)) + ' step - ' + String(tok).replace(/(\d)(\d{3})$/, '$1.$2') + ' token' };
+});
+const wj2TraceOpen = { ...wj2TraceRuns[0], open: true, steps: [
+  { n: 'Step 1', finish: 'tool-calls', tokens: '700 vào / 60 ra', parts: [{ label: 'Gọi tool: kb_search', text: '{ "query": "chăm sóc da sau laser" }', mono: true }, { label: 'Tool trả về: kb_search', text: '3 đoạn từ 2 nguồn đã được bác sĩ duyệt.' }] },
+  { n: 'Step 2', finish: 'stop', tokens: '900 vào / 90 ra', parts: [{ label: 'Model nói', text: 'Em đã soạn nháp trả lời kèm nguồn, chờ nhân viên duyệt.' }] }] };
+const wj2TraceHead = () => pageHead('Trace agent', 'Mỗi lượt bot trả lời đã chạy qua những step nào: model nói gì, gọi tool nào với tham số gì');
+const wj2TraceEnd = () => sm('Đã hết lượt có trace. Trace cũ hơn bị dọn theo "Giữ trace" ở trang Cấu hình.');
+
+// ---- Logs (/admin/logs) ----
+const wj2LogTabs = (on) => tabs(['Log hệ thống', 'Nhật ký thao tác'], on, { seg: true });
+const wj2LogHead = () => pageHead('Logs', 'Log toàn hệ thống đọc từ file. File ghi cả mức debug nên đầy đủ hơn nhìn terminal.');
+const wj2LogFilters = () => row({ g: 8, ai: 'flex-end' }, secondary('Mọi mức', { aria: 'Lọc theo mức', ric: 'expand_more' }), secondary('Mọi scope', { aria: 'Lọc theo scope', ric: 'expand_more' }), input('', '', { ph: 'Tìm trong log rồi Enter...', w: 420, suf: 'search' }), secondary('Tải lại', { icon: 'refresh' }));
+const wj2LogLines = [
+  ['09:00:00.000', 'INFO', 'http', 'Nhận tin nhắn đến, đã xếp vào hàng đợi', 1], ['08:59:23.000', 'INFO', 'channel.zalo_bot', 'Lượt agent hoàn tất'], ['08:58:46.000', 'DEBUG', 'agent.loop', 'Quét hàng đợi việc đến hạn'],
+  ['08:58:09.000', 'WARN', 'scheduler', 'Cờ đỏ: chuyển bác sĩ trước khi gọi mô hình', 1], ['08:57:32.000', 'INFO', 'knowledge.ingest', 'Nạp tài liệu: đã cắt đoạn xong'], ['08:56:55.000', 'ERROR', 'policy', 'Gửi tin lỗi: kênh không khả dụng, sẽ thử lại'],
+  ['08:56:18.000', 'INFO', 'http', 'Nháp chờ duyệt đã được tạo', 1], ['08:55:41.000', 'INFO', 'channel.zalo_bot', 'Nhận tin nhắn đến, đã xếp vào hàng đợi'], ['08:55:04.000', 'INFO', 'agent.loop', 'Lượt agent hoàn tất'],
+  ['08:54:27.000', 'DEBUG', 'scheduler', 'Quét hàng đợi việc đến hạn', 1], ['08:53:50.000', 'WARN', 'knowledge.ingest', 'Cờ đỏ: chuyển bác sĩ trước khi gọi mô hình'], ['08:53:13.000', 'INFO', 'policy', 'Nạp tài liệu: đã cắt đoạn xong']
+];
+const wj2LogTone = { INFO: 'info', DEBUG: 'neutral', WARN: 'warning', ERROR: 'danger' };
+// LogLine (kit: Badge + Button; `log-viewer.tsx`): time, level badge, scope, message and "Chi tiết"
+const wj2LogList = () => list(wj2LogLines.map(([t, lv, sc, msg, more]) => ({ t: msg, sub: t + ' · ' + sc, actions: [badge(lv, wj2LogTone[lv], { dot: false }), ...(more ? [quiet('Chi tiết')] : [])] })), { box: true });
+const wj2LogsPage = () => [wj2LogHead(), wj2LogTabs(0), wj2LogFilters(), wj2LogList(), secondary('Xem thêm 150 dòng cũ hơn')];
+const wj2AuditRows = [['Chủ phòng khám', 'review.approve', 'review_item', '· 00000000'], ['Quản lý', 'handoff.claim', 'handoff', '· 00000001'], ['Bác sĩ', 'review.approve', 'review_item', '· 00000002'],
+  ['CSKH', 'draft.edit', 'draft', '· 00000003'], ['Lễ tân', 'followup.done', 'followup', '· 00000004'], ['agent', 'draft.create', 'draft', '· 00000005']];
+const wj2AuditPage = () => [wj2LogHead(), wj2LogTabs(1),
+  row({ jc: 'space-between', g: 12 }, row({ g: 12, ai: 'flex-end' }, input('', '', { ph: 'Lọc theo hành động, ví dụ review.approve', w: 340 }), secondary('Mọi đối tượng', { aria: 'Lọc theo đối tượng', ric: 'expand_more' })),
+    row({ g: 8 }, secondary('Trước', { dis: true }), sm('Trang 1'), secondary('Sau'))),
+  table(['Lúc', 'Người thực hiện', 'Hành động', 'Đối tượng', ['Chi tiết', '1.6fr']], wj2AuditRows.map(([who, act, obj, id], i) => ['20/09 0' + (9 - i) + ':00', [badge(who, who === 'agent' ? 'brand' : 'neutral', { dot: false })], act, [txt(obj), sm(id)], sm('{"clinic_id":"00000000-0000-4000-8000-000000000001","via":"mock"}')])),
+  sm('Nhật ký chỉ thêm, không sửa hay xóa được. Nội dung tin nhắn của bệnh nhân không được ghi ở đây.')];
+
 // @@DEFS
 const WJ2 = [
   // ---- Tài khoản Zalo: công tắc khẩn, thêm, sửa, QR, xóa ----
@@ -335,6 +371,15 @@ const WJ2 = [
     sm('Không agent nào dùng được server này')
   ], { sub: 'Tra cứu danh mục (bản thử)', footer: [secondary('Đóng'), primary('Lưu')] }),
   wj2McpDlg('WJ93', 'Xóa server "Lịch hẹn nội bộ"?', 'hộp xác nhận xóa server', [txt('1 agent đang dùng server này sẽ mất quyền gọi tool ngoài của nó.', { size: 's', tone: 'soft' })], { w: 440, footer: [secondary('Hủy'), danger('Xóa')] }),
+
+  npage('WJ94', 'Trace agent', wj2NXW + '/admin/traces · danh sách các lượt bot trả lời, mỗi lượt là một nút "Xem"; hết trang thì có dòng báo', '/admin/traces', [wj2TraceHead(), trace(...wj2TraceRuns), wj2TraceEnd()], { nx: 'owner' }),
+  npage('WJ95', 'Trace agent · chưa có trace', wj2NXW + '/admin/traces · chưa có lượt nào (trace chưa bật hoặc đã dọn)', '/admin/traces', [wj2TraceHead(), empty('Chưa có trace nào. Trace chỉ ghi từ lúc bật AGENT_TRACE_ENABLED, và tự dọn sau AGENT_TRACE_RETENTION_DAYS ngày.', '', { flat: true, icon: 'account_tree' })], { nx: 'owner', state: true }),
+  npage('WJ96', 'Trace agent · lượt đã mở', wj2NXW + '/admin/traces · lượt đầu đã mở: từng step với finish, token, tool gọi, tool trả về, lời model', '/admin/traces', [wj2TraceHead(), trace(wj2TraceOpen, ...wj2TraceRuns.slice(1)), wj2TraceEnd()], { nx: 'owner', state: true }),
+  npage('WJ97', 'Trace agent · hết lượt có trace', wj2NXW + '/admin/traces · cuối danh sách: "Đã hết lượt có trace"', '/admin/traces', [wj2TraceHead(), trace(...wj2TraceRuns), wj2TraceEnd()], { nx: 'owner', state: true }),
+  npage('WJ98', 'Logs', wj2NXW + '/admin/logs · tab "Log hệ thống": lọc theo mức, scope, tìm; mỗi dòng có mức, scope, nội dung và "Chi tiết"', '/admin/logs', wj2LogsPage(), { nx: 'owner' }),
+  npage('WJ99', 'Logs · Nhật ký thao tác', wj2NXW + '/admin/logs · tab "Nhật ký thao tác": bảng người thực hiện, hành động, đối tượng, chi tiết; phân trang', '/admin/logs', wj2AuditPage(), { nx: 'owner' }),
+  npage('WJ100', 'Logs · ghi log ra file đang tắt', wj2NXW + '/admin/logs · LOG_TO_FILE chưa bật: dòng báo thay cho danh sách', '/admin/logs', [wj2LogHead(), wj2LogTabs(0), notice('Ghi log ra file đang tắt. Bật LOG_TO_FILE=true rồi khởi động lại backend để xem nhật ký ứng dụng ở đây.', 'warning'), wj2LogFilters()], { nx: 'owner', state: true }),
+  npage('WJ101', 'Logs · không có dòng log', wj2NXW + '/admin/logs · bộ lọc không khớp dòng nào', '/admin/logs', [wj2LogHead(), wj2LogTabs(0), wj2LogFilters(), empty('Không có dòng log nào khớp.', '', { flat: true, icon: 'search_off' })], { nx: 'owner', state: true }),
 
   // @@ENTRIES
 ];
