@@ -3416,6 +3416,11 @@ export interface components {
              */
             patient_id: string;
             /**
+             * Room Id
+             * @description Optional room; it must be active, free in the window and not blocked (U10).
+             */
+            room_id?: string | null;
+            /**
              * Starts At
              * Format: date-time
              * @description ISO 8601 timestamp with an explicit +07:00 offset.
@@ -3483,6 +3488,11 @@ export interface components {
              */
             patient_id: string;
             /**
+             * Room Id
+             * @description Treatment room (U10); none for visits booked without a room.
+             */
+            room_id?: string | null;
+            /**
              * Starts At
              * Format: date-time
              * @description ISO 8601 timestamp with an explicit +07:00 offset.
@@ -3519,6 +3529,11 @@ export interface components {
             duration_min?: number | null;
             /** Note */
             note?: string | null;
+            /**
+             * Room Id
+             * @description Send null to take the room off the visit.
+             */
+            room_id?: string | null;
             /** Starts At */
             starts_at?: string | null;
             /** Version */
@@ -7579,6 +7594,41 @@ export interface components {
          * @enum {string}
          */
         RuleSendMode: "staff_task" | "auto_reminder" | "draft_for_review";
+        /**
+         * ScheduleBlock
+         * @description A room block inside the range of the board. Same fields as ``catalog.RoomBlockOut``.
+         */
+        ScheduleBlock: {
+            /** Created By */
+            created_by?: string | null;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * End
+             * @description HH:MM, clinic time.
+             */
+            end: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Room Id
+             * Format: uuid
+             */
+            room_id: string;
+            /**
+             * Start
+             * @description HH:MM, clinic time.
+             */
+            start: string;
+        };
         /** ScheduleCreate */
         ScheduleCreate: {
             /** Account Id */
@@ -7630,6 +7680,11 @@ export interface components {
             cancelled_at?: string | null;
             /** Created By */
             created_by?: string | null;
+            /**
+             * Created By Name
+             * @description "Người tạo" of the reception table: the staff account that booked it.
+             */
+            created_by_name?: string | null;
             /** Doctor Id */
             doctor_id: string | null;
             /** Doctor Name */
@@ -7655,6 +7710,13 @@ export interface components {
             /** Patient Name */
             patient_name?: string | null;
             /**
+             * Room Id
+             * @description Treatment room (U10); none for visits booked without a room.
+             */
+            room_id?: string | null;
+            /** Room Name */
+            room_name?: string | null;
+            /**
              * Starts At
              * Format: date-time
              * @description ISO 8601 timestamp with an explicit +07:00 offset.
@@ -7679,6 +7741,11 @@ export interface components {
          *     only that doctor's appointments.
          */
         ScheduleOut: {
+            /**
+             * Blocks
+             * @description Room blocks that fall inside the range.
+             */
+            blocks?: components["schemas"]["ScheduleBlock"][];
             /** Doctor Id */
             doctor_id?: string | null;
             /** Doctors */
@@ -7691,12 +7758,37 @@ export interface components {
             /** Items */
             items: components["schemas"]["ScheduleItem"][];
             /**
+             * Rooms
+             * @description Every room of the clinic: the columns of the room grid.
+             */
+            rooms?: components["schemas"]["ScheduleRoom"][];
+            /**
              * To Day
              * Format: date
              * @description Last day, inclusive (same as ``from_day`` for the day view).
              */
             to_day: string;
             view: components["schemas"]["ScheduleView"];
+        };
+        /**
+         * ScheduleRoom
+         * @description A room column of the room grid. Same fields as ``catalog.RoomOut``; declared here because ``catalog``
+         *     imports ``crm``, which imports this module.
+         */
+        ScheduleRoom: {
+            /** Active */
+            active: boolean;
+            /** Capacity */
+            capacity: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Version */
+            version: number;
         };
         /** ScheduleUpdate */
         ScheduleUpdate: {

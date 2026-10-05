@@ -7,6 +7,7 @@ import type { AddressInfo } from "node:net";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
+import { ROOM_IDS } from "./data/catalog";
 import { DOCTOR_AN, DOCTOR_TAM, clinicToday, patientRef } from "./data/clinic";
 import { startMockServer } from "./server";
 
@@ -293,5 +294,77 @@ describe("dashboard KPIs (mock)", () => {
     const owner = await signIn("owner@pema.test");
 
     expect((await call(owner, "GET", "/api/v1/dashboard/kpis?range=year")).status).toBe(422);
+  });
+});
+
+describe("room rules (mock)", () => {
+  const room = ROOM_IDS[3];
+  const book = (cookie: string, day: string, clock: string, patient: number, doctor: string) =>
+    call(cookie, "POST", "/api/v1/appointments", {
+      patient_id: patientRef(patient).id,
+      doctor_id: doctor,
+      room_id: room,
+      starts_at: `${day}T${clock}:00+07:00`,
+      duration_min: 30,
+    });
+
+  it("returns_the_rooms_the_blocks_and_the_room_and_creator_names_on_the_board", async () => {
+    const reception = await signIn("reception@pema.test");
+    const day = (await (
+      await call(reception, "GET", `/api/v1/appointments/schedule?day=${clinicToday()}`)
+    ).json()) as {
+      rooms: { id: string; name: string }[];
+      items: { room_id: string | null; room_name: string | null; created_by_name: string | null }[];
+    };
+
+    expect(day.rooms.map((r) => r.id)).toContain(room);
+    const held = day.items.filter((i) => i.room_id !== null);
+    expect(held.length).toBeGreaterThanOrEqual(6);
+    expect(held.every((i) => i.room_name !== null && i.created_by_name !== null)).toBe(true);
+    expect(day.items.some((i) => i.room_id === null)).toBe(true);
+  });
+
+  it("refuses_a_busy_room_and_a_blocked_room_in_the_backend_sentences", async () => {
+    const reception = await signIn("reception@pema.test");
+    const manager = await signIn("manager@pema.test");
+    const day = clinicToday(40);
+    expect((await book(reception, day, "09:00", 4, DOCTOR_AN)).status).toBe(201);
+
+    const busy = await book(reception, day, "09:15", 5, DOCTOR_TAM);
+    expect(busy.status).toBe(409);
+    expect(((await busy.json()) as { error: { message: string } }).error.message).toBe(
+      "Phòng đang bận hoặc đang chuẩn bị sau lịch 09:00.",
+    );
+
+    const block = await call(manager, "POST", "/api/v1/room-blocks", {
+      room_id: room,
+      day,
+      start: "14:00",
+      end: "15:00",
+      reason: "Bảo trì",
+    });
+    expect(block.status).toBe(201);
+    const blocked = await book(reception, day, "14:30", 6, DOCTOR_TAM);
+    expect(blocked.status).toBe(409);
+    expect(((await blocked.json()) as { error: { message: string } }).error.message).toBe(
+      "Trùng thời gian khóa: Bảo trì",
+    );
+  });
+
+  it("refuses_to_block_a_room_that_holds_a_visit_in_the_window", async () => {
+    const reception = await signIn("reception@pema.test");
+    const manager = await signIn("manager@pema.test");
+    const day = clinicToday(41);
+    expect((await book(reception, day, "10:00", 4, DOCTOR_AN)).status).toBe(201);
+
+    const refused = await call(manager, "POST", "/api/v1/room-blocks", {
+      room_id: room,
+      day,
+      start: "10:15",
+      end: "11:00",
+      reason: "Vệ sinh",
+    });
+
+    expect(refused.status).toBe(409);
   });
 });

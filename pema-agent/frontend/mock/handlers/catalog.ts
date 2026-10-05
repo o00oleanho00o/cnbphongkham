@@ -345,6 +345,24 @@ function registerResources(r: Router): void {
     if (!inside || input.reason.trim() === "") {
       fail(422, "validation_failed", "Khoảng khóa phải hợp lệ trong 08:00–18:00 và có lý do.");
     }
+    const held = appointments.some((a) => {
+      const startMin = Number(a.starts_at.slice(11, 13)) * 60 + Number(a.starts_at.slice(14, 16));
+      const toMin = (clock: string) => Number(clock.slice(0, 2)) * 60 + Number(clock.slice(3, 5));
+      return (
+        a.room_id === input.room_id &&
+        !["cancelled", "missed"].includes(a.status) &&
+        a.starts_at.slice(0, 10) === input.day &&
+        startMin < toMin(input.end) &&
+        startMin + a.duration_min > toMin(input.start)
+      );
+    });
+    if (held) {
+      fail(
+        409,
+        "appointment_conflict",
+        "Có lịch hẹn trong khoảng này. Hãy dời lịch trước khi khóa phòng.",
+      );
+    }
     const created: S["RoomBlockOut"] = {
       id: uid("block"),
       room_id: input.room_id,

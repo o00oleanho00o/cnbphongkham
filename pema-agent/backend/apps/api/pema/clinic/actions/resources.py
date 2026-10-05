@@ -13,9 +13,9 @@ What the prototype screen showed and where it comes from here:
 * the rooms (name, active) and the room blocks ("Khóa phòng" with a reason, "Gỡ khóa").
 
 Block rule of ``block()``: the window must lie inside 08:00-18:00, start before end, and carry a reason. The
-prototype also refused a block that overlaps a booked appointment of the room; an appointment has no room yet
-in this system (the scheduling step adds it), so that check is an open item, not silently dropped: the answer
-of ``add_block`` says nothing about appointments.
+prototype also refuses a block that overlaps an active appointment of the room ("Có lịch hẹn trong khoảng
+này. Hãy dời lịch trước khi khóa phòng."); since U10 an appointment carries its room, so ``add_block`` (the
+"block_room" action of the room grid) checks it too.
 
 Permissions: reading needs ``appointment.read`` (everybody who sees the schedule) or ``admin.rules``; every
 change needs ``admin.rules`` (ARCH-PB01 "Quản trị catalog/role": manager, owner).
@@ -236,6 +236,25 @@ async def add_block(db: ClinicDatabase, ctx: ActionContext, payload: RoomBlockCr
         )
     async with db.session() as session:
         await _load_room(session, ctx, payload.room_id)
+        day_start = datetime.combine(payload.day, time.min, tzinfo=VN_TZ)
+        held = await session.scalars(
+            select(Appointment).where(
+                Appointment.clinic_id == ctx.clinic_id,
+                Appointment.room_id == payload.room_id,
+                Appointment.status.notin_(_FREE),
+                Appointment.starts_at >= day_start,
+                Appointment.starts_at < day_start + timedelta(days=1),
+            )
+        )
+        for held_row in held:
+            begin = held_row.starts_at.astimezone(VN_TZ)
+            first = begin.hour * 60 + begin.minute
+            if first < _minutes(payload.end) and first + held_row.duration_min > _minutes(payload.start):
+                raise DomainError(
+                    ErrorCode.APPOINTMENT_CONFLICT,
+                    "Có lịch hẹn trong khoảng này. Hãy dời lịch trước khi khóa phòng.",
+                    details={"conflict": "room", "with_appointment_id": str(held_row.id)},
+                )
         row = RoomBlock(
             clinic_id=ctx.clinic_id,
             room_id=payload.room_id,
