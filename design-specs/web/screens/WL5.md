@@ -228,7 +228,7 @@ Kit components used: Button×14, Badge×6, Card×5, Sidebar×1, TopBar×1, Field
 - Canvas note: Next.js › /templates · vai trò CSKH chỉ đọc: không có nút "Soạn mẫu mới", "Tắt mẫu", "Duyệt", "Sửa"
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WL5-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WL5-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

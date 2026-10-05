@@ -200,7 +200,7 @@ Kit components used: Button×13, Badge×6, Card×5, Field×4, PageHeading×1, Di
 - Canvas note: Next.js › /templates · hộp thoại: sửa mẫu "Nhắc lịch tái khám", mã mẫu bị khóa
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WL8-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WL8-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

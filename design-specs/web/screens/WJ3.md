@@ -202,7 +202,7 @@ Kit components used: Button×35, Field×2, Sidebar×1, TopBar×1, PageHeading×1
 - Canvas note: Next.js › /admin/users · tìm "zzz": bảng được thay bằng trạng thái trống
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WJ3-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WJ3-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

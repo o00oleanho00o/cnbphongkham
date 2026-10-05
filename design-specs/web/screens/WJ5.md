@@ -190,7 +190,7 @@ Kit components used: Button×9, Badge×7, Field×6, PageHeading×1, TableShell×
 - Canvas note: Next.js › /admin/users · hộp thoại thêm nhân viên khi email đã có người dùng: báo lỗi ở cuối biểu mẫu
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WJ5-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WJ5-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

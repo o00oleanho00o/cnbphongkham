@@ -93,7 +93,7 @@ Kit components used: Field×2, Button×2, Card×1.
 - Canvas note: Next.js › /login · đã nhập email và mật khẩu, nút chuyển thành "Đang đăng nhập..." và tắt
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WL2-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WL2-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

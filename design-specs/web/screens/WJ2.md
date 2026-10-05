@@ -243,7 +243,7 @@ Kit components used: Button×34, Badge×7, Field×2, Sidebar×1, TopBar×1, Page
 - Canvas note: Next.js › /admin/users · quản lý chỉ xem: có ghi chú quyền, không có nút Thêm nhân viên và cột Thao tác
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WJ2-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WJ2-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

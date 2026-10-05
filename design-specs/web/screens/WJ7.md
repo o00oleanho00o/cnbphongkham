@@ -178,7 +178,7 @@ Kit components used: Button×7, Badge×7, Field×4, PageHeading×1, TableShell×
 - Canvas note: Next.js › /admin/users · sửa tài khoản của chính mình: vai trò bị khóa, có câu giải thích
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WJ7-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WJ7-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

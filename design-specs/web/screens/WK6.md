@@ -204,7 +204,7 @@ Kit components used: Button×36, Badge×2, Sidebar×1, TopBar×1, Field×1, Page
 - Canvas note: Next.js › /admin/care/on-call · có số trực nhưng đã tắt: cùng thông báo, thẻ mang nhãn "Đã tắt"
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WK6-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WK6-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

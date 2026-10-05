@@ -210,7 +210,7 @@ Kit components used: Button×13, Badge×6, Card×5, Field×4, PageHeading×1, Di
 - Canvas note: Next.js › /templates · hộp thoại: mẫu mới, nút "Lưu mẫu" tắt cho đến khi đủ mã, tiêu đề và nội dung
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WL7-1440x900.png`
+- `pema-agent/frontend/visual-ref/old/WL7-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

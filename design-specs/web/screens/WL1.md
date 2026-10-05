@@ -101,9 +101,9 @@ Kit components used: Field×2, Button×2, Card×1.
 - Canvas note: Next.js › /login · trang đăng nhập, không có khung ứng dụng · chưa nhập gì: nút "Đăng nhập" tắt
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WL1-1440x900.png`
-- `pema-agent/frontend/visual-ref/old/WL1-1920x1020.png`
-- `pema-agent/frontend/visual-ref/old/WL1-390x844.png`
+- `pema-agent/frontend/visual-ref/old/WL1-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
+- `pema-agent/frontend/visual-ref/old/WL1-1920x1020.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
+- `pema-agent/frontend/visual-ref/old/WL1-390x844.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text

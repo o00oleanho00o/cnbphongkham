@@ -268,9 +268,9 @@ Quoted in the brief but not found verbatim in the front-end source (built from p
 - Canvas note: Next.js › /admin/care/staff · tab 1 của quản trị agent chăm sóc: một thẻ mỗi nhân viên, 2 cột
 
 ## Images
-- `pema-agent/frontend/visual-ref/old/WK1-1440x900.png`
-- `pema-agent/frontend/visual-ref/old/WK1-1920x1020.png`
-- `pema-agent/frontend/visual-ref/old/WK1-390x844.png`
+- `pema-agent/frontend/visual-ref/old/WK1-1440x900.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
+- `pema-agent/frontend/visual-ref/old/WK1-1920x1020.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
+- `pema-agent/frontend/visual-ref/old/WK1-390x844.png` (not on disk: run `web-shots.cjs`; the images are git-ignored)
 
 ## Prompt
 ```text
