@@ -109,14 +109,14 @@ const legend = (items = SVC_LEGEND) => ({ k: 'legend', items: items.map(([t, svc
 
 // ---- fields ----
 const SUFFIX = { select: 'expand_more', date: 'calendar_month', month: 'calendar_month', time: 'schedule' };
-// field(label, { ty, val, ph, hint, err, req, lines, opts, open, on, dis, w, text }); the helpers below set `ty`.
+// field(label, { ty, val, ph, hint, err, req, lines, opts, open, on, dis, w, text, desc }); `sufAria` = accessible name of the icon button inside the box (a password field's "Hiện nội dung"); `desc` (checkbox only) is the grey description under the label; the accessible name of the checkbox is label + desc, as the browser computes it (the spec lists it that way); the helpers below set `ty`.
 const field = (label, o = {}) => {
   const ty = o.ty || 'text';
   const val = o.val === undefined || o.val === null ? '' : String(o.val);
   const box = !['check', 'radio', 'range', 'file'].includes(ty);
   const opts = (o.opts || []).map(x => { const [t, on] = Array.isArray(x) ? x : [x, String(x) === val]; return { t, on, cls: ty === 'radio' ? 'rd-dot' + (on ? ' rd-on' : '') : 'lb-o' + (on ? ' lb-on' : '') }; });
   return {
-    k: 'field', ty, label: ty === 'check' ? '' : label, text: label, ph: o.ph || '', fcls: o.w ? 'fd fd-w' : 'fd', req: !!o.req, hint: o.hint || '', err: o.err || '', w: o.w ? o.w + 'px' : '220px',
+    k: 'field', ty, label: ty === 'check' ? '' : label, text: label, desc: o.desc || '', sufAria: o.sufAria || '', ph: o.ph || '', fcls: o.w ? 'fd fd-w' : 'fd', req: !!o.req, hint: o.hint || '', err: o.err || '', w: o.w ? o.w + 'px' : '220px',
     box, cls: 'fc' + (ty === 'textarea' ? ' fc-ta' : '') + (o.err ? ' fc-err' : '') + (o.dis ? ' fc-dis' : ''), lh: (o.lines || 3) * 24 + 16,
     pre: ty === 'search' ? 'search' : '', suf: o.suf !== undefined ? o.suf : (SUFFIX[ty] || ''), vc: val ? 'fc-v' : 'fc-ph', shown: ty === 'file' ? (o.text || 'Chọn tệp') : (val || o.ph || ''),
     cb: 'ck-b' + (o.on ? ' ck-on' : ''), opts, open: !!o.open, pct: o.pct === undefined ? 0 : o.pct

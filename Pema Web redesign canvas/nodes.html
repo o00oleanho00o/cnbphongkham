@@ -42,8 +42,8 @@
 
 <sc-if value="{{ $V.k == 'field' }}"><div class="{{ $V.fcls }}" style="--fw:{{ $V.w }}">
 <sc-if value="{{ $V.label }}"><div class="fd-l">{{ $V.label }}<sc-if value="{{ $V.req }}"><b class="fd-r">*</b></sc-if></div></sc-if>
-<sc-if value="{{ $V.box }}"><div class="{{ $V.cls }}" style="--lh:{{ $V.lh }}px"><sc-if value="{{ $V.pre }}"><span class="ms fc-p">{{ $V.pre }}</span></sc-if><span class="{{ $V.vc }}">{{ $V.shown }}</span><sc-if value="{{ $V.suf }}"><span class="ms fc-s">{{ $V.suf }}</span></sc-if></div></sc-if>
-<sc-if value="{{ $V.ty == 'check' }}"><div class="ck"><span class="{{ $V.cb }}"><span class="ms">check</span></span><span class="ck-t">{{ $V.text }}</span></div></sc-if>
+<sc-if value="{{ $V.box }}"><div class="{{ $V.cls }}" style="--lh:{{ $V.lh }}px"><sc-if value="{{ $V.pre }}"><span class="ms fc-p">{{ $V.pre }}</span></sc-if><span class="{{ $V.vc }}">{{ $V.shown }}</span><sc-if value="{{ $V.suf }}"><span class="ms fc-s" aria-label="{{ $V.sufAria }}">{{ $V.suf }}</span></sc-if></div></sc-if>
+<sc-if value="{{ $V.ty == 'check' }}"><div class="ck"><span class="{{ $V.cb }}"><span class="ms">check</span></span><span class="ck-t">{{ $V.text }}<sc-if value="{{ $V.desc }}"><span class="ck-d">{{ $V.desc }}</span></sc-if></span></div></sc-if>
 <sc-if value="{{ $V.ty == 'radio' }}"><div class="rd"><sc-for list="{{ $V.opts }}" as="o$L"><div class="rd-o"><span class="{{ o$L.cls }}"></span><span>{{ o$L.t }}</span></div></sc-for></div></sc-if>
 <sc-if value="{{ $V.ty == 'range' }}"><div class="rg"><div class="rg-t"><i class="rg-b" style="width:{{ $V.pct }}%"></i><i class="rg-k" style="left:{{ $V.pct }}%"></i></div><span class="rg-v">{{ $V.shown }}</span></div></sc-if>
 <sc-if value="{{ $V.ty == 'file' }}"><div class="fl"><span class="ms">upload_file</span><span>{{ $V.shown }}</span></div></sc-if>

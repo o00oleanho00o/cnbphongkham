@@ -61,7 +61,7 @@ function inline(n, ctx, tail = '') {
 function fieldLine(n, ctx) {
   ctx.used.Field = (ctx.used.Field || 0) + 1;
   const type = { check: 'checkbox', radio: 'radio', file: 'file', range: 'range', textarea: 'textarea', select: 'select', search: 'search' }[n.ty] || n.ty;
-  const a = { label: n.text || n.label, type, required: n.req, placeholder: n.ph, default: n.vc === 'fc-v' && n.box ? n.shown : n.ty === 'file' || n.ty === 'range' ? n.shown : '', checked: n.ty === 'check' && /ck-on/.test(n.cb) ? true : undefined, hint: n.hint, error: n.err };
+  const a = { label: (n.text || n.label) + (n.desc || ''), type, required: n.req, placeholder: n.ph, default: n.vc === 'fc-v' && n.box ? n.shown : n.ty === 'file' || n.ty === 'range' ? n.shown : '', checked: n.ty === 'check' && /ck-on/.test(n.cb) ? true : undefined, hint: n.hint, error: n.err };
   if (n.opts && n.opts.length) a.options = n.opts.map((o) => o.t);
   return `<Field${attrs(a)} />`;
 }
@@ -144,7 +144,8 @@ function renderNode(n, pad, out, ctx) {
     case 'facts':
       return push(`<Facts items={${JSON.stringify(n.rows.map((r) => (r.sub ? [r.l, r.v, r.sub] : [r.l, r.v])))}} />`);
     case 'field':
-      return push(fieldLine(n, ctx));
+      push(fieldLine(n, ctx));
+      return n.sufAria ? push(`<${use('Button')} variant="quiet" aria-label=${q(n.sufAria)} icon-only></Button>  // inside the field box`) : undefined;
     case 'table': {
       push(`<${use('TableShell')} columns={${JSON.stringify(n.head.map((h) => h.h))}} rows={${n.rows.length}}${n.foot ? ` foot=${q(n.foot)}` : ''}  /* cards at 390 */>`);
       const seen = new Set();
@@ -354,6 +355,7 @@ function shellLinesNx(sc, ctx) {
   if (s.skip) out.push(`<${use('Button')} variant="secondary" href="#main-content" as="link" old="skip-link">"Đến nội dung chính"</Button>`);
   out.push(`<${use('Sidebar')} old="sidebar">  // menu of role \`${s.accountId}\` (lib/nav.tsx); at 390 a header with the menu button and a bottom tab bar (${s.tabs.map((t) => q(t.label)).join(', ')}) replace it`);
   out.push(`  <${use('Button')} variant="quiet" href="/" title="Về trang chính" as="link">"PHÒNG KHÁM DA LIỄU"</Button>`);
+  out.push('  <Button variant="quiet" aria-label="Đóng menu" icon-only></Button>  // phone drawer only');
   out.push('  <nav aria-label="Chức năng">');
   for (const sec of s.sections) {
     out.push(`    <Text transform="uppercase">${q(sec.title)}</Text>`);
