@@ -226,6 +226,13 @@ describe("the table of a month", () => {
     expect(periodAction("paid", true)).toBeNull();
     expect(periodAction("open", false)).toBeNull();
   });
+
+  it("closes_by_the_close_permission_and_confirms_the_payout_by_the_write_permission", () => {
+    expect(periodAction("open", false, true)).toBe("close");
+    expect(periodAction("open", true, false)).toBeNull();
+    expect(periodAction("closed", true, false)).toBe("pay");
+    expect(periodAction("closed", false, true)).toBeNull();
+  });
 });
 
 describe("the form to record a procedure", () => {

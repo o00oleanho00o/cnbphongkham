@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { ApiError } from "@/lib/api/client";
 
 import {
+  ROLE_HINT,
+  STAFF_ROLES,
   activeQuery,
   asStaffRole,
   buildUpdate,
@@ -35,6 +37,16 @@ const FORM: StaffForm = {
   password: "mat-khau-8-ky-tu",
   passwordAgain: "mat-khau-8-ky-tu",
 };
+
+describe("the roles of the picker", () => {
+  it("offers_the_accountant_with_a_hint_and_never_the_patient", () => {
+    expect(STAFF_ROLES).toContain("accountant");
+    expect(STAFF_ROLES).not.toContain("patient");
+    expect(asStaffRole("accountant")).toBe("accountant");
+    expect(ROLE_HINT.accountant).toContain("không duyệt đơn thuốc");
+    expect(Object.keys(ROLE_HINT).sort()).toEqual([...STAFF_ROLES].sort());
+  });
+});
 
 describe("rowActions", () => {
   describe("given a viewer who cannot change staff (the manager)", () => {

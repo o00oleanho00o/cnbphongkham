@@ -1,5 +1,5 @@
 """Role to permission matrix. New module: implements the authorization matrix of ``docs/ARCH-PB01.md`` for
-the six roles of ``pema_contracts.roles`` (deny by default).
+the seven roles of ``pema_contracts.roles`` (deny by default).
 
 How the columns of the ARCH-PB01 table map to the roles of this system:
 
@@ -9,7 +9,8 @@ ARCH-PB01 column   role
 Le tan             ``reception``
 Bac si             ``doctor``
 Cham soc           ``cs_staff``
-Thu ngan           none: billing is PB02 (finance), not part of the clinic CRM API
+Thu ngan           ``accountant`` ("Doi soat & thu ngan", package U step U11; before U11 the cashier
+                   function was done by reception/manager/owner and still is, next to the accountant)
 Nguoi benh         ``patient`` (the patient app is not a staff session; see ``PATIENT_PERMISSIONS``)
 Quan ly            ``manager`` ("Quan tri catalog/role": quan ly)
 Chu phong kham     ``owner`` (the prototype's ``staff-context.js`` gives the owner the capabilities
@@ -47,8 +48,9 @@ MANAGER_PERMISSIONS: frozenset[Permission] = frozenset(
         P.APPOINTMENT_CHECK_IN,
         P.ORDER_READ,
         P.ORDER_WRITE,  # not ORDER_APPROVE: the doctor of the order signs it, a manager is not a clinician
-        P.FINANCE_READ,  # PB02 "Ke toan": no accountant role exists, the manager holds it (open item)
+        P.FINANCE_READ,  # PB02 "Ke toan": the accountant role (U11) holds it; the manager keeps it too
         P.FINANCE_WRITE,
+        P.FINANCE_PERIOD_CLOSE,  # override of the accountant's close; the audit row names the actor
         P.FINANCE_COLLECT,  # not FINANCE_NOTIFICATIONS: the owner's inbox is the owner's
         P.CRM_TASK_READ,
         P.CRM_TASK_RESOLVE,
@@ -152,10 +154,29 @@ RECEPTION_PERMISSIONS: frozenset[Permission] = frozenset(
         P.APPOINTMENT_READ,
         P.APPOINTMENT_WRITE,
         P.APPOINTMENT_CHECK_IN,
-        P.ORDER_READ,  # "Thu ngân lên đơn": the cashier work of the clinic has no role of its own (open item)
+        P.ORDER_READ,  # "Thu ngân lên đơn": reception does the cashier work next to the accountant (U11)
         P.ORDER_WRITE,
         P.FINANCE_COLLECT,  # the cashier records receipts; it reads no finance totals
         P.KB_READ,
+    }
+)
+
+ACCOUNTANT_PERMISSIONS: frozenset[Permission] = frozenset(
+    {
+        # Old web `staff-context.js` account {id:'accountant', label:'Đối soát & thu ngân'}: pages finance,
+        # cashier, patients, patient, guide; capabilities billing + readFinance; `finance_server.py` lets it
+        # record, approve, void, close and pay. Nothing clinical, no CRM queue, no Inbox.
+        P.PATIENT_READ,  # identity and billing tab only, like reception: no Patient 360, no clinical fields
+        P.CONSENT_READ,
+        P.ORDER_READ,
+        P.ORDER_WRITE,  # raises and edits DRAFT orders; NOT ORDER_APPROVE (the doctor signs an order)
+        P.FINANCE_READ,
+        P.FINANCE_WRITE,  # record/approve/void a performed procedure, confirm a payout: needed before a close
+        P.FINANCE_PERIOD_CLOSE,  # the accountant closes the month
+        P.FINANCE_COLLECT,
+        P.KB_READ,  # the guide ("Hướng dẫn")
+        # not SESSION_*/MEDIA_*/ORDER_APPROVE (clinical), not ADMIN_USERS*, not FINANCE_NOTIFICATIONS (the
+        # owner's inbox), not APPOINTMENT_* / CRM_* / CONVERSATION_* (no schedule, no queue, no Inbox)
     }
 )
 
@@ -170,6 +191,7 @@ ROLE_PERMISSIONS: Mapping[Role, frozenset[Permission]] = {
     Role.DOCTOR: DOCTOR_PERMISSIONS,
     Role.CS_STAFF: CS_STAFF_PERMISSIONS,
     Role.RECEPTION: RECEPTION_PERMISSIONS,
+    Role.ACCOUNTANT: ACCOUNTANT_PERMISSIONS,
     Role.PATIENT: PATIENT_PERMISSIONS,
 }
 
@@ -199,9 +221,9 @@ ASSIGNABLE_ROLES: frozenset[Role] = frozenset(
 """Roles a task, a conversation or a patient's "Phụ trách" can be handed to (ST-S): staff who can
 actually work the item, that is who hold ``conversation.reply`` or ``crm_task.resolve``. Derived from the
 matrix above, not a second list, so a role that gains or loses those permissions follows. Today: owner,
-manager, doctor, cs_staff. Reception is excluded (no conversations, no CRM queue: an item handed to them
-would sit unseen) and so is ``patient`` (not a staff role). Whether a role may be assigned is separate
-from who may assign: that is the permission of the action (``conversation.reply``,
+manager, doctor, cs_staff. Reception and the accountant are excluded (no conversations, no CRM queue: an
+item handed to them would sit unseen) and so is ``patient`` (not a staff role). Whether a role may be
+assigned is separate from who may assign: that is the permission of the action (``conversation.reply``,
 ``crm_task.resolve``, ``patient.write``)."""
 
 

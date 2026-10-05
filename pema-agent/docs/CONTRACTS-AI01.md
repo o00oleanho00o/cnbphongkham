@@ -378,8 +378,9 @@ route, one new DTO), so it did not need package G.
 Decisions:
 
 * **Assignable roles** (`pema.clinic.rbac.ASSIGNABLE_ROLES`, derived from the permission matrix, not a second list): the
-  staff roles that hold `conversation.reply` or `crm_task.resolve` = owner, manager, doctor, cs_staff. Reception is out
-  (no Inbox, no CRM queue: an item handed to them would sit unseen) and so is `patient`. A role that gains or loses
+  staff roles that hold `conversation.reply` or `crm_task.resolve` = owner, manager, doctor, cs_staff. Reception and
+  the accountant (the seventh role, package U step U11) are out (no Inbox, no CRM queue: an item handed to them would
+  sit unseen) and so is `patient`. A role that gains or loses
   those permissions follows automatically.
 * **Who may assign** stays the permission of each action: `conversation.reply` (conversation `assigned_user_id`),
   `crm_task.resolve` (`owner_user_id`), `patient.write` (`doctor_id`, `cs_owner_id`). Since ST-S a staff member may hand

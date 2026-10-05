@@ -117,33 +117,39 @@ def test_every_permission_code_is_granted_to_someone() -> None:
             {Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT},
         ),
         (P.KB_MANAGE, {Role.MANAGER, Role.OWNER, Role.DOCTOR}, {Role.CS_STAFF, Role.RECEPTION, Role.PATIENT}),
-        # package U, step U6 (PB02 finance): the accountant has no role of its own, the manager holds it. The clinic
-        # projection and every write are the owner's and the manager's; a doctor reads only the personal one;
-        # reception only collects; the owner's payment notifications are the owner's alone.
+        # package U, steps U6 and U11 (PB02 finance): the accountant is a role of its own (U11) and the manager
+        # keeps the same finance rights. The clinic projection and every write are theirs and the owner's; a
+        # doctor reads only the personal one; reception only collects; the owner's payment notifications are the
+        # owner's alone.
         (
             P.FINANCE_READ,
-            {Role.OWNER, Role.MANAGER},
+            {Role.OWNER, Role.MANAGER, Role.ACCOUNTANT},
             {Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT},
         ),
         (
             P.FINANCE_READ_OWN,
             {Role.OWNER, Role.DOCTOR},
-            {Role.MANAGER, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT},
+            {Role.MANAGER, Role.CS_STAFF, Role.RECEPTION, Role.ACCOUNTANT, Role.PATIENT},
         ),
         (
             P.FINANCE_WRITE,
-            {Role.OWNER, Role.MANAGER},
+            {Role.OWNER, Role.MANAGER, Role.ACCOUNTANT},
+            {Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT},
+        ),
+        (
+            P.FINANCE_PERIOD_CLOSE,
+            {Role.OWNER, Role.MANAGER, Role.ACCOUNTANT},
             {Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT},
         ),
         (
             P.FINANCE_COLLECT,
-            {Role.OWNER, Role.MANAGER, Role.RECEPTION},
+            {Role.OWNER, Role.MANAGER, Role.RECEPTION, Role.ACCOUNTANT},
             {Role.DOCTOR, Role.CS_STAFF, Role.PATIENT},
         ),
         (
             P.FINANCE_NOTIFICATIONS,
             {Role.OWNER},
-            {Role.MANAGER, Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT},
+            {Role.MANAGER, Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.ACCOUNTANT, Role.PATIENT},
         ),
     ],
 )
@@ -188,5 +194,5 @@ def test_an_agent_actor_cannot_use_staff_permissions_and_staff_cannot_submit_as_
 def test_only_owner_and_doctor_are_clinical() -> None:
     assert is_clinical(_ctx(Role.DOCTOR))
     assert is_clinical(_ctx(Role.OWNER))
-    for role in (Role.MANAGER, Role.CS_STAFF, Role.RECEPTION, Role.PATIENT):
+    for role in (Role.MANAGER, Role.CS_STAFF, Role.RECEPTION, Role.ACCOUNTANT, Role.PATIENT):
         assert not is_clinical(_ctx(role))

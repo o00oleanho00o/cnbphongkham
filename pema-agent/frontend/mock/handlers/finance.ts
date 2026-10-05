@@ -469,7 +469,7 @@ function registerPeriods(r: Router): void {
     return { body: { today, items } satisfies S["PeriodListOut"] };
   });
 
-  r.post("/api/v1/finance/periods/{month}/close", "finance.write", (ctx): Reply => {
+  r.post("/api/v1/finance/periods/{month}/close", "finance_period.close", (ctx): Reply => {
     const month = monthParam(ctx);
     if (periodOf(month)) invalidState(M.periodClosed);
     const list = entriesOfMonth(month);

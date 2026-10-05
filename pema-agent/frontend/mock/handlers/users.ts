@@ -19,7 +19,14 @@ import {
 type S = Schemas;
 type StaffRole = Exclude<S["Role"], "patient">;
 
-const STAFF_ROLES: readonly StaffRole[] = ["owner", "manager", "doctor", "cs_staff", "reception"];
+const STAFF_ROLES: readonly StaffRole[] = [
+  "owner",
+  "manager",
+  "doctor",
+  "cs_staff",
+  "reception",
+  "accountant",
+];
 const MIN_PASSWORD = 8;
 const VERSION_CONFLICT = "Bản ghi đã được người khác thay đổi. Hãy tải lại rồi thử lại.";
 const NOT_FOUND = "Không tìm thấy tài khoản.";

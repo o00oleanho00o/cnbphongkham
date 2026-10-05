@@ -44,6 +44,7 @@ function FinanceShell({ children }: { children: ReactNode }) {
       month,
       scope,
       canWrite: can("finance.write") && scope === "clinic",
+      canClose: can("finance_period.close") && scope === "clinic",
       canCollect: can("finance.collect"),
       isOwner: user.role === "owner",
       refreshKey,

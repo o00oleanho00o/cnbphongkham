@@ -156,6 +156,7 @@ export function context(over: Partial<FinanceContextValue> = {}): FinanceContext
     month: "2026-09",
     scope: "clinic",
     canWrite: true,
+    canClose: true,
     canCollect: true,
     isOwner: false,
     refreshKey: 0,
@@ -167,6 +168,7 @@ export function context(over: Partial<FinanceContextValue> = {}): FinanceContext
 export const ACCOUNTANT: Permission[] = [
   "finance.read",
   "finance.write",
+  "finance_period.close",
   "finance.collect",
   "admin.rules",
   "patient.read",

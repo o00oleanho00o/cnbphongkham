@@ -9788,6 +9788,7 @@
           "finance.read",
           "finance.read_own",
           "finance.write",
+          "finance_period.close",
           "finance.collect",
           "finance.notifications",
           "crm.task.read",
@@ -11001,6 +11002,7 @@
           "doctor",
           "cs_staff",
           "reception",
+          "accountant",
           "patient"
         ],
         "title": "Role",
@@ -25181,7 +25183,7 @@
         ]
       },
       "post": {
-        "description": "Owner only (`admin.users`). Role is one of owner, manager, doctor, cs_staff, reception (never `patient`). The e-mail is the sign-in name, unique per clinic (409 when taken). The initial password has the same 8-character floor as a password change. Limited to 5 creations per minute per owner. The audit entry never holds the password, the name or the e-mail.",
+        "description": "Owner only (`admin.users`). Role is one of owner, manager, doctor, cs_staff, reception, accountant (never `patient`). The e-mail is the sign-in name, unique per clinic (409 when taken). The initial password has the same 8-character floor as a password change. Limited to 5 creations per minute per owner. The audit entry never holds the password, the name or the e-mail.",
         "operationId": "admin_users_create_user",
         "requestBody": {
           "content": {
