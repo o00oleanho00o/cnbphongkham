@@ -60,6 +60,8 @@ export type NavItem = {
   tabLabel?: string;
   /** Old screen whose page is not built yet: shown in place, not clickable. */
   planned?: boolean;
+  /** Other paths that belong to this entry (the order review and print pages belong to "Thu ngân"). */
+  aliases?: readonly string[];
 };
 
 export type NavSection = { title: string; items: NavItem[] };
@@ -131,8 +133,8 @@ export const NAV_SECTIONS: NavSection[] = [
         to: "/cashier",
         label: "Thu ngân",
         icon: IconReceipt,
-        needs: ["patient.read"],
-        planned: true,
+        needs: ["order.read", "order.write"],
+        aliases: ["/orders"],
       },
       {
         to: "/finance",
@@ -262,9 +264,14 @@ export function isActivePath(pathname: string, to: string): boolean {
   return pathname === to || pathname.startsWith(`${to}/`);
 }
 
+/** The entry is the page itself, a page below it, or one of its aliases. */
+export function isItemActive(pathname: string, item: NavItem): boolean {
+  return [item.to, ...(item.aliases ?? [])].some((to) => isActivePath(pathname, to));
+}
+
 /** The most specific item whose path contains `pathname`: gives the page its title in the top bar. */
 export function currentNavItem(pathname: string): NavItem | undefined {
   return NAV_SECTIONS.flatMap((s) => s.items)
-    .filter((i) => isActivePath(pathname, i.to))
+    .filter((i) => isItemActive(pathname, i))
     .toSorted((a, b) => b.to.length - a.to.length)[0];
 }

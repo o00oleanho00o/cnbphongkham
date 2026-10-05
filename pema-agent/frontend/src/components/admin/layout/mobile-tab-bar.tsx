@@ -8,7 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 
 import { IconMenu } from "@/components/admin/shared/dashboard-icons";
-import { isActivePath, type NavItem } from "@/lib/nav";
+import { isItemActive, type NavItem } from "@/lib/nav";
 import { coCanHoiTruocKhiRoi, xinPhepRoiTrang } from "@/lib/admin/shared/unsaved-changes-guard";
 
 export function MobileTabBar({ tabs, onOpenMenu }: { tabs: NavItem[]; onOpenMenu: () => void }) {
@@ -24,10 +24,10 @@ export function MobileTabBar({ tabs, onOpenMenu }: { tabs: NavItem[]; onOpenMenu
   return (
     <nav
       aria-label="Điều hướng nhanh"
-      className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden print:hidden"
     >
       {tabs.map((item) => {
-        const active = isActivePath(pathname, item.to);
+        const active = isItemActive(pathname, item);
         return (
           <Link
             key={item.to}

@@ -38,6 +38,8 @@ type ModalProps = {
   children: ReactNode;
   footer?: ReactNode;
   wide?: boolean;
+  /** Two panes side by side (the quick order: product list and order content): 1040px from `sm`. */
+  xwide?: boolean;
 };
 
 function Modal({
@@ -48,6 +50,7 @@ function Modal({
   children,
   footer,
   wide = false,
+  xwide = false,
 }: ModalProps & { placement: Placement }) {
   const titleId = useId();
   const backdrop = useChotNen(onClose);
@@ -94,7 +97,7 @@ function Modal({
         className={cx(
           "flex max-h-[92dvh] w-full flex-col bg-surface shadow-pop outline-none",
           sheet ? "rounded-t-modal sm:rounded-modal" : "rounded-modal",
-          wide ? "sm:max-w-2xl" : "sm:max-w-lg",
+          xwide ? "sm:max-w-[1040px]" : wide ? "sm:max-w-2xl" : "sm:max-w-lg",
         )}
       >
         <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">

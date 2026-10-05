@@ -8,6 +8,7 @@ import { useState, type FormEvent } from "react";
 import { Fact, FormError, Muted } from "@/components/ops/patient/shared";
 import { EmptyState } from "@/components/ops/ops-ui";
 import { useToast } from "@/components/ops/toast";
+import { PatientOrdersCard } from "@/components/orders/patient-orders-card";
 import type { Schemas } from "@/lib/api";
 import { errorMessage, http, unwrap } from "@/lib/api/client";
 import { formatDate } from "@/lib/ops/format";
@@ -18,6 +19,7 @@ import {
   validatePlanForm,
   type PlanFormState,
 } from "@/lib/ops/plan-form";
+import { useSession } from "@/lib/session/session-context";
 import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
 import { Card } from "@/ui/card";
@@ -286,6 +288,7 @@ export function PlanTab({
   onChanged: () => void;
 }) {
   const [dialog, setDialog] = useState<{ plan: Plan | undefined } | null>(null);
+  const { canAny } = useSession();
   const live = plans.filter((p) => p.status === "planned" || p.status === "active");
   const remaining = live.reduce(
     (sum, p) => sum + Math.max(0, p.total_sessions - p.completed_sessions),
@@ -331,6 +334,7 @@ export function PlanTab({
           </Card>
         </div>
       )}
+      {canAny(["order.read", "order.write"]) && <PatientOrdersCard patientId={patientId} />}
       {dialog !== null && (
         <PlanDialog
           patientId={patientId}

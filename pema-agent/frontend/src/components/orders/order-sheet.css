@@ -1,0 +1,244 @@
+/*
+ * The two A5 sheets of an order (Đơn thuốc, Phiếu tư vấn): `components/orders/order-sheet.tsx`.
+ * Old web: `prototype/order-review/order-review.css` (@page A5, natural flow, no height cap when printing).
+ * A sheet is PAPER: white with black ink in light and in dark mode, so it uses plain white and black and not the
+ * theme tokens. The `order-a5` named page limits the A5 size to the order screens: no other page of the app changes
+ * its paper.
+ */
+@page order-a5 {
+  size: A5 portrait;
+  margin: 8mm;
+}
+
+.order-print-root {
+  page: order-a5;
+}
+
+.order-doc-set {
+  min-width: 0;
+}
+
+.order-doc-scroll {
+  max-height: calc(100dvh - 11rem);
+  overflow: auto;
+  border-radius: 0.5rem;
+  background: var(--color-tile);
+  padding: 1rem;
+}
+
+.order-sheet {
+  width: 132mm;
+  min-height: 194mm;
+  margin: 0 auto;
+  padding: 4mm;
+  background: #fff;
+  color: #000;
+  font:
+    13px/1.45 Arial,
+    sans-serif;
+  overflow-wrap: anywhere;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.18);
+}
+
+.order-sheet-header {
+  display: flex;
+  align-items: center;
+  gap: 5mm;
+  border-bottom: 1px solid #000;
+  padding-bottom: 3mm;
+}
+
+.order-sheet-header img {
+  width: 24mm;
+  height: 14mm;
+  object-fit: contain;
+}
+
+.order-sheet-header small {
+  display: block;
+  font-size: 11px;
+}
+
+.order-sheet h1 {
+  margin: 4mm 0;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.order-sheet-draft {
+  text-align: center;
+  font-weight: 700;
+}
+
+.order-patient-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1mm 3mm;
+  border-top: 1px solid #000;
+  border-bottom: 1px solid #000;
+  padding: 2mm 0;
+}
+
+.order-patient-grid .order-wide {
+  grid-column: 1 / -1;
+}
+
+.order-item {
+  margin: 4mm 0;
+  break-inside: avoid;
+}
+
+.order-item-line {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 3mm;
+}
+
+.order-item-line strong {
+  min-width: 0;
+  flex: 1;
+}
+
+.order-item-line span {
+  max-width: 28mm;
+  flex-shrink: 0;
+}
+
+.order-item-usage,
+.order-item-note,
+.order-sheet-note {
+  margin-top: 1mm;
+  white-space: pre-line;
+}
+
+.order-item-usage {
+  margin-top: 2mm;
+}
+
+.order-sheet-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 45%;
+  column-gap: 4mm;
+  align-items: start;
+  margin-top: 4mm;
+  border-top: 1px solid #000;
+  padding-top: 2mm;
+  break-inside: avoid;
+}
+
+.order-sheet-footer > div:first-child {
+  grid-column: 1;
+}
+
+.order-sheet-footer > p {
+  grid-column: 1;
+  margin: 2mm 0;
+  font-size: 11px;
+}
+
+.order-signature {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  text-align: center;
+}
+
+.order-signature b {
+  margin-top: 9mm;
+}
+
+.order-print-blocked {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .order-doc-scroll {
+    padding: 0.5rem;
+  }
+
+  .order-sheet {
+    width: auto;
+    margin: 0;
+  }
+}
+
+@media print {
+  html,
+  body {
+    margin: 0;
+    background: #fff;
+    color: #000;
+  }
+
+  .order-screen-only {
+    display: none !important;
+  }
+
+  .order-docs {
+    display: block;
+  }
+
+  .order-doc-set {
+    break-after: page;
+  }
+
+  .order-doc-set:last-child {
+    break-after: auto;
+  }
+
+  .order-doc-scroll {
+    display: block;
+    max-height: none;
+    overflow: visible;
+    border: 0;
+    background: #fff;
+    padding: 0;
+  }
+
+  .order-sheet {
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .order-sheet * {
+    color: #000 !important;
+    border-color: #000 !important;
+  }
+
+  .order-sheet img {
+    filter: grayscale(1);
+  }
+
+  .order-sheet-header,
+  .order-patient-grid,
+  .order-sheet h1 {
+    break-inside: avoid;
+  }
+
+  /* a draft prints nothing: the doctor has not approved it */
+  .order-print-root[data-approved="false"] .order-docs {
+    display: none;
+  }
+
+  .order-print-root[data-approved="false"] .order-print-blocked {
+    display: block;
+  }
+
+  .order-print-root[data-sheet="PRESCRIPTION"] .order-doc-set[data-doc="CONSULTATION"],
+  .order-print-root[data-sheet="CONSULTATION"] .order-doc-set[data-doc="PRESCRIPTION"] {
+    display: none;
+  }
+
+  .order-print-root[data-sheet="PRESCRIPTION"] .order-doc-set[data-doc="PRESCRIPTION"],
+  .order-print-root[data-sheet="CONSULTATION"] .order-doc-set[data-doc="CONSULTATION"] {
+    break-after: auto;
+  }
+}

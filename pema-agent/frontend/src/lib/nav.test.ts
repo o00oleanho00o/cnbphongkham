@@ -157,6 +157,11 @@ describe("currentNavItem", () => {
     expect(currentNavItem("/patients/abc")?.label).toBe("Tìm bệnh nhân");
   });
 
+  it("belongs_the_order_review_and_print_pages_to_the_cashier_entry", () => {
+    expect(currentNavItem("/orders/abc")?.label).toBe("Thu ngân");
+    expect(currentNavItem("/orders/abc/print")?.label).toBe("Thu ngân");
+  });
+
   it("is_undefined_for_a_path_outside_the_menu", () => {
     expect(currentNavItem("/nowhere")).toBeUndefined();
   });
