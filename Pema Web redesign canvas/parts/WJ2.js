@@ -327,7 +327,6 @@ const wj2TunePage = () => wj2TuneShell(0, wj2ProviderBody());
 const wj2TuneDlg = (id, title, note, behind, text, btnText) => ndlg(id, title, wj2NXW + '/admin/tuning · ' + note, [txt(text, { size: 's', tone: 'soft' })],
   { nx: 'owner', nav: '/admin/tuning', behind, w: 480, footer: [secondary('Hủy'), danger(btnText)] });
 
-// @@DEFS
 const WJ2 = [
   // ---- Tài khoản Zalo: công tắc khẩn, thêm, sửa, QR, xóa ----
   wj2ZaloDlg('WJ58', 'BẬT công tắc khẩn của Tài khoản bot chính thức?', 'hộp xác nhận bật công tắc khẩn của kênh; nút bật tắt khi chưa nhập lý do',
@@ -483,5 +482,4 @@ const WJ2 = [
   npage('WJ114', 'Mô hình & cấu hình · không có tham số khớp', wj2NXW + '/admin/tuning · tìm "zzz" không khớp tham số nào', '/admin/tuning', wj2TuneShell(0, card({ comp: 'TuningGroup', title: 'Nhà cung cấp LLM', sub: 'Model trả lời khách. Thiếu mục này thì trợ lý không trả lời được tin nào.' }, sm('Không có tham số nào khớp từ khóa đang tìm.')), 'zzz'), { nx: 'owner', state: true }),
   npage('WJ115', 'Cấu hình · nhóm (liên kết trực tiếp)', wj2NXW + '/admin/tuning/[group] · liên kết trực tiếp tới một nhóm; cùng trang với nhóm đó, menu giữ "Mô hình & cấu hình"', '/admin/tuning', wj2TunePage(), { nx: 'owner' }),
 
-  // @@ENTRIES
 ];
