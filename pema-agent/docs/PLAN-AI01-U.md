@@ -71,5 +71,27 @@ from the current head; U8 adds the merge revision (pattern `h_0008_merge_heads`)
 
 ## 6. Owner / doctor inputs still needed
 
-Which services/prices/protocols are real for seed (synthetic until then); whether cashiers may approve orders; finance
-period-close policy owner; photo consent wording.
+Which services/prices/protocols are real for seed (synthetic until then; owner said "ok", meaning keep synthetic
+until real data is given — not a decision to fabricate real-looking prices); guide content beyond the 3 synthetic
+articles (8 more needed for the old count of 11); photo consent wording; token/room-handoff/"Hỏi Pema"/photo-retention
+decisions (owner 2026-10-05: "tạm để suy nghĩ" — left open on purpose, do not re-ask yet).
+
+## 7. Round 2 (owner decisions 2026-10-05, after U8's `PARITY-AI01-U.md`)
+
+Source: U8's parity table (§4 "fix needed" rows) and open-items list. Owner answers, verbatim intent:
+
+| # | Question put to the owner | Answer | Recipe |
+|---|---|---|---|
+| 1 | Fix the 2 failing package-M on-call tests now? | **No.** Leave them failing; they are package M's, not package U's, and the cause (test freezes `NOW`, seed takes `valid_from = now()`) is understood and simple to fix later. Do not have an agent "fix" this without being asked again. | — (none; HANDOFF records the decision so nobody re-opens it as a mystery) |
+| 2 | Build the parity-table "fix needed" items (create-patient dialog + chips, "Dịch vụ & tài chính" tab, the other Patient 360 dialogs, "Tiền sử & chẩn đoán")? | **Yes.** | U9 |
+| 3 | Dedicated accountant role, cashier/thu ngân approves orders, who closes the finance period? | **Yes** to a dedicated role and to "yes" on the bundle. Checked against the old web and the current clinical-safety rule (`AGENT.md`: doctor approves orders) before building: the old web's own `accountant` role never approved orders either (`approveOrder` hard-requires `actor.role === 'doctor'`). **Built:** `Role.ACCOUNTANT` (matches an old-web role the new system had dropped). **Not built, flagged instead:** letting accountant/reception approve a prescription order — this would remove an explicit safety control that both the old web and the current backend enforce; needs the owner's explicit, separate confirmation after reading this flag. **Default taken:** accountant closes the finance period (its job in the old web was literally "Đối soát & thu ngân" — reconciliation and cashier); owner/manager keep an override. | U11 |
+| 4 | New views: reception table on `/today`, room-column grid on `/schedule`? | **Yes**, both, additive (the current CSKH queue and doctor-column board stay). | U10 |
+| 5 | Real service/price basis, guide content, photo-consent wording? | **"ok"** — read as: proceed with synthetic data as before, owner will supply the real content later. Not a request to fabricate real-looking data or write the remaining 8 guide articles from nothing. | — (stays open, §6) |
+| 6 | Delete superseded `prototype/*` and `finance_server.py`? | **No, keep them.** They stay read-only reference material (package W still generates screenshots and specs from them). | — (no action; already read-only by HARD RULES) |
+| 7 | Token/room-handoff/"Hỏi Pema"/photo-retention decisions? | **Left open** ("tạm để suy nghĩ"). | — (stays open, §6) |
+
+New steps (recipes `recipes/U/10-U9-*.md` … `13-U12-*.md`), order: `U8 → (U9 ‖ U10 ‖ U11 ‖ U12)`, merged one at a time
+by the director (same shared-file reasons as U2/U3/U4/U7). U11 changes a system invariant (`roles.py` docstring says
+"the six roles are fixed" — this becomes seven) and touches `docs/ARCH-PB01.md`'s permission table (allowed: it is a
+living contract, not the read-only PB01/PB02 spec prose). U12 is pure cleanup (wording, tooling baselines, one
+contrast fix) with no product decision in it.

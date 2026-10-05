@@ -270,7 +270,7 @@ How to run it (when the user says so):
 6. M6 numbers (D5 recall 100% with zero LLM calls, p50/p95 latency on the RTX 3060) go into
    `pema-agent/evals/care/report.md` and a line here.
 
-## Package U — UI parity with the old Pema web + port of the missing screens (BUILT on `feat/ui-parity` 2026-10-05, U0–U8 merged, NOT pushed; parity gaps listed below)
+## Package U — UI parity with the old Pema web + port of the missing screens (U0–U8 BUILT on `feat/ui-parity` 2026-10-05, NOT pushed; round 2 — U9–U12 — PLANNED, owner decisions below, not yet built)
 
 ### Progress log (director-run gate per step: FE vitest/lint/tsc/build + `pnpm inventory` + `pnpm visual`, BE full pytest
 incl. evals + ruff + pyright + import-linter, 0 attribution lines; merged into `feat/ui-parity` only, NOT pushed)
@@ -290,6 +290,38 @@ incl. evals + ruff + pyright + import-linter, 0 attribution lines; merged into `
 **Known baseline failure (package M, not package U):** `tests/care/test_care_routing_store.py` (2 tests: `test_the_on_call_contact_comes_from_the_database_on_every_call`, `test_the_whole_chain_over_postgres_ends_with_the_on_call_contact_and_staff_can_still_accept`) fail in every full run. The test freezes `NOW = 2026-10-05 03:00 UTC` while the seeded on-call row gets `valid_from = now()` from the DB (`m_0001`), so the row is never valid at `NOW` after that instant. Fix: an explicit `valid_from` in the seed. Not fixed (outside package U).
 
 **Open items after U8 (not built; recorded in `pema-agent/docs/PARITY-AI01-U.md`):** create-patient dialog (WC3, `POST /patients` exists), filter chips on `/patients`, Patient 360 "Dịch vụ & tài chính" tab and add-service dialog (WC10, WC19), AI brief / Nhắn tin / key facts / home care / expected return dialogs (WC13/15/16/18), "Tiền sử & chẩn đoán" card; 14 inventory ids still `none` (WA10, WC3, WC10, WC13, WC15, WC16, WC18, WC19, WC25, WC27, WC29, WC32, WC34, WC28 stale); guide has 3 of the old 11 articles; old-web PNGs in `visual-ref/old/` are git-ignored, so a fresh checkout has only `manifest.json` (run `web-shots.cjs` against the old web); `pending-web.cjs`/`pending.cjs` fail because the sync baseline `c40ba22` is not in git history (now `0c454cc` after the 2026-10-05 history rewrite below — same tree, new hash); `catalog-nextjs.cjs` text still says /cashier and /finance are greyed "(sắp có)"; `snapshot.json` `meta.inventory_sha` was edited by hand after the catalog change (re-walking the old web takes hours). Owner decisions: reception list on `/today`?, room-column grid on `/schedule`?, accountant role, cashier approval, period-close owner, photo consent wording, deleting superseded `prototype/*` and `finance_server.py`.
+
+**Owner decisions 2026-10-05 (round 2, on the open items above) — full reasoning in `PLAN-AI01-U.md` §7, new recipes
+`recipes/U/10-U9-*.md` … `13-U12-*.md`, planned but NOT built yet:**
+1. The 2 package-M on-call test failures: **leave them, do not fix** (owner declined). The earlier claim in this file
+   that they "will pass the next day" was wrong — they fail on every run, forever, until the seed sets an explicit
+   `valid_from`; the owner chose not to spend a step on it now.
+2. Build the U8 parity "fix needed" items (create-patient dialog + chips, "Dịch vụ & tài chính" tab, the remaining
+   Patient 360 dialogs, "Tiền sử & chẩn đoán" card): **yes → U9**.
+3. Dedicated accountant role + "can the cashier approve orders" + who closes a finance period: **yes to the
+   bundle, with one flagged deviation.** `Role.ACCOUNTANT` is being added (U11) — this restores a role the old web
+   already had (`staff-context.js`: `accountant`, "Đối soát & thu ngân") that the new backend had dropped in favour
+   of projecting it onto `manager` (`finance.py` docstring, now reversed). Letting accountant/reception approve a
+   prescription **order is NOT being built**: both the old web (`order-data.js`: `'Cần bác sĩ duyệt đơn.'`, doctor-
+   only, and only the assigned doctor) and the current backend enforce doctor-only order approval as a clinical
+   safety rule (`AGENT.md`); removing it needs the owner's explicit, separate sign-off after reading this note, not
+   a one-word "có" folded into a three-part question. Default taken for period-close: accountant closes it, owner/
+   manager keep an override.
+4. Reception table on `/today` + room-column grid on `/schedule`, additive (keep the current CSKH queue and
+   doctor-column board): **yes → U10**.
+5. Real service/price basis, the remaining 8 guide articles, photo-consent wording: owner said **"ok"**, read as
+   "keep synthetic for now, real content later" — not a request to invent real-looking numbers or articles. Stays
+   open (`PLAN-AI01-U.md` §6).
+6. Delete superseded `prototype/*` / `finance_server.py`: **no, keep** (package W still reads them for screenshots
+   and specs; already read-only by the HARD RULES).
+7. Token / room hand-off / "Hỏi Pema" / photo-retention decisions: **left open** ("tạm để suy nghĩ"), not re-asked.
+
+Housekeeping also queued (`U12`, no product decision in it): `design-specs/README.md`/`SKILL.md` stale "82-screen"/
+"211 screens" wording, MCP `get_web_screen` error for a Next.js id with no snapshot, `catalog-nextjs.cjs` still
+greying out `/cashier`/`/finance`, `snapshot.json` `meta.inventory_sha` hand-edit, `pending-web.cjs`/`pending.cjs`
+baseline (`c40ba22` → `0c454cc`, see the history-rewrite note below), regenerating `visual-ref/old/` (empty on this
+checkout), and the two dark-mode contrast failures (`surface` on `brand-500` 3.81:1, on `accent-strong` 3.44:1, both
+below 4.5:1).
 
 **History rewrite 2026-10-05 (attribution fix, same tree):** the U4-sync merge (old hash `3bc3d40`) was made by fast-forwarding `feat/ui-parity` onto a merge done on the `ui/u4-sync` worktree, which had `ui/u4-fix` (`24dfd1c`) as a parent. `ui/u4-fix` predates the earlier `filter-branch` rewrite of `feat/ui-parity` (see the attribution note above), so merging it pulled back ~90 pre-rewrite commit hashes, including the one with a `Co-Authored-By: Claude` trailer. Fix: `git replace --graft 3bc3d40 649940d` (the W12 merge, 3bc3d40's other, post-rewrite parent) then `git filter-branch -- 649940d..feat/ui-parity` to make it permanent; the `649940d..HEAD` tree is byte-identical to before (`git diff` empty), only commit hashes from U4 on changed. New hashes: `3bc3d40`→`ff14ecf`, `22df969`→`0f78638`, `9281762`→`fa3a6a2`, `142800b`→`34ff3c1`, the docs commit (old `2415cd7`) → `84757b9`. Verified after rewrite: `f6be3b9` is not an ancestor, 0 attribution trailers in the whole branch history. Backup of the pre-fix tip: local branch `backup/ui-parity-before-graft` (never push). `origin/feat/ui-parity` still has the old history (through U5, pushed 2026-10-05 17:43) until the user allows `git push --force-with-lease=feat/ui-parity:<old tip> origin feat/ui-parity`.
 
@@ -454,6 +486,10 @@ Gate: `web-inventory.cjs --check` 0; `web-canvas.cjs check --complete --viewport
 
 ## Next Steps (only when the user asks)
 
+0. **Run next:** package U round 2, recipes `recipes/U/10-U9-*.md` … `13-U12-*.md` (U9 patient parity fixes, U10
+   reception/room views, U11 accountant role, U12 housekeeping) — planned 2026-10-05 against the owner's answers in
+   the "Owner decisions 2026-10-05 (round 2)" paragraph above, not yet built. Order: `U8 → (U9 ‖ U10 ‖ U11 ‖ U12)`,
+   one `pema-builder` per recipe in its own worktree, same gate as U0–U8, merged into `feat/ui-parity` one at a time.
 1. Small leftovers: rate limit on `PATCH /admin/users`; stale sentence in `frontend/README` saying change-password is
    disabled (`POST /auth/password` exists); `TableShell` missing space when `ghimCotCuoi` is on.
 2. Apply the owner's answers to the open decisions above (each is a small, isolated change).
