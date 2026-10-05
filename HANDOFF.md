@@ -395,7 +395,8 @@ Known gaps (2026-10-04):
 | W6b shots (4 agents) + specs (3 agents) for the 130 new ids | `design/w6b-shots-a…d`, `design/w6b-specs-1…3` | merged; manifest and snapshot/notes merged by script (`web-snapshot.cjs --merge=`) | manifest 1150 rows, 1150 PNG on disk, SHA 0 mismatch; `web-specs.cjs --check` 0 (211 specs, 0 missing) | each agent used its own old-web server (4173, 4175–4180); PNGs copied into the main checkout folder; `web-shots.cjs` records `native_dialog` messages |
 | W6c-0 phone frame + Patient Mobile blocks | `design/w6c0` | `88bdfcf` | proofs WI1, WI9, WI23 | `mob()` 390×844 frame, `native()` dialog frame, `errLine`, blocks appt/events/bubbles/upload/stepper/quick/rx |
 | W6c frames for 130 new ids (5 agents: WI-1, WI-2, OPS, REST-1, REST-2) | `design/w6c-wi1` … `rest2` | `f00e068` | **all 211 ids**: `web-canvas.cjs check … --complete --viewport=all --frames` exit 0, total 211/211, 263 frames, errors/overflow/unresolved/missing empty; `web-specs.cjs --check` 0; `web-coverage.cjs --check` ok (1150 files) | one-line fix in `canvas-layout.cjs` (dialog toast listed in Layout) |
-| Local viewer (Docker) | `feat/web-design` | — | image builds, `http://127.0.0.1:4191/` serves `Pema Web.dc.html` (462 KB), 0 page errors | `docker compose up -d --build pema-web-design-viewer` from the repo root; `design-viewer/Dockerfile` takes `CANVAS_DIR` (default app canvas, port 4190); the "Pema Web" tab is next to "Pema Web blocks" |
+| Local viewer (Docker) | `feat/web-design` | — | image builds, `http://127.0.0.1:4191/` serves `Pema Web.dc.html` (462 KB), 0 page errors | `docker compose up -d --build pema-web-design-viewer` from the repo root; `design-viewer/Dockerfile` takes `CANVAS_DIR` (default app canvas, port 4190); the "Pema Web" tab is next to "Pema Web blocks" |
+
 | W5 push to claude.ai/design | — | — | — | OPTIONAL now (only to share on claude.ai): needs the user to create the project and run `/design-sync`; see `recipes/W/07-W5-push-design.md` |
 
 ## Session log 2026-10-04 (after package W)
@@ -418,6 +419,30 @@ Known gaps (2026-10-04):
   check that an agent really compared the images; that depends on its report. Screen counts in the docs now say 211 (was 81).
 - **Open:** force-push of the cleaned `feat/ui-parity` (see HARD RULES); cleanup of worktrees and `design/*` branches;
   run lint and tests on the merged branches.
+
+## Package W2 — design the Next.js-only screens, one Design System, one claude.ai/design project (planned 2026-10-05; NOTHING built)
+
+Check result 2026-10-05: the web canvas covers the old web completely (211 ids WA–WI, specs and frames consistent), but
+by decision D3 **no Next.js-only screen is designed**: `/admin/*` (26 routes), `/care/*` (5), `/templates`, `/login`
+(~33 routes, ~70–100 frames with states/dialogs). No Design System artifact exists. The account has **no published
+artifact** (neither canvas is on claude.ai/design). App canvas (82) and web canvas (211) are separate files with no
+reverse index.
+
+Owner decisions 2026-10-05: (1) Patient Mobile web (group WI, 42 screens) is dropped as a Next.js target — designs stay
+for KMP/Zalo, INDEX rows marked `served by KMP/Zalo`; revisit as a Zalo-opened web only when a Zalo OA exists.
+(2) Publishing (W5) is the owner's `/design-sync`, not a subagent step. (3) Keep two canvas files; unify through one
+project, one Design System, one cross-index (`design-specs/INDEX.md`).
+
+Where: plan `pema-agent/docs/PLAN-AI01-W2.md`; recipes `pema-agent/recipes/W2/` (`00-README.md`, `_REPORT-TEMPLATE.md`,
+`01-W7` inventory → `02-W8` shots ‖ `03-W9` specs → `04-W10` frames+blocks → `05-W11` design-system source →
+`06-W12` unify/PUBLISH.md → `07-W5` owner publish). Reuses package-W scripts in `.claude/skills/pema-web-design/scripts/`.
+Writes only to `design-specs/`, `Pema Web redesign canvas/`, new `design-system/`, that skill folder, and `pema-agent/docs|recipes`.
+No FE/BE code changes; U0/U1 implement the new blocks from `BLOCKS.md`.
+
+How to run (when the user says so): branch `feat/ui-parity`; one `pema-builder` per recipe in its own worktree; prompt
+"Follow pema-agent/recipes/W2/<file>.md on branch feat/ui-parity. Return the report in _REPORT-TEMPLATE.md format."
+Gate: `web-inventory.cjs --check` 0; `web-canvas.cjs check --complete --viewport=all --frames` 0 for all ids;
+`web-coverage.cjs` counts equal; viewer 0 page errors; no attribution in commits. Merge into `feat/ui-parity` only.
 
 ## Next Steps (only when the user asks)
 
