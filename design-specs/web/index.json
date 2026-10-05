@@ -1,6 +1,6 @@
 {
   "generator": ".claude/skills/pema-web-design/scripts/web-specs.cjs",
-  "snapshot": "9e8d4cc14be19519",
+  "snapshot": "947a5df0ead280f4",
   "counts": {
     "total": 384,
     "by_kind": {
