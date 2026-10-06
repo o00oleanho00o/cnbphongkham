@@ -2,11 +2,15 @@
 `C:\Users\phanx\Documents\Codex\2026-09-11\create-an-image-of\cnbphongkham` (fresh clone, 2026-10-04, **no U4**)
 
 Language of the user: Vietnamese. Reply in Vietnamese.
-Last updated: 2026-10-04 (package W built and merged; git history of `feat/single-tenant` rewritten and merged to `dev`; frontend design rules, agent and hook added). **Branches:**
-`feat/ai-agent-backend` (multi-tenant, tip `294e4dc`, frozen); `feat/single-tenant` (one system = one clinic, tip `3493f10`, merged to `origin/dev`
-by PR #11 as `e972af3`); `feat/ui-parity` (packages U + W, tip `8ab9faa`, on origin, contains `e972af3`).
-Status: single-tenant, package M, package U (U0–U12, merged into `feat/ui-parity`, NOT pushed; round 2 U9–U12 merged WITHOUT the merge gate, see "Round 2 progress") and packages W and W2 are built. The frontend now has a design gate
-(rule + agent `pema-ui-builder` + pre-commit hook, see "Session log 2026-10-04"). Package O (shared inbox) is BUILT on `feat/shared-inbox` (O1–O7 merged 2026-10-06, `1f12ab7d`, not pushed) but was merged WITHOUT any full test gate at the owner's request, see "Result of package O". Wait for the user's next instruction before starting anything.
+Last updated: 2026-10-06 (state check after PR #13). **Where the work is: `dev`** (`origin/dev` `74bc37c5`, "Merge pull request #13 from
+feat/shared-inbox"). `dev` holds everything: single-tenant (PR #11 `e972af3`), package M, packages U (U0–U12), W, W2, O (O1–O7), the CRM
+idea tooling (`178c9fe9`) and the docker one-command stack. Other branches: `feat/ai-agent-backend` (multi-tenant, tip `294e4dc`, frozen);
+`origin/feat/ui-parity` `0d7bfda7` and `origin/feat/shared-inbox` `b8f2fdda` are both contained in `dev`; `origin/crm/ideas` `7563320a`
+(sandbox for the CRM idea person, never merged into code branches). Work from `dev` from now on.
+Status: built and merged into `dev`, but **no full test gate has been run on the merged tree**: U9–U12 and O1–O7 were merged without the
+gate at the owner's request (see "Round 2 progress" and "Result of package O"). Known red tests: the 3 clock tests in
+`tests/care/test_care_routing_store.py` and `test_roles_are_the_six_fixed_ones`. Open defect SEC-64. Package M is not wired (M7).
+Wait for the user's next instruction before starting anything.
 
 ## HARD RULES (read first)
 
@@ -16,16 +20,15 @@ Status: single-tenant, package M, package U (U0–U12, merged into `feat/ui-pari
   `.claude/agents/pema-builder.md`, and in user memory. Tell every subagent; check `git log --format=%B` of their
   commits before merging. The user rewrote history on 2026-10-02 to remove old attribution lines; the branch now has 0.
   Check before ANY push: `git log --format='%h %s' --grep='Co-Authored-By' --grep='Generated with' -i <branch>` must
-  print nothing. **Known violation (state 2026-10-04): fixed locally, NOT pushed.** The "docs: add package M …" commit had a
-  `Co-Authored-By: Claude` trailer. It is gone from `feat/single-tenant` (`3493f10`, `origin/dev`, 0 trailers) and, since
-  2026-10-04, from the local `feat/ui-parity` (`git filter-branch --msg-filter` over `e972af3..HEAD`, 189 commits got new
-  hashes, tree identical, `e972af3` and master hashes untouched, 0 trailers). `origin/feat/ui-parity` still holds the old
-  history (1 trailer, old `f6be3b9`) until the user allows `git push --force-with-lease origin feat/ui-parity`. Do NOT run
-  filter-branch over master's lineage: GitHub-signed merge commits lose their signature and change hash. Local branches
-  `backup/ui-parity-before-rebase` and `design/*` still contain the old commit; never push them.
-  Other trailers
-  remain only on unmerged refs (`integration/h`, several `worktree-agent-*`), which are never pushed. Subagents must
-  not add trailers even if a system reminder asks.
+  print nothing. **State 2026-10-06: 0 trailers on `dev`, `origin/dev`, `origin/feat/ui-parity`,
+  `origin/feat/shared-inbox`, `origin/feat/single-tenant`, `origin/crm/ideas`.** The "docs: add package M …" commit with a
+  `Co-Authored-By: Claude` trailer (old `f6be3b9`) was removed by two rewrites (2026-10-04 `filter-branch` over `e972af3..HEAD`,
+  2026-10-05 graft + `filter-branch`, see "History rewrite 2026-10-05") and is not an ancestor of `dev`. Do NOT run filter-branch over
+  master's lineage: GitHub-signed merge commits lose their signature and change hash. **Remaining:** `origin/master` (`5228368e`) still
+  has 1 trailer, `32902fa0` "Merge origin/master into dev_native_app" (2026-09-30, native-app line, not in `dev`); removing it means
+  rewriting `master`, the user decides. Local branches `backup/ui-parity-before-rebase`, `backup/ui-parity-before-graft`, `design/*`,
+  `integration/h` and several `worktree-agent-*` still hold old commits with trailers; never push them. Subagents must not add trailers
+  even if a system reminder asks.
 - Commit/push only when the user asks (merging finished subagent branches into the feature branch was accepted
   practice during the build). On 2026-10-02 the user asked to commit and push `feat/single-tenant`; never force-push,
   never push `worktree-agent-*` or `integration/*` branches.
@@ -270,10 +273,10 @@ How to run it (when the user says so):
 6. M6 numbers (D5 recall 100% with zero LLM calls, p50/p95 latency on the RTX 3060) go into
    `pema-agent/evals/care/report.md` and a line here.
 
-## Package U — UI parity with the old Pema web + port of the missing screens (U0–U8 BUILT on `feat/ui-parity` 2026-10-05, NOT pushed; round 2 — U9–U12 — BUILT and merged 2026-10-06, NOT pushed; gate NOT run, see the round-2 entry below)
+## Package U — UI parity with the old Pema web + port of the missing screens (U0–U12 BUILT; in `dev` through PR #13 since 2026-10-06; round 2 — U9–U12 — merged WITHOUT the gate, see the round-2 entry below)
 
 ### Progress log (director-run gate per step: FE vitest/lint/tsc/build + `pnpm inventory` + `pnpm visual`, BE full pytest
-incl. evals + ruff + pyright + import-linter, 0 attribution lines; merged into `feat/ui-parity` only, NOT pushed)
+incl. evals + ruff + pyright + import-linter, 0 attribution lines; merged into `feat/ui-parity` only; later pushed and merged into `dev`)
 
 | Step | Branch / commit | Merged as | Gate result | Notes |
 |---|---|---|---|---|
@@ -335,7 +338,7 @@ baseline (`c40ba22` → `0c454cc`, see the history-rewrite note below), regenera
 checkout), and the two dark-mode contrast failures (`surface` on `brand-500` 3.81:1, on `accent-strong` 3.44:1, both
 below 4.5:1).
 
-**History rewrite 2026-10-05 (attribution fix, same tree):** the U4-sync merge (old hash `3bc3d40`) was made by fast-forwarding `feat/ui-parity` onto a merge done on the `ui/u4-sync` worktree, which had `ui/u4-fix` (`24dfd1c`) as a parent. `ui/u4-fix` predates the earlier `filter-branch` rewrite of `feat/ui-parity` (see the attribution note above), so merging it pulled back ~90 pre-rewrite commit hashes, including the one with a `Co-Authored-By: Claude` trailer. Fix: `git replace --graft 3bc3d40 649940d` (the W12 merge, 3bc3d40's other, post-rewrite parent) then `git filter-branch -- 649940d..feat/ui-parity` to make it permanent; the `649940d..HEAD` tree is byte-identical to before (`git diff` empty), only commit hashes from U4 on changed. New hashes: `3bc3d40`→`ff14ecf`, `22df969`→`0f78638`, `9281762`→`fa3a6a2`, `142800b`→`34ff3c1`, the docs commit (old `2415cd7`) → `84757b9`. Verified after rewrite: `f6be3b9` is not an ancestor, 0 attribution trailers in the whole branch history. Backup of the pre-fix tip: local branch `backup/ui-parity-before-graft` (never push). `origin/feat/ui-parity` still has the old history (through U5, pushed 2026-10-05 17:43) until the user allows `git push --force-with-lease=feat/ui-parity:<old tip> origin feat/ui-parity`.
+**History rewrite 2026-10-05 (attribution fix, same tree):** the U4-sync merge (old hash `3bc3d40`) was made by fast-forwarding `feat/ui-parity` onto a merge done on the `ui/u4-sync` worktree, which had `ui/u4-fix` (`24dfd1c`) as a parent. `ui/u4-fix` predates the earlier `filter-branch` rewrite of `feat/ui-parity` (see the attribution note above), so merging it pulled back ~90 pre-rewrite commit hashes, including the one with a `Co-Authored-By: Claude` trailer. Fix: `git replace --graft 3bc3d40 649940d` (the W12 merge, 3bc3d40's other, post-rewrite parent) then `git filter-branch -- 649940d..feat/ui-parity` to make it permanent; the `649940d..HEAD` tree is byte-identical to before (`git diff` empty), only commit hashes from U4 on changed. New hashes: `3bc3d40`→`ff14ecf`, `22df969`→`0f78638`, `9281762`→`fa3a6a2`, `142800b`→`34ff3c1`, the docs commit (old `2415cd7`) → `84757b9`. Verified after rewrite: `f6be3b9` is not an ancestor, 0 attribution trailers in the whole branch history. Backup of the pre-fix tip: local branch `backup/ui-parity-before-graft` (never push). `origin/feat/ui-parity` was later pushed with the cleaned history (`0d7bfda7`, 0 trailers, contained in `dev`).
 
 Lesson from round 2: a migration that changes a CHECK constraint must be tested with a downgrade while rows that use the new value exist (the seed adds an accountant); if the full gate is skipped, still run `tests/care/test_care_schema.py`, `tests/test_database.py` and every test that calls `downgrade(`. Leftovers to know: a Docker container `pema-pg-u6` (throwaway Postgres from the U6 agent) was still running on 2026-10-06 and was not removed; `git stash list` has one old entry (`codex/catalog-orders-a5` WIP, 13 days old) that is not from package U.
 
@@ -367,7 +370,7 @@ Gates before merging a worktree: FE vitest ≥ 407 and `pnpm inventory`/`pnpm vi
 BE pytest/ruff/pyright/import-linter, no attribution in `git log --format=%B`, report filed. Migrations use prefix
 `u<step>_`; U8 adds the merge head. Photos: upload/view with consent only, no image analysis (scope unchanged).
 
-## Package W — design of the old Pema web: screenshots, screen specs, web canvas (BUILT 2026-10-04: 211 screens incl. Patient Mobile; merged into `feat/ui-parity` and pushed; W5 push to claude.ai/design optional)
+## Package W — design of the old Pema web: screenshots, screen specs, web canvas (BUILT 2026-10-04: 211 screens incl. Patient Mobile; in `dev`; W5 push to claude.ai/design optional)
 
 Why: the app has a canvas (`Pema App.dc.html`, 82 mobile screens), generated specs (`design-specs/screens/`), the MCP
 server `pema-design` and two skills. The old web has only its code in `prototype/`. Package U ports the old web by
@@ -461,16 +464,16 @@ Known gaps (2026-10-04):
   Do not use it. Because `e972af3` has the same tree as `4296064`, the branch took `git merge -s ours e972af3`
   (`8ab9faa`, pushed): tree unchanged, history contains master. Backup of the tip before this: local branch
   `backup/ui-parity-before-rebase`. Not run on the rebased branches: backend pytest/ruff (this machine has no `uv`) and the frontend gate.
-- **Design gate for the frontend (uncommitted at the time of writing):** `CLAUDE.md` and `AGENT.md` carry the same "Screen specs" and
+- **Design gate for the frontend (committed as `d5bc247` "rule for UI", in `dev`):** `CLAUDE.md` and `AGENT.md` carry the same "Screen specs" and
   "Web design canvas" sections; the web canvas rule is now MANDATORY for `pema-agent/frontend/src/{app,ui,components}` (read spec and
   canvas image first, new `pnpm visual` shot compared with canvas and old shot, ids named in the report). New agent
   `.claude/agents/pema-ui-builder.md`. New git hook `.githooks/pre-commit` runs `pending-web.cjs` and blocks a commit with
   `✗ NOT LOGGED`; each clone must run `git config core.hooksPath .githooks` once (already set on this machine). The hook cannot
   check that an agent really compared the images; that depends on its report. Screen counts in the docs now say 211 (was 81).
-- **Open:** force-push of the cleaned `feat/ui-parity` (see HARD RULES); cleanup of worktrees and `design/*` branches;
-  run lint and tests on the merged branches.
+- **Open:** cleanup of worktrees and `design/*` branches; run lint and tests on the merged branches. (The force-push of the
+  cleaned `feat/ui-parity` was done later; see HARD RULES.)
 
-## Package W2 — design the Next.js-only screens, one Design System, one claude.ai/design project (BUILT 2026-10-05: W7–W12 merged into `feat/ui-parity`, NOT pushed)
+## Package W2 — design the Next.js-only screens, one Design System, one claude.ai/design project (BUILT 2026-10-05: W7–W12; in `dev`)
 
 Result: web inventory 384 ids (WA–WI 211 old web, WJ 115 / WK 39 / WL 19 Next.js-only = 173); two canvas files `Pema Web.dc.html` (211 ids, 263 frames) and `Pema Web (Next.js).dc.html` (173 ids, 251 frames) + `Pema Web blocks.dc.html`; viewer dropdown Web cũ / Màn mới / Cả hai; `design-system/` (tokens.json, colors.md, typography.md, 64 component pages, `check.cjs` 8/8); hub `design-specs/INDEX.md` = app 82 + web 384 + Design System with the two-way app↔web table, built by `unify-index.cjs` (app tool `design-specs.cjs` keeps it through a 12-line hook in `specs-lib.cjs`, owner accepted 2026-10-05). Merge commits: W7 `7154edd`, W9 `dc6952a`, W8 `c55f047`, W10 `ec33103`, W11 `ef30d4a` (retry 1), W12 `649940d`. Nothing published to claude.ai/design.
 Pitfall: `web-specs --check` once depended on git-ignored PNGs on disk (image lines), fixed by regenerating in a checkout without PNGs; the app tool `design-specs.cjs` has the same dependence on `pema-kmp/design-ref/` (run `gradlew canvasRefs` in a fresh worktree). On Windows (`autocrlf=true`) `design-specs.cjs --check` reports "out of date" until `design-specs.cjs` is run once; that produces no git diff.
@@ -498,7 +501,7 @@ How to run (when the user says so): branch `feat/ui-parity`; one `pema-builder` 
 Gate: `web-inventory.cjs --check` 0; `web-canvas.cjs check --complete --viewport=all --frames` 0 for all ids;
 `web-coverage.cjs` counts equal; viewer 0 page errors; no attribution in commits. Merge into `feat/ui-parity` only.
 
-## Package O — one identity, many operators: shared inbox over Zalo (BUILT 2026-10-06 on `feat/shared-inbox`: O1–O7 merged, NOT pushed, NO director-run gate; details in "Result of package O" below)
+## Package O — one identity, many operators: shared inbox over Zalo (BUILT 2026-10-06: O1–O7; in `dev` through PR #13; NO director-run gate; details in "Result of package O" below)
 
 Branch `feat/shared-inbox`, created 2026-10-06 from `feat/ui-parity` `0d7bfda7` (M, U0–U12, W, W2 included). v1 of
 the plan (branch `plan/package-o` `b2fecd6`, 2026-10-05) is superseded; keep that branch, never build from it.
@@ -531,11 +534,11 @@ gate once on the branch base and record it (U9–U12 were merged without a gate)
 worktree from the current branch head; gate before each `--no-ff` merge; merge into `feat/shared-inbox` only; never
 push unless asked. Expected baseline failures: the 3 clock-dependent tests in `tests/care/test_care_routing_store.py`.
 
-### Result of package O (2026-10-06, all 7 steps merged into `feat/shared-inbox`, NOT pushed, NOT gated)
+### Result of package O (2026-10-06, all 7 steps merged into `feat/shared-inbox`, then into `dev` by PR #13; NOT gated)
 
 **Read this first.** After the baseline gate the owner told the director to skip gates ("bỏ qua xử lý cổng nền", then "viết test nhưng tạm chưa cần chạy pass"). From O1 on, the director ran **no** pytest, no vitest, no `pnpm visual`/`build`/`smoke`, no `web-*` gate on any step. Before each merge the director only checked: one alembic head (read from the `down_revision` chain), no conflict markers, no AI attribution in commit messages, `openapi.json`/`schema.d.ts` consistent (no path or schema removed), and for O5 that `Pema Web.dc.html` is byte-identical. Every test number below is what the step's own agent reported, not a director-run result. Many DB-backed tests were written and never run.
 
-**Branch state.** `feat/shared-inbox` = `1f12ab7d`, created from `feat/ui-parity` `0d7bfda7`, plan commit `df277b3a`. **19 commits ahead of `df277b3a`.** The branch does not exist on `origin`; nothing was pushed. Attribution check `git log --format=%B df277b3a..HEAD`: 0 lines.
+**Branch state.** `feat/shared-inbox` = `1f12ab7d`, created from `feat/ui-parity` `0d7bfda7`, plan commit `df277b3a`. **19 commits ahead of `df277b3a`.** (Written before the push. Later on 2026-10-06 the branch was pushed, `origin/feat/shared-inbox` = `b8f2fdda`, and merged into `dev` by PR #13 `74bc37c5`.) Attribution check `git log --format=%B df277b3a..HEAD`: 0 lines.
 
 **Baseline gate (step 0, director-run, on `df277b3a`, before the owner said skip):**
 - BE: ruff check clean; ruff format 1063 files clean; pyright 0 errors; import-linter 4 kept / 0 broken; alembic head `u9_0010_patient_parity`; pytest **5722 passed, 10 skipped, 4 failed** (1206 s). The 4 failures: the 3 clock-dependent care tests in `tests/care/test_care_routing_store.py` (owner declined to fix) plus `packages/contracts/tests/test_contracts.py::test_roles_are_the_six_fixed_ones` (asserts 6 roles; U11 added `accountant` as the 7th and did not update the test — a second regression of the ungated U9–U12 round; fix = add `"accountant"` to the set and rename; the owner was asked and did not answer, so it is still red).
@@ -585,7 +588,7 @@ Alembic chain: `u9_0010_patient_parity` → `o1_0010_identities_roster` → `o2_
 
 **Next steps (in this order).** 1. Run the full gate on `feat/shared-inbox` `1f12ab7d` now that Docker works: BE ruff/format/pyright/import-linter, full pytest on a throwaway `pgvector/pgvector:pg17 -c fsync=off` + `redis:7` with `PEMA_TEST_DATABASE_URL`/`PEMA_TEST_REDIS_URL`, `alembic heads` = 1; FE `pnpm test`, `lint`, `check:types`, `inventory`, `build`, `smoke`, `dev:mock` + `pnpm visual`; expected failures are only the 3 clock tests and, until fixed, the roles test; run `tests/ops`, `tests/clinic` and `tests/live` explicitly (O2 changed the send path, the PATCH assign and the viewers list). 2. Fix SEC-64 (one small step), then the roles test. 3. Ask the owner the decisions above. 4. Small BE follow-up for the inbox filters and the device list. 5. M7 wiring, then the KMP push client. 6. Push only when the owner asks.
 
-## CRM idea tooling (a second person, own Claude account, shapes CRM ideas; written 2026-10-06, committed locally as `178c9fe9`, NOT pushed)
+## CRM idea tooling (a second person, own Claude account, shapes CRM ideas; written 2026-10-06, commit `178c9fe9`, in `dev`)
 
 Purpose: someone else proposes CRM ideas and proves them on a copy of the old web; the owner of the new system
 (Python + Next.js) reads the result and decides how to port it. That person never turns an idea into `pema-agent/` code.
@@ -606,18 +609,39 @@ What happened: a first version put everything (including `crm-lab/`, CLAUDE.md a
 cherry-picking it onto `feat/shared-inbox` conflicted in HANDOFF.md and the owner wanted the sandbox files out of the
 code branch, so the copy on `feat/shared-inbox` (`82c7f44d`, never pushed) was deleted with `git reset --hard 7fb7e761`
 (still in the reflog) and the config was rewritten into `.claude/`. The owner committed the 7 files himself as
-`178c9fe9` "Rules for CRM idea" on `feat/shared-inbox` (not pushed); only this HANDOFF section was still uncommitted.
+`178c9fe9` "Rules for CRM idea" on `feat/shared-inbox`; it reached `dev` with PR #13.
 
 Open: `crm/ideas` still has the older skill text and a CRM section in its own `CLAUDE.md`/`HANDOFF.md` — sync it with
 the `.claude/` files above when the owner says so (copy the three files, drop the CLAUDE.md section). Add the other
 person as a collaborator and tell them to `git switch crm/ideas`, then run `pnpm install` and
 `npx playwright install chromium` once in `pema-agent/frontend` (the shot tool finds Playwright there), then `/crm-idea`.
 
+## Session log 2026-10-06 (state check, after PR #13)
+
+- `dev` = `origin/dev` = `74bc37c5`. Commits after the package O handoff, all in `dev`: `99a2ec9c` one-command stack
+  (root `docker compose up --build` includes the pema-agent stack, a seed service for the fictional demo clinic,
+  `pema-agent/infra/.env.local-demo` with placeholders and loopback ports, a design-system static server, a root `.dockerignore` that
+  cut the build context from about 300 MB), merged as `23544787` (w2/w12); `1d6c71d8` the `pema-prototype` service is commented out
+  (run it by hand: `cd prototype; python -m http.server 4173`); `4f44e23c` the design services (:4190, :4191, :4192) are commented
+  out to focus on BE, FE and the worker (remove the leading `# ` to enable; or `cd design-viewer; npm run dev`); `7fb7e761` fixes of the
+  demo accounts and password; `178c9fe9` CRM idea rules; `b8f2fdda` handoff.
+- This checkout (`C:\Users\phanx\...\cnbphongkham`): local `feat/ui-parity` (`354a7d94`) is stale and behind `origin/feat/ui-parity`;
+  no local `feat/shared-inbox`. On disk here: 29 worktrees `C:/wt/pema-*` (package W, branches `design/*`) and `C:/wt/pema-web-design`
+  (`feat/web-design`); container `pema-web-design-viewer` still running. The `.claude/worktrees/o-*`, `ui/*`, `w2/*` worktrees and the
+  `pema-pg-u6` container named in the sections above are on the other machine.
+- Nothing was run in this check (no tests, no gate).
+
 ## Next Steps (only when the user asks)
 
-0b. **CRM idea tooling** is committed locally on `feat/shared-inbox` (`178c9fe9`, see the section above): push when the owner asks, then sync `crm/ideas`.
-0a. **Package O (shared inbox) is built but not gated** on `feat/shared-inbox` `1f12ab7d` — run the full gate first (see "Result of package O" → "Next steps"), then fix SEC-64 and the roles test, then decide the owner items.
-0. **Run next:** the merge gate on `feat/ui-parity` `58243e5` (full BE pytest on a throwaway Postgres + Redis, FE `pnpm test`/`lint`/`check:types`/`inventory`/`build`/`smoke`, `pnpm dev:mock` + `pnpm visual`, `alembic heads` = 1): package U round 2 (U9–U12) was merged on 2026-10-06 without it at the owner's request. Then: owner decisions still open (real pricing, guide content, consent wording, token values, room hand-off, "Hỏi Pema" label, photo retention, whether non-doctors may approve orders), and push when the owner asks.
+0. **Run next: the full gate on `dev` `74bc37c5`** (nothing merged since U9 has been gated): BE ruff/format/pyright/import-linter,
+   full pytest on a throwaway `pgvector/pgvector:pg17 -c fsync=off` + `redis:7` (`PEMA_TEST_DATABASE_URL`/`PEMA_TEST_REDIS_URL`),
+   `alembic heads` = 1 (`o3_0010_notifications`); FE `pnpm test`, `lint`, `check:types`, `inventory`, `build`, `smoke`, `dev:mock` +
+   `pnpm visual`; run `tests/ops`, `tests/clinic`, `tests/live` and the O DB tests that were never run (`test_o2_*`, `test_o3_*`,
+   `test_o4_outbound_action`). Expected failures: the 3 clock tests and `test_roles_are_the_six_fixed_ones`.
+0a. Then fix SEC-64 (claim the row before the channel call in `outbound.py`) and the roles test; ask the owner the package O decisions
+   ("Owner decisions needed" in "Result of package O") and the package U ones (real pricing, guide content, consent wording, token
+   values, room hand-off, "Hỏi Pema" label, photo retention, whether non-doctors may approve orders).
+0b. Sync `crm/ideas` with the `.claude/` CRM files when the owner asks (see "CRM idea tooling").
 1. Small leftovers: rate limit on `PATCH /admin/users`; stale sentence in `frontend/README` saying change-password is
    disabled (`POST /auth/password` exists); `TableShell` missing space when `ghimCotCuoi` is on.
 2. Apply the owner's answers to the open decisions above (each is a small, isolated change).
