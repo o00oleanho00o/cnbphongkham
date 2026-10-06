@@ -5415,7 +5415,7 @@ export interface components {
          * @description Stable machine-readable error codes. ``message`` is Vietnamese UI text; ``code`` never changes.
          * @enum {string}
          */
-        ErrorCode: "unauthenticated" | "forbidden" | "not_found" | "validation_failed" | "version_conflict" | "duplicate_request" | "invalid_state" | "appointment_conflict" | "rate_limited" | "not_implemented" | "consent_required" | "marketing_opt_out" | "channel_unavailable" | "channel_kill_switch_on" | "channel_daily_cap_reached" | "channel_outside_send_window" | "channel_recipient_not_reachable" | "channel_webhook_rejected" | "review_required" | "ai_unavailable" | "policy_denied" | "identity_not_verified" | "tool_unavailable" | "invalid_schedule" | "mcp_server_unapproved" | "kb_source_invalid" | "payload_too_large" | "thread_locked" | "internal";
+        ErrorCode: "unauthenticated" | "forbidden" | "not_found" | "validation_failed" | "version_conflict" | "duplicate_request" | "invalid_state" | "appointment_conflict" | "rate_limited" | "not_implemented" | "consent_required" | "marketing_opt_out" | "channel_unavailable" | "channel_kill_switch_on" | "channel_daily_cap_reached" | "channel_outside_send_window" | "channel_recipient_not_reachable" | "channel_webhook_rejected" | "review_required" | "ai_unavailable" | "policy_denied" | "identity_not_verified" | "tool_unavailable" | "invalid_schedule" | "mcp_server_unapproved" | "kb_source_invalid" | "payload_too_large" | "thread_locked" | "no_identity" | "internal";
         /**
          * ErrorResponse
          * @description Body of every non-2xx response.

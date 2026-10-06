@@ -5010,6 +5010,7 @@
           "kb_source_invalid",
           "payload_too_large",
           "thread_locked",
+          "no_identity",
           "internal"
         ],
         "title": "ErrorCode",
