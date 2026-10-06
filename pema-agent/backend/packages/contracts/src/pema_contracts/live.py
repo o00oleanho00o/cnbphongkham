@@ -38,6 +38,10 @@ class LiveEventType(StrEnum):
     """Who holds a conversation changed: claim, takeover, release, shift end or assign (``id`` is the
     conversation). Package O, step O2. Like every event it carries no more than the id: the screens read the
     holder from the conversation and the who-and-why from ``GET /conversations/{id}/assignments``."""
+    NOTIFICATIONS_CHANGED = "notifications.changed"
+    """A notice was queued, delivered or acknowledged (``id`` is the notice). Package O, step O3. Every open
+    screen reloads ``GET /me/notifications``, which answers the caller's own rows only; the event carries
+    no text and no recipient."""
     CARE_CHANGED = "care.changed"
     """The care state of a patient changed: control state, autonomy level, a paused reminder, a note for the
     agent, an alert (``id`` is the patient). Package M, step M5."""

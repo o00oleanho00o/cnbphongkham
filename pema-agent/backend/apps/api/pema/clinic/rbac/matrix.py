@@ -86,6 +86,8 @@ MANAGER_PERMISSIONS: frozenset[Permission] = frozenset(
         P.THREAD_CLAIM,  # package O step O2: claim, take over, release
         P.THREAD_ASSIGN,
         P.THREAD_END_SHIFT,
+        P.NOTIFY_SELF,  # package O step O3: own notices, link, push token
+        P.NOTIFY_MANAGE,
     }
 )
 
@@ -122,6 +124,7 @@ DOCTOR_PERMISSIONS: frozenset[Permission] = frozenset(
         P.CARE_APPROVE,
         P.ROSTER_READ,  # package O: who covers which identity (read only)
         P.THREAD_CLAIM,
+        P.NOTIFY_SELF,
     }
 )
 
@@ -152,6 +155,7 @@ CS_STAFF_PERMISSIONS: frozenset[Permission] = frozenset(
         P.CARE_ACT,
         P.ROSTER_READ,  # package O: who covers which identity (read only)
         P.THREAD_CLAIM,
+        P.NOTIFY_SELF,
     }
 )
 

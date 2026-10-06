@@ -49,12 +49,14 @@ from pema.channels.zalo_personal.incoming_message_router import RespondDecision,
 from pema.channels.zalo_personal.qr_login_manager import build_qr_manager
 from pema.channels.zalo_personal.services import C2Services
 from pema.composition.auth_bridge import resolve_staff_context
+from pema.composition.notify import bind_internal_registry
 from pema.composition.outbound import install_identity_queue
 from pema.composition.runtime import ProcessRole, Runtime
 from pema.config.env import Settings
 from pema.middleware.allowlist_filter import should_respond
 from pema.middleware.message_batcher import MessageBatcher
 from pema.middleware.thread_run_chain import QueueThreadRunner, ThreadRef
+from pema.notify.link import InternalInboxGuard
 from pema.scheduler.proactive_send_counter_store import ProactiveSendCounterStore
 from pema.scheduler.proactive_send_guard import PgProactiveSendGuard
 from pema.shared.logger import create_logger
@@ -108,7 +110,7 @@ def build_bot_stack(
             conversation=rt.conversation,
             batcher=batcher,
             thread_busy=rt.chain,
-            inbox=rt.clinic_actions,
+            inbox=InternalInboxGuard(rt.clinic_actions, bind_internal_registry(rt)),
             agents=rt.agents,
             persist_images=rt.media_images.persist,
             send_in_parts=send_in_parts,
@@ -214,6 +216,9 @@ def build_personal_stack(
     )
     qr = build_qr_manager(bridge, manager, rt.accounts)
 
+    internal_registry = bind_internal_registry(rt)
+    internal_guard = InternalInboxGuard(rt.clinic_actions, internal_registry)
+
     async def record_incoming(clinic_id: UUID, msg: InboundMessage, /, *, luu_anh_ngay: bool) -> int:
         recorded = await ghi_tin_den_vao_history(
             clinic_id=clinic_id,
@@ -221,7 +226,7 @@ def build_personal_stack(
             msg=msg,
             luu_anh_ngay=luu_anh_ngay,
             history=rt.conversation,
-            inbox=rt.clinic_actions,
+            inbox=internal_guard,
             ctx=webhook_action_context(clinic_id),
             persist_images=rt.media_images.persist,
         )
@@ -231,6 +236,9 @@ def build_personal_stack(
         await gan_anh_vao_history(clinic_id, rt.conversation, [msg])
 
     def decide(account: AccountConfig, msg: InboundMessage, bot_enabled: bool, /) -> RespondDecision:
+        if internal_registry.is_internal(account.id):
+            # the clinic's notifier: never answers, never a conversation (the guard above handles the message)
+            return RespondDecision(respond=False, record=True, reason="internal_account")
         decision = should_respond(account, msg, bot_enabled)
         return RespondDecision(respond=decision.respond, record=decision.record, reason=decision.reason)
 

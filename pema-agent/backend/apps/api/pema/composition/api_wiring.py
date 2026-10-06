@@ -40,6 +40,7 @@ from pema.composition.auth_bridge import (
     resolve_staff_context,
 )
 from pema.composition.intake import BotStack, PersonalStack
+from pema.composition.notify import NotifyStack, build_notify_stack
 from pema.composition.outbound import RegistryOutboundDelivery, install_identity_queue
 from pema.composition.runtime import Runtime
 from pema.config.runtime_tuning_settings import get_tuning_int
@@ -177,6 +178,9 @@ class ApiLifecycle:
         self._crm_task: asyncio.Task[None] | None = None
         self._crm_wake = asyncio.Event()
         self._retention_task: asyncio.Task[None] | None = None
+        self.notify: NotifyStack | None = None
+        """The notification chain (package O3); ``stack.staff_notify`` and ``stack.sla_scheduler`` are the
+        production adapters package M7 hands to the care wiring."""
 
     async def start(self) -> None:
         rt = self._rt
@@ -197,6 +201,9 @@ class ApiLifecycle:
         if interval > 0:
             appointment_events.install_listener(lambda _change: self._crm_wake.set())
             self._crm_task = asyncio.get_running_loop().create_task(self._crm_loop(interval))
+        self.notify = await build_notify_stack(rt)
+        self._app.state.notify_stack = self.notify
+        self.notify.start()
         self._retention_task = start_retention_loop(
             RetentionRunner(
                 rt.db,
@@ -228,6 +235,9 @@ class ApiLifecycle:
             crm.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await crm
+        notify, self.notify = self.notify, None
+        if notify is not None:
+            await notify.stop()
         retention, self._retention_task = self._retention_task, None
         if retention is not None:
             retention.cancel()

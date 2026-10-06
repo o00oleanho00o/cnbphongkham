@@ -6,7 +6,9 @@ Who is told what happens in the outbox, not on the wire: an assignment change wr
 ``Protocol``
 here, the real senders (in-app, personal Zalo through the internal notifier, the team group, push) live
 outside
-``pema.clinic.actions`` and are wired in ``pema.composition``. Nothing in this step delivers anything.
+``pema.clinic.actions`` and are wired in ``pema.composition``. Nothing in this step delivers anything; step O3
+adds the consumer (``pema.notify``), its bookkeeping (``notification_chain.py``) and
+``enqueue_handoff_notice`` for package M's ``StaffNotify``.
 
 Recipients of an assignment change (``recipients_of``):
 
@@ -30,11 +32,13 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from pema.clinic import audit
 from pema.clinic.models import NotificationOutbox
 from pema.policy.pii import KnownName, mask_pii
 from pema_contracts.actions import ActionContext
 from pema_contracts.ops import (
     AssignmentKind,
+    HandoffNoticeEvent,
     NotificationPayload,
     NotificationRecipientKind,
     NotificationState,
@@ -43,6 +47,7 @@ from pema_contracts.ops import (
 
 KIND_PREFIX = "assignment."
 CODE_HEX_CHARS = 4
+_HANDOFF_ONLY_FIELDS = ("request_id", "position", "sla_due_at", "oncall_id")
 
 _SUMMARIES: Mapping[AssignmentKind, str] = {
     AssignmentKind.CLAIM: "Đã nhận hội thoại {code}",
@@ -81,6 +86,9 @@ def serialize_payload(payload: NotificationPayload, *, forbidden_names: Iterable
     with ``forbidden_names`` (the patient and the customer of the thread) as known names; anything the mask
     would change refuses the payload. The error never repeats the offending text."""
     data = payload.model_dump(mode="json")
+    for key in _HANDOFF_ONLY_FIELDS:  # an assignment payload keeps the shape it had in step O2
+        if data.get(key) is None:
+            data.pop(key, None)
     known = [KnownName(name) for name in forbidden_names if name and name.strip()]
     for key in ("summary", "identity_label"):
         value = data.get(key)
@@ -160,6 +168,10 @@ class OutboxNotification:
     recipient_user_id: UUID | None
     conversation_id: UUID | None
     payload: Mapping[str, Any]
+    attempts: int = 0
+    chain_step: str | None = None
+    """``None``: the first step of the recipient kind; ``bell``: the in-app step is done, the bell waits."""
+    acked: bool = False
 
 
 @dataclass(frozen=True)
@@ -191,3 +203,91 @@ class FakeNotificationDelivery:
         if self.raises is not None:
             raise self.raises
         return self.result
+
+
+# --------------------------------------------------------------------- handoff notices (step O3)
+HANDOFF_SUMMARY = "Có yêu cầu chuyển người xử lý {code}"
+HANDOFF_ON_CALL_SUMMARY = "Trực 24/7: có yêu cầu chuyển người xử lý {code}"
+_URGENT_VALUES = frozenset({"urgent", "critical"})
+
+
+def handoff_short_code(request_id: UUID) -> str:
+    return "#" + request_id.hex[:CODE_HEX_CHARS].upper()
+
+
+def handoff_deep_link(request_id: UUID) -> str:
+    """Opens the handoff request in the care screen; it needs a login."""
+    return f"/care/handoffs?request={request_id}"
+
+
+def handoff_payload(
+    *,
+    request_id: UUID,
+    urgency: str,
+    depth: str,
+    position: int,
+    sla_due_at: Any,
+    on_call: bool,
+    oncall_id: UUID | None = None,
+    to_user_id: UUID | None = None,
+) -> dict[str, Any]:
+    """The JSON of a handoff notice. The one-line summary is composed here from the short code and the depth
+    code (``D1`` .. ``D5``); the care summary of package M is NOT copied (the deep link opens it behind the
+    login), so nothing of the patient can reach a chat. The payload check still runs; if it ever refuses the
+    depth text the sentence without it is used: a handoff notice is never dropped over its wording."""
+    code = handoff_short_code(request_id)
+    generic = (HANDOFF_ON_CALL_SUMMARY if on_call else HANDOFF_SUMMARY).format(code=code)
+
+    def build(text: str) -> NotificationPayload:
+        return NotificationPayload(
+            event=HandoffNoticeEvent.HANDOFF_ON_CALL if on_call else HandoffNoticeEvent.HANDOFF_REQUEST,
+            short_code=code,
+            urgency=NotificationUrgency.URGENT if urgency in _URGENT_VALUES else NotificationUrgency.NORMAL,
+            summary=text,
+            deep_link=handoff_deep_link(request_id),
+            to_user_id=to_user_id,
+            request_id=request_id,
+            position=position,
+            sla_due_at=sla_due_at,
+            oncall_id=oncall_id,
+        )
+
+    try:
+        return serialize_payload(build(f"{generic} · {depth[:8]}"))
+    except UnsafeNotificationPayloadError:
+        return serialize_payload(build(generic))
+
+
+async def enqueue_handoff_notice(
+    session: AsyncSession,
+    ctx: ActionContext,
+    *,
+    payload: Mapping[str, Any],
+    recipient_kind: NotificationRecipientKind,
+    recipient_user_id: UUID | None,
+) -> NotificationOutbox:
+    """One outbox row for a notice of package M's routing, with its audit row (ids and codes only)."""
+    row = NotificationOutbox(
+        clinic_id=ctx.clinic_id,
+        kind="handoff." + str(payload["event"]),
+        recipient_kind=recipient_kind.value,
+        recipient_user_id=recipient_user_id,
+        conversation_id=None,
+        payload=dict(payload),
+        state=NotificationState.PENDING.value,
+    )
+    session.add(row)
+    await session.flush()
+    await audit.record(
+        session,
+        ctx,
+        "notification.enqueue",
+        "notification",
+        row.id,
+        {
+            "kind": row.kind,
+            "recipient_kind": recipient_kind.value,
+            "recipient_user_id": str(recipient_user_id) if recipient_user_id else None,
+        },
+    )
+    return row
