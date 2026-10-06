@@ -498,6 +498,16 @@ How to run (when the user says so): branch `feat/ui-parity`; one `pema-builder` 
 Gate: `web-inventory.cjs --check` 0; `web-canvas.cjs check --complete --viewport=all --frames` 0 for all ids;
 `web-coverage.cjs` counts equal; viewer 0 page errors; no attribution in commits. Merge into `feat/ui-parity` only.
 
+## Branch `crm/ideas` — CRM idea sandbox (created 2026-10-06 from `feat/ui-parity` `0d7bfda7`)
+
+A second person (own Claude account) shapes CRM ideas here; the owner of the new system decides how to port them.
+`crm-lab/` = editable copy of the old web (`clinic-web`, `patient-mobile`, `shared`, `finance`, `order-review`,
+`finance_server.py`; web on 4177, finance on 4176 with `.local/crm-lab-finance.sqlite3`; `tools/shot.cjs` for
+screenshots). `crm-ideas/<slug>/` = `IDEA.md`, `CHANGES.md`, `shots/`, and `PORT-NOTES.md` for the porting decision.
+Skill `/crm-idea` (`.claude/skills/crm-idea/`), rules at the top of `CLAUDE.md`. `prototype/` stays frozen.
+To port an idea: read the folder (`git show crm/ideas:crm-ideas/<slug>/IDEA.md` or merge the folder), write
+`PORT-NOTES.md`, then a recipe in the target package as for U9. Do not merge `crm-lab/` into code branches.
+
 ## Next Steps (only when the user asks)
 
 0. **Run next:** the merge gate on `feat/ui-parity` `58243e5` (full BE pytest on a throwaway Postgres + Redis, FE `pnpm test`/`lint`/`check:types`/`inventory`/`build`/`smoke`, `pnpm dev:mock` + `pnpm visual`, `alembic heads` = 1): package U round 2 (U9–U12) was merged on 2026-10-06 without it at the owner's request. Then: owner decisions still open (real pricing, guide content, consent wording, token values, room hand-off, "Hỏi Pema" label, photo retention, whether non-doctors may approve orders), and push when the owner asks.

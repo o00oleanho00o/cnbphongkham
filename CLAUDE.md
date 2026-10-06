@@ -1,5 +1,12 @@
 # CLAUDE.md
 
+## CRM ideas (branch `crm/ideas`)
+
+Ý tưởng CRM được thử trong `crm-lab/` (bản chép sửa được của web cũ, chạy cổng 4177, tài chính 4176) và ghi lại trong `crm-ideas/<tên>/` (`IDEA.md`, `CHANGES.md`, ảnh trước/sau). Người phụ trách hệ mới (Python + Next.js, `pema-agent/`) đọc ở đó rồi tự quyết cách đưa sang, ghi vào `PORT-NOTES.md`. Quy trình từng bước: skill [crm-idea](.claude/skills/crm-idea/SKILL.md) (`/crm-idea`).
+- Không sửa `prototype/` (bản gốc đóng băng; thiết kế web và bảng đối chiếu đo theo nó). Luật ghi `web-changes.md` bên dưới chỉ áp cho `prototype/`, không áp cho `crm-lab/`.
+- `pema-agent/` không bị cấm nhưng chỉ sửa khi người dùng yêu cầu rõ; mọi file sửa ở đó phải ghi trong `CHANGES.md` của ý tưởng.
+- Người làm ý tưởng CRM không cần đọc `HANDOFF.md` (đó là nhật ký xây hệ AI).
+
 ## Design canvas
 
 To check which Pema web screens are missing from the claude.ai/design canvas (`Pema App redesign canvas/Pema App.dc.html`) and add them, follow the project skill [pema-web-to-canvas](.claude/skills/pema-web-to-canvas/SKILL.md) (`/pema-web-to-canvas`). It covers design only, not app code.

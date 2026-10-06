@@ -1,0 +1,68 @@
+/* Work surfaces: spend the viewport on records and time, not repeated headings. */
+.clinic-shell .content{max-width:none;margin:0;padding:24px 28px 32px}
+.clinic-shell .search-page{max-width:none;width:100%}
+body[data-page=patients] .search-page .table{min-width:950px;width:100%}
+body[data-page=patients] .table td{padding:11px 12px}
+body[data-page=patients] .table .progress-line{max-width:160px}
+body[data-page=patients] .search-box{padding:10px 14px;margin-bottom:10px;max-width:720px}
+body[data-page=patients] .filter-row{margin-bottom:14px}
+body[data-page=patients] .filter-row button{min-height:34px}
+body[data-page=patients] .search-page>.panel{padding:0;border-radius:12px}
+body[data-page=patients] .table th{padding:13px 12px}
+body[data-page=patients] .table thead{position:sticky;top:0;z-index:2}
+body[data-page=patients] .page-heading,body[data-page=schedule] .page-heading{margin-bottom:14px;gap:12px}
+body[data-page=patients] .page-title,body[data-page=schedule] .page-title{font-size:25px;margin:0 0 4px}
+body[data-page=patients] .page-heading .eyebrow,body[data-page=schedule] .page-heading .eyebrow{display:none}
+body[data-page=patients] .page-heading .subtitle,body[data-page=schedule] .page-heading .subtitle{margin:0;font-size:12px}
+body[data-page=schedule] .ops-stats{display:flex;gap:0;background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:12px;flex-wrap:wrap}
+body[data-page=schedule] .ops-stat{flex:1;display:flex;align-items:center;gap:10px;padding:10px 16px;background:none;border:0;border-right:1px solid var(--line);border-radius:0}
+body[data-page=schedule] .ops-stat:last-child{border-right:0}
+body[data-page=schedule] .ops-stat small{font-size:11px}
+body[data-page=schedule] .ops-stat strong{font-size:18px;margin:0}
+body[data-page=schedule] .ops-stat>span{display:none}
+body[data-page=schedule] .ops-toolbar{gap:10px;margin-bottom:12px}
+body[data-page=schedule] .ops-toolbar .field label{margin-bottom:4px}
+body[data-page=schedule] .calendar-panel{padding:12px 0 0}
+body[data-page=schedule] .calendar-panel>.panel-head{padding:0 16px;margin-bottom:10px}
+body[data-page=schedule] .calendar-panel>.panel-head .panel-title small{display:none}
+body[data-page=schedule] .room-heading,body[data-page=schedule] .time-heading{padding:10px}
+body[data-page=schedule] .calendar-legend{padding:8px 12px}
+body[data-page=schedule] .ops-layout{gap:14px}
+body[data-page=schedule] .wait-card{padding:12px 0;display:grid;grid-template-columns:1fr auto;gap:5px 8px;align-items:center}
+body[data-page=schedule] .wait-card .patient-mini{grid-column:1/-1;gap:8px}
+body[data-page=schedule] .wait-card .avatar{width:28px;height:28px;font-size:10px}
+body[data-page=schedule] .wait-card p{grid-column:1/-1;margin:0}
+body[data-page=schedule] .wait-card>small{margin:0}
+body[data-page=schedule] .wait-card .btn{margin:0;padding:5px 8px;min-height:30px}
+body[data-page=schedule] .ops-side>.notice{display:none}
+@media(min-width:1101px){
+ body[data-page=schedule],body[data-page=patients]{height:100dvh;overflow:hidden}
+ body[data-page=schedule] .main,body[data-page=patients] .main{height:100dvh;display:flex;flex-direction:column;min-width:0}
+ body[data-page=schedule] .topbar,body[data-page=patients] .topbar{height:60px;min-height:60px;flex:none;padding:0 28px}
+ body[data-page=schedule] .content,body[data-page=patients] .content{flex:1;min-height:0;display:flex;flex-direction:column;padding:18px 24px 18px}
+ body[data-page=schedule] .content>.page-heading,body[data-page=patients] .content>.page-heading{flex:none}
+ body[data-page=schedule] .ops-stats,body[data-page=schedule] .ops-toolbar{flex:none}
+ body[data-page=schedule] .ops-layout{flex:1;min-height:0;grid-template-columns:minmax(0,1fr) 250px;align-items:stretch}
+ body[data-page=schedule] .calendar-panel{min-height:0;display:flex;flex-direction:column}
+ body[data-page=schedule] .calendar-panel>.panel-head,body[data-page=schedule] .calendar-legend{flex:none}
+ body[data-page=schedule] .calendar-scroll{flex:1;min-height:0;max-height:none}
+ body[data-page=schedule] .ops-side{display:flex;min-height:0}
+ body[data-page=schedule] .ops-side>.panel{display:block;max-height:none;min-height:0;flex:1;overflow:auto;padding:12px 14px}
+ body[data-page=schedule] .ops-side .panel-title{position:sticky;top:-12px;z-index:2;background:white;padding:8px 0 12px}
+ body[data-page=patients] .search-page{flex:1;min-height:0;display:flex;flex-direction:column}
+ body[data-page=patients] .search-box,body[data-page=patients] .filter-row{flex:none}
+ body[data-page=patients] .search-page>.panel{flex:1;min-height:0;overflow:auto}
+}
+@media(max-width:1100px){body[data-page=schedule] .ops-stat{flex:1 1 40%}body[data-page=schedule] .ops-side>.panel{max-height:500px}}
+@media(max-width:700px){.clinic-shell .content{padding:18px 14px 32px}body[data-page=schedule] .ops-stat{padding:8px 10px}body[data-page=schedule] .page-heading .actions{margin-top:10px}body[data-page=schedule] .ops-stats{margin-top:8px}body[data-page=patients] .search-box{max-width:100%}}
+/* Default desktop acceptance viewport: 1920 × 1020 CSS pixels at 100% zoom. */
+.clinic-shell .photo-studio{max-width:none;width:100%}
+@media(min-width:1600px){
+ .clinic-shell .topbar{height:64px;padding:0 28px}
+ .clinic-shell .page-heading{margin-bottom:20px}
+ .clinic-shell .resource-grid,.clinic-shell .service-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .clinic-shell .resource-card,.clinic-shell .service-card{padding:22px}
+ .clinic-shell .shift-label{flex-wrap:wrap;gap:6px}
+ .clinic-shell .patient-layout{grid-template-columns:minmax(0,1.8fr) minmax(360px,1fr)}
+ .clinic-shell .studio-canvas .clinical-photo svg{max-height:470px}
+}
