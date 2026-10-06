@@ -23,7 +23,11 @@ Forced deviations:
 ``SendResult``, not an
   exception. ``reply_target_from_channel`` turns that into ``ChannelSendRejectedError``, which has no numeric
   ``code`` and therefore is never retried (``la_loi_may_chu_tu_choi`` stays exactly the original test);
-* ``getTuning`` reads the tuning provider of package A.
+* ``getTuning`` reads the tuning provider of package A;
+* package O step O4: every part of a reply goes through the identity send queue
+  (``pema.channels.identity_send_queue``: kill switch and one gap per clinic identity) when a queue is passed
+  to ``reply_target_from_channel`` or installed for the process; ``ReplyResult.external_message_ids`` keeps
+  what the adapter answered for each part.
 """
 
 from __future__ import annotations
@@ -32,6 +36,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from time import monotonic
 
+from pema.channels.identity_send_queue import IdentitySendQueue, installed_identity_send_queue
 from pema.channels.reply_quote import trich_dan_trong_ngan_sach
 from pema.channels.split_styled_message import (
     NganSachByteOptions,
@@ -42,7 +47,7 @@ from pema.channels.split_styled_message import (
 from pema.config.runtime_tuning_settings import get_tuning_int
 from pema.middleware.rate_limiter import enqueue_send as enqueue_send_rate_limited
 from pema.shared.logger import create_logger
-from pema_contracts.channel import ChannelPort, QuoteRef, SendStatus, TextStyle, ThreadKind
+from pema_contracts.channel import ChannelPort, QuoteRef, SendResult, SendStatus, TextStyle, ThreadKind
 from pema_contracts.errors import ErrorCode
 
 log = create_logger("send-reply")
@@ -128,6 +133,8 @@ class ReplyResult:
     """Số tin đã gửi."""
     error: BaseException | None = field(default=None)
     """Lỗi ở tin đầu tiên gửi hỏng (nếu có) - caller quyết định báo cho người dùng."""
+    external_message_ids: list[str] = field(default_factory=list[str])
+    """What the adapter answered for each part that left (O4): the id of the message on the channel."""
 
 
 type EnqueueSend = Callable[[str, Callable[[], Awaitable[object]]], Awaitable[object]]
@@ -161,6 +168,7 @@ def reply_target_from_channel(
     *,
     proactive: bool = False,
     quote: QuoteRef | None = None,
+    identity_queue: IdentitySendQueue | None = None,
 ) -> ReplyTarget:
     """``duongGuiZcaJs`` + ``replyTargetTuKenh`` in one place: the ONE function that knows which fields of the
     channel travel down to the send path. They are all optional, so forgetting one is silent: missing
@@ -175,16 +183,21 @@ def reply_target_from_channel(
     given, so an empty value would change the API call for nothing).
     """
     capabilities = channel.capabilities()
+    queue = identity_queue if identity_queue is not None else installed_identity_send_queue()
 
     async def gui_mot_doan(doan: DoanCanGui) -> object:
-        result = await channel.send_text(
-            thread_id,
-            doan.text,
-            thread_kind=thread_type,
-            styles=doan.styles if doan.styles else (),
-            quote=doan.quote,
-            proactive=proactive,
-        )
+        async def gui() -> SendResult:
+            return await channel.send_text(
+                thread_id,
+                doan.text,
+                thread_kind=thread_type,
+                styles=doan.styles if doan.styles else (),
+                quote=doan.quote,
+                proactive=proactive,
+            )
+
+        # O4: one queue, one gap and the kill switch per clinic identity, whoever sends through it
+        result = await queue.send(channel.account_id, gui) if queue is not None else await gui()
         if result.status is SendStatus.REJECTED:
             raise ChannelSendRejectedError(result.error_code, result.detail)
         return result
@@ -358,14 +371,17 @@ async def send_reply_in_parts(
         )
 
     delivered: list[str] = []
+    external_ids: list[str] = []
     for part in parts:
         try:
             # Chỉ đoạn ĐẦU trích dẫn: các đoạn sau là phần nối tiếp của cùng một câu trả lời, trích lại ở mỗi
             # đoạn thì khối trích dẫn lặp đầy màn hình
-            await _send_one_co_duong_lui(
+            sent = await _send_one_co_duong_lui(
                 queue, target, part.text, part.styles, trich_dan.quote if not delivered else None
             )
             delivered.append(part.text)
+            if isinstance(sent, SendResult) and sent.external_message_id:
+                external_ids.append(sent.external_message_id)
         except Exception as err:
             log.error(
                 "Gửi tin thất bại",
@@ -374,9 +390,16 @@ async def send_reply_in_parts(
                 total=len(parts),
                 err=err,
             )
-            return ReplyResult(delivered_text="\n".join(delivered), sent_parts=len(delivered), error=err)
+            return ReplyResult(
+                delivered_text="\n".join(delivered),
+                sent_parts=len(delivered),
+                error=err,
+                external_message_ids=external_ids,
+            )
 
-    return ReplyResult(delivered_text="\n".join(delivered), sent_parts=len(delivered))
+    return ReplyResult(
+        delivered_text="\n".join(delivered), sent_parts=len(delivered), external_message_ids=external_ids
+    )
 
 
 # Lần cuối đã báo lỗi cho mỗi (thread + loại lỗi).
