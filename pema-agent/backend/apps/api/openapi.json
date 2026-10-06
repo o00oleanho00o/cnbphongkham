@@ -5058,6 +5058,7 @@
           "kb_source_invalid",
           "payload_too_large",
           "thread_locked",
+          "no_identity",
           "internal"
         ],
         "title": "ErrorCode",
@@ -8293,6 +8294,119 @@
           "version"
         ],
         "title": "MessageTemplateUpdate",
+        "type": "object"
+      },
+      "NoticeOut": {
+        "additionalProperties": false,
+        "description": "A notice as its recipient reads it in the app (``GET /me/notifications``).",
+        "properties": {
+          "acked_at": {
+            "anyOf": [
+              {
+                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+                "examples": [
+                  "2026-09-20T09:00:00+07:00"
+                ],
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acked At"
+          },
+          "created_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/NotificationPayload"
+          },
+          "state": {
+            "$ref": "#/components/schemas/NotificationState"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "state",
+          "created_at",
+          "acked_at",
+          "payload"
+        ],
+        "title": "NoticeOut",
+        "type": "object"
+      },
+      "NotificationOut": {
+        "additionalProperties": false,
+        "properties": {
+          "amount_vnd": {
+            "title": "Amount Vnd",
+            "type": "integer"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "invoice_id": {
+            "format": "uuid",
+            "title": "Invoice Id",
+            "type": "string"
+          },
+          "payment_id": {
+            "format": "uuid",
+            "title": "Payment Id",
+            "type": "string"
+          },
+          "read": {
+            "title": "Read",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "payment_id",
+          "invoice_id",
+          "title",
+          "body",
+          "amount_vnd",
+          "created_at",
+          "read"
+        ],
+        "title": "NotificationOut",
         "type": "object"
       },
       "NotificationPayload": {
@@ -16737,119 +16851,6 @@
         ],
         "title": "Weekday",
         "type": "string"
-      },
-      "pema_contracts__finance__NotificationOut": {
-        "additionalProperties": false,
-        "properties": {
-          "amount_vnd": {
-            "title": "Amount Vnd",
-            "type": "integer"
-          },
-          "body": {
-            "title": "Body",
-            "type": "string"
-          },
-          "created_at": {
-            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
-            "examples": [
-              "2026-09-20T09:00:00+07:00"
-            ],
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "invoice_id": {
-            "format": "uuid",
-            "title": "Invoice Id",
-            "type": "string"
-          },
-          "payment_id": {
-            "format": "uuid",
-            "title": "Payment Id",
-            "type": "string"
-          },
-          "read": {
-            "title": "Read",
-            "type": "boolean"
-          },
-          "title": {
-            "title": "Title",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "payment_id",
-          "invoice_id",
-          "title",
-          "body",
-          "amount_vnd",
-          "created_at",
-          "read"
-        ],
-        "title": "NotificationOut",
-        "type": "object"
-      },
-      "pema_contracts__ops__NotificationOut": {
-        "additionalProperties": false,
-        "description": "A notice as its recipient reads it in the app (``GET /me/notifications``).",
-        "properties": {
-          "acked_at": {
-            "anyOf": [
-              {
-                "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
-                "examples": [
-                  "2026-09-20T09:00:00+07:00"
-                ],
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Acked At"
-          },
-          "created_at": {
-            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
-            "examples": [
-              "2026-09-20T09:00:00+07:00"
-            ],
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "kind": {
-            "title": "Kind",
-            "type": "string"
-          },
-          "payload": {
-            "$ref": "#/components/schemas/NotificationPayload"
-          },
-          "state": {
-            "$ref": "#/components/schemas/NotificationState"
-          }
-        },
-        "required": [
-          "id",
-          "kind",
-          "state",
-          "created_at",
-          "acked_at",
-          "payload"
-        ],
-        "title": "NotificationOut",
-        "type": "object"
       }
     },
     "securitySchemes": {
@@ -35682,7 +35683,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/pema_contracts__finance__NotificationOut"
+                    "$ref": "#/components/schemas/NotificationOut"
                   },
                   "title": "Response Finance List Notifications",
                   "type": "array"
@@ -35793,7 +35794,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/pema_contracts__finance__NotificationOut"
+                  "$ref": "#/components/schemas/NotificationOut"
                 }
               }
             },
@@ -37581,7 +37582,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/pema_contracts__ops__NotificationOut"
+                    "$ref": "#/components/schemas/NoticeOut"
                   },
                   "title": "Response Notifications List My Notifications",
                   "type": "array"
@@ -39062,7 +39063,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/pema_contracts__ops__NotificationOut"
+                  "$ref": "#/components/schemas/NoticeOut"
                 }
               }
             },

@@ -399,7 +399,7 @@ class NotifySettingsUpdate(ApiModel):
     public_base_url: str | None = Field(default=None, max_length=300, pattern=r"^https?://\S+$")
 
 
-class NotificationOut(ApiModel):
+class NoticeOut(ApiModel):
     """A notice as its recipient reads it in the app (``GET /me/notifications``)."""
 
     id: UUID

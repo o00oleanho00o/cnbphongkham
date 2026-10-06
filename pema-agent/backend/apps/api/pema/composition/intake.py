@@ -50,6 +50,7 @@ from pema.channels.zalo_personal.qr_login_manager import build_qr_manager
 from pema.channels.zalo_personal.services import C2Services
 from pema.composition.auth_bridge import resolve_staff_context
 from pema.composition.notify import bind_internal_registry
+from pema.composition.outbound import install_identity_queue
 from pema.composition.runtime import ProcessRole, Runtime
 from pema.config.env import Settings
 from pema.middleware.allowlist_filter import should_respond
@@ -101,6 +102,7 @@ def build_bot_stack(
     """``client_factory`` replaces the real Bot API client (the integration tests give a fake one)."""
     bot_settings = get_zalo_bot_settings()
     batcher = batcher or make_batcher(rt)
+    install_identity_queue(rt.db, rt.redis_client)  # O4: one gap and the kill switch per clinic identity
     send_in_parts: ReplySender = send_reply_in_parts
     router = BotMessageRouter(
         BotRouterDeps(
@@ -187,6 +189,7 @@ def build_personal_stack(
 ) -> PersonalStack:
     config = settings or rt.settings
     batcher = batcher or make_batcher(rt)
+    install_identity_queue(rt.db, rt.redis_client)  # O4: one gap and the kill switch per clinic identity
     secret = config.zalo_bridge_secret.get_secret_value() if config.zalo_bridge_secret else ""
     bridge = HttpBridgeClient(config.zalo_bridge_url, secret)
     vault = CredentialVault(rt.accounts)

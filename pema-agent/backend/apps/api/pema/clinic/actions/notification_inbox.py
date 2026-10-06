@@ -44,7 +44,7 @@ from pema_contracts.actions import ActionContext
 from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.live import LiveEventType
 from pema_contracts.ops import (
-    NotificationOut,
+    NoticeOut,
     NotificationPayload,
     NotificationState,
     NotifyLinkOut,
@@ -77,8 +77,8 @@ def display_code(code: str) -> str:
     return f"{code[: CODE_LENGTH // 2]}-{code[CODE_LENGTH // 2 :]}"
 
 
-def _notice_out(row: NotificationOutbox) -> NotificationOut:
-    return NotificationOut(
+def _notice_out(row: NotificationOutbox) -> NoticeOut:
+    return NoticeOut(
         id=row.id,
         kind=row.kind,
         state=NotificationState(row.state),
@@ -91,7 +91,7 @@ def _notice_out(row: NotificationOutbox) -> NotificationOut:
 # ------------------------------------------------------------------------------------ own notices
 async def list_own(
     db: ClinicDatabase, ctx: ActionContext, *, unacked_only: bool = False, limit: int = LIST_LIMIT
-) -> list[NotificationOut]:
+) -> list[NoticeOut]:
     """The caller's notices, newest first."""
     require(ctx, Permission.NOTIFY_SELF)
     me = acting_user_id(ctx)
@@ -116,7 +116,7 @@ def _mark_acked(row: NotificationOutbox, me: UUID) -> None:
         row.state = NotificationState.SENT.value
 
 
-async def ack(db: ClinicDatabase, ctx: ActionContext, notification_id: UUID) -> NotificationOut:
+async def ack(db: ClinicDatabase, ctx: ActionContext, notification_id: UUID) -> NoticeOut:
     """Acknowledge one notice of the caller. Repeating it changes nothing."""
     require(ctx, Permission.NOTIFY_SELF)
     me = acting_user_id(ctx)

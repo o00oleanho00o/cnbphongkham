@@ -41,7 +41,7 @@ from pema.composition.auth_bridge import (
 )
 from pema.composition.intake import BotStack, PersonalStack
 from pema.composition.notify import NotifyStack, build_notify_stack
-from pema.composition.outbound import RegistryOutboundDelivery
+from pema.composition.outbound import RegistryOutboundDelivery, install_identity_queue
 from pema.composition.runtime import Runtime
 from pema.config.runtime_tuning_settings import get_tuning_int
 from pema.conversation.agent_trace_store import PgTraceReader
@@ -88,7 +88,10 @@ def wire_api(app: FastAPI, rt: Runtime, bot: BotStack, personal: PersonalStack) 
     state.runtime = rt
     state.clinic_db = rt.db
     state.live = rt.live
-    state.outbound_delivery = RegistryOutboundDelivery(rt.accounts, rt.channels, rt.conversation)
+    identity_queue = install_identity_queue(rt.db, rt.redis_client)
+    state.outbound_delivery = RegistryOutboundDelivery(
+        rt.accounts, rt.channels, rt.conversation, identity_queue
+    )
     state.admin_stores = AdminStores(
         agents=rt.agents,
         accounts=rt.accounts,

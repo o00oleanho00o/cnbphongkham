@@ -97,6 +97,15 @@ async def effective_limits(db: ClinicDatabase, clinic_id: UUID, account_id: str)
     return None if row is None else _limits(row)[1]
 
 
+async def identity_for_send(db: ClinicDatabase, clinic_id: UUID, account_id: str) -> IdentityOut | None:
+    """One identity as the send path of step O4 needs it: purpose, enabled, kill switch of its channel and
+    the effective limits, read fresh on every call (the kill switch must stop the NEXT message). ``None``
+    when the account does not exist. No permission: an internal lookup that returns no credential."""
+    async with db.session() as session:
+        row = (await session.execute(_GET_SQL, {"clinic_id": clinic_id, "account_id": account_id})).first()
+    return None if row is None else _identity_out(row)
+
+
 async def list_identities(db: ClinicDatabase, ctx: ActionContext) -> list[IdentityOut]:
     """Every channel account with its purpose, state and limits. Customer-facing first, then internal."""
     require_any(ctx, READ_PERMISSIONS)

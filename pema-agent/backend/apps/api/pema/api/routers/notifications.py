@@ -18,7 +18,7 @@ from pema.clinic.actions import notification_inbox as inbox
 from pema_contracts.ops import (
     AckedOut,
     AckTargetIn,
-    NotificationOut,
+    NoticeOut,
     NotifyLinkOut,
     NotifyLinkStatus,
     NotifyPreferenceIn,
@@ -34,26 +34,26 @@ router = APIRouter(tags=["notifications"], responses=ERROR_RESPONSES, dependenci
 
 @router.get(
     "/me/notifications",
-    response_model=list[NotificationOut],
+    response_model=list[NoticeOut],
     summary="My notices, newest first",
     description="The in-app channel of the chain. Only the caller's own rows; the payload is PII-free.",
 )
 async def list_my_notifications(
     db: Database, ctx: Ctx, unacked_only: bool = False, limit: int = Query(default=50, ge=1, le=200)
-) -> list[NotificationOut]:
+) -> list[NoticeOut]:
     return await inbox.list_own(db, ctx, unacked_only=unacked_only, limit=limit)
 
 
 @router.post(
     "/notifications/{notification_id}/ack",
-    response_model=NotificationOut,
+    response_model=NoticeOut,
     summary="Acknowledge one notice",
     description=(
         "Stops the chain of that notice (no bell). Repeating it changes nothing. Somebody else's notice is a "
         "404. It does not accept a handoff: the SLA of package M keeps running."
     ),
 )
-async def ack_notification(notification_id: UUID, db: Database, ctx: Ctx) -> NotificationOut:
+async def ack_notification(notification_id: UUID, db: Database, ctx: Ctx) -> NoticeOut:
     return await inbox.ack(db, ctx, notification_id)
 
 
