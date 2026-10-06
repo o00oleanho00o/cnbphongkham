@@ -444,14 +444,18 @@ class ClinicAgentFacingActions:
         )
 
     async def record_inbound_message(self, ctx: ActionContext, message: InboundMessage) -> InboxRef:
-        """Inbox of record. Idempotent on ``update_id``: a duplicate delivery writes nothing."""
+        """Inbox of record. Idempotent on ``update_id``: a duplicate delivery writes nothing.
+
+        The identity that received the message (``message.account_id``) is stored on the conversation when it
+        is still empty (package O1). An account the installation does not know is stored as ``NULL``; an
+        INTERNAL account is refused by the database (a conversation never points to the clinic's notifier)."""
         actor = _agent_actor(ctx)
         async with self._db.session() as session:
             row = (
                 await session.execute(
                     sql(
                         "SELECT * FROM clinic_agent.record_inbound_message(:channel, :update_id, :thread, "
-                        ":uid, :name, :text, :sent_at, :actor)"
+                        ":uid, :name, :text, :sent_at, :actor, :account)"
                     ),
                     {
                         "channel": message.channel.value,
@@ -462,6 +466,7 @@ class ClinicAgentFacingActions:
                         "text": message.text or None,
                         "sent_at": message.sent_at.astimezone(UTC),
                         "actor": actor,
+                        "account": message.account_id or None,
                     },
                 )
             ).one()
