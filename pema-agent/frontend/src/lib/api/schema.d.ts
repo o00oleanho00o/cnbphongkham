@@ -1855,6 +1855,63 @@ export interface paths {
         patch: operations["conversations_update_conversation"];
         trace?: never;
     };
+    "/api/v1/conversations/{conversation_id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Put a colleague on the conversation (owner, manager)
+         * @description `user_id` null takes it off the holder and puts it back in the queue.
+         */
+        post: operations["assignment_assign_conversation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/{conversation_id}/assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who held the conversation, newest first */
+        get: operations["assignment_list_assignments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/{conversation_id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Take an unassigned conversation (Nhận)
+         * @description Every operator (owner, manager, doctor, cs_staff). Only an unassigned conversation: one that a colleague holds answers 409 `thread_locked`. Claiming what you already hold changes nothing. The body is optional (`assignment_version` the client saw).
+         */
+        post: operations["assignment_claim_conversation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/conversations/{conversation_id}/messages": {
         parameters: {
             query?: never;
@@ -1905,6 +1962,46 @@ export interface paths {
         put?: never;
         /** Mark inbound messages as read */
         post: operations["conversations_mark_conversation_read"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/{conversation_id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Give the conversation back: to the queue, or to the care agent
+         * @description The holder (or an owner or manager) puts it back in the queue. With `to_agent` the patient must be in the STAFF state of the care agent: 409 `invalid_state` otherwise, 501 until the care loop is wired. A refusal of the care agent leaves the conversation as it was.
+         */
+        post: operations["assignment_release_conversation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/{conversation_id}/takeover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Take the conversation from the colleague who holds it (Tiếp quản)
+         * @description Needs a `reason` (kept in the history, staff only). The previous holder, the new holder and the team group get a notice. 409 `invalid_state` when nobody holds it (claim it) or you already do.
+         */
+        post: operations["assignment_takeover_conversation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3254,6 +3351,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/staff/{user_id}/end-shift": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End an operator's shift: their active conversations move on (owner, manager)
+         * @description Each active conversation of the user goes to an operator who is on duty for its identity (the one with the fewest active conversations), else back to the queue. A conversation that changed hands in the meantime is skipped.
+         */
+        post: operations["assignment_end_shift"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/studio/{patient_id}": {
         parameters: {
             query?: never;
@@ -3849,6 +3966,19 @@ export interface components {
             prescription: components["schemas"]["OrderItemOut"][];
         };
         /**
+         * AssignRequest
+         * @description ``POST /conversations/{id}/assign``: owner and manager. ``user_id`` null puts it back in the queue.
+         */
+        AssignRequest: {
+            /**
+             * Assignment Version
+             * @description The ``assignment_version`` the client saw. When it is no longer the stored one the call answers 409 ``version_conflict``. Left out: the action uses the version it reads itself.
+             */
+            assignment_version?: number | null;
+            /** User Id */
+            user_id?: string | null;
+        };
+        /**
          * AssignableStaffOut
          * @description A colleague a task or a conversation can be handed to (``GET /staff/assignable``, every signed-in staff
          *     member may read it). The minimum a picker needs: no e-mail, phone, last sign-in or lock state (locked
@@ -3864,6 +3994,52 @@ export interface components {
             name: string;
             role: components["schemas"]["Role"];
         };
+        /**
+         * AssignmentEventOut
+         * @description One line of the history of a conversation (``GET /conversations/{id}/assignments``, newest first).
+         */
+        AssignmentEventOut: {
+            /**
+             * At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            at: string;
+            /**
+             * By
+             * @description Who made the change; null: the system.
+             */
+            by?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["AssignmentKind"];
+            /** Previous User Id */
+            previous_user_id?: string | null;
+            /** Previous User Name */
+            previous_user_name?: string | null;
+            /**
+             * Reason
+             * @description Takeover reason or release note; staff only.
+             */
+            reason?: string | null;
+            /**
+             * User Id
+             * @description Who holds it after the change; null: back in the queue.
+             */
+            user_id: string | null;
+            /** User Name */
+            user_name?: string | null;
+        };
+        /**
+         * AssignmentKind
+         * @description Why a row of ``clinic.conversation_assignment`` exists.
+         * @enum {string}
+         */
+        AssignmentKind: "claim" | "takeover" | "release" | "shift_end" | "assign";
         /** AuditLogOut */
         AuditLogOut: {
             /**
@@ -4335,6 +4511,17 @@ export interface components {
             /** Version */
             version: number;
         };
+        /**
+         * ClaimRequest
+         * @description ``POST /conversations/{id}/claim`` (the body is optional).
+         */
+        ClaimRequest: {
+            /**
+             * Assignment Version
+             * @description The ``assignment_version`` the client saw. When it is no longer the stored one the call answers 409 ``version_conflict``. Left out: the action uses the version it reads itself.
+             */
+            assignment_version?: number | null;
+        };
         /** ClinicalNoteOut */
         ClinicalNoteOut: {
             /**
@@ -4491,6 +4678,17 @@ export interface components {
         ConversationOut: {
             /** Assigned User Id */
             assigned_user_id?: string | null;
+            /**
+             * Assigned User Name
+             * @description Display name of the holder (staff-only information).
+             */
+            assigned_user_name?: string | null;
+            /**
+             * Assignment Version
+             * @description Bumped by every claim, takeover, release, shift end and assign (step O2).
+             * @default 1
+             */
+            assignment_version: number;
             channel: components["schemas"]["ChannelKind"];
             /**
              * Created At
@@ -4509,6 +4707,8 @@ export interface components {
              * @default false
              */
             has_pending_review: boolean;
+            /** @description Whether the holder has the conversation open now and in which state (``replying`` or ``viewing``); null when they are not here or presence is unavailable. The holder is never in ``viewers``. */
+            holder_presence?: components["schemas"]["PresenceState"] | null;
             /**
              * Id
              * Format: uuid
@@ -4547,12 +4747,25 @@ export interface components {
         ConversationSummary: {
             /** Assigned User Id */
             assigned_user_id?: string | null;
+            /**
+             * Assigned User Name
+             * @description Display name of the holder (staff-only information).
+             */
+            assigned_user_name?: string | null;
+            /**
+             * Assignment Version
+             * @description Bumped by every claim, takeover, release, shift end and assign (step O2).
+             * @default 1
+             */
+            assignment_version: number;
             channel: components["schemas"]["ChannelKind"];
             /**
              * Has Pending Review
              * @default false
              */
             has_pending_review: boolean;
+            /** @description Whether the holder has the conversation open now and in which state (``replying`` or ``viewing``); null when they are not here or presence is unavailable. The holder is never in ``viewers``. */
+            holder_presence?: components["schemas"]["PresenceState"] | null;
             /**
              * Id
              * Format: uuid
@@ -4996,6 +5209,32 @@ export interface components {
             /** Send Gap Min S */
             send_gap_min_s: number;
         };
+        /**
+         * EndShiftResult
+         * @description What ``POST /staff/{user_id}/end-shift`` did, thread by thread.
+         */
+        EndShiftResult: {
+            /**
+             * Rerouted
+             * @description Moved to an operator who is on duty.
+             */
+            rerouted: number;
+            /**
+             * Skipped
+             * @description Changed hands while the shift was being ended: left alone.
+             */
+            skipped: number;
+            /**
+             * To Queue
+             * @description Nobody on duty (or no identity known): back to the queue.
+             */
+            to_queue: number;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
         /** EntryCreate */
         EntryCreate: {
             /**
@@ -5176,7 +5415,7 @@ export interface components {
          * @description Stable machine-readable error codes. ``message`` is Vietnamese UI text; ``code`` never changes.
          * @enum {string}
          */
-        ErrorCode: "unauthenticated" | "forbidden" | "not_found" | "validation_failed" | "version_conflict" | "duplicate_request" | "invalid_state" | "appointment_conflict" | "rate_limited" | "not_implemented" | "consent_required" | "marketing_opt_out" | "channel_unavailable" | "channel_kill_switch_on" | "channel_daily_cap_reached" | "channel_outside_send_window" | "channel_recipient_not_reachable" | "channel_webhook_rejected" | "review_required" | "ai_unavailable" | "policy_denied" | "identity_not_verified" | "tool_unavailable" | "invalid_schedule" | "mcp_server_unapproved" | "kb_source_invalid" | "payload_too_large" | "internal";
+        ErrorCode: "unauthenticated" | "forbidden" | "not_found" | "validation_failed" | "version_conflict" | "duplicate_request" | "invalid_state" | "appointment_conflict" | "rate_limited" | "not_implemented" | "consent_required" | "marketing_opt_out" | "channel_unavailable" | "channel_kill_switch_on" | "channel_daily_cap_reached" | "channel_outside_send_window" | "channel_recipient_not_reachable" | "channel_webhook_rejected" | "review_required" | "ai_unavailable" | "policy_denied" | "identity_not_verified" | "tool_unavailable" | "invalid_schedule" | "mcp_server_unapproved" | "kb_source_invalid" | "payload_too_large" | "thread_locked" | "internal";
         /**
          * ErrorResponse
          * @description Body of every non-2xx response.
@@ -6102,7 +6341,7 @@ export interface components {
          * LiveEventType
          * @enum {string}
          */
-        LiveEventType: "inbox.changed" | "tasks.changed" | "review.changed" | "presence.changed" | "handoff.changed" | "appointments.changed" | "care.changed";
+        LiveEventType: "inbox.changed" | "tasks.changed" | "review.changed" | "presence.changed" | "handoff.changed" | "appointments.changed" | "assignment.changed" | "care.changed";
         /**
          * LlmProviderKind
          * @description ``LLM_PROVIDER_KINDS`` of src/config/llm-provider-kind.ts.
@@ -7578,7 +7817,7 @@ export interface components {
          * Permission
          * @enum {string}
          */
-        Permission: "patient.read" | "patient.write" | "patient.read_360" | "consent.read" | "consent.write" | "appointment.read" | "appointment.write" | "appointment.check_in" | "session.write" | "session.read" | "media.read" | "media.write" | "order.read" | "order.write" | "order.approve" | "finance.read" | "finance.read_own" | "finance.write" | "finance_period.close" | "finance.collect" | "finance.notifications" | "crm.task.read" | "crm.task.resolve" | "crm.activity.write" | "conversation.read" | "conversation.reply" | "review.read" | "review.decide" | "review.decide_clinical" | "kb.read" | "kb.manage" | "admin.rules" | "admin.channels" | "admin.kill_switch" | "admin.logs" | "admin.accounts" | "admin.users.read" | "admin.users" | "admin.agents" | "admin.model" | "admin.tools" | "admin.schedules" | "admin.mcp" | "admin.usage" | "admin.policy" | "care.read" | "care.act" | "care.admin" | "care.matrix" | "care.approve" | "identity.manage" | "roster.manage" | "roster.read" | "agent.submit";
+        Permission: "patient.read" | "patient.write" | "patient.read_360" | "consent.read" | "consent.write" | "appointment.read" | "appointment.write" | "appointment.check_in" | "session.write" | "session.read" | "media.read" | "media.write" | "order.read" | "order.write" | "order.approve" | "finance.read" | "finance.read_own" | "finance.write" | "finance_period.close" | "finance.collect" | "finance.notifications" | "crm.task.read" | "crm.task.resolve" | "crm.activity.write" | "conversation.read" | "conversation.reply" | "review.read" | "review.decide" | "review.decide_clinical" | "kb.read" | "kb.manage" | "admin.rules" | "admin.channels" | "admin.kill_switch" | "admin.logs" | "admin.accounts" | "admin.users.read" | "admin.users" | "admin.agents" | "admin.model" | "admin.tools" | "admin.schedules" | "admin.mcp" | "admin.usage" | "admin.policy" | "care.read" | "care.act" | "care.admin" | "care.matrix" | "care.approve" | "identity.manage" | "roster.manage" | "roster.read" | "thread.claim" | "thread.assign" | "thread.end_shift" | "agent.submit";
         /** PermissionsResponse */
         PermissionsResponse: {
             /** Permissions */
@@ -7859,6 +8098,28 @@ export interface components {
              * @description What the agent will do after the release (Vietnamese).
              */
             consequence: string;
+        };
+        /**
+         * ReleaseRequest
+         * @description ``POST /conversations/{id}/release``.
+         */
+        ReleaseRequest: {
+            /**
+             * Assignment Version
+             * @description The ``assignment_version`` the client saw. When it is no longer the stored one the call answers 409 ``version_conflict``. Left out: the action uses the version it reads itself.
+             */
+            assignment_version?: number | null;
+            /**
+             * Note
+             * @description With ``to_agent``: the note the care agent reads (M's release note).
+             */
+            note?: string | null;
+            /**
+             * To Agent
+             * @description Hand the conversation back to the care agent (the patient is in the STAFF state of package M). False: only back to the queue.
+             * @default false
+             */
+            to_agent: boolean;
         };
         /** ReleaseResultOut */
         ReleaseResultOut: {
@@ -9111,6 +9372,20 @@ export interface components {
             uptime_seconds: number;
             /** Version */
             version: string;
+        };
+        /**
+         * TakeoverRequest
+         * @description ``POST /conversations/{id}/takeover``. The reason is kept in the history (staff only) and never in an
+         *     audit row or a notification.
+         */
+        TakeoverRequest: {
+            /**
+             * Assignment Version
+             * @description The ``assignment_version`` the client saw. When it is no longer the stored one the call answers 409 ``version_conflict``. Left out: the action uses the version it reads itself.
+             */
+            assignment_version?: number | null;
+            /** Reason */
+            reason: string;
         };
         /**
          * TaskPriority
@@ -21393,6 +21668,269 @@ export interface operations {
             };
         };
     };
+    assignment_assign_conversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assignment_list_assignments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssignmentEventOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assignment_claim_conversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ClaimRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     conversations_list_messages: {
         parameters: {
             query?: {
@@ -21762,6 +22300,184 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assignment_release_conversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReleaseRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assignment_takeover_conversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TakeoverRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
             };
             /** @description Not authenticated. */
             401: {
@@ -30127,6 +30843,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AssignableStaffOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assignment_end_shift: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EndShiftResult"];
                 };
             };
             /** @description Not authenticated. */
