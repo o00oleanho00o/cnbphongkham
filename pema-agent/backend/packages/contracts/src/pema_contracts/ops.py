@@ -253,6 +253,8 @@ class AssignmentEventOut(ApiModel):
 class NotificationRecipientKind(StrEnum):
     USER = "user"
     TEAM_GROUP = "team_group"
+    ON_CALL = "on_call"
+    """The 24/7 on-call contact of package M (a number outside the app, read again when it is used)."""
 
 
 class NotificationState(StrEnum):
@@ -270,7 +272,17 @@ class NotificationUrgency(StrEnum):
 
 
 SHORT_CODE_PATTERN = r"^#[0-9A-F]{4}$"
-DEEP_LINK_PATTERN = r"^/inbox\?conversation=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+_UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+DEEP_LINK_PATTERN = rf"^(/inbox\?conversation={_UUID}|/care/handoffs\?request={_UUID})$"
+
+
+class HandoffNoticeEvent(StrEnum):
+    """What a notice of package M's routing is about (step O3, ``StaffNotify``)."""
+
+    HANDOFF_REQUEST = "handoff_request"
+    """A care agent asks this person to take over a patient (the SLA clock runs)."""
+    HANDOFF_ON_CALL = "handoff_on_call"
+    """Last link of the chain: the 24/7 on-call contact."""
 
 
 class NotificationPayload(ApiModel):
@@ -280,7 +292,7 @@ class NotificationPayload(ApiModel):
     serializer in ``pema.clinic.actions.notifications`` also runs the free-text fields through the PII mask
     and refuses the payload when anything is found."""
 
-    event: AssignmentKind
+    event: AssignmentKind | HandoffNoticeEvent
     short_code: str = Field(pattern=SHORT_CODE_PATTERN)
     identity_label: str | None = Field(default=None, max_length=100)
     urgency: NotificationUrgency = NotificationUrgency.NORMAL
@@ -288,3 +300,128 @@ class NotificationPayload(ApiModel):
     deep_link: str = Field(pattern=DEEP_LINK_PATTERN)
     from_user_id: UUID | None = None
     to_user_id: UUID | None = None
+    request_id: UUID | None = Field(default=None, description="The handoff request (handoff events only).")
+    position: int | None = Field(default=None, ge=0, description="Place in the routing chain (handoff only).")
+    sla_due_at: VnDatetime | None = Field(default=None, description="Answer by (handoff events only).")
+    oncall_id: UUID | None = Field(default=None, description="The on-call row current when it was queued.")
+
+
+# ------------------------------------------------------------------ delivery chain and setup (step O3)
+class NotificationProvider(StrEnum):
+    """One step of the delivery chain; one row of ``clinic.notification_log`` per attempt."""
+
+    IN_APP = "in_app"
+    PUSH = "push"
+    ZALO_BELL = "zalo_bell"
+    TEAM_GROUP = "team_group"
+
+
+class NotificationLogStatus(StrEnum):
+    SENT = "sent"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+
+
+class PushPlatform(StrEnum):
+    ANDROID = "android"
+    IOS = "ios"
+    WEB = "web"
+
+
+class PushTokenIn(ApiModel):
+    """``POST /me/push-tokens``. The token is stored encrypted and never returned."""
+
+    platform: PushPlatform
+    token: str = Field(min_length=16, max_length=4096)
+
+
+class PushTokenOut(ApiModel):
+    id: UUID
+    platform: PushPlatform
+    last_seen: VnDatetime
+
+
+class NotifyLinkOut(ApiModel):
+    """``POST /me/notify-zalo/link``: send ``code`` as a message to the clinic's internal Zalo account."""
+
+    code: str
+    expires_at: VnDatetime
+    internal_label: str | None = Field(
+        default=None, description="Label of the internal account to send the code to; null: none is set up."
+    )
+
+
+class NotifyLinkStatus(ApiModel):
+    """``GET /me/notify-zalo``."""
+
+    linked: bool
+    consented_at: VnDatetime | None = None
+
+
+class NotifyPreferenceOut(ApiModel):
+    """Quiet hours of one operator (clinic clock). ``urgent`` notices still ring."""
+
+    quiet_start: str | None = Field(default=None, pattern=HHMM_PATTERN)
+    quiet_end: str | None = Field(default=None, pattern=HHMM_PATTERN)
+
+
+class NotifyPreferenceIn(NotifyPreferenceOut):
+    @model_validator(mode="after")
+    def _both_or_none(self) -> NotifyPreferenceIn:
+        if (self.quiet_start is None) != (self.quiet_end is None):
+            raise ValueError("give both quiet_start and quiet_end, or neither")
+        if self.quiet_start is not None and self.quiet_start == self.quiet_end:
+            raise ValueError("quiet_start and quiet_end must differ")
+        return self
+
+
+class NotifySettingsOut(ApiModel):
+    """The clinic's notification settings (``GET /notifications/settings``)."""
+
+    ack_timeout_s: int = Field(ge=30, le=3600)
+    team_group_id: str | None = None
+    in_app_enabled: bool
+    push_enabled: bool
+    bell_enabled: bool
+    group_enabled: bool
+    public_base_url: str | None = None
+
+
+class NotifySettingsUpdate(ApiModel):
+    """``PUT /notifications/settings`` (owner and manager). A field left out stays."""
+
+    ack_timeout_s: int | None = Field(default=None, ge=30, le=3600)
+    team_group_id: str | None = Field(default=None, max_length=200)
+    in_app_enabled: bool | None = None
+    push_enabled: bool | None = None
+    bell_enabled: bool | None = None
+    group_enabled: bool | None = None
+    public_base_url: str | None = Field(default=None, max_length=300, pattern=r"^https?://\S+$")
+
+
+class NotificationOut(ApiModel):
+    """A notice as its recipient reads it in the app (``GET /me/notifications``)."""
+
+    id: UUID
+    kind: str
+    state: NotificationState
+    created_at: VnDatetime
+    acked_at: VnDatetime | None
+    payload: NotificationPayload
+
+
+class AckTargetIn(ApiModel):
+    """``POST /notifications/ack``: the deep link was opened. Exactly one of the two."""
+
+    conversation_id: UUID | None = None
+    request_id: UUID | None = None
+
+    @model_validator(mode="after")
+    def _one_target(self) -> AckTargetIn:
+        if (self.conversation_id is None) == (self.request_id is None):
+            raise ValueError("give exactly one of conversation_id and request_id")
+        return self
+
+
+class AckedOut(ApiModel):
+    acked: int = Field(ge=0, description="How many notices of the caller were acknowledged.")

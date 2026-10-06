@@ -47,6 +47,13 @@ def _config(pg_url: str) -> Config:
     return Config(str(API_INI))
 
 
+def _head(pg_url: str) -> str:
+    """The head of the stack (later steps stack on this one)."""
+    head = ScriptDirectory.from_config(_config(pg_url)).get_current_head()
+    assert head is not None
+    return head
+
+
 def _scalar(engine: Engine, sql: str, **params: Any) -> Any:
     with engine.connect() as conn:
         return conn.execute(text(sql), params).scalar()
@@ -54,7 +61,8 @@ def _scalar(engine: Engine, sql: str, **params: Any) -> Any:
 
 def test_there_is_one_head_and_it_stacks_on_the_previous_one(pg_url: str) -> None:
     script = ScriptDirectory.from_config(_config(pg_url))
-    assert script.get_heads() == [REVISION]
+    assert len(script.get_heads()) == 1, "one alembic head"
+    assert REVISION in {r.revision for r in script.walk_revisions()}
     revision = script.get_revision(REVISION)
     assert revision is not None
     assert revision.down_revision == PREVIOUS
@@ -193,7 +201,7 @@ def test_a_round_trip_through_the_named_previous_revision_with_rows_that_use_the
     assert row.o_duplicate is False
 
     command.upgrade(config, "heads")
-    assert _scalar(admin, "SELECT version_num FROM public.alembic_version_pema") == REVISION
+    assert _scalar(admin, "SELECT version_num FROM public.alembic_version_pema") == _head(pg_url)
     assert (
         _scalar(admin, "SELECT count(*) FROM clinic.account_roster") == 0
     )  # the entry was dropped with the table

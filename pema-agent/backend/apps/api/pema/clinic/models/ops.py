@@ -1,7 +1,8 @@
 """Package O tables: ``clinic.account_roster`` (O1), ``clinic.conversation_assignment`` and
 ``clinic.notification_outbox`` (O2).
 
-Later steps add the notification log and the push tokens to this module. Columns only, like the rest of
+O3 adds the delivery bookkeeping of the outbox, ``notification_log``, ``push_token``, ``notify_setting``,
+``notify_preference``, ``notify_link_code`` and ``sla_check``. Columns only, like the rest of
 ``pema.clinic.models``; the database owns the foreign keys and the CHECKs (exactly one of ``weekdays`` and
 ``on_date``, ``start_time <> end_time``, the kinds and states of the O2 tables).
 """
@@ -12,7 +13,7 @@ from datetime import date, datetime, time
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import ARRAY, Date, DateTime, Integer, Text, Time, func
+from sqlalchemy import ARRAY, Boolean, Date, DateTime, Integer, Text, Time, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -76,3 +77,102 @@ class NotificationOutbox(Base):
     payload: Mapped[dict[str, Any]] = mapped_column(JSONB)
     state: Mapped[str] = mapped_column(Text, default="pending")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    chain_step: Mapped[str | None] = mapped_column(Text, default=None)
+    """``None``: the first step of the recipient kind; ``bell``: waiting for the personal Zalo; ``done``."""
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    acked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    acked_by: Mapped[UUID | None] = mapped_column(default=None)
+
+
+class NotificationLog(Base):
+    """One attempt of one step of the delivery chain (append only). No text, no recipient detail."""
+
+    __tablename__ = "notification_log"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    clinic_id: Mapped[UUID]
+    outbox_id: Mapped[UUID]
+    provider: Mapped[str] = mapped_column(Text)
+    attempt: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(Text)
+    latency_ms: Mapped[int | None] = mapped_column(Integer, default=None)
+    error_code: Mapped[str | None] = mapped_column(Text, default=None)
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class PushToken(Base):
+    """A device of an operator. ``token_hash`` is the key, ``token_enc`` what the provider needs (AES-GCM)."""
+
+    __tablename__ = "push_token"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    clinic_id: Mapped[UUID]
+    user_id: Mapped[UUID]
+    platform: Mapped[str] = mapped_column(Text)
+    token_hash: Mapped[str] = mapped_column(Text)
+    token_enc: Mapped[str] = mapped_column(Text)
+    last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class NotifySetting(Base):
+    """The clinic's notification settings (one row; the defaults apply while it does not exist)."""
+
+    __tablename__ = "notify_setting"
+
+    clinic_id: Mapped[UUID] = mapped_column(primary_key=True)
+    ack_timeout_s: Mapped[int] = mapped_column(Integer, default=180)
+    team_group_id: Mapped[str | None] = mapped_column(Text, default=None)
+    in_app_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    push_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    bell_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    group_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    public_base_url: Mapped[str | None] = mapped_column(Text, default=None)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_by: Mapped[UUID | None] = mapped_column(default=None)
+
+
+class NotifyPreference(Base):
+    """Quiet hours of one operator (clinic clock); ``urgent`` notices still ring."""
+
+    __tablename__ = "notify_preference"
+
+    clinic_id: Mapped[UUID] = mapped_column(primary_key=True)
+    user_id: Mapped[UUID] = mapped_column(primary_key=True)
+    quiet_start: Mapped[time | None] = mapped_column(Time, default=None)
+    quiet_end: Mapped[time | None] = mapped_column(Time, default=None)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class NotifyLinkCode(Base):
+    """The one-time code that links a personal Zalo id to an operator (only its hash is stored)."""
+
+    __tablename__ = "notify_link_code"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    clinic_id: Mapped[UUID]
+    user_id: Mapped[UUID]
+    code_hash: Mapped[str] = mapped_column(Text)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SlaCheck(Base):
+    """ "Look at routing request ``request_id`` again at ``due_at``" (package M's ``SlaScheduler``)."""
+
+    __tablename__ = "sla_check"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    clinic_id: Mapped[UUID]
+    request_id: Mapped[UUID]
+    idx: Mapped[int] = mapped_column(Integer)
+    due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    dedupe_key: Mapped[str] = mapped_column(Text)
+    state: Mapped[str] = mapped_column(Text, default="pending")
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

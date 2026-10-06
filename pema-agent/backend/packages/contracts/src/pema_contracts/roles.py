@@ -144,5 +144,11 @@ class Permission(StrEnum):
     THREAD_END_SHIFT = "thread.end_shift"
     """End the shift of an operator: their active conversations move to whoever is on duty, or back to the
     queue (package O). Owner and manager."""
+    NOTIFY_SELF = "notify.self"
+    """Receive notices, acknowledge them, link one's own Zalo and register a push token (package O, step O3).
+    Every assignable role: owner, manager, doctor, cs_staff. Acts on the caller's own rows only."""
+    NOTIFY_MANAGE = "notify.manage"
+    """Change the clinic's notification settings: ack timeout, team group, which steps are on (package O,
+    step O3). Owner and manager."""
     AGENT_SUBMIT = "agent.submit"
     """Held by the agent worker's actor only: create review items, read minimal context."""
