@@ -33,7 +33,7 @@ Workspace này chứa prototype và tài liệu nghiên cứu của Pema Digital
 
 ### Chạy nhanh bằng Docker Compose
 
-Tại thư mục gốc của workspace, chạy 1 lệnh (build và chạy toàn bộ dự án, gồm cả các trang design; `docker compose build` một mình chỉ build image, không chạy):
+Tại thư mục gốc của workspace, chạy 1 lệnh (build và chạy backend, frontend và worker AI; `docker compose build` một mình chỉ build image, không chạy):
 
 ```powershell
 docker compose up -d --build
@@ -45,11 +45,8 @@ Không cần tạo `.env`: compose đọc giá trị demo ở [`pema-agent/infra
 | --- | --- |
 | [http://localhost:3000](http://localhost:3000) | Pema staff web (Next.js) chạy với backend thật (API, Postgres, Redis, worker) |
 | [http://localhost:8000/healthz](http://localhost:8000/healthz) | API |
-| [http://localhost:4190](http://localhost:4190) | Design canvas của app (Pema App) |
-| [http://localhost:4191](http://localhost:4191) | Design canvas của web (Pema Web) |
-| [http://localhost:4192](http://localhost:4192) | Design system: token, màu, 64 trang component, thẻ preview |
 
-Prototype cũ (Clinic Web, Patient Mobile ở cổng 4173) tạm không nằm trong stack Docker: chạy tay theo mục "Chạy local bằng Python" bên dưới (dịch vụ `pema-prototype` đang được comment trong `docker-compose.yml`).
+Tạm thời các trang design (canvas app `:4190`, canvas web `:4191`, design system `:4192`) và prototype cũ (`:4173`) không nằm trong stack Docker để tập trung vào BE, FE, AI; các dịch vụ đó đang được comment trong `docker-compose.yml`, bỏ `# ` đầu khối để bật lại. Prototype cũ chạy tay theo mục "Chạy local bằng Python" bên dưới; design canvas chạy bằng `cd design-viewer; npm run dev` (mục "Design Viewer").
 
 Đăng nhập staff web: dịch vụ `seed` tạo phòng khám mẫu (hư cấu) và các tài khoản `owner@example.test`, `manager@example.test`, `doctor.mai@example.test`, `cs.maianh@example.test`, `reception.lan@example.test`. Mật khẩu chung được sinh ngẫu nhiên và in **một lần**: `docker compose logs seed`. Muốn tự chọn, đặt `PEMA_SEED_PASSWORD` trong shell trước khi chạy lệnh. Chưa có khóa LLM nên agent CSKH chưa trả lời được cho tới khi đặt `LLM_*` (dashboard hoặc `pema-agent/infra/.env.local-demo`). Lần chạy đầu build nhiều image (Python, Next.js) nên mất vài phút.
 
