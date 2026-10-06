@@ -1,6 +1,6 @@
 // W7: catalog of the screens that exist ONLY in the Next.js front end (pema-agent/frontend), not in the old web.
 // Groups: WJ agent admin (/admin/* except /admin/care), WK care agent (/admin/care/*, /care/*), WL sign-in, shell and
-// message templates. Merged into the main catalog by lib/catalog.cjs; web-inventory.cjs writes them to inventory.json with
+// message templates, WM shared inbox (package O, step O5: designed first, built in O6; entries carry `planned: true`). Merged into the main catalog by lib/catalog.cjs; web-inventory.cjs writes them to inventory.json with
 // `source: "nextjs"`.
 //
 // Ids are frozen once committed: never renumber, append new ids at the end of their group. Within this file the numbers
@@ -33,10 +33,11 @@ const groups = [
   { code: 'WJ', name: 'Quản trị agent (Next.js)' },
   { code: 'WK', name: 'Agent chăm sóc (Next.js)' },
   { code: 'WL', name: 'Đăng nhập, khung & mẫu tin (Next.js)' },
+  { code: 'WM', name: 'Inbox chia sẻ (Next.js)' },
 ];
 
 const screens = [];
-const counters = { WJ: 0, WK: 0, WL: 0 };
+const counters = { WJ: 0, WK: 0, WL: 0, WM: 0 };
 
 // add(group, name, kind, route, role, reach, expectText, sources, notes, extra)
 function add(group, name, kind, route, role, reach, expectText, sources, notes, extra = {}) {
@@ -513,6 +514,187 @@ add('WL', 'Khung · điện thoại · thanh tab', 'state', '(app shell)', 'cs_s
 add('WL', 'Khung · điện thoại · ngăn menu', 'state', '(app shell)', 'cs_staff', [...as('cs_staff', '/today'), { button: 'Mở menu' }], 'Đóng menu', SHELL,
   'The sidebar slides in from the left (w-72) over a dimmed blurred overlay; closing buttons "Đóng menu" (overlay and X); closes on route change, link click or overlay. Tests: src/ui/sidebar.test.tsx "closes_the_drawer_when_a_link_is_followed", top-bar.test.tsx "opens_the_menu_from_the_phone_button".',
   MOBILE);
+
+// =====================================================================================================================
+// WM  shared inbox (package O, step O5). Designed before it is built: O6 builds the screens, so every id is `planned`
+// (no shots, no snapshot; the frames of the Next.js canvas are the reference). Routes /inbox and /admin/accounts exist and
+// change; /admin/roster and /me/notifications are new (`planned_route`). Ids of the old Inbox (WD6, WC14, ...) keep their ids.
+// What each control calls is the O API of openapi.json (O1, O2); the notification screens follow PLAN-AI01-O.md and the O3
+// recipe and are PROVISIONAL until O3 merges (see notes.json groups.WM.todo).
+// =====================================================================================================================
+const WMS = 'Next.js build in step O6. ';
+const WM_PLANNED = { planned: true, next_status: 'designed (O5)' };
+const INBOX_SRC = [`${APP}/inbox/page.tsx`, `${CMP}/ops/inbox/conversation-list.tsx`, `${CMP}/ops/inbox/thread-view.tsx`, `${CMP}/ops/inbox/presence-line.tsx`, 'pema-agent/docs/PLAN-AI01-O.md'];
+const WM_ACC_SRC = [`${ADM}/accounts/page.tsx`, 'pema-agent/docs/PLAN-AI01-O.md'];
+const WM_ROSTER_SRC = ['pema-agent/docs/PLAN-AI01-O.md', 'pema-agent/recipes/O/01-O1-identities-limits-roster.md'];
+const WM_ME_SRC = ['pema-agent/docs/PLAN-AI01-O.md', 'pema-agent/recipes/O/03-O3-notifications.md'];
+const wmRoute = (route) => ({ ...WM_PLANNED, planned_route: true, next_route: route });
+const WM_PHONE = { ...WM_PLANNED, viewport: [390, 844], frames: ['390x844'] };
+
+// ---- /inbox: queue, tabs, account filter
+add('WM', 'Inbox · Chờ nhận', 'page', '/inbox', 'cs_staff', as('cs_staff', '/inbox'), 'Chờ nhận', INBOX_SRC,
+  `${WMS}Existing page /inbox with three tabs "Chờ nhận", "Của tôi", "Tất cả" (counts beside the names), the identity filter "Tất cả danh tính" (aria "Lọc theo danh tính"), the search "Tìm theo tên, mã hồ sơ hoặc nội dung" and the status chips of today. Each row: patient name, one-line preview, time, unread badge, the identity badge ("Long") and the holder line ("Chưa ai nhận", "Mai Anh đang giữ", "Bạn đang giữ"). Queue tab = unassigned conversations. Calls GET /api/v1/conversations (assigned_user_id, conversation_status, q) and GET /api/v1/identities for the filter; assignment.changed and inbox.changed events refresh it. Account filter and queue filter are provisional: the list DTO has no account_id yet.`,
+  WM_PLANNED);
+add('WM', 'Inbox · Của tôi', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { text: 'Của tôi' }], 'Của tôi', INBOX_SRC,
+  `Tab "Của tôi": the conversations the signed-in operator holds (GET /api/v1/conversations?assigned_user_id=<me>), the holder line reads "Bạn đang giữ". Empty text "Bạn chưa phụ trách hội thoại nào" / "Bấm Nhận ở một hội thoại trong tab Chờ nhận.".`,
+  WM_PLANNED);
+add('WM', 'Inbox · Tất cả · lọc theo danh tính', 'state', '/inbox', 'owner', [...as('owner', '/inbox'), { text: 'Tất cả' }, { button: 'Tất cả danh tính' }, { text: 'Long' }], 'Tất cả', INBOX_SRC,
+  `Tab "Tất cả" with the identity filter set to "Long": rows of one identity only, every holder visible; owner and manager also see the "Giao cho..." action in a thread. The filter lists the customer identities from GET /api/v1/identities (purpose customer), never the internal notifier.`,
+  WM_PLANNED);
+add('WM', 'Inbox · hàng chờ trống', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { note: 'no unassigned conversation' }], 'Không có hội thoại nào đang chờ nhận', INBOX_SRC,
+  `EmptyState "Không có hội thoại nào đang chờ nhận" / "Hội thoại mới chưa có người phụ trách sẽ hiện ở đây." in the tab "Chờ nhận". The other tabs keep the existing text "Không có hội thoại nào" / "Đổi bộ lọc hoặc từ khóa tìm kiếm.".`,
+  WM_PLANNED);
+add('WM', 'Inbox · đang tải', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { note: 'GET /api/v1/conversations pending (delay it)' }], 'Inbox', INBOX_SRC,
+  `Header, tabs and filters are drawn; the list is the 5-row ListSkeleton of today (ListSkeleton in src/components/ops/ops-ui.tsx). The thread pane shows the empty text of today.`,
+  WM_PLANNED);
+add('WM', 'Inbox · lỗi tải', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { note: 'GET /api/v1/conversations failing' }], 'Thử lại', INBOX_SRC,
+  `RetryNotice of today (the backend sentence and "Thử lại") above the list; tabs and filters stay usable.`,
+  WM_PLANNED);
+
+// ---- /inbox: thread, holder banner, locked composer
+add('WM', 'Hội thoại · chưa có người phụ trách', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { note: 'open an unassigned conversation' }], 'Chưa có người phụ trách', INBOX_SRC,
+  `Thread of an unassigned conversation. Info Notice "Chưa có người phụ trách. Bấm Nhận để phụ trách hội thoại này; gửi tin trả lời cũng tự nhận." with the primary button "Nhận" (opens the dialog "Nhận hội thoại này?"). The composer is open: the first reply of an operator claims the thread (O2). Under the composer "Khách thấy tin này từ "Long", không thấy tên nhân viên." (the customer sees the identity only).`,
+  WM_PLANNED);
+add('WM', 'Hội thoại · tôi đang phụ trách', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { note: 'open a conversation the signed-in operator holds' }], 'Bạn đang phụ trách hội thoại này.', INBOX_SRC,
+  `Success Notice "Bạn đang phụ trách hội thoại này." with "Trả lại" and "Lịch sử phụ trách"; composer open; a colleague who only looks shows as "Phạm Quốc Việt đang xem" (a manager reading, no lock). Replaces the button "Nhận xử lý" and the "Phụ trách:" picker for operators (the picker stays for owner and manager as "Giao cho...").`,
+  WM_PLANNED);
+add('WM', 'Hội thoại · đồng nghiệp đang trả lời · soạn tin bị khóa', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { note: 'open a conversation another operator holds' }], 'đang trả lời — Tiếp quản?', INBOX_SRC,
+  `Warn Notice with the backend sentence of 409 thread_locked: "Hoàng Nam đang trả lời — Tiếp quản?" and the button "Tiếp quản" (opens the dialog "Tiếp quản hội thoại"). The composer is disabled with the placeholder "Hoàng Nam đang phụ trách. Tiếp quản để nhắn khách." and "Gửi" disabled; the thread stays readable. Owner and manager also get "Giao cho..." and "Lịch sử phụ trách". Today's softer warning "... Bạn vẫn nhắn được, nhưng hãy hỏi đồng nghiệp trước" goes away: the lock is real.`,
+  WM_PLANNED);
+add('WM', 'Hội thoại · điện thoại · chưa có người phụ trách', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { note: 'phone width, ?c=<unassigned id>' }], 'Chưa có người phụ trách', INBOX_SRC,
+  `390 px: the thread is a child screen (back link "Danh sách hội thoại"), the holder Notice and the button "Nhận" full width, composer at the bottom above the tab bar.`,
+  WM_PHONE);
+add('WM', 'Hội thoại · điện thoại · soạn tin bị khóa', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { note: 'phone width, ?c=<held by a colleague>' }], 'đang trả lời — Tiếp quản?', INBOX_SRC,
+  `390 px: the locked thread; "Hoàng Nam đang trả lời — Tiếp quản?" with "Tiếp quản" full width, composer disabled.`,
+  WM_PHONE);
+add('WM', 'Hội thoại · đã bị tiếp quản', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { note: 'an assignment.changed event moves the thread to a colleague while it is open' }], 'Đã bị tiếp quản', INBOX_SRC,
+  `Toast "Đã bị tiếp quản" when assignment.changed shows another holder while the operator has the thread open. The banner turns into "Hoàng Nam đang trả lời — Tiếp quản?", the composer locks and the draft the operator was typing stays in it (not sent, not lost). The same notice reaches the previous holder by the notification chain (in-app, then Zalo bell).`,
+  WM_PLANNED);
+add('WM', 'Hội thoại · gửi bị chặn (thread_locked)', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { note: 'POST /api/v1/conversations/{id}/messages answers 409 thread_locked' }], 'Tin chưa gửi. Nội dung bạn soạn vẫn còn.', INBOX_SRC,
+  `The send answered 409 thread_locked (a colleague claimed the thread meanwhile): error Notice "Tin chưa gửi. Nội dung bạn soạn vẫn còn." plus "Hoàng Nam đang trả lời — Tiếp quản?" with "Tiếp quản"; the draft stays in the composer. Details of the 409 carry the holder id and assignment_version.`,
+  WM_PLANNED);
+add('WM', 'Hội thoại · vừa đổi người phụ trách', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { note: 'claim or takeover answers 409 on a stale assignment_version' }], 'Hội thoại vừa được cập nhật, đã tải lại.', INBOX_SRC,
+  `A claim or takeover sent with an old assignment_version answers 409: info Notice "Hội thoại vừa được cập nhật, đã tải lại." (the sentence of today's thread view) and the thread shows its new holder; the dialog closes.`,
+  WM_PLANNED);
+add('WM', 'Hội thoại · không có quyền nhận', 'state', '/inbox', 'reception', [...as('reception', '/inbox'), { note: 'open a conversation as reception (no thread.claim)' }], 'Vai trò của bạn chỉ xem được hội thoại', INBOX_SRC,
+  `Role without thread.claim (reception, accountant): read-only thread. Info Notice "Vai trò của bạn chỉ xem được hội thoại, không nhận hay trả lời được." instead of the holder banner; no "Nhận", no composer. Accountant and reception never hold a thread (PLAN-AI01-O §3). Wording provisional.`,
+  WM_PLANNED);
+add('WM', 'Hội thoại · đang tải', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { note: 'GET /api/v1/conversations/{id} pending' }], 'Hội thoại', INBOX_SRC,
+  `The thread pane while the conversation and the holder are loading: header skeleton, three bubbles, the composer disabled; the buttons "Nhận", "Trả lại", "Tiếp quản" appear only after the holder is known.`,
+  WM_PLANNED);
+
+// ---- /inbox: dialogs
+add('WM', 'Nhận hội thoại', 'dialog', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { button: 'Nhận' }], 'Nhận hội thoại này?', INBOX_SRC,
+  `ConfirmDialog (normal) "Nhận hội thoại này?", message "Bạn sẽ là người phụ trách và là người duy nhất nhắn khách qua "Long" cho đến khi trả lại hoặc có người tiếp quản. Cả đội thấy trên nhóm Zalo.", buttons "Hủy" / "Nhận". Calls POST /api/v1/conversations/{id}/claim (thread.claim; body assignment_version optional). Success toast "Đã nhận hội thoại #3F2A.". 409 thread_locked turns into the locked thread state.`,
+  WM_PLANNED);
+add('WM', 'Tiếp quản hội thoại', 'dialog', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { button: 'Tiếp quản' }], 'Tiếp quản hội thoại', INBOX_SRC,
+  `Dialog, subtitle "Hoàng Nam đang phụ trách hội thoại #3F2A.". Required textarea "Lý do tiếp quản" (max 500, hint "Chỉ nhân viên xem được lý do; khách không thấy."), info Notice "Hoàng Nam, bạn và nhóm Zalo của đội sẽ nhận thông báo.", buttons "Hủy" / "Tiếp quản" (disabled until a reason is typed). Calls POST /api/v1/conversations/{id}/takeover {reason, assignment_version}. Success toast "Đã tiếp quản hội thoại #3F2A.". 409 invalid_state when nobody holds it ("Hội thoại chưa có người phụ trách. Hãy bấm Nhận.") or you already do ("Bạn đang phụ trách hội thoại này.").`,
+  WM_PLANNED);
+add('WM', 'Tiếp quản · chưa nhập lý do', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { button: 'Tiếp quản' }, { note: 'submit with an empty reason' }], 'Hãy nhập lý do tiếp quản.', INBOX_SRC,
+  `The reason field in error: "Hãy nhập lý do tiếp quản." (422 min_length 1); the button "Tiếp quản" stays disabled.`,
+  WM_PLANNED);
+add('WM', 'Trả lại hội thoại', 'dialog', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { button: 'Trả lại' }], 'Trả lại hội thoại', INBOX_SRC,
+  `Dialog, subtitle "#3F2A · Long". Radio "Trả lại cho": "Về hàng chờ" (hint "Ai cũng nhận được; hội thoại hiện ở tab Chờ nhận.") and "Trả lại cho trợ lý AI" (hint "Trợ lý tiếp tục phụ trách. Chỉ trả được khi bệnh nhân đang ở trạng thái nhân viên xử lý."), textarea "Ghi chú bàn giao" (max 500, hint "Trợ lý đọc ghi chú này ở các lượt sau. Thông tin cá nhân được che trước khi lưu."), buttons "Hủy" / "Trả lại". Calls POST /api/v1/conversations/{id}/release {to_agent, note}; holder or owner/manager only. Success toasts "Đã trả hội thoại về hàng chờ." / "Đã trả hội thoại lại cho trợ lý.".`,
+  WM_PLANNED);
+add('WM', 'Trả lại · trợ lý chưa sẵn sàng', 'state', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { button: 'Trả lại' }, { note: 'to_agent answers 501 or 409 invalid_state' }], 'Chưa nối với trợ lý chăm sóc nên chưa trả lại cho trợ lý được.', INBOX_SRC,
+  `Warn Notice inside the open dialog with the backend sentence; the thread stays as it was and "Về hàng chờ" still works. Sentences: 501 "Chưa nối với trợ lý chăm sóc nên chưa trả lại cho trợ lý được." (until package M7 wires the care loop), 409 "Bệnh nhân không ở trạng thái nhân viên đang xử lý, chưa thể trả lại cho trợ lý.", 409 "Hội thoại chưa gắn với bệnh nhân nên không trả lại cho trợ lý được.".`,
+  WM_PLANNED);
+add('WM', 'Giao hội thoại cho đồng nghiệp', 'dialog', '/inbox', 'manager', [...as('manager', '/inbox'), { button: 'Giao cho...' }], 'Giao hội thoại cho đồng nghiệp', INBOX_SRC,
+  `Owner and manager only (thread.assign). Select "Người phụ trách" filled by GET /api/v1/staff/assignable (name and role label) with the extra first option "Bỏ người phụ trách (về hàng chờ)"; buttons "Hủy" / "Giao". Calls POST /api/v1/conversations/{id}/assign {user_id | null}. Success toast "Đã giao hội thoại cho Mai Anh.". The previous holder, the new holder and the team group are notified.`,
+  WM_PLANNED);
+add('WM', 'Lịch sử phụ trách', 'dialog', '/inbox', 'cs_staff', [...as('cs_staff', '/inbox'), { button: 'Lịch sử phụ trách' }], 'Lịch sử phụ trách', INBOX_SRC,
+  `Sheet "Lịch sử phụ trách", subtitle "#3F2A · Long". Timeline, newest first, from GET /api/v1/conversations/{id}/assignments: kind label (Nhận, Tiếp quản, Trả lại, Hết ca, Giao), who, previous holder, time, and the takeover reason (staff only). Empty text "Hội thoại chưa có người phụ trách nào.".`,
+  WM_PLANNED);
+
+// ---- /admin/accounts: identities
+add('WM', 'Tài khoản Zalo · danh tính và giới hạn gửi', 'page', '/admin/accounts', 'owner', as('owner', '/admin/accounts'), 'Danh tính', WM_ACC_SRC,
+  `${WMS}Existing page /admin/accounts with each account read as a clinic identity: badge "Khách hàng" (customer) or "Nội bộ" (internal), the line of limits that apply now ("Giới hạn đang áp dụng: ... (theo kênh)" or "(riêng)"), who is on duty today, buttons "Sửa danh tính" and "Lịch trực"; a new card "Tài khoản thông báo nội bộ" with its status. No credential field anywhere: a token, cookie or QR payload never reaches the screen (Login QR and "Sửa" stay as they are). Reads GET /api/v1/identities; owner and manager (identity.manage, admin.accounts).`,
+  WM_PLANNED);
+add('WM', 'Tài khoản Zalo · chưa có tài khoản thông báo nội bộ', 'state', '/admin/accounts', 'owner', [...as('owner', '/admin/accounts'), { note: 'no identity with purpose internal' }], 'Chưa có tài khoản thông báo nội bộ', WM_ACC_SRC,
+  `Card "Tài khoản thông báo nội bộ" without an account: warn Notice "Chưa có tài khoản thông báo nội bộ. Chuông Zalo và nhóm Zalo của đội bị bỏ qua; nhân viên chỉ nhận thông báo trong ứng dụng." and the button "Chọn tài khoản nội bộ" (sets purpose internal through "Sửa danh tính"). The chain skips the step and logs it (PLAN-AI01-O §7). Provisional until O3.`,
+  WM_PLANNED);
+add('WM', 'Sửa danh tính', 'dialog', '/admin/accounts', 'owner', [...as('owner', '/admin/accounts'), { button: 'Sửa danh tính' }], 'Sửa danh tính', WM_ACC_SRC,
+  `Dialog "Sửa danh tính: Long". Fields "Tên danh tính" (the name the customer sees), radio "Mục đích" ("Khách hàng" = nhắn tin với khách; "Nội bộ" = chỉ gửi thông báo cho nhân viên), "Tối đa tin chủ động mỗi ngày", "Cách nhau tối thiểu (giây)", "Cách nhau tối đa (giây)" with placeholders that show the channel value ("Theo kênh: 5"); hint "Để trống = dùng giới hạn của kênh.". Buttons "Hủy" / "Lưu". Calls PATCH /api/v1/identities/{account_id} (identity.manage). No credential field.`,
+  WM_PLANNED);
+add('WM', 'Sửa danh tính · giới hạn không hợp lệ', 'state', '/admin/accounts', 'owner', [...as('owner', '/admin/accounts'), { button: 'Sửa danh tính' }, { note: 'minimum gap larger than maximum gap' }], 'Khoảng nghỉ tối thiểu không được lớn hơn khoảng nghỉ tối đa.', WM_ACC_SRC,
+  `Field error under "Cách nhau tối thiểu (giây)": "Khoảng nghỉ tối thiểu không được lớn hơn khoảng nghỉ tối đa."; "Lưu" disabled. Ranges: gap 0 to 86400 seconds, cap 0 to 100000.`,
+  WM_PLANNED);
+add('WM', 'Sửa danh tính · không đổi được mục đích', 'state', '/admin/accounts', 'owner', [...as('owner', '/admin/accounts'), { button: 'Sửa danh tính' }, { note: 'purpose change refused (409)' }], 'Không đổi được: còn hội thoại đang gắn với danh tính này.', WM_ACC_SRC,
+  `Red notice inside the open dialog with the backend sentence: "Không đổi được: còn hội thoại đang gắn với danh tính này." (customer to internal while threads exist) or "Không đổi được: hãy xóa lịch trực của danh tính này trước." (a roster still points at it). The form stays open.`,
+  WM_PLANNED);
+add('WM', 'Cài đặt thông báo nội bộ', 'dialog', '/admin/accounts', 'owner', [...as('owner', '/admin/accounts'), { button: 'Cài đặt thông báo' }], 'Cài đặt thông báo', WM_ACC_SRC,
+  `PROVISIONAL (O3). Dialog "Cài đặt thông báo": switches "Chuông Zalo cho nhân viên", "Đăng nhóm Zalo của đội" and "Đẩy lên điện thoại" (off until push credentials exist), field "Chờ xác nhận trước khi gọi qua Zalo (phút)" default 3, status line "Nhóm Zalo của đội: Đã đặt". The group id and any token are never shown. Buttons "Hủy" / "Lưu". Settings live in clinic.channel_setting.config or a small settings row (O3 recipe).`,
+  WM_PLANNED);
+
+// ---- /admin/roster: roster (new route)
+add('WM', 'Lịch trực', 'page', '/admin/roster', 'manager', as('manager', '/admin/roster'), 'Lịch trực', WM_ROSTER_SRC,
+  `${WMS}New page, menu entry "Lịch trực" in "Zalo & CSKH". One identity at a time (tabs of the customer identities), card "Đang trực bây giờ" (GET /api/v1/identities/{id}/on-duty, each with "Kết thúc ca"), then the week grid Monday to Sunday of that identity with one block per slot (operator, hours, role colour) and "Thêm ca" per day; "Thêm ca trực" in the header. Read: roster.read (owner, manager, doctor, cs_staff); change: roster.manage (owner, manager). Calls GET /api/v1/roster?account_id=.`,
+  wmRoute('/admin/roster'));
+add('WM', 'Lịch trực · chỉ xem', 'state', '/admin/roster', 'cs_staff', [...as('cs_staff', '/admin/roster'), { note: 'role with roster.read only' }], 'Bạn chỉ xem được lịch trực.', WM_ROSTER_SRC,
+  `Doctor and cs_staff read the roster: info Notice "Bạn chỉ xem được lịch trực. Thêm, sửa ca và kết thúc ca là việc của chủ phòng khám và quản lý.", no "Thêm ca trực", no "Thêm ca", no "Kết thúc ca"; a slot is not clickable.`,
+  wmRoute('/admin/roster'));
+add('WM', 'Lịch trực · chưa có ca', 'state', '/admin/roster', 'manager', [...as('manager', '/admin/roster'), { note: 'no roster entry for the identity' }], 'Chưa có ca trực nào', WM_ROSTER_SRC,
+  `EmptyState "Chưa có ca trực nào" / "Chưa ai trực danh tính này. Hội thoại mới vào hàng chờ và ai cũng nhận được." and the button "Thêm ca trực". Without a roster the queue works as today.`,
+  wmRoute('/admin/roster'));
+add('WM', 'Lịch trực · lỗi tải', 'state', '/admin/roster', 'manager', [...as('manager', '/admin/roster'), { note: 'GET /api/v1/roster failing' }], 'Thử lại', WM_ROSTER_SRC,
+  `RetryNotice with the backend sentence and "Thử lại"; the identity tabs stay.`,
+  wmRoute('/admin/roster'));
+add('WM', 'Thêm ca trực', 'dialog', '/admin/roster', 'manager', [...as('manager', '/admin/roster'), { button: 'Thêm ca trực' }], 'Thêm ca trực', WM_ROSTER_SRC,
+  `Dialog. Fields "Danh tính" (customer identities only), "Người trực" (assignable staff: owner, manager, doctor, cs_staff), radio "Kiểu lịch" ("Lặp theo thứ" / "Một ngày"), weekday chips Thứ 2 to CN (repeat) or a date (one day), "Từ" and "Đến" (hint "Giờ đến nhỏ hơn giờ từ: ca kết thúc vào sáng hôm sau."), "Ghi chú" (max 200). Buttons "Hủy" / "Thêm ca". Calls POST /api/v1/roster (roster.manage). Success toast "Đã thêm ca trực.".`,
+  wmRoute('/admin/roster'));
+add('WM', 'Thêm ca trực · một ngày và ca qua đêm', 'state', '/admin/roster', 'manager', [...as('manager', '/admin/roster'), { button: 'Thêm ca trực' }, { text: 'Một ngày' }], 'Một ngày', WM_ROSTER_SRC,
+  `"Một ngày" chosen: a date field replaces the weekday chips (cover for one date). "Từ 22:00" "Đến 06:00" shows the hint "Ca kết thúc vào 06:00 sáng hôm sau." (end earlier than start = next morning, +07:00 clock).`,
+  wmRoute('/admin/roster'));
+add('WM', 'Thêm ca trực · lỗi nhập', 'state', '/admin/roster', 'manager', [...as('manager', '/admin/roster'), { button: 'Thêm ca trực' }, { note: 'start equals end (422)' }], 'Giờ bắt đầu và giờ kết thúc phải khác nhau.', WM_ROSTER_SRC,
+  `Red line at the end of the form with the backend sentence. Other sentences: "Người trực phải là nhân viên đang hoạt động có vai trò xử lý hội thoại.", "Chọn lịch lặp theo thứ hoặc một ngày cụ thể, không chọn cả hai.", "Danh tính nội bộ không có lịch trực.", "Danh tính không tồn tại.".`,
+  wmRoute('/admin/roster'));
+add('WM', 'Sửa ca trực', 'dialog', '/admin/roster', 'manager', [...as('manager', '/admin/roster'), { text: 'Mai Anh' }], 'Sửa ca trực', WM_ROSTER_SRC,
+  `Same form titled "Sửa ca trực" opened from a slot, filled with its values; footer "Xóa ca" (left), "Hủy", "Lưu". Calls PATCH /api/v1/roster/{entry_id} with the version read (409 on a stale version) and DELETE for "Xóa ca".`,
+  wmRoute('/admin/roster'));
+add('WM', 'Sửa ca trực · ca vừa được sửa', 'state', '/admin/roster', 'manager', [...as('manager', '/admin/roster'), { text: 'Mai Anh' }, { note: 'PATCH answers 409 version' }], 'Ca trực vừa được người khác sửa. Đã tải lại.', WM_ROSTER_SRC,
+  `Info Notice "Ca trực vừa được người khác sửa. Đã tải lại." in the form, with the fresh values; the user saves again.`,
+  wmRoute('/admin/roster'));
+add('WM', 'Xóa ca trực', 'dialog', '/admin/roster', 'manager', [...as('manager', '/admin/roster'), { text: 'Mai Anh' }, { button: 'Xóa ca' }], 'Xóa ca trực này?', WM_ROSTER_SRC,
+  `ConfirmDialog (danger) "Xóa ca trực này?", message "Mai Anh sẽ không còn được xếp trực "Long" vào các giờ này. Hội thoại đang giữ không bị đổi.", buttons "Hủy" / "Xóa ca". Toast "Đã xóa ca trực.".`,
+  wmRoute('/admin/roster'));
+add('WM', 'Kết thúc ca của nhân viên', 'dialog', '/admin/roster', 'manager', [...as('manager', '/admin/roster'), { button: 'Kết thúc ca' }], 'Kết thúc ca của', WM_ROSTER_SRC,
+  `ConfirmDialog (danger) "Kết thúc ca của Mai Anh?", message "Các hội thoại đang mở của Mai Anh chuyển cho người đang trực danh tính đó; nếu không có ai trực, chuyển về hàng chờ. Cả hai bên và nhóm Zalo nhận thông báo.", buttons "Hủy" / "Kết thúc ca". Calls POST /api/v1/staff/{user_id}/end-shift (thread.end_shift, owner and manager).`,
+  wmRoute('/admin/roster'));
+add('WM', 'Kết thúc ca · kết quả', 'state', '/admin/roster', 'manager', [...as('manager', '/admin/roster'), { button: 'Kết thúc ca' }, { button: 'Kết thúc ca' }], 'Đã kết thúc ca: 4 hội thoại chuyển người trực', WM_ROSTER_SRC,
+  `Toast "Đã kết thúc ca: 4 hội thoại chuyển người trực, 1 về hàng chờ, 0 bỏ qua." from EndShiftResult (rerouted, to_queue, skipped); the card "Đang trực bây giờ" drops the person. Skipped = changed hands in the meantime.`,
+  wmRoute('/admin/roster'));
+
+// ---- /me/notifications (new route, PROVISIONAL until O3)
+add('WM', 'Thông báo của tôi', 'page', '/me/notifications', 'cs_staff', as('cs_staff', '/me/notifications'), 'Thông báo của tôi', WM_ME_SRC,
+  `${WMS}New page, not in the menu (reached from the bell of the top bar and the user chip). PROVISIONAL until O3 merges. Cards: "Trong ứng dụng" (always on), "Đẩy lên điện thoại" (status; devices registered through POST/DELETE /api/v1/me/push-tokens), "Chuông Zalo" (link state; POST /api/v1/me/notify-zalo/link starts a one-time code), "Giờ yên tĩnh" (from, to; "Tin khẩn vẫn đổ chuông."), and an info Notice about the team group. Every operator role may open it; it only touches the signed-in user. Notifications carry no PII: short code, identity label, urgency, masked summary, deep link.`,
+  wmRoute('/me/notifications'));
+add('WM', 'Thông báo của tôi · chưa liên kết Zalo', 'state', '/me/notifications', 'cs_staff', [...as('cs_staff', '/me/notifications'), { note: 'notify_zalo_user_id empty' }], 'Chưa liên kết', WM_ME_SRC,
+  `Card "Chuông Zalo" unlinked: badge "Chưa liên kết", text "Liên kết Zalo cá nhân để Pema gọi bạn khi bạn chưa mở thông báo sau 3 phút.", button "Liên kết Zalo". PROVISIONAL (O3).`,
+  wmRoute('/me/notifications'));
+add('WM', 'Liên kết Zalo · mã một lần', 'dialog', '/me/notifications', 'cs_staff', [...as('cs_staff', '/me/notifications'), { button: 'Liên kết Zalo' }], 'Liên kết Zalo', WM_ME_SRC,
+  `PROVISIONAL (O3). Dialog "Liên kết Zalo" with the one-time code in a code block (for example "PEMA-7K3Q"), three steps ("Mở Zalo trên điện thoại.", "Gửi mã này cho tài khoản "Pema Nội bộ".", "Chờ vài giây: trang này tự cập nhật."), the line "Mã dùng một lần, còn hiệu lực 09:12.". Button "Đóng". The internal account stores notify_zalo_user_id and the consent time when it receives the code; it never answers customers.`,
+  wmRoute('/me/notifications'));
+add('WM', 'Liên kết Zalo · mã hết hạn', 'state', '/me/notifications', 'cs_staff', [...as('cs_staff', '/me/notifications'), { button: 'Liên kết Zalo' }, { note: 'the code expired' }], 'Mã đã hết hạn.', WM_ME_SRC,
+  `PROVISIONAL (O3). Red line "Mã đã hết hạn. Tạo mã mới và gửi lại." and the button "Tạo mã mới"; a used code reads "Mã này đã được dùng.".`,
+  wmRoute('/me/notifications'));
+add('WM', 'Thông báo của tôi · đã liên kết Zalo', 'state', '/me/notifications', 'cs_staff', [...as('cs_staff', '/me/notifications'), { note: 'link completed' }], 'Đã liên kết Zalo', WM_ME_SRC,
+  `PROVISIONAL (O3). Success toast "Đã liên kết Zalo." and the card "Chuông Zalo" with badge "Đã liên kết", "Đồng ý nhận thông báo ngày 20/09/2026" and "Hủy liên kết".`,
+  wmRoute('/me/notifications'));
+add('WM', 'Hủy liên kết Zalo', 'dialog', '/me/notifications', 'cs_staff', [...as('cs_staff', '/me/notifications'), { button: 'Hủy liên kết' }], 'Hủy liên kết Zalo?', WM_ME_SRC,
+  `PROVISIONAL (O3). ConfirmDialog (danger) "Hủy liên kết Zalo?", message "Pema sẽ không gọi bạn qua Zalo nữa. Bạn vẫn nhận thông báo trong ứng dụng.", buttons "Giữ liên kết" / "Hủy liên kết".`,
+  wmRoute('/me/notifications'));
+add('WM', 'Thông báo của tôi · đã đăng ký điện thoại', 'state', '/me/notifications', 'cs_staff', [...as('cs_staff', '/me/notifications'), { note: 'one push token registered' }], 'Đã đăng ký', WM_ME_SRC,
+  `PROVISIONAL (O3). Card "Đẩy lên điện thoại" with badge "Đã đăng ký", the device row ("Điện thoại của tôi · iOS · hoạt động 20/09") and "Hủy đăng ký" (DELETE /api/v1/me/push-tokens). Today the real chain is in-app, Zalo bell, team group: the mobile app has no push client yet.`,
+  wmRoute('/me/notifications'));
+add('WM', 'Thông báo của tôi · giờ yên tĩnh', 'state', '/me/notifications', 'cs_staff', [...as('cs_staff', '/me/notifications'), { note: 'quiet hours switched on and saved' }], 'Tin khẩn vẫn đổ chuông.', WM_ME_SRC,
+  `PROVISIONAL (O3). Quiet hours on, "Từ 22:00" "Đến 06:00", saved toast "Đã lưu giờ yên tĩnh."; hint "Tin khẩn vẫn đổ chuông.". Only the Zalo bell is silenced; urgency critical still rings.`,
+  wmRoute('/me/notifications'));
+add('WM', 'Thông báo của tôi · chưa có tài khoản nội bộ', 'state', '/me/notifications', 'cs_staff', [...as('cs_staff', '/me/notifications'), { note: 'no internal notifier configured' }], 'Phòng khám chưa cấu hình tài khoản thông báo nội bộ', WM_ME_SRC,
+  `PROVISIONAL (O3). Warn Notice "Phòng khám chưa cấu hình tài khoản thông báo nội bộ nên chưa liên kết Zalo được. Bạn vẫn nhận thông báo trong ứng dụng." and "Liên kết Zalo" disabled.`,
+  wmRoute('/me/notifications'));
+add('WM', 'Thông báo của tôi · đang tải và lỗi', 'state', '/me/notifications', 'cs_staff', [...as('cs_staff', '/me/notifications'), { note: 'settings request failing' }], 'Thử lại', WM_ME_SRC,
+  `PROVISIONAL (O3). While loading: three card skeletons; on failure RetryNotice "Thử lại" above the cards.`,
+  wmRoute('/me/notifications'));
 
 // Routes that are pure redirects or development-only: recorded so that "every FE route is claimed" holds.
 const non_screens_nextjs = [

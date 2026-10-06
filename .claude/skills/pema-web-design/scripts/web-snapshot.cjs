@@ -390,6 +390,7 @@ function tokensSummary(screens) {
 
 (async () => {
   const inventory = readJson(INVENTORY);
+  inventory.screens = inventory.screens.filter((s) => !s.planned); // O5: planned ids (group WM) have no page to walk yet
   INV_ROLE = inventory.role;
   if (SHOW) {
     const all = readJson(OUT);

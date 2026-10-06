@@ -75,15 +75,19 @@
     {
       "code": "WL",
       "name": "Đăng nhập, khung & mẫu tin (Next.js)"
+    },
+    {
+      "code": "WM",
+      "name": "Inbox chia sẻ (Next.js)"
     }
   ],
   "counts": {
-    "total": 384,
+    "total": 435,
     "by_kind": {
-      "dialog": 66,
+      "dialog": 79,
       "modal": 6,
-      "page": 55,
-      "state": 238,
+      "page": 59,
+      "state": 272,
       "tab": 19
     },
     "by_group": {
@@ -98,7 +102,8 @@
       "WI": 42,
       "WJ": 115,
       "WK": 39,
-      "WL": 19
+      "WL": 19,
+      "WM": 51
     }
   },
   "screens": [
@@ -17972,6 +17977,1951 @@
         390,
         844
       ]
+    },
+    {
+      "id": "WM1",
+      "group": "WM",
+      "name": "Inbox · Chờ nhận",
+      "kind": "page",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        }
+      ],
+      "expect": {
+        "text": "Chờ nhận"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [],
+      "notes": "Next.js build in step O6. Existing page /inbox with three tabs \"Chờ nhận\", \"Của tôi\", \"Tất cả\" (counts beside the names), the identity filter \"Tất cả danh tính\" (aria \"Lọc theo danh tính\"), the search \"Tìm theo tên, mã hồ sơ hoặc nội dung\" and the status chips of today. Each row: patient name, one-line preview, time, unread badge, the identity badge (\"Long\") and the holder line (\"Chưa ai nhận\", \"Mai Anh đang giữ\", \"Bạn đang giữ\"). Queue tab = unassigned conversations. Calls GET /api/v1/conversations (assigned_user_id, conversation_status, q) and GET /api/v1/identities for the filter; assignment.changed and inbox.changed events refresh it. Account filter and queue filter are provisional: the list DTO has no account_id yet.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM2",
+      "group": "WM",
+      "name": "Inbox · Của tôi",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "text": "Của tôi"
+        }
+      ],
+      "expect": {
+        "text": "Của tôi"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Tab \"Của tôi\": the conversations the signed-in operator holds (GET /api/v1/conversations?assigned_user_id=<me>), the holder line reads \"Bạn đang giữ\". Empty text \"Bạn chưa phụ trách hội thoại nào\" / \"Bấm Nhận ở một hội thoại trong tab Chờ nhận.\".",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM3",
+      "group": "WM",
+      "name": "Inbox · Tất cả · lọc theo danh tính",
+      "kind": "state",
+      "role": "owner",
+      "reach": [
+        {
+          "login": "owner"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "text": "Tất cả"
+        },
+        {
+          "button": "Tất cả danh tính"
+        },
+        {
+          "text": "Long"
+        }
+      ],
+      "expect": {
+        "text": "Tất cả"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Tab \"Tất cả\" with the identity filter set to \"Long\": rows of one identity only, every holder visible; owner and manager also see the \"Giao cho...\" action in a thread. The filter lists the customer identities from GET /api/v1/identities (purpose customer), never the internal notifier.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM4",
+      "group": "WM",
+      "name": "Inbox · hàng chờ trống",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "note": "no unassigned conversation"
+        }
+      ],
+      "expect": {
+        "text": "Không có hội thoại nào đang chờ nhận"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "EmptyState \"Không có hội thoại nào đang chờ nhận\" / \"Hội thoại mới chưa có người phụ trách sẽ hiện ở đây.\" in the tab \"Chờ nhận\". The other tabs keep the existing text \"Không có hội thoại nào\" / \"Đổi bộ lọc hoặc từ khóa tìm kiếm.\".",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM5",
+      "group": "WM",
+      "name": "Inbox · đang tải",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "note": "GET /api/v1/conversations pending (delay it)"
+        }
+      ],
+      "expect": {
+        "text": "Inbox"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Header, tabs and filters are drawn; the list is the 5-row ListSkeleton of today (ListSkeleton in src/components/ops/ops-ui.tsx). The thread pane shows the empty text of today.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM6",
+      "group": "WM",
+      "name": "Inbox · lỗi tải",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "note": "GET /api/v1/conversations failing"
+        }
+      ],
+      "expect": {
+        "text": "Thử lại"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "RetryNotice of today (the backend sentence and \"Thử lại\") above the list; tabs and filters stay usable.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM7",
+      "group": "WM",
+      "name": "Hội thoại · chưa có người phụ trách",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "note": "open an unassigned conversation"
+        }
+      ],
+      "expect": {
+        "text": "Chưa có người phụ trách"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Thread of an unassigned conversation. Info Notice \"Chưa có người phụ trách. Bấm Nhận để phụ trách hội thoại này; gửi tin trả lời cũng tự nhận.\" with the primary button \"Nhận\" (opens the dialog \"Nhận hội thoại này?\"). The composer is open: the first reply of an operator claims the thread (O2). Under the composer \"Khách thấy tin này từ \"Long\", không thấy tên nhân viên.\" (the customer sees the identity only).",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM8",
+      "group": "WM",
+      "name": "Hội thoại · tôi đang phụ trách",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "note": "open a conversation the signed-in operator holds"
+        }
+      ],
+      "expect": {
+        "text": "Bạn đang phụ trách hội thoại này."
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Success Notice \"Bạn đang phụ trách hội thoại này.\" with \"Trả lại\" and \"Lịch sử phụ trách\"; composer open; a colleague who only looks shows as \"Phạm Quốc Việt đang xem\" (a manager reading, no lock). Replaces the button \"Nhận xử lý\" and the \"Phụ trách:\" picker for operators (the picker stays for owner and manager as \"Giao cho...\").",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM9",
+      "group": "WM",
+      "name": "Hội thoại · đồng nghiệp đang trả lời · soạn tin bị khóa",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "note": "open a conversation another operator holds"
+        }
+      ],
+      "expect": {
+        "text": "đang trả lời — Tiếp quản?"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Warn Notice with the backend sentence of 409 thread_locked: \"Hoàng Nam đang trả lời — Tiếp quản?\" and the button \"Tiếp quản\" (opens the dialog \"Tiếp quản hội thoại\"). The composer is disabled with the placeholder \"Hoàng Nam đang phụ trách. Tiếp quản để nhắn khách.\" and \"Gửi\" disabled; the thread stays readable. Owner and manager also get \"Giao cho...\" and \"Lịch sử phụ trách\". Today's softer warning \"... Bạn vẫn nhắn được, nhưng hãy hỏi đồng nghiệp trước\" goes away: the lock is real.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM10",
+      "group": "WM",
+      "name": "Hội thoại · điện thoại · chưa có người phụ trách",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "note": "phone width, ?c=<unassigned id>"
+        }
+      ],
+      "expect": {
+        "text": "Chưa có người phụ trách"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "390x844"
+      ],
+      "covers": [],
+      "notes": "390 px: the thread is a child screen (back link \"Danh sách hội thoại\"), the holder Notice and the button \"Nhận\" full width, composer at the bottom above the tab bar.",
+      "source": "nextjs",
+      "planned": true,
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "id": "WM11",
+      "group": "WM",
+      "name": "Hội thoại · điện thoại · soạn tin bị khóa",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "note": "phone width, ?c=<held by a colleague>"
+        }
+      ],
+      "expect": {
+        "text": "đang trả lời — Tiếp quản?"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "390x844"
+      ],
+      "covers": [],
+      "notes": "390 px: the locked thread; \"Hoàng Nam đang trả lời — Tiếp quản?\" with \"Tiếp quản\" full width, composer disabled.",
+      "source": "nextjs",
+      "planned": true,
+      "viewport": [
+        390,
+        844
+      ]
+    },
+    {
+      "id": "WM12",
+      "group": "WM",
+      "name": "Hội thoại · đã bị tiếp quản",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "note": "an assignment.changed event moves the thread to a colleague while it is open"
+        }
+      ],
+      "expect": {
+        "text": "Đã bị tiếp quản"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Toast \"Đã bị tiếp quản\" when assignment.changed shows another holder while the operator has the thread open. The banner turns into \"Hoàng Nam đang trả lời — Tiếp quản?\", the composer locks and the draft the operator was typing stays in it (not sent, not lost). The same notice reaches the previous holder by the notification chain (in-app, then Zalo bell).",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM13",
+      "group": "WM",
+      "name": "Hội thoại · gửi bị chặn (thread_locked)",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "note": "POST /api/v1/conversations/{id}/messages answers 409 thread_locked"
+        }
+      ],
+      "expect": {
+        "text": "Tin chưa gửi. Nội dung bạn soạn vẫn còn."
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "The send answered 409 thread_locked (a colleague claimed the thread meanwhile): error Notice \"Tin chưa gửi. Nội dung bạn soạn vẫn còn.\" plus \"Hoàng Nam đang trả lời — Tiếp quản?\" with \"Tiếp quản\"; the draft stays in the composer. Details of the 409 carry the holder id and assignment_version.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM14",
+      "group": "WM",
+      "name": "Hội thoại · vừa đổi người phụ trách",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "note": "claim or takeover answers 409 on a stale assignment_version"
+        }
+      ],
+      "expect": {
+        "text": "Hội thoại vừa được cập nhật, đã tải lại."
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "A claim or takeover sent with an old assignment_version answers 409: info Notice \"Hội thoại vừa được cập nhật, đã tải lại.\" (the sentence of today's thread view) and the thread shows its new holder; the dialog closes.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM15",
+      "group": "WM",
+      "name": "Hội thoại · không có quyền nhận",
+      "kind": "state",
+      "role": "reception",
+      "reach": [
+        {
+          "login": "reception"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "note": "open a conversation as reception (no thread.claim)"
+        }
+      ],
+      "expect": {
+        "text": "Vai trò của bạn chỉ xem được hội thoại"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Role without thread.claim (reception, accountant): read-only thread. Info Notice \"Vai trò của bạn chỉ xem được hội thoại, không nhận hay trả lời được.\" instead of the holder banner; no \"Nhận\", no composer. Accountant and reception never hold a thread (PLAN-AI01-O §3). Wording provisional.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM16",
+      "group": "WM",
+      "name": "Hội thoại · đang tải",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "note": "GET /api/v1/conversations/{id} pending"
+        }
+      ],
+      "expect": {
+        "text": "Hội thoại"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "The thread pane while the conversation and the holder are loading: header skeleton, three bubbles, the composer disabled; the buttons \"Nhận\", \"Trả lại\", \"Tiếp quản\" appear only after the holder is known.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM17",
+      "group": "WM",
+      "name": "Nhận hội thoại",
+      "kind": "dialog",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "button": "Nhận"
+        }
+      ],
+      "expect": {
+        "text": "Nhận hội thoại này?"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "ConfirmDialog (normal) \"Nhận hội thoại này?\", message \"Bạn sẽ là người phụ trách và là người duy nhất nhắn khách qua \"Long\" cho đến khi trả lại hoặc có người tiếp quản. Cả đội thấy trên nhóm Zalo.\", buttons \"Hủy\" / \"Nhận\". Calls POST /api/v1/conversations/{id}/claim (thread.claim; body assignment_version optional). Success toast \"Đã nhận hội thoại #3F2A.\". 409 thread_locked turns into the locked thread state.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM18",
+      "group": "WM",
+      "name": "Tiếp quản hội thoại",
+      "kind": "dialog",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "button": "Tiếp quản"
+        }
+      ],
+      "expect": {
+        "text": "Tiếp quản hội thoại"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Dialog, subtitle \"Hoàng Nam đang phụ trách hội thoại #3F2A.\". Required textarea \"Lý do tiếp quản\" (max 500, hint \"Chỉ nhân viên xem được lý do; khách không thấy.\"), info Notice \"Hoàng Nam, bạn và nhóm Zalo của đội sẽ nhận thông báo.\", buttons \"Hủy\" / \"Tiếp quản\" (disabled until a reason is typed). Calls POST /api/v1/conversations/{id}/takeover {reason, assignment_version}. Success toast \"Đã tiếp quản hội thoại #3F2A.\". 409 invalid_state when nobody holds it (\"Hội thoại chưa có người phụ trách. Hãy bấm Nhận.\") or you already do (\"Bạn đang phụ trách hội thoại này.\").",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM19",
+      "group": "WM",
+      "name": "Tiếp quản · chưa nhập lý do",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "button": "Tiếp quản"
+        },
+        {
+          "note": "submit with an empty reason"
+        }
+      ],
+      "expect": {
+        "text": "Hãy nhập lý do tiếp quản."
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "The reason field in error: \"Hãy nhập lý do tiếp quản.\" (422 min_length 1); the button \"Tiếp quản\" stays disabled.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM20",
+      "group": "WM",
+      "name": "Trả lại hội thoại",
+      "kind": "dialog",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "button": "Trả lại"
+        }
+      ],
+      "expect": {
+        "text": "Trả lại hội thoại"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Dialog, subtitle \"#3F2A · Long\". Radio \"Trả lại cho\": \"Về hàng chờ\" (hint \"Ai cũng nhận được; hội thoại hiện ở tab Chờ nhận.\") and \"Trả lại cho trợ lý AI\" (hint \"Trợ lý tiếp tục phụ trách. Chỉ trả được khi bệnh nhân đang ở trạng thái nhân viên xử lý.\"), textarea \"Ghi chú bàn giao\" (max 500, hint \"Trợ lý đọc ghi chú này ở các lượt sau. Thông tin cá nhân được che trước khi lưu.\"), buttons \"Hủy\" / \"Trả lại\". Calls POST /api/v1/conversations/{id}/release {to_agent, note}; holder or owner/manager only. Success toasts \"Đã trả hội thoại về hàng chờ.\" / \"Đã trả hội thoại lại cho trợ lý.\".",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM21",
+      "group": "WM",
+      "name": "Trả lại · trợ lý chưa sẵn sàng",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "button": "Trả lại"
+        },
+        {
+          "note": "to_agent answers 501 or 409 invalid_state"
+        }
+      ],
+      "expect": {
+        "text": "Chưa nối với trợ lý chăm sóc nên chưa trả lại cho trợ lý được."
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Warn Notice inside the open dialog with the backend sentence; the thread stays as it was and \"Về hàng chờ\" still works. Sentences: 501 \"Chưa nối với trợ lý chăm sóc nên chưa trả lại cho trợ lý được.\" (until package M7 wires the care loop), 409 \"Bệnh nhân không ở trạng thái nhân viên đang xử lý, chưa thể trả lại cho trợ lý.\", 409 \"Hội thoại chưa gắn với bệnh nhân nên không trả lại cho trợ lý được.\".",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM22",
+      "group": "WM",
+      "name": "Giao hội thoại cho đồng nghiệp",
+      "kind": "dialog",
+      "role": "manager",
+      "reach": [
+        {
+          "login": "manager"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "button": "Giao cho..."
+        }
+      ],
+      "expect": {
+        "text": "Giao hội thoại cho đồng nghiệp"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Owner and manager only (thread.assign). Select \"Người phụ trách\" filled by GET /api/v1/staff/assignable (name and role label) with the extra first option \"Bỏ người phụ trách (về hàng chờ)\"; buttons \"Hủy\" / \"Giao\". Calls POST /api/v1/conversations/{id}/assign {user_id | null}. Success toast \"Đã giao hội thoại cho Mai Anh.\". The previous holder, the new holder and the team group are notified.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM23",
+      "group": "WM",
+      "name": "Lịch sử phụ trách",
+      "kind": "dialog",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/inbox"
+        },
+        {
+          "button": "Lịch sử phụ trách"
+        }
+      ],
+      "expect": {
+        "text": "Lịch sử phụ trách"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/inbox/page.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/conversation-list.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/thread-view.tsx",
+        "pema-agent/frontend/src/components/ops/inbox/presence-line.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Sheet \"Lịch sử phụ trách\", subtitle \"#3F2A · Long\". Timeline, newest first, from GET /api/v1/conversations/{id}/assignments: kind label (Nhận, Tiếp quản, Trả lại, Hết ca, Giao), who, previous holder, time, and the takeover reason (staff only). Empty text \"Hội thoại chưa có người phụ trách nào.\".",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM24",
+      "group": "WM",
+      "name": "Tài khoản Zalo · danh tính và giới hạn gửi",
+      "kind": "page",
+      "role": "owner",
+      "reach": [
+        {
+          "login": "owner"
+        },
+        {
+          "goto": "/admin/accounts"
+        }
+      ],
+      "expect": {
+        "text": "Danh tính"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/admin/accounts/page.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/admin/accounts",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [],
+      "notes": "Next.js build in step O6. Existing page /admin/accounts with each account read as a clinic identity: badge \"Khách hàng\" (customer) or \"Nội bộ\" (internal), the line of limits that apply now (\"Giới hạn đang áp dụng: ... (theo kênh)\" or \"(riêng)\"), who is on duty today, buttons \"Sửa danh tính\" and \"Lịch trực\"; a new card \"Tài khoản thông báo nội bộ\" with its status. No credential field anywhere: a token, cookie or QR payload never reaches the screen (Login QR and \"Sửa\" stay as they are). Reads GET /api/v1/identities; owner and manager (identity.manage, admin.accounts).",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM25",
+      "group": "WM",
+      "name": "Tài khoản Zalo · chưa có tài khoản thông báo nội bộ",
+      "kind": "state",
+      "role": "owner",
+      "reach": [
+        {
+          "login": "owner"
+        },
+        {
+          "goto": "/admin/accounts"
+        },
+        {
+          "note": "no identity with purpose internal"
+        }
+      ],
+      "expect": {
+        "text": "Chưa có tài khoản thông báo nội bộ"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/admin/accounts/page.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/admin/accounts",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Card \"Tài khoản thông báo nội bộ\" without an account: warn Notice \"Chưa có tài khoản thông báo nội bộ. Chuông Zalo và nhóm Zalo của đội bị bỏ qua; nhân viên chỉ nhận thông báo trong ứng dụng.\" and the button \"Chọn tài khoản nội bộ\" (sets purpose internal through \"Sửa danh tính\"). The chain skips the step and logs it (PLAN-AI01-O §7). Provisional until O3.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM26",
+      "group": "WM",
+      "name": "Sửa danh tính",
+      "kind": "dialog",
+      "role": "owner",
+      "reach": [
+        {
+          "login": "owner"
+        },
+        {
+          "goto": "/admin/accounts"
+        },
+        {
+          "button": "Sửa danh tính"
+        }
+      ],
+      "expect": {
+        "text": "Sửa danh tính"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/admin/accounts/page.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/admin/accounts",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Dialog \"Sửa danh tính: Long\". Fields \"Tên danh tính\" (the name the customer sees), radio \"Mục đích\" (\"Khách hàng\" = nhắn tin với khách; \"Nội bộ\" = chỉ gửi thông báo cho nhân viên), \"Tối đa tin chủ động mỗi ngày\", \"Cách nhau tối thiểu (giây)\", \"Cách nhau tối đa (giây)\" with placeholders that show the channel value (\"Theo kênh: 5\"); hint \"Để trống = dùng giới hạn của kênh.\". Buttons \"Hủy\" / \"Lưu\". Calls PATCH /api/v1/identities/{account_id} (identity.manage). No credential field.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM27",
+      "group": "WM",
+      "name": "Sửa danh tính · giới hạn không hợp lệ",
+      "kind": "state",
+      "role": "owner",
+      "reach": [
+        {
+          "login": "owner"
+        },
+        {
+          "goto": "/admin/accounts"
+        },
+        {
+          "button": "Sửa danh tính"
+        },
+        {
+          "note": "minimum gap larger than maximum gap"
+        }
+      ],
+      "expect": {
+        "text": "Khoảng nghỉ tối thiểu không được lớn hơn khoảng nghỉ tối đa."
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/admin/accounts/page.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/admin/accounts",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Field error under \"Cách nhau tối thiểu (giây)\": \"Khoảng nghỉ tối thiểu không được lớn hơn khoảng nghỉ tối đa.\"; \"Lưu\" disabled. Ranges: gap 0 to 86400 seconds, cap 0 to 100000.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM28",
+      "group": "WM",
+      "name": "Sửa danh tính · không đổi được mục đích",
+      "kind": "state",
+      "role": "owner",
+      "reach": [
+        {
+          "login": "owner"
+        },
+        {
+          "goto": "/admin/accounts"
+        },
+        {
+          "button": "Sửa danh tính"
+        },
+        {
+          "note": "purpose change refused (409)"
+        }
+      ],
+      "expect": {
+        "text": "Không đổi được: còn hội thoại đang gắn với danh tính này."
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/admin/accounts/page.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/admin/accounts",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Red notice inside the open dialog with the backend sentence: \"Không đổi được: còn hội thoại đang gắn với danh tính này.\" (customer to internal while threads exist) or \"Không đổi được: hãy xóa lịch trực của danh tính này trước.\" (a roster still points at it). The form stays open.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM29",
+      "group": "WM",
+      "name": "Cài đặt thông báo nội bộ",
+      "kind": "dialog",
+      "role": "owner",
+      "reach": [
+        {
+          "login": "owner"
+        },
+        {
+          "goto": "/admin/accounts"
+        },
+        {
+          "button": "Cài đặt thông báo"
+        }
+      ],
+      "expect": {
+        "text": "Cài đặt thông báo"
+      },
+      "sources": [
+        "pema-agent/frontend/src/app/(admin)/admin/accounts/page.tsx",
+        "pema-agent/docs/PLAN-AI01-O.md"
+      ],
+      "next_route": "/admin/accounts",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "PROVISIONAL (O3). Dialog \"Cài đặt thông báo\": switches \"Chuông Zalo cho nhân viên\", \"Đăng nhóm Zalo của đội\" and \"Đẩy lên điện thoại\" (off until push credentials exist), field \"Chờ xác nhận trước khi gọi qua Zalo (phút)\" default 3, status line \"Nhóm Zalo của đội: Đã đặt\". The group id and any token are never shown. Buttons \"Hủy\" / \"Lưu\". Settings live in clinic.channel_setting.config or a small settings row (O3 recipe).",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM30",
+      "group": "WM",
+      "name": "Lịch trực",
+      "kind": "page",
+      "role": "manager",
+      "reach": [
+        {
+          "login": "manager"
+        },
+        {
+          "goto": "/admin/roster"
+        }
+      ],
+      "expect": {
+        "text": "Lịch trực"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/01-O1-identities-limits-roster.md"
+      ],
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [],
+      "notes": "Next.js build in step O6. New page, menu entry \"Lịch trực\" in \"Zalo & CSKH\". One identity at a time (tabs of the customer identities), card \"Đang trực bây giờ\" (GET /api/v1/identities/{id}/on-duty, each with \"Kết thúc ca\"), then the week grid Monday to Sunday of that identity with one block per slot (operator, hours, role colour) and \"Thêm ca\" per day; \"Thêm ca trực\" in the header. Read: roster.read (owner, manager, doctor, cs_staff); change: roster.manage (owner, manager). Calls GET /api/v1/roster?account_id=.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM31",
+      "group": "WM",
+      "name": "Lịch trực · chỉ xem",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/admin/roster"
+        },
+        {
+          "note": "role with roster.read only"
+        }
+      ],
+      "expect": {
+        "text": "Bạn chỉ xem được lịch trực."
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/01-O1-identities-limits-roster.md"
+      ],
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Doctor and cs_staff read the roster: info Notice \"Bạn chỉ xem được lịch trực. Thêm, sửa ca và kết thúc ca là việc của chủ phòng khám và quản lý.\", no \"Thêm ca trực\", no \"Thêm ca\", no \"Kết thúc ca\"; a slot is not clickable.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM32",
+      "group": "WM",
+      "name": "Lịch trực · chưa có ca",
+      "kind": "state",
+      "role": "manager",
+      "reach": [
+        {
+          "login": "manager"
+        },
+        {
+          "goto": "/admin/roster"
+        },
+        {
+          "note": "no roster entry for the identity"
+        }
+      ],
+      "expect": {
+        "text": "Chưa có ca trực nào"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/01-O1-identities-limits-roster.md"
+      ],
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "EmptyState \"Chưa có ca trực nào\" / \"Chưa ai trực danh tính này. Hội thoại mới vào hàng chờ và ai cũng nhận được.\" and the button \"Thêm ca trực\". Without a roster the queue works as today.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM33",
+      "group": "WM",
+      "name": "Lịch trực · lỗi tải",
+      "kind": "state",
+      "role": "manager",
+      "reach": [
+        {
+          "login": "manager"
+        },
+        {
+          "goto": "/admin/roster"
+        },
+        {
+          "note": "GET /api/v1/roster failing"
+        }
+      ],
+      "expect": {
+        "text": "Thử lại"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/01-O1-identities-limits-roster.md"
+      ],
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "RetryNotice with the backend sentence and \"Thử lại\"; the identity tabs stay.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM34",
+      "group": "WM",
+      "name": "Thêm ca trực",
+      "kind": "dialog",
+      "role": "manager",
+      "reach": [
+        {
+          "login": "manager"
+        },
+        {
+          "goto": "/admin/roster"
+        },
+        {
+          "button": "Thêm ca trực"
+        }
+      ],
+      "expect": {
+        "text": "Thêm ca trực"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/01-O1-identities-limits-roster.md"
+      ],
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Dialog. Fields \"Danh tính\" (customer identities only), \"Người trực\" (assignable staff: owner, manager, doctor, cs_staff), radio \"Kiểu lịch\" (\"Lặp theo thứ\" / \"Một ngày\"), weekday chips Thứ 2 to CN (repeat) or a date (one day), \"Từ\" and \"Đến\" (hint \"Giờ đến nhỏ hơn giờ từ: ca kết thúc vào sáng hôm sau.\"), \"Ghi chú\" (max 200). Buttons \"Hủy\" / \"Thêm ca\". Calls POST /api/v1/roster (roster.manage). Success toast \"Đã thêm ca trực.\".",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM35",
+      "group": "WM",
+      "name": "Thêm ca trực · một ngày và ca qua đêm",
+      "kind": "state",
+      "role": "manager",
+      "reach": [
+        {
+          "login": "manager"
+        },
+        {
+          "goto": "/admin/roster"
+        },
+        {
+          "button": "Thêm ca trực"
+        },
+        {
+          "text": "Một ngày"
+        }
+      ],
+      "expect": {
+        "text": "Một ngày"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/01-O1-identities-limits-roster.md"
+      ],
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "\"Một ngày\" chosen: a date field replaces the weekday chips (cover for one date). \"Từ 22:00\" \"Đến 06:00\" shows the hint \"Ca kết thúc vào 06:00 sáng hôm sau.\" (end earlier than start = next morning, +07:00 clock).",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM36",
+      "group": "WM",
+      "name": "Thêm ca trực · lỗi nhập",
+      "kind": "state",
+      "role": "manager",
+      "reach": [
+        {
+          "login": "manager"
+        },
+        {
+          "goto": "/admin/roster"
+        },
+        {
+          "button": "Thêm ca trực"
+        },
+        {
+          "note": "start equals end (422)"
+        }
+      ],
+      "expect": {
+        "text": "Giờ bắt đầu và giờ kết thúc phải khác nhau."
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/01-O1-identities-limits-roster.md"
+      ],
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Red line at the end of the form with the backend sentence. Other sentences: \"Người trực phải là nhân viên đang hoạt động có vai trò xử lý hội thoại.\", \"Chọn lịch lặp theo thứ hoặc một ngày cụ thể, không chọn cả hai.\", \"Danh tính nội bộ không có lịch trực.\", \"Danh tính không tồn tại.\".",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM37",
+      "group": "WM",
+      "name": "Sửa ca trực",
+      "kind": "dialog",
+      "role": "manager",
+      "reach": [
+        {
+          "login": "manager"
+        },
+        {
+          "goto": "/admin/roster"
+        },
+        {
+          "text": "Mai Anh"
+        }
+      ],
+      "expect": {
+        "text": "Sửa ca trực"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/01-O1-identities-limits-roster.md"
+      ],
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Same form titled \"Sửa ca trực\" opened from a slot, filled with its values; footer \"Xóa ca\" (left), \"Hủy\", \"Lưu\". Calls PATCH /api/v1/roster/{entry_id} with the version read (409 on a stale version) and DELETE for \"Xóa ca\".",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM38",
+      "group": "WM",
+      "name": "Sửa ca trực · ca vừa được sửa",
+      "kind": "state",
+      "role": "manager",
+      "reach": [
+        {
+          "login": "manager"
+        },
+        {
+          "goto": "/admin/roster"
+        },
+        {
+          "text": "Mai Anh"
+        },
+        {
+          "note": "PATCH answers 409 version"
+        }
+      ],
+      "expect": {
+        "text": "Ca trực vừa được người khác sửa. Đã tải lại."
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/01-O1-identities-limits-roster.md"
+      ],
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Info Notice \"Ca trực vừa được người khác sửa. Đã tải lại.\" in the form, with the fresh values; the user saves again.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM39",
+      "group": "WM",
+      "name": "Xóa ca trực",
+      "kind": "dialog",
+      "role": "manager",
+      "reach": [
+        {
+          "login": "manager"
+        },
+        {
+          "goto": "/admin/roster"
+        },
+        {
+          "text": "Mai Anh"
+        },
+        {
+          "button": "Xóa ca"
+        }
+      ],
+      "expect": {
+        "text": "Xóa ca trực này?"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/01-O1-identities-limits-roster.md"
+      ],
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "ConfirmDialog (danger) \"Xóa ca trực này?\", message \"Mai Anh sẽ không còn được xếp trực \"Long\" vào các giờ này. Hội thoại đang giữ không bị đổi.\", buttons \"Hủy\" / \"Xóa ca\". Toast \"Đã xóa ca trực.\".",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM40",
+      "group": "WM",
+      "name": "Kết thúc ca của nhân viên",
+      "kind": "dialog",
+      "role": "manager",
+      "reach": [
+        {
+          "login": "manager"
+        },
+        {
+          "goto": "/admin/roster"
+        },
+        {
+          "button": "Kết thúc ca"
+        }
+      ],
+      "expect": {
+        "text": "Kết thúc ca của"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/01-O1-identities-limits-roster.md"
+      ],
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "ConfirmDialog (danger) \"Kết thúc ca của Mai Anh?\", message \"Các hội thoại đang mở của Mai Anh chuyển cho người đang trực danh tính đó; nếu không có ai trực, chuyển về hàng chờ. Cả hai bên và nhóm Zalo nhận thông báo.\", buttons \"Hủy\" / \"Kết thúc ca\". Calls POST /api/v1/staff/{user_id}/end-shift (thread.end_shift, owner and manager).",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM41",
+      "group": "WM",
+      "name": "Kết thúc ca · kết quả",
+      "kind": "state",
+      "role": "manager",
+      "reach": [
+        {
+          "login": "manager"
+        },
+        {
+          "goto": "/admin/roster"
+        },
+        {
+          "button": "Kết thúc ca"
+        },
+        {
+          "button": "Kết thúc ca"
+        }
+      ],
+      "expect": {
+        "text": "Đã kết thúc ca: 4 hội thoại chuyển người trực"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/01-O1-identities-limits-roster.md"
+      ],
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Toast \"Đã kết thúc ca: 4 hội thoại chuyển người trực, 1 về hàng chờ, 0 bỏ qua.\" from EndShiftResult (rerouted, to_queue, skipped); the card \"Đang trực bây giờ\" drops the person. Skipped = changed hands in the meantime.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM42",
+      "group": "WM",
+      "name": "Thông báo của tôi",
+      "kind": "page",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/me/notifications"
+        }
+      ],
+      "expect": {
+        "text": "Thông báo của tôi"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/03-O3-notifications.md"
+      ],
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "covers": [],
+      "notes": "Next.js build in step O6. New page, not in the menu (reached from the bell of the top bar and the user chip). PROVISIONAL until O3 merges. Cards: \"Trong ứng dụng\" (always on), \"Đẩy lên điện thoại\" (status; devices registered through POST/DELETE /api/v1/me/push-tokens), \"Chuông Zalo\" (link state; POST /api/v1/me/notify-zalo/link starts a one-time code), \"Giờ yên tĩnh\" (from, to; \"Tin khẩn vẫn đổ chuông.\"), and an info Notice about the team group. Every operator role may open it; it only touches the signed-in user. Notifications carry no PII: short code, identity label, urgency, masked summary, deep link.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM43",
+      "group": "WM",
+      "name": "Thông báo của tôi · chưa liên kết Zalo",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/me/notifications"
+        },
+        {
+          "note": "notify_zalo_user_id empty"
+        }
+      ],
+      "expect": {
+        "text": "Chưa liên kết"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/03-O3-notifications.md"
+      ],
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "Card \"Chuông Zalo\" unlinked: badge \"Chưa liên kết\", text \"Liên kết Zalo cá nhân để Pema gọi bạn khi bạn chưa mở thông báo sau 3 phút.\", button \"Liên kết Zalo\". PROVISIONAL (O3).",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM44",
+      "group": "WM",
+      "name": "Liên kết Zalo · mã một lần",
+      "kind": "dialog",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/me/notifications"
+        },
+        {
+          "button": "Liên kết Zalo"
+        }
+      ],
+      "expect": {
+        "text": "Liên kết Zalo"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/03-O3-notifications.md"
+      ],
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "PROVISIONAL (O3). Dialog \"Liên kết Zalo\" with the one-time code in a code block (for example \"PEMA-7K3Q\"), three steps (\"Mở Zalo trên điện thoại.\", \"Gửi mã này cho tài khoản \"Pema Nội bộ\".\", \"Chờ vài giây: trang này tự cập nhật.\"), the line \"Mã dùng một lần, còn hiệu lực 09:12.\". Button \"Đóng\". The internal account stores notify_zalo_user_id and the consent time when it receives the code; it never answers customers.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM45",
+      "group": "WM",
+      "name": "Liên kết Zalo · mã hết hạn",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/me/notifications"
+        },
+        {
+          "button": "Liên kết Zalo"
+        },
+        {
+          "note": "the code expired"
+        }
+      ],
+      "expect": {
+        "text": "Mã đã hết hạn."
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/03-O3-notifications.md"
+      ],
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "PROVISIONAL (O3). Red line \"Mã đã hết hạn. Tạo mã mới và gửi lại.\" and the button \"Tạo mã mới\"; a used code reads \"Mã này đã được dùng.\".",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM46",
+      "group": "WM",
+      "name": "Thông báo của tôi · đã liên kết Zalo",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/me/notifications"
+        },
+        {
+          "note": "link completed"
+        }
+      ],
+      "expect": {
+        "text": "Đã liên kết Zalo"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/03-O3-notifications.md"
+      ],
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "PROVISIONAL (O3). Success toast \"Đã liên kết Zalo.\" and the card \"Chuông Zalo\" with badge \"Đã liên kết\", \"Đồng ý nhận thông báo ngày 20/09/2026\" and \"Hủy liên kết\".",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM47",
+      "group": "WM",
+      "name": "Hủy liên kết Zalo",
+      "kind": "dialog",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/me/notifications"
+        },
+        {
+          "button": "Hủy liên kết"
+        }
+      ],
+      "expect": {
+        "text": "Hủy liên kết Zalo?"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/03-O3-notifications.md"
+      ],
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "PROVISIONAL (O3). ConfirmDialog (danger) \"Hủy liên kết Zalo?\", message \"Pema sẽ không gọi bạn qua Zalo nữa. Bạn vẫn nhận thông báo trong ứng dụng.\", buttons \"Giữ liên kết\" / \"Hủy liên kết\".",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM48",
+      "group": "WM",
+      "name": "Thông báo của tôi · đã đăng ký điện thoại",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/me/notifications"
+        },
+        {
+          "note": "one push token registered"
+        }
+      ],
+      "expect": {
+        "text": "Đã đăng ký"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/03-O3-notifications.md"
+      ],
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "PROVISIONAL (O3). Card \"Đẩy lên điện thoại\" with badge \"Đã đăng ký\", the device row (\"Điện thoại của tôi · iOS · hoạt động 20/09\") and \"Hủy đăng ký\" (DELETE /api/v1/me/push-tokens). Today the real chain is in-app, Zalo bell, team group: the mobile app has no push client yet.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM49",
+      "group": "WM",
+      "name": "Thông báo của tôi · giờ yên tĩnh",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/me/notifications"
+        },
+        {
+          "note": "quiet hours switched on and saved"
+        }
+      ],
+      "expect": {
+        "text": "Tin khẩn vẫn đổ chuông."
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/03-O3-notifications.md"
+      ],
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "PROVISIONAL (O3). Quiet hours on, \"Từ 22:00\" \"Đến 06:00\", saved toast \"Đã lưu giờ yên tĩnh.\"; hint \"Tin khẩn vẫn đổ chuông.\". Only the Zalo bell is silenced; urgency critical still rings.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM50",
+      "group": "WM",
+      "name": "Thông báo của tôi · chưa có tài khoản nội bộ",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/me/notifications"
+        },
+        {
+          "note": "no internal notifier configured"
+        }
+      ],
+      "expect": {
+        "text": "Phòng khám chưa cấu hình tài khoản thông báo nội bộ"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/03-O3-notifications.md"
+      ],
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "PROVISIONAL (O3). Warn Notice \"Phòng khám chưa cấu hình tài khoản thông báo nội bộ nên chưa liên kết Zalo được. Bạn vẫn nhận thông báo trong ứng dụng.\" and \"Liên kết Zalo\" disabled.",
+      "source": "nextjs",
+      "planned": true
+    },
+    {
+      "id": "WM51",
+      "group": "WM",
+      "name": "Thông báo của tôi · đang tải và lỗi",
+      "kind": "state",
+      "role": "cs_staff",
+      "reach": [
+        {
+          "login": "cs_staff"
+        },
+        {
+          "goto": "/me/notifications"
+        },
+        {
+          "note": "settings request failing"
+        }
+      ],
+      "expect": {
+        "text": "Thử lại"
+      },
+      "sources": [
+        "pema-agent/docs/PLAN-AI01-O.md",
+        "pema-agent/recipes/O/03-O3-notifications.md"
+      ],
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "legacy_shot": null,
+      "frames": [
+        "1440x900"
+      ],
+      "covers": [],
+      "notes": "PROVISIONAL (O3). While loading: three card skeletons; on failure RetryNotice \"Thử lại\" above the cards.",
+      "source": "nextjs",
+      "planned": true
     }
   ],
   "non_screens": [
