@@ -127,5 +127,13 @@ class Permission(StrEnum):
     """Read and edit the depth and autonomy matrix (the thresholds the doctor decides)."""
     CARE_APPROVE = "care.approve"
     """Clear the ``pending_doctor_approval`` badge of the matrix and the timing: doctor, manager, owner."""
+    IDENTITY_MANAGE = "identity.manage"
+    """Mark a channel account as customer-facing or internal and set its own send limits (package O). Owner
+    and manager. Never grants access to a credential: those never leave the server."""
+    ROSTER_MANAGE = "roster.manage"
+    """Enter, change and delete who covers each channel identity and when (package O). Owner and manager."""
+    ROSTER_READ = "roster.read"
+    """Read the channel identities and the roster (package O): every operator (owner, manager, doctor,
+    cs_staff), so the Inbox can filter by identity and show who is on duty."""
     AGENT_SUBMIT = "agent.submit"
     """Held by the agent worker's actor only: create review items, read minimal context."""
