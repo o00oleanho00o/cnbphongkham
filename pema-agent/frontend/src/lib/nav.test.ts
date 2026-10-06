@@ -37,6 +37,7 @@ const NOT_IN_MENU = [
   "/admin/care",
   "/admin/agents/new",
   "/admin/auth",
+  "/me/notifications",
   "/dev/kit",
   ...FINANCE_TABS,
 ];

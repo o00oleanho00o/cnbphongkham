@@ -63,9 +63,31 @@ export const accounts: S["AccountOut"][] = [
     auto_accept_friends: true,
     auto_accept_friend_delay_minutes: 5,
   },
+  {
+    id: "noi-bo",
+    label: "Pema Nội bộ",
+    channel: "zalo_personal",
+    clinic_id: CLINIC_ID,
+    agent_id: "tro-ly-noi-bo",
+    policy_profile: "staff_assistant",
+    enabled: true,
+    running: true,
+    has_bot_token: false,
+    has_credentials: true,
+    allowlist: { mode: "list", user_ids: [] },
+    respond_to_groups: false,
+    group_require_mention: true,
+    group_passive_listen: false,
+    auto_react_enabled: false,
+    auto_react_icon: "like",
+    typing_indicator_enabled: false,
+    disabled_tools: [],
+    auto_accept_friends: false,
+    auto_accept_friend_delay_minutes: 0,
+  },
 ];
 
-const channels: S["ChannelSettingsOut"][] = [
+export const channels: S["ChannelSettingsOut"][] = [
   {
     channel: "zalo_bot",
     enabled: true,

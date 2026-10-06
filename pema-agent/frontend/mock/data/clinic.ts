@@ -430,6 +430,8 @@ type ConvSeed = {
   last: string;
   lastAgoMs: number;
   externalRef: string;
+  /** Who holds the thread (package O); omitted: nobody, it waits in the queue. */
+  holder?: string;
 };
 
 const CONV_SEEDS: ConvSeed[] = [
@@ -462,6 +464,7 @@ const CONV_SEEDS: ConvSeed[] = [
     last: "[Khách gửi ảnh]",
     lastAgoMs: 50 * MIN,
     externalRef: "zalo:u-demo-003",
+    holder: uuid(6, 1),
   },
   {
     n: 4,
@@ -482,6 +485,7 @@ const CONV_SEEDS: ConvSeed[] = [
     last: "Cảm ơn em, chiều nay anh qua nhé",
     lastAgoMs: 3 * HOUR,
     externalRef: "zalo:u-demo-005",
+    holder: CS_MAI_ANH,
   },
   {
     n: 6,
@@ -505,7 +509,9 @@ export const conversations: S["ConversationOut"][] = CONV_SEEDS.map((c) => {
     patient_id: patient?.id ?? null,
     patient_code: patient?.code ?? null,
     patient_display_name: patient?.full_name ?? null,
-    assigned_user_id: c.status === "open" ? CS_MAI_ANH : null,
+    assigned_user_id: c.holder ?? null,
+    assigned_user_name: c.holder ? (OWNER_NAMES[c.holder] ?? null) : null,
+    assignment_version: 0,
     unread_count: c.unread,
     has_pending_review: c.pending,
     last_message_at: isoFromNow(-c.lastAgoMs),

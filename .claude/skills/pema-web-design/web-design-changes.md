@@ -21,6 +21,36 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-06 · change · Inbox: ba tab, lọc danh tính, người phụ trách và khóa soạn tin
+- Where: `pema-agent/frontend/src/app/(admin)/inbox/page.tsx`, `src/components/ops/inbox/conversation-list.tsx`, `src/components/ops/inbox/thread-view.tsx`, `src/components/ops/inbox/holder-banner.tsx`, `src/components/ops/inbox/assignment-dialogs.tsx`, `src/ui/tabs.tsx` · route `/inbox`
+- Change: tabs "Chờ nhận / Của tôi / Tất cả" with counts (segmented pills; `Tabs` gets `segmented`), select "Lọc theo danh tính" ("Tất cả danh tính" + the customer identities), tab and filter kept in the URL; each row shows "#code · identity", the holder ("Chưa ai nhận", "Bạn đang giữ", "<Tên> đang giữ") and the badge "<n> tin chưa đọc"; empty texts "Không có hội thoại nào đang chờ nhận" and "Bạn chưa phụ trách hội thoại nào"; thread header shows "<identity> · #code", buttons "Giao cho..." (`thread.assign`) and "Lịch sử phụ trách", and a holder banner: "Chưa có người phụ trách. Bấm Nhận ..." + "Nhận", "Bạn đang phụ trách hội thoại này." + "Trả lại", "<Tên> đang trả lời — Tiếp quản?" + "Tiếp quản", "Vai trò của bạn chỉ xem được hội thoại, không nhận hay trả lời được."; reply box locked with "<Tên> đang phụ trách. Tiếp quản để nhắn khách." while a colleague holds the thread; 409 `thread_locked` shows "Tin chưa gửi. Nội dung bạn soạn vẫn còn." + "Tiếp quản"; `no_identity` sentence and message badge; line "Khách thấy tin này từ "<identity>", không thấy tên nhân viên."; toast "Đã bị tiếp quản: <Tên> giữ hội thoại #code". Removed: the "Phụ trách:" picker and the button "Nhận xử lý" (replaced by the dialogs, owner design WM1-WM23).
+- Web canvas target: WM1-WM16
+- Logged by: O6
+
+### 2026-10-06 · add · Inbox: hộp thoại Nhận, Tiếp quản, Trả lại, Giao cho..., Lịch sử phụ trách
+- Where: `pema-agent/frontend/src/components/ops/inbox/assignment-dialogs.tsx` · route `/inbox`
+- Change: dialog "Nhận hội thoại này?" (Hủy, Nhận); "Tiếp quản hội thoại" (field "Lý do tiếp quản" required, max 500, "Hoàng Nam, bạn và nhóm Zalo của đội sẽ nhận thông báo."); "Trả lại hội thoại" (radio "Về hàng chờ" / "Trả lại cho trợ lý AI", field "Ghi chú bàn giao", warning "Chưa nối với trợ lý chăm sóc nên chưa trả lại cho trợ lý được." on 501); "Giao hội thoại cho đồng nghiệp" (select "Người phụ trách" with "Bỏ người phụ trách (về hàng chờ)"); "Lịch sử phụ trách" (timeline of claim, takeover, release, shift end, assign).
+- Web canvas target: WM17, WM18, WM19, WM20, WM21, WM22, WM23
+- Logged by: O6
+
+### 2026-10-06 · change · Tài khoản Zalo: danh tính, giới hạn đang áp dụng, thông báo nội bộ
+- Where: `pema-agent/frontend/src/app/(admin)/admin/accounts/page.tsx`, `src/components/admin/accounts/identity-lines.tsx`, `identity-edit-dialog.tsx`, `notifier-card.tsx` · route `/admin/accounts`
+- Change: subtitle "... mỗi account là một danh tính: khách chỉ thấy tên danh tính, không thấy tên nhân viên", heading "Danh tính" ("Khách hàng nhìn thấy tên của danh tính khi nhắn tin"), badge "Khách hàng" / "Nội bộ" per account, lines "Giới hạn đang áp dụng: tối đa N tin chủ động/ngày · cách nhau A–B giây (theo kênh | riêng)" and "Đang trực: ...", buttons "Sửa danh tính" and "Lịch trực"; dialog "Sửa danh tính" (name, purpose, daily cap, send gaps, blank = channel limit; "Khoảng nghỉ tối thiểu không được lớn hơn khoảng nghỉ tối đa."); card "Tài khoản thông báo nội bộ" (status, facts, "Cài đặt thông báo" dialog, or the warning with "Chọn tài khoản nội bộ"). No credential field.
+- Web canvas target: WM24, WM25, WM26, WM27, WM28, WM29
+- Logged by: O6
+
+### 2026-10-06 · add · Lịch trực
+- Where: `pema-agent/frontend/src/app/(admin)/admin/roster/page.tsx`, `src/components/ops/roster/roster-dialog.tsx`, `src/components/ops/roster/week-grid.tsx`, `src/lib/nav.tsx` · route `/admin/roster`
+- Change: new page "Lịch trực" and menu entry "Lịch trực" (section "Zalo & CSKH"): tabs per identity, card "Đang trực bây giờ" with "Kết thúc ca", week grid with "Tuần trước" / "Tuần sau", "Thêm ca trực", "Thêm ca", legend "CSKH / Bác sĩ / Chủ phòng khám, quản lý"; dialogs "Thêm ca trực", "Sửa ca trực" (kiểu lịch "Lặp theo thứ" / "Một ngày", overnight sentence, "Xóa ca"), "Xóa ca trực này?", "Kết thúc ca của <Tên>?"; toast "Đã kết thúc ca: N hội thoại chuyển người trực, N về hàng chờ, N bỏ qua."; read-only sentence "Bạn chỉ xem được lịch trực. ..."; empty "Chưa có ca trực nào", error "Không tải được lịch trực.".
+- Web canvas target: WM30-WM41
+- Logged by: O6
+
+### 2026-10-06 · add · Thông báo của tôi
+- Where: `pema-agent/frontend/src/app/(admin)/me/notifications/page.tsx`, `src/components/ops/notifications/zalo-link-dialog.tsx`, `src/ui/top-bar.tsx`, `src/components/admin/layout/app-shell.tsx` · route `/me/notifications`
+- Change: new page "Thông báo của tôi" (cards "Trong ứng dụng", "Đẩy lên điện thoại", "Chuông Zalo", "Giờ yên tĩnh", team group sentence), dialog "Liên kết Zalo" (one-time code, countdown, "Tạo mã mới" when expired), confirm "Hủy liên kết Zalo?", toasts "Đã liên kết Zalo." and "Đã lưu giờ yên tĩnh."; the top bar gets a gear link "Thông báo của tôi" beside the bell for roles with `notify.self`.
+- Web canvas target: WM42-WM51
+- Logged by: O6
+
 ### 2026-10-05 · change · Dark-mode tokens brand-500 and accent-strong (contrast)
 - Where: `pema-agent/frontend/src/ui/tokens.css` (`.dark`), `src/ui/tokens.json`, `design-system/tokens.json`
 - Change: dark `--color-brand-500` #2b7fc9 -> #3b8dd5 and `--color-accent-strong` #b5594a -> #c17467 so the `surface` label on them is 4.56:1 and 4.57:1 (was 3.81:1 and 3.44:1, below AA 4.5:1). Light mode unchanged. Affects primary button, active chip/tab, progress bar and avatar fills in dark mode.

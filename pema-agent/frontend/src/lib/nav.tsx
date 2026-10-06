@@ -165,6 +165,7 @@ export const NAV_SECTIONS: NavSection[] = [
         tab: true,
       },
       { to: "/templates", label: "Mẫu tin", icon: IconFileText, needs: ["kb.read"] },
+      { to: "/admin/roster", label: "Lịch trực", icon: IconCalendar, needs: ["roster.read"] },
     ],
   },
   {

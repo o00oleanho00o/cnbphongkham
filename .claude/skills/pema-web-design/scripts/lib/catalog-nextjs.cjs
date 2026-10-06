@@ -528,7 +528,7 @@ const INBOX_SRC = [`${APP}/inbox/page.tsx`, `${CMP}/ops/inbox/conversation-list.
 const WM_ACC_SRC = [`${ADM}/accounts/page.tsx`, 'pema-agent/docs/PLAN-AI01-O.md'];
 const WM_ROSTER_SRC = ['pema-agent/docs/PLAN-AI01-O.md', 'pema-agent/recipes/O/01-O1-identities-limits-roster.md'];
 const WM_ME_SRC = ['pema-agent/docs/PLAN-AI01-O.md', 'pema-agent/recipes/O/03-O3-notifications.md'];
-const wmRoute = (route) => ({ ...WM_PLANNED, planned_route: true, next_route: route });
+const wmRoute = (route) => ({ ...WM_PLANNED, next_route: route });
 const WM_PHONE = { ...WM_PLANNED, viewport: [390, 844], frames: ['390x844'] };
 
 // ---- /inbox: queue, tabs, account filter

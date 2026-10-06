@@ -32,6 +32,7 @@ import {
 } from "../core";
 import { lightSession, notes, plansOf, sessionsOf } from "../data/patient-care";
 import { assertAssignable } from "../assignable";
+import { lockedError, setHolder } from "../data/ops";
 import { viewersFor } from "../live-bus";
 import { decorate360, matchesView } from "./patient-profile";
 
@@ -580,6 +581,9 @@ function sendStaffMessage(ctx: Ctx): Reply {
     if (conv.status === "closed") {
       fail(409, "invalid_state", "Hội thoại đã đóng. Mở lại trước khi nhắn.");
     }
+    // Package O: only the holder replies; the first reply on an unassigned thread claims it.
+    if (conv.assigned_user_id && conv.assigned_user_id !== user.userId) lockedError(conv);
+    if (!conv.assigned_user_id) setHolder(conv, "claim", user.userId, user.userId);
     const created: S["MessageOut"] = {
       id: uid("msg"),
       conversation_id: conv.id,
@@ -861,7 +865,9 @@ export function register(r: Router): void {
     const { version, assigned_user_id, status } = bodyOf<S["ConversationUpdate"]>(ctx);
     checkVersion(conv.version, version);
     if (assigned_user_id) assertAssignable(assigned_user_id);
-    if (assigned_user_id !== undefined) conv.assigned_user_id = assigned_user_id;
+    if (assigned_user_id !== undefined) {
+      setHolder(conv, "assign", session(ctx).userId, assigned_user_id);
+    }
     if (status) conv.status = status;
     conv.version += 1;
     return { body: conv };
