@@ -37,6 +37,10 @@ Then update the README, related operations/domain docs, and append a checkpoint 
 - Look at screenshots, page errors, linked data and error states; an exit code alone is not enough.
 - Keep docs in line with observed behavior; do not document a feature as existing just because it is planned.
 
+## Shared inbox and customer messaging (package O)
+
+Staff never contact patients from personal accounts; all customer messaging goes through Pema identities; personal Zalo only receives PII-free notifications. A staff reply is written in Pema (Inbox), leaves through the identity of the thread with no operator name or signature, and a personal Zalo id is only ever a notification target (short code, identity label, urgency, a template summary, a deep link behind the login: no name, phone number or message text). The internal notifier account never faces a customer. Never add a path that sends to a customer from an account that is not a clinic identity, or that puts patient data in a notification. Details: `pema-agent/docs/ARCH-AI01.md` section 16, `pema-agent/docs/SECURITY-REVIEW-AI01.md` section 11.
+
 ## Mobile app rules (KMP)
 
 1. The mobile app is `pema-kmp/` (Kotlin Multiplatform + Compose Multiplatform). Follow [pema-kmp/CONVENTIONS.md](pema-kmp/CONVENTIONS.md) and [pema-kmp/README.md](pema-kmp/README.md); read the screen spec in `design-specs/screens/<ID>.md` before changing a screen. `flutter-template/` is legacy code kept for reference only: do not develop, build or test it, and do not use it as a source.
