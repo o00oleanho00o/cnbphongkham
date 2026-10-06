@@ -34,6 +34,10 @@ class LiveEventType(StrEnum):
     APPOINTMENTS_CHANGED = "appointments.changed"
     """An appointment was booked, moved or went through a reception transition (``id`` is the appointment).
     Package U, step U2: the schedule and the dashboard reload."""
+    ASSIGNMENT_CHANGED = "assignment.changed"
+    """Who holds a conversation changed: claim, takeover, release, shift end or assign (``id`` is the
+    conversation). Package O, step O2. Like every event it carries no more than the id: the screens read the
+    holder from the conversation and the who-and-why from ``GET /conversations/{id}/assignments``."""
     CARE_CHANGED = "care.changed"
     """The care state of a patient changed: control state, autonomy level, a paused reminder, a note for the
     agent, an alert (``id`` is the patient). Package M, step M5."""

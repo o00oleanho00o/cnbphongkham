@@ -21,7 +21,7 @@ from pema.clinic.models.finance import (
     ProcedureEntryPerson,
 )
 from pema.clinic.models.inbox import ChannelIdentity, Conversation, Message, ReviewItem
-from pema.clinic.models.ops import AccountRoster
+from pema.clinic.models.ops import AccountRoster, ConversationAssignment, NotificationOutbox
 from pema.clinic.models.orders import CatalogImport, Order, OrderItem, Product
 from pema.clinic.models.scheduling import Appointment
 from pema.clinic.models.tenant import AuthSession, Clinic, UserAccount
@@ -39,6 +39,7 @@ __all__ = [
     "Consent",
     "ConsultNote",
     "Conversation",
+    "ConversationAssignment",
     "CrmActivity",
     "CrmRule",
     "CrmTask",
@@ -49,6 +50,7 @@ __all__ = [
     "Media",
     "Message",
     "MessageTemplate",
+    "NotificationOutbox",
     "Order",
     "OrderItem",
     "Patient",

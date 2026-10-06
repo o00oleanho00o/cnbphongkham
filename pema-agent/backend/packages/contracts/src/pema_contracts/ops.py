@@ -167,3 +167,124 @@ class OnDutyOut(ApiModel):
     account_id: str
     at: VnDatetime
     operators: list[OnDutyOperator]
+
+
+# ------------------------------------------------------------------------------ assignment (step O2)
+class AssignmentKind(StrEnum):
+    """Why a row of ``clinic.conversation_assignment`` exists."""
+
+    CLAIM = "claim"
+    """An operator took an unassigned conversation (or the first reply claimed it)."""
+    TAKEOVER = "takeover"
+    """An operator took the conversation from the colleague who held it; a reason is required."""
+    RELEASE = "release"
+    """The holder gave it back: to the queue, or to the care agent."""
+    SHIFT_END = "shift_end"
+    """The holder's shift ended: it went to whoever is on duty, or back to the queue."""
+    ASSIGN = "assign"
+    """An owner or manager put someone on it (or took it off the holder)."""
+
+
+class AssignmentRequestBase(ApiModel):
+    assignment_version: int | None = Field(
+        default=None,
+        ge=1,
+        description="The ``assignment_version`` the client saw. When it is no longer the stored one the call "
+        "answers 409 ``version_conflict``. Left out: the action uses the version it reads itself.",
+    )
+
+
+class ClaimRequest(AssignmentRequestBase):
+    """``POST /conversations/{id}/claim`` (the body is optional)."""
+
+
+class TakeoverRequest(AssignmentRequestBase):
+    """``POST /conversations/{id}/takeover``. The reason is kept in the history (staff only) and never in an
+    audit row or a notification."""
+
+    reason: str = Field(min_length=1, max_length=500)
+
+
+class ReleaseRequest(AssignmentRequestBase):
+    """``POST /conversations/{id}/release``."""
+
+    to_agent: bool = Field(
+        default=False,
+        description="Hand the conversation back to the care agent (the patient is in the STAFF state of "
+        "package M). False: only back to the queue.",
+    )
+    note: str | None = Field(
+        default=None,
+        max_length=500,
+        description="With ``to_agent``: the note the care agent reads (M's release note).",
+    )
+
+
+class AssignRequest(AssignmentRequestBase):
+    """``POST /conversations/{id}/assign``: owner and manager. ``user_id`` null puts it back in the queue."""
+
+    user_id: UUID | None = None
+
+
+class EndShiftResult(ApiModel):
+    """What ``POST /staff/{user_id}/end-shift`` did, thread by thread."""
+
+    user_id: UUID
+    rerouted: int = Field(ge=0, description="Moved to an operator who is on duty.")
+    to_queue: int = Field(ge=0, description="Nobody on duty (or no identity known): back to the queue.")
+    skipped: int = Field(ge=0, description="Changed hands while the shift was being ended: left alone.")
+
+
+class AssignmentEventOut(ApiModel):
+    """One line of the history of a conversation (``GET /conversations/{id}/assignments``, newest first)."""
+
+    id: UUID
+    kind: AssignmentKind
+    user_id: UUID | None = Field(description="Who holds it after the change; null: back in the queue.")
+    user_name: str | None = None
+    previous_user_id: UUID | None = None
+    previous_user_name: str | None = None
+    reason: str | None = Field(default=None, description="Takeover reason or release note; staff only.")
+    at: VnDatetime
+    by: UUID | None = Field(default=None, description="Who made the change; null: the system.")
+
+
+# --------------------------------------------------------------------------- notification outbox (O2)
+class NotificationRecipientKind(StrEnum):
+    USER = "user"
+    TEAM_GROUP = "team_group"
+
+
+class NotificationState(StrEnum):
+    """Lifecycle of an outbox row. O2 only writes ``pending``; O3 delivers and moves it on."""
+
+    PENDING = "pending"
+    SENT = "sent"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+
+
+class NotificationUrgency(StrEnum):
+    NORMAL = "normal"
+    URGENT = "urgent"
+
+
+SHORT_CODE_PATTERN = r"^#[0-9A-F]{4}$"
+DEEP_LINK_PATTERN = r"^/inbox\?conversation=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+
+
+class NotificationPayload(ApiModel):
+    """What a notification may say, and nothing else (``extra = forbid``): a short code, the identity label,
+    an urgency, a one-line summary the action composes from a template (never the text of a message), a deep
+    link that needs a login, and ids. No phone number, no patient or customer name, no message text: the
+    serializer in ``pema.clinic.actions.notifications`` also runs the free-text fields through the PII mask
+    and refuses the payload when anything is found."""
+
+    event: AssignmentKind
+    short_code: str = Field(pattern=SHORT_CODE_PATTERN)
+    identity_label: str | None = Field(default=None, max_length=100)
+    urgency: NotificationUrgency = NotificationUrgency.NORMAL
+    summary: str = Field(min_length=1, max_length=160)
+    deep_link: str = Field(pattern=DEEP_LINK_PATTERN)
+    from_user_id: UUID | None = None
+    to_user_id: UUID | None = None

@@ -148,6 +148,7 @@ def conversation_summary(
     patient_display_name: str | None,
     last_preview: str | None,
     has_pending_review: bool,
+    assigned_user_name: str | None = None,
 ) -> ConversationSummary:
     return ConversationSummary(
         id=row.id,
@@ -157,6 +158,8 @@ def conversation_summary(
         patient_display_name=patient_display_name,
         status=ConversationStatus(row.status),
         assigned_user_id=row.assigned_user_id,
+        assigned_user_name=assigned_user_name if row.assigned_user_id else None,
+        assignment_version=row.assignment_version,
         last_message_at=row.last_message_at,
         last_message_preview=last_preview[:PREVIEW_CHARS] if last_preview else None,
         unread_count=row.unread_count,

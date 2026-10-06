@@ -83,6 +83,9 @@ MANAGER_PERMISSIONS: frozenset[Permission] = frozenset(
         P.IDENTITY_MANAGE,  # package O: identity purpose and limits, never a credential
         P.ROSTER_MANAGE,
         P.ROSTER_READ,
+        P.THREAD_CLAIM,  # package O step O2: claim, take over, release
+        P.THREAD_ASSIGN,
+        P.THREAD_END_SHIFT,
     }
 )
 
@@ -118,6 +121,7 @@ DOCTOR_PERMISSIONS: frozenset[Permission] = frozenset(
         P.CARE_MATRIX,  # the thresholds are the doctor's decision (PLAN-AI01-M section 15.1)
         P.CARE_APPROVE,
         P.ROSTER_READ,  # package O: who covers which identity (read only)
+        P.THREAD_CLAIM,
     }
 )
 
@@ -147,6 +151,7 @@ CS_STAFF_PERMISSIONS: frozenset[Permission] = frozenset(
         P.CARE_READ,  # supervises the agent of the patients they look after; no matrix, no admin
         P.CARE_ACT,
         P.ROSTER_READ,  # package O: who covers which identity (read only)
+        P.THREAD_CLAIM,
     }
 )
 
