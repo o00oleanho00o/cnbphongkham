@@ -2923,6 +2923,9 @@
       "todo": [
         "PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json.",
         "Every field of this screen is provisional: the push status (registered devices), the bell link state and consent date, the one-time code format and expiry, and the quiet-hours fields."
+      ],
+      "differences": [
+        "Built in O6: the push card always reads \"Chưa đăng ký\" (the contract has POST and DELETE /me/push-tokens but no GET to list devices, so WM48 cannot be drawn until a list route exists); no \"test notification\" button (no endpoint); the page has no menu entry, it opens from a gear icon \"Thông báo của tôi\" beside the bell in the top bar for roles with `notify.self`."
       ]
     },
     "WM43": {
@@ -3006,12 +3009,30 @@
     "WM1": {
       "todo": [
         "Identity filter and queue tab need account_id and an unassigned filter on GET /api/v1/conversations (not in the DTO at O2); see groups.WM.todo."
+      ],
+      "differences": [
+        "Built in O6: the tabs \"Chờ nhận / Của tôi / Tất cả\" (with counts) and the identity filter work on the loaded rows (limit 100) because GET /api/v1/conversations has no account_id or unassigned filter; the tab, filter and open thread live in the URL (?tab=, ?identity=, ?c=; the notification deep link ?conversation= also opens a thread); the identity of a row is the account_id when the DTO has it, else the customer identity of the row's channel (unknown when two identities share a channel); the empty detail card has no \"forum\" icon."
       ]
     },
     "WM12": {
       "related": [
         "WM9 the locked thread this turns into",
         "WM13 a send that is refused after the takeover"
+      ]
+    },
+    "WM8": {
+      "differences": [
+        "Built in O6: the old \"Phụ trách:\" picker (Tôi, Giữ nguyên, Chưa giao, colleagues) and the button \"Nhận xử lý\" are gone for every role; \"Nhận\", \"Trả lại\", \"Tiếp quản\" are dialogs and \"Giao cho...\" (colleague or \"Bỏ người phụ trách (về hàng chờ)\") shows only with `thread.assign`; staff messages keep the old bubble with \"Nhân viên\" as sender, not \"Hoàng Nam · qua Long\" (MessageOut has no sender name)."
+      ]
+    },
+    "WM13": {
+      "rules": [
+        "409 thread_locked on a send keeps the draft, shows \"Tin chưa gửi. Nội dung bạn soạn vẫn còn.\" with \"Tiếp quản\" and reloads the thread so the holder banner appears; error code no_identity (message queued with error_code, or a send refused) shows \"Chưa gửi được: hội thoại này chưa gắn với tài khoản Zalo nào...\" and the message badge \"Chưa có danh tính gửi\"."
+      ]
+    },
+    "WM30": {
+      "differences": [
+        "Built in O6: tabs are the customer identities (GET /identities, purpose customer; ?identity= keeps the tab); \"Đang trực bây giờ\" is GET /identities/{id}/on-duty and its shift line is looked up in the loaded roster; \"Tuần trước / Tuần sau\" move the week client-side; the roster read needs `roster.read`, writes `roster.manage`, \"Kết thúc ca\" `thread.end_shift`."
       ]
     }
   },

@@ -68,7 +68,7 @@ Other screens:
 
 ## Next.js target
 - Route: `/inbox` · status: **designed (O5)** · U step: —
-- FEATURE-INVENTORY row: `/inbox` "Inbox" (owner U1); test ids: `src/app/(admin)/inbox/page.test.tsx`, `src/components/ops/assignee-status.test.tsx`, `src/lib/live/use-live-events.test.tsx`, `src/lib/live/use-presence-heartbeat.test.tsx`, `src/lib/ops/presence-view.test.ts`
+- FEATURE-INVENTORY row: `/inbox` "Inbox" (owner U1); test ids: `src/app/(admin)/inbox/page.test.tsx`, `src/lib/ops/inbox-view.test.ts`, `src/lib/ops/assignment-errors.test.ts`, `src/components/ops/assignee-status.test.tsx`, `src/lib/live/use-live-events.test.tsx`, `src/lib/live/use-presence-heartbeat.test.tsx`, `src/lib/ops/presence-view.test.ts`
 - Existing page file: `pema-agent/frontend/src/app/(admin)/inbox/page.tsx`
 
 ## App canvas
@@ -195,16 +195,16 @@ Kit components used: Button×20, Field×3, Card×2, Sidebar×1, TopBar×1, PageH
 - Measured behaviour at 1920, 1280, 1024 and 390 comes with the snapshot of the mock-BE page (W8, `web-snapshot.cjs`); frames to build: 1440x900.
 
 ## Required text (keep verbatim)
-- Nhận xử lý
-- Phụ trách:
 - Trả lại
+- Lịch sử phụ trách
+- Giao cho...
+- Bạn đang phụ trách hội thoại này.
+- Phụ trách:
 
 ## Texts to re-check against the code
 Quoted in the brief but not found verbatim in the front-end source (built from parts, sent by the back end, or worded differently in the code):
-- Bạn đang phụ trách hội thoại này.
-- Lịch sử phụ trách
 - Phạm Quốc Việt đang xem
-- Giao cho...
+- Nhận xử lý
 
 ## Business rules
 - The customer sees the identity only: no operator name, no signature in outgoing text ("Khách thấy tin này từ "Long", không thấy tên nhân viên.").
@@ -216,6 +216,7 @@ Quoted in the brief but not found verbatim in the front-end source (built from p
 - Next.js today: the thread has the button "Nhận xử lý" and a "Phụ trách:" picker for every replying role, and a colleague who is replying only gets a warning ("... Bạn vẫn nhắn được, nhưng hãy hỏi đồng nghiệp trước"). Design: "Nhận" (dialog), "Trả lại", "Tiếp quản" (reason), "Lịch sử phụ trách"; the picker becomes "Giao cho..." for owner and manager; a colleague holding the thread locks the composer.
 - Old web: the follow-up inbox (WD6, WC14) has no holder or lock; those ids keep their ids, WM adds states instead of renumbering.
 - The top-bar bell is a plain link to /inbox today; the design adds /me/notifications (not in the menu) next to it. The "Lịch trực" menu entry is added to the sidebar of the WM frames only (frames WJ-WL keep their sidebar).
+- Built in O6: the old "Phụ trách:" picker (Tôi, Giữ nguyên, Chưa giao, colleagues) and the button "Nhận xử lý" are gone for every role; "Nhận", "Trả lại", "Tiếp quản" are dialogs and "Giao cho..." (colleague or "Bỏ người phụ trách (về hàng chờ)") shows only with `thread.assign`; staff messages keep the old bubble with "Nhân viên" as sender, not "Hoàng Nam · qua Long" (MessageOut has no sender name).
 
 ## Gotchas
 - The WM1 frame at 390 also draws the empty detail card under the list; on a phone the real page shows the list only and opens a thread as a child screen (WM10, WM11 draw that child screen).
