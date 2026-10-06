@@ -28,5 +28,8 @@ Người đề xuất: <tên> · Ngày: <YYYY-MM-DD>
 ## Có dính tới agent AI / Zalo không?
 <Có/không. Nếu có: agent cần làm gì, gửi tin gì, khi nào. Người hệ mới quyết phần này.>
 
+## Đề xuất cho hệ mới
+<Nếu muốn ý tưởng chạy trên hệ mới thế nào thì ghi ở đây. Không tự sửa code hệ mới; người phụ trách hệ mới quyết.>
+
 ## Câu hỏi còn mở
 - <Điều chưa chắc, cần chủ phòng khám hoặc bác sĩ trả lời>

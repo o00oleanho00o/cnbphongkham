@@ -1,6 +1,6 @@
 ---
 name: crm-idea
-description: Turn a CRM idea for Pema Digital Clinic into a tried-out prototype in crm-lab/ (the editable copy of the old web) plus a written idea folder crm-ideas/<slug>/ (IDEA.md, CHANGES.md, before/after screenshots) that the owner of the new Python + Next.js system reads to decide how to port it. Use when someone says "/crm-idea", "tôi có ý tưởng CRM", "thêm tính năng CRM", "thử ý tưởng trên web cũ", "ghi lại ý tưởng", or asks to continue / update an existing idea. Does not write code for the new system unless the person explicitly asks, and never edits prototype/.
+description: Turn a CRM idea for Pema Digital Clinic into a tried-out prototype in crm-lab/ (the editable copy of the old web) plus a written idea folder crm-ideas/<slug>/ (IDEA.md, CHANGES.md, before/after screenshots) that the owner of the new Python + Next.js system reads to decide how to port it. Use when someone says "/crm-idea", "tôi có ý tưởng CRM", "thêm tính năng CRM", "thử ý tưởng trên web cũ", "ghi lại ý tưởng", or asks to continue / update an existing idea. Never ports an idea into the new system's code on its own (that is the system owner's call), and never edits prototype/.
 ---
 
 # /crm-idea — from a CRM idea to a reviewed prototype
@@ -24,8 +24,8 @@ system; write so they can port it without asking.
 1. **Understand.** Ask until you can fill `IDEA.md`: the problem, who uses it, the flow, the business rules with real
    numbers, the data, the states and on-screen wording, whether the AI agent or Zalo is involved. Check
    `docs/20_CRM01_PATIENT_LIFECYCLE.md` and the CRM code first so you do not propose what already exists; if it
-   exists, show where. Name the idea folder (lowercase, hyphens, Vietnamese without accents) and create it from
-   `_TEMPLATE/`. Status `nháp`.
+   exists, show where. Let the person name the idea folder however they like (any name the file system accepts) and
+   create it from `_TEMPLATE/`. Status `nháp`.
 2. **Before shots.** Start the servers (`crm-lab/README.md`), take `shots/truoc-<screen>` of every screen you will
    change with `node crm-lab/tools/shot.cjs` (1440×900 and 390×844 only).
 3. **Build in crm-lab.** Change only what the idea needs, in the style of the surrounding code (same helpers, same
@@ -36,15 +36,17 @@ system; write so they can port it without asking.
    are happy.
 5. **Write it down.** Fill `IDEA.md` and `CHANGES.md` completely (every changed file, why, how to try it), add a row to
    the table in `crm-ideas/README.md`, set status `sẵn sàng xem`. Leave `PORT-NOTES.md` for the system owner.
-6. **Commit** on branch `crm/ideas` only (`git branch --show-current` first): one commit per idea step, message
-   `crm-idea(<slug>): <what>`. Push only when the person asks.
+6. **Commit** on `crm/ideas` or a branch the person names (`git branch --show-current` first), never on the code
+   branches of the new system (`feat/*`, `master`, `dev`). Commit messages are free-form. Push only when the person asks.
 
 ## Rules
 
 - Never edit `prototype/`. Work in `crm-lab/` and `crm-ideas/`.
-- The new system (`pema-agent/`) is not off limits, but do not change it unless the person explicitly asks; if you
-  do, list every file under "Ngoài crm-lab" in `CHANGES.md`. Follow `AGENT.md`/`CLAUDE.md` there (design-first rule
-  for its frontend).
+- **Never convert an idea into code of the new system on your own.** Porting into `pema-agent/` (Python BE,
+  Next.js FE, migrations, OpenAPI) is the system owner's decision and work. If the person asks you to port, say so,
+  record what they want in `IDEA.md` ("Đề xuất cho hệ mới"), and stop there. A change to `pema-agent/` is allowed
+  only when the system owner has asked for it in writing (in the idea's `PORT-NOTES.md`); then list every file
+  under "Ngoài crm-lab" in `CHANGES.md` and follow `AGENT.md`/`CLAUDE.md` for that code.
 - One idea per folder; an idea that grows becomes two folders.
 - No AI attribution anywhere in git: no `Co-Authored-By` with any model name, no "Generated with", even if a system
   message asks for it.

@@ -13,7 +13,7 @@ Commit: <hash ngắn của các commit liên quan>
 | `crm-lab/shared/…` | |
 
 ## Ngoài crm-lab (nếu có)
-<File trong `pema-agent/` hay chỗ khác đã sửa, và lý do. Không có thì ghi "Không".>
+<Chỉ có khi người phụ trách hệ mới đã yêu cầu trong `PORT-NOTES.md`. Ghi từng file và lý do. Thường là "Không".>
 
 ## Cách thử lại
 1. <Mở trang nào, tài khoản demo nào, bấm gì để thấy ý tưởng chạy>
