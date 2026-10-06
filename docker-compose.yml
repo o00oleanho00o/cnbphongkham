@@ -9,7 +9,7 @@
 #   http://localhost:4190   Design canvas of the app (Pema App redesign canvas)
 #   http://localhost:4191   Design canvas of the web (Pema Web redesign canvas)
 #   http://localhost:4192   Design system (tokens, colour roles, component pages, preview cards)
-#   http://localhost:4173   Old prototype (prototype/)
+#   (old prototype on :4173 is not in the stack for now: run it by hand, see the comment at `services:`)
 #
 # The Pema stack (postgres, redis, migrate, api, worker, frontend, seed) comes from pema-agent/infra: its compose file
 # plus docker-compose.local.yml, with the demo values of infra/.env.local-demo (local use only, ports on 127.0.0.1).
@@ -22,14 +22,17 @@ include:
     env_file: pema-agent/infra/.env.local-demo
 
 services:
-  pema-prototype:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: pema-prototype
-    ports:
-      - "4173:4173"
-    restart: unless-stopped
+  # Temporarily off: run the old prototype by hand as in README ("Chạy local bằng Python"):
+  #   cd prototype; python -m http.server 4173 --bind 127.0.0.1
+  # To put it back in the stack, remove the leading "# " of this block.
+  # pema-prototype:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: pema-prototype
+  #   ports:
+  #     - "4173:4173"
+  #   restart: unless-stopped
 
   pema-design-viewer:
     build:

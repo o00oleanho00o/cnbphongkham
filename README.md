@@ -48,8 +48,8 @@ Không cần tạo `.env`: compose đọc giá trị demo ở [`pema-agent/infra
 | [http://localhost:4190](http://localhost:4190) | Design canvas của app (Pema App) |
 | [http://localhost:4191](http://localhost:4191) | Design canvas của web (Pema Web) |
 | [http://localhost:4192](http://localhost:4192) | Design system: token, màu, 64 trang component, thẻ preview |
-| [http://127.0.0.1:4173/clinic-web/](http://127.0.0.1:4173/clinic-web/) | Prototype cũ: Clinic Web |
-| [http://127.0.0.1:4173/patient-mobile/](http://127.0.0.1:4173/patient-mobile/) | Prototype cũ: Patient Mobile |
+
+Prototype cũ (Clinic Web, Patient Mobile ở cổng 4173) tạm không nằm trong stack Docker: chạy tay theo mục "Chạy local bằng Python" bên dưới (dịch vụ `pema-prototype` đang được comment trong `docker-compose.yml`).
 
 Đăng nhập staff web: dịch vụ `seed` tạo phòng khám mẫu (hư cấu) và các tài khoản `owner@example.test`, `manager@example.test`, `doctor.mai@example.test`, `cs.maianh@example.test`, `reception.lan@example.test`. Mật khẩu chung được sinh ngẫu nhiên và in **một lần**: `docker compose logs seed`. Muốn tự chọn, đặt `PEMA_SEED_PASSWORD` trong shell trước khi chạy lệnh. Chưa có khóa LLM nên agent CSKH chưa trả lời được cho tới khi đặt `LLM_*` (dashboard hoặc `pema-agent/infra/.env.local-demo`). Lần chạy đầu build nhiều image (Python, Next.js) nên mất vài phút.
 
