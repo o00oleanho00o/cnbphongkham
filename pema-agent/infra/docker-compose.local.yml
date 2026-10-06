@@ -3,9 +3,10 @@
 #
 #   - worker and frontend start without a profile, so a plain `docker compose up --build` runs everything;
 #   - `seed` is a one-shot that creates the fictional demo clinic (users of every role, patients, conversations).
-#     Its account password is PEMA_SEED_PASSWORD when set in the shell; otherwise a random one is generated and
-#     printed ONCE: `docker compose logs seed`. Accounts: owner@example.test, manager@example.test,
-#     doctor.mai@example.test, cs.maianh@example.test, reception.lan@example.test, ...
+#     Login: PEMA_SEED_OWNER_EMAIL / PEMA_SEED_PASSWORD from infra/.env.local-demo (admin@gmail.com / Admin@123;
+#     the shell wins). With PEMA_SEED_PASSWORD empty a random one is generated and printed ONCE:
+#     `docker compose logs seed`. The other accounts keep manager@example.test, doctor.mai@example.test,
+#     cs.maianh@example.test, reception.lan@example.test, ... with the same password.
 #     A second run finds the data and changes nothing.
 services:
   worker:
@@ -24,4 +25,5 @@ services:
     environment: !override
       PEMA_DATABASE_URL: postgresql+psycopg://be_app:${PEMA_BE_APP_PASSWORD:?set it in infra/.env.local-demo}@postgres:5432/pema
       PEMA_SEED_PASSWORD: ${PEMA_SEED_PASSWORD:-}
+      PEMA_SEED_OWNER_EMAIL: ${PEMA_SEED_OWNER_EMAIL:-}
     command: ["python", "-m", "pema.clinic.actions.seed_demo"]

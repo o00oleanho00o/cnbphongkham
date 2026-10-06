@@ -9,8 +9,9 @@
 #
 # The stack (postgres, redis, migrate, api, worker, frontend, seed) comes from pema-agent/infra: its compose file
 # plus docker-compose.local.yml, with the demo values of infra/.env.local-demo (local use only, ports on 127.0.0.1).
-# First login: `docker compose logs seed` prints the password of the demo accounts (owner@example.test, ...) once;
-# set PEMA_SEED_PASSWORD in the shell beforehand to choose it. Stop: `docker compose down` (add -v to also drop data).
+# Login (owner): admin@gmail.com / Admin@123, set in infra/.env.local-demo (PEMA_SEED_OWNER_EMAIL, PEMA_SEED_PASSWORD;
+# the shell wins; with the password empty a random one is printed once by `docker compose logs seed`).
+# Stop: `docker compose down` (add -v to also drop data; the seed only runs on an empty database).
 #
 # Temporarily off, to focus on BE, FE and AI (remove the leading "# " of a block to put it back, and of `services:`):
 #   - design canvases, design system: pema-design-viewer :4190, pema-web-design-viewer :4191, pema-design-system :4192
