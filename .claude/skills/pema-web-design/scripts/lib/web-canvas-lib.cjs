@@ -12,14 +12,18 @@ const BLOCKS_FILE = 'Pema Web blocks.dc.html';
 const NEXT_FILE = 'Pema Web (Next.js).dc.html';
 const TOKENS = path.join(ROOT, 'pema-agent', 'frontend', 'src', 'ui', 'tokens.json');
 const INVENTORY = path.join(ROOT, 'design-specs', 'web', 'inventory.json');
-const GROUP_CODES = ['WA', 'WB', 'WC', 'WD', 'WE', 'WF', 'WG', 'WH', 'WI', 'WJ', 'WK', 'WL'];
+const GROUP_CODES = ['WA', 'WB', 'WC', 'WD', 'WE', 'WF', 'WG', 'WH', 'WI', 'WJ', 'WK', 'WL', 'WM'];
+// O5: groups added after W3a (WM, shared inbox). base.js and tail.js are frozen and their text sits in every canvas file, so the old-web canvas and
+// the block gallery must not learn about these groups (byte-identical); only the file that holds one gets its part, and the build appends it to the
+// PARTS map of tail.js (see buildScript).
+const LEGACY_CODES = GROUP_CODES.slice(0, 12);
 // part files of a group: WI is written in two files (parts/WI.js, parts/WI2.js) that the canvas merges into the single group WI
 // WJ (agent admin, 115 ids) is written in two files as well: parts/WJ.js (WJ1-WJ57) and parts/WJ2.js (WJ58-WJ115)
 // W10 (owner decision 2026-10-05): two canvas files from the same base.js, blocks.js and tail.js. The old-web canvas holds WA-WI only,
 // the Next.js-only groups WJ/WK/WL are built into their own file.
 const OUTPUTS = {
   [CANVAS_FILE]: ['WA', 'WB', 'WC', 'WD', 'WE', 'WF', 'WG', 'WH', 'WI'],
-  [NEXT_FILE]: ['WJ', 'WK', 'WL']
+  [NEXT_FILE]: ['WJ', 'WK', 'WL', 'WM']
 };
 /** Group codes a canvas file holds (the block gallery holds the scratch group WA). */
 const groupsOfFile = (fileName) => (fileName === BLOCKS_FILE ? ['WA'] : OUTPUTS[fileName] || GROUP_CODES);
@@ -36,7 +40,8 @@ const GROUP_SUB = {
   WI: 'Patient Mobile web: trang chủ, lịch hẹn, hành trình, tin nhắn, hồ sơ và mọi trạng thái · khung điện thoại 390×844',
   WJ: 'Quản trị agent (Next.js): nhân viên, phiên chat, danh bạ, kho tri thức, tài khoản Zalo, agents, tools, MCP, trace, logs, chính sách, cấu hình · khung Next.js',
   WK: 'Care agent (Next.js): kỹ năng và ca trực, số trực, ma trận ngưỡng, SLA, cảnh báo, yêu cầu chuyển giao, dòng thời gian, trả lại, nói với agent',
-  WL: 'Đăng nhập, khung ứng dụng Next.js (menu theo vai trò, trạng thái tải, quyền, điện thoại) và Tin nhắn mẫu đã duyệt'
+  WL: 'Đăng nhập, khung ứng dụng Next.js (menu theo vai trò, trạng thái tải, quyền, điện thoại) và Tin nhắn mẫu đã duyệt',
+  WM: 'Inbox chia sẻ (Next.js): hàng chờ Chờ nhận / Của tôi / Tất cả, hội thoại có người phụ trách và khóa soạn tin, nhận, tiếp quản, trả lại, giao, lịch sử, danh tính và giới hạn gửi, lịch trực, thông báo của tôi'
 };
 
 const lf = (s) => s.replace(/\r\n/g, '\n');
@@ -172,15 +177,22 @@ function buildScript(defs, blocks) {
   const held = defs.map((d) => d.code);
   for (const code of GROUP_CODES) {
     for (const part of GROUP_PARTS[code] || [code]) {
-      if (blocks) names.push(code === 'WA' ? 'blocks' : `@const ${part} = [];`);
-      else if (!held.includes(code)) names.push(`@const ${part} = [];`);
-      else names.push(part);
+      if (blocks) {
+        if (LEGACY_CODES.includes(code)) names.push(code === 'WA' ? 'blocks' : `@const ${part} = [];`);
+      } else if (!held.includes(code)) {
+        if (LEGACY_CODES.includes(code)) names.push(`@const ${part} = [];`);
+      } else names.push(part);
     }
   }
   names.push('tail');
   const parts = names.map((n) => (n.startsWith('@') ? n.slice(1) : read(path.join(CANVAS_DIR, 'parts', `${n}.js`)).replace(/\s+$/, '')));
   const [base, ...rest] = parts;
-  const tail = rest.pop();
+  let tail = rest.pop();
+  const extra = held.filter((code) => !LEGACY_CODES.includes(code));
+  if (extra.length && !blocks) {
+    if (!tail.includes('WK, WL };')) throw new Error('tail.js: the PARTS map no longer ends with "WK, WL };"');
+    tail = tail.replace('WK, WL };', `WK, WL, ${extra.join(', ')} };`);
+  }
   const indent = (s) => s.split('\n').map((l) => (l ? '    ' + l : l)).join('\n');
   const body = [base, `const GROUP_DEFS = ${JSON.stringify(defs)};`, ...rest, tail].map(indent).join('\n\n');
   return `class Component extends DCLogic {\n  build() {\n${body}\n  }\n${RENDER_VALS}\n}`;
@@ -212,4 +224,4 @@ function buildCanvas(opts = {}) {
   return out;
 }
 
-module.exports = { ROOT, CANVAS_DIR, CANVAS_FILE, BLOCKS_FILE, NEXT_FILE, OUTPUTS, groupsOfFile, TOKENS, INVENTORY, GROUP_CODES, GROUP_PARTS, lf, read, sha, tokenVars, tokenCss, tokenVarsOfCanvas, compareTokens, buildCanvas, buildScript, groupDefs };
+module.exports = { ROOT, CANVAS_DIR, CANVAS_FILE, BLOCKS_FILE, NEXT_FILE, OUTPUTS, LEGACY_CODES, groupsOfFile, TOKENS, INVENTORY, GROUP_CODES, GROUP_PARTS, lf, read, sha, tokenVars, tokenCss, tokenVarsOfCanvas, compareTokens, buildCanvas, buildScript, groupDefs };

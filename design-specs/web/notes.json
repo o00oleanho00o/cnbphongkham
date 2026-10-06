@@ -134,6 +134,33 @@
       "rules": [
         "Sign-in is by email and password only: no clinic code (one install = one clinic), the account is looked up by email; the session cookie is HttpOnly, with a sliding and an absolute limit (ARCH-AI01 section 8)."
       ]
+    },
+    "WM": {
+      "logic": [
+        "Shared inbox over one clinic identity (package O). Customers talk to an identity (\"Long\" on Zalo, \"Pema CSKH\" bot); operators (owner, manager, doctor, cs_staff) work in Pema only and personal Zalo is a notification bell. Designed in step O5 before it is built in step O6: every WM id has status \"designed (O5)\", no shots and no snapshot; the frames of \"Pema Web (Next.js).dc.html\" are the reference.",
+        "The O API behind each control (openapi.json at O2): list GET /api/v1/conversations (assigned_user_id, conversation_status, q); \"Nhận\" POST /api/v1/conversations/{id}/claim; \"Tiếp quản\" POST .../takeover {reason}; \"Trả lại\" POST .../release {to_agent, note}; \"Giao cho...\" POST .../assign {user_id|null}; \"Lịch sử phụ trách\" GET .../assignments; send POST .../messages (409 thread_locked); staff picker GET /api/v1/staff/assignable; identities GET /api/v1/identities and PATCH /api/v1/identities/{account_id}; on duty GET /api/v1/identities/{account_id}/on-duty; roster GET/POST /api/v1/roster and PATCH/DELETE /api/v1/roster/{entry_id}; \"Kết thúc ca\" POST /api/v1/staff/{user_id}/end-shift. Live: assignment.changed and inbox.changed on GET /api/v1/events.",
+        "Roles (matrix.py): owner and manager hold thread.assign, thread.end_shift, roster.manage and identity.manage; doctor and cs_staff hold thread.claim and roster.read; reception and accountant never hold a thread. The back end decides, the menu and the buttons only follow it."
+      ],
+      "rules": [
+        "The customer sees the identity only: no operator name, no signature in outgoing text (\"Khách thấy tin này từ \"Long\", không thấy tên nhân viên.\").",
+        "Only the holder of a thread replies: a send by another operator answers 409 thread_locked with \"<Tên> đang trả lời — Tiếp quản?\"; the first reply on an unassigned thread claims it. Takeover needs a reason, kept for staff only, and notifies the previous holder, the new holder and the team group.",
+        "Operators never see a credential: no screen of group WM has a token, cookie, QR payload or any *_enc value. Notifications carry no PII: short code (\"#A1B2\": four hex digits of the conversation id), identity label, urgency, a masked one-line summary and a deep link that needs login.",
+        "Accountant and reception never hold a thread (ASSIGNABLE_ROLES). Returning a thread \"to the care agent\" needs the patient in the STAFF state of package M and answers 501 until package M7 wires the care loop."
+      ],
+      "differences": [
+        "Next.js today: the thread has the button \"Nhận xử lý\" and a \"Phụ trách:\" picker for every replying role, and a colleague who is replying only gets a warning (\"... Bạn vẫn nhắn được, nhưng hãy hỏi đồng nghiệp trước\"). Design: \"Nhận\" (dialog), \"Trả lại\", \"Tiếp quản\" (reason), \"Lịch sử phụ trách\"; the picker becomes \"Giao cho...\" for owner and manager; a colleague holding the thread locks the composer.",
+        "Old web: the follow-up inbox (WD6, WC14) has no holder or lock; those ids keep their ids, WM adds states instead of renumbering.",
+        "The top-bar bell is a plain link to /inbox today; the design adds /me/notifications (not in the menu) next to it. The \"Lịch trực\" menu entry is added to the sidebar of the WM frames only (frames WJ-WL keep their sidebar)."
+      ],
+      "gotchas": [
+        "The WM1 frame at 390 also draws the empty detail card under the list; on a phone the real page shows the list only and opens a thread as a child screen (WM10, WM11 draw that child screen).",
+        "Frames show the conversation code as \"#\" + four hex digits (joined at run time in parts/WM.js so the canvas check does not read it as a hex colour).",
+        "When O6 creates src/app/(admin)/admin/roster/page.tsx and src/app/(admin)/me/notifications/page.tsx, drop `planned_route` on the WM entries of those routes in lib/catalog-nextjs.cjs (web-inventory.cjs --check says so), and add the menu entry \"Lịch trực\" to src/lib/nav.tsx."
+      ],
+      "todo": [
+        "Open items for O6 (BE): ConversationSummary has no account_id and GET /api/v1/conversations has no account or \"unassigned\" filter, so the identity filter and the tab \"Chờ nhận\" need either a small O1/O2 follow-up (account_id in the DTO, filters account_id and unassigned=true) or filtering the first 100 rows in the page.",
+        "PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json."
+      ]
     }
   },
   "screens": {
@@ -2891,6 +2918,101 @@
       "related": [
         "WJ2 and WK11 are pages that show their own read-only note instead"
       ]
+    },
+    "WM42": {
+      "todo": [
+        "PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json.",
+        "Every field of this screen is provisional: the push status (registered devices), the bell link state and consent date, the one-time code format and expiry, and the quiet-hours fields."
+      ]
+    },
+    "WM43": {
+      "todo": [
+        "PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json.",
+        "Every field of this screen is provisional: the push status (registered devices), the bell link state and consent date, the one-time code format and expiry, and the quiet-hours fields."
+      ]
+    },
+    "WM44": {
+      "todo": [
+        "PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json.",
+        "Every field of this screen is provisional: the push status (registered devices), the bell link state and consent date, the one-time code format and expiry, and the quiet-hours fields."
+      ]
+    },
+    "WM45": {
+      "todo": [
+        "PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json.",
+        "Every field of this screen is provisional: the push status (registered devices), the bell link state and consent date, the one-time code format and expiry, and the quiet-hours fields."
+      ]
+    },
+    "WM46": {
+      "todo": [
+        "PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json.",
+        "Every field of this screen is provisional: the push status (registered devices), the bell link state and consent date, the one-time code format and expiry, and the quiet-hours fields."
+      ]
+    },
+    "WM47": {
+      "todo": [
+        "PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json.",
+        "Every field of this screen is provisional: the push status (registered devices), the bell link state and consent date, the one-time code format and expiry, and the quiet-hours fields."
+      ]
+    },
+    "WM48": {
+      "todo": [
+        "PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json.",
+        "Every field of this screen is provisional: the push status (registered devices), the bell link state and consent date, the one-time code format and expiry, and the quiet-hours fields."
+      ]
+    },
+    "WM49": {
+      "todo": [
+        "PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json.",
+        "Every field of this screen is provisional: the push status (registered devices), the bell link state and consent date, the one-time code format and expiry, and the quiet-hours fields."
+      ]
+    },
+    "WM50": {
+      "todo": [
+        "PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json.",
+        "Every field of this screen is provisional: the push status (registered devices), the bell link state and consent date, the one-time code format and expiry, and the quiet-hours fields."
+      ]
+    },
+    "WM51": {
+      "todo": [
+        "PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json.",
+        "Every field of this screen is provisional: the push status (registered devices), the bell link state and consent date, the one-time code format and expiry, and the quiet-hours fields."
+      ]
+    },
+    "WM25": {
+      "todo": [
+        "PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json.",
+        "Provisional fields: the internal-notifier status, \"Chờ xác nhận ... (phút)\" (ack timeout, default 3), the switches for bell, team group and push, and the \"group set\" status line (the group id itself is never shown)."
+      ]
+    },
+    "WM29": {
+      "todo": [
+        "PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json.",
+        "Provisional fields: the internal-notifier status, \"Chờ xác nhận ... (phút)\" (ack timeout, default 3), the switches for bell, team group and push, and the \"group set\" status line (the group id itself is never shown)."
+      ]
+    },
+    "WM24": {
+      "purpose": "The accounts page read as clinic identities: purpose badge, the limits that apply now, who is on duty, and the internal notifier card. Credentials stay on the existing \"Sửa\" and \"Login QR\" paths.",
+      "actions": [
+        "\"Sửa danh tính\" -> PATCH /api/v1/identities/{account_id} (identity.manage)",
+        "\"Lịch trực\" -> /admin/roster for that identity",
+        "\"Cài đặt thông báo\" -> PROVISIONAL (O3)",
+        "List -> GET /api/v1/identities (IdentityOut: purpose, enabled, channel_enabled, kill_switch_on, bridge_state, overrides, effective; no credential field)"
+      ],
+      "todo": [
+        "The internal notifier card (status, \"Cài đặt thông báo\") is PROVISIONAL until O3 merges; the purpose badge, limits and duty line come from the O1 API."
+      ]
+    },
+    "WM1": {
+      "todo": [
+        "Identity filter and queue tab need account_id and an unassigned filter on GET /api/v1/conversations (not in the DTO at O2); see groups.WM.todo."
+      ]
+    },
+    "WM12": {
+      "related": [
+        "WM9 the locked thread this turns into",
+        "WM13 a send that is refused after the takeover"
+      ]
     }
   },
   "routes": {
@@ -3459,6 +3581,64 @@
       "related": [
         "WA1 old-web shell for the owner (different shell)",
         "WA2 old-web shell for the CSKH role"
+      ]
+    },
+    "/inbox": {
+      "purpose": "The shared inbox: conversations of patients on the clinic identities, split into the queue \"Chờ nhận\", the operator's own \"Của tôi\" and \"Tất cả\", with the thread beside the list on desktop and as a child screen on a phone. Shows who holds a thread, locks the composer for everybody else, and offers Nhận, Tiếp quản, Trả lại, Giao cho... and the assignment history.",
+      "gate": "`conversation.read` to open; `thread.claim` to Nhận, Tiếp quản and Trả lại (owner, manager, doctor, cs_staff); `thread.assign` for \"Giao cho...\" (owner, manager); `conversation.reply` to send.",
+      "roles": "owner, manager, doctor, cs_staff (hold and answer threads); reception reads only (no claim, no composer).",
+      "actions": [
+        "\"Nhận\" -> POST /api/v1/conversations/{id}/claim (dialog \"Nhận hội thoại này?\")",
+        "\"Tiếp quản\" -> POST /api/v1/conversations/{id}/takeover with a required reason (dialog \"Tiếp quản hội thoại\")",
+        "\"Trả lại\" -> POST /api/v1/conversations/{id}/release {to_agent, note} (dialog \"Trả lại hội thoại\")",
+        "\"Giao cho...\" -> POST /api/v1/conversations/{id}/assign (owner, manager)",
+        "\"Lịch sử phụ trách\" -> GET /api/v1/conversations/{id}/assignments",
+        "\"Gửi\" -> POST /api/v1/conversations/{id}/messages (409 thread_locked turns the composer into the locked state)",
+        "Tabs, identity filter, search and status chips -> GET /api/v1/conversations and GET /api/v1/identities"
+      ],
+      "context": [
+        "Messages come from clinic.message, the Inbox of record; agent.history (the LLM context) is a different store and never shown here. Presence (\"Phạm Quốc Việt đang xem\") is only a hint: managers may read a thread silently, the lock is the holder."
+      ],
+      "related": [
+        "WD6 the old follow-up inbox keeps its id",
+        "WJ15 the AI chat sessions of the agent admin are a different list",
+        "WK23 care handoffs that end in a human holding the thread"
+      ]
+    },
+    "/admin/roster": {
+      "purpose": "Roster of operators per clinic identity: who covers \"Long\" or \"Pema CSKH\" and when, as a Monday to Sunday week grid, with the people on duty now and the end of a shift. The roster decides who a thread goes to when a shift ends.",
+      "gate": "`roster.read` to open (owner, manager, doctor, cs_staff); `roster.manage` to add, edit and delete slots; `thread.end_shift` to end a shift (owner, manager).",
+      "roles": "owner and manager manage; doctor and cs_staff read only (WM31).",
+      "actions": [
+        "\"Thêm ca trực\" / \"Thêm ca\" -> POST /api/v1/roster {account_id, user_id, weekdays | on_date, start, end, note}",
+        "Click a slot -> PATCH /api/v1/roster/{entry_id} (version) and DELETE for \"Xóa ca\"",
+        "Identity tabs and the grid -> GET /api/v1/roster?account_id=; \"Đang trực bây giờ\" -> GET /api/v1/identities/{account_id}/on-duty",
+        "\"Kết thúc ca\" -> POST /api/v1/staff/{user_id}/end-shift (result: rerouted, to_queue, skipped)"
+      ],
+      "context": [
+        "An end time earlier than the start time means the slot ends the next morning (+07:00 clock). Internal identities have no roster. A roster is optional: without one the queue works as today."
+      ],
+      "related": [
+        "WM24 identities and limits on /admin/accounts",
+        "WK1 skills and shifts of the care staff are a separate care roster"
+      ]
+    },
+    "/me/notifications": {
+      "purpose": "The signed-in operator's own notification settings: in-app (always on), push to the phone, the Zalo bell through the internal notifier account, and quiet hours. PROVISIONAL until O3 merges (step O3 runs in parallel and adds the notification and outbound details): field names, wording and limits below come from PLAN-AI01-O.md and the O3 recipe, not from openapi.json.",
+      "gate": "Sign-in only; it reads and changes the caller's own settings (provisional: O3 defines the endpoints).",
+      "roles": "owner, manager, doctor, cs_staff.",
+      "actions": [
+        "\"Liên kết Zalo\" -> POST /api/v1/me/notify-zalo/link (one-time code; PROVISIONAL, O3)",
+        "\"Hủy đăng ký\" -> DELETE /api/v1/me/push-tokens; registering a device is done by the mobile app with POST /api/v1/me/push-tokens (PROVISIONAL, O3)",
+        "\"Lưu\" quiet hours (from, to) -> a settings call of O3 (PROVISIONAL, name not fixed)",
+        "Opening a notification deep link, or POST /api/v1/notifications/{id}/ack, stops the chain (PROVISIONAL, O3)"
+      ],
+      "context": [
+        "Chain per recipient (O3 recipe): in-app now, push when a token exists and the provider is enabled, Zalo bell after the ack timeout (default 3 minutes), team group posted once. Urgency \"critical\" ignores quiet hours. The KMP push client does not exist yet: only the fake and a disabled provider."
+      ],
+      "related": [
+        "WM29 clinic-wide notification settings on /admin/accounts (PROVISIONAL)",
+        "WM24 the internal notifier identity"
       ]
     }
   },

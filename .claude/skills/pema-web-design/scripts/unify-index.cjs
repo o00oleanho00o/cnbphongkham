@@ -47,7 +47,7 @@ for (const h of want) if (!text.includes(`\n${h}\n`)) fail(`2 sections: missing 
 const rows = (re) => text.split('\n').filter((l) => re.test(l));
 const appRows = rows(/^\| \[[A-K]\d+\]\(screens\//);
 if (appRows.length !== appModel.screens.length) fail(`2 sections: ${appRows.length} app rows, expected ${appModel.screens.length}`);
-const webRows = rows(/^\| \[W[A-L]\d+\]\(web\/screens\//);
+const webRows = rows(/^\| \[W[A-M]\d+\]\(web\/screens\//);
 const wiCount = web.filter((w) => w.group === 'WI').length;
 if (webRows.length !== web.length) fail(`2 sections: ${webRows.length} web rows, expected ${web.length} (each id once as the first cell of a row)`);
 

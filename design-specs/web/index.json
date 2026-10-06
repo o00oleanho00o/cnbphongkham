@@ -1,13 +1,13 @@
 {
   "generator": ".claude/skills/pema-web-design/scripts/web-specs.cjs",
-  "snapshot": "81d0b99782d3deb8",
+  "snapshot": "90d9aba65d9c936e",
   "counts": {
-    "total": 384,
+    "total": 435,
     "by_kind": {
-      "dialog": 66,
+      "dialog": 79,
       "modal": 6,
-      "page": 55,
-      "state": 238,
+      "page": 59,
+      "state": 272,
       "tab": 19
     },
     "by_group": {
@@ -22,7 +22,8 @@
       "WI": 42,
       "WJ": 115,
       "WK": 39,
-      "WL": 19
+      "WL": 19,
+      "WM": 51
     }
   },
   "groups": [
@@ -73,6 +74,10 @@
     {
       "code": "WL",
       "name": "Đăng nhập, khung & mẫu tin (Next.js)"
+    },
+    {
+      "code": "WM",
+      "name": "Inbox chia sẻ (Next.js)"
     }
   ],
   "screens": [
@@ -10245,6 +10250,1289 @@
       "has_snapshot": true,
       "counts": {
         "actions": 24,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM1",
+      "name": "Inbox · Chờ nhận",
+      "group": "WM",
+      "kind": "page",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WM1.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM2",
+      "name": "Inbox · Của tôi",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM2.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM3",
+      "name": "Inbox · Tất cả · lọc theo danh tính",
+      "group": "WM",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM3.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM4",
+      "name": "Inbox · hàng chờ trống",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM4.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM5",
+      "name": "Inbox · đang tải",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM5.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM6",
+      "name": "Inbox · lỗi tải",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM6.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM7",
+      "name": "Hội thoại · chưa có người phụ trách",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM7.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM8",
+      "name": "Hội thoại · tôi đang phụ trách",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM8.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM9",
+      "name": "Hội thoại · đồng nghiệp đang trả lời · soạn tin bị khóa",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM9.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM10",
+      "name": "Hội thoại · điện thoại · chưa có người phụ trách",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "390x844"
+      ],
+      "spec": "screens/WM10.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM11",
+      "name": "Hội thoại · điện thoại · soạn tin bị khóa",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "390x844"
+      ],
+      "spec": "screens/WM11.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM12",
+      "name": "Hội thoại · đã bị tiếp quản",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM12.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM13",
+      "name": "Hội thoại · gửi bị chặn (thread_locked)",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM13.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM14",
+      "name": "Hội thoại · vừa đổi người phụ trách",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM14.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM15",
+      "name": "Hội thoại · không có quyền nhận",
+      "group": "WM",
+      "kind": "state",
+      "role": "reception",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM15.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM16",
+      "name": "Hội thoại · đang tải",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM16.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM17",
+      "name": "Nhận hội thoại",
+      "group": "WM",
+      "kind": "dialog",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM17.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM18",
+      "name": "Tiếp quản hội thoại",
+      "group": "WM",
+      "kind": "dialog",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM18.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM19",
+      "name": "Tiếp quản · chưa nhập lý do",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM19.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM20",
+      "name": "Trả lại hội thoại",
+      "group": "WM",
+      "kind": "dialog",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM20.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM21",
+      "name": "Trả lại · trợ lý chưa sẵn sàng",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM21.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM22",
+      "name": "Giao hội thoại cho đồng nghiệp",
+      "group": "WM",
+      "kind": "dialog",
+      "role": "manager",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM22.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM23",
+      "name": "Lịch sử phụ trách",
+      "group": "WM",
+      "kind": "dialog",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/inbox",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM23.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM24",
+      "name": "Tài khoản Zalo · danh tính và giới hạn gửi",
+      "group": "WM",
+      "kind": "page",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WM24.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM25",
+      "name": "Tài khoản Zalo · chưa có tài khoản thông báo nội bộ",
+      "group": "WM",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM25.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM26",
+      "name": "Sửa danh tính",
+      "group": "WM",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM26.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM27",
+      "name": "Sửa danh tính · giới hạn không hợp lệ",
+      "group": "WM",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM27.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM28",
+      "name": "Sửa danh tính · không đổi được mục đích",
+      "group": "WM",
+      "kind": "state",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM28.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM29",
+      "name": "Cài đặt thông báo nội bộ",
+      "group": "WM",
+      "kind": "dialog",
+      "role": "owner",
+      "source": "nextjs",
+      "next_route": "/admin/accounts",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM29.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM30",
+      "name": "Lịch trực",
+      "group": "WM",
+      "kind": "page",
+      "role": "manager",
+      "source": "nextjs",
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WM30.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM31",
+      "name": "Lịch trực · chỉ xem",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM31.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM32",
+      "name": "Lịch trực · chưa có ca",
+      "group": "WM",
+      "kind": "state",
+      "role": "manager",
+      "source": "nextjs",
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM32.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM33",
+      "name": "Lịch trực · lỗi tải",
+      "group": "WM",
+      "kind": "state",
+      "role": "manager",
+      "source": "nextjs",
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM33.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM34",
+      "name": "Thêm ca trực",
+      "group": "WM",
+      "kind": "dialog",
+      "role": "manager",
+      "source": "nextjs",
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM34.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM35",
+      "name": "Thêm ca trực · một ngày và ca qua đêm",
+      "group": "WM",
+      "kind": "state",
+      "role": "manager",
+      "source": "nextjs",
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM35.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM36",
+      "name": "Thêm ca trực · lỗi nhập",
+      "group": "WM",
+      "kind": "state",
+      "role": "manager",
+      "source": "nextjs",
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM36.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM37",
+      "name": "Sửa ca trực",
+      "group": "WM",
+      "kind": "dialog",
+      "role": "manager",
+      "source": "nextjs",
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM37.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM38",
+      "name": "Sửa ca trực · ca vừa được sửa",
+      "group": "WM",
+      "kind": "state",
+      "role": "manager",
+      "source": "nextjs",
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM38.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM39",
+      "name": "Xóa ca trực",
+      "group": "WM",
+      "kind": "dialog",
+      "role": "manager",
+      "source": "nextjs",
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM39.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM40",
+      "name": "Kết thúc ca của nhân viên",
+      "group": "WM",
+      "kind": "dialog",
+      "role": "manager",
+      "source": "nextjs",
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM40.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM41",
+      "name": "Kết thúc ca · kết quả",
+      "group": "WM",
+      "kind": "state",
+      "role": "manager",
+      "source": "nextjs",
+      "next_route": "/admin/roster",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM41.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM42",
+      "name": "Thông báo của tôi",
+      "group": "WM",
+      "kind": "page",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900",
+        "1920x1020",
+        "390x844"
+      ],
+      "spec": "screens/WM42.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM43",
+      "name": "Thông báo của tôi · chưa liên kết Zalo",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM43.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM44",
+      "name": "Liên kết Zalo · mã một lần",
+      "group": "WM",
+      "kind": "dialog",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM44.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM45",
+      "name": "Liên kết Zalo · mã hết hạn",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM45.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM46",
+      "name": "Thông báo của tôi · đã liên kết Zalo",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM46.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM47",
+      "name": "Hủy liên kết Zalo",
+      "group": "WM",
+      "kind": "dialog",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM47.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM48",
+      "name": "Thông báo của tôi · đã đăng ký điện thoại",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM48.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM49",
+      "name": "Thông báo của tôi · giờ yên tĩnh",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM49.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM50",
+      "name": "Thông báo của tôi · chưa có tài khoản nội bộ",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM50.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
+        "fields": 0,
+        "chips_tabs": 0,
+        "statuses": 0,
+        "kpis": 0,
+        "notices": 0,
+        "tables": 0
+      }
+    },
+    {
+      "id": "WM51",
+      "name": "Thông báo của tôi · đang tải và lỗi",
+      "group": "WM",
+      "kind": "state",
+      "role": "cs_staff",
+      "source": "nextjs",
+      "next_route": "/me/notifications",
+      "next_status": "designed (O5)",
+      "app_canvas": [],
+      "frames": [
+        "1440x900"
+      ],
+      "spec": "screens/WM51.md",
+      "has_snapshot": false,
+      "counts": {
+        "actions": 0,
         "fields": 0,
         "chips_tabs": 0,
         "statuses": 0,

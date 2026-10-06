@@ -88,6 +88,7 @@ function build() {
     covers: s.covers || [],
     notes: s.notes || '',
     ...(s.source ? { source: s.source } : {}),
+    ...(s.planned ? { planned: true } : {}),
     ...(s.viewport ? { viewport: s.viewport } : {}),
     ...(s.native ? { native: true, native_dialog: s.native } : {}),
   }));
@@ -132,7 +133,10 @@ function validateNextjs() {
   const routes = frontendRoutes();
   const claimed = new Set([...catalog.screens.map((s) => s.next_route).filter(Boolean), ...catalog.non_screens.map((n) => n.route).filter(Boolean)]);
   for (const s of catalog.screens.filter((x) => x.source === 'nextjs')) {
-    if (s.next_route !== '(app shell)' && !routes.includes(s.next_route)) problems.push(`${s.id}: next_route ${s.next_route} is not a page.tsx route of pema-agent/frontend`);
+    // O5: an entry with `planned_route` is designed before it is built; its route becomes a page.tsx in O6, and then the flag must go.
+    if (s.planned_route) {
+      if (routes.includes(s.next_route)) problems.push(`${s.id}: route ${s.next_route} exists now, drop planned_route in lib/catalog-nextjs.cjs`);
+    } else if (s.next_route !== '(app shell)' && !routes.includes(s.next_route)) problems.push(`${s.id}: next_route ${s.next_route} is not a page.tsx route of pema-agent/frontend`);
     if (!s.expect || !s.expect.text) problems.push(`${s.id}: a Next.js entry needs expect.text`);
     if (!s.notes) problems.push(`${s.id}: a Next.js entry needs notes (gate, tests, verbatim texts)`);
   }
@@ -145,7 +149,7 @@ function validateCatalog() {
   const ids = new Set();
   const groups = new Set(catalog.groups.map((g) => g.code));
   for (const s of catalog.screens) {
-    if (!/^W[A-L]\d+$/.test(s.id)) problems.push(`${s.id}: id must match ^W[A-L]\\d+$`);
+    if (!/^W[A-M]\d+$/.test(s.id)) problems.push(`${s.id}: id must match ^W[A-M]\\d+$`);
     if (ids.has(s.id)) problems.push(`${s.id}: duplicate id`);
     ids.add(s.id);
     if (!s.id.startsWith(s.group) || !groups.has(s.group)) problems.push(`${s.id}: group ${s.group} does not match`);

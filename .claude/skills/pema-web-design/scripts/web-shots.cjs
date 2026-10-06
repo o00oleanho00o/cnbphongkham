@@ -50,7 +50,11 @@ const CHANGED_LIMIT = 0.05;
 // WF19 is the print call of an approved order: the print media draws its A5 sheets (WF12-WF14 are drafts, which print nothing)
 const PRINT_IDS = ['WF5', 'WF6', 'WF19'];
 
-const loadInventory = () => JSON.parse(fs.readFileSync(INVENTORY, 'utf8'));
+// O5: an id with `planned: true` is designed before it is built (group WM): it has no page to shoot yet, so it is left out here.
+const loadInventory = () => {
+  const inv = JSON.parse(fs.readFileSync(INVENTORY, 'utf8'));
+  return { ...inv, screens: inv.screens.filter((s) => !s.planned) };
+};
 const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const vpName = ([w, h]) => `${w}x${h}`;
 const isNext = (entry) => entry.source === 'nextjs';

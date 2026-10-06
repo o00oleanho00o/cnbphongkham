@@ -61,7 +61,7 @@ const FILE_OPT = take('file');
 const [mode = 'list', ...pos] = argv;
 let [fileArg = '', codesArg = '', outDir = '.'] = typeof FILE_OPT === 'string' ? ['', ...pos] : pos;
 // with --file the groups are optional: a first argument that is not a list of group codes is the output folder
-if (typeof FILE_OPT === 'string' && codesArg && !/^W[A-L](,W[A-L])*$/.test(codesArg)) {
+if (typeof FILE_OPT === 'string' && codesArg && !/^W[A-M](,W[A-M])*$/.test(codesArg)) {
   outDir = codesArg;
   codesArg = '';
 }
@@ -72,7 +72,7 @@ const fileName = path.basename((typeof FILE_OPT === 'string' && FILE_OPT) || fil
 const GALLERY = fileName === lib.BLOCKS_FILE; // the block gallery has scratch ids WA9xx that are not in the inventory
 const ALLOWED = lib.groupsOfFile(fileName); // groups this canvas file holds
 const filePath = path.join(canvasDir, fileName);
-const SCREEN_ID = '^W[A-L]\\d+(-\\d+)?$';
+const SCREEN_ID = '^W[A-M]\\d+(-\\d+)?$';
 
 /** Evaluate the built canvas script in Node, like specs-lib loadCanvas does for the app canvas. */
 function loadGroups(file) {
