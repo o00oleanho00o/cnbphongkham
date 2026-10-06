@@ -135,5 +135,14 @@ class Permission(StrEnum):
     ROSTER_READ = "roster.read"
     """Read the channel identities and the roster (package O): every operator (owner, manager, doctor,
     cs_staff), so the Inbox can filter by identity and show who is on duty."""
+    THREAD_CLAIM = "thread.claim"
+    """Take an unassigned conversation, take it over from a colleague (with a reason) and give back one's own
+    (package O). Every assignable role: owner, manager, doctor, cs_staff."""
+    THREAD_ASSIGN = "thread.assign"
+    """Put a colleague on a conversation, or take it off the holder, whoever holds it (package O). Owner and
+    manager."""
+    THREAD_END_SHIFT = "thread.end_shift"
+    """End the shift of an operator: their active conversations move to whoever is on duty, or back to the
+    queue (package O). Owner and manager."""
     AGENT_SUBMIT = "agent.submit"
     """Held by the agent worker's actor only: create review items, read minimal context."""

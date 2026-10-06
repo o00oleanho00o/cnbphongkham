@@ -1327,6 +1327,39 @@
         "title": "ApprovedOrderGroupOut",
         "type": "object"
       },
+      "AssignRequest": {
+        "additionalProperties": false,
+        "description": "``POST /conversations/{id}/assign``: owner and manager. ``user_id`` null puts it back in the queue.",
+        "properties": {
+          "assignment_version": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The ``assignment_version`` the client saw. When it is no longer the stored one the call answers 409 ``version_conflict``. Left out: the action uses the version it reads itself.",
+            "title": "Assignment Version"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          }
+        },
+        "title": "AssignRequest",
+        "type": "object"
+      },
       "AssignableStaffOut": {
         "additionalProperties": false,
         "description": "A colleague a task or a conversation can be handed to (``GET /staff/assignable``, every signed-in staff\nmember may read it). The minimum a picker needs: no e-mail, phone, last sign-in or lock state (locked\naccounts are never listed). ``role`` is only one of the roles that can handle conversations and tasks.",
@@ -1351,6 +1384,121 @@
         ],
         "title": "AssignableStaffOut",
         "type": "object"
+      },
+      "AssignmentEventOut": {
+        "additionalProperties": false,
+        "description": "One line of the history of a conversation (``GET /conversations/{id}/assignments``, newest first).",
+        "properties": {
+          "at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Who made the change; null: the system.",
+            "title": "By"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AssignmentKind"
+          },
+          "previous_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous User Id"
+          },
+          "previous_user_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous User Name"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Takeover reason or release note; staff only.",
+            "title": "Reason"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Who holds it after the change; null: back in the queue.",
+            "title": "User Id"
+          },
+          "user_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Name"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "user_id",
+          "at"
+        ],
+        "title": "AssignmentEventOut",
+        "type": "object"
+      },
+      "AssignmentKind": {
+        "description": "Why a row of ``clinic.conversation_assignment`` exists.",
+        "enum": [
+          "claim",
+          "takeover",
+          "release",
+          "shift_end",
+          "assign"
+        ],
+        "title": "AssignmentKind",
+        "type": "string"
       },
       "AuditLogOut": {
         "additionalProperties": false,
@@ -2587,6 +2735,27 @@
         "title": "ChannelSettingsUpdate",
         "type": "object"
       },
+      "ClaimRequest": {
+        "additionalProperties": false,
+        "description": "``POST /conversations/{id}/claim`` (the body is optional).",
+        "properties": {
+          "assignment_version": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The ``assignment_version`` the client saw. When it is no longer the stored one the call answers 409 ``version_conflict``. Left out: the action uses the version it reads itself.",
+            "title": "Assignment Version"
+          }
+        },
+        "title": "ClaimRequest",
+        "type": "object"
+      },
       "ClinicalNoteOut": {
         "additionalProperties": false,
         "properties": {
@@ -2991,6 +3160,24 @@
             ],
             "title": "Assigned User Id"
           },
+          "assigned_user_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Display name of the holder (staff-only information).",
+            "title": "Assigned User Name"
+          },
+          "assignment_version": {
+            "default": 1,
+            "description": "Bumped by every claim, takeover, release, shift end and assign (step O2).",
+            "title": "Assignment Version",
+            "type": "integer"
+          },
           "channel": {
             "$ref": "#/components/schemas/ChannelKind"
           },
@@ -3012,6 +3199,17 @@
             "default": false,
             "title": "Has Pending Review",
             "type": "boolean"
+          },
+          "holder_presence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PresenceState"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Whether the holder has the conversation open now and in which state (``replying`` or ``viewing``); null when they are not here or presence is unavailable. The holder is never in ``viewers``."
           },
           "id": {
             "format": "uuid",
@@ -3140,6 +3338,24 @@
             ],
             "title": "Assigned User Id"
           },
+          "assigned_user_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Display name of the holder (staff-only information).",
+            "title": "Assigned User Name"
+          },
+          "assignment_version": {
+            "default": 1,
+            "description": "Bumped by every claim, takeover, release, shift end and assign (step O2).",
+            "title": "Assignment Version",
+            "type": "integer"
+          },
           "channel": {
             "$ref": "#/components/schemas/ChannelKind"
           },
@@ -3147,6 +3363,17 @@
             "default": false,
             "title": "Has Pending Review",
             "type": "boolean"
+          },
+          "holder_presence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PresenceState"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Whether the holder has the conversation open now and in which state (``replying`` or ``viewing``); null when they are not here or presence is unavailable. The holder is never in ``viewers``."
           },
           "id": {
             "format": "uuid",
@@ -4345,6 +4572,43 @@
         "title": "EffectiveLimits",
         "type": "object"
       },
+      "EndShiftResult": {
+        "additionalProperties": false,
+        "description": "What ``POST /staff/{user_id}/end-shift`` did, thread by thread.",
+        "properties": {
+          "rerouted": {
+            "description": "Moved to an operator who is on duty.",
+            "minimum": 0.0,
+            "title": "Rerouted",
+            "type": "integer"
+          },
+          "skipped": {
+            "description": "Changed hands while the shift was being ended: left alone.",
+            "minimum": 0.0,
+            "title": "Skipped",
+            "type": "integer"
+          },
+          "to_queue": {
+            "description": "Nobody on duty (or no identity known): back to the queue.",
+            "minimum": 0.0,
+            "title": "To Queue",
+            "type": "integer"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "rerouted",
+          "to_queue",
+          "skipped"
+        ],
+        "title": "EndShiftResult",
+        "type": "object"
+      },
       "EntryCreate": {
         "additionalProperties": false,
         "properties": {
@@ -4745,6 +5009,7 @@
           "mcp_server_unapproved",
           "kb_source_invalid",
           "payload_too_large",
+          "thread_locked",
           "internal"
         ],
         "title": "ErrorCode",
@@ -6751,6 +7016,7 @@
           "presence.changed",
           "handoff.changed",
           "appointments.changed",
+          "assignment.changed",
           "care.changed"
         ],
         "title": "LiveEventType",
@@ -10515,6 +10781,9 @@
           "identity.manage",
           "roster.manage",
           "roster.read",
+          "thread.claim",
+          "thread.assign",
+          "thread.end_shift",
           "agent.submit"
         ],
         "title": "Permission",
@@ -11241,6 +11510,46 @@
           "consequence"
         ],
         "title": "ReleasePreviewOut",
+        "type": "object"
+      },
+      "ReleaseRequest": {
+        "additionalProperties": false,
+        "description": "``POST /conversations/{id}/release``.",
+        "properties": {
+          "assignment_version": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The ``assignment_version`` the client saw. When it is no longer the stored one the call answers 409 ``version_conflict``. Left out: the action uses the version it reads itself.",
+            "title": "Assignment Version"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With ``to_agent``: the note the care agent reads (M's release note).",
+            "title": "Note"
+          },
+          "to_agent": {
+            "default": false,
+            "description": "Hand the conversation back to the care agent (the patient is in the STAFF state of package M). False: only back to the queue.",
+            "title": "To Agent",
+            "type": "boolean"
+          }
+        },
+        "title": "ReleaseRequest",
         "type": "object"
       },
       "ReleaseResultOut": {
@@ -14580,6 +14889,36 @@
           "python"
         ],
         "title": "SystemInfo",
+        "type": "object"
+      },
+      "TakeoverRequest": {
+        "additionalProperties": false,
+        "description": "``POST /conversations/{id}/takeover``. The reason is kept in the history (staff only) and never in an\naudit row or a notification.",
+        "properties": {
+          "assignment_version": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The ``assignment_version`` the client saw. When it is no longer the stored one the call answers 409 ``version_conflict``. Left out: the action uses the version it reads itself.",
+            "title": "Assignment Version"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "TakeoverRequest",
         "type": "object"
       },
       "TaskPriority": {
@@ -31343,6 +31682,363 @@
         ]
       }
     },
+    "/api/v1/conversations/{conversation_id}/assign": {
+      "post": {
+        "description": "`user_id` null takes it off the holder and puts it back in the queue.",
+        "operationId": "assignment_assign_conversation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Put a colleague on the conversation (owner, manager)",
+        "tags": [
+          "assignment"
+        ]
+      }
+    },
+    "/api/v1/conversations/{conversation_id}/assignments": {
+      "get": {
+        "operationId": "assignment_list_assignments",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AssignmentEventOut"
+                  },
+                  "title": "Response Assignment List Assignments",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Who held the conversation, newest first",
+        "tags": [
+          "assignment"
+        ]
+      }
+    },
+    "/api/v1/conversations/{conversation_id}/claim": {
+      "post": {
+        "description": "Every operator (owner, manager, doctor, cs_staff). Only an unassigned conversation: one that a colleague holds answers 409 `thread_locked`. Claiming what you already hold changes nothing. The body is optional (`assignment_version` the client saw).",
+        "operationId": "assignment_claim_conversation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ClaimRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Take an unassigned conversation (Nhận)",
+        "tags": [
+          "assignment"
+        ]
+      }
+    },
     "/api/v1/conversations/{conversation_id}/messages": {
       "get": {
         "operationId": "conversations_list_messages",
@@ -31922,6 +32618,251 @@
         "summary": "Mark inbound messages as read",
         "tags": [
           "conversations"
+        ]
+      }
+    },
+    "/api/v1/conversations/{conversation_id}/release": {
+      "post": {
+        "description": "The holder (or an owner or manager) puts it back in the queue. With `to_agent` the patient must be in the STAFF state of the care agent: 409 `invalid_state` otherwise, 501 until the care loop is wired. A refusal of the care agent leaves the conversation as it was.",
+        "operationId": "assignment_release_conversation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ReleaseRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Give the conversation back: to the queue, or to the care agent",
+        "tags": [
+          "assignment"
+        ]
+      }
+    },
+    "/api/v1/conversations/{conversation_id}/takeover": {
+      "post": {
+        "description": "Needs a `reason` (kept in the history, staff only). The previous holder, the new holder and the team group get a notice. 409 `invalid_state` when nobody holds it (claim it) or you already do.",
+        "operationId": "assignment_takeover_conversation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TakeoverRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Take the conversation from the colleague who holds it (Tiếp quản)",
+        "tags": [
+          "assignment"
         ]
       }
     },
@@ -43152,6 +44093,115 @@
         ]
       }
     },
+    "/api/v1/staff/{user_id}/end-shift": {
+      "post": {
+        "description": "Each active conversation of the user goes to an operator who is on duty for its identity (the one with the fewest active conversations), else back to the queue. A conversation that changed hands in the meantime is skipped.",
+        "operationId": "assignment_end_shift",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndShiftResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "End an operator's shift: their active conversations move on (owner, manager)",
+        "tags": [
+          "assignment"
+        ]
+      }
+    },
     "/api/v1/studio/{patient_id}": {
       "get": {
         "operationId": "studio_get_studio",
@@ -43610,6 +44660,10 @@
     {
       "description": "Pickers for every signed-in member: who can be assigned work. (ST-S)",
       "name": "staff"
+    },
+    {
+      "description": "Who holds a conversation: claim, takeover, release. (O2)",
+      "name": "assignment"
     },
     {
       "description": "Channel accounts as clinic identities: purpose, limits. (O1)",

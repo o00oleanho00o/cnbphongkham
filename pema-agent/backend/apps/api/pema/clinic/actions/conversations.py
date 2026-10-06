@@ -11,7 +11,10 @@ here. Rules:
   in a second one (``outbound.deliver_queued_message``). ``Idempotency-Key`` is stored as the message's
   ``update_id`` (``staff:<key>``), so the unique index of ``clinic.message`` makes a retry return the first
   message instead of sending twice;
-* a proactive reply needs a linked patient with a granted messaging consent.
+* a proactive reply needs a linked patient with a granted messaging consent;
+* package O, step O2: only the holder of a thread replies (``thread_locked`` 409 otherwise); the first
+  reply on an unassigned thread claims it; a change of "Phụ trách" is an assignment (history, outbox
+  notice, live event).
 """
 
 from __future__ import annotations
@@ -23,6 +26,11 @@ from sqlalchemy import ColumnElement, and_, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pema.clinic import audit
+from pema.clinic.actions._assignment_core import (
+    apply_assignment,
+    enforce_reply_lock,
+    locked_error,
+)
 from pema.clinic.actions._common import (
     check_version,
     escape_like,
@@ -43,7 +51,7 @@ from pema.clinic.models import (
     ReviewItem,
     UserAccount,
 )
-from pema.clinic.rbac import require
+from pema.clinic.rbac import has_permission, require
 from pema.core.db import ClinicDatabase
 from pema.live import emit_live
 from pema_contracts.actions import ActionContext
@@ -61,6 +69,7 @@ from pema_contracts.conversations import (
 )
 from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.live import LiveEventType
+from pema_contracts.ops import AssignmentKind
 from pema_contracts.patients import ConsentKind
 from pema_contracts.roles import Permission
 
@@ -130,6 +139,7 @@ async def summaries(
             Patient.code,
             Patient.full_name,
             ChannelIdentity.display_name,
+            UserAccount.display_name,
             last_body,
             _pending_review(),
         )
@@ -143,6 +153,13 @@ async def summaries(
                 ChannelIdentity.clinic_id == Conversation.clinic_id,
             ),
         )
+        .outerjoin(
+            UserAccount,
+            and_(
+                UserAccount.id == Conversation.assigned_user_id,
+                UserAccount.clinic_id == Conversation.clinic_id,
+            ),
+        )
         .where(*where)
         .order_by(Conversation.last_message_at.desc().nulls_last(), Conversation.id)
         .limit(limit)
@@ -150,7 +167,7 @@ async def summaries(
     )
     items: list[ConversationSummary] = []
     by_id: dict[UUID, Conversation] = {}
-    for conv, code, full_name, identity_name, body, pending in rows.all():
+    for conv, code, full_name, identity_name, holder_name, body, pending in rows.all():
         items.append(
             conversation_summary(
                 conv,
@@ -158,18 +175,26 @@ async def summaries(
                 patient_display_name=full_name or identity_name,
                 last_preview=body,
                 has_pending_review=bool(pending),
+                assigned_user_name=holder_name,
             )
         )
         by_id[conv.id] = conv
     return items, total, by_id
 
 
-async def load_conversation(session: AsyncSession, ctx: ActionContext, conversation_id: UUID) -> Conversation:
+async def load_conversation(
+    session: AsyncSession, ctx: ActionContext, conversation_id: UUID, *, for_update: bool = False
+) -> Conversation:
+    """The conversation if the caller may see it, else 404. ``for_update`` takes the row lock: the assignment
+    actions and the send lock use it, so two changes of one thread run one after the other."""
     where = [Conversation.id == conversation_id, Conversation.clinic_id == ctx.clinic_id]
     scope = _scope_condition(ctx)
     if scope is not None:
         where.append(scope)
-    row = await session.scalar(select(Conversation).where(*where))
+    query = select(Conversation).where(*where)
+    if for_update:
+        query = query.with_for_update(of=Conversation)
+    row = await session.scalar(query)
     if row is None:
         raise not_found("hội thoại")
     return row
@@ -211,7 +236,9 @@ async def list_conversations(
     return Page[ConversationSummary](items=items, total=total, limit=limit, offset=offset)
 
 
-async def _one_out(session: AsyncSession, ctx: ActionContext, conversation_id: UUID) -> ConversationOut:
+async def conversation_detail(
+    session: AsyncSession, ctx: ActionContext, conversation_id: UUID
+) -> ConversationOut:
     items, _, by_id = await summaries(session, ctx, [Conversation.id == conversation_id], limit=1, offset=0)
     if not items:
         raise not_found("hội thoại")
@@ -222,7 +249,7 @@ async def get_conversation(db: ClinicDatabase, ctx: ActionContext, conversation_
     require(ctx, Permission.CONVERSATION_READ)
     async with db.session() as session:
         await load_conversation(session, ctx, conversation_id)
-        return await _one_out(session, ctx, conversation_id)
+        return await conversation_detail(session, ctx, conversation_id)
 
 
 async def require_conversation_access(db: ClinicDatabase, ctx: ActionContext, conversation_id: UUID) -> None:
@@ -280,14 +307,28 @@ async def update_conversation(
             row.status = payload.status.value
             changed.append("status")
         details: dict[str, Any] = {}
+        handed_over = False
         if "assigned_user_id" in payload.model_fields_set:
             if payload.assigned_user_id is not None:
                 # active, of this installation and a role that can work conversations; one answer for all
                 await load_assignable_user(session, ctx, payload.assigned_user_id)
             if payload.assigned_user_id != row.assigned_user_id:
-                details["assignee_from"] = str(row.assigned_user_id) if row.assigned_user_id else None
+                # package O step O2: the "Phụ trách" box goes through the assignment core (history, outbox,
+                # audit, live event). A thread that a colleague holds is theirs: only an owner or a manager
+                # (``thread.assign``) takes it away from them this way, everybody else takes it over.
+                holder = row.assigned_user_id
+                if (
+                    holder is not None
+                    and holder != ctx.actor_user_id
+                    and not has_permission(ctx, Permission.THREAD_ASSIGN)
+                ):
+                    raise await locked_error(session, ctx, row)
+                details["assignee_from"] = str(holder) if holder else None
                 details["assignee_to"] = str(payload.assigned_user_id) if payload.assigned_user_id else None
-            row.assigned_user_id = payload.assigned_user_id
+                await apply_assignment(
+                    session, ctx, row, kind=AssignmentKind.ASSIGN, new_user_id=payload.assigned_user_id
+                )
+                handed_over = True
             changed.append("assigned_user_id")
         with lost_race_is_conflict():
             await session.flush()
@@ -299,7 +340,9 @@ async def update_conversation(
             row.id,
             {"changed_fields": changed, **details},
         )
-        result = await _one_out(session, ctx, conversation_id)
+        result = await conversation_detail(session, ctx, conversation_id)
+    if handed_over:
+        emit_live(LiveEventType.ASSIGNMENT_CHANGED, conversation_id)
     emit_live(LiveEventType.INBOX_CHANGED, conversation_id)
     return result
 
@@ -368,8 +411,9 @@ async def send_message(
     transaction 2 records sent/rejected (``outbound.deliver_queued_message``)."""
     require(ctx, Permission.CONVERSATION_REPLY)
     update_id = f"staff:{ctx.idempotency_key}" if ctx.idempotency_key else None
+    claimed = False
     async with db.session() as session:
-        conv = await load_conversation(session, ctx, conversation_id)
+        conv = await load_conversation(session, ctx, conversation_id, for_update=True)
         existing = None
         if update_id is not None:
             existing = await session.scalar(
@@ -386,6 +430,9 @@ async def send_message(
                 )
             message_id = existing.id
         else:
+            # the send lock (O2): the row is locked, so a takeover that is being applied waits for this send
+            # to finish, and the next send of the old holder is refused
+            claimed = await enforce_reply_lock(session, ctx, conv)
             if payload.proactive:
                 if conv.patient_id is None:
                     raise DomainError(
@@ -421,6 +468,8 @@ async def send_message(
                 {"conversation_id": str(conv.id), "proactive": payload.proactive},
             )
             message_id = row.id
+    if claimed:
+        emit_live(LiveEventType.ASSIGNMENT_CHANGED, conversation_id)
     emit_live(LiveEventType.INBOX_CHANGED, conversation_id)
     result = await deliver_queued_message(db, ctx, message_id, delivery)
     if result is None:  # pragma: no cover - the row was just written
