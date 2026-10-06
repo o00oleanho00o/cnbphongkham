@@ -11,3 +11,17 @@ demo-assets/screenshots
 demo-assets/test-results
 **/node_modules
 design-viewer/dist
+
+# Root-context builds (prototype, design viewers) need only prototype/, design-viewer/ and the two canvas folders.
+# pema-agent has its own contexts and *.dockerignore files; design-system/ is bind-mounted by compose.
+.claude
+.agents
+pema-agent
+pema-kmp
+flutter-template
+research
+demo-assets
+design-system
+design-specs
+*.png
+pema.apk
