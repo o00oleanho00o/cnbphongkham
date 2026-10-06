@@ -585,8 +585,37 @@ Alembic chain: `u9_0010_patient_parity` → `o1_0010_identities_roster` → `o2_
 
 **Next steps (in this order).** 1. Run the full gate on `feat/shared-inbox` `1f12ab7d` now that Docker works: BE ruff/format/pyright/import-linter, full pytest on a throwaway `pgvector/pgvector:pg17 -c fsync=off` + `redis:7` with `PEMA_TEST_DATABASE_URL`/`PEMA_TEST_REDIS_URL`, `alembic heads` = 1; FE `pnpm test`, `lint`, `check:types`, `inventory`, `build`, `smoke`, `dev:mock` + `pnpm visual`; expected failures are only the 3 clock tests and, until fixed, the roles test; run `tests/ops`, `tests/clinic` and `tests/live` explicitly (O2 changed the send path, the PATCH assign and the viewers list). 2. Fix SEC-64 (one small step), then the roles test. 3. Ask the owner the decisions above. 4. Small BE follow-up for the inbox filters and the device list. 5. M7 wiring, then the KMP push client. 6. Push only when the owner asks.
 
+## CRM idea tooling (a second person, own Claude account, shapes CRM ideas; written 2026-10-06, committed locally as `178c9fe9`, NOT pushed)
+
+Purpose: someone else proposes CRM ideas and proves them on a copy of the old web; the owner of the new system
+(Python + Next.js) reads the result and decides how to port it. That person never turns an idea into `pema-agent/` code.
+
+Where things are (decision of the owner: Claude config lives in `.claude/`, idea records at the repo root, the lab copy
+only on its own branch):
+- `.claude/skills/crm-idea/SKILL.md` (`/crm-idea`): dialogue and hand-over; checks it is on `crm/ideas`, asks until
+  `IDEA.md` is clear, delegates the build, sets status `sẵn sàng xem`; refuses to port into the new system.
+- `.claude/agents/crm-lab-builder.md`: builds one idea in `crm-lab/` (before/after shots with `crm-lab/tools/shot.cjs`,
+  fills `CHANGES.md`); edits only `crm-lab/` and the idea folder; does not commit.
+- `.claude/rules/crm-ideas.md`: no edits to `prototype/`; no porting into `pema-agent/` without the system owner's
+  written request in `PORT-NOTES.md`; no commits on `feat/*`, `master`, `dev`; names free; no AI attribution.
+- `crm-ideas/` (repo root): `README.md` index, `_TEMPLATE/{IDEA,CHANGES,PORT-NOTES}.md`; one folder per idea, any name.
+- `crm-lab/` (editable copy of `prototype/`: web on 4177, finance on 4176, own `.local/crm-lab-finance.sqlite3`) exists
+  ONLY on branch `crm/ideas` (pushed, tip `7563320a`, 2 commits on `0d7bfda7`).
+
+What happened: a first version put everything (including `crm-lab/`, CLAUDE.md and HANDOFF changes) on `crm/ideas`;
+cherry-picking it onto `feat/shared-inbox` conflicted in HANDOFF.md and the owner wanted the sandbox files out of the
+code branch, so the copy on `feat/shared-inbox` (`82c7f44d`, never pushed) was deleted with `git reset --hard 7fb7e761`
+(still in the reflog) and the config was rewritten into `.claude/`. The owner committed the 7 files himself as
+`178c9fe9` "Rules for CRM idea" on `feat/shared-inbox` (not pushed); only this HANDOFF section was still uncommitted.
+
+Open: `crm/ideas` still has the older skill text and a CRM section in its own `CLAUDE.md`/`HANDOFF.md` — sync it with
+the `.claude/` files above when the owner says so (copy the three files, drop the CLAUDE.md section). Add the other
+person as a collaborator and tell them to `git switch crm/ideas`, then run `pnpm install` and
+`npx playwright install chromium` once in `pema-agent/frontend` (the shot tool finds Playwright there), then `/crm-idea`.
+
 ## Next Steps (only when the user asks)
 
+0b. **CRM idea tooling** is committed locally on `feat/shared-inbox` (`178c9fe9`, see the section above): push when the owner asks, then sync `crm/ideas`.
 0a. **Package O (shared inbox) is built but not gated** on `feat/shared-inbox` `1f12ab7d` — run the full gate first (see "Result of package O" → "Next steps"), then fix SEC-64 and the roles test, then decide the owner items.
 0. **Run next:** the merge gate on `feat/ui-parity` `58243e5` (full BE pytest on a throwaway Postgres + Redis, FE `pnpm test`/`lint`/`check:types`/`inventory`/`build`/`smoke`, `pnpm dev:mock` + `pnpm visual`, `alembic heads` = 1): package U round 2 (U9–U12) was merged on 2026-10-06 without it at the owner's request. Then: owner decisions still open (real pricing, guide content, consent wording, token values, room hand-off, "Hỏi Pema" label, photo retention, whether non-doctors may approve orders), and push when the owner asks.
 1. Small leftovers: rate limit on `PATCH /admin/users`; stale sentence in `frontend/README` saying change-password is
