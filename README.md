@@ -33,22 +33,34 @@ Workspace này chứa prototype và tài liệu nghiên cứu của Pema Digital
 
 ### Chạy nhanh bằng Docker Compose
 
-Tại thư mục gốc của workspace, chạy 1 lệnh:
+Tại thư mục gốc của workspace, chạy 1 lệnh (build và chạy toàn bộ dự án, gồm cả các trang design; `docker compose build` một mình chỉ build image, không chạy):
 
 ```powershell
 docker compose up -d --build
 ```
 
-Sau khi container lên, mở:
+Không cần tạo `.env`: compose đọc giá trị demo ở [`pema-agent/infra/.env.local-demo`](pema-agent/infra/.env.local-demo) (chỉ dùng trên máy này, mọi cổng bind `127.0.0.1`). Sau khi container lên, mở:
 
-- Clinic Web: [http://127.0.0.1:4173/clinic-web/](http://127.0.0.1:4173/clinic-web/)
-- Patient Mobile: [http://127.0.0.1:4173/patient-mobile/](http://127.0.0.1:4173/patient-mobile/)
+| URL | Nội dung |
+| --- | --- |
+| [http://localhost:3000](http://localhost:3000) | Pema staff web (Next.js) chạy với backend thật (API, Postgres, Redis, worker) |
+| [http://localhost:8000/healthz](http://localhost:8000/healthz) | API |
+| [http://localhost:4190](http://localhost:4190) | Design canvas của app (Pema App) |
+| [http://localhost:4191](http://localhost:4191) | Design canvas của web (Pema Web) |
+| [http://localhost:4192](http://localhost:4192) | Design system: token, màu, 64 trang component, thẻ preview |
+| [http://127.0.0.1:4173/clinic-web/](http://127.0.0.1:4173/clinic-web/) | Prototype cũ: Clinic Web |
+| [http://127.0.0.1:4173/patient-mobile/](http://127.0.0.1:4173/patient-mobile/) | Prototype cũ: Patient Mobile |
+
+Đăng nhập staff web: dịch vụ `seed` tạo phòng khám mẫu (hư cấu) và các tài khoản `owner@example.test`, `manager@example.test`, `doctor.mai@example.test`, `cs.maianh@example.test`, `reception.lan@example.test`. Mật khẩu chung được sinh ngẫu nhiên và in **một lần**: `docker compose logs seed`. Muốn tự chọn, đặt `PEMA_SEED_PASSWORD` trong shell trước khi chạy lệnh. Chưa có khóa LLM nên agent CSKH chưa trả lời được cho tới khi đặt `LLM_*` (dashboard hoặc `pema-agent/infra/.env.local-demo`). Lần chạy đầu build nhiều image (Python, Next.js) nên mất vài phút.
 
 Lệnh dừng:
 
 ```powershell
-docker compose down
+docker compose down        # giữ dữ liệu
+docker compose down -v     # xóa luôn dữ liệu Postgres/Redis
 ```
+
+Cài đặt thật cho một phòng khám dùng stack riêng ở [`pema-agent/infra/`](pema-agent/infra/README.md) (`make infra-secrets` sinh bí mật ngẫu nhiên), không dùng file demo.
 
 ### Chạy local bằng Python
 

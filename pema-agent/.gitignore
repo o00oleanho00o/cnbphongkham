@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+# placeholder values for the one-command local demo (root docker-compose.yml); never a real installation's secrets
+!.env.local-demo
 **/.local/
 *.pem
 *.key
