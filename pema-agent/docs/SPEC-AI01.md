@@ -118,7 +118,7 @@ Mười luật của `crm-data.js` (`d1`, `d3`, `d7`, `due`, `overdue`, `no_show
 
 ## 4. API
 
-Tiền tố `/api/v1`. `openapi.json` đã commit liệt kê 100 đường dẫn, 132 thao tác (`make openapi` sinh lại; test fail khi file cũ). Nhóm: `auth`, `me`, `permissions`, `patients`, `appointments`, `crm`, `conversations`, `review-items`, `webhooks` (không dành cho FE), và `admin/*` (accounts, agents, channels, contacts, friends, kb, logs, mcp, memories, model, policy, rules, schedules, templates, threads, tools, traces, usage). `/healthz` ngoài tiền tố.
+Tiền tố `/api/v1`. `openapi.json` đã commit liệt kê 176 đường dẫn, 224 thao tác (`make openapi` sinh lại; test fail khi file cũ). Nhóm: `auth`, `me`, `permissions`, `patients` (cùng `consents`, `sessions`, `plans`, `consult-notes`, `media`, `approved-orders`, `360`), `appointments`, `dashboard`, `resources` (`rooms`, `room-blocks`), `services`, `protocols`, `studio`, `orders`, `catalog`, `finance`, `guide`, `media`, `crm`, `conversations`, `review-items`, `webhooks` (không dành cho FE), và `admin/*` (accounts, agents, channels, contacts, friends, kb, logs, mcp, memories, model, policy, rules, schedules, templates, threads, tools, traces, usage). `/healthz` ngoài tiền tố.
 
 - Phiên là cookie HttpOnly sau `POST /auth/login` (JWT, mật khẩu argon2). Thiếu phiên: 401; thiếu quyền: 403; **deny by default**.
 - Lỗi theo `ErrorResponse` với `ErrorCode` ổn định; thông điệp tiếng Việt, không chứa PII.
@@ -142,8 +142,18 @@ Tập quyền phẳng theo vai trò là **trần**; các luật hẹp hơn (bác
 | Ký duyệt tài liệu KB cho `patient_channel` | ✓ | ✗ | ✓ | ✗ | ✗ |
 | Quản trị AI (account, agent, model, tool, lịch, MCP, chính sách, kill switch, luật, log, usage) | ✓ | ✓ | ✗ | ✗ | ✗ |
 | Cấp mã xác minh | ✓ | ✓ | ✗ | ✓ | ✓ |
+| Kế hoạch, buổi điều trị, bản nháp tư vấn (ghi) | ✓ | ✗ | ✓ | ✗ | ✗ |
+| Ảnh trước/sau (tải lên, xem; cần đồng ý ảnh còn hiệu lực) | ✓ | ✗ | ✓ (giới hạn phụ trách) | ✓ | ✗ |
+| Lên đơn thuốc/phiếu tư vấn nháp, xem danh mục sản phẩm | ✓ | ✓ | ✓ | ✗ | ✓ |
+| Duyệt đơn (ký) | ✓ | ✗ | ✓ (đơn của mình) | ✗ | ✗ |
+| Thu tiền, lập hóa đơn từ đơn | ✓ | ✓ | ✗ | ✗ | ✓ |
+| Tài chính: tổng quan và bảng tiền thủ thuật của cả phòng khám | ✓ | ✓ | ✗ | ✗ | ✗ |
+| Tài chính: chỉ các dòng mình thực hiện (Doanh số của tôi) | ✓ | ✗ | ✓ | ✗ | ✗ |
+| Ghi, duyệt, hủy lượt thủ thuật; chốt tháng; xác nhận đã chi | ✓ | ✓ | ✗ | ✗ | ✗ |
+| Thông báo thanh toán của chủ | ✓ | ✗ | ✗ | ✗ | ✗ |
+| Dịch vụ, phòng, khóa phòng, phác đồ (sửa); danh mục sản phẩm chỉ nạp bằng CLI `pema catalog import`, không qua route | ✓ | ✓ | ✗ | ✗ | ✗ |
 
-Vai trò bệnh nhân: không có quyền staff nào. Cột "Thu ngân" của ARCH-PB01 thuộc PB02, không có trong API này. Bảng trên là **bản tóm tắt**; nguồn thật là `pema/clinic/rbac/matrix.py`. Chủ phòng khám cần xác nhận từng ô (SCOPE-AI01 mục 9, việc 2).
+Vai trò bệnh nhân: không có quyền staff nào. Cột "Thu ngân" và "Kế toán" của ARCH-PB01 chưa có vai trò riêng: lễ tân thu tiền, quản lý giữ phần kế toán (SCOPE-AI01 mục 9). Các hàng về buổi điều trị, ảnh, đơn, tài chính, dịch vụ do gói U thêm; `tests/clinic/test_u8_security_pass.py` kiểm từng route đúng ma trận (403 chính xác khi vai trò không có quyền). Bảng trên là **bản tóm tắt**; nguồn thật là `pema/clinic/rbac/matrix.py`. Chủ phòng khám cần xác nhận từng ô (SCOPE-AI01 mục 9, việc 2).
 
 ## 6. Cấu hình
 

@@ -11,7 +11,8 @@ Run (needs the migrated database and the ``be_app`` URL)::
     PEMA_SEED_PASSWORD='choose-one' uv run python -m pema.clinic.actions.seed_demo
 
 ``PEMA_SEED_PASSWORD`` is the password of every demo account. When it is not set a random one is generated
-and printed ONCE; there is no default password in the repository. The script is idempotent: a second run
+and printed ONCE; there is no default password in the repository. ``PEMA_SEED_OWNER_EMAIL`` (optional) sets the
+e-mail of the owner account instead of ``owner@example.test``. The script is idempotent: a second run
 finds the demo owner account and stops. The clinic row itself is not created here: the migration creates it
 (``PEMA_CLINIC_NAME``) and the CLI makes sure it exists through ``pema.core.installation.ensure_clinic`` with
 the owner URL when one is configured. The demo day is the prototype's 2026-09-20 (``--today`` overrides) so
@@ -35,6 +36,8 @@ from uuid import UUID, uuid5
 from sqlalchemy import select
 
 from pema.clinic import audit
+from pema.clinic.actions.catalog_seed import seed_default_catalog
+from pema.clinic.actions.seed_guide import seed_guide_articles
 from pema.clinic.models import (
     Appointment,
     ChannelIdentity,
@@ -70,6 +73,7 @@ USERS: tuple[tuple[str, str, Role], ...] = (
     ("cs.maianh", "CSKH Mai Anh (mẫu)", Role.CS_STAFF),
     ("cs.thu", "CSKH Thu (mẫu)", Role.CS_STAFF),
     ("reception.lan", "Lễ tân Lan (mẫu)", Role.RECEPTION),
+    ("accountant.hoa", "Kế toán Hoa (mẫu)", Role.ACCOUNTANT),
 )
 
 # code, label of the CRM01 case, days since the last session (None: no session), total/completed sessions
@@ -102,8 +106,12 @@ class SeedResult:
     conversation_id: UUID | None = None
 
 
-async def seed_demo(db: ClinicDatabase, *, password: str, today: date = DEMO_DAY) -> SeedResult:
-    """Add the demo data to the clinic of the installation; do nothing when it is already there."""
+async def seed_demo(
+    db: ClinicDatabase, *, password: str, today: date = DEMO_DAY, owner_email: str | None = None
+) -> SeedResult:
+    """Add the demo data to the clinic of the installation; do nothing when it is already there.
+
+    ``owner_email`` replaces the e-mail of the owner account (default ``owner@example.test``)."""
     slug = DEMO_SLUG
     clinic_id = await get_installation_clinic_id(db)
     users = {key: _id("user", slug, key) for key, _, _ in USERS}
@@ -111,12 +119,13 @@ async def seed_demo(db: ClinicDatabase, *, password: str, today: date = DEMO_DAY
     conversation_id = _id("conversation", slug, "P025")
     async with db.session() as probe:
         already = await probe.scalar(select(UserAccount.id).where(UserAccount.id == users["owner"]))
-    if already is not None:
-        return SeedResult(clinic_id, False, users, patient_ids, conversation_id)
-
     ctx = ActionContext(
         clinic_id=clinic_id, actor_type=ActorType.SYSTEM, source=ActionSource.SYSTEM, request_id="seed-demo"
     )
+    if already is not None:
+        await seed_default_catalog(db, ctx)  # a demo database from before the catalog gets it on a re-run
+        return SeedResult(clinic_id, False, users, patient_ids, conversation_id)
+
     password_hash = passwords.hash_password(password)
     stamp = _at(today, 9)
     async with db.session() as session:
@@ -125,7 +134,7 @@ async def seed_demo(db: ClinicDatabase, *, password: str, today: date = DEMO_DAY
                 UserAccount(
                     id=users[key],
                     clinic_id=clinic_id,
-                    email=f"{key}@example.test",
+                    email=owner_email if key == "owner" and owner_email else f"{key}@example.test",
                     display_name=name,
                     role=role.value,
                     password_hash=password_hash,
@@ -411,6 +420,7 @@ async def seed_demo(db: ClinicDatabase, *, password: str, today: date = DEMO_DAY
         await audit.record(
             session, ctx, "seed.demo", "clinic", clinic_id, {"patients": len(CASES), "users": len(USERS)}
         )
+    await seed_default_catalog(db, ctx)
     return SeedResult(clinic_id, True, users, patient_ids, conversation_id)
 
 
@@ -449,11 +459,14 @@ async def _run(today: date) -> int:
     await _ensure_installed()
     db = ClinicDatabase(get_settings().database_url)
     try:
-        result = await seed_demo(db, password=password, today=today)
+        result = await seed_demo(
+            db, password=password, today=today, owner_email=os.environ.get("PEMA_SEED_OWNER_EMAIL") or None
+        )
+        guide_added = await seed_guide_articles(db)  # idempotent, also on a clinic seeded before U7
     finally:
         await db.dispose()
     if not result.created:
-        sys.stdout.write("The demo data is already there; nothing changed.\n")
+        sys.stdout.write(f"The demo data is already there; guide articles added: {guide_added}.\n")
         return 0
     sys.stdout.write(f"Seeded the demo clinic with {len(USERS)} users and {len(CASES)} patients.\n")
     if generated:

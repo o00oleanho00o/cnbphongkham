@@ -64,28 +64,28 @@ export function AgentCreateModal({
           phủ là `fixed inset-0` nên trang cuộn cũng không kéo nó vào. `dvh`
           chứ không `vh` để trên điện thoại còn trừ đúng phần thanh địa chỉ
           đang chiếm chỗ. */}
-      <div className="max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-2xl bg-surface p-6 shadow-xl">
-        <h2 className="text-[17px] font-semibold text-ink">Tạo agent mới</h2>
-        <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">
+      <div className="max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-card bg-surface p-6 shadow-xl">
+        <h2 className="text-section font-semibold text-ink">Tạo agent mới</h2>
+        <p className="mt-1 text-small leading-relaxed text-ink-soft">
           Đặt tên trước đã. Bước sau còn model, số bước và công cụ - agent chỉ được tạo khi bạn bấm
           Tạo ở đó.
         </p>
 
         <div className="mt-5 flex gap-3">
           <div className="w-20">
-            <label htmlFor="ag-icon" className="mb-2 block text-[13px] font-medium text-ink">
+            <label htmlFor="ag-icon" className="mb-2 block text-small font-medium text-ink">
               Icon
             </label>
             <input
               id="ag-icon"
-              className="gc-input w-full text-center text-lg"
+              className="gc-input w-full text-center text-section"
               value={icon}
               onChange={(e) => setIcon(e.target.value)}
               maxLength={8}
             />
           </div>
           <div className="flex-1">
-            <label htmlFor="ag-ten" className="mb-2 block text-[13px] font-medium text-ink">
+            <label htmlFor="ag-ten" className="mb-2 block text-small font-medium text-ink">
               Tên hiển thị
             </label>
             <input
@@ -115,7 +115,7 @@ export function AgentCreateModal({
         />
 
         <div className="mt-5">
-          <label htmlFor="ag-persona" className="mb-2 block text-[13px] font-medium text-ink">
+          <label htmlFor="ag-persona" className="mb-2 block text-small font-medium text-ink">
             Agent này làm gì?{" "}
             <span className="font-normal text-ink-soft">
               (để trống cũng được, bước sau sửa tiếp)
@@ -139,7 +139,7 @@ export function AgentCreateModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-line px-4 py-2 text-[14px] font-medium text-ink-soft hover:bg-tile"
+            className="rounded-control border border-line px-4 py-2 text-body font-medium text-ink-soft hover:bg-tile"
           >
             Hủy
           </button>
@@ -149,7 +149,7 @@ export function AgentCreateModal({
             disabled={
               tenTrong || idTrong || trungId || kiemDinhDangId(id) !== "" || icon.trim() === ""
             }
-            className="rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+            className="rounded-control bg-brand-500 px-4 py-2 text-body font-medium text-white hover:bg-brand-600 disabled:opacity-50"
           >
             Tiếp tục
           </button>

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import date
 from uuid import UUID
 
-from fastapi import APIRouter, Security, status
+from fastapi import APIRouter, Query, Security, status
 
 from pema.api.dashboard_auth import Ctx, Database
 from pema.api.deps import ERROR_RESPONSES, Limit, Offset, cookie_scheme
@@ -15,6 +16,9 @@ from pema_contracts.appointments import (
     AppointmentStatus,
     AppointmentTransition,
     AppointmentUpdate,
+    FreeSlotOut,
+    ScheduleOut,
+    ScheduleView,
 )
 from pema_contracts.common import Page, VnDatetime
 
@@ -50,6 +54,44 @@ async def list_appointments(
     )
 
 
+@router.get(
+    "/appointments/schedule",
+    response_model=ScheduleOut,
+    summary="The clinic board: one day or seven days, optionally one doctor",
+    description=(
+        "Every status is returned; the screen hides cancelled and missed by default. A doctor gets only "
+        "their own appointments. Declared before `/appointments/{appointment_id}` so `schedule` is not "
+        "read as an id."
+    ),
+)
+async def get_schedule(
+    db: Database,
+    ctx: Ctx,
+    day: date,
+    view: ScheduleView = ScheduleView.DAY,
+    doctor_id: UUID | None = None,
+) -> ScheduleOut:
+    return await appointments.list_schedule(db, ctx, day=day, view=view, doctor_id=doctor_id)
+
+
+@router.get(
+    "/appointments/free-slot",
+    response_model=FreeSlotOut,
+    summary="First free start of a day for a patient and a doctor",
+)
+async def get_free_slot(
+    db: Database,
+    ctx: Ctx,
+    patient_id: UUID,
+    day: date,
+    doctor_id: UUID | None = None,
+    duration_min: int = Query(default=30, ge=5, le=480),
+) -> FreeSlotOut:
+    return await appointments.find_free_slot(
+        db, ctx, patient_id=patient_id, doctor_id=doctor_id, day=day, duration_min=duration_min
+    )
+
+
 @router.post(
     "/appointments",
     response_model=AppointmentOut,
@@ -74,6 +116,17 @@ async def update_appointment(
     appointment_id: UUID, body: AppointmentUpdate, db: Database, ctx: Ctx
 ) -> AppointmentOut:
     return await appointments.update_appointment(db, ctx, appointment_id, body)
+
+
+@router.post(
+    "/appointments/{appointment_id}/confirm",
+    response_model=AppointmentOut,
+    summary="Confirmed with the patient (booked to confirmed)",
+)
+async def confirm_appointment(
+    appointment_id: UUID, body: AppointmentTransition, db: Database, ctx: Ctx
+) -> AppointmentOut:
+    return await appointments.confirm_appointment(db, ctx, appointment_id, body)
 
 
 @router.post(

@@ -18,6 +18,8 @@ import { parseBounded } from "@/lib/care/forms";
 import { DEPTH_LABEL } from "@/lib/care/labels";
 import { useSession } from "@/lib/session/session-context";
 import { useLoad } from "@/lib/use-load";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 const DEPTH_OPTIONS: SelectOption[] = DEPTHS.map((d) => ({ value: d, label: DEPTH_LABEL[d] }));
 
@@ -97,7 +99,7 @@ function TimingForm({ timing, onSaved }: { timing: CareTiming; onSaved: () => vo
               <input
                 id={`${baseId}-u`}
                 inputMode="numeric"
-                className="gc-input w-28"
+                className={cx(FIELD_BASE_CLASS, "w-28")}
                 disabled={!timing.can_edit}
                 value={urgent}
                 onChange={(e) => setUrgent(e.target.value)}
@@ -107,7 +109,7 @@ function TimingForm({ timing, onSaved }: { timing: CareTiming; onSaved: () => vo
               <input
                 id={`${baseId}-n`}
                 inputMode="numeric"
-                className="gc-input w-28"
+                className={cx(FIELD_BASE_CLASS, "w-28")}
                 disabled={!timing.can_edit}
                 value={normal}
                 onChange={(e) => setNormal(e.target.value)}
@@ -121,7 +123,7 @@ function TimingForm({ timing, onSaved }: { timing: CareTiming; onSaved: () => vo
               <input
                 id={`${baseId}-c`}
                 inputMode="numeric"
-                className="gc-input w-28"
+                className={cx(FIELD_BASE_CLASS, "w-28")}
                 disabled={!timing.can_edit}
                 value={chain}
                 onChange={(e) => setChain(e.target.value)}
@@ -150,12 +152,12 @@ function TimingForm({ timing, onSaved }: { timing: CareTiming; onSaved: () => vo
           title="Khung giờ gửi tin"
           subtitle="Agent chỉ gửi tin trong khung giờ này; tin ngoài khung được xếp hàng tới giờ mở"
         >
-          <p className="text-[15px] font-semibold text-ink">
+          <p className="text-body-lg font-semibold text-ink">
             {timing.send_window_start && timing.send_window_end
               ? `${timing.send_window_start} đến ${timing.send_window_end}`
               : "Mặc định của phòng khám"}
           </p>
-          <p className="mt-1 text-[12px] text-ink-soft">
+          <p className="mt-1 text-label text-ink-soft">
             Múi giờ {timing.time_zone}. Khung giờ chỉnh ở{" "}
             <Link href="/admin/accounts" className="text-brand-500 underline">
               cài đặt kênh Zalo

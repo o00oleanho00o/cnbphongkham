@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
-import { IconCheck, IconClose, IconUsers } from "@/components/admin/shared/dashboard-icons";
+import { IconCheck, IconClose } from "@/components/admin/shared/dashboard-icons";
 import { SelectMenu } from "@/components/admin/shared/select-menu";
 import { EmptyRow, InitialAvatar, TableShell } from "@/components/admin/shared/ui-bits";
 import { useAdminAccounts } from "@/lib/admin/shared/accounts-context";
@@ -134,13 +134,12 @@ export default function FriendsPage() {
   return (
     <div>
       <PageHeader
-        icon={IconUsers}
         title="Bạn bè"
         subtitle="Duyệt yêu cầu kết bạn và xem danh sách bạn (chỉ nick cá nhân đang chạy)"
       />
 
       {accounts.length === 0 && (
-        <p className="mb-4 text-sm text-ink-soft">
+        <p className="mb-4 text-body text-ink-soft">
           Chưa có tài khoản Zalo cá nhân nào. Tính năng bạn bè không áp dụng cho kênh bot.
         </p>
       )}
@@ -154,19 +153,19 @@ export default function FriendsPage() {
           options={accounts.map((a) => ({
             value: a.id,
             label: a.label,
-            dotClass: a.online ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600",
+            dotClass: a.online ? "bg-success" : "bg-ink-soft/40",
           }))}
         />
       </div>
 
-      <p className="mb-3 text-sm text-ink-soft/80">
+      <p className="mb-3 text-body text-ink-soft/80">
         Chỉ hiện yêu cầu tới TỪ KHI bật tính năng và bot đang chạy - Zalo không cho lấy lại yêu cầu
         cũ.
       </p>
 
-      <h2 className="mb-2 text-sm font-semibold text-ink">Chờ duyệt ({requests.length})</h2>
+      <h2 className="mb-2 text-body font-semibold text-ink">Chờ duyệt ({requests.length})</h2>
       {actionError && (
-        <p role="alert" className="mb-2 text-sm text-red-500">
+        <p role="alert" className="mb-2 text-body text-danger">
           {actionError}
         </p>
       )}
@@ -184,7 +183,7 @@ export default function FriendsPage() {
               <div className="flex justify-end gap-1.5">
                 <button
                   onClick={() => void decide(r, "accept")}
-                  className="rounded-lg p-2 text-emerald-600 transition-colors hover:bg-emerald-500/10"
+                  className="rounded-control p-2 text-success transition-colors hover:bg-success-soft"
                   title="Chấp nhận"
                   aria-label="Chấp nhận"
                 >
@@ -192,7 +191,7 @@ export default function FriendsPage() {
                 </button>
                 <button
                   onClick={() => void reject(r)}
-                  className="rounded-lg p-2 text-ink-soft/60 transition-colors hover:bg-red-500/10 hover:text-red-500"
+                  className="rounded-control p-2 text-ink-soft/60 transition-colors hover:bg-danger-soft hover:text-danger"
                   title="Từ chối"
                   aria-label="Từ chối"
                 >
@@ -205,16 +204,16 @@ export default function FriendsPage() {
       </TableShell>
 
       <div className="mt-6 mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-ink">Danh sách bạn ({friends.length})</h2>
+        <h2 className="text-body font-semibold text-ink">Danh sách bạn ({friends.length})</h2>
         <button
           onClick={reloadFriends}
           disabled={loadingFriends}
-          className="rounded-lg border border-line px-3 py-1 text-sm text-ink-soft transition-colors hover:bg-tile/60 disabled:opacity-50"
+          className="rounded-control border border-line px-3 py-1 text-body text-ink-soft transition-colors hover:bg-tile/60 disabled:opacity-50"
         >
           {loadingFriends ? "Đang tải..." : "Làm mới"}
         </button>
       </div>
-      {friendsError && <p className="mb-3 text-sm text-red-500">{friendsError}</p>}
+      {friendsError && <p className="mb-3 text-body text-danger">{friendsError}</p>}
       <TableShell headers={["", "Tên", "User ID"]} minWidth={600}>
         {friends.length === 0 && !friendsError && (
           <EmptyRow colSpan={3} text={loadingFriends ? "Đang tải..." : "Chưa có bạn nào"} />

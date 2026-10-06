@@ -11,13 +11,13 @@ import { errorMessage, http, unwrap } from "@/lib/api/client";
 import { useSession } from "@/lib/session/session-context";
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
-import { IconFileText } from "@/components/admin/shared/dashboard-icons";
 import { useVungTha } from "@/components/admin/shared/file-drop-zone";
 import { nhanKhopTuKhoa } from "@/lib/admin/shared/fold-for-search";
 import { EmptyRow, ListToolbar, TableShell } from "@/components/admin/shared/ui-bits";
 import { KbAddSourceModal } from "@/components/admin/kb/kb-add-source-modal";
 import { KbAssignAgentsModal } from "@/components/admin/kb/kb-assign-agents-modal";
 import { KbChunksModal } from "@/components/admin/kb/kb-chunks-modal";
+import { KbGuideTagsModal } from "@/components/admin/kb/kb-guide-tags-modal";
 import { KbGuideModal } from "@/components/admin/kb/kb-guide-modal";
 import { KbSearchModal } from "@/components/admin/kb/kb-search-modal";
 import { xayThongDiepXoaNguon } from "@/lib/admin/kb/kb-delete-warning-message";
@@ -89,6 +89,11 @@ export default function KnowledgePage() {
   const [xemDoanCua, setXemDoanCua] = useState<KbSourceListItem | null>(null);
   const [ganAgentCho, setGanAgentCho] = useState<KbSourceListItem | null>(null);
   const [xemHuongDan, setXemHuongDan] = useState(false);
+  // Package U7: which sources are articles of the staff guide (`GET /guide/articles`), and the one being tagged.
+  const [baiHuongDan, setBaiHuongDan] = useState<Map<string, Schemas["GuideArticleSummary"]>>(
+    () => new Map(),
+  );
+  const [ganNhanCho, setGanNhanCho] = useState<KbSourceListItem | null>(null);
   const [thuTim, setThuTim] = useState(false);
   const [fileTha, setFileTha] = useState<File | null>(null);
   const { confirm, confirmDialog } = useConfirmDialog();
@@ -119,15 +124,23 @@ export default function KnowledgePage() {
     void demAgentMoiNguon().then(setDemAgent);
   }, []);
 
+  // Not on the 4 s poll: the tags only change when someone saves them here (or in another tab, on the next visit).
+  const taiLaiBaiHuongDan = useCallback(() => {
+    unwrap(http.GET("/api/v1/guide/articles"))
+      .then((bai) => setBaiHuongDan(new Map(bai.map((b) => [b.id, b]))))
+      .catch(() => setBaiHuongDan(new Map()));
+  }, []);
+
   useEffect(() => {
     reload();
     tinhLaiAgent();
+    taiLaiBaiHuongDan();
     // Việc cắt đoạn chạy ở worker nền (kb-ingest-worker.ts, quét mỗi 5s) - tự
     // làm mới để trạng thái cho_xu_ly/dang_xu_ly chuyển sang san_sang/hong mà
     // người dùng không phải tự bấm F5.
     const timer = window.setInterval(reload, 4000);
     return () => window.clearInterval(timer);
-  }, [reload, tinhLaiAgent]);
+  }, [reload, tinhLaiAgent, taiLaiBaiHuongDan]);
 
   const daLoc = (sources ?? []).filter((s) => nhanKhopTuKhoa(s.name, query));
 
@@ -205,26 +218,25 @@ export default function KnowledgePage() {
   return (
     <div>
       <PageHeader
-        icon={IconFileText}
         title="Kho tri thức"
         subtitle="Tài liệu nạp ở đây được cắt đoạn để agent tra cứu qua công cụ kb_search - nạp xong phải GÁN cho agent thì bot mới đọc được"
         aside={
           <div className="flex items-center gap-2">
             <button
               onClick={() => setThuTim(true)}
-              className="cursor-pointer rounded-lg border border-line px-3 py-2 text-[14px] font-medium text-ink-soft hover:bg-tile hover:text-ink"
+              className="cursor-pointer rounded-control border border-line px-3 py-2 text-body font-medium text-ink-soft hover:bg-tile hover:text-ink"
             >
               Thử tìm
             </button>
             <button
               onClick={() => setXemHuongDan(true)}
-              className="cursor-pointer rounded-lg border border-line px-3 py-2 text-[14px] font-medium text-ink-soft hover:bg-tile hover:text-ink"
+              className="cursor-pointer rounded-control border border-line px-3 py-2 text-body font-medium text-ink-soft hover:bg-tile hover:text-ink"
             >
               Hướng dẫn
             </button>
             <button
               onClick={() => setAdding(true)}
-              className="cursor-pointer rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600"
+              className="cursor-pointer rounded-control bg-brand-500 px-4 py-2 text-body font-medium text-white hover:bg-brand-600"
             >
               Thêm nguồn
             </button>
@@ -232,10 +244,8 @@ export default function KnowledgePage() {
         }
       />
 
-      {actionError && (
-        <p className="mb-4 text-[13px] text-red-600 dark:text-red-400">{actionError}</p>
-      )}
-      {loadError && <p className="mb-4 text-[13px] text-red-600 dark:text-red-400">{loadError}</p>}
+      {actionError && <p className="mb-4 text-small text-danger">{actionError}</p>}
+      {loadError && <p className="mb-4 text-small text-danger">{loadError}</p>}
 
       {sources !== null && sources.length > 0 && (
         <ListToolbar
@@ -288,13 +298,15 @@ export default function KnowledgePage() {
                 onDelete={() => void remove(s)}
                 onViewChunks={() => setXemDoanCua(s)}
                 onAssignAgents={() => setGanAgentCho(s)}
+                guideTopic={baiHuongDan.get(s.id)?.topic ?? null}
+                onEditGuide={can("kb.manage") ? () => setGanNhanCho(s) : undefined}
               />
             ))
           )}
         </TableShell>
         {dangKeoFile && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-2xl border-2 border-dashed border-brand-500 bg-brand-50/80 dark:bg-brand-50/60">
-            <span className="text-[15px] font-medium text-brand-700 dark:text-brand-700">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-card border-2 border-dashed border-brand-500 bg-brand-50/80 dark:bg-brand-50/60">
+            <span className="text-body-lg font-medium text-brand-700 dark:text-brand-700">
               Thả file để thêm nguồn
             </span>
           </div>
@@ -330,6 +342,16 @@ export default function KnowledgePage() {
       )}
 
       {xemHuongDan && <KbGuideModal onClose={() => setXemHuongDan(false)} />}
+
+      {ganNhanCho && (
+        <KbGuideTagsModal
+          sourceId={ganNhanCho.id}
+          sourceName={ganNhanCho.name}
+          tags={baiHuongDan.get(ganNhanCho.id)?.tags ?? []}
+          onClose={() => setGanNhanCho(null)}
+          onSaved={taiLaiBaiHuongDan}
+        />
+      )}
 
       {thuTim && <KbSearchModal onClose={() => setThuTim(false)} />}
 

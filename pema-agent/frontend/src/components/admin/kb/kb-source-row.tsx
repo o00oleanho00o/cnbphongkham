@@ -45,6 +45,8 @@ export function KbSourceRow({
   onDelete,
   onViewChunks,
   onAssignAgents,
+  guideTopic,
+  onEditGuide,
 }: {
   source: KbSourceListItem;
   /** Số agent đọc được nguồn này; null = chưa biết (không có quyền xem agent hoặc đang tải) */
@@ -58,6 +60,10 @@ export function KbSourceRow({
   onViewChunks: () => void;
   /** Mở modal gán nguồn này cho agent - đường thoát khỏi ngõ cụt "nạp xong mà bot không thấy" */
   onAssignAgents: () => void;
+  /** Package U7: topic of the staff-guide article this source is ("" = no topic); null = not an article */
+  guideTopic: string | null;
+  /** `kb.manage`: mở modal đưa nguồn vào / gỡ khỏi mục Hướng dẫn; undefined = không có quyền */
+  onEditGuide?: () => void;
 }) {
   const [dangXuLyLai, setDangXuLyLai] = useState(false);
   const [loiXuLyLai, setLoiXuLyLai] = useState("");
@@ -94,10 +100,7 @@ export function KbSourceRow({
       <td className="max-w-xs px-4 py-3 text-ink">
         <div className="truncate font-medium">{source.name}</div>
         {source.status === "hong" && source.error && (
-          <div
-            className="mt-0.5 truncate text-[12px] text-red-600 dark:text-red-400"
-            title={source.error}
-          >
+          <div className="mt-0.5 truncate text-label text-danger" title={source.error}>
             {source.error}
           </div>
         )}
@@ -105,11 +108,16 @@ export function KbSourceRow({
             hết lượt thử nên không nguồn nào giành nữa) - không riêng gì nguồn Hỏng */}
         {(source.status === "hong" ||
           (source.status === "cho_xu_ly" && (source.attempts ?? 0) > 0)) && (
-          <div className="mt-0.5 text-[11px] text-ink-soft">Đã thử {source.attempts ?? 0} lần</div>
+          <div className="mt-0.5 text-micro text-ink-soft">Đã thử {source.attempts ?? 0} lần</div>
         )}
-        {loiXuLyLai && (
-          <div className="mt-0.5 text-[12px] text-red-600 dark:text-red-400">{loiXuLyLai}</div>
+        {guideTopic !== null && (
+          <div className="mt-1">
+            <Badge tone="blue" dot={false}>
+              {guideTopic === "" ? "Hướng dẫn" : `Hướng dẫn · ${guideTopic}`}
+            </Badge>
+          </div>
         )}
+        {loiXuLyLai && <div className="mt-0.5 text-label text-danger">{loiXuLyLai}</div>}
       </td>
       {/* "Loại" và "Định dạng" GỘP làm một: nguồn `file` luôn có định dạng, nguồn
           `text` luôn không - hai cột rời nhau chỉ tốn bề ngang mà không nói thêm
@@ -134,8 +142,8 @@ export function KbSourceRow({
               ? "Chưa agent nào đọc được - bấm để gán"
               : "Đổi agent đọc được nguồn này"
           }
-          className={`flex cursor-pointer items-center gap-1.5 text-[13px] hover:underline ${
-            agentCount === 0 ? "text-amber-700 dark:text-amber-400" : "text-ink-soft hover:text-ink"
+          className={`flex cursor-pointer items-center gap-1.5 text-small hover:underline ${
+            agentCount === 0 ? "text-warning" : "text-ink-soft hover:text-ink"
           }`}
         >
           {agentCount === null ? (
@@ -170,11 +178,7 @@ export function KbSourceRow({
           </button>
         ) : null}
         <div
-          className={`mt-1 text-[12px] font-medium ${
-            daDuyet
-              ? "text-emerald-700 dark:text-emerald-300"
-              : "text-amber-700 dark:text-amber-300"
-          }`}
+          className={`mt-1 text-label font-medium ${daDuyet ? "text-success" : "text-warning"}`}
           title={
             daDuyet
               ? "Bác sĩ đã duyệt nguồn này"
@@ -200,23 +204,32 @@ export function KbSourceRow({
               onClick={() => void xuLyLai()}
               disabled={dangXuLyLai}
               title="Xử lý lại"
-              className="flex cursor-pointer items-center gap-1 text-[13px] text-brand-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50 dark:text-brand-400"
+              className="flex cursor-pointer items-center gap-1 text-small text-brand-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50 dark:text-brand-400"
             >
               <IconUndo size={14} />
               {dangXuLyLai ? "Đang xử lý..." : "Xử lý lại"}
             </button>
           )}
+          {onEditGuide && (
+            <button
+              onClick={onEditGuide}
+              title="Hiện nguồn này trong mục Hướng dẫn của nhân viên"
+              className="cursor-pointer text-small text-ink-soft hover:text-ink hover:underline"
+            >
+              Nhãn hướng dẫn
+            </button>
+          )}
           <button
             onClick={onViewChunks}
             title="Xem đoạn đã cắt"
-            className="flex cursor-pointer items-center gap-1 text-[13px] text-ink-soft hover:text-ink hover:underline"
+            className="flex cursor-pointer items-center gap-1 text-small text-ink-soft hover:text-ink hover:underline"
           >
             <IconEye size={14} />
             Xem đoạn
           </button>
           <button
             onClick={onDelete}
-            className="cursor-pointer text-[13px] text-red-600 hover:underline dark:text-red-400"
+            className="cursor-pointer text-small text-danger hover:underline"
           >
             Xóa
           </button>

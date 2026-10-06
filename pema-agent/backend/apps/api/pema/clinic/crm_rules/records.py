@@ -31,6 +31,7 @@ from datetime import date, datetime
 from enum import StrEnum
 from uuid import UUID
 
+from pema.clinic.crm_rules.protocols import ProtocolConfig
 from pema.clinic.crm_rules.rules import RuleConfig
 from pema_contracts.common import VN_TZ
 from pema_contracts.crm import RuleKey, TaskPriority, TaskStatus
@@ -217,3 +218,5 @@ class ClinicCrmData:
     patients: tuple[PatientSnapshot, ...]
     existing_tasks: tuple[ExistingTask, ...]
     templates: Mapping[str, TemplateRef] = field(default_factory=dict[str, TemplateRef])
+    protocols: Mapping[str, ProtocolConfig] = field(default_factory=dict[str, ProtocolConfig])
+    """``clinic.protocol`` by code (package U4). Empty: the engine uses the built-in laser-co2 defaults."""

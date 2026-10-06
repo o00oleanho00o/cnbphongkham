@@ -1,6 +1,7 @@
 // Mock of the knowledge-base sources: statuses move on while the page polls (cho_xu_ly -> dang_xu_ly ->
 // san_sang), one source is broken, one is not approved by a doctor. The texts are generic fictional
 // aftercare wording for the demo, not medical advice.
+import { GUIDE_SEEDS } from "../data/guide";
 import { agents } from "./agents";
 import {
   bodyOf,
@@ -166,6 +167,41 @@ const store: Stored[] = [
     pollsLeft: 0,
   },
 ];
+
+// The three staff-guide articles are ordinary text sources of the knowledge base (the real seed does the same);
+// `mock/handlers/guide.ts` finds them through their `guide` tag.
+store.push(
+  ...GUIDE_SEEDS.map((g): Stored => ({
+    source: {
+      ...BASE,
+      id: g.id,
+      name: g.name,
+      kind: "text",
+      format: "md",
+      status: "san_sang",
+      chunk_count: 1,
+      byte_size: Buffer.byteLength(g.body, "utf8"),
+      attempts: 1,
+      approved_by_clinical_owner: false,
+      created_at: isoFromNow(-6 * DAY),
+      updated_at: isoFromNow(-6 * DAY),
+    },
+    chunks: [{ order: 1, title: "", content: g.body }],
+    pollsLeft: 0,
+  })),
+);
+
+/** A source of the store with its chunks (the guide handler reads the article text from here). */
+export function kbSourceById(
+  id: string,
+): { source: S["KbSource"]; chunks: S["KbChunk"][] } | undefined {
+  return store.find((s) => s.source.id === id);
+}
+
+/** Every source of the store (the guide handler lists the ones tagged `guide`). */
+export function kbSources(): readonly { source: S["KbSource"]; chunks: S["KbChunk"][] }[] {
+  return store;
+}
 
 const agentSources = new Map<string, Set<string>>([
   ["cskh-da-lieu", new Set(["kb-sau-laser", "kb-dau-hieu"])],

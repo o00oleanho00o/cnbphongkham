@@ -84,6 +84,23 @@ class TreatmentPlanOut(ApiModel):
     total_sessions: int
     completed_sessions: int
     status: str
+    goal: str | None = None
+    doctor_id: UUID | None = None
+    version: int = 1
+    unit_price_vnd: int | None = Field(
+        default=None,
+        description="Price of one session fixed when the service was added to the course (U9). Null for a "
+        "plan made without a price and for a caller who holds no finance permission.",
+    )
+    discount_vnd: int | None = Field(default=None, description="Discount fixed with the price (same rules).")
+    agreed_price_vnd: int | None = Field(
+        default=None,
+        description="Price after discount (sessions x unit price - discount), fixed when the service was "
+        "added: a later change of the catalog never moves it (same rules).",
+    )
+    service_terms_version: int | None = Field(
+        default=None, description="Number of the catalog price snapshot the price was taken from."
+    )
 
 
 class TreatmentSessionOut(ApiModel):
@@ -94,6 +111,12 @@ class TreatmentSessionOut(ApiModel):
     protocol_id: str | None = Field(default=None, description="E.g. 'laser-co2'; drives D+1/3/7 rules.")
     title: str
     status: str
+    session_type: str | None = None
+    region: str | None = None
+    view: str | None = None
+    next_visit_on: date | None = None
+    reviewed: bool = False
+    version: int = 1
 
 
 class ConsentOut(ApiModel):
@@ -116,7 +139,9 @@ class TimelineEvent(ApiModel):
 
     id: str
     at: VnDatetime
-    kind: str = Field(description="session, appointment, crm_activity, message, review, consent")
+    kind: str = Field(
+        description="session, appointment, crm_activity, message, review, consent, consult, app_event"
+    )
     title: str
     detail: str | None = None
     by: str | None = None
@@ -137,3 +162,7 @@ class Patient360(ApiModel):
     consents: list[ConsentOut] = Field(default_factory=list[ConsentOut])
     conversations: list[ConversationSummary] = Field(default_factory=list[ConversationSummary])
     timeline: list[TimelineEvent] = Field(default_factory=list[TimelineEvent])
+    alerts: list[str] = Field(
+        default_factory=list[str],
+        description="The 'Thông tin cần nhớ' lines of the hero (U9), one warning per entry.",
+    )

@@ -21,7 +21,7 @@ const isBooted = (data: unknown): data is Booted =>
   typeof data === 'object' && data !== null && (data as { type?: unknown }).type === '__dc_booted';
 
 /** Tracks one .dc page inside an iframe: boot, props metadata, screen list and content size. */
-export function useDcFrame(frameRef: RefObject<HTMLIFrameElement | null>, frameId: string) {
+export function useDcFrame(frameRef: RefObject<HTMLIFrameElement | null>, frameId: string, enabled = true) {
   const [status, setStatus] = useState<FrameStatus>('loading');
   const [root, setRoot] = useState('');
   const [meta, setMeta] = useState<PropsMeta | null>(null);
@@ -36,6 +36,7 @@ export function useDcFrame(frameRef: RefObject<HTMLIFrameElement | null>, frameI
     setScreens([]);
     setSize(BASE_SIZE);
     setWin(null);
+    if (!enabled) return;
     // support.js posts this after boot and again whenever the root's props metadata changes.
     const onMessage = (e: MessageEvent) => {
       const frameWin = frameRef.current?.contentWindow;
@@ -51,7 +52,7 @@ export function useDcFrame(frameRef: RefObject<HTMLIFrameElement | null>, frameI
       window.removeEventListener('message', onMessage);
       window.clearTimeout(timer);
     };
-  }, [frameRef, frameId]);
+  }, [frameRef, frameId, enabled]);
 
   useEffect(() => {
     const doc = win?.document;

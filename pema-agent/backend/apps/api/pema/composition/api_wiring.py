@@ -28,6 +28,7 @@ from pema.api.routers import admin_crm_rules, admin_model, admin_usage
 from pema.api.routers.admin_stores import AdminStores
 from pema.api.routers.admin_tools import ToolsAdminServices, install_tools_admin_services
 from pema.channels.zalo_personal.audit_writer import SqlAuditSink
+from pema.clinic.actions import appointment_events
 from pema.clinic.crm_rules.admin import SqlCrmRuleAdminService
 from pema.clinic.crm_rules.runner import CrmRulesRunner
 from pema.clinic.crm_rules.sql_store import SqlCrmRuleStore
@@ -39,7 +40,8 @@ from pema.composition.auth_bridge import (
     resolve_staff_context,
 )
 from pema.composition.intake import BotStack, PersonalStack
-from pema.composition.outbound import RegistryOutboundDelivery
+from pema.composition.notify import NotifyStack, build_notify_stack
+from pema.composition.outbound import RegistryOutboundDelivery, install_identity_queue
 from pema.composition.runtime import Runtime
 from pema.config.runtime_tuning_settings import get_tuning_int
 from pema.conversation.agent_trace_store import PgTraceReader
@@ -57,6 +59,10 @@ from pema_contracts.installation import installation_clinic_id
 from pema_contracts.roles import ActorType, Permission
 
 log = create_logger("composition.api")
+
+CRM_NUDGE_SETTLE_S = 2.0
+"""After an appointment changed, wait this long before the rules run, so a burst (a morning of check-ins)
+becomes one run."""
 
 
 def _audit_context(clinic_id: UUID) -> ActionContext:
@@ -82,7 +88,10 @@ def wire_api(app: FastAPI, rt: Runtime, bot: BotStack, personal: PersonalStack) 
     state.runtime = rt
     state.clinic_db = rt.db
     state.live = rt.live
-    state.outbound_delivery = RegistryOutboundDelivery(rt.accounts, rt.channels, rt.conversation)
+    identity_queue = install_identity_queue(rt.db, rt.redis_client)
+    state.outbound_delivery = RegistryOutboundDelivery(
+        rt.accounts, rt.channels, rt.conversation, identity_queue
+    )
     state.admin_stores = AdminStores(
         agents=rt.agents,
         accounts=rt.accounts,
@@ -167,7 +176,11 @@ class ApiLifecycle:
         self._bot = bot
         self._personal = personal
         self._crm_task: asyncio.Task[None] | None = None
+        self._crm_wake = asyncio.Event()
         self._retention_task: asyncio.Task[None] | None = None
+        self.notify: NotifyStack | None = None
+        """The notification chain (package O3); ``stack.staff_notify`` and ``stack.sla_scheduler`` are the
+        production adapters package M7 hands to the care wiring."""
 
     async def start(self) -> None:
         rt = self._rt
@@ -186,7 +199,11 @@ class ApiLifecycle:
             await self._personal.manager.start_all_accounts()
         interval = rt.settings.crm_runner_interval_seconds
         if interval > 0:
+            appointment_events.install_listener(lambda _change: self._crm_wake.set())
             self._crm_task = asyncio.get_running_loop().create_task(self._crm_loop(interval))
+        self.notify = await build_notify_stack(rt)
+        self._app.state.notify_stack = self.notify
+        self.notify.start()
         self._retention_task = start_retention_loop(
             RetentionRunner(
                 rt.db,
@@ -204,14 +221,23 @@ class ApiLifecycle:
                 log.info("crm rules ran", tasks=report.tasks_created, jobs=report.jobs_created)
             except Exception as err:
                 log.error("crm rules run failed", err=err)
-            await asyncio.sleep(interval_s)
+            # Package U, step U2: a changed appointment (missed, arrived, cancelled) wakes the loop early.
+            with contextlib.suppress(TimeoutError):
+                await asyncio.wait_for(self._crm_wake.wait(), timeout=interval_s)
+            if self._crm_wake.is_set():
+                await asyncio.sleep(CRM_NUDGE_SETTLE_S)
+                self._crm_wake.clear()
 
     async def stop(self) -> None:
+        appointment_events.install_listener(None)
         crm, self._crm_task = self._crm_task, None
         if crm is not None:
             crm.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await crm
+        notify, self.notify = self.notify, None
+        if notify is not None:
+            await notify.stop()
         retention, self._retention_task = self._retention_task, None
         if retention is not None:
             retention.cancel()

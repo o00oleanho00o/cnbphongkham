@@ -27,6 +27,8 @@ type Options = {
   onCamera: CameraUpdate;
   tool: Tool;
   shortcuts: Shortcuts;
+  /** A second page on the same canvas (the "Cả hai" web view): `originX` is where its iframe sits in world coordinates. */
+  extra?: { win: DcWindow | null; originX: number };
 };
 
 type Point = { x: number; y: number };
@@ -90,14 +92,15 @@ function canScroll(target: EventTarget | null, dx: number, dy: number) {
  * (or pinch) zooms at the pointer, Space or the hand tool drags. Inside the page, wheel over a
  * scrollable area scrolls it, so prototypes stay usable.
  */
-export function useCanvasInput({ viewportRef, win, onCamera, tool, shortcuts }: Options) {
+export function useCanvasInput({ viewportRef, win, onCamera, tool, shortcuts, extra }: Options) {
   const [spaceHeld, setSpaceHeld] = useState(false);
   const [dragging, setDragging] = useState(false);
   const panActive = tool === 'hand' || spaceHeld;
 
-  const live = useRef({ onCamera, shortcuts, panActive });
+  const extraOriginX = extra?.originX ?? 0;
+  const live = useRef({ onCamera, shortcuts, panActive, extraOriginX });
   useLayoutEffect(() => {
-    live.current = { onCamera, shortcuts, panActive };
+    live.current = { onCamera, shortcuts, panActive, extraOriginX };
   });
   const last = useRef<Point | null>(null);
 
@@ -170,27 +173,38 @@ export function useCanvasInput({ viewportRef, win, onCamera, tool, shortcuts }: 
     return () => viewport.removeEventListener('wheel', onWheel);
   }, [viewportRef]);
 
+  const extraWin = extra?.win ?? null;
   useEffect(() => {
-    if (!win) return;
-    const onWheel = (e: WheelEvent) => {
-      const zooming = e.ctrlKey || e.metaKey;
-      if (!zooming && !live.current.panActive) {
-        const { dx, dy } = wheelDelta(e);
-        if (canScroll(e.target, dx, dy)) return;
-      }
-      e.preventDefault();
-      // Page coordinates are world coordinates: the iframe sits at the world origin, unscrolled.
-      applyWheel(e, live.current.onCamera, (c) => ({ x: c.x + e.clientX * c.z, y: c.y + e.clientY * c.z }));
-    };
-    win.addEventListener('wheel', onWheel, { passive: false });
-    win.addEventListener('keydown', onKeyDown);
-    win.addEventListener('keyup', onKeyUp);
-    return () => {
-      win.removeEventListener('wheel', onWheel);
-      win.removeEventListener('keydown', onKeyDown);
-      win.removeEventListener('keyup', onKeyUp);
-    };
-  }, [win, onKeyDown, onKeyUp]);
+    const pages = [
+      { w: win, second: false },
+      { w: extraWin, second: true }
+    ];
+    const detach = pages.flatMap(({ w, second }) => {
+      if (!w) return [];
+      const onWheel = (e: WheelEvent) => {
+        const zooming = e.ctrlKey || e.metaKey;
+        if (!zooming && !live.current.panActive) {
+          const { dx, dy } = wheelDelta(e);
+          if (canScroll(e.target, dx, dy)) return;
+        }
+        e.preventDefault();
+        // Page coordinates are world coordinates: the first iframe sits at the world origin, unscrolled; the second one at `originX`.
+        const ox = second ? live.current.extraOriginX : 0;
+        applyWheel(e, live.current.onCamera, (c) => ({ x: c.x + (ox + e.clientX) * c.z, y: c.y + e.clientY * c.z }));
+      };
+      w.addEventListener('wheel', onWheel, { passive: false });
+      w.addEventListener('keydown', onKeyDown);
+      w.addEventListener('keyup', onKeyUp);
+      return [
+        () => {
+          w.removeEventListener('wheel', onWheel);
+          w.removeEventListener('keydown', onKeyDown);
+          w.removeEventListener('keyup', onKeyUp);
+        }
+      ];
+    });
+    return () => detach.forEach((d) => d());
+  }, [win, extraWin, onKeyDown, onKeyUp]);
 
   const handlers = useMemo(() => {
     const end = () => {

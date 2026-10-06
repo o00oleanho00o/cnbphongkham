@@ -186,6 +186,34 @@ select {
   border-color: var(--accent-line);
 }
 
+/* Web canvas switch: "Web cũ" (default) / "Màn mới" / "Cả hai" (shown when the folder holds both web canvases). */
+.web-source {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 4px 0 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.web-source[data-active] {
+  color: var(--accent);
+  background: var(--accent-tint);
+  border-color: var(--accent-line);
+}
+.web-source select {
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .toolbar-group {
   display: flex;
   align-items: center;

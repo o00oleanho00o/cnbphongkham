@@ -378,8 +378,9 @@ route, one new DTO), so it did not need package G.
 Decisions:
 
 * **Assignable roles** (`pema.clinic.rbac.ASSIGNABLE_ROLES`, derived from the permission matrix, not a second list): the
-  staff roles that hold `conversation.reply` or `crm_task.resolve` = owner, manager, doctor, cs_staff. Reception is out
-  (no Inbox, no CRM queue: an item handed to them would sit unseen) and so is `patient`. A role that gains or loses
+  staff roles that hold `conversation.reply` or `crm_task.resolve` = owner, manager, doctor, cs_staff. Reception and
+  the accountant (the seventh role, package U step U11) are out (no Inbox, no CRM queue: an item handed to them would
+  sit unseen) and so is `patient`. A role that gains or loses
   those permissions follows automatically.
 * **Who may assign** stays the permission of each action: `conversation.reply` (conversation `assigned_user_id`),
   `crm_task.resolve` (`owner_user_id`), `patient.write` (`doctor_id`, `cs_owner_id`). Since ST-S a staff member may hand
@@ -428,3 +429,84 @@ Deviation from the first design note (agreed rule: the FE's existing shape wins)
 ### 11.3 Tests
 
 `apps/api/tests/live/` (bus, publisher, hub, stream, presence, routes; real Redis in `test_live_redis.py`) and `tests/integration/test_loop_live_events.py` (real API and worker over a real Redis).
+
+## 12. Shared inbox: identities, assignment, notifications (package O)
+
+Written in step O7 from the code of O1 to O4 and O6 (`pema_contracts.ops`, `pema_contracts.live`, the routers under
+`pema/api/routers/{identities,roster,assignment,notifications}.py`). Single-tenant: no RLS, `clinic_id` is the
+installation id (section 10). All routes need the staff session (401 without); the per-route permission is the
+one named in the table; a denied call is 403 `forbidden`.
+
+### 12.1 Routes
+
+| Route | Permission | Notes |
+|---|---|---|
+| `GET /api/v1/identities`, `GET /identities/{account_id}/on-duty?at=` | `identity.manage` or `roster.read` | Channel accounts as clinic identities (`IdentityOut`: label, channel, `purpose`, enabled, kill switch, bridge state, the overrides and the EFFECTIVE limits). Never a credential. |
+| `PATCH /api/v1/identities/{account_id}` | `identity.manage` (owner, manager) | `IdentityUpdate`: label, `purpose` (`customer` or `internal`), `send_gap_min_s`, `send_gap_max_s`, `daily_cap`; a limit sent as `null` clears its override; the effective gap must stay ordered. An identity in use cannot be switched to `internal`. |
+| `GET/POST /api/v1/roster`, `PATCH/DELETE /roster/{entry_id}` | `roster.read` (owner, manager, doctor, cs_staff) to read; `roster.manage` (owner, manager) to write | Who covers which customer identity, by weekday and clock window (`RosterEntryCreate`: `account_id`, `user_id`, `weekdays`, `start`, `end`). The user must be an assignable role. |
+| `POST /api/v1/conversations/{id}/claim` | `thread.claim` | Body `ClaimRequest {assignment_version?}`. An unassigned thread only; already yours = no change; somebody else holds it = 409 `thread_locked`. Returns the conversation. |
+| `POST /api/v1/conversations/{id}/takeover` | `thread.claim` | Body `TakeoverRequest {reason, assignment_version?}`; the reason is required and kept in the history only. 409 `invalid_state` when nobody holds the thread or you already do. |
+| `POST /api/v1/conversations/{id}/release` | `thread.claim` (the holder); `thread.assign` to release another's | Body `ReleaseRequest {note?, to_agent, assignment_version?}`. `to_agent` needs the patient in package M's STAFF state; M refusing leaves the thread as it was. |
+| `POST /api/v1/conversations/{id}/assign` | `thread.assign` (owner, manager) | Body `AssignRequest {user_id or null, assignment_version?}`; the user must be an assignable role. |
+| `GET /api/v1/conversations/{id}/assignments` | `conversation.read` | `AssignmentEventOut[]`, newest first: kind, who, previous holder, reason, when, by. |
+| `POST /api/v1/staff/{user_id}/end-shift` | `thread.end_shift` (owner, manager) | `EndShiftResult {rerouted, to_queue, skipped}`; one transaction per thread. |
+| `POST /api/v1/conversations/{id}/messages` (changed) | `conversation.reply` | New refusals: 409 `thread_locked` (somebody else holds the thread; the first reply on an unassigned thread claims it); the stored message stays `queued` with `error_code = no_identity` when no identity can be resolved. The text is sent exactly as stored. |
+| `GET /api/v1/me/notifications` | `notify.self` | `NoticeOut[]`: kind, state, time, ack time and the PII-free `NotificationPayload`. |
+| `POST /api/v1/notifications/{id}/ack`, `POST /notifications/ack` | `notify.self` | Ack one notice of the caller, or every notice about a conversation or a handoff request (`AckTargetIn`: exactly one of `conversation_id`, `request_id`). Repeating changes nothing. |
+| `POST /api/v1/me/push-tokens`, `DELETE /me/push-tokens/{token_id}` | `notify.self` | `PushTokenIn {platform, token}`; stored encrypted and hashed, never returned. There is **no GET**: the app cannot list devices. |
+| `POST /api/v1/me/notify-zalo/link`, `GET/DELETE /me/notify-zalo` | `notify.self` | One-time code (8 characters, 10 minutes) to send from the personal Zalo to the internal account; status and unlink. |
+| `GET/PUT /api/v1/me/notify-preferences` | `notify.self` | Own quiet hours (`HH:MM`, both or neither); an `urgent` notice rings anyway. |
+| `GET/PUT /api/v1/notifications/settings` | `notify.self` to read; `notify.manage` (owner, manager) to write | `NotifySettingsOut`: ack timeout (30 to 3600 s, default 180), team group id, switches for in-app, push, bell and group, public base URL. |
+
+Error codes added to `ErrorCode`: `thread_locked` (409; `details`: `holder_user_id`, `assignment_version`),
+`no_identity` (409 on a request; as a message `error_code` it marks a message that stayed `queued`),
+`channel_daily_cap_reached`, `channel_kill_switch_on` (a send refused by the identity queue).
+
+### 12.2 Live events
+
+`LiveEventType` gains `assignment.changed` (`id` = the conversation; sent with `inbox.changed` after each commit
+that changes a holder; the FE reloads the holder and the history from the API) and `notifications.changed` (`id` =
+the notice; every open screen of the recipient reloads). Same rule as section 11: only `type` and `id`, no PII.
+
+### 12.3 Permissions added
+
+`identity.manage`, `roster.manage`, `roster.read`, `thread.claim`, `thread.assign`, `thread.end_shift`,
+`notify.self`, `notify.manage`. Held by: owner all; manager all; doctor `roster.read`, `thread.claim`,
+`notify.self`; cs_staff the same three; reception, accountant and patient none; the agent none of the `thread.*`.
+Operators are exactly the `ASSIGNABLE_ROLES` (owner, manager, doctor, cs_staff).
+
+### 12.4 Seams (Protocols) and who implements them
+
+| Seam | Where | Implementation | Wired |
+|---|---|---|---|
+| `OutboundDelivery` (extended: `account_id`, `sender_type`, `sender_user_id`, `requires_identity`) | `pema.clinic.actions.outbound` | `pema.composition.outbound.RegistryOutboundDelivery` over `IdentitySendQueue` (`pema.channels.identity_send_queue`) | yes, in the API process |
+| `NotificationDelivery` | `pema.clinic.actions.notifications` | the chain of `pema.notify.consumer.NotificationConsumer` | yes (`build_notify_stack`) |
+| `CareHandback` | `pema.clinic.actions.assignment` | `pema.composition.care_assignment.CareAssignmentBridge` over package M's `CareControl` | **no** (M7) |
+| `StaffNotify` (package M) | `pema.care.ports` | `pema.notify.staff_notify.OutboxStaffNotify` | exposed as `NotifyStack.staff_notify`; **not used** (M7) |
+| `SlaScheduler` (package M) | `pema.care.ports` | `pema.notify.sla.DurableSlaScheduler` on `clinic.sla_check` (NOT on `pema.scheduler`; see ARCH-AI01 16.5) | exposed as `NotifyStack.sla_scheduler`; the runner starts only with a handler (M7) |
+| `RoutingDirectory` (package M) | `pema.care.ports` | `pema.composition.roster_routing.RosterRoutingDirectory` (roster first) | **no** (M7) |
+| `PushProvider` | `pema.notify.providers` | `FakePushProvider` (tests); `FcmApnsPushProvider` is a disabled skeleton | no real provider |
+
+### 12.5 Tables and the migration chain
+
+`o1_0010_identities_roster` (on `u9_0010_patient_parity`), `o2_0010_assignment`, `o3_0010_notifications` (the single
+head). New: `clinic.account_roster`, `conversation_assignment` (append only), `notification_outbox`,
+`notification_log`, `push_token`, `notify_setting`, `notify_preference`, `notify_link_code`, `sla_check`; new columns
+`agent.accounts.purpose` and the three own limits, `clinic.conversation.account_id` and `assignment_version`,
+`clinic.staff_profiles.notify_zalo_user_id` and `notify_zalo_consented_at`.
+
+### 12.6 Rules that hold everywhere
+
+* Customers see only the identity: no operator name, no signature; the stored text is the sent text.
+* A notification carries a short code, the identity label, an urgency, a one-line summary composed from a template, a
+  deep link behind the login and ids: `NotificationPayload` is closed (`extra = forbid`). No phone number, name or
+  message text, ever; the serializer refuses what the PII mask would change.
+* No credential in any DTO, response, audit row, outbox payload or log line (`*_enc`, cookies, QR payloads, push
+  tokens, the bell id, the group id, the on-call number).
+* An `internal` account never faces a customer and never creates a conversation.
+* Every outbound message has `sender_user_id` (staff) or a `sender_type` of `ai_draft` or `system`.
+
+### 12.7 Tests
+
+`apps/api/tests/ops/` (O1 to O4) and `pema-agent/evals/ops/` (O7: `test_ops_eval.py`, `test_ops_races.py`,
+`test_ops_security.py`, the load eval `run_eval.py` and `report.md`).

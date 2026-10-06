@@ -156,7 +156,7 @@ export function ToolChainSettingsModal({
               enabled={braveOn}
               onToggle={() => setBraveOn((v) => !v)}
             >
-              <label className="block text-[13px] font-medium text-ink" htmlFor="brave-key">
+              <label className="block text-small font-medium text-ink" htmlFor="brave-key">
                 API key
                 <span className="ml-2 font-normal text-ink-soft">
                   ({hasKey ? "đã lưu key" : "chưa có key"})
@@ -169,7 +169,7 @@ export function ToolChainSettingsModal({
                 placeholder={hasKey ? "Để trống nếu giữ key cũ" : "Dán key vào đây"}
                 className="mt-1.5"
               />
-              <p className="mt-1.5 text-[12px] leading-[1.6] text-ink-soft">
+              <p className="mt-1.5 text-label leading-[1.6] text-ink-soft">
                 Lấy key miễn phí tại{" "}
                 <a
                   href="https://brave.com/search/api/"
@@ -192,7 +192,7 @@ export function ToolChainSettingsModal({
             />
 
             {blocked && (
-              <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-2.5 text-[13px] text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
+              <div className="rounded-tile border border-warning-line bg-warning-soft px-4 py-2.5 text-small text-warning">
                 Nhập API key Brave trước rồi mới bật được bậc này.
               </div>
             )}
@@ -217,7 +217,7 @@ export function ToolChainSettingsModal({
         )}
 
         {error && (
-          <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-[13px] text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+          <div className="rounded-tile border border-danger-line bg-danger-soft px-4 py-2.5 text-small text-danger">
             {error}
           </div>
         )}

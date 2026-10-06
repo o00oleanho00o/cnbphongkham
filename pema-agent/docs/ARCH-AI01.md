@@ -55,10 +55,10 @@ Một account bot chỉ được **một** tiến trình nghe: chế độ `webh
 
 ## 3. Cơ sở dữ liệu
 
-- **Schema**: `ctx` (hàm ngữ cảnh), `clinic` (CRM), `clinic_agent` (cửa của agent), `agent` (engine). Migration Alembic: `0001` clinic, `0002` agent (ghi cách ánh xạ mọi bảng SQLite gốc), `0003` clinic_agent; bổ sung `b1_0004`, `b2_0001`, `s_0004`, `p0001`; `g_0005` gộp đầu nhánh; `g_0006` ghim `search_path` của các hàm `SECURITY DEFINER`; `b1_0007_session_absolute_expiry` (cột `clinic.auth_session.absolute_expires_at` NOT NULL, hạn tuyệt đối của phiên, phiên cũ điền `created_at + 7 ngày`) và `h2_0007_retention` (chỉ mục theo tuổi cho các phép quét của tác vụ xóa, cộng hai hàm bên dưới) cùng nối sau `g_0006`, nên `h_0008_merge_heads` gộp lại; trên nhánh single-tenant còn `st_0009_single_tenant` (một phòng khám, bỏ RLS, mục dưới) là MỘT đầu duy nhất (`alembic heads` ra `st_0009_single_tenant`); chạy `alembic upgrade heads`.
+- **Schema**: `ctx` (hàm ngữ cảnh), `clinic` (CRM), `clinic_agent` (cửa của agent), `agent` (engine). Migration Alembic: `0001` clinic, `0002` agent (ghi cách ánh xạ mọi bảng SQLite gốc), `0003` clinic_agent; bổ sung `b1_0004`, `b2_0001`, `s_0004`, `p0001`; `g_0005` gộp đầu nhánh; `g_0006` ghim `search_path` của các hàm `SECURITY DEFINER`; `b1_0007_session_absolute_expiry` (cột `clinic.auth_session.absolute_expires_at` NOT NULL, hạn tuyệt đối của phiên, phiên cũ điền `created_at + 7 ngày`) và `h2_0007_retention` (chỉ mục theo tuổi cho các phép quét của tác vụ xóa, cộng hai hàm bên dưới) cùng nối sau `g_0006`, nên `h_0008_merge_heads` gộp lại; trên nhánh single-tenant còn `st_0009_single_tenant` (một phòng khám, bỏ RLS, mục dưới); gói M thêm `m_0001_care_tables`, `m_0002_paused_reminders`; gói U thêm `u3_0010_sessions_plans_media` → `u7_0001_guide_tags` → `u4_0010_services_resources` → `u5_0010_orders_catalog` → `u6_0010_finance`, một chuỗi thẳng nên **không cần revision gộp** và `alembic heads` ra MỘT đầu duy nhất là `u6_0010_finance` (U8 đã chạy `upgrade head`, `downgrade base` và `upgrade head` trên Postgres sạch); chạy `alembic upgrade heads`.
 - **Ràng buộc một dòng (`st_0009_single_tenant`)**: `clinic.clinic` có đúng MỘT dòng, do chính CSDL bảo đảm: cột `singleton boolean NOT NULL DEFAULT true` với `CHECK (singleton)` và `UNIQUE (singleton)` nên INSERT thứ hai thất bại; trigger chặn DELETE dòng đó (mã của nó là mã cài đặt, mọi bảng khác trỏ vào). Nâng cấp từ CSDL đã có từ hai phòng khám trở lên thì migration dừng, báo rõ (phải tách hoặc gộp trước). Hàm `clinic.ensure_clinic(name, slug, timezone, id)` tạo dòng đó idempotent (không đổi tên, không đổi mã, hỏi mã khác thì báo lỗi); chỉ role chủ chạy được. Migration gọi nó với `PEMA_CLINIC_NAME` (mặc định `Pema Clinic`), slug cố định `clinic` và `PEMA_CLINIC_ID` làm mã nếu có (không thì sinh một mã, một lần). `ctx.the_clinic_id()` (STABLE, SECURITY DEFINER, cả hai role gọi được) trả mã duy nhất và **báo lỗi khi bảng rỗng** (đóng khi hỏng, không trả "không có dòng" như thể CSDL trống); nó thay `ctx.current_clinic_id()` trong mười view `clinic_agent` và chín hàm definer, giữ `security_barrier`, quyền và `search_path ... pg_temp`. Đã xóa: 41 policy `clinic_isolation`, RLS trên mọi bảng `clinic.*` và `agent.*`, `ctx.current_clinic_id`, `ctx.resolve_clinic`, `ctx.list_active_clinic_ids`. Chi tiết hợp đồng: CONTRACTS-AI01 mục 10.
-- **`clinic.*`** (21 bảng): `clinic`, `user_account`, `auth_session`, `patient`, `episode`, `treatment_plan`, `treatment_session`, `appointment`, `consent`, `conversation`, `message`, `review_item`, `message_template`, `crm_rule`, `crm_task`, `crm_activity`, `channel_setting`, `channel_identity`, `identity_link_code`, `identity_link_attempt`, `audit_log`.
-- **`agent.*`**: `accounts`, `agents`, `contacts`, `friend_requests`, `threads`, `history`, `memories`, `image_descriptions`, `usage`, `usage_steps`, `jobs`, `job_runs`, `proactive_send_counters`, `kb_document`, `kb_chunk` (vector 1024, `tsvector` trên cột đã bỏ dấu), `agent_kb_document`, `mcp_servers`, `agent_mcp_servers`, `runtime_settings`, `channel_update_seen`.
+- **`clinic.*`** (41 bảng sau `u6_0010`): lõi B/ST: `clinic`, `user_account`, `auth_session`, `patient`, `episode`, `treatment_plan`, `treatment_session`, `appointment`, `consent`, `conversation`, `message`, `review_item`, `message_template`, `crm_rule`, `crm_task`, `crm_activity`, `channel_setting`, `channel_identity`, `identity_link_code`, `identity_link_attempt`, `audit_log`; gói M (care): `on_call_contacts`, `staff_profiles`, `patient_ownership`; gói U: `consult_note`, `media` (U3), `service`, `service_version`, `room`, `room_block`, `protocol` (U4), `order`, `order_item`, `product`, `catalog_import` (U5), `invoice`, `payment`, `procedure_entry`, `procedure_entry_person`, `finance_period`, `finance_notification` (U6). Ảnh trước/sau nằm ở kho tệp (`PEMA_DATA_DIR`), bảng `media` chỉ giữ siêu dữ liệu và đồng ý; không bảng nào chứa kết quả phân tích ảnh.
+- **`agent.*`**: `accounts`, `agents`, `contacts`, `friend_requests`, `threads`, `history`, `memories`, `image_descriptions`, `usage`, `usage_steps`, `jobs`, `job_runs`, `proactive_send_counters`, `kb_document`, `kb_chunk` (vector 1024, `tsvector` trên cột đã bỏ dấu), `agent_kb_document`, `mcp_servers`, `agent_mcp_servers`, `runtime_settings`, `channel_update_seen`; gói M (care, `m_0001`, `m_0002`) thêm `actions_log`, `care_agents`, `care_memory`, `conversation_control`, `handoff_requests`, `paused_reminders`, `skills`, `tasks` (28 bảng sau `u6_0010`).
 - **Hai kho, hai mục đích**: `agent.history` là kho ngữ cảnh cho LLM; `clinic.message` là Inbox chính thức nhân viên đọc. Tầng kênh ghi cả hai. `review_item` ở `clinic.review_item`.
 - **Role**: `be_app` (DML trên `clinic.*` và `agent.*`; `audit_log` chỉ chèn và đọc: không sửa, không xóa) và `agent_worker` (DML trên `agent.*`; đọc view `clinic_agent`; EXECUTE hàm `clinic_agent`; **không có gì trên `clinic.*`**). Từ `st_0009` **không còn RLS**: `be_app` và `agent_worker` đọc mọi dòng của bảng mà họ có quyền (chỉ có một phòng khám trong CSDL); cái còn lại để giới hạn họ là grant (và `agent_worker` không có gì trên `clinic.*`). `bootstrap-roles.sh` tạo role NOLOGIN, đặt mật khẩu từ môi trường (psql đọc bằng `\getenv`, không qua argv; `log_statement` tắt cho phiên đó), và mặc định thu hồi `CONNECT` của PUBLIC. Mật khẩu rỗng thì role vẫn NOLOGIN.
 - **Không RLS, không ngữ cảnh phòng khám**: mọi bảng giữ `clinic_id` (khóa ngoại tới `clinic.clinic`, khóa kép vẫn dùng) như mã cài đặt; không còn policy, không còn `app.clinic_id`. Mở đơn vị công việc bằng `async with db.session() as s:` (đối số `clinic_id` cũ bị bỏ qua); mã cài đặt lấy bằng `get_installation_clinic_id(db)` (bộ nhớ đệm, rồi `PEMA_CLINIC_ID`, rồi `ctx.the_clinic_id()`). SQL mới dùng `ctx.the_clinic_id()`, không đọc `app.clinic_id`.
@@ -265,3 +265,81 @@ nơi ghi (API hoặc worker) --commit--> emit_live(type, id) --gộp 200 ms--> P
 * Hiện diện: Redis, một sorted set mỗi hội thoại (điểm = thời điểm hết hạn), TTL 30 giây, nhịp 15 giây từ FE. Danh sách `viewers` đọc một lượt pipeline cho cả trang hội thoại. Redis hỏng thì `viewers` rỗng và nhịp vẫn trả 204. Không bao giờ chặn gửi.
 * Hạ tầng: Caddy không nén `/api/v1/events` (`encode` có matcher loại trừ), `flush_interval -1` đã có ở `to_api`, header `Cache-Control: no-cache, no-transform` và `X-Accel-Buffering: no`.
 * Giới hạn: 5 luồng mỗi người, 200 mỗi tiến trình API (đếm theo tiến trình; chạy nhiều tiến trình API thì cộng lại); nhịp hiện diện và lệnh rời đi tối đa 120 lần mỗi người mỗi 60 giây (quá thì trả 204 và bỏ qua, SEC-54). Sự kiện mà người đó không được đọc thì không ghi gì ra luồng, kể cả dòng keep-alive (SEC-55).
+
+## 16. Hộp thư dùng chung: một danh tính, nhiều người trực (gói O)
+
+Quyết định của chủ phòng khám (PLAN-AI01-O mục 1): khách chỉ nói chuyện với **danh tính của phòng khám** ("Long" trên Zalo); nhân viên **không bao giờ** nhắn khách từ Zalo cá nhân mà chỉ trả lời trong Pema; tin đi chỉ hiện danh tính, không tên người gửi, không chữ ký; Zalo cá nhân của nhân viên chỉ là **chuông báo**; tiếp quản được phép và cả hai người cùng được báo; số trực 24/7 của gói M vẫn là mắt xích cuối. Mọi thứ dưới đây chạy ở tiến trình API (role `be_app`); worker không chạm các bảng này.
+
+### 16.1 Các khái niệm và nơi chúng nằm
+
+| Khái niệm | Nơi nằm | Ghi chú |
+|---|---|---|
+| **Danh tính** (kênh Zalo khách thấy) | `agent.accounts` + cột `purpose` (`customer` hoặc `internal`) và ghi đè giới hạn riêng `send_gap_min_s`, `send_gap_max_s`, `daily_cap` (rỗng thì rơi về dòng của kênh trong `clinic.channel_setting`) | Màn `/admin/accounts` có sẵn; chỉ thêm cột, không tạo mô hình tài khoản mới. Chưa có loại `fb_page`/`ig` (gói F). |
+| **Tài khoản thông báo nội bộ** | cùng bảng, `purpose = 'internal'` | Chỉ để rung chuông người trực và đăng vào nhóm; **không bao giờ** hướng khách (mục 16.4). Không tạo `clinic.conversation`, không chạy lượt agent (`InternalAccountRegistry`). |
+| **Người trực** (operator) | `clinic.user_account` với vai trò giao được: chủ, quản lý, bác sĩ, CSKH (`ASSIGNABLE_ROLES`) | Kế toán và lễ tân không bao giờ giữ hội thoại (kiểm bằng ma trận quyền, action và HTTP). |
+| **Hội thoại** | `clinic.conversation` + `account_id` (khóa ngoại tới danh tính, không trỏ được tới tài khoản `internal`) | Một khách × một danh tính. `record_inbound_message` ghi danh tính nhận tin. |
+| **Phân công** | `conversation.assigned_user_id` + `assignment_version` + bảng chỉ thêm `clinic.conversation_assignment` (claim, takeover, release, shift_end, assign; lý do chỉ nằm ở lịch sử) | Một cột giữ MỘT người; mọi đổi chủ đi qua `apply_assignment` (một giao dịch: đổi chủ, dòng lịch sử, dòng audit chỉ có id, các dòng outbox, tăng version). |
+| **Lịch trực** | `clinic.account_roster` (danh tính × người × thứ × giờ) do chủ/quản lý nhập | `who_is_on(danh tính, lúc)` trả người đang trực; dùng cho hết ca và để xếp hạng trong routing của M. |
+| **Chuông** | `clinic.staff_profiles.notify_zalo_user_id` + thời điểm đồng ý | Liên kết một lần bằng mã (mục 16.3). |
+
+### 16.2 Luồng
+
+```
+Khách -> danh tính "Long" -> đường vào sẵn có -> clinic.conversation (account_id)
+  chưa giao ... hàng đợi "Chờ nhận" (lọc theo danh tính); lịch trực cho biết ai đang phụ trách "Long"
+  nhận ........ "Nhận" (claim) hoặc câu trả lời đầu tiên (tự nhận) -> khóa gửi; nhóm Zalo được báo
+  trả lời ..... send_message: khóa gửi (409 thread_locked cho người không giữ) -> hàng đợi theo danh tính
+                (khoảng cách và trần ngày chung cho cả agent lẫn mọi người trực) -> OutboundDelivery -> "Long"
+  tiếp quản ... "Tiếp quản" (bắt buộc có lý do): người cũ, người mới và nhóm đều được báo; lịch sử có dòng mới
+  hết ca ...... end_shift: mỗi hội thoại đang mở của người đó chuyển cho người đang trực danh tính ấy (ít việc nhất,
+                A-Z khi hòa) hoặc về hàng đợi; mỗi hội thoại một giao dịch
+  trả lại ..... về hàng đợi, hoặc `to_agent` (bệnh nhân phải ở trạng thái STAFF của M; M từ chối thì không đổi gì)
+  không ai nhận: routing của M (RoutingAdvance) -> ứng viên kế -> số trực 24/7 cuối cùng
+```
+
+Ghi chú để không hiểu sai: `sender_type` của tin đi là `staff` (kèm `sender_user_id`), `ai_draft` hoặc `system`; một tin do agent soạn và được người duyệt gửi mang `staff` với người duyệt và `review_item_id`, và không bị khóa gửi (quyết định của người duyệt). Cổng `OutboundDelivery` kiểm khóa lần thứ hai ngay trước khi gọi kênh: tin staff mà người gửi không còn giữ hội thoại bị `rejected` (`thread_locked`) và không bao giờ tới kênh; tin đã vào bước gửi thì được gửi nốt.
+
+### 16.3 Chuỗi thông báo (`pema.notify`, bảng `clinic.notification_outbox` và `notification_log`)
+
+Mỗi thay đổi phân công ghi các dòng outbox trong CÙNG giao dịch; `NotificationConsumer` (một vòng lặp trong tiến trình API, mượn dòng bằng lease `FOR UPDATE SKIP LOCKED`) đi theo chuỗi:
+
+| Người nhận | Chuỗi |
+|---|---|
+| người trực (`user`) | trong ứng dụng ngay (`GET /me/notifications` + sự kiện `notifications.changed`) -> push ngay nếu phòng khám bật, nhà cung cấp bật và có token -> **chuông Zalo cá nhân** sau `ack_timeout` (mặc định 180 giây) nếu chưa ack, người đó đã liên kết Zalo và không trong giờ yên tĩnh (tin `urgent` vẫn rung) |
+| nhóm (`team_group`) | một lần, vào nhóm Zalo đã cấu hình; chưa cấu hình thì bỏ qua và ghi log |
+| trực 24/7 (`on_call`) | ngay, qua tài khoản nội bộ; không phụ thuộc công tắc của phòng khám; số lấy từ DB lúc gửi, không lưu vào dòng |
+
+Mỗi lần thử ghi một dòng `notification_log` (nhà cung cấp, trạng thái, độ trễ ms, mã lỗi ngắn). Bước lỗi tạm thời được thử lại tăng dần (20, 40, 80 giây), tối đa 3 lần; bị chốt chặn từ chối thì dừng. Ack (`POST /notifications/{id}/ack` hoặc mở đường dẫn sâu) kết thúc chuỗi. **Nội dung không có PII**: mã ngắn `#A1B2`, nhãn danh tính, mức khẩn, một câu tóm tắt dựng từ mẫu (không bao giờ từ tin nhắn), đường dẫn sâu cần đăng nhập; DTO `NotificationPayload` đóng (`extra = forbid`) và bộ tuần tự hóa từ chối payload mà bộ che PII sửa được.
+
+Liên kết chuông: nhân viên gọi `POST /me/notify-zalo/link`, nhận mã 8 ký tự hiệu lực 10 phút, nhắn mã đó từ Zalo cá nhân tới tài khoản nội bộ; `LinkHandler` ghi id Zalo. Sai vài lần liên tiếp thì người gửi bị làm im một lúc. Tin gửi tới tài khoản nội bộ không bao giờ vào Inbox khách.
+
+**Hiện trạng thật của chuỗi:** trong ứng dụng, chuông Zalo cá nhân và nhóm là chuỗi chạy thật; **push đứng sau nhà cung cấp giả** (`FcmApnsPushProvider` bị tắt, chưa có thông tin FCM/APNs và `pema-kmp` chưa có mã push); API token đẩy có (`POST/DELETE /me/push-tokens`) nhưng **không có GET** nên thẻ push ở màn thông báo chưa liệt kê được thiết bị.
+
+### 16.4 Gửi với tư cách danh tính (`pema.channels.identity_send_queue`)
+
+Một hàng đợi, một khoảng cách, một trần cho MỖI danh tính: `admit` (từ chối danh tính `internal`, danh tính tắt, công tắc dừng của kênh; tin chủ động giữ một ô của trần ngày, hoàn lại nếu tin không đi) rồi `send` từng phần dưới một khóa theo danh tính (Redis, có TTL; Redis hỏng thì ghi log và đi tiếp, khóa trong tiến trình vẫn nối đuôi) với khoảng cách ngẫu nhiên giữa mức tối thiểu và tối đa HIỆU LỰC của danh tính. Agent, người trực và bộ lập lịch dùng chung. Trần ngày chỉ tính tin **chủ động**; một câu trả lời trong cuộc trao đổi khách mở thì chịu khoảng cách chứ không chịu trần. Danh tính chưa rõ: `conversation.account_id`, nếu rỗng thì danh tính khách DUY NHẤT đang bật của kênh, nếu không có thì tin nằm `queued` với `error_code = no_identity` (hiện trong Inbox, không tự đoán). Văn bản gửi đi đúng byte đã lưu: không tên người, không chữ ký. Adapter trả `external_message_id` thì được lưu; không có trạng thái `delivered` vì chưa adapter nào báo.
+
+### 16.5 Cổng của gói M đã có adapter (và chưa nối)
+
+| Cổng của M | Adapter của O | Trạng thái |
+|---|---|---|
+| `StaffNotify` | `pema.notify.staff_notify.OutboxStaffNotify` (một dòng outbox không PII mỗi lần hỏi; số trực không lưu) | Có và có test; `build_notify_stack` đưa ra `stack.staff_notify`, **chưa ai dùng**: nối vào vòng chăm sóc là M7 |
+| `SlaScheduler` | `pema.notify.sla.DurableSlaScheduler` + `SlaCheckRunner` trên bảng `clinic.sla_check` (khử trùng theo `dedupe_key`, lease, thử lại có giới hạn) | Có và có test. **Lệch khỏi recipe**: các kiểm tra SLA nằm ở `clinic.sla_check`, KHÔNG nằm trên `pema.scheduler` vì `agent.jobs` của gói S gắn với một tài khoản và luồng và không có loại việc gọi ngược vào ứng dụng. `SlaCheckRunner` chỉ chạy khi M7 đưa `RoutingService.on_sla_expired`; tới lúc đó `sweep_overdue` của M là chốt phụ |
+| `RoutingDirectory` | `pema.composition.roster_routing.RosterRoutingDirectory` (người đang trực danh tính đứng trước trong xếp hạng; trực 24/7 vẫn cuối) | Có và có test; **chưa đăng ký** (M7). `Ownership` của M chỉ có hai ô nên mỗi ô xếp tối đa một người trực lên đầu |
+| `CareControl.accept` / `release_to_auto` | `pema.composition.care_assignment.CareAssignmentBridge` (accept = claim hội thoại mở có tin đến mới nhất của bệnh nhân; trả lại cho agent chỉ khi bệnh nhân ở trạng thái STAFF) | Có và có test với fake của M; **chưa đăng ký** (M7) |
+| `ChannelSend`, `RoutingAdvance` và phần còn lại của vòng chăm sóc | không làm trong O | M7 |
+
+Trước M7, O chạy trên đường hộp thư của người đang chạy thật (claim, takeover, gửi, thông báo trong ứng dụng, chuông và nhóm).
+
+### 16.6 Dữ liệu và migration
+
+Ba migration xếp trên một đầu duy nhất: `o1_0010_identities_roster` (sau `u9_0010_patient_parity`), `o2_0010_assignment`, `o3_0010_notifications` (đầu hiện tại). Bảng mới: `clinic.account_roster`, `conversation_assignment`, `notification_outbox`, `notification_log`, `push_token` (token mã hóa và băm, không bao giờ trả về), `notify_setting`, `notify_preference`, `notify_link_code`, `sla_check`. Cột mới: `agent.accounts.purpose` (+CHECK) và ba giới hạn riêng, `clinic.conversation.account_id` và `assignment_version`, cột Zalo của chuông ở hồ sơ nhân viên. Hạ cấp về một mã phiên bản có tên và chịu được dòng đã dùng giá trị mới.
+
+### 16.7 Điều còn mở của gói O (chi tiết ở `evals/ops/report.md` và SECURITY-REVIEW mục 9)
+
+- **Chưa kiểm chứng**: cầu nối Zalo có `send_text` tới một SỐ ĐIỆN THOẠI hay không (mọi đường đã làm gửi tới id Zalo đã liên kết, nhóm hoặc người đã nhắn tài khoản nội bộ; số trực 24/7 là số điện thoại và đi cùng đường, nên bước trực 24/7 có thể thất bại thật cho tới khi thử với bridge thật; thất bại được ghi log và thử lại có giới hạn).
+- Trần ngày theo danh tính của O4 **chưa hợp nhất** với trần riêng của bộ lập lịch gói S (hai bộ đếm độc lập); tổng tin chủ động tới khách có thể vượt trần nhỏ hơn cho tới khi hợp nhất.
+- FE: thẻ "Chờ nhận" và bộ lọc danh tính chạy trên 100 dòng đầu đã tải, vì `ConversationSummary` không có `account_id` và danh sách không có bộ lọc theo danh tính hay "chưa giao".
+- Bác sĩ chỉ thấy hội thoại của bệnh nhân trong phạm vi của mình (SEC-63 a): hội thoại của khách chưa liên kết là 404 với bác sĩ, kể cả khi lịch trực hay `end_shift` giao cho họ. Chủ phòng khám quyết định có xếp bác sĩ vào lịch trực danh tính hay không.
+- Khóa gửi chưa chặn hai lần giao CÙNG một tin (SEC-64).
+- KMP: chưa có mã push; khi chủ cấp FCM/APNs thì thêm client và bật nhà cung cấp thật (bước sau, ngoài gói O).

@@ -29,13 +29,14 @@ import json
 from collections import defaultdict
 from collections.abc import Mapping
 from datetime import date, datetime, time
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pema.clinic.crm_rules.engine import SUPERSEDED_RESOLUTION, clinic_today
+from pema.clinic.crm_rules.protocols import ProtocolConfig
 from pema.clinic.crm_rules.records import (
     AppointmentSnapshot,
     AppointmentStatus,
@@ -92,6 +93,24 @@ async def seed_default_rules(session: AsyncSession, clinic_id: UUID) -> None:
     )
 
 
+def _protocol_config(row: _Row) -> ProtocolConfig:
+    milestones: dict[RuleKey, int] = {}
+    raw = row["milestones"]
+    for item in cast(list[Any], raw) if isinstance(raw, list) else []:
+        entry = json_object(item)
+        key = RuleKey(str(entry["rule_key"]))
+        milestones[key] = int(entry["day"])
+    followup = row["followup_days"]
+    return ProtocolConfig(
+        code=str(row["code"]),
+        name=str(row["name"]),
+        milestones=milestones,
+        followup_days=int(followup) if followup is not None else None,
+        window_days=int(row["window_days"]),
+        active=bool(row["active"]),
+    )
+
+
 class SqlCrmRuleStore:
     def __init__(self, db: ClinicDatabase) -> None:
         self._db = db
@@ -119,6 +138,7 @@ class SqlCrmRuleStore:
                 "WHERE clinic_id = :c AND active AND approved_at IS NOT NULL",
                 c=clinic_id,
             )
+            protocols = await self._protocols(session, clinic_id)
         return ClinicCrmData(
             rules=tuple(rules),
             patients=tuple(patients),
@@ -130,7 +150,17 @@ class SqlCrmRuleStore:
                 str(t["template_key"]): TemplateRef(str(t["template_key"]), bool(t["marketing"]))
                 for t in templates
             },
+            protocols=protocols,
         )
+
+    async def _protocols(self, session: AsyncSession, clinic_id: UUID) -> dict[str, ProtocolConfig]:
+        rows = await _rows(
+            session,
+            "SELECT code, name, milestones, followup_days, window_days, active "
+            "FROM clinic.protocol WHERE clinic_id = :c",
+            c=clinic_id,
+        )
+        return {str(r["code"]): _protocol_config(r) for r in rows}
 
     async def _rules(self, session: AsyncSession, clinic_id: UUID) -> list[RuleConfig]:
         rows = await _rows(

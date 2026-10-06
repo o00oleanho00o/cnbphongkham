@@ -17,7 +17,12 @@
     "test": "vitest run",
     "gen:types": "openapi-typescript ../backend/apps/api/openapi.json -o src/lib/api/schema.d.ts",
     "check:types": "tsc --noEmit",
-    "shots": "tsx scripts/viewport-shots.ts"
+    "shots": "tsx scripts/viewport-shots.ts",
+    "tokens": "tsx scripts/export-tokens.ts",
+    "visual": "tsx scripts/visual-check.ts",
+    "inventory": "tsx scripts/inventory-check.ts",
+    "check": "node scripts/check.mjs",
+    "smoke": "tsx scripts/route-smoke.ts"
   },
   "dependencies": {
     "next": "^16.3.7",

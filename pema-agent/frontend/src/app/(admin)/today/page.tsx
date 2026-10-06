@@ -1,6 +1,7 @@
 "use client";
 
-// "Việc hôm nay": the CRM task queue of the day (`GET /api/v1/crm/tasks`, due by the end of today in
+// "Việc hôm nay": first the reception table of the day (old "Hôm nay tại Pema", package U step U10, shown to
+// roles that read the schedule), then the CRM task queue of the day (`GET /api/v1/crm/tasks`, due by the end of today in
 // clinic time). New screen (no zalo-agent original); behaviour from the web prototype's "CSKH hôm nay"
 // (prototype/shared/crm-ui.js) and design-specs C1/C2/C6/I13. For tasks that staff send by hand it offers
 // "Sao chép nội dung" and "Đánh dấu đã làm". The BE owns the rules; this page only lists and records.
@@ -10,7 +11,6 @@ import { useCallback, useMemo, useState } from "react";
 
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { SelectMenu, type SelectOption } from "@/components/admin/shared/select-menu";
-import { IconClipboardCheck } from "@/components/admin/shared/ops-icons";
 import {
   ChipRow,
   EmptyState,
@@ -19,6 +19,7 @@ import {
   RetryNotice,
 } from "@/components/ops/ops-ui";
 import { LiveStatus } from "@/components/ops/live-status";
+import { ReceptionTable } from "@/components/ops/today/reception-table";
 import { ResolveTaskSheet } from "@/components/ops/today/resolve-task-sheet";
 import { TaskCard } from "@/components/ops/today/task-card";
 import { useToast } from "@/components/ops/toast";
@@ -119,90 +120,98 @@ export default function TodayPage() {
   }, [reload]);
 
   const canResolve = can("crm.task.resolve");
+  const showReception = can("appointment.read");
 
   return (
-    <div className="mx-auto max-w-[1400px]">
+    <div>
       <PageHeader
-        icon={IconClipboardCheck}
         title="Việc hôm nay"
         subtitle={`${formatDate(clinicDateKey())} · ${data ? `${data.total} việc` : "đang tải"}`}
       />
 
       <LiveStatus mode={liveMode} />
 
-      <div className="mb-4 space-y-3">
-        <ChipRow label="Trạng thái">
-          {STATUSES.map((s) => (
-            <FilterChip key={s} selected={status === s} onClick={() => setStatus(s)}>
-              {TASK_STATUS_LABEL[s]}
+      {showReception && <ReceptionTable patients={patients} />}
+
+      <section aria-label="Việc CSKH hôm nay">
+        {showReception && (
+          <h2 className="mb-3 text-section font-bold text-heading">Việc CSKH hôm nay</h2>
+        )}
+
+        <div className="mb-4 space-y-3">
+          <ChipRow label="Trạng thái">
+            {STATUSES.map((s) => (
+              <FilterChip key={s} selected={status === s} onClick={() => setStatus(s)}>
+                {TASK_STATUS_LABEL[s]}
+              </FilterChip>
+            ))}
+          </ChipRow>
+          <ChipRow label="Kênh liên hệ">
+            {channelCounts.map(({ channel: c, count }) => (
+              <FilterChip
+                key={c}
+                selected={channel === c}
+                onClick={() => setChannel(c)}
+                count={count}
+              >
+                {c === "all" ? "Mọi kênh" : CHANNEL_LABEL[c]}
+              </FilterChip>
+            ))}
+          </ChipRow>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="sm:w-72">
+              <SelectMenu
+                size="md"
+                ariaLabel="Nhóm chăm sóc"
+                value={rule}
+                options={RULE_OPTIONS}
+                onChange={setRule}
+              />
+            </div>
+            <FilterChip selected={mineOnly} onClick={() => setMineOnly((v) => !v)}>
+              Việc của tôi
             </FilterChip>
-          ))}
-        </ChipRow>
-        <ChipRow label="Kênh liên hệ">
-          {channelCounts.map(({ channel: c, count }) => (
-            <FilterChip
-              key={c}
-              selected={channel === c}
-              onClick={() => setChannel(c)}
-              count={count}
-            >
-              {c === "all" ? "Mọi kênh" : CHANNEL_LABEL[c]}
-            </FilterChip>
-          ))}
-        </ChipRow>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="sm:w-72">
-            <SelectMenu
-              size="md"
-              ariaLabel="Nhóm chăm sóc"
-              value={rule}
-              options={RULE_OPTIONS}
-              onChange={setRule}
-            />
           </div>
-          <FilterChip selected={mineOnly} onClick={() => setMineOnly((v) => !v)}>
-            Việc của tôi
-          </FilterChip>
         </div>
-      </div>
 
-      {error && <RetryNotice message={error} onRetry={reload} />}
+        {error && <RetryNotice message={error} onRetry={reload} />}
 
-      {loading && !data && <ListSkeleton />}
+        {loading && !data && <ListSkeleton />}
 
-      {data && visible.length === 0 && !loading && (
-        <EmptyState
-          title={
-            status === "open" ? "Hôm nay không còn việc cần làm" : "Không có việc nào ở mục này"
-          }
-          hint="Đổi bộ lọc trạng thái, kênh hoặc nhóm chăm sóc để xem các việc khác."
-        />
-      )}
-
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        {visible.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            patientName={displayName(patients, task.patient_id, task.patient_code)}
-            marketingOptOut={patients.get(task.patient_id)?.marketing_opt_out ?? false}
-            onCopy={onCopy}
-            canResolve={canResolve}
-            onMarkDone={onMarkDone}
-            onRecord={onRecord}
+        {data && visible.length === 0 && !loading && (
+          <EmptyState
+            title={
+              status === "open" ? "Hôm nay không còn việc cần làm" : "Không có việc nào ở mục này"
+            }
+            hint="Đổi bộ lọc trạng thái, kênh hoặc nhóm chăm sóc để xem các việc khác."
           />
-        ))}
-      </div>
+        )}
 
-      {sheet && (
-        <ResolveTaskSheet
-          task={sheet.task}
-          patientName={displayName(patients, sheet.task.patient_id, sheet.task.patient_code)}
-          presetFromShortcut={sheet.shortcut}
-          onClose={closeSheet}
-          onDone={onDone}
-        />
-      )}
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          {visible.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              patientName={displayName(patients, task.patient_id, task.patient_code)}
+              marketingOptOut={patients.get(task.patient_id)?.marketing_opt_out ?? false}
+              onCopy={onCopy}
+              canResolve={canResolve}
+              onMarkDone={onMarkDone}
+              onRecord={onRecord}
+            />
+          ))}
+        </div>
+
+        {sheet && (
+          <ResolveTaskSheet
+            task={sheet.task}
+            patientName={displayName(patients, sheet.task.patient_id, sheet.task.patient_code)}
+            presetFromShortcut={sheet.shortcut}
+            onClose={closeSheet}
+            onDone={onDone}
+          />
+        )}
+      </section>
     </div>
   );
 }

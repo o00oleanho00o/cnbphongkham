@@ -31,6 +31,17 @@ class LiveEventType(StrEnum):
     HANDOFF_CHANGED = "handoff.changed"
     """A care agent asked for a person, the chain moved on, or somebody accepted or declined (``id`` is the
     patient). Package M, step M5."""
+    APPOINTMENTS_CHANGED = "appointments.changed"
+    """An appointment was booked, moved or went through a reception transition (``id`` is the appointment).
+    Package U, step U2: the schedule and the dashboard reload."""
+    ASSIGNMENT_CHANGED = "assignment.changed"
+    """Who holds a conversation changed: claim, takeover, release, shift end or assign (``id`` is the
+    conversation). Package O, step O2. Like every event it carries no more than the id: the screens read the
+    holder from the conversation and the who-and-why from ``GET /conversations/{id}/assignments``."""
+    NOTIFICATIONS_CHANGED = "notifications.changed"
+    """A notice was queued, delivered or acknowledged (``id`` is the notice). Package O, step O3. Every open
+    screen reloads ``GET /me/notifications``, which answers the caller's own rows only; the event carries
+    no text and no recipient."""
     CARE_CHANGED = "care.changed"
     """The care state of a patient changed: control state, autonomy level, a paused reminder, a note for the
     agent, an alert (``id`` is the patient). Package M, step M5."""

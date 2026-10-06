@@ -3,6 +3,7 @@
 // number, photo or token here. Times are relative to "now" so "Việc hôm nay" always has work to show.
 import { USERS } from "../auth";
 import { DAY, HOUR, MIN, isoFromNow, uuid, type Schemas } from "../core";
+import { ROOM_IDS } from "./catalog";
 
 type S = Schemas;
 
@@ -17,7 +18,7 @@ export const DOCTOR_NAMES: Record<string, string> = {
   [DOCTOR_MAI]: "BS. Đoàn Thị Mai",
 };
 
-const OWNER_NAMES: Record<string, string> = Object.fromEntries(
+export const OWNER_NAMES: Record<string, string> = Object.fromEntries(
   USERS.map((u) => [u.id, u.display_name]),
 );
 
@@ -321,6 +322,7 @@ const appointment = (
   patient_id: patientRef(patient).id,
   patient_code: patientRef(patient).code,
   doctor_id: patientRef(patient).doctor_id ?? null,
+  room_id: null,
   starts_at: isoFromNow(startsMs),
   duration_min: 45,
   status,
@@ -332,12 +334,55 @@ const appointment = (
   version: 1,
 });
 
+/** `YYYY-MM-DD` of the clinic's today (+07:00), whatever the zone of the machine. */
+export function clinicToday(offsetDays = 0): string {
+  return isoFromNow(offsetDays * DAY).slice(0, 10);
+}
+
+/** An appointment on a clinic day at a clock time ("08:30"); the doctor is the one given, not the patient's. */
+const onDay = (
+  n: number,
+  patient: number,
+  dayOffset: number,
+  clock: string,
+  doctor: string,
+  status: S["AppointmentStatus"],
+  note: string,
+  duration = 30,
+  room: string | null = null,
+): S["AppointmentOut"] => {
+  const at = `${clinicToday(dayOffset)}T${clock}:00+07:00`;
+  return {
+    ...appointment(n, patient, 0, status, note),
+    doctor_id: doctor,
+    room_id: room,
+    starts_at: at,
+    duration_min: duration,
+    missed_at: status === "missed" ? at : null,
+    cancel_reason: status === "cancelled" ? "Bệnh nhân bận việc đột xuất" : null,
+    cancelled_at: status === "cancelled" ? at : null,
+  };
+};
+
 export const appointments: S["AppointmentOut"][] = [
   appointment(1, 1, 26 * DAY, "booked", "Buổi 3/4 Laser CO2"),
   appointment(2, 1, -2 * DAY, "completed", "Buổi 2/4 Laser CO2"),
   appointment(3, 4, 5 * HOUR, "confirmed", "Tái khám"),
   appointment(4, 6, -1 * DAY, "missed", "Tái khám"),
   appointment(5, 2, -3 * DAY, "completed", "Peel da nhẹ"),
+  // A full clinic day for the schedule board (every reception status once) and a few on the next days.
+  // Rooms: most visits hold one (the room grid), visit 10 does not ("Chưa xếp phòng").
+  onDay(6, 2, 0, "08:00", DOCTOR_AN, "completed", "Tái khám sau peel", 30, ROOM_IDS[0]),
+  onDay(7, 3, 0, "08:30", DOCTOR_TAM, "in_progress", "Laser CO2 buổi 2/4", 45, ROOM_IDS[2]),
+  onDay(8, 5, 0, "09:00", DOCTOR_AN, "arrived", "Tư vấn da liễu", 30, ROOM_IDS[0]),
+  onDay(9, 7, 0, "09:30", DOCTOR_MAI, "confirmed", "Chăm sóc theo chỉ định", 45, ROOM_IDS[3]),
+  onDay(10, 8, 0, "10:00", DOCTOR_TAM, "booked", "Tái khám"),
+  onDay(11, 9, 0, "10:30", DOCTOR_AN, "missed", "Tái khám", 30, ROOM_IDS[1]),
+  onDay(12, 10, 0, "14:00", DOCTOR_MAI, "booked", "Tư vấn chuyên sâu", 45, ROOM_IDS[1]),
+  onDay(13, 6, 0, "15:00", DOCTOR_TAM, "cancelled", "Laser theo chỉ định", 45, ROOM_IDS[2]),
+  onDay(14, 1, 1, "09:00", DOCTOR_TAM, "confirmed", "Buổi 3/4 Laser CO2", 45, ROOM_IDS[2]),
+  onDay(15, 4, 2, "10:30", DOCTOR_MAI, "booked", "Tái khám"),
+  onDay(16, 2, 4, "14:30", DOCTOR_AN, "booked", "Peel da nhẹ"),
 ];
 
 // ----------------------------------------------------------------- Consents
@@ -385,6 +430,8 @@ type ConvSeed = {
   last: string;
   lastAgoMs: number;
   externalRef: string;
+  /** Who holds the thread (package O); omitted: nobody, it waits in the queue. */
+  holder?: string;
 };
 
 const CONV_SEEDS: ConvSeed[] = [
@@ -417,6 +464,7 @@ const CONV_SEEDS: ConvSeed[] = [
     last: "[Khách gửi ảnh]",
     lastAgoMs: 50 * MIN,
     externalRef: "zalo:u-demo-003",
+    holder: uuid(6, 1),
   },
   {
     n: 4,
@@ -437,6 +485,7 @@ const CONV_SEEDS: ConvSeed[] = [
     last: "Cảm ơn em, chiều nay anh qua nhé",
     lastAgoMs: 3 * HOUR,
     externalRef: "zalo:u-demo-005",
+    holder: CS_MAI_ANH,
   },
   {
     n: 6,
@@ -460,7 +509,9 @@ export const conversations: S["ConversationOut"][] = CONV_SEEDS.map((c) => {
     patient_id: patient?.id ?? null,
     patient_code: patient?.code ?? null,
     patient_display_name: patient?.full_name ?? null,
-    assigned_user_id: c.status === "open" ? CS_MAI_ANH : null,
+    assigned_user_id: c.holder ?? null,
+    assigned_user_name: c.holder ? (OWNER_NAMES[c.holder] ?? null) : null,
+    assignment_version: 0,
     unread_count: c.unread,
     has_pending_review: c.pending,
     last_message_at: isoFromNow(-c.lastAgoMs),

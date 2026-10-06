@@ -266,6 +266,11 @@ class StaffProfile(CareBase):
     shift: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
     capacity: Mapped[int] = mapped_column(Integer, default=5)
     languages: Mapped[list[str]] = mapped_column(ARRAY(Text), default=lambda: ["vi"])
+    notify_zalo_user_id: Mapped[str | None] = mapped_column(Text, default=None)
+    """Personal Zalo id of the notification bell (package O). Set only together with
+    ``notify_zalo_consented_at``, after the operator links it themselves; the worker's view
+    ``clinic_agent.staff_profile`` does not expose it."""
+    notify_zalo_consented_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     version: Mapped[int] = mapped_column(Integer, default=1)
     created_at: Mapped[datetime] = _created_at()
     updated_at: Mapped[datetime] = _updated_at()

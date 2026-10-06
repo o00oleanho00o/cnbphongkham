@@ -14,7 +14,7 @@ from pydantic import Field
 
 from pema_contracts.channel import ChannelKind
 from pema_contracts.common import ApiModel, VnDatetime
-from pema_contracts.live import PresenceViewer
+from pema_contracts.live import PresenceState, PresenceViewer
 
 
 class ConversationStatus(StrEnum):
@@ -58,6 +58,18 @@ class ConversationSummary(ApiModel):
     patient_display_name: str | None
     status: ConversationStatus
     assigned_user_id: UUID | None = None
+    assigned_user_name: str | None = Field(
+        default=None, description="Display name of the holder (staff-only information)."
+    )
+    assignment_version: int = Field(
+        default=1, description="Bumped by every claim, takeover, release, shift end and assign (step O2)."
+    )
+    holder_presence: PresenceState | None = Field(
+        default=None,
+        description="Whether the holder has the conversation open now and in which state "
+        "(``replying`` or ``viewing``); null when they are not here or presence is unavailable. The "
+        "holder is never in ``viewers``.",
+    )
     last_message_at: VnDatetime | None = None
     last_message_preview: str | None = Field(default=None, max_length=120)
     unread_count: int = 0

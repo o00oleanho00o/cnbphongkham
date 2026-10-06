@@ -20,7 +20,7 @@ Zalo là kênh ra khách. Giai đoạn này chỉ CSKH bằng chữ. Có hai h�
 | [docs/SCOPE-AI01.md](docs/SCOPE-AI01.md) | Phạm vi, quyết định đã chốt, điều chưa kiểm chứng, **việc mở cần chủ phòng khám/bác sĩ quyết** |
 | [docs/SPEC-AI01.md](docs/SPEC-AI01.md) | Hành vi, use case, tiêu chí nghiệm thu và bằng chứng, phân quyền |
 | [docs/MODULEMAP-AI01.md](docs/MODULEMAP-AI01.md) | Module, gói sở hữu, ranh giới import |
-| [docs/ARCH-AI01.md](docs/ARCH-AI01.md) | Tiến trình, DB, luồng tin, kênh, an toàn, triển khai; mục 14: hai nhánh song song (đa phòng khám và một phòng khám) |
+| [docs/ARCH-AI01.md](docs/ARCH-AI01.md) | Tiến trình, DB, luồng tin, kênh, an toàn, triển khai; mục 14: hai nhánh song song (đa phòng khám và một phòng khám); mục 16: hộp thư dùng chung (gói O) |
 | [docs/PORT-MAP.md](docs/PORT-MAP.md) | Mỗi file zalo-agent → module Python; cuối file có "Khác biệt so với PORT-MAP ban đầu" |
 | [infra/README.md](infra/README.md), [infra/ubuntu/HUONG-DAN-UBUNTU.md](infra/ubuntu/HUONG-DAN-UBUNTU.md) | Compose, role DB, sao lưu; hướng dẫn Ubuntu + Ollama + Tailscale |
 | [frontend/README.md](frontend/README.md), [backend/bridges/zalo-personal/README.md](backend/bridges/zalo-personal/README.md), [evals/README.md](evals/README.md) | FE và mock; cầu nối Zalo cá nhân và rủi ro; eval với mô hình thật |
@@ -106,7 +106,17 @@ make up-ollama       # thêm container Ollama có GPU NVIDIA (hoặc cài Ollama
 make down
 ```
 
-Không có profile `worker` thì API nhận webhook và xếp lượt nhưng không ai chạy lượt. Tham số mô hình (`LLM_BASE_URL`, `LLM_MODEL=pema-chat`) và tuỳ chọn mạng (`PEMA_*_BIND`, chỉ loopback theo mặc định) ở `infra/.env.example`. Dữ liệu mẫu hư cấu cho phòng khám của bản cài: `uv run python -m pema.clinic.actions.seed_demo` (xem docstring của module; không có mật khẩu mặc định trong repo). Bot Zalo, QR cho tài khoản cá nhân, persona và KB cấu hình ở trang quản trị AI của FE.
+Không có profile `worker` thì API nhận webhook và xếp lượt nhưng không ai chạy lượt. Tham số mô hình (`LLM_BASE_URL`, `LLM_MODEL=pema-chat`) và tuỳ chọn mạng (`PEMA_*_BIND`, chỉ loopback theo mặc định) ở `infra/.env.example`. Dữ liệu mẫu hư cấu cho phòng khám của bản cài: `uv run python -m pema.clinic.actions.seed_demo` (xem docstring của module; không có mật khẩu mặc định trong repo). Danh mục sản phẩm của phòng khám (115 dòng, dữ liệu thật, không phải dữ liệu mẫu) nạp một lần bằng `uv run pema catalog import <đường dẫn>/product-catalog.json [--source-name danhsach.xlsx] [--source-sha256 <SHA-256 của file Excel>]` (idempotent: chạy lại cùng file không đổi gì); ứng dụng không đọc thư mục `prototype/` khi chạy. Bot Zalo, QR cho tài khoản cá nhân, persona và KB cấu hình ở trang quản trị AI của FE.
+
+Tài chính PB02 (U6) chạy trong cùng API: `/api/v1/finance/*` (tổng quan theo vai trò, lượt thủ thuật và người thực hiện, duyệt/hủy, chốt tháng và xác nhận đã chi, phiếu thu có mã chống thu trùng, thông báo của chủ, CSV) trên các bảng `clinic.invoice|payment|procedure_entry|procedure_entry_person|finance_period|finance_notification` (migration `u6_0010_finance`). Vai trò lấy từ phiên đăng nhập, không có header giả lập; kế toán chưa có vai trò riêng nên do `manager` đảm nhiệm. `prototype/finance_server.py` và `prototype/finance/` vẫn nằm trong repo nhưng FE mới không dùng; MISA/hóa đơn điện tử chưa làm.
+
+## Ứng dụng nhân viên hợp nhất (gói U)
+
+Một FE Next.js (`frontend/`) thay cho `prototype/clinic-web`: cùng thứ tự menu và nhãn tiếng Việt của web cũ (Tổng quan, Hôm nay, Điều phối lịch, Tìm bệnh nhân, Theo dõi, Ảnh trước / sau, Bác sĩ & phòng, Dịch vụ, Thu ngân, Tài chính & tiền thủ thuật, Hỏi Pema, Hướng dẫn), thêm Zalo & CSKH, Care agent và Quản trị agent giữ nguyên. Chạy thử không cần dịch vụ nào: `cd frontend && pnpm dev:mock`, đăng nhập `owner@pema.test` / `demo1234` (mock có dữ liệu mẫu của mọi màn). Chạy thật: `make up-app` (backend + worker + FE); nạp danh mục sản phẩm một lần bằng `pema catalog import` (đoạn trên) và dữ liệu mẫu bằng `seed_demo`; đổi tài khoản mẫu trước khi dùng.
+
+Kiểm trước khi báo xong một thay đổi giao diện: `cd frontend && pnpm check` (lint, typecheck, format, vitest, `pnpm inventory`, rồi `pnpm smoke` và `pnpm visual` với `pnpm dev:mock` đang chạy; `CHECK_SKIP_BROWSER=1` bỏ hai bước trình duyệt và báo cáo phải nói rõ). Màu và cỡ chữ lấy từ `src/ui/tokens.css` (`pnpm tokens` sinh `tokens.json` cho KMP); `FEATURE-INVENTORY.md` là danh sách tính năng đóng băng. Ảnh đối chiếu với web cũ: `frontend/visual-ref/{old,new}` (git-ignored; sinh lại bằng `web-shots.cjs` và `pnpm visual`). Bằng chứng và khoảng trống còn lại: [docs/PARITY-AI01-U.md](docs/PARITY-AI01-U.md).
+
+Còn nằm trong repo nhưng **không còn dùng** (quyết định xóa là của chủ phòng khám): `prototype/clinic-web`, `prototype/finance/*`, `prototype/finance_server.py` và `finance_test.py` (bản dịch Python của luật tài chính có test tương đương ở `backend/apps/api/tests/clinic/test_finance_equivalence.py`), `prototype/shared/*.js` của Clinic Web. Web Patient Mobile giữ nguyên cho ứng dụng bệnh nhân.
 
 Ảnh Docker của cầu nối (`bridge` profile) và của FE đã dựng thật và khởi động thử (không cần Zalo thật); cầu nối chạy bằng tsx, không có bước build, và chỉ lắng nghe trong mạng compose.
 
@@ -133,6 +143,34 @@ Worker và API là hai tiến trình; chúng gặp nhau qua kênh Redis pub/sub 
 | `POST/PATCH /api/v1/patients` (`doctor_id`, `cs_owner_id`) | quyền `patient.write` | bác sĩ điều trị, CSKH phụ trách hồ sơ |
 
 Mọi nơi nhận người được giao chạy chung một kiểm tra phía máy chủ (`pema/clinic/actions/assignees.py`): người đó phải thuộc bản cài, đang hoạt động và có vai trò giao được, nếu không là 422 với cùng một câu trả lời (không lộ tài khoản nào tồn tại hay bị khóa). Dòng audit ghi id người giao trước và sau (không ghi tên). Quy tắc chọn vai trò và mục SEC-60 đến SEC-63 ở `docs/SECURITY-REVIEW-AI01.md`.
+
+## Hộp thư dùng chung: một danh tính, nhiều người trực (gói O)
+
+Khách chỉ nói chuyện với **danh tính của phòng khám** (ví dụ "Long" trên Zalo). Nhân viên **không bao giờ nhắn khách từ Zalo cá nhân**: họ trả lời trong Pema, và tin đi chỉ hiện danh tính (không tên người, không chữ ký). Zalo cá nhân của nhân viên chỉ **nhận thông báo không có thông tin cá nhân** (mã ngắn, tên danh tính, mức khẩn, một câu tóm tắt mẫu, đường dẫn cần đăng nhập). Thiết kế đầy đủ: [ARCH-AI01 mục 16](docs/ARCH-AI01.md); route và quyền: [CONTRACTS-AI01 mục 12](docs/CONTRACTS-AI01.md); rủi ro: [SECURITY-REVIEW-AI01 mục 11](docs/SECURITY-REVIEW-AI01.md) (SEC-64 đến SEC-78).
+
+### Người trực mới: bắt đầu như thế nào
+
+1. **Đăng nhập** Pema bằng tài khoản được chủ hay quản lý cấp. Chỉ bốn vai trò làm việc với hội thoại: chủ, quản lý, bác sĩ, CSKH. Lễ tân và kế toán không nhận và không gửi tin cho khách.
+2. **Inbox** có ba thẻ: "Chờ nhận" (chưa ai phụ trách), "Của tôi", "Tất cả"; lọc được theo danh tính. Bấm **Nhận** để giữ một hội thoại: từ lúc đó chỉ bạn trả lời được, đồng nghiệp vẫn đọc được. Viết câu trả lời đầu tiên cho một hội thoại chưa ai nhận cũng là nhận.
+3. Hội thoại do đồng nghiệp giữ hiện "<Tên> đang trả lời — Tiếp quản?". **Tiếp quản** cần ghi lý do; người cũ, người mới và nhóm đều được báo, lịch sử phụ trách có thêm một dòng. **Trả lại** đưa hội thoại về hàng chờ (hoặc về cho trợ lý chăm sóc khi bệnh nhân đang ở trạng thái nhân viên xử lý). Hết ca thì quản lý bấm "Hết ca" cho bạn: các hội thoại đang mở chuyển cho người đang trực danh tính đó hoặc về hàng chờ.
+4. **Lịch trực** (`/admin/roster`, chủ và quản lý nhập, mọi người trực xem được): ai phụ trách danh tính nào, thứ nào, giờ nào.
+5. **Nhận chuông trên Zalo cá nhân, làm một lần** (`/me/notifications`): bấm nút liên kết Zalo, nhận một mã 8 ký tự có hiệu lực 10 phút, nhắn đúng mã đó từ Zalo cá nhân của bạn tới **tài khoản thông báo nội bộ** của phòng khám. Pema xác nhận lại bằng một tin. Từ đó, nếu một thông báo dành cho bạn chưa được xác nhận sau 3 phút (cài đặt của phòng khám), chuông Zalo sẽ rung; tin khẩn rung kể cả trong giờ yên tĩnh bạn đặt. Gỡ liên kết bất cứ lúc nào ở cùng màn hình. Tin bạn nhắn tới tài khoản nội bộ ngoài mã liên kết không được đọc và không bao giờ vào Inbox khách.
+6. **Push trên ứng dụng di động: chưa có.** Phía máy chủ đã sẵn (đăng ký thiết bị, nhà cung cấp giả để thử, nhà cung cấp thật đang tắt) nhưng `pema-kmp` chưa có mã nhận push và phòng khám chưa có thông tin FCM/APNs. Hiện chuỗi thật là: trong ứng dụng (trang "Thông báo của tôi", có liên kết ở thanh trên), rồi Zalo cá nhân, và nhóm Zalo của đội.
+
+Quy tắc cho phòng khám (cũng ở [AGENT.md](../AGENT.md)): nhân viên không nhắn khách từ tài khoản cá nhân; mọi tin tới khách đi qua danh tính của Pema; Zalo cá nhân chỉ nhận thông báo không có thông tin cá nhân. Mã không chặn được việc ai đó tự mở Zalo cá nhân và nhắn khách (SEC-65), nên đây cũng là việc đào tạo.
+
+Phần của gói M (vòng chăm sóc) chưa nối vào đây: cổng `StaffNotify` và `SlaScheduler` đã có adapter nhưng chưa được đăng ký, cầu nối `CareAssignmentBridge` và thứ tự lịch trực cho routing cũng vậy (gói M7). Cho tới lúc đó, hộp thư của người trực (nhận, tiếp quản, gửi, thông báo trong ứng dụng, chuông và nhóm) chạy độc lập.
+
+### Đo và kiểm tra gói O
+
+`evals/ops/` (bộ tải 200 hội thoại một danh tính, năm người trực, bộ đua, bộ quét bảo mật): số đo và cách chạy ở [evals/ops/report.md](evals/ops/report.md). Chạy:
+
+```bash
+cd pema-agent/backend
+PYTHONPATH=.. uv run python -m evals.ops.run_eval                                   # không cần cơ sở dữ liệu: hàng đợi, chuỗi thông báo, leo thang
+PYTHONPATH=.. PEMA_EVAL_OPS_DATABASE_URL=postgresql+psycopg://... uv run python -m evals.ops.run_eval   # thêm phần 200 hội thoại thật (CSDL TẠM: bị xóa và dựng lại)
+PEMA_TEST_DATABASE_URL=postgresql+psycopg://... uv run pytest -c pyproject.toml --rootdir . ../evals/ops
+```
 
 ## Quy tắc áp dụng khắp nơi
 

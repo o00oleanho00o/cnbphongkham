@@ -6,7 +6,6 @@ import type { Schemas } from "@/lib/api";
 import { errorMessage, http, unwrap } from "@/lib/api/client";
 import { PageHeader } from "@/components/admin/layout/page-header";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
-import { IconGlobe } from "@/components/admin/shared/dashboard-icons";
 import { EmptyRow, TableShell } from "@/components/admin/shared/ui-bits";
 import { McpAssignAgentsModal } from "@/components/admin/mcp/mcp-assign-agents-modal";
 import { McpServerFormModal } from "@/components/admin/mcp/mcp-server-form-modal";
@@ -93,23 +92,20 @@ export default function McpPage() {
   return (
     <div>
       <PageHeader
-        icon={IconGlobe}
         title="MCP"
         subtitle="Server MCP ngoài cắm cho agent dùng tool của chúng - thêm xong phải GÁN cho agent thì bot mới gọi được"
         aside={
           <button
             onClick={() => setFormFor("new")}
-            className="cursor-pointer rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600"
+            className="cursor-pointer rounded-control bg-brand-500 px-4 py-2 text-body font-medium text-white hover:bg-brand-600"
           >
             Thêm server
           </button>
         }
       />
 
-      {actionError && (
-        <p className="mb-4 text-[13px] text-red-600 dark:text-red-400">{actionError}</p>
-      )}
-      {loadError && <p className="mb-4 text-[13px] text-red-600 dark:text-red-400">{loadError}</p>}
+      {actionError && <p className="mb-4 text-small text-danger">{actionError}</p>}
+      {loadError && <p className="mb-4 text-small text-danger">{loadError}</p>}
 
       <TableShell
         headers={["Tên", "URL", "Trạng thái", "Số tool", "Agent đang dùng", "Cập nhật", ""]}

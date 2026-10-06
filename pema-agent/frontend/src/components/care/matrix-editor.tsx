@@ -27,6 +27,8 @@ import {
   type MatrixEdit,
   type MatrixText,
 } from "@/lib/care/matrix-draft";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 const DEPTH_OPTIONS: SelectOption[] = DEPTHS.map((d) => ({ value: d, label: DEPTH_LABEL[d] }));
 
@@ -133,7 +135,7 @@ export function MatrixEditor({ matrix, onChanged }: { matrix: CareMatrix; onChan
             <input
               id={`${baseId}-hc`}
               inputMode="decimal"
-              className="gc-input w-28"
+              className={cx(FIELD_BASE_CLASS, "w-28")}
               disabled={readOnly}
               value={text.handoffConfidence}
               onChange={(e) => setText({ ...text, handoffConfidence: e.target.value })}
@@ -143,7 +145,7 @@ export function MatrixEditor({ matrix, onChanged }: { matrix: CareMatrix; onChan
             <input
               id={`${baseId}-pw`}
               inputMode="numeric"
-              className="gc-input w-28"
+              className={cx(FIELD_BASE_CLASS, "w-28")}
               disabled={readOnly}
               value={text.windowHours}
               onChange={(e) => setText({ ...text, windowHours: e.target.value })}
@@ -157,7 +159,7 @@ export function MatrixEditor({ matrix, onChanged }: { matrix: CareMatrix; onChan
             <input
               id={`${baseId}-rq`}
               inputMode="numeric"
-              className="gc-input w-28"
+              className={cx(FIELD_BASE_CLASS, "w-28")}
               disabled={readOnly}
               value={text.repeatThreshold}
               onChange={(e) => setText({ ...text, repeatThreshold: e.target.value })}
@@ -189,7 +191,7 @@ export function MatrixEditor({ matrix, onChanged }: { matrix: CareMatrix; onChan
         <ul className="mt-4 divide-y divide-line">
           {edit.handoff.rows.map((row) => (
             <li key={row.signal} className="flex flex-wrap items-center justify-between gap-2 py-2">
-              <span className="text-[14px] text-ink">{SIGNAL_LABEL[row.signal]}</span>
+              <span className="text-body text-ink">{SIGNAL_LABEL[row.signal]}</span>
               <div className="w-full sm:w-64">
                 <SelectMenu
                   ariaLabel={`Chuyển cho người từ độ sâu, tín hiệu ${SIGNAL_LABEL[row.signal]}`}
@@ -223,7 +225,7 @@ export function MatrixEditor({ matrix, onChanged }: { matrix: CareMatrix; onChan
             <input
               id={`${baseId}-ac`}
               inputMode="decimal"
-              className="gc-input w-28"
+              className={cx(FIELD_BASE_CLASS, "w-28")}
               disabled={readOnly}
               value={text.autonomyConfidence}
               onChange={(e) => setText({ ...text, autonomyConfidence: e.target.value })}
@@ -241,13 +243,13 @@ export function MatrixEditor({ matrix, onChanged }: { matrix: CareMatrix; onChan
                 })
               }
             />
-            <span className="text-[14px] text-ink">Xác nhận lịch hẹn khách đã chọn chạy ở L1</span>
+            <span className="text-body text-ink">Xác nhận lịch hẹn khách đã chọn chạy ở L1</span>
           </label>
         </div>
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[480px] text-left text-[14px]">
+          <table className="w-full min-w-[480px] text-left text-body">
             <thead>
-              <tr className="text-[12px] text-ink-soft">
+              <tr className="text-label text-ink-soft">
                 <th className="py-2 pr-3 font-medium">Loại tin</th>
                 <th className="py-2 pr-3 font-medium">Lên L2 sau (lần)</th>
                 <th className="py-2 font-medium">Mở cho D3</th>
@@ -259,7 +261,7 @@ export function MatrixEditor({ matrix, onChanged }: { matrix: CareMatrix; onChan
                   <td className="py-2 pr-3 text-ink">
                     {actionTypeLabel(rule.action_type)}
                     {rule.hard_human && (
-                      <span className="block text-[12px] text-ink-soft">
+                      <span className="block text-label text-ink-soft">
                         Luôn do người quyết định, không chỉnh được
                       </span>
                     )}
@@ -268,7 +270,7 @@ export function MatrixEditor({ matrix, onChanged }: { matrix: CareMatrix; onChan
                     <input
                       aria-label={`Lên L2 sau bao nhiêu lần, ${actionTypeLabel(rule.action_type)}`}
                       inputMode="numeric"
-                      className="gc-input w-24"
+                      className={cx(FIELD_BASE_CLASS, "w-24")}
                       disabled={readOnly || rule.hard_human}
                       value={text.nToL2[rule.action_type] ?? ""}
                       onChange={(e) =>

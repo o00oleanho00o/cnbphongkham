@@ -17,8 +17,6 @@ import {
   IconClock,
   IconCpu,
   IconDatabase,
-  IconGrid,
-  IconHeart,
   IconMessage,
   IconSignal,
 } from "@/components/admin/shared/dashboard-icons";
@@ -92,7 +90,7 @@ export default function OverviewPage() {
 
   return (
     <div>
-      <PageHeader icon={IconGrid} title="Tổng quan" subtitle="Trạng thái bot và mức dùng LLM" />
+      <PageHeader title="Tổng quan" subtitle="Trạng thái bot và mức dùng LLM" />
 
       {/* Bot khởi động BÌNH THƯỜNG khi chưa cấu hình LLM (cố ý - phải vào được
           dashboard mới nhập được). Không có dải này thì bức tranh người dùng
@@ -100,11 +98,11 @@ export default function OverviewPage() {
           "chưa cài đặt xong". Cảnh báo duy nhất trước đây là một dòng log lúc
           boot, thứ không ai mở dashboard để đọc. */}
       {llmReady === false && (
-        <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/40">
-          <div className="text-[13px] font-semibold text-amber-900 dark:text-amber-200">
+        <div className="mb-5 rounded-tile border border-warning-line bg-warning-soft px-4 py-3">
+          <div className="text-small font-semibold text-warning">
             Chưa cấu hình LLM - bot chưa trả lời được tin nhắn nào
           </div>
-          <div className="mt-1 text-[12px] leading-relaxed text-amber-800 dark:text-amber-300">
+          <div className="mt-1 text-label leading-relaxed text-warning">
             Thiếu API key, tên model hoặc base URL.{" "}
             <Link
               href="/admin/tuning/providers"
@@ -137,7 +135,7 @@ export default function OverviewPage() {
           label="Token hôm nay"
           value={formatNumber((todayUsage?.inputTokens ?? 0) + (todayUsage?.outputTokens ?? 0))}
           sub={
-            <span className="text-[12px] text-ink-soft">
+            <span className="text-label text-ink-soft">
               {formatNumber(todayUsage?.inputTokens ?? 0)} vào /{" "}
               {formatNumber(todayUsage?.outputTokens ?? 0)} ra
             </span>
@@ -148,7 +146,6 @@ export default function OverviewPage() {
       </div>
 
       <SectionCard
-        icon={IconHeart}
         title="Tình trạng hệ thống"
         subtitle="Bot đang chạy ra sao và giữ bao nhiêu dữ liệu"
         aside={
@@ -185,7 +182,7 @@ export default function OverviewPage() {
         </div>
 
         <div className="mt-5">
-          <div className="mb-2 text-[11px] font-semibold tracking-wider text-ink-soft uppercase">
+          <div className="mb-2 text-micro font-semibold tracking-wider text-ink-soft uppercase">
             Kênh
           </div>
           <div className="flex flex-wrap gap-2">
@@ -201,14 +198,13 @@ export default function OverviewPage() {
       {series.length > 0 && (
         <div className="mt-5">
           <SectionCard
-            icon={IconBolt}
             title="Mức sử dụng"
             subtitle={`Theo dõi hoạt động ${data.days} ngày gần nhất`}
             aside={
               <div className="flex flex-wrap items-center gap-2">
                 {/* Hai chỉ số KHÔNG vẽ chung một trục: số token lớn hơn số lượt
                     cả nghìn lần, chồng lên nhau thì cột "lượt" dẹp thành đường kẻ */}
-                <div className="flex rounded-lg border border-line p-0.5">
+                <div className="flex rounded-control border border-line p-0.5">
                   {(
                     [
                       ["turns", "Lượt dùng"],
@@ -219,7 +215,7 @@ export default function OverviewPage() {
                       key={key}
                       type="button"
                       onClick={() => setChiSo(key)}
-                      className={`rounded-md px-3 py-1 text-[13px] font-medium transition-colors ${
+                      className={`rounded-md px-3 py-1 text-small font-medium transition-colors ${
                         chiSo === key
                           ? "bg-brand-50 text-brand-700"
                           : "text-ink-soft hover:text-ink"
@@ -235,17 +231,13 @@ export default function OverviewPage() {
           >
             <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
               <TongKet nhan="Tổng lượt" giaTri={formatNumber(tongLuot)} mau="bg-brand-500" />
-              <TongKet nhan="Tổng token" giaTri={formatNumber(tongToken)} mau="bg-emerald-500" />
-              <TongKet
-                nhan="Trung bình/ngày"
-                giaTri={formatNumber(trungBinhNgay)}
-                mau="bg-violet-500"
-              />
+              <TongKet nhan="Tổng token" giaTri={formatNumber(tongToken)} mau="bg-success" />
+              <TongKet nhan="Trung bình/ngày" giaTri={formatNumber(trungBinhNgay)} mau="bg-info" />
             </div>
 
             <UsageBarChart data={series} metric={chiSo} />
 
-            <p className="mt-3 text-[12px] text-ink-soft">
+            <p className="mt-3 text-label text-ink-soft">
               Đưa chuột lên từng cột để xem cả số lượt lẫn số token của ngày đó.
             </p>
           </SectionCard>
@@ -285,9 +277,9 @@ function TongKet({ nhan, giaTri, mau }: { nhan: string; giaTri: string; mau: str
     <div className="gc-tile">
       <div className="flex items-center gap-2">
         <span className={`h-2 w-2 shrink-0 rounded-full ${mau}`} />
-        <span className="text-[12px] text-ink-soft">{nhan}</span>
+        <span className="text-label text-ink-soft">{nhan}</span>
       </div>
-      <div className="mt-1 text-[20px] font-semibold text-ink">{giaTri}</div>
+      <div className="mt-1 text-subtitle font-semibold text-ink">{giaTri}</div>
     </div>
   );
 }

@@ -16,7 +16,7 @@ travels) and the policy hook call sites of section 3.
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Literal
 from uuid import UUID
@@ -73,6 +73,7 @@ from pema.middleware.message_batcher import StorePendingInbox
 from pema.middleware.redis_backends import RedisPendingBatchStore, RedisThreadRunChain, RedisTurnQueue
 from pema.middleware.redis_ops import AsyncRedisOps, make_redis_client
 from pema.middleware.thread_run_chain import ClinicThreadLock
+from pema.notify.link import InternalAccountRegistry
 from pema.policy.gateway import SqlPolicyGateway
 from pema.policy.hooks import ClinicPolicyHooks
 from pema.scheduler.deps import SchedulerDeps
@@ -144,6 +145,9 @@ class Runtime:
     lock_backend: RedisLockBackend
     live: LiveServices
     """Live events and presence (ST-R): the publisher works in both processes, hub and presence the API."""
+    internal: InternalAccountRegistry = field(default_factory=InternalAccountRegistry)
+    """Which accounts are the clinic's internal notifier (package O3): their messages never reach the
+    Inbox."""
 
     async def clinic_id(self) -> UUID:
         """The id of the one clinic of this installation (read once, then cached)."""

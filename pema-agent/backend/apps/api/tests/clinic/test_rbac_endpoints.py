@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date
 from uuid import uuid4
 
 import pytest
@@ -19,6 +20,7 @@ from pema.clinic import actions
 from pema.clinic.actions.seed_demo import SeedResult
 from pema.core.db import ClinicDatabase
 from pema_contracts.actions import ActionContext
+from pema_contracts.dashboard import DashboardRange
 from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.roles import ActorType, Role
 
@@ -107,6 +109,21 @@ ENDPOINTS: tuple[Endpoint, ...] = (
             "starts_at": "2026-09-19T10:00:00+07:00",  # past: passes the permission, then 422
         },
     ),
+    Endpoint("appointment_schedule", "GET", "/appointments/schedule?day=2026-09-20", ALL),
+    Endpoint(
+        "appointment_free_slot",
+        "GET",
+        f"/appointments/free-slot?patient_id={FAKE}&day=2026-09-20",
+        frozenset({OWNER, MANAGER, DOCTOR, RECEPTION, CS}),
+    ),
+    Endpoint("dashboard_kpis", "GET", "/dashboard/kpis", ALL),
+    Endpoint(
+        "confirm",
+        "POST",
+        f"/appointments/{FAKE}/confirm",
+        frozenset({OWNER, MANAGER, DOCTOR, RECEPTION}),
+        lambda w: {"version": 1},
+    ),
     Endpoint(
         "check_in",
         "POST",
@@ -146,6 +163,24 @@ ENDPOINTS: tuple[Endpoint, ...] = (
             "channel": "internal_note",
             "note": "ghi chú RBAC mẫu",
         },
+    ),
+    Endpoint("get_segments", "GET", "/crm/segments", frozenset({OWNER, MANAGER, DOCTOR, CS})),
+    Endpoint(
+        "list_segment_patients",
+        "GET",
+        "/crm/segments/dormant/patients",
+        frozenset({OWNER, MANAGER, DOCTOR, CS}),
+    ),
+    Endpoint("list_crm_rules", "GET", "/crm/rules", frozenset({OWNER, MANAGER, DOCTOR, CS})),
+    Endpoint("list_guide_articles", "GET", "/guide/articles", ALL),
+    Endpoint("get_guide_article", "GET", "/guide/articles/none", ALL),
+    Endpoint("ask_the_guide", "POST", "/guide/ask", ALL, lambda w: {"question": "lịch"}),
+    Endpoint(
+        "set_guide_tags",
+        "PUT",
+        f"/guide/articles/{FAKE}/tags",
+        frozenset({OWNER, MANAGER, DOCTOR}),
+        lambda w: {"tags": ["guide"]},
     ),
     Endpoint("list_conversations", "GET", "/conversations", frozenset({OWNER, MANAGER, DOCTOR, CS})),
     Endpoint(
@@ -234,6 +269,8 @@ async def test_the_patient_role_is_denied_every_clinic_action(db: ClinicDatabase
         actions.patients.list_patients(db, ctx),
         actions.patient_360.get_patient_360(db, ctx, world.patients["P025"]),
         actions.appointments.list_appointments(db, ctx),
+        actions.appointments.list_schedule(db, ctx, day=date(2026, 9, 20)),
+        actions.dashboard.kpis(db, ctx, range_=DashboardRange.TODAY),
         actions.crm_tasks.list_tasks(db, ctx),
         actions.conversations.list_conversations(db, ctx),
         actions.review_items.list_review_items(db, ctx),

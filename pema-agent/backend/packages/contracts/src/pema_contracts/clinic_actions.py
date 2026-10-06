@@ -67,6 +67,11 @@ class CareContext(ApiModel):
     last_protocol_id: str | None = Field(default=None, description="A code such as 'laser-co2', not text.")
     days_since_last_session: int | None = None
     remaining_sessions: int | None = None
+    plan_service_code: str | None = Field(
+        default=None, description="Code of the live treatment plan with sessions left, e.g. 'laser-co2'."
+    )
+    plan_completed_sessions: int | None = None
+    plan_total_sessions: int | None = None
     days_to_next_appointment: int | None = None
     followup_milestone: FollowupMilestone | None = None
     marketing_opt_out: bool = False

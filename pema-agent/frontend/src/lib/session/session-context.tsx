@@ -60,5 +60,6 @@ export const ROLE_LABEL: Record<Schemas["Role"], string> = {
   doctor: "Bác sĩ",
   cs_staff: "CSKH",
   reception: "Lễ tân",
+  accountant: "Kế toán",
   patient: "Bệnh nhân",
 };

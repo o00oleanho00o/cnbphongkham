@@ -1,8 +1,9 @@
 """Roles, actor types and permission codes.
 
-The six roles are fixed (docs/CONTRACTS-AI01.md). Authorization is deny-by-default and is enforced in
-``pema.clinic.actions`` only; FE and AI never decide access. The role-to-permission matrix is implemented by
-the BE core package (B1) from ARCH-PB01; the permission *codes* below are the stable vocabulary.
+The seven roles are fixed (docs/CONTRACTS-AI01.md; ``accountant`` was added by package U, step U11).
+Authorization is deny-by-default and is enforced in ``pema.clinic.actions`` only; FE and AI never decide
+access. The role-to-permission matrix is implemented by the BE core package (B1) from ARCH-PB01; the
+permission *codes* below are the stable vocabulary.
 """
 
 from __future__ import annotations
@@ -16,11 +17,14 @@ class Role(StrEnum):
     DOCTOR = "doctor"
     CS_STAFF = "cs_staff"
     RECEPTION = "reception"
+    ACCOUNTANT = "accountant"
+    """Reconciliation and cashier ("Đối soát & thu ngân"): finance, the cashier desk and the billing side
+    of a patient. No Inbox, no CRM queue, no clinical content; never approves an order (U11)."""
     PATIENT = "patient"
 
 
 STAFF_ROLES: frozenset[Role] = frozenset(
-    {Role.OWNER, Role.MANAGER, Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION}
+    {Role.OWNER, Role.MANAGER, Role.DOCTOR, Role.CS_STAFF, Role.RECEPTION, Role.ACCOUNTANT}
 )
 """Roles that sign in to the staff dashboard (everything except the patient)."""
 
@@ -44,6 +48,42 @@ class Permission(StrEnum):
     APPOINTMENT_WRITE = "appointment.write"
     APPOINTMENT_CHECK_IN = "appointment.check_in"
     SESSION_WRITE = "session.write"
+    SESSION_READ = "session.read"
+    """Read the clinical text of sessions and consult notes (doctor, owner; care staff only for the patients
+    they look after: narrowed by the action)."""
+    MEDIA_READ = "media.read"
+    """See clinical photos of a patient (doctor, owner; care staff only for their patients, and only while the
+    patient's media consent is granted)."""
+    MEDIA_WRITE = "media.write"
+    """Upload clinical photos. Needs the patient's media consent (the action refuses without it)."""
+    ORDER_READ = "order.read"
+    """Read quick orders (prescriptions and consultation sheets) and the product catalog (a doctor is narrowed
+    to own patients by the action; reception and manager see the clinic)."""
+    ORDER_WRITE = "order.write"
+    """Create and edit DRAFT orders (cashier work: reception, accountant, manager, doctor, owner). A draft is
+    not shown on the patient app and cannot be printed."""
+    ORDER_APPROVE = "order.approve"
+    """Approve an order so it can be printed and shown: the responsible doctor (the owner may approve for any
+    doctor). Never reception, the accountant or a manager: the order carries a clinical text (a
+    prescription is a clinical act; the old web enforced the same rule, ``approveOrder`` needs the doctor)."""
+    FINANCE_READ = "finance.read"
+    """Read the clinic-wide finance projection (PB02): revenue performed, cash collected, debt, the commission
+    table of every doctor, invoices and receipts. Owner, manager and the accountant."""
+    FINANCE_READ_OWN = "finance.read_own"
+    """Read the personal finance projection: only the rows of the caller as a performer, never invoices,
+    receipts, debt or the clinic totals. Doctor (and the owner, who is the clinic's doctor)."""
+    FINANCE_WRITE = "finance.write"
+    """Record performed procedures, approve or void them and confirm a month's payout. Owner, manager and the
+    accountant. The commission rates and bases live on the service terms (``admin.rules``)."""
+    FINANCE_PERIOD_CLOSE = "finance_period.close"
+    """Close (freeze) a finance month. The accountant closes it; owner and manager may close it too (override,
+    audited with the actor: ``finance.period.close``). There is no re-open in this version (U11)."""
+    FINANCE_COLLECT = "finance.collect"
+    """Raise the invoice of an order and record a receipt on an invoice (cashier work: reception, accountant,
+    manager, owner). Holds no read access to the finance projection."""
+    FINANCE_NOTIFICATIONS = "finance.notifications"
+    """Read the owner's payment notifications and mark them read. Owner only: neither the manager nor the
+    accountant reads the owner's inbox."""
     CRM_TASK_READ = "crm.task.read"
     CRM_TASK_RESOLVE = "crm.task.resolve"
     CRM_ACTIVITY_WRITE = "crm.activity.write"
@@ -87,5 +127,28 @@ class Permission(StrEnum):
     """Read and edit the depth and autonomy matrix (the thresholds the doctor decides)."""
     CARE_APPROVE = "care.approve"
     """Clear the ``pending_doctor_approval`` badge of the matrix and the timing: doctor, manager, owner."""
+    IDENTITY_MANAGE = "identity.manage"
+    """Mark a channel account as customer-facing or internal and set its own send limits (package O). Owner
+    and manager. Never grants access to a credential: those never leave the server."""
+    ROSTER_MANAGE = "roster.manage"
+    """Enter, change and delete who covers each channel identity and when (package O). Owner and manager."""
+    ROSTER_READ = "roster.read"
+    """Read the channel identities and the roster (package O): every operator (owner, manager, doctor,
+    cs_staff), so the Inbox can filter by identity and show who is on duty."""
+    THREAD_CLAIM = "thread.claim"
+    """Take an unassigned conversation, take it over from a colleague (with a reason) and give back one's own
+    (package O). Every assignable role: owner, manager, doctor, cs_staff."""
+    THREAD_ASSIGN = "thread.assign"
+    """Put a colleague on a conversation, or take it off the holder, whoever holds it (package O). Owner and
+    manager."""
+    THREAD_END_SHIFT = "thread.end_shift"
+    """End the shift of an operator: their active conversations move to whoever is on duty, or back to the
+    queue (package O). Owner and manager."""
+    NOTIFY_SELF = "notify.self"
+    """Receive notices, acknowledge them, link one's own Zalo and register a push token (package O, step O3).
+    Every assignable role: owner, manager, doctor, cs_staff. Acts on the caller's own rows only."""
+    NOTIFY_MANAGE = "notify.manage"
+    """Change the clinic's notification settings: ack timeout, team group, which steps are on (package O,
+    step O3). Owner and manager."""
     AGENT_SUBMIT = "agent.submit"
     """Held by the agent worker's actor only: create review items, read minimal context."""

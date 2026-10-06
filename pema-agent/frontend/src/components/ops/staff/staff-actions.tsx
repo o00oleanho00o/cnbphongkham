@@ -23,9 +23,9 @@ function ActionButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`inline-flex min-h-11 items-center justify-center rounded-lg border px-3 text-[13px] font-medium whitespace-nowrap transition-colors lg:min-h-9 ${
+      className={`inline-flex min-h-11 items-center justify-center rounded-control border px-3 text-small font-medium whitespace-nowrap transition-colors lg:min-h-9 ${
         tone === "danger"
-          ? "border-red-200 bg-surface text-red-700 hover:bg-red-50 dark:border-red-900/50 dark:text-red-300 dark:hover:bg-red-950/40"
+          ? "border-danger-line bg-surface text-danger hover:bg-danger-soft"
           : "border-line bg-surface text-ink hover:bg-tile"
       }`}
     >

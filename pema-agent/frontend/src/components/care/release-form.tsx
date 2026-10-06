@@ -15,6 +15,8 @@ import { careApi } from "@/lib/care/care-api";
 import type { CareLevel, PatientCareTimeline, ReleasePreview } from "@/lib/care/care-types";
 import { NOTE_MAX, releaseBody, releaseError, type ReleaseDraft } from "@/lib/care/forms";
 import { CONTROL_LABEL, LEVEL_LABEL } from "@/lib/care/labels";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 const PREVIEW_DELAY_MS = 300;
 const KEEP = "" as const;
@@ -107,7 +109,7 @@ export function ReleaseForm({
 
   return (
     <form
-      className="gc-card space-y-5 p-4 sm:p-5"
+      className="space-y-5 rounded-card border border-line bg-surface p-4 shadow-card sm:p-5"
       onSubmit={(e) => {
         e.preventDefault();
         void submit();
@@ -120,7 +122,7 @@ export function ReleaseForm({
       >
         <textarea
           id={noteId}
-          className="gc-input min-h-24 w-full"
+          className={cx(FIELD_BASE_CLASS, "min-h-24 w-full")}
           value={draft.note}
           maxLength={NOTE_MAX}
           onChange={(e) => setDraft({ ...draft, note: e.target.value })}
@@ -128,14 +130,14 @@ export function ReleaseForm({
       </Field>
 
       <fieldset>
-        <legend className="mb-1.5 text-[13px] font-medium text-ink">
+        <legend className="mb-1.5 text-small font-medium text-ink">
           Mức tự chủ sau khi trả lại
         </legend>
         <div className="space-y-1">
           {options.map((option) => (
             <label
               key={option.value || "keep"}
-              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-line px-3 py-2 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50"
+              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control border border-line px-3 py-2 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50"
             >
               <input
                 type="radio"
@@ -143,7 +145,7 @@ export function ReleaseForm({
                 checked={draft.level === option.value}
                 onChange={() => setDraft({ ...draft, level: option.value })}
               />
-              <span className="text-[14px] text-ink">{option.label}</span>
+              <span className="text-body text-ink">{option.label}</span>
             </label>
           ))}
         </div>
@@ -158,7 +160,7 @@ export function ReleaseForm({
           <input
             id={daysId}
             inputMode="numeric"
-            className="gc-input w-28"
+            className={cx(FIELD_BASE_CLASS, "w-28")}
             value={draft.days}
             onChange={(e) => setDraft({ ...draft, days: e.target.value })}
             aria-invalid={problem !== ""}

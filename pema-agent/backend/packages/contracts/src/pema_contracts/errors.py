@@ -49,6 +49,12 @@ class ErrorCode(StrEnum):
     """MCP server not bound to the agent (default-deny) or tool fingerprint drifted (needs re-approval)."""
     KB_SOURCE_INVALID = "kb_source_invalid"
     PAYLOAD_TOO_LARGE = "payload_too_large"
+    THREAD_LOCKED = "thread_locked"
+    """Another operator holds the thread (package O, step O2): only the holder replies; the others take over
+    first. ``details`` carries the holder id and the ``assignment_version`` to take over from."""
+    NO_IDENTITY = "no_identity"
+    """Package O, step O4: the conversation has no clinic identity to send through (no ``account_id`` and the
+    channel has no single customer account). The message stays ``queued`` with this code on it."""
     INTERNAL = "internal"
 
 
@@ -80,6 +86,8 @@ ERROR_HTTP_STATUS: dict[ErrorCode, int] = {
     ErrorCode.MCP_SERVER_UNAPPROVED: 409,
     ErrorCode.KB_SOURCE_INVALID: 422,
     ErrorCode.PAYLOAD_TOO_LARGE: 413,
+    ErrorCode.THREAD_LOCKED: 409,
+    ErrorCode.NO_IDENTITY: 409,
     ErrorCode.INTERNAL: 500,
 }
 """HTTP status each code maps to. The mapping is part of the contract."""

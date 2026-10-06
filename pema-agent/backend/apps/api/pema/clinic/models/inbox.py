@@ -43,6 +43,9 @@ class Conversation(Base):
     last_message_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     last_inbound_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     unread_count: Mapped[int] = mapped_column(Integer, default=0)
+    assignment_version: Mapped[int] = mapped_column(Integer, default=1)
+    """Package O step O2: bumped by every change of the holder (claim, takeover, release, shift end,
+    assign); the optimistic lock of the assignment actions, apart from ``version`` which every edit bumps."""
     version: Mapped[int] = mapped_column(Integer, default=1)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

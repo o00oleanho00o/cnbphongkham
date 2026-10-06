@@ -4,9 +4,12 @@
 
 Forced deviations from the JS prototype (which kept everything in ``localStorage``):
 
-* the schema has no rooms, services or buffers, so the room check and the per-service buffer are gone: a
-  slot is occupied from ``starts_at`` for ``duration_min`` minutes. The doctor-versus-doctor and
-  patient-versus-patient overlap rules of ``validate`` are kept exactly;
+* the schema has no services or buffers on an appointment, so the per-service buffer is gone: a slot is
+  occupied from ``starts_at`` for ``duration_min`` minutes (``buffer`` is 0, so the room "chuẩn bị phòng" time
+  is not modelled). The doctor-versus-doctor and patient-versus-patient overlap rules of ``validate`` are kept
+  exactly. Package U step U10 adds the room ``room_id`` and the two room rules of ``validate``: a room blocked
+  in the window (``Trùng thời gian khóa``) and a room already busy in the window (``Phòng đang bận``); the
+  service-room list (``Phòng không phù hợp với dịch vụ``) stays out because an appointment has no service;
 * working hours (08:00 to 18:00, break 12:00 to 13:00) are the constants of the prototype's doctors; there
   is no per-doctor shift table yet (open item);
 * times are aware datetimes (stored ``timestamptz``); the day and the clock time are read in the clinic's
@@ -20,7 +23,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from uuid import UUID
 
 from pema_contracts.appointments import AppointmentStatus
@@ -37,6 +40,8 @@ FREE_STATUSES: frozenset[AppointmentStatus] = frozenset(
 )
 """JS ``active``: a cancelled or missed appointment no longer occupies its slot."""
 
+CONFIRM_FROM: frozenset[AppointmentStatus] = frozenset({AppointmentStatus.BOOKED})
+"""JS ``setStatus(id, 'confirmed')``: the desk phoned the patient and they said yes."""
 CHECK_IN_FROM: frozenset[AppointmentStatus] = frozenset(
     {AppointmentStatus.BOOKED, AppointmentStatus.CONFIRMED}
 )
@@ -130,4 +135,84 @@ def raise_for_conflict(conflict: Conflict) -> None:
         ErrorCode.APPOINTMENT_CONFLICT,
         f"Trùng lịch của {who} lúc {local}.",
         details={"conflict": conflict.kind, "with_appointment_id": str(conflict.with_appointment_id)},
+    )
+
+
+@dataclass(frozen=True)
+class RoomSlot:
+    """What the room check needs about one appointment that holds a room."""
+
+    starts_at: datetime
+    duration_min: int
+    appointment_id: UUID | None = None
+    status: AppointmentStatus = AppointmentStatus.BOOKED
+
+    @property
+    def ends_at(self) -> datetime:
+        return self.starts_at + timedelta(minutes=self.duration_min)
+
+
+@dataclass(frozen=True)
+class BlockWindow:
+    """A ``clinic.room_block`` row: the day and the clock window (clinic zone) with its reason."""
+
+    day: date
+    start: time
+    end: time
+    reason: str
+
+
+def _minutes(value: time) -> int:
+    return value.hour * 60 + value.minute
+
+
+def find_block(starts_at: datetime, duration_min: int, blocks: Iterable[BlockWindow]) -> BlockWindow | None:
+    """JS ``validate``: ``Trung thoi gian khoa``: the first block of the same day whose window overlaps
+    ``[start, start + duration)`` (``start < b.end and occupied > b.start``). Appointments never cross
+    midnight (``validate_slot``), so the clock minutes of the clinic zone are enough."""
+    begin = _local(starts_at)
+    first = begin.hour * 60 + begin.minute
+    last = first + duration_min
+    for block in blocks:
+        if block.day != begin.date():
+            continue
+        if first < _minutes(block.end) and last > _minutes(block.start):
+            return block
+    return None
+
+
+def find_room_busy(
+    starts_at: datetime,
+    duration_min: int,
+    others: Iterable[RoomSlot],
+    *,
+    exclude: UUID | None = None,
+) -> RoomSlot | None:
+    """JS ``validate``: ``Phong dang ban``: the first active appointment of the same room that overlaps the
+    window. The visit being moved (``exclude``) is skipped."""
+    end = starts_at + timedelta(minutes=duration_min)
+    for other in others:
+        if other.status in FREE_STATUSES:
+            continue
+        if exclude is not None and other.appointment_id == exclude:
+            continue
+        if starts_at < other.ends_at and end > other.starts_at:
+            return other
+    return None
+
+
+def raise_for_block(block: BlockWindow) -> None:
+    raise DomainError(
+        ErrorCode.APPOINTMENT_CONFLICT,
+        f"Trùng thời gian khóa: {block.reason}",
+        details={"conflict": "room_block"},
+    )
+
+
+def raise_for_room_busy(other: RoomSlot) -> None:
+    local = _local(other.starts_at).strftime("%H:%M")
+    raise DomainError(
+        ErrorCode.APPOINTMENT_CONFLICT,
+        f"Phòng đang bận hoặc đang chuẩn bị sau lịch {local}.",
+        details={"conflict": "room", "with_appointment_id": str(other.appointment_id)},
     )

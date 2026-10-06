@@ -65,7 +65,7 @@ function QrBody({ state }: { state: QrState }): ReactNode {
   if (state.status === "success") return <span className="text-5xl">✅</span>;
   if (FAILED.includes(state.status)) return <span className="text-5xl">⚠️</span>;
   if (state.status === "scanned") return <span className="text-5xl">📱</span>;
-  return <span className="animate-pulse text-[13px] text-ink-soft">Đang tải QR...</span>;
+  return <span className="animate-pulse text-small text-ink-soft">Đang tải QR...</span>;
 }
 
 /** Modal QR login: POST bắt đầu phiên rồi polling status mỗi 1.5s */
@@ -119,28 +119,26 @@ export function QrLoginModal({ account, onClose }: { account: Account; onClose: 
         aria-label={`Login QR - ${account.label}`}
       >
         <div className="mb-1 font-semibold break-words text-ink">Login QR - {account.label}</div>
-        <p className="mb-4 text-[13px] text-ink-soft">{STATUS_TEXT[state.status]}</p>
+        <p className="mb-4 text-small text-ink-soft">{STATUS_TEXT[state.status]}</p>
 
-        <div className="mx-auto mb-4 flex h-56 w-56 items-center justify-center rounded-xl border border-line bg-surface">
+        <div className="mx-auto mb-4 flex h-56 w-56 items-center justify-center rounded-tile border border-line bg-surface">
           <QrBody state={state} />
         </div>
 
-        {state.error && (
-          <p className="mb-3 text-[13px] text-red-600 dark:text-red-400">{state.error}</p>
-        )}
+        {state.error && <p className="mb-3 text-small text-danger">{state.error}</p>}
 
         <div className="flex justify-center gap-3">
           {failed && (
             <button
               onClick={() => setRetryKey((k) => k + 1)}
-              className="min-h-11 rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600 sm:min-h-0"
+              className="min-h-11 rounded-control bg-brand-500 px-4 py-2 text-body font-medium text-white hover:bg-brand-600 sm:min-h-0"
             >
               Thử lại
             </button>
           )}
           <button
             onClick={onClose}
-            className="min-h-11 rounded-lg border border-line px-4 py-2 text-[14px] text-ink hover:bg-tile sm:min-h-0"
+            className="min-h-11 rounded-control border border-line px-4 py-2 text-body text-ink hover:bg-tile sm:min-h-0"
           >
             {state.status === "success" ? "Xong" : "Đóng"}
           </button>

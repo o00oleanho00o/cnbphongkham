@@ -1,0 +1,578 @@
+{
+  "namespace": "PemaDesignSystem",
+  "components": [],
+  "startingPoints": [],
+  "cards": [
+    {
+      "path": "preview/colors-brand.html",
+      "group": "Colors",
+      "viewport": "700x200",
+      "subtitle": "Primary, navy, sky and the brand wash scale",
+      "name": "Brand palette"
+    },
+    {
+      "path": "preview/colors-surface-ink.html",
+      "group": "Colors",
+      "viewport": "700x200",
+      "subtitle": "Canvas, surface, tile, field, ink, ink-soft, heading, link",
+      "name": "Surface and ink"
+    },
+    {
+      "path": "preview/colors-lines.html",
+      "group": "Colors",
+      "viewport": "700x170",
+      "subtitle": "Line, strong line, focus",
+      "name": "Lines"
+    },
+    {
+      "path": "preview/colors-status.html",
+      "group": "Colors",
+      "viewport": "700x200",
+      "subtitle": "Success, info, warning, danger in light and dark",
+      "name": "Status"
+    },
+    {
+      "path": "preview/type-scale.html",
+      "group": "Type",
+      "viewport": "700x420",
+      "subtitle": "Be Vietnam Pro, eleven sizes from eyebrow 10 to page 30",
+      "name": "Type scale"
+    },
+    {
+      "path": "preview/spacing-scale.html",
+      "group": "Spacing",
+      "viewport": "700x230",
+      "subtitle": "Space tokens 4 to 24",
+      "name": "Spacing scale"
+    },
+    {
+      "path": "preview/spacing-radii.html",
+      "group": "Spacing",
+      "viewport": "700x200",
+      "subtitle": "Radius tokens from field 9 to pill",
+      "name": "Radius"
+    },
+    {
+      "path": "preview/spacing-shadows.html",
+      "group": "Spacing",
+      "viewport": "700x230",
+      "subtitle": "Card shadow and pop shadow",
+      "name": "Elevation"
+    },
+    {
+      "path": "preview/components-buttons.html",
+      "group": "Components",
+      "viewport": "700x180",
+      "subtitle": "Primary, secondary, danger, solid danger, quiet",
+      "name": "Buttons"
+    },
+    {
+      "path": "preview/components-badges-chips.html",
+      "group": "Components",
+      "viewport": "700x180",
+      "subtitle": "Status badges and filter chips",
+      "name": "Badges and chips"
+    },
+    {
+      "path": "preview/components-card-kpi.html",
+      "group": "Components",
+      "viewport": "700x200",
+      "subtitle": "Card with title and a KPI tile",
+      "name": "Card and KPI"
+    },
+    {
+      "path": "preview/components-fields.html",
+      "group": "Components",
+      "viewport": "700x220",
+      "subtitle": "Field states: default, error, disabled",
+      "name": "Fields"
+    }
+  ],
+  "templates": [],
+  "hasThumbnailHtml": false,
+  "globalCssPaths": [
+    "colors_and_type.css"
+  ],
+  "tokens": [
+    {
+      "name": "--color-brand-50",
+      "value": "#e8f4fb",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-brand-100",
+      "value": "#cfe6f6",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-brand-200",
+      "value": "#9fcdee",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-brand-400",
+      "value": "#3caae5",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-brand-500",
+      "value": "#0b4f94",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-brand-600",
+      "value": "#083a6e",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-brand-700",
+      "value": "#083a6e",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-canvas",
+      "value": "#f4f8fb",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-canvas-alt",
+      "value": "#edf5f9",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-surface",
+      "value": "#ffffff",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-ink",
+      "value": "#17324d",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-ink-soft",
+      "value": "#5a6d80",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-heading",
+      "value": "#083a6e",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-link",
+      "value": "#0b4f94",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-line",
+      "value": "#d9e5ee",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-line-strong",
+      "value": "#c8dce9",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-tile",
+      "value": "#eaf1f7",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-field",
+      "value": "#f8fbfd",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-table-head",
+      "value": "#f3f8fb",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-row-hover",
+      "value": "#f2f8fc",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-overlay",
+      "value": "rgb(18 59 92 / 50%)",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-focus",
+      "value": "#2181bc",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-plate",
+      "value": "#ffffff",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-success",
+      "value": "#28745d",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-success-soft",
+      "value": "#e6f4ef",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-success-line",
+      "value": "#c4e3d8",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-info",
+      "value": "#426c8a",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-info-soft",
+      "value": "#eaf3f9",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-info-line",
+      "value": "#cfe5f3",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-warning",
+      "value": "#8a6727",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-warning-soft",
+      "value": "#fff5df",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-warning-line",
+      "value": "#f1dfb9",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-danger",
+      "value": "#a13f46",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-danger-soft",
+      "value": "#fbeceb",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-danger-line",
+      "value": "#f0cfcd",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-accent",
+      "value": "#c56d5c",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--color-accent-strong",
+      "value": "#a8503f",
+      "kind": "color",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--radius-field",
+      "value": "9px",
+      "kind": "radius",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--radius-control",
+      "value": "10px",
+      "kind": "radius",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--radius-tile",
+      "value": "12px",
+      "kind": "radius",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--radius-card",
+      "value": "14px",
+      "kind": "radius",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--radius-modal",
+      "value": "20px",
+      "kind": "radius",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--radius-hero",
+      "value": "24px",
+      "kind": "radius",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--radius-pill",
+      "value": "999px",
+      "kind": "radius",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--shadow-card",
+      "value": "0 5px 18px rgb(18 61 99 / 6%)",
+      "kind": "shadow",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--shadow-pop",
+      "value": "0 30px 100px rgb(18 43 70 / 25%)",
+      "kind": "shadow",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--text-eyebrow",
+      "value": "10px",
+      "kind": "text",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--text-micro",
+      "value": "11px",
+      "kind": "text",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--text-label",
+      "value": "12px",
+      "kind": "text",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--text-small",
+      "value": "13px",
+      "kind": "text",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--text-body",
+      "value": "14px",
+      "kind": "text",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--text-body-lg",
+      "value": "15px",
+      "kind": "text",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--text-section",
+      "value": "16px",
+      "kind": "text",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--text-subtitle",
+      "value": "20px",
+      "kind": "text",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--text-title",
+      "value": "25px",
+      "kind": "text",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--text-metric",
+      "value": "27px",
+      "kind": "text",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--text-page",
+      "value": "30px",
+      "kind": "text",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--space-1",
+      "value": "4px",
+      "kind": "space",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--space-2",
+      "value": "8px",
+      "kind": "space",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--space-3",
+      "value": "12px",
+      "kind": "space",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--space-4",
+      "value": "16px",
+      "kind": "space",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--space-5",
+      "value": "20px",
+      "kind": "space",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--space-6",
+      "value": "24px",
+      "kind": "space",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--layout-sidebar-w",
+      "value": "232px",
+      "kind": "layout",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--layout-sidebar-w-narrow",
+      "value": "208px",
+      "kind": "layout",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--layout-topbar-h",
+      "value": "60px",
+      "kind": "layout",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--layout-topbar-h-wide",
+      "value": "64px",
+      "kind": "layout",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--layout-content-pad-x",
+      "value": "28px",
+      "kind": "layout",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--layout-content-pad-y",
+      "value": "24px",
+      "kind": "layout",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--layout-content-max",
+      "value": "1640px",
+      "kind": "layout",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--layout-aside-w",
+      "value": "360px",
+      "kind": "layout",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--layout-touch-min",
+      "value": "44px",
+      "kind": "layout",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--z-sticky",
+      "value": "5",
+      "kind": "z",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--z-topbar",
+      "value": "30",
+      "kind": "z",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--z-drawer",
+      "value": "50",
+      "kind": "z",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--z-modal",
+      "value": "55",
+      "kind": "z",
+      "definedIn": "colors_and_type.css"
+    },
+    {
+      "name": "--z-toast",
+      "value": "60",
+      "kind": "z",
+      "definedIn": "colors_and_type.css"
+    }
+  ],
+  "themes": [
+    {
+      "name": "dark",
+      "selector": ".dark, [data-theme=\"dark\"]"
+    }
+  ],
+  "fonts": [],
+  "brandFonts": [
+    {
+      "family": "Be Vietnam Pro",
+      "status": "google-fonts-link",
+      "tokens": [
+        "--font-family-ui"
+      ],
+      "path": "colors_and_type.css"
+    }
+  ],
+  "source": "repo: design-system/ (tokens.json is the single source; see README.md)"
+}

@@ -6,42 +6,57 @@
 // placeholder where a message had no text. The AI draft shown in the thread is a draft, not a sent message.
 // Several people at once: the thread reloads quietly when the page says it changed (`liveTick`), keeping the
 // scroll position (it only follows new messages when you were already at the bottom) and the draft being typed;
-// a presence beat tells colleagues you are viewing or replying, and theirs is shown as a warning, never a lock.
+// a presence beat tells colleagues you are viewing or replying ("đang xem" / "đang trả lời").
+// Package O: one person holds a thread. Nhận, Tiếp quản (with a reason), Trả lại and Giao cho... are dialogs
+// (assignment-dialogs.tsx); while a colleague holds it the reply box is locked with the holder's name, and a 409
+// `thread_locked` on a send turns into the same banner with the draft kept. The BE decides every rule.
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
 import { SelectMenu, type SelectOption } from "@/components/admin/shared/select-menu";
 import { Badge } from "@/components/admin/shared/ui-bits";
 import { IconImageOff } from "@/components/admin/shared/ops-icons";
-import { AssigneeStatus } from "@/components/ops/assignee-status";
-import { conversationTitle } from "@/components/ops/inbox/conversation-list";
-import { PresenceLine } from "@/components/ops/inbox/presence-line";
 import {
-  ListSkeleton,
-  Notice,
-  PrimaryButton,
-  RetryNotice,
-  SecondaryButton,
-} from "@/components/ops/ops-ui";
+  AssignDialog,
+  ClaimDialog,
+  HistoryDialog,
+  ReleaseDialog,
+  TakeoverDialog,
+} from "@/components/ops/inbox/assignment-dialogs";
+import { conversationTitle } from "@/components/ops/inbox/conversation-list";
+import { HolderBanner } from "@/components/ops/inbox/holder-banner";
+import { PresenceLine } from "@/components/ops/inbox/presence-line";
+import { ListSkeleton, Notice, PrimaryButton, RetryNotice } from "@/components/ops/ops-ui";
 import { useToast } from "@/components/ops/toast";
 import type { Schemas } from "@/lib/api";
 import { ApiError, errorMessage, http, newIdempotencyKey, unwrap } from "@/lib/api/client";
+import {
+  THREAD_LOCKED_UNSENT,
+  assignmentErrorText,
+  isThreadLocked,
+  messageErrorHint,
+  messageErrorLabel,
+} from "@/lib/ops/assignment-errors";
 import { viewersOf, type PresenceViewer } from "@/lib/live/live-types";
 import { usePresenceHeartbeat } from "@/lib/live/use-presence-heartbeat";
 import {
-  OWNER_KEEP,
-  initialOwnerValue,
-  ownerIdFor,
-  ownerOptions,
-} from "@/lib/ops/assignee-options";
+  customerSeesLine,
+  holderState,
+  identityOf,
+  lockedPlaceholder,
+  conversationCode,
+} from "@/lib/ops/inbox-view";
 import { formatDateTime } from "@/lib/ops/format";
 import { CONVERSATION_STATUS_LABEL, MESSAGE_STATUS_LABEL, SENDER_LABEL } from "@/lib/ops/labels";
 import { presenceStateFor, presenceText, someoneReplying } from "@/lib/ops/presence-view";
 import { useSession } from "@/lib/session/session-context";
-import { useAssignableStaff } from "@/lib/staff/use-assignable-staff";
 import { useLoad } from "@/lib/use-load";
+import { Button } from "@/ui/button";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 type Conversation = Schemas["ConversationOut"];
+type Dialog = "claim" | "takeover" | "release" | "assign" | "history" | null;
 type Message = Schemas["MessageOut"];
 
 const STATUS_OPTIONS: SelectOption[] = (
@@ -66,7 +81,7 @@ function MessageBubble({ message }: { message: Message }) {
   const tone = inbound
     ? "bg-surface border-line text-ink"
     : draft
-      ? "border-2 border-dashed border-amber-400 bg-amber-50 text-ink dark:bg-amber-950/30"
+      ? "border-2 border-dashed border-warning-line bg-warning-soft text-ink"
       : system
         ? "bg-tile text-ink-soft border-line"
         : "bg-brand-500 text-white border-brand-500";
@@ -74,10 +89,10 @@ function MessageBubble({ message }: { message: Message }) {
   return (
     <li className={`flex flex-col gap-1 ${align}`}>
       <div
-        className={`max-w-[88%] rounded-2xl border px-3.5 py-2.5 text-[14px] leading-relaxed sm:max-w-[75%] ${tone}`}
+        className={`max-w-[88%] rounded-card border px-3.5 py-2.5 text-body leading-relaxed sm:max-w-[75%] ${tone}`}
       >
         {message.body === null ? (
-          <span className="inline-flex items-center gap-2 text-[13px] text-ink-soft">
+          <span className="inline-flex items-center gap-2 text-small text-ink-soft">
             <IconImageOff size={18} />
             Tin không có chữ (ảnh hoặc tệp). Hệ thống không phân tích ảnh; nhân viên xem trực tiếp.
           </span>
@@ -85,7 +100,7 @@ function MessageBubble({ message }: { message: Message }) {
           <span className="whitespace-pre-wrap">{message.body}</span>
         )}
       </div>
-      <div className="flex flex-wrap items-center gap-1.5 px-1 text-[11px] text-ink-soft">
+      <div className="flex flex-wrap items-center gap-1.5 px-1 text-micro text-ink-soft">
         <span>{SENDER_LABEL[message.sender_type]}</span>
         <span>·</span>
         <span>{formatDateTime(message.created_at)}</span>
@@ -98,8 +113,11 @@ function MessageBubble({ message }: { message: Message }) {
             Mở nháp để duyệt
           </Link>
         )}
-        {message.error_code && <Badge tone="red">Lỗi gửi</Badge>}
+        {message.error_code && <Badge tone="red">{messageErrorLabel(message.error_code)}</Badge>}
       </div>
+      {message.error_code && messageErrorHint(message.error_code) && (
+        <p className="px-1 text-label text-danger">{messageErrorHint(message.error_code)}</p>
+      )}
     </li>
   );
 }
@@ -109,6 +127,7 @@ export function ThreadView({
   onChanged,
   liveTick = 0,
   listViewers,
+  identities = [],
 }: {
   conversationId: string;
   /** The list should reload (status, unread or last message changed). */
@@ -117,6 +136,8 @@ export function ThreadView({
   liveTick?: number;
   /** Presence as the list last saw it; preferred over the detail's own because the list refreshes on events. */
   listViewers?: readonly PresenceViewer[];
+  /** The clinic identities, to name the one the thread runs on. */
+  identities?: readonly Schemas["IdentityOut"][];
 }) {
   const { user, can } = useSession();
   const toast = useToast();
@@ -127,12 +148,8 @@ export function ThreadView({
   const endRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLOListElement>(null);
   const atBottom = useRef(true);
-  const {
-    staff,
-    loading: staffLoading,
-    error: staffError,
-    reload: reloadStaff,
-  } = useAssignableStaff();
+  const [dialog, setDialog] = useState<Dialog>(null);
+  const [lockedSend, setLockedSend] = useState(false);
 
   const load = useCallback(
     async (signal: AbortSignal): Promise<Loaded> => {
@@ -205,15 +222,13 @@ export function ThreadView({
     [data],
   );
 
-  async function patchConversation(
-    change: Partial<Pick<Conversation, "assigned_user_id" | "status">>,
-  ) {
+  async function patchStatus(status: Schemas["ConversationStatus"]) {
     if (!data) return;
     try {
       const updated = await unwrap(
         http.PATCH("/api/v1/conversations/{conversation_id}", {
           params: { path: { conversation_id: conversationId } },
-          body: { ...change, version: data.conversation.version },
+          body: { status, version: data.conversation.version },
         }),
       );
       setData({ ...data, conversation: updated });
@@ -235,6 +250,7 @@ export function ThreadView({
     if (!body) return;
     setSending(true);
     setSendError("");
+    setLockedSend(false);
     try {
       await unwrap(
         http.POST("/api/v1/conversations/{conversation_id}/messages", {
@@ -250,7 +266,11 @@ export function ThreadView({
       reload();
       onChanged();
     } catch (err) {
-      setSendError(errorMessage(err));
+      // A colleague holds the thread now: the draft stays, the thread reloads and shows who holds it.
+      const lost = isThreadLocked(err);
+      setLockedSend(lost);
+      setSendError(lost ? "" : assignmentErrorText(err));
+      if (lost) refresh();
     } finally {
       setSending(false);
     }
@@ -259,34 +279,40 @@ export function ThreadView({
   if (error && !data) return <RetryNotice message={error} onRetry={reload} />;
   if (!data) return loading ? <ListSkeleton rows={3} /> : null;
 
-  const { conversation } = data;
+  const loaded = data;
+  const { conversation } = loaded;
   const closed = conversation.status === "closed";
   const canReply = can("conversation.reply");
-  const mine = conversation.assigned_user_id === user.id;
+  const canClaim = can("thread.claim");
+  const canAssign = can("thread.assign");
+  const holder = holderState(conversation, user.id);
+  const locked = canReply && holder === "other";
+  const identity = identityOf(conversation, identities);
   const viewers = listViewers ?? viewersOf(conversation);
-  const ownerInput = {
-    me: user,
-    currentId: conversation.assigned_user_id,
-    staff,
-    keepWhenUnassigned: true,
-    allowUnassign: true,
+  const holderName = conversation.assigned_user_name ?? null;
+
+  function closeDialog(updated: Conversation | null) {
+    setDialog(null);
+    setLockedSend(false);
+    if (updated) setData({ ...loaded, conversation: updated });
+    else reload();
+    onChanged();
+  }
+  const dialogProps = {
+    conversation,
+    identityLabel: identity?.label ?? null,
+    onClose: () => setDialog(null),
+    onDone: closeDialog,
   };
 
-  function changeOwner(value: string) {
-    if (value === OWNER_KEEP) return;
-    void patchConversation({
-      assigned_user_id: ownerIdFor(value, user, conversation.assigned_user_id),
-    });
-  }
-
   return (
-    <section className="gc-card flex min-h-[60dvh] flex-col lg:max-h-[calc(100dvh-9rem)]">
+    <section className="flex min-h-[60dvh] flex-col rounded-card border border-line bg-surface shadow-card lg:max-h-[calc(100dvh-9rem)]">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
         <div className="min-w-0">
-          <h2 className="truncate text-[16px] font-semibold text-ink">
+          <h2 className="truncate text-section font-semibold text-ink">
             {conversationTitle(conversation)}
           </h2>
-          <p className="text-[12px] text-ink-soft">
+          <p className="text-label text-ink-soft">
             {conversation.patient_id ? (
               <Link
                 href={`/patients/${conversation.patient_id}`}
@@ -297,45 +323,42 @@ export function ThreadView({
             ) : (
               "Chưa gắn hồ sơ bệnh nhân"
             )}
+            {identity ? ` · ${identity.label}` : ""} · {conversationCode(conversation.id)}
           </p>
           <PresenceLine viewers={viewers} className="mt-1" />
         </div>
-        {canReply && (
-          <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
-            {!mine && (
-              <SecondaryButton
-                onClick={() => void patchConversation({ assigned_user_id: user.id })}
-              >
-                Nhận xử lý
-              </SecondaryButton>
-            )}
-            <div className="sm:w-64">
-              <SelectMenu
-                size="md"
-                ariaLabel="Phụ trách hội thoại"
-                prefix="Phụ trách:"
-                value={initialOwnerValue(ownerInput)}
-                options={ownerOptions(ownerInput)}
-                onChange={changeOwner}
-              />
-              <AssigneeStatus loading={staffLoading} error={staffError} onRetry={reloadStaff} />
-            </div>
+        <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+          {canAssign && (
+            <Button variant="secondary" onClick={() => setDialog("assign")}>
+              Giao cho...
+            </Button>
+          )}
+          <Button variant="secondary" onClick={() => setDialog("history")}>
+            Lịch sử phụ trách
+          </Button>
+          {canReply && (
             <div className="sm:w-44">
               <SelectMenu
                 size="md"
                 ariaLabel="Trạng thái hội thoại"
                 value={conversation.status}
                 options={STATUS_OPTIONS}
-                onChange={(value) =>
-                  void patchConversation({ status: value as Schemas["ConversationStatus"] })
-                }
+                onChange={(value) => void patchStatus(value as Schemas["ConversationStatus"])}
               />
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </header>
 
       <div className="space-y-2 px-4 pt-3 empty:hidden">
+        <HolderBanner
+          holder={holder}
+          holderName={holderName}
+          canClaim={canClaim}
+          onClaim={() => setDialog("claim")}
+          onTakeover={() => setDialog("takeover")}
+          onRelease={() => setDialog("release")}
+        />
         {!conversation.patient_id && (
           <Notice tone="warn">
             Khách chưa được xác minh với hồ sơ nào. Trợ lý AI không được nhắc tên, lịch hẹn hay
@@ -348,7 +371,7 @@ export function ThreadView({
             action={
               <Link
                 href={`/review?i=${redFlags[0]?.id}`}
-                className="text-[13px] font-semibold underline"
+                className="text-small font-semibold underline"
               >
                 Mở cảnh báo
               </Link>
@@ -364,7 +387,7 @@ export function ThreadView({
             action={
               <Link
                 href={`/review?i=${mediaFlags[0]?.id}`}
-                className="text-[13px] font-semibold underline"
+                className="text-small font-semibold underline"
               >
                 Mở mục xử lý
               </Link>
@@ -390,7 +413,17 @@ export function ThreadView({
 
       {canReply && (
         <form onSubmit={(e) => void send(e)} className="border-t border-line p-3">
-          {someoneReplying(viewers) && (
+          {lockedSend && (
+            <div className="mb-2">
+              <Notice
+                tone="error"
+                action={<Button onClick={() => setDialog("takeover")}>Tiếp quản</Button>}
+              >
+                {THREAD_LOCKED_UNSENT}
+              </Notice>
+            </div>
+          )}
+          {!locked && someoneReplying(viewers) && (
             <div className="mb-2">
               <Notice tone="warn">
                 {presenceText(viewers.filter((v) => v.state === "replying"))}. Bạn vẫn nhắn được,
@@ -416,22 +449,45 @@ export function ThreadView({
             }}
             maxLength={MAX_REPLY}
             rows={2}
-            disabled={closed}
-            placeholder={
-              closed ? "Hội thoại đã đóng, mở lại để nhắn." : "Nhập tin trả lời khách..."
-            }
-            className="gc-input w-full resize-y"
+            disabled={closed || locked}
+            placeholder={replyPlaceholder(closed, locked, holderName)}
+            className={cx(FIELD_BASE_CLASS, "w-full resize-y")}
           />
-          <div className="mt-2 flex items-center justify-between gap-2">
-            <span className="text-[12px] text-ink-soft">
-              {text.length}/{MAX_REPLY} · Tin do nhân viên soạn và gửi.
-            </span>
-            <PrimaryButton type="submit" disabled={sending || closed || !text.trim()}>
+          <div className="mt-1 text-label text-ink-soft">
+            {text.length}/{MAX_REPLY} · Tin do nhân viên soạn và gửi.
+          </div>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+            <span className="text-label text-ink-soft">{customerSeesLine(identity?.label)}</span>
+            <PrimaryButton type="submit" disabled={sending || closed || locked || !text.trim()}>
               {sending ? "Đang gửi..." : "Gửi"}
             </PrimaryButton>
           </div>
         </form>
       )}
+
+      {dialog === "claim" && <ClaimDialog {...dialogProps} />}
+      {dialog === "takeover" && (
+        <TakeoverDialog
+          conversation={conversation}
+          onClose={dialogProps.onClose}
+          onDone={closeDialog}
+        />
+      )}
+      {dialog === "release" && <ReleaseDialog {...dialogProps} />}
+      {dialog === "assign" && <AssignDialog {...dialogProps} />}
+      {dialog === "history" && (
+        <HistoryDialog
+          conversation={conversation}
+          identityLabel={identity?.label ?? null}
+          onClose={dialogProps.onClose}
+        />
+      )}
     </section>
   );
+}
+
+function replyPlaceholder(closed: boolean, locked: boolean, holderName: string | null): string {
+  if (closed) return "Hội thoại đã đóng, mở lại để nhắn.";
+  if (locked) return lockedPlaceholder(holderName);
+  return "Nhập tin trả lời khách...";
 }

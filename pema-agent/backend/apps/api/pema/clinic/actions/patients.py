@@ -11,11 +11,11 @@ New module (the prototype kept patients in ``localStorage``). Rules:
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import Integer, cast, func, or_, select
+from sqlalchemy import Integer, cast, exists, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
@@ -31,18 +31,25 @@ from pema.clinic.actions._common import (
 from pema.clinic.actions._mappers import patient_out
 from pema.clinic.actions._scope import patient_scope, require_patient_access
 from pema.clinic.actions.assignees import load_assignable_user
-from pema.clinic.models import Patient, UserAccount
+from pema.clinic.domain.appointments import FREE_STATUSES
+from pema.clinic.models import Appointment, Patient, TreatmentPlan, UserAccount
 from pema.clinic.rbac import require
 from pema.core.db import ClinicDatabase
 from pema_contracts.actions import ActionContext
+from pema_contracts.appointments import AppointmentStatus
 from pema_contracts.common import VN_TZ, Page
 from pema_contracts.errors import DomainError, ErrorCode
+from pema_contracts.patient_profile import PatientListView
 from pema_contracts.patients import PatientCreate, PatientOut, PatientUpdate
 from pema_contracts.roles import Permission, Role
 
 DOCTOR_ROLES = (Role.DOCTOR.value, Role.OWNER.value)
 CS_OWNER_ROLES = (Role.CS_STAFF.value, Role.MANAGER.value, Role.OWNER.value)
 CODE_RETRIES = 5
+NEXT_VISIT_DAYS = 7
+"""'Tái khám tuần này': an appointment from today to seven days ahead (old: 2026-09-20 to 2026-09-27)."""
+LIVE_PLAN_STATUSES = ("planned", "active")
+_NOT_A_VISIT = [*(s.value for s in FREE_STATUSES), AppointmentStatus.COMPLETED.value]
 
 _NULLABLE_UPDATE_FIELDS = ("phone", "birth_date", "doctor_id", "cs_owner_id")
 _ASSIGNEE_FIELDS = ("doctor_id", "cs_owner_id")
@@ -93,6 +100,33 @@ async def _check_assignee(
     )
 
 
+def _view_conditions(view: PatientListView) -> list[Any]:
+    """The chip of the list as SQL, so a page of 50 is a page of the chip and not of the whole clinic."""
+    if view is PatientListView.ACTIVE:
+        return [
+            exists().where(
+                TreatmentPlan.clinic_id == Patient.clinic_id,
+                TreatmentPlan.patient_id == Patient.id,
+                TreatmentPlan.status.in_(LIVE_PLAN_STATUSES),
+                TreatmentPlan.completed_sessions < TreatmentPlan.total_sessions,
+            )
+        ]
+    if view is PatientListView.NEXT:
+        start = datetime.combine(today_vn(), datetime.min.time(), tzinfo=VN_TZ)
+        return [
+            exists().where(
+                Appointment.clinic_id == Patient.clinic_id,
+                Appointment.patient_id == Patient.id,
+                Appointment.status.notin_(_NOT_A_VISIT),
+                Appointment.starts_at >= start,
+                Appointment.starts_at < start + timedelta(days=NEXT_VISIT_DAYS + 1),
+            )
+        ]
+    if view is PatientListView.ALERTS:
+        return [func.coalesce(func.cardinality(Patient.alerts), 0) > 0]
+    return []
+
+
 async def list_patients(
     db: ClinicDatabase,
     ctx: ActionContext,
@@ -100,6 +134,7 @@ async def list_patients(
     q: str | None = None,
     doctor_id: UUID | None = None,
     cs_owner_id: UUID | None = None,
+    view: PatientListView = PatientListView.ALL,
     limit: int = 50,
     offset: int = 0,
 ) -> Page[PatientOut]:
@@ -114,6 +149,7 @@ async def list_patients(
         conditions.append(Patient.doctor_id == doctor_id)
     if cs_owner_id is not None:
         conditions.append(Patient.cs_owner_id == cs_owner_id)
+    conditions.extend(_view_conditions(view))
     if q:
         pattern = f"%{escape_like(q.lower())}%"
         conditions.append(

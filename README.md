@@ -33,22 +33,31 @@ Workspace này chứa prototype và tài liệu nghiên cứu của Pema Digital
 
 ### Chạy nhanh bằng Docker Compose
 
-Tại thư mục gốc của workspace, chạy 1 lệnh:
+Tại thư mục gốc của workspace, chạy 1 lệnh (build và chạy backend, frontend và worker AI; `docker compose build` một mình chỉ build image, không chạy):
 
 ```powershell
 docker compose up -d --build
 ```
 
-Sau khi container lên, mở:
+Không cần tạo `.env`: compose đọc giá trị demo ở [`pema-agent/infra/.env.local-demo`](pema-agent/infra/.env.local-demo) (chỉ dùng trên máy này, mọi cổng bind `127.0.0.1`). Sau khi container lên, mở:
 
-- Clinic Web: [http://127.0.0.1:4173/clinic-web/](http://127.0.0.1:4173/clinic-web/)
-- Patient Mobile: [http://127.0.0.1:4173/patient-mobile/](http://127.0.0.1:4173/patient-mobile/)
+| URL | Nội dung |
+| --- | --- |
+| [http://localhost:3000](http://localhost:3000) | Pema staff web (Next.js) chạy với backend thật (API, Postgres, Redis, worker) |
+| [http://localhost:8000/healthz](http://localhost:8000/healthz) | API |
+
+Tạm thời các trang design (canvas app `:4190`, canvas web `:4191`, design system `:4192`) và prototype cũ (`:4173`) không nằm trong stack Docker để tập trung vào BE, FE, AI; các dịch vụ đó đang được comment trong `docker-compose.yml`, bỏ `# ` đầu khối để bật lại. Prototype cũ chạy tay theo mục "Chạy local bằng Python" bên dưới; design canvas chạy bằng `cd design-viewer; npm run dev` (mục "Design Viewer").
+
+Đăng nhập staff web: dịch vụ `seed` tạo phòng khám mẫu (hư cấu) và các tài khoản `admin@gmail.com` (owner), `manager@example.test`, `doctor.mai@example.test`, `cs.maianh@example.test`, `reception.lan@example.test`. Mật khẩu chung của mọi tài khoản mẫu là `Admin@123`; cả email owner lẫn mật khẩu nằm trong `pema-agent/infra/.env.local-demo` (`PEMA_SEED_OWNER_EMAIL`, `PEMA_SEED_PASSWORD`), đặt trong shell sẽ thắng file. Để trống `PEMA_SEED_PASSWORD` thì mật khẩu được sinh ngẫu nhiên và in **một lần**: `docker compose logs seed`. Seed chỉ chạy khi database còn trống: đã seed bằng tài khoản cũ thì cần `docker compose down -v` rồi `up` lại. Chưa có khóa LLM nên agent CSKH chưa trả lời được cho tới khi đặt `LLM_*` (dashboard hoặc `pema-agent/infra/.env.local-demo`). Lần chạy đầu build nhiều image (Python, Next.js) nên mất vài phút.
 
 Lệnh dừng:
 
 ```powershell
-docker compose down
+docker compose down        # giữ dữ liệu
+docker compose down -v     # xóa luôn dữ liệu Postgres/Redis
 ```
+
+Cài đặt thật cho một phòng khám dùng stack riêng ở [`pema-agent/infra/`](pema-agent/infra/README.md) (`make infra-secrets` sinh bí mật ngẫu nhiên), không dùng file demo.
 
 ### Chạy local bằng Python
 

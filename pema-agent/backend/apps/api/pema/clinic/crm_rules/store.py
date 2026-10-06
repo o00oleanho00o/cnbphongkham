@@ -14,12 +14,13 @@ values.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
+from pema.clinic.crm_rules.protocols import ProtocolConfig
 from pema.clinic.crm_rules.records import (
     OPEN_STATUSES,
     ClinicCrmData,
@@ -65,11 +66,13 @@ class MemoryCrmRuleStore:
         patients: Sequence[PatientSnapshot] = (),
         tasks: Sequence[ExistingTask] = (),
         templates: Sequence[TemplateRef] = (),
+        protocols: Mapping[str, ProtocolConfig] | None = None,
     ) -> None:
         self.rules: list[RuleConfig] = list(rules)
         self.patients: dict[UUID, PatientSnapshot] = {p.id: p for p in patients}
         self.tasks: dict[str, ExistingTask] = {t.task_key: t for t in tasks}
         self.templates: dict[str, TemplateRef] = {t.key: t for t in templates}
+        self.protocols: dict[str, ProtocolConfig] = dict(protocols or {})
         self.created: dict[str, TaskCandidate] = {}
         self.superseded_at: dict[str, datetime] = {}
         self.audit: list[dict[str, int]] = []
@@ -84,6 +87,7 @@ class MemoryCrmRuleStore:
             patients=tuple(self.patients.values()),
             existing_tasks=tuple(self.tasks.values()),
             templates=dict(self.templates),
+            protocols=dict(self.protocols),
         )
 
     async def apply(self, clinic_id: UUID, changes: StoreChanges) -> int:

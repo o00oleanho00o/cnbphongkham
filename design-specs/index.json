@@ -102,7 +102,7 @@
         "shotTest": "pema-kmp/core/ui/src/jvmTest/kotlin/com/pema/clinic/core/ui/BlocksShotTest.kt:51",
         "shotImage": "pema-kmp/feature/workspace/build/shots/A1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/A1.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Clinic\", unread = 1)",
         "PemaBottomNav: Hôm nay* | Lịch hẹn | Hồ sơ | Theo dõi | Thêm"
@@ -191,7 +191,7 @@
         "shotTest": "pema-kmp/core/ui/src/jvmTest/kotlin/com/pema/clinic/core/ui/BlocksShotTest.kt:80",
         "shotImage": "pema-kmp/feature/workspace/build/shots/A2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/A2.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Clinic\", unread = 1)",
         "PemaBottomNav: Hôm nay | Lịch hẹn* | Hồ sơ | Theo dõi | Thêm"
@@ -278,7 +278,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:67",
         "shotImage": "pema-kmp/feature/patients/build/shots/A3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/A3.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Clinic\", unread = 1)",
         "PemaBottomNav: Hôm nay | Lịch hẹn | Hồ sơ* | Theo dõi | Thêm"
@@ -381,7 +381,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:77",
         "shotImage": "pema-kmp/feature/workspace/build/shots/A4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/A4.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Clinic\", unread = 1)",
         "PemaBottomNav: Hôm nay | Lịch hẹn | Hồ sơ | Theo dõi* | Thêm"
@@ -453,7 +453,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:88",
         "shotImage": "pema-kmp/feature/workspace/build/shots/A5-vs.png"
       },
-      "reference": "pema-kmp/design-ref/A5.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Clinic\", unread = 1)",
         "PemaBottomNav: Hôm nay | Lịch hẹn | Hồ sơ | Theo dõi | Thêm*"
@@ -543,7 +543,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:93",
         "shotImage": "pema-kmp/feature/workspace/build/shots/A6-vs.png"
       },
-      "reference": "pema-kmp/design-ref/A6.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Clinic\", unread = 1)",
         "PemaBottomNav: Hôm nay* | Lịch hẹn | Hồ sơ | Theo dõi | Thêm",
@@ -648,7 +648,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:121",
         "shotImage": "pema-kmp/feature/workspace/build/shots/A7-vs.png"
       },
-      "reference": "pema-kmp/design-ref/A7.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Clinic\", unread = 1)",
         "PemaBottomNav: Hôm nay* | Lịch hẹn | Hồ sơ | Theo dõi | Thêm",
@@ -739,7 +739,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:104",
         "shotImage": "pema-kmp/feature/workspace/build/shots/B1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/B1.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Bác sĩ\")",
         "PemaBottomNav: Công việc* | Hồ sơ mẫu"
@@ -806,7 +806,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:83",
         "shotImage": "pema-kmp/feature/patients/build/shots/B2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/B2.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Bác sĩ\")",
         "PemaBottomNav: Công việc | Hồ sơ mẫu*"
@@ -876,7 +876,7 @@
         "shotTest": "pema-kmp/feature/care/src/jvmTest/kotlin/com/pema/clinic/feature/care/CareShotsTest.kt:39",
         "shotImage": "pema-kmp/feature/care/build/shots/C1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/C1.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"CSKH\")",
         "PemaBottomNav: Công việc* | Hồ sơ mẫu"
@@ -981,7 +981,7 @@
         "shotTest": "pema-kmp/feature/care/src/jvmTest/kotlin/com/pema/clinic/feature/care/CareShotsTest.kt:59",
         "shotImage": "pema-kmp/feature/care/build/shots/C2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/C2.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"CSKH\")",
         "PemaBottomNav: Công việc* | Hồ sơ mẫu",
@@ -1104,7 +1104,7 @@
         "shotTest": "pema-kmp/feature/care/src/jvmTest/kotlin/com/pema/clinic/feature/care/CareShotsTest.kt:81",
         "shotImage": "pema-kmp/feature/care/build/shots/C3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/C3.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"CSKH\")",
         "PemaBottomNav: Công việc* | Hồ sơ mẫu"
@@ -1175,7 +1175,7 @@
         "shotTest": "pema-kmp/feature/care/src/jvmTest/kotlin/com/pema/clinic/feature/care/CareShotsTest.kt:101",
         "shotImage": "pema-kmp/feature/care/build/shots/C4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/C4.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"CSKH\")",
         "PemaBottomNav: Công việc* | Hồ sơ mẫu"
@@ -1243,7 +1243,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:98",
         "shotImage": "pema-kmp/feature/patients/build/shots/C5-vs.png"
       },
-      "reference": "pema-kmp/design-ref/C5.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"CSKH\")",
         "PemaBottomNav: Công việc | Hồ sơ mẫu*"
@@ -1338,7 +1338,7 @@
         "shotTest": "pema-kmp/feature/care/src/jvmTest/kotlin/com/pema/clinic/feature/care/CareShotsTest.kt:122",
         "shotImage": "pema-kmp/feature/care/build/shots/C6-vs.png"
       },
-      "reference": "pema-kmp/design-ref/C6.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Chăm sóc khách hàng\")  // back button, padding 20"
       ],
@@ -1413,7 +1413,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:115",
         "shotImage": "pema-kmp/feature/workspace/build/shots/D1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/D1.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Kế toán\")",
         "PemaBottomNav: Công việc* | Hồ sơ mẫu"
@@ -1471,7 +1471,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:113",
         "shotImage": "pema-kmp/feature/patients/build/shots/D2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/D2.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Kế toán\")",
         "PemaBottomNav: Công việc | Hồ sơ mẫu*"
@@ -1566,7 +1566,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:124",
         "shotImage": "pema-kmp/feature/workspace/build/shots/E1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/E1.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Care\")",
         "PemaBottomNav: Trang chủ* | Hành trình | Tin nhắn | Hồ sơ"
@@ -1646,7 +1646,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:129",
         "shotImage": "pema-kmp/feature/workspace/build/shots/E2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/E2.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Care\")",
         "PemaBottomNav: Trang chủ | Hành trình* | Tin nhắn | Hồ sơ"
@@ -1717,7 +1717,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:144",
         "shotImage": "pema-kmp/feature/workspace/build/shots/E3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/E3.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Care\")",
         "PemaBottomNav: Trang chủ | Hành trình | Tin nhắn* | Hồ sơ"
@@ -1787,7 +1787,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:160",
         "shotImage": "pema-kmp/feature/workspace/build/shots/E4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/E4.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Care\")",
         "PemaBottomNav: Trang chủ | Hành trình | Tin nhắn | Hồ sơ*"
@@ -1860,7 +1860,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:125",
         "shotImage": "pema-kmp/feature/patients/build/shots/F1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F1.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Patient 360\")  // back button, padding 20"
       ],
@@ -1944,7 +1944,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:126",
         "shotImage": "pema-kmp/feature/patients/build/shots/F2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F2.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tư vấn\")  // back button, padding 20"
       ],
@@ -2004,7 +2004,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:127",
         "shotImage": "pema-kmp/feature/patients/build/shots/F3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F3.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Buổi điều trị\")  // back button, padding 20"
       ],
@@ -2064,7 +2064,7 @@
         "shotTest": "pema-kmp/feature/orders/src/jvmTest/kotlin/com/pema/clinic/feature/orders/OrdersShotTest.kt:13",
         "shotImage": "pema-kmp/feature/orders/build/shots/F4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F4.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Lên đơn nhanh\")  // back button, padding 20"
       ],
@@ -2141,7 +2141,7 @@
         "shotTest": "pema-kmp/feature/orders/src/jvmTest/kotlin/com/pema/clinic/feature/orders/OrdersShotTest.kt:34",
         "shotImage": "pema-kmp/feature/orders/build/shots/F5-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F5.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Kiểm tra đơn\")  // back button, padding 20"
       ],
@@ -2211,7 +2211,7 @@
         "shotTest": "pema-kmp/feature/orders/src/jvmTest/kotlin/com/pema/clinic/feature/orders/OrdersShotTest.kt:59",
         "shotImage": "pema-kmp/feature/orders/build/shots/F6-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F6.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Đơn thuốc & tư vấn\")  // back button, padding 20"
       ],
@@ -2279,7 +2279,7 @@
         "shotTest": "pema-kmp/feature/orders/src/jvmTest/kotlin/com/pema/clinic/feature/orders/OrdersShotTest.kt:71",
         "shotImage": "pema-kmp/feature/orders/build/shots/F7-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F7.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Phiếu A5\")  // back button, padding 20"
       ],
@@ -2342,7 +2342,7 @@
         "shotTest": "pema-kmp/feature/schedule/src/jvmTest/kotlin/com/pema/clinic/feature/schedule/ScheduleShotsTest.kt:10",
         "shotImage": "pema-kmp/feature/schedule/build/shots/F8-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F8.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Đặt lịch\")  // back button, padding 20"
       ],
@@ -2425,7 +2425,7 @@
         "shotTest": "pema-kmp/feature/schedule/src/jvmTest/kotlin/com/pema/clinic/feature/schedule/ScheduleShotsTest.kt:28",
         "shotImage": "pema-kmp/feature/schedule/build/shots/F9-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F9.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Chi tiết lịch\")  // back button, padding 20"
       ],
@@ -2489,7 +2489,7 @@
         "shotTest": "pema-kmp/feature/aftercare/src/jvmTest/kotlin/com/pema/clinic/feature/aftercare/AftercareShotTest.kt:55",
         "shotImage": "pema-kmp/feature/aftercare/build/shots/F10-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F10.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Phản hồi\")  // back button, padding 20"
       ],
@@ -2554,7 +2554,7 @@
         "shotTest": "pema-kmp/feature/billing/src/jvmTest/kotlin/com/pema/clinic/feature/billing/BillingShotTest.kt:14",
         "shotImage": "pema-kmp/feature/billing/build/shots/F11-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F11.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Thu ngân\")  // back button, padding 20"
       ],
@@ -2617,7 +2617,7 @@
         "shotTest": "pema-kmp/feature/billing/src/jvmTest/kotlin/com/pema/clinic/feature/billing/BillingShotTest.kt:21",
         "shotImage": "pema-kmp/feature/billing/build/shots/F12-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F12.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Thu ngân\")  // back button, padding 20",
         "PemaBottomSheet(title = \"Xác nhận thu tiền\", sub = \"580.000 ₫\")",
@@ -2688,7 +2688,7 @@
         "shotTest": "pema-kmp/feature/schedule/src/jvmTest/kotlin/com/pema/clinic/feature/schedule/ScheduleShotsTest.kt:48",
         "shotImage": "pema-kmp/feature/schedule/build/shots/F13-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F13.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Dịch vụ\")  // back button, padding 20"
       ],
@@ -2754,7 +2754,7 @@
         "shotTest": "pema-kmp/feature/schedule/src/jvmTest/kotlin/com/pema/clinic/feature/schedule/ScheduleShotsTest.kt:55",
         "shotImage": "pema-kmp/feature/schedule/build/shots/F14-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F14.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Bác sĩ & phòng\")  // back button, padding 20"
       ],
@@ -2821,7 +2821,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:128",
         "shotImage": "pema-kmp/feature/patients/build/shots/F15-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F15.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Ask Pema\")  // back button, padding 20"
       ],
@@ -2888,7 +2888,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:164",
         "shotImage": "pema-kmp/feature/workspace/build/shots/F16-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F16.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Hướng dẫn\")  // back button, padding 20"
       ],
@@ -2956,7 +2956,7 @@
         "shotTest": "pema-kmp/composeApp/src/jvmTest/kotlin/com/pema/clinic/ShellShotTest.kt:11",
         "shotImage": "pema-kmp/composeApp/build/shots/F17-vs.png"
       },
-      "reference": "pema-kmp/design-ref/F17.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Thu ngân\")  // back button, padding 20"
       ],
@@ -3010,7 +3010,7 @@
         "shotTest": "pema-kmp/feature/aftercare/src/jvmTest/kotlin/com/pema/clinic/feature/aftercare/AftercareShotTest.kt:13",
         "shotImage": "pema-kmp/feature/aftercare/build/shots/G1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G1.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Chăm sóc tại nhà\")  // back button, padding 20"
       ],
@@ -3070,7 +3070,7 @@
         "shotTest": "pema-kmp/feature/aftercare/src/jvmTest/kotlin/com/pema/clinic/feature/aftercare/AftercareShotTest.kt:31",
         "shotImage": "pema-kmp/feature/aftercare/build/shots/G2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G2.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Gửi cập nhật\")  // back button, padding 20"
       ],
@@ -3141,7 +3141,7 @@
         "shotTest": "pema-kmp/feature/schedule/src/jvmTest/kotlin/com/pema/clinic/feature/schedule/ScheduleShotsTest.kt:62",
         "shotImage": "pema-kmp/feature/schedule/build/shots/G3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G3.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Lịch của tôi\")  // back button, padding 20"
       ],
@@ -3201,7 +3201,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:129",
         "shotImage": "pema-kmp/feature/patients/build/shots/G4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G4.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Kế hoạch điều trị\")  // back button, padding 20"
       ],
@@ -3269,7 +3269,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/PatientsShotTest.kt:130",
         "shotImage": "pema-kmp/feature/patients/build/shots/G5-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G5.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Ảnh tiến triển\")  // back button, padding 20"
       ],
@@ -3330,7 +3330,7 @@
         "shotTest": "pema-kmp/feature/orders/src/jvmTest/kotlin/com/pema/clinic/feature/orders/OrdersShotTest.kt:84",
         "shotImage": "pema-kmp/feature/orders/build/shots/G6-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G6.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Đơn thuốc & tư vấn\")  // back button, padding 20"
       ],
@@ -3394,7 +3394,7 @@
         "shotTest": "pema-kmp/feature/billing/src/jvmTest/kotlin/com/pema/clinic/feature/billing/BillingShotTest.kt:28",
         "shotImage": "pema-kmp/feature/billing/build/shots/G7-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G7.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Hóa đơn\")  // back button, padding 20"
       ],
@@ -3449,7 +3449,7 @@
         "shotTest": "pema-kmp/feature/aftercare/src/jvmTest/kotlin/com/pema/clinic/feature/aftercare/AftercareShotTest.kt:46",
         "shotImage": "pema-kmp/feature/aftercare/build/shots/G8-vs.png"
       },
-      "reference": "pema-kmp/design-ref/G8.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Quyền riêng tư\")  // back button, padding 20"
       ],
@@ -3503,7 +3503,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:41",
         "shotImage": "pema-kmp/feature/finance/build/shots/H1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H1.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
@@ -3599,7 +3599,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:47",
         "shotImage": "pema-kmp/feature/finance/build/shots/H2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H2.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
@@ -3671,7 +3671,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:57",
         "shotImage": "pema-kmp/feature/finance/build/shots/H3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H3.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20",
         "PemaExtendedFab(\"Ghi lượt\")"
@@ -3792,7 +3792,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:63",
         "shotImage": "pema-kmp/feature/finance/build/shots/H4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H4.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20",
         "PemaExtendedFab(\"Ghi lượt\")",
@@ -3914,7 +3914,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:80",
         "shotImage": "pema-kmp/feature/finance/build/shots/H5-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H5.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
@@ -3995,7 +3995,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:86",
         "shotImage": "pema-kmp/feature/finance/build/shots/H6-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H6.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
@@ -4075,7 +4075,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:92",
         "shotImage": "pema-kmp/feature/finance/build/shots/H7-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H7.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài chính Pema\")  // back button, padding 20"
       ],
@@ -4137,7 +4137,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:105",
         "shotImage": "pema-kmp/feature/finance/build/shots/H8-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H8.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Chính sách thủ thuật\")  // back button, padding 20"
       ],
@@ -4201,7 +4201,7 @@
         "shotTest": "pema-kmp/feature/finance/src/jvmTest/kotlin/com/pema/clinic/feature/finance/FinanceShotsTest.kt:111",
         "shotImage": "pema-kmp/feature/finance/build/shots/H9-vs.png"
       },
-      "reference": "pema-kmp/design-ref/H9.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Ghi lượt đã thực hiện\")  // back button, padding 20"
       ],
@@ -4315,7 +4315,7 @@
         "shotTest": "pema-kmp/feature/operations/src/jvmTest/kotlin/com/pema/clinic/feature/operations/OperationsShotTest.kt:14",
         "shotImage": "pema-kmp/feature/operations/build/shots/I1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I1.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tổng quan\")  // back button, padding 20"
       ],
@@ -4429,7 +4429,7 @@
         "shotTest": "pema-kmp/feature/operations/src/jvmTest/kotlin/com/pema/clinic/feature/operations/OperationsShotTest.kt:21",
         "shotImage": "pema-kmp/feature/operations/build/shots/I2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I2.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tiếp đón hôm nay\")  // back button, padding 20",
         "PemaExtendedFab(\"Đặt lịch mới\")"
@@ -4543,7 +4543,7 @@
         "shotTest": "pema-kmp/feature/operations/src/jvmTest/kotlin/com/pema/clinic/feature/operations/OperationsShotTest.kt:28",
         "shotImage": "pema-kmp/feature/operations/build/shots/I3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I3.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Điều phối theo phòng\")  // back button, padding 20"
       ],
@@ -4651,7 +4651,7 @@
         "shotTest": "pema-kmp/feature/operations/src/jvmTest/kotlin/com/pema/clinic/feature/operations/OperationsShotTest.kt:35",
         "shotImage": "pema-kmp/feature/operations/build/shots/I4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I4.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Đặt lịch hẹn\")  // back button, padding 20"
       ],
@@ -4742,7 +4742,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/ClinicToolsShotTest.kt:13",
         "shotImage": "pema-kmp/feature/patients/build/shots/I5-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I5.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Hồ sơ mới\")  // back button, padding 20"
       ],
@@ -4813,7 +4813,7 @@
         "shotTest": "pema-kmp/feature/aftercare/src/jvmTest/kotlin/com/pema/clinic/feature/aftercare/FollowUpInboxShotTest.kt:13",
         "shotImage": "pema-kmp/feature/aftercare/build/shots/I6-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I6.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Follow-up Inbox\")  // back button, padding 20"
       ],
@@ -4899,7 +4899,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/ClinicToolsShotTest.kt:27",
         "shotImage": "pema-kmp/feature/patients/build/shots/I7-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I7.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Ảnh trước / sau\")  // back button, padding 20"
       ],
@@ -4996,7 +4996,7 @@
         "shotTest": "pema-kmp/feature/operations/src/jvmTest/kotlin/com/pema/clinic/feature/operations/OperationsShotTest.kt:54",
         "shotImage": "pema-kmp/feature/operations/build/shots/I8-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I8.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Khóa thời gian phòng\")  // back button, padding 20"
       ],
@@ -5092,7 +5092,7 @@
         "shotTest": "pema-kmp/feature/operations/src/jvmTest/kotlin/com/pema/clinic/feature/operations/OperationsShotTest.kt:72",
         "shotImage": "pema-kmp/feature/operations/build/shots/I9-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I9.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Chỉnh dịch vụ\")  // back button, padding 20"
       ],
@@ -5176,7 +5176,7 @@
         "shotTest": "pema-kmp/feature/billing/src/jvmTest/kotlin/com/pema/clinic/feature/billing/InvoiceCashierShotTest.kt:13",
         "shotImage": "pema-kmp/feature/billing/build/shots/I10-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I10.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Thu ngân · hóa đơn\")  // back button, padding 20"
       ],
@@ -5277,7 +5277,7 @@
         "shotTest": "pema-kmp/feature/billing/src/jvmTest/kotlin/com/pema/clinic/feature/billing/InvoiceCashierShotTest.kt:20",
         "shotImage": "pema-kmp/feature/billing/build/shots/I11-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I11.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Thu ngân · hóa đơn\")  // back button, padding 20",
         "PemaBottomSheet(title = \"Thu tiền · Nguyễn Thu Hà\", sub = \"HD-DEMO-001 · Còn lại 150.000 ₫\")",
@@ -5394,7 +5394,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/ClinicToolsShotTest.kt:42",
         "shotImage": "pema-kmp/feature/patients/build/shots/I12-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I12.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Ask Pema · hỏi đáp\")  // back button, padding 20"
       ],
@@ -5475,7 +5475,7 @@
         "shotTest": "pema-kmp/feature/care/src/jvmTest/kotlin/com/pema/clinic/feature/care/CareRecordShotTest.kt:19",
         "shotImage": "pema-kmp/feature/care/build/shots/I13-vs.png"
       },
-      "reference": "pema-kmp/design-ref/I13.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Ghi nhận CSKH\")  // back button, padding 20"
       ],
@@ -5573,7 +5573,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360ClinicalShotTest.kt:19",
         "shotImage": "pema-kmp/feature/patients/build/shots/J1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J1.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tiền sử & chẩn đoán\")  // back button, padding 20"
       ],
@@ -5662,7 +5662,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360ClinicalShotTest.kt:43",
         "shotImage": "pema-kmp/feature/patients/build/shots/J2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J2.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"AI brief trước buổi hẹn\")  // back button, padding 20"
       ],
@@ -5745,7 +5745,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360ClinicalShotTest.kt:57",
         "shotImage": "pema-kmp/feature/patients/build/shots/J3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J3.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Kế hoạch điều trị\")  // back button, padding 20"
       ],
@@ -5849,7 +5849,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360ClinicalShotTest.kt:64",
         "shotImage": "pema-kmp/feature/patients/build/shots/J4-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J4.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Điều chỉnh kế hoạch\")  // back button, padding 20"
       ],
@@ -5928,7 +5928,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360ClinicalShotTest.kt:78",
         "shotImage": "pema-kmp/feature/patients/build/shots/J5-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J5.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Ghi buổi điều trị\")  // back button, padding 20"
       ],
@@ -6027,7 +6027,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360AdminShotTest.kt:13",
         "shotImage": "pema-kmp/feature/patients/build/shots/J6-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J6.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Dịch vụ & tài chính\")  // back button, padding 20"
       ],
@@ -6124,7 +6124,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360AdminShotTest.kt:15",
         "shotImage": "pema-kmp/feature/patients/build/shots/J7-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J7.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"CRM & CSKH hồ sơ\")  // back button, padding 20"
       ],
@@ -6221,7 +6221,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360AdminShotTest.kt:17",
         "shotImage": "pema-kmp/feature/patients/build/shots/J8-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J8.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Lịch sử hợp nhất\")  // back button, padding 20"
       ],
@@ -6304,7 +6304,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360AdminShotTest.kt:19",
         "shotImage": "pema-kmp/feature/patients/build/shots/J9-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J9.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Nhắn tin người bệnh\")  // back button, padding 20"
       ],
@@ -6379,7 +6379,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360AdminShotTest.kt:21",
         "shotImage": "pema-kmp/feature/patients/build/shots/J10-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J10.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Thông tin cần nhớ\")  // back button, padding 20"
       ],
@@ -6452,7 +6452,7 @@
         "shotTest": "pema-kmp/feature/patients/src/jvmTest/kotlin/com/pema/clinic/feature/patients/Patient360AdminShotTest.kt:23",
         "shotImage": "pema-kmp/feature/patients/build/shots/J11-vs.png"
       },
-      "reference": "pema-kmp/design-ref/J11.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Gửi chăm sóc tại nhà\")  // back button, padding 20"
       ],
@@ -6520,7 +6520,7 @@
         "shotTest": "pema-kmp/feature/schedule/src/jvmTest/kotlin/com/pema/clinic/feature/schedule/PatientAppointmentsShotTest.kt:9",
         "shotImage": "pema-kmp/feature/schedule/build/shots/K1-vs.png"
       },
-      "reference": "pema-kmp/design-ref/K1.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Lịch hẹn\")  // back button, padding 20"
       ],
@@ -6603,7 +6603,7 @@
         "shotTest": "pema-kmp/feature/billing/src/jvmTest/kotlin/com/pema/clinic/feature/billing/PatientDocumentsShotTest.kt:9",
         "shotImage": "pema-kmp/feature/billing/build/shots/K2-vs.png"
       },
-      "reference": "pema-kmp/design-ref/K2.png",
+      "reference": "",
       "frame": [
         "DetailScaffold(title = \"Tài liệu & hóa đơn\")  // back button, padding 20"
       ],
@@ -6675,7 +6675,7 @@
         "shotTest": "pema-kmp/feature/workspace/src/jvmTest/kotlin/com/pema/clinic/feature/workspace/WorkspaceShotsTest.kt:136",
         "shotImage": "pema-kmp/feature/workspace/build/shots/K3-vs.png"
       },
-      "reference": "pema-kmp/design-ref/K3.png",
+      "reference": "",
       "frame": [
         "PemaScaffold + PemaMainTopBar(roleLabel = \"Care\")",
         "PemaBottomNav: Trang chủ | Hành trình* | Tin nhắn | Hồ sơ"

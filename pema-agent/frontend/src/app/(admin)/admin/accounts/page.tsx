@@ -6,27 +6,35 @@
 // `warning` that `update()` used to return does not exist in the contract, so it is gone. After a
 // change the page also refreshes the shell's account list (`useAdminAccounts().reload`). NEW: the
 // channel switchboard (kill switch, daily cap, window) on top, and the policy profile badge per account.
+// Package O: each account is also a clinic identity (purpose badge, the limits that really apply, who is on duty,
+// "Sửa danh tính", "Lịch trực"), and a card below shows the internal notification account. The old edit drawer
+// (token, QR, brain) stays: identity fields are a separate dialog and never carry a credential.
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/admin/layout/page-header";
-import { IconSignal } from "@/components/admin/shared/dashboard-icons";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { Badge, InitialAvatar } from "@/components/admin/shared/ui-bits";
 import { AccountEditDrawer } from "@/components/admin/accounts/account-edit-drawer";
 import { PolicyProfileBadge } from "@/components/admin/accounts/policy-profile-badge";
+import { IdentityEditDialog } from "@/components/admin/accounts/identity-edit-dialog";
+import { IdentityLines } from "@/components/admin/accounts/identity-lines";
+import { NotifierCard } from "@/components/admin/accounts/notifier-card";
 import { QrLoginModal } from "@/components/admin/accounts/qr-login-modal";
 import { ChannelSettingsPanel } from "@/components/admin/channels/channel-settings-panel";
 import { NHAN_KENH_NGAN } from "@/lib/admin/accounts/mo-ta-loai-kenh";
 import { useAdminAccounts } from "@/lib/admin/shared/accounts-context";
-import type { Account, Agent } from "@/lib/api";
+import type { Account, Agent, Schemas } from "@/lib/api";
 import { errorMessage, http, unwrap } from "@/lib/api/client";
+import { PURPOSE_LABEL } from "@/lib/admin/accounts/identity-view";
+import { useIdentities } from "@/lib/identities/use-identities";
+import { useSession } from "@/lib/session/session-context";
 
 type BadgeTone = "blue" | "gray" | "green" | "red" | "amber";
 
 const NOTICE_CLASS: Record<"red" | "amber", string> = {
-  red: "text-red-600 dark:text-red-400",
-  amber: "text-amber-600 dark:text-amber-400",
+  red: "text-danger",
+  amber: "text-warning",
 };
 
 /**
@@ -56,6 +64,11 @@ export default function AccountsPage() {
   const [notice, setNotice] = useState<{ tone: "red" | "amber"; text: string } | null>(null);
   const { confirm, confirmDialog } = useConfirmDialog();
   const { reload: reloadShell } = useAdminAccounts();
+  const { can } = useSession();
+  const { identities, reload: reloadIdentities } = useIdentities();
+  const [identityEditing, setIdentityEditing] = useState<Schemas["IdentityOut"] | null>(null);
+  const canEditIdentity = can("identity.manage");
+  const canSeeRoster = can("roster.read");
 
   const reload = useCallback(async () => {
     // Danh sách agent chỉ để hiện tên não; thiếu quyền admin.agents thì vẫn xem được account.
@@ -66,7 +79,8 @@ export default function AccountsPage() {
     setAccounts(accs);
     setAgents(ags);
     reloadShell();
-  }, [reloadShell]);
+    reloadIdentities();
+  }, [reloadShell, reloadIdentities]);
 
   useEffect(() => {
     reload().catch(() => setNotice({ tone: "red", text: "Không tải được danh sách" }));
@@ -127,13 +141,12 @@ export default function AccountsPage() {
   return (
     <div>
       <PageHeader
-        icon={IconSignal}
         title="Tài khoản Zalo"
-        subtitle="Tài khoản Zalo của bot - mỗi account gắn một agent (não) và có policies riêng"
+        subtitle="Tài khoản Zalo của bot - mỗi account là một danh tính: khách chỉ thấy tên danh tính, không thấy tên nhân viên"
         aside={
           <button
             onClick={() => setCreating(true)}
-            className="min-h-11 rounded-lg bg-brand-500 px-4 py-2 text-[14px] font-medium text-white hover:bg-brand-600 sm:min-h-0"
+            className="min-h-11 rounded-control bg-brand-500 px-4 py-2 text-body font-medium text-white hover:bg-brand-600 sm:min-h-0"
           >
             Thêm account
           </button>
@@ -142,7 +155,14 @@ export default function AccountsPage() {
 
       <ChannelSettingsPanel />
 
-      {notice && <p className={`mb-4 text-[13px] ${NOTICE_CLASS[notice.tone]}`}>{notice.text}</p>}
+      {notice && <p className={`mb-4 text-small ${NOTICE_CLASS[notice.tone]}`}>{notice.text}</p>}
+
+      <div className="mb-3">
+        <h2 className="text-section font-bold text-heading">Danh tính</h2>
+        <p className="text-label text-ink-soft">
+          Khách hàng nhìn thấy tên của danh tính khi nhắn tin
+        </p>
+      </div>
 
       <div className="grid gap-3 2xl:grid-cols-2">
         {accounts.length === 0 && (
@@ -154,6 +174,7 @@ export default function AccountsPage() {
         {accounts.map((acc) => {
           const agent = agentName(acc.agent_id);
           const status = statusBadge(acc);
+          const identity = identities.find((i) => i.id === acc.id);
           return (
             <div key={acc.id} className="gc-card flex flex-wrap items-center gap-4 px-5 py-4">
               <InitialAvatar name={acc.label} />
@@ -161,10 +182,11 @@ export default function AccountsPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold break-words text-ink">{acc.label}</span>
                   <Badge tone="blue">{NHAN_KENH_NGAN[acc.channel]}</Badge>
+                  {identity && <Badge tone="blue">{PURPOSE_LABEL[identity.purpose]}</Badge>}
                   <PolicyProfileBadge profile={acc.policy_profile} />
                   <Badge tone={status.tone}>{status.text}</Badge>
                 </div>
-                <div className="mt-0.5 text-[12px] break-words text-ink-soft">
+                <div className="mt-0.5 text-label break-words text-ink-soft">
                   {acc.id} · não: {agent ? `${agent.icon} ${agent.name}` : acc.agent_id}
                 </div>
               </div>
@@ -176,23 +198,23 @@ export default function AccountsPage() {
                   aria-label={`Bật account ${acc.label}`}
                   onClick={() => void toggleEnabled(acc)}
                   className={`relative h-11 w-11 shrink-0 rounded-full sm:h-5 sm:w-9 sm:transition-colors ${
-                    acc.enabled ? "sm:bg-brand-500" : "sm:bg-slate-300 sm:dark:bg-slate-600"
+                    acc.enabled ? "sm:bg-brand-500" : "sm:bg-ink-soft/40"
                   }`}
                   title={acc.enabled ? "Đang bật - bấm để tắt" : "Đang tắt - bấm để bật"}
                 >
                   <span
                     className={`absolute top-1/2 left-1/2 h-5 w-9 -translate-x-1/2 -translate-y-1/2 rounded-full transition-colors sm:hidden ${
-                      acc.enabled ? "bg-brand-500" : "bg-slate-300 dark:bg-slate-600"
+                      acc.enabled ? "bg-brand-500" : "bg-ink-soft/40"
                     }`}
                   >
                     <span
-                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all ${
+                      className={`absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow-sm transition-all ${
                         acc.enabled ? "left-[18px]" : "left-0.5"
                       }`}
                     />
                   </span>
                   <span
-                    className={`absolute top-0.5 hidden h-4 w-4 rounded-full bg-white shadow-sm transition-all sm:block ${
+                    className={`absolute top-0.5 hidden h-4 w-4 rounded-full bg-surface shadow-sm transition-all sm:block ${
                       acc.enabled ? "left-[18px]" : "left-0.5"
                     }`}
                   />
@@ -202,28 +224,60 @@ export default function AccountsPage() {
                 {acc.channel === "zalo_personal" && (
                   <button
                     onClick={() => setQrAccount(acc)}
-                    className="min-h-11 rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-brand-600 hover:bg-brand-50 sm:min-h-0"
+                    className="min-h-11 rounded-control border border-line px-3 py-1.5 text-small font-medium text-brand-600 hover:bg-brand-50 sm:min-h-0"
                   >
                     Login QR
                   </button>
                 )}
                 <button
                   onClick={() => setEditing(acc)}
-                  className="min-h-11 rounded-lg border border-line px-3 py-1.5 text-[13px] font-medium text-ink hover:bg-tile sm:min-h-0"
+                  className="min-h-11 rounded-control border border-line px-3 py-1.5 text-small font-medium text-ink hover:bg-tile sm:min-h-0"
                 >
                   Sửa
                 </button>
                 <button
                   onClick={() => void remove(acc)}
-                  className="min-h-11 rounded-lg px-3 py-1.5 text-[13px] text-red-600 hover:bg-red-50 sm:min-h-0 dark:text-red-400 dark:hover:bg-red-950/40"
+                  className="min-h-11 rounded-control px-3 py-1.5 text-small text-danger hover:bg-danger-soft sm:min-h-0"
                 >
                   Xóa
                 </button>
               </div>
+              {identity && (
+                <IdentityLines
+                  identity={identity}
+                  canEdit={canEditIdentity}
+                  canRoster={canSeeRoster}
+                  onEdit={() => setIdentityEditing(identity)}
+                />
+              )}
             </div>
           );
         })}
       </div>
+
+      {identities.length > 0 && (
+        <div className="mt-4">
+          <NotifierCard
+            identities={identities}
+            running={accounts.some(
+              (a) => a.running && identities.some((i) => i.id === a.id && i.purpose === "internal"),
+            )}
+            canManage={can("notify.manage")}
+            onIdentityChanged={() => void reload()}
+          />
+        </div>
+      )}
+
+      {identityEditing && (
+        <IdentityEditDialog
+          identity={identityEditing}
+          onClose={() => setIdentityEditing(null)}
+          onSaved={() => {
+            setIdentityEditing(null);
+            void reload();
+          }}
+        />
+      )}
 
       {(editing || creating) && (
         <AccountEditDrawer

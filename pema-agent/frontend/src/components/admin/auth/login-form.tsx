@@ -79,11 +79,11 @@ export function LoginForm() {
         <div className="mb-6 flex flex-col items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element -- fixed brand asset */}
           <img src="/pema-logo.png" alt="Pema" width={294} height={156} className="h-20 w-auto" />
-          <h1 className="text-[17px] font-semibold text-ink">Đăng nhập CSKH</h1>
-          <div className="text-[13px] text-ink-soft">Chăm sóc khách hàng và trợ lý AI</div>
+          <h1 className="text-section font-semibold text-ink">Đăng nhập CSKH</h1>
+          <div className="text-small text-ink-soft">Chăm sóc khách hàng và trợ lý AI</div>
         </div>
 
-        <label htmlFor="email" className="mb-1.5 block text-[13px] font-medium text-ink">
+        <label htmlFor="email" className="mb-1.5 block text-small font-medium text-ink">
           Email
         </label>
         <input
@@ -96,12 +96,12 @@ export function LoginForm() {
           className="gc-input mb-3 w-full"
         />
 
-        <label htmlFor="password" className="mb-1.5 block text-[13px] font-medium text-ink">
+        <label htmlFor="password" className="mb-1.5 block text-small font-medium text-ink">
           Mật khẩu
         </label>
         <SecretInput id="password" value={password} onChange={setPassword} className="mb-3" />
         {error && (
-          <p role="alert" className="mb-3 text-[13px] text-red-600 dark:text-red-400">
+          <p role="alert" className="mb-3 text-small text-danger">
             {error}
           </p>
         )}
@@ -109,7 +109,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={busy || !email.trim() || password.length === 0}
-          className="min-h-11 w-full rounded-lg bg-brand-500 py-2.5 text-[14px] font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+          className="min-h-11 w-full rounded-control bg-brand-500 py-2.5 text-body font-medium text-white hover:bg-brand-600 disabled:opacity-50"
         >
           {busy ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>

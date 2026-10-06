@@ -17,19 +17,22 @@ from pema.api.dashboard_auth import AuthenticatedUser
 from pema.clinic.actions import conversations
 from pema.clinic.rbac import is_doctor_scoped, permissions_for
 from pema.core.db import ClinicDatabase
+from pema.live.presence import PresenceEntry
 from pema.live.services import LiveServices
 from pema.live.sse import StreamAccess
 from pema_contracts.actions import ActionContext
 from pema_contracts.conversations import ConversationSummary
 from pema_contracts.errors import DomainError, ErrorCode
-from pema_contracts.live import LiveEventType, PresenceViewer
+from pema_contracts.live import LiveEventType, PresenceState, PresenceViewer
 from pema_contracts.roles import ActorType, Permission
 
 EVENT_PERMISSION: dict[LiveEventType, Permission] = {
     LiveEventType.INBOX_CHANGED: Permission.CONVERSATION_READ,
     LiveEventType.PRESENCE_CHANGED: Permission.CONVERSATION_READ,
+    LiveEventType.ASSIGNMENT_CHANGED: Permission.CONVERSATION_READ,
     LiveEventType.REVIEW_CHANGED: Permission.REVIEW_READ,
     LiveEventType.TASKS_CHANGED: Permission.CRM_TASK_READ,
+    LiveEventType.APPOINTMENTS_CHANGED: Permission.APPOINTMENT_READ,
     LiveEventType.HANDOFF_CHANGED: Permission.CARE_READ,
     LiveEventType.CARE_CHANGED: Permission.CARE_READ,
 }
@@ -55,19 +58,26 @@ def stream_access_of(user: AuthenticatedUser) -> StreamAccess:
 async def with_viewers[S: ConversationSummary](
     db: ClinicDatabase, ctx: ActionContext, live: LiveServices | None, items: Sequence[S]
 ) -> list[S]:
-    """Fill ``viewers`` of each conversation: the colleagues who have it open, never the caller. One Redis
-    round trip for the whole page and one query for the names; a presence store that is down means none."""
+    """Fill ``viewers`` of each conversation: the colleagues who have it open, never the caller and never the
+    holder, and ``holder_presence``: whether the holder (package O, step O2) has it open and in which state,
+    so the screen can tell "đang trả lời" from "đang xem". One Redis round trip for the whole page and one
+    query for the names; a presence store that is down means none."""
     if live is None or not items:
         return list(items)
     present = await live.presence.viewers([item.id for item in items])
-    others = {
-        conversation_id: [e for e in entries if e.user_id != ctx.actor_user_id]
-        for conversation_id, entries in present.items()
-    }
+    holders = {item.id: item.assigned_user_id for item in items}
+    others: dict[UUID, list[PresenceEntry]] = {}
+    holder_state: dict[UUID, PresenceState] = {}
+    for conversation_id, entries in present.items():
+        holder = holders.get(conversation_id)
+        others[conversation_id] = [
+            e for e in entries if e.user_id != ctx.actor_user_id and e.user_id != holder
+        ]
+        for entry in entries:
+            if holder is not None and entry.user_id == holder:
+                holder_state[conversation_id] = entry.state
     user_ids = sorted({e.user_id for entries in others.values() for e in entries}, key=str)
-    if not user_ids:
-        return list(items)
-    names = await conversations.staff_display_names(db, ctx, user_ids)
+    names = await conversations.staff_display_names(db, ctx, user_ids) if user_ids else {}
     result: list[S] = []
     for item in items:
         viewers = [
@@ -75,7 +85,12 @@ async def with_viewers[S: ConversationSummary](
             for e in others.get(item.id, [])
             if e.user_id in names
         ]
-        result.append(item.model_copy(update={"viewers": viewers}) if viewers else item)
+        update: dict[str, object] = {}
+        if viewers:
+            update["viewers"] = viewers
+        if item.id in holder_state:
+            update["holder_presence"] = holder_state[item.id]
+        result.append(item.model_copy(update=update) if update else item)
     return result
 
 

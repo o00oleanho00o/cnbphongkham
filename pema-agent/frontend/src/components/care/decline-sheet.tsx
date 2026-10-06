@@ -11,6 +11,8 @@ import { Sheet } from "@/components/ops/sheet";
 import { REASON_MAX, declineError } from "@/lib/care/forms";
 import { ROLE_LABEL, useSession } from "@/lib/session/session-context";
 import { useAssignableStaff } from "@/lib/staff/use-assignable-staff";
+import { cx } from "@/ui/classnames";
+import { FIELD_BASE_CLASS } from "@/ui/field";
 
 const NOBODY = "";
 
@@ -74,7 +76,7 @@ export function DeclineSheet({
         >
           <textarea
             id="decline-reason"
-            className="gc-input min-h-24 w-full"
+            className={cx(FIELD_BASE_CLASS, "min-h-24 w-full")}
             value={reason}
             maxLength={REASON_MAX}
             onChange={(e) => setReason(e.target.value)}
@@ -83,7 +85,7 @@ export function DeclineSheet({
             aria-describedby={problem ? "decline-reason-error" : undefined}
           />
           {problem && (
-            <p id="decline-reason-error" role="alert" className="mt-1 text-[12px] text-red-700">
+            <p id="decline-reason-error" role="alert" className="mt-1 text-label text-danger">
               {problem}
             </p>
           )}
@@ -106,7 +108,7 @@ export function DeclineSheet({
           <Notice
             tone="warn"
             action={
-              <button type="button" onClick={reload} className="min-h-9 px-2 text-[13px] underline">
+              <button type="button" onClick={reload} className="min-h-9 px-2 text-small underline">
                 Thử lại
               </button>
             }

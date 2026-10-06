@@ -8,7 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 
 import { IconMenu } from "@/components/admin/shared/dashboard-icons";
-import { isActivePath, type NavItem } from "@/lib/nav";
+import { isItemActive, type NavItem } from "@/lib/nav";
 import { coCanHoiTruocKhiRoi, xinPhepRoiTrang } from "@/lib/admin/shared/unsaved-changes-guard";
 
 export function MobileTabBar({ tabs, onOpenMenu }: { tabs: NavItem[]; onOpenMenu: () => void }) {
@@ -24,17 +24,17 @@ export function MobileTabBar({ tabs, onOpenMenu }: { tabs: NavItem[]; onOpenMenu
   return (
     <nav
       aria-label="Điều hướng nhanh"
-      className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden print:hidden"
     >
       {tabs.map((item) => {
-        const active = isActivePath(pathname, item.to);
+        const active = isItemActive(pathname, item);
         return (
           <Link
             key={item.to}
             href={item.to}
             aria-current={active ? "page" : undefined}
             onClick={(e) => guard(e, item.to)}
-            className={`flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${
+            className={`flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-micro font-medium ${
               active ? "text-brand-500" : "text-ink-soft"
             }`}
           >
@@ -46,7 +46,7 @@ export function MobileTabBar({ tabs, onOpenMenu }: { tabs: NavItem[]; onOpenMenu
       <button
         type="button"
         onClick={onOpenMenu}
-        className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-ink-soft"
+        className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-micro font-medium text-ink-soft"
       >
         <IconMenu size={21} />
         Menu

@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import date, datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, Date, DateTime, Integer, Text, func
+from sqlalchemy import BigInteger, Boolean, Date, DateTime, Integer, Text, func
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
 
 from pema.clinic.models.base import Base
@@ -34,6 +35,8 @@ class Patient(Base):
     latest_outcome: Mapped[str | None] = mapped_column(Text, default=None)
     next_action_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     next_action_type: Mapped[str | None] = mapped_column(Text, default=None)
+    alerts: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
+    """The 'Thông tin cần nhớ' lines (U9). Clinical-ish text: never in audit details or logs."""
     version: Mapped[int] = mapped_column(Integer, default=1)
 
     __mapper_args__ = {"version_id_col": version}  # noqa: RUF012
@@ -64,10 +67,18 @@ class TreatmentPlan(Base):
     doctor_id: Mapped[UUID | None] = mapped_column(default=None)
     service_code: Mapped[str] = mapped_column(Text)
     title: Mapped[str] = mapped_column(Text)
+    goal: Mapped[str | None] = mapped_column(Text, default=None)
     total_sessions: Mapped[int] = mapped_column(Integer, default=1)
     completed_sessions: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[str] = mapped_column(Text, default="active")
+    unit_price_vnd: Mapped[int | None] = mapped_column(BigInteger, default=None)
+    discount_vnd: Mapped[int | None] = mapped_column(BigInteger, default=None)
+    agreed_price_vnd: Mapped[int | None] = mapped_column(BigInteger, default=None)
+    service_terms_version: Mapped[int | None] = mapped_column(Integer, default=None)
+    """The price, the discount and the catalog snapshot fixed when 'Thêm dịch vụ vào liệu trình' saved the
+    plan (U9); null on a plan the Kế hoạch tab made."""
     version: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __mapper_args__ = {"version_id_col": version}  # noqa: RUF012
 
@@ -85,6 +96,19 @@ class TreatmentSession(Base):
     title: Mapped[str] = mapped_column(Text)
     note: Mapped[str | None] = mapped_column(Text, default=None)
     status: Mapped[str] = mapped_column(Text, default="completed")
+    session_type: Mapped[str | None] = mapped_column(Text, default=None)
+    region: Mapped[str | None] = mapped_column(Text, default=None)
+    view: Mapped[str | None] = mapped_column(Text, default=None)
+    next_visit_on: Mapped[date | None] = mapped_column(Date, default=None)
+    aftercare: Mapped[str | None] = mapped_column(Text, default=None)
+    consent_id: Mapped[UUID | None] = mapped_column(default=None)
+    reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
+    reviewed_by: Mapped[UUID | None] = mapped_column(default=None)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    created_by: Mapped[UUID | None] = mapped_column(default=None)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+
+    __mapper_args__ = {"version_id_col": version}  # noqa: RUF012
 
 
 class Consent(Base):

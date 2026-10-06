@@ -1216,7 +1216,7 @@ export interface paths {
         put?: never;
         /**
          * Owner creates a staff account
-         * @description Owner only (`admin.users`). Role is one of owner, manager, doctor, cs_staff, reception (never `patient`). The e-mail is the sign-in name, unique per clinic (409 when taken). The initial password has the same 8-character floor as a password change. Limited to 5 creations per minute per owner. The audit entry never holds the password, the name or the e-mail.
+         * @description Owner only (`admin.users`). Role is one of owner, manager, doctor, cs_staff, reception, accountant (never `patient`). The e-mail is the sign-in name, unique per clinic (409 when taken). The initial password has the same 8-character floor as a password change. Limited to 5 creations per minute per owner. The audit entry never holds the password, the name or the e-mail.
          */
         post: operations["admin_users_create_user"];
         delete?: never;
@@ -1277,6 +1277,43 @@ export interface paths {
         put?: never;
         /** Book an appointment (validated; optional CRM task link) */
         post: operations["appointments_create_appointment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments/free-slot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** First free start of a day for a patient and a doctor */
+        get: operations["appointments_get_free_slot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The clinic board: one day or seven days, optionally one doctor
+         * @description Every status is returned; the screen hides cancelled and missed by default. A doctor gets only their own appointments. Declared before `/appointments/{appointment_id}` so `schedule` is not read as an id.
+         */
+        get: operations["appointments_get_schedule"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1346,6 +1383,23 @@ export interface paths {
         put?: never;
         /** Treatment finished (in_progress to completed) */
         post: operations["appointments_complete_appointment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/appointments/{appointment_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirmed with the patient (booked to confirmed) */
+        post: operations["appointments_confirm_appointment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1715,6 +1769,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/catalog/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search the product catalog */
+        get: operations["catalog_list_products"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalog/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Counts and provenance of the catalog */
+        get: operations["catalog_catalog_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/consult-notes/{note_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve a draft into Patient 360 (the clinician may have edited the text) */
+        post: operations["patient_care_approve_consult_note"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/conversations": {
         parameters: {
             query?: never;
@@ -1748,6 +1853,63 @@ export interface paths {
         head?: never;
         /** Assign or change status */
         patch: operations["conversations_update_conversation"];
+        trace?: never;
+    };
+    "/api/v1/conversations/{conversation_id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Put a colleague on the conversation (owner, manager)
+         * @description `user_id` null takes it off the holder and puts it back in the queue.
+         */
+        post: operations["assignment_assign_conversation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/{conversation_id}/assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who held the conversation, newest first */
+        get: operations["assignment_list_assignments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/{conversation_id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Take an unassigned conversation (Nhận)
+         * @description Every operator (owner, manager, doctor, cs_staff). Only an unassigned conversation: one that a colleague holds answers 409 `thread_locked`. Claiming what you already hold changes nothing. The body is optional (`assignment_version` the client saw).
+         */
+        post: operations["assignment_claim_conversation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/conversations/{conversation_id}/messages": {
@@ -1806,6 +1968,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/conversations/{conversation_id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Give the conversation back: to the queue, or to the care agent
+         * @description The holder (or an owner or manager) puts it back in the queue. With `to_agent` the patient must be in the STAFF state of the care agent: 409 `invalid_state` otherwise, 501 until the care loop is wired. A refusal of the care agent leaves the conversation as it was.
+         */
+        post: operations["assignment_release_conversation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/conversations/{conversation_id}/takeover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Take the conversation from the colleague who holds it (Tiếp quản)
+         * @description Needs a `reason` (kept in the history, staff only). The previous holder, the new holder and the team group get a notice. 409 `invalid_state` when nobody holds it (claim it) or you already do.
+         */
+        post: operations["assignment_takeover_conversation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/crm/activities": {
         parameters: {
             query?: never;
@@ -1818,6 +2020,57 @@ export interface paths {
         put?: never;
         /** Add an internal note or contact log */
         post: operations["crm_create_activity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The automation rules, read only (tuning is /admin/rules) */
+        get: operations["crm_list_crm_rules"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/segments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Customer groups: lifecycle stages and at-risk, with counts */
+        get: operations["crm_get_segments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/crm/segments/{segment}/patients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Patients of one group, most overdue first */
+        get: operations["crm_list_segment_patients"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1875,6 +2128,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dashboard/kpis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Clinic KPIs for today, this week or this month
+         * @description Only numbers the database holds. `appointments` and `patients` need `appointment.read`, `care` needs `crm.task.read`; a block the caller may not read is null. A doctor gets own appointments only. No revenue: there is no finance data until package U6.
+         */
+        get: operations["dashboard_get_kpis"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events": {
         parameters: {
             query?: never;
@@ -1895,6 +2168,388 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/finance/billable-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Quick orders that have something to pay and no invoice yet */
+        get: operations["finance_list_billable_orders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The commission table of a month: one row per performer of every procedure */
+        get: operations["finance_list_entries"];
+        put?: never;
+        /** Record a completed procedure and who performed it (pending approval) */
+        post: operations["finance_create_entry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/entries/{entry_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve a pending entry (before the month is closed) */
+        post: operations["finance_approve_entry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/entries/{entry_id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel an entry with a reason (before the month is closed, nothing received) */
+        post: operations["finance_void_entry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The commission table of a month as CSV for Excel */
+        get: operations["finance_export_csv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Invoices, newest first */
+        get: operations["finance_list_invoices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/invoices/from-order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Raise the invoice of a quick order (the same invoice when asked again) */
+        post: operations["finance_create_invoice_for_order"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The owner's payment notifications */
+        get: operations["finance_list_notifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/notifications/{notification_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a notification as read */
+        post: operations["finance_read_notification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The overview of a month */
+        get: operations["finance_overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The receipts of a month */
+        get: operations["finance_list_payments"];
+        put?: never;
+        /** Record a receipt on an invoice (idempotent on its key) */
+        post: operations["finance_record_payment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/performers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who can be named as a performer of a procedure */
+        get: operations["finance_list_performers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/periods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The last 12 months with their status and what blocks closing them */
+        get: operations["finance_list_periods"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/periods/{month}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Close a month that ended: freeze its commission table */
+        post: operations["finance_close_period"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/periods/{month}/pay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm the payout of a closed month with its voucher */
+        post: operations["finance_pay_period"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/guide/articles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Guide articles (KB tag 'guide') */
+        get: operations["guide_list_articles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/guide/articles/{article_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One article with its Markdown body */
+        get: operations["guide_get_article"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/guide/articles/{article_id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Replace the tags of a knowledge-base source (audited) */
+        put: operations["guide_set_article_tags"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/guide/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Passages of the guide that answer a question (retrieval, nothing is generated) */
+        post: operations["guide_ask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/identities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Channel accounts as clinic identities: purpose, state, send limits
+         * @description Customer-facing identities first, then the internal notifier. Each row carries the purpose, whether the account and its channel are enabled, the per-identity overrides and the limits that really apply (override, else the channel row). No credential, cookie, QR payload or token is ever returned.
+         */
+        get: operations["identities_list_identities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/identities/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set the purpose, label and send limits of one identity
+         * @description Owner and manager. A limit sent as null clears its override (the channel row applies again). Moving an account to `internal` is refused while a conversation or a roster entry still points at it.
+         */
+        patch: operations["identities_update_identity"];
+        trace?: never;
+    };
+    "/api/v1/identities/{account_id}/on-duty": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who covers one identity at a moment */
+        get: operations["identities_identity_on_duty"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -1904,6 +2559,285 @@ export interface paths {
         };
         /** Current user, clinic and permission list */
         get: operations["auth_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My notices, newest first
+         * @description The in-app channel of the chain. Only the caller's own rows; the payload is PII-free.
+         */
+        get: operations["notifications_list_my_notifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/notify-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My quiet hours */
+        get: operations["notifications_get_my_preferences"];
+        /**
+         * Set my quiet hours
+         * @description Quiet hours silence the personal Zalo bell; an urgent notice still rings.
+         */
+        put: operations["notifications_set_my_preferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/notify-zalo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Is my personal Zalo linked? */
+        get: operations["notifications_notify_zalo_status"];
+        put?: never;
+        post?: never;
+        /** Unlink my personal Zalo */
+        delete: operations["notifications_unlink_notify_zalo"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/notify-zalo/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start linking my personal Zalo (one-time code)
+         * @description Returns a code valid for 10 minutes. Send it as a message to the clinic's internal Zalo account; the inbound handler of that account links the sender. The code works once.
+         */
+        post: operations["notifications_start_notify_zalo_link"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/push-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register this device for push
+         * @description Stored encrypted, never returned. Registering a known token only refreshes it.
+         */
+        post: operations["notifications_register_push_token"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/push-tokens/{token_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Forget one of my devices */
+        delete: operations["notifications_delete_push_token"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/{media_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm an uploaded photo (resolves the session's missing-photo task) */
+        post: operations["patient_care_confirm_media"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/{media_id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The bytes of a clinical photo (audited; needs media.read and the consent) */
+        get: operations["patient_care_media_content"];
+        /** Send the bytes of a photo to the signed path of its upload intent */
+        put: operations["patient_care_upload_media_content"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/ack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Acknowledge the notices of a conversation or handoff request (deep link opened) */
+        post: operations["notifications_ack_target"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Notification settings of the clinic */
+        get: operations["notifications_get_notify_settings"];
+        /**
+         * Change the notification settings (owner and manager)
+         * @description Ack timeout, team group id, which steps are on, public base URL of the deep links.
+         */
+        put: operations["notifications_update_notify_settings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/{notification_id}/ack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Acknowledge one notice
+         * @description Stops the chain of that notice (no bell). Repeating it changes nothing. Somebody else's notice is a 404. It does not accept a handoff: the SLA of package M keeps running.
+         */
+        post: operations["notifications_ack_notification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Orders, newest first */
+        get: operations["orders_list_orders"];
+        put?: never;
+        /** Create a draft order from catalog products */
+        post: operations["orders_create_draft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One order with its lines */
+        get: operations["orders_get_order"];
+        /** Save a draft (the lines replace the previous ones); an approved order is immutable */
+        put: operations["orders_update_draft"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** The responsible doctor approves the order so it can be printed */
+        post: operations["orders_approve_order"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}/print-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The order and its lines split into Đơn thuốc and Phiếu tư vấn */
+        get: operations["orders_print_data"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1965,6 +2899,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/patients/{patient_id}/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save 'Thông tin cần nhớ' */
+        put: operations["patient_profile_save_alerts"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/app-updates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Notes on the patient app timeline, newest first */
+        get: operations["patient_profile_list_app_updates"];
+        put?: never;
+        /** Put a note ('Nhắn tin' or 'Chăm sóc tại nhà') on the patient app timeline; no channel is used */
+        post: operations["patient_profile_send_app_update"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/approved-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Approved orders as the patient app groups them (staff preview) */
+        get: operations["orders_approved_orders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/brief": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The templated brief of a patient (built from records, no model); a doctor edits and approves it */
+        get: operations["patient_profile_get_brief"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/brief/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A doctor approves the brief as edited */
+        post: operations["patient_profile_approve_brief"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/clinical-note": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 'Tiền sử & chẩn đoán' recorded by a doctor */
+        get: operations["patient_profile_get_clinical_note"];
+        /** A doctor saves 'Tiền sử & chẩn đoán' (both texts required) */
+        put: operations["patient_profile_save_clinical_note"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/patients/{patient_id}/consents": {
         parameters: {
             query?: never;
@@ -1983,6 +3021,145 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/patients/{patient_id}/consult-notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Consultation notes of a patient (drafts and approved) */
+        get: operations["patient_care_list_consult_notes"];
+        put?: never;
+        /** Compose a draft from a few key points (replaces the open draft) */
+        post: operations["patient_care_create_consult_draft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/expected-return": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save 'Ngày dự kiến quay lại' (date, reason, source) */
+        put: operations["patient_profile_save_expected_return"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/finance-tab": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Courses and prices of a patient for the finance tab; no clinical record (finance.read) */
+        get: operations["patient_profile_get_finance_tab"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Clinical photos of a patient */
+        get: operations["patient_care_list_media"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/media/upload-intent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask to upload a clinical photo (needs the patient's media consent) */
+        post: operations["patient_care_media_upload_intent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Treatment plans of a patient */
+        get: operations["patient_care_list_plans"];
+        put?: never;
+        /** Create a treatment plan */
+        post: operations["patient_care_create_plan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/service-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a catalog service to the course; its price is fixed on the plan */
+        post: operations["patient_profile_add_service_plan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/patients/{patient_id}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Treatment sessions of a patient with their clinical text */
+        get: operations["patient_care_list_sessions"];
+        put?: never;
+        /** Record a treatment session (complete=true finishes it: counters, recall, missing-photo task) */
+        post: operations["patient_care_create_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/permissions": {
         parameters: {
             query?: never;
@@ -1992,6 +3169,75 @@ export interface paths {
         };
         /** Permission codes of the current role (deny by default) */
         get: operations["auth_permissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plans/{plan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit a treatment plan */
+        patch: operations["patient_care_update_plan"];
+        trace?: never;
+    };
+    "/api/v1/protocols": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Follow-up protocols */
+        get: operations["protocols_list_protocols"];
+        put?: never;
+        /** Add a protocol (milestones and review day are data) */
+        post: operations["protocols_create_protocol"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/protocols/{protocol_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit milestones, review day, window */
+        patch: operations["protocols_update_protocol"];
+        trace?: never;
+    };
+    "/api/v1/resources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Doctors (account + shift of care staff + load of the day), rooms and room blocks */
+        get: operations["resources_get_resources"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2085,6 +3331,180 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/room-blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Block a room for a window of a day (08:00-18:00, with a reason) */
+        post: operations["resources_create_room_block"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/room-blocks/{block_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a room block */
+        delete: operations["resources_delete_room_block"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rooms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a treatment room */
+        post: operations["resources_create_room"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rooms/{room_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Rename, resize or (de)activate a room */
+        patch: operations["resources_update_room"];
+        trace?: never;
+    };
+    "/api/v1/roster": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Roster entries: who covers which identity, when */
+        get: operations["roster_list_roster"];
+        put?: never;
+        /** Add a roster entry (owner, manager) */
+        post: operations["roster_create_roster_entry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/roster/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a roster entry */
+        delete: operations["roster_delete_roster_entry"];
+        options?: never;
+        head?: never;
+        /** Change a roster entry */
+        patch: operations["roster_update_roster_entry"];
+        trace?: never;
+    };
+    "/api/v1/services": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Service catalog */
+        get: operations["services_list_services"];
+        put?: never;
+        /** Add a service (first price and rate snapshot) */
+        post: operations["services_create_service"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/services/{service_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One service with the history of its price and rate snapshots */
+        get: operations["services_get_service"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit a service; a change of price, rate, basis, duration or buffer adds a snapshot */
+        patch: operations["services_update_service"];
+        trace?: never;
+    };
+    "/api/v1/sessions/{session_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Finish a recorded session */
+        post: operations["patient_care_complete_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{session_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A clinician signs off a completed session */
+        post: operations["patient_care_review_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/staff/assignable": {
         parameters: {
             query?: never;
@@ -2097,6 +3517,43 @@ export interface paths {
          * @description Any signed-in staff member (no admin permission). ACTIVE staff of the clinic whose role can work conversations and CRM tasks (owner, manager, doctor, cs_staff; not reception), A to Z by name. Only `id`, `name` and `role`: never an e-mail, a phone, a hash, the last sign-in or a locked account. Limited to 60 calls per minute per user. The server checks the same rule again when an assignee is saved, so this list is a convenience, not the authority.
          */
         get: operations["staff_list_assignable_staff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/{user_id}/end-shift": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End an operator's shift: their active conversations move on (owner, manager)
+         * @description Each active conversation of the user goes to an operator who is on duty for its identity (the one with the fewest active conversations), else back to the queue. A conversation that changed hands in the meantime is skipped.
+         */
+        post: operations["assignment_end_shift"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/studio/{patient_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Before/after studio of one patient (views, media consent, milestone photos) */
+        get: operations["studio_get_studio"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2349,6 +3806,24 @@ export interface components {
             daily: components["schemas"]["DailyUsage"][];
         };
         /**
+         * AckTargetIn
+         * @description ``POST /notifications/ack``: the deep link was opened. Exactly one of the two.
+         */
+        AckTargetIn: {
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Request Id */
+            request_id?: string | null;
+        };
+        /** AckedOut */
+        AckedOut: {
+            /**
+             * Acked
+             * @description How many notices of the caller were acknowledged.
+             */
+            acked: number;
+        };
+        /**
          * ActorType
          * @description Who performs an action. The agent worker is an ``agent`` actor, never a sixth role.
          * @enum {string}
@@ -2447,6 +3922,22 @@ export interface components {
             policy_profile?: components["schemas"]["PolicyProfileKey"] | null;
             reasoning_effort?: components["schemas"]["ReasoningEffort"] | null;
         };
+        /** AlertsOut */
+        AlertsOut: {
+            /** Alerts */
+            alerts: string[];
+        };
+        /**
+         * AlertsUpdate
+         * @description Old ``alerts-edit``: one warning per line. Blank lines are dropped, each line is trimmed.
+         */
+        AlertsUpdate: {
+            /**
+             * Alerts
+             * @description One warning per entry.
+             */
+            alerts: string[];
+        };
         /** Allowlist */
         Allowlist: {
             /** @default all */
@@ -2459,6 +3950,40 @@ export interface components {
          * @enum {string}
          */
         AllowlistMode: "all" | "list";
+        /** AppUpdateCreate */
+        AppUpdateCreate: {
+            /** Body */
+            body: string;
+            kind: components["schemas"]["AppUpdateKind"];
+        };
+        /**
+         * AppUpdateKind
+         * @enum {string}
+         */
+        AppUpdateKind: "message" | "aftercare";
+        /**
+         * AppUpdateOut
+         * @description One note on the patient app timeline. Nothing is sent through Zalo or any channel.
+         */
+        AppUpdateOut: {
+            /** Body */
+            body: string;
+            /** By Name */
+            by_name?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["AppUpdateKind"];
+        };
         /** AppointmentCreate */
         AppointmentCreate: {
             /**
@@ -2481,12 +4006,48 @@ export interface components {
              */
             patient_id: string;
             /**
+             * Room Id
+             * @description Optional room; it must be active, free in the window and not blocked (U10).
+             */
+            room_id?: string | null;
+            /**
              * Starts At
              * Format: date-time
              * @description ISO 8601 timestamp with an explicit +07:00 offset.
              * @example 2026-09-20T09:00:00+07:00
              */
             starts_at: string;
+        };
+        /**
+         * AppointmentKpis
+         * @description Appointments whose start falls in the range, counted by their status now.
+         */
+        AppointmentKpis: {
+            /** Cancelled */
+            cancelled: number;
+            /** Completed */
+            completed: number;
+            /** In Progress */
+            in_progress: number;
+            /** Missed */
+            missed: number;
+            /** Total */
+            total: number;
+            /**
+             * Upcoming
+             * @description booked + confirmed: not arrived yet.
+             */
+            upcoming: number;
+            /**
+             * Visits
+             * @description Came to the clinic: arrived + in_progress + completed.
+             */
+            visits: number;
+            /**
+             * Waiting
+             * @description arrived: in the waiting room.
+             */
+            waiting: number;
         };
         /** AppointmentOut */
         AppointmentOut: {
@@ -2516,6 +4077,11 @@ export interface components {
              * Format: uuid
              */
             patient_id: string;
+            /**
+             * Room Id
+             * @description Treatment room (U10); none for visits booked without a room.
+             */
+            room_id?: string | null;
             /**
              * Starts At
              * Format: date-time
@@ -2553,10 +4119,56 @@ export interface components {
             duration_min?: number | null;
             /** Note */
             note?: string | null;
+            /**
+             * Room Id
+             * @description Send null to take the room off the visit.
+             */
+            room_id?: string | null;
             /** Starts At */
             starts_at?: string | null;
             /** Version */
             version: number;
+        };
+        /**
+         * ApprovedOrderGroupOut
+         * @description One approved order as the patient app shows it (staff preview): lines grouped by sheet.
+         */
+        ApprovedOrderGroupOut: {
+            /** Approved At */
+            approved_at?: string | null;
+            /** Consultation */
+            consultation: components["schemas"]["OrderItemOut"][];
+            /** Diagnosis */
+            diagnosis: string;
+            /** Doctor Name */
+            doctor_name: string;
+            /** Note */
+            note: string;
+            /**
+             * Order Date
+             * Format: date
+             */
+            order_date: string;
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /** Prescription */
+            prescription: components["schemas"]["OrderItemOut"][];
+        };
+        /**
+         * AssignRequest
+         * @description ``POST /conversations/{id}/assign``: owner and manager. ``user_id`` null puts it back in the queue.
+         */
+        AssignRequest: {
+            /**
+             * Assignment Version
+             * @description The ``assignment_version`` the client saw. When it is no longer the stored one the call answers 409 ``version_conflict``. Left out: the action uses the version it reads itself.
+             */
+            assignment_version?: number | null;
+            /** User Id */
+            user_id?: string | null;
         };
         /**
          * AssignableStaffOut
@@ -2574,6 +4186,52 @@ export interface components {
             name: string;
             role: components["schemas"]["Role"];
         };
+        /**
+         * AssignmentEventOut
+         * @description One line of the history of a conversation (``GET /conversations/{id}/assignments``, newest first).
+         */
+        AssignmentEventOut: {
+            /**
+             * At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            at: string;
+            /**
+             * By
+             * @description Who made the change; null: the system.
+             */
+            by?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["AssignmentKind"];
+            /** Previous User Id */
+            previous_user_id?: string | null;
+            /** Previous User Name */
+            previous_user_name?: string | null;
+            /**
+             * Reason
+             * @description Takeover reason or release note; staff only.
+             */
+            reason?: string | null;
+            /**
+             * User Id
+             * @description Who holds it after the change; null: back in the queue.
+             */
+            user_id: string | null;
+            /** User Name */
+            user_name?: string | null;
+        };
+        /**
+         * AssignmentKind
+         * @description Why a row of ``clinic.conversation_assignment`` exists.
+         * @enum {string}
+         */
+        AssignmentKind: "claim" | "takeover" | "release" | "shift_end" | "assign";
         /** AuditLogOut */
         AuditLogOut: {
             /**
@@ -2629,6 +4287,35 @@ export interface components {
              */
             n_to_l2?: number | null;
         };
+        /**
+         * BillableOrderOut
+         * @description A quick order (U5) that has no invoice yet.
+         */
+        BillableOrderOut: {
+            /**
+             * Order Date
+             * Format: date
+             */
+            order_date: string;
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /** Patient Code */
+            patient_code: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** Patient Name */
+            patient_name: string;
+            /** Status */
+            status: string;
+            /** Total Vnd */
+            total_vnd: number;
+        };
         /** Body_admin_kb_upload_kb_file_source */
         Body_admin_kb_upload_kb_file_source: {
             /**
@@ -2653,6 +4340,47 @@ export interface components {
          * @enum {string}
          */
         BridgeState: "not_configured" | "awaiting_qr" | "connected" | "blocked" | "down";
+        /** BriefApprove */
+        BriefApprove: {
+            /**
+             * Text
+             * @description The brief as the doctor edited it.
+             */
+            text: string;
+        };
+        /** BriefApprovedOut */
+        BriefApprovedOut: {
+            /**
+             * Approved At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            approved_at: string;
+            /** Approved By Name */
+            approved_by_name?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Source Ids */
+            source_ids: string[];
+            /** Text */
+            text: string;
+        };
+        /**
+         * BriefDraftOut
+         * @description The templated brief of a patient: ``text`` is built from existing records (``source_ids`` names them as
+         *     ``kind:id`` like the timeline), never by a model. ``approved`` is the last version a doctor approved.
+         */
+        BriefDraftOut: {
+            approved?: components["schemas"]["BriefApprovedOut"] | null;
+            /** Source Ids */
+            source_ids: string[];
+            /** Text */
+            text: string;
+        };
         /**
          * CareAlertKind
          * @enum {string}
@@ -2731,6 +4459,52 @@ export interface components {
          */
         CareDepth: "D1" | "D2" | "D3" | "D4" | "D5";
         /**
+         * CareKpis
+         * @description CSKH numbers (need ``crm.task.read``). Rates are whole percents, ``None`` when there is nothing to
+         *     divide by (never a made-up 0%).
+         */
+        CareKpis: {
+            /**
+             * Booked After Care
+             * @description Contacts in the range that ended in an appointment.
+             */
+            booked_after_care: number;
+            /**
+             * Contact Attempts
+             * @description Logged contacts in the range, internal notes excluded.
+             */
+            contact_attempts: number;
+            /** Contact Rate Pct */
+            contact_rate_pct?: number | null;
+            /**
+             * Contacts Reached
+             * @description Of those, not unanswered or invalid.
+             */
+            contacts_reached: number;
+            /** Followup Completion Pct */
+            followup_completion_pct?: number | null;
+            /**
+             * Overdue Patients
+             * @description Distinct patients of those tasks.
+             */
+            overdue_patients: number;
+            /**
+             * Overdue Tasks
+             * @description Open or rescheduled, due before today.
+             */
+            overdue_tasks: number;
+            /**
+             * Tasks Due
+             * @description Tasks whose due day is in the range.
+             */
+            tasks_due: number;
+            /**
+             * Tasks Resolved
+             * @description Of those, resolved.
+             */
+            tasks_resolved: number;
+        };
+        /**
          * CareLevel
          * @description Autonomy level of the agent: L0 drafts only, L1 approved templates, L2 plus KB answers.
          * @enum {string}
@@ -2807,6 +4581,33 @@ export interface components {
          * @enum {string}
          */
         CareUrgency: "normal" | "urgent";
+        /**
+         * CatalogSummaryOut
+         * @description The line above the product list ("115 sản phẩm · 30 thuốc · 78 sản phẩm tư vấn · 7 cần phân loại")
+         *     and the provenance of the data.
+         */
+        CatalogSummaryOut: {
+            /** Consultation */
+            consultation: number;
+            /** Imported At */
+            imported_at?: string | null;
+            /** Prescription */
+            prescription: number;
+            /**
+             * Sha256
+             * @description SHA-256 of the canonical rows that were imported.
+             */
+            sha256: string | null;
+            /**
+             * Source Name
+             * @description File the catalog was imported from.
+             */
+            source_name: string | null;
+            /** Total */
+            total: number;
+            /** Unresolved */
+            unresolved: number;
+        };
         /**
          * ChangePasswordRequest
          * @description A signed-in user changes their OWN password (``POST /auth/password``). The floor of the new password
@@ -2902,6 +4703,51 @@ export interface components {
             /** Version */
             version: number;
         };
+        /**
+         * ClaimRequest
+         * @description ``POST /conversations/{id}/claim`` (the body is optional).
+         */
+        ClaimRequest: {
+            /**
+             * Assignment Version
+             * @description The ``assignment_version`` the client saw. When it is no longer the stored one the call answers 409 ``version_conflict``. Left out: the action uses the version it reads itself.
+             */
+            assignment_version?: number | null;
+        };
+        /** ClinicalNoteOut */
+        ClinicalNoteOut: {
+            /**
+             * Diagnosis
+             * @default
+             */
+            diagnosis: string;
+            /**
+             * History
+             * @default
+             */
+            history: string;
+            /** Reviewed At */
+            reviewed_at?: string | null;
+            /** Reviewed By Name */
+            reviewed_by_name?: string | null;
+        };
+        /**
+         * ClinicalNoteUpdate
+         * @description Old ``crm-history`` and ``crm-diagnosis``. Both are required (the action answers with
+         *     ``CLINICAL_NOTE_BLANK_MESSAGE``).
+         */
+        ClinicalNoteUpdate: {
+            /**
+             * Diagnosis
+             * @description Khám / chẩn đoán do bác sĩ xác nhận. Never written by a model.
+             */
+            diagnosis: string;
+            /**
+             * History
+             * @description Tiền sử đã khai thác.
+             */
+            history: string;
+        };
         /** ConsentCreate */
         ConsentCreate: {
             /** Granted */
@@ -2932,6 +4778,69 @@ export interface components {
             /** Source */
             source?: string | null;
         };
+        /**
+         * ConsultNoteApprove
+         * @description Old ``approve-note``: the clinician edits the draft, then approves it into Patient 360.
+         */
+        ConsultNoteApprove: {
+            /**
+             * Body
+             * @description The edited text; left out = as is.
+             */
+            body?: string | null;
+            /** Version */
+            version: number;
+        };
+        /**
+         * ConsultNoteDraftCreate
+         * @description Old ``generate-note``: a few key points typed by the clinician become a structured draft.
+         */
+        ConsultNoteDraftCreate: {
+            /** Input Text */
+            input_text: string;
+        };
+        /** ConsultNoteOut */
+        ConsultNoteOut: {
+            /** Approved At */
+            approved_at?: string | null;
+            /** Approved By */
+            approved_by?: string | null;
+            /** Approved By Name */
+            approved_by_name?: string | null;
+            /** Body */
+            body: string;
+            /**
+             * Created At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            created_at: string;
+            /** Created By */
+            created_by?: string | null;
+            /** Created By Name */
+            created_by_name?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** Source Text */
+            source_text: string;
+            status: components["schemas"]["ConsultNoteStatus"];
+            /** Version */
+            version: number;
+        };
+        /**
+         * ConsultNoteStatus
+         * @enum {string}
+         */
+        ConsultNoteStatus: "draft" | "approved";
         /** ContactRow */
         ContactRow: {
             /** Account Id */
@@ -2961,6 +4870,17 @@ export interface components {
         ConversationOut: {
             /** Assigned User Id */
             assigned_user_id?: string | null;
+            /**
+             * Assigned User Name
+             * @description Display name of the holder (staff-only information).
+             */
+            assigned_user_name?: string | null;
+            /**
+             * Assignment Version
+             * @description Bumped by every claim, takeover, release, shift end and assign (step O2).
+             * @default 1
+             */
+            assignment_version: number;
             channel: components["schemas"]["ChannelKind"];
             /**
              * Created At
@@ -2979,6 +4899,8 @@ export interface components {
              * @default false
              */
             has_pending_review: boolean;
+            /** @description Whether the holder has the conversation open now and in which state (``replying`` or ``viewing``); null when they are not here or presence is unavailable. The holder is never in ``viewers``. */
+            holder_presence?: components["schemas"]["PresenceState"] | null;
             /**
              * Id
              * Format: uuid
@@ -3017,12 +4939,25 @@ export interface components {
         ConversationSummary: {
             /** Assigned User Id */
             assigned_user_id?: string | null;
+            /**
+             * Assigned User Name
+             * @description Display name of the holder (staff-only information).
+             */
+            assigned_user_name?: string | null;
+            /**
+             * Assignment Version
+             * @description Bumped by every claim, takeover, release, shift end and assign (step O2).
+             * @default 1
+             */
+            assignment_version: number;
             channel: components["schemas"]["ChannelKind"];
             /**
              * Has Pending Review
              * @default false
              */
             has_pending_review: boolean;
+            /** @description Whether the holder has the conversation open now and in which state (``replying`` or ``viewing``); null when they are not here or presence is unavailable. The holder is never in ``viewers``. */
+            holder_presence?: components["schemas"]["PresenceState"] | null;
             /**
              * Id
              * Format: uuid
@@ -3205,6 +5140,68 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** CrmSegmentCount */
+        CrmSegmentCount: {
+            /** Count */
+            count: number;
+            key: components["schemas"]["CrmSegmentKey"];
+        };
+        /**
+         * CrmSegmentKey
+         * @description Customer groups of the old CRM01 ``segment`` card: the five lifecycle stages (``stageLabels`` of
+         *     ``crm-automation.js``) and ``at_risk``, which cuts across them (no new booking and overdue by more than
+         *     7 days, or sessions left and more than 45 days idle).
+         * @enum {string}
+         */
+        CrmSegmentKey: "new" | "returning" | "treating" | "dormant" | "reactivated" | "at_risk";
+        /**
+         * CrmSegmentPatientOut
+         * @description A row of the list behind one segment card. ``version`` is the lock of ``PATCH /patients/{id}``, which
+         *     the opt-out switch uses (audited there).
+         */
+        CrmSegmentPatientOut: {
+            /** Cs Owner Name */
+            cs_owner_name?: string | null;
+            /** Expected Next Visit At */
+            expected_next_visit_at?: string | null;
+            /** Full Name */
+            full_name: string;
+            /** Last Visit At */
+            last_visit_at?: string | null;
+            lifecycle_stage: components["schemas"]["CrmSegmentKey"];
+            /** Marketing Opt Out */
+            marketing_opt_out: boolean;
+            /** Overdue Days */
+            overdue_days: number;
+            /** Patient Code */
+            patient_code: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** Remaining Sessions */
+            remaining_sessions: number;
+            /** Risk Level */
+            risk_level: string;
+            /** Version */
+            version: number;
+        };
+        /**
+         * CrmSegmentsOut
+         * @description One number per group, computed from the same read model as Patient 360 (``compute_profile``).
+         */
+        CrmSegmentsOut: {
+            /**
+             * Marketing Opt Out
+             * @description Patients who asked not to receive marketing.
+             */
+            marketing_opt_out: number;
+            /** Segments */
+            segments: components["schemas"]["CrmSegmentCount"][];
+            /** Total Patients */
+            total_patients: number;
+        };
         /** CrmTaskOut */
         CrmTaskOut: {
             /**
@@ -3310,6 +5307,38 @@ export interface components {
             /** Turns */
             turns: number;
         };
+        /** DashboardKpisOut */
+        DashboardKpisOut: {
+            /** @description Null when the caller lacks ``appointment.read``. */
+            appointments?: components["schemas"]["AppointmentKpis"] | null;
+            /** @description Null when the caller lacks ``crm.task.read``. */
+            care?: components["schemas"]["CareKpis"] | null;
+            /**
+             * Ends On
+             * Format: date
+             * @description Inclusive.
+             */
+            ends_on: string;
+            /** @description Null with ``appointments``. */
+            patients?: components["schemas"]["PatientKpis"] | null;
+            range: components["schemas"]["DashboardRange"];
+            scope: components["schemas"]["DashboardScope"];
+            /**
+             * Starts On
+             * Format: date
+             */
+            starts_on: string;
+        };
+        /**
+         * DashboardRange
+         * @enum {string}
+         */
+        DashboardRange: "today" | "week" | "month";
+        /**
+         * DashboardScope
+         * @enum {string}
+         */
+        DashboardScope: "clinic" | "doctor";
         /** DepthRowOut */
         DepthRowOut: {
             from_depth: components["schemas"]["CareDepth"];
@@ -3321,6 +5350,227 @@ export interface components {
          * @enum {string}
          */
         DepthSignal: "default" | "vip" | "complex_history" | "past_complaint" | "pending_doctor_work" | "post_procedure" | "out_of_hours" | "asks_for_human" | "negative_sentiment" | "repeated_question" | "answer_rejected" | "urgent";
+        /**
+         * DoctorResourceOut
+         * @description A doctor as the resources page shows them: the account and the shift of package M, plus the load of the
+         *     day asked. Nothing here is stored twice: ``clinic.user_account`` and ``clinic.staff_profiles`` are the
+         *     source.
+         */
+        DoctorResourceOut: {
+            /** Active */
+            active: boolean;
+            /**
+             * Booked Count
+             * @description Active appointments of the doctor on ``day``.
+             */
+            booked_count: number;
+            /** Booked Minutes */
+            booked_minutes: number;
+            /**
+             * Has Shift
+             * @description False when the doctor has no row in clinic.staff_profiles yet.
+             */
+            has_shift: boolean;
+            /** Name */
+            name: string;
+            /**
+             * Shift
+             * @description The intervals of the weekday of ``day``.
+             */
+            shift: components["schemas"]["ShiftIntervalOut"][];
+            /** Shift Minutes */
+            shift_minutes: number;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /**
+         * EffectiveLimits
+         * @description What the send path applies to this identity: the override, else the channel row, else no limit.
+         */
+        EffectiveLimits: {
+            /**
+             * Daily Cap
+             * @description None: no cap.
+             */
+            daily_cap?: number | null;
+            /** Send Gap Max S */
+            send_gap_max_s: number;
+            /** Send Gap Min S */
+            send_gap_min_s: number;
+        };
+        /**
+         * EndShiftResult
+         * @description What ``POST /staff/{user_id}/end-shift`` did, thread by thread.
+         */
+        EndShiftResult: {
+            /**
+             * Rerouted
+             * @description Moved to an operator who is on duty.
+             */
+            rerouted: number;
+            /**
+             * Skipped
+             * @description Changed hands while the shift was being ended: left alone.
+             */
+            skipped: number;
+            /**
+             * To Queue
+             * @description Nobody on duty (or no identity known): back to the queue.
+             */
+            to_queue: number;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /** EntryCreate */
+        EntryCreate: {
+            /**
+             * Discount Vnd
+             * @default 0
+             */
+            discount_vnd: number;
+            /**
+             * Entry Date
+             * Format: date
+             * @description The day the procedure was done; not in the future, not in a closed month.
+             */
+            entry_date: string;
+            /**
+             * Invoice Id
+             * @description Attach the procedure to an invoice that already exists (same patient, not over-allocated). Omit to raise a new invoice for it.
+             */
+            invoice_id?: string | null;
+            /** List Vnd */
+            list_vnd: number;
+            /**
+             * Note
+             * @description Confirmation that the procedure was done.
+             */
+            note: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /**
+             * People
+             * @description Who performed it. Never filled in from the doctor in charge of the patient.
+             */
+            people: components["schemas"]["EntryPersonIn"][];
+            /**
+             * Service Id
+             * Format: uuid
+             */
+            service_id: string;
+        };
+        /** EntryOut */
+        EntryOut: {
+            basis: components["schemas"]["ServiceBasis"];
+            /** Discount Vnd */
+            discount_vnd: number;
+            /**
+             * Entry Date
+             * Format: date
+             */
+            entry_date: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Invoice Id
+             * Format: uuid
+             */
+            invoice_id: string;
+            /** Invoice Number */
+            invoice_number: string;
+            /** List Vnd */
+            list_vnd: number;
+            /** Net Vnd */
+            net_vnd: number;
+            /** Note */
+            note: string;
+            /** Owns Invoice */
+            owns_invoice: boolean;
+            /** Patient Code */
+            patient_code: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** People */
+            people: components["schemas"]["EntryPersonOut"][];
+            /**
+             * Service Id
+             * Format: uuid
+             */
+            service_id: string;
+            /** Service Name */
+            service_name: string;
+            status: components["schemas"]["EntryStatus"];
+            /** Terms Version */
+            terms_version: number;
+            /** Version */
+            version: number;
+            /** Void Reason */
+            void_reason?: string | null;
+        };
+        /** EntryPersonIn */
+        EntryPersonIn: {
+            /**
+             * Doctor Id
+             * Format: uuid
+             */
+            doctor_id: string;
+            /**
+             * Rate Bp
+             * @description Commission rate of this person; the rates add up to at most 10000.
+             */
+            rate_bp: number;
+            /**
+             * Share Bp
+             * @description Share of the revenue; the shares of an entry add up to 10000.
+             */
+            share_bp: number;
+        };
+        /** EntryPersonOut */
+        EntryPersonOut: {
+            /**
+             * Doctor Id
+             * Format: uuid
+             */
+            doctor_id: string;
+            /** Doctor Name */
+            doctor_name: string;
+            /** Fee Vnd */
+            fee_vnd: number;
+            /** Rate Bp */
+            rate_bp: number;
+            /** Revenue Vnd */
+            revenue_vnd: number;
+            /** Share Bp */
+            share_bp: number;
+        };
+        /**
+         * EntryStatus
+         * @enum {string}
+         */
+        EntryStatus: "pending" | "approved" | "void";
+        /** EntryVoid */
+        EntryVoid: {
+            /**
+             * Reason
+             * @description Why the entry is cancelled; kept on the entry.
+             */
+            reason: string;
+        };
         /** EpisodeOut */
         EpisodeOut: {
             /** Closed On */
@@ -3357,7 +5607,7 @@ export interface components {
          * @description Stable machine-readable error codes. ``message`` is Vietnamese UI text; ``code`` never changes.
          * @enum {string}
          */
-        ErrorCode: "unauthenticated" | "forbidden" | "not_found" | "validation_failed" | "version_conflict" | "duplicate_request" | "invalid_state" | "appointment_conflict" | "rate_limited" | "not_implemented" | "consent_required" | "marketing_opt_out" | "channel_unavailable" | "channel_kill_switch_on" | "channel_daily_cap_reached" | "channel_outside_send_window" | "channel_recipient_not_reachable" | "channel_webhook_rejected" | "review_required" | "ai_unavailable" | "policy_denied" | "identity_not_verified" | "tool_unavailable" | "invalid_schedule" | "mcp_server_unapproved" | "kb_source_invalid" | "payload_too_large" | "internal";
+        ErrorCode: "unauthenticated" | "forbidden" | "not_found" | "validation_failed" | "version_conflict" | "duplicate_request" | "invalid_state" | "appointment_conflict" | "rate_limited" | "not_implemented" | "consent_required" | "marketing_opt_out" | "channel_unavailable" | "channel_kill_switch_on" | "channel_daily_cap_reached" | "channel_outside_send_window" | "channel_recipient_not_reachable" | "channel_webhook_rejected" | "review_required" | "ai_unavailable" | "policy_denied" | "identity_not_verified" | "tool_unavailable" | "invalid_schedule" | "mcp_server_unapproved" | "kb_source_invalid" | "payload_too_large" | "thread_locked" | "no_identity" | "internal";
         /**
          * ErrorResponse
          * @description Body of every non-2xx response.
@@ -3375,6 +5625,215 @@ export interface components {
             kind: "every";
             /** Minutes */
             minutes: number;
+        };
+        /** ExpectedReturnOut */
+        ExpectedReturnOut: {
+            /** Date */
+            date: string;
+            /** Reason */
+            reason: string;
+            /** Source */
+            source: string;
+        };
+        /**
+         * ExpectedReturnUpdate
+         * @description Old ``crm-expected-date``, ``crm-expected-reason``, ``crm-expected-source``. The date is a string so
+         *     the action can answer an impossible date (``2026-02-30``) with the old sentence instead of a 422.
+         */
+        ExpectedReturnUpdate: {
+            /**
+             * Date
+             * @description YYYY-MM-DD
+             */
+            date: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Source
+             * @description One of EXPECTED_SOURCES.
+             */
+            source: string;
+        };
+        /** FinanceDoctorOut */
+        FinanceDoctorOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /** FinanceEntriesOut */
+        FinanceEntriesOut: {
+            /**
+             * Can Write
+             * @description True when the caller may record, approve or void entries.
+             */
+            can_write: boolean;
+            /**
+             * Doctors
+             * @description Who can be a performer (own: the caller only).
+             */
+            doctors: components["schemas"]["FinanceDoctorOut"][];
+            /** Month */
+            month: string;
+            period: components["schemas"]["FinancePeriodOut"];
+            /** Rows */
+            rows: components["schemas"]["FinanceRowOut"][];
+            scope: components["schemas"]["FinanceScope"];
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+        };
+        /** FinanceOverviewOut */
+        FinanceOverviewOut: {
+            /** Month */
+            month: string;
+            /**
+             * Pending Entries
+             * @description Entries waiting for the accountant's approval.
+             */
+            pending_entries: number;
+            period: components["schemas"]["FinancePeriodOut"];
+            scope: components["schemas"]["FinanceScope"];
+            summary: components["schemas"]["FinanceSummaryOut"];
+            /**
+             * Team
+             * @description One row per doctor (own: the caller only).
+             */
+            team: components["schemas"]["FinanceTeamOut"][];
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+        };
+        /** FinancePeriodOut */
+        FinancePeriodOut: {
+            /** Closed At */
+            closed_at?: string | null;
+            /** Month */
+            month: string;
+            /** Paid At */
+            paid_at?: string | null;
+            /**
+             * Reference
+             * @description Voucher of the payout; set when ``status`` is paid.
+             */
+            reference?: string | null;
+            status: components["schemas"]["PeriodStatus"];
+        };
+        /**
+         * FinanceRowOut
+         * @description One commission row: one performer of one procedure. ``revenue_vnd`` is the performer's share of the net
+         *     price (the last performer takes the remainder, so the rows add up to the net price); ``fee_vnd`` is
+         *     ``base_vnd`` x ``rate_bp``, rounded to the dong.
+         */
+        FinanceRowOut: {
+            /** Base Vnd */
+            base_vnd: number;
+            basis: components["schemas"]["ServiceBasis"];
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Doctor Id
+             * Format: uuid
+             */
+            doctor_id: string;
+            /** Doctor Name */
+            doctor_name: string;
+            /**
+             * Entry Id
+             * Format: uuid
+             */
+            entry_id: string;
+            /** Fee Vnd */
+            fee_vnd: number;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Patient Code */
+            patient_code: string;
+            /** Rate Bp */
+            rate_bp: number;
+            /** Revenue Vnd */
+            revenue_vnd: number;
+            /** Service Name */
+            service_name: string;
+            /** Share Bp */
+            share_bp: number;
+            status: components["schemas"]["EntryStatus"];
+        };
+        /**
+         * FinanceScope
+         * @description Which projection the caller asks for. ``clinic``: the whole clinic (owner, accountant). ``own``: only
+         *     the rows where the caller performed (doctor; the owner may ask for it too).
+         * @enum {string}
+         */
+        FinanceScope: "clinic" | "own";
+        /** FinanceSummaryOut */
+        FinanceSummaryOut: {
+            /**
+             * Collected Vnd
+             * @description Receipts of the month. Null in the personal projection.
+             */
+            collected_vnd?: number | null;
+            /**
+             * Debt Vnd
+             * @description Open balance of every invoice at this moment (not only the month's). Null in the personal projection.
+             */
+            debt_vnd?: number | null;
+            /**
+             * Fee Vnd
+             * @description Approved procedure fee (commission) of the month. Not the clinic's profit.
+             */
+            fee_vnd: number;
+            /**
+             * Pending Vnd
+             * @description Procedure fee still waiting for approval. Not part of ``fee_vnd``.
+             */
+            pending_vnd: number;
+            /**
+             * Revenue Vnd
+             * @description Performed revenue: the net price of the procedures done in the month (own: the caller's share).
+             */
+            revenue_vnd: number;
+        };
+        /** FinanceTeamOut */
+        FinanceTeamOut: {
+            /**
+             * Doctor Id
+             * Format: uuid
+             */
+            doctor_id: string;
+            /** Doctor Name */
+            doctor_name: string;
+            /** Entry Count */
+            entry_count: number;
+            /**
+             * Fee Vnd
+             * @description Approved fee of this doctor.
+             */
+            fee_vnd: number;
+            /** Revenue Vnd */
+            revenue_vnd: number;
+        };
+        /**
+         * FreeSlotOut
+         * @description First start the validator accepts for the given patient, doctor, day and duration; ``None`` when the
+         *     day has none (prototype: ``Khong co gio trong``).
+         */
+        FreeSlotOut: {
+            /** Starts At */
+            starts_at?: string | null;
         };
         /** FriendDecision */
         FriendDecision: {
@@ -3416,6 +5875,106 @@ export interface components {
          * @enum {string}
          */
         Gender: "female" | "male" | "other" | "unknown";
+        /** GuideArticle */
+        GuideArticle: {
+            /**
+             * Body
+             * @description Markdown. Headings, paragraphs, lists, bold and links only.
+             */
+            body: string;
+            /** Id */
+            id: string;
+            status: components["schemas"]["KbSourceStatus"];
+            /**
+             * Summary
+             * @description First paragraph of the article, at most 240 characters.
+             */
+            summary: string;
+            /** Tags */
+            tags: string[];
+            /** Title */
+            title: string;
+            /**
+             * Topic
+             * @description First tag other than 'guide' (the old 'role' eyebrow); '' when none.
+             */
+            topic: string;
+            /**
+             * Updated At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            updated_at: string;
+        };
+        /** GuideArticleSummary */
+        GuideArticleSummary: {
+            /** Id */
+            id: string;
+            status: components["schemas"]["KbSourceStatus"];
+            /**
+             * Summary
+             * @description First paragraph of the article, at most 240 characters.
+             */
+            summary: string;
+            /** Tags */
+            tags: string[];
+            /** Title */
+            title: string;
+            /**
+             * Topic
+             * @description First tag other than 'guide' (the old 'role' eyebrow); '' when none.
+             */
+            topic: string;
+            /**
+             * Updated At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            updated_at: string;
+        };
+        /**
+         * GuideAskHit
+         * @description One passage of an article that matches the question, with where it came from.
+         */
+        GuideAskHit: {
+            /** Article Id */
+            article_id: string;
+            /** Article Title */
+            article_title: string;
+            /**
+             * Heading
+             * @description Heading of the section the passage is in; '' for the lead.
+             */
+            heading: string;
+            /** Passage */
+            passage: string;
+            /** Score */
+            score: number;
+        };
+        /**
+         * GuideAskRequest
+         * @description The question is sent in the body, not the URL: it may name a customer and urls reach access logs.
+         */
+        GuideAskRequest: {
+            /** Question */
+            question: string;
+        };
+        /** GuideAskResponse */
+        GuideAskResponse: {
+            /** Hits */
+            hits: components["schemas"]["GuideAskHit"][];
+        };
+        GuideTag: string;
+        /**
+         * GuideTagsUpdate
+         * @description Replace the tags of a source. ``guide`` in the list makes it an article; removing it hides it.
+         */
+        GuideTagsUpdate: {
+            /** Tags */
+            tags: components["schemas"]["GuideTag"][];
+        };
         /** HandoffDeclineIn */
         HandoffDeclineIn: {
             /**
@@ -3446,6 +6005,12 @@ export interface components {
             rows: components["schemas"]["DepthRowOut"][];
             unverified_max_depth: components["schemas"]["CareDepth"];
         };
+        /**
+         * HandoffNoticeEvent
+         * @description What a notice of package M's routing is about (step O3, ``StaffNotify``).
+         * @enum {string}
+         */
+        HandoffNoticeEvent: "handoff_request" | "handoff_on_call";
         /** HandoffResultOut */
         HandoffResultOut: {
             /**
@@ -3590,6 +6155,60 @@ export interface components {
          * @enum {string}
          */
         IdentityLinkStatus: "unlinked" | "pending" | "verified" | "rejected";
+        /**
+         * IdentityOut
+         * @description A channel account as a clinic identity. No credential, no cookie, no QR, no token: not even a flag
+         *     beyond the state the operator already sees (enabled, channel state).
+         */
+        IdentityOut: {
+            /**
+             * Bridge State
+             * @description Zalo bridge state of the channel, if any.
+             */
+            bridge_state?: string | null;
+            channel: components["schemas"]["ChannelKind"];
+            /**
+             * Channel Enabled
+             * @description ``clinic.channel_setting.enabled`` of this channel.
+             */
+            channel_enabled: boolean;
+            effective: components["schemas"]["EffectiveLimits"];
+            /** Enabled */
+            enabled: boolean;
+            /** Id */
+            id: string;
+            /**
+             * Kill Switch On
+             * @description The kill switch of this channel is on: nothing is sent.
+             */
+            kill_switch_on: boolean;
+            /** Label */
+            label: string;
+            overrides: components["schemas"]["LimitOverrides"];
+            purpose: components["schemas"]["IdentityPurpose"];
+        };
+        /**
+         * IdentityPurpose
+         * @enum {string}
+         */
+        IdentityPurpose: "customer" | "internal";
+        /**
+         * IdentityUpdate
+         * @description ``PATCH /identities/{id}``. A field that is left out stays; a limit sent as ``null`` clears its
+         *     override
+         *     (back to the channel row). Any other field is refused (``extra = forbid``).
+         */
+        IdentityUpdate: {
+            /** Daily Cap */
+            daily_cap?: number | null;
+            /** Label */
+            label?: string | null;
+            purpose?: components["schemas"]["IdentityPurpose"] | null;
+            /** Send Gap Max S */
+            send_gap_max_s?: number | null;
+            /** Send Gap Min S */
+            send_gap_min_s?: number | null;
+        };
         /** ImageGenSettingsOut */
         ImageGenSettingsOut: {
             /**
@@ -3631,6 +6250,55 @@ export interface components {
          * @enum {string}
          */
         InboundMediaAction: "pass" | "flag_and_hand_off";
+        /** InvoiceFromOrder */
+        InvoiceFromOrder: {
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+        };
+        /** InvoiceOut */
+        InvoiceOut: {
+            /** Amount Vnd */
+            amount_vnd: number;
+            /**
+             * Due Vnd
+             * @description ``amount_vnd`` minus ``received_vnd``; what a receipt may still take.
+             */
+            due_vnd: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Invoice Date
+             * Format: date
+             */
+            invoice_date: string;
+            /** Number */
+            number: string;
+            /** Order Id */
+            order_id?: string | null;
+            /** Patient Code */
+            patient_code: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** Patient Name */
+            patient_name: string;
+            /** Received Vnd */
+            received_vnd: number;
+            source: components["schemas"]["InvoiceSource"];
+        };
+        /**
+         * InvoiceSource
+         * @enum {string}
+         */
+        InvoiceSource: "finance" | "order";
         /**
          * JobKind
          * @enum {string}
@@ -3844,6 +6512,18 @@ export interface components {
             reason?: string | null;
         };
         /**
+         * LimitOverrides
+         * @description Per-identity overrides. ``None`` = use the row of the channel (``clinic.channel_setting``).
+         */
+        LimitOverrides: {
+            /** Daily Cap */
+            daily_cap?: number | null;
+            /** Send Gap Max S */
+            send_gap_max_s?: number | null;
+            /** Send Gap Min S */
+            send_gap_min_s?: number | null;
+        };
+        /**
          * LiveEvent
          * @description The ``data`` of one server-sent event (default ``message`` event type).
          */
@@ -3859,7 +6539,7 @@ export interface components {
          * LiveEventType
          * @enum {string}
          */
-        LiveEventType: "inbox.changed" | "tasks.changed" | "review.changed" | "presence.changed" | "handoff.changed" | "care.changed";
+        LiveEventType: "inbox.changed" | "tasks.changed" | "review.changed" | "presence.changed" | "handoff.changed" | "appointments.changed" | "assignment.changed" | "notifications.changed" | "care.changed";
         /**
          * LlmProviderKind
          * @description ``LLM_PROVIDER_KINDS`` of src/config/llm-provider-kind.ts.
@@ -4080,6 +6760,121 @@ export interface components {
             permissions: components["schemas"]["Permission"][];
             user: components["schemas"]["UserSummary"];
         };
+        /** MediaOut */
+        MediaOut: {
+            /** Confirmed At */
+            confirmed_at?: string | null;
+            /**
+             * Consent Active
+             * @description The patient's current media consent is granted.
+             */
+            consent_active: boolean;
+            /**
+             * Consent Id
+             * Format: uuid
+             */
+            consent_id: string;
+            /**
+             * Content Path
+             * @description GET returns the bytes (needs media.read and the consent).
+             */
+            content_path: string;
+            /**
+             * Created At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Mime */
+            mime: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** Region */
+            region?: string | null;
+            /** Session Id */
+            session_id?: string | null;
+            /** Size Bytes */
+            size_bytes: number;
+            stage: components["schemas"]["MediaStage"];
+            status: components["schemas"]["MediaStatus"];
+            /** Uploaded By */
+            uploaded_by?: string | null;
+            /** Uploaded By Name */
+            uploaded_by_name?: string | null;
+            /** Version */
+            version: number;
+            /** View */
+            view?: string | null;
+        };
+        /**
+         * MediaStage
+         * @enum {string}
+         */
+        MediaStage: "before" | "after";
+        /**
+         * MediaStatus
+         * @enum {string}
+         */
+        MediaStatus: "pending" | "uploaded" | "confirmed";
+        /** MediaUploadIntent */
+        MediaUploadIntent: {
+            /**
+             * Mime
+             * @description One of MEDIA_MIME_TYPES.
+             */
+            mime: string;
+            /** Region */
+            region?: string | null;
+            /** Session Id */
+            session_id?: string | null;
+            /**
+             * Size Bytes
+             * @description Exact size of the file the browser will send.
+             */
+            size_bytes: number;
+            stage: components["schemas"]["MediaStage"];
+            /** View */
+            view?: string | null;
+        };
+        /**
+         * MediaUploadTarget
+         * @description Where and how to send the bytes: ``PUT`` the raw file to ``upload_path`` (relative to the API origin)
+         *     with ``Content-Type`` = ``mime``, before ``expires_at``; then call confirm.
+         */
+        MediaUploadTarget: {
+            /**
+             * Expires At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            expires_at: string;
+            /** Max Bytes */
+            max_bytes: number;
+            /**
+             * Media Id
+             * Format: uuid
+             */
+            media_id: string;
+            /**
+             * Method
+             * @default PUT
+             */
+            method: string;
+            /** Mime */
+            mime: string;
+            /** Upload Path */
+            upload_path: string;
+        };
         /** MemoryFact */
         MemoryFact: {
             /** Account Id */
@@ -4260,6 +7055,207 @@ export interface components {
             /** Version */
             version: number;
         };
+        /**
+         * NoticeOut
+         * @description A notice as its recipient reads it in the app (``GET /me/notifications``).
+         */
+        NoticeOut: {
+            /** Acked At */
+            acked_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            payload: components["schemas"]["NotificationPayload"];
+            state: components["schemas"]["NotificationState"];
+        };
+        /** NotificationOut */
+        NotificationOut: {
+            /** Amount Vnd */
+            amount_vnd: number;
+            /** Body */
+            body: string;
+            /**
+             * Created At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Invoice Id
+             * Format: uuid
+             */
+            invoice_id: string;
+            /**
+             * Payment Id
+             * Format: uuid
+             */
+            payment_id: string;
+            /** Read */
+            read: boolean;
+            /** Title */
+            title: string;
+        };
+        /**
+         * NotificationPayload
+         * @description What a notification may say, and nothing else (``extra = forbid``): a short code, the identity label,
+         *     an urgency, a one-line summary the action composes from a template (never the text of a message), a deep
+         *     link that needs a login, and ids. No phone number, no patient or customer name, no message text: the
+         *     serializer in ``pema.clinic.actions.notifications`` also runs the free-text fields through the PII mask
+         *     and refuses the payload when anything is found.
+         */
+        NotificationPayload: {
+            /** Deep Link */
+            deep_link: string;
+            /** Event */
+            event: components["schemas"]["AssignmentKind"] | components["schemas"]["HandoffNoticeEvent"];
+            /** From User Id */
+            from_user_id?: string | null;
+            /** Identity Label */
+            identity_label?: string | null;
+            /**
+             * Oncall Id
+             * @description The on-call row current when it was queued.
+             */
+            oncall_id?: string | null;
+            /**
+             * Position
+             * @description Place in the routing chain (handoff only).
+             */
+            position?: number | null;
+            /**
+             * Request Id
+             * @description The handoff request (handoff events only).
+             */
+            request_id?: string | null;
+            /** Short Code */
+            short_code: string;
+            /**
+             * Sla Due At
+             * @description Answer by (handoff events only).
+             */
+            sla_due_at?: string | null;
+            /** Summary */
+            summary: string;
+            /** To User Id */
+            to_user_id?: string | null;
+            /** @default normal */
+            urgency: components["schemas"]["NotificationUrgency"];
+        };
+        /**
+         * NotificationState
+         * @description Lifecycle of an outbox row. O2 only writes ``pending``; O3 delivers and moves it on.
+         * @enum {string}
+         */
+        NotificationState: "pending" | "sent" | "failed" | "skipped";
+        /**
+         * NotificationUrgency
+         * @enum {string}
+         */
+        NotificationUrgency: "normal" | "urgent";
+        /**
+         * NotifyLinkOut
+         * @description ``POST /me/notify-zalo/link``: send ``code`` as a message to the clinic's internal Zalo account.
+         */
+        NotifyLinkOut: {
+            /** Code */
+            code: string;
+            /**
+             * Expires At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            expires_at: string;
+            /**
+             * Internal Label
+             * @description Label of the internal account to send the code to; null: none is set up.
+             */
+            internal_label?: string | null;
+        };
+        /**
+         * NotifyLinkStatus
+         * @description ``GET /me/notify-zalo``.
+         */
+        NotifyLinkStatus: {
+            /** Consented At */
+            consented_at?: string | null;
+            /** Linked */
+            linked: boolean;
+        };
+        /** NotifyPreferenceIn */
+        NotifyPreferenceIn: {
+            /** Quiet End */
+            quiet_end?: string | null;
+            /** Quiet Start */
+            quiet_start?: string | null;
+        };
+        /**
+         * NotifyPreferenceOut
+         * @description Quiet hours of one operator (clinic clock). ``urgent`` notices still ring.
+         */
+        NotifyPreferenceOut: {
+            /** Quiet End */
+            quiet_end?: string | null;
+            /** Quiet Start */
+            quiet_start?: string | null;
+        };
+        /**
+         * NotifySettingsOut
+         * @description The clinic's notification settings (``GET /notifications/settings``).
+         */
+        NotifySettingsOut: {
+            /** Ack Timeout S */
+            ack_timeout_s: number;
+            /** Bell Enabled */
+            bell_enabled: boolean;
+            /** Group Enabled */
+            group_enabled: boolean;
+            /** In App Enabled */
+            in_app_enabled: boolean;
+            /** Public Base Url */
+            public_base_url?: string | null;
+            /** Push Enabled */
+            push_enabled: boolean;
+            /** Team Group Id */
+            team_group_id?: string | null;
+        };
+        /**
+         * NotifySettingsUpdate
+         * @description ``PUT /notifications/settings`` (owner and manager). A field left out stays.
+         */
+        NotifySettingsUpdate: {
+            /** Ack Timeout S */
+            ack_timeout_s?: number | null;
+            /** Bell Enabled */
+            bell_enabled?: boolean | null;
+            /** Group Enabled */
+            group_enabled?: boolean | null;
+            /** In App Enabled */
+            in_app_enabled?: boolean | null;
+            /** Public Base Url */
+            public_base_url?: string | null;
+            /** Push Enabled */
+            push_enabled?: boolean | null;
+            /** Team Group Id */
+            team_group_id?: string | null;
+        };
         /** OnCallContactIn */
         OnCallContactIn: {
             /**
@@ -4324,6 +7320,34 @@ export interface components {
             /** Items */
             items: components["schemas"]["OnCallContactOut"][];
         };
+        /** OnDutyOperator */
+        OnDutyOperator: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            role: components["schemas"]["Role"];
+        };
+        /**
+         * OnDutyOut
+         * @description Who covers an identity at a moment (``GET /identities/{id}/on-duty``).
+         */
+        OnDutyOut: {
+            /** Account Id */
+            account_id: string;
+            /**
+             * At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            at: string;
+            /** Operators */
+            operators: components["schemas"]["OnDutyOperator"][];
+        };
         /**
          * OnceAtInput
          * @description ``date`` + ``time`` in the schedule's time zone. The raw datetime string of the LLM is NOT accepted:
@@ -4375,6 +7399,274 @@ export interface components {
             /** Summary */
             summary: string;
             urgency: components["schemas"]["CareUrgency"];
+        };
+        /** OrderApprove */
+        OrderApprove: {
+            /**
+             * Version
+             * @description The version the doctor reviewed; a newer one answers 409.
+             */
+            version: number;
+        };
+        /** OrderCreate */
+        OrderCreate: {
+            /**
+             * Diagnosis
+             * @default
+             */
+            diagnosis: string;
+            /**
+             * Doctor Id
+             * @description Omitted: the doctor of the patient.
+             */
+            doctor_id?: string | null;
+            /** Items */
+            items: components["schemas"]["OrderItemIn"][];
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+        };
+        /**
+         * OrderItemIn
+         * @description One line the cashier chose. Name, unit and price are NOT sent: they come from the catalog (or from the
+         *     snapshot the draft already holds).
+         */
+        OrderItemIn: {
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Product Code */
+            product_code: string;
+            /** Quantity */
+            quantity: number;
+            /** @description Omitted: the catalog route. */
+            route?: components["schemas"]["OrderRoute"] | null;
+            /**
+             * Route Reason
+             * @default
+             */
+            route_reason: string;
+            /**
+             * Usage
+             * @default
+             */
+            usage: string;
+        };
+        /** OrderItemOut */
+        OrderItemOut: {
+            catalog_route: components["schemas"]["OrderRoute"];
+            /** Line No */
+            line_no: number;
+            /** Name */
+            name: string;
+            /** Note */
+            note: string;
+            /** Product Code */
+            product_code: string;
+            /** Quantity */
+            quantity: number;
+            route: components["schemas"]["OrderRoute"];
+            /** Route Reason */
+            route_reason: string;
+            /** Source Type */
+            source_type: string;
+            /** Unit */
+            unit: string;
+            /** Unit Price Vnd */
+            unit_price_vnd: number;
+            /** Usage */
+            usage: string;
+        };
+        /** OrderOut */
+        OrderOut: {
+            /**
+             * Created At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            created_at: string;
+            /** Diagnosis */
+            diagnosis: string;
+            /**
+             * Doctor Id
+             * Format: uuid
+             */
+            doctor_id: string;
+            /** Doctor Name */
+            doctor_name: string;
+            /**
+             * Editable
+             * @description A draft with nothing received: it may still be edited.
+             */
+            editable: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Invoice Id */
+            invoice_id?: string | null;
+            /** Item Count */
+            item_count: number;
+            /** Items */
+            items: components["schemas"]["OrderItemOut"][];
+            /** Note */
+            note: string;
+            /**
+             * Order Date
+             * Format: date
+             */
+            order_date: string;
+            /** Paid */
+            paid: boolean;
+            /** Patient Code */
+            patient_code: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** Patient Name */
+            patient_name: string;
+            /**
+             * Ready To Approve
+             * @description Every line is classified with its usage, the diagnosis is there and something prints.
+             */
+            ready_to_approve: boolean;
+            /** Received Vnd */
+            received_vnd: number;
+            /** Reviewed At */
+            reviewed_at?: string | null;
+            /** Reviewed By Name */
+            reviewed_by_name?: string | null;
+            status: components["schemas"]["OrderStatus"];
+            /** Total Vnd */
+            total_vnd: number;
+            /** Unresolved Count */
+            unresolved_count: number;
+            /** Version */
+            version: number;
+        };
+        /** OrderPatientOut */
+        OrderPatientOut: {
+            /** Age */
+            age?: number | null;
+            /** Code */
+            code: string;
+            /** Full Name */
+            full_name: string;
+            /** @default unknown */
+            gender: components["schemas"]["Gender"];
+        };
+        /**
+         * OrderPrintOut
+         * @description What the review page and the A5 sheets draw: the order and its lines split by route.
+         */
+        OrderPrintOut: {
+            /** Consultation */
+            consultation: components["schemas"]["OrderItemOut"][];
+            /** Excluded */
+            excluded: components["schemas"]["OrderItemOut"][];
+            order: components["schemas"]["OrderOut"];
+            patient: components["schemas"]["OrderPatientOut"];
+            /** Prescription */
+            prescription: components["schemas"]["OrderItemOut"][];
+            /**
+             * Printable
+             * @description Approved, every line classified and complete: the sheets may be printed.
+             */
+            printable: boolean;
+            /** Unresolved */
+            unresolved: components["schemas"]["OrderItemOut"][];
+        };
+        /**
+         * OrderRoute
+         * @enum {string}
+         */
+        OrderRoute: "PRESCRIPTION" | "CONSULTATION" | "NONE" | "UNRESOLVED";
+        /**
+         * OrderStatus
+         * @enum {string}
+         */
+        OrderStatus: "draft" | "approved";
+        /** OrderSummaryOut */
+        OrderSummaryOut: {
+            /**
+             * Created At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            created_at: string;
+            /**
+             * Doctor Id
+             * Format: uuid
+             */
+            doctor_id: string;
+            /** Doctor Name */
+            doctor_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Item Count */
+            item_count: number;
+            /**
+             * Order Date
+             * Format: date
+             */
+            order_date: string;
+            /** Patient Code */
+            patient_code: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** Patient Name */
+            patient_name: string;
+            /** Reviewed At */
+            reviewed_at?: string | null;
+            /** Reviewed By Name */
+            reviewed_by_name?: string | null;
+            status: components["schemas"]["OrderStatus"];
+            /** Total Vnd */
+            total_vnd: number;
+            /** Version */
+            version: number;
+        };
+        /**
+         * OrderUpdate
+         * @description A draft is saved as a whole: the lines replace the previous ones.
+         */
+        OrderUpdate: {
+            /**
+             * Diagnosis
+             * @default
+             */
+            diagnosis: string;
+            /** Doctor Id */
+            doctor_id?: string | null;
+            /** Items */
+            items: components["schemas"]["OrderItemIn"][];
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Version */
+            version: number;
         };
         /**
          * OutboundMode
@@ -4444,10 +7736,32 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[CrmSegmentPatientOut] */
+        Page_CrmSegmentPatientOut_: {
+            /** Items */
+            items: components["schemas"]["CrmSegmentPatientOut"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** Page[CrmTaskOut] */
         Page_CrmTaskOut_: {
             /** Items */
             items: components["schemas"]["CrmTaskOut"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[InvoiceOut] */
+        Page_InvoiceOut_: {
+            /** Items */
+            items: components["schemas"]["InvoiceOut"][];
             /** Limit */
             limit: number;
             /** Offset */
@@ -4466,10 +7780,43 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Page[OrderSummaryOut] */
+        Page_OrderSummaryOut_: {
+            /** Items */
+            items: components["schemas"]["OrderSummaryOut"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** Page[PatientOut] */
         Page_PatientOut_: {
             /** Items */
             items: components["schemas"]["PatientOut"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[PaymentOut] */
+        Page_PaymentOut_: {
+            /** Items */
+            items: components["schemas"]["PaymentOut"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /** Page[ProductOut] */
+        Page_ProductOut_: {
+            /** Items */
+            items: components["schemas"]["ProductOut"][];
             /** Limit */
             limit: number;
             /** Offset */
@@ -4504,6 +7851,11 @@ export interface components {
          * @description Read model joining context; the original records stay the source of truth.
          */
         Patient360: {
+            /**
+             * Alerts
+             * @description The 'Thông tin cần nhớ' lines of the hero (U9), one warning per entry.
+             */
+            alerts?: string[];
             /** Appointments */
             appointments?: components["schemas"]["AppointmentOut"][];
             /** Consents */
@@ -4585,6 +7937,36 @@ export interface components {
             /** Source */
             source?: string | null;
         };
+        /**
+         * PatientFinanceTabOut
+         * @description The data of the 'Dịch vụ & tài chính' tab without any clinical record (``finance.read``): who the
+         *     patient is and the courses with sessions used and the price fixed on them. The accountant has no
+         *     Patient 360; this is its tab. The catalog for 'Thêm dịch vụ' is ``GET /services`` (``finance.write``).
+         */
+        PatientFinanceTabOut: {
+            patient: components["schemas"]["PatientOut"];
+            /** Plans */
+            plans: components["schemas"]["TreatmentPlanOut"][];
+        };
+        /**
+         * PatientKpis
+         * @description ``seen`` = distinct patients with a visit in the range; ``new`` of them had their first contact in the
+         *     range (``patient.first_contact_at``), ``returning`` is the rest.
+         */
+        PatientKpis: {
+            /** New */
+            new: number;
+            /** Returning */
+            returning: number;
+            /** Seen */
+            seen: number;
+        };
+        /**
+         * PatientListView
+         * @description Old ``patientFilter``: Tất cả, Đang điều trị, Tái khám tuần này, Có cảnh báo.
+         * @enum {string}
+         */
+        PatientListView: "all" | "active" | "next" | "alerts";
         /** PatientOut */
         PatientOut: {
             /** Birth Date */
@@ -4669,6 +8051,67 @@ export interface components {
             /** Prepared Text */
             prepared_text?: string | null;
         };
+        /** PaymentCreate */
+        PaymentCreate: {
+            /** Amount Vnd */
+            amount_vnd: number;
+            /**
+             * Id
+             * @description Idempotency key of the receipt: a retry with the same key and content returns the first receipt, the same key with other content is refused.
+             */
+            id: string;
+            /**
+             * Invoice Id
+             * Format: uuid
+             */
+            invoice_id: string;
+            method: components["schemas"]["PaymentMethod"];
+        };
+        /**
+         * PaymentMethod
+         * @enum {string}
+         */
+        PaymentMethod: "cash" | "transfer";
+        /** PaymentOut */
+        PaymentOut: {
+            /** Amount Vnd */
+            amount_vnd: number;
+            /**
+             * Created At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Invoice Id
+             * Format: uuid
+             */
+            invoice_id: string;
+            /** Invoice Number */
+            invoice_number: string;
+            /** Key */
+            key: string;
+            method: components["schemas"]["PaymentMethod"];
+            /**
+             * Paid On
+             * Format: date
+             */
+            paid_on: string;
+            /** Patient Code */
+            patient_code: string;
+            /**
+             * Replayed
+             * @description True when this call found the receipt of an earlier call.
+             * @default false
+             */
+            replayed: boolean;
+        };
         /** PendingDraftOut */
         PendingDraftOut: {
             /**
@@ -4687,11 +8130,60 @@ export interface components {
              */
             review_item_id: string;
         };
+        /** PeriodListOut */
+        PeriodListOut: {
+            /**
+             * Items
+             * @description The last 12 months, newest first.
+             */
+            items: components["schemas"]["PeriodRowOut"][];
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+        };
+        /** PeriodPay */
+        PeriodPay: {
+            /**
+             * Reference
+             * @description Voucher of the payout.
+             */
+            reference: string;
+        };
+        /** PeriodRowOut */
+        PeriodRowOut: {
+            /**
+             * Blocker
+             * @description Why the month cannot be closed yet (Vietnamese).
+             */
+            blocker?: string | null;
+            /** Closable */
+            closable: boolean;
+            /** Closed At */
+            closed_at?: string | null;
+            /** Entry Count */
+            entry_count: number;
+            /** Month */
+            month: string;
+            /** Paid At */
+            paid_at?: string | null;
+            /** Pending Count */
+            pending_count: number;
+            /** Reference */
+            reference?: string | null;
+            status: components["schemas"]["PeriodStatus"];
+        };
+        /**
+         * PeriodStatus
+         * @enum {string}
+         */
+        PeriodStatus: "open" | "closed" | "paid";
         /**
          * Permission
          * @enum {string}
          */
-        Permission: "patient.read" | "patient.write" | "patient.read_360" | "consent.read" | "consent.write" | "appointment.read" | "appointment.write" | "appointment.check_in" | "session.write" | "crm.task.read" | "crm.task.resolve" | "crm.activity.write" | "conversation.read" | "conversation.reply" | "review.read" | "review.decide" | "review.decide_clinical" | "kb.read" | "kb.manage" | "admin.rules" | "admin.channels" | "admin.kill_switch" | "admin.logs" | "admin.accounts" | "admin.users.read" | "admin.users" | "admin.agents" | "admin.model" | "admin.tools" | "admin.schedules" | "admin.mcp" | "admin.usage" | "admin.policy" | "care.read" | "care.act" | "care.admin" | "care.matrix" | "care.approve" | "agent.submit";
+        Permission: "patient.read" | "patient.write" | "patient.read_360" | "consent.read" | "consent.write" | "appointment.read" | "appointment.write" | "appointment.check_in" | "session.write" | "session.read" | "media.read" | "media.write" | "order.read" | "order.write" | "order.approve" | "finance.read" | "finance.read_own" | "finance.write" | "finance_period.close" | "finance.collect" | "finance.notifications" | "crm.task.read" | "crm.task.resolve" | "crm.activity.write" | "conversation.read" | "conversation.reply" | "review.read" | "review.decide" | "review.decide_clinical" | "kb.read" | "kb.manage" | "admin.rules" | "admin.channels" | "admin.kill_switch" | "admin.logs" | "admin.accounts" | "admin.users.read" | "admin.users" | "admin.agents" | "admin.model" | "admin.tools" | "admin.schedules" | "admin.mcp" | "admin.usage" | "admin.policy" | "care.read" | "care.act" | "care.admin" | "care.matrix" | "care.approve" | "identity.manage" | "roster.manage" | "roster.read" | "thread.claim" | "thread.assign" | "thread.end_shift" | "notify.self" | "notify.manage" | "agent.submit";
         /** PermissionsResponse */
         PermissionsResponse: {
             /** Permissions */
@@ -4703,6 +8195,39 @@ export interface components {
          * @enum {string}
          */
         PiiMaskMode: "off" | "optional" | "required";
+        /** PlanCreate */
+        PlanCreate: {
+            /** Episode Id */
+            episode_id?: string | null;
+            /** Goal */
+            goal?: string | null;
+            /** Service Code */
+            service_code: string;
+            /** Title */
+            title: string;
+            /** Total Sessions */
+            total_sessions: number;
+        };
+        /**
+         * PlanStatus
+         * @enum {string}
+         */
+        PlanStatus: "planned" | "active" | "completed" | "abandoned" | "cancelled";
+        /**
+         * PlanUpdate
+         * @description Old ``plan-edit`` modal: the name and the total number of sessions (never below what is done).
+         */
+        PlanUpdate: {
+            /** Goal */
+            goal?: string | null;
+            status?: components["schemas"]["PlanStatus"] | null;
+            /** Title */
+            title?: string | null;
+            /** Total Sessions */
+            total_sessions?: number | null;
+            /** Version */
+            version: number;
+        };
         /**
          * PolicyProfile
          * @description One column of the table in PLAN-AI01 section 5, as data.
@@ -4779,6 +8304,143 @@ export interface components {
          * @enum {string}
          */
         ProactiveCapScope: "account_thread" | "patient_account";
+        /** ProductOut */
+        ProductOut: {
+            /** Active */
+            active: boolean;
+            /**
+             * Code
+             * @description The Excel code, e.g. 'H002'. It is the product id.
+             */
+            code: string;
+            /** Name */
+            name: string;
+            /**
+             * Price Vnd
+             * @description Price after tax.
+             */
+            price_vnd: number;
+            /** @description Where the catalog sends the product (the prototype's outputType). */
+            route: components["schemas"]["OrderRoute"];
+            /** Row Number */
+            row_number: number;
+            /**
+             * Source Type
+             * @description The Excel type: Thuốc, Mỹ Phẩm, TPCN or empty.
+             */
+            source_type: string;
+            /** Unit */
+            unit: string;
+            /** Vat */
+            vat: number;
+        };
+        /** ProtocolCreate */
+        ProtocolCreate: {
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /** Code */
+            code: string;
+            /** Followup Days */
+            followup_days?: number | null;
+            /** Milestones */
+            milestones?: components["schemas"]["ProtocolMilestone"][];
+            /** Name */
+            name: string;
+            /**
+             * Window Days
+             * @default 45
+             */
+            window_days: number;
+        };
+        /** ProtocolMilestone */
+        ProtocolMilestone: {
+            /**
+             * Day
+             * @description Days after the session.
+             */
+            day: number;
+            /** @description One of d1, d3, d7. */
+            rule_key: components["schemas"]["RuleKey"];
+        };
+        /** ProtocolOut */
+        ProtocolOut: {
+            /** Active */
+            active: boolean;
+            /** Code */
+            code: string;
+            /**
+             * Followup Days
+             * @description Day of the review recommendation (D+30 for laser-co2).
+             */
+            followup_days: number | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Milestones */
+            milestones: components["schemas"]["ProtocolMilestone"][];
+            /** Name */
+            name: string;
+            /** Version */
+            version: number;
+            /**
+             * Window Days
+             * @description The chain applies to a session at most this old.
+             */
+            window_days: number;
+        };
+        /**
+         * ProtocolUpdate
+         * @description Only the fields that are sent change; ``followup_days: null`` removes the review recommendation.
+         */
+        ProtocolUpdate: {
+            /** Active */
+            active?: boolean | null;
+            /** Followup Days */
+            followup_days?: number | null;
+            /** Milestones */
+            milestones?: components["schemas"]["ProtocolMilestone"][] | null;
+            /** Name */
+            name?: string | null;
+            /** Version */
+            version: number;
+            /** Window Days */
+            window_days?: number | null;
+        };
+        /**
+         * PushPlatform
+         * @enum {string}
+         */
+        PushPlatform: "android" | "ios" | "web";
+        /**
+         * PushTokenIn
+         * @description ``POST /me/push-tokens``. The token is stored encrypted and never returned.
+         */
+        PushTokenIn: {
+            platform: components["schemas"]["PushPlatform"];
+            /** Token */
+            token: string;
+        };
+        /** PushTokenOut */
+        PushTokenOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Last Seen
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            last_seen: string;
+            platform: components["schemas"]["PushPlatform"];
+        };
         /**
          * QrLoginState
          * @enum {string}
@@ -4833,6 +8495,28 @@ export interface components {
              */
             consequence: string;
         };
+        /**
+         * ReleaseRequest
+         * @description ``POST /conversations/{id}/release``.
+         */
+        ReleaseRequest: {
+            /**
+             * Assignment Version
+             * @description The ``assignment_version`` the client saw. When it is no longer the stored one the call answers 409 ``version_conflict``. Left out: the action uses the version it reads itself.
+             */
+            assignment_version?: number | null;
+            /**
+             * Note
+             * @description With ``to_agent``: the note the care agent reads (M's release note).
+             */
+            note?: string | null;
+            /**
+             * To Agent
+             * @description Hand the conversation back to the care agent (the patient is in the STAFF state of package M). False: only back to the queue.
+             * @default false
+             */
+            to_agent: boolean;
+        };
         /** ReleaseResultOut */
         ReleaseResultOut: {
             override_level?: components["schemas"]["CareLevel"] | null;
@@ -4857,6 +8541,23 @@ export interface components {
              * Format: password
              */
             new_password: string;
+        };
+        /** ResourcesOut */
+        ResourcesOut: {
+            /**
+             * Blocks
+             * @description Room blocks from ``day`` on, soonest first.
+             */
+            blocks: components["schemas"]["RoomBlockOut"][];
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Doctors */
+            doctors: components["schemas"]["DoctorResourceOut"][];
+            /** Rooms */
+            rooms: components["schemas"]["RoomOut"][];
         };
         /** ReviewApprove */
         ReviewApprove: {
@@ -4970,7 +8671,175 @@ export interface components {
          * Role
          * @enum {string}
          */
-        Role: "owner" | "manager" | "doctor" | "cs_staff" | "reception" | "patient";
+        Role: "owner" | "manager" | "doctor" | "cs_staff" | "reception" | "accountant" | "patient";
+        /** RoomBlockCreate */
+        RoomBlockCreate: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** End */
+            end: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Room Id
+             * Format: uuid
+             */
+            room_id: string;
+            /** Start */
+            start: string;
+        };
+        /** RoomBlockOut */
+        RoomBlockOut: {
+            /** Created By */
+            created_by?: string | null;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** End */
+            end: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Room Id
+             * Format: uuid
+             */
+            room_id: string;
+            /** Start */
+            start: string;
+        };
+        /** RoomCreate */
+        RoomCreate: {
+            /**
+             * Capacity
+             * @default 1
+             */
+            capacity: number;
+            /** Name */
+            name: string;
+        };
+        /** RoomOut */
+        RoomOut: {
+            /** Active */
+            active: boolean;
+            /** Capacity */
+            capacity: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Version */
+            version: number;
+        };
+        /** RoomUpdate */
+        RoomUpdate: {
+            /** Active */
+            active?: boolean | null;
+            /** Capacity */
+            capacity?: number | null;
+            /** Name */
+            name?: string | null;
+            /** Version */
+            version: number;
+        };
+        /** RosterEntryCreate */
+        RosterEntryCreate: {
+            /** Account Id */
+            account_id: string;
+            /**
+             * End
+             * @description Earlier than the start: the slot ends the next morning (the +07:00 clock).
+             */
+            end: string;
+            /** Note */
+            note?: string | null;
+            /**
+             * On Date
+             * @description One explicit date (a cover for a day).
+             */
+            on_date?: string | null;
+            /** Start */
+            start: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /**
+             * Weekdays
+             * @description Days of the week the slot repeats on. Exactly one of weekdays and on_date.
+             */
+            weekdays?: components["schemas"]["Weekday"][] | null;
+        };
+        /** RosterEntryOut */
+        RosterEntryOut: {
+            /** Account Id */
+            account_id: string;
+            /** End */
+            end: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Note */
+            note: string | null;
+            /** On Date */
+            on_date: string | null;
+            /** Start */
+            start: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** User Name */
+            user_name: string;
+            user_role: components["schemas"]["Role"];
+            /** Version */
+            version: number;
+            /** Weekdays */
+            weekdays: components["schemas"]["Weekday"][] | null;
+        };
+        /**
+         * RosterEntryUpdate
+         * @description ``PATCH /roster/{id}``. ``version`` is the one the client read. Switching between ``weekdays`` and
+         *     ``on_date`` is done by sending the new one and ``null`` for the other.
+         */
+        RosterEntryUpdate: {
+            /** End */
+            end?: string | null;
+            /** Note */
+            note?: string | null;
+            /**
+             * On Date
+             * @description One explicit date (a cover for a day).
+             */
+            on_date?: string | null;
+            /** Start */
+            start?: string | null;
+            /** User Id */
+            user_id?: string | null;
+            /** Version */
+            version: number;
+            /**
+             * Weekdays
+             * @description Days of the week the slot repeats on. Exactly one of weekdays and on_date.
+             */
+            weekdays?: components["schemas"]["Weekday"][] | null;
+        };
         /**
          * RuleKey
          * @description The 10 automation rules (JS ids). ``manual`` tasks are created by staff.
@@ -4983,6 +8852,41 @@ export interface components {
          * @enum {string}
          */
         RuleSendMode: "staff_task" | "auto_reminder" | "draft_for_review";
+        /**
+         * ScheduleBlock
+         * @description A room block inside the range of the board. Same fields as ``catalog.RoomBlockOut``.
+         */
+        ScheduleBlock: {
+            /** Created By */
+            created_by?: string | null;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * End
+             * @description HH:MM, clinic time.
+             */
+            end: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Room Id
+             * Format: uuid
+             */
+            room_id: string;
+            /**
+             * Start
+             * @description HH:MM, clinic time.
+             */
+            start: string;
+        };
         /** ScheduleCreate */
         ScheduleCreate: {
             /** Account Id */
@@ -5008,12 +8912,142 @@ export interface components {
              */
             timezone: string;
         };
+        /**
+         * ScheduleDoctor
+         * @description A doctor the schedule can be filtered by (active doctor or owner of the clinic).
+         */
+        ScheduleDoctor: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
         ScheduleInput: components["schemas"]["OnceAtInput"] | components["schemas"]["OnceInMinutesInput"] | components["schemas"]["EveryInput"] | components["schemas"]["CronInput"];
+        /**
+         * ScheduleItem
+         * @description One row of the schedule: the appointment plus the two names a reception desk reads on the board.
+         *     ``patient_name`` is filled only for a caller that holds ``patient.read``.
+         */
+        ScheduleItem: {
+            /** Cancel Reason */
+            cancel_reason?: string | null;
+            /** Cancelled At */
+            cancelled_at?: string | null;
+            /** Created By */
+            created_by?: string | null;
+            /**
+             * Created By Name
+             * @description "Người tạo" of the reception table: the staff account that booked it.
+             */
+            created_by_name?: string | null;
+            /** Doctor Id */
+            doctor_id: string | null;
+            /** Doctor Name */
+            doctor_name?: string | null;
+            /** Duration Min */
+            duration_min: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Missed At */
+            missed_at?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Patient Code */
+            patient_code: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** Patient Name */
+            patient_name?: string | null;
+            /**
+             * Room Id
+             * @description Treatment room (U10); none for visits booked without a room.
+             */
+            room_id?: string | null;
+            /** Room Name */
+            room_name?: string | null;
+            /**
+             * Starts At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            starts_at: string;
+            status: components["schemas"]["AppointmentStatus"];
+            /**
+             * Version
+             * @description Optimistic lock counter; send it back on PATCH/transitions.
+             */
+            version: number;
+        };
         /**
          * ScheduleKind
          * @enum {string}
          */
         ScheduleKind: "once" | "every" | "cron";
+        /**
+         * ScheduleOut
+         * @description The day (or the 7 days from ``from_day``) of the clinic board, oldest first. A doctor's own call lists
+         *     only that doctor's appointments.
+         */
+        ScheduleOut: {
+            /**
+             * Blocks
+             * @description Room blocks that fall inside the range.
+             */
+            blocks?: components["schemas"]["ScheduleBlock"][];
+            /** Doctor Id */
+            doctor_id?: string | null;
+            /** Doctors */
+            doctors: components["schemas"]["ScheduleDoctor"][];
+            /**
+             * From Day
+             * Format: date
+             */
+            from_day: string;
+            /** Items */
+            items: components["schemas"]["ScheduleItem"][];
+            /**
+             * Rooms
+             * @description Every room of the clinic: the columns of the room grid.
+             */
+            rooms?: components["schemas"]["ScheduleRoom"][];
+            /**
+             * To Day
+             * Format: date
+             * @description Last day, inclusive (same as ``from_day`` for the day view).
+             */
+            to_day: string;
+            view: components["schemas"]["ScheduleView"];
+        };
+        /**
+         * ScheduleRoom
+         * @description A room column of the room grid. Same fields as ``catalog.RoomOut``; declared here because ``catalog``
+         *     imports ``crm``, which imports this module.
+         */
+        ScheduleRoom: {
+            /** Active */
+            active: boolean;
+            /** Capacity */
+            capacity: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Version */
+            version: number;
+        };
         /** ScheduleUpdate */
         ScheduleUpdate: {
             /** Enabled */
@@ -5028,6 +9062,11 @@ export interface components {
             /** Timezone */
             timezone?: string | null;
         };
+        /**
+         * ScheduleView
+         * @enum {string}
+         */
+        ScheduleView: "day" | "week";
         /**
          * ScheduledJob
          * @description A job's CURRENT state. History of runs is ``JobRunRecord``.
@@ -5121,6 +9160,346 @@ export interface components {
          * @enum {string}
          */
         SenderType: "patient" | "staff" | "ai_draft" | "system";
+        /**
+         * ServiceBasis
+         * @description What a commission rate is applied to (``finance_server.py``: ``net``, ``list``, ``collected``).
+         * @enum {string}
+         */
+        ServiceBasis: "net" | "list" | "collected";
+        /** ServiceCreate */
+        ServiceCreate: {
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /** @default net */
+            basis: components["schemas"]["ServiceBasis"];
+            /**
+             * Buffer Min
+             * @default 0
+             */
+            buffer_min: number;
+            /** Code */
+            code: string;
+            /** Duration Min */
+            duration_min: number;
+            /** Name */
+            name: string;
+            /** Price Vnd */
+            price_vnd: number;
+            /** Protocol Code */
+            protocol_code?: string | null;
+            /**
+             * Rate Bp
+             * @default 0
+             */
+            rate_bp: number;
+            /** Room Ids */
+            room_ids?: string[];
+        };
+        /** ServiceDetailOut */
+        ServiceDetailOut: {
+            /** Active */
+            active: boolean;
+            /** @description Null unless the caller holds admin.rules. */
+            basis?: components["schemas"]["ServiceBasis"] | null;
+            /** Buffer Min */
+            buffer_min: number;
+            /** Code */
+            code: string;
+            /** Duration Min */
+            duration_min: number;
+            /**
+             * History
+             * @description Every snapshot, newest first.
+             */
+            history: components["schemas"]["ServiceTermsOut"][];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Price Vnd */
+            price_vnd: number;
+            /** Protocol Code */
+            protocol_code?: string | null;
+            /**
+             * Rate Bp
+             * @description Null unless the caller holds admin.rules.
+             */
+            rate_bp?: number | null;
+            /** Room Ids */
+            room_ids: string[];
+            /**
+             * Terms Version
+             * @description Number of the current price/rate snapshot.
+             */
+            terms_version: number;
+            /**
+             * Version
+             * @description Optimistic lock counter; send it back on PATCH.
+             */
+            version: number;
+        };
+        /** ServiceOut */
+        ServiceOut: {
+            /** Active */
+            active: boolean;
+            /** @description Null unless the caller holds admin.rules. */
+            basis?: components["schemas"]["ServiceBasis"] | null;
+            /** Buffer Min */
+            buffer_min: number;
+            /** Code */
+            code: string;
+            /** Duration Min */
+            duration_min: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Price Vnd */
+            price_vnd: number;
+            /** Protocol Code */
+            protocol_code?: string | null;
+            /**
+             * Rate Bp
+             * @description Null unless the caller holds admin.rules.
+             */
+            rate_bp?: number | null;
+            /** Room Ids */
+            room_ids: string[];
+            /**
+             * Terms Version
+             * @description Number of the current price/rate snapshot.
+             */
+            terms_version: number;
+            /**
+             * Version
+             * @description Optimistic lock counter; send it back on PATCH.
+             */
+            version: number;
+        };
+        /**
+         * ServicePlanCreate
+         * @description Old ``linked-service-form``: service, number of sessions (1 to 20), discount. The price is read
+         *     from the catalog by the action and fixed on the plan.
+         */
+        ServicePlanCreate: {
+            /**
+             * Discount Vnd
+             * @default 0
+             */
+            discount_vnd: number;
+            /**
+             * Service Id
+             * Format: uuid
+             */
+            service_id: string;
+            /** Sessions */
+            sessions: number;
+        };
+        /**
+         * ServiceTermsOut
+         * @description One snapshot of the terms of a service.
+         */
+        ServiceTermsOut: {
+            /** @description Null unless the caller holds admin.rules. */
+            basis?: components["schemas"]["ServiceBasis"] | null;
+            /** Buffer Min */
+            buffer_min: number;
+            /** Changed By */
+            changed_by?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            created_at: string;
+            /** Duration Min */
+            duration_min: number;
+            /** Price Vnd */
+            price_vnd: number;
+            /**
+             * Rate Bp
+             * @description Null unless the caller holds admin.rules.
+             */
+            rate_bp?: number | null;
+            /** Version No */
+            version_no: number;
+        };
+        /**
+         * ServiceUpdate
+         * @description Only the fields that are sent change. A change of ``price_vnd``, ``rate_bp``, ``basis``,
+         *     ``duration_min`` or ``buffer_min`` creates a new snapshot. ``protocol_code: null`` detaches it.
+         */
+        ServiceUpdate: {
+            /** Active */
+            active?: boolean | null;
+            basis?: components["schemas"]["ServiceBasis"] | null;
+            /** Buffer Min */
+            buffer_min?: number | null;
+            /** Duration Min */
+            duration_min?: number | null;
+            /** Name */
+            name?: string | null;
+            /** Price Vnd */
+            price_vnd?: number | null;
+            /** Protocol Code */
+            protocol_code?: string | null;
+            /** Rate Bp */
+            rate_bp?: number | null;
+            /** Room Ids */
+            room_ids?: string[] | null;
+            /** Version */
+            version: number;
+        };
+        /**
+         * SessionComplete
+         * @description Finish a recorded (``scheduled``) session. Fields left out keep what the session already holds.
+         */
+        SessionComplete: {
+            /** Aftercare */
+            aftercare?: string | null;
+            /** Next Visit On */
+            next_visit_on?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Performed On */
+            performed_on?: string | null;
+            /** Version */
+            version: number;
+            /**
+             * With Photo
+             * @default false
+             */
+            with_photo: boolean;
+        };
+        /**
+         * SessionCreate
+         * @description The ``session-*`` inputs of the old Ghi buổi điều trị form. ``complete=true`` is the old
+         *     "Lưu buổi điều trị": the session is recorded and finished in one step.
+         */
+        SessionCreate: {
+            /**
+             * Aftercare
+             * @description Hướng dẫn chăm sóc gửi sau buổi.
+             * @default
+             */
+            aftercare: string;
+            /**
+             * Complete
+             * @default true
+             */
+            complete: boolean;
+            /**
+             * Next Visit On
+             * @description Ngày dự kiến tái khám.
+             */
+            next_visit_on?: string | null;
+            /**
+             * Note
+             * @description Đánh giá trước buổi.
+             * @default
+             */
+            note: string;
+            /**
+             * Performed On
+             * Format: date
+             */
+            performed_on: string;
+            /** Plan Id */
+            plan_id?: string | null;
+            /**
+             * Protocol Id
+             * @description E.g. 'laser-co2'.
+             */
+            protocol_id?: string | null;
+            /** Region */
+            region?: string | null;
+            /** Session Type */
+            session_type: string;
+            /** View */
+            view?: string | null;
+            /**
+             * With Photo
+             * @description The form has a photo to upload next. When false a completed session raises the task 'Thiếu ảnh mốc đánh giá' of the old web.
+             * @default false
+             */
+            with_photo: boolean;
+        };
+        /**
+         * SessionDetailOut
+         * @description A session with its clinical text. Read with ``session.read``.
+         */
+        SessionDetailOut: {
+            /** Aftercare */
+            aftercare?: string | null;
+            /** Consent Id */
+            consent_id?: string | null;
+            /** Doctor Id */
+            doctor_id: string | null;
+            /** Doctor Name */
+            doctor_name?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Next Visit On */
+            next_visit_on?: string | null;
+            /** Note */
+            note?: string | null;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /**
+             * Performed At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            performed_at: string;
+            /** Plan Id */
+            plan_id: string | null;
+            /**
+             * Protocol Id
+             * @description E.g. 'laser-co2'; drives D+1/3/7 rules.
+             */
+            protocol_id?: string | null;
+            /** Region */
+            region?: string | null;
+            /**
+             * Reviewed
+             * @default false
+             */
+            reviewed: boolean;
+            /** Reviewed At */
+            reviewed_at?: string | null;
+            /** Reviewed By */
+            reviewed_by?: string | null;
+            /** Session Type */
+            session_type?: string | null;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+            /** View */
+            view?: string | null;
+        };
         /** SessionInfo */
         SessionInfo: {
             /**
@@ -5131,6 +9510,11 @@ export interface components {
              */
             expires_at: string;
             user: components["schemas"]["UserSummary"];
+        };
+        /** SessionReview */
+        SessionReview: {
+            /** Version */
+            version: number;
         };
         /** ShiftIntervalOut */
         ShiftIntervalOut: {
@@ -5326,6 +9710,56 @@ export interface components {
             /** Sender Name */
             sender_name?: string | null;
         };
+        /** StudioOut */
+        StudioOut: {
+            /** Concern */
+            concern?: string | null;
+            /**
+             * Media Consent
+             * @description The newest ``media`` consent of the patient is granted.
+             */
+            media_consent: boolean;
+            /** Patient Code */
+            patient_code: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** Patient Name */
+            patient_name: string;
+            /** Photos */
+            photos: components["schemas"]["StudioPhotoOut"][];
+            /** View */
+            view: string;
+            /** Views */
+            views: string[];
+        };
+        /**
+         * StudioPhotoOut
+         * @description A milestone photo. The photo store (``clinic.media``) belongs to the Patient 360 step; until it exists
+         *     the list is empty and the screen shows the clinic's illustrative placeholders.
+         */
+        StudioPhotoOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Region */
+            region: string;
+            /** Session Id */
+            session_id?: string | null;
+            /**
+             * Taken At
+             * Format: date-time
+             * @description ISO 8601 timestamp with an explicit +07:00 offset.
+             * @example 2026-09-20T09:00:00+07:00
+             */
+            taken_at: string;
+            /** View */
+            view: string;
+        };
         /** SystemInfo */
         SystemInfo: {
             /** Python */
@@ -5334,6 +9768,20 @@ export interface components {
             uptime_seconds: number;
             /** Version */
             version: string;
+        };
+        /**
+         * TakeoverRequest
+         * @description ``POST /conversations/{id}/takeover``. The reason is kept in the history (staff only) and never in an
+         *     audit row or a notification.
+         */
+        TakeoverRequest: {
+            /**
+             * Assignment Version
+             * @description The ``assignment_version`` the client saw. When it is no longer the stored one the call answers 409 ``version_conflict``. Left out: the action uses the version it reads itself.
+             */
+            assignment_version?: number | null;
+            /** Reason */
+            reason: string;
         };
         /**
          * TaskPriority
@@ -5437,7 +9885,7 @@ export interface components {
             id: string;
             /**
              * Kind
-             * @description session, appointment, crm_activity, message, review, consent
+             * @description session, appointment, crm_activity, message, review, consent, consult, app_event
              */
             kind: string;
             /** Source Id */
@@ -5620,10 +10068,24 @@ export interface components {
         };
         /** TreatmentPlanOut */
         TreatmentPlanOut: {
+            /**
+             * Agreed Price Vnd
+             * @description Price after discount (sessions x unit price - discount), fixed when the service was added: a later change of the catalog never moves it (same rules).
+             */
+            agreed_price_vnd?: number | null;
             /** Completed Sessions */
             completed_sessions: number;
+            /**
+             * Discount Vnd
+             * @description Discount fixed with the price (same rules).
+             */
+            discount_vnd?: number | null;
+            /** Doctor Id */
+            doctor_id?: string | null;
             /** Episode Id */
             episode_id: string | null;
+            /** Goal */
+            goal?: string | null;
             /**
              * Id
              * Format: uuid
@@ -5631,12 +10093,27 @@ export interface components {
             id: string;
             /** Service Code */
             service_code: string;
+            /**
+             * Service Terms Version
+             * @description Number of the catalog price snapshot the price was taken from.
+             */
+            service_terms_version?: number | null;
             /** Status */
             status: string;
             /** Title */
             title: string;
             /** Total Sessions */
             total_sessions: number;
+            /**
+             * Unit Price Vnd
+             * @description Price of one session fixed when the service was added to the course (U9). Null for a plan made without a price and for a caller who holds no finance permission.
+             */
+            unit_price_vnd?: number | null;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
         };
         /** TreatmentSessionOut */
         TreatmentSessionOut: {
@@ -5647,6 +10124,8 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Next Visit On */
+            next_visit_on?: string | null;
             /**
              * Performed At
              * Format: date-time
@@ -5661,10 +10140,26 @@ export interface components {
              * @description E.g. 'laser-co2'; drives D+1/3/7 rules.
              */
             protocol_id?: string | null;
+            /** Region */
+            region?: string | null;
+            /**
+             * Reviewed
+             * @default false
+             */
+            reviewed: boolean;
+            /** Session Type */
+            session_type?: string | null;
             /** Status */
             status: string;
             /** Title */
             title: string;
+            /**
+             * Version
+             * @default 1
+             */
+            version: number;
+            /** View */
+            view?: string | null;
         };
         /** TuningGroup */
         TuningGroup: {
@@ -5807,6 +10302,12 @@ export interface components {
              */
             ok: boolean;
         };
+        /**
+         * Weekday
+         * @description The keys of the weekly shift of ``clinic.staff_profiles`` (``mon`` .. ``sun``).
+         * @enum {string}
+         */
+        Weekday: "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
     };
     responses: never;
     parameters: never;
@@ -14262,6 +18763,181 @@ export interface operations {
             };
         };
     };
+    appointments_get_free_slot: {
+        parameters: {
+            query: {
+                patient_id: string;
+                day: string;
+                doctor_id?: string | null;
+                duration_min?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FreeSlotOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appointments_get_schedule: {
+        parameters: {
+            query: {
+                day: string;
+                view?: components["schemas"]["ScheduleView"];
+                doctor_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     appointments_get_appointment: {
         parameters: {
             query?: never;
@@ -14615,6 +19291,95 @@ export interface operations {
         };
     };
     appointments_complete_appointment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appointment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppointmentTransition"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppointmentOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    appointments_confirm_appointment: {
         parameters: {
             query?: never;
             header?: never;
@@ -16770,6 +21535,268 @@ export interface operations {
             };
         };
     };
+    catalog_list_products: {
+        parameters: {
+            query?: {
+                /** @description Code, name or type; accents are ignored. */
+                q?: string;
+                /** @description Page size. */
+                limit?: number;
+                /** @description Rows to skip. */
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ProductOut_"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    catalog_catalog_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogSummaryOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_care_approve_consult_note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                note_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsultNoteApprove"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsultNoteOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     conversations_list_conversations: {
         parameters: {
             query?: {
@@ -16960,6 +21987,269 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ConversationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assignment_assign_conversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assignment_list_assignments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssignmentEventOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assignment_claim_conversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ClaimRequest"] | null;
             };
         };
         responses: {
@@ -17472,6 +22762,184 @@ export interface operations {
             };
         };
     };
+    assignment_release_conversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReleaseRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assignment_takeover_conversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TakeoverRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     crm_list_activities: {
         parameters: {
             query?: {
@@ -17582,6 +23050,262 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CrmActivityOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    crm_list_crm_rules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmRuleOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    crm_get_segments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmSegmentsOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    crm_list_segment_patients: {
+        parameters: {
+            query?: {
+                /** @description Page size. */
+                limit?: number;
+                /** @description Rows to skip. */
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                segment: components["schemas"]["CrmSegmentKey"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_CrmSegmentPatientOut_"];
                 };
             };
             /** @description Not authenticated. */
@@ -17919,6 +23643,91 @@ export interface operations {
             };
         };
     };
+    dashboard_get_kpis: {
+        parameters: {
+            query?: {
+                range?: components["schemas"]["DashboardRange"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardKpisOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     live_stream_events: {
         parameters: {
             query?: never;
@@ -17998,6 +23807,2084 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_list_billable_orders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillableOrderOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_list_entries: {
+        parameters: {
+            query: {
+                /** @description Accounting month, YYYY-MM. */
+                month: string;
+                /** @description The projection: clinic (owner, accountant) or own (doctor, owner). Default: the widest one allowed. */
+                scope?: components["schemas"]["FinanceScope"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinanceEntriesOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_create_entry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntryOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_approve_entry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntryOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_void_entry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryVoid"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntryOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_export_csv: {
+        parameters: {
+            query: {
+                /** @description Accounting month, YYYY-MM. */
+                month: string;
+                /** @description The projection: clinic (owner, accountant) or own (doctor, owner). Default: the widest one allowed. */
+                scope?: components["schemas"]["FinanceScope"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description UTF-8 CSV with a byte order mark. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_list_invoices: {
+        parameters: {
+            query?: {
+                /** @description Only invoices with an open balance. */
+                due_only?: boolean;
+                patient_id?: string | null;
+                /** @description Page size. */
+                limit?: number;
+                /** @description Rows to skip. */
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_InvoiceOut_"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_create_invoice_for_order: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvoiceFromOrder"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_list_notifications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_read_notification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_overview: {
+        parameters: {
+            query: {
+                /** @description Accounting month, YYYY-MM. */
+                month: string;
+                /** @description The projection: clinic (owner, accountant) or own (doctor, owner). Default: the widest one allowed. */
+                scope?: components["schemas"]["FinanceScope"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinanceOverviewOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_list_payments: {
+        parameters: {
+            query: {
+                /** @description Accounting month, YYYY-MM. */
+                month: string;
+                /** @description Page size. */
+                limit?: number;
+                /** @description Rows to skip. */
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_PaymentOut_"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_record_payment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_list_performers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinanceDoctorOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_list_periods: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeriodListOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_close_period: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Accounting month, YYYY-MM. */
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinancePeriodOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    finance_pay_period: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Accounting month, YYYY-MM. */
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PeriodPay"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinancePeriodOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    guide_list_articles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuideArticleSummary"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    guide_get_article: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                article_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuideArticle"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    guide_set_article_tags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                article_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuideTagsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuideArticleSummary"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    guide_ask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuideAskRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuideAskResponse"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    identities_list_identities: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    identities_update_identity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IdentityUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    identities_identity_on_duty: {
+        parameters: {
+            query?: {
+                /** @description The moment to look at; default now. */
+                at?: string | null;
+            };
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnDutyOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -18085,6 +25972,1819 @@ export interface operations {
             };
         };
     };
+    notifications_list_my_notifications: {
+        parameters: {
+            query?: {
+                unacked_only?: boolean;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoticeOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    notifications_get_my_preferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotifyPreferenceOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    notifications_set_my_preferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotifyPreferenceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotifyPreferenceOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    notifications_notify_zalo_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotifyLinkStatus"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    notifications_unlink_notify_zalo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotifyLinkStatus"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    notifications_start_notify_zalo_link: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotifyLinkOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    notifications_register_push_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushTokenIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushTokenOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    notifications_delete_push_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_care_confirm_media: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_care_media_content: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": unknown;
+                    "image/png": unknown;
+                    "image/webp": unknown;
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_care_upload_media_content: {
+        parameters: {
+            query: {
+                /** @description Expiry of the signed path (unix seconds). */
+                exp: number;
+                /** @description Signature of the signed path. */
+                sig: string;
+            };
+            header?: never;
+            path: {
+                media_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "image/jpeg": string;
+                "image/png": string;
+                "image/webp": string;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    notifications_ack_target: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AckTargetIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AckedOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    notifications_get_notify_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotifySettingsOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    notifications_update_notify_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotifySettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotifySettingsOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    notifications_ack_notification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoticeOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    orders_list_orders: {
+        parameters: {
+            query?: {
+                patient_id?: string | null;
+                status?: components["schemas"]["OrderStatus"] | null;
+                /** @description Page size. */
+                limit?: number;
+                /** @description Rows to skip. */
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_OrderSummaryOut_"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    orders_create_draft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    orders_get_order: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    orders_update_draft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    orders_approve_order: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderApprove"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    orders_print_data: {
+        parameters: {
+            query?: {
+                /** @description Refuse a draft or an incomplete order (the strict print check). */
+                require_approved?: boolean;
+            };
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderPrintOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     patients_list_patients: {
         parameters: {
             query?: {
@@ -18092,6 +27792,8 @@ export interface operations {
                 q?: string | null;
                 doctor_id?: string | null;
                 cs_owner_id?: string | null;
+                /** @description Chip of the list: all, active (sessions left), next (visit within a week), alerts. */
+                view?: components["schemas"]["PatientListView"];
                 /** @description Page size. */
                 limit?: number;
                 /** @description Rows to skip. */
@@ -18523,6 +28225,704 @@ export interface operations {
             };
         };
     };
+    patient_profile_save_alerts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertsOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_list_app_updates: {
+        parameters: {
+            query?: {
+                kind?: components["schemas"]["AppUpdateKind"] | null;
+            };
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppUpdateOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_send_app_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppUpdateCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppUpdateOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    orders_approved_orders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovedOrderGroupOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_get_brief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BriefDraftOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_approve_brief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BriefApprove"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BriefApprovedOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_get_clinical_note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClinicalNoteOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_save_clinical_note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClinicalNoteUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClinicalNoteOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     patients_list_consents: {
         parameters: {
             query?: never;
@@ -18697,6 +29097,967 @@ export interface operations {
             };
         };
     };
+    patient_care_list_consult_notes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsultNoteOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_care_create_consult_draft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsultNoteDraftCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsultNoteOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_save_expected_return: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpectedReturnUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpectedReturnOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_get_finance_tab: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatientFinanceTabOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_care_list_media: {
+        parameters: {
+            query?: {
+                session_id?: string | null;
+            };
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_care_media_upload_intent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MediaUploadIntent"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaUploadTarget"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_care_list_plans: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreatmentPlanOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_care_create_plan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreatmentPlanOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_profile_add_service_plan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServicePlanCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreatmentPlanOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_care_list_sessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionDetailOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_care_create_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionDetailOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     auth_permissions: {
         parameters: {
             query?: never;
@@ -18713,6 +30074,440 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PermissionsResponse"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_care_update_plan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreatmentPlanOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    protocols_list_protocols: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProtocolOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    protocols_create_protocol: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProtocolCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProtocolOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    protocols_update_protocol: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                protocol_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProtocolUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProtocolOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    resources_get_resources: {
+        parameters: {
+            query?: {
+                /** @description Day of the load; default today (+07:00). */
+                day?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourcesOut"];
                 };
             };
             /** @description Not authenticated. */
@@ -19228,6 +31023,1223 @@ export interface operations {
             };
         };
     };
+    resources_create_room_block: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoomBlockCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomBlockOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    resources_delete_room_block: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                block_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    resources_create_room: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoomCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    resources_update_room: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                room_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoomUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    roster_list_roster: {
+        parameters: {
+            query?: {
+                /** @description Only the entries of this identity. */
+                account_id?: string | null;
+                /** @description Only the entries of this operator. */
+                user_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RosterEntryOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    roster_create_roster_entry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RosterEntryCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RosterEntryOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    roster_delete_roster_entry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    roster_update_roster_entry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RosterEntryUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RosterEntryOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    services_list_services: {
+        parameters: {
+            query?: {
+                active?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    services_create_service: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    services_get_service: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                service_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceDetailOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    services_update_service: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                service_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_care_complete_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionComplete"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionDetailOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    patient_care_review_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionReview"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionDetailOut"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     staff_list_assignable_staff: {
         parameters: {
             query?: never;
@@ -19244,6 +32256,179 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AssignableStaffOut"][];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assignment_end_shift: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EndShiftResult"];
+                };
+            };
+            /** @description Not authenticated. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Role lacks the permission. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found in this clinic. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Version conflict or invalid state. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation failed. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Rate limited or channel cap reached. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Skeleton: not implemented yet. */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    studio_get_studio: {
+        parameters: {
+            query?: {
+                /** @description One of the studio views; default the first. */
+                view?: string | null;
+            };
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudioOut"];
                 };
             };
             /** @description Not authenticated. */
