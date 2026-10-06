@@ -189,6 +189,15 @@ const ALL: Permission[] = [
   "care.admin",
   "care.matrix",
   "care.approve",
+  // Package O: the shared inbox (claim, takeover, assign), identities, roster and notifications.
+  "identity.manage",
+  "roster.manage",
+  "roster.read",
+  "thread.claim",
+  "thread.assign",
+  "thread.end_shift",
+  "notify.self",
+  "notify.manage",
 ];
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
@@ -225,6 +234,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "finance.read_own",
     "crm.task.read",
     "conversation.read",
+    "conversation.reply",
     "review.read",
     "review.decide",
     "review.decide_clinical",
@@ -233,6 +243,9 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "care.act",
     "care.matrix",
     "care.approve",
+    "roster.read",
+    "thread.claim",
+    "notify.self",
   ],
   cs_staff: [
     "patient.read",
@@ -253,6 +266,9 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "kb.read",
     "care.read",
     "care.act",
+    "roster.read",
+    "thread.claim",
+    "notify.self",
   ],
   reception: [
     "patient.read",

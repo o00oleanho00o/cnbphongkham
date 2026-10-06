@@ -15,6 +15,24 @@ export type TabItem = {
 const tabId = (idPrefix: string, id: string): string => `${idPrefix}-tab-${id}`;
 const panelId = (idPrefix: string, id: string): string => `${idPrefix}-panel-${id}`;
 
+const TAB_CLASS = {
+  underline: {
+    base: "-mb-px min-h-11 border-b-2 px-3.5 py-2.5 text-body whitespace-nowrap transition-colors lg:min-h-10",
+    selected: "border-link font-bold text-link",
+    idle: "border-transparent text-ink-soft hover:text-ink",
+  },
+  pill: {
+    base: "min-h-9 rounded-tile px-3 py-1.5 text-small whitespace-nowrap transition-colors",
+    selected: "bg-surface font-bold text-link shadow-card",
+    idle: "text-ink-soft hover:text-ink",
+  },
+};
+
+function tabClass(segmented: boolean, selected: boolean): string {
+  const look = TAB_CLASS[segmented ? "pill" : "underline"];
+  return cx(look.base, selected ? look.selected : look.idle);
+}
+
 /** Index of the tab a key moves to, or null when the key is not a tab-navigation key. */
 export function targetTabIndex(key: string, current: number, count: number): number | null {
   const moves: Record<string, number> = {
@@ -30,6 +48,8 @@ export function targetTabIndex(key: string, current: number, count: number): num
  * Tab bar of the old web (`.tabbar`, the Patient 360 tabs): underline on the active tab, scrolls sideways
  * inside itself on a phone. Arrow keys, Home and End move between tabs (roving tabindex).
  *
+ * `segmented`: the same tabs as a pill control (selected pill raised) at every width, with no bottom rule.
+ *
  * `segmentedOnPhone`: below `lg` the same tabs become a segmented control (one row of equal pills that never
  * scrolls, `shortLabel` shown), from `lg` the underline bar. One set of ids either way.
  */
@@ -40,6 +60,7 @@ export function Tabs({
   value,
   onChange,
   segmentedOnPhone = false,
+  segmented = false,
 }: {
   label: string;
   /** Unique per page; ties each tab to its panel (`TabPanel`). */
@@ -48,6 +69,8 @@ export function Tabs({
   value: string;
   onChange: (id: string) => void;
   segmentedOnPhone?: boolean;
+  /** Segmented control at every width (the shared Inbox: Chờ nhận / Của tôi / Tất cả; the roster: one identity per tab). */
+  segmented?: boolean;
 }) {
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
 
@@ -67,7 +90,9 @@ export function Tabs({
       aria-label={label}
       onKeyDown={onKeyDown}
       className={cx(
-        "mb-5 flex gap-1 overflow-x-auto border-b border-line",
+        segmented
+          ? "mb-4 flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-control border border-line bg-tile p-0.5"
+          : "mb-5 flex gap-1 overflow-x-auto border-b border-line",
         segmentedOnPhone &&
           "grid gap-0.5 overflow-visible rounded-control border bg-tile p-0.5 lg:flex lg:gap-1 lg:overflow-x-auto lg:rounded-none lg:border-0 lg:border-b lg:bg-transparent lg:p-0",
       )}
@@ -93,10 +118,7 @@ export function Tabs({
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(item.id)}
             className={cx(
-              "-mb-px min-h-11 border-b-2 px-3.5 py-2.5 text-body whitespace-nowrap transition-colors lg:min-h-10",
-              selected
-                ? "border-link font-bold text-link"
-                : "border-transparent text-ink-soft hover:text-ink",
+              tabClass(segmented, selected),
               segmentedOnPhone &&
                 "mb-0 min-w-0 rounded-tile px-1 text-small lg:-mb-px lg:rounded-none lg:px-3.5 lg:text-body",
               segmentedOnPhone &&

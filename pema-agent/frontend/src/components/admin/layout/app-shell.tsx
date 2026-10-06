@@ -162,6 +162,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           pathname={pathname}
           searchHref={allows(["patient.read"]) ? "/patients" : undefined}
           bellHref={allows(["conversation.read"]) ? "/inbox" : undefined}
+          notifyHref={allows(["notify.self"]) ? "/me/notifications" : undefined}
           menuOpen={menuOpen}
           onMenu={setMenuOpen}
           onLogoutRequest={guardedLogout}
@@ -182,6 +183,7 @@ function ShellFrame({
   pathname,
   searchHref,
   bellHref,
+  notifyHref,
   menuOpen,
   onMenu,
   onLogoutRequest,
@@ -195,6 +197,7 @@ function ShellFrame({
   pathname: string;
   searchHref?: string;
   bellHref?: string;
+  notifyHref?: string;
   menuOpen: boolean;
   onMenu: (open: boolean) => void;
   onLogoutRequest: (logout: () => Promise<void>) => Promise<void>;
@@ -226,6 +229,7 @@ function ShellFrame({
           onOpenMenu={openMenu}
           searchHref={searchHref}
           bellHref={bellHref}
+          notifyHref={notifyHref}
         />
       }
       tabBar={<MobileTabBar tabs={tabs} onOpenMenu={openMenu} />}

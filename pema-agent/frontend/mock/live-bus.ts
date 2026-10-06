@@ -15,7 +15,9 @@ export type LiveEventType =
   | "presence.changed"
   | "handoff.changed"
   | "appointments.changed"
-  | "care.changed";
+  | "care.changed"
+  | "assignment.changed"
+  | "notifications.changed";
 export type LiveMessage = { type: LiveEventType; id: string | null };
 export type PresenceState = "viewing" | "replying";
 export type Viewer = { user_id: string; name: string; state: PresenceState };
@@ -123,6 +125,11 @@ const APPOINTMENT_ID: readonly Announce[] = [
   { type: "appointments.changed", idParam: "appointment_id" },
 ];
 
+const ASSIGNMENT: readonly Announce[] = [
+  { type: "assignment.changed", idParam: "conversation_id" },
+  { type: "inbox.changed", idParam: "conversation_id" },
+];
+
 const CARE_PATIENT: readonly Announce[] = [
   { type: "handoff.changed", idParam: "patient_id" },
   { type: "care.changed", idParam: "patient_id" },
@@ -138,6 +145,14 @@ const ANNOUNCE: Record<string, readonly Announce[]> = {
   ],
   "POST /api/v1/conversations/{conversation_id}/read": [
     { type: "inbox.changed", idParam: "conversation_id" },
+  ],
+  "POST /api/v1/conversations/{conversation_id}/claim": ASSIGNMENT,
+  "POST /api/v1/conversations/{conversation_id}/takeover": ASSIGNMENT,
+  "POST /api/v1/conversations/{conversation_id}/release": ASSIGNMENT,
+  "POST /api/v1/conversations/{conversation_id}/assign": ASSIGNMENT,
+  "POST /api/v1/staff/{user_id}/end-shift": [
+    { type: "assignment.changed" },
+    { type: "inbox.changed" },
   ],
   "POST /api/v1/appointments": [{ type: "appointments.changed" }],
   "PATCH /api/v1/appointments/{appointment_id}": APPOINTMENT_ID,

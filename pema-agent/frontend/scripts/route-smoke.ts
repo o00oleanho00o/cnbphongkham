@@ -89,6 +89,11 @@ const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
   "/admin/memory": { heading: "Trí nhớ", action: { role: "button", name: "" } },
   "/admin/kb": { heading: "Kho tri thức", action: { role: "button", name: "Thêm nguồn" } },
   "/admin/accounts": { heading: "Tài khoản Zalo", action: { role: "button", name: "" } },
+  "/admin/roster": { heading: "Lịch trực", action: { role: "button", name: "Thêm ca trực" } },
+  "/me/notifications": {
+    heading: "Thông báo của tôi",
+    action: { role: "button", name: "Liên kết Zalo" },
+  },
   "/admin/agents": { heading: "Agents", action: { role: "button", name: "Tạo agent" } },
   "/admin/agents/new": { heading: "", action: { role: "button", name: "Tạo agent" } },
   "/admin/agents/[id]": { heading: "", action: { role: "button", name: "Lưu" } },

@@ -6,7 +6,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { IconMenu, IconSearch } from "@/components/admin/shared/dashboard-icons";
+import { IconGear, IconMenu, IconSearch } from "@/components/admin/shared/dashboard-icons";
 import { coCanHoiTruocKhiRoi, xinPhepRoiTrang } from "@/lib/admin/shared/unsaved-changes-guard";
 
 import { GuardedLink } from "./guarded-link";
@@ -18,6 +18,7 @@ export function TopBar({
   onOpenMenu,
   searchHref,
   bellHref,
+  notifyHref,
 }: {
   /** Name of the current screen (breadcrumb); empty when the path is not in the menu. */
   title: string;
@@ -27,6 +28,8 @@ export function TopBar({
   searchHref?: string;
   /** Where the bell goes; omitted when the role has no inbox. */
   bellHref?: string;
+  /** Where "Thông báo của tôi" (how Pema reaches me) is; omitted when the role has no notice settings. */
+  notifyHref?: string;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -91,6 +94,16 @@ export function TopBar({
               className="w-full bg-transparent text-label text-ink outline-none placeholder:text-ink-soft"
             />
           </form>
+        )}
+        {notifyHref !== undefined && (
+          <GuardedLink
+            href={notifyHref}
+            aria-label="Thông báo của tôi"
+            title="Thông báo của tôi"
+            className="rounded-tile p-2 text-ink-soft hover:bg-brand-50 hover:text-brand-700"
+          >
+            <IconGear size={19} />
+          </GuardedLink>
         )}
         {bellHref !== undefined && (
           <GuardedLink

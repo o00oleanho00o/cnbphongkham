@@ -2,7 +2,8 @@
 // The Inbox with several people at once, against a fake of the typed client and a fake EventSource: a colleague
 // shows as "đang xem / đang trả lời" in the list and in the thread (a warning, never a lock), our own presence
 // beat is sent, an `inbox.changed` event reloads the right list and thread without losing the selection or the
-// draft being typed, and the "Phụ trách" box offers Tôi, Giữ nguyên and the assignable staff.
+// draft being typed. The shared-inbox part (tabs, identity filter, Nhận / Tiếp quản / Trả lại, the lock, the
+// takeover toast, the role guards) is at the end of the file, against the same fakes.
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -27,10 +28,11 @@ const api = vi.hoisted(() => ({
   staff: vi.fn(),
   search: { current: "" },
   push: vi.fn(),
+  replace: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: api.push }),
+  useRouter: () => ({ push: api.push, replace: api.replace }),
   useSearchParams: () => new URLSearchParams(api.search.current),
 }));
 vi.mock("@/lib/api/client", async (importActual) => {
@@ -86,7 +88,12 @@ class FakeEventSource {
 
 type Viewer = { user_id: string; name: string; state: "viewing" | "replying" };
 
-function summary(id: string, name: string, viewers: Viewer[] = []) {
+function summary(
+  id: string,
+  name: string,
+  viewers: Viewer[] = [],
+  holder: { id: string | null; name: string | null } = { id: null, name: null },
+) {
   return {
     id,
     channel: "zalo_oa",
@@ -99,7 +106,9 @@ function summary(id: string, name: string, viewers: Viewer[] = []) {
     patient_id: "p-1",
     unread_count: 0,
     version: 1,
-    assigned_user_id: null,
+    assigned_user_id: holder.id,
+    assigned_user_name: holder.name,
+    assignment_version: 3,
     viewers,
   };
 }
@@ -111,17 +120,20 @@ function ok<T>(data: T) {
 let listViewers: Viewer[] = [];
 let detailViewers: Viewer[] = [];
 let detailAssignee: string | null = null;
+let rows: ReturnType<typeof summary>[] | null = null;
 
 function route(path: string, options?: { params?: { path?: { conversation_id?: string } } }) {
   if (path === "/api/v1/conversations") {
-    const items = [summary(C1, "Khách Một", listViewers), summary(C2, "Khách Hai")];
+    const items = rows ?? [summary(C1, "Khách Một", listViewers), summary(C2, "Khách Hai")];
     return ok({ items, total: items.length, limit: 100, offset: 0 });
   }
+  if (path === "/api/v1/identities") return ok(IDENTITIES);
   if (path === "/api/v1/conversations/{conversation_id}") {
     const id = options?.params?.path?.conversation_id ?? C1;
     return ok({
       ...summary(id, "Khách Một", detailViewers),
       assigned_user_id: detailAssignee,
+      assigned_user_name: detailAssignee === LAN ? "Bùi Ngọc Lan" : null,
       created_at: "x",
       external_ref: "z",
     });
@@ -132,7 +144,31 @@ function route(path: string, options?: { params?: { path?: { conversation_id?: s
   return ok({ items: [], total: 0, limit: 20, offset: 0 });
 }
 
-function renderInbox() {
+function identity(id: string, label: string, channel: string) {
+  return {
+    id,
+    label,
+    channel,
+    purpose: "customer",
+    enabled: true,
+    channel_enabled: true,
+    kill_switch_on: false,
+    overrides: {},
+    effective: { daily_cap: null, send_gap_min_s: 0, send_gap_max_s: 0 },
+  };
+}
+
+const IDENTITIES = [
+  identity("long", "Long", "zalo_oa"),
+  identity("bot", "Pema CSKH", "zalo_bot"),
+  { ...identity("noi-bo", "Pema Nội bộ", "zalo_personal"), purpose: "internal" },
+];
+
+const CAN_CLAIM = ["conversation.read", "conversation.reply", "review.read", "thread.claim"];
+
+function renderInbox(
+  permissions: string[] = ["conversation.read", "conversation.reply", "review.read"],
+) {
   return render(
     <SessionProvider
       user={{
@@ -142,7 +178,7 @@ function renderInbox() {
         display_name: "Mai Anh",
         role: "cs_staff",
       }}
-      permissions={["conversation.read", "conversation.reply", "review.read"]}
+      permissions={permissions as never}
       onLoggedOut={() => undefined}
     >
       <ToastProvider>
@@ -171,6 +207,8 @@ beforeEach(() => {
   listViewers = [];
   detailViewers = [];
   detailAssignee = null;
+  rows = null;
+  api.replace.mockReset();
   api.search.current = "";
   api.get.mockReset().mockImplementation(route);
   api.post.mockReset().mockImplementation(() => ok(undefined));
@@ -324,140 +362,288 @@ describe("Inbox live updates", () => {
   });
 });
 
-describe("Inbox assignment box", () => {
-  it("offers Tôi, Giữ nguyên and the assignable staff, and assigns the colleague that is picked", async () => {
-    api.search.current = `c=${C1}`;
-    renderInbox();
-    const user = userEvent.setup();
-    const box = await screen.findByLabelText("Phụ trách hội thoại");
-    await waitFor(() => expect(api.staff).toHaveBeenCalled());
-    await user.click(box);
-    const options = await screen.findAllByRole("option");
-    await waitFor(() =>
-      expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
-        "Tôi (Mai Anh)",
-        "Giữ nguyên: chưa giao",
-        "Bùi Ngọc Lan (Quản lý)",
-        "Nguyễn Thanh Hà (Chủ phòng khám)",
-      ]),
-    );
-    expect(options.length).toBeGreaterThan(0);
+describe("Inbox queue tabs and identity filter", () => {
+  const queued = summary(C1, "Khách Một");
+  const mine = summary(C2, "Khách Hai", [], { id: ME, name: "Mai Anh" });
+  const theirs = {
+    ...summary("00000000-0000-4000-8007-000000000003", "Khách Ba", [], {
+      id: LAN,
+      name: "Bùi Ngọc Lan",
+    }),
+    channel: "zalo_bot",
+  };
 
-    await user.click(screen.getByRole("option", { name: "Bùi Ngọc Lan (Quản lý)" }));
-
-    await waitFor(() => expect(api.patch).toHaveBeenCalled());
-    const request = api.patch.mock.calls[0]?.[1] as { body: { assigned_user_id: string } };
-    expect(request.body.assigned_user_id).toBe(LAN);
+  beforeEach(() => {
+    rows = [queued, mine, theirs];
   });
 
-  it("changes nothing when Giữ nguyên is picked", async () => {
-    api.search.current = `c=${C1}`;
-    renderInbox();
-    const user = userEvent.setup();
-    await user.click(await screen.findByLabelText("Phụ trách hội thoại"));
-    await user.click(await screen.findByRole("option", { name: /Giữ nguyên/ }));
-    expect(api.patch).not.toHaveBeenCalled();
+  it("opens_on_the_queue_for_a_role_that_can_claim_and_lists_only_unassigned_threads", async () => {
+    renderInbox(CAN_CLAIM);
+
+    expect(await screen.findByText("Khách Một")).toBeTruthy();
+    expect(screen.queryByText("Khách Hai")).toBeNull();
+    expect(screen.queryByText("Khách Ba")).toBeNull();
   });
 
-  it("offers Chưa giao once somebody owns the conversation and hands it back to nobody", async () => {
+  it("counts_each_tab_from_the_loaded_rows", async () => {
+    renderInbox(CAN_CLAIM);
+
+    await screen.findByText("Khách Một");
+
+    const tabs = screen.getAllByRole("tab").map((t) => t.textContent);
+    expect(tabs).toEqual(["Chờ nhận1", "Của tôi1", "Tất cả3"]);
+  });
+
+  it("says_who_holds_each_thread_on_the_tab_Tất_cả", async () => {
+    api.search.current = "tab=all";
+    renderInbox(CAN_CLAIM);
+
+    expect(await screen.findByText(/Bạn đang giữ/)).toBeTruthy();
+    expect(screen.getByText(/Bùi Ngọc Lan đang giữ/)).toBeTruthy();
+    expect(screen.getByText(/Chưa ai nhận/)).toBeTruthy();
+  });
+
+  it("opens_on_Tất_cả_for_a_role_that_only_reads", async () => {
+    renderInbox();
+
+    expect(await screen.findByText("Khách Hai")).toBeTruthy();
+    expect(screen.getByText("Khách Một")).toBeTruthy();
+  });
+
+  it("keeps_the_tab_in_the_url_so_it_survives_a_reload", async () => {
+    renderInbox(CAN_CLAIM);
+    const user = userEvent.setup();
+    await screen.findByText("Khách Một");
+
+    await user.click(screen.getByRole("tab", { name: /Của tôi/ }));
+
+    expect(api.replace).toHaveBeenCalledWith("/inbox?tab=mine");
+  });
+
+  it("filters_the_loaded_rows_by_identity_and_keeps_the_choice_in_the_url", async () => {
+    api.search.current = "tab=all&identity=bot";
+    renderInbox(CAN_CLAIM);
+
+    expect(await screen.findByText("Khách Ba")).toBeTruthy();
+    expect(screen.queryByText("Khách Một")).toBeNull();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByLabelText("Lọc theo danh tính"));
+    await user.click(await screen.findByRole("option", { name: "Long" }));
+    expect(api.replace).toHaveBeenCalledWith("/inbox?tab=all&identity=long");
+  });
+
+  it("offers_the_customer_identities_only_and_not_the_internal_account", async () => {
+    renderInbox(CAN_CLAIM);
+    const user = userEvent.setup();
+    await screen.findByText("Khách Một");
+
+    await user.click(screen.getByLabelText("Lọc theo danh tính"));
+
+    const labels = (await screen.findAllByRole("option")).map((o) => o.textContent);
+    expect(labels).toEqual(["Tất cả danh tính", "Long", "Pema CSKH"]);
+  });
+
+  it("names_the_queue_when_it_is_empty", async () => {
+    rows = [mine];
+    renderInbox(CAN_CLAIM);
+
+    expect(await screen.findByText("Không có hội thoại nào đang chờ nhận")).toBeTruthy();
+  });
+});
+
+describe("Inbox holder actions", () => {
+  beforeEach(() => {
     api.search.current = `c=${C1}`;
+  });
+
+  it("offers_Nhận_when_nobody_holds_the_thread_and_claims_it_after_the_dialog", async () => {
+    renderInbox(CAN_CLAIM);
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Nhận" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Nhận" }));
+
+    await waitFor(() => expect(api.post).toHaveBeenCalled());
+    expect(api.post.mock.calls[0]?.[0]).toBe("/api/v1/conversations/{conversation_id}/claim");
+  });
+
+  it("locks_the_reply_box_and_offers_Tiếp_quản_while_a_colleague_holds_the_thread", async () => {
     detailAssignee = LAN;
-    renderInbox();
-    const user = userEvent.setup();
-    await user.click(await screen.findByLabelText("Phụ trách hội thoại"));
-    await waitFor(() =>
-      expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
-        "Tôi (Mai Anh)",
-        "Giữ nguyên: Bùi Ngọc Lan",
-        "Chưa giao",
-        "Nguyễn Thanh Hà (Chủ phòng khám)",
-      ]),
-    );
+    renderInbox(CAN_CLAIM);
 
-    await user.click(screen.getByRole("option", { name: "Chưa giao" }));
-
-    await waitFor(() => expect(api.patch).toHaveBeenCalled());
-    const request = api.patch.mock.calls[0]?.[1] as { body: { assigned_user_id: string | null } };
-    expect(request.body.assigned_user_id).toBeNull();
+    expect(await screen.findByText("Bùi Ngọc Lan đang trả lời — Tiếp quản?")).toBeTruthy();
+    const reply = screen.getByLabelText("Nội dung trả lời") as HTMLTextAreaElement;
+    expect(reply.disabled).toBe(true);
+    expect(reply.placeholder).toBe("Bùi Ngọc Lan đang phụ trách. Tiếp quản để nhắn khách.");
+    expect((screen.getByRole("button", { name: "Gửi" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it("can be used with the keyboard alone: Enter opens, arrows move, Enter picks", async () => {
-    api.search.current = `c=${C1}`;
-    renderInbox();
-    const user = userEvent.setup();
-    const box = await screen.findByLabelText("Phụ trách hội thoại");
-    await waitFor(() => expect(api.staff).toHaveBeenCalled());
-    await screen.findByRole("button", { name: "Nhận xử lý" });
-    box.focus();
-
-    await user.keyboard("{Enter}");
-    await waitFor(() => expect(screen.getAllByRole("option")).toHaveLength(4));
-    await user.keyboard("{ArrowDown}{Enter}");
-
-    await waitFor(() => expect(api.patch).toHaveBeenCalled());
-    const request = api.patch.mock.calls[0]?.[1] as { body: { assigned_user_id: string } };
-    expect(request.body.assigned_user_id).toBe(LAN);
-    expect(box.getAttribute("aria-haspopup")).toBe("listbox");
-  });
-
-  it("keeps working while the colleagues load and says so", async () => {
-    api.search.current = `c=${C1}`;
-    api.staff.mockReset().mockReturnValue(new Promise(() => undefined));
-    renderInbox();
-    const user = userEvent.setup();
-    expect(await screen.findByText("Đang tải danh sách nhân viên...")).toBeTruthy();
-    await user.click(await screen.findByLabelText("Phụ trách hội thoại"));
-    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
-      "Tôi (Mai Anh)",
-      "Giữ nguyên: chưa giao",
-    ]);
-  });
-
-  it("says when the colleagues cannot be read and offers Thử lại, which reads them again", async () => {
-    api.search.current = `c=${C1}`;
-    api.staff.mockReset().mockRejectedValueOnce(new Error("Lỗi 500"));
-    api.staff.mockResolvedValue([{ id: LAN, name: "Bùi Ngọc Lan", role: "manager" }]);
-    renderInbox();
-    const user = userEvent.setup();
-    expect(await screen.findByText(/Chưa tải được danh sách nhân viên/)).toBeTruthy();
-
-    await user.click(screen.getByRole("button", { name: "Thử lại" }));
-
-    await waitFor(() => expect(screen.queryByText(/Chưa tải được danh sách nhân viên/)).toBeNull());
-    await user.click(screen.getByLabelText("Phụ trách hội thoại"));
-    expect(await screen.findByRole("option", { name: "Bùi Ngọc Lan (Quản lý)" })).toBeTruthy();
-    expect(api.staff).toHaveBeenCalledTimes(2);
-  });
-
-  it("keeps the Nhận xử lý button working: it assigns the conversation to me", async () => {
-    api.search.current = `c=${C1}`;
+  it("needs_a_reason_to_take_over_and_sends_it_with_the_assignment_version", async () => {
     detailAssignee = LAN;
-    renderInbox();
+    renderInbox(CAN_CLAIM);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Tiếp quản" }));
+    const dialog = await screen.findByRole("dialog");
+    const confirm = within(dialog).getByRole("button", { name: "Tiếp quản" }) as HTMLButtonElement;
+    expect(confirm.disabled).toBe(true);
+
+    await user.type(within(dialog).getByLabelText(/Lý do tiếp quản/), "Bác sĩ cần xem ảnh ngay");
+    await user.click(confirm);
+
+    await waitFor(() => expect(api.post).toHaveBeenCalled());
+    const call = api.post.mock.calls[0] as [
+      string,
+      { body: { reason: string; assignment_version: number } },
+    ];
+    expect(call[0]).toBe("/api/v1/conversations/{conversation_id}/takeover");
+    expect(call[1].body).toEqual({ reason: "Bác sĩ cần xem ảnh ngay", assignment_version: 3 });
+  });
+
+  it("offers_Trả_lại_on_my_own_thread_and_releases_it_to_the_queue", async () => {
+    detailAssignee = ME;
+    renderInbox(CAN_CLAIM);
+    const user = userEvent.setup();
+    expect(await screen.findByText("Bạn đang phụ trách hội thoại này.")).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: "Trả lại" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Trả lại" }));
+
+    await waitFor(() => expect(api.post).toHaveBeenCalled());
+    const call = api.post.mock.calls[0] as [string, { body: { to_agent: boolean } }];
+    expect(call[0]).toBe("/api/v1/conversations/{conversation_id}/release");
+    expect(call[1].body.to_agent).toBe(false);
+  });
+
+  it("says_the_care_loop_is_not_connected_when_returning_to_the_assistant_answers_501", async () => {
+    detailAssignee = ME;
+    api.post.mockImplementation(() =>
+      Promise.resolve({
+        error: { error: { code: "not_implemented", message: "x" } },
+        response: new Response(null, { status: 501 }),
+      }),
+    );
+    renderInbox(CAN_CLAIM);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Trả lại" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByLabelText(/Trả lại cho trợ lý AI/));
+    await user.click(within(dialog).getByRole("button", { name: "Trả lại" }));
+
+    expect(
+      await within(dialog).findByText(
+        "Chưa nối với trợ lý chăm sóc nên chưa trả lại cho trợ lý được.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("offers_Giao_cho_only_to_a_role_that_may_assign", async () => {
+    renderInbox(CAN_CLAIM);
+    await screen.findByRole("button", { name: "Lịch sử phụ trách" });
+    expect(screen.queryByRole("button", { name: "Giao cho..." })).toBeNull();
+    cleanup();
+
+    renderInbox([...CAN_CLAIM, "thread.assign"]);
+    expect(await screen.findByRole("button", { name: "Giao cho..." })).toBeTruthy();
+  });
+
+  it("gives_a_read_only_role_one_sentence_and_no_claim_button_or_reply_box", async () => {
+    renderInbox(["conversation.read"]);
+
+    expect(
+      await screen.findByText(
+        "Vai trò của bạn chỉ xem được hội thoại, không nhận hay trả lời được.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Nhận" })).toBeNull();
+    expect(screen.queryByLabelText("Nội dung trả lời")).toBeNull();
+  });
+
+  it("shows_the_history_of_who_held_the_thread", async () => {
+    api.get.mockImplementation((path: string, options?: unknown) =>
+      path === "/api/v1/conversations/{conversation_id}/assignments"
+        ? ok([
+            {
+              id: "a1",
+              at: "2026-09-20T09:40:00+07:00",
+              kind: "takeover",
+              by: "Hoàng Nam",
+              user_id: ME,
+              user_name: "Hoàng Nam",
+              previous_user_id: LAN,
+              previous_user_name: "Mai Anh",
+              reason: "Chị khách cần bác sĩ xem ảnh ngay",
+            },
+          ])
+        : route(path, options as never),
+    );
+    renderInbox(CAN_CLAIM);
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("button", { name: "Nhận xử lý" }));
+    await user.click(await screen.findByRole("button", { name: "Lịch sử phụ trách" }));
 
-    await waitFor(() => expect(api.patch).toHaveBeenCalled());
-    const request = api.patch.mock.calls[0]?.[1] as { body: { assigned_user_id: string } };
-    expect(request.body.assigned_user_id).toBe(ME);
+    expect(await screen.findByText("Hoàng Nam tiếp quản từ Mai Anh")).toBeTruthy();
+    expect(screen.getByText("Lý do: Chị khách cần bác sĩ xem ảnh ngay")).toBeTruthy();
+  });
+});
+
+describe("Inbox when a send is refused", () => {
+  function refuseSend(code: string, message: string, status: number) {
+    api.post.mockImplementation((path: string) =>
+      path === "/api/v1/conversations/{conversation_id}/messages"
+        ? Promise.resolve({
+            error: { error: { code, message } },
+            response: new Response(null, { status }),
+          })
+        : ok(undefined),
+    );
+  }
+
+  beforeEach(() => {
+    api.search.current = `c=${C1}`;
   });
 
-  it("lives in the thread header next to the status box", async () => {
-    api.search.current = `c=${C1}`;
-    renderInbox();
-    const header = (await screen.findByLabelText("Phụ trách hội thoại")).closest("header");
-    expect(header).not.toBeNull();
-    expect(within(header as HTMLElement).getByLabelText("Trạng thái hội thoại")).toBeTruthy();
+  it("turns_a_thread_locked_answer_into_the_takeover_banner_and_keeps_the_draft", async () => {
+    refuseSend("thread_locked", "Bùi Ngọc Lan đang trả lời — Tiếp quản?", 409);
+    renderInbox(CAN_CLAIM);
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText("Nội dung trả lời"), "Dạ em chào chị");
+
+    await user.click(screen.getByRole("button", { name: "Gửi" }));
+
+    expect(await screen.findByText("Tin chưa gửi. Nội dung bạn soạn vẫn còn.")).toBeTruthy();
+    expect((screen.getByLabelText("Nội dung trả lời") as HTMLTextAreaElement).value).toBe(
+      "Dạ em chào chị",
+    );
   });
 
-  it("shows the viewers line and the assignee box in the same thread header", async () => {
-    api.search.current = `c=${C1}`;
-    listViewers = [{ user_id: LAN, name: "Bùi Ngọc Lan", state: "viewing" }];
-    detailViewers = listViewers;
-    renderInbox();
-    const box = await screen.findByLabelText("Phụ trách hội thoại");
-    const header = box.closest("header") as HTMLElement;
-    expect(within(header).getByTestId("presence-line")).toBeTruthy();
-    expect(within(header).getByLabelText("Trạng thái hội thoại")).toBeTruthy();
+  it("explains_no_identity_in_words", async () => {
+    refuseSend("no_identity", "x", 422);
+    renderInbox(CAN_CLAIM);
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText("Nội dung trả lời"), "Dạ em chào chị");
+
+    await user.click(screen.getByRole("button", { name: "Gửi" }));
+
+    expect(await screen.findByText(/chưa gắn với tài khoản Zalo nào/)).toBeTruthy();
+  });
+});
+
+describe("Inbox takeover notice", () => {
+  it("tells_the_previous_holder_when_a_colleague_takes_their_thread_over", async () => {
+    rows = [summary(C1, "Khách Một", [], { id: ME, name: "Mai Anh" })];
+    api.search.current = "tab=all";
+    renderInbox(CAN_CLAIM);
+    await screen.findByText("Khách Một");
+    stream().open();
+
+    rows = [summary(C1, "Khách Một", [], { id: LAN, name: "Bùi Ngọc Lan" })];
+    stream().emit({ type: "assignment.changed", id: C1 });
+
+    expect(
+      await screen.findByText(/Đã bị tiếp quản: Bùi Ngọc Lan giữ hội thoại #0000/),
+    ).toBeTruthy();
   });
 });
