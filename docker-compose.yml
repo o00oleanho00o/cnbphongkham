@@ -13,8 +13,11 @@
 # the shell wins; with the password empty a random one is printed once by `docker compose logs seed`).
 # Stop: `docker compose down` (add -v to also drop data; the seed only runs on an empty database).
 #
-# Temporarily off, to focus on BE, FE and AI (remove the leading "# " of a block to put it back, and of `services:`):
-#   - design canvases, design system: pema-design-viewer :4190, pema-web-design-viewer :4191, pema-design-system :4192
+#   http://localhost:4190   design canvas of the app (Pema App)
+#   http://localhost:4191   design canvas of the web (dropdown: Web cũ / Màn mới / Cả hai)
+#   http://localhost:4192   design system (folder listing of design-system/)
+#
+# Temporarily off (remove the leading "# " of the block to put it back):
 #   - old prototype :4173: run it by hand as in README ("Chạy local bằng Python"):
 #       cd prototype; python -m http.server 4173 --bind 127.0.0.1
 include:
@@ -23,43 +26,44 @@ include:
       - pema-agent/infra/docker-compose.local.yml
     env_file: pema-agent/infra/.env.local-demo
 
-# services:
-#   pema-prototype:
-#     build:
-#       context: .
-#       dockerfile: Dockerfile
-#     container_name: pema-prototype
-#     ports:
-#       - "4173:4173"
-#     restart: unless-stopped
-#
-#   pema-design-viewer:
-#     build:
-#       context: .
-#       dockerfile: design-viewer/Dockerfile
-#     container_name: pema-design-viewer
-#     ports:
-#       - "4190:80"
-#     restart: unless-stopped
-#
-#   pema-web-design-viewer:
-#     build:
-#       context: .
-#       dockerfile: design-viewer/Dockerfile
-#       args:
-#         CANVAS_DIR: "Pema Web redesign canvas"
-#     container_name: pema-web-design-viewer
-#     ports:
-#       - "4191:80"
-#     restart: unless-stopped
-#
-#   # Static folder listing of design-system/ (preview/*.html cards render, the .md pages open as text).
-#   pema-design-system:
-#     image: python:3.12-alpine
-#     container_name: pema-design-system
-#     command: ["python", "-m", "http.server", "80", "--bind", "0.0.0.0", "--directory", "/site"]
-#     volumes:
-#       - ./design-system:/site:ro
-#     ports:
-#       - "4192:80"
-#     restart: unless-stopped
+services:
+  pema-design-viewer:
+    build:
+      context: .
+      dockerfile: design-viewer/Dockerfile
+    container_name: pema-design-viewer
+    ports:
+      - "4190:80"
+    restart: unless-stopped
+
+  pema-web-design-viewer:
+    build:
+      context: .
+      dockerfile: design-viewer/Dockerfile
+      args:
+        CANVAS_DIR: "Pema Web redesign canvas"
+    container_name: pema-web-design-viewer
+    ports:
+      - "4191:80"
+    restart: unless-stopped
+
+  # Static folder listing of design-system/ (preview/*.html cards render, the .md pages open as text).
+  pema-design-system:
+    image: python:3.12-alpine
+    container_name: pema-design-system
+    command: ["python", "-m", "http.server", "80", "--bind", "0.0.0.0", "--directory", "/site"]
+    volumes:
+      - ./design-system:/site:ro
+    ports:
+      - "4192:80"
+    restart: unless-stopped
+
+  # Old prototype, off (see the note at the top).
+  # pema-prototype:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: pema-prototype
+  #   ports:
+  #     - "4173:4173"
+  #   restart: unless-stopped
