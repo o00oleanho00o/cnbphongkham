@@ -16,10 +16,7 @@
 #   http://localhost:4190   design canvas of the app (Pema App)
 #   http://localhost:4191   design canvas of the web (dropdown: Web cũ / Màn mới / Cả hai)
 #   http://localhost:4192   design system (folder listing of design-system/)
-#
-# Temporarily off (remove the leading "# " of the block to put it back):
-#   - old prototype :4173: run it by hand as in README ("Chạy local bằng Python"):
-#       cd prototype; python -m http.server 4173 --bind 127.0.0.1
+#   http://localhost:4173   old prototype (Clinic Web, Patient Mobile, Finance), reference only
 include:
   - path:
       - pema-agent/infra/docker-compose.yml
@@ -58,12 +55,12 @@ services:
       - "4192:80"
     restart: unless-stopped
 
-  # Old prototype, off (see the note at the top).
-  # pema-prototype:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: pema-prototype
-  #   ports:
-  #     - "4173:4173"
-  #   restart: unless-stopped
+  # Old prototype of the web (reference for the design packages; the app itself does not use it).
+  pema-prototype:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pema-prototype
+    ports:
+      - "4173:4173"
+    restart: unless-stopped
