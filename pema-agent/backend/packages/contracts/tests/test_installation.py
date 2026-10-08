@@ -8,8 +8,6 @@ from uuid import UUID, uuid4
 import pytest
 
 from pema_contracts.actions import ActionContext
-from pema_contracts.agent_turn import AgentTurnRequest, TurnJob
-from pema_contracts.common import now_vn
 from pema_contracts.installation import (
     InstallationClinicNotLoadedError,
     installation_clinic_id,
@@ -19,7 +17,6 @@ from pema_contracts.installation import (
 )
 from pema_contracts.review import ReviewItemCreate, ReviewKind
 from pema_contracts.roles import ActorType
-from pema_contracts.testing import make_inbound, new_turn_job
 
 
 @pytest.fixture(autouse=True)
@@ -39,20 +36,13 @@ def test_installation_id_is_not_invented_when_it_was_not_loaded() -> None:
 
 
 def test_dtos_fill_clinic_id_from_the_installation() -> None:
-    """ActionContext, TurnJob, AgentTurnRequest, ReviewItemCreate tự điền clinic_id từ mã cài đặt"""
+    """ActionContext và ReviewItemCreate tự điền clinic_id từ mã cài đặt"""
     clinic: UUID = uuid4()
     set_installation_clinic_id(clinic)
     assert installation_clinic_id() == clinic
     assert ActionContext(actor_type=ActorType.USER).clinic_id == clinic
-    job = TurnJob(
-        job_id=uuid4(), account_id="acc-1", thread_id="t-1", messages=[make_inbound()], enqueued_at=now_vn()
-    )
-    assert job.clinic_id == clinic
-    request = AgentTurnRequest(account_id="acc-1", batch=[make_inbound()])
-    assert request.clinic_id == clinic
     review = ReviewItemCreate(job_id="turn-1", kind=ReviewKind.REPLY_DRAFT)
     assert review.clinic_id == clinic
-    assert new_turn_job().clinic_id == clinic
 
 
 def test_an_explicit_clinic_id_still_wins() -> None:

@@ -1,4 +1,4 @@
-# The Pema stack (backend, frontend, AI worker) with ONE command, from the repo root:
+# The Pema clinic stack (backend, frontend) with ONE command, from the repo root:
 #
 #   docker compose up --build
 #
@@ -7,7 +7,7 @@
 #   http://localhost:3000   Pema staff web (Next.js)           demo accounts: see the `seed` service
 #   http://localhost:8000   Pema API (FastAPI, /healthz)
 #
-# The stack (postgres, redis, migrate, api, worker, frontend, seed) comes from pema-agent/infra: its compose file
+# The stack (postgres, redis, migrate, api, frontend, seed) comes from pema-agent/infra: its compose file
 # plus docker-compose.local.yml, with the demo values of infra/.env.local-demo (local use only, ports on 127.0.0.1).
 # Login (owner): admin@gmail.com / Admin@123, set in infra/.env.local-demo (PEMA_SEED_OWNER_EMAIL, PEMA_SEED_PASSWORD;
 # the shell wins; with the password empty a random one is printed once by `docker compose logs seed`).

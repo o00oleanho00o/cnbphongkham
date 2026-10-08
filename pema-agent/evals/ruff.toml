@@ -1,9 +1,0 @@
-# The evals sit outside the backend workspace; lint them with the backend rules:
-#   cd backend && uv run ruff check ../evals && uv run ruff format --check ../evals
-extend = "../backend/pyproject.toml"
-src = ["../backend/packages/contracts/src", "../backend/apps/api", ".."]
-
-[lint.per-file-ignores]
-# Case data (Vietnamese text copied verbatim from the original cases) and tests
-"eval_cases*.py" = ["E501"]
-"test_*.py" = ["S101", "E501", "PT012"]

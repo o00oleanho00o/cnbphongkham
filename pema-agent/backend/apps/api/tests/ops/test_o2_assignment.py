@@ -1,8 +1,7 @@
 """Assignment history, claim, send lock, takeover, release, assign, end of shift (package O, step O2).
 
 New tests (no zalo-agent original). Need ``PEMA_TEST_DATABASE_URL`` (the module is marked ``db``). They cover the
-acceptance of the recipe: one holder per thread, a history row for every kind, takeover writes three outbox rows
-(previous, new, group) with a PII-free payload, 409 ``thread_locked`` on a send by a non-holder, release from the
+acceptance of the recipe: one holder per thread, a history row for every kind, 409 ``thread_locked`` on a send by a non-holder, release from the
 STAFF state calls package M's port (a fake), RBAC denials for the accountant and reception, audit rows, and the
 races (two claims at once, a takeover during a send, a shift end with a message still queued).
 """
@@ -25,7 +24,6 @@ from pema.clinic.actions import FakeOutboundDelivery, _common, assignment, conve
 from pema.clinic.actions.assignment import CareHandbackRefusedError
 from pema.clinic.actions.seed_demo import SeedResult
 from pema.core.db import ClinicDatabase
-from pema.policy.pii import mask_pii
 from pema_contracts.actions import ActionContext
 from pema_contracts.channel import SendResult, SendStatus
 from pema_contracts.common import VN_TZ
@@ -68,16 +66,6 @@ def history(admin: Engine, conversation_id: UUID) -> list[Any]:
         'WHERE conversation_id = :c ORDER BY "at", id',
         c=conversation_id,
     )
-
-
-def outbox(admin: Engine, conversation_id: UUID, kind: str | None = None) -> list[Any]:
-    sql = (
-        "SELECT kind, recipient_kind, recipient_user_id, payload, state FROM clinic.notification_outbox "
-        "WHERE conversation_id = :c"
-    )
-    if kind is not None:
-        return rows(admin, sql + " AND kind = :k", c=conversation_id, k=kind)
-    return rows(admin, sql, c=conversation_id)
 
 
 def holder_of(admin: Engine, conversation_id: UUID) -> UUID | None:
@@ -154,15 +142,6 @@ async def test_a_claim_takes_an_unassigned_thread_and_writes_everything_that_goe
         None,
         world.users["cs.maianh"],
     )
-    # a claim tells the team group only
-    (note,) = outbox(admin, cid)
-    assert (note.kind, note.recipient_kind, note.recipient_user_id, note.state) == (
-        "assignment.claim",
-        "team_group",
-        None,
-        "pending",
-    )
-    assert note.payload["identity_label"] == "Long"
     audit = rows(
         admin,
         "SELECT details FROM clinic.audit_log WHERE action = 'thread.claim' AND entity_id = :c",
@@ -181,7 +160,6 @@ async def test_claiming_what_you_already_hold_changes_nothing(
     again = await assignment.claim(db, mai, cid)
     assert again.assignment_version == 2
     assert len(history(admin, cid)) == 1
-    assert len(outbox(admin, cid)) == 1
 
 
 async def test_a_thread_somebody_else_holds_cannot_be_claimed(
@@ -230,41 +208,6 @@ async def test_a_stale_assignment_version_is_a_409(
 
 
 # ---------------------------------------------------------------------------------------- takeover
-async def test_a_takeover_tells_the_old_holder_the_new_one_and_the_group_without_any_pii(
-    db: ClinicDatabase, admin: Engine, world: SeedResult, add_account: Any, staff_ctx: Any
-) -> None:
-    add_account("long", label="Long")
-    cid = await new_thread(db, admin, world)
-    await assignment.claim(db, staff_ctx("cs.maianh"), cid)
-    out = await assignment.takeover(
-        db, staff_ctx("doctor.mai"), cid, TakeoverRequest(reason="Câu hỏi về điều trị, bác sĩ trả lời")
-    )
-    assert out.assigned_user_id == world.users["doctor.mai"]
-    assert out.assignment_version == 3
-
-    kinds = [h.kind for h in history(admin, cid)]
-    assert kinds == ["claim", "takeover"]
-    takeover = history(admin, cid)[-1]
-    assert takeover.previous_user_id == world.users["cs.maianh"]
-    assert takeover.reason == "Câu hỏi về điều trị, bác sĩ trả lời"
-
-    notes = outbox(admin, cid, "assignment.takeover")
-    assert len(notes) == 3
-    assert {(n.recipient_kind, n.recipient_user_id) for n in notes} == {
-        ("user", world.users["cs.maianh"]),
-        ("user", world.users["doctor.mai"]),
-        ("team_group", None),
-    }
-    for note in notes:
-        assert set(note.payload) == PAYLOAD_KEYS
-        assert note.payload["short_code"] == "#" + cid.hex[:4].upper()
-        assert note.payload["deep_link"] == f"/inbox?conversation={cid}"
-        flat = json.dumps(note.payload, ensure_ascii=False)
-        assert "Bệnh nhân mẫu 025" not in flat
-        assert "Khách mẫu" not in flat
-        assert "Câu hỏi về điều trị" not in flat, "the reason stays in the history"
-        assert not mask_pii(note.payload["summary"]).changed
-        assert not mask_pii(note.payload["identity_label"]).changed
 
 
 async def test_the_reason_of_a_takeover_never_reaches_the_audit_row(
@@ -348,8 +291,6 @@ async def test_a_release_to_the_agent_calls_package_m_and_frees_the_thread(
     )
     assert out.assigned_user_id is None
     assert care.released == [(world.patients["P025"], "Khách đã yên tâm")]
-    (note,) = outbox(admin, cid, "assignment.release")
-    assert "trợ lý" in note.payload["summary"]
 
 
 async def test_a_release_to_the_agent_is_refused_outside_the_staff_state_and_changes_nothing(
@@ -399,12 +340,6 @@ async def test_a_manager_puts_a_colleague_on_a_thread_and_can_take_it_off_again(
         world.users["cs.maianh"],
         world.users["manager"],
     )
-    notes = outbox(admin, cid, "assignment.assign")
-    assert {(n.recipient_kind, n.recipient_user_id) for n in notes} == {
-        ("user", world.users["cs.maianh"]),
-        ("user", world.users["cs.thu"]),
-        ("team_group", None),
-    }
     same = await assignment.assign(db, manager, cid, AssignRequest(user_id=world.users["cs.thu"]))
     assert same.assignment_version == out.assignment_version, "assigning the holder again is a no-op"
     freed = await assignment.assign(db, manager, cid, AssignRequest(user_id=None))
@@ -437,7 +372,6 @@ async def test_the_phu_trach_box_goes_through_the_assignment_core(
     assert out.assignment_version == 2
     (entry,) = history(admin, cid)
     assert entry.kind == "assign"
-    assert len(outbox(admin, cid)) == 1
     # a colleague cannot take a thread someone holds through the box; a manager can
     with pytest.raises(DomainError) as err:
         await conversations.update_conversation(
@@ -588,17 +522,6 @@ async def test_end_shift_moves_each_active_thread_to_whoever_is_on_duty_or_back_
         world.users["cs.maianh"],
         world.users["manager"],
     )
-    notes = outbox(admin, on_long, "assignment.shift_end")
-    assert {(n.recipient_kind, n.recipient_user_id) for n in notes} == {
-        ("user", world.users["cs.maianh"]),
-        ("user", world.users["cs.thu"]),
-        ("team_group", None),
-    }
-    queued = outbox(admin, on_hoa, "assignment.shift_end")
-    assert {(n.recipient_kind, n.recipient_user_id) for n in queued} == {
-        ("user", world.users["cs.maianh"]),
-        ("team_group", None),
-    }
 
 
 async def test_end_shift_balances_the_threads_between_the_operators_on_duty(

@@ -9,9 +9,6 @@
 #     cs.maianh@example.test, reception.lan@example.test, ... with the same password.
 #     A second run finds the data and changes nothing.
 services:
-  worker:
-    profiles: !reset []
-
   frontend:
     profiles: !reset []
 

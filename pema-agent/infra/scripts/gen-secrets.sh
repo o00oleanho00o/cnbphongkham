@@ -31,7 +31,6 @@ for token in $(grep -o 'change-me-[a-z0-9-]*' "$SRC" | sort -u || true); do
 done
 sed -i "s|^PEMA_SECRET_ENCRYPTION_KEY=.*|PEMA_SECRET_ENCRYPTION_KEY=$(rand_hex 32)|" "$DST"
 sed -i "s|^PEMA_JWT_SECRET=.*|PEMA_JWT_SECRET=$(rand_hex 32)|" "$DST"
-sed -i "s|^PEMA_ZALO_BRIDGE_SECRET=.*|PEMA_ZALO_BRIDGE_SECRET=$(rand_hex 32)|" "$DST"
 chmod 600 "$DST"
 
 echo "wrote $DST (not tracked by git). Review it, then: make up"

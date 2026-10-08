@@ -21,7 +21,6 @@ from pema.clinic.actions.dashboard import percent, range_days
 from pema.clinic.actions.seed_demo import DEMO_DAY, SeedResult
 from pema.clinic.crm_rules.runner import CrmRulesRunner
 from pema.clinic.crm_rules.sql_store import SqlCrmRuleStore
-from pema.clinic.crm_rules.testing import FakeScheduler
 from pema.core.db import ClinicDatabase
 from pema_contracts.common import VN_TZ
 from pema_contracts.dashboard import DashboardRange
@@ -352,7 +351,7 @@ async def test_a_missed_or_cancelled_visit_makes_the_no_show_rule_open_a_recall_
     reception = await client_factory("reception.lan")
     start = datetime.fromisoformat(fresh_start(9))
     appt = await _book(reception, _body(world, "P032", "doctor.mai", start.isoformat()))
-    runner = CrmRulesRunner(SqlCrmRuleStore(db), FakeScheduler())
+    runner = CrmRulesRunner(SqlCrmRuleStore(db))
     later = start + timedelta(days=3)
     await runner.run_clinic(world.clinic_id, now=later)
     assert await _rule_tasks(admin, world.patients["P032"], "no_show") == []

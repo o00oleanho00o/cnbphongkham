@@ -12,12 +12,12 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
+from pema.composition.app_runtime import make_redis_client
 from pema.live.bus import channel_name
 from pema.live.hub import LiveHub
 from pema.live.presence import PresenceService, RedisPresenceStore
 from pema.live.publisher import LivePublisher, install_live_publisher
 from pema.live.redis_bus import RedisLiveEventBus
-from pema.middleware.redis_ops import make_redis_client
 from pema_contracts.live import LiveEvent, LiveEventType, PresenceState
 
 pytestmark = pytest.mark.redis

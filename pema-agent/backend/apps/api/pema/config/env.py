@@ -11,7 +11,6 @@ Nothing here has a real secret as default; secrets are ``None`` until configured
 committed (see ``infra/.env.example``). Each runtime role has its own connection URL:
 
 * ``database_url``         role ``be_app``       (API process; RLS applies)
-* ``worker_database_url``  role ``agent_worker`` (worker process; reads clinic data only via views)
 * ``migration_database_url`` owner role, used only by Alembic.
 """
 
@@ -49,7 +48,6 @@ class Settings(BaseSettings):
     set it is the id the migration creates the clinic with, and processes use it without asking the DB."""
 
     database_url: str = "postgresql+psycopg://be_app@localhost:5432/pema"
-    worker_database_url: str = "postgresql+psycopg://agent_worker@localhost:5432/pema"
     migration_database_url: str = "postgresql+psycopg://postgres@localhost:5432/pema"
     redis_url: str = "redis://localhost:6379/0"
 
@@ -95,9 +93,6 @@ class Settings(BaseSettings):
     retention_link_attempt_days: int = Field(default=30, ge=0)
     """``clinic.identity_link_attempt`` (failure log of the link flow); never younger than one hour."""
 
-    zalo_personal_enabled: bool = False
-    zalo_bridge_url: str = "http://localhost:8200"
-    zalo_bridge_secret: SecretStr | None = None
 
     @field_validator("clinic_id", mode="before")
     @classmethod

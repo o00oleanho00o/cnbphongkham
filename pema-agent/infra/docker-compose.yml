@@ -1,22 +1,19 @@
-# Pema Agent stack: postgres, redis, migrate, api, worker, frontend and the Node bridge.
+# Pema clinic stack (branch feat/agent-v2: the agent layer, its worker and the Zalo bridge were removed):
+# postgres, redis, migrate, api, frontend.
 # ONE STACK = ONE CLINIC (single tenant, branch feat/single-tenant): its own postgres, redis, secrets, Zalo accounts and
 # domain. A second clinic is a second, completely separate stack (other `name:`/-p project, other .env, other host
 # ports, other volumes); see infra/README.md "One system, one clinic".
-# The LLM is a third-party API (LLM_PROVIDER / LLM_BASE_URL / LLM_API_KEY), as in zalo-agent.
 #
 #   default (no profile)  postgres, redis, migrate (one-shot), api
-#   profile worker        agent turns + scheduler + KB ingest (`python -m pema.workers.main`). Without it the
-#                         API answers webhooks and queues turns, but nobody runs them.
 #   profile frontend      Next.js dashboard (output: "standalone"; it forwards /api/v1 to PEMA_API_INTERNAL_URL, read at
 #                         RUNTIME, so one image serves any API address).
 #   profile proxy         Caddy reverse proxy (TLS, security headers) plus the dashboard behind it. The only service
 #                         that publishes 80/443. Run it with the override file docker-compose.proxy.yml, which turns
 #                         the loopback ports of api and frontend into `expose` (see infra/README.md, "Reverse proxy").
-#   profile bridge        Node zca-js bridge (personal Zalo account, risk of account lock). Internal only.
 #   profile ollama        TẠM TẮT LLM LOCAL (2026-10-02): the `ollama` and `ollama-pull` services are commented out
 #                         at the end of this file. Ollama with an NVIDIA GPU, or natively on the GPU PC
 #                         (see infra/ubuntu/HUONG-DAN-UBUNTU.md).
-#   profile app           worker + frontend together (convenience)
+#   profile app           frontend (convenience, kept for the old commands)
 #
 # Run from pema-agent/ (the Makefile does this):
 #   docker compose -f infra/docker-compose.yml --env-file infra/.env up -d
@@ -33,8 +30,7 @@ x-backend-build: &backend-build
 
 # Variables every Python process reads (pema.config.env.Settings, prefix PEMA_). Inside the compose network
 # the hosts are service names, so the URLs are composed here from the passwords in .env, not copied from it.
-# The database URL is NOT here: each process gets only the role it may use (below). The worker must not hold
-# the `be_app` password, because its role (`agent_worker`) has no privilege on `clinic.*` on purpose.
+# The database URL is NOT here: the API gets its role below.
 x-backend-env: &backend-env
   PEMA_ENVIRONMENT: ${PEMA_ENVIRONMENT:-prod}
   PEMA_LOG_LEVEL: ${PEMA_LOG_LEVEL:-INFO}
@@ -50,18 +46,6 @@ x-backend-env: &backend-env
   PEMA_REDIS_URL: redis://:${PEMA_REDIS_PASSWORD:?set it in infra/.env}@redis:6379/0
   PEMA_JWT_SECRET: ${PEMA_JWT_SECRET:?set it in infra/.env}
   PEMA_SECRET_ENCRYPTION_KEY: ${PEMA_SECRET_ENCRYPTION_KEY:?set it in infra/.env}
-  PEMA_ZALO_PERSONAL_ENABLED: ${PEMA_ZALO_PERSONAL_ENABLED:-false}
-  PEMA_ZALO_BRIDGE_URL: http://zalo-personal-bridge:8200
-  PEMA_ZALO_BRIDGE_SECRET: ${PEMA_ZALO_BRIDGE_SECRET:-}
-  # LLM endpoint seed (original unprefixed names; the dashboard value in agent.runtime_settings wins).
-  # Third-party API (OpenRouter, OpenAI, DeepSeek, a 9Router/LiteLLM router, Anthropic, Gemini): see .env.example.
-  LLM_PROVIDER: ${LLM_PROVIDER:-openai-compatible}
-  LLM_BASE_URL: ${LLM_BASE_URL:-}
-  LLM_API_KEY: ${LLM_API_KEY:-}
-  LLM_MODEL: ${LLM_MODEL:-}
-  # Zalo Bot API: `polling` (the worker listens) or `webhook` (the API listens; needs the public https URL).
-  PEMA_ZALO_BOT_MODE: ${PEMA_ZALO_BOT_MODE:-polling}
-  PEMA_ZALO_BOT_WEBHOOK_BASE_URL: ${PEMA_ZALO_BOT_WEBHOOK_BASE_URL:-}
   # Knowledge-base embeddings (bge-m3 through an OpenAI-compatible endpoint). Off = keyword search only.
   # TẠM TẮT LLM LOCAL (2026-10-02): bge-m3 runs on the local Ollama, so embeddings default to off (keyword
   # search, as in zalo-agent). Re-enable: default `true` and uncomment the two lines below.
@@ -71,9 +55,7 @@ x-backend-env: &backend-env
   PEMA_CRM_RUNNER_INTERVAL_SECONDS: ${PEMA_CRM_RUNNER_INTERVAL_SECONDS:-900}
 
 # Data retention (pema.retention; the periods are the clinic owner's decision, defaults as in the code: 0 keeps
-# the group forever). Each process gets the groups of ITS scope: the API (role be_app) runs `clinic`, the worker
-# (role agent_worker) runs `agent`. Both get the cadence. TRACE_DAYS / MEDIA_DAYS empty = follow the dashboard
-# tuning keys AGENT_TRACE_RETENTION_DAYS / MEDIA_RETENTION_DAYS.
+# the group forever). The API (role be_app) runs scope `clinic`.
 x-retention-common-env: &retention-common-env
   PEMA_RETENTION_INTERVAL_SECONDS: ${PEMA_RETENTION_INTERVAL_SECONDS:-86400}
   PEMA_RETENTION_BATCH_SIZE: ${PEMA_RETENTION_BATCH_SIZE:-500}
@@ -84,19 +66,8 @@ x-retention-clinic-env: &retention-clinic-env
   PEMA_RETENTION_LINK_CODE_DAYS: ${PEMA_RETENTION_LINK_CODE_DAYS:-7}
   PEMA_RETENTION_LINK_ATTEMPT_DAYS: ${PEMA_RETENTION_LINK_ATTEMPT_DAYS:-30}
 
-x-retention-agent-env: &retention-agent-env
-  PEMA_RETENTION_HISTORY_DAYS: ${PEMA_RETENTION_HISTORY_DAYS:-0}
-  PEMA_RETENTION_MEMORY_DAYS: ${PEMA_RETENTION_MEMORY_DAYS:-0}
-  PEMA_RETENTION_USAGE_DAYS: ${PEMA_RETENTION_USAGE_DAYS:-0}
-  PEMA_RETENTION_TRACE_DAYS: ${PEMA_RETENTION_TRACE_DAYS:-}
-  PEMA_RETENTION_MEDIA_DAYS: ${PEMA_RETENTION_MEDIA_DAYS:-}
-  PEMA_RETENTION_JOB_RUN_DAYS: ${PEMA_RETENTION_JOB_RUN_DAYS:-30}
-
 x-api-database: &api-database
   PEMA_DATABASE_URL: postgresql+psycopg://be_app:${PEMA_BE_APP_PASSWORD:?set it in infra/.env}@postgres:5432/pema
-
-x-worker-database: &worker-database
-  PEMA_WORKER_DATABASE_URL: postgresql+psycopg://agent_worker:${PEMA_AGENT_WORKER_PASSWORD:?set it in infra/.env}@postgres:5432/pema
 
 services:
   postgres:
@@ -186,7 +157,7 @@ services:
       PEMA_SESSION_ABSOLUTE_DAYS: ${PEMA_SESSION_ABSOLUTE_DAYS:-7}
       # Client address for the login rate limit. X-Forwarded-For is believed ONLY when the TCP peer is one of
       # PEMA_TRUSTED_PROXIES: by default the fixed address of the Caddy container on the `edge` network (below).
-      # Anyone else, including the frontend and the bridge, is taken at its socket address. See client_ip.py.
+      # Anyone else, including the frontend, is taken at its socket address. See client_ip.py.
       PEMA_DASHBOARD_BEHIND_PROXY: ${PEMA_DASHBOARD_BEHIND_PROXY:-true}
       PEMA_TRUSTED_PROXIES: ${PEMA_TRUSTED_PROXIES:-${PEMA_PROXY_IP:-172.29.80.2}}
       # The session cookie is Secure (browsers send it only over https; localhost counts as secure). Set false
@@ -217,24 +188,6 @@ services:
       timeout: 5s
       retries: 6
       start_period: 15s
-
-  # Agent turns, scheduler loop, KB ingest. Same image as the API. Talks to the LLM over HTTP only, so it can
-  # run on the server (LLM_BASE_URL points at the GPU PC over Tailscale) or on the GPU PC itself.
-  worker:
-    profiles: ["worker", "app"]
-    build: *backend-build
-    image: pema-agent-api:${PEMA_IMAGE_TAG:-local}
-    restart: unless-stopped
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-      redis:
-        condition: service_healthy
-    environment:
-      <<: [*backend-env, *worker-database, *retention-common-env, *retention-agent-env]
-    command: ["python", "-m", "pema.workers.main"]
-    volumes:
-      - pema-data:/var/lib/pema
 
   frontend:
     profiles: ["frontend", "app", "proxy"]
@@ -300,36 +253,6 @@ services:
       retries: 6
       start_period: 10s
 
-  zalo-personal-bridge:
-    profiles: ["bridge"]
-    build:
-      context: ..
-      dockerfile: infra/docker/bridge.Dockerfile
-    image: pema-agent-bridge:${PEMA_IMAGE_TAG:-local}
-    restart: unless-stopped
-    environment:
-      # Same flag as the API (default off): disabled, the bridge serves only GET /health and never loads zca-js.
-      PEMA_ZALO_PERSONAL_ENABLED: ${PEMA_ZALO_PERSONAL_ENABLED:-false}
-      # HMAC secret shared with the API (inbound events + outbound calls)
-      PEMA_ZALO_BRIDGE_SECRET: ${PEMA_ZALO_BRIDGE_SECRET:?set it when the bridge profile is on}
-      # Listen on every interface OF THE CONTAINER so the api service can reach it over the compose network.
-      # This is not exposure: the port is only `expose`d below, never published to the host.
-      PEMA_ZALO_BRIDGE_HOST: 0.0.0.0
-      PEMA_ZALO_BRIDGE_PORT: "8200"
-      # Events go to {base}/webhooks/zalo-bridge/{account_id} (no clinic segment: one installation = one clinic)
-      PEMA_API_BASE_URL: http://api:8000/api/v1
-      PEMA_BOT_TIMEZONE: ${PEMA_BOT_TIMEZONE:-Asia/Ho_Chi_Minh}
-      ZALO_BRIDGE_LOG_LEVEL: ${ZALO_BRIDGE_LOG_LEVEL:-info}
-    # Internal only: the API reaches it at http://zalo-personal-bridge:8200. Never publish this port.
-    expose:
-      - "8200"
-    healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8200/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
-      interval: 10s
-      timeout: 5s
-      retries: 6
-      start_period: 15s
-
   # TẠM TẮT LLM LOCAL (2026-10-02): local LLM services. Re-enable: remove the leading `# ` of this block and
   # of the `ollama-models` volume, then `make up-ollama`.
   # ollama:
@@ -388,7 +311,7 @@ services:
   #       { echo "FROM $$PEMA_LLM_MODEL_PULL"; echo "PARAMETER num_ctx $$OLLAMA_CONTEXT_LENGTH"; } > /tmp/Modelfile
   #       ollama create pema-chat -f /tmp/Modelfile
 
-# `default` joins postgres, redis, migrate, worker, the bridge and everything else (unchanged). `edge` is the only
+# `default` joins postgres, redis, migrate and everything else (unchanged). `edge` is the only
 # network Caddy is on: api and frontend are on both, nothing else is on it. Its fixed subnet lets the API name the
 # proxy by address (PEMA_TRUSTED_PROXIES). Docker hands out the other containers' addresses only from `ip_range`
 # (the upper half), so the fixed address of Caddy (`.2`) can never be taken by api or frontend, whatever order they

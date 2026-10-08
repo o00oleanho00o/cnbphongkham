@@ -258,14 +258,15 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
         json={"version": version, "assigned_user_id": str(world.users["cs.thu"])},
     )
 
-    from pema.clinic.actions import ClinicAgentFacingActions
+    from pema.clinic.actions.inbox_ingest import create_review_item
     from pema_contracts.review import ReviewItemCreate, ReviewItemOut, ReviewKind
 
     agent = ActionContext(clinic_id=world.clinic_id, actor_type=ActorType.AGENT)
     items: list[ReviewItemOut] = []
     for n in range(3):
         items.append(
-            await ClinicAgentFacingActions(db).create_review_item(
+            await create_review_item(
+                db,
                 agent,
                 ReviewItemCreate(
                     job_id=f"audit-job-{uuid4().hex}",

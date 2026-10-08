@@ -14,7 +14,7 @@ from pema.bootstrap import create_app
 
 HTTP_METHODS = {"get", "post", "put", "patch", "delete"}
 EXPECTED_PATHS = [
-    # clinic CRM (B1, B2)
+    # clinic CRM (B1, B2) and the knowledge base (D3)
     "/api/v1/auth/login",
     "/api/v1/me",
     "/api/v1/patients/{patient_id}/360",
@@ -29,33 +29,7 @@ EXPECTED_PATHS = [
     "/api/v1/admin/logs/audit",
     "/api/v1/admin/templates",
     "/api/v1/admin/templates/{template_id}/approve",
-    # channels (C1, C2)
-    "/api/v1/webhooks/zalo-bot/{account_id}",
-    "/api/v1/webhooks/zalo-bridge/{account_id}",
-    "/api/v1/admin/channels/{channel}/kill-switch",
-    "/api/v1/admin/accounts",
-    "/api/v1/admin/accounts/{account_id}/login",
-    "/api/v1/admin/accounts/{account_id}/login/status",
-    "/api/v1/admin/accounts/{account_id}/bot-token",
-    "/api/v1/admin/friends/{account_id}/requests",
-    # engine admin (D1..D5, S, P)
-    "/api/v1/admin/agents",
-    "/api/v1/admin/model/provider",
-    "/api/v1/admin/model/tuning",
-    "/api/v1/admin/tools",
-    "/api/v1/admin/tools/image-gen",
     "/api/v1/admin/kb/sources",
-    "/api/v1/admin/kb/search",
-    "/api/v1/admin/schedules/{job_id}/run",
-    "/api/v1/admin/mcp/servers",
-    "/api/v1/admin/mcp/servers/{server_id}/reapprove",
-    "/api/v1/admin/usage/overview",
-    "/api/v1/admin/traces",
-    "/api/v1/admin/logs/app",
-    "/api/v1/admin/threads",
-    "/api/v1/admin/memories",
-    "/api/v1/admin/policy/profiles",
-    "/api/v1/admin/policy/identity/confirm",
 ]
 
 
@@ -108,18 +82,6 @@ def test_every_admin_and_clinic_route_requires_the_session_cookie(schema: dict[s
             if method in HTTP_METHODS and not any("SessionCookie" in req for req in op.get("security", [])):
                 unsecured.append(f"{method.upper()} {path}")
     assert unsecured == []
-
-
-def test_secrets_are_write_only_in_the_admin_dtos(schema: dict[str, Any]) -> None:
-    schemas = schema["components"]["schemas"]
-    for name in ("AccountOut", "LlmSettingsOut", "McpServerView", "VisionSettingsOut", "ImageGenSettingsOut"):
-        props = set(schemas[name]["properties"])
-        assert not props & {"bot_token", "token", "api_key", "headers", "password", "credential"}, name
-
-
-def test_kill_switch_and_daily_cap_are_in_the_channel_settings_schema(schema: dict[str, Any]) -> None:
-    props = schema["components"]["schemas"]["ChannelSettingsOut"]["properties"]
-    assert {"kill_switch_on", "daily_cap", "proactive_sent_today", "bridge_state"} <= set(props)
 
 
 async def test_health_answers_without_a_session(client: httpx.AsyncClient) -> None:
@@ -215,9 +177,3 @@ async def test_a_mutating_staff_route_refuses_an_anonymous_caller(client: httpx.
     resp = await client.post(f"/api/v1/review-items/{uuid4()}/reject", json={"version": 1, "reason": "x"})
     assert resp.status_code == 401
     assert resp.json()["error"]["code"] == "unauthenticated"
-
-
-async def test_bot_token_with_bad_shape_is_rejected_before_the_stub(client: httpx.AsyncClient) -> None:
-    resp = await client.put("/api/v1/admin/accounts/bot-1/bot-token", json={"token": "not a token"})
-    assert resp.status_code == 422
-    assert "not a token" not in resp.text

@@ -32,14 +32,12 @@ def test_uoc_token_tu_ky_tu_matches_the_direct_division(n: int) -> None:
     ("relative", "pattern"),
     [
         ("config/runtime_tuning_settings.py", r"_CHARS['\"]\)\s*/\s*\d"),
-        ("agent/token_estimate.py", r"len\([^)]*\)\s*/\s*\d"),
     ],
 )
 def test_there_is_only_one_chars_to_token_constant(relative: str, pattern: str) -> None:
     """không nơi nào tự chia cho một số ký tự/token khác
 
     The paid-for bug: a cross rule wrote ``/ 4`` (the English figure) while the real estimator ran at 2.5.
-    Both guarded files exist now (``agent/token_estimate.py`` landed with D1), so no case is skipped.
     """
     path = PEMA_ROOT / relative
     found = re.search(pattern, path.read_text(encoding="utf-8"))

@@ -97,12 +97,12 @@ def test_embeddings_are_off_by_default_while_the_local_llm_is_paused(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """Tạm tắt LLM local: không đặt PEMA_EMBEDDING_ENABLED thì không dựng embedder (chỉ tìm theo từ khóa)."""
-    from pema.workers.kb_ingest_worker import tao_embedder
+    from pema.composition.app_runtime import embedder_from_env
 
     monkeypatch.delenv("PEMA_EMBEDDING_ENABLED", raising=False)
     monkeypatch.chdir(tmp_path)  # no stray .env file
     assert EmbeddingSettings().enabled is False
-    assert tao_embedder() is None
+    assert embedder_from_env() is None
 
 
 def test_embeddings_can_be_switched_back_on_by_environment(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -19,7 +19,7 @@ from sqlalchemy.engine import Engine
 from pema.api.clinic_testing import ClientFactory, record_inbound
 from pema.api.routers import live as live_router
 from pema.bootstrap import create_app
-from pema.clinic.actions import ClinicAgentFacingActions
+from pema.clinic.actions.inbox_ingest import create_review_item
 from pema.clinic.actions.seed_demo import SeedResult
 from pema.core.db import ClinicDatabase
 from pema.live import sse
@@ -249,7 +249,8 @@ async def test_a_new_review_item_announces_the_queue_and_the_conversation(
 ) -> None:
     stream = await open_events(app, await client_factory("cs.maianh"), streams)
     await stream.read_until("retry:")
-    item = await ClinicAgentFacingActions(db).create_review_item(
+    item = await create_review_item(
+        db,
         ActionContext(clinic_id=world.clinic_id, actor_type=ActorType.AGENT),
         ReviewItemCreate(
             job_id=f"job-{uuid4().hex}",

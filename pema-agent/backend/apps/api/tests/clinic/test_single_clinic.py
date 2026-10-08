@@ -14,11 +14,8 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DBAPIError
 
 from pema.api.clinic_testing import ClientFactory
-from pema.clinic.actions import ClinicAgentFacingActions
 from pema.clinic.actions.seed_demo import SeedResult
 from pema.core.db import ClinicDatabase, get_installation_clinic_id
-from pema_contracts.actions import ActionContext
-from pema_contracts.roles import ActorType
 
 pytestmark = pytest.mark.db
 
@@ -51,16 +48,6 @@ async def test_the_worker_role_reads_clinic_data_only_through_the_views(
     with pytest.raises(DBAPIError):
         async with worker_db.session() as session:
             await session.execute(text("SELECT count(*) FROM clinic.patient"))
-
-
-async def test_the_agent_door_knows_the_patients_of_the_clinic_and_not_an_unknown_code(
-    worker_db: ClinicDatabase, world: SeedResult
-) -> None:
-    door = ClinicAgentFacingActions(worker_db)
-    ctx = ActionContext(actor_type=ActorType.AGENT)
-    assert ctx.clinic_id == world.clinic_id, "the default of clinic_id is the installation id"
-    assert await door.get_care_context(ctx, "P025") is not None
-    assert await door.get_care_context(ctx, f"X{uuid4().hex[:5]}") is None
 
 
 async def test_ids_that_do_not_exist_answer_404_through_the_api(

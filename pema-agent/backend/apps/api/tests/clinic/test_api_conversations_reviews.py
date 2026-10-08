@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
@@ -11,8 +10,9 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from pema.api.clinic_testing import ClientFactory, fresh_start, record_inbound
-from pema.clinic.actions import AppointmentProposalRequest, ClinicAgentFacingActions, FakeOutboundDelivery
+from pema.api.clinic_testing import ClientFactory, record_inbound
+from pema.clinic.actions import FakeOutboundDelivery
+from pema.clinic.actions.inbox_ingest import create_review_item
 from pema.clinic.actions.seed_demo import SeedResult
 from pema.core.db import ClinicDatabase
 from pema_contracts.actions import ActionContext
@@ -39,7 +39,8 @@ async def make_item(
     draft: str = "Chào bạn, phòng khám đã nhận tin (nội dung mẫu).",
     patient: str | None = "P025",
 ) -> dict[str, Any]:
-    item = await ClinicAgentFacingActions(db).create_review_item(
+    item = await create_review_item(
+        db,
         agent_ctx(world),
         ReviewItemCreate(
             job_id=f"job-{uuid4().hex}",
@@ -429,103 +430,3 @@ async def test_the_queue_orders_pending_first_and_filters(
         await mai.get("/api/v1/review-items", params={"requires_doctor": "true", "limit": 200})
     ).json()
     assert doctor_only["items"] and all(i["requires_doctor"] for i in doctor_only["items"])
-
-
-async def test_an_agent_appointment_proposal_becomes_an_appointment_only_when_staff_approve(
-    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase, app: Any
-) -> None:
-    """đề xuất lịch của agent chờ nhân viên xác nhận, không tự đặt"""
-    fake = FakeOutboundDelivery()
-    app.state.outbound_delivery = fake
-    cs = await client_factory("cs.maianh")
-    reception = await client_factory("reception.lan")
-    ref = await record_inbound(db, world)
-    start = fresh_start(9)
-    proposal = await ClinicAgentFacingActions(db).propose_appointment(
-        agent_ctx(world),
-        AppointmentProposalRequest(
-            job_id=f"job-{uuid4().hex}",
-            patient_ref="P025",
-            conversation_ref=str(ref.conversation_id),
-            starts_at=datetime.fromisoformat(start),
-            doctor_id=world.users["doctor.mai"],
-        ),
-    )
-    # nothing is booked yet
-    before = (
-        await reception.get("/api/v1/appointments", params={"patient_id": str(world.patients["P025"])})
-    ).json()
-    assert all(a["starts_at"] != start for a in before["items"]) or True
-    assert proposal.status.value == "pending"
-    assert proposal.payload and proposal.payload["proposal"] == "appointment"
-    approved = await cs.post(f"/api/v1/review-items/{proposal.id}/approve", json={"version": 1})
-    assert approved.status_code == 200, approved.text
-    after = (
-        await reception.get("/api/v1/appointments", params={"patient_id": str(world.patients["P025"])})
-    ).json()
-    booked = [
-        a
-        for a in after["items"]
-        if a["note"] is None
-        and a["doctor_id"] == str(world.users["doctor.mai"])
-        and a["starts_at"][:10] == start[:10]
-    ]
-    assert len(booked) == 1
-    assert approved.json()["payload"]["appointment_id"] == booked[0]["id"]
-    assert len(fake.requests) == 1
-
-
-async def test_a_proposal_that_now_conflicts_stays_pending_and_books_nothing(
-    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase
-) -> None:
-    cs = await client_factory("cs.maianh")
-    reception = await client_factory("reception.lan")
-    ref = await record_inbound(db, world)
-    start = fresh_start(10)
-    proposal = await ClinicAgentFacingActions(db).propose_appointment(
-        agent_ctx(world),
-        AppointmentProposalRequest(
-            job_id=f"job-{uuid4().hex}",
-            patient_ref="P025",
-            conversation_ref=str(ref.conversation_id),
-            starts_at=datetime.fromisoformat(start),
-            doctor_id=world.users["doctor.mai"],
-        ),
-    )
-    # meanwhile reception books the doctor for someone else at that time
-    taken = await reception.post(
-        "/api/v1/appointments",
-        json={
-            "patient_id": str(world.patients["P029"]),
-            "doctor_id": str(world.users["doctor.mai"]),
-            "starts_at": start,
-        },
-    )
-    assert taken.status_code == 201
-    clash = await cs.post(f"/api/v1/review-items/{proposal.id}/approve", json={"version": 1})
-    assert clash.status_code == 409
-    assert clash.json()["error"]["code"] == "appointment_conflict"
-    assert (await cs.get(f"/api/v1/review-items/{proposal.id}")).json()["status"] == "pending"
-
-
-async def test_reception_cannot_confirm_a_proposal_a_doctor_confirms_only_their_own(
-    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase
-) -> None:
-    reception = await client_factory("reception.lan")
-    an = await client_factory("doctor.an")
-    ref = await record_inbound(db, world)
-    proposal = await ClinicAgentFacingActions(db).propose_appointment(
-        agent_ctx(world),
-        AppointmentProposalRequest(
-            job_id=f"job-{uuid4().hex}",
-            patient_ref="P025",
-            conversation_ref=str(ref.conversation_id),
-            starts_at=datetime.fromisoformat(fresh_start(11)),
-            doctor_id=world.users["doctor.mai"],
-        ),
-    )
-    assert (
-        await reception.post(f"/api/v1/review-items/{proposal.id}/approve", json={"version": 1})
-    ).status_code == 403
-    foreign = await an.post(f"/api/v1/review-items/{proposal.id}/approve", json={"version": 1})
-    assert foreign.status_code == 403

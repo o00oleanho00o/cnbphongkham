@@ -24,7 +24,6 @@ from pema.clinic.actions import _common
 from pema.clinic.actions.seed_demo import DEMO_DAY, SeedResult
 from pema.clinic.crm_rules.runner import CrmRulesRunner
 from pema.clinic.crm_rules.sql_store import SqlCrmRuleStore
-from pema.clinic.crm_rules.testing import FakeScheduler
 from pema.clinic.media_storage import InMemoryMediaStorage
 from pema.core.db import ClinicDatabase
 
@@ -149,7 +148,7 @@ async def test_completing_a_session_does_what_save_session_did_and_feeds_the_crm
     )
     assert photo_tasks == 0  # with_photo: no "Thiếu ảnh mốc" task
 
-    report = await CrmRulesRunner(SqlCrmRuleStore(db), FakeScheduler()).run_clinic(world.clinic_id, DEMO_NOW)
+    report = await CrmRulesRunner(SqlCrmRuleStore(db)).run_clinic(world.clinic_id, DEMO_NOW)
     assert report.tasks_created >= 3
     with admin.connect() as conn:
         rules = set(
@@ -542,22 +541,6 @@ async def test_patient_360_carries_the_richer_plans_and_sessions(
     assert "note" not in newest and "aftercare" not in newest  # the 360 never carries clinical text
     for key in newest:
         assert key != "note"
-
-
-async def test_the_agent_care_context_shows_the_plan_progress_as_codes_and_numbers(
-    world: SeedResult, worker_db: ClinicDatabase, db: ClinicDatabase
-) -> None:
-    from pema.clinic.actions import ClinicAgentFacingActions
-    from pema_contracts.actions import ActionContext
-    from pema_contracts.roles import ActorType
-
-    ctx = ActionContext(clinic_id=world.clinic_id, actor_type=ActorType.AGENT)
-    care = await ClinicAgentFacingActions(worker_db).get_care_context(ctx, "P025")
-    assert care is not None
-    assert care.plan_service_code == "laser-co2"
-    assert (care.plan_completed_sessions, care.plan_total_sessions) == (1, 3)
-    dump = care.model_dump_json()
-    assert "Liệu trình mẫu" not in dump  # titles are free text; the agent gets codes and numbers only
 
 
 async def test_a_photo_above_the_global_body_ceiling_uploads_and_one_above_the_photo_ceiling_is_refused(

@@ -10,11 +10,10 @@ All data is synthetic: patient codes P025.., uuid user ids, no names, phones or 
 
 from __future__ import annotations
 
-import json
 import os
 import uuid
 from collections.abc import AsyncIterator, Iterator
-from datetime import UTC, datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -31,14 +30,13 @@ from pema.clinic.crm_rules.engine import SUPERSEDED_RESOLUTION
 from pema.clinic.crm_rules.rules import DEFAULT_RULES
 from pema.clinic.crm_rules.runner import CrmRulesRunner
 from pema.clinic.crm_rules.sql_store import SqlCrmRuleStore
-from pema.clinic.crm_rules.testing import NOW, FakeScheduler
+from pema.clinic.crm_rules.testing import NOW
 from pema.core.db import ClinicDatabase
 from pema.core.testing import ensure_test_clinic, truncate_installation_data
 from pema_contracts.actions import ActionContext
 from pema_contracts.crm import CrmRuleUpdate, RuleKey, RuleSendMode
 from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.roles import ActorType, Role
-from pema_contracts.scheduler import JobKind
 
 pytestmark = pytest.mark.db
 
@@ -214,8 +212,8 @@ def _audit(engine: Engine, clinic_id: uuid.UUID, action: str) -> list[dict[str, 
         return [dict(r) for r in rows]
 
 
-def _runner(db: ClinicDatabase, scheduler: FakeScheduler) -> CrmRulesRunner:
-    return CrmRulesRunner(SqlCrmRuleStore(db), scheduler, daily_cap=10, max_lateness_days=1)
+def _runner(db: ClinicDatabase) -> CrmRulesRunner:
+    return CrmRulesRunner(SqlCrmRuleStore(db))
 
 
 async def test_the_ten_rules_are_seeded_per_clinic_and_listed_in_order(
@@ -293,8 +291,7 @@ async def test_a_run_writes_the_tasks_once_and_a_rerun_writes_nothing(
     db: ClinicDatabase, clinic: Ids, admin_engine: Engine
 ) -> None:
     """Lần chạy ghi việc vào Postgres đúng một lần; chạy lại không ghi thêm gì và không audit thêm."""
-    scheduler = FakeScheduler()
-    runner = _runner(db, scheduler)
+    runner = _runner(db)
     first = await runner.run_clinic(clinic["clinic"], NOW)
     tasks = _tasks(admin_engine, clinic["clinic"])
     assert first.tasks_created == len(tasks) > 0
@@ -334,44 +331,13 @@ async def test_a_run_writes_the_tasks_once_and_a_rerun_writes_nothing(
     assert len(runs) == 1
     assert runs[0]["actor_type"] == "system"
     assert runs[0]["details"]["new_tasks"] == first.tasks_created
-    assert scheduler.create_calls == 0
-
-
-async def test_a_message_job_is_created_only_for_a_verified_consenting_patient(
-    db: ClinicDatabase, clinic: Ids
-) -> None:
-    """Job tin nhắn chỉ tạo cho bệnh nhân đã xác minh danh tính và đồng ý nhận tin; chạy lại không tạo thêm."""
-    await SqlCrmRuleAdminService(db).update_rule(
-        _owner(clinic["clinic"], clinic["owner"]),
-        RuleKey.D1,
-        CrmRuleUpdate(version=1, send_mode=RuleSendMode.AUTO_REMINDER),
-    )
-    scheduler = FakeScheduler()
-    runner = _runner(db, scheduler)
-    first = await runner.run_clinic(clinic["clinic"], NOW)
-    assert first.jobs_created == 1
-    job = next(iter(scheduler.jobs.values()))
-    assert (job.kind, job.payload, job.account_id, job.thread_id) == (
-        JobKind.MESSAGE,
-        "crm.d1",
-        "bot-1",
-        "uid-025",
-    )
-    assert job.patient_id == clinic["P025"]
-    assert job.dedupe_key is not None
-    assert job.dedupe_key.startswith("CRM:d1:P025:")
-    assert job.next_run_at == (NOW + timedelta(0)).astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%S.000Z")
-
-    second = await runner.run_clinic(clinic["clinic"], NOW)
-    assert (second.jobs_created, second.jobs_already_scheduled) == (0, 1)
-    assert scheduler.create_calls == 1
 
 
 async def test_a_new_booking_supersedes_the_open_task_and_a_resolved_task_is_left_alone(
     db: ClinicDatabase, clinic: Ids, admin_engine: Engine
 ) -> None:
     """Đặt lịch mới thay thế việc đang mở; việc đã xử lý xong không bị đụng tới."""
-    runner = _runner(db, FakeScheduler())
+    runner = _runner(db)
     await runner.run_clinic(clinic["clinic"], NOW)
     tasks = _tasks(admin_engine, clinic["clinic"])
     overdue = next(k for k in tasks if k.startswith("CRM:overdue:P027:"))
@@ -398,7 +364,7 @@ async def test_opting_out_supersedes_the_marketing_task_and_keeps_the_clinical_o
     db: ClinicDatabase, clinic: Ids, admin_engine: Engine
 ) -> None:
     """Từ chối nhận tin thay thế việc marketing nhưng giữ việc lâm sàng."""
-    runner = _runner(db, FakeScheduler())
+    runner = _runner(db)
     await runner.run_clinic(clinic["clinic"], NOW)
     with admin_engine.begin() as conn:
         _run(conn, "UPDATE clinic.patient SET marketing_opt_out = true WHERE id = :p", p=clinic["P030"])
@@ -411,35 +377,10 @@ async def test_opting_out_supersedes_the_marketing_task_and_keeps_the_clinical_o
 
 async def test_the_worker_role_cannot_read_the_crm_task_table(db: ClinicDatabase, clinic: Ids) -> None:
     """Vai trò agent_worker không đọc được bảng việc CRM."""
-    await _runner(db, FakeScheduler()).run_clinic(clinic["clinic"], NOW)
+    await _runner(db).run_clinic(clinic["clinic"], NOW)
     worker = create_engine(_role_url("agent_worker", WORKER_PASSWORD))
     try:
         with pytest.raises(ProgrammingError), worker.connect() as conn:
             conn.execute(text("SELECT count(*) FROM clinic.crm_task"))
     finally:
         worker.dispose()
-
-
-async def test_a_rule_can_name_its_own_approved_template_in_its_conditions(
-    db: ClinicDatabase, clinic: Ids, admin_engine: Engine
-) -> None:
-    """Quy tắc có thể chỉ định mẫu đã duyệt riêng trong điều kiện; job dùng đúng khoá mẫu đó."""
-    await SqlCrmRuleStore(db).ensure_rules(clinic["clinic"])
-    with admin_engine.begin() as conn:
-        _run(
-            conn,
-            "INSERT INTO clinic.message_template (clinic_id, template_key, title, body, active, approved_by, "
-            "approved_at) VALUES (:c, 'crm.custom', 'Custom', 'Synthetic body', true, :u, now())",
-            c=clinic["clinic"],
-            u=clinic["doctor"],
-        )
-        _run(
-            conn,
-            "UPDATE clinic.crm_rule SET send_mode = 'auto_reminder', conditions = CAST(:j AS jsonb) "
-            "WHERE clinic_id = :c AND rule_key = 'd3'",
-            c=clinic["clinic"],
-            j=json.dumps({"protocol": "laser-co2", "template_key": "crm.custom"}),
-        )
-    scheduler = FakeScheduler()
-    await _runner(db, scheduler).run_clinic(clinic["clinic"], NOW)
-    assert [j.payload for j in scheduler.jobs.values()] == ["crm.custom"]

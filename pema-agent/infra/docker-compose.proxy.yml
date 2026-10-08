@@ -2,7 +2,7 @@
 # publishing their loopback ports and are reachable only on the compose networks (`expose`).
 #
 #   docker compose -f infra/docker-compose.yml -f infra/docker-compose.proxy.yml --env-file infra/.env \
-#       --profile proxy up -d             (add --profile worker for the agent worker)
+#       --profile proxy up -d      
 #
 # Without this file (plain `up`, `--profile app`, `pnpm dev`) the ports stay on the loopback addresses
 # PEMA_API_BIND / PEMA_FRONTEND_BIND: that is the development way, no proxy, no TLS, this machine only.

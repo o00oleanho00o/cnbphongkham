@@ -1,7 +1,0 @@
-extend = "../ruff.toml"
-
-[lint.per-file-ignores]
-# prose-heavy report and docstrings (E501); a seeded simulation, not cryptography (S311);
-# tests state a race and its outcome in one assertion (S101, PT018) and parametrize with a plain string (PT006)
-"*.py" = ["E501", "S311"]
-"test_*.py" = ["S101", "E501", "PT012", "PT018", "PT006", "S311"]

@@ -377,35 +377,6 @@ async def test_get_chunks_unknown_source_returns_404(kb_api: KbApi) -> None:
     assert res.status_code == 404
 
 
-async def test_get_source_agents_returns_the_agents_bound_used_to_warn_before_a_delete(kb_api: KbApi) -> None:
-    """trả đúng danh sách agent đang gán nguồn này - dashboard dùng để cảnh báo trước khi xóa"""
-    kb_api.kb_database.add_agent("a1")
-    kb_api.kb_database.add_agent("a2")
-    id_ = await tao_text(kb_api)
-    for agent in ("a1", "a2"):
-        res = await kb_api.client.put(
-            f"{kb_api.base}/agents/{agent}/sources", json={"ids": [id_]}, headers=kb_api.headers()
-        )
-        assert res.status_code == 200
-    res = await kb_api.client.get(f"{kb_api.base}/sources/{id_}/agents", headers=kb_api.headers())
-    assert res.status_code == 200
-    assert sorted(res.json()["ids"]) == ["a1", "a2"]
-
-
-async def test_get_source_agents_unknown_source_returns_404_and_unbound_source_returns_empty(
-    kb_api: KbApi,
-) -> None:
-    """nguồn không tồn tại trả 404; nguồn chưa agent nào gán trả mảng rỗng"""
-    res = await kb_api.client.get(f"{kb_api.base}/sources/khong-ton-tai/agents", headers=kb_api.headers())
-    assert res.status_code == 404
-    id_ = await tao_text(kb_api)
-    res = await kb_api.client.get(f"{kb_api.base}/sources/{id_}/agents", headers=kb_api.headers())
-    assert res.json() == {"ids": []}
-
-
-# ------------------------------------------------------------------------------ DELETE
-
-
 async def test_delete_removes_both_the_database_row_and_the_file_on_disk(kb_api: KbApi) -> None:
     """DELETE xóa cả dòng DB lẫn file trên đĩa"""
     res = await kb_api.client.post(
@@ -440,186 +411,6 @@ async def test_delete_a_typed_source_without_a_file_raises_nothing_and_unknown_i
 # ------------------------------------------------------------------------------ bindings (agent -> sources)
 
 
-async def test_put_agent_sources_replaces_the_whole_list(kb_api: KbApi) -> None:
-    """PUT thay thế toàn bộ danh sách"""
-    kb_api.kb_database.add_agent("a1")
-    n1, n2 = await tao_text(kb_api, "n1"), await tao_text(kb_api, "n2")
-    await kb_api.client.put(
-        f"{kb_api.base}/agents/a1/sources", json={"ids": [n1, n2]}, headers=kb_api.headers()
-    )
-    res = await kb_api.client.put(
-        f"{kb_api.base}/agents/a1/sources", json={"ids": [n2]}, headers=kb_api.headers()
-    )
-    assert res.json() == {"ids": [n2]}
-    assert (await kb_api.client.get(f"{kb_api.base}/agents/a1/sources", headers=kb_api.headers())).json() == {
-        "ids": [n2]
-    }
-
-
-async def test_put_agent_sources_binding_a_missing_source_or_agent_is_refused_and_writes_nothing(
-    kb_api: KbApi,
-) -> None:
-    """gán nguồn KHÔNG tồn tại / cho agentId KHÔNG tồn tại bị từ chối - không được tạo dòng gán mồ côi"""
-    kb_api.kb_database.add_agent("a1")
-    n1 = await tao_text(kb_api, "n1")
-    res = await kb_api.client.put(
-        f"{kb_api.base}/agents/a1/sources", json={"ids": ["khong-co"]}, headers=kb_api.headers()
-    )
-    assert res.status_code == 422
-    res = await kb_api.client.put(
-        f"{kb_api.base}/agents/agent-khong-ton-tai/sources", json={"ids": [n1]}, headers=kb_api.headers()
-    )
-    assert res.status_code == 422
-    assert kb_api.kb_database.scalar("SELECT count(*) FROM agent.agent_kb_document") == 0
-
-
-async def test_put_agent_sources_far_too_many_ids_are_refused_by_the_list_bound_before_any_lookup(
-    kb_api: KbApi,
-) -> None:
-    """sourceIds vượt xa trần số lượng vẫn bị chặn nhờ .max(500) - không lọt xuống tới câu SQL"""
-    # 1-character ids: the cheapest valid element (4 bytes of JSON), 40,000 of them is ~160 KB - under the
-    # route's own 256 KB body ceiling, so the LIST bound is what is measured, not the body ceiling.
-    kb_api.kb_database.add_agent("a1")
-    qua = ["a"] * 40_000
-    res = await kb_api.client.put(
-        f"{kb_api.base}/agents/a1/sources", json={"ids": qua}, headers=kb_api.headers()
-    )
-    assert res.status_code == 422, f"phải chặn có lý do, không phải văng 500 trần - nhận {res.status_code}"
-    assert res.json()["error"]["code"] == "validation_failed"
-    assert kb_api.kb_database.scalar("SELECT count(*) FROM agent.agent_kb_document") == 0
-
-
-async def test_put_agent_sources_a_huge_body_is_cut_at_the_reading_layer(kb_api: KbApi) -> None:
-    """PUT gán nguồn với body khổng lồ bị chặn ở TẦNG ĐỌC, không nuốt hết vào RAM"""
-    kb_api.kb_database.add_agent("a1")
-    ids = ["x" * 8000 for _ in range(400)]
-    res = await kb_api.client.put(
-        f"{kb_api.base}/agents/a1/sources", json={"ids": ids}, headers=kb_api.headers()
-    )
-    assert res.status_code == 413
-
-
-async def test_put_agent_sources_uses_its_own_256kb_ceiling_not_the_file_ceiling(kb_api: KbApi) -> None:
-    """PUT gán nguồn dùng trần body RIÊNG (256KB), KHÔNG bám theo trần file 20-100MB"""
-    # The file ceiling is left at its default (20 MB): the 1 MB body below passes it - that is exactly what
-    # tells the old shared ceiling from the own one.
-    kb_api.kb_database.add_agent("a1")
-    than = {"ids": ["x" + "y" * (1024 * 1024)]}
-    res = await kb_api.client.put(f"{kb_api.base}/agents/a1/sources", json=than, headers=kb_api.headers())
-    assert res.status_code == 413, f"body 1MB phải bị trần riêng 256KB chặn - nhận {res.status_code}"
-    assert kb_api.kb_database.scalar("SELECT count(*) FROM agent.agent_kb_document") == 0
-
-
-async def test_put_agent_sources_the_largest_valid_payload_500_ids_still_passes_the_own_ceiling(
-    kb_api: KbApi,
-) -> None:
-    """PUT gán nguồn với payload HỢP LỆ lớn nhất (500 id) vẫn qua được trần riêng"""
-    kb_api.kb_database.add_agent("a1")
-    kb_api.kb_database.execute(
-        "INSERT INTO agent.kb_document (clinic_id, id, name, kind) "
-        "SELECT :c, 'nguon-' || lpad(i::text, 12, '0'), 'n' || i, 'text' FROM generate_series(1, 500) AS i",
-        {"c": kb_api.kb_database.clinic_id},
-    )
-    ids = [f"nguon-{i:012d}" for i in range(1, 501)]
-    res = await kb_api.client.put(
-        f"{kb_api.base}/agents/a1/sources", json={"ids": ids}, headers=kb_api.headers()
-    )
-    assert res.status_code == 200, (
-        f"payload hợp lệ lớn nhất phải qua được - nhận {res.status_code}: {res.text[:200]}"
-    )
-    assert len(res.json()["ids"]) == 500
-
-
-async def test_put_agent_sources_each_element_has_its_own_length_ceiling(kb_api: KbApi) -> None:
-    """từng phần tử sourceIds có trần độ dài - id thật chỉ dài 16 ký tự hex, 64 đã dư"""
-    kb_api.kb_database.add_agent("a1")
-    res = await kb_api.client.put(
-        f"{kb_api.base}/agents/a1/sources", json={"ids": ["x" * 200]}, headers=kb_api.headers()
-    )
-    assert res.status_code == 422
-    # Not only the status: an unknown 200-character id would ALSO be refused by the "does not exist" branch.
-    # The message of the list-bound branch names the 64-character ceiling.
-    assert "64" in res.json()["error"]["message"], (
-        "phải bị chặn ở trần độ dài phần tử, không phải ở bước kiểm tồn tại"
-    )
-
-
-# ------------------------------------------------------------------------------ bindings (source -> agents)
-
-
-async def test_put_source_agents_binding_many_agents_reads_back_the_same_in_both_directions(
-    kb_api: KbApi,
-) -> None:
-    """gán nguồn cho nhiều agent, đọc lại thấy đúng ở CẢ HAI chiều"""
-    n = await tao_text(kb_api, "Bảng giá")
-    kb_api.kb_database.add_agent("ban-hang")
-    kb_api.kb_database.add_agent("ho-tro")
-    res = await kb_api.client.put(
-        f"{kb_api.base}/sources/{n}/agents", json={"ids": ["ban-hang", "ho-tro"]}, headers=kb_api.headers()
-    )
-    assert res.status_code == 200
-    assert res.json() == {"ids": ["ban-hang", "ho-tro"]}
-    assert (
-        await kb_api.client.get(f"{kb_api.base}/agents/ban-hang/sources", headers=kb_api.headers())
-    ).json() == {"ids": [n]}
-
-
-async def test_put_source_agents_replaces_and_only_touches_this_source(kb_api: KbApi) -> None:
-    """THAY THẾ chứ không cộng dồn; chỉ đụng nguồn ĐANG gán, không xóa gán của nguồn khác cùng agent"""
-    n1, n2 = await tao_text(kb_api, "Bảng giá"), await tao_text(kb_api, "Chính sách")
-    kb_api.kb_database.add_agent("ban-hang")
-    await kb_api.client.put(
-        f"{kb_api.base}/sources/{n1}/agents", json={"ids": ["ban-hang"]}, headers=kb_api.headers()
-    )
-    await kb_api.client.put(
-        f"{kb_api.base}/sources/{n2}/agents", json={"ids": ["ban-hang"]}, headers=kb_api.headers()
-    )
-    got = (
-        await kb_api.client.get(f"{kb_api.base}/agents/ban-hang/sources", headers=kb_api.headers())
-    ).json()["ids"]
-    assert sorted(got) == sorted([n1, n2])
-    await kb_api.client.put(f"{kb_api.base}/sources/{n1}/agents", json={"ids": []}, headers=kb_api.headers())
-    assert (
-        await kb_api.client.get(f"{kb_api.base}/sources/{n1}/agents", headers=kb_api.headers())
-    ).json() == {"ids": []}
-
-
-async def test_put_source_agents_unknown_source_is_404_and_unknown_agent_is_refused_without_writing(
-    kb_api: KbApi,
-) -> None:
-    """nguồn không tồn tại thì 404; agent không tồn tại thì từ chối trọn gói và KHÔNG ghi gì cả"""
-    kb_api.kb_database.add_agent("co-that")
-    res = await kb_api.client.put(
-        f"{kb_api.base}/sources/khong-co-that/agents", json={"ids": ["co-that"]}, headers=kb_api.headers()
-    )
-    assert res.status_code == 404
-    n = await tao_text(kb_api, "Bảng giá")
-    res = await kb_api.client.put(
-        f"{kb_api.base}/sources/{n}/agents",
-        json={"ids": ["co-that", "khong-co-that"]},
-        headers=kb_api.headers(),
-    )
-    assert res.status_code == 422
-    assert kb_api.kb_database.scalar("SELECT count(*) FROM agent.agent_kb_document") == 0
-
-
-async def test_put_source_agents_element_length_ceiling_and_huge_body(kb_api: KbApi) -> None:
-    """từng phần tử agentIds có trần độ dài; body khổng lồ bị chặn ở TẦNG ĐỌC"""
-    n = await tao_text(kb_api, "Bảng giá")
-    res = await kb_api.client.put(
-        f"{kb_api.base}/sources/{n}/agents", json={"ids": ["x" * 200]}, headers=kb_api.headers()
-    )
-    assert res.status_code == 422
-    ids = ["x" * 8000 for _ in range(400)]
-    res = await kb_api.client.put(
-        f"{kb_api.base}/sources/{n}/agents", json={"ids": ids}, headers=kb_api.headers()
-    )
-    assert res.status_code == 413
-
-
-# ------------------------------------------------------------------------------ approval, search, auth
-
-
 async def test_patch_approval_only_a_doctor_or_the_owner_may_sign_off_and_it_records_who(
     kb_api: KbApi,
 ) -> None:
@@ -644,26 +435,6 @@ async def test_patch_approval_only_a_doctor_or_the_owner_may_sign_off_and_it_rec
     ) == str(kb_api.user_id)
 
 
-async def test_post_search_previews_the_hybrid_search_for_staff_default_deny_applies(kb_api: KbApi) -> None:
-    """(thêm) xem trước tìm kiếm cho nhân viên; mặc định đóng vẫn áp dụng"""
-    kb_api.kb_database.add_agent("tro-ly")
-    id_ = await tao_text(kb_api, "Chăm sóc sau laser", "Tránh nắng và không bôi acid trong một tuần.")
-    kb_api.kb_database.execute(
-        "INSERT INTO agent.kb_chunk (clinic_id, source_id, ord, title, content, folded) "
-        "VALUES (:c, :s, 0, '', 'Tránh nắng và không bôi acid trong một tuần.', 'Tranh nang va khong boi acid')",
-        {"c": kb_api.kb_database.clinic_id, "s": id_},
-    )
-    body = {"query": "tránh nắng", "agent_id": "tro-ly", "limit": 5}
-    res = await kb_api.client.post(f"{kb_api.base}/search", json=body, headers=kb_api.headers())
-    assert res.status_code == 200
-    assert res.json() == {"hits": []}, "agent chưa gán nguồn nào thì đọc được RỖNG"
-    await kb_api.client.put(
-        f"{kb_api.base}/agents/tro-ly/sources", json={"ids": [id_]}, headers=kb_api.headers()
-    )
-    res = await kb_api.client.post(f"{kb_api.base}/search", json=body, headers=kb_api.headers())
-    assert [h["source_id"] for h in res.json()["hits"]] == [id_]
-
-
 async def test_auth_every_kb_route_demands_a_session_even_the_routes_that_write_to_disk(
     kb_api: KbApi,
 ) -> None:
@@ -677,13 +448,6 @@ async def test_auth_every_kb_route_demands_a_session_even_the_routes_that_write_
         ("POST", "/sources/x/reindex"),
         ("PATCH", "/sources/x/approval"),
         ("GET", "/sources/x/chunks"),
-        ("GET", "/sources/x/agents"),
-        ("GET", "/agents/a/sources"),
-        ("PUT", "/agents/a/sources"),
-        # The REVERSE binding is a WRITE route too: leaving it out would leave open exactly what this list
-        # exists to guard.
-        ("PUT", "/sources/x/agents"),
-        ("POST", "/search"),
     ]
     for method, path in duong:
         res = await kb_api.client.request(method, f"{kb_api.base}{path}")

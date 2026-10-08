@@ -18,13 +18,13 @@ from alembic.script import ScriptDirectory
 from pydantic import ValidationError
 
 from pema.config.env import Settings
-from pema.core.pg_testing import BE_PASSWORD, WORKER_PASSWORD
 from pema.core.db import ClinicDatabase
+from pema.core.pg_testing import BE_PASSWORD, WORKER_PASSWORD
+from pema.retention.cli import format_report, run_cli
 from pema.retention.pg_testing import RetentionEnv, Seed
 from pema.retention.policy import RetentionPolicy, Scope, policy_from_settings
 from pema.retention.runner import RetentionRunner, RunStatus, ScopeReport
 from pema.retention.schedule import start_retention_loop
-from pema.workers.retention import format_report, run_cli
 
 API_DIR = Path(__file__).resolve().parents[2]
 PEMA = API_DIR / "pema"
@@ -68,32 +68,6 @@ def test_an_empty_trace_or_media_variable_from_compose_means_unset(monkeypatch: 
     assert settings.retention_media_days is None
     monkeypatch.setenv("PEMA_RETENTION_TRACE_DAYS", "0")
     assert Settings().retention_trace_days == 0, "an explicit 0 still keeps the group forever"
-
-
-def test_compose_passes_every_retention_setting_to_the_process_that_reads_it() -> None:
-    compose = (ENV_EXAMPLE.parent / "docker-compose.yml").read_text(encoding="utf-8")
-    declared: dict[str, str] = {}
-    current = ""
-    for line in compose.splitlines():
-        if line.startswith("x-retention-"):
-            current = line.split(":", 1)[0]
-        elif line and not line.startswith(" "):
-            current = ""
-        match = re.match(r"\s+(PEMA_RETENTION_[A-Z_]+):", line)
-        if match and current:
-            declared[match.group(1)] = current
-    wanted = {f"PEMA_{name.upper()}" for name in Settings.model_fields if name.startswith("retention_")}
-    assert set(declared) == wanted, "compose must carry every PEMA_RETENTION_* setting, by name"
-    clinic = {"MESSAGE_DAYS", "AUTH_SESSION_DAYS", "LINK_CODE_DAYS", "LINK_ATTEMPT_DAYS"}
-    for name, block in declared.items():
-        if name.removeprefix("PEMA_RETENTION_") in clinic:
-            assert block == "x-retention-clinic-env"
-        elif name.removeprefix("PEMA_RETENTION_") in {"INTERVAL_SECONDS", "BATCH_SIZE"}:
-            assert block == "x-retention-common-env"
-        else:
-            assert block == "x-retention-agent-env"
-    assert "<<: [*backend-env, *api-database, *retention-common-env, *retention-clinic-env]" in compose
-    assert "<<: [*backend-env, *worker-database, *retention-common-env, *retention-agent-env]" in compose
 
 
 def test_a_negative_number_of_days_is_refused_by_the_settings_and_by_the_policy() -> None:
@@ -145,15 +119,6 @@ async def test_the_loop_runs_every_interval_and_a_failing_pass_does_not_stop_it(
 
 
 # ------------------------------------------------------------------------------------------------ wiring
-def test_the_worker_runs_the_agent_scope_and_the_api_process_the_clinic_scope() -> None:
-    worker = (PEMA / "workers" / "main.py").read_text(encoding="utf-8")
-    api = (PEMA / "composition" / "api_wiring.py").read_text(encoding="utf-8")
-    assert "scopes=(Scope.AGENT,)" in worker
-    assert "Scope.CLINIC" not in worker
-    assert "scopes=(Scope.CLINIC,)" in api
-    assert "Scope.AGENT" not in api
-    assert "start_media_cleanup_schedule" not in worker, "the retention run replaces the former daily cleanup"
-    assert "pema.workers.retention" not in api, "the API process never imports the worker package"
 
 
 def test_the_migration_chain_has_one_head() -> None:
@@ -171,7 +136,6 @@ def test_no_retention_sql_names_the_audit_log_in_a_delete() -> None:
 def _settings(env: RetentionEnv, *, history_days: int = 0, message_days: int = 0) -> Settings:
     return Settings(
         database_url=env.server.role_url("be_app", BE_PASSWORD),
-        worker_database_url=env.server.role_url("agent_worker", WORKER_PASSWORD),
         retention_history_days=history_days,
         retention_message_days=message_days,
     )
@@ -189,25 +153,10 @@ async def test_cli_dry_run_prints_the_counts_and_changes_nothing(env: RetentionE
     )
     printed = out.getvalue()
     assert code == 0
-    assert "scope=agent status=done" in printed
     assert "scope=clinic status=done" in printed
-    assert "would delete history: 2" in printed
+    assert "scope=agent" not in printed
     assert "would delete conversations: 1" in printed
-    assert seed.count("agent.history", env.clinic_id) == 2
     assert seed.count("clinic.conversation", env.clinic_id) == 1
-
-
-@pytest.mark.db
-async def test_cli_agent_scope_connects_as_the_worker_role_and_deletes(env: RetentionEnv, seed: Seed) -> None:
-    seed.history(env.clinic_id, age=40, n=2)
-    settings = _settings(env, history_days=30).model_copy(
-        update={"database_url": "postgresql+psycopg://be_app:wrong@127.0.0.1:1/none"}
-    )
-    out = io.StringIO()
-    code = await run_cli(["--scope", "agent"], settings=settings, out=out)
-    assert code == 0, out.getvalue()
-    assert "deleted history: 2" in out.getvalue()
-    assert seed.count("agent.history", env.clinic_id) == 0
 
 
 @pytest.mark.db
@@ -218,12 +167,12 @@ async def test_cli_has_no_clinic_option_one_installation_is_one_clinic(env: Rete
             ["--clinic", str(env.clinic_id)], settings=_settings(env, history_days=30), out=io.StringIO()
         )
     out = io.StringIO()
-    code = await run_cli(["--scope", "clinic"], settings=_settings(env, history_days=30), out=out)
+    code = await run_cli([], settings=_settings(env, history_days=30), out=out)
     assert code == 0
     assert "scope=clinic status=done" in out.getvalue()
     assert "scope=agent" not in out.getvalue()
 
 
 def test_the_report_of_a_skipped_run_says_why() -> None:
-    report = ScopeReport(uuid.uuid4(), Scope.AGENT, False, status=RunStatus.SKIPPED_LOCKED)
+    report = ScopeReport(uuid.uuid4(), Scope.CLINIC, False, status=RunStatus.SKIPPED_LOCKED)
     assert "another runner holds the lock" in format_report(report)
