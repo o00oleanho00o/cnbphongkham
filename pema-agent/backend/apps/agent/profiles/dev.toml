@@ -1,0 +1,19 @@
+# Development profile. Secrets never go here: the API key is read from LLM_API_KEY.
+# LLM_MODEL and LLM_BASE_URL override [model].model and [model].base_url.
+
+[agent]
+name = "dev"
+system_prompt = """You are a helpful general-purpose assistant.
+Reply in the user's language. Use a tool when it gives a better answer than guessing."""
+tools = ["get_datetime"]
+timezone = "Asia/Ho_Chi_Minh"
+
+[model]
+provider = "openai-compatible"
+model = ""
+base_url = ""
+timeout_s = 120
+
+[loop]
+max_steps = 6
+max_output_tokens = 2048

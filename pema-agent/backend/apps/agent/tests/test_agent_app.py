@@ -1,0 +1,120 @@
+"""Profiles, the model factory and the chat CLI (run with the echo model)."""
+
+from __future__ import annotations
+
+import io
+from pathlib import Path
+
+import pytest
+from pydantic import ValidationError
+
+from agent_app.cli import main, render_turn
+from agent_app.model_factory import build_model, describe_model, resolve_model_config
+from agent_app.profile import Profile, load_profile
+from agentcore import Message, ModelConfigError, TextBlock, ToolResultBlock, ToolUseBlock, TurnResult, Usage
+from agentcore.harness.model.scripted import EchoModel
+from agentcore.harness.tools.builtin import builtin_tools
+
+DEV_PROFILE = Path(__file__).resolve().parents[1] / "profiles" / "dev.toml"
+
+
+def _profile(**model: str) -> Profile:
+    return Profile.model_validate(
+        {"agent": {"name": "t", "system_prompt": "p"}, "model": {"model": "from-profile", **model}}
+    )
+
+
+def test_the_dev_profile_loads_and_its_tools_exist() -> None:
+    profile = load_profile(DEV_PROFILE)
+
+    assert profile.agent.name == "dev"
+    assert builtin_tools(timezone=profile.agent.timezone).subset(profile.agent.tools).names() == [
+        "get_datetime"
+    ]
+    assert profile.loop_policy().max_steps == profile.loop.max_steps
+
+
+def test_a_misspelt_key_is_refused(tmp_path: Path) -> None:
+    path = tmp_path / "bad.toml"
+    path.write_text('[agent]\nname = "x"\nsystem_prompt = "p"\ntool = ["get_datetime"]\n', encoding="utf-8")
+
+    with pytest.raises(ValidationError):
+        load_profile(path)
+
+
+def test_the_environment_overrides_the_profile_and_holds_the_key() -> None:
+    env = {"LLM_MODEL": "from-env", "LLM_BASE_URL": "https://llm.test/v1", "LLM_API_KEY": "secret"}
+
+    config = resolve_model_config(_profile(base_url="https://profile.test/v1"), env)
+
+    assert (config.model, config.base_url, config.api_key) == ("from-env", "https://llm.test/v1", "secret")
+
+
+def test_without_overrides_the_profile_values_are_used() -> None:
+    config = resolve_model_config(_profile(base_url="https://profile.test/v1"), {"LLM_API_KEY": "k"})
+
+    assert (config.model, config.base_url) == ("from-profile", "https://profile.test/v1")
+    assert (
+        describe_model(_profile(), fake=False, env={"LLM_API_KEY": "k"}) == "from-profile via api.openai.com"
+    )
+
+
+def test_a_missing_key_is_a_config_error_and_fake_needs_no_key() -> None:
+    with pytest.raises(ModelConfigError) as caught:
+        build_model(_profile(), fake=False, env={})
+
+    assert caught.value.field == "api_key"
+    assert isinstance(build_model(_profile(), fake=True, env={}), EchoModel)
+
+
+def test_a_turn_is_rendered_with_its_tool_calls() -> None:
+    result = TurnResult(
+        text="14:00",
+        stop="completed",
+        steps=2,
+        usage=Usage(input_tokens=30, output_tokens=5),
+        new_messages=[
+            Message.user("mấy giờ rồi?"),
+            Message(role="assistant", blocks=[ToolUseBlock(id="c1", name="get_datetime", args={})]),
+            Message(
+                role="tool", blocks=[ToolResultBlock(tool_use_id="c1", name="get_datetime", content="14:00")]
+            ),
+            Message(role="assistant", blocks=[TextBlock(text="14:00")]),
+        ],
+    )
+
+    assert render_turn(result) == (
+        "  [tool] get_datetime({})\n"
+        "  [tool] get_datetime -> ok: 14:00\n"
+        "agent> 14:00\n"
+        "  (steps=2, in=30, out=5, stop=completed)\n"
+    )
+
+
+def test_chat_with_the_echo_model(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr("sys.stdin", io.StringIO("xin chào\n/new\n/exit\n"))
+
+    exit_code = main(["chat", "--profile", str(DEV_PROFILE), "--fake"])
+
+    out = capsys.readouterr().out
+    assert exit_code == 0
+    assert "agent> (echo) xin chào" in out
+    assert "new session: cli-" in out
+
+
+def test_chat_ends_at_the_end_of_input(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr("sys.stdin", io.StringIO("hello\n"))
+
+    assert main(["chat", "--profile", str(DEV_PROFILE), "--fake"]) == 0
+    assert "agent> (echo) hello" in capsys.readouterr().out
+
+
+def test_chat_with_a_missing_profile_exits_with_a_config_error(capsys: pytest.CaptureFixture[str]) -> None:
+    exit_code = main(["chat", "--profile", "does-not-exist.toml", "--fake"])
+
+    assert exit_code == 2
+    assert capsys.readouterr().out.startswith("error:")

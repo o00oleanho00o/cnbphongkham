@@ -8,9 +8,39 @@ resolution-markers = [
 
 [manifest]
 members = [
+    "agent-app",
+    "agent-core",
     "pema-agent-backend",
     "pema-api",
     "pema-contracts",
+]
+
+[[package]]
+name = "agent-app"
+version = "0.1.0"
+source = { editable = "apps/agent" }
+dependencies = [
+    { name = "agent-core" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "agent-core", editable = "packages/agent-core" }]
+
+[[package]]
+name = "agent-core"
+version = "0.1.0"
+source = { editable = "packages/agent-core" }
+dependencies = [
+    { name = "openai" },
+    { name = "pydantic" },
+    { name = "tzdata" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "openai", specifier = ">=1.54" },
+    { name = "pydantic", specifier = ">=2.9" },
+    { name = "tzdata", specifier = ">=2024.2" },
 ]
 
 [[package]]

@@ -25,7 +25,7 @@ dev = [
 [tool.ruff]
 line-length = 110
 target-version = "py312"
-src = ["packages/contracts/src", "apps/api", ".."]
+src = ["packages/contracts/src", "packages/agent-core/src", "apps/api", "apps/agent", ".."]
 extend-exclude = [".venv"]
 
 [tool.ruff.lint]
@@ -41,7 +41,7 @@ ignore = [
 "**/alembic/env.py" = ["S608"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["pema_contracts", "pema"]
+known-first-party = ["pema_contracts", "pema", "agentcore", "agent_app"]
 known-third-party = ["alembic"]
 
 # ------------------------------------------------------------- pyright
@@ -52,7 +52,7 @@ include = ["packages", "apps"]
 exclude = ["**/.venv", "**/__pycache__", "**/node_modules"]
 venvPath = "."
 venv = ".venv"
-extraPaths = ["packages/contracts/src", "apps/api", ".."]
+extraPaths = ["packages/contracts/src", "packages/agent-core/src", "apps/api", "apps/agent", ".."]
 
 # -------------------------------------------------------------- pytest
 [tool.pytest.ini_options]
@@ -68,8 +68,20 @@ markers = [
 # ------------------------------------------------------- import-linter
 # Architecture rules of PLAN-AI01 section 3. Package-level ownership is in docs/CONTRACTS-AI01.md.
 [tool.importlinter]
-root_packages = ["pema_contracts", "pema"]
+root_packages = ["pema_contracts", "pema", "agentcore", "agent_app"]
 include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "the agent core is general: it never imports the clinic app, its contracts or the agent service"
+type = "forbidden"
+source_modules = ["agentcore"]
+forbidden_modules = ["pema", "pema_contracts", "agent_app"]
+
+[[tool.importlinter.contracts]]
+name = "the agent service does not import the clinic app"
+type = "forbidden"
+source_modules = ["agent_app"]
+forbidden_modules = ["pema"]
 
 [[tool.importlinter.contracts]]
 name = "contracts is a leaf: it never imports the application"
