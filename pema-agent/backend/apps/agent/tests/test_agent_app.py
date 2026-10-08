@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from agent_app.cli import main, render_turn
+from agent_app.cli import build_prompt, main, render_turn
 from agent_app.model_factory import build_model, describe_model, resolve_model_config
 from agent_app.profile import Profile, load_profile
 from agentcore import Message, ModelConfigError, TextBlock, ToolResultBlock, ToolUseBlock, TurnResult, Usage
@@ -32,6 +32,48 @@ def test_the_dev_profile_loads_and_its_tools_exist() -> None:
         "get_datetime"
     ]
     assert profile.loop_policy().max_steps == profile.loop.max_steps
+
+
+def test_the_dev_profile_reads_its_prompt_file_and_builds_its_prompt() -> None:
+    profile = load_profile(DEV_PROFILE)
+
+    prompt = build_prompt(profile, tool_names=profile.agent.tools)
+
+    assert profile.agent.system_prompt.startswith("You are a helpful general-purpose assistant.")
+    assert prompt.render_system().startswith(profile.agent.system_prompt.strip())
+    assert prompt.env.tool_names == ("get_datetime",)
+
+
+def test_a_prompt_given_twice_is_refused(tmp_path: Path) -> None:
+    path = tmp_path / "both.toml"
+    path.write_text(
+        '[agent]\nname = "x"\nsystem_prompt = "p"\nsystem_prompt_file = "p.md"\n', encoding="utf-8"
+    )
+
+    with pytest.raises(ValidationError, match="not both"):
+        load_profile(path)
+
+
+def test_an_unknown_prompt_section_stops_the_chat(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    path = tmp_path / "bad.toml"
+    path.write_text('[agent]\nname = "x"\n\n[prompt]\nsections = ["identity", "nope"]\n', encoding="utf-8")
+
+    assert main(["chat", "--profile", str(path), "--fake"]) == 2
+    assert "Unknown prompt section(s): nope" in capsys.readouterr().out
+
+
+def test_the_prompt_command_shows_the_system_prompt_and_the_context_block(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr("sys.stdin", io.StringIO("/prompt\n/exit\n"))
+
+    assert main(["chat", "--profile", str(DEV_PROFILE), "--fake"]) == 0
+    out = capsys.readouterr().out
+    assert (
+        "--- system prompt (frozen for this session) ---\nYou are a helpful general-purpose assistant." in out
+    )
+    assert "<agent-context>\nCurrent time: " in out
+    assert "Channel: cli\nStep 1 of 6.\n</agent-context>" in out
 
 
 def test_a_misspelt_key_is_refused(tmp_path: Path) -> None:
@@ -100,7 +142,7 @@ def test_chat_with_the_echo_model(
 
     out = capsys.readouterr().out
     assert exit_code == 0
-    assert "agent> (echo) xin chào" in out
+    assert "agent> (echo) xin chào\n  (steps=1" in out
     assert "new session: cli-" in out
 
 

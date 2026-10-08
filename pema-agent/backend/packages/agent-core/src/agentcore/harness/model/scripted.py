@@ -56,5 +56,7 @@ class ScriptedModel:
 
 class EchoModel:
     async def complete(self, request: LlmRequest) -> AssistantResult:
-        last_user = next((m.text() for m in reversed(request.messages) if m.role == "user"), "")
-        return reply(f"(echo) {last_user}")
+        last_user = next((m for m in reversed(request.messages) if m.role == "user"), None)
+        # Only the first block: the context block, when present, is appended after the user's own words.
+        first = last_user.blocks[0] if last_user and last_user.blocks else None
+        return reply(f"(echo) {first.text if isinstance(first, TextBlock) else ''}")

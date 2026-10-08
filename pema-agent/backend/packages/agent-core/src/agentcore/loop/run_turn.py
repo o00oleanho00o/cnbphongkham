@@ -3,29 +3,31 @@
 The model is called in a loop and the tools it asks for are run, until it answers without a tool call. When
 the step budget runs out, one last call without tools forces an answer. Every assistant message is stored
 before its tools run, and every tool call gets exactly one result, so the stored history is always valid to
-send back to a provider.
+send back to a provider. The system prompt is the session's frozen one; the per-turn and per-step context
+goes at the end of each request and is never stored.
 """
 
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Final, Literal
 
 from pydantic import ValidationError
 
+from agentcore.clock import utc_now
 from agentcore.harness.model.errors import ModelError
 from agentcore.harness.model.types import AssistantResult, LlmRequest, ModelClient
 from agentcore.harness.store.base import SessionStore
 from agentcore.harness.tools.registry import ToolRegistry
 from agentcore.harness.tools.spec import ToolContext, ToolSpec
 from agentcore.messages import Block, Message, TextBlock, ToolResultBlock, ToolUseBlock, Usage
+from agentcore.prompt.builder import PromptBuilder, with_context
+from agentcore.prompt.sections import StepInfo, TurnInfo
 from agentcore.tenancy import DEFAULT_TENANT
 
-FINAL_TURN_NOTE: Final = (
-    "[system note] The step limit for this turn has been reached. Answer the user now with what you "
-    "already have. Do not call tools."
-)
 ERROR_TEXT_LIMIT: Final = 300
 VALIDATION_ERRORS_SHOWN: Final = 3
 
@@ -59,18 +61,23 @@ async def run_turn(
     *,
     session_id: str,
     user_text: str,
-    system_prompt: str,
+    prompt: PromptBuilder,
     model: ModelClient,
     tools: ToolRegistry,
     store: SessionStore,
     policy: LoopPolicy | None = None,
     tenant_id: str = DEFAULT_TENANT,
+    channel: str | None = None,
+    clock: Callable[[], datetime] = utc_now,
 ) -> TurnResult:
+    """``clock`` must return an aware datetime; tests pass a fixed one."""
     limits = policy or LoopPolicy()
     ctx = ToolContext(session_id=session_id, tenant_id=tenant_id)
     schemas = tools.schemas()
     new_messages: list[Message] = []
     usage = Usage()
+    system = await prompt.system(store, tenant_id, session_id)
+    turn_prompt = prompt.start_turn(TurnInfo(now=clock(), channel=channel))
 
     async def record(message: Message) -> None:
         await store.append(tenant_id, session_id, message)
@@ -80,8 +87,12 @@ async def run_turn(
 
     for step in range(1, limits.max_steps + 1):
         history = await store.load(tenant_id, session_id)
+        context = turn_prompt.context(StepInfo(step=step, max_steps=limits.max_steps))
         request = LlmRequest(
-            system=system_prompt, messages=history, tools=schemas, max_output_tokens=limits.max_output_tokens
+            system=system,
+            messages=with_context(history, context),
+            tools=schemas,
+            max_output_tokens=limits.max_output_tokens,
         )
         result = await _complete(model, request)
         usage = usage + (result.message.usage or Usage())
@@ -100,10 +111,10 @@ async def run_turn(
             await record(Message(role="tool", blocks=[await _run_tool(use, tools, ctx)]))
 
     history = await store.load(tenant_id, session_id)
-    # The note goes to the model only; it is not part of the stored conversation.
+    context = turn_prompt.context(StepInfo(step=limits.max_steps + 1, max_steps=limits.max_steps, final=True))
     request = LlmRequest(
-        system=system_prompt,
-        messages=[*history, Message.user(FINAL_TURN_NOTE)],
+        system=system,
+        messages=with_context(history, context),
         tools=[],
         max_output_tokens=limits.max_output_tokens,
     )

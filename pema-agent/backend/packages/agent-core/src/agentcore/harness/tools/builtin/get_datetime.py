@@ -3,16 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import UTC, datetime
-from typing import Final
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from agentcore.clock import describe_time, utc_now, zone
 from agentcore.harness.tools.spec import ToolContext, ToolOutput, ToolSpec
-
-# Fixed English names: strftime("%A") would follow the process locale.
-_WEEKDAYS: Final = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
 
 class GetDatetimeArgs(BaseModel):
@@ -22,24 +18,18 @@ class GetDatetimeArgs(BaseModel):
     )
 
 
-def _utc_now() -> datetime:
-    return datetime.now(UTC)
-
-
 def make_get_datetime_tool(
-    *, default_timezone: str = "UTC", clock: Callable[[], datetime] = _utc_now
+    *, default_timezone: str = "UTC", clock: Callable[[], datetime] = utc_now
 ) -> ToolSpec[GetDatetimeArgs]:
     """``clock`` must return an aware datetime; tests pass a fixed one."""
-    _zone(default_timezone)
+    zone(default_timezone)
 
     async def handler(args: GetDatetimeArgs, ctx: ToolContext) -> ToolOutput:
         name = args.timezone or default_timezone
         try:
-            zone = _zone(name)
+            return ToolOutput(text=describe_time(clock(), name))
         except ValueError:
             return ToolOutput(text=f"Unknown time zone: {name}", is_error=True)
-        now = clock().astimezone(zone)
-        return ToolOutput(text=f"{now.isoformat(timespec='seconds')} ({_WEEKDAYS[now.weekday()]}, {name})")
 
     return ToolSpec(
         name="get_datetime",
@@ -48,10 +38,3 @@ def make_get_datetime_tool(
         handler=handler,
         timeout_s=5.0,
     )
-
-
-def _zone(name: str) -> ZoneInfo:
-    try:
-        return ZoneInfo(name)
-    except (ZoneInfoNotFoundError, ValueError) as err:
-        raise ValueError(f"Unknown time zone: {name}") from err

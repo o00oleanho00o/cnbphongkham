@@ -14,20 +14,32 @@ from typing import Final
 from uuid import uuid4
 
 from agent_app.model_factory import build_model, describe_model
-from agent_app.profile import load_profile
+from agent_app.profile import Profile, load_profile
 from agentcore import (
+    DEFAULT_TENANT,
     InMemorySessionStore,
     ModelError,
+    PromptBuilder,
+    PromptEnv,
+    SessionStore,
+    StepInfo,
     ToolResultBlock,
     ToolUseBlock,
+    TurnInfo,
     TurnResult,
+    builtin_sections,
     run_turn,
 )
+from agentcore.clock import utc_now
 from agentcore.harness.tools.builtin import builtin_tools
 
 EXIT_CONFIG_ERROR: Final = 2
 PREVIEW_CHARS: Final = 120
-HELP: Final = "Commands: /new (start a new session), /exit (quit), /help (this help)\n"
+CHANNEL: Final = "cli"
+HELP: Final = (
+    "Commands: /new (start a new session), /prompt (show what the model gets), "
+    "/exit (quit), /help (this help)\n"
+)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -50,6 +62,7 @@ async def _chat(profile_path: Path, *, fake: bool, session: str | None) -> int:
     try:
         profile = load_profile(profile_path)
         tools = builtin_tools(timezone=profile.agent.timezone).subset(profile.agent.tools)
+        prompt = build_prompt(profile, tool_names=tools.names())
         model = build_model(profile, fake=fake, env=os.environ)
     except (OSError, ValueError, ModelError) as err:
         _write(f"error: {err}\n")
@@ -79,20 +92,45 @@ async def _chat(profile_path: Path, *, fake: bool, session: str | None) -> int:
             session_id = _new_session_id()
             _write(f"new session: {session_id}\n")
             continue
+        if text == "/prompt":
+            _write(await show_prompt(prompt, store, session_id, max_steps=profile.loop.max_steps))
+            continue
         try:
             result = await run_turn(
                 session_id=session_id,
                 user_text=text,
-                system_prompt=profile.agent.system_prompt,
+                prompt=prompt,
                 model=model,
                 tools=tools,
                 store=store,
                 policy=profile.loop_policy(),
+                channel=CHANNEL,
             )
         except ModelError as err:
             _write(f"error ({err.kind}): {err}\n")
             continue
         _write(render_turn(result))
+
+
+def build_prompt(profile: Profile, *, tool_names: Sequence[str]) -> PromptBuilder:
+    env = PromptEnv(
+        agent_name=profile.agent.name,
+        persona=profile.agent.system_prompt,
+        timezone=profile.agent.timezone,
+        tool_names=tuple(tool_names),
+    )
+    return PromptBuilder(env, builtin_sections().select(profile.prompt.sections))
+
+
+async def show_prompt(prompt: PromptBuilder, store: SessionStore, session_id: str, *, max_steps: int) -> str:
+    """The session's system prompt (frozen on first use) and the context block the next message would get."""
+    system = await prompt.system(store, DEFAULT_TENANT, session_id)
+    turn = prompt.start_turn(TurnInfo(now=utc_now(), channel=CHANNEL))
+    context = turn.context(StepInfo(step=1, max_steps=max_steps))
+    return (
+        f"--- system prompt (frozen for this session) ---\n{system}\n"
+        f"--- context block for the next message ---\n{context or '(none)'}\n"
+    )
 
 
 def render_turn(result: TurnResult) -> str:

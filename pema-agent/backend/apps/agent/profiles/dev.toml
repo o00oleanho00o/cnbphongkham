@@ -3,10 +3,13 @@
 
 [agent]
 name = "dev"
-system_prompt = """You are a helpful general-purpose assistant.
-Reply in the user's language. Use a tool when it gives a better answer than guessing."""
+system_prompt_file = "prompts/dev.md"
 tools = ["get_datetime"]
 timezone = "Asia/Ho_Chi_Minh"
+
+[prompt]
+# session sections form the frozen system prompt; turn/step sections go in the per-request context block
+sections = ["identity", "tool_usage", "environment", "status"]
 
 [model]
 provider = "openai-compatible"

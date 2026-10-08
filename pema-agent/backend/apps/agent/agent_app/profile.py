@@ -7,11 +7,12 @@ from __future__ import annotations
 
 import tomllib
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from agentcore import LoopPolicy
+from agentcore.prompt import DEFAULT_SECTIONS
 
 
 class _Section(BaseModel):
@@ -21,9 +22,17 @@ class _Section(BaseModel):
 
 class AgentSection(_Section):
     name: str
-    system_prompt: str
+    system_prompt: str = ""
+    system_prompt_file: str | None = None
+    """A UTF-8 text file, relative to the profile; ``load_profile`` reads it into ``system_prompt``."""
     tools: list[str] = Field(default_factory=list[str])
     timezone: str = "UTC"
+
+    @model_validator(mode="after")
+    def _one_prompt_source(self) -> Self:
+        if self.system_prompt and self.system_prompt_file:
+            raise ValueError("set system_prompt or system_prompt_file, not both")
+        return self
 
 
 class ModelSection(_Section):
@@ -38,9 +47,15 @@ class LoopSection(_Section):
     max_output_tokens: int = Field(default=2048, ge=64)
 
 
+class PromptSection(_Section):
+    sections: list[str] = Field(default_factory=lambda: list(DEFAULT_SECTIONS))
+    """Prompt sections in order; session sections form the system prompt, the others the context block."""
+
+
 class Profile(_Section):
     agent: AgentSection
     model: ModelSection = Field(default_factory=ModelSection)
+    prompt: PromptSection = Field(default_factory=PromptSection)
     loop: LoopSection = Field(default_factory=LoopSection)
 
     def loop_policy(self) -> LoopPolicy:
@@ -49,4 +64,9 @@ class Profile(_Section):
 
 def load_profile(path: Path) -> Profile:
     with path.open("rb") as file:
-        return Profile.model_validate(tomllib.load(file))
+        profile = Profile.model_validate(tomllib.load(file))
+    prompt_file = profile.agent.system_prompt_file
+    if prompt_file is None:
+        return profile
+    text = (path.parent / prompt_file).read_text(encoding="utf-8")
+    return profile.model_copy(update={"agent": profile.agent.model_copy(update={"system_prompt": text})})

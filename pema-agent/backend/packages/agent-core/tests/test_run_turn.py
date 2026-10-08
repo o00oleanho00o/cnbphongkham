@@ -14,6 +14,7 @@ from agentcore import (
     LlmRequest,
     LoopPolicy,
     ModelError,
+    PromptBuilder,
     ToolContext,
     ToolOutput,
     ToolRegistry,
@@ -23,7 +24,7 @@ from agentcore import (
     run_turn,
 )
 from agentcore.harness.model.scripted import ScriptedModel, ScriptStep, calls, reply, tool_call
-from agentcore.loop.run_turn import FINAL_TURN_NOTE
+from agentcore.prompt import FINAL_TURN_NOTE
 
 SESSION = "s1"
 
@@ -65,7 +66,7 @@ async def _run(
     result = await run_turn(
         session_id=SESSION,
         user_text="hi",
-        system_prompt="system",
+        prompt=PromptBuilder.fixed("system"),
         model=model,
         tools=tools,
         store=used_store,
@@ -202,9 +203,10 @@ async def test_the_step_budget_ends_with_a_final_call_without_tools() -> None:
     assert result.text == "best answer so far"
     final_request = model.requests[-1]
     assert final_request.tools == []
-    assert final_request.messages[-1].text() == FINAL_TURN_NOTE
+    assert final_request.messages[-1].role == "user"
+    assert FINAL_TURN_NOTE in final_request.messages[-1].text()
     history = await store.load("default", SESSION)
-    assert all(m.text() != FINAL_TURN_NOTE for m in history)
+    assert all(FINAL_TURN_NOTE not in m.text() for m in history)
     assert history[-1].text() == "best answer so far"
 
 

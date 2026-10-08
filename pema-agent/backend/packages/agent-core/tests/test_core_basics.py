@@ -9,6 +9,7 @@ from agentcore import (
     InMemorySessionStore,
     LoopPolicy,
     Message,
+    PromptBuilder,
     TextBlock,
     ThinkingBlock,
     ToolContext,
@@ -114,7 +115,7 @@ async def test_a_turn_is_stored_under_its_tenant() -> None:
     await run_turn(
         session_id="s1",
         user_text="hi",
-        system_prompt="",
+        prompt=PromptBuilder.fixed(""),
         model=ScriptedModel([reply("hello")]),
         tools=ToolRegistry(),
         store=store,
@@ -136,7 +137,7 @@ async def test_the_tool_context_carries_the_session_and_tenant() -> None:
     await run_turn(
         session_id="s9",
         user_text="hi",
-        system_prompt="",
+        prompt=PromptBuilder.fixed(""),
         model=ScriptedModel([calls(tool_call("capture")), reply("done")]),
         tools=ToolRegistry([tool]),
         store=InMemorySessionStore(),
@@ -154,7 +155,7 @@ async def test_an_error_reported_by_the_tool_itself_is_kept() -> None:
     result = await run_turn(
         session_id="s1",
         user_text="hi",
-        system_prompt="",
+        prompt=PromptBuilder.fixed(""),
         model=ScriptedModel([calls(tool_call("refuse")), reply("ok")]),
         tools=ToolRegistry([tool]),
         store=InMemorySessionStore(),
@@ -170,7 +171,7 @@ async def test_the_system_prompt_and_output_limit_reach_the_model() -> None:
     await run_turn(
         session_id="s1",
         user_text="hi",
-        system_prompt="be brief",
+        prompt=PromptBuilder.fixed("be brief"),
         model=model,
         tools=ToolRegistry(),
         store=InMemorySessionStore(),
