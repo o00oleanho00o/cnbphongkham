@@ -21,19 +21,16 @@ from fastapi import FastAPI
 from pema.api.body_limit import BodyLimitMiddleware
 from pema.api.errors import install_error_handlers
 from pema.api.router import TAGS_METADATA, build_api_router, build_system_router, unique_operation_id
-from pema.channels.zalo_bot.bot_account_runner import ClientFactory
-from pema.composition.api_wiring import ApiLifecycle, wire_api
+from pema.composition.app_runtime import AppLifecycle, AppRuntime, build_app_runtime, wire_app
 from pema.composition.auth_bridge import StaffSessionMiddleware
-from pema.composition.intake import build_bot_stack, build_personal_stack
-from pema.composition.runtime import ProcessRole, Runtime, build_runtime
 from pema.config.env import get_settings
 from pema.core.db import ClinicDatabase
 from pema.shared.logger import configure_logging
 from pema_contracts import __version__
 
-API_TITLE = "Pema CSKH Agent API"
+API_TITLE = "Pema Clinic API"
 API_DESCRIPTION = (
-    "Backend of the Pema Digital Clinic CSKH agent (clinic CRM + a Python derivative of zalo-agent). "
+    "Backend of the Pema Digital Clinic: authentication, CRM, Inbox and knowledge base. "
     "All timestamps are ISO 8601 with +07:00. Errors use ErrorResponse with a stable ErrorCode. "
     "Mutating endpoints that accept an Idempotency-Key replay the first result for the same key. "
     "Staff endpoints need the session cookie of POST /auth/login; the permission of each role follows the "
@@ -48,9 +45,9 @@ def _default_database(url: str) -> ClinicDatabase:
     return ClinicDatabase(url)
 
 
-def create_app(*, runtime: Runtime | None = None, bot_client_factory: ClientFactory | None = None) -> FastAPI:
-    """``runtime`` and ``bot_client_factory`` are for the integration tests (their own database and model, a
-    fake Bot API client); production passes none and the lifespan builds everything from the environment."""
+def create_app(*, runtime: AppRuntime | None = None) -> FastAPI:
+    """``runtime`` is for the integration tests (their own database); production passes none and the lifespan
+    builds everything from the environment."""
     settings = get_settings()
     configure_logging(
         settings.log_level,
@@ -61,13 +58,11 @@ def create_app(*, runtime: Runtime | None = None, bot_client_factory: ClientFact
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
-        lifecycle: ApiLifecycle | None = None
+        lifecycle: AppLifecycle | None = None
         if getattr(app.state, "runtime", None) is None:
-            rt = runtime or build_runtime(settings, ProcessRole.API)
-            bot = build_bot_stack(rt, client_factory=bot_client_factory)
-            personal = build_personal_stack(rt, bot.batcher, bot_manager=bot.manager)
-            wire_api(app, rt, bot, personal)
-            lifecycle = ApiLifecycle(app, rt, bot, personal)
+            rt = runtime or build_app_runtime(settings)
+            wire_app(app, rt)
+            lifecycle = AppLifecycle(rt)
             await lifecycle.start()
         try:
             yield

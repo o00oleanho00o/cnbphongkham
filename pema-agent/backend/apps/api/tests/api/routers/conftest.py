@@ -25,7 +25,7 @@ from pema.api.router import build_api_router
 from pema.api.routers.admin_stores_testing import Harness, open_harness
 from pema.channels.zalo_personal.service_testing import TestRig
 from pema.config.testing_settings import settings_env
-from pema.conversation.pg_testing import ClinicEnv, PgTestServer
+from pema.core.pg_testing import ClinicEnv, PgTestServer
 from pema.core.db import ClinicDatabase
 from pema.knowledge.kb_test_support import KbTestDatabase, database_url_for_tests
 from pema.knowledge.postgres_knowledge_store import PostgresKnowledgeStore

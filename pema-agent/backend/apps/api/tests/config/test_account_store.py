@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 
 from pema.config.account_store import AccountStoreImpl
-from pema.conversation.pg_testing import ClinicEnv
+from pema.core.pg_testing import ClinicEnv
 from pema_contracts.channel import ChannelKind
 
 pytestmark = pytest.mark.db

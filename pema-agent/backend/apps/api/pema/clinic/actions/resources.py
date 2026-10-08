@@ -39,7 +39,6 @@ from pema.clinic.models import Appointment, Room, RoomBlock, UserAccount
 from pema.clinic.rbac import require, require_any
 from pema.core.db import ClinicDatabase
 from pema_contracts.actions import ActionContext
-from pema_contracts.care import ShiftIntervalOut
 from pema_contracts.catalog import (
     DoctorResourceOut,
     ResourcesOut,
@@ -48,6 +47,7 @@ from pema_contracts.catalog import (
     RoomCreate,
     RoomOut,
     RoomUpdate,
+    ShiftIntervalOut,
 )
 from pema_contracts.common import VN_TZ
 from pema_contracts.errors import DomainError, ErrorCode

@@ -1,6 +1,5 @@
-"""The action layer: authorise, filter by clinic, audit every mutation, idempotency. REST routes,
-scheduler and agent tools all call these. ``agent_facing`` implements
-``pema_contracts.clinic_actions.AgentFacingClinicActions``. Owner: B1.
+"""The action layer: authorise, filter by clinic, audit every mutation, idempotency. REST routes call
+these; a future agent service reaches the clinic only through the HTTP API. Owner: B1.
 
 Conventions: every public action is ``async def name(db, ctx, ...)``; ``db`` is a
 ``pema.core.db.ClinicDatabase`` and ``ctx`` an ``ActionContext``. Each action checks the permission FIRST
@@ -36,14 +35,9 @@ from pema.clinic.actions import (
     studio,
     templates,
 )
-from pema.clinic.actions.agent_facing import ClinicAgentFacingActions
 from pema.clinic.actions.outbound import FakeOutboundDelivery, OutboundDelivery, OutboundRequest
-from pema_contracts.clinic_actions import AppointmentProposalRequest, EscalationRequest
 
 __all__ = [
-    "AppointmentProposalRequest",
-    "ClinicAgentFacingActions",
-    "EscalationRequest",
     "FakeOutboundDelivery",
     "OutboundDelivery",
     "OutboundRequest",

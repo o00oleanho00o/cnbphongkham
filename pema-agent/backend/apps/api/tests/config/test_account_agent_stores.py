@@ -17,7 +17,7 @@ import pytest
 from pema.config import env as env_module
 from pema.config.account_store import AccountStoreImpl
 from pema.config.agent_store import DEFAULT_AGENT_ID, AgentStoreImpl
-from pema.conversation.pg_testing import ClinicEnv
+from pema.core.pg_testing import ClinicEnv
 from pema_contracts.agents import AccountConfig, Allowlist, AllowlistMode, LlmProviderKind
 from pema_contracts.channel import ChannelKind
 from pema_contracts.errors import DomainError, ErrorCode

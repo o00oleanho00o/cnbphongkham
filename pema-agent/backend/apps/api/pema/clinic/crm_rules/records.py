@@ -35,7 +35,6 @@ from pema.clinic.crm_rules.protocols import ProtocolConfig
 from pema.clinic.crm_rules.rules import RuleConfig
 from pema_contracts.common import VN_TZ
 from pema_contracts.crm import RuleKey, TaskPriority, TaskStatus
-from pema_contracts.policy import PolicyProfileKey
 
 OPEN_STATUSES: frozenset[TaskStatus] = frozenset({TaskStatus.OPEN, TaskStatus.RESCHEDULED})
 """``open(t)`` of the JavaScript: ``['open', 'rescheduled'].includes(t.status)``."""
@@ -102,8 +101,6 @@ class ChannelTarget:
     account_id: str
     thread_id: str
     thread_type: int = 0
-    policy_profile: PolicyProfileKey = PolicyProfileKey.PATIENT_CHANNEL
-    """Effective profile of the account and its agent (the restrictive one wins). Fail safe by default."""
 
 
 @dataclass(frozen=True, slots=True)

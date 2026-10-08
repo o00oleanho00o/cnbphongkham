@@ -26,9 +26,16 @@ from uuid import UUID
 
 from pydantic import Field, StringConstraints
 
-from pema_contracts.care import Hhmm, ShiftIntervalOut
 from pema_contracts.common import ApiModel, VnDatetime
 from pema_contracts.crm import RuleKey
+
+Hhmm = Annotated[str, StringConstraints(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")]
+
+
+class ShiftIntervalOut(ApiModel):
+    start: Hhmm
+    end: Hhmm = Field(description="An end earlier than the start means the shift ends the next morning.")
+
 
 Code = Annotated[str, StringConstraints(pattern=r"^[a-z0-9][a-z0-9-]{1,39}$")]
 

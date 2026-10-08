@@ -14,8 +14,7 @@ What the snapshots are built from:
 * channel target: a VERIFIED ``clinic.channel_identity`` of a ``zalo_bot`` / ``zalo_personal`` channel
 joined to
   an enabled ``agent.accounts`` row of that channel (the most recently active identity wins; when a clinic has
-  several enabled accounts of one channel the first by id is used: open item for package G). The profile is
-  ``effective_profile_key(account, agent)``, the restrictive one;
+  several enabled accounts of one channel the first by id is used);
 * consent: the newest ``messaging`` row of ``clinic.consent`` is granted and not revoked;
 * templates: ``clinic.message_template`` that is active AND approved.
 
@@ -52,7 +51,6 @@ from pema.clinic.crm_rules.store import StoreChanges
 from pema.core.db import ClinicDatabase
 from pema_contracts.common import VN_TZ
 from pema_contracts.crm import RuleKey, RuleSendMode, TaskPriority, TaskStatus
-from pema_contracts.policy import PolicyProfileKey, effective_profile_key
 
 _Row = Mapping[str, Any]
 
@@ -220,11 +218,9 @@ class SqlCrmRuleStore:
         )
         target_rows = await _rows(
             session,
-            "SELECT DISTINCT ON (ci.patient_id) ci.patient_id, a.id AS account_id, ci.external_user_id, "
-            "a.policy_profile AS account_profile, g.policy_profile AS agent_profile "
+            "SELECT DISTINCT ON (ci.patient_id) ci.patient_id, a.id AS account_id, ci.external_user_id "
             "FROM clinic.channel_identity ci "
             "JOIN agent.accounts a ON a.clinic_id = ci.clinic_id AND a.channel = ci.channel AND a.enabled "
-            "JOIN agent.agents g ON g.clinic_id = a.clinic_id AND g.id = a.agent_id "
             "WHERE ci.clinic_id = :c AND ci.verification_status = 'verified' AND ci.patient_id IS NOT NULL "
             "AND ci.channel IN ('zalo_bot', 'zalo_personal') "
             "ORDER BY ci.patient_id, ci.last_inbound_at DESC NULLS LAST, a.id",
@@ -260,9 +256,6 @@ class SqlCrmRuleStore:
                 account_id=str(r["account_id"]),
                 thread_id=str(r["external_user_id"]),
                 thread_type=0,
-                policy_profile=effective_profile_key(
-                    PolicyProfileKey(str(r["account_profile"])), PolicyProfileKey(str(r["agent_profile"]))
-                ),
             )
             for r in target_rows
         }

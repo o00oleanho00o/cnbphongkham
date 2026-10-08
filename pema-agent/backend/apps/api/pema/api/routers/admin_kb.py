@@ -1,8 +1,9 @@
 # ported from: src/server/routes/kb-routes.ts and src/server/routes/kb-inspect-routes.ts
-"""Knowledge base sources, chunks, agent bindings and preview search (package D3 implements).
+"""Knowledge base sources and chunks (package D3). The agent bindings and the agent-scoped preview search were
+removed with the agent layer (branch feat/agent-v2); the staff guide and "Hỏi Pema" search on their own.
 
 Port of kb-routes.ts and kb-inspect-routes.ts. Uploads are size-capped before parsing (zip-bomb ceilings
-live in the parser). Bindings are default-deny: an agent with no source bound reads nothing.
+live in the parser).
 
 Processing of the content (reading the file, cutting chunks) is NOT here - a route only writes the file and
 the row in ``cho_xu_ly`` and answers at once; ``kb_ingest_worker`` processes it in the next background round.
@@ -35,15 +36,8 @@ from pema.api.kb_route_guards import (
     lay_store,
 )
 from pema.knowledge.doc_text_extract import DINH_DANG_HO_TRO
-from pema_contracts.admin_agent import (
-    IdList,
-    KbApprove,
-    KbSearchRequest,
-    KbSearchResponse,
-    KbTextSourceCreate,
-)
 from pema_contracts.errors import DomainError, ErrorCode
-from pema_contracts.knowledge import KbChunk, KbSource
+from pema_contracts.knowledge import KbApprove, KbChunk, KbSource, KbTextSourceCreate
 from pema_contracts.roles import Permission
 
 router = admin_router("kb", "admin-kb")
@@ -155,40 +149,3 @@ async def list_kb_chunks(
             f"Tham số phân trang không hợp lệ (limit tối đa {SO_DOAN_TOI_DA_MOI_TRANG})",
         )
     return await lay_store(request).list_chunks(ctx.clinic_id, source_id, offset=offset, limit=limit)
-
-
-@router.get("/sources/{source_id}/agents", response_model=IdList, summary="Agents allowed to read a source")
-async def get_agents_of_kb_source(request: Request, source_id: str) -> IdList:
-    ctx = _ngu_canh(request, Permission.KB_READ)
-    return IdList(ids=await lay_store(request).agents_of_source(ctx.clinic_id, source_id))
-
-
-@router.put("/sources/{source_id}/agents", response_model=IdList, summary="Set the agents of a source")
-async def set_agents_of_kb_source(request: Request, source_id: str, body: IdList) -> IdList:
-    ctx = _ngu_canh(request, Permission.KB_MANAGE)
-    store = lay_store(request)
-    await store.set_agents_for_source(ctx.clinic_id, source_id, body.ids)
-    return IdList(ids=await store.agents_of_source(ctx.clinic_id, source_id))
-
-
-@router.get("/agents/{agent_id}/sources", response_model=IdList, summary="Sources an agent may read")
-async def get_kb_sources_of_agent(request: Request, agent_id: str) -> IdList:
-    ctx = _ngu_canh(request, Permission.KB_READ)
-    return IdList(ids=await lay_store(request).sources_of_agent(ctx.clinic_id, agent_id))
-
-
-@router.put("/agents/{agent_id}/sources", response_model=IdList, summary="Set the sources of an agent")
-async def set_kb_sources_of_agent(request: Request, agent_id: str, body: IdList) -> IdList:
-    ctx = _ngu_canh(request, Permission.KB_MANAGE)
-    store = lay_store(request)
-    await store.set_sources_for_agent(ctx.clinic_id, agent_id, body.ids)
-    return IdList(ids=await store.sources_of_agent(ctx.clinic_id, agent_id))
-
-
-@router.post("/search", response_model=KbSearchResponse, summary="Hybrid search preview for staff")
-async def search_kb(request: Request, body: KbSearchRequest) -> KbSearchResponse:
-    ctx = _ngu_canh(request, Permission.KB_READ)
-    hits = await lay_store(request).search(
-        ctx.clinic_id, question=body.query, agent_id=body.agent_id, limit=body.limit
-    )
-    return KbSearchResponse(hits=hits)

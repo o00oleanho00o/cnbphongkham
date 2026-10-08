@@ -13,7 +13,7 @@ from collections.abc import AsyncIterator, Iterator
 import pytest
 
 from pema.config.testing_settings import settings_env
-from pema.conversation.pg_testing import ClinicEnv, PgTestServer
+from pema.core.pg_testing import ClinicEnv, PgTestServer
 
 
 @pytest.fixture(scope="session")

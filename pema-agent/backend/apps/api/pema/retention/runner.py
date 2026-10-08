@@ -25,8 +25,6 @@ Properties the tests pin down:
 * **A failing group does not stop the others**; it is logged (no PII: the group name) and
   listed in ``ScopeReport.failed``.
 
-Files are removed AFTER the transaction that deleted their rows commits (a file cannot be rolled back); a
-crash in between leaves a file without a row, which the age sweep of ``media_days`` collects later.
 """
 
 from __future__ import annotations
@@ -43,10 +41,8 @@ from uuid import UUID
 
 from sqlalchemy import text
 
-from pema.conversation.history_store import parse_images
-from pema.conversation.media_store import MediaStore
-from pema.conversation.sql_util import affected_rows
 from pema.core.db import ClinicDatabase, get_installation_clinic_id
+from pema.core.sql_util import affected_rows
 from pema.retention import rules
 from pema.retention.policy import RetentionPolicy, Scope
 from pema.shared.logger import create_logger
@@ -114,8 +110,7 @@ class RetentionRunner:
         db: ClinicDatabase,
         policy: RetentionPolicy | Callable[[], RetentionPolicy],
         *,
-        media: MediaStore | None = None,
-        scopes: Iterable[Scope] = _SCOPE_ORDER,
+        scopes: Iterable[Scope] = (Scope.CLINIC,),
         now: Callable[[], datetime] | None = None,
         max_batches: int = MAX_BATCHES_PER_GROUP,
     ) -> None:
@@ -123,7 +118,6 @@ class RetentionRunner:
         self._policy: Callable[[], RetentionPolicy] = (
             policy if callable(policy) else lambda: policy  # a static policy
         )
-        self._media = media
         wanted = frozenset(scopes)
         self._scopes = tuple(s for s in _SCOPE_ORDER if s in wanted)
         self._now: Callable[[], datetime] = now or (lambda: datetime.now(UTC))
@@ -156,10 +150,7 @@ class RetentionRunner:
                 return report
             ctx = _Ctx(clinic_id, self._policy(), self._now(), report)
             started = time.monotonic()
-            if scope is Scope.AGENT:
-                await self._run_agent(ctx)
-            else:
-                await self._run_clinic(ctx)
+            await self._run_clinic(ctx)
             if not dry_run:
                 await self._audit(ctx)
             log.info(
@@ -173,14 +164,6 @@ class RetentionRunner:
         return report
 
     # -------------------------------------------------------------------------------------------- scopes
-    async def _run_agent(self, ctx: _Ctx) -> None:
-        p = ctx.policy
-        await self._step(ctx, "history", p.history_days, self._history)
-        await self._step(ctx, "thread_summaries", p.history_days, self._thread_summaries)
-        for rule in rules.AGENT_RULES:
-            await self._step(ctx, rule.group, rule.days(p), self._rule(rule))
-        await self._step(ctx, "media_files", p.media_days if self._media else 0, self._media_files)
-
     async def _run_clinic(self, ctx: _Ctx) -> None:
         p = ctx.policy
         for rule in rules.CLINIC_RULES:
@@ -234,66 +217,6 @@ class RetentionRunner:
             if n < ctx.policy.batch_size:
                 return
         ctx.report.capped.append(group)
-
-    async def _history(self, ctx: _Ctx, group: str, cutoff: datetime) -> None:
-        params: dict[str, Any] = {"clinic_id": ctx.clinic_id, "cutoff": cutoff}
-        if ctx.dry_run:
-            async with self._db.session() as session:
-                row = (await session.execute(rules.HISTORY_COUNT, params)).one()
-            ctx.report.add(group, int(row.n))
-            ctx.report.add("history_media_files", int(row.images))
-            return
-
-        async def batch() -> int:
-            async with self._db.session() as session:
-                rows = (
-                    await session.execute(
-                        rules.HISTORY_DELETE_BATCH, {**params, "batch": ctx.policy.batch_size}
-                    )
-                ).all()
-                paths = sorted({path for row in rows for path in parse_images(row.images)})
-                if paths:
-                    ctx.report.add(
-                        "image_descriptions",
-                        affected_rows(
-                            await session.execute(
-                                rules.DESCRIPTIONS_OF_PATHS, {"clinic_id": ctx.clinic_id, "paths": paths}
-                            )
-                        ),
-                    )
-            # After the commit: a file cannot be rolled back (see the module docstring).
-            if paths and self._media is not None:
-                ctx.report.add(
-                    "history_media_files", await self._media.delete_media_files(ctx.clinic_id, paths)
-                )
-            return len(rows)
-
-        await self._in_batches(ctx, group, batch)
-
-    async def _thread_summaries(self, ctx: _Ctx, group: str, cutoff: datetime) -> None:
-        params: dict[str, Any] = {"clinic_id": ctx.clinic_id, "cutoff": cutoff}
-        if ctx.dry_run:
-            async with self._db.session() as session:
-                ctx.report.add(group, int((await session.execute(rules.THREADS_COUNT, params)).scalar() or 0))
-            return
-        await self._in_batches(
-            ctx,
-            group,
-            lambda: self._delete_batch(rules.THREADS_RESET_BATCH, params, ctx.policy.batch_size),
-        )
-
-    async def _media_files(self, ctx: _Ctx, group: str, cutoff: datetime) -> None:
-        del cutoff  # the media store works from the age in days (file mtime), same clock as the descriptions
-        if self._media is None:
-            return
-        days = ctx.policy.media_days
-        now = ctx.now.timestamp()
-        ctx.report.add(
-            group,
-            await self._media.cleanup_expired_media_for_clinic(
-                ctx.clinic_id, days, now=now, dry_run=ctx.dry_run
-            ),
-        )
 
     async def _link_attempts(self, ctx: _Ctx, group: str, cutoff: datetime) -> None:
         params: dict[str, Any] = {"cutoff": cutoff, "dry_run": ctx.dry_run}

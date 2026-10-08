@@ -78,37 +78,15 @@ source_modules = ["pema_contracts"]
 forbidden_modules = ["pema"]
 
 [[tool.importlinter.contracts]]
-name = "clinic domain and actions never import channels, api, agent, workers or middleware"
+name = "clinic domain and actions never import the api or the composition root"
 type = "forbidden"
 source_modules = ["pema.clinic.domain", "pema.clinic.actions"]
-forbidden_modules = [
-    "pema.channels",
-    "pema.api",
-    "pema.agent",
-    "pema.workers",
-    "pema.middleware",
-]
+forbidden_modules = ["pema.api", "pema.composition", "pema.bootstrap"]
 
 [[tool.importlinter.contracts]]
-name = "agent-side packages reach the clinic only through pema.clinic.actions"
+name = "support packages reach the clinic only through pema.clinic.actions"
 type = "forbidden"
-source_modules = [
-    "pema.agent",
-    "pema.conversation",
-    "pema.knowledge",
-    "pema.scheduler",
-    "pema.mcp",
-    "pema.notify",
-    "pema.policy",
-    "pema.retention",
-    "pema.channels",
-    "pema.middleware",
-    "pema.documents",
-    "pema.images",
-    "pema.video",
-    "pema.workers",
-    "pema.live",
-]
+source_modules = ["pema.knowledge", "pema.retention", "pema.live"]
 forbidden_modules = [
     "pema.clinic.models",
     "pema.clinic.domain",
@@ -119,26 +97,15 @@ forbidden_modules = [
 allow_indirect_imports = true
 
 [[tool.importlinter.contracts]]
-name = "only the composition layer imports pema.api, pema.workers and pema.bootstrap"
+name = "only the composition layer imports pema.api and pema.bootstrap"
 type = "forbidden"
 source_modules = [
-    "pema.agent",
-    "pema.channels",
     "pema.clinic",
     "pema.config",
-    "pema.conversation",
     "pema.core",
-    "pema.documents",
-    "pema.images",
     "pema.knowledge",
     "pema.live",
-    "pema.mcp",
-    "pema.middleware",
-    "pema.notify",
-    "pema.policy",
     "pema.retention",
-    "pema.scheduler",
     "pema.shared",
-    "pema.video",
 ]
-forbidden_modules = ["pema.api", "pema.workers", "pema.bootstrap"]
+forbidden_modules = ["pema.api", "pema.bootstrap"]

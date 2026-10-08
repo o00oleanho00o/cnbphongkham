@@ -16,7 +16,7 @@ from __future__ import annotations
 import pytest
 
 from pema.api.routers.admin_stores_testing import API, Harness
-from pema.conversation.pg_testing import ClinicEnv
+from pema.core.pg_testing import ClinicEnv
 from pema_contracts.conversation import StoredMessage
 
 pytestmark = pytest.mark.db

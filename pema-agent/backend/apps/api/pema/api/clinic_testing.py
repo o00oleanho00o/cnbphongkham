@@ -42,8 +42,8 @@ from pema.clinic.actions.seed_demo import DEMO_DAY, SeedResult, seed_demo
 from pema.config.env import get_settings
 from pema.core.db import ClinicDatabase
 from pema.core.testing import ensure_test_clinic, truncate_installation_data
-from pema_contracts.clinic_actions import InboxRef
 from pema_contracts.common import VN_TZ
+from pema_contracts.conversations import InboxRef
 
 ENV_URL = "PEMA_TEST_DATABASE_URL"
 BE_PASSWORD = "be-app-test-secret"  # noqa: S105  - throwaway test database only
@@ -278,7 +278,7 @@ async def record_inbound(
     unlinked."""
     from uuid import uuid4
 
-    from pema.clinic.actions.agent_facing import ClinicAgentFacingActions
+    from pema.clinic.actions.inbox_ingest import record_inbound_message
     from pema_contracts.actions import ActionContext, ActionSource
     from pema_contracts.channel import ChannelKind, InboundMessage
     from pema_contracts.roles import ActorType
@@ -295,4 +295,4 @@ async def record_inbound(
         msg_id=uuid4().hex,
         sent_at=DEMO_NOW,
     )
-    return await ClinicAgentFacingActions(db).record_inbound_message(ctx, message)
+    return await record_inbound_message(db, ctx, message)

@@ -13,7 +13,7 @@ from collections.abc import AsyncIterator, Iterator
 
 import pytest
 
-from pema.conversation.pg_testing import PgTestServer
+from pema.core.pg_testing import PgTestServer
 from pema.retention.pg_testing import RetentionEnv, Seed
 
 

@@ -1,6 +1,6 @@
 """Test support of the retention job: synthetic rows with an explicit age (not imported by production code).
 
-Same pattern as ``pema.conversation.pg_testing`` (it reuses its ``PgTestServer``: a throwaway database with the
+Same pattern as ``pema.core.pg_testing`` (it reuses its ``PgTestServer``: a throwaway database with the
 real Alembic history). Single tenant: that database holds exactly ONE clinic, created by the migration.
 ``RetentionEnv`` takes it (``ensure_test_clinic``), empties the data (``truncate_installation_data``) and adds the
 default agent and two bot accounts; ``Seed`` inserts as the SUPERUSER of the database so a test can place rows of any
@@ -20,8 +20,8 @@ from uuid import UUID
 
 from sqlalchemy import text
 
-from pema.conversation.pg_testing import BE_PASSWORD, DEFAULT_AGENT_ID, WORKER_PASSWORD, PgTestServer
 from pema.core.db import ClinicDatabase
+from pema.core.pg_testing import BE_PASSWORD, DEFAULT_AGENT_ID, WORKER_PASSWORD, PgTestServer
 from pema.core.testing import ensure_test_clinic, truncate_installation_data
 
 

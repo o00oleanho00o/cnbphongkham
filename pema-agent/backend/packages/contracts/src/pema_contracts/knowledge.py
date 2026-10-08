@@ -143,3 +143,12 @@ class EmbeddingClient(Protocol):
 
 KB_EMBEDDING_DIMENSIONS = 1024
 """Width of ``agent.kb_chunk.embedding`` (bge-m3). Changing the model means a migration."""
+
+
+class KbTextSourceCreate(ApiModel):
+    name: str = Field(min_length=1, max_length=200)
+    text: str = Field(min_length=1, max_length=2_000_000)
+
+
+class KbApprove(ApiModel):
+    approved: bool = Field(description="Doctor sign-off of a source.")

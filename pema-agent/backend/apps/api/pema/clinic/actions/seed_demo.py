@@ -11,8 +11,8 @@ Run (needs the migrated database and the ``be_app`` URL)::
     PEMA_SEED_PASSWORD='choose-one' uv run python -m pema.clinic.actions.seed_demo
 
 ``PEMA_SEED_PASSWORD`` is the password of every demo account. When it is not set a random one is generated
-and printed ONCE; there is no default password in the repository. ``PEMA_SEED_OWNER_EMAIL`` (optional) sets the
-e-mail of the owner account instead of ``owner@example.test``. The script is idempotent: a second run
+and printed ONCE; there is no default password in the repository. ``PEMA_SEED_OWNER_EMAIL`` (optional) sets
+the e-mail of the owner account instead of ``owner@example.test``. The script is idempotent: a second run
 finds the demo owner account and stops. The clinic row itself is not created here: the migration creates it
 (``PEMA_CLINIC_NAME``) and the CLI makes sure it exists through ``pema.core.installation.ensure_clinic`` with
 the owner URL when one is configured. The demo day is the prototype's 2026-09-20 (``--today`` overrides) so

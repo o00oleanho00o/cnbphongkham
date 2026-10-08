@@ -8,8 +8,10 @@ Every change of it goes through ``apply_assignment``, which in the caller's tran
 
 * sets the new holder and bumps ``assignment_version``,
 * appends a row to ``clinic.conversation_assignment`` (the history),
-* writes the audit row (ids and kind only: never the reason, a name or a message),
-* writes the outbox rows of the notification (``notifications.py``).
+* writes the audit row (ids and kind only: never the reason, a name or a message).
+
+Staff notifications were removed with the agent layer (branch feat/agent-v2); they come back with the new
+channel integration.
 
 Callers load the conversation ``FOR UPDATE`` first, so two changes of the same thread run one after the other
 and the second one sees the first one's result (a second claim finds a holder and answers ``thread_locked``;
@@ -21,13 +23,12 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pema.clinic import audit
 from pema.clinic.actions._common import check_version, lost_race_is_conflict
-from pema.clinic.actions.notifications import enqueue_assignment_notices
-from pema.clinic.models import ChannelIdentity, Conversation, ConversationAssignment, Patient, UserAccount
+from pema.clinic.models import Conversation, ConversationAssignment, UserAccount
 from pema_contracts.actions import ActionContext
 from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.ops import AssignmentKind
@@ -74,37 +75,6 @@ def check_assignment_version(conv: Conversation, expected: int | None) -> None:
         check_version(conv.assignment_version, expected)
 
 
-async def _notice_context(
-    session: AsyncSession, ctx: ActionContext, conv: Conversation
-) -> tuple[str | None, list[str]]:
-    """The identity label to show and the names a notification must never carry (the patient and the
-    customer of the thread). Three small reads of the one conversation."""
-    label = await session.scalar(
-        text(
-            "SELECT a.label FROM clinic.conversation c "
-            "JOIN agent.accounts a ON a.clinic_id = c.clinic_id AND a.id = c.account_id "
-            "WHERE c.clinic_id = :clinic_id AND c.id = :conversation_id"
-        ),
-        {"clinic_id": ctx.clinic_id, "conversation_id": conv.id},
-    )
-    names: list[str] = []
-    if conv.patient_id is not None:
-        patient_name = await session.scalar(
-            select(Patient.full_name).where(Patient.id == conv.patient_id, Patient.clinic_id == ctx.clinic_id)
-        )
-        if patient_name:
-            names.append(patient_name)
-    if conv.identity_id is not None:
-        customer_name = await session.scalar(
-            select(ChannelIdentity.display_name).where(
-                ChannelIdentity.id == conv.identity_id, ChannelIdentity.clinic_id == ctx.clinic_id
-            )
-        )
-        if customer_name:
-            names.append(customer_name)
-    return label, names
-
-
 async def apply_assignment(
     session: AsyncSession,
     ctx: ActionContext,
@@ -146,18 +116,6 @@ async def apply_assignment(
             "to_agent": to_agent,
             "assignment_version": conv.assignment_version,
         },
-    )
-    label, forbidden = await _notice_context(session, ctx, conv)
-    await enqueue_assignment_notices(
-        session,
-        ctx,
-        conversation_id=conv.id,
-        kind=kind,
-        previous_user_id=previous,
-        new_user_id=new_user_id,
-        identity_label=label,
-        forbidden_names=forbidden,
-        to_agent=to_agent,
     )
     return history
 

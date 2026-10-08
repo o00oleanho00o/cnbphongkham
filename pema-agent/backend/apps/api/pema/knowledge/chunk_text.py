@@ -25,7 +25,7 @@ import re
 from dataclasses import dataclass
 from typing import Final
 
-from pema.agent.tools.tag_ky_tu_an import loc_ky_tu_an
+from pema.knowledge.tag_ky_tu_an import loc_ky_tu_an
 
 
 @dataclass(frozen=True, slots=True)

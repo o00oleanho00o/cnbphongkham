@@ -18,7 +18,7 @@ from alembic.script import ScriptDirectory
 from pydantic import ValidationError
 
 from pema.config.env import Settings
-from pema.conversation.pg_testing import BE_PASSWORD, WORKER_PASSWORD
+from pema.core.pg_testing import BE_PASSWORD, WORKER_PASSWORD
 from pema.core.db import ClinicDatabase
 from pema.retention.pg_testing import RetentionEnv, Seed
 from pema.retention.policy import RetentionPolicy, Scope, policy_from_settings

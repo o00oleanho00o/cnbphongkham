@@ -120,3 +120,12 @@ class WebhookAck(ApiModel):
 
     ok: bool = True
     duplicate: bool = False
+
+
+class InboxRef(ApiModel):
+    """What the Inbox wrote for one channel message (``pema.clinic.actions.inbox_ingest``)."""
+
+    conversation_id: UUID
+    message_id: UUID | None = None
+    patient_id: UUID | None = None
+    duplicate: bool = Field(default=False, description="update_id already recorded; nothing new was written.")
