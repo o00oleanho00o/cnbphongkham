@@ -31,7 +31,7 @@ HELP: Final = "Commands: /new (start a new session), /exit (quit), /help (this h
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    _tolerate_unencodable_output()
+    _use_utf8_text_streams()
     parser = argparse.ArgumentParser(prog="agent", description="General-purpose agent")
     commands = parser.add_subparsers(dest="command", required=True)
     chat = commands.add_parser("chat", help="Chat with an agent in the terminal")
@@ -149,11 +149,22 @@ def _preview(text: str) -> str:
     return flat if len(flat) <= PREVIEW_CHARS else flat[:PREVIEW_CHARS] + "..."
 
 
-def _tolerate_unencodable_output() -> None:
-    # A console or pipe in a legacy code page cannot print every character of a reply: replace, do not crash.
-    reconfigure = getattr(sys.stdout, "reconfigure", None)
-    if callable(reconfigure):
-        reconfigure(errors="replace")
+def _use_utf8_text_streams() -> None:
+    """On Windows a pipe or a file falls back to the legacy code page and garbles Vietnamese text; a console
+    already speaks UTF-8. Undecodable or unencodable characters are replaced instead of crashing the chat."""
+    for stream in (sys.stdin, sys.stdout):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if not callable(reconfigure):
+            continue
+        if _is_terminal(stream):
+            reconfigure(errors="replace")
+        else:
+            reconfigure(encoding="utf-8", errors="replace")
+
+
+def _is_terminal(stream: object) -> bool:
+    isatty = getattr(stream, "isatty", None)
+    return bool(isatty()) if callable(isatty) else False
 
 
 def _write(text: str) -> None:

@@ -113,6 +113,17 @@ def test_chat_ends_at_the_end_of_input(
     assert "agent> (echo) hello" in capsys.readouterr().out
 
 
+def test_piped_utf8_input_is_read_as_utf8_whatever_the_code_page(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # A Windows pipe opens stdin in the legacy code page while the bytes are UTF-8.
+    piped = io.TextIOWrapper(io.BytesIO("xin chào\n/exit\n".encode()), encoding="cp1252")
+    monkeypatch.setattr("sys.stdin", piped)
+
+    assert main(["chat", "--profile", str(DEV_PROFILE), "--fake"]) == 0
+    assert "agent> (echo) xin chào" in capsys.readouterr().out
+
+
 def test_chat_with_a_missing_profile_exits_with_a_config_error(capsys: pytest.CaptureFixture[str]) -> None:
     exit_code = main(["chat", "--profile", "does-not-exist.toml", "--fake"])
 
