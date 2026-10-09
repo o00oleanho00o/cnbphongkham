@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -17,7 +17,14 @@ from agent_app.ingress import (
     SessionLocks,
 )
 from agent_app.ingress_store import PostgresConversationStore, PostgresIngressStore, PostgresSessionLocks
-from agent_app.model_factory import resolve_model_settings
+from agent_app.model_settings import (
+    SECRET_KEY_ENV,
+    DynamicModel,
+    InMemoryModelSettingsStore,
+    ModelAdmin,
+    ModelSettingsStore,
+    PostgresModelSettingsStore,
+)
 from agent_app.profile import Profile
 from agent_app.storage import (
     AgentDatabase,
@@ -26,7 +33,7 @@ from agent_app.storage import (
     PostgresSkillStore,
     PostgresTracer,
 )
-from agentcore import InMemorySessionStore, InMemoryTracer, SessionStore, TurnTrace
+from agentcore import DEFAULT_TENANT, InMemorySessionStore, InMemoryTracer, SessionStore, TurnTrace
 
 
 class TraceLog(Protocol):
@@ -45,6 +52,9 @@ class Runtime:
     conversations: ConversationStore
     sessions: PostgresSessionStore | None
     db: AgentDatabase | None
+    model_admin: ModelAdmin
+    dynamic_model: DynamicModel | None
+    """None with ``--fake``: the echo model ignores the settings."""
 
     def dispatcher(self, settings: DispatchSettings | None = None) -> Dispatcher:
         return Dispatcher(
@@ -60,11 +70,31 @@ class Runtime:
 
 
 def build_runtime(
-    profile: Profile, *, fake: bool, env: Mapping[str, str], db: AgentDatabase | None
+    profile: Profile,
+    *,
+    fake: bool,
+    env: Mapping[str, str],
+    db: AgentDatabase | None,
+    tenant_id: str = DEFAULT_TENANT,
 ) -> Runtime:
+    """Model settings come from the database (or process memory without one), then the environment, then
+    the profile; a missing API key is reported on the first model call, so an admin can still set one."""
+    name = profile.agent.name
+    settings_store: ModelSettingsStore = (
+        InMemoryModelSettingsStore() if db is None else PostgresModelSettingsStore(db, agent=name)
+    )
+    secret_key = env.get(SECRET_KEY_ENV) or None
+    dynamic = (
+        None
+        if fake
+        else DynamicModel(profile, env, settings_store, tenant_id=tenant_id, secret_key=secret_key)
+    )
+    admin = ModelAdmin(
+        profile, env, settings_store, tenant_id=tenant_id, secret_key=secret_key, dynamic=dynamic
+    )
     if db is None:
         return Runtime(
-            agent=build_agent(profile, fake=fake, env=env),
+            agent=build_agent(profile, fake=fake, env=env, model=dynamic),
             store=InMemorySessionStore(),
             tracer=InMemoryTracer(),
             locks=InMemorySessionLocks(),
@@ -72,17 +102,19 @@ def build_runtime(
             conversations=InMemoryConversationStore(),
             sessions=None,
             db=None,
+            model_admin=admin,
+            dynamic_model=dynamic,
         )
-    name = profile.agent.name
     agent = build_agent(
         profile,
         fake=fake,
         env=env,
         memory_backend=PostgresMemoryBackend(db),
         skill_store=PostgresSkillStore(db),
+        model=dynamic,
     )
     sessions = PostgresSessionStore(db, agent=name)
-    model_name = "echo" if fake else resolve_model_settings(profile, env).model
+    model_name: Callable[[], str] = (lambda: "echo") if dynamic is None else (lambda: dynamic.model_name)
     return Runtime(
         agent=agent,
         store=sessions,
@@ -92,4 +124,6 @@ def build_runtime(
         conversations=PostgresConversationStore(db, agent=name),
         sessions=sessions,
         db=db,
+        model_admin=admin,
+        dynamic_model=dynamic,
     )

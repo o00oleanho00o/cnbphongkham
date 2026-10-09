@@ -24,6 +24,7 @@ WORKDIR /app/backend
 # Layer 1: third-party dependencies only (cached until a manifest or the lock changes).
 COPY backend/pyproject.toml backend/uv.lock backend/.python-version ./
 COPY backend/packages/contracts/pyproject.toml packages/contracts/pyproject.toml
+COPY backend/packages/secret-cipher/pyproject.toml packages/secret-cipher/pyproject.toml
 COPY backend/apps/api/pyproject.toml apps/api/pyproject.toml
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync ${UV_SYNC_FLAGS} --no-dev --no-install-workspace --package pema-api
@@ -31,10 +32,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Layer 2: the workspace members themselves, installed non-editable so the runtime image needs no sources
 # besides the Alembic files.
 COPY backend/packages/contracts packages/contracts
+COPY backend/packages/secret-cipher packages/secret-cipher
 COPY backend/apps/api/pema apps/api/pema
 # --no-cache: uv keys the cached wheel of a local directory by its pyproject.toml, not by the sources, so a shared
 # cache mount can hand back the wheel of an OLDER checkout (stale code in a fresh image). The third-party packages
-# are already in /opt/venv from layer 1; only the two workspace members are built here.
+# are already in /opt/venv from layer 1; only the workspace members are built here.
 RUN uv sync ${UV_SYNC_FLAGS} --no-cache --no-dev --no-editable --package pema-api
 
 

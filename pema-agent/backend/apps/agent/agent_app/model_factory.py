@@ -1,5 +1,6 @@
 """Builds the model client of a profile. The environment overrides the profile (``LLM_PROVIDER``,
-``LLM_MODEL``, ``LLM_BASE_URL``, ``LLM_REASONING``); the API key comes from ``LLM_API_KEY`` only."""
+``LLM_MODEL``, ``LLM_BASE_URL``, ``LLM_REASONING``); the API key comes from ``LLM_API_KEY`` only. Settings
+an admin stores in the database override both (``agent_app.model_settings``)."""
 
 from __future__ import annotations
 
@@ -11,6 +12,7 @@ from agent_app.profile import Profile
 from agentcore import ModelClient, ReasoningEffort
 from agentcore.harness.model.anthropic import AnthropicConfig, AnthropicModel
 from agentcore.harness.model.openai_compat import OpenAICompatConfig, OpenAICompatModel
+from agentcore.harness.model.reasoning import OpenAIDialect
 from agentcore.harness.model.scripted import EchoModel
 
 Provider = Literal["openai-compatible", "anthropic"]
@@ -28,6 +30,7 @@ class ModelSettings:
     base_url: str | None
     timeout_s: float
     reasoning: ReasoningEffort | None
+    dialect: OpenAIDialect | None = None
 
 
 def resolve_model_settings(profile: Profile, env: Mapping[str, str]) -> ModelSettings:
@@ -40,24 +43,32 @@ def resolve_model_settings(profile: Profile, env: Mapping[str, str]) -> ModelSet
         base_url=env.get("LLM_BASE_URL") or profile.model.base_url or None,
         timeout_s=profile.model.timeout_s,
         reasoning=reasoning or profile.model.reasoning,
+        dialect=profile.model.dialect,
     )
 
 
 def resolve_model_config(profile: Profile, env: Mapping[str, str]) -> OpenAICompatConfig:
-    settings = resolve_model_settings(profile, env)
+    return _openai_config(resolve_model_settings(profile, env))
+
+
+def _openai_config(settings: ModelSettings) -> OpenAICompatConfig:
     return OpenAICompatConfig(
         model=settings.model,
         api_key=settings.api_key,
         base_url=settings.base_url,
         timeout_s=settings.timeout_s,
-        dialect=profile.model.dialect,
+        dialect=settings.dialect,
     )
 
 
 def build_model(profile: Profile, *, fake: bool, env: Mapping[str, str]) -> ModelClient:
     if fake:
         return EchoModel()
-    settings = resolve_model_settings(profile, env)
+    return client_for(resolve_model_settings(profile, env))
+
+
+def client_for(settings: ModelSettings) -> ModelClient:
+    """Raises ``ModelConfigError`` when a required value (the API key, the model) is missing."""
     if settings.provider == "anthropic":
         config = AnthropicConfig(
             model=settings.model,
@@ -66,13 +77,16 @@ def build_model(profile: Profile, *, fake: bool, env: Mapping[str, str]) -> Mode
             timeout_s=settings.timeout_s,
         )
         return AnthropicModel(config)
-    return OpenAICompatModel(resolve_model_config(profile, env))
+    return OpenAICompatModel(_openai_config(settings))
 
 
 def describe_model(profile: Profile, *, fake: bool, env: Mapping[str, str]) -> str:
     if fake:
         return "echo (no provider)"
-    settings = resolve_model_settings(profile, env)
+    return describe_settings(resolve_model_settings(profile, env))
+
+
+def describe_settings(settings: ModelSettings) -> str:
     where = settings.base_url or DEFAULT_HOSTS[settings.provider]
     reasoning = f", reasoning {settings.reasoning}" if settings.reasoning else ""
     return f"{settings.model} via {where} ({settings.provider}{reasoning})"

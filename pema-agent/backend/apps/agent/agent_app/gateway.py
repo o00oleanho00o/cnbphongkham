@@ -12,6 +12,8 @@ import asyncio
 import contextlib
 import hmac
 import json
+import time
+from collections import deque
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Final
@@ -23,12 +25,18 @@ from sqlalchemy import text as sql
 
 from agent_app.dispatcher import Dispatcher, StreamObserver
 from agent_app.ingress import IngressRecord
+from agent_app.model_factory import Provider
+from agent_app.model_settings import ModelAdmin, SecretKeyMissingError
 from agent_app.storage import AgentDatabase
-from agentcore import ToolUseBlock
+from agentcore import ReasoningEffort, ToolUseBlock
 from agentcore.channels import InboundMessage
+from agentcore.harness.model.reasoning import OpenAIDialect
 
 CHANNEL: Final = "http"
 TOKEN_ENV: Final = "AGENT_GATEWAY_TOKEN"  # noqa: S105 - the name of the variable, not a token
+ADMIN_TOKEN_ENV: Final = "AGENT_ADMIN_TOKEN"  # noqa: S105 - the name of the variable, not a token
+ADMIN_FAILURES_PER_WINDOW: Final = 5
+ADMIN_FAILURE_WINDOW_S: Final = 60.0
 MIN_TOKEN_CHARS: Final = 32
 MAX_BODY_BYTES: Final = 64 * 1024
 DEFAULT_WAIT_S: Final = 60.0
@@ -47,10 +55,42 @@ ERROR_STATUS: Final[dict[str, int]] = {
 class GatewaySettings:
     token: str
     wait_s: float = DEFAULT_WAIT_S
+    admin_token: str | None = None
+    """Enables ``/v1/admin/*``; must differ from ``token`` so the chat caller cannot change the model."""
 
     def __post_init__(self) -> None:
         if len(self.token) < MIN_TOKEN_CHARS:
             raise ValueError(f"{TOKEN_ENV} must have at least {MIN_TOKEN_CHARS} characters")
+        if self.admin_token is not None:
+            if len(self.admin_token) < MIN_TOKEN_CHARS:
+                raise ValueError(f"{ADMIN_TOKEN_ENV} must have at least {MIN_TOKEN_CHARS} characters")
+            if hmac.compare_digest(self.admin_token, self.token):
+                raise ValueError(f"{ADMIN_TOKEN_ENV} must differ from {TOKEN_ENV}")
+
+
+class FailureLimiter:
+    """Refuses a client after ``limit`` failed logins within ``window_s``, until the window moves on."""
+
+    def __init__(
+        self, limit: int = ADMIN_FAILURES_PER_WINDOW, window_s: float = ADMIN_FAILURE_WINDOW_S
+    ) -> None:
+        self._limit = limit
+        self._window_s = window_s
+        self._failures: dict[str, deque[float]] = {}
+
+    def blocked(self, client: str, now: float) -> bool:
+        failures = self._failures.get(client)
+        if failures is None:
+            return False
+        while failures and now - failures[0] >= self._window_s:
+            failures.popleft()
+        if not failures:
+            del self._failures[client]
+            return False
+        return len(failures) >= self._limit
+
+    def failed(self, client: str, now: float) -> None:
+        self._failures.setdefault(client, deque()).append(now)
 
 
 class _Body(BaseModel):
@@ -71,8 +111,24 @@ class ResetRequest(_Body):
     conversation_id: str | None = Field(default=None, min_length=1, max_length=300)
 
 
+class ModelSettingsPatch(_Body):
+    """Only the fields sent change: a value sets it, null gives it back to the environment or the profile.
+    ``api_key``: "" keeps the stored key, null removes it."""
+
+    provider: Provider | None = None
+    model: str | None = Field(default=None, min_length=1, max_length=200)
+    base_url: str | None = Field(default=None, max_length=500, pattern=r"^https?://")
+    reasoning: ReasoningEffort | None = None
+    dialect: OpenAIDialect | None = None
+    api_key: str | None = Field(default=None, max_length=500)
+
+
 def create_app(
-    dispatcher: Dispatcher, settings: GatewaySettings, *, db: AgentDatabase | None = None
+    dispatcher: Dispatcher,
+    settings: GatewaySettings,
+    *,
+    db: AgentDatabase | None = None,
+    admin: ModelAdmin | None = None,
 ) -> FastAPI:
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
@@ -136,6 +192,9 @@ def create_app(
         session_id = await dispatcher.reset(CHANNEL, body.conversation_id or body.user_id)
         return {"session_id": session_id}
 
+    if settings.admin_token is not None and admin is not None:
+        _add_admin_routes(app, admin, settings.admin_token)
+
     @app.get("/v1/sessions/{session_id}", dependencies=[authorized])
     async def session(session_id: str) -> Response:
         messages = await dispatcher.store.load(dispatcher.tenant_id, session_id)
@@ -162,13 +221,57 @@ def _bearer(expected: str) -> Callable[[str | None], Awaitable[None]]:
     wanted = expected.encode("utf-8")
 
     async def check(authorization: str | None = Header(default=None)) -> None:
-        scheme, _, token = (authorization or "").partition(" ")
-        if scheme.lower() != "bearer" or not hmac.compare_digest(token.strip().encode("utf-8"), wanted):
+        if not _token_matches(authorization, wanted):
             raise HTTPException(
                 401, detail="a valid bearer token is required", headers={"WWW-Authenticate": "Bearer"}
             )
 
     return check
+
+
+def _token_matches(authorization: str | None, wanted: bytes) -> bool:
+    scheme, _, token = (authorization or "").partition(" ")
+    return scheme.lower() == "bearer" and hmac.compare_digest(token.strip().encode("utf-8"), wanted)
+
+
+def _add_admin_routes(app: FastAPI, admin: ModelAdmin, token: str) -> None:
+    """Model settings, as zalo-agent's dashboard has them: read (key masked), change, clear, test."""
+    wanted = token.encode("utf-8")
+    limiter = FailureLimiter()
+
+    async def check(request: Request, authorization: str | None = Header(default=None)) -> None:
+        client = request.client.host if request.client else "unknown"
+        now = time.monotonic()
+        if limiter.blocked(client, now):
+            raise HTTPException(429, detail="too many failed attempts; try again later")
+        if not _token_matches(authorization, wanted):
+            limiter.failed(client, now)
+            raise HTTPException(
+                401, detail="a valid admin token is required", headers={"WWW-Authenticate": "Bearer"}
+            )
+
+    authorized = Depends(check)
+
+    @app.get("/v1/admin/model", dependencies=[authorized])
+    async def show_model() -> dict[str, Any]:
+        return await admin.show()
+
+    @app.patch("/v1/admin/model", dependencies=[authorized])
+    async def change_model(body: ModelSettingsPatch) -> Response:
+        try:
+            shown = await admin.update({name: getattr(body, name) for name in body.model_fields_set})
+        except SecretKeyMissingError as err:
+            return _error(409, "no_encryption_key", str(err))
+        return JSONResponse(shown)
+
+    @app.delete("/v1/admin/model", dependencies=[authorized])
+    async def clear_model() -> dict[str, Any]:
+        return await admin.clear()
+
+    @app.post("/v1/admin/model/test", dependencies=[authorized])
+    async def test_model() -> Response:
+        outcome = await admin.test()
+        return JSONResponse(outcome, status_code=200 if outcome["ok"] else 502)
 
 
 def _inbound(body: ChatRequest) -> InboundMessage:

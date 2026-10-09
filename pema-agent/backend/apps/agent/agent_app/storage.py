@@ -398,7 +398,9 @@ _TURN_EVENTS = sql(
 class PostgresTracer:
     """One transaction per turn; a turn written twice (a retry) is kept once."""
 
-    def __init__(self, db: AgentDatabase, *, agent: str, model: str) -> None:
+    def __init__(self, db: AgentDatabase, *, agent: str, model: str | Callable[[], str]) -> None:
+        """``model`` names the model of each traced turn; a callable is asked at each turn, because an admin
+        can change the model while the service runs."""
         self._engine = db.engine
         self._agent = agent
         self._model = model
@@ -409,7 +411,7 @@ class PostgresTracer:
             "tenant_id": trace.tenant_id,
             "session_id": trace.session_id,
             "agent": self._agent,
-            "model": self._model,
+            "model": self._model if isinstance(self._model, str) else self._model(),
             "channel": trace.channel,
             "user_id": trace.user_id,
             "started_at": trace.started_at,

@@ -10,10 +10,12 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "fastapi>=0.115",
     "uvicorn>=0.32",
+    "secret-cipher",
 ]
 
 [tool.uv.sources]
 agent-core = { workspace = true }
+secret-cipher = { workspace = true }
 
 [project.scripts]
 agent = "agent_app.cli:main"

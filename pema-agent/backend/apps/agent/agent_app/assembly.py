@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from agent_app.model_factory import build_model, resolve_model_settings
 from agent_app.profile import Profile
@@ -42,10 +42,12 @@ def build_agent(
     env: Mapping[str, str],
     memory_backend: MemoryBackend | None = None,
     skill_store: SkillStore | None = None,
+    model: ModelClient | None = None,
 ) -> Agent:
-    """Without a backend or store, memory and agent-written skills live in process memory."""
+    """Without a backend or store, memory and agent-written skills live in process memory. A given ``model``
+    (the settings-aware one of a service) picks its own reasoning effort, so the policy leaves it unset."""
     name = profile.agent.name
-    model = build_model(profile, fake=fake, env=env)
+    client = model or build_model(profile, fake=fake, env=env)
     tools = builtin_tools(timezone=profile.agent.timezone).subset(profile.agent.tools)
     memory: MemoryService | None = None
     if profile.memory.enabled:
@@ -61,17 +63,22 @@ def build_agent(
             tools.register(spec)
     prompt = build_prompt(profile, tool_names=tools.names(), memory=memory, skills=skills)
     context_policy = profile.context_policy()
-    context = ContextManager(context_policy, model) if context_policy else None
-    reasoning = None if fake else resolve_model_settings(profile, env).reasoning
+    context = ContextManager(context_policy, client) if context_policy else None
+    if model is not None:
+        policy = replace(profile.loop_policy(), reasoning=None)
+    else:
+        policy = profile.loop_policy(
+            reasoning=None if fake else resolve_model_settings(profile, env).reasoning
+        )
     return Agent(
         profile,
-        model,
+        client,
         tools,
         prompt,
         context,
         memory,
         skills,
-        profile.loop_policy(reasoning=reasoning),
+        policy,
         build_hooks(profile, env),
     )
 

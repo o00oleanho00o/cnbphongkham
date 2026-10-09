@@ -13,6 +13,7 @@ members = [
     "pema-agent-backend",
     "pema-api",
     "pema-contracts",
+    "secret-cipher",
 ]
 
 [[package]]
@@ -24,6 +25,7 @@ dependencies = [
     { name = "alembic" },
     { name = "fastapi" },
     { name = "psycopg", extra = ["binary"] },
+    { name = "secret-cipher" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "uvicorn" },
 ]
@@ -34,6 +36,7 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.14" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
+    { name = "secret-cipher", editable = "packages/secret-cipher" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.36" },
     { name = "uvicorn", specifier = ">=0.32" },
 ]
@@ -1381,6 +1384,7 @@ dependencies = [
     { name = "python-docx" },
     { name = "python-multipart" },
     { name = "redis" },
+    { name = "secret-cipher" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "tzdata" },
     { name = "uvicorn" },
@@ -1411,6 +1415,7 @@ requires-dist = [
     { name = "python-docx", specifier = ">=1.1" },
     { name = "python-multipart", specifier = ">=0.0.12" },
     { name = "redis", specifier = ">=5.2" },
+    { name = "secret-cipher", editable = "packages/secret-cipher" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.36" },
     { name = "tzdata", specifier = ">=2024.2" },
     { name = "uvicorn", specifier = ">=0.32" },
@@ -1955,6 +1960,17 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/14/21/26e4643629b3ebb44f0a06f9c9a53058d63d989415f63a9a3c28e2ee7f22/ruff-0.16.9-py3-none-win_amd64.whl", hash = "sha256:6bd40fec8cd4c8a3d4dd589bd8ad4e6320c13c29234159bfd959a40d529d597b", size = 10592965, upload-time = "2026-09-24T20:37:44.944Z" },
     { url = "https://files.pythonhosted.org/packages/51/60/5fb1a39dbb5ae314d5f59bc7348a63c1d5c20f3cd83914c4b5cb0be31d2d/ruff-0.16.9-py3-none-win_arm64.whl", hash = "sha256:ed1a252039200f57a59eebc063b54beabea67bfbaaca0eeaa7f54b5fbcda2284", size = 10458649, upload-time = "2026-09-24T20:37:46.882Z" },
 ]
+
+[[package]]
+name = "secret-cipher"
+version = "0.1.0"
+source = { editable = "packages/secret-cipher" }
+dependencies = [
+    { name = "cryptography" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "cryptography", specifier = ">=43" }]
 
 [[package]]
 name = "six"

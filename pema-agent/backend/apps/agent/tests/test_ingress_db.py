@@ -23,6 +23,7 @@ from agent_app.db_roles import RUNTIME_ROLE, bootstrap_role
 from agent_app.dispatcher import DispatchSettings
 from agent_app.ingress import SessionBusyError, TurnReply
 from agent_app.ingress_store import PostgresConversationStore, PostgresIngressStore, PostgresSessionLocks
+from agent_app.model_settings import PostgresModelSettingsStore, StoredModelSettings
 from agent_app.profile import load_profile
 from agent_app.runtime import build_runtime
 from agent_app.storage import AgentDatabase
@@ -64,7 +65,8 @@ def db_url(migrated: tuple[str, Engine]) -> str:
         conn.execute(
             sql(
                 "TRUNCATE agent_rt.agent_ingress, agent_rt.agent_conversation, agent_rt.agent_session, "
-                "agent_rt.agent_message, agent_rt.agent_turn, agent_rt.agent_turn_event, agent_rt.agent_memory"
+                "agent_rt.agent_message, agent_rt.agent_turn, agent_rt.agent_turn_event, agent_rt.agent_memory, "
+                "agent_rt.agent_model_settings"
             )
         )
     return migrated[0]
@@ -238,6 +240,12 @@ def test_the_runtime_role_can_queue_messages(migrated: tuple[str, Engine]) -> No
                         "VALUES ('t', 'dev', 'http', 'role-check')"
                     )
                 )
+                conn.execute(
+                    sql(
+                        "INSERT INTO agent_rt.agent_model_settings (tenant_id, agent, model) "
+                        "VALUES ('role-check', 'dev', 'm')"
+                    )
+                )
         finally:
             as_role.dispose()
     finally:
@@ -245,3 +253,24 @@ def test_the_runtime_role_can_queue_messages(migrated: tuple[str, Engine]) -> No
             if conn.execute(sql("SELECT 1 FROM pg_roles WHERE rolname = :r"), {"r": RUNTIME_ROLE}).first():
                 conn.execute(sql(f"DROP OWNED BY {RUNTIME_ROLE}"))
                 conn.execute(sql(f"DROP ROLE {RUNTIME_ROLE}"))
+
+
+def test_model_settings_are_stored_per_agent_and_a_clear_never_lowers_the_version(db_url: str) -> None:
+    async def check(db: AgentDatabase) -> None:
+        store = PostgresModelSettingsStore(db, agent="dev")
+        assert (await store.get("t"), await store.version("t")) == (None, 0)
+
+        saved = await store.save(
+            "t", StoredModelSettings(provider="anthropic", model="m1", reasoning="low", api_key_enc="sealed")
+        )
+        cleared = await store.save("t", StoredModelSettings())
+
+        assert saved.version == 1
+        assert await PostgresModelSettingsStore(db, agent="other").get("t") is None
+        assert cleared.version == 2
+        loaded = await store.get("t")
+        assert loaded == StoredModelSettings(version=2)
+        assert loaded is not None
+        assert loaded.empty
+
+    _run(db_url, check)
