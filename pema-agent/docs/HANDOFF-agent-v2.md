@@ -856,7 +856,7 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
 - First action next session: the Zalo plugin P0–P5d is done (branch `feat/zalo-plugin`); left: a phone QR scan
   and a message round trip in Docker (needs the user's secondary nick and a model key). Plan C (one sign-in,
-  below): C1, C2, C3a, C3b-1, C3b-2, C4 done (C4 without the phone scan); next: the QR scan and a message
+  below): C1, C2, C3a, C3b-1, C3b-2, C4 done (C4 without the phone scan); next: the analysis "all is plugin" (see C4), the QR scan and a message
   round trip, screenshots and `pnpm smoke`, then merge.
 
 ### Deferred: verifier hook (user, 2026-10-09)
@@ -1026,6 +1026,27 @@ Steps (each: commit, stop, report):
     badge, `components/admin/layout/app-shell.tsx`), a route removed with `588f18fc`: a 404 per page load, no
     visible effect. It belongs to the dead-frontend-code cleanup. The profile `clinic` could list `zalo` in
     `[plugins] enabled` if Zalo should be on from the first start; left to the user.
+  - **Merge into :3000, old agent administration removed** (2026-10-10, the user's order after asking why 8088
+    existed next to 3000; the plan C text said "expose only", C4 had kept a loopback port by mistake):
+    (1) clinic web: deleted the pages `/admin/{overview,traces,threads,schedules,memory,agents (+new,[id]),tools,
+    mcp,policy,tuning (+[group])}` and 66 files of `components/admin` and `lib/admin` that only they used (found by
+    an import-reachability scan; 15 tests went with their subjects); the shell no longer calls the removed
+    `GET /api/v1/admin/accounts` (no more 404 per page) and the top bar's online dot is not drawn
+    (`online={null}`; it can come back from the agent's channels). Menu "Quản trị agent" = Điều khiển agent, Kho
+    tri thức, Nhân viên, Logs. Inventory, route-smoke, viewport-shots, port-web-file, READMEs and
+    `web-design-changes.md` updated. `schema.d.ts` is still the old one (regenerating is its own task).
+    (2) agent: profile `clinic` now enables `sso` and `calculate` only (no `web`: no dashboard, no password sign-in,
+    no API keys); the compose service has `expose: 8088` and no `ports`; `PEMA_AGENT_PORT/BIND` removed from the
+    env files; the Plugins page of the clinic web does not list `web`. The `web` plugin and `plugins/web/ui` stay in
+    the repo for the `dev` profile (standalone use): removing them for good is the "all is plugin" decision below.
+    Checks: tsc, eslint, `pnpm inventory`, `pending-web.cjs` clean; vitest 1184 passed, the same 2 failures of
+    `mock/contract.test.ts` as before; `apps/agent` sso and plugin-ui tests 18 passed. Real run: 8088 not
+    reachable from the host, sign-in at `:3000` still reaches the agent (plugins, Zalo script 200), the four agent
+    pages render with no console errors, the removed routes 404.
+  - **Next (not started): analysis "all is plugin"** against `E:\Desktop\clone-git` (Hermes, OpenClaw, claw-code,
+    zalo-agent, the DeepSeek harness if present): where the admin UI lives, what a plugin contributes (tools,
+    channels, pages, settings, jobs), one sign-in, what stays in the core. Output a comparison with `agentcore`,
+    `agent_app` and the plugins `web`, `sso`, `zalo`, `calculate`, then decide whether `web` goes for good.
   - My first attempt ran in the project `cnbphongkham` and left four empty volumes (`cnbphongkham_agent-home`,
     `_pema-data`, `_pg-data`, `_redis-data`); `docker volume rm` of them was not allowed, remove them by hand.
 

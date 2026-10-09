@@ -1,5 +1,6 @@
-# Override for "behind the reverse proxy": only Caddy publishes ports (80/443). The api, the frontend and the agent
-# stop publishing their loopback ports and are reachable only on the compose networks (`expose`).
+# Override for "behind the reverse proxy": only Caddy publishes ports (80/443). The api and the frontend stop
+# publishing their loopback ports and are reachable only on the compose networks (`expose`). The agent never
+# publishes one.
 #
 #   docker compose -f infra/docker-compose.yml -f infra/docker-compose.proxy.yml --env-file infra/.env \
 #       --profile proxy up -d      
@@ -19,7 +20,3 @@ services:
     ports: !reset []
     expose:
       - "3000"
-  agent:
-    ports: !reset []
-    expose:
-      - "8088"

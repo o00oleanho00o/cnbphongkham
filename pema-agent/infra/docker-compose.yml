@@ -18,9 +18,9 @@
 #                         agent, running the profile `agents/clinic`. Staff sign in ONCE on the clinic web: its
 #                         server asks the clinic API for a short token and calls the agent through /agent/...
 #                         (PEMA_AGENT_INTERNAL_URL), so the pages "Điều khiển agent" and the Zalo pages live in
-#                         the clinic web. The agent's own dashboard stays on 127.0.0.1:8088 for the first setup and
-#                         emergencies. Model, key, plugins and Zalo accounts are kept in Postgres and the agent-home
-#                         volume (its secret key: back it up with the database).
+#                         the clinic web. The agent publishes no port (`expose` only) and has no dashboard of its own
+#                         in this profile. Model, key, plugins and Zalo accounts are kept in Postgres and the
+#                         agent-home volume (its secret key: back it up with the database).
 #
 # Run from pema-agent/ (the Makefile does this):
 #   docker compose -f infra/docker-compose.yml --env-file infra/.env up -d
@@ -229,8 +229,10 @@ services:
     environment:
       AGENT_DATABASE_URL: postgresql+psycopg://agent_rt_app:${PEMA_AGENT_RT_APP_PASSWORD:-}@postgres:5432/pema
     command: ["agent", "serve", "--profile", "agents/clinic", "--home", "/data", "--host", "0.0.0.0", "--port", "8088"]
-    ports:
-      - "${PEMA_AGENT_BIND:-127.0.0.1}:${PEMA_AGENT_PORT:-8088}:8088"
+    # Only the compose network reaches it (the frontend, as http://agent:8088). To look at it from the host, use
+    # `docker compose exec agent ...` or add a `ports` entry in a local override file.
+    expose:
+      - "8088"
     volumes:
       - agent-home:/data
     healthcheck:

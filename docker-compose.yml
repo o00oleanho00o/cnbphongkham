@@ -6,8 +6,8 @@
 #
 #   http://localhost:3000   Pema staff web (Next.js)           demo accounts: see the `seed` service
 #   http://localhost:8000   Pema API (FastAPI, /healthz)
-#   http://localhost:8088   general agent (profile agents/clinic): reached by staff through the web at :3000 (Quản trị agent >
-#                           Điều khiển agent, Zalo pages); its own dashboard here is for the first setup and emergencies
+#   (the general agent, profile agents/clinic, publishes no port: staff reach it through the web at :3000, menu
+#   Quản trị agent > Điều khiển agent and the Zalo pages)
 #
 # The stack (postgres, redis, migrate, api, frontend, seed) comes from pema-agent/infra: its compose file
 # plus docker-compose.local.yml, with the demo values of infra/.env.local-demo (local use only, ports on 127.0.0.1).

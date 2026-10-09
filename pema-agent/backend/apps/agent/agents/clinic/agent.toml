@@ -1,5 +1,6 @@
 # The clinic's agent: staff sign in once on the clinic web, whose server calls this agent with a short token
-# the clinic API signs (plugin sso). The web plugin's own sign-in stays for the first setup and emergencies.
+# the clinic API signs (plugin sso). The agent has no dashboard or sign-in of its own here: its pages (overview,
+# model, plugins, and the pages plugins ship) are shown by the clinic web under "Điều khiển agent".
 # Secrets never go here: the model's API key is set on the dashboard and stored encrypted in the database.
 
 [agent]
@@ -53,8 +54,8 @@ queue_max_wait_s = 3.0
 queue_max_batch = 20
 
 [plugins]
-# web: this service's own dashboard sign-in; sso: the clinic web's staff (owner and manager get admin)
-enabled = ["web", "sso", "calculate"]
+# sso: the clinic web's staff (owner and manager get admin)
+enabled = ["sso", "calculate"]
 
 [plugins.sso]
 issuer = "pema-clinic"
