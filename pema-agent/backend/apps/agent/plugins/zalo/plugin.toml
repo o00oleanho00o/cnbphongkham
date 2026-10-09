@@ -8,3 +8,15 @@ type = "boolean"
 title = "Rich text"
 description = "Turn the agent's markdown into Zalo bold, italic, headings and lists; off sends plain text."
 default = true
+
+[user_config.public_url]
+type = "string"
+title = "Public address"
+description = "https address at which Zalo reaches this service (the bot webhook is <address>/v1/hooks/zalo/bot/<account>). Empty: bots long-poll instead."
+default = ""
+
+[user_config.poll_timeout_s]
+type = "integer"
+title = "Polling wait (seconds)"
+description = "How long one getUpdates call waits for a message (5-60)."
+default = 30

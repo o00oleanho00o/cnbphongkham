@@ -76,7 +76,11 @@ class ToolExecutor:
     ) -> list[ToolRun]:
         """Like ``run``, with how long each call took and the guard that blocked it."""
         hook_ctx = HookContext(
-            tenant_id=ctx.tenant_id, session_id=ctx.session_id, user_id=ctx.user_id, step=step
+            tenant_id=ctx.tenant_id,
+            session_id=ctx.session_id,
+            user_id=ctx.user_id,
+            step=step,
+            channel=ctx.channel,
         )
         allowed, refused = list(uses[: self._max_calls]), list(uses[self._max_calls :])
         runs: list[ToolRun] = []

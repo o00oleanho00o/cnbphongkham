@@ -28,6 +28,7 @@ class HookContext:
     session_id: str
     user_id: str | None
     step: int
+    channel: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

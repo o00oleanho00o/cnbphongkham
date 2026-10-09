@@ -101,3 +101,12 @@ class ReactionIconOut(_Model):
     key: str
     emoji: str
     label: str
+
+
+class BotTokenSet(_Model):
+    token: str = Field(
+        min_length=10,
+        max_length=500,
+        pattern=r"^\d+:[A-Za-z0-9_-]+$",
+        description="``<numeric id>:<secret>`` from Zalo Bot Creator, write-only.",
+    )

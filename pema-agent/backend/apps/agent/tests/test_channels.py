@@ -101,6 +101,29 @@ class StubbornChannel(FakeChannel):
         self.receive = receive
 
 
+class CleaningChannel(FakeChannel):
+    """Shows plain text only and refuses replies that mention a secret."""
+
+    def prepare(self, text: str) -> str | None:
+        return None if "secret" in text else text.replace("*", "")
+
+
+async def test_a_channel_prepares_the_whole_reply_before_it_is_split_or_refuses_it(tmp_path: Path) -> None:
+    channel = CleaningChannel(max_chars=12)
+    dispatcher, hub = _hub(_runtime(tmp_path), channel)
+    await hub.sync()
+
+    await channel.hear("m1", "**alpha** beta")
+    await channel.hear("m2", "the secret", conversation="c2")
+    first = await _until(hub, dispatcher, 1, "sent")
+    second = await _until(hub, dispatcher, 2, "skipped")
+
+    assert [m.text for m in channel.sent] == ["(echo) alpha", "beta"]
+    assert first.delivered_parts == 2
+    assert second.delivery_error == "the channel refused the reply"
+    await dispatcher.close()
+
+
 class BrokenModel:
     async def complete(self, request: LlmRequest, *, sink: StreamSink | None = None) -> AssistantResult:
         raise ModelError("auth", "bad key")

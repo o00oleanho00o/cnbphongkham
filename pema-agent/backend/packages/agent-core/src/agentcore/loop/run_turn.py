@@ -170,7 +170,7 @@ async def run_turn(
     limits = policy or LoopPolicy()
     guards = hooks or HookSet()
     executor = limits.executor(tools, guards)
-    ctx = ToolContext(session_id=session_id, tenant_id=tenant_id, user_id=user_id)
+    ctx = ToolContext(session_id=session_id, tenant_id=tenant_id, user_id=user_id, channel=channel)
     schemas = tools.schemas()
     new_messages: list[Message] = []
     events: list[TraceEvent] = []
@@ -257,7 +257,9 @@ async def run_turn(
         return True
 
     async def call_model(step: StepInfo, offered: list[ToolSchema]) -> AssistantResult:
-        hook_ctx = HookContext(tenant_id=tenant_id, session_id=session_id, user_id=user_id, step=step.step)
+        hook_ctx = HookContext(
+            tenant_id=tenant_id, session_id=session_id, user_id=user_id, step=step.step, channel=channel
+        )
         retries = 0
         overflow_handled = False
         while True:

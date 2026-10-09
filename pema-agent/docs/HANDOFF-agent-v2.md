@@ -637,6 +637,26 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   import the plugin as `plugins.zalo...`); the old test channel plugin named `zalo` in `test_channels.py` is now
   `chatter`. Full suite 603 passed with the DB. `running` is always false until P2 registers channels;
   `disabled_tools` is stored but not enforced yet (P2: a hook for the account's channel).
+- **P2 done** (commit after this entry): Zalo Bot API. Plugin: `bot/types.py`, `bot/client.py` (restored, token
+  masked three ways, 408 = empty poll), `bot/parser.py` (update → `ZaloInbound`; labels for sticker/voice/odd
+  kinds; bot senders dropped; hash id when Zalo gives none), `inbound.py` (`ZaloInbound` → core
+  `InboundMessage`; in a group the sender's name goes in front of the text; metadata `thread_type`,
+  `sender_name`, `image_url`), `access.py` (restored allowlist filter; passive "record only" is decided but
+  dropped: the core has no keep-without-answer path), `bot/channel.py` (`ZaloBotChannel`, channel
+  `zalo-<account>`: `getMe` on start, long polling with backoff 2→60 s or webhook when `public_url` is set,
+  plain text through `prepare`, `typing` via `sendChatAction`, send errors → `ChannelSendError` retryable for
+  network/429/5xx), `plugin.py` (`ZaloPlugin.sync`: enabled bot account + token ⇒ channel, token change ⇒
+  restart, settings change ⇒ live; job `accounts` every 15 s; `TurnSection zalo_channel` with the bot's limits;
+  `PreToolHook zalo_disabled_tools` denies the account's switched-off tools), routes `PUT
+  /accounts/{id}/bot-token` (getMe before storing) and hook `POST /v1/hooks/zalo/bot/{id}` (secret header,
+  unknown account = same 401, 400 on a bad body). Settings `public_url`, `poll_timeout_s`. Test seam: config
+  `bot_transport` (an httpx transport; not a manifest setting). Core: `ToolContext.channel`,
+  `HookContext.channel`; `agentcore.channels.PreparesText` (`prepare(text) -> str | None`, run by the hub
+  before splitting; None ⇒ delivery `skipped`). No Zalo-specific tools on the Bot API (the "7 tools" of the
+  old port were generic tools allowed on the bot). Tests: `tests/zalo/test_bot_client.py` (restored),
+  `test_bot_channel.py` (fake Zalo over an httpx transport, end to end with hub and gateway); full suite 640 +
+  the hub `prepare` test. Limit: every process running the plugin polls the same bot (run channels in one
+  process until a lease exists).
 
 ## S1 progress log (newest last)
 

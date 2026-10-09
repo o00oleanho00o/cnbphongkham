@@ -22,6 +22,8 @@ class ToolContext:
     tenant_id: str = DEFAULT_TENANT
     user_id: str | None = None
     """The person the session talks to, set by the caller; a tool never takes it from the model."""
+    channel: str | None = None
+    """The channel the turn came in on (``http``, ``cli``, a plugin's channel), set by the caller."""
 
 
 class ToolOutput(BaseModel):

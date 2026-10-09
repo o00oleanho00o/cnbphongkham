@@ -26,6 +26,7 @@ from agentcore.channels import (
     ChannelSendError,
     InboundMessage,
     OutboundMessage,
+    PreparesText,
     Receive,
     ShowsTyping,
     split_reply,
@@ -192,6 +193,12 @@ class ChannelHub:
                 record.id, "skipped", f"no reply: {record.error_kind or record.status}"
             )
             return True
+        if isinstance(adapter, PreparesText):
+            prepared = adapter.prepare(text)
+            if prepared is None:
+                await self._ingress.finish_delivery(record.id, "skipped", "the channel refused the reply")
+                return True
+            text = prepared
         parts = split_reply(text, adapter.capabilities.max_text_chars)
         if not parts:
             await self._ingress.finish_delivery(record.id, "skipped", "empty reply")

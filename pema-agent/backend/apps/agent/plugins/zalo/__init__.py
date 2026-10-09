@@ -7,12 +7,25 @@ A port of zalo-agent (MIT; see NOTICE). Nothing of it lives in the agent core.
 
 from __future__ import annotations
 
+import functools
+
+import httpx
+
 from agent_app.plugins import PluginContext
 
-from .accounts import AccountStore
-from .routes import account_routes
+from .bot.client import tao_zalo_bot_client
+from .plugin import ZaloPlugin
+from .routes import account_routes, hook_routes
 
 
 def register(ctx: PluginContext) -> None:
-    store = AccountStore(ctx.storage, encrypt=ctx.encrypt, decrypt=ctx.decrypt)
-    ctx.register_routes(account_routes(store, running=lambda _account_id: False))
+    # ``bot_transport`` is not a manifest setting: only code that enables the plugin itself (tests, with a
+    # fake Zalo) passes an httpx transport.
+    transport = ctx.config.get("bot_transport")
+    if isinstance(transport, httpx.AsyncBaseTransport):
+        plugin = ZaloPlugin(ctx, bot_client=functools.partial(tao_zalo_bot_client, transport=transport))
+    else:
+        plugin = ZaloPlugin(ctx)
+    plugin.register()
+    ctx.register_routes(account_routes(plugin))
+    ctx.register_routes(hook_routes(plugin), kind="hooks")

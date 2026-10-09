@@ -95,6 +95,14 @@ class ShowsTyping(Protocol):
     async def typing(self, conversation_id: str, metadata: Mapping[str, str]) -> None: ...
 
 
+@runtime_checkable
+class PreparesText(Protocol):
+    """A channel that turns the whole reply into what it can show (strips markup it cannot render) before it
+    is split into parts; None means the reply must not go out at all (the channel's own safety check)."""
+
+    def prepare(self, text: str) -> str | None: ...
+
+
 def split_reply(text: str, max_chars: int | None) -> list[str]:
     """The reply in pieces of at most ``max_chars``, cut at a paragraph, a line or a space when one is
     near."""
