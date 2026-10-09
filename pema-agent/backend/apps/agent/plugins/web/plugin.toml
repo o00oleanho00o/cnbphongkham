@@ -1,7 +1,11 @@
 name = "web"
 version = "0.1.0"
-description = "The dashboard's sign-in: one admin account (email and password, created on the first visit), signed login tokens (JWT) and API keys for the chat API."
+description = "The dashboard: its pages, served at / (built from ui/), and its sign-in: one admin account (email and password, created on the first visit), signed login tokens (JWT) and API keys for the chat API."
 api = 1
+
+[ui]
+dir = "ui/dist"
+home = true
 
 [user_config.token_hours]
 type = "integer"

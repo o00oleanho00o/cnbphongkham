@@ -1,0 +1,25 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+/* Plugin pages are separate bundles: scan them too so the classes they use exist. */
+@source "../../../*/ui/src";
+
+@theme inline {
+  --font-sans: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body {
+  @apply bg-canvas font-sans text-ink antialiased;
+  font-size: var(--text-body);
+}
+
+button:not(:disabled),
+select:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}

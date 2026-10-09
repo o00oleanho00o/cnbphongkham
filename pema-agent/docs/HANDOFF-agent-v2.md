@@ -738,6 +738,21 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   only. Forgot password: `agent plugins forget web --prefix user:` reopens setup. `tests/conftest.py` gives
   every test its own home. Tests `tests/web/test_web_plugin.py`; full agent suite 671; real `agent serve`
   smoke test (setup, me, plugins, chat with the JWT) passed.
+- **P5b done** (commit after this entry): manifest `[ui]` (`dir` default `ui/dist`, `entry` script, `styles`,
+  `home`; plain relative paths only). `agent_app/plugin_ui.py` serves enabled plugins' built files open at
+  `/ui/<plugin>/...` (only inside `dir`, fixed content types because Windows maps `.js` to `text/plain`,
+  `index.html` no-cache, `assets/` immutable, `nosniff`); `GET /` redirects (relative) to the `home`
+  plugin; `GET /v1/admin/ui` (admin) lists the enabled plugins' scripts/styles. Plugin `web` is the home:
+  `plugins/web/ui` = Vite 8 + React 19 + Tailwind 4 app (own `pnpm-lock.yaml`, TS 5.9 pinned; `dist/`
+  ignored, built in the Dockerfile later; `pnpm dev` at `/ui/web/` proxies `/v1` and other plugins' `/ui` to
+  `127.0.0.1:8088`). Hash routing; pages: sign-in/setup, Tổng quan (channels, jobs), Model (provider, model,
+  base URL, reasoning, dialect, key masked, test, reset), Plugins (toggle, settings form from `user_config`,
+  `web` cannot be switched off there), API key (shown once, revoke), Tài khoản (change password). Tokens copied
+  from `frontend/src/ui/tokens.css` (light). Plugin browser halves: `window.__PEMA_AGENT__` = `{version,
+  React, jsxRuntime, api, ui, register}`; a plugin script (IIFE, React external) calls
+  `register(name, {pages: [{id, title, component}]})`, shown at `#/p/<plugin>/<id>`; the shell's CSS scans
+  `plugins/*/ui/src`, installed plugins ship their own CSS. Tests: `tests/test_plugin_ui.py` (9), vitest 3;
+  full agent suite 680; checked in the browser (setup, overview, plugins toggle, model page).
 
 ## S1 progress log (newest last)
 

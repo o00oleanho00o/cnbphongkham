@@ -1,0 +1,61 @@
+/*
+ * Pema design tokens, copied from pema-agent/frontend/src/ui/tokens.css (light theme) so the agent's dashboard
+ * looks like the clinic web without depending on its sources. Change both together.
+ */
+@theme static {
+  --color-brand-50: #e8f4fb;
+  --color-brand-100: #cfe6f6;
+  --color-brand-200: #9fcdee;
+  --color-brand-400: #3caae5;
+  --color-brand-500: #0b4f94;
+  --color-brand-600: #083a6e;
+  --color-brand-700: #083a6e;
+
+  --color-canvas: #f4f8fb;
+  --color-surface: #ffffff;
+  --color-ink: #17324d;
+  --color-ink-soft: #5a6d80;
+  --color-heading: #083a6e;
+  --color-link: #0b4f94;
+  --color-line: #d9e5ee;
+  --color-line-strong: #c8dce9;
+  --color-tile: #eaf1f7;
+  --color-field: #f8fbfd;
+  --color-table-head: #f3f8fb;
+  --color-overlay: rgb(18 59 92 / 50%);
+  --color-focus: #2181bc;
+
+  --color-success: #28745d;
+  --color-success-soft: #e6f4ef;
+  --color-success-line: #c4e3d8;
+  --color-info: #426c8a;
+  --color-info-soft: #eaf3f9;
+  --color-info-line: #cfe5f3;
+  --color-warning: #8a6727;
+  --color-warning-soft: #fff5df;
+  --color-warning-line: #f1dfb9;
+  --color-danger: #a13f46;
+  --color-danger-soft: #fbeceb;
+  --color-danger-line: #f0cfcd;
+
+  --radius-field: 9px;
+  --radius-control: 10px;
+  --radius-tile: 12px;
+  --radius-card: 14px;
+  --radius-modal: 20px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 5px 18px rgb(18 61 99 / 6%);
+  --shadow-pop: 0 30px 100px rgb(18 43 70 / 25%);
+
+  --text-micro: 11px;
+  --text-label: 12px;
+  --text-small: 13px;
+  --text-body: 14px;
+  --text-body-lg: 15px;
+  --text-section: 16px;
+  --text-subtitle: 20px;
+  --text-title: 25px;
+
+  --layout-sidebar-w: 232px;
+}

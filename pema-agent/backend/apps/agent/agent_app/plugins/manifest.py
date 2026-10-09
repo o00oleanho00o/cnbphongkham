@@ -48,6 +48,39 @@ class ConfigField(BaseModel):
     """A secret: stored encrypted and never shown in full."""
 
 
+class UiSpec(BaseModel):
+    """The plugin's browser half: built files the gateway serves, open, at ``/ui/<plugin>/``."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    dir: str = "ui/dist"
+    entry: str | None = None
+    """A script in ``dir`` the dashboard loads once signed in; it adds the plugin's pages."""
+    styles: list[str] = Field(default_factory=list[str])
+    home: bool = False
+    """Its ``index.html`` is the dashboard itself: ``/`` leads there."""
+
+    @field_validator("dir", "entry")
+    @classmethod
+    def _relative(cls, value: str | None) -> str | None:
+        if value is not None:
+            _check_relative(value)
+        return value
+
+    @field_validator("styles")
+    @classmethod
+    def _relatives(cls, value: list[str]) -> list[str]:
+        for item in value:
+            _check_relative(item)
+        return value
+
+
+def _check_relative(path: str) -> None:
+    parts = path.replace("\\", "/").split("/")
+    if not path or path.startswith(("/", "\\")) or ":" in path or any(p in ("", ".", "..") for p in parts):
+        raise ValueError(f"{path!r} must be a plain path inside the plugin's folder")
+
+
 class PluginManifest(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
@@ -61,6 +94,7 @@ class PluginManifest(BaseModel):
     requires: list[str] = Field(default_factory=list[str])
     """Python packages (pip requirement strings) the plugin needs."""
     user_config: dict[str, ConfigField] = Field(default_factory=dict[str, ConfigField])
+    ui: UiSpec | None = None
 
     @field_validator("name")
     @classmethod

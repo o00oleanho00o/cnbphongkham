@@ -12,7 +12,8 @@ before it runs and a ``message_id`` sent twice runs once. A reply not ready with
 202 and can be fetched from ``/v1/ingress/{id}``.
 
 Plugins add their own routes: ``/v1/plugins/<plugin>/...`` for admins, ``/v1/hooks/<plugin>/...`` open to the
-platforms that call back (the plugin checks their signature; calls are limited per address).
+platforms that call back (the plugin checks their signature; calls are limited per address), and their browser
+files under ``/ui/<plugin>/`` (``agent_app.plugin_ui``); ``/`` leads to the dashboard plugin's page.
 """
 
 from __future__ import annotations
@@ -30,7 +31,7 @@ from pathlib import Path
 from typing import Any, Final, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text as sql
 from starlette.types import ASGIApp, Receive, Scope, Send
@@ -41,6 +42,7 @@ from agent_app.dispatcher import Dispatcher, StreamObserver
 from agent_app.ingress import IngressRecord
 from agent_app.model_factory import Provider
 from agent_app.model_settings import ModelAdmin, SecretKeyMissingError
+from agent_app.plugin_ui import UI_PREFIX, PluginUi, inside
 from agent_app.plugins.install import MAX_ZIP_BYTES
 from agent_app.plugins.jobs import JobRunner
 from agent_app.plugins.manager import PluginManager, PluginNotFoundError
@@ -337,6 +339,16 @@ def create_app(
             return None
 
         app.mount(PLUGIN_HOOKS, PluginRoutes(plugins, "hooks", hook_guard))
+        app.mount(UI_PREFIX, PluginUi(plugins))
+        manager = plugins
+
+        @app.get("/", include_in_schema=False)
+        async def home() -> Response:
+            name = manager.host.home()
+            if name is None:
+                return _error(404, "not_found", "no dashboard: the web plugin is off")
+            # Relative, so the service also works behind a proxy that adds a path prefix.
+            return RedirectResponse(f"{UI_PREFIX.lstrip('/')}/{name}/", status_code=307)
 
     @app.get("/v1/sessions/{session_id}", dependencies=[authorized])
     async def session(session_id: str) -> Response:
@@ -410,6 +422,26 @@ def _add_admin_routes(
     if plugins is not None:
         _add_plugin_routes(app, plugins, authorized)
         app.mount(PLUGIN_ROUTES, PluginRoutes(plugins, "admin", gate.guard(ADMIN)))
+        host = plugins.host
+
+        @app.get("/v1/admin/ui", dependencies=[authorized])
+        async def plugin_scripts() -> dict[str, Any]:
+            """The scripts (and styles) the dashboard loads to add the enabled plugins' pages."""
+            scripts: list[dict[str, Any]] = []
+            for name in host.enabled():
+                found = host.ui(name)
+                if found is None or found[1].entry is None or inside(found[0], found[1].entry) is None:
+                    continue
+                folder, spec = found
+                scripts.append(
+                    {
+                        "name": name,
+                        "script": f"{UI_PREFIX}/{name}/{spec.entry}",
+                        "styles": [f"{UI_PREFIX}/{name}/{s}" for s in spec.styles if inside(folder, s)],
+                    }
+                )
+            return {"home": host.home(), "plugins": scripts}
+
     if jobs is not None:
         runner = jobs
 

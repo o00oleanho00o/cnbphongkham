@@ -25,7 +25,7 @@ from fastapi import APIRouter, FastAPI
 
 from agent_app.auth import Authenticator
 from agent_app.model_settings import NO_SECRET_KEY, SECRET_KEY_ENV
-from agent_app.plugins.manifest import PluginError, PluginSource
+from agent_app.plugins.manifest import PluginError, PluginSource, UiSpec
 from agent_app.plugins.records import InMemoryPluginRecords, PluginStorage, StorageFor
 from agentcore import ToolSpec
 from agentcore.channels import ChannelAdapter, valid_channel_name
@@ -360,6 +360,21 @@ class PluginHost:
         """The app serving the plugin's routes of this kind, while it is enabled."""
         loaded = self._loaded.get(plugin)
         return None if loaded is None else loaded.routes.get(kind)
+
+    def ui(self, plugin: str) -> tuple[Path, UiSpec] | None:
+        """The folder of the plugin's built browser files and their description, while it is enabled."""
+        loaded = self._loaded.get(plugin)
+        spec = None if loaded is None else loaded.source.manifest.ui
+        if loaded is None or spec is None:
+            return None
+        return loaded.source.folder / spec.dir, spec
+
+    def home(self) -> str | None:
+        """The enabled plugin whose browser files are the dashboard."""
+        return next(
+            (name for name, p in self._loaded.items() if p.source.manifest.ui and p.source.manifest.ui.home),
+            None,
+        )
 
     def status(self) -> list[PluginStatus]:
         statuses: list[PluginStatus] = []
