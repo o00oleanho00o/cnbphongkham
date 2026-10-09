@@ -1,11 +1,11 @@
 # Handoff — agent-v2 (general agent core)
 
 Lives in the repo (`pema-agent/docs/HANDOFF-agent-v2.md`) so it is pushed and shared; update it here after
-each stage. Last updated 2026-10-09, after S3e-3 (`fac0bfcf`): S3 is complete.
+each stage. Last updated 2026-10-09, after S4a (`ff0c66a0`).
 
-Next session focus: plan **S4 (Loop)** on branch `feat/agent-v2` — write the plan, wait for the user's "go",
-then implement one sub-stage at a time (commit, stop, report). Reply to the user in Vietnamese. Open items to
-handle later are under "Loose ends" → "Known limits of S3e".
+Next session focus: **S4b (loop guard)** on branch `feat/agent-v2` — write its detailed plan, wait for the
+user's "go", then implement (commit, stop, report). S4 order agreed: S4a → S4b → S4c → S4d. Reply to the user in
+Vietnamese. Open items to handle later are under "Loose ends".
 
 ## Where things are
 
@@ -13,10 +13,10 @@ handle later are under "Loose ends" → "Known limits of S3e".
 - Branch: `feat/agent-v2` — the branch made to rewrite the agent from scratch (commits `588f18fc`, `eadaac30`
   removed the old agent layer; see their messages and `pema-agent/backend/apps/api/pema/composition/app_runtime.py`
   docstring: "a future agent service talks to the clinic through the HTTP API only").
-- Done so far (read the commits, do not re-derive): S0 … S3e-3, see "Roadmap and status" and the progress
-  entries below; latest `fac0bfcf`.
-- Tests: full agent suite `uv run pytest packages/agent-core packages/secret-cipher apps/agent -q` (371 at
-  S3e-3, Postgres tests need `PEMA_TEST_DATABASE_URL`). ruff, pyright strict, lint-imports clean.
+- Done so far (read the commits, do not re-derive): S0 … S4a, see "Roadmap and status" and the progress
+  entries below; latest `ff0c66a0`.
+- Tests: full agent suite `uv run pytest packages/agent-core packages/secret-cipher apps/agent -q` (381 at
+  S4a, Postgres tests need `PEMA_TEST_DATABASE_URL`). ruff, pyright strict, lint-imports clean.
 - Reference repos cloned in `E:\Desktop\clone-git`: `claw-code`, `hermes-agent`, `openclaw-src` (the empty
   `openclaw` folder is junk), `zalo-agent`, `mattpocock-skills`.
 - Installed project skill: `.claude/skills/handoff/` (from `mattpocock/skills@b0618bc`, MIT `LICENSE` kept).
@@ -63,7 +63,7 @@ handle later are under "Loose ends" → "Known limits of S3e".
 | S1 | Prompt: sections + scopes, frozen system, transient context message, status bar | **Done `f4b68879`** (real-model check pending) |
 | S2 | Context: token estimate, providers, history window, trim without splitting tool pairs, compaction (aux model + heuristic fallback), memory tool + `MemoryBackend`, skills tools + `SkillSource` | **Done** `aad3ce48`, `c0e6e1d9`, `80596312` |
 | S3 | Harness: full model layer (3 providers, DB settings, AES-GCM secrets, reasoning map), parallel read-only tools, guide/sensor pipeline, Postgres store, trace, channel API + HTTP `/v1/chat`, plugin loader + profiles | **Done**: S3a `95aa0d10`, S3b `949eb697`, S3c `b798d78d`, S3d-1 `0c6fa3b3`, S3d-2 `981e7363`, S3e-1 `a693729d`, S3e-2 `3f6a4ffb`, S3e-3 `fac0bfcf` |
-| S4 | Loop: budgets, recovery per error kind (429 wait once, context overflow cut once, auth stop), loop guard, mid-turn injection (`collect`/`steer`), one run per session, verifier hook, trigger runtime | **Next — plan first** |
+| S4 | Loop: budgets, recovery per error kind (429 wait once, context overflow cut once, auth stop), loop guard, mid-turn injection (`collect`/`steer`), one run per session, verifier hook, trigger runtime | In progress: S4a `ff0c66a0` done; next S4b loop guard, then S4c collect/steer, S4d keyless replay tests (+ verifier hook) |
 | S5 | Graph: nodes/edges/state, `run_turn` as node, sub-agent `delegate` — only when needed | Planned |
 
 ## S1 plan (approved and done — kept for reference)
@@ -481,6 +481,32 @@ S2a design refinements made while implementing:
     per-channel rate limits, real Zalo adapter (domain plugin).
   - STOPPED after S3e-3 — S3 complete. Next: S4 (plan first: retry backoff + Retry-After, stream idle watchdog,
     repeat-tool reminder 3/5/8, collect/steer, keyless replay tests; HMAC for the gateway still TODO).
+- 2026-10-09 S4 split agreed: S4a recovery of model calls, S4b loop guard (repeat-tool reminder 3/5/8, tool
+  error streak, maybe token budget), S4c collect/steer, S4d keyless replay tests + verifier hook. HMAC deferred
+  (see "Deferred by the user"). Failure reply on channels: a configurable text per agent (option a).
+- **S4a committed `ff0c66a0`** "feat(agent): retry failed model calls, recover from context overflow, limit turn
+  time".
+  - `agentcore/loop/retry.py` `RetryPolicy` (max_retries 4, base 0.5 s doubling, cap 10 s, jitter 20 %,
+    `Retry-After` wins; retries rate_limit / transient / empty_response). `LoopPolicy.retry`, `.max_turn_s`
+    (300 s, None = no limit). The old one-off empty-completion retry is gone (covered by the policy).
+  - `run_turn(sleep=, timer=)` (tests skip pauses and move time); retry loop in `call_model`: each failed call is
+    a `model_call` error event, each retry a `model_retry` event (duration = pause; detail error_kind, retry,
+    streamed); `context_overflow` → `compact(force=True)` once and resend (trace `compaction` detail `forced`),
+    a second overflow or no context manager fails the turn; auth/config/unknown fail at once.
+  - Deadline: before steps 2..n, if `max_turn_s` passed → one last call without tools, `stop = "deadline"`
+    (`TurnStop`/`TraceStop` gained it). Failed-turn trace `steps` = highest step reached, not calls.
+  - `RetryObserver` (runtime_checkable): observers with `retry(error_kind)` hear when streamed text became void.
+    SSE `StreamObserver` sends `event: retry`; CLI prints "(the model stopped: …; trying again)".
+  - Adapters: `max_retries` default 0 (SDK no longer retries on its own), `timeout_s` = longest gap between
+    stream pieces (read timeout), new `connect_timeout_s` 10 s (`openai.Timeout(read, connect=...)`).
+  - Migration `0007_retry_deadline`: agent_turn stop + 'deadline', agent_turn_event kind + 'model_retry'.
+  - Profile: `[agent] failure_reply` (≤ 1000 chars; dev has an English sentence), `[loop] max_turn_s`;
+    `ChannelHub(failure_reply=)` sends it for failed turns (delivery `sent`, the record keeps `error_kind`);
+    `Runtime.channel_hub` passes the profile's text. HTTP keeps its error status.
+  - Tests: new `packages/agent-core/tests/test_recovery.py` (8); run_turn/gateway/storage/channels tests updated
+    (gateway rate-limit test now counts 1 + 4 calls). Full agent-core + secret-cipher + apps/agent with DB:
+    381 passed; ruff, pyright strict, lint-imports 7/7 clean. **Not run against a real model** (no key in env).
+  - STOPPED after S4a. Next: S4b plan, after the user's "go".
 
 ## S1 progress log (newest last)
 
@@ -550,17 +576,15 @@ S2a design refinements made while implementing:
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
-- First action next session: write the S4 plan for approval (the S3 work was checked live with DeepSeek after
-  S3d; S3e has not been run against a real model yet).
+- First action next session: write the S4b plan for approval. S3e and S4a have not been run against a real
+  model yet (the user can give a key via the environment for a live check).
 - A stale custom agent draft exists at `C:\Users\My PC\AppData\Roaming\Code\User\prompts\zalo-agent-builder.agent.md`
   (written before the "general core" decision; it says Hermes-based). Offer to rewrite or delete it.
 
 ### Known limits of S3e (handle later; the user asked to keep them here)
 
-- **Failed turn on a channel gets no answer.** When a turn fails (model down, bad key), the reply is marked
-  `delivery = 'skipped'` and the user on Zalo/other channel hears nothing. Decide with the user: send a short
-  default apology (configurable per agent/profile, e.g. `[channels] failure_text`) or keep silent. Code:
-  `ChannelHub.deliver` in `apps/agent/agent_app/channel_hub.py` (branch `record.status != "done"`).
+- ~~**Failed turn on a channel gets no answer.**~~ Done in S4a: `[agent] failure_reply` is sent through the
+  channel when set; empty keeps the old behaviour (`delivery = 'skipped'`).
 - **Delivery is at least once.** A process that dies mid-send (or a send that times out but went through) makes
   the next attempt repeat that part. Possible fix: pass an idempotency key (`ingress_id` + part) in
   `OutboundMessage` for channels whose API supports it; dedupe on the channel side.
