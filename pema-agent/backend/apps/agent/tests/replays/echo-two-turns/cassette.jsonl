@@ -1,0 +1,5 @@
+{"type": "header", "format": 1, "recorded_at": "2026-10-09T10:28:53+00:00", "model": "echo (no provider)"}
+{"type": "turn", "user_text": "hello there"}
+{"type": "call", "request": {"tools": ["get_datetime", "memory", "skill_list", "skill_view", "skill_write", "skill_patch", "calculate"], "user": "hello there"}, "stream": [["text", "(echo) hello there"]], "result": {"message": {"role": "assistant", "blocks": [{"type": "text", "text": "(echo) hello there"}], "usage": {"input_tokens": 0, "output_tokens": 0, "cache_read_tokens": 0, "cache_write_tokens": 0, "reasoning_tokens": 0}}, "stop_reason": "end"}}
+{"type": "turn", "user_text": "and again"}
+{"type": "call", "request": {"tools": ["get_datetime", "memory", "skill_list", "skill_view", "skill_write", "skill_patch", "calculate"], "user": "and again"}, "stream": [["text", "(echo) and again"]], "result": {"message": {"role": "assistant", "blocks": [{"type": "text", "text": "(echo) and again"}], "usage": {"input_tokens": 0, "output_tokens": 0, "cache_read_tokens": 0, "cache_write_tokens": 0, "reasoning_tokens": 0}}, "stop_reason": "end"}}

@@ -21,6 +21,7 @@ from agent_app.ingress import (
 )
 from agent_app.ingress_store import PostgresConversationStore, PostgresIngressStore, PostgresSessionLocks
 from agent_app.live import LiveAgent
+from agent_app.model_factory import build_model
 from agent_app.model_settings import (
     SECRET_KEY_ENV,
     DynamicModel,
@@ -41,7 +42,14 @@ from agent_app.storage import (
     PostgresSkillStore,
     PostgresTracer,
 )
-from agentcore import DEFAULT_TENANT, InMemorySessionStore, InMemoryTracer, SessionStore, TurnTrace
+from agentcore import (
+    DEFAULT_TENANT,
+    InMemorySessionStore,
+    InMemoryTracer,
+    ModelClient,
+    SessionStore,
+    TurnTrace,
+)
 from agentcore.memory import InMemoryMemoryBackend, MemoryBackend
 from agentcore.skills import InMemorySkillStore, SkillStore
 
@@ -150,10 +158,12 @@ def build_runtime(
     db: AgentDatabase | None,
     tenant_id: str = DEFAULT_TENANT,
     plugins: PluginHost | None = None,
+    model_wrapper: Callable[[ModelClient], ModelClient] | None = None,
 ) -> Runtime:
     """Model settings come from the database (or process memory without one), then the environment, then
     the profile; a missing API key is reported on the first model call, so an admin can still set one.
-    Without a given plugin host, the profile's plugins are found and enabled here."""
+    Without a given plugin host, the profile's plugins are found and enabled here. ``model_wrapper`` wraps
+    the model every call goes through, the summariser's too (recording, replay)."""
     name = profile.agent.name
     settings_store: ModelSettingsStore = (
         InMemoryModelSettingsStore() if db is None else PostgresModelSettingsStore(db, agent=name)
@@ -169,6 +179,9 @@ def build_runtime(
     )
     memory_backend: MemoryBackend = InMemoryMemoryBackend() if db is None else PostgresMemoryBackend(db)
     skill_store: SkillStore = InMemorySkillStore() if db is None else PostgresSkillStore(db)
+    model: ModelClient | None = dynamic
+    if model_wrapper is not None:
+        model = model_wrapper(dynamic if dynamic is not None else build_model(profile, fake=True, env=env))
 
     def build(added: Contributions) -> Agent:
         return build_agent(
@@ -177,7 +190,7 @@ def build_runtime(
             env=env,
             memory_backend=memory_backend,
             skill_store=skill_store,
-            model=dynamic,
+            model=model,
             plugins=added,
         )
 

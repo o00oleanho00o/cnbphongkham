@@ -1,0 +1,10 @@
+== turn 1 ==
+user: hello there
+assistant: (echo) hello there
+stop: completed, steps 1, compactions 0
+events: model_call
+== turn 2 ==
+user: and again
+assistant: (echo) and again
+stop: completed, steps 1, compactions 0
+events: model_call

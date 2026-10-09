@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import difflib
 import getpass
 import json
 import os
@@ -33,6 +34,7 @@ from agent_app.model_settings import (
 from agent_app.plugins import PluginError
 from agent_app.plugins.manager import PluginManager
 from agent_app.profile import Profile, load_profile
+from agent_app.replay import replay
 from agent_app.runtime import PLUGIN_DIR_ENV, Runtime, build_runtime
 from agent_app.storage import AgentDatabase, PostgresSessionStore, SessionOwnerError
 from agentcore import (
@@ -58,6 +60,7 @@ from agentcore import (
 )
 from agentcore.clock import utc_now
 from agentcore.harness.model.reasoning import OpenAIDialect
+from agentcore.harness.model.replay import CassetteError, CassetteWriter, RecordingModel
 from agentcore.loop.run_turn import flush_memory
 from agentcore.memory import MemoryService
 
@@ -88,6 +91,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     chat.add_argument("--fake", action="store_true", help="use an echo model: no provider, no API key")
     chat.add_argument("--session", default=None, help="session id to resume (default: a new random one)")
+    chat.add_argument(
+        "--record",
+        type=Path,
+        default=None,
+        metavar="CASSETTE",
+        help="write every turn and model call to this file, for keyless replay tests",
+    )
+    replay = commands.add_parser("replay", help="Replay a recorded cassette through the agent, without a key")
+    replay.add_argument("cassette", type=Path)
+    replay.add_argument("--profile", type=Path, required=True, help="agent folder or TOML profile")
+    replay.add_argument("--expect", type=Path, default=None, help="compare the transcript with this file")
+    replay.add_argument("--update", action="store_true", help="write the transcript to the --expect file")
     serve = commands.add_parser("serve", help=f"Serve the HTTP gateway (needs {TOKEN_ENV})")
     serve.add_argument(
         "--profile", type=Path, required=True, help="agent folder (with agent.toml) or a TOML profile"
@@ -120,8 +135,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         work = _model(args)
     elif args.command == "plugins":
         work = _plugins(args)
+    elif args.command == "replay":
+        work = _replay(args.cassette, args.profile, expect=args.expect, update=args.update)
     else:
-        work = _chat(args.profile, fake=args.fake, session=args.session)
+        work = _chat(args.profile, fake=args.fake, session=args.session, record=args.record)
     try:
         return asyncio.run(work, loop_factory=loop_factory)
     except KeyboardInterrupt:
@@ -349,32 +366,94 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int) -> int
             await db.dispose()
 
 
-async def _chat(profile_path: Path, *, fake: bool, session: str | None) -> int:
+async def _chat(profile_path: Path, *, fake: bool, session: str | None, record: Path | None = None) -> int:
     db_url = os.environ.get(DATABASE_URL_ENV)
     db = AgentDatabase(db_url) if db_url else None
     try:
-        return await _chat_with(profile_path, fake=fake, session=session, db=db)
+        return await _chat_with(profile_path, fake=fake, session=session, db=db, record=record)
     finally:
         if db is not None:
             await db.dispose()
 
 
-async def _chat_with(profile_path: Path, *, fake: bool, session: str | None, db: AgentDatabase | None) -> int:
+async def _chat_with(
+    profile_path: Path,
+    *,
+    fake: bool,
+    session: str | None,
+    db: AgentDatabase | None,
+    record: Path | None = None,
+) -> int:
+    writer: CassetteWriter | None = None
     try:
         profile = load_profile(profile_path)
-        runtime = build_runtime(profile, fake=fake, env=os.environ, db=db)
+        if record is not None:
+            cassette = CassetteWriter(record, model=describe_model(profile, fake=fake, env=os.environ))
+            writer = cassette
+            runtime = build_runtime(
+                profile,
+                fake=fake,
+                env=os.environ,
+                db=db,
+                model_wrapper=lambda model: RecordingModel(model, cassette),
+            )
+        else:
+            runtime = build_runtime(profile, fake=fake, env=os.environ, db=db)
     except (OSError, ValueError, ModelError) as err:
         _write(f"error: {err}\n")
         return EXIT_CONFIG_ERROR
+    if writer is not None:
+        _write(f"recording to {writer.path}; commands that call the model (/compact) do not replay\n")
     try:
         await runtime.plugin_manager.start()
-        return await _chat_loop(profile, runtime, fake=fake, session=session, db=db)
+        return await _chat_loop(profile, runtime, fake=fake, session=session, db=db, record=writer)
     finally:
         runtime.close()
 
 
+async def _replay(cassette: Path, profile_path: Path, *, expect: Path | None, update: bool) -> int:
+    try:
+        outcome = await replay(cassette, load_profile(profile_path))
+    except (OSError, ValueError) as err:
+        _write(f"error: {err}\n")
+        return EXIT_CONFIG_ERROR
+    except CassetteError as err:
+        _write(f"replay failed: {err}\n")
+        return 1
+    return _check_transcript(
+        outcome.transcript, cassette, expect=expect, update=update, calls=outcome.calls_used
+    )
+
+
+def _check_transcript(
+    transcript: str, cassette: Path, *, expect: Path | None, update: bool, calls: int
+) -> int:
+    if expect is None:
+        _write(transcript)
+        return 0
+    if update:
+        expect.write_text(transcript, encoding="utf-8", newline="\n")
+        _write(f"wrote {expect} ({calls} model calls)\n")
+        return 0
+    wanted = expect.read_text(encoding="utf-8") if expect.is_file() else ""
+    if wanted == transcript:
+        _write(f"ok: {cassette} matches {expect} ({calls} model calls)\n")
+        return 0
+    diff = difflib.unified_diff(
+        wanted.splitlines(keepends=True), transcript.splitlines(keepends=True), str(expect), "replay"
+    )
+    _write("".join(diff))
+    return 1
+
+
 async def _chat_loop(
-    profile: Profile, runtime: Runtime, *, fake: bool, session: str | None, db: AgentDatabase | None
+    profile: Profile,
+    runtime: Runtime,
+    *,
+    fake: bool,
+    session: str | None,
+    db: AgentDatabase | None,
+    record: CassetteWriter | None = None,
 ) -> int:
     name = profile.agent.name
     store, tracer, sessions = runtime.store, runtime.tracer, runtime.sessions
@@ -426,6 +505,8 @@ async def _chat_loop(
             continue
         try:
             observer = ConsoleObserver()
+            if record is not None:
+                record.turn(text)
             async with runtime.locks.hold(DEFAULT_TENANT, session_id, timeout_s=CLI_LOCK_WAIT_S):
                 result = await run_turn(
                     session_id=session_id,

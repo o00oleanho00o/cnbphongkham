@@ -1,0 +1,7 @@
+== turn 1 ==
+user: What is 2+3*4?
+call calculate {"expression": "2+3*4"}
+result calculate ok: 14
+assistant: 2+3*4 = 14
+stop: completed, steps 2, compactions 0
+events: model_call, tool_call, model_call, model_retry, model_call
