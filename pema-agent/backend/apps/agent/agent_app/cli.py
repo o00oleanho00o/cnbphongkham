@@ -1,4 +1,4 @@
-"""``agent chat``: talk to an agent from the terminal."""
+"""``agent chat`` (chat in the terminal), ``agent serve`` (the HTTP gateway) and ``agent db``."""
 
 from __future__ import annotations
 
@@ -10,28 +10,23 @@ import sys
 import threading
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Final, Protocol
+from typing import Final
 from uuid import uuid4
 
 import psycopg
+import uvicorn
 
-from agent_app.assembly import Agent, build_agent
+from agent_app.assembly import Agent
 from agent_app.db_roles import MIGRATION_URL_ENV, PASSWORD_ENV, RUNTIME_ROLE, bootstrap_role
-from agent_app.model_factory import describe_model, resolve_model_settings
+from agent_app.gateway import TOKEN_ENV, GatewaySettings, create_app
+from agent_app.ingress import SessionBusyError
+from agent_app.model_factory import describe_model
 from agent_app.profile import load_profile
-from agent_app.storage import (
-    AgentDatabase,
-    PostgresMemoryBackend,
-    PostgresSessionStore,
-    PostgresSkillStore,
-    PostgresTracer,
-    SessionOwnerError,
-)
+from agent_app.runtime import build_runtime
+from agent_app.storage import AgentDatabase, PostgresSessionStore, SessionOwnerError
 from agentcore import (
     DEFAULT_TENANT,
     ContextManager,
-    InMemorySessionStore,
-    InMemoryTracer,
     LlmRequest,
     Message,
     ModelError,
@@ -64,12 +59,9 @@ HELP: Final = (
     "/trace (timings of the last turn), /exit (quit), /help (this help)\n"
 )
 RECENT_SESSIONS: Final = 10
-
-
-class TraceLog(Protocol):
-    async def record(self, trace: TurnTrace) -> None: ...
-
-    async def last(self, tenant_id: str, session_id: str) -> TurnTrace | None: ...
+CLI_LOCK_WAIT_S: Final = 30.0
+DEFAULT_HOST: Final = "127.0.0.1"
+DEFAULT_PORT: Final = 8088
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -82,6 +74,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     chat.add_argument("--fake", action="store_true", help="use an echo model: no provider, no API key")
     chat.add_argument("--session", default=None, help="session id to resume (default: a new random one)")
+    serve = commands.add_parser("serve", help=f"Serve the HTTP gateway (needs {TOKEN_ENV})")
+    serve.add_argument(
+        "--profile", type=Path, required=True, help="agent folder (with agent.toml) or a TOML profile"
+    )
+    serve.add_argument("--fake", action="store_true", help="use an echo model: no provider, no API key")
+    serve.add_argument("--host", default=DEFAULT_HOST, help=f"address to listen on (default {DEFAULT_HOST})")
+    serve.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"port (default {DEFAULT_PORT})")
     db = commands.add_parser("db", help="Database administration (schema agent_rt)")
     db_commands = db.add_subparsers(dest="db_command", required=True)
     db_commands.add_parser(
@@ -94,13 +93,41 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _bootstrap_role()
     # psycopg's async driver cannot run on the Windows proactor loop.
     loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
+    work = (
+        _serve(args.profile, fake=args.fake, host=args.host, port=args.port)
+        if args.command == "serve"
+        else _chat(args.profile, fake=args.fake, session=args.session)
+    )
     try:
-        return asyncio.run(
-            _chat(args.profile, fake=args.fake, session=args.session), loop_factory=loop_factory
-        )
+        return asyncio.run(work, loop_factory=loop_factory)
     except KeyboardInterrupt:
         _write("\n")
         return 0
+
+
+async def _serve(profile_path: Path, *, fake: bool, host: str, port: int) -> int:
+    try:
+        settings = GatewaySettings(token=os.environ.get(TOKEN_ENV, ""))
+    except ValueError as err:
+        _write(f"error: {err}\n")
+        return EXIT_CONFIG_ERROR
+    db_url = os.environ.get(DATABASE_URL_ENV)
+    db = AgentDatabase(db_url) if db_url else None
+    try:
+        try:
+            runtime = build_runtime(load_profile(profile_path), fake=fake, env=os.environ, db=db)
+        except (OSError, ValueError, ModelError) as err:
+            _write(f"error: {err}\n")
+            return EXIT_CONFIG_ERROR
+        if db is None:
+            _write(f"warning: no {DATABASE_URL_ENV}: messages and sessions live in process memory only\n")
+        app = create_app(runtime.dispatcher(), settings, db=db)
+        server = uvicorn.Server(uvicorn.Config(app, host=host, port=port, log_level="info", access_log=False))
+        await server.serve()
+        return 0
+    finally:
+        if db is not None:
+            await db.dispose()
 
 
 async def _chat(profile_path: Path, *, fake: bool, session: str | None) -> int:
@@ -116,27 +143,13 @@ async def _chat(profile_path: Path, *, fake: bool, session: str | None) -> int:
 async def _chat_with(profile_path: Path, *, fake: bool, session: str | None, db: AgentDatabase | None) -> int:
     try:
         profile = load_profile(profile_path)
-        agent = build_agent(
-            profile,
-            fake=fake,
-            env=os.environ,
-            memory_backend=PostgresMemoryBackend(db) if db else None,
-            skill_store=PostgresSkillStore(db) if db else None,
-        )
+        runtime = build_runtime(profile, fake=fake, env=os.environ, db=db)
     except (OSError, ValueError, ModelError) as err:
         _write(f"error: {err}\n")
         return EXIT_CONFIG_ERROR
 
     name = profile.agent.name
-    store: SessionStore
-    tracer: TraceLog
-    sessions: PostgresSessionStore | None = None
-    if db is None:
-        store, tracer = InMemorySessionStore(), InMemoryTracer()
-    else:
-        model_name = "echo" if fake else resolve_model_settings(profile, os.environ).model
-        sessions = PostgresSessionStore(db, agent=name)
-        store, tracer = sessions, PostgresTracer(db, agent=name, model=model_name)
+    agent, store, tracer, sessions = runtime.agent, runtime.store, runtime.tracer, runtime.sessions
     session_id = session or _new_session_id()
     lines = _stdin_lines()
     model_label = describe_model(profile, fake=fake, env=os.environ)
@@ -183,21 +196,25 @@ async def _chat_with(profile_path: Path, *, fake: bool, session: str | None, db:
             continue
         try:
             observer = ConsoleObserver()
-            result = await run_turn(
-                session_id=session_id,
-                user_text=text,
-                prompt=agent.prompt,
-                model=agent.model,
-                tools=agent.tools,
-                store=store,
-                policy=agent.policy,
-                user_id=CLI_USER,
-                channel=CHANNEL,
-                context=agent.context,
-                observer=observer,
-                hooks=agent.hooks,
-                tracer=tracer,
-            )
+            async with runtime.locks.hold(DEFAULT_TENANT, session_id, timeout_s=CLI_LOCK_WAIT_S):
+                result = await run_turn(
+                    session_id=session_id,
+                    user_text=text,
+                    prompt=agent.prompt,
+                    model=agent.model,
+                    tools=agent.tools,
+                    store=store,
+                    policy=agent.policy,
+                    user_id=CLI_USER,
+                    channel=CHANNEL,
+                    context=agent.context,
+                    observer=observer,
+                    hooks=agent.hooks,
+                    tracer=tracer,
+                )
+        except SessionBusyError:
+            _write("\nthe session is busy with another run; try again in a moment\n")
+            continue
         except ModelError as err:
             _write(f"\nerror ({err.kind}): {err}\n")
             continue

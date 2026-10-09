@@ -40,6 +40,7 @@ from agentcore.harness.tools.executor import (
 )
 from agentcore.harness.tools.registry import ToolRegistry
 from agentcore.harness.tools.spec import ToolContext
+from agentcore.loop.repair import missing_tool_results
 from agentcore.messages import Block, Message, TextBlock, ToolResultBlock, ToolUseBlock, Usage
 from agentcore.prompt.builder import CONTEXT_CLOSE, CONTEXT_OPEN, PromptBuilder, with_context
 from agentcore.prompt.sections import StepInfo, TurnInfo
@@ -242,7 +243,16 @@ async def run_turn(
     async def turn() -> TurnResult:
         nonlocal system, turn_start, usage
         system = await prompt.system(store, tenant_id, session_id, user_id=user_id)
-        turn_start = len(await store.load(tenant_id, session_id))
+        history = await store.load(tenant_id, session_id)
+        repairs = missing_tool_results(history)
+        if repairs:
+            logger.warning(
+                "session %s: %d tool calls had no result; marked interrupted", session_id, len(repairs)
+            )
+            for message in repairs:
+                await store.append(tenant_id, session_id, message)
+            events.append(TraceEvent("repair", 0, 0.0, detail={"tool_calls": len(repairs)}))
+        turn_start = len(history) + len(repairs)
         await record(Message.user(user_text))
 
         for step in range(1, limits.max_steps + 1):

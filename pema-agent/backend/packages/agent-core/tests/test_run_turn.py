@@ -176,13 +176,13 @@ async def test_a_slow_tool_times_out() -> None:
     assert "timed out" in error.content
 
 
-async def test_a_long_tool_result_is_truncated() -> None:
-    long_tool = _tool("long", handler_text="x" * 50, max_result_chars=10)
+async def test_a_long_tool_result_keeps_its_start_and_end() -> None:
+    long_tool = _tool("long", handler_text="a" * 20 + "b" * 30, max_result_chars=10)
     result, _, _ = await _run([calls(tool_call("long")), reply("ok")], ToolRegistry([long_tool]))
 
     (out,) = _results(result)
     assert not out.is_error
-    assert out.content == "x" * 10 + "…[truncated 40 chars]"
+    assert out.content == "aaaaa\n…[40 chars omitted]…\nbbbbb"
 
 
 async def test_two_calls_in_one_message_get_two_results_in_order() -> None:

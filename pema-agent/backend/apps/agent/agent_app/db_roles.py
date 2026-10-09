@@ -16,7 +16,14 @@ RUNTIME_ROLE: Final = "agent_rt_app"
 PASSWORD_ENV: Final = "AGENT_RT_APP_PASSWORD"  # noqa: S105 - the name of the variable, not a password
 MIGRATION_URL_ENV: Final = "AGENT_MIGRATION_DATABASE_URL"
 SCHEMA: Final = "agent_rt"
-DATA_TABLES: Final = ("agent_memory", "agent_skill", "agent_session", "agent_message")
+DATA_TABLES: Final = (
+    "agent_memory",
+    "agent_skill",
+    "agent_session",
+    "agent_message",
+    "agent_conversation",
+    "agent_ingress",
+)
 TRACE_TABLES: Final = ("agent_turn", "agent_turn_event")
 GRANTS: Final[tuple[tuple[tuple[str, ...], LiteralString], ...]] = (
     (DATA_TABLES, "SELECT, INSERT, UPDATE, DELETE"),
@@ -65,6 +72,12 @@ def bootstrap_role(migration_url: str, password: str) -> list[str]:
                     )
                 )
                 done.append(f"granted {rights} on {SCHEMA}.{table}")
+        conn.execute(
+            sql.SQL("GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA {} TO {}").format(
+                sql.Identifier(SCHEMA), role
+            )
+        )
+        done.append(f"granted USAGE, SELECT on the sequences of {SCHEMA}")
     return done
 
 

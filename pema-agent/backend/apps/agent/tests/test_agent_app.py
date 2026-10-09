@@ -394,3 +394,12 @@ def test_bootstrap_role_needs_the_owner_url_and_the_password(
 def test_bootstrap_role_refuses_a_short_password() -> None:
     with pytest.raises(ValueError, match="at least 16"):
         bootstrap_role("postgresql+psycopg://owner@localhost/db", "short")
+
+
+def test_serve_needs_a_long_enough_gateway_token(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("AGENT_GATEWAY_TOKEN", "too-short")
+
+    assert main(["serve", "--profile", str(DEV_PROFILE), "--fake"]) == 2
+    assert "AGENT_GATEWAY_TOKEN must have at least 32 characters" in capsys.readouterr().out

@@ -172,6 +172,9 @@ def _describe(err: ValidationError) -> str:
 
 
 def _truncate(text: str, limit: int) -> str:
+    """Keeps the start and the end: errors and totals usually sit at the end of long output."""
     if len(text) <= limit:
         return text
-    return f"{text[:limit]}…[truncated {len(text) - limit} chars]"
+    head = (limit + 1) // 2
+    tail = limit - head
+    return f"{text[:head]}\n…[{len(text) - limit} chars omitted]…\n{text[len(text) - tail :]}"
