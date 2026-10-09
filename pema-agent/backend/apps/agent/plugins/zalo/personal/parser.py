@@ -76,4 +76,5 @@ def parse_incoming_message(
         image_urls=images,
         mentions_me=mentions_me,
         is_self=bool(message.get("isSelf")),
+        raw=dict(data),
     )

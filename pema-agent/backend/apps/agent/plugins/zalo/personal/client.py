@@ -198,3 +198,31 @@ class BridgeAccountApi:
         await self._client.request(
             "POST", self._path("typing"), {"thread_id": thread_id, "thread_type": int(thread_type)}
         )
+
+    async def send_delivered_event(self, params: Sequence[JsonObject], thread_type: ThreadKind) -> None:
+        await self._client.request(
+            "POST",
+            self._path("receipts/delivered"),
+            {"is_seen": False, "params": list(params), "thread_type": int(thread_type)},
+        )
+
+    async def send_seen_event(self, params: Sequence[JsonObject], thread_type: ThreadKind) -> None:
+        await self._client.request(
+            "POST", self._path("receipts/seen"), {"params": list(params), "thread_type": int(thread_type)}
+        )
+
+    async def add_reaction(
+        self, icon_key: str, *, msg_id: str, cli_msg_id: str, thread_id: str, thread_type: ThreadKind
+    ) -> None:
+        """``icon_key`` is a key of ``REACTION_ICONS``; the bridge maps it to the zca-js value."""
+        await self._client.request(
+            "POST",
+            self._path("reaction"),
+            {
+                "icon_key": icon_key,
+                "msg_id": msg_id,
+                "cli_msg_id": cli_msg_id,
+                "thread_id": thread_id,
+                "thread_type": int(thread_type),
+            },
+        )

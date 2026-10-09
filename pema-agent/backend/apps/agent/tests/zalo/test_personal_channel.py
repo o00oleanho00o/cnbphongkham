@@ -21,6 +21,7 @@ from agent_app.plugins import PluginHost, discover
 from agent_app.profile import load_profile
 from agent_app.runtime import BUNDLED_PLUGINS, Runtime, build_runtime
 from agentcore.harness.model.scripted import ScriptedModel, reply
+from plugins.zalo.personal.receipts import quote_from, receipt_params
 from plugins.zalo.personal.signing import signed_headers, verify_signature
 
 TOKEN = "t" * 40
@@ -42,7 +43,10 @@ class FakeBridge:
         self.stopped: list[str] = []
         self.sent: list[dict[str, Any]] = []
         self.typing: list[str] = []
+        self.receipts: list[tuple[str, str, int]] = []
+        self.reactions: list[tuple[str, str, str]] = []
         self.refuse_styles = False
+        self.refuse_quotes = False
         self.transport = httpx.MockTransport(self._handle)
 
     def _handle(self, request: httpx.Request) -> httpx.Response:
@@ -68,13 +72,21 @@ class FakeBridge:
         if action == "login/qr":
             return _ok(state="waiting_scan", qr_png_base64=QR)
         if action == "send":
-            if self.refuse_styles and "styles" in data:
+            refused = (self.refuse_styles and "styles" in data) or (self.refuse_quotes and "quote" in data)
+            if refused:
                 error = {"kind": "zalo_rejected", "message": "invalid params", "code": 112}
                 return httpx.Response(502, json={"ok": False, "error": error})
             self.sent.append(data)
             return _ok(msg_id="out-1")
         if action == "typing":
             self.typing.append(data["thread_id"])
+            return _ok()
+        if action in ("receipts/delivered", "receipts/seen"):
+            for item in data["params"]:
+                self.receipts.append((action.split("/")[1], item["msgId"], data["thread_type"]))
+            return _ok()
+        if action == "reaction":
+            self.reactions.append((data["icon_key"], data["msg_id"], data["thread_id"]))
             return _ok()
         return httpx.Response(404, json={"ok": False, "error": {"kind": "bad_request", "message": action}})
 
@@ -156,7 +168,10 @@ def _message(
         "msgId": f"m-{text}",
         "cliMsgId": "c1",
         "uidFrom": sender,
+        "idTo": group or "me-1",
         "dName": "An",
+        "msgType": "webchat",
+        "ts": "1760000000000",
         "content": text,
     }
     if mentions:
@@ -303,3 +318,74 @@ async def test_without_the_bridge_a_qr_login_asks_to_install_it_and_bots_cannot_
     assert bot.status_code == 422
     assert (status["installed"], status["running"]) == (False, False)
     await setup.close()
+
+
+async def test_every_message_is_marked_delivered_and_the_answered_one_seen_reacted_and_quoted(
+    tmp_path: Path, bridge: FakeBridge
+) -> None:
+    setup = Setup(_runtime(tmp_path, bridge))
+    await setup.personal(auto_react_icon="like")
+    await setup.event("nick", {"type": "credential_updated", "credential": CREDENTIAL})
+    await setup.hub.sync()
+
+    await setup.event("nick", _message("không gọi bot", group="g1"))
+    await setup.event("nick", _message("@bot giá?", group="g1", mentions=["me-1"]))
+    await setup.until(lambda: bridge.sent and len(bridge.receipts) == 3 and bridge.reactions)
+
+    assert sorted(bridge.receipts) == [
+        ("delivered", "m-@bot giá?", 1),
+        ("delivered", "m-không gọi bot", 1),
+        ("seen", "m-@bot giá?", 1),
+    ]
+    assert bridge.reactions == [("like", "m-@bot giá?", "g1")]
+    (sent,) = bridge.sent
+    assert sent["quote"] == {
+        "content": "@bot giá?",
+        "msgType": "webchat",
+        "uidFrom": "u1",
+        "msgId": "m-@bot giá?",
+        "cliMsgId": "c1",
+        "ts": "1760000000000",
+        "ttl": 0,
+    }
+    await setup.close()
+
+
+async def test_a_one_to_one_reply_has_no_quote_and_a_refused_quote_is_sent_plain(
+    tmp_path: Path, bridge: FakeBridge
+) -> None:
+    setup = Setup(_runtime(tmp_path, bridge))
+    await setup.personal(auto_react_enabled=False)
+    await setup.event("nick", {"type": "credential_updated", "credential": CREDENTIAL})
+    await setup.hub.sync()
+    bridge.refuse_quotes = True
+
+    await setup.event("nick", _message("riêng"))
+    await setup.event("nick", _message("@bot nhóm", group="g1", mentions=["me-1"]))
+    await setup.until(lambda: len(bridge.sent) == 2)
+    await asyncio.sleep(0.05)
+
+    assert [("quote" in s, s["thread_id"]) for s in bridge.sent] == [(False, "u1"), (False, "g1")]
+    assert bridge.reactions == []
+    await setup.close()
+
+
+def test_receipt_and_quote_need_their_ids_and_a_quotable_kind() -> None:
+    raw = _message("hi", group="g1")["message"]["data"]
+
+    assert receipt_params(raw) == {
+        "msgId": "m-hi",
+        "cliMsgId": "c1",
+        "uidFrom": "u1",
+        "idTo": "g1",
+        "msgType": "webchat",
+        "st": 0,
+        "at": 0,
+        "cmd": 0,
+        "ts": "1760000000000",
+    }
+    assert receipt_params({**raw, "idTo": ""}) is None
+    assert quote_from(raw, is_group=False) is None
+    assert quote_from({**raw, "msgType": "group.poll"}, is_group=True) is None
+    assert quote_from({**raw, "content": {"href": "x"}}, is_group=True) is None
+    assert quote_from({**raw, "ts": 1760000000000.0}, is_group=True) == quote_from(raw, is_group=True)

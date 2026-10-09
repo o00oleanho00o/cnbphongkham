@@ -7,7 +7,9 @@ conversation. ``metadata`` carries what the reply needs back (the thread type) a
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from typing import Any
 
 from agentcore.channels import InboundMessage
 
@@ -28,9 +30,11 @@ class ZaloInbound:
     image_urls: tuple[str, ...] = ()
     mentions_me: bool = False
     is_self: bool = False
+    raw: Mapping[str, Any] = field(default_factory=dict[str, Any])
+    """The platform's own data of the message (zca-js ``data``), for receipts and quotes."""
 
 
-def to_inbound(msg: ZaloInbound) -> InboundMessage:
+def to_inbound(msg: ZaloInbound, extra: Mapping[str, str] | None = None) -> InboundMessage:
     text = msg.text.strip()
     if not text and msg.image_urls:
         text = "[gửi một ảnh]"
@@ -41,6 +45,7 @@ def to_inbound(msg: ZaloInbound) -> InboundMessage:
         metadata["sender_name"] = msg.sender_name
     if msg.image_urls:
         metadata["image_url"] = msg.image_urls[0]
+    metadata.update(extra or {})
     return InboundMessage(
         channel="",  # the hub sets the channel that heard it
         conversation_id=msg.thread_id,

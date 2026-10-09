@@ -681,6 +681,15 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   Test seams: config `bridge_transport` + `bridge_secret`. Tests: `test_bridge_supervisor.py` (fake runner),
   `test_personal_channel.py` (fake bridge); full suite 655. Not yet: friend events are acknowledged and
   ignored; no receipts/reactions/quotes.
+- **P3b done** (commit after this entry): `personal/receipts.py` (restored `receipt_params`, `quote_from` with
+  zca-js's own quotable checks); client gains `send_delivered_event`, `send_seen_event`, `add_reaction`.
+  `ZaloInbound.raw` keeps the zca-js `data`; `to_inbound(msg, extra)` adds metadata. Personal channel:
+  "delivered" for every message heard, "seen" + auto-react (account's icon, if `auto_react_enabled`) for the
+  ones handed to the agent (no core "turn started" signal, so "seen" = accepted), all in background tasks,
+  failures logged at debug; in a group the first part of the reply quotes the answered message (quote JSON
+  rides in the inbound metadata `quote` and comes back on the outbound record); a `zalo_rejected` with styles
+  or quote is resent plain. Group names moved to P3c (with contacts). Tests: 3 more in
+  `test_personal_channel.py`; full suite 658.
 
 ## S1 progress log (newest last)
 
