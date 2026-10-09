@@ -11,9 +11,9 @@ import tomllib
 from pathlib import Path
 from typing import Any, Final, Literal, cast
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 
-from agentcore import ContextPolicy, LoopPolicy, ReasoningEffort
+from agentcore import ContextPolicy, LoopGuardPolicy, LoopPolicy, ReasoningEffort
 from agentcore.context import DEFAULT_CHARS_PER_TOKEN
 from agentcore.harness.model.reasoning import OpenAIDialect
 from agentcore.harness.tools.executor import DEFAULT_MAX_CALLS_PER_STEP, DEFAULT_MAX_PARALLEL
@@ -61,6 +61,26 @@ class LoopSection(_Section):
     max_output_tokens: int = Field(default=2048, ge=64)
     max_turn_s: float = Field(default=300.0, gt=0)
     """After this long no new step starts and one last call answers."""
+    max_turn_tokens: int | None = Field(default=None, gt=0)
+    """Input plus output tokens after which no new step starts; unset for no limit."""
+    repeat_thresholds: list[int] = Field(default_factory=lambda: [3, 5, 8])
+    """Identical tool calls in a row that earn the model a reminder."""
+    stop_after_repeats: int | None = 10
+    error_streak_remind: int | None = 3
+    error_streak_stop: int | None = 5
+
+    @model_validator(mode="after")
+    def _guard_is_valid(self) -> LoopSection:
+        self.guard_policy()
+        return self
+
+    def guard_policy(self) -> LoopGuardPolicy:
+        return LoopGuardPolicy(
+            repeat_thresholds=tuple(self.repeat_thresholds),
+            stop_after_repeats=self.stop_after_repeats,
+            error_streak_remind=self.error_streak_remind,
+            error_streak_stop=self.error_streak_stop,
+        )
 
 
 class PromptSection(_Section):
@@ -141,6 +161,8 @@ class Profile(_Section):
             max_steps=self.loop.max_steps,
             max_output_tokens=self.loop.max_output_tokens,
             max_turn_s=self.loop.max_turn_s,
+            max_turn_tokens=self.loop.max_turn_tokens,
+            guard=self.loop.guard_policy(),
             reasoning=reasoning or self.model.reasoning,
             max_parallel_tools=self.guards.max_parallel_tools,
             max_tool_calls_per_step=self.guards.max_tool_calls_per_step,

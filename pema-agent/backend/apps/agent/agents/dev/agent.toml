@@ -57,6 +57,13 @@ max_steps = 6
 max_output_tokens = 2048
 # after this many seconds no new step starts and one last call answers
 max_turn_s = 300
+# max_turn_tokens = 200000  # input + output tokens of one turn; unset = no limit
+# loop guard: the same tool call with the same arguments in a row earns a reminder at these counts and ends
+# the turn's tool use at stop_after_repeats; failing tool calls in a row: a reminder, then a stop
+repeat_thresholds = [3, 5, 8]
+stop_after_repeats = 10
+error_streak_remind = 3
+error_streak_stop = 5
 
 [plugins]
 # Plugins to load at start, found in apps/agent/plugins, this folder's plugins/ and $AGENT_PLUGIN_DIR.

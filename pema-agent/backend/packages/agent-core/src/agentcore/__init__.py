@@ -17,6 +17,7 @@ from agentcore.harness.store.base import CompactionRecord, SessionStore, StoredP
 from agentcore.harness.store.memory import InMemorySessionStore
 from agentcore.harness.tools.registry import ToolRegistry
 from agentcore.harness.tools.spec import ToolContext, ToolOutput, ToolSpec
+from agentcore.loop.guard import LoopGuardPolicy
 from agentcore.loop.retry import RetryPolicy
 from agentcore.loop.run_turn import LoopPolicy, TurnObserver, TurnResult, TurnStop, run_turn
 from agentcore.messages import (
@@ -53,6 +54,7 @@ __all__ = [
     "InMemorySessionStore",
     "InMemoryTracer",
     "LlmRequest",
+    "LoopGuardPolicy",
     "LoopPolicy",
     "Message",
     "ModelClient",

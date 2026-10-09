@@ -142,7 +142,8 @@ class TurnPrompt:
         self._sections = list(sections)
         self._turn_texts = {s.name: s.render(env, turn) for s in self._sections if isinstance(s, TurnSection)}
 
-    def context(self, step: StepInfo) -> str | None:
+    def context(self, step: StepInfo, notes: Sequence[str] = ()) -> str | None:
+        """``notes`` are one-off remarks for this call only (the loop guard's reminders)."""
         parts: list[str] = []
         for section in self._sections:
             if isinstance(section, TurnSection):
@@ -151,6 +152,7 @@ class TurnPrompt:
                 text = section.render(self._env, self._turn, step)
             if text:
                 parts.append(text)
+        parts.extend(note for note in notes if note)
         if step.final:
             parts.append(FINAL_TURN_NOTE)
         if not parts:

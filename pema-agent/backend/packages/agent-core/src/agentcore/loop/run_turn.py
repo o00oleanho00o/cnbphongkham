@@ -1,7 +1,8 @@
 """One turn of the agent.
 
 The model is called in a loop and the tools it asks for are run, until it answers without a tool call. When
-the step budget or the turn's time runs out, one last call without tools forces an answer. Every assistant
+the step budget, the turn's time or its token budget runs out, or the loop guard sees the turn going in
+circles, one last call without tools forces an answer. Every assistant
 message is stored before its tools run, and every tool call gets exactly one result, so the stored history is
 always valid to send back to a provider. The system prompt is the session's frozen one; the per-turn and
 per-step context goes at the end of each request and is never stored. With a context manager, a request over
@@ -42,6 +43,7 @@ from agentcore.harness.tools.executor import (
 )
 from agentcore.harness.tools.registry import ToolRegistry
 from agentcore.harness.tools.spec import ToolContext
+from agentcore.loop.guard import LoopGuard, LoopGuardPolicy
 from agentcore.loop.repair import missing_tool_results
 from agentcore.loop.retry import RetryPolicy
 from agentcore.messages import Block, Message, TextBlock, ToolResultBlock, ToolUseBlock, Usage
@@ -72,7 +74,10 @@ class LoopPolicy:
     max_tool_calls_per_step: int = DEFAULT_MAX_CALLS_PER_STEP
     max_turn_s: float | None = 300.0
     """After this long no new step starts: one last call without tools answers. None for no limit."""
+    max_turn_tokens: int | None = None
+    """Input plus output tokens of the turn's calls after which no new step starts; None for no limit."""
     retry: RetryPolicy = field(default_factory=RetryPolicy)
+    guard: LoopGuardPolicy = field(default_factory=LoopGuardPolicy)
 
     def __post_init__(self) -> None:
         if self.max_steps < 1:
@@ -83,6 +88,8 @@ class LoopPolicy:
             raise ValueError("max_parallel_tools and max_tool_calls_per_step must be at least 1")
         if self.max_turn_s is not None and self.max_turn_s <= 0:
             raise ValueError("max_turn_s must be positive")
+        if self.max_turn_tokens is not None and self.max_turn_tokens < 1:
+            raise ValueError("max_turn_tokens must be positive")
 
     def executor(self, tools: ToolRegistry, hooks: HookSet | None) -> ToolExecutor:
         return ToolExecutor(
@@ -113,7 +120,7 @@ class RetryObserver(Protocol):
     def retry(self, error_kind: str) -> None: ...
 
 
-TurnStop = Literal["completed", "max_steps", "deadline"]
+TurnStop = Literal["completed", "max_steps", "deadline", "budget", "loop"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,6 +175,9 @@ async def run_turn(
     turn_start = 0
     system = ""
     turn_prompt = prompt.start_turn(TurnInfo(now=started_at, channel=channel))
+    loop_guard = LoopGuard(limits.guard)
+    notes: list[str] = []
+    """Loop guard reminders for the next model call; they ride in the context block and are never stored."""
 
     async def record(message: Message) -> None:
         await store.append(tenant_id, session_id, message)
@@ -179,7 +189,7 @@ async def run_turn(
         visible = history[compaction.first_kept :] if compaction else history
         return LlmRequest(
             system=system,
-            messages=with_context(visible, turn_prompt.context(step)),
+            messages=with_context(visible, turn_prompt.context(step, notes)),
             tools=offered,
             max_output_tokens=limits.max_output_tokens,
             reasoning=limits.reasoning,
@@ -296,6 +306,27 @@ async def run_turn(
     def out_of_time() -> bool:
         return limits.max_turn_s is not None and timer() - started >= limits.max_turn_s
 
+    def over_budget() -> bool:
+        spent = usage.input_tokens + usage.output_tokens
+        return limits.max_turn_tokens is not None and spent >= limits.max_turn_tokens
+
+    def watch(step: int, uses: Sequence[ToolUseBlock], runs: Sequence[ToolRun]) -> bool:
+        """Feeds the loop guard; queues its reminders and returns True when the turn must stop using tools."""
+        by_id = {use.id: use for use in uses}
+        stop = False
+        for run in runs:
+            use = by_id.get(run.result.tool_use_id)
+            if use is None:
+                continue
+            for note in loop_guard.observe(use, run.result):
+                detail = {"reason": note.reason, "count": note.count, "stop": note.stop}
+                events.append(TraceEvent("guard", step, 0.0, name=note.tool, detail=detail))
+                if note.stop:
+                    stop = True
+                else:
+                    notes.append(note.text)
+        return stop
+
     async def turn() -> TurnResult:
         nonlocal system, turn_start, usage
         system = await prompt.system(store, tenant_id, session_id, user_id=user_id)
@@ -317,17 +348,25 @@ async def run_turn(
             if step > 1 and out_of_time():
                 stop = "deadline"
                 break
+            if step > 1 and over_budget():
+                stop = "budget"
+                break
             steps = step
             result = await call_model(StepInfo(step=step, max_steps=limits.max_steps), schemas)
+            notes.clear()
             usage = usage + (result.message.usage or Usage())
             await record(result.message)
 
             uses = result.message.tool_uses()
             if not uses:
                 return finished(result.message.text(), "completed", step)
-            for run in await executor.execute(uses, ctx, step=step, observer=observer):
+            runs = await executor.execute(uses, ctx, step=step, observer=observer)
+            for run in runs:
                 events.append(_tool_event(step, run))
                 await record(Message(role="tool", blocks=[run.result]))
+            if watch(step, uses, runs):
+                stop = "loop"
+                break
 
         final_step = StepInfo(step=steps + 1, max_steps=limits.max_steps, final=True)
         result = await call_model(final_step, [])

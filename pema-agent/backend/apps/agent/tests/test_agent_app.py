@@ -48,6 +48,20 @@ def test_the_dev_profile_loads_and_its_tools_exist() -> None:
     assert profile.loop_policy().max_steps == profile.loop.max_steps
 
 
+def test_the_loop_guard_settings_are_checked_when_the_profile_loads() -> None:
+    policy = load_profile(DEV_PROFILE).loop_policy()
+
+    assert (policy.guard.repeat_thresholds, policy.guard.stop_after_repeats, policy.max_turn_tokens) == (
+        (3, 5, 8),
+        10,
+        None,
+    )
+    with pytest.raises(ValidationError, match="stop_after_repeats"):
+        Profile.model_validate(
+            {"agent": {"name": "t"}, "loop": {"repeat_thresholds": [3, 5], "stop_after_repeats": 4}}
+        )
+
+
 def test_compaction_is_on_only_with_a_context_window() -> None:
     dev = load_profile(DEV_PROFILE).context_policy()
 

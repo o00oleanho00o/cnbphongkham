@@ -35,6 +35,7 @@ from agentcore import (
     AssistantResult,
     CompactionRecord,
     LlmRequest,
+    LoopGuardPolicy,
     LoopPolicy,
     Message,
     ModelError,
@@ -385,6 +386,35 @@ def test_a_failed_turn_is_traced_even_without_a_session_row(admin: tuple[str, En
     with admin[1].connect() as conn:
         turns = conn.execute(sql("SELECT count(*) FROM agent_rt.agent_turn")).scalar()
     assert turns == 1
+
+
+def test_a_turn_stopped_by_the_loop_guard_is_traced(admin: tuple[str, Engine]) -> None:
+    same = calls(tool_call("missing", {"q": "x"}))
+
+    async def check(db: AgentDatabase) -> None:
+        tracer = PostgresTracer(db, agent="dev", model="m1")
+        guard = LoopGuardPolicy(repeat_thresholds=(2,), stop_after_repeats=3)
+        result = await run_turn(
+            session_id="s-loop",
+            user_text="hi",
+            prompt=PromptBuilder.fixed("sys"),
+            model=ScriptedModel([same, same, same, reply("stopped")]),
+            tools=ToolRegistry(),
+            store=PostgresSessionStore(db, agent="dev"),
+            tenant_id="t",
+            tracer=tracer,
+            policy=LoopPolicy(max_steps=10, guard=guard),
+        )
+        trace = await tracer.last("t", "s-loop")
+        assert trace is not None
+        assert (result.stop, trace.stop) == ("loop", "loop")
+        assert [e.detail["reason"] for e in trace.events if e.kind == "guard"] == [
+            "repeat",
+            "repeat",
+            "errors",
+        ]
+
+    _run(admin[0], check)
 
 
 def _as_role(url: str, password: str) -> Engine:
