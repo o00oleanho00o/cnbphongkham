@@ -52,3 +52,11 @@ timeout_s = 120
 [loop]
 max_steps = 6
 max_output_tokens = 2048
+
+[plugins]
+# Plugins to load at start, found in apps/agent/plugins, this folder's plugins/ and $AGENT_PLUGIN_DIR.
+# A listed plugin that fails to load stops the start. `agent plugins list --profile ...` shows them all.
+enabled = ["calculate"]
+
+[plugins.calculate]
+precision = 10

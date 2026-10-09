@@ -6,6 +6,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 
 from agent_app.model_factory import build_model, resolve_model_settings
+from agent_app.plugins.host import Contributions, Section
 from agent_app.profile import Profile
 from agentcore import (
     ContextManager,
@@ -43,10 +44,13 @@ def build_agent(
     memory_backend: MemoryBackend | None = None,
     skill_store: SkillStore | None = None,
     model: ModelClient | None = None,
+    plugins: Contributions | None = None,
 ) -> Agent:
     """Without a backend or store, memory and agent-written skills live in process memory. A given ``model``
-    (the settings-aware one of a service) picks its own reasoning effort, so the policy leaves it unset."""
+    (the settings-aware one of a service) picks its own reasoning effort, so the policy leaves it unset.
+    ``plugins`` adds their tools, prompt sections (after the profile's, unless it lists them) and hooks."""
     name = profile.agent.name
+    added = plugins or Contributions()
     client = model or build_model(profile, fake=fake, env=env)
     tools = builtin_tools(timezone=profile.agent.timezone).subset(profile.agent.tools)
     memory: MemoryService | None = None
@@ -61,7 +65,11 @@ def build_agent(
         )
         for spec in skill_tools(skills, agent=name):
             tools.register(spec)
-    prompt = build_prompt(profile, tool_names=tools.names(), memory=memory, skills=skills)
+    for spec in added.tools:
+        tools.register(spec)
+    prompt = build_prompt(
+        profile, tool_names=tools.names(), memory=memory, skills=skills, extra_sections=added.sections
+    )
     context_policy = profile.context_policy()
     context = ContextManager(context_policy, client) if context_policy else None
     if model is not None:
@@ -70,6 +78,9 @@ def build_agent(
         policy = profile.loop_policy(
             reasoning=None if fake else resolve_model_settings(profile, env).reasoning
         )
+    hooks = build_hooks(profile, env)
+    for hook in added.hooks:
+        hooks.add(hook)
     return Agent(
         profile,
         client,
@@ -79,7 +90,7 @@ def build_agent(
         memory,
         skills,
         policy,
-        build_hooks(profile, env),
+        hooks,
     )
 
 
@@ -100,6 +111,7 @@ def build_prompt(
     tool_names: Sequence[str],
     memory: MemoryService | None = None,
     skills: SkillLibrary | None = None,
+    extra_sections: Sequence[Section] = (),
 ) -> PromptBuilder:
     env = PromptEnv(
         agent_name=profile.agent.name,
@@ -108,5 +120,9 @@ def build_prompt(
         tool_names=tuple(tool_names),
         rules=profile.agent.rules,
     )
-    sections = builtin_sections().select(profile.prompt.sections)
-    return PromptBuilder(env, sections, memory=memory, skills=skills)
+    registry = builtin_sections()
+    for section in extra_sections:
+        registry.register(section)
+    listed = list(profile.prompt.sections)
+    names = listed + [s.name for s in extra_sections if s.name not in listed]
+    return PromptBuilder(env, registry.select(names), memory=memory, skills=skills)

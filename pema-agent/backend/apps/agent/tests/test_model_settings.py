@@ -4,7 +4,6 @@ settings-aware model, the admin operations, the admin HTTP routes and ``agent mo
 from __future__ import annotations
 
 import logging
-from dataclasses import replace
 from pathlib import Path
 
 import httpx
@@ -186,7 +185,7 @@ def _service(*, admin_token: str | None = ADMIN_TOKEN, secret_key: str | None = 
         PROFILE, env, store, tenant_id="default", secret_key=secret_key, dynamic=dynamic, factory=factory
     )
     runtime = build_runtime(load_profile(DEV_PROFILE), fake=True, env={}, db=None)
-    runtime = replace(runtime, agent=replace(runtime.agent, model=dynamic))
+    runtime.live.use_model(dynamic)
     app = create_app(runtime.dispatcher(), GatewaySettings(token=TOKEN, admin_token=admin_token), admin=admin)
     return httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://agent")
 

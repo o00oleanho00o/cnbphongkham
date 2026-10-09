@@ -191,12 +191,10 @@ class SlowEcho:
 
 
 def test_the_dispatcher_runs_one_conversation_in_order_and_stores_everything(db_url: str) -> None:
-    from dataclasses import replace
-
     async def check(db: AgentDatabase) -> None:
         model = SlowEcho()
         runtime = build_runtime(load_profile(DEV_PROFILE), fake=True, env={}, db=db)
-        runtime = replace(runtime, agent=replace(runtime.agent, model=model))
+        runtime.live.use_model(model)
         dispatcher = runtime.dispatcher(DispatchSettings(poll_s=0.02))
         records = [(await dispatcher.accept(_inbound(f"m{i}", f"tin {i}")))[0] for i in range(3)]
         finished = [await dispatcher.wait(r.id, 5.0) for r in records]

@@ -6,7 +6,6 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import AsyncGenerator
-from dataclasses import replace
 from pathlib import Path
 
 import httpx
@@ -61,7 +60,7 @@ class GateModel:
 
 def _dispatcher(model: GateModel, *, max_attempts: int = 3) -> Dispatcher:
     runtime = build_runtime(load_profile(DEV_PROFILE), fake=True, env={}, db=None)
-    runtime = replace(runtime, agent=replace(runtime.agent, model=model))
+    runtime.live.use_model(model)
     return runtime.dispatcher(DispatchSettings(poll_s=0.01, max_attempts=max_attempts))
 
 

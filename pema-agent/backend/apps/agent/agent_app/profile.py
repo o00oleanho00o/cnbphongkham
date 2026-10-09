@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import tomllib
 from pathlib import Path
-from typing import Final, Literal
+from typing import Any, Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
@@ -93,6 +93,21 @@ class GuardsSection(_Section):
     max_tool_calls_per_step: int = Field(default=DEFAULT_MAX_CALLS_PER_STEP, ge=1, le=64)
 
 
+class PluginsSection(BaseModel):
+    """``enabled`` lists the plugins to load at start (a failing one stops the start); a ``[plugins.<name>]``
+    table holds that plugin's settings."""
+
+    model_config = ConfigDict(extra="allow")
+
+    enabled: list[str] = Field(default_factory=list[str])
+
+    def config(self, name: str) -> dict[str, Any]:
+        value = (self.model_extra or {}).get(name, {})
+        if not isinstance(value, dict):
+            raise ValueError(f"[plugins.{name}] must be a table of settings")
+        return cast(dict[str, Any], value)
+
+
 class Profile(_Section):
     agent: AgentSection
     model: ModelSection = Field(default_factory=ModelSection)
@@ -101,6 +116,7 @@ class Profile(_Section):
     memory: MemorySection = Field(default_factory=MemorySection)
     skills: SkillsSection = Field(default_factory=SkillsSection)
     guards: GuardsSection = Field(default_factory=GuardsSection)
+    plugins: PluginsSection = Field(default_factory=PluginsSection)
     loop: LoopSection = Field(default_factory=LoopSection)
     _folder: Path | None = PrivateAttr(default=None)
 
@@ -128,6 +144,10 @@ class Profile(_Section):
 
     def bundled_skills_dir(self) -> Path | None:
         return self._folder / self.skills.dir if self._folder is not None else None
+
+    def plugins_dir(self) -> Path | None:
+        """The agent's own plugins, next to its skills."""
+        return self._folder / "plugins" if self._folder is not None else None
 
     def context_policy(self) -> ContextPolicy | None:
         if self.context.window_tokens is None:

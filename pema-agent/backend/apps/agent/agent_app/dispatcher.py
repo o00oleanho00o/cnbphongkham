@@ -22,6 +22,7 @@ from agent_app.ingress import (
     SessionLocks,
     TurnReply,
 )
+from agent_app.live import LiveAgent
 from agent_app.storage import PostgresSessionStore
 from agentcore import (
     DEFAULT_TENANT,
@@ -80,7 +81,7 @@ class StreamObserver:
 class Dispatcher:
     def __init__(
         self,
-        agent: Agent,
+        agent: Agent | LiveAgent,
         *,
         store: SessionStore,
         tracer: Tracer,
@@ -90,7 +91,7 @@ class Dispatcher:
         sessions: PostgresSessionStore | None = None,
         settings: DispatchSettings | None = None,
     ) -> None:
-        self.agent = agent
+        self._agent = agent
         self.store = store
         self.ingress = ingress
         self.settings = settings or DispatchSettings()
@@ -108,6 +109,11 @@ class Dispatcher:
     @property
     def tenant_id(self) -> str:
         return self.settings.tenant_id
+
+    @property
+    def agent(self) -> Agent:
+        """The agent for the next turn; with plugins switched on or off it is a new one."""
+        return self._agent.current() if isinstance(self._agent, LiveAgent) else self._agent
 
     async def session_for(self, channel: str, conversation_id: str) -> str:
         epoch = await self._conversations.epoch(self.tenant_id, channel, conversation_id)

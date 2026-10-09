@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Protocol
+from pathlib import Path
+from typing import Final, Protocol
 
+import agent_app
 from agent_app.assembly import Agent, build_agent
 from agent_app.dispatcher import Dispatcher, DispatchSettings
 from agent_app.ingress import (
@@ -17,6 +19,7 @@ from agent_app.ingress import (
     SessionLocks,
 )
 from agent_app.ingress_store import PostgresConversationStore, PostgresIngressStore, PostgresSessionLocks
+from agent_app.live import LiveAgent
 from agent_app.model_settings import (
     SECRET_KEY_ENV,
     DynamicModel,
@@ -25,6 +28,7 @@ from agent_app.model_settings import (
     ModelSettingsStore,
     PostgresModelSettingsStore,
 )
+from agent_app.plugins import Contributions, Discovery, PluginError, PluginHost, PluginOrigin, discover
 from agent_app.profile import Profile
 from agent_app.storage import (
     AgentDatabase,
@@ -34,6 +38,12 @@ from agent_app.storage import (
     PostgresTracer,
 )
 from agentcore import DEFAULT_TENANT, InMemorySessionStore, InMemoryTracer, SessionStore, TurnTrace
+from agentcore.memory import InMemoryMemoryBackend, MemoryBackend
+from agentcore.skills import InMemorySkillStore, SkillStore
+
+PLUGIN_DIR_ENV: Final = "AGENT_PLUGIN_DIR"
+BUNDLED_PLUGINS: Final = Path(agent_app.__file__).resolve().parents[1] / "plugins"
+"""``apps/agent/plugins``: the plugins shipped with the service."""
 
 
 class TraceLog(Protocol):
@@ -44,7 +54,7 @@ class TraceLog(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class Runtime:
-    agent: Agent
+    live: LiveAgent
     store: SessionStore
     tracer: TraceLog
     locks: SessionLocks
@@ -56,9 +66,20 @@ class Runtime:
     dynamic_model: DynamicModel | None
     """None with ``--fake``: the echo model ignores the settings."""
 
+    @property
+    def agent(self) -> Agent:
+        return self.live.current()
+
+    @property
+    def plugins(self) -> PluginHost:
+        return self.live.host
+
+    def close(self) -> None:
+        self.plugins.close()
+
     def dispatcher(self, settings: DispatchSettings | None = None) -> Dispatcher:
         return Dispatcher(
-            self.agent,
+            self.live,
             store=self.store,
             tracer=self.tracer,
             ingress=self.ingress,
@@ -69,6 +90,33 @@ class Runtime:
         )
 
 
+def plugin_roots(profile: Profile, env: Mapping[str, str]) -> list[tuple[PluginOrigin, Path]]:
+    """Bundled plugins, then the agent folder's, then the installed ones (``AGENT_PLUGIN_DIR``)."""
+    roots: list[tuple[PluginOrigin, Path]] = [("bundled", BUNDLED_PLUGINS)]
+    own = profile.plugins_dir()
+    if own is not None:
+        roots.append(("agent", own))
+    installed = env.get(PLUGIN_DIR_ENV)
+    if installed:
+        roots.append(("installed", Path(installed)))
+    return roots
+
+
+def start_plugins(profile: Profile, env: Mapping[str, str], discovery: Discovery | None = None) -> PluginHost:
+    """Enables the plugins the profile lists; any of them failing stops the start, naming the plugin."""
+    found = discovery or discover(plugin_roots(profile, env))
+    host = PluginHost(found.plugins, env)
+    try:
+        for name in profile.plugins.enabled:
+            if name not in found.plugins and name in found.broken:
+                raise PluginError(name, found.broken[name])
+            host.enable(name, profile.plugins.config(name))
+    except Exception:
+        host.close()
+        raise
+    return host
+
+
 def build_runtime(
     profile: Profile,
     *,
@@ -76,9 +124,11 @@ def build_runtime(
     env: Mapping[str, str],
     db: AgentDatabase | None,
     tenant_id: str = DEFAULT_TENANT,
+    plugins: PluginHost | None = None,
 ) -> Runtime:
     """Model settings come from the database (or process memory without one), then the environment, then
-    the profile; a missing API key is reported on the first model call, so an admin can still set one."""
+    the profile; a missing API key is reported on the first model call, so an admin can still set one.
+    Without a given plugin host, the profile's plugins are found and enabled here."""
     name = profile.agent.name
     settings_store: ModelSettingsStore = (
         InMemoryModelSettingsStore() if db is None else PostgresModelSettingsStore(db, agent=name)
@@ -92,9 +142,24 @@ def build_runtime(
     admin = ModelAdmin(
         profile, env, settings_store, tenant_id=tenant_id, secret_key=secret_key, dynamic=dynamic
     )
+    memory_backend: MemoryBackend = InMemoryMemoryBackend() if db is None else PostgresMemoryBackend(db)
+    skill_store: SkillStore = InMemorySkillStore() if db is None else PostgresSkillStore(db)
+
+    def build(added: Contributions) -> Agent:
+        return build_agent(
+            profile,
+            fake=fake,
+            env=env,
+            memory_backend=memory_backend,
+            skill_store=skill_store,
+            model=dynamic,
+            plugins=added,
+        )
+
+    live = LiveAgent(build, plugins or start_plugins(profile, env))
     if db is None:
         return Runtime(
-            agent=build_agent(profile, fake=fake, env=env, model=dynamic),
+            live=live,
             store=InMemorySessionStore(),
             tracer=InMemoryTracer(),
             locks=InMemorySessionLocks(),
@@ -105,18 +170,10 @@ def build_runtime(
             model_admin=admin,
             dynamic_model=dynamic,
         )
-    agent = build_agent(
-        profile,
-        fake=fake,
-        env=env,
-        memory_backend=PostgresMemoryBackend(db),
-        skill_store=PostgresSkillStore(db),
-        model=dynamic,
-    )
     sessions = PostgresSessionStore(db, agent=name)
     model_name: Callable[[], str] = (lambda: "echo") if dynamic is None else (lambda: dynamic.model_name)
     return Runtime(
-        agent=agent,
+        live=live,
         store=sessions,
         tracer=PostgresTracer(db, agent=name, model=model_name),
         locks=PostgresSessionLocks(db),

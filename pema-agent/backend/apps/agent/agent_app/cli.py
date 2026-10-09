@@ -1,5 +1,5 @@
 """``agent chat`` (chat in the terminal), ``agent serve`` (the HTTP gateway), ``agent model`` (stored model
-settings) and ``agent db``."""
+settings), ``agent plugins`` and ``agent db``."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ import os
 import sys
 import threading
 from collections.abc import Sequence
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Final, get_args
 from uuid import uuid4
@@ -30,8 +31,9 @@ from agent_app.model_settings import (
     PostgresModelSettingsStore,
     SecretKeyMissingError,
 )
-from agent_app.profile import load_profile
-from agent_app.runtime import build_runtime
+from agent_app.plugins import PluginError, PluginHost, discover
+from agent_app.profile import Profile, load_profile
+from agent_app.runtime import Runtime, build_runtime, plugin_roots, start_plugins
 from agent_app.storage import AgentDatabase, PostgresSessionStore, SessionOwnerError
 from agentcore import (
     DEFAULT_TENANT,
@@ -96,6 +98,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     _add_model_commands(
         commands.add_parser("model", help=f"Model settings stored in the database (needs {DATABASE_URL_ENV})")
     )
+    plugins = commands.add_parser("plugins", help="Plugins of an agent")
+    plugin_commands = plugins.add_subparsers(dest="plugins_command", required=True)
+    plugin_list = plugin_commands.add_parser(
+        "list", help="every plugin found, whether the profile enables it and what it registers"
+    )
+    plugin_list.add_argument("--profile", type=Path, required=True, help="agent folder or TOML profile")
     db = commands.add_parser("db", help="Database administration (schema agent_rt)")
     db_commands = db.add_subparsers(dest="db_command", required=True)
     db_commands.add_parser(
@@ -106,6 +114,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "db":
         return _bootstrap_role()
+    if args.command == "plugins":
+        return _list_plugins(args.profile)
     # psycopg's async driver cannot run on the Windows proactor loop.
     loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
     if args.command == "serve":
@@ -154,6 +164,32 @@ def _http_url(value: str) -> str:
     if not value.startswith(("http://", "https://")) or len(value) > MAX_BASE_URL_CHARS:
         raise argparse.ArgumentTypeError("use an http(s) URL of at most 500 characters")
     return value
+
+
+def _list_plugins(profile_path: Path) -> int:
+    """Loads the profile's plugins as a start would, reports them and unloads them again."""
+    try:
+        profile = load_profile(profile_path)
+        found = discover(plugin_roots(profile, os.environ))
+    except (OSError, ValueError) as err:
+        _write(f"error: {err}\n")
+        return EXIT_CONFIG_ERROR
+    error: str | None = None
+    try:
+        host = start_plugins(profile, os.environ, found)
+    except PluginError as err:
+        error = str(err)
+        host = PluginHost(found.plugins, os.environ)
+    statuses = host.status()
+    host.close()
+    shown = {
+        "enabled_in_profile": profile.plugins.enabled,
+        "plugins": [asdict(status) for status in statuses],
+        "broken": dict(found.broken),
+        "error": error,
+    }
+    _write(json.dumps(shown, ensure_ascii=False, indent=2) + "\n")
+    return 0 if error is None else 1
 
 
 async def _model(args: argparse.Namespace) -> int:
@@ -225,7 +261,10 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int) -> int
             _write(f"warning: no {DATABASE_URL_ENV}: messages and sessions live in process memory only\n")
         app = create_app(runtime.dispatcher(), settings, db=db, admin=runtime.model_admin)
         server = uvicorn.Server(uvicorn.Config(app, host=host, port=port, log_level="info", access_log=False))
-        await server.serve()
+        try:
+            await server.serve()
+        finally:
+            runtime.close()
         return 0
     finally:
         if db is not None:
@@ -249,7 +288,15 @@ async def _chat_with(profile_path: Path, *, fake: bool, session: str | None, db:
     except (OSError, ValueError, ModelError) as err:
         _write(f"error: {err}\n")
         return EXIT_CONFIG_ERROR
+    try:
+        return await _chat_loop(profile, runtime, fake=fake, session=session, db=db)
+    finally:
+        runtime.close()
 
+
+async def _chat_loop(
+    profile: Profile, runtime: Runtime, *, fake: bool, session: str | None, db: AgentDatabase | None
+) -> int:
     name = profile.agent.name
     agent, store, tracer, sessions = runtime.agent, runtime.store, runtime.tracer, runtime.sessions
     session_id = session or _new_session_id()

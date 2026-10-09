@@ -1,0 +1,10 @@
+name = "calculate"
+version = "1.0.0"
+description = "Exact arithmetic: the model calls `calculate` instead of working sums out in its head."
+api = 1
+
+[user_config.precision]
+type = "integer"
+title = "Decimal places"
+description = "Decimal places a non-whole result is rounded to (0-15)."
+default = 10
