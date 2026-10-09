@@ -10,12 +10,16 @@ from __future__ import annotations
 
 import hashlib
 import re
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
-from typing import Final
+from typing import Final, Protocol
 
 MAX_SESSION_ID_CHARS: Final = 200
 _NAME: Final = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
+
+
+def valid_channel_name(name: str) -> bool:
+    return bool(_NAME.match(name))
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,6 +40,72 @@ class ChannelCapabilities:
     """Longest reply the channel accepts in one message; None for no limit."""
     markdown: bool = False
     streaming: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class OutboundMessage:
+    """One message of a reply; a long reply is sent as several, ``part`` of ``parts``."""
+
+    conversation_id: str
+    text: str
+    user_id: str | None = None
+    reply_to: str | None = None
+    """The channel's id of the message being answered."""
+    part: int = 1
+    parts: int = 1
+    metadata: Mapping[str, str] = field(default_factory=dict[str, str])
+    """What the inbound message carried (thread type and the like)."""
+
+
+class ChannelSendError(Exception):
+    """A send that did not go through. ``retryable`` False (a blocked user, a deleted chat) stops retries."""
+
+    def __init__(self, message: str, *, retryable: bool = True, retry_after_s: float | None = None) -> None:
+        super().__init__(message)
+        self.retryable = retryable
+        self.retry_after_s = retry_after_s
+
+
+Receive = Callable[[InboundMessage], Awaitable[None]]
+
+
+class ChannelAdapter(Protocol):
+    """A chat platform as the agent sees it. ``start`` begins listening (webhook, polling) and returns; each
+    message heard goes to ``receive``, which stores it before it runs. ``send`` delivers one message and
+    raises ``ChannelSendError`` when it cannot."""
+
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def capabilities(self) -> ChannelCapabilities: ...
+
+    async def start(self, receive: Receive) -> None: ...
+
+    async def stop(self) -> None: ...
+
+    async def send(self, message: OutboundMessage) -> None: ...
+
+
+def split_reply(text: str, max_chars: int | None) -> list[str]:
+    """The reply in pieces of at most ``max_chars``, cut at a paragraph, a line or a space when one is
+    near."""
+    text = text.strip()
+    if not text:
+        return []
+    if max_chars is None or len(text) <= max_chars:
+        return [text]
+    parts: list[str] = []
+    while len(text) > max_chars:
+        window = text[: max_chars + 1]
+        cut = max((window.rfind(sep) for sep in ("\n\n", "\n", " ")), default=-1)
+        if cut < max_chars // 2:
+            cut = max_chars
+        parts.append(text[:cut].rstrip())
+        text = text[cut:].lstrip()
+    if text:
+        parts.append(text)
+    return [part for part in parts if part]
 
 
 def session_id_for(agent: str, channel: str, conversation_id: str, epoch: int) -> str:

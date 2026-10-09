@@ -310,6 +310,45 @@ def test_a_change_through_one_process_reaches_another_through_postgres(db_url: s
     _run(db_url, check)
 
 
+def test_replies_are_claimed_in_order_retried_and_taken_over_on_postgres(db_url: str) -> None:
+    async def check(db: AgentDatabase) -> None:
+        store = PostgresIngressStore(db, agent="dev")
+        first, _ = await store.accept("t", _inbound("d1", conversation="cd"), "s-d", deliver=True)
+        second, _ = await store.accept("t", _inbound("d2", conversation="cd"), "s-d", deliver=True)
+        plain, _ = await store.accept("t", _inbound("d3", conversation="other"), "s-x")
+        not_over = await store.claim_delivery("t", first.id, stale_s=60)
+        for record in (first, second):
+            await store.claim(record.id)
+            await store.finish(record.id, TurnReply("turn", "ok", "end", 1, Usage()))
+
+        held = await store.claim_delivery("t", second.id, stale_s=60)
+        due = await store.due_deliveries("t", ["http"], stale_s=60, limit=10)
+        claimed = await store.claim_delivery("t", first.id, stale_s=60)
+        busy = await store.claim_delivery("t", first.id, stale_s=60)
+        taken = await store.claim_delivery("t", first.id, stale_s=0)
+        await store.delivery_progress(first.id, 1)
+        await store.retry_delivery(first.id, "busy", after_s=3600)
+        waiting = await store.claim_delivery("t", first.id, stale_s=60)
+        await store.retry_delivery(first.id, "busy", after_s=0)
+        again = await store.claim_delivery("t", first.id, stale_s=60)
+        await store.finish_delivery(first.id, "sent")
+        after = await store.due_deliveries("t", ["http"], stale_s=60, limit=10)
+
+        assert (first.delivery, plain.delivery) == ("pending", None)
+        assert (not_over, held, busy, waiting) == (None, None, None, None)
+        assert [r.id for r in due] == [first.id]
+        assert claimed is not None
+        assert (claimed.delivery, claimed.delivery_attempts) == ("sending", 1)
+        assert taken is not None
+        assert taken.delivery_attempts == 2
+        assert again is not None
+        assert (again.delivered_parts, again.delivery_error, again.delivery_attempts) == (1, "busy", 3)
+        assert [r.id for r in after] == [second.id]
+        assert await store.due_deliveries("t", ["zalo"], stale_s=60, limit=10) == []
+
+    _run(db_url, check)
+
+
 def test_model_settings_are_stored_per_agent_and_a_clear_never_lowers_the_version(db_url: str) -> None:
     async def check(db: AgentDatabase) -> None:
         store = PostgresModelSettingsStore(db, agent="dev")

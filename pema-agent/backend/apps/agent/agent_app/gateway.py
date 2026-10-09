@@ -24,6 +24,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text as sql
 
+from agent_app.channel_hub import ChannelHub
 from agent_app.dispatcher import Dispatcher, StreamObserver
 from agent_app.ingress import IngressRecord
 from agent_app.model_factory import Provider
@@ -152,16 +153,22 @@ def create_app(
     db: AgentDatabase | None = None,
     admin: ModelAdmin | None = None,
     plugins: PluginManager | None = None,
+    channels: ChannelHub | None = None,
 ) -> FastAPI:
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
-        sweeper = asyncio.create_task(dispatcher.run_sweeper(), name="ingress sweeper")
+        background = [asyncio.create_task(dispatcher.run_sweeper(), name="ingress sweeper")]
+        if channels is not None:
+            background.append(asyncio.create_task(channels.run(), name="channel hub"))
         try:
             yield
         finally:
-            sweeper.cancel()
-            await asyncio.gather(sweeper, return_exceptions=True)
+            for task in background:
+                task.cancel()
+            await asyncio.gather(*background, return_exceptions=True)
             await dispatcher.close()
+            if channels is not None:
+                await channels.close()
 
     app = FastAPI(title="agent gateway", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
     authorized = Depends(_bearer(settings.token))
@@ -216,8 +223,8 @@ def create_app(
         session_id = await dispatcher.reset(CHANNEL, body.conversation_id or body.user_id)
         return {"session_id": session_id}
 
-    if settings.admin_token is not None and (admin is not None or plugins is not None):
-        _add_admin_routes(app, settings.admin_token, admin, plugins)
+    if settings.admin_token is not None and (admin, plugins, channels) != (None, None, None):
+        _add_admin_routes(app, settings.admin_token, admin, plugins, channels)
 
     @app.get("/v1/sessions/{session_id}", dependencies=[authorized])
     async def session(session_id: str) -> Response:
@@ -259,7 +266,11 @@ def _token_matches(authorization: str | None, wanted: bytes) -> bool:
 
 
 def _add_admin_routes(
-    app: FastAPI, token: str, admin: ModelAdmin | None, plugins: PluginManager | None
+    app: FastAPI,
+    token: str,
+    admin: ModelAdmin | None,
+    plugins: PluginManager | None,
+    channels: ChannelHub | None = None,
 ) -> None:
     """Model settings, as zalo-agent's dashboard has them: read (key masked), change, clear, test; and the
     plugin manager."""
@@ -280,6 +291,13 @@ def _add_admin_routes(
     authorized = Depends(check)
     if plugins is not None:
         _add_plugin_routes(app, plugins, authorized)
+    if channels is not None:
+        hub = channels
+
+        @app.get("/v1/admin/channels", dependencies=[authorized])
+        async def list_channels() -> dict[str, Any]:
+            return {"channels": hub.status()}
+
     if admin is None:
         return
 
@@ -393,6 +411,13 @@ def _status(record: IngressRecord) -> dict[str, Any]:
         status["reply"] = record.reply.to_json()
     if record.error_kind is not None:
         status["error_kind"] = record.error_kind
+    if record.delivery is not None:
+        status["delivery"] = {
+            "status": record.delivery,
+            "attempts": record.delivery_attempts,
+            "parts_sent": record.delivered_parts,
+            "error": record.delivery_error,
+        }
     return status
 
 

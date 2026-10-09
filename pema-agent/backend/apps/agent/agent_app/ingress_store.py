@@ -10,46 +10,47 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import json
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Sequence
 from typing import Any, Final, cast
 
 from sqlalchemy import text as sql
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
-from agent_app.ingress import IngressRecord, IngressStatus, SessionBusyError, TurnReply
+from agent_app.ingress import (
+    MAX_DELIVERY_ERROR,
+    DeliveryOutcome,
+    IngressRecord,
+    IngressStatus,
+    SessionBusyError,
+    TurnReply,
+)
 from agent_app.storage import AgentDatabase, retrying
 from agentcore.channels import InboundMessage
 
 LOCK_POLL_S: Final = 0.2
 
+# Rows are read by column name, so ``*`` is enough.
 _ACCEPT = sql(
     "INSERT INTO agent_rt.agent_ingress (tenant_id, agent, channel, external_id, conversation_id, user_id, "
-    "session_id, text, metadata) VALUES (:tenant_id, :agent, :channel, :external_id, :conversation_id, "
-    ":user_id, :session_id, :text, CAST(:metadata AS jsonb)) ON CONFLICT DO NOTHING "
-    "RETURNING id, tenant_id, channel, external_id, conversation_id, user_id, session_id, text, status, "
-    "attempts, error_kind, reply, metadata"
+    "session_id, text, metadata, delivery) VALUES (:tenant_id, :agent, :channel, :external_id, "
+    ":conversation_id, :user_id, :session_id, :text, CAST(:metadata AS jsonb), :delivery) "
+    "ON CONFLICT DO NOTHING RETURNING *"
 )
 _BY_EXTERNAL = sql(
-    "SELECT id, tenant_id, channel, external_id, conversation_id, user_id, session_id, text, status, "
-    "attempts, error_kind, reply, metadata FROM agent_rt.agent_ingress "
+    "SELECT * FROM agent_rt.agent_ingress "
     "WHERE tenant_id = :tenant_id AND agent = :agent AND channel = :channel AND external_id = :external_id"
 )
 _GET = sql(
-    "SELECT id, tenant_id, channel, external_id, conversation_id, user_id, session_id, text, status, "
-    "attempts, error_kind, reply, metadata FROM agent_rt.agent_ingress "
-    "WHERE tenant_id = :tenant_id AND agent = :agent AND id = :id"
+    "SELECT * FROM agent_rt.agent_ingress WHERE tenant_id = :tenant_id AND agent = :agent AND id = :id"
 )
 _NEXT_QUEUED = sql(
-    "SELECT id, tenant_id, channel, external_id, conversation_id, user_id, session_id, text, status, "
-    "attempts, error_kind, reply, metadata FROM agent_rt.agent_ingress "
+    "SELECT * FROM agent_rt.agent_ingress "
     "WHERE tenant_id = :tenant_id AND session_id = :session_id AND agent = :agent AND status = 'queued' "
     "ORDER BY id LIMIT 1"
 )
 _CLAIM = sql(
     "UPDATE agent_rt.agent_ingress SET status = 'processing', attempts = attempts + 1, started_at = now() "
-    "WHERE id = :id AND status = 'queued' "
-    "RETURNING id, tenant_id, channel, external_id, conversation_id, user_id, session_id, text, status, "
-    "attempts, error_kind, reply, metadata"
+    "WHERE id = :id AND status = 'queued' RETURNING *"
 )
 _FINISH = sql(
     "UPDATE agent_rt.agent_ingress SET status = 'done', reply = CAST(:reply AS jsonb), error_kind = NULL, "
@@ -60,9 +61,7 @@ _FAIL = sql(
     "WHERE id = :id"
 )
 _PROCESSING = sql(
-    "SELECT id, tenant_id, channel, external_id, conversation_id, user_id, session_id, text, status, "
-    "attempts, error_kind, reply, metadata FROM agent_rt.agent_ingress "
-    "WHERE agent = :agent AND status = 'processing' ORDER BY id"
+    "SELECT * FROM agent_rt.agent_ingress WHERE agent = :agent AND status = 'processing' ORDER BY id"
 )
 _REQUEUE = sql(
     "UPDATE agent_rt.agent_ingress SET "
@@ -74,6 +73,39 @@ _REQUEUE = sql(
 _QUEUED_SESSIONS = sql(
     "SELECT DISTINCT tenant_id, session_id FROM agent_rt.agent_ingress "
     "WHERE agent = :agent AND status = 'queued' ORDER BY tenant_id, session_id"
+)
+# Due: the turn is over and the reply waits for its time, or a crashed process left it sending. Held back:
+# an earlier reply of the same session is not out yet (replies leave in the order the messages came).
+_DUE_DELIVERIES = sql(
+    "SELECT i.* FROM agent_rt.agent_ingress AS i WHERE i.tenant_id = :tenant_id AND i.agent = :agent "
+    "AND i.channel = ANY(:channels) AND i.status IN ('done', 'failed', 'dead') AND ("
+    "(i.delivery = 'pending' AND (i.delivery_after IS NULL OR i.delivery_after <= now())) OR "
+    "(i.delivery = 'sending' AND i.delivery_at < now() - make_interval(secs => :stale_s))) "
+    "AND NOT EXISTS (SELECT 1 FROM agent_rt.agent_ingress e WHERE e.agent = i.agent "
+    "AND e.tenant_id = i.tenant_id AND e.session_id = i.session_id AND e.id < i.id "
+    "AND e.delivery IN ('pending', 'sending')) ORDER BY i.id LIMIT :limit"
+)
+_CLAIM_DELIVERY = sql(
+    "UPDATE agent_rt.agent_ingress AS i SET delivery = 'sending', "
+    "delivery_attempts = i.delivery_attempts + 1, delivery_at = now() "
+    "WHERE i.tenant_id = :tenant_id AND i.agent = :agent AND i.id = :id "
+    "AND i.status IN ('done', 'failed', 'dead') AND ("
+    "(i.delivery = 'pending' AND (i.delivery_after IS NULL OR i.delivery_after <= now())) OR "
+    "(i.delivery = 'sending' AND i.delivery_at < now() - make_interval(secs => :stale_s))) "
+    "AND NOT EXISTS (SELECT 1 FROM agent_rt.agent_ingress e WHERE e.agent = i.agent "
+    "AND e.tenant_id = i.tenant_id AND e.session_id = i.session_id AND e.id < i.id "
+    "AND e.delivery IN ('pending', 'sending')) RETURNING i.*"
+)
+_DELIVERY_PROGRESS = sql(
+    "UPDATE agent_rt.agent_ingress SET delivered_parts = :parts, delivery_at = now() WHERE id = :id"
+)
+_RETRY_DELIVERY = sql(
+    "UPDATE agent_rt.agent_ingress SET delivery = 'pending', delivery_error = :error, "
+    "delivery_after = now() + make_interval(secs => :after_s) WHERE id = :id"
+)
+_FINISH_DELIVERY = sql(
+    "UPDATE agent_rt.agent_ingress SET delivery = :outcome, delivery_error = :error, delivery_after = NULL, "
+    "delivery_at = now() WHERE id = :id"
 )
 _EPOCH = sql(
     "SELECT epoch FROM agent_rt.agent_conversation WHERE tenant_id = :tenant_id AND agent = :agent "
@@ -105,6 +137,10 @@ def _record(row: Any) -> IngressRecord:
         error_kind=row.error_kind,
         reply=None if reply is None else TurnReply.from_json(reply),
         metadata=cast(dict[str, str], row.metadata),
+        delivery=row.delivery,
+        delivery_attempts=row.delivery_attempts,
+        delivered_parts=row.delivered_parts,
+        delivery_error=row.delivery_error,
     )
 
 
@@ -129,7 +165,7 @@ class PostgresIngressStore:
         await retrying(what, work)
 
     async def accept(
-        self, tenant_id: str, inbound: InboundMessage, session_id: str
+        self, tenant_id: str, inbound: InboundMessage, session_id: str, *, deliver: bool = False
     ) -> tuple[IngressRecord, bool]:
         params = {
             "tenant_id": tenant_id,
@@ -141,6 +177,7 @@ class PostgresIngressStore:
             "session_id": session_id,
             "text": inbound.text,
             "metadata": json.dumps(dict(inbound.metadata), ensure_ascii=False),
+            "delivery": "pending" if deliver else None,
         }
 
         async def work() -> tuple[IngressRecord, bool]:
@@ -194,6 +231,48 @@ class PostgresIngressStore:
                 return [(row.tenant_id, row.session_id) for row in rows]
 
         return await retrying("list queued sessions", work)
+
+    async def due_deliveries(
+        self, tenant_id: str, channels: Sequence[str], *, stale_s: float, limit: int
+    ) -> list[IngressRecord]:
+        if not channels:
+            return []
+        params = {
+            "tenant_id": tenant_id,
+            "agent": self._agent,
+            "channels": list(channels),
+            "stale_s": stale_s,
+            "limit": limit,
+        }
+
+        async def work() -> list[IngressRecord]:
+            async with self._engine.connect() as conn:
+                return [_record(row) for row in await conn.execute(_DUE_DELIVERIES, params)]
+
+        return await retrying("list due deliveries", work)
+
+    async def claim_delivery(
+        self, tenant_id: str, ingress_id: int, *, stale_s: float
+    ) -> IngressRecord | None:
+        params = {"tenant_id": tenant_id, "agent": self._agent, "id": ingress_id, "stale_s": stale_s}
+        return await self._one("claim delivery", _CLAIM_DELIVERY, params)
+
+    async def delivery_progress(self, ingress_id: int, parts: int) -> None:
+        await self._write("delivery progress", _DELIVERY_PROGRESS, {"id": ingress_id, "parts": parts})
+
+    async def retry_delivery(self, ingress_id: int, error: str, *, after_s: float) -> None:
+        params = {"id": ingress_id, "error": error[:MAX_DELIVERY_ERROR], "after_s": after_s}
+        await self._write("retry delivery", _RETRY_DELIVERY, params)
+
+    async def finish_delivery(
+        self, ingress_id: int, outcome: DeliveryOutcome, error: str | None = None
+    ) -> None:
+        params = {
+            "id": ingress_id,
+            "outcome": outcome,
+            "error": None if error is None else error[:MAX_DELIVERY_ERROR],
+        }
+        await self._write("finish delivery", _FINISH_DELIVERY, params)
 
 
 class PostgresConversationStore:

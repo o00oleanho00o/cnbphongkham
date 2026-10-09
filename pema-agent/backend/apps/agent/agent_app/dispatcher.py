@@ -108,6 +108,7 @@ class Dispatcher:
         self._wanted: set[str] = set()
         self._finished: dict[int, asyncio.Event] = {}
         self._observers: dict[int, StreamObserver] = {}
+        self._listeners: list[Callable[[IngressRecord], None]] = []
 
     @property
     def tenant_id(self) -> str:
@@ -128,11 +129,12 @@ class Dispatcher:
         return session_id_for(self.agent.profile.agent.name, channel, conversation_id, epoch)
 
     async def accept(
-        self, inbound: InboundMessage, *, observer: StreamObserver | None = None
+        self, inbound: InboundMessage, *, observer: StreamObserver | None = None, deliver: bool = False
     ) -> tuple[IngressRecord, bool]:
-        """Stores the message and starts its session's drain; returns the record and whether it is new."""
+        """Stores the message and starts its session's drain; returns the record and whether it is new. With
+        ``deliver`` the reply goes out through the message's channel once the turn is over."""
         session_id = await self.session_for(inbound.channel, inbound.conversation_id)
-        record, created = await self.ingress.accept(self.tenant_id, inbound, session_id)
+        record, created = await self.ingress.accept(self.tenant_id, inbound, session_id, deliver=deliver)
         if observer is not None and not record.finished:
             self._observers[record.id] = observer
         if record.status == "queued":
@@ -225,6 +227,12 @@ class Dispatcher:
             event = self._finished.pop(record.id, None)
             if event is not None:
                 event.set()
+            for listener in self._listeners:
+                listener(record)
+
+    def on_finished(self, listener: Callable[[IngressRecord], None]) -> None:
+        """Called with the record (as claimed) after each run, done or failed; must not block."""
+        self._listeners.append(listener)
 
     async def sweep(self) -> None:
         """Re-queues messages a crashed run left behind and drains every session with queued messages."""

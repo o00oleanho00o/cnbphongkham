@@ -9,6 +9,7 @@ from typing import Final, Protocol
 
 import agent_app
 from agent_app.assembly import Agent, build_agent
+from agent_app.channel_hub import ChannelHub, DeliverySettings
 from agent_app.dispatcher import Dispatcher, DispatchSettings
 from agent_app.ingress import (
     ConversationStore,
@@ -80,6 +81,15 @@ class Runtime:
 
     def close(self) -> None:
         self.plugins.close()
+
+    def channel_hub(self, dispatcher: Dispatcher, settings: DeliverySettings | None = None) -> ChannelHub:
+        """Runs the chat channels of the enabled plugins for ``dispatcher`` and sends their replies."""
+        return ChannelHub(
+            dispatcher,
+            channels=lambda: self.plugins.contributions().channels,
+            refresh=self.plugin_manager.refresh,
+            settings=settings,
+        )
 
     def dispatcher(self, settings: DispatchSettings | None = None) -> Dispatcher:
         return Dispatcher(

@@ -355,6 +355,7 @@ class PluginManager:
             "tools": list(status.tools),
             "sections": list(status.sections),
             "hooks": list(status.hooks),
+            "channels": list(status.channels),
             "requires": list(manifest.requires),
             "requires_env": list(manifest.requires_env),
             "settings": settings,

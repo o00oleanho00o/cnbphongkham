@@ -1,9 +1,9 @@
 """Loads plugins, gives them a context to register through, and unloads them again.
 
-A plugin is a folder with a manifest and a Python module whose ``register(ctx)`` adds tools, prompt sections
-and hooks through ``ctx``. Every registration returns a function that undoes it; disabling a plugin undoes
-them in reverse order. The host's ``version`` grows with every change, so the agent knows when to rebuild its
-tools, prompt and hooks. Plugins are trusted local code: they run in this process, unsandboxed.
+A plugin is a folder with a manifest and a Python module whose ``register(ctx)`` adds tools, prompt sections,
+hooks and chat channels through ``ctx``. Every registration returns a function that undoes it; disabling a
+plugin undoes them in reverse order. The host's ``version`` grows with every change, so the agent knows when
+to rebuild its tools, prompt and hooks. Plugins are trusted local code: they run in this process, unsandboxed.
 """
 
 from __future__ import annotations
@@ -19,12 +19,14 @@ from typing import Any, Final
 
 from agent_app.plugins.manifest import PluginError, PluginSource
 from agentcore import ToolSpec
+from agentcore.channels import ChannelAdapter, valid_channel_name
 from agentcore.harness.hooks import Hook
 from agentcore.prompt import SessionSection, StepSection, TurnSection
 
 REGISTER: Final = "register"
 DEPS_DIR: Final = ".deps"
 """A plugin's own Python packages, installed with it; on ``sys.path`` while it is enabled."""
+RESERVED_CHANNELS: Final = frozenset({"http", "cli"})
 
 Disposer = Callable[[], None]
 Section = SessionSection | TurnSection | StepSection
@@ -37,6 +39,7 @@ class Contributions:
     tools: tuple[ToolSpec[Any], ...] = ()
     sections: tuple[Section, ...] = ()
     hooks: tuple[Hook, ...] = ()
+    channels: tuple[ChannelAdapter, ...] = ()
 
 
 @dataclass(slots=True)
@@ -47,6 +50,7 @@ class _Loaded:
     tools: list[ToolSpec[Any]] = field(default_factory=list[ToolSpec[Any]])
     sections: list[Section] = field(default_factory=list[Section])
     hooks: list[Hook] = field(default_factory=list[Hook])
+    channels: list[ChannelAdapter] = field(default_factory=list[ChannelAdapter])
     disposers: list[Disposer] = field(default_factory=list[Disposer])
 
 
@@ -83,6 +87,15 @@ class PluginContext:
     def register_hook(self, hook: Hook) -> Disposer:
         return self._add(self._loaded.hooks, hook)
 
+    def register_channel(self, adapter: ChannelAdapter) -> Disposer:
+        """A chat platform; the service starts it, stores what it hears and sends the replies through it."""
+        name = adapter.name
+        if not valid_channel_name(name) or name in RESERVED_CHANNELS:
+            raise PluginError(self.name, f"invalid channel name {name!r}")
+        if any(c.name == name for c in self._loaded.channels):
+            raise PluginError(self.name, f"channel {name} registered twice")
+        return self._add(self._loaded.channels, adapter)
+
     def on_disable(self, callback: Callable[[], None]) -> Disposer:
         """Runs when the plugin is disabled, after its later registrations are undone."""
         self._loaded.disposers.append(callback)
@@ -112,6 +125,7 @@ class PluginStatus:
     tools: tuple[str, ...]
     sections: tuple[str, ...]
     hooks: tuple[str, ...]
+    channels: tuple[str, ...] = ()
 
 
 class PluginHost:
@@ -189,6 +203,7 @@ class PluginHost:
             tools=tuple(t for p in loaded for t in p.tools),
             sections=tuple(s for p in loaded for s in p.sections),
             hooks=tuple(h for p in loaded for h in p.hooks),
+            channels=tuple(c for p in loaded for c in p.channels),
         )
 
     def status(self) -> list[PluginStatus]:
@@ -206,6 +221,7 @@ class PluginHost:
                     tools=tuple(t.name for t in loaded.tools) if loaded else (),
                     sections=tuple(s.name for s in loaded.sections) if loaded else (),
                     hooks=tuple(h.name for h in loaded.hooks) if loaded else (),
+                    channels=tuple(c.name for c in loaded.channels) if loaded else (),
                 )
             )
         return statuses
@@ -215,6 +231,7 @@ class PluginHost:
             for kind, mine, theirs in (
                 ("tool", {t.name for t in candidate.tools}, {t.name for t in other.tools}),
                 ("prompt section", {s.name for s in candidate.sections}, {s.name for s in other.sections}),
+                ("channel", {c.name for c in candidate.channels}, {c.name for c in other.channels}),
             ):
                 clash = sorted(mine & theirs)
                 if clash:

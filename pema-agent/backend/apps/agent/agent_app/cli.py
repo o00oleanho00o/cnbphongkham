@@ -328,12 +328,14 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int) -> int
             _write(f"warning: no {DATABASE_URL_ENV}: messages and sessions live in process memory only\n")
         try:
             await runtime.plugin_manager.start()
+            dispatcher = runtime.dispatcher()
             app = create_app(
-                runtime.dispatcher(),
+                dispatcher,
                 settings,
                 db=db,
                 admin=runtime.model_admin,
                 plugins=runtime.plugin_manager,
+                channels=runtime.channel_hub(dispatcher),
             )
             server = uvicorn.Server(
                 uvicorn.Config(app, host=host, port=port, log_level="info", access_log=False)

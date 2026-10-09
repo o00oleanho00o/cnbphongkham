@@ -10,15 +10,21 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from collections.abc import AsyncGenerator, Mapping
+import math
+import time
+from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
-from typing import Any, Literal, Protocol
+from typing import Any, Final, Literal, Protocol
 
 from agentcore import TurnResult, Usage
 from agentcore.channels import InboundMessage
 
 IngressStatus = Literal["queued", "processing", "done", "failed", "dead"]
 FINISHED: frozenset[IngressStatus] = frozenset({"done", "failed", "dead"})
+DeliveryStatus = Literal["pending", "sending", "sent", "failed", "skipped"]
+DeliveryOutcome = Literal["sent", "failed", "skipped"]
+OPEN_DELIVERY: frozenset[DeliveryStatus | None] = frozenset({"pending", "sending"})
+MAX_DELIVERY_ERROR: Final = 1000
 
 
 class SessionBusyError(RuntimeError):
@@ -72,6 +78,11 @@ class IngressRecord:
     error_kind: str | None = None
     reply: TurnReply | None = None
     metadata: Mapping[str, str] = field(default_factory=dict[str, str])
+    delivery: DeliveryStatus | None = None
+    """None when the caller takes the reply itself (HTTP); else how sending it through the channel went."""
+    delivery_attempts: int = 0
+    delivered_parts: int = 0
+    delivery_error: str | None = None
 
     @property
     def finished(self) -> bool:
@@ -80,9 +91,10 @@ class IngressRecord:
 
 class IngressStore(Protocol):
     async def accept(
-        self, tenant_id: str, inbound: InboundMessage, session_id: str
+        self, tenant_id: str, inbound: InboundMessage, session_id: str, *, deliver: bool = False
     ) -> tuple[IngressRecord, bool]:
-        """The stored record and whether it is new; a known external id returns the first record."""
+        """The stored record and whether it is new; a known external id returns the first record. With
+        ``deliver`` the reply is to be sent through the message's channel."""
         ...
 
     async def get(self, tenant_id: str, ingress_id: int) -> IngressRecord | None: ...
@@ -112,6 +124,30 @@ class IngressStore(Protocol):
         """(tenant, session) pairs that have queued messages."""
         ...
 
+    async def due_deliveries(
+        self, tenant_id: str, channels: Sequence[str], *, stale_s: float, limit: int
+    ) -> list[IngressRecord]:
+        """Finished messages of these channels whose reply is due to be sent (or whose send a crashed process
+        left behind for longer than ``stale_s``), oldest first."""
+        ...
+
+    async def claim_delivery(
+        self, tenant_id: str, ingress_id: int, *, stale_s: float
+    ) -> IngressRecord | None:
+        """Due -> sending (one more attempt). None when it is not due, someone else is sending it, or an
+        earlier reply of the same session is not out yet: replies leave in the order the messages came."""
+        ...
+
+    async def delivery_progress(self, ingress_id: int, parts: int) -> None:
+        """``parts`` parts of the reply are out."""
+        ...
+
+    async def retry_delivery(self, ingress_id: int, error: str, *, after_s: float) -> None: ...
+
+    async def finish_delivery(
+        self, ingress_id: int, outcome: DeliveryOutcome, error: str | None = None
+    ) -> None: ...
+
 
 class ConversationStore(Protocol):
     async def epoch(self, tenant_id: str, channel: str, conversation_id: str) -> int: ...
@@ -131,12 +167,15 @@ class SessionLocks(Protocol):
 
 
 class InMemoryIngressStore:
-    def __init__(self) -> None:
+    def __init__(self, clock: Callable[[], float] = time.monotonic) -> None:
         self._records: dict[int, IngressRecord] = {}
         self._by_external: dict[tuple[str, str, str], int] = {}
+        self._clock = clock
+        self._delivery_at: dict[int, float] = {}
+        self._delivery_after: dict[int, float] = {}
 
     async def accept(
-        self, tenant_id: str, inbound: InboundMessage, session_id: str
+        self, tenant_id: str, inbound: InboundMessage, session_id: str, *, deliver: bool = False
     ) -> tuple[IngressRecord, bool]:
         key = (tenant_id, inbound.channel, inbound.message_id)
         known = self._by_external.get(key)
@@ -153,6 +192,7 @@ class InMemoryIngressStore:
             text=inbound.text,
             status="queued",
             metadata=dict(inbound.metadata),
+            delivery="pending" if deliver else None,
         )
         self._records[record.id] = record
         self._by_external[key] = record.id
@@ -197,6 +237,63 @@ class InMemoryIngressStore:
 
     async def queued_sessions(self) -> list[tuple[str, str]]:
         return sorted({(r.tenant_id, r.session_id) for r in self._records.values() if r.status == "queued"})
+
+    async def due_deliveries(
+        self, tenant_id: str, channels: Sequence[str], *, stale_s: float, limit: int
+    ) -> list[IngressRecord]:
+        due = [
+            r
+            for r in self._records.values()
+            if r.tenant_id == tenant_id
+            and r.channel in channels
+            and self._due(r, stale_s)
+            and not self._held(r)
+        ]
+        return due[:limit]
+
+    async def claim_delivery(
+        self, tenant_id: str, ingress_id: int, *, stale_s: float
+    ) -> IngressRecord | None:
+        record = self._records.get(ingress_id)
+        if record is None or record.tenant_id != tenant_id or not self._due(record, stale_s):
+            return None
+        if self._held(record):
+            return None
+        self._delivery_at[ingress_id] = self._clock()
+        return self._set(replace(record, delivery="sending", delivery_attempts=record.delivery_attempts + 1))
+
+    async def delivery_progress(self, ingress_id: int, parts: int) -> None:
+        self._delivery_at[ingress_id] = self._clock()
+        self._set(replace(self._records[ingress_id], delivered_parts=parts))
+
+    async def retry_delivery(self, ingress_id: int, error: str, *, after_s: float) -> None:
+        self._delivery_after[ingress_id] = self._clock() + after_s
+        self._set(
+            replace(self._records[ingress_id], delivery="pending", delivery_error=error[:MAX_DELIVERY_ERROR])
+        )
+
+    async def finish_delivery(
+        self, ingress_id: int, outcome: DeliveryOutcome, error: str | None = None
+    ) -> None:
+        self._delivery_after.pop(ingress_id, None)
+        trimmed = None if error is None else error[:MAX_DELIVERY_ERROR]
+        self._set(replace(self._records[ingress_id], delivery=outcome, delivery_error=trimmed))
+
+    def _held(self, record: IngressRecord) -> bool:
+        """An earlier reply of the same session is not out yet."""
+        return any(
+            r.id < record.id and r.session_id == record.session_id and r.delivery in OPEN_DELIVERY
+            for r in self._records.values()
+            if r.tenant_id == record.tenant_id
+        )
+
+    def _due(self, record: IngressRecord, stale_s: float) -> bool:
+        if not record.finished:
+            return False
+        now = self._clock()
+        if record.delivery == "pending":
+            return self._delivery_after.get(record.id, -math.inf) <= now
+        return record.delivery == "sending" and now - self._delivery_at.get(record.id, now) > stale_s
 
     def _set(self, record: IngressRecord) -> IngressRecord:
         self._records[record.id] = record
