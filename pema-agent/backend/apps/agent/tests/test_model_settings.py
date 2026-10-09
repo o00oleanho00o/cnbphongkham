@@ -1,5 +1,5 @@
-"""Model settings changed at runtime: resolution (database > environment > profile), the encrypted key, the
-settings-aware model, the admin operations, the admin HTTP routes and ``agent model``."""
+"""Model settings changed at runtime: resolution (database > profile), the encrypted key, the settings-aware
+model, the admin operations, the admin HTTP routes and ``agent model``."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from agent_app.model_settings import (
 from agent_app.profile import Profile, load_profile
 from agent_app.runtime import build_runtime
 from agentcore import AssistantResult, LlmRequest, Message, ModelError, StreamSink, TextBlock
-from secretcipher import encrypt_with
+from secretcipher import encrypt_with, mask_secret
 
 DEV_PROFILE = Path(__file__).resolve().parents[1] / "agents" / "dev"
 KEY = "a" * 64
@@ -64,41 +64,40 @@ class Factory:
         return model
 
 
-def test_each_field_comes_from_the_database_then_the_environment_then_the_profile() -> None:
-    env = {"LLM_MODEL": "from-env", "LLM_API_KEY": "env-key"}
+def test_each_field_comes_from_the_database_then_the_profile() -> None:
     stored = StoredModelSettings(
         base_url="https://db.test/v1", api_key_enc=encrypt_with(KEY, "db-key"), version=3
     )
 
-    with_db = resolve_effective(PROFILE, env, stored, KEY)
-    without = resolve_effective(PROFILE, env, None, KEY)
+    with_db = resolve_effective(PROFILE, stored, KEY)
+    without = resolve_effective(PROFILE, None, KEY)
 
     assert (with_db.settings.model, with_db.settings.base_url, with_db.settings.api_key) == (
-        "from-env",
+        "from-profile",
         "https://db.test/v1",
         "db-key",
     )
     assert with_db.settings.reasoning == "high"
     assert dict(with_db.sources) == {
         "provider": "profile",
-        "model": "env",
+        "model": "profile",
         "base_url": "db",
         "reasoning": "profile",
         "dialect": "profile",
         "api_key": "db",
     }
     assert with_db.version == 3
-    assert (without.settings.api_key, without.sources["api_key"], without.version) == ("env-key", "env", 0)
+    assert (without.settings.api_key, without.sources["api_key"], without.version) == ("", "unset", 0)
 
 
-def test_a_stored_key_that_no_longer_decrypts_falls_back_to_the_environment() -> None:
+def test_a_stored_key_that_no_longer_decrypts_is_reported_and_not_used() -> None:
     stored = StoredModelSettings(api_key_enc=encrypt_with(KEY, "db-key"), version=1)
 
-    changed = resolve_effective(PROFILE, {"LLM_API_KEY": "env-key"}, stored, OTHER_KEY)
-    missing = resolve_effective(PROFILE, {"LLM_API_KEY": "env-key"}, stored, None)
+    changed = resolve_effective(PROFILE, stored, OTHER_KEY)
+    missing = resolve_effective(PROFILE, stored, None)
 
-    assert (changed.settings.api_key, changed.api_key_broken) == ("env-key", True)
-    assert (missing.settings.api_key, missing.api_key_broken) == ("env-key", True)
+    assert (changed.settings.api_key, changed.api_key_broken) == ("", True)
+    assert (missing.settings.api_key, missing.api_key_broken) == ("", True)
 
 
 async def test_the_model_rebuilds_when_the_stored_version_changes_and_fills_only_a_default_effort() -> None:
@@ -107,7 +106,6 @@ async def test_the_model_rebuilds_when_the_stored_version_changes_and_fills_only
     factory = Factory()
     model = DynamicModel(
         PROFILE,
-        {},
         store,
         tenant_id="t",
         secret_key=None,
@@ -137,7 +135,7 @@ async def test_an_update_changes_only_what_it_names_and_never_logs_the_key(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     store = InMemoryModelSettingsStore()
-    admin = ModelAdmin(PROFILE, {"LLM_API_KEY": "env-key-123456"}, store, tenant_id="t", secret_key=KEY)
+    admin = ModelAdmin(PROFILE, store, tenant_id="t", secret_key=KEY)
     caplog.set_level(logging.INFO)
 
     shown = await admin.update({"model": "m1", "api_key": "sk-abcdefghijklmnop"})
@@ -147,10 +145,11 @@ async def test_an_update_changes_only_what_it_names_and_never_logs_the_key(
 
     assert (shown["model"], shown["api_key"], shown["stored"]) == ("m1", "sk-ab...mnop", True)
     assert (kept["api_key"], kept["reasoning"], kept["sources"]["api_key"]) == ("sk-ab...mnop", "low", "db")
-    assert (back["model"], back["sources"]["model"], back["api_key"]) == (
+    assert (back["model"], back["sources"]["model"], back["api_key"], back["sources"]["api_key"]) == (
         "from-profile",
         "profile",
-        "env-k...3456",
+        mask_secret(""),
+        "unset",
     )
     assert (cleared["stored"], cleared["reasoning"], cleared["version"]) == (False, "high", 4)
     assert "sk-abcdefghijklmnop" not in caplog.text
@@ -158,18 +157,18 @@ async def test_an_update_changes_only_what_it_names_and_never_logs_the_key(
 
 
 async def test_a_key_cannot_be_stored_without_the_encryption_key() -> None:
-    admin = ModelAdmin(PROFILE, {}, InMemoryModelSettingsStore(), tenant_id="t", secret_key=None)
+    admin = ModelAdmin(PROFILE, InMemoryModelSettingsStore(), tenant_id="t", secret_key=None)
 
-    with pytest.raises(SecretKeyMissingError, match="AGENT_SECRET_ENCRYPTION_KEY"):
+    with pytest.raises(SecretKeyMissingError, match="no secret key"):
         await admin.update({"api_key": "sk-abcdefghijklmnop"})
     assert (await admin.update({"model": "m1"}))["model"] == "m1"
 
 
 async def test_the_test_call_reports_success_or_the_error_kind() -> None:
     store = InMemoryModelSettingsStore()
-    ok = await ModelAdmin(PROFILE, {}, store, tenant_id="t", secret_key=None, factory=Factory()).test()
+    ok = await ModelAdmin(PROFILE, store, tenant_id="t", secret_key=None, factory=Factory()).test()
     failing = Factory(error=ModelError("auth", "bad key"))
-    failed = await ModelAdmin(PROFILE, {}, store, tenant_id="t", secret_key=None, factory=failing).test()
+    failed = await ModelAdmin(PROFILE, store, tenant_id="t", secret_key=None, factory=failing).test()
 
     assert (ok["ok"], ok["model"]) == (True, "from-profile")
     assert failed == {"ok": False, "model": "from-profile", "error_kind": "auth"}
@@ -179,10 +178,9 @@ async def test_the_test_call_reports_success_or_the_error_kind() -> None:
 def _service(*, admin_token: str | None = ADMIN_TOKEN, secret_key: str | None = KEY) -> httpx.AsyncClient:
     store = InMemoryModelSettingsStore()
     factory = Factory()
-    env = {"LLM_API_KEY": "env-key-123456"}
-    dynamic = DynamicModel(PROFILE, env, store, tenant_id="default", secret_key=secret_key, factory=factory)
+    dynamic = DynamicModel(PROFILE, store, tenant_id="default", secret_key=secret_key, factory=factory)
     admin = ModelAdmin(
-        PROFILE, env, store, tenant_id="default", secret_key=secret_key, dynamic=dynamic, factory=factory
+        PROFILE, store, tenant_id="default", secret_key=secret_key, dynamic=dynamic, factory=factory
     )
     runtime = build_runtime(load_profile(DEV_PROFILE), fake=True, env={}, db=None)
     runtime.live.use_model(dynamic)
@@ -190,13 +188,13 @@ def _service(*, admin_token: str | None = ADMIN_TOKEN, secret_key: str | None = 
     return httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://agent")
 
 
-async def test_admin_routes_exist_only_with_an_admin_token_and_refuse_the_chat_token() -> None:
+async def test_admin_routes_need_a_caller_with_the_admin_scope() -> None:
     async with _service(admin_token=None) as off, _service() as on:
-        missing = await off.get("/v1/admin/model", headers=ADMIN)
+        nobody = await off.get("/v1/admin/model", headers=ADMIN)
         chat_token = await on.get("/v1/admin/model", headers=CHAT)
         allowed = await on.get("/v1/admin/model", headers=ADMIN)
 
-    assert (missing.status_code, chat_token.status_code, allowed.status_code) == (404, 401, 200)
+    assert (nobody.status_code, chat_token.status_code, allowed.status_code) == (401, 403, 200)
     with pytest.raises(ValueError, match="must differ"):
         GatewaySettings(token=TOKEN, admin_token=TOKEN)
     with pytest.raises(ValueError, match="at least 32"):
@@ -204,8 +202,9 @@ async def test_admin_routes_exist_only_with_an_admin_token_and_refuse_the_chat_t
 
 
 async def test_repeated_failed_admin_logins_are_refused_for_a_while() -> None:
+    wrong = {"Authorization": f"Bearer {'x' * 40}"}
     async with _service() as client:
-        failures = [(await client.get("/v1/admin/model", headers=CHAT)).status_code for _ in range(5)]
+        failures = [(await client.get("/v1/admin/model", headers=wrong)).status_code for _ in range(5)]
         blocked = await client.get("/v1/admin/model", headers=ADMIN)
 
     assert failures == [401] * 5

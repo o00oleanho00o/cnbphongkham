@@ -461,7 +461,7 @@ async def test_without_a_plugin_folder_nothing_can_be_installed(tmp_path: Path) 
     path.write_text('[agent]\nname = "t"\n', encoding="utf-8")
     runtime = build_runtime(load_profile(path), fake=True, env={}, db=None)
 
-    with pytest.raises(PluginError, match="set AGENT_PLUGIN_DIR"):
+    with pytest.raises(PluginError, match="no folder for installed plugins"):
         await runtime.plugin_manager.install_zip(b"")
 
 
@@ -542,7 +542,7 @@ async def test_admin_plugin_routes(tmp_path: Path) -> None:
         )
         removed = await client.delete("/v1/admin/plugins/ping", headers=ADMIN_AUTH)
 
-    assert chat_token.status_code == 401
+    assert chat_token.status_code == 403
     assert listed.status_code == 200
     assert {p["name"] for p in listed.json()["plugins"]} >= {"calculate", "cfg"}
     assert missing.status_code == 404

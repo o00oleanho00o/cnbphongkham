@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -13,7 +14,14 @@ from pydantic import ValidationError
 from agent_app.assembly import build_agent, build_prompt
 from agent_app.cli import ConsoleObserver, format_trace, main, stats_line
 from agent_app.db_roles import bootstrap_role
-from agent_app.model_factory import build_model, describe_model, resolve_model_config, resolve_model_settings
+from agent_app.home import ServiceHome
+from agent_app.model_factory import (
+    build_model,
+    client_for,
+    describe_model,
+    resolve_model_config,
+    resolve_model_settings,
+)
 from agent_app.profile import Profile, load_profile
 from agentcore import (
     ModelConfigError,
@@ -177,36 +185,27 @@ def test_a_misspelt_key_is_refused(tmp_path: Path) -> None:
         load_profile(path)
 
 
-def test_the_environment_overrides_the_profile_and_holds_the_key() -> None:
-    env = {"LLM_MODEL": "from-env", "LLM_BASE_URL": "https://llm.test/v1", "LLM_API_KEY": "secret"}
+def test_the_profile_names_the_model_and_no_environment_variable_changes_it(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LLM_MODEL", "from-env")
+    monkeypatch.setenv("LLM_API_KEY", "secret")
 
-    config = resolve_model_config(_profile(base_url="https://profile.test/v1"), env)
+    config = resolve_model_config(_profile(base_url="https://profile.test/v1"))
 
-    assert (config.model, config.base_url, config.api_key) == ("from-env", "https://llm.test/v1", "secret")
-
-
-def test_without_overrides_the_profile_values_are_used() -> None:
-    config = resolve_model_config(_profile(base_url="https://profile.test/v1"), {"LLM_API_KEY": "k"})
-
-    assert (config.model, config.base_url) == ("from-profile", "https://profile.test/v1")
-    assert describe_model(_profile(), fake=False, env={"LLM_API_KEY": "k"}) == (
-        "from-profile via api.openai.com (openai-compatible)"
-    )
+    assert (config.model, config.base_url, config.api_key) == ("from-profile", "https://profile.test/v1", "")
+    assert describe_model(_profile(), fake=False) == "from-profile via api.openai.com (openai-compatible)"
 
 
-def test_provider_and_reasoning_come_from_the_profile_or_the_environment() -> None:
+def test_provider_and_reasoning_come_from_the_profile() -> None:
     profile = Profile.model_validate(
         {"agent": {"name": "t"}, "model": {"model": "m", "provider": "anthropic", "reasoning": "low"}}
     )
 
-    from_profile = resolve_model_settings(profile, {})
-    from_env = resolve_model_settings(profile, {"LLM_PROVIDER": "openai-compatible", "LLM_REASONING": "off"})
+    settings = resolve_model_settings(profile)
 
-    assert (from_profile.provider, from_profile.reasoning) == ("anthropic", "low")
-    assert (from_env.provider, from_env.reasoning) == ("openai-compatible", "off")
-    assert describe_model(profile, fake=False, env={}) == "m via api.anthropic.com (anthropic, reasoning low)"
-    with pytest.raises(ValueError, match="LLM_REASONING='max'"):
-        resolve_model_settings(profile, {"LLM_REASONING": "max"})
+    assert (settings.provider, settings.reasoning) == ("anthropic", "low")
+    assert describe_model(profile, fake=False) == "m via api.anthropic.com (anthropic, reasoning low)"
 
 
 def test_the_anthropic_provider_builds_the_anthropic_adapter() -> None:
@@ -214,9 +213,11 @@ def test_the_anthropic_provider_builds_the_anthropic_adapter() -> None:
         {"agent": {"name": "t"}, "model": {"model": "m", "provider": "anthropic"}}
     )
 
-    assert isinstance(build_model(profile, fake=False, env={"LLM_API_KEY": "k"}), AnthropicModel)
+    settings = replace(resolve_model_settings(profile), api_key="k")
+
+    assert isinstance(client_for(settings), AnthropicModel)
     with pytest.raises(ModelConfigError):
-        build_model(profile, fake=False, env={})
+        build_model(profile, fake=False)
 
 
 def test_the_loop_policy_carries_the_reasoning_effort() -> None:
@@ -224,8 +225,6 @@ def test_the_loop_policy_carries_the_reasoning_effort() -> None:
 
     assert profile.loop_policy().reasoning == "high"
     assert profile.loop_policy(reasoning="off").reasoning == "off"
-    agent = build_agent(profile, fake=False, env={"LLM_API_KEY": "k", "LLM_REASONING": "low"})
-    assert agent.policy.reasoning == "low"
 
 
 def test_the_guards_section_picks_the_hooks_and_the_tool_limits() -> None:
@@ -254,10 +253,10 @@ def test_the_guards_section_picks_the_hooks_and_the_tool_limits() -> None:
 
 def test_a_missing_key_is_a_config_error_and_fake_needs_no_key() -> None:
     with pytest.raises(ModelConfigError) as caught:
-        build_model(_profile(), fake=False, env={})
+        build_model(_profile(), fake=False)
 
     assert caught.value.field == "api_key"
-    assert isinstance(build_model(_profile(), fake=True, env={}), EchoModel)
+    assert isinstance(build_model(_profile(), fake=True), EchoModel)
 
 
 def _result(**kwargs: Any) -> TurnResult:
@@ -410,10 +409,17 @@ def test_bootstrap_role_refuses_a_short_password() -> None:
         bootstrap_role("postgresql+psycopg://owner@localhost/db", "short")
 
 
-def test_serve_needs_a_long_enough_gateway_token(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    monkeypatch.setenv("AGENT_GATEWAY_TOKEN", "too-short")
+def test_serve_and_chat_keep_their_secret_key_in_the_home_folder(tmp_path: Path) -> None:
+    home = ServiceHome(tmp_path / "home")
 
-    assert main(["serve", "--profile", str(DEV_PROFILE), "--fake"]) == 2
-    assert "AGENT_GATEWAY_TOKEN must have at least 32 characters" in capsys.readouterr().out
+    first = home.settings()
+    again = ServiceHome(tmp_path / "home").secret_key()
+    (tmp_path / "broken").mkdir()
+    (tmp_path / "broken" / "secret.key").write_text("not a key", encoding="ascii")
+
+    assert first["AGENT_SECRET_ENCRYPTION_KEY"] == again
+    assert len(again) == 64
+    assert first["AGENT_PLUGIN_DIR"] == str(tmp_path / "home" / "installed")
+    with pytest.raises(ValueError, match="does not hold a secret key"):
+        ServiceHome(tmp_path / "broken").secret_key()
+    assert (tmp_path / "broken" / "secret.key").read_text(encoding="ascii") == "not a key"

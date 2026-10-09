@@ -229,17 +229,16 @@ def test_a_plugin_seals_secrets_with_the_service_key_it_cannot_read(tmp_path: Pa
     with_key: list[str] = []
     PluginHost(sources, {"AGENT_SECRET_ENCRYPTION_KEY": "0f" * 32}).enable("sealer", {"log": with_key})
 
-    assert without == ["plugin sealer: set AGENT_SECRET_ENCRYPTION_KEY (64 hex characters) to store a secret"]
+    assert without == [
+        "plugin sealer: the service has no secret key (agent serve creates one in its home folder)"
+    ]
     sealed, opened, refused = with_key
     assert "token-123" not in sealed
     assert opened == "token-123"
-    assert (
-        refused
-        == "plugin sealer: a stored secret does not decrypt (was AGENT_SECRET_ENCRYPTION_KEY changed?)"
-    )
+    assert refused == "plugin sealer: a stored secret does not decrypt (was the secret key file replaced?)"
 
 
-async def test_plugin_admin_routes_need_the_admin_token_and_reach_the_plugin(tmp_path: Path) -> None:
+async def test_plugin_admin_routes_need_the_admin_scope_and_reach_the_plugin(tmp_path: Path) -> None:
     runtime = _runtime(tmp_path, ["hooky"])
     async with _client(runtime) as client:
         anonymous = await client.get("/v1/plugins/hooky/accounts/a1")
@@ -253,7 +252,7 @@ async def test_plugin_admin_routes_need_the_admin_token_and_reach_the_plugin(tmp
         no_route = await client.get("/v1/plugins/hooky/nothing", headers=admin)
         hook_path = await client.post("/v1/hooks/hooky/accounts/a1", headers=admin)
 
-    assert (anonymous.status_code, chat_token.status_code) == (401, 401)
+    assert (anonymous.status_code, chat_token.status_code) == (401, 403)
     assert anonymous.headers["www-authenticate"] == "Bearer"
     assert saved.json() == {"saved": "a1"}
     assert shown.json() == {

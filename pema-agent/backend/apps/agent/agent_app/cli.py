@@ -1,5 +1,8 @@
 """``agent chat`` (chat in the terminal), ``agent serve`` (the HTTP gateway), ``agent model`` (stored model
-settings), ``agent plugins`` and ``agent db``."""
+settings), ``agent plugins`` and ``agent db``.
+
+The only environment variable is the database address (``AGENT_DATABASE_URL``; ``agent db`` takes its own).
+Everything else is in the home folder (``--home``, see ``agent_app.home``) or set on the dashboard."""
 
 from __future__ import annotations
 
@@ -21,11 +24,11 @@ import uvicorn
 
 from agent_app.assembly import Agent
 from agent_app.db_roles import MIGRATION_URL_ENV, PASSWORD_ENV, RUNTIME_ROLE, bootstrap_role
-from agent_app.gateway import ADMIN_TOKEN_ENV, TOKEN_ENV, GatewaySettings, create_app
+from agent_app.gateway import GatewaySettings, create_app
+from agent_app.home import DEFAULT_HOME, ServiceHome
 from agent_app.ingress import SessionBusyError
 from agent_app.model_factory import Provider, describe_model
 from agent_app.model_settings import (
-    SECRET_KEY_ENV,
     SETTING_FIELDS,
     ModelAdmin,
     PostgresModelSettingsStore,
@@ -35,7 +38,7 @@ from agent_app.plugins import PluginError
 from agent_app.plugins.manager import PluginManager
 from agent_app.profile import Profile, load_profile
 from agent_app.replay import replay
-from agent_app.runtime import PLUGIN_DIR_ENV, Runtime, build_runtime
+from agent_app.runtime import Runtime, build_runtime
 from agent_app.storage import AgentDatabase, PostgresSessionStore, SessionOwnerError
 from agentcore import (
     DEFAULT_TENANT,
@@ -84,8 +87,15 @@ DEFAULT_PORT: Final = 8088
 def main(argv: Sequence[str] | None = None) -> int:
     _use_utf8_text_streams()
     parser = argparse.ArgumentParser(prog="agent", description="General-purpose agent")
+    home = argparse.ArgumentParser(add_help=False)
+    home.add_argument(
+        "--home",
+        type=Path,
+        default=DEFAULT_HOME,
+        help=f"the service's folder: secret key, plugin files, installed plugins (default {DEFAULT_HOME})",
+    )
     commands = parser.add_subparsers(dest="command", required=True)
-    chat = commands.add_parser("chat", help="Chat with an agent in the terminal")
+    chat = commands.add_parser("chat", parents=[home], help="Chat with an agent in the terminal")
     chat.add_argument(
         "--profile", type=Path, required=True, help="agent folder (with agent.toml) or a TOML profile"
     )
@@ -103,7 +113,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     replay.add_argument("--profile", type=Path, required=True, help="agent folder or TOML profile")
     replay.add_argument("--expect", type=Path, default=None, help="compare the transcript with this file")
     replay.add_argument("--update", action="store_true", help="write the transcript to the --expect file")
-    serve = commands.add_parser("serve", help=f"Serve the HTTP gateway (needs {TOKEN_ENV})")
+    serve = commands.add_parser(
+        "serve", parents=[home], help="Serve the HTTP gateway (sign in on the dashboard, plugin web)"
+    )
     serve.add_argument(
         "--profile", type=Path, required=True, help="agent folder (with agent.toml) or a TOML profile"
     )
@@ -111,12 +123,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     serve.add_argument("--host", default=DEFAULT_HOST, help=f"address to listen on (default {DEFAULT_HOST})")
     serve.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"port (default {DEFAULT_PORT})")
     _add_model_commands(
-        commands.add_parser("model", help=f"Model settings stored in the database (needs {DATABASE_URL_ENV})")
+        commands.add_parser(
+            "model", help=f"Model settings stored in the database (needs {DATABASE_URL_ENV})"
+        ),
+        home,
     )
     plugins = commands.add_parser(
         "plugins", help=f"Plugins of an agent (changes are stored: they need {DATABASE_URL_ENV})"
     )
-    _add_plugin_commands(plugins)
+    _add_plugin_commands(plugins, home)
     db = commands.add_parser("db", help="Database administration (schema agent_rt)")
     db_commands = db.add_subparsers(dest="db_command", required=True)
     db_commands.add_parser(
@@ -130,7 +145,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     # psycopg's async driver cannot run on the Windows proactor loop.
     loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
     if args.command == "serve":
-        work = _serve(args.profile, fake=args.fake, host=args.host, port=args.port)
+        work = _serve(args.profile, fake=args.fake, host=args.host, port=args.port, home=args.home)
     elif args.command == "model":
         work = _model(args)
     elif args.command == "plugins":
@@ -138,7 +153,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.command == "replay":
         work = _replay(args.cassette, args.profile, expect=args.expect, update=args.update)
     else:
-        work = _chat(args.profile, fake=args.fake, session=args.session, record=args.record)
+        work = _chat(args.profile, fake=args.fake, session=args.session, record=args.record, home=args.home)
     try:
         return asyncio.run(work, loop_factory=loop_factory)
     except KeyboardInterrupt:
@@ -146,15 +161,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
 
-def _add_model_commands(model: argparse.ArgumentParser) -> None:
+def _add_model_commands(model: argparse.ArgumentParser, home: argparse.ArgumentParser) -> None:
     actions = model.add_subparsers(dest="model_command", required=True)
     for name, help_text in (
         ("show", "show the settings in effect and where each comes from (the key masked)"),
         ("set", "change stored settings; fields not given stay as they are"),
-        ("clear", "remove every stored setting: back to the environment and the profile"),
+        ("clear", "remove every stored setting: back to the profile"),
         ("test", "send one tiny request with the settings in effect"),
     ):
-        action = actions.add_parser(name, help=help_text)
+        action = actions.add_parser(name, parents=[home], help=help_text)
         action.add_argument("--profile", type=Path, required=True, help="agent folder or TOML profile")
         if name != "set":
             continue
@@ -171,24 +186,27 @@ def _add_model_commands(model: argparse.ArgumentParser) -> None:
             action="append",
             default=[],
             choices=(*SETTING_FIELDS, "api_key"),
-            help="give this field back to the environment or the profile (repeatable)",
+            help="give this field back to the profile (repeatable)",
         )
 
 
-def _add_plugin_commands(plugins: argparse.ArgumentParser) -> None:
+def _add_plugin_commands(plugins: argparse.ArgumentParser, home: argparse.ArgumentParser) -> None:
     actions = plugins.add_subparsers(dest="plugins_command", required=True)
     for name, help_text in (
         ("list", "every plugin found: on or off, who decided, its settings and what it registers"),
         ("enable", "switch a plugin on (it is loaded here first, to check it works)"),
         ("disable", "switch a plugin off"),
         ("set", "change a plugin's settings"),
-        ("install", f"install a plugin into {PLUGIN_DIR_ENV} (from a folder, a zip file or a git URL)"),
+        ("install", "install a plugin into the home folder (from a folder, a zip file or a git URL)"),
         ("uninstall", "remove an installed plugin"),
+        ("forget", "delete a plugin's stored records whose key starts with --prefix (web: user: to reset)"),
     ):
-        action = actions.add_parser(name, help=help_text)
+        action = actions.add_parser(name, parents=[home], help=help_text)
         action.add_argument("--profile", type=Path, required=True, help="agent folder or TOML profile")
-        if name in {"enable", "disable", "set", "uninstall"}:
+        if name in {"enable", "disable", "set", "uninstall", "forget"}:
             action.add_argument("name")
+        if name == "forget":
+            action.add_argument("--prefix", required=True, help="only records whose key starts with this")
         if name in {"enable", "set"}:
             action.add_argument("--set", action="append", default=[], metavar="KEY=VALUE", dest="values")
             action.add_argument("--unset", action="append", default=[], metavar="KEY")
@@ -220,13 +238,17 @@ async def _plugins(args: argparse.Namespace) -> int:
     db = AgentDatabase(db_url) if db_url else None
     try:
         try:
-            runtime = build_runtime(load_profile(args.profile), fake=True, env=os.environ, db=db)
+            env = _service_env(args.home)
+            runtime = build_runtime(load_profile(args.profile), fake=True, env=env, db=db)
         except (OSError, ValueError) as err:
             _write(f"error: {err}\n")
             return EXIT_CONFIG_ERROR
         try:
             await runtime.plugin_manager.start()
-            shown = await _plugin_command(runtime.plugin_manager, args)
+            if args.plugins_command == "forget":
+                shown = await forget_records(runtime, args.name, args.prefix)
+            else:
+                shown = await _plugin_command(runtime.plugin_manager, args)
         except (PluginError, SecretKeyMissingError) as err:
             _write(f"error: {err}\n")
             return 1
@@ -237,6 +259,17 @@ async def _plugins(args: argparse.Namespace) -> int:
             await db.dispose()
     _write(json.dumps(shown, ensure_ascii=False, indent=2) + "\n")
     return 0 if not shown.get("error") else 1
+
+
+async def forget_records(runtime: Runtime, name: str, prefix: str) -> dict[str, Any]:
+    """Names the deleted keys only: values may hold secrets."""
+    if not prefix:
+        raise PluginError(name, "give a non-empty --prefix")
+    storage = runtime.plugins.storage(name)
+    keys = [key for key, _ in await storage.list(prefix)]
+    for key in keys:
+        await storage.delete(key)
+    return {"plugin": name, "deleted": keys}
 
 
 async def _plugin_command(manager: PluginManager, args: argparse.Namespace) -> dict[str, Any]:
@@ -286,10 +319,9 @@ async def _model(args: argparse.Namespace) -> int:
         profile = load_profile(args.profile)
         admin = ModelAdmin(
             profile,
-            os.environ,
             PostgresModelSettingsStore(db, agent=profile.agent.name),
             tenant_id=DEFAULT_TENANT,
-            secret_key=os.environ.get(SECRET_KEY_ENV) or None,
+            secret_key=ServiceHome(args.home).secret_key(),
         )
         if args.model_command == "show":
             shown = await admin.show()
@@ -325,24 +357,21 @@ def _model_changes(args: argparse.Namespace) -> dict[str, Any]:
     return changes
 
 
-async def _serve(profile_path: Path, *, fake: bool, host: str, port: int) -> int:
-    try:
-        settings = GatewaySettings(
-            token=os.environ.get(TOKEN_ENV, ""), admin_token=os.environ.get(ADMIN_TOKEN_ENV) or None
-        )
-    except ValueError as err:
-        _write(f"error: {err}\n")
-        return EXIT_CONFIG_ERROR
+async def _serve(profile_path: Path, *, fake: bool, host: str, port: int, home: Path) -> int:
+    settings = GatewaySettings()
     db_url = os.environ.get(DATABASE_URL_ENV)
     db = AgentDatabase(db_url) if db_url else None
     try:
         try:
-            runtime = build_runtime(load_profile(profile_path), fake=fake, env=os.environ, db=db)
+            env = _service_env(home)
+            runtime = build_runtime(load_profile(profile_path), fake=fake, env=env, db=db)
         except (OSError, ValueError, ModelError) as err:
             _write(f"error: {err}\n")
             return EXIT_CONFIG_ERROR
         if db is None:
             _write(f"warning: no {DATABASE_URL_ENV}: messages and sessions live in process memory only\n")
+        if "web" not in runtime.plugins.enabled():
+            _write("warning: the web plugin is off: nobody can sign in to the gateway\n")
         try:
             await runtime.plugin_manager.start()
             # Helper processes of plugins call back over loopback, whatever address the service binds.
@@ -372,11 +401,13 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int) -> int
             await db.dispose()
 
 
-async def _chat(profile_path: Path, *, fake: bool, session: str | None, record: Path | None = None) -> int:
+async def _chat(
+    profile_path: Path, *, fake: bool, session: str | None, record: Path | None = None, home: Path
+) -> int:
     db_url = os.environ.get(DATABASE_URL_ENV)
     db = AgentDatabase(db_url) if db_url else None
     try:
-        return await _chat_with(profile_path, fake=fake, session=session, db=db, record=record)
+        return await _chat_with(profile_path, fake=fake, session=session, db=db, record=record, home=home)
     finally:
         if db is not None:
             await db.dispose()
@@ -389,22 +420,24 @@ async def _chat_with(
     session: str | None,
     db: AgentDatabase | None,
     record: Path | None = None,
+    home: Path = DEFAULT_HOME,
 ) -> int:
     writer: CassetteWriter | None = None
     try:
         profile = load_profile(profile_path)
+        env = _service_env(home)
         if record is not None:
-            cassette = CassetteWriter(record, model=describe_model(profile, fake=fake, env=os.environ))
+            cassette = CassetteWriter(record, model=describe_model(profile, fake=fake))
             writer = cassette
             runtime = build_runtime(
                 profile,
                 fake=fake,
-                env=os.environ,
+                env=env,
                 db=db,
                 model_wrapper=lambda model: RecordingModel(model, cassette),
             )
         else:
-            runtime = build_runtime(profile, fake=fake, env=os.environ, db=db)
+            runtime = build_runtime(profile, fake=fake, env=env, db=db)
     except (OSError, ValueError, ModelError) as err:
         _write(f"error: {err}\n")
         return EXIT_CONFIG_ERROR
@@ -465,7 +498,7 @@ async def _chat_loop(
     store, tracer, sessions = runtime.store, runtime.tracer, runtime.sessions
     session_id = session or _new_session_id()
     lines = _stdin_lines()
-    model_label = describe_model(profile, fake=fake, env=os.environ)
+    model_label = describe_model(profile, fake=fake)
     storage = (
         "postgres" if db else f"in process memory (set {DATABASE_URL_ENV} to keep sessions, notes and skills)"
     )
@@ -577,6 +610,12 @@ def format_trace(trace: TurnTrace | None) -> str:
             + (f"  ({detail})" if detail else "")
         )
     return "\n".join(lines) + "\n"
+
+
+def _service_env(home: Path) -> dict[str, str]:
+    """The settings ``build_runtime`` takes: the process environment (variables plugins list in
+    ``requires_env``) overlaid with the home folder's key and folders, which always win."""
+    return {**os.environ, **ServiceHome(home).settings()}
 
 
 def _bootstrap_role() -> int:

@@ -23,7 +23,8 @@ from typing import Any, Final, Literal
 from cryptography.exceptions import InvalidTag
 from fastapi import APIRouter, FastAPI
 
-from agent_app.model_settings import SECRET_KEY_ENV
+from agent_app.auth import Authenticator
+from agent_app.model_settings import NO_SECRET_KEY, SECRET_KEY_ENV
 from agent_app.plugins.manifest import PluginError, PluginSource
 from agent_app.plugins.records import InMemoryPluginRecords, PluginStorage, StorageFor
 from agentcore import ToolSpec
@@ -37,14 +38,16 @@ DEPS_DIR: Final = ".deps"
 """A plugin's own Python packages, installed with it; on ``sys.path`` while it is enabled."""
 RESERVED_CHANNELS: Final = frozenset({"http", "cli"})
 DATA_DIR_ENV: Final = "AGENT_DATA_DIR"
+"""The service setting naming its home folder (``agent_app.home``), not an environment variable."""
 DEFAULT_DATA_DIR: Final = ".pema-agent"
-"""Under the home folder, when ``AGENT_DATA_DIR`` is not set."""
+"""Under the user's home folder, when the service names none."""
 
 Disposer = Callable[[], None]
 Section = SessionSection | TurnSection | StepSection
 RouteKind = Literal["admin", "hooks"]
-"""``admin``: under ``/v1/plugins/<plugin>``, behind the admin token. ``hooks``: under ``/v1/hooks/<plugin>``,
-open to the internet; the plugin checks who calls (a signature, a shared secret)."""
+"""``admin``: under ``/v1/plugins/<plugin>``, for callers with the ``admin`` scope; the route finds who in
+``request.state.principal``. ``hooks``: under ``/v1/hooks/<plugin>``, open to the internet; the plugin checks
+who calls (a signature, a shared secret, a password)."""
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -70,6 +73,7 @@ class Contributions:
     hooks: tuple[Hook, ...] = ()
     channels: tuple[ChannelAdapter, ...] = ()
     jobs: tuple[PluginJob, ...] = ()
+    authenticators: tuple[Authenticator, ...] = ()
 
 
 @dataclass(slots=True)
@@ -82,6 +86,7 @@ class _Loaded:
     hooks: list[Hook] = field(default_factory=list[Hook])
     channels: list[ChannelAdapter] = field(default_factory=list[ChannelAdapter])
     jobs: list[PluginJob] = field(default_factory=list[PluginJob])
+    authenticators: list[Authenticator] = field(default_factory=list[Authenticator])
     routes: dict[RouteKind, FastAPI] = field(default_factory=dict[RouteKind, FastAPI])
     disposers: list[Disposer] = field(default_factory=list[Disposer])
 
@@ -151,13 +156,13 @@ class PluginContext:
             return decrypt_with(self._secret_key(), sealed)
         except (InvalidTag, ValueError) as err:
             raise PluginError(
-                self.name, f"a stored secret does not decrypt (was {SECRET_KEY_ENV} changed?)"
+                self.name, "a stored secret does not decrypt (was the secret key file replaced?)"
             ) from err
 
     def _secret_key(self) -> str:
         key = self._env.get(SECRET_KEY_ENV)
         if not key:
-            raise PluginError(self.name, f"set {SECRET_KEY_ENV} (64 hex characters) to store a secret")
+            raise PluginError(self.name, NO_SECRET_KEY)
         return key
 
     def register_tool(self, spec: ToolSpec[Any]) -> Disposer:
@@ -206,6 +211,11 @@ class PluginContext:
         if any(j.name == name for j in self._loaded.jobs):
             raise PluginError(self.name, f"job {name} registered twice")
         return self._add(self._loaded.jobs, PluginJob(self.name, name, run))
+
+    def register_authenticator(self, authenticator: Authenticator) -> Disposer:
+        """Turns bearer tokens of its own (a login, an API key) into a caller of the gateway; asked after the
+        service's own tokens, in plugin order, until one knows the token."""
+        return self._add(self._loaded.authenticators, authenticator)
 
     def on_disable(self, callback: Callable[[], None]) -> Disposer:
         """Runs when the plugin is disabled, after its later registrations are undone."""
@@ -339,7 +349,12 @@ class PluginHost:
             hooks=tuple(h for p in loaded for h in p.hooks),
             channels=tuple(c for p in loaded for c in p.channels),
             jobs=tuple(j for p in loaded for j in p.jobs),
+            authenticators=tuple(a for p in loaded for a in p.authenticators),
         )
+
+    def storage(self, plugin: str) -> PluginStorage:
+        """A plugin's records, enabled or not (``agent plugins forget``)."""
+        return self._storage(plugin)
 
     def routes(self, plugin: str, kind: RouteKind) -> FastAPI | None:
         """The app serving the plugin's routes of this kind, while it is enabled."""

@@ -64,9 +64,9 @@ class AnthropicConfig(BaseModel):
 class AnthropicModel:
     def __init__(self, config: AnthropicConfig, *, client: AsyncAnthropic | None = None) -> None:
         if not config.model.strip():
-            raise ModelConfigError("model", "No model is configured: set LLM_MODEL or the profile's model.")
+            raise ModelConfigError("model", "No model is configured.")
         if not config.api_key.strip():
-            raise ModelConfigError("api_key", "No API key is configured: set LLM_API_KEY.")
+            raise ModelConfigError("api_key", "No API key is configured for the model.")
         self._config = config
         self._client = client or AsyncAnthropic(
             api_key=config.api_key,

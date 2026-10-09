@@ -1,9 +1,10 @@
-"""Model settings an admin changes at runtime: stored per (tenant, agent), resolved field by field as
-database > environment > profile, applied to the next model call without a restart.
+"""Model settings an admin changes at runtime (dashboard or ``agent model``): stored per (tenant, agent),
+resolved field by field as database > profile, applied to the next model call without a restart.
 
-The API key is stored encrypted with ``AGENT_SECRET_ENCRYPTION_KEY`` (AES-256-GCM, package ``secretcipher``)
-and never leaves the service: reads show it masked. A stored key that no longer decrypts (the encryption key
-changed) is reported as broken and the environment key is used instead.
+The API key is stored only in the database, encrypted with the service's secret key (AES-256-GCM, package
+``secretcipher``; the key file lives in the service's home folder, see ``agent_app.home``), and never leaves
+the service: reads show it masked. A stored key that no longer decrypts (the key file was replaced) is
+reported as broken and no key is used.
 """
 
 from __future__ import annotations
@@ -34,30 +35,26 @@ from agentcore import (
 from agentcore.harness.model.reasoning import OpenAIDialect
 from secretcipher import decrypt_with, encrypt_with, mask_secret
 
-SECRET_KEY_ENV: Final = "AGENT_SECRET_ENCRYPTION_KEY"  # noqa: S105 - the name of the variable, not a key
+SECRET_KEY_ENV: Final = "AGENT_SECRET_ENCRYPTION_KEY"  # noqa: S105 - a setting's name, not a key
+"""The service setting holding the secret key; the CLI fills it from the home folder, not the environment."""
 REFRESH_S: Final = 5.0
 TEST_TIMEOUT_S: Final = 30.0
 SETTING_FIELDS: Final = ("provider", "model", "base_url", "reasoning", "dialect")
-ENV_NAMES: Final = {
-    "provider": "LLM_PROVIDER",
-    "model": "LLM_MODEL",
-    "base_url": "LLM_BASE_URL",
-    "reasoning": "LLM_REASONING",
-}
+NO_SECRET_KEY: Final = "the service has no secret key (agent serve creates one in its home folder)"  # noqa: S105
 
-FieldSource = Literal["db", "env", "profile"]
+FieldSource = Literal["db", "profile", "unset"]
 ClientFactory = Callable[[ModelSettings], ModelClient]
 
 logger = logging.getLogger(__name__)
 
 
 class SecretKeyMissingError(RuntimeError):
-    """An API key cannot be stored or read without ``AGENT_SECRET_ENCRYPTION_KEY``."""
+    """A secret cannot be stored or read without the service's secret key."""
 
 
 @dataclass(frozen=True, slots=True)
 class StoredModelSettings:
-    """What an admin stored; None leaves the field to the environment or the profile."""
+    """What an admin stored; None leaves the field to the profile."""
 
     provider: Provider | None = None
     model: str | None = None
@@ -81,9 +78,9 @@ class ResolvedModel:
 
 
 def resolve_effective(
-    profile: Profile, env: Mapping[str, str], stored: StoredModelSettings | None, secret_key: str | None
+    profile: Profile, stored: StoredModelSettings | None, secret_key: str | None
 ) -> ResolvedModel:
-    base = resolve_model_settings(profile, env)
+    base = resolve_model_settings(profile)
     stored = stored or StoredModelSettings()
     sources: dict[str, FieldSource] = {}
     changes: dict[str, Any] = {}
@@ -93,28 +90,24 @@ def resolve_effective(
             changes[name] = value
             sources[name] = "db"
         else:
-            sources[name] = "env" if env.get(ENV_NAMES.get(name, "")) else "profile"
-    api_key, broken, key_source = _api_key(stored, secret_key, base.api_key)
-    sources["api_key"] = key_source
+            sources[name] = "profile"
+    api_key, broken = _api_key(stored, secret_key)
+    sources["api_key"] = "db" if api_key else "unset"
     settings = replace(base, api_key=api_key, **changes)
     return ResolvedModel(settings=settings, sources=sources, api_key_broken=broken, version=stored.version)
 
 
-def _api_key(
-    stored: StoredModelSettings, secret_key: str | None, env_key: str
-) -> tuple[str, bool, FieldSource]:
+def _api_key(stored: StoredModelSettings, secret_key: str | None) -> tuple[str, bool]:
     if stored.api_key_enc is None:
-        return env_key, False, "env"
+        return "", False
     if secret_key is None:
-        logger.warning("a stored API key cannot be read: %s is not set; using LLM_API_KEY", SECRET_KEY_ENV)
-        return env_key, True, "env"
+        logger.warning("a stored API key cannot be read: %s", NO_SECRET_KEY)
+        return "", True
     try:
-        return decrypt_with(secret_key, stored.api_key_enc), False, "db"
+        return decrypt_with(secret_key, stored.api_key_enc), False
     except (InvalidTag, ValueError):
-        logger.warning(
-            "the stored API key does not decrypt (was %s changed?); using LLM_API_KEY", SECRET_KEY_ENV
-        )
-        return env_key, True, "env"
+        logger.warning("the stored API key does not decrypt (was the secret key file replaced?)")
+        return "", True
 
 
 class InMemoryModelSettingsStore:
@@ -212,7 +205,6 @@ class DynamicModel:
     def __init__(
         self,
         profile: Profile,
-        env: Mapping[str, str],
         store: ModelSettingsStore,
         *,
         tenant_id: str,
@@ -222,7 +214,6 @@ class DynamicModel:
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._profile = profile
-        self._env = env
         self._store = store
         self._tenant_id = tenant_id
         self._secret_key = secret_key
@@ -238,7 +229,7 @@ class DynamicModel:
     def model_name(self) -> str:
         if self._resolved is not None:
             return self._resolved.settings.model
-        return resolve_model_settings(self._profile, self._env).model
+        return resolve_model_settings(self._profile).model
 
     def invalidate(self) -> None:
         self._checked = -math.inf
@@ -250,7 +241,7 @@ class DynamicModel:
             version = await self._store.version(self._tenant_id)
             if self._resolved is None or version != self._resolved.version:
                 stored = await self._store.get(self._tenant_id)
-                resolved = resolve_effective(self._profile, self._env, stored, self._secret_key)
+                resolved = resolve_effective(self._profile, stored, self._secret_key)
                 if self._resolved is not None:
                     logger.info("model settings version %d in effect", resolved.version)
                 self._resolved, self._client = resolved, None
@@ -272,7 +263,6 @@ class ModelAdmin:
     def __init__(
         self,
         profile: Profile,
-        env: Mapping[str, str],
         store: ModelSettingsStore,
         *,
         tenant_id: str,
@@ -281,7 +271,6 @@ class ModelAdmin:
         factory: ClientFactory = client_for,
     ) -> None:
         self._profile = profile
-        self._env = env
         self._store = store
         self._tenant_id = tenant_id
         self._secret_key = secret_key
@@ -290,11 +279,11 @@ class ModelAdmin:
 
     async def resolved(self) -> ResolvedModel:
         stored = await self._store.get(self._tenant_id)
-        return resolve_effective(self._profile, self._env, stored, self._secret_key)
+        return resolve_effective(self._profile, stored, self._secret_key)
 
     async def show(self) -> dict[str, Any]:
         stored = await self._store.get(self._tenant_id)
-        resolved = resolve_effective(self._profile, self._env, stored, self._secret_key)
+        resolved = resolve_effective(self._profile, stored, self._secret_key)
         settings = resolved.settings
         return {
             "provider": settings.provider,
@@ -310,9 +299,8 @@ class ModelAdmin:
         }
 
     async def update(self, changes: Mapping[str, Any]) -> dict[str, Any]:
-        """``changes`` holds only the fields to change: a value sets it, None clears it (back to the
-        environment or the profile). ``api_key``: a non-empty value is stored encrypted, "" keeps the stored
-        one, None removes it."""
+        """``changes`` holds only the fields to change: a value sets it, None clears it (back to the profile).
+        ``api_key``: a non-empty value is stored encrypted, "" keeps the stored one, None removes it."""
         current = await self._store.get(self._tenant_id) or StoredModelSettings()
         updates: dict[str, Any] = {name: changes[name] for name in SETTING_FIELDS if name in changes}
         if "api_key" in changes:
@@ -321,9 +309,7 @@ class ModelAdmin:
                 updates["api_key_enc"] = None
             elif key:
                 if self._secret_key is None:
-                    raise SecretKeyMissingError(
-                        f"set {SECRET_KEY_ENV} (64 hex characters) to store an API key"
-                    )
+                    raise SecretKeyMissingError(NO_SECRET_KEY)
                 updates["api_key_enc"] = encrypt_with(self._secret_key, key)
         await self._save(replace(current, **updates), [*updates])
         return await self.show()

@@ -51,7 +51,7 @@ def build_agent(
     ``plugins`` adds their tools, prompt sections (after the profile's, unless it lists them) and hooks."""
     name = profile.agent.name
     added = plugins or Contributions()
-    client = model or build_model(profile, fake=fake, env=env)
+    client = model or build_model(profile, fake=fake)
     tools = builtin_tools(timezone=profile.agent.timezone).subset(profile.agent.tools)
     memory: MemoryService | None = None
     if profile.memory.enabled:
@@ -75,9 +75,7 @@ def build_agent(
     if model is not None:
         policy = replace(profile.loop_policy(), reasoning=None)
     else:
-        policy = profile.loop_policy(
-            reasoning=None if fake else resolve_model_settings(profile, env).reasoning
-        )
+        policy = profile.loop_policy(reasoning=None if fake else resolve_model_settings(profile).reasoning)
     hooks = build_hooks(profile, env)
     for hook in added.hooks:
         hooks.add(hook)

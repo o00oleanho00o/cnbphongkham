@@ -43,7 +43,7 @@ Next session focus: the Zalo plugin, branch `feat/zalo-plugin` (from `feat/agent
 | Language / stack | Python 3.12, uv, pydantic v2, pyright strict, ruff (T20: no `print`), pytest asyncio auto |
 | Location | `pema-agent/backend/packages/agent-core` (core) + `apps/agent` (service); later `plugins/` |
 | Import rules | `agentcore` never imports `pema`, `pema_contracts`, `agent_app`; `agent_app` never imports `pema` (import-linter contracts in `backend/pyproject.toml`) |
-| Profiles | TOML (no pyyaml in the repo); API key only from env `LLM_API_KEY`; env overrides profile |
+| Profiles | TOML (no pyyaml in the repo); the model's API key is set on the dashboard / `agent model` and stored encrypted in the DB (2026-10-09, P5a: no `LLM_*` variables any more) |
 | Tenancy | `tenant_id` everywhere, default `"default"`; one tenant now, clinic chain later |
 | Storage | Postgres later (own schema, own Alembic); pgvector reserved for RAG. S0–S1 use in-memory store |
 | Model layer | Follow zalo-agent: 3 provider kinds (openai-compatible, anthropic, google), settings DB → env → default, one reasoning-effort map, classified errors. S0 has only openai-compatible |
@@ -711,6 +711,33 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   and `PUT /accounts/{id}/oa-keys` (OA accounts only, stored sealed as JSON, never answered back). An OA
   account never gets a channel (`_wanted`) and its `AccountOut.warning` says it does not run yet. Test in
   `test_accounts.py`; zalo tests 222 pass.
+- **P5 decisions** (user, 2026-10-09, after two rejected plans): no proxy between the clinic API and the
+  agent, no service-to-service env vars; follow Hermes / OpenClaw / DeepSeek Harness (read in
+  `E:\Desktop\clone-git`: the agent serves its own dashboard, everything is a plugin, a plugin ships a
+  browser half). Sign-in = Bearer JWT (no launch-token link). The only env var left is `AGENT_DATABASE_URL`
+  (compose fills it); model key on the dashboard; secret key and folders in a home folder. Build the UI in
+  the Dockerfile (no committed dist). Keep the Zalo bridge Install button. Keep the clinic web's old Zalo
+  pages for now. Plan: P5a core + `web` plugin, P5b React dashboard shell + plugin browser halves, P5c Zalo
+  UI, P5d Docker + real run.
+- **P5a done** (commit after this entry): `agent_app/home.py` `ServiceHome` (`--home`, default
+  `~/.pema-agent`, `/data` in a container): `secret.key` made on first start (64 hex, 0600, created by
+  link so it is never half-written or replaced; a bad file is an error), `plugins/<name>/` data,
+  `installed/` plugins. The CLI builds the settings mapping from it (`_service_env`: process env for plugins'
+  `requires_env`, overlaid by the home's key and folders); `AGENT_GATEWAY_TOKEN`, `AGENT_ADMIN_TOKEN`,
+  `AGENT_SECRET_ENCRYPTION_KEY`, `AGENT_DATA_DIR`, `AGENT_PLUGIN_DIR` and `LLM_*` are no longer read (the
+  constant names stay as internal setting keys). Model settings resolve database > profile (sources `db`,
+  `profile`, `unset` for the key). `agent_app/auth.py`: `Principal(subject, scopes)`, scopes `chat`/`admin`,
+  `Authenticator`; `ctx.register_authenticator`; `gateway.Gate` checks every route (fixed tokens from
+  `GatewaySettings` for tests/embedding, then plugin authenticators), sets `request.state.principal`, 401
+  unknown / 403 wrong scope / 429 after 5 failures a minute per address / 503 when a store is down; admin
+  routes now always exist. Plugin `web` (bundled, in the dev profile): `users.py` (scrypt passwords,
+  `token_version`, API keys `pak_<id>_<secret>` stored as SHA-256, JWT signing key sealed in storage),
+  `tokens.py` (PyJWT HS256, `sub`/`ver`/`iss`/`exp`), routes: hooks `GET /state`, `POST /setup` (first
+  account only), `POST /login` (5 failures / 5 min per address and per account); admin `GET /me`,
+  `POST /password` (ends older logins), `GET/POST /api-keys`, `DELETE /api-keys/{id}`. API keys get `chat`
+  only. Forgot password: `agent plugins forget web --prefix user:` reopens setup. `tests/conftest.py` gives
+  every test its own home. Tests `tests/web/test_web_plugin.py`; full agent suite 671; real `agent serve`
+  smoke test (setup, me, plugins, chat with the JWT) passed.
 
 ## S1 progress log (newest last)
 

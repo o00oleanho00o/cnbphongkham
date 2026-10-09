@@ -1,0 +1,10 @@
+name = "web"
+version = "0.1.0"
+description = "The dashboard's sign-in: one admin account (email and password, created on the first visit), signed login tokens (JWT) and API keys for the chat API."
+api = 1
+
+[user_config.token_hours]
+type = "integer"
+title = "Login lifetime (hours)"
+description = "How long a dashboard login lasts before signing in again (1-720)."
+default = 12

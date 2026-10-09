@@ -64,6 +64,8 @@ from agentcore.memory import InMemoryMemoryBackend, MemoryBackend
 from agentcore.skills import InMemorySkillStore, SkillStore
 
 PLUGIN_DIR_ENV: Final = "AGENT_PLUGIN_DIR"
+"""The service setting naming the folder of installed plugins (``agent_app.home``); not read from the
+environment."""
 BUNDLED_PLUGINS: Final = Path(agent_app.__file__).resolve().parents[1] / "plugins"
 """``apps/agent/plugins``: the plugins shipped with the service."""
 
@@ -138,7 +140,7 @@ class Runtime:
 
 
 def plugin_roots(profile: Profile, env: Mapping[str, str]) -> list[tuple[PluginOrigin, Path]]:
-    """Bundled plugins, then the agent folder's, then the installed ones (``AGENT_PLUGIN_DIR``)."""
+    """Bundled plugins, then the agent folder's, then the installed ones."""
     roots: list[tuple[PluginOrigin, Path]] = [("bundled", BUNDLED_PLUGINS)]
     own = profile.plugins_dir()
     if own is not None:
@@ -180,8 +182,9 @@ def build_runtime(
     plugins: PluginHost | None = None,
     model_wrapper: Callable[[ModelClient], ModelClient] | None = None,
 ) -> Runtime:
-    """Model settings come from the database (or process memory without one), then the environment, then
-    the profile; a missing API key is reported on the first model call, so an admin can still set one.
+    """Model settings come from the database (or process memory without one), then the profile; a missing
+    API key is reported on the first model call, so an admin can still set one. ``env`` holds the service's
+    settings (the secret key, the home folders: see ``agent_app.home``) and the variables plugins may read.
     Without a given plugin host, the profile's plugins are found and enabled here. ``model_wrapper`` wraps
     the model every call goes through, the summariser's too (recording, replay)."""
     name = profile.agent.name
@@ -190,13 +193,9 @@ def build_runtime(
     )
     secret_key = env.get(SECRET_KEY_ENV) or None
     dynamic = (
-        None
-        if fake
-        else DynamicModel(profile, env, settings_store, tenant_id=tenant_id, secret_key=secret_key)
+        None if fake else DynamicModel(profile, settings_store, tenant_id=tenant_id, secret_key=secret_key)
     )
-    admin = ModelAdmin(
-        profile, env, settings_store, tenant_id=tenant_id, secret_key=secret_key, dynamic=dynamic
-    )
+    admin = ModelAdmin(profile, settings_store, tenant_id=tenant_id, secret_key=secret_key, dynamic=dynamic)
     memory_backend: MemoryBackend = InMemoryMemoryBackend() if db is None else PostgresMemoryBackend(db)
     skill_store: SkillStore = InMemorySkillStore() if db is None else PostgresSkillStore(db)
     records = (
@@ -204,7 +203,7 @@ def build_runtime(
     )
     model: ModelClient | None = dynamic
     if model_wrapper is not None:
-        model = model_wrapper(dynamic if dynamic is not None else build_model(profile, fake=True, env=env))
+        model = model_wrapper(dynamic if dynamic is not None else build_model(profile, fake=True))
 
     def build(added: Contributions) -> Agent:
         return build_agent(

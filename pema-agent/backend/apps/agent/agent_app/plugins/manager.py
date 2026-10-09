@@ -4,8 +4,8 @@ is stored per (tenant, agent) and every process of the agent follows it.
 What runs is reconciled with what is stored: a stored row decides for its plugin, otherwise the profile's
 ``[plugins] enabled`` does. A managed plugin that fails to load is switched off and the error is stored; the
 service keeps running. Each process looks for changes at most every ``refresh_s`` (before a turn), so one
-made through another process applies within a few seconds. Installed plugins live in ``AGENT_PLUGIN_DIR``,
-which every process of the agent must share.
+made through another process applies within a few seconds. Installed plugins live in the ``installed`` folder
+of the service's home (``agent_app.home``), which every process of the agent must share.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ from typing import Any, Final, Literal, cast
 from cryptography.exceptions import InvalidTag
 
 from agent_app.live import LiveAgent
-from agent_app.model_settings import SECRET_KEY_ENV, SecretKeyMissingError
+from agent_app.model_settings import NO_SECRET_KEY, SecretKeyMissingError
 from agent_app.plugins.host import PluginHost
 from agent_app.plugins.install import PluginInstaller, Staged
 from agent_app.plugins.manifest import (
@@ -261,7 +261,9 @@ class PluginManager:
 
     def _need_installer(self) -> PluginInstaller:
         if self._installer is None:
-            raise PluginError("install", "set AGENT_PLUGIN_DIR to the folder installed plugins live in")
+            raise PluginError(
+                "install", "this service has no folder for installed plugins (agent serve --home)"
+            )
         return self._installer
 
     def _config(self, source: PluginSource, row: PluginState | None) -> dict[str, Any]:
@@ -275,12 +277,12 @@ class PluginManager:
         if row.secrets_enc is None:
             return {}
         if self._secret_key is None:
-            raise PluginError(name, f"its stored secret settings need {SECRET_KEY_ENV}")
+            raise PluginError(name, f"its stored secret settings cannot be read: {NO_SECRET_KEY}")
         try:
             return cast(dict[str, Any], json.loads(decrypt_with(self._secret_key, row.secrets_enc)))
         except (InvalidTag, ValueError) as err:
             raise PluginError(
-                name, f"its stored secret settings do not decrypt (was {SECRET_KEY_ENV} changed?)"
+                name, "its stored secret settings do not decrypt (was the secret key file replaced?)"
             ) from err
 
     def _with_settings(
@@ -313,7 +315,7 @@ class PluginManager:
         if not secrets:
             return replace(row, config=config, secrets_enc=None)
         if self._secret_key is None:
-            raise SecretKeyMissingError(f"set {SECRET_KEY_ENV} (64 hex characters) to store a secret setting")
+            raise SecretKeyMissingError(NO_SECRET_KEY)
         return replace(row, config=config, secrets_enc=encrypt_with(self._secret_key, json.dumps(secrets)))
 
     def _describe(self, source: PluginSource, row: PluginState | None) -> dict[str, Any]:

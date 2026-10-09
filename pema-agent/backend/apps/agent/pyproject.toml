@@ -12,6 +12,7 @@ dependencies = [
     "uvicorn>=0.32",
     "secret-cipher",
     "pyyaml>=6.0",
+    "pyjwt>=2.9",
 ]
 
 [tool.uv.sources]

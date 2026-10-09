@@ -76,9 +76,9 @@ class OpenAICompatConfig(BaseModel):
 class OpenAICompatModel:
     def __init__(self, config: OpenAICompatConfig, *, client: AsyncOpenAI | None = None) -> None:
         if not config.model.strip():
-            raise ModelConfigError("model", "No model is configured: set LLM_MODEL or the profile's model.")
+            raise ModelConfigError("model", "No model is configured.")
         if not config.api_key.strip():
-            raise ModelConfigError("api_key", "No API key is configured: set LLM_API_KEY.")
+            raise ModelConfigError("api_key", "No API key is configured for the model.")
         self._config = config
         self._dialect: OpenAIDialect = config.resolved_dialect()
         self._client = client or AsyncOpenAI(

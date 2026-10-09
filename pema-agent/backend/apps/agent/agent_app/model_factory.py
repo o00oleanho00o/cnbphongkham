@@ -1,12 +1,11 @@
-"""Builds the model client of a profile. The environment overrides the profile (``LLM_PROVIDER``,
-``LLM_MODEL``, ``LLM_BASE_URL``, ``LLM_REASONING``); the API key comes from ``LLM_API_KEY`` only. Settings
-an admin stores in the database override both (``agent_app.model_settings``)."""
+"""Builds the model client of a profile. The profile names the provider and the model; the API key and any
+change an admin makes are stored in the database (``agent_app.model_settings``), set on the dashboard or with
+``agent model``. No environment variable is read."""
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, Literal, cast, get_args
+from typing import Final, Literal
 
 from agent_app.profile import Profile
 from agentcore import ModelClient, ReasoningEffort
@@ -33,22 +32,21 @@ class ModelSettings:
     dialect: OpenAIDialect | None = None
 
 
-def resolve_model_settings(profile: Profile, env: Mapping[str, str]) -> ModelSettings:
-    provider = _choice(env.get("LLM_PROVIDER"), get_args(Provider), "LLM_PROVIDER")
-    reasoning = _choice(env.get("LLM_REASONING"), get_args(ReasoningEffort), "LLM_REASONING")
+def resolve_model_settings(profile: Profile) -> ModelSettings:
+    """The profile's model, without a key."""
     return ModelSettings(
-        provider=provider or profile.model.provider,
-        model=env.get("LLM_MODEL") or profile.model.model,
-        api_key=env.get("LLM_API_KEY", ""),
-        base_url=env.get("LLM_BASE_URL") or profile.model.base_url or None,
+        provider=profile.model.provider,
+        model=profile.model.model,
+        api_key="",
+        base_url=profile.model.base_url or None,
         timeout_s=profile.model.timeout_s,
-        reasoning=reasoning or profile.model.reasoning,
+        reasoning=profile.model.reasoning,
         dialect=profile.model.dialect,
     )
 
 
-def resolve_model_config(profile: Profile, env: Mapping[str, str]) -> OpenAICompatConfig:
-    return _openai_config(resolve_model_settings(profile, env))
+def resolve_model_config(profile: Profile) -> OpenAICompatConfig:
+    return _openai_config(resolve_model_settings(profile))
 
 
 def _openai_config(settings: ModelSettings) -> OpenAICompatConfig:
@@ -61,10 +59,10 @@ def _openai_config(settings: ModelSettings) -> OpenAICompatConfig:
     )
 
 
-def build_model(profile: Profile, *, fake: bool, env: Mapping[str, str]) -> ModelClient:
+def build_model(profile: Profile, *, fake: bool) -> ModelClient:
     if fake:
         return EchoModel()
-    return client_for(resolve_model_settings(profile, env))
+    return client_for(resolve_model_settings(profile))
 
 
 def client_for(settings: ModelSettings) -> ModelClient:
@@ -80,21 +78,13 @@ def client_for(settings: ModelSettings) -> ModelClient:
     return OpenAICompatModel(_openai_config(settings))
 
 
-def describe_model(profile: Profile, *, fake: bool, env: Mapping[str, str]) -> str:
+def describe_model(profile: Profile, *, fake: bool) -> str:
     if fake:
         return "echo (no provider)"
-    return describe_settings(resolve_model_settings(profile, env))
+    return describe_settings(resolve_model_settings(profile))
 
 
 def describe_settings(settings: ModelSettings) -> str:
     where = settings.base_url or DEFAULT_HOSTS[settings.provider]
     reasoning = f", reasoning {settings.reasoning}" if settings.reasoning else ""
     return f"{settings.model} via {where} ({settings.provider}{reasoning})"
-
-
-def _choice[T: str](value: str | None, allowed: tuple[T, ...], name: str) -> T | None:
-    if not value:
-        return None
-    if value not in allowed:
-        raise ValueError(f"{name}={value!r}: use one of {', '.join(allowed)}")
-    return cast(T, value)

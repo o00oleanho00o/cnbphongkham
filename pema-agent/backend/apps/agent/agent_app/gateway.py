@@ -1,12 +1,18 @@
-"""HTTP gateway: a trusted backend (the clinic) sends user messages and gets the agent's replies.
+"""HTTP gateway: a trusted backend (the clinic) sends user messages and gets the agent's replies; admins
+change the model and the plugins.
 
-The caller authenticates with a bearer service token. It names the person speaking (``user_id``) and
-optionally the conversation; the session is derived from them on the server, so a reply always belongs to the
-conversation it came from. Every message is stored before it runs and a ``message_id`` sent twice runs once.
-A reply not ready within ``wait_s`` is answered with 202 and can be fetched from ``/v1/ingress/{id}``.
+Every caller sends a bearer token; the gate (``Gate``) turns it into a ``Principal`` with scopes (``chat``,
+``admin``: see ``agent_app.auth``). The tokens come from the plugins that register an authenticator (the
+``web`` plugin: dashboard logins and API keys); tests and embedders may also give fixed tokens in
+``GatewaySettings``. Nothing is read from the environment. Failed attempts are limited per address.
 
-Plugins add their own routes: ``/v1/plugins/<plugin>/...`` behind the admin token, ``/v1/hooks/<plugin>/...``
-open to the platforms that call back (the plugin checks their signature; calls are limited per address).
+The caller names the person speaking (``user_id``) and optionally the conversation; the session is derived
+from them on the server, so a reply always belongs to the conversation it came from. Every message is stored
+before it runs and a ``message_id`` sent twice runs once. A reply not ready within ``wait_s`` is answered with
+202 and can be fetched from ``/v1/ingress/{id}``.
+
+Plugins add their own routes: ``/v1/plugins/<plugin>/...`` for admins, ``/v1/hooks/<plugin>/...`` open to the
+platforms that call back (the plugin checks their signature; calls are limited per address).
 """
 
 from __future__ import annotations
@@ -18,17 +24,18 @@ import json
 import logging
 import time
 from collections import deque
-from collections.abc import AsyncGenerator, Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Literal
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text as sql
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from agent_app.auth import ADMIN, CHAT, Authenticator, Principal
 from agent_app.channel_hub import ChannelHub
 from agent_app.dispatcher import Dispatcher, StreamObserver
 from agent_app.ingress import IngressRecord
@@ -44,8 +51,6 @@ from agentcore.channels import InboundMessage, valid_channel_name
 from agentcore.harness.model.reasoning import OpenAIDialect
 
 CHANNEL: Final = "http"
-TOKEN_ENV: Final = "AGENT_GATEWAY_TOKEN"  # noqa: S105 - the name of the variable, not a token
-ADMIN_TOKEN_ENV: Final = "AGENT_ADMIN_TOKEN"  # noqa: S105 - the name of the variable, not a token
 ADMIN_FAILURES_PER_WINDOW: Final = 5
 ADMIN_FAILURE_WINDOW_S: Final = 60.0
 HOOK_CALLS_PER_WINDOW: Final = 120
@@ -71,19 +76,19 @@ ERROR_STATUS: Final[dict[str, int]] = {
 
 @dataclass(frozen=True, slots=True)
 class GatewaySettings:
-    token: str
+    token: str | None = None
+    """A fixed token for the chat routes, given in code (tests, an embedding service); never from the
+    environment."""
     wait_s: float = DEFAULT_WAIT_S
     admin_token: str | None = None
-    """Enables ``/v1/admin/*``; must differ from ``token`` so the chat caller cannot change the model."""
+    """A fixed token for every route; must differ from ``token``."""
 
     def __post_init__(self) -> None:
-        if len(self.token) < MIN_TOKEN_CHARS:
-            raise ValueError(f"{TOKEN_ENV} must have at least {MIN_TOKEN_CHARS} characters")
-        if self.admin_token is not None:
-            if len(self.admin_token) < MIN_TOKEN_CHARS:
-                raise ValueError(f"{ADMIN_TOKEN_ENV} must have at least {MIN_TOKEN_CHARS} characters")
-            if hmac.compare_digest(self.admin_token, self.token):
-                raise ValueError(f"{ADMIN_TOKEN_ENV} must differ from {TOKEN_ENV}")
+        for name, value in (("token", self.token), ("admin_token", self.admin_token)):
+            if value is not None and len(value) < MIN_TOKEN_CHARS:
+                raise ValueError(f"{name} must have at least {MIN_TOKEN_CHARS} characters")
+        if self.token and self.admin_token and hmac.compare_digest(self.admin_token, self.token):
+            raise ValueError("admin_token must differ from token")
 
 
 class WindowLimiter:
@@ -110,6 +115,81 @@ class WindowLimiter:
 
     def count(self, client: str, now: float) -> None:
         self._events.setdefault(client, deque()).append(now)
+
+
+Guard = Callable[[Request], Awaitable[Response | None]]
+"""Answers a request before the route does (a refused token, too many calls), or lets it through (None)."""
+
+
+class Gate:
+    """Admits a request when its bearer token belongs to a caller with the route's scope; the caller is then
+    in ``request.state.principal``. Wrong tokens count against the address: after a few in a minute it is
+    refused for a while, valid token or not."""
+
+    def __init__(
+        self, settings: GatewaySettings, authenticators: Callable[[], Sequence[Authenticator]]
+    ) -> None:
+        self._fixed: list[tuple[bytes, Principal]] = []
+        if settings.token:
+            self._fixed.append((settings.token.encode("utf-8"), Principal("service", frozenset({CHAT}))))
+        if settings.admin_token:
+            admin = Principal("admin", frozenset({CHAT, ADMIN}))
+            self._fixed.append((settings.admin_token.encode("utf-8"), admin))
+        self._authenticators = authenticators
+        self._failures = WindowLimiter()
+
+    async def principal(self, authorization: str | None) -> Principal | None:
+        scheme, _, token = (authorization or "").partition(" ")
+        token = token.strip()
+        if scheme.lower() != "bearer" or not token:
+            return None
+        given = token.encode("utf-8")
+        for wanted, principal in self._fixed:
+            if hmac.compare_digest(given, wanted):
+                return principal
+        for authenticate in self._authenticators():
+            found = await authenticate(token)
+            if found is not None:
+                return found
+        return None
+
+    async def admit(self, request: Request, scope: str) -> tuple[int, str] | None:
+        """None when admitted, else the status and the reason."""
+        client = request.client.host if request.client else "unknown"
+        now = time.monotonic()
+        if self._failures.blocked(client, now):
+            return 429, "too many failed attempts; try again later"
+        try:
+            principal = await self.principal(request.headers.get("authorization"))
+        except Exception:  # a store behind an authenticator is down: not the caller's fault
+            logger.exception("a token could not be checked")
+            return 503, "the token cannot be checked now; try again"
+        if principal is None:
+            self._failures.count(client, now)
+            return 401, "a valid bearer token is required"
+        if scope not in principal.scopes:
+            return 403, f"this token may not use the {scope} routes"
+        request.state.principal = principal
+        return None
+
+    def dependency(self, scope: str) -> Callable[[Request], Awaitable[None]]:
+        async def check(request: Request) -> None:
+            refused = await self.admit(request, scope)
+            if refused is not None:
+                status, detail = refused
+                raise HTTPException(status, detail=detail, headers=_challenge(status))
+
+        return check
+
+    def guard(self, scope: str) -> Guard:
+        async def check(request: Request) -> Response | None:
+            refused = await self.admit(request, scope)
+            if refused is None:
+                return None
+            status, detail = refused
+            return JSONResponse({"detail": detail}, status_code=status, headers=_challenge(status))
+
+        return check
 
 
 class _Body(BaseModel):
@@ -189,7 +269,9 @@ def create_app(
                 await jobs.close()
 
     app = FastAPI(title="agent gateway", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
-    authorized = Depends(_bearer(settings.token))
+    host = plugins.host if plugins is not None else None
+    gate = Gate(settings, lambda: host.contributions().authenticators if host is not None else ())
+    authorized = Depends(gate.dependency(CHAT))
 
     @app.middleware("http")
     async def limit_body(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
@@ -241,12 +323,12 @@ def create_app(
         session_id = await dispatcher.reset(CHANNEL, body.conversation_id or body.user_id)
         return {"session_id": session_id}
 
-    if settings.admin_token is not None and (admin, plugins, channels, jobs) != (None, None, None, None):
-        _add_admin_routes(app, settings.admin_token, admin, plugins, channels, jobs)
+    if (admin, plugins, channels, jobs) != (None, None, None, None):
+        _add_admin_routes(app, gate, admin, plugins, channels, jobs)
     if plugins is not None:
         hits = WindowLimiter(HOOK_CALLS_PER_WINDOW, HOOK_WINDOW_S)
 
-        def hook_guard(request: Request) -> Response | None:
+        async def hook_guard(request: Request) -> Response | None:
             client = request.client.host if request.client else "unknown"
             now = time.monotonic()
             if hits.blocked(client, now):
@@ -278,23 +360,6 @@ def create_app(
     return app
 
 
-def _bearer(expected: str) -> Callable[[str | None], Awaitable[None]]:
-    wanted = expected.encode("utf-8")
-
-    async def check(authorization: str | None = Header(default=None)) -> None:
-        if not _token_matches(authorization, wanted):
-            raise HTTPException(
-                401, detail="a valid bearer token is required", headers={"WWW-Authenticate": "Bearer"}
-            )
-
-    return check
-
-
-def _token_matches(authorization: str | None, wanted: bytes) -> bool:
-    scheme, _, token = (authorization or "").partition(" ")
-    return scheme.lower() == "bearer" and hmac.compare_digest(token.strip().encode("utf-8"), wanted)
-
-
 def _challenge(status: int) -> dict[str, str] | None:
     return {"WWW-Authenticate": "Bearer"} if status == 401 else None
 
@@ -303,12 +368,7 @@ class PluginRoutes:
     """Hands a request under its mount point to the routes the plugin named next in the path registered;
     ``guard`` may answer first (a refused token, too many calls)."""
 
-    def __init__(
-        self,
-        plugins: PluginManager,
-        kind: Literal["admin", "hooks"],
-        guard: Callable[[Request], Response | None],
-    ) -> None:
+    def __init__(self, plugins: PluginManager, kind: Literal["admin", "hooks"], guard: Guard) -> None:
         self._plugins = plugins
         self._kind: Literal["admin", "hooks"] = kind
         self._guard = guard
@@ -316,7 +376,7 @@ class PluginRoutes:
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
             return
-        refusal = self._guard(Request(scope))
+        refusal = await self._guard(Request(scope))
         if refusal is not None:
             await refusal(scope, receive, send)
             return
@@ -338,7 +398,7 @@ class PluginRoutes:
 
 def _add_admin_routes(
     app: FastAPI,
-    token: str,
+    gate: Gate,
     admin: ModelAdmin | None,
     plugins: PluginManager | None,
     channels: ChannelHub | None = None,
@@ -346,36 +406,10 @@ def _add_admin_routes(
 ) -> None:
     """Model settings (read with the key masked, change, clear, test), the plugin manager, the plugins' own
     admin routes, and the state of channels and plugin jobs."""
-    wanted = token.encode("utf-8")
-    limiter = WindowLimiter()
-
-    def refusal(request: Request) -> tuple[int, str] | None:
-        client = request.client.host if request.client else "unknown"
-        now = time.monotonic()
-        if limiter.blocked(client, now):
-            return 429, "too many failed attempts; try again later"
-        if not _token_matches(request.headers.get("authorization"), wanted):
-            limiter.count(client, now)
-            return 401, "a valid admin token is required"
-        return None
-
-    async def check(request: Request) -> None:
-        refused = refusal(request)
-        if refused is not None:
-            status, detail = refused
-            raise HTTPException(status, detail=detail, headers=_challenge(status))
-
-    def guard(request: Request) -> Response | None:
-        refused = refusal(request)
-        if refused is None:
-            return None
-        status, detail = refused
-        return JSONResponse({"detail": detail}, status_code=status, headers=_challenge(status))
-
-    authorized = Depends(check)
+    authorized = Depends(gate.dependency(ADMIN))
     if plugins is not None:
         _add_plugin_routes(app, plugins, authorized)
-        app.mount(PLUGIN_ROUTES, PluginRoutes(plugins, "admin", guard))
+        app.mount(PLUGIN_ROUTES, PluginRoutes(plugins, "admin", gate.guard(ADMIN)))
     if jobs is not None:
         runner = jobs
 

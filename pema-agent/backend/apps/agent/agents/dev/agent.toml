@@ -1,5 +1,5 @@
-# Development agent. Secrets never go here: the API key is read from LLM_API_KEY.
-# LLM_MODEL and LLM_BASE_URL override [model].model and [model].base_url.
+# Development agent. Secrets never go here: the model's API key is set on the dashboard (or `agent model set
+# --ask-key`) and stored encrypted in the database; the model and base URL set there override [model].
 # Who the agent is lives in SOUL.md, how it works in AGENTS.md, bundled skills in skills/<name>/SKILL.md.
 # The agent can read those files but never change them.
 
@@ -42,14 +42,14 @@ max_parallel_tools = 4
 max_tool_calls_per_step = 8
 
 [model]
-# provider: openai-compatible (OpenAI, DeepSeek, OpenRouter, ...) or anthropic; LLM_PROVIDER overrides it
+# provider: openai-compatible (OpenAI, DeepSeek, OpenRouter, ...) or anthropic; the dashboard overrides it
 provider = "openai-compatible"
 model = ""
 base_url = ""
 timeout_s = 120
 # timeout_s: longest wait for the next piece of the model's stream; a stalled stream is retried
 # reasoning: off | low | medium | high; unset keeps the provider default (DeepSeek thinks at "high", which is
-# slow); LLM_REASONING overrides it. dialect: "deepseek" or "openai"; unset guesses from base_url.
+# slow). dialect: "deepseek" or "openai"; unset guesses from base_url.
 # reasoning = "off"
 
 [loop]
@@ -74,9 +74,10 @@ queue_max_batch = 20
 # queue_by_channel = { http = "followup" }
 
 [plugins]
-# Plugins to load at start, found in apps/agent/plugins, this folder's plugins/ and $AGENT_PLUGIN_DIR.
+# Plugins to load at start, found in apps/agent/plugins, this folder's plugins/ and the home's installed/.
 # A listed plugin that fails to load stops the start. `agent plugins list --profile ...` shows them all.
-enabled = ["calculate"]
+# web: the dashboard's sign-in; without it nobody can call the gateway.
+enabled = ["web", "calculate"]
 
 [plugins.calculate]
 precision = 10
