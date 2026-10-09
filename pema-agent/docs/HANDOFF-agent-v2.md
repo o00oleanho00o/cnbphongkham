@@ -856,7 +856,7 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
 - First action next session: the Zalo plugin P0–P5d is done (branch `feat/zalo-plugin`); left: a phone QR scan
   and a message round trip in Docker (needs the user's secondary nick and a model key). Plan C (one sign-in,
-  below): C1 and C2 done; next is C3 when the user says go.
+  below): C1, C2 and C3a done; next is C3b (UI) when the user says go.
 
 ### Deferred: verifier hook (user, 2026-10-09)
 
@@ -946,6 +946,23 @@ Steps (each: commit, stop, report):
   `window.__PEMA_AGENT__` from Next's React; `api` calls `/agent/v1/...` same origin; `ui` mapped onto the
   Next kit; page `/admin/agent/p/[plugin]/[page]`, menu entries from enabled plugins; port overview, model,
   plugins pages from `plugins/web/ui`; Tailwind `@source` the bundled plugins' `ui/src`.
+  - Split in two. **C3a done** (2026-10-10, this commit): `frontend/src/lib/server/agent-proxy.ts` +
+    `src/app/agent/[...path]/route.ts` (no visible change). `AgentTokens`: one token request per session
+    (keyed by the sha256 of `pema_session`, calls that come together share it), reused while more than 20 s
+    is left, forgotten when the agent answers 401, at most 500 kept. No cookie → 401 without calling the
+    API; the API's 401/403 body passes through; no token or agent down → 502. Cookie, `x-forwarded-*` and
+    agent `Set-Cookie` dropped; a relative `Location` gets the `/agent` prefix. The proxy only sends tokens
+    it was just given, which answers the limiter concern above. `api-proxy.ts` now exports
+    `isUnsafeSegment`, `decodeSegment`, `parseHttpUrl`, `errorResponse`. Tests
+    `src/lib/server/agent-proxy.test.ts` (9). The clinic API has no trusted-host check, so `Host: api:8000`
+    works.
+  - Found while checking: regenerating `src/lib/api/schema.d.ts` in C1 (`e35737d9`) dropped the types of
+    endpoints that `588f18fc` removed from the backend (roster, care matrix, identities, notify...), which
+    the frontend still uses: 622 tsc errors. This commit puts back the previous `schema.d.ts`, so it lacks
+    `AgentTokenResponse`/`JwksResponse` (the proxy does not use them). Clearing the dead frontend code and
+    regenerating is its own task; ask the user.
+  - **C3b next**: the UI part (SDK host, plugin page host, overview/model/plugins pages, menu), through
+    `pema-ui-builder` and the process of `AGENTS.md`.
 - **C4 compose + real run**: `frontend` gets `PEMA_AGENT_INTERNAL_URL=http://agent:8088`; `agent` runs
   `agents/clinic`, `expose` only; sign in once at `:3000` (`admin@gmail.com`), open the Zalo pages, scan a QR.
 

@@ -58,7 +58,7 @@ export type UpstreamResolution =
   { ok: true; url: URL } | { ok: false; status: 400 | 404 | 502; message: string };
 
 /** True when one decoded path segment could move the request outside the intended path. */
-function isUnsafeSegment(decoded: string): boolean {
+export function isUnsafeSegment(decoded: string): boolean {
   return (
     decoded === "." ||
     decoded === ".." ||
@@ -69,7 +69,7 @@ function isUnsafeSegment(decoded: string): boolean {
 }
 
 /** One percent-decoded path segment, or null when it is not valid percent-encoding. */
-function decodeSegment(segment: string): string | null {
+export function decodeSegment(segment: string): string | null {
   try {
     return decodeURIComponent(segment);
   } catch {
@@ -77,7 +77,7 @@ function decodeSegment(segment: string): string | null {
   }
 }
 
-function parseHttpUrl(value: string): URL | null {
+export function parseHttpUrl(value: string): URL | null {
   try {
     const url = new URL(value);
     return url.protocol === "http:" || url.protocol === "https:" ? url : null;
@@ -190,7 +190,7 @@ export function responseHeadersFromUpstream(upstream: Response, base: URL): Head
   return out;
 }
 
-function errorResponse(status: number, code: string, message: string): Response {
+export function errorResponse(status: number, code: string, message: string): Response {
   return Response.json(
     { error: { code, message, request_id: null } },
     { status, headers: { "cache-control": "no-store" } },
