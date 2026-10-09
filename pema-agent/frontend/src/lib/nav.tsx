@@ -25,7 +25,6 @@ import {
   IconGlobe,
   IconGrid,
   IconHeart,
-  IconSignal,
   IconSliders,
   IconUsers,
 } from "@/components/admin/shared/dashboard-icons";
@@ -42,6 +41,7 @@ import {
   IconBook,
   IconCalendar,
   IconImages,
+  IconPuzzle,
   IconReceipt,
   IconSparkles,
   IconStethoscope,
@@ -207,8 +207,6 @@ export const NAV_SECTIONS: NavSection[] = [
       { to: "/admin/overview", label: "Tổng quan AI", icon: IconGrid, needs: ["admin.usage"] },
       { to: "/admin/traces", label: "Trace agent", icon: IconCpu, needs: ["admin.usage"] },
       { to: "/admin/threads", label: "Phiên chat", icon: IconChat, needs: ["admin.agents"] },
-      { to: "/admin/contacts", label: "Danh bạ", icon: IconUsers, needs: ["admin.agents"] },
-      { to: "/admin/friends", label: "Bạn bè", icon: IconHeart, needs: ["admin.accounts"] },
       {
         to: "/admin/schedules",
         label: "Lịch tự động",
@@ -217,12 +215,8 @@ export const NAV_SECTIONS: NavSection[] = [
       },
       { to: "/admin/memory", label: "Trí nhớ", icon: IconBrain, needs: ["admin.agents"] },
       { to: "/admin/kb", label: "Kho tri thức", icon: IconFileText, needs: ["kb.read"] },
-      {
-        to: "/admin/accounts",
-        label: "Tài khoản Zalo",
-        icon: IconSignal,
-        needs: ["admin.accounts"],
-      },
+      // The pages the agent's plugins ship (Zalo accounts, contacts, friends, groups, bridge).
+      { to: "/admin/agent", label: "Plugin agent", icon: IconPuzzle, needs: ["admin.agents"] },
       { to: "/admin/users", label: "Nhân viên", icon: IconIdBadge, needs: ["admin.users.read"] },
       { to: "/admin/agents", label: "Agents", icon: IconBot, needs: ["admin.agents"] },
       { to: "/admin/tools", label: "Tools", icon: IconBolt, needs: ["admin.tools"] },

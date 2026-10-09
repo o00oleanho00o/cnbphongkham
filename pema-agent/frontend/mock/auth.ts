@@ -3,6 +3,7 @@
 // it would see and the 403 state can be exercised.
 import { randomUUID } from "node:crypto";
 
+import { issueAgentToken } from "./agent";
 import {
   HttpError,
   fail,
@@ -401,6 +402,15 @@ export function register(r: Router): void {
       user: userSummary(s.userId),
     };
     return { body };
+  });
+
+  // The clinic web's server asks for this with the cookie and sends it to the agent (here: mock/agent.ts).
+  r.post("/api/v1/auth/agent-token", null, (ctx): Reply => {
+    const s = requireSession(ctx);
+    if (!s.permissions.includes("admin.agents")) {
+      fail(403, "forbidden", "Bạn không có quyền quản trị agent.");
+    }
+    return { body: issueAgentToken(), headers: { "cache-control": "no-store" } };
   });
 
   // Mirrors the real route: needs the current password, 8-character floor, must differ, every OTHER session

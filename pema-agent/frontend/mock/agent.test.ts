@@ -1,0 +1,83 @@
+// The mock's agent-token route and fake agent (`pnpm dev:mock`): the owner and the manager get a short token, other
+// roles 403 with the API's sentence, no session 401; the fake agent wants that token and lists the Zalo plugin.
+import type { Server } from "node:http";
+import type { AddressInfo } from "node:net";
+
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
+import { startMockServer } from "./server";
+
+let server: Server;
+let base: string;
+
+beforeAll(async () => {
+  server = await startMockServer(0);
+  base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+});
+
+afterAll(() => {
+  server.close();
+});
+
+async function cookieOf(email: string): Promise<string> {
+  const res = await fetch(`${base}/api/v1/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email, password: "demo1234" }),
+  });
+  return res.headers.get("set-cookie")?.split(";")[0] ?? "";
+}
+
+const askToken = (cookie: string) =>
+  fetch(`${base}/api/v1/auth/agent-token`, {
+    method: "POST",
+    headers: cookie ? { cookie } : {},
+  });
+
+describe("mock POST /api/v1/auth/agent-token", () => {
+  it("gives_the_owner_and_the_manager_a_short_token", async () => {
+    for (const email of ["owner@pema.test", "manager@pema.test"]) {
+      const res = await askToken(await cookieOf(email));
+      const body = (await res.json()) as { token: string; expires_at: string };
+
+      expect(res.status).toBe(200);
+      expect(body.token).toMatch(/^mock-agent-/);
+      expect(Date.parse(body.expires_at)).toBeGreaterThan(Date.now());
+    }
+  });
+
+  it("refuses_a_role_without_admin_agents_with_the_apis_sentence_and_no_session_with_401", async () => {
+    const res = await askToken(await cookieOf("doctor@pema.test"));
+
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({
+      error: expect.objectContaining({
+        code: "forbidden",
+        message: "Bạn không có quyền quản trị agent.",
+      }) as unknown,
+    });
+    expect((await askToken("")).status).toBe(401);
+  });
+});
+
+describe("the fake agent", () => {
+  it("wants_a_token_then_lists_the_zalo_script_and_its_accounts", async () => {
+    expect((await fetch(`${base}/v1/admin/ui`)).status).toBe(401);
+
+    const { token } = (await (await askToken(await cookieOf("owner@pema.test"))).json()) as {
+      token: string;
+    };
+    const signed = { headers: { authorization: `Bearer ${token}` } };
+    const listing = (await (await fetch(`${base}/v1/admin/ui`, signed)).json()) as {
+      plugins: { name: string; script: string }[];
+    };
+    const accounts = (await (await fetch(`${base}/v1/plugins/zalo/accounts`, signed)).json()) as {
+      id: string;
+    }[];
+
+    expect(listing.plugins).toEqual([
+      expect.objectContaining({ name: "zalo", script: "/ui/zalo/client.js" }),
+    ]);
+    expect(accounts.length).toBeGreaterThan(0);
+  });
+});

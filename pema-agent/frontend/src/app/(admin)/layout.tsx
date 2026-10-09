@@ -7,9 +7,10 @@ import { ToastProvider } from "@/components/ops/toast";
 /**
  * Everything behind sign-in. Route tree (the original react-router tree, plus the clinic screens):
  *   /today /inbox /review /patients /patients/[id] /templates          clinic operations
- *   /admin/overview /threads /contacts /friends /schedules /memory /kb  AI administration, one route per
- *   /admin/accounts /agents (/new, /[id]) /tools /mcp /traces /logs     page of the original dashboard
+ *   /admin/overview /threads /schedules /memory /kb                     AI administration, one route per
+ *   /admin/agents (/new, /[id]) /tools /mcp /traces /logs               page of the original dashboard
  *   /admin/tuning (/[group]) /policy /auth
+ *   /admin/agent (/p/[plugin]/[page])                                   pages the agent's plugins ship
  */
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (

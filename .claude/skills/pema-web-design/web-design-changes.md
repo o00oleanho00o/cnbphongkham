@@ -21,6 +21,24 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-10 · add · Plugin agent: trang của plugin agent (Zalo)
+- Where: `pema-agent/frontend/src/app/(admin)/admin/agent/layout.tsx`, `src/app/(admin)/admin/agent/page.tsx`, `src/app/(admin)/admin/agent/p/[plugin]/[page]/page.tsx`, `src/components/agent/agent-plugins.tsx`, `src/components/agent/plugin-kit.tsx`, `src/lib/nav.tsx`, `src/ui/icons.tsx`, `src/app/globals.css` · route `/admin/agent`, `/admin/agent/p/<plugin>/<page>`
+- Change: menu entry "Plugin agent" (puzzle icon, section "Quản trị agent", `admin.agents`) opens the pages the agent's enabled plugins ship, drawn with the app kit: tabs "Trang của plugin agent" of the registered pages (plugin name added when several plugins have pages); today the Zalo plugin: "Tài khoản Zalo", "Danh bạ Zalo", "Bạn bè Zalo", "Nhóm Zalo", "Cầu nối Zalo" (`/admin/agent/p/zalo/accounts|contacts|friends|groups|bridge`). `/admin/agent` opens the first page or shows "Chưa có plugin nào có trang quản trị" ("Bật một plugin có trang quản trị (ví dụ Zalo) ở dịch vụ agent rồi mở lại mục này.") and "Không tải được trang của plugin: <tên>."; page states: spinner "Đang tải trang plugin", "Không tìm thấy trang này" (hint "Plugin <p> không có trang "<id>"." or "Plugin <p> chưa bật hoặc không có trang quản trị.", button "Về trang plugin agent"), "Không tải được trang của plugin <p>." + "Thử lại", "Không tải được trang plugin: <lỗi>" + "Thử lại", 403 with the API's sentence ("Bạn không có quyền quản trị agent."), 401 "Phiên đăng nhập đã hết. Đang chuyển tới trang đăng nhập…".
+- Web canvas target: new screen (no web canvas id yet)
+- Logged by: C3b-1
+
+### 2026-10-10 · remove · Tài khoản Zalo, Danh bạ, Bạn bè (replaced by the Zalo plugin's pages)
+- Where: `pema-agent/frontend/src/app/(admin)/admin/accounts/page.tsx`, `src/app/(admin)/admin/contacts/page.tsx`, `src/app/(admin)/admin/friends/page.tsx`, `src/components/admin/accounts/account-edit-drawer.tsx`, `identity-edit-dialog.tsx`, `identity-lines.tsx`, `notifier-card.tsx`, `qr-login-modal.tsx`, `src/components/admin/channels/channel-settings-panel.tsx`, `src/lib/nav.tsx`, `src/app/(admin)/layout.tsx` and `src/ui/README.md` (route lists in comments only) · routes `/admin/accounts`, `/admin/contacts`, `/admin/friends`
+- Change: pages and menu entries "Tài khoản Zalo", "Danh bạ", "Bạn bè" removed; accounts (QR login, edit, delete), contacts and friends are now the Zalo plugin's pages under "Plugin agent". Not carried over by the plugin: the channel panel "Kênh gửi tin" (daily cap, gaps, send window, "Công tắc khẩn"), the policy-profile select, identities ("Sửa danh tính", "Giới hạn đang áp dụng", "Đang trực", "Lịch trực" link) and the card "Tài khoản thông báo nội bộ" (open question for the owner).
+- Web canvas target: WJ23, WJ24, WJ25, WJ26, WJ27, WJ28, WJ29, WJ54-WJ66, WM24-WM29
+- Logged by: C3b-1
+
+### 2026-10-10 · change · SLA và khung giờ: bỏ liên kết "cài đặt kênh Zalo"
+- Where: `pema-agent/frontend/src/app/(admin)/admin/care/timing/page.tsx` · route `/admin/care/timing`
+- Change: card "Khung giờ gửi tin" now ends with "Múi giờ <tz>." only; the sentence "Khung giờ chỉnh ở cài đặt kênh Zalo." and its link to `/admin/accounts` (removed page) are gone.
+- Web canvas target: unknown
+- Logged by: C3b-1
+
 ### 2026-10-06 · change · Inbox: ba tab, lọc danh tính, người phụ trách và khóa soạn tin
 - Where: `pema-agent/frontend/src/app/(admin)/inbox/page.tsx`, `src/components/ops/inbox/conversation-list.tsx`, `src/components/ops/inbox/thread-view.tsx`, `src/components/ops/inbox/holder-banner.tsx`, `src/components/ops/inbox/assignment-dialogs.tsx`, `src/ui/tabs.tsx` · route `/inbox`
 - Change: tabs "Chờ nhận / Của tôi / Tất cả" with counts (segmented pills; `Tabs` gets `segmented`), select "Lọc theo danh tính" ("Tất cả danh tính" + the customer identities), tab and filter kept in the URL; each row shows "#code · identity", the holder ("Chưa ai nhận", "Bạn đang giữ", "<Tên> đang giữ") and the badge "<n> tin chưa đọc"; empty texts "Không có hội thoại nào đang chờ nhận" and "Bạn chưa phụ trách hội thoại nào"; thread header shows "<identity> · #code", buttons "Giao cho..." (`thread.assign`) and "Lịch sử phụ trách", and a holder banner: "Chưa có người phụ trách. Bấm Nhận ..." + "Nhận", "Bạn đang phụ trách hội thoại này." + "Trả lại", "<Tên> đang trả lời — Tiếp quản?" + "Tiếp quản", "Vai trò của bạn chỉ xem được hội thoại, không nhận hay trả lời được."; reply box locked with "<Tên> đang phụ trách. Tiếp quản để nhắn khách." while a colleague holds the thread; 409 `thread_locked` shows "Tin chưa gửi. Nội dung bạn soạn vẫn còn." + "Tiếp quản"; `no_identity` sentence and message badge; line "Khách thấy tin này từ "<identity>", không thấy tên nhân viên."; toast "Đã bị tiếp quản: <Tên> giữ hội thoại #code". Removed: the "Phụ trách:" picker and the button "Nhận xử lý" (replaced by the dialogs, owner design WM1-WM23).

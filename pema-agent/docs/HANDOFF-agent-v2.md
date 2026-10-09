@@ -856,7 +856,7 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
 - First action next session: the Zalo plugin P0–P5d is done (branch `feat/zalo-plugin`); left: a phone QR scan
   and a message round trip in Docker (needs the user's secondary nick and a model key). Plan C (one sign-in,
-  below): C1, C2 and C3a done; next is C3b (UI) when the user says go.
+  below): C1, C2, C3a, C3b-1 done; next is C3b-2 when the user says go.
 
 ### Deferred: verifier hook (user, 2026-10-09)
 
@@ -954,7 +954,7 @@ Steps (each: commit, stop, report):
     agent `Set-Cookie` dropped; a relative `Location` gets the `/agent` prefix. The proxy only sends tokens
     it was just given, which answers the limiter concern above. `api-proxy.ts` now exports
     `isUnsafeSegment`, `decodeSegment`, `parseHttpUrl`, `errorResponse`. Tests
-    `src/lib/server/agent-proxy.test.ts` (9). The clinic API has no trusted-host check, so `Host: api:8000`
+    `src/lib/server/agent-proxy.test.ts` (10). The clinic API has no trusted-host check, so `Host: api:8000`
     works.
   - Found while checking: regenerating `src/lib/api/schema.d.ts` in C1 (`e35737d9`) dropped the types of
     endpoints that `588f18fc` removed from the backend (roster, care matrix, identities, notify...), which
@@ -963,6 +963,16 @@ Steps (each: commit, stop, report):
     regenerating is its own task; ask the user.
   - **C3b next**: the UI part (SDK host, plugin page host, overview/model/plugins pages, menu), through
     `pema-ui-builder` and the process of `AGENTS.md`.
+  - **C3b-1 done** (2026-10-10, this commit): `src/lib/agent/sdk.ts` (`window.__PEMA_AGENT__` from Next's
+    React), `src/lib/agent/api.ts` (`/agent/v1/...` same origin), `src/components/agent/plugin-kit.tsx`
+    (the SDK's `ui` on the app kit), `agent-plugins.tsx`, pages `/admin/agent` (first plugin page or an empty
+    state) and `/admin/agent/p/[plugin]/[page]`; menu "Plugin agent" (`admin.agents`); `mock/agent.ts` for
+    `pnpm dev:mock`. Removed the old Next pages `/admin/accounts|contacts|friends` and their components; the
+    plugin does not carry over the channel panel, policy select, identities and the internal notifier card
+    (logged as an open question in `web-design-changes.md`). Checks: tsc, eslint, 62 vitest. Screenshots
+    (`pnpm visual`) skipped at the user's request (2026-10-10) — do them before merging.
+  - **C3b-2 left**: overview/model/plugins pages from `plugins/web/ui`, hide the dead "Quản trị agent"
+    entries, Tailwind `@source` of the bundled plugins' `ui/src`, screenshots.
 - **C4 compose + real run**: `frontend` gets `PEMA_AGENT_INTERNAL_URL=http://agent:8088`; `agent` runs
   `agents/clinic`, `expose` only; sign in once at `:3000` (`admin@gmail.com`), open the Zalo pages, scan a QR.
 

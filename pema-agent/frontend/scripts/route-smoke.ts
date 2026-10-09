@@ -34,6 +34,7 @@ const patientCare = (action: Expectation["action"]): Expectation => ({
 const REDIRECTS: Readonly<Record<string, string>> = {
   "/": "/today",
   "/admin/care": "/admin/care/staff",
+  "/admin/agent": "/admin/agent/p/zalo/accounts",
   "/care/patients/[id]": "/care/patients/00000000-0000-4000-8002-000000000007/timeline",
 };
 
@@ -83,12 +84,13 @@ const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
   },
   "/admin/overview": { heading: "Tổng quan", action: { role: "button", name: "" } },
   "/admin/threads": { heading: "Phiên chat AI", action: { role: "button", name: "" } },
-  "/admin/contacts": { heading: "Danh bạ", action: { role: "button", name: "" } },
-  "/admin/friends": { heading: "Bạn bè", action: { role: "button", name: "" } },
   "/admin/schedules": { heading: "Lịch hẹn", action: { role: "button", name: "" } },
   "/admin/memory": { heading: "Trí nhớ", action: { role: "button", name: "" } },
   "/admin/kb": { heading: "Kho tri thức", action: { role: "button", name: "Thêm nguồn" } },
-  "/admin/accounts": { heading: "Tài khoản Zalo", action: { role: "button", name: "" } },
+  "/admin/agent/p/[plugin]/[page]": {
+    heading: "Tài khoản Zalo",
+    action: { role: "button", name: "Thêm tài khoản" },
+  },
   "/admin/roster": { heading: "Lịch trực", action: { role: "button", name: "Thêm ca trực" } },
   "/me/notifications": {
     heading: "Thông báo của tôi",

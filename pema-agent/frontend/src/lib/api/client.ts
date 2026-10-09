@@ -27,7 +27,7 @@ export const http = createClient<paths>({ baseUrl: "", credentials: "include" })
 
 type MaybeResult<T> = { data?: T; error?: unknown; response: Response };
 
-function redirectToLogin(): void {
+export function redirectToLogin(): void {
   if (typeof window === "undefined") return;
   // Outside the React tree there is no router; a full navigation also drops stale client state.
   // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- no router here

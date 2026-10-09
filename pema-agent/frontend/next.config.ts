@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import type { NextConfig } from "next";
 
@@ -29,6 +30,9 @@ const config: NextConfig = {
   agentRules: false,
   devIndicators: false,
   env: { NEXT_PUBLIC_APP_VERSION: version },
+  // `pema-agent/`: globals.css scans the agent plugins' sources in ../backend and Turbopack reads nothing outside
+  // its root. The standalone output follows it (`.next/standalone/frontend/server.js`, see frontend.Dockerfile).
+  turbopack: { root: fileURLToPath(new URL("..", import.meta.url)) },
 };
 
 export default config;

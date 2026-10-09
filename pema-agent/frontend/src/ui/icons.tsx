@@ -77,3 +77,9 @@ export const IconImages = (p: IconProps) => (
     <path d="M20.5 8v9a3 3 0 0 1-3 3H9" />
   </svg>
 );
+
+export const IconPuzzle = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M9.5 4.5a2 2 0 0 1 4 0V6H18a1 1 0 0 1 1 1v4.5h-1.5a2 2 0 0 0 0 4H19V19a1 1 0 0 1-1 1h-4.5v-1.5a2 2 0 0 0-4 0V20H5a1 1 0 0 1-1-1v-4.5h1.5a2 2 0 0 0 0-4H4V7a1 1 0 0 1 1-1h4.5Z" />
+  </svg>
+);

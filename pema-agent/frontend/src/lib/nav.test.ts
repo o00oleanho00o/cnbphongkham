@@ -127,6 +127,30 @@ describe("every screen stays reachable", () => {
   });
 });
 
+describe("the agent plugin pages", () => {
+  const agentSection = NAV_SECTIONS.find((s) => s.title === "Quản trị agent");
+
+  it("has_one_entry_for_the_pages_the_agent_plugins_ship", () => {
+    const entry = agentSection?.items.find((i) => i.to === "/admin/agent");
+
+    expect(entry?.label).toBe("Plugin agent");
+    expect(entry?.needs).toEqual(["admin.agents"]);
+  });
+
+  it("drops_the_zalo_pages_the_plugin_pages_replace", () => {
+    const paths = items.map((i) => i.to);
+
+    for (const gone of ["/admin/accounts", "/admin/friends", "/admin/contacts"]) {
+      expect(paths).not.toContain(gone);
+    }
+  });
+
+  it("belongs_every_plugin_page_to_the_plugin_entry_but_not_the_agents_list", () => {
+    expect(currentNavItem("/admin/agent/p/zalo/accounts")?.label).toBe("Plugin agent");
+    expect(currentNavItem("/admin/agents")?.label).toBe("Agents");
+  });
+});
+
 describe("visibleSections", () => {
   it("hides_items_the_role_cannot_use_and_drops_empty_sections", () => {
     const sections = visibleSections((needs) => needs.includes("review.read"));

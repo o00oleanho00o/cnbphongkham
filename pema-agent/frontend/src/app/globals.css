@@ -14,6 +14,9 @@
  */
 @import "../ui/tokens.css";
 
+/* The pages of the agent's bundled plugins are separate scripts (`/admin/agent/p/*`): this stylesheet makes their classes. */
+@source "../../../backend/apps/agent/plugins/*/ui/src/**/*.{ts,tsx}";
+
 /* Bật dark mode theo class `.dark` trên <html> thay vì chỉ nghe media query:
    người dùng phải TỰ CHỌN được sáng/tối bất kể hệ điều hành đang đặt gì. */
 @custom-variant dark (&:where(.dark, .dark *));

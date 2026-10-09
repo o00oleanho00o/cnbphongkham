@@ -43,6 +43,7 @@ export const SAMPLE_PARAMS: Readonly<Record<string, string>> = {
   "/orders/[id]/print": "/orders/00000000-0000-4000-8041-000000000002/print",
   "/admin/agents/[id]": "/admin/agents/cskh-da-lieu",
   "/admin/tuning/[group]": "/admin/tuning/agent",
+  "/admin/agent/p/[plugin]/[page]": "/admin/agent/p/zalo/accounts",
 };
 
 /** The URL to open for a route: itself, or the sample of its dynamic segments. */

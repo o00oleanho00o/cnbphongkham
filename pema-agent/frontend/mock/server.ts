@@ -7,6 +7,7 @@ import { readdirSync } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { fileURLToPath } from "node:url";
 
+import { answerAgent, buildAgentRouter, isAgentPath } from "./agent";
 import { register as registerAuth, sessionFromRequest } from "./auth";
 import { announceChange } from "./live-bus";
 import { HttpError, Router, errorBody, parseJson, readBody, type Ctx, type Reply } from "./core";
@@ -48,6 +49,7 @@ function openEventStream(
 
 export async function startMockServer(port: number) {
   const router = await buildRouter();
+  const agentRouter = buildAgentRouter();
 
   const server = createServer((req, res) => {
     void (async () => {
@@ -71,6 +73,10 @@ export async function startMockServer(port: number) {
       };
 
       try {
+        if (isAgentPath(url.pathname)) {
+          send(await answerAgent(agentRouter, req, res, url));
+          return;
+        }
         const found = router.match(req.method ?? "GET", url.pathname);
         if (!found) {
           send({ status: 404, body: errorBody("not_found", "Không tìm thấy đường dẫn này.") });

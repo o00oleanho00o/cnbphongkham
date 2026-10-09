@@ -2,7 +2,6 @@
 
 // SLA và khung giờ: bao lâu một người được hỏi phải trả lời trước khi chuyển người kế tiếp, chuỗi dài tối đa bao nhiêu,
 // ngoài giờ thì từ độ sâu nào đi thẳng tới số trực. Khung giờ gửi tin nằm ở cài đặt kênh, trang này chỉ hiển thị.
-import Link from "next/link";
 import { useCallback, useId, useState } from "react";
 
 import { SectionCard } from "@/components/admin/shared/ui-bits";
@@ -157,13 +156,7 @@ function TimingForm({ timing, onSaved }: { timing: CareTiming; onSaved: () => vo
               ? `${timing.send_window_start} đến ${timing.send_window_end}`
               : "Mặc định của phòng khám"}
           </p>
-          <p className="mt-1 text-label text-ink-soft">
-            Múi giờ {timing.time_zone}. Khung giờ chỉnh ở{" "}
-            <Link href="/admin/accounts" className="text-brand-500 underline">
-              cài đặt kênh Zalo
-            </Link>
-            .
-          </p>
+          <p className="mt-1 text-label text-ink-soft">Múi giờ {timing.time_zone}.</p>
         </SectionCard>
 
         {problem && <Notice tone="warn">{problem}</Notice>}
