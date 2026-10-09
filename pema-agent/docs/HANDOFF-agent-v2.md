@@ -889,6 +889,17 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   secret (`X-Agent-Timestamp`, `X-Agent-Signature`, HMAC-SHA256), the gateway rejects a bad signature or a
   timestamp older than ~5 min (replay), compares with `hmac.compare_digest`; keep the bearer token as well.
 
+### Deferred: Zalo features of the old Next pages that zalo-agent does not have (user, 2026-10-10)
+
+The Zalo plugin copies zalo-agent; what zalo-agent lacks is not built now, only listed here. Removed with the
+old pages `/admin/accounts|contacts|friends` in `bf1d4d3b` (see `web-design-changes.md`, canvas WJ23–WJ29,
+WJ54–WJ66, WM24–WM29):
+- the channel panel "Kênh gửi tin": daily cap, gaps between sends, send window, "Công tắc khẩn" (kill switch);
+- the policy-profile select per account;
+- identities: "Sửa danh tính", "Giới hạn đang áp dụng", "Đang trực", link to "Lịch trực";
+- the card "Tài khoản thông báo nội bộ" (the account that sends internal notices).
+Decide per item later: a setting of the Zalo plugin, a separate plugin, or dropped.
+
 ### Deferred: plan C — one sign-in for CRM and agent (agreed 2026-10-10, start when the user asks)
 
 Goal: staff sign in once on the Next.js web (`:3000`, clinic API session); the menu "Quản trị agent" shows the
