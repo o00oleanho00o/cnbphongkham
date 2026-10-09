@@ -1,11 +1,11 @@
 # Handoff — agent-v2 (general agent core)
 
 Lives in the repo (`pema-agent/docs/HANDOFF-agent-v2.md`) so it is pushed and shared; update it here after
-each stage. Last updated 2026-10-09, after S4c (`09c2096a`).
+each stage. Last updated 2026-10-09, after S4d (`8f765862`).
 
-Next session focus: **S4d (keyless replay tests + verifier hook)** on branch `feat/agent-v2` — write its detailed
-plan, wait for the user's "go", then implement (commit, stop, report). S4 order agreed: S4a → S4b → S4c → S4d.
-Reply to the user in Vietnamese. Open items to handle later are under "Loose ends".
+Next session focus: **record the 3 real DeepSeek scenarios for the replay tests** (the user chose to give the key
+to the assistant; see "S4d" below), then plan S5 or the next item the user picks. Reply to the user in
+Vietnamese. Open items to handle later are under "Loose ends".
 
 ## Where things are
 
@@ -13,10 +13,10 @@ Reply to the user in Vietnamese. Open items to handle later are under "Loose end
 - Branch: `feat/agent-v2` — the branch made to rewrite the agent from scratch (commits `588f18fc`, `eadaac30`
   removed the old agent layer; see their messages and `pema-agent/backend/apps/api/pema/composition/app_runtime.py`
   docstring: "a future agent service talks to the clinic through the HTTP API only").
-- Done so far (read the commits, do not re-derive): S0 … S4c, see "Roadmap and status" and the progress
-  entries below; latest `09c2096a`.
-- Tests: full agent suite `uv run pytest packages/agent-core packages/secret-cipher apps/agent -q` (405 at
-  S4c, Postgres tests need `PEMA_TEST_DATABASE_URL`). ruff, pyright strict, lint-imports clean.
+- Done so far (read the commits, do not re-derive): S0 … S4d, see "Roadmap and status" and the progress
+  entries below; latest `8f765862`.
+- Tests: full agent suite `uv run pytest packages/agent-core packages/secret-cipher apps/agent -q` (418 at
+  S4d, Postgres tests need `PEMA_TEST_DATABASE_URL`). ruff, pyright strict, lint-imports clean.
 - Reference repos cloned in `E:\Desktop\clone-git`: `claw-code`, `hermes-agent`, `openclaw-src` (the empty
   `openclaw` folder is junk), `zalo-agent`, `mattpocock-skills`.
 - Installed project skill: `.claude/skills/handoff/` (from `mattpocock/skills@b0618bc`, MIT `LICENSE` kept).
@@ -63,7 +63,7 @@ Reply to the user in Vietnamese. Open items to handle later are under "Loose end
 | S1 | Prompt: sections + scopes, frozen system, transient context message, status bar | **Done `f4b68879`** (real-model check pending) |
 | S2 | Context: token estimate, providers, history window, trim without splitting tool pairs, compaction (aux model + heuristic fallback), memory tool + `MemoryBackend`, skills tools + `SkillSource` | **Done** `aad3ce48`, `c0e6e1d9`, `80596312` |
 | S3 | Harness: full model layer (3 providers, DB settings, AES-GCM secrets, reasoning map), parallel read-only tools, guide/sensor pipeline, Postgres store, trace, channel API + HTTP `/v1/chat`, plugin loader + profiles | **Done**: S3a `95aa0d10`, S3b `949eb697`, S3c `b798d78d`, S3d-1 `0c6fa3b3`, S3d-2 `981e7363`, S3e-1 `a693729d`, S3e-2 `3f6a4ffb`, S3e-3 `fac0bfcf` |
-| S4 | Loop: budgets, recovery per error kind (429 wait once, context overflow cut once, auth stop), loop guard, mid-turn injection (`collect`/`steer`), one run per session, verifier hook, trigger runtime | In progress: S4a `ff0c66a0`, S4b `ccb21241`, S4c `09c2096a` done; next S4d keyless replay tests (+ verifier hook) |
+| S4 | Loop: budgets, recovery per error kind (429 wait once, context overflow cut once, auth stop), loop guard, mid-turn injection (`collect`/`steer`), one run per session, verifier hook, trigger runtime | In progress: S4a `ff0c66a0`, S4b `ccb21241`, S4c `09c2096a`, S4d `8f765862` done (real-model cassettes still to record; verifier hook deferred) |
 | S5 | Graph: nodes/edges/state, `run_turn` as node, sub-agent `delegate` — only when needed | Planned |
 
 ## S1 plan (approved and done — kept for reference)
@@ -553,6 +553,33 @@ S2a design refinements made while implementing:
   - Known: a crash mid-turn requeues the joined messages too (they may run again; at-least-once); every
     message now waits ~0.8 s before its turn starts in collect/steer; the CLI chat does not use the queue.
   - STOPPED after S4c. Next: S4d plan, after the user's "go".
+- 2026-10-09 S4d decisions (user): own JSONL cassette format (not deepseek's Session JSONL); three real
+  scenarios recorded by the assistant with the user's key (option b): (a) a plain question, (b) "mấy giờ rồi"
+  with `get_datetime`, (c) arithmetic through the `calculate` plugin plus a memory note; verifier hook later.
+- **S4d committed `8f765862`** "feat(agent): record a model once and replay it in keyless tests".
+  - `agentcore/harness/model/replay.py`: lines `Header` (format 1, recorded_at, model), `Turn` (user_text),
+    `Call` (request summary = tool names + start of the user's latest words (context block skipped, 300
+    chars) + reasoning; `stream` deltas; `result` AssistantResult or `error` kind/message/retry_after_s).
+    `Cassette.load` (header first, format check, exactly one of result/error), `CassetteWriter` (line by line,
+    LF), `RecordingModel(inner, writer)`, `ReplayModel(cassette, strict=True)` (drift → `CassetteError` with
+    "record the scenario again", extra calls, `assert_consumed()`). Credited to deepseek-harness llm-replay (MIT).
+  - `build_runtime(model_wrapper=)`: wraps the model all calls use, summariser included (Echo when fake).
+  - `agent_app/replay.py`: `replay(cassette, profile)` runs the turns like `agent chat` (user `cli-user`,
+    channel `cli`, env {}, in-memory stores, no retry pauses, no turn deadline) and returns a transcript
+    (user/assistant text, `call <tool> <args>`, `result <tool> ok|error: …`, stop/steps/compactions, trace event
+    kinds) masked for datetimes, dates, times, uuids, weekdays.
+  - CLI: `agent chat --record CASSETTE` (records turns + calls; warns that /compact is not replayable);
+    `agent replay CASSETTE --profile P [--expect FILE] [--update]` (diff on mismatch, exit 1).
+  - Fixtures `apps/agent/tests/replays/<name>/{cassette.jsonl, expected.txt}`: `echo-two-turns` (recorded with
+    --fake) and `calculate-after-rate-limit` (hand-written: tool call, rate-limit error line, retry). Tests:
+    `packages/agent-core/tests/test_replay.py`, `apps/agent/tests/test_replays.py` (runs every scenario).
+    Full suite 418 passed; ruff, pyright strict, lint-imports clean.
+  - To add a real scenario (without AGENT_DATABASE_URL, so memory starts empty): set LLM_API_KEY / LLM_BASE_URL
+    / LLM_MODEL in the terminal, `uv run agent chat --profile apps/agent/agents/dev --record
+    apps/agent/tests/replays/<name>/cassette.jsonl`, type the turns, `/exit`; then `uv run agent replay
+    <cassette> --profile apps/agent/agents/dev --expect <dir>/expected.txt --update`; check the cassette has no
+    secret before committing. Any change to the dev agent's tools makes the cassettes drift: re-record.
+  - STOPPED after S4d. Pending: record the 3 real scenarios with the user's key.
 
 ## S1 progress log (newest last)
 
@@ -622,8 +649,14 @@ S2a design refinements made while implementing:
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
-- First action next session: write the S4d plan for approval. S3e, S4a, S4b and S4c have not been run against
-  a real model yet (the user can give a key via the environment for a live check).
+- First action next session: record the 3 real replay scenarios (the user gives the key), then ask what comes
+  next (S5 Graph, HMAC, Zalo channel plugin, UI). S3e and S4 have not been run against a real model yet.
+
+### Deferred: verifier hook (user, 2026-10-09)
+
+- A hook that checks the final answer before it is returned (e.g. clinic rules: no diagnosis, no promised
+  prices) and asks the model for one revision. Build it when a concrete rule exists, likely as a new hook
+  kind plugins can register (`register_hook`), with one revision at most and a trace event.
 - A stale custom agent draft exists at `C:\Users\My PC\AppData\Roaming\Code\User\prompts\zalo-agent-builder.agent.md`
   (written before the "general core" decision; it says Hermes-based). Offer to rewrite or delete it.
 
