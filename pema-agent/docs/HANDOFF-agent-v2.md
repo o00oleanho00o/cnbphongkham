@@ -1,11 +1,11 @@
 # Handoff — agent-v2 (general agent core)
 
 Lives in the repo (`pema-agent/docs/HANDOFF-agent-v2.md`) so it is pushed and shared; update it here after
-each stage. Last updated 2026-10-09, after S4b (`ccb21241`).
+each stage. Last updated 2026-10-09, after S4c (`09c2096a`).
 
-Next session focus: **S4c (collect/steer: a new message while a turn runs)** on branch `feat/agent-v2` — write
-its detailed plan, wait for the user's "go", then implement (commit, stop, report). S4 order agreed:
-S4a → S4b → S4c → S4d. Reply to the user in Vietnamese. Open items to handle later are under "Loose ends".
+Next session focus: **S4d (keyless replay tests + verifier hook)** on branch `feat/agent-v2` — write its detailed
+plan, wait for the user's "go", then implement (commit, stop, report). S4 order agreed: S4a → S4b → S4c → S4d.
+Reply to the user in Vietnamese. Open items to handle later are under "Loose ends".
 
 ## Where things are
 
@@ -13,10 +13,10 @@ S4a → S4b → S4c → S4d. Reply to the user in Vietnamese. Open items to hand
 - Branch: `feat/agent-v2` — the branch made to rewrite the agent from scratch (commits `588f18fc`, `eadaac30`
   removed the old agent layer; see their messages and `pema-agent/backend/apps/api/pema/composition/app_runtime.py`
   docstring: "a future agent service talks to the clinic through the HTTP API only").
-- Done so far (read the commits, do not re-derive): S0 … S4b, see "Roadmap and status" and the progress
-  entries below; latest `ccb21241`.
-- Tests: full agent suite `uv run pytest packages/agent-core packages/secret-cipher apps/agent -q` (397 at
-  S4b, Postgres tests need `PEMA_TEST_DATABASE_URL`). ruff, pyright strict, lint-imports clean.
+- Done so far (read the commits, do not re-derive): S0 … S4c, see "Roadmap and status" and the progress
+  entries below; latest `09c2096a`.
+- Tests: full agent suite `uv run pytest packages/agent-core packages/secret-cipher apps/agent -q` (405 at
+  S4c, Postgres tests need `PEMA_TEST_DATABASE_URL`). ruff, pyright strict, lint-imports clean.
 - Reference repos cloned in `E:\Desktop\clone-git`: `claw-code`, `hermes-agent`, `openclaw-src` (the empty
   `openclaw` folder is junk), `zalo-agent`, `mattpocock-skills`.
 - Installed project skill: `.claude/skills/handoff/` (from `mattpocock/skills@b0618bc`, MIT `LICENSE` kept).
@@ -63,7 +63,7 @@ S4a → S4b → S4c → S4d. Reply to the user in Vietnamese. Open items to hand
 | S1 | Prompt: sections + scopes, frozen system, transient context message, status bar | **Done `f4b68879`** (real-model check pending) |
 | S2 | Context: token estimate, providers, history window, trim without splitting tool pairs, compaction (aux model + heuristic fallback), memory tool + `MemoryBackend`, skills tools + `SkillSource` | **Done** `aad3ce48`, `c0e6e1d9`, `80596312` |
 | S3 | Harness: full model layer (3 providers, DB settings, AES-GCM secrets, reasoning map), parallel read-only tools, guide/sensor pipeline, Postgres store, trace, channel API + HTTP `/v1/chat`, plugin loader + profiles | **Done**: S3a `95aa0d10`, S3b `949eb697`, S3c `b798d78d`, S3d-1 `0c6fa3b3`, S3d-2 `981e7363`, S3e-1 `a693729d`, S3e-2 `3f6a4ffb`, S3e-3 `fac0bfcf` |
-| S4 | Loop: budgets, recovery per error kind (429 wait once, context overflow cut once, auth stop), loop guard, mid-turn injection (`collect`/`steer`), one run per session, verifier hook, trigger runtime | In progress: S4a `ff0c66a0`, S4b `ccb21241` done; next S4c collect/steer, then S4d keyless replay tests (+ verifier hook) |
+| S4 | Loop: budgets, recovery per error kind (429 wait once, context overflow cut once, auth stop), loop guard, mid-turn injection (`collect`/`steer`), one run per session, verifier hook, trigger runtime | In progress: S4a `ff0c66a0`, S4b `ccb21241`, S4c `09c2096a` done; next S4d keyless replay tests (+ verifier hook) |
 | S5 | Graph: nodes/edges/state, `run_turn` as node, sub-agent `delegate` — only when needed | Planned |
 
 ## S1 plan (approved and done — kept for reference)
@@ -529,6 +529,30 @@ S2a design refinements made while implementing:
     `test_storage.py`. Full agent-core + secret-cipher + apps/agent with DB: 397 passed; ruff, pyright strict,
     lint-imports 7/7 clean. Not run against a real model.
   - STOPPED after S4b. Next: S4c plan (collect/steer), after the user's "go".
+- 2026-10-09 S4c decisions (user "go" on the proposals): default mode `steer` (like OpenClaw), join only the
+  same person's messages, quiet window 0.8 s (at most 3 s). `interrupt` not built. Reference read:
+  OpenClaw `docs/concepts/queue.md`, `queue-steering.md`.
+- **S4c committed `09c2096a`** "feat(agent): collect and steer messages that come while a turn runs".
+  - `DispatchSettings`: `queue_mode` (followup | collect | steer; default followup here so explicit settings in
+    tests keep the old behaviour), `queue_by_channel`, `debounce_s`, `max_wait_s`, `max_batch`, `mode_for()`.
+    `Runtime.dispatcher()` without settings builds them from the profile `[loop]` (`queue_mode` default
+    `steer`, `queue_by_channel`, `queue_debounce_s` 0.8, `queue_max_wait_s` 3.0, `queue_max_batch` 20;
+    max_wait ≥ debounce validated). `QueueMode` lives in `agent_app.profile`.
+  - Drain: for collect/steer `_quiet()` waits until the session's queued count stops changing (debounce, cap
+    max_wait), then `_gather()` claims the next queued messages of the same user, stopping at another user's
+    message (order kept). `_process(lead, joined, steer=)` runs one turn on the texts joined with a blank line;
+    with steer, `run_turn(steer=)` gathers more after each tool batch. All joined records end with the lead's
+    reply or error; a joined record with a delivery gets `finish_delivery(skipped, "answered together with
+    message N")` before it is finished (the hub never sends it); waiters/observers of joined ids are released.
+  - Core: `run_turn(steer=, collected=)`: steered texts stored as user messages after the tool results (the
+    Anthropic adapter merges consecutive user content); `inbox` trace events (collect at step 0, steer per
+    step). Migration `0009_inbox` adds the event kind. Ingress stores: `queued_in_session(tenant, session,
+    limit)`.
+  - Tests: new `apps/agent/tests/test_queue_modes.py` (6), core steer test in `test_run_turn.py`, Postgres
+    collect test in `test_ingress_db.py`. Full suite 405 passed; ruff, pyright strict, lint-imports clean.
+  - Known: a crash mid-turn requeues the joined messages too (they may run again; at-least-once); every
+    message now waits ~0.8 s before its turn starts in collect/steer; the CLI chat does not use the queue.
+  - STOPPED after S4c. Next: S4d plan, after the user's "go".
 
 ## S1 progress log (newest last)
 
@@ -598,8 +622,8 @@ S2a design refinements made while implementing:
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
-- First action next session: write the S4c plan for approval. S3e, S4a and S4b have not been run against a
-  real model yet (the user can give a key via the environment for a live check).
+- First action next session: write the S4d plan for approval. S3e, S4a, S4b and S4c have not been run against
+  a real model yet (the user can give a key via the environment for a live check).
 - A stale custom agent draft exists at `C:\Users\My PC\AppData\Roaming\Code\User\prompts\zalo-agent-builder.agent.md`
   (written before the "general core" decision; it says Hermes-based). Offer to rewrite or delete it.
 
