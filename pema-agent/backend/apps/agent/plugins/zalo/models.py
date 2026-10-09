@@ -128,6 +128,15 @@ class BotTokenSet(_Model):
     )
 
 
+class OaKeysSet(_Model):
+    """The keys of an Official Account, write-only (stored sealed, never answered back)."""
+
+    app_id: str = Field(pattern=r"^\d{1,30}$")
+    app_secret: str = Field(min_length=8, max_length=200)
+    oa_secret_key: str = Field(min_length=8, max_length=200, description="Checks the OA webhook signature.")
+    refresh_token: str = Field(min_length=8, max_length=2000, description="OAuth v4; renewed on each use.")
+
+
 ZALO_ID_PATTERN: Final = r"^[A-Za-z0-9_.-]{1,100}$"
 """A Zalo user or group id as it may appear in a path or a body (part of a storage key)."""
 

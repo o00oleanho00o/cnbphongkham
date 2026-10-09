@@ -1,7 +1,8 @@
 # ported from: src/server/routes/account-routes.ts
 """Admin routes of the Zalo plugin, under ``/v1/plugins/zalo`` (admin token): accounts (list, create, change,
-delete), a bot's token, the QR login of a personal account, the Node bridge (status, install, uninstall), the
-reaction icons the dashboard offers, the address book, group names and the friends of personal accounts.
+delete), a bot's token, an OA's keys, the QR login of a personal account, the Node bridge (status, install,
+uninstall), the reaction icons the dashboard offers, the address book, group names and the friends of personal
+accounts.
 Under ``/v1/hooks/zalo`` (open): the webhook of bot accounts (secret header) and the events of the plugin's
 own bridge (HMAC signature).
 
@@ -36,10 +37,12 @@ from .models import (
     FriendOut,
     FriendRequestOut,
     GroupOut,
+    OaKeysSet,
     QrLoginState,
     QrLoginStatus,
     ReactionIconOut,
 )
+from .oa import NOT_AVAILABLE as OA_NOT_AVAILABLE
 from .personal.client import BridgeAccountApi, BridgeClient, BridgeQrStatus, ZaloBridgeError
 from .personal.signing import verify_signature
 from .plugin import LOCKED_OUT, ZaloPlugin
@@ -60,6 +63,8 @@ def account_routes(plugin: ZaloPlugin) -> APIRouter:
     async def out(account: AccountConfig, warning: str | None = None) -> AccountOut:
         if warning is None and plugin.state(account.id) in LOCKED_OUT:
             warning = "Zalo đã đăng xuất hoặc khóa tài khoản này - quét lại mã QR."
+        if warning is None and account.channel is ChannelKind.ZALO_OA:
+            warning = OA_NOT_AVAILABLE
         return AccountOut.model_validate(
             {
                 **account.model_dump(),
@@ -136,6 +141,19 @@ def account_routes(plugin: ZaloPlugin) -> APIRouter:
             await client.aclose()
         await store.set_secret(account_id, body.token)
         await plugin.sync()
+        return await out(account)
+
+    @router.put("/accounts/{account_id}/oa-keys")
+    async def set_oa_keys(account_id: str, body: OaKeysSet) -> AccountOut:
+        """Stores an Official Account's keys sealed; nothing checks them yet (no OA channel)."""
+        account = await store.get(account_id)
+        if account is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Account không tồn tại")
+        if account.channel is not ChannelKind.ZALO_OA:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, "Chỉ tài khoản Zalo OA mới nhận khóa OA"
+            )
+        await store.set_secret(account_id, body.model_dump_json())
         return await out(account)
 
     @router.post("/accounts/{account_id}/login", status_code=status.HTTP_202_ACCEPTED)

@@ -141,6 +141,35 @@ async def test_the_reaction_icons_come_from_the_plugin(tmp_path: Path) -> None:
     runtime.close()
 
 
+async def test_an_oa_account_keeps_its_keys_sealed_and_does_not_run_yet(tmp_path: Path) -> None:
+    runtime = _runtime(tmp_path)
+    keys = {
+        "app_id": "1234567890",
+        "app_secret": "app-secret-synthetic",
+        "oa_secret_key": "oa-secret-synthetic",
+        "refresh_token": "refresh-synthetic",
+    }
+    async with _client(runtime) as client:
+        await client.post(
+            "/accounts", json={"id": "oa-1", "label": "OA", "channel": "zalo_oa"}, headers=HEADERS
+        )
+        await client.post("/accounts", json={"id": "le-tan", "label": "Lễ tân"}, headers=HEADERS)
+        stored = await client.put("/accounts/oa-1/oa-keys", json=keys, headers=HEADERS)
+        not_oa = await client.put("/accounts/le-tan/oa-keys", json=keys, headers=HEADERS)
+        bad = await client.put("/accounts/oa-1/oa-keys", json=keys | {"app_id": "abc"}, headers=HEADERS)
+        token = await client.put(
+            "/accounts/oa-1/bot-token", json={"token": "123:abcdefghij"}, headers=HEADERS
+        )
+        listed = (await client.get("/accounts", headers=HEADERS)).text
+
+    assert stored.status_code == 200
+    assert (stored.json()["has_credentials"], stored.json()["running"]) == (True, False)
+    assert stored.json()["warning"] == "Zalo OA chưa chạy được: khóa đã lưu, kênh sẽ có ở bản sau."
+    assert (not_oa.status_code, bad.status_code, token.status_code) == (422, 422, 422)
+    assert all(secret not in stored.text + listed for secret in keys.values())
+    runtime.close()
+
+
 def _store(key: str = KEY, records: InMemoryPluginRecords | None = None) -> AccountStore:
     storage = (records or InMemoryPluginRecords()).storage("zalo")
 

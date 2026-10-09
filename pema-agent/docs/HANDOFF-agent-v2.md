@@ -705,6 +705,12 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   503 refused), `GET /contacts?account_id&q&limit&offset`, `DELETE /contacts/{id}/{user}`, `GET /groups`.
   Limit: a listing reads at most 1000 storage records (`MAX_LIST`). Tests: 3 more in
   `test_personal_channel.py`, contacts in the bot test; apps/agent 414 pass (core untouched).
+- **P4 done** (commit after this entry): Zalo OA stub. `plugins/zalo/oa/__init__.py` (what the channel will
+  need: OAuth v4 refresh token renewed on each use, `X-ZEvent-Signature` webhook check, reply window / no ZNS
+  on its own; `NOT_AVAILABLE` text). `OaKeysSet` (`app_id`, `app_secret`, `oa_secret_key`, `refresh_token`)
+  and `PUT /accounts/{id}/oa-keys` (OA accounts only, stored sealed as JSON, never answered back). An OA
+  account never gets a channel (`_wanted`) and its `AccountOut.warning` says it does not run yet. Test in
+  `test_accounts.py`; zalo tests 222 pass.
 
 ## S1 progress log (newest last)
 
