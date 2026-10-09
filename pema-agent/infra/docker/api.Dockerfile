@@ -23,9 +23,13 @@ WORKDIR /app/backend
 
 # Layer 1: third-party dependencies only (cached until a manifest or the lock changes).
 COPY backend/pyproject.toml backend/uv.lock backend/.python-version ./
+# Every workspace member's manifest is copied (also the agent's, which this image never installs) so `--locked` sees
+# the workspace the lock was made for.
 COPY backend/packages/contracts/pyproject.toml packages/contracts/pyproject.toml
+COPY backend/packages/agent-core/pyproject.toml packages/agent-core/pyproject.toml
 COPY backend/packages/secret-cipher/pyproject.toml packages/secret-cipher/pyproject.toml
 COPY backend/apps/api/pyproject.toml apps/api/pyproject.toml
+COPY backend/apps/agent/pyproject.toml apps/agent/pyproject.toml
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync ${UV_SYNC_FLAGS} --no-dev --no-install-workspace --package pema-api
 

@@ -1,7 +1,7 @@
 # Handoff — agent-v2 (general agent core)
 
 Lives in the repo (`pema-agent/docs/HANDOFF-agent-v2.md`) so it is pushed and shared; update it here after
-each stage. Last updated 2026-10-10, after plan C step C3b-2 on branch `feat/zalo-plugin`.
+each stage. Last updated 2026-10-10, after plan C step C4 on branch `feat/zalo-plugin`.
 
 Next session focus: the Zalo plugin, branch `feat/zalo-plugin` (from `feat/agent-v2`). P0 is done; next is P1
 (see "Zalo plugin" below). Reply to the user in Vietnamese. Open items to handle later are under "Loose ends".
@@ -856,7 +856,8 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
 - First action next session: the Zalo plugin P0–P5d is done (branch `feat/zalo-plugin`); left: a phone QR scan
   and a message round trip in Docker (needs the user's secondary nick and a model key). Plan C (one sign-in,
-  below): C1, C2, C3a, C3b-1, C3b-2 done; next is C4 when the user says go.
+  below): C1, C2, C3a, C3b-1, C3b-2, C4 done (C4 without the phone scan); next: the QR scan and a message
+  round trip, screenshots and `pnpm smoke`, then merge.
 
 ### Deferred: verifier hook (user, 2026-10-09)
 
@@ -1003,6 +1004,30 @@ Steps (each: commit, stop, report):
     it (globals.css scans the plugins' `ui/src`); the image build is not run yet: check it in C4.
 - **C4 compose + real run**: `frontend` gets `PEMA_AGENT_INTERNAL_URL=http://agent:8088`; `agent` runs
   `agents/clinic`, `expose` only; sign in once at `:3000` (`admin@gmail.com`), open the Zalo pages, scan a QR.
+  - **C4 done except the phone scan** (2026-10-10, this commit). `infra/docker-compose.yml`: frontend has
+    `PEMA_AGENT_INTERNAL_URL` (default `http://agent:8088`; with the `agent` profile off the `/agent` calls answer
+    502, nothing else changes); agent has `command: agent serve --profile agents/clinic ...`. The agent keeps its
+    loopback port 8088 (first setup and emergencies, as the profile's comment says); `docker-compose.proxy.yml`
+    turns it into `expose` like api and frontend, so behind Caddy nothing of the agent is published. Found by the
+    first real build: `api.Dockerfile` did not copy the manifests of `agent-core` and `apps/agent`, so
+    `uv sync --locked` failed ("lockfile needs to be updated"); fixed. The frontend image builds.
+  - Real run (root `docker compose -p pema-agent up -d --build redis migrate api seed agent-migrate agent
+    frontend`; project name `pema-agent` matters: the root file's default project is `cnbphongkham` and its
+    ports clash with the stack already running). With a real login at `:3000` (`admin@gmail.com`): `/agent/...`
+    without a session 401; with it, `/agent/v1/admin/{ui,plugins,model,channels,jobs}` 200 (the clinic API's JWKS
+    is read by the agent over `http://api:8000`); a garbage token straight to 8088 401; `reception.lan@...`
+    403 with the API's sentence. The profile `clinic` enables only `web`, `sso`, `calculate`, so Zalo was off:
+    switched on with `POST /agent/v1/admin/plugins/zalo/enable` (what the Plugins page does), then
+    `/agent/ui/zalo/client.js` 200 and the Zalo routes answer. Playwright on the real stack: the four pages
+    (`/admin/agent`, `/model`, `/plugins`, `/p/zalo/accounts`) render with the tabs and the menu entry
+    "Điều khiển agent". Not done: the phone QR scan and a message round trip (needs the secondary nick and a model
+    key), screenshots, `pnpm smoke`.
+  - Known: every admin page of the clinic web still calls `GET /api/v1/admin/accounts` (the shell's online
+    badge, `components/admin/layout/app-shell.tsx`), a route removed with `588f18fc`: a 404 per page load, no
+    visible effect. It belongs to the dead-frontend-code cleanup. The profile `clinic` could list `zalo` in
+    `[plugins] enabled` if Zalo should be on from the first start; left to the user.
+  - My first attempt ran in the project `cnbphongkham` and left four empty volumes (`cnbphongkham_agent-home`,
+    `_pema-data`, `_pg-data`, `_redis-data`); `docker volume rm` of them was not allowed, remove them by hand.
 
 Reference read (2026-10-10): `E:\Desktop\clone-git\crm-trycompai` (trycompai/crm, MIT; Next.js + NestJS + eve
 agent). Their bridge: `apps/app/app/eve/v1/[...path]/route.ts` checks the session, strips the cookie, checks

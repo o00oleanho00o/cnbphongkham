@@ -14,10 +14,13 @@
 #                         at the end of this file. Ollama with an NVIDIA GPU, or natively on the GPU PC
 #                         (see infra/ubuntu/HUONG-DAN-UBUNTU.md).
 #   profile app           frontend (convenience, kept for the old commands)
-#   profile agent         the general agent (apps/agent) with its own dashboard on 127.0.0.1:8088: agent-migrate
-#                         (role agent_rt_app + schema agent_rt) and agent. Everything else (admin account, model and
-#                         key, plugins, Zalo accounts) is set on that dashboard and kept in Postgres and the
-#                         agent-home volume (its secret key: back it up with the database).
+#   profile agent         the general agent (apps/agent): agent-migrate (role agent_rt_app + schema agent_rt) and
+#                         agent, running the profile `agents/clinic`. Staff sign in ONCE on the clinic web: its
+#                         server asks the clinic API for a short token and calls the agent through /agent/...
+#                         (PEMA_AGENT_INTERNAL_URL), so the pages "Điều khiển agent" and the Zalo pages live in
+#                         the clinic web. The agent's own dashboard stays on 127.0.0.1:8088 for the first setup and
+#                         emergencies. Model, key, plugins and Zalo accounts are kept in Postgres and the agent-home
+#                         volume (its secret key: back it up with the database).
 #
 # Run from pema-agent/ (the Makefile does this):
 #   docker compose -f infra/docker-compose.yml --env-file infra/.env up -d
@@ -212,8 +215,9 @@ services:
       AGENT_RT_APP_PASSWORD: ${PEMA_AGENT_RT_APP_PASSWORD:-}
     command: ["sh", "-c", "agent db bootstrap-role && alembic -c alembic.ini upgrade head"]
 
-  # The agent serves its own dashboard (first visit creates the admin account). Its only setting from here is the
-  # database; the bridge of personal Zalo accounts runs inside this container once installed from the dashboard.
+  # The clinic's agent (profile agents/clinic: plugin sso trusts the tokens of the clinic API, which it reads the public
+  # keys of at http://api:8000). Its only setting from here is the database; the bridge of personal Zalo accounts runs
+  # inside this container once installed from the Zalo pages. The frontend reaches it at http://agent:8088.
   agent:
     profiles: ["agent"]
     build: *agent-build
@@ -224,6 +228,7 @@ services:
         condition: service_completed_successfully
     environment:
       AGENT_DATABASE_URL: postgresql+psycopg://agent_rt_app:${PEMA_AGENT_RT_APP_PASSWORD:-}@postgres:5432/pema
+    command: ["agent", "serve", "--profile", "agents/clinic", "--home", "/data", "--host", "0.0.0.0", "--port", "8088"]
     ports:
       - "${PEMA_AGENT_BIND:-127.0.0.1}:${PEMA_AGENT_PORT:-8088}:8088"
     volumes:
@@ -251,6 +256,9 @@ services:
       # Where the dashboard server forwards /api/v1 and /healthz. Read on every request (route handler), not at
       # build time: change it here and `docker compose up -d frontend`, no rebuild.
       PEMA_API_INTERNAL_URL: ${PEMA_API_INTERNAL_URL:-http://api:8000}
+      # Where the server forwards /agent/v1 and /agent/ui (the agent service, profile `agent`; with the profile off,
+      # those calls answer 502 and the rest of the web is unaffected). Read on every request, like the API address.
+      PEMA_AGENT_INTERNAL_URL: ${PEMA_AGENT_INTERNAL_URL:-http://agent:8088}
     networks:
       - default
       - edge
