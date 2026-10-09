@@ -14,7 +14,7 @@ LOAD_ENV_ROOT := set -a; if [ -f infra/.env ]; then . infra/.env; fi; set +a;
 LOAD_ENV := set -a; if [ -f ../infra/.env ]; then . ../infra/.env; fi; set +a;
 
 .PHONY: help setup lint format typecheck test test-db openapi types db-upgrade db-downgrade clean \
-        infra-secrets infra-config up up-app up-proxy down down-proxy logs ps db-migrate db-bootstrap \
+        infra-secrets infra-config up up-app up-agent up-proxy down down-proxy logs ps db-migrate db-bootstrap \
         retention-dry-run backup restore-verify
 
 help:
@@ -31,6 +31,7 @@ help:
 	@echo "infra-config   docker compose config (every profile, also proxy with the override; uses infra/.env or a throwaway one)"
 	@echo "up / down      start / stop postgres, redis, migrate, api (profile: frontend)"
 	@echo "up-app         up + frontend"
+	@echo "up-agent       up + the general agent (agent-migrate, agent; dashboard on 127.0.0.1:8088)"
 	@echo "up-proxy       stack behind Caddy (profile proxy + docker-compose.proxy.yml); down-proxy stops it"
 	@echo "retention-dry-run  python -m pema.retention.cli --dry-run in the api container (counts, deletes nothing)"
 	@echo "db-migrate     roles + alembic upgrade heads inside the compose network (one-shot migrate service); checks and prints the one clinic"
@@ -91,6 +92,10 @@ up:
 
 up-app:
 	$(COMPOSE) --profile app up -d --build
+
+# The general agent and its dashboard on 127.0.0.1:8088 (needs PEMA_AGENT_RT_APP_PASSWORD in infra/.env).
+up-agent:
+	$(COMPOSE) --profile agent up -d --build
 
 # TẠM TẮT LLM LOCAL (2026-10-02): re-enable together with the `ollama` services in infra/docker-compose.yml
 # (and add up-ollama back to .PHONY).

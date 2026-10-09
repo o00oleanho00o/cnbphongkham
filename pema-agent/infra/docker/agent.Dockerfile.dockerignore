@@ -1,0 +1,23 @@
+# Build context is pema-agent/. Keep it small and keep secrets out of the image.
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+**/.pyright
+**/node_modules
+**/dist
+**/.local
+**/.env
+**/.env.*
+frontend
+kb-samples
+evals
+docs
+recipes
+demo-assets
+backend/**/tests
+backend/apps/api/pema
+backend/apps/api/alembic
+backend/packages/contracts/src
+.git

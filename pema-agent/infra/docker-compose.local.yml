@@ -1,7 +1,8 @@
 # Override used ONLY by the root docker-compose.yml (`include`), to start the whole project with one command.
 # infra/docker-compose.yml on its own (make up, make up-app, make up-proxy) is unchanged.
 #
-#   - worker and frontend start without a profile, so a plain `docker compose up --build` runs everything;
+#   - worker, frontend and the general agent start without a profile, so a plain `docker compose up --build` runs
+#     everything;
 #   - `seed` is a one-shot that creates the fictional demo clinic (users of every role, patients, conversations).
 #     Login: PEMA_SEED_OWNER_EMAIL / PEMA_SEED_PASSWORD from infra/.env.local-demo (admin@gmail.com / Admin@123;
 #     the shell wins). With PEMA_SEED_PASSWORD empty a random one is generated and printed ONCE:
@@ -10,6 +11,12 @@
 #     A second run finds the data and changes nothing.
 services:
   frontend:
+    profiles: !reset []
+
+  agent-migrate:
+    profiles: !reset []
+
+  agent:
     profiles: !reset []
 
   seed:

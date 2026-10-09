@@ -769,6 +769,22 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   zalo enabled → its five pages appear; account created and edited (saved values verified); bridge installed
   from the page and running; a real Zalo QR shown (not scanned). Zalo/plugins/plugin-ui tests 269 pass.
   Build: `pnpm install && pnpm run build` in `plugins/zalo/ui`, then rebuild `plugins/web/ui` for the CSS.
+- **P5d done** (commit after this entry): `infra/docker/agent.Dockerfile` (+ `.dockerignore`): stage `node`
+  (node:22-bookworm-slim + pnpm 11.17), stage `ui` builds zalo then web UI (frozen lockfiles), `builder` (uv,
+  every member's manifest copied so `--locked` holds; agent-app installed EDITABLE because `BUNDLED_PLUGINS`
+  is the folder next to `agent_app`), `runtime` (python slim + Node/pnpm copied from the node stage, user
+  `agent` 10001, sources at `/app/backend/...`, `VOLUME /data`, `CMD agent serve --profile agents/dev --home
+  /data --host 0.0.0.0 --port 8088`). Compose profile `agent` (default in the root one-command stack through
+  `docker-compose.local.yml`): `agent-migrate` (`agent db bootstrap-role && alembic -c alembic.ini upgrade
+  head`, owner URL from the superuser password) and `agent` (`AGENT_DATABASE_URL` composed from
+  `PEMA_AGENT_RT_APP_PASSWORD`, port `${PEMA_AGENT_BIND}:${PEMA_AGENT_PORT:-8088}`, volume `agent-home:/data`,
+  healthcheck `/health`). New `.env` keys `PEMA_AGENT_RT_APP_PASSWORD`, `PEMA_AGENT_PORT`, `PEMA_AGENT_BIND`
+  (`gen-secrets.sh` fills the password); `make up-agent`. Found by the image: `httpx` was only a dev
+  dependency (openai 3 uses `httpx2`), now a dependency of agent-app (lock updated). Real run with
+  `.env.local-demo`: migrations at `0010_plugin_records`, setup, zalo enabled, bridge installed inside the
+  container from the dashboard, personal account created, a real QR shown. Full agent suite 680, contracts 7.
+  Not done: the phone scan and a message round trip (needs the user's secondary nick and a model key);
+  the profile is still `agents/dev`.
 
 ## S1 progress log (newest last)
 

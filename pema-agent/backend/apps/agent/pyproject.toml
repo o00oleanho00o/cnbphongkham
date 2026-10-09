@@ -13,6 +13,8 @@ dependencies = [
     "secret-cipher",
     "pyyaml>=6.0",
     "pyjwt>=2.9",
+    # the bundled zalo plugin's HTTP client (Bot API, its bridge)
+    "httpx>=0.27",
 ]
 
 [tool.uv.sources]

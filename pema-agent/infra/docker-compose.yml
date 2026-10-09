@@ -14,6 +14,10 @@
 #                         at the end of this file. Ollama with an NVIDIA GPU, or natively on the GPU PC
 #                         (see infra/ubuntu/HUONG-DAN-UBUNTU.md).
 #   profile app           frontend (convenience, kept for the old commands)
+#   profile agent         the general agent (apps/agent) with its own dashboard on 127.0.0.1:8088: agent-migrate
+#                         (role agent_rt_app + schema agent_rt) and agent. Everything else (admin account, model and
+#                         key, plugins, Zalo accounts) is set on that dashboard and kept in Postgres and the
+#                         agent-home volume (its secret key: back it up with the database).
 #
 # Run from pema-agent/ (the Makefile does this):
 #   docker compose -f infra/docker-compose.yml --env-file infra/.env up -d
@@ -27,6 +31,10 @@ name: pema-agent
 x-backend-build: &backend-build
   context: ..
   dockerfile: infra/docker/api.Dockerfile
+
+x-agent-build: &agent-build
+  context: ..
+  dockerfile: infra/docker/agent.Dockerfile
 
 # Variables every Python process reads (pema.config.env.Settings, prefix PEMA_). Inside the compose network
 # the hosts are service names, so the URLs are composed here from the passwords in .env, not copied from it.
@@ -189,6 +197,44 @@ services:
       retries: 6
       start_period: 15s
 
+  # One-shot: the agent's runtime role (password from .env, CONNECT granted even with the hardened database), then
+  # its own migrations (schema agent_rt, own version table) as the owner role.
+  agent-migrate:
+    profiles: ["agent"]
+    build: *agent-build
+    image: pema-agent-agent:${PEMA_IMAGE_TAG:-local}
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AGENT_MIGRATION_DATABASE_URL: postgresql+psycopg://postgres:${PEMA_PG_SUPERUSER_PASSWORD:?set it in infra/.env}@postgres:5432/pema
+      AGENT_RT_APP_PASSWORD: ${PEMA_AGENT_RT_APP_PASSWORD:-}
+    command: ["sh", "-c", "agent db bootstrap-role && alembic -c alembic.ini upgrade head"]
+
+  # The agent serves its own dashboard (first visit creates the admin account). Its only setting from here is the
+  # database; the bridge of personal Zalo accounts runs inside this container once installed from the dashboard.
+  agent:
+    profiles: ["agent"]
+    build: *agent-build
+    image: pema-agent-agent:${PEMA_IMAGE_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      agent-migrate:
+        condition: service_completed_successfully
+    environment:
+      AGENT_DATABASE_URL: postgresql+psycopg://agent_rt_app:${PEMA_AGENT_RT_APP_PASSWORD:-}@postgres:5432/pema
+    ports:
+      - "${PEMA_AGENT_BIND:-127.0.0.1}:${PEMA_AGENT_PORT:-8088}:8088"
+    volumes:
+      - agent-home:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8088/health', timeout=3).status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
   frontend:
     profiles: ["frontend", "app", "proxy"]
     build:
@@ -328,6 +374,7 @@ volumes:
   pg-data:
   redis-data:
   pema-data:
+  agent-home:
   caddy-data:
   caddy-config:
   # ollama-models:  # TẠM TẮT LLM LOCAL (2026-10-02)
