@@ -12,6 +12,31 @@
         "title": "ActorType",
         "type": "string"
       },
+      "AgentTokenResponse": {
+        "additionalProperties": false,
+        "description": "A short token (EdDSA JWT, ``aud`` ``pema-agent``) with which the clinic web's server calls the agent\nservice for the signed-in staff member. Checked by the agent against ``GET /.well-known/jwks.json``.",
+        "properties": {
+          "expires_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "expires_at"
+        ],
+        "title": "AgentTokenResponse",
+        "type": "object"
+      },
       "AlertsOut": {
         "additionalProperties": false,
         "properties": {
@@ -4127,6 +4152,24 @@
         "additionalProperties": true,
         "type": "object"
       },
+      "JwksResponse": {
+        "additionalProperties": false,
+        "description": "The public keys that check the agent tokens (RFC 7517 key set).",
+        "properties": {
+          "keys": {
+            "items": {
+              "$ref": "#/components/schemas/PublicJwk"
+            },
+            "title": "Keys",
+            "type": "array"
+          }
+        },
+        "required": [
+          "keys"
+        ],
+        "title": "JwksResponse",
+        "type": "object"
+      },
       "KbApprove": {
         "additionalProperties": false,
         "properties": {
@@ -7443,6 +7486,45 @@
         "title": "ProtocolUpdate",
         "type": "object"
       },
+      "PublicJwk": {
+        "additionalProperties": false,
+        "properties": {
+          "alg": {
+            "title": "Alg",
+            "type": "string"
+          },
+          "crv": {
+            "title": "Crv",
+            "type": "string"
+          },
+          "kid": {
+            "title": "Kid",
+            "type": "string"
+          },
+          "kty": {
+            "title": "Kty",
+            "type": "string"
+          },
+          "use": {
+            "title": "Use",
+            "type": "string"
+          },
+          "x": {
+            "title": "X",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kty",
+          "crv",
+          "x",
+          "kid",
+          "use",
+          "alg"
+        ],
+        "title": "PublicJwk",
+        "type": "object"
+      },
       "ReleaseRequest": {
         "additionalProperties": false,
         "description": "``POST /conversations/{id}/release``.",
@@ -10234,6 +10316,98 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/.well-known/jwks.json": {
+      "get": {
+        "description": "Open: a public key only. The agent service fetches it to check `POST /auth/agent-token`.",
+        "operationId": "auth_agent_token_keys",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JwksResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "summary": "Public keys that check the agent tokens",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/admin/kb/sources": {
       "get": {
         "operationId": "admin_kb_list_kb_sources",
@@ -13925,6 +14099,103 @@
         "summary": "Treatment started (arrived to in_progress)",
         "tags": [
           "appointments"
+        ]
+      }
+    },
+    "/api/v1/auth/agent-token": {
+      "post": {
+        "description": "Asked by the clinic web's server, which sends it to the agent as a bearer token; the agent checks it against `GET /.well-known/jwks.json`. Valid 2 minutes, never past the session. Needs `admin.agents`.",
+        "operationId": "auth_agent_token_for_user",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentTokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "A short token for the agent service, for the signed-in user",
+        "tags": [
+          "auth"
         ]
       }
     },

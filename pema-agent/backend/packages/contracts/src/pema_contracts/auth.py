@@ -58,6 +58,29 @@ class PermissionsResponse(ApiModel):
     permissions: list[Permission]
 
 
+class AgentTokenResponse(ApiModel):
+    """A short token (EdDSA JWT, ``aud`` ``pema-agent``) with which the clinic web's server calls the agent
+    service for the signed-in staff member. Checked by the agent against ``GET /.well-known/jwks.json``."""
+
+    token: str
+    expires_at: VnDatetime
+
+
+class PublicJwk(ApiModel):
+    kty: str
+    crv: str
+    x: str
+    kid: str
+    use: str
+    alg: str
+
+
+class JwksResponse(ApiModel):
+    """The public keys that check the agent tokens (RFC 7517 key set)."""
+
+    keys: list[PublicJwk]
+
+
 class StaffUserOut(ApiModel):
     """One staff account of the clinic as the owner and the manager see it (``GET /admin/users``). Never
     carries a password or a hash. ``email`` is the sign-in name (lower case, unique per clinic)."""

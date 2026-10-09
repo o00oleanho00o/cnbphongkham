@@ -13,6 +13,7 @@ from pema.api.export_openapi import DEFAULT_PATH, render_openapi
 from pema.bootstrap import create_app
 
 HTTP_METHODS = {"get", "post", "put", "patch", "delete"}
+OPEN_PATHS = {"/healthz", "/api/v1/auth/login", "/api/v1/.well-known/jwks.json"}
 EXPECTED_PATHS = [
     # clinic CRM (B1, B2) and the knowledge base (D3)
     "/api/v1/auth/login",
@@ -73,10 +74,9 @@ def test_every_tag_used_by_a_route_is_described(schema: dict[str, Any]) -> None:
 
 
 def test_every_admin_and_clinic_route_requires_the_session_cookie(schema: dict[str, Any]) -> None:
-    open_paths = {"/healthz", "/api/v1/auth/login"}
     unsecured: list[str] = []
     for path, item in schema["paths"].items():
-        if path in open_paths or "/webhooks/" in path:
+        if path in OPEN_PATHS or "/webhooks/" in path:
             continue
         for method, op in item.items():
             if method in HTTP_METHODS and not any("SessionCookie" in req for req in op.get("security", [])):
@@ -141,7 +141,7 @@ async def test_a_bare_app_never_serves_a_staff_route_to_an_anonymous_caller(
     unauthenticated = 0
     for path, item in schema["paths"].items():
         op = item.get("get")
-        if op is None or path == "/healthz" or path in GUARDED_BY_THE_MIDDLEWARE_WHEN_WIRED:
+        if op is None or path in OPEN_PATHS or path in GUARDED_BY_THE_MIDDLEWARE_WHEN_WIRED:
             continue
         params = {
             p["name"]: str(uuid4())

@@ -856,7 +856,7 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
 - First action next session: the Zalo plugin P0–P5d is done (branch `feat/zalo-plugin`); left: a phone QR scan
   and a message round trip in Docker (needs the user's secondary nick and a model key). Plan C (one sign-in,
-  below) waits until the user asks.
+  below): C1 done; next is C2 when the user says go.
 
 ### Deferred: verifier hook (user, 2026-10-09)
 
@@ -911,6 +911,17 @@ Steps (each: commit, stop, report):
   (context claims such as `patient_id` later); `GET /api/v1/.well-known/jwks.json` public (add to
   `PUBLIC_API_PREFIXES`); the private key made once in `PEMA_DATA_DIR` (volume `pema-data`, created exclusively,
   0600). Tests.
+  - Done (2026-10-10, this commit): `apps/api/pema/api/agent_token.py` (key file `agent-token-ed25519.pem`,
+    written to a draft with `O_EXCL` then `os.link`ed so two processes never race; `kid` = RFC 7638
+    thumbprint; `exp = min(now + 2 min, session expiry)`; claims `iss sub name role scope iat exp jti`),
+    routes in `routers/auth.py` (`Cache-Control: no-store` on the token, `public, max-age=300` on the keys;
+    403 without `admin.agents`), DTOs `AgentTokenResponse`, `PublicJwk`, `JwksResponse` in
+    `pema_contracts.auth`, `/api/v1/.well-known/` in `PUBLIC_API_PREFIXES`, `openapi.json` and
+    `frontend/src/lib/api/schema.d.ts` regenerated. Tests `apps/api/tests/api/test_agent_token.py` (5 unit +
+    1 DB: owner/manager 200, reception 403, anonymous 401, keys open and the token checks with them) and
+    `tests/test_openapi_skeleton.py` (`OPEN_PATHS`). DB tests ran against a separate database `pema_test` in
+    `pema-agent-postgres-1` (`postgresql+psycopg://postgres:<superuser pw from .env.local-demo>@127.0.0.1:15432/pema_test`);
+    never point `PEMA_TEST_DATABASE_URL` at `pema`, the fixture drops schemas.
 - **C2 agent**: bundled plugin `sso` (general: "trust JWTs of one issuer"): settings `issuer`, `audience`;
   JWKS cached, refetched on an unknown `kid`; registers an `Authenticator` → `Principal(subject, scopes)`.
   New profile `agents/clinic` (`web`, `sso` with `issuer=http://api:8000`, `calculate`); the core still names

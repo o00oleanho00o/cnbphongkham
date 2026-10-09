@@ -57,8 +57,9 @@ log = create_logger("composition.auth")
 
 API_PREFIX = "/api/v1/"
 ADMIN_PREFIX = "/api/v1/admin/"
-PUBLIC_API_PREFIXES: tuple[str, ...] = ("/api/v1/auth/login", "/api/v1/webhooks/")
-"""Routes that authenticate in another way: the login itself and the webhooks (secret token / HMAC)."""
+PUBLIC_API_PREFIXES: tuple[str, ...] = ("/api/v1/auth/login", "/api/v1/webhooks/", "/api/v1/.well-known/")
+"""Routes that authenticate in another way: the login itself and the webhooks (secret token / HMAC); and the
+public key set of the agent tokens."""
 AUDITED_FAMILIES: frozenset[str] = frozenset({"kb", "mcp", "schedules", "tools"})
 """Admin families whose services write no audit row of their own."""
 UNSAFE_METHODS: frozenset[str] = frozenset({"POST", "PUT", "PATCH", "DELETE"})

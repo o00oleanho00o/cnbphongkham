@@ -4,16 +4,21 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Request, Response, Security, status
 
+from pema.api import agent_token
 from pema.api import dashboard_auth as auth
 from pema.api import dashboard_password_store as password_store
 from pema.api.deps import ERROR_RESPONSES, cookie_scheme
 from pema.api.request_id import clean_request_id
+from pema.clinic.actions._common import now
 from pema.clinic.rbac import permissions_for
 from pema_contracts.auth import (
+    AgentTokenResponse,
     ChangePasswordRequest,
+    JwksResponse,
     LoginRequest,
     MeResponse,
     PermissionsResponse,
+    PublicJwk,
     SessionInfo,
 )
 from pema_contracts.errors import DomainError, ErrorCode
@@ -112,3 +117,33 @@ async def permissions(user: auth.CurrentUser) -> PermissionsResponse:
     return PermissionsResponse(
         role=user.role, permissions=_ordered(permissions_for(ActorType.USER, user.role))
     )
+
+
+@router.post(
+    "/auth/agent-token",
+    response_model=AgentTokenResponse,
+    dependencies=[Security(cookie_scheme)],
+    summary="A short token for the agent service, for the signed-in user",
+    description=(
+        "Asked by the clinic web's server, which sends it to the agent as a bearer token; the agent checks "
+        "it against `GET /.well-known/jwks.json`. Valid 2 minutes, never past the session. "
+        "Needs `admin.agents`."
+    ),
+)
+async def agent_token_for_user(response: Response, user: auth.CurrentUser) -> AgentTokenResponse:
+    if Permission.ADMIN_AGENTS not in permissions_for(ActorType.USER, user.role):
+        raise DomainError(ErrorCode.FORBIDDEN, "Bạn không có quyền quản trị agent.")
+    token, expires_at = agent_token.mint(agent_token.signing_key(), user, now())
+    response.headers["Cache-Control"] = "no-store"
+    return AgentTokenResponse(token=token, expires_at=expires_at)
+
+
+@router.get(
+    "/.well-known/jwks.json",
+    response_model=JwksResponse,
+    summary="Public keys that check the agent tokens",
+    description="Open: a public key only. The agent service fetches it to check `POST /auth/agent-token`.",
+)
+async def agent_token_keys(response: Response) -> JwksResponse:
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return JwksResponse(keys=[PublicJwk(**agent_token.signing_key().public_jwk())])
