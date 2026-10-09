@@ -1,0 +1,7 @@
+# Settings of this bridge's own pnpm project (pnpm v11 reads them from this file, not .npmrc).
+# This is NOT a workspace: it lists no packages and must not be moved to a higher level.
+packages: []
+allowBuilds:
+  esbuild: true # binary resolver of tsx
+minimumReleaseAgeExclude:
+  - globals@17.13.0

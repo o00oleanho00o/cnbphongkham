@@ -657,6 +657,30 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   `test_bot_channel.py` (fake Zalo over an httpx transport, end to end with hub and gateway); full suite 640 +
   the hub `prepare` test. Limit: every process running the plugin polls the same bot (run channels in one
   process until a lease exists).
+- **P3 split** (user agreed 2026-10-09): the Node bridge is installed by an admin's button (not on enable) and
+  run automatically while a personal account is enabled. P3a = bridge + QR + channel basics; P3b = receipts,
+  reactions, auto-react, quotes, group names; P3c = friends, contacts, auto-accept.
+- **P3a done** (commit after this entry): `plugins/zalo/bridge/` = the Node bridge restored from `eadaac30^`
+  (its own 296 tests pass after `pnpm install`; `LICENSE-NOTICE.md` points to the plugin `NOTICE`).
+  `personal/supervisor.py` `BridgeSupervisor`: install = copy sources (no tests) to
+  `<data_dir>/bridge/<version>/` + `pnpm install --frozen-lockfile --prod` (checks Node ≥ 22.13 and pnpm;
+  cleans up on failure; marker `installed.json`); job `bridge` runs `node --import tsx src/index.ts` on a free
+  loopback port with a fresh HMAC secret and a minimal env (no service keys), restarts after 2/5/30/60 s,
+  stops when no enabled personal account; output to `bridge.log`; `generation` grows per run. On Windows the
+  runner resolves `pnpm.cmd`/`node.exe` (a real install+run+signed call+uninstall smoke test passed).
+  `personal/client.py` (signed `BridgeClient`, `BridgeAccountApi`), `signing.py`, `image_variant.py` (restored),
+  `parser.py`, `channel.py` (`ZaloPersonalChannel`: attach to a live session or start with the stored login;
+  rich text styles, resend plain on `zalo_rejected`; typing). `plugin.py` rewritten: one `_channels` map for
+  bot and personal; personal channel needs bridge + credential + not locked out; restart on new credential or
+  new bridge run; `bridge_event` handles `message`, `credential_updated` (stored sealed, clears lock-out),
+  `account_state` (`logged_out`/`session_dead`/`blocked` stored as `state:<id>` → channel dropped, warning in
+  the account list). Routes: `GET/POST /bridge/install`/`DELETE /bridge`, `POST /accounts/{id}/login`,
+  `GET /accounts/{id}/login/status` (old `QrLoginStatus` shape), hook `POST
+  /v1/hooks/zalo/webhooks/zalo-bridge/{id}` (HMAC of the current run). Core: `ctx.data_dir`
+  (`AGENT_DATA_DIR`, default `~/.pema-agent`, `plugins/<name>`), `ctx.self_url` (set by `agent serve`, loopback).
+  Test seams: config `bridge_transport` + `bridge_secret`. Tests: `test_bridge_supervisor.py` (fake runner),
+  `test_personal_channel.py` (fake bridge); full suite 655. Not yet: friend events are acknowledged and
+  ignored; no receipts/reactions/quotes.
 
 ## S1 progress log (newest last)
 

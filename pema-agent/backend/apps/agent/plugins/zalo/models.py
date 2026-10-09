@@ -103,6 +103,21 @@ class ReactionIconOut(_Model):
     label: str
 
 
+class QrLoginState(StrEnum):
+    IDLE = "idle"
+    WAITING_SCAN = "waiting_scan"
+    SCANNED = "scanned"
+    SUCCESS = "success"
+    EXPIRED = "expired"
+    ERROR = "error"
+
+
+class QrLoginStatus(_Model):
+    state: QrLoginState
+    qr_png_base64: str | None = Field(default=None, description="Present while waiting for a scan.")
+    detail: str | None = None
+
+
 class BotTokenSet(_Model):
     token: str = Field(
         min_length=10,

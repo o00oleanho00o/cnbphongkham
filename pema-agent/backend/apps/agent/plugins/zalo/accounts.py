@@ -21,6 +21,7 @@ from .models import AccountConfig, AccountCreate, AccountUpdate, Allowlist, Allo
 
 ACCOUNT: Final = "account:"
 SECRET: Final = "secret:"  # noqa: S105 - a key prefix, not a secret
+STATE: Final = "state:"
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +77,20 @@ class AccountStore:
     async def delete(self, account_id: str) -> bool:
         """The account and its credential; what it said and heard stays in the agent's sessions."""
         await self._storage.delete(SECRET + account_id)
+        await self._storage.delete(STATE + account_id)
         return await self._storage.delete(ACCOUNT + account_id)
+
+    async def state(self, account_id: str) -> str | None:
+        """Why a personal account cannot run until a new QR scan (``logged_out``, ``session_dead``,
+        ``blocked``)."""
+        value = await self._storage.get(STATE + account_id)
+        return value if isinstance(value, str) else None
+
+    async def set_state(self, account_id: str, state: str | None) -> None:
+        if state is None:
+            await self._storage.delete(STATE + account_id)
+        else:
+            await self._storage.put(STATE + account_id, state)
 
     async def has_secret(self, account_id: str) -> bool:
         return await self._storage.get(SECRET + account_id) is not None

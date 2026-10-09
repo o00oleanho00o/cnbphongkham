@@ -345,6 +345,11 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int) -> int
             _write(f"warning: no {DATABASE_URL_ENV}: messages and sessions live in process memory only\n")
         try:
             await runtime.plugin_manager.start()
+            # Helper processes of plugins call back over loopback, whatever address the service binds.
+            local = "127.0.0.1" if host in ("0.0.0.0", "::", "") else host  # noqa: S104 - compared, not bound
+            runtime.plugins.self_url = (
+                f"http://[{local}]:{port}" if ":" in local else f"http://{local}:{port}"
+            )
             dispatcher = runtime.dispatcher()
             app = create_app(
                 dispatcher,

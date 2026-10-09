@@ -16,6 +16,7 @@ import logging
 import sys
 from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
+from pathlib import Path
 from types import ModuleType
 from typing import Any, Final, Literal
 
@@ -35,6 +36,9 @@ REGISTER: Final = "register"
 DEPS_DIR: Final = ".deps"
 """A plugin's own Python packages, installed with it; on ``sys.path`` while it is enabled."""
 RESERVED_CHANNELS: Final = frozenset({"http", "cli"})
+DATA_DIR_ENV: Final = "AGENT_DATA_DIR"
+DEFAULT_DATA_DIR: Final = ".pema-agent"
+"""Under the home folder, when ``AGENT_DATA_DIR`` is not set."""
 
 Disposer = Callable[[], None]
 Section = SessionSection | TurnSection | StepSection
@@ -93,12 +97,16 @@ class PluginContext:
         *,
         storage: PluginStorage,
         channel_owner: Callable[[str], str | None],
+        data_dir: Path,
+        self_url: Callable[[], str | None],
     ) -> None:
         self._loaded = loaded
         self._env = env
         self._changed = changed
         self._storage = storage
         self._channel_owner = channel_owner
+        self._data_dir = data_dir
+        self._self_url = self_url
         self.logger = logging.getLogger(f"agent_plugin.{loaded.source.name}")
 
     @property
@@ -120,6 +128,18 @@ class PluginContext:
     def storage(self) -> PluginStorage:
         """This plugin's own records, kept in the agent's database (process memory without one)."""
         return self._storage
+
+    @property
+    def data_dir(self) -> Path:
+        """A folder of this plugin's own on this machine (helper programs, caches); created on first use."""
+        self._data_dir.mkdir(parents=True, exist_ok=True)
+        return self._data_dir
+
+    @property
+    def self_url(self) -> str | None:
+        """Where this service answers HTTP on this machine (``http://127.0.0.1:<port>``), for a helper process
+        that calls the plugin's hook routes back; None until the service listens (``agent serve``)."""
+        return self._self_url()
 
     def encrypt(self, plaintext: str) -> str:
         """Seals a secret (a token, a login cookie) with the service's key before it goes to ``storage``; the
@@ -228,10 +248,14 @@ class PluginHost:
         env: Mapping[str, str],
         *,
         storage: StorageFor | None = None,
+        data_root: Path | None = None,
     ) -> None:
         self._sources = dict(sources)
         self._env = env
         self._storage: StorageFor = storage or InMemoryPluginRecords().storage
+        self._data_root = data_root or Path(env.get(DATA_DIR_ENV) or Path.home() / DEFAULT_DATA_DIR)
+        self.self_url: str | None = None
+        """Set by the service once it listens; plugins read it through ``ctx.self_url``."""
         self._loaded: dict[str, _Loaded] = {}
         self._generation = itertools.count(1)
         self.version = 0
@@ -281,6 +305,8 @@ class PluginHost:
                     self._bump,
                     storage=self._storage(name),
                     channel_owner=self._channel_owner,
+                    data_dir=self._data_root / "plugins" / name,
+                    self_url=lambda: self.self_url,
                 )
             )
             self._check_unique(loaded)
