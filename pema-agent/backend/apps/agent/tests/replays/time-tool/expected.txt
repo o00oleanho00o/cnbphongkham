@@ -1,0 +1,7 @@
+== turn 1 ==
+user: Dùng công cụ để xem bây giờ ở Tokyo là mấy giờ.
+call get_datetime {"timezone": "Asia/Tokyo"}
+result get_datetime ok: <datetime> (<weekday>, Asia/Tokyo)
+assistant: Bây giờ ở Tokyo là **<time>** thứ Sáu, ngày 09/10/2026.
+stop: completed, steps 2, compactions 0
+events: model_call, tool_call, model_call

@@ -1,0 +1,14 @@
+== turn 1 ==
+user: Tính giúp mình (125000 * 3 - 15000) / 2
+call calculate {"expression": "(125000 * 3 - 15000) / 2"}
+result calculate ok: 180000
+assistant: Kết quả là **180000**.
+stop: completed, steps 2, compactions 0
+events: model_call, tool_call, model_call
+== turn 2 ==
+user: Hãy ghi nhớ rằng mình tên Nam và thích câu trả lời ngắn gọn.
+call memory {"action": "add", "target": "user", "content": "Tên: Nam. Thích câu trả lời ngắn gọn."}
+result memory ok: Saved (user memory: 1 notes, 37/1375 chars). It reaches your prompt in the next session.
+assistant: Đã ghi nhớ: bạn tên Nam, thích câu trả lời ngắn gọn. 👍
+stop: completed, steps 2, compactions 0
+events: model_call, tool_call, model_call

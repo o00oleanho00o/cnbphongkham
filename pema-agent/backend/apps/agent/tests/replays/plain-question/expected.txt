@@ -1,0 +1,5 @@
+== turn 1 ==
+user: Giới thiệu ngắn gọn về bạn trong 2 câu.
+assistant: Tôi là một trợ lý AI tổng hợp, có thể giúp bạn giải đáp câu hỏi, làm việc với con số, tra cứu thông tin và hỗ trợ nhiều tác vụ khác. Tôi trả lời ngắn gọn và sẽ hỏi lại khi cần làm rõ yêu cầu của bạn.
+stop: completed, steps 1, compactions 0
+events: model_call
