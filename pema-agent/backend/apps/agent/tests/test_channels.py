@@ -55,7 +55,7 @@ class Echoes:
 
 
 def register(ctx):
-    ctx.register_channel(Echoes(ctx.config.get("channel", "zalo"), ctx.config["log"]))
+    ctx.register_channel(Echoes(ctx.config.get("channel", "chat"), ctx.config["log"]))
 """
 
 
@@ -264,26 +264,26 @@ async def test_a_channel_that_cannot_start_is_reported_and_tried_again(tmp_path:
 
 async def test_a_plugin_channel_starts_and_stops_with_its_plugin(tmp_path: Path) -> None:
     runtime = _runtime(tmp_path)
-    plugin = tmp_path / "agent" / "plugins" / "zalo"
+    plugin = tmp_path / "agent" / "plugins" / "chatter"
     plugin.mkdir()
-    (plugin / "plugin.toml").write_text('name = "zalo"\n', encoding="utf-8")
+    (plugin / "plugin.toml").write_text('name = "chatter"\n', encoding="utf-8")
     (plugin / "__init__.py").write_text(textwrap.dedent(CHANNEL_PLUGIN), encoding="utf-8")
     log: list[str] = []
     dispatcher = runtime.dispatcher()
     hub = runtime.channel_hub(dispatcher, FAST)
     await runtime.plugin_manager.start()  # finds the plugin written after the start
 
-    runtime.live.enable("zalo", {"log": log})
+    runtime.live.enable("chatter", {"log": log})
     await hub.sync()
     running = hub.running
-    channels = [s.channels for s in runtime.plugins.status() if s.name == "zalo"]
-    runtime.live.disable("zalo")
+    channels = [s.channels for s in runtime.plugins.status() if s.name == "chatter"]
+    runtime.live.disable("chatter")
     await hub.sync()
     with pytest.raises(PluginError, match="invalid channel name 'http'"):
-        runtime.live.enable("zalo", {"log": log, "channel": "http"})
+        runtime.live.enable("chatter", {"log": log, "channel": "http"})
 
-    assert (running, channels) == (["zalo"], [("zalo",)])
-    assert (log, hub.running) == (["start zalo", "stop zalo"], [])
+    assert (running, channels) == (["chat"], [("chat",)])
+    assert (log, hub.running) == (["start chat", "stop chat"], [])
     await dispatcher.close()
 
 

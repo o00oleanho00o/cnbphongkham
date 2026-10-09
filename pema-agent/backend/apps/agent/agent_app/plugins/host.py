@@ -19,14 +19,17 @@ from dataclasses import dataclass, field
 from types import ModuleType
 from typing import Any, Final, Literal
 
+from cryptography.exceptions import InvalidTag
 from fastapi import APIRouter, FastAPI
 
+from agent_app.model_settings import SECRET_KEY_ENV
 from agent_app.plugins.manifest import PluginError, PluginSource
 from agent_app.plugins.records import InMemoryPluginRecords, PluginStorage, StorageFor
 from agentcore import ToolSpec
 from agentcore.channels import ChannelAdapter, valid_channel_name
 from agentcore.harness.hooks import Hook
 from agentcore.prompt import SessionSection, StepSection, TurnSection
+from secretcipher import decrypt_with, encrypt_with
 
 REGISTER: Final = "register"
 DEPS_DIR: Final = ".deps"
@@ -117,6 +120,25 @@ class PluginContext:
     def storage(self) -> PluginStorage:
         """This plugin's own records, kept in the agent's database (process memory without one)."""
         return self._storage
+
+    def encrypt(self, plaintext: str) -> str:
+        """Seals a secret (a token, a login cookie) with the service's key before it goes to ``storage``; the
+        plugin never sees the key."""
+        return encrypt_with(self._secret_key(), plaintext)
+
+    def decrypt(self, sealed: str) -> str:
+        try:
+            return decrypt_with(self._secret_key(), sealed)
+        except (InvalidTag, ValueError) as err:
+            raise PluginError(
+                self.name, f"a stored secret does not decrypt (was {SECRET_KEY_ENV} changed?)"
+            ) from err
+
+    def _secret_key(self) -> str:
+        key = self._env.get(SECRET_KEY_ENV)
+        if not key:
+            raise PluginError(self.name, f"set {SECRET_KEY_ENV} (64 hex characters) to store a secret")
+        return key
 
     def register_tool(self, spec: ToolSpec[Any]) -> Disposer:
         return self._add(self._loaded.tools, spec)

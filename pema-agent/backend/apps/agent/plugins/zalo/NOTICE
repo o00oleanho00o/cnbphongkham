@@ -1,0 +1,58 @@
+The Zalo plugin is a derivative work of zalo-agent and drives personal Zalo accounts through zca-js. Both are
+MIT-licensed; their copyright and permission notices are reproduced below as the MIT license requires.
+
+1. zalo-agent
+
+Source: https://github.com/vuhai2002/zalo-agent, version 0.3.1, commit bf154de68335e73073c2b6913c731be22ca3d0e6.
+The plugin's Python code is a translation of its TypeScript src/zalo, src/zalo-bot and the account handling of
+src/config and src/server (files start with "# ported from: src/<path>.ts").
+
+MIT License
+
+Copyright (c) 2026 Vu Van Hai
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+2. zca-js
+
+Source: https://github.com/RFS-ADRENO/zca-js (npm package zca-js 2.1.2). Not translated and not vendored: the
+plugin's Node bridge uses it as an unmodified npm dependency. zca-js is an UNOFFICIAL, reverse-engineered client;
+using it can get the account locked.
+
+MIT License
+
+Copyright (c) 2024 - 2025 RFS-ADRENO, truong9c2208, JustKemForFun
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

@@ -204,6 +204,41 @@ async def test_bad_keys_and_values_are_refused(key: str, value: Any, error: str)
 # --- routes ---
 
 
+SEALING_PLUGIN = """
+def register(ctx):
+    log = ctx.config["log"]
+    try:
+        sealed = ctx.encrypt("token-123")
+    except ValueError as err:
+        log.append(str(err))
+        return
+    log.append(sealed)
+    log.append(ctx.decrypt(sealed))
+    try:
+        ctx.decrypt("not sealed")
+    except ValueError as err:
+        log.append(str(err))
+"""
+
+
+def test_a_plugin_seals_secrets_with_the_service_key_it_cannot_read(tmp_path: Path) -> None:
+    _plugin(tmp_path, "sealer", SEALING_PLUGIN)
+    sources = discover([("agent", tmp_path)]).plugins
+    without: list[str] = []
+    PluginHost(sources, {}).enable("sealer", {"log": without})
+    with_key: list[str] = []
+    PluginHost(sources, {"AGENT_SECRET_ENCRYPTION_KEY": "0f" * 32}).enable("sealer", {"log": with_key})
+
+    assert without == ["plugin sealer: set AGENT_SECRET_ENCRYPTION_KEY (64 hex characters) to store a secret"]
+    sealed, opened, refused = with_key
+    assert "token-123" not in sealed
+    assert opened == "token-123"
+    assert (
+        refused
+        == "plugin sealer: a stored secret does not decrypt (was AGENT_SECRET_ENCRYPTION_KEY changed?)"
+    )
+
+
 async def test_plugin_admin_routes_need_the_admin_token_and_reach_the_plugin(tmp_path: Path) -> None:
     runtime = _runtime(tmp_path, ["hooky"])
     async with _client(runtime) as client:

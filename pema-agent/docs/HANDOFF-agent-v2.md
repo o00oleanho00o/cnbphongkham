@@ -623,6 +623,20 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   conversation's messages are unfinished (cap 300 s). Plugin descriptions list `jobs` and `routes`.
   `FailureLimiter` became `WindowLimiter` (`count` instead of `failed`). Tests: `apps/agent/tests/
   test_plugin_runtime.py` (16) + a Postgres records test; full suite 438 passed with the DB.
+- **P1 done** (commit after this entry): `apps/agent/plugins/zalo/` = `plugin.toml` (setting `rich_text`,
+  default on), `NOTICE` (MIT texts of zalo-agent and zca-js), `models.py` (ChannelKind zalo_bot /
+  zalo_personal / zalo_oa, AccountConfig/Create/Update/Out as the old admin API minus `clinic_id`, `agent_id`,
+  `policy_profile`; account id max 58 chars because the channel will be `zalo-<id>`), `accounts.py`
+  (`AccountStore` on `ctx.storage`: `account:<id>` settings, `secret:<id>` sealed credential; a bot account
+  starts with a closed allowlist), `reaction_icons.py`, `routes.py` (`GET/POST /accounts`, `PATCH/DELETE
+  /accounts/{id}`, `GET /accounts/reaction-icons` under `/v1/plugins/zalo`), `format/` restored from
+  `588f18fc^` (utf16, markdown → Zalo styles, normalise, split long / styled, sanitize reply, prepare outgoing
+  text; `get_tuning("ZALO_RICH_TEXT_ENABLED")` became a `rich_text` argument; `TextStyle` copied into
+  `format/text_style.py`). Core: `ctx.encrypt` / `ctx.decrypt` seal with `AGENT_SECRET_ENCRYPTION_KEY` (the
+  plugin never sees the key). Tests: `apps/agent/tests/zalo/` (153 restored format tests + account tests,
+  import the plugin as `plugins.zalo...`); the old test channel plugin named `zalo` in `test_channels.py` is now
+  `chatter`. Full suite 603 passed with the DB. `running` is always false until P2 registers channels;
+  `disabled_tools` is stored but not enforced yet (P2: a hook for the account's channel).
 
 ## S1 progress log (newest last)
 

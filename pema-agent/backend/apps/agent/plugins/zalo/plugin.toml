@@ -1,0 +1,10 @@
+name = "zalo"
+version = "0.1.0"
+description = "Zalo for the agent: Zalo Bot API, personal Zalo accounts (QR login) and Zalo OA (not yet), with accounts, recipient lists and rich-text replies."
+api = 1
+
+[user_config.rich_text]
+type = "boolean"
+title = "Rich text"
+description = "Turn the agent's markdown into Zalo bold, italic, headings and lists; off sends plain text."
+default = true
