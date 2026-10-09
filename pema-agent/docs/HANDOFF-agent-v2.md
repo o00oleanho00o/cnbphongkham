@@ -854,7 +854,9 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
-- First action next session: continue the Zalo plugin with P1 (branch `feat/zalo-plugin`).
+- First action next session: the Zalo plugin P0–P5d is done (branch `feat/zalo-plugin`); left: a phone QR scan
+  and a message round trip in Docker (needs the user's secondary nick and a model key). Plan C (one sign-in,
+  below) waits until the user asks.
 
 ### Deferred: verifier hook (user, 2026-10-09)
 
@@ -886,6 +888,53 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   `apps/agent/agent_app/gateway.py`). Plan when picked up: the caller signs `timestamp + body` with a shared
   secret (`X-Agent-Timestamp`, `X-Agent-Signature`, HMAC-SHA256), the gateway rejects a bad signature or a
   timestamp older than ~5 min (replay), compares with `hmac.compare_digest`; keep the bearer token as well.
+
+### Deferred: plan C — one sign-in for CRM and agent (agreed 2026-10-10, start when the user asks)
+
+Goal: staff sign in once on the Next.js web (`:3000`, clinic API session); the menu "Quản trị agent" shows the
+agent's pages (overview, model, plugins) and the pages plugins ship (Zalo from `plugins/zalo/ui` `client.js`).
+The agent publishes no port outside the stack; its own dashboard on 8088 stays for first setup and emergencies.
+Rejected: a separate FE image (A/B options) — static files cost nothing, the stateful agent is what does not
+scale; real scaling later = stateless gateway + one channel worker (Zalo sessions, bridge, jobs).
+
+Decisions (user agreed): (1) the Next server does the token work, the browser never holds an agent token;
+tokens signed Ed25519 by the clinic API, the agent reads the public key (JWKS): no shared secret, no new env
+secret. (2) Zalo pages come from the plugin's script; drop the old Next pages `/admin/accounts|friends|contacts`.
+(3) Hide the dead "Quản trị agent" entries (traces, threads, memory, schedules, agents, tools, mcp, policy,
+tuning: they call removed clinic endpoints) until the agent has the routes; KB, users and logs are clinic and
+stay. (4) Follow the frontend UI process of `AGENTS.md` (specs, screenshots, `web-design-changes.md`); new
+screens without an id are logged as new.
+
+Steps (each: commit, stop, report):
+- **C1 clinic API**: `POST /api/v1/auth/agent-token` (called by the Next server with the user's cookie; needs
+  `admin.agents`), token 2 min, Ed25519, `iss` clinic, `aud=pema-agent`, `sub`, name, role, `scope`
+  (context claims such as `patient_id` later); `GET /api/v1/.well-known/jwks.json` public (add to
+  `PUBLIC_API_PREFIXES`); the private key made once in `PEMA_DATA_DIR` (volume `pema-data`, created exclusively,
+  0600). Tests.
+- **C2 agent**: bundled plugin `sso` (general: "trust JWTs of one issuer"): settings `issuer`, `audience`;
+  JWKS cached, refetched on an unknown `kid`; registers an `Authenticator` → `Principal(subject, scopes)`.
+  New profile `agents/clinic` (`web`, `sso` with `issuer=http://api:8000`, `calculate`); the core still names
+  no clinic. Tests.
+- **C3 Next.js**: route `/agent/[...path]` → `PEMA_AGENT_INTERNAL_URL` with the rules of `lib/server/api-proxy.ts`
+  (only `/agent/v1/**`, `/agent/ui/**`); it gets a token from the clinic API with the cookie (also the session
+  check; cached per session until shortly before expiry), strips the cookie, sets `Bearer`, streams. Host
+  `window.__PEMA_AGENT__` from Next's React; `api` calls `/agent/v1/...` same origin; `ui` mapped onto the
+  Next kit; page `/admin/agent/p/[plugin]/[page]`, menu entries from enabled plugins; port overview, model,
+  plugins pages from `plugins/web/ui`; Tailwind `@source` the bundled plugins' `ui/src`.
+- **C4 compose + real run**: `frontend` gets `PEMA_AGENT_INTERNAL_URL=http://agent:8088`; `agent` runs
+  `agents/clinic`, `expose` only; sign in once at `:3000` (`admin@gmail.com`), open the Zalo pages, scan a QR.
+
+Reference read (2026-10-10): `E:\Desktop\clone-git\crm-trycompai` (trycompai/crm, MIT; Next.js + NestJS + eve
+agent). Their bridge: `apps/app/app/eve/v1/[...path]/route.ts` checks the session, strips the cookie, checks
+the conversation belongs to the user, mints a 2-min HS256 token (`iss crm-app`, `aud crm-agent`, record ids
+as claims) and streams; the agent (`apps/agent/agent/channels/eve.ts`) maps it to a user principal. Taken:
+the proxy as the enforcement point, short tokens, context in the token not in the message. Not taken: the
+shared `AGENT_BRIDGE_SECRET` env in both processes (we use Ed25519 + JWKS), the agent reading the CRM tables
+directly (our boundary: schema `agent_rt`, import-linter). Ideas for later: a work queue leased with
+`FOR UPDATE SKIP LOCKED` (`apps/agent/agent/lib/tasks.ts`) for scaling dispatch; "evidence, not confidence"
+(weak evidence becomes a suggestion a human settles, like the doctor-approval rule); a native agent chat
+panel on Patient 360 (`docs/agent-panel.md` lists the pitfalls: keep the stream mounted across tabs, 90 s
+quiet = over, unreachable = offline not working).
 
 ## Suggested skills
 
