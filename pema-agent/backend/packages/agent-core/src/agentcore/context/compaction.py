@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from typing import Final
 
@@ -74,10 +74,12 @@ class ContextManager:
         keep_from: int,
         max_output_tokens: int,
         force: bool = False,
+        before_summary: Callable[[Sequence[Message]], Awaitable[Usage]] | None = None,
     ) -> CompactionResult | None:
         """Summarise what lies before the newest turns that fit the keep budget. ``keep_from`` (the current
         turn's user message, or the history length between turns) is never compacted; ``force`` keeps only the
-        newest turn. None when there is nothing to compact."""
+        newest turn. ``before_summary`` sees the messages about to be summarised (a memory flush) and returns
+        the tokens it used. None when there is nothing to compact."""
         history = await store.load(tenant_id, session_id)
         previous = await store.load_compaction(tenant_id, session_id)
         start = previous.first_kept if previous else 0
@@ -88,7 +90,9 @@ class ContextManager:
         if cut is None:
             return None
         middle = history[start:cut]
+        flushed = await before_summary(middle) if before_summary else Usage()
         summary, usage, fallback = await self._summarise(previous.summary if previous else None, middle)
+        usage = usage + flushed
         record = CompactionRecord(summary=summary, first_kept=cut)
         await store.save_compaction(tenant_id, session_id, record)
         logger.info(

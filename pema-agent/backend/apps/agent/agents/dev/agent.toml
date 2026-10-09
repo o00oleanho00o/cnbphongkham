@@ -1,0 +1,40 @@
+# Development agent. Secrets never go here: the API key is read from LLM_API_KEY.
+# LLM_MODEL and LLM_BASE_URL override [model].model and [model].base_url.
+# Who the agent is lives in SOUL.md, how it works in AGENTS.md, bundled skills in skills/<name>/SKILL.md.
+# The agent can read those files but never change them.
+
+[agent]
+name = "dev"
+tools = ["get_datetime"]
+timezone = "Asia/Ho_Chi_Minh"
+
+[prompt]
+# session sections form the frozen system prompt; turn/step sections go in the per-request context block
+sections = ["identity", "rules", "tool_usage", "skills", "memory", "user_memory", "environment", "status"]
+
+[context]
+# older turns are summarised when a request would pass compact_at of the window left after the reply
+window_tokens = 128000
+compact_at = 0.75
+keep_recent_ratio = 0.20
+
+[memory]
+# notes the agent keeps across sessions: its own and about each user
+enabled = true
+agent_chars = 2200
+user_chars = 1375
+
+[skills]
+# bundled skills come from this folder; the agent may add its own with the skill tools
+enabled = true
+dir = "skills"
+
+[model]
+provider = "openai-compatible"
+model = ""
+base_url = ""
+timeout_s = 120
+
+[loop]
+max_steps = 6
+max_output_tokens = 2048

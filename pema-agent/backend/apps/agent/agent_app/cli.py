@@ -13,36 +13,40 @@ from pathlib import Path
 from typing import Final
 from uuid import uuid4
 
-from agent_app.model_factory import build_model, describe_model
-from agent_app.profile import Profile, load_profile
+from agent_app.assembly import Agent, build_agent
+from agent_app.model_factory import describe_model
+from agent_app.profile import load_profile
 from agentcore import (
     DEFAULT_TENANT,
     ContextManager,
     InMemorySessionStore,
     LlmRequest,
+    Message,
     ModelError,
     PromptBuilder,
-    PromptEnv,
     SessionStore,
     StepInfo,
     TokenEstimator,
+    ToolContext,
     ToolRegistry,
     ToolResultBlock,
     ToolUseBlock,
     TurnInfo,
     TurnResult,
-    builtin_sections,
+    Usage,
     run_turn,
 )
 from agentcore.clock import utc_now
-from agentcore.harness.tools.builtin import builtin_tools
+from agentcore.loop.run_turn import flush_memory
+from agentcore.memory import MemoryService
 
 EXIT_CONFIG_ERROR: Final = 2
 PREVIEW_CHARS: Final = 120
 CHANNEL: Final = "cli"
+CLI_USER: Final = "cli-user"
 HELP: Final = (
-    "Commands: /new (start a new session), /prompt (show what the model gets), "
-    "/context (context size), /compact (summarise older turns now), /exit (quit), /help (this help)\n"
+    "Commands: /new (start a new session), /prompt (show what the model gets), /context (context size), "
+    "/compact (summarise older turns now), /memory (saved notes), /exit (quit), /help (this help)\n"
 )
 
 
@@ -51,7 +55,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="agent", description="General-purpose agent")
     commands = parser.add_subparsers(dest="command", required=True)
     chat = commands.add_parser("chat", help="Chat with an agent in the terminal")
-    chat.add_argument("--profile", type=Path, required=True, help="path to a TOML profile")
+    chat.add_argument(
+        "--profile", type=Path, required=True, help="agent folder (with agent.toml) or a TOML profile"
+    )
     chat.add_argument("--fake", action="store_true", help="use an echo model: no provider, no API key")
     chat.add_argument("--session", default=None, help="session id (default: a new random one)")
     args = parser.parse_args(argv)
@@ -65,15 +71,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 async def _chat(profile_path: Path, *, fake: bool, session: str | None) -> int:
     try:
         profile = load_profile(profile_path)
-        tools = builtin_tools(timezone=profile.agent.timezone).subset(profile.agent.tools)
-        prompt = build_prompt(profile, tool_names=tools.names())
-        model = build_model(profile, fake=fake, env=os.environ)
-        context_policy = profile.context_policy()
+        agent = build_agent(profile, fake=fake, env=os.environ)
     except (OSError, ValueError, ModelError) as err:
         _write(f"error: {err}\n")
         return EXIT_CONFIG_ERROR
 
-    context = ContextManager(context_policy, model) if context_policy else None
     store = InMemorySessionStore()
     session_id = session or _new_session_id()
     lines = _stdin_lines()
@@ -98,33 +100,21 @@ async def _chat(profile_path: Path, *, fake: bool, session: str | None) -> int:
             session_id = _new_session_id()
             _write(f"new session: {session_id}\n")
             continue
-        if text == "/prompt":
-            _write(await show_prompt(prompt, store, session_id, max_steps=profile.loop.max_steps))
-            continue
-        if text == "/context":
-            output_tokens = profile.loop.max_output_tokens
-            _write(
-                await show_context(prompt, store, session_id, tools, context, max_output_tokens=output_tokens)
-            )
-            continue
-        if text == "/compact":
-            output_tokens = profile.loop.max_output_tokens
-            try:
-                _write(await compact_now(prompt, store, session_id, context, max_output_tokens=output_tokens))
-            except ModelError as err:
-                _write(f"error ({err.kind}): {err}\n")
+        if text.startswith("/"):
+            await _command(text, agent, store, session_id)
             continue
         try:
             result = await run_turn(
                 session_id=session_id,
                 user_text=text,
-                prompt=prompt,
-                model=model,
-                tools=tools,
+                prompt=agent.prompt,
+                model=agent.model,
+                tools=agent.tools,
                 store=store,
                 policy=profile.loop_policy(),
+                user_id=CLI_USER,
                 channel=CHANNEL,
-                context=context,
+                context=agent.context,
             )
         except ModelError as err:
             _write(f"error ({err.kind}): {err}\n")
@@ -132,19 +122,35 @@ async def _chat(profile_path: Path, *, fake: bool, session: str | None) -> int:
         _write(render_turn(result))
 
 
-def build_prompt(profile: Profile, *, tool_names: Sequence[str]) -> PromptBuilder:
-    env = PromptEnv(
-        agent_name=profile.agent.name,
-        persona=profile.agent.system_prompt,
-        timezone=profile.agent.timezone,
-        tool_names=tuple(tool_names),
-    )
-    return PromptBuilder(env, builtin_sections().select(profile.prompt.sections))
+async def _command(text: str, agent: Agent, store: SessionStore, session_id: str) -> None:
+    loop = agent.profile.loop
+    try:
+        if text == "/prompt":
+            _write(await show_prompt(agent.prompt, store, session_id, max_steps=loop.max_steps))
+        elif text == "/context":
+            _write(
+                await show_context(
+                    agent.prompt,
+                    store,
+                    session_id,
+                    agent.tools,
+                    agent.context,
+                    max_output_tokens=loop.max_output_tokens,
+                )
+            )
+        elif text == "/compact":
+            _write(await compact_now(agent, store, session_id))
+        elif text == "/memory":
+            _write(await show_memory(agent.memory, agent=agent.profile.agent.name))
+        else:
+            _write(f"unknown command: {text}\n{HELP}")
+    except ModelError as err:
+        _write(f"error ({err.kind}): {err}\n")
 
 
 async def show_prompt(prompt: PromptBuilder, store: SessionStore, session_id: str, *, max_steps: int) -> str:
     """The session's system prompt (frozen on first use) and the context block the next message would get."""
-    system = await prompt.system(store, DEFAULT_TENANT, session_id)
+    system = await prompt.system(store, DEFAULT_TENANT, session_id, user_id=CLI_USER)
     turn = prompt.start_turn(TurnInfo(now=utc_now(), channel=CHANNEL))
     context = turn.context(StepInfo(step=1, max_steps=max_steps))
     return (
@@ -167,7 +173,7 @@ async def show_context(
     compaction = await store.load_compaction(DEFAULT_TENANT, session_id)
     first_kept = compaction.first_kept if compaction else 0
     request = LlmRequest(
-        system=await prompt.system(store, DEFAULT_TENANT, session_id),
+        system=await prompt.system(store, DEFAULT_TENANT, session_id, user_id=CLI_USER),
         messages=history[first_kept:],
         tools=tools.schemas(),
         max_output_tokens=max_output_tokens,
@@ -189,30 +195,50 @@ async def show_context(
     return "\n".join(lines) + "\n"
 
 
-async def compact_now(
-    prompt: PromptBuilder,
-    store: SessionStore,
-    session_id: str,
-    context: ContextManager | None,
-    *,
-    max_output_tokens: int,
-) -> str:
-    if context is None:
+async def compact_now(agent: Agent, store: SessionStore, session_id: str) -> str:
+    """Summarise everything but the newest turn, after the same memory flush a turn would do."""
+    if agent.context is None:
         return "compaction is off: set [context] window_tokens in the profile\n"
     history = await store.load(DEFAULT_TENANT, session_id)
-    outcome = await context.compact(
+    system = await agent.prompt.system(store, DEFAULT_TENANT, session_id, user_id=CLI_USER)
+    max_output_tokens = agent.profile.loop.max_output_tokens
+
+    async def flush(messages: Sequence[Message]) -> Usage:
+        ctx = ToolContext(session_id=session_id, tenant_id=DEFAULT_TENANT, user_id=CLI_USER)
+        return await flush_memory(
+            model=agent.model,
+            tools=agent.tools,
+            ctx=ctx,
+            system=system,
+            messages=messages,
+            max_output_tokens=max_output_tokens,
+        )
+
+    outcome = await agent.context.compact(
         store=store,
         tenant_id=DEFAULT_TENANT,
         session_id=session_id,
         keep_from=len(history),
         max_output_tokens=max_output_tokens,
         force=True,
+        before_summary=flush,
     )
     if outcome is None:
         return "nothing to compact yet\n"
-    await prompt.system(store, DEFAULT_TENANT, session_id, refresh=True)
+    await agent.prompt.system(store, DEFAULT_TENANT, session_id, user_id=CLI_USER, refresh=True)
     note = " (no summary: the summariser failed)" if outcome.fallback else ""
     return f"compacted {outcome.compacted_messages} messages{note}\n"
+
+
+async def show_memory(memory: MemoryService | None, *, agent: str) -> str:
+    if memory is None:
+        return "memory is off: set [memory] enabled = true in the profile\n"
+    snapshot = await memory.snapshot(DEFAULT_TENANT, agent, CLI_USER)
+    lines = [f"agent notes ({len(snapshot.agent_notes)}):"]
+    lines.extend(f"  - {note}" for note in snapshot.agent_notes)
+    lines.append(f"notes about {CLI_USER} ({len(snapshot.user_notes)}):")
+    lines.extend(f"  - {note}" for note in snapshot.user_notes)
+    return "\n".join(lines) + "\n"
 
 
 def render_turn(result: TurnResult) -> str:

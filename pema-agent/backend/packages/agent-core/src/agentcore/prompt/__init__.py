@@ -12,6 +12,7 @@ from agentcore.prompt.builder import (
     with_context,
 )
 from agentcore.prompt.builtin import DEFAULT_SECTIONS, builtin_sections
+from agentcore.prompt.data import SessionData, SkillEntry, load_session_data
 from agentcore.prompt.sections import (
     PromptEnv,
     Scope,
@@ -35,12 +36,15 @@ __all__ = [
     "Scope",
     "Section",
     "SectionRegistry",
+    "SessionData",
     "SessionSection",
+    "SkillEntry",
     "StepInfo",
     "StepSection",
     "TurnInfo",
     "TurnPrompt",
     "TurnSection",
     "builtin_sections",
+    "load_session_data",
     "with_context",
 ]

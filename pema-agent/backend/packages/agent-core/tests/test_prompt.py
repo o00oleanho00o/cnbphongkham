@@ -50,9 +50,11 @@ def test_the_registry_refuses_unknown_bad_and_repeated_names() -> None:
     with pytest.raises(ValueError, match="Unknown prompt section"):
         builtin_sections().select(["identity", "nope"])
     with pytest.raises(ValueError, match="Invalid section name"):
-        SectionRegistry([SessionSection("Bad-Name", lambda env: "x")])
+        SectionRegistry([SessionSection("Bad-Name", lambda env, data: "x")])
     with pytest.raises(ValueError, match="already registered"):
-        SectionRegistry([SessionSection("a", lambda env: "x"), SessionSection("a", lambda env: "y")])
+        SectionRegistry(
+            [SessionSection("a", lambda env, data: "x"), SessionSection("a", lambda env, data: "y")]
+        )
 
 
 def test_a_section_listed_twice_is_refused() -> None:
@@ -81,7 +83,7 @@ def test_without_tools_or_context_sections_the_system_prompt_is_only_the_identit
 
 async def test_the_system_prompt_is_frozen_for_the_session() -> None:
     counter = iter(range(100))
-    changing = SessionSection("changing", lambda env: f"version {next(counter)}")
+    changing = SessionSection("changing", lambda env, data: f"version {next(counter)}")
     builder = PromptBuilder(ENV, [changing])
     store = InMemorySessionStore()
 

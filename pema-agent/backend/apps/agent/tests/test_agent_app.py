@@ -8,14 +8,16 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from agent_app.cli import build_prompt, main, render_turn
+from agent_app.assembly import build_agent, build_prompt
+from agent_app.cli import main, render_turn
 from agent_app.model_factory import build_model, describe_model, resolve_model_config
 from agent_app.profile import Profile, load_profile
 from agentcore import Message, ModelConfigError, TextBlock, ToolResultBlock, ToolUseBlock, TurnResult, Usage
 from agentcore.harness.model.scripted import EchoModel
 from agentcore.harness.tools.builtin import builtin_tools
+from agentcore.prompt import CONTEXT_EXPLAINER
 
-DEV_PROFILE = Path(__file__).resolve().parents[1] / "profiles" / "dev.toml"
+DEV_PROFILE = Path(__file__).resolve().parents[1] / "agents" / "dev"
 
 
 def _profile(**model: str) -> Profile:
@@ -69,24 +71,54 @@ def test_without_a_window_the_commands_say_compaction_is_off(
     assert "compaction is off: set [context] window_tokens" in out
 
 
-def test_the_dev_profile_reads_its_prompt_file_and_builds_its_prompt() -> None:
+def test_the_dev_agent_folder_gives_persona_rules_tools_and_a_bundled_skill() -> None:
     profile = load_profile(DEV_PROFILE)
 
-    prompt = build_prompt(profile, tool_names=profile.agent.tools)
+    agent = build_agent(profile, fake=True, env={})
 
     assert profile.agent.system_prompt.startswith("You are a helpful general-purpose assistant.")
-    assert prompt.render_system().startswith(profile.agent.system_prompt.strip())
-    assert prompt.env.tool_names == ("get_datetime",)
+    assert profile.agent.rules.startswith("## How you work")
+    assert agent.tools.names() == [
+        "get_datetime",
+        "memory",
+        "skill_list",
+        "skill_view",
+        "skill_write",
+        "skill_patch",
+    ]
+    system = agent.prompt.render_system()
+    assert system.startswith(profile.agent.system_prompt.strip())
+    assert "## How you work" in system
+    assert "## Memory" in system
 
 
-def test_a_prompt_given_twice_is_refused(tmp_path: Path) -> None:
-    path = tmp_path / "both.toml"
-    path.write_text(
-        '[agent]\nname = "x"\nsystem_prompt = "p"\nsystem_prompt_file = "p.md"\n', encoding="utf-8"
-    )
+async def test_the_bundled_skill_is_listed_and_read_only() -> None:
+    agent = build_agent(load_profile(DEV_PROFILE), fake=True, env={})
+    assert agent.skills is not None
 
-    with pytest.raises(ValidationError, match="not both"):
-        load_profile(path)
+    (skill,) = await agent.skills.list("default", "dev")
+
+    assert (skill.name, skill.origin) == ("write-a-plan", "bundled")
+    with pytest.raises(ValueError, match="bundled skill"):
+        await agent.skills.write("default", "dev", name="write-a-plan", description="x", body="y")
+
+
+def test_a_persona_in_soul_md_and_in_the_profile_is_refused(tmp_path: Path) -> None:
+    (tmp_path / "agent.toml").write_text('[agent]\nname = "x"\nsystem_prompt = "p"\n', encoding="utf-8")
+    (tmp_path / "SOUL.md").write_text("soul", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="not both"):
+        load_profile(tmp_path)
+
+
+def test_a_plain_toml_profile_needs_no_folder_files(tmp_path: Path) -> None:
+    path = tmp_path / "plain.toml"
+    path.write_text('[agent]\nname = "x"\nsystem_prompt = "p"\n', encoding="utf-8")
+
+    profile = load_profile(path)
+
+    assert (profile.agent.system_prompt, profile.agent.rules, profile.folder) == ("p", "", tmp_path)
+    assert build_prompt(profile, tool_names=[]).render_system() == f"p\n\n{CONTEXT_EXPLAINER}"
 
 
 def test_an_unknown_prompt_section_stops_the_chat(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

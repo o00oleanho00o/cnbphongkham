@@ -8,6 +8,7 @@ A section's scope decides where its text goes and how long it lives:
 - ``step``: rendered before every model call, sent in the same block.
 
 Each scope has its own section type, so a session section cannot read the clock or the step by mistake.
+Session sections also read ``SessionData`` (notes, skills index), loaded once with the system prompt.
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ from datetime import datetime
 from typing import Final, Literal
 
 from agentcore.clock import zone
+from agentcore.prompt.data import SessionData
 
 SECTION_NAME_PATTERN: Final = re.compile(r"[a-z][a-z0-9_]{0,63}")
 
@@ -33,6 +35,8 @@ class PromptEnv:
     persona: str
     timezone: str = "UTC"
     tool_names: tuple[str, ...] = ()
+    rules: str = ""
+    """Working rules (the agent's AGENTS.md)."""
 
     def __post_init__(self) -> None:
         zone(self.timezone)
@@ -59,7 +63,7 @@ class StepInfo:
 @dataclass(frozen=True, slots=True)
 class SessionSection:
     name: str
-    render: Callable[[PromptEnv], str | None]
+    render: Callable[[PromptEnv, SessionData], str | None]
 
     @property
     def scope(self) -> Scope:

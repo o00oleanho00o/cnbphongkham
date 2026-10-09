@@ -20,6 +20,8 @@ TOOL_NAME_PATTERN: Final = re.compile(r"[A-Za-z0-9_-]{1,64}")
 class ToolContext:
     session_id: str
     tenant_id: str = DEFAULT_TENANT
+    user_id: str | None = None
+    """The person the session talks to, set by the caller; a tool never takes it from the model."""
 
 
 class ToolOutput(BaseModel):

@@ -18,7 +18,9 @@ from collections.abc import Sequence
 from typing import Final
 
 from agentcore.harness.store.base import SessionStore, StoredPrompt
+from agentcore.memory.service import MemoryService
 from agentcore.messages import Message, TextBlock
+from agentcore.prompt.data import SessionData, load_session_data
 from agentcore.prompt.sections import (
     PromptEnv,
     Section,
@@ -28,6 +30,7 @@ from agentcore.prompt.sections import (
     TurnInfo,
     TurnSection,
 )
+from agentcore.skills.library import SkillLibrary
 
 CONTEXT_OPEN: Final = "<agent-context>"
 CONTEXT_CLOSE: Final = "</agent-context>"
@@ -50,7 +53,14 @@ logger = logging.getLogger(__name__)
 
 
 class PromptBuilder:
-    def __init__(self, env: PromptEnv, sections: Sequence[Section]) -> None:
+    def __init__(
+        self,
+        env: PromptEnv,
+        sections: Sequence[Section],
+        *,
+        memory: MemoryService | None = None,
+        skills: SkillLibrary | None = None,
+    ) -> None:
         names = [section.name for section in sections]
         repeated = sorted(name for name, count in Counter(names).items() if count > 1)
         if repeated:
@@ -58,6 +68,8 @@ class PromptBuilder:
         self._env = env
         self._session = [s for s in sections if isinstance(s, SessionSection)]
         self._dynamic = [s for s in sections if not isinstance(s, SessionSection)]
+        self._memory = memory
+        self._skills = skills
         payload = json.dumps({"env": dataclasses.asdict(env), "sections": names}, sort_keys=True)
         self._fingerprint = hashlib.sha256(payload.encode()).hexdigest()
 
@@ -74,14 +86,21 @@ class PromptBuilder:
     def fingerprint(self) -> str:
         return self._fingerprint
 
-    def render_system(self) -> str:
-        parts = [text for section in self._session if (text := section.render(self._env))]
+    def render_system(self, data: SessionData | None = None) -> str:
+        loaded = data or SessionData()
+        parts = [text for section in self._session if (text := section.render(self._env, loaded))]
         if self._dynamic:
             parts.append(CONTEXT_EXPLAINER)
         return "\n\n".join(parts)
 
     async def system(
-        self, store: SessionStore, tenant_id: str, session_id: str, *, refresh: bool = False
+        self,
+        store: SessionStore,
+        tenant_id: str,
+        session_id: str,
+        *,
+        user_id: str | None = None,
+        refresh: bool = False,
     ) -> str:
         """The session's frozen system prompt, built and stored on first use. ``refresh`` rebuilds it: a
         compaction does, since the summary changed and the provider's cache is lost anyway."""
@@ -95,7 +114,14 @@ class PromptBuilder:
                 saved.fingerprint[:12],
                 self._fingerprint[:12],
             )
-        parts = [self.render_system()]
+        data = await load_session_data(
+            memory=self._memory,
+            skills=self._skills,
+            tenant_id=tenant_id,
+            agent=self._env.agent_name,
+            user_id=user_id,
+        )
+        parts = [self.render_system(data)]
         compaction = await store.load_compaction(tenant_id, session_id)
         if compaction is not None:
             parts.append(f"{SUMMARY_OPEN}\n{SUMMARY_INTRO}\n\n{compaction.summary}\n{SUMMARY_CLOSE}")
@@ -144,5 +170,5 @@ def with_context(messages: Sequence[Message], context: str | None) -> list[Messa
     return [*messages, Message.user(context)]
 
 
-def _persona(env: PromptEnv) -> str:
+def _persona(env: PromptEnv, data: SessionData) -> str:
     return env.persona
