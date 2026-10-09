@@ -38,6 +38,8 @@ class Allow:
 @dataclass(frozen=True, slots=True)
 class Deny:
     reason: str
+    hook: str = ""
+    """Filled in by the HookSet: the name of the hook that refused."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,9 +129,9 @@ class HookSet:
                 logger.warning(
                     "pre_tool hook %s failed (%s); %s blocked", hook.name, type(err).__name__, use.name
                 )
-                return Deny(f"guard {hook.name} failed ({type(err).__name__})")
+                return Deny(f"guard {hook.name} failed ({type(err).__name__})", hook.name)
             if isinstance(decision, Deny):
-                return Deny(f"{hook.name}: {decision.reason}")
+                return Deny(f"{hook.name}: {decision.reason}", hook.name)
             if isinstance(decision, Rewrite):
                 use = use.model_copy(update={"args": decision.args})
         return use

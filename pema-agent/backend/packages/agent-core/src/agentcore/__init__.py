@@ -39,6 +39,7 @@ from agentcore.prompt import (
     builtin_sections,
 )
 from agentcore.tenancy import DEFAULT_TENANT
+from agentcore.trace import InMemoryTracer, TraceEvent, Tracer, TurnTrace
 
 __all__ = [
     "DEFAULT_TENANT",
@@ -49,6 +50,7 @@ __all__ = [
     "ContextManager",
     "ContextPolicy",
     "InMemorySessionStore",
+    "InMemoryTracer",
     "LlmRequest",
     "LoopPolicy",
     "Message",
@@ -77,11 +79,14 @@ __all__ = [
     "ToolSchema",
     "ToolSpec",
     "ToolUseBlock",
+    "TraceEvent",
+    "Tracer",
     "TurnInfo",
     "TurnObserver",
     "TurnResult",
     "TurnSection",
     "TurnStop",
+    "TurnTrace",
     "Usage",
     "builtin_sections",
     "run_turn",

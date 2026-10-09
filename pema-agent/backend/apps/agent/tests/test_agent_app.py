@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -10,10 +11,19 @@ import pytest
 from pydantic import ValidationError
 
 from agent_app.assembly import build_agent, build_prompt
-from agent_app.cli import ConsoleObserver, main, stats_line
+from agent_app.cli import ConsoleObserver, format_trace, main, stats_line
+from agent_app.db_roles import bootstrap_role
 from agent_app.model_factory import build_model, describe_model, resolve_model_config, resolve_model_settings
 from agent_app.profile import Profile, load_profile
-from agentcore import ModelConfigError, ToolResultBlock, ToolUseBlock, TurnResult, Usage
+from agentcore import (
+    ModelConfigError,
+    ToolResultBlock,
+    ToolUseBlock,
+    TraceEvent,
+    TurnResult,
+    TurnTrace,
+    Usage,
+)
 from agentcore.harness.model.anthropic import AnthropicModel
 from agentcore.harness.model.scripted import EchoModel
 from agentcore.harness.tools.builtin import builtin_tools
@@ -324,3 +334,63 @@ def test_chat_with_a_missing_profile_exits_with_a_config_error(capsys: pytest.Ca
 
     assert exit_code == 2
     assert capsys.readouterr().out.startswith("error:")
+
+
+def test_the_trace_command_shows_the_last_turn_of_the_session(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.delenv("AGENT_DATABASE_URL", raising=False)
+    monkeypatch.setattr(
+        "sys.stdin", io.StringIO("/trace\nxin chào\n/trace\n/sessions\n/new\n/trace\n/exit\n")
+    )
+
+    assert main(["chat", "--profile", str(DEV_PROFILE), "--fake"]) == 0
+    out = capsys.readouterr().out
+    assert out.count("no turn traced in this session yet\n") == 2
+    assert ": completed, 1 steps, " in out
+    assert "  step 1  model_call  " in out
+    assert "sessions live only in this process: set AGENT_DATABASE_URL" in out
+
+
+def test_a_failed_turn_trace_names_the_error_and_the_blocking_guard() -> None:
+    trace = TurnTrace(
+        turn_id="0123456789abcdef",
+        tenant_id="t",
+        session_id="s",
+        user_id=None,
+        channel="cli",
+        started_at=datetime(2026, 10, 9, tzinfo=UTC),
+        duration_s=1.5,
+        stop="error",
+        steps=2,
+        usage=Usage(input_tokens=10, output_tokens=2),
+        compactions=0,
+        error_kind="transient",
+        events=(
+            TraceEvent(
+                "tool_call", 1, 0.01, name="memory", is_error=True, detail={"blocked_by": "injection_guard"}
+            ),
+            TraceEvent("model_call", 2, 1.2, is_error=True, detail={"error_kind": "transient"}),
+        ),
+    )
+
+    assert format_trace(trace) == (
+        "turn 01234567: error (transient), 2 steps, 1.50s, in=10 out=2 cached=0\n"
+        "  step 1  tool_call memory  0.01s  error  (blocked_by=injection_guard)\n"
+        "  step 2  model_call  1.20s  error  (error_kind=transient)\n"
+    )
+
+
+def test_bootstrap_role_needs_the_owner_url_and_the_password(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.delenv("AGENT_MIGRATION_DATABASE_URL", raising=False)
+    monkeypatch.setenv("AGENT_RT_APP_PASSWORD", "x" * 20)
+
+    assert main(["db", "bootstrap-role"]) == 2
+    assert "set AGENT_MIGRATION_DATABASE_URL" in capsys.readouterr().out
+
+
+def test_bootstrap_role_refuses_a_short_password() -> None:
+    with pytest.raises(ValueError, match="at least 16"):
+        bootstrap_role("postgresql+psycopg://owner@localhost/db", "short")

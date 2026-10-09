@@ -9,7 +9,9 @@ history stays valid for every provider. Calls beyond ``max_calls_per_step`` get 
 from __future__ import annotations
 
 import asyncio
+import time
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any, Final, Protocol
 
 from pydantic import ValidationError
@@ -29,6 +31,13 @@ class ToolObserver(Protocol):
     def tool_call(self, use: ToolUseBlock) -> None: ...
 
     def tool_result(self, result: ToolResultBlock) -> None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class ToolRun:
+    result: ToolResultBlock
+    duration_s: float
+    blocked_by: str | None = None
 
 
 class ToolExecutor:
@@ -55,14 +64,25 @@ class ToolExecutor:
         step: int,
         observer: ToolObserver | None = None,
     ) -> list[ToolResultBlock]:
+        return [run.result for run in await self.execute(uses, ctx, step=step, observer=observer)]
+
+    async def execute(
+        self,
+        uses: Sequence[ToolUseBlock],
+        ctx: ToolContext,
+        *,
+        step: int,
+        observer: ToolObserver | None = None,
+    ) -> list[ToolRun]:
+        """Like ``run``, with how long each call took and the guard that blocked it."""
         hook_ctx = HookContext(
             tenant_id=ctx.tenant_id, session_id=ctx.session_id, user_id=ctx.user_id, step=step
         )
         allowed, refused = list(uses[: self._max_calls]), list(uses[self._max_calls :])
-        results: list[ToolResultBlock] = []
+        runs: list[ToolRun] = []
         limit = asyncio.Semaphore(self._max_parallel)
 
-        async def bounded(use: ToolUseBlock) -> ToolResultBlock:
+        async def bounded(use: ToolUseBlock) -> ToolRun:
             async with limit:
                 return await self._run_one(use, ctx, hook_ctx)
 
@@ -71,18 +91,18 @@ class ToolExecutor:
                 for use in batch:
                     observer.tool_call(use)
             done = await asyncio.gather(*(bounded(use) for use in batch))
-            results.extend(done)
+            runs.extend(done)
             if observer is not None:
-                for result in done:
-                    observer.tool_result(result)
+                for run in done:
+                    observer.tool_result(run.result)
         for use in refused:
             result = _error(
                 use, f"Too many tool calls in one step: at most {self._max_calls}. Call it again later."
             )
-            results.append(result)
+            runs.append(ToolRun(result, 0.0))
             if observer is not None:
                 observer.tool_result(result)
-        return results
+        return runs
 
     def _batches(self, uses: Sequence[ToolUseBlock]) -> list[list[ToolUseBlock]]:
         """Consecutive read-only calls share a batch; every other call is a batch of its own."""
@@ -100,26 +120,28 @@ class ToolExecutor:
         spec = self._tools.get(use.name)
         return spec is not None and spec.read_only
 
-    async def _run_one(self, use: ToolUseBlock, ctx: ToolContext, hook_ctx: HookContext) -> ToolResultBlock:
+    async def _run_one(self, use: ToolUseBlock, ctx: ToolContext, hook_ctx: HookContext) -> ToolRun:
+        started = time.perf_counter()
         spec = self._tools.get(use.name)
-        result = await self._checked(use, spec, ctx, hook_ctx)
-        return await self._hooks.after_tool(use, spec, result, hook_ctx)
+        result, blocked_by = await self._checked(use, spec, ctx, hook_ctx)
+        result = await self._hooks.after_tool(use, spec, result, hook_ctx)
+        return ToolRun(result, time.perf_counter() - started, blocked_by)
 
     async def _checked(
         self, use: ToolUseBlock, spec: ToolSpec[Any] | None, ctx: ToolContext, hook_ctx: HookContext
-    ) -> ToolResultBlock:
+    ) -> tuple[ToolResultBlock, str | None]:
         if spec is None:
-            return _error(use, f"Unknown tool: {use.name}")
+            return _error(use, f"Unknown tool: {use.name}"), None
         if use.raw_args is not None:
-            return _error(use, "Arguments are not valid JSON: send a JSON object.")
+            return _error(use, "Arguments are not valid JSON: send a JSON object."), None
         checked = await self._hooks.before_tool(use, spec, hook_ctx)
         if isinstance(checked, Deny):
-            return _error(use, f"blocked by {checked.reason}")
+            return _error(use, f"blocked by {checked.reason}"), checked.hook
         try:
             args = spec.args_model.model_validate(checked.args)
         except ValidationError as err:
-            return _error(use, f"Invalid arguments: {_describe(err)}")
-        return await _execute(spec, args, use, ctx)
+            return _error(use, f"Invalid arguments: {_describe(err)}"), None
+        return await _execute(spec, args, use, ctx), None
 
 
 async def _execute(spec: ToolSpec[Any], args: Any, use: ToolUseBlock, ctx: ToolContext) -> ToolResultBlock:

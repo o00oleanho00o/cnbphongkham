@@ -10,17 +10,28 @@ import sys
 import threading
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Final
+from typing import Final, Protocol
 from uuid import uuid4
 
+import psycopg
+
 from agent_app.assembly import Agent, build_agent
-from agent_app.model_factory import describe_model
+from agent_app.db_roles import MIGRATION_URL_ENV, PASSWORD_ENV, RUNTIME_ROLE, bootstrap_role
+from agent_app.model_factory import describe_model, resolve_model_settings
 from agent_app.profile import load_profile
-from agent_app.storage import AgentDatabase, PostgresMemoryBackend, PostgresSkillStore
+from agent_app.storage import (
+    AgentDatabase,
+    PostgresMemoryBackend,
+    PostgresSessionStore,
+    PostgresSkillStore,
+    PostgresTracer,
+    SessionOwnerError,
+)
 from agentcore import (
     DEFAULT_TENANT,
     ContextManager,
     InMemorySessionStore,
+    InMemoryTracer,
     LlmRequest,
     Message,
     ModelError,
@@ -34,6 +45,7 @@ from agentcore import (
     ToolUseBlock,
     TurnInfo,
     TurnResult,
+    TurnTrace,
     Usage,
     run_turn,
 )
@@ -47,9 +59,17 @@ CHANNEL: Final = "cli"
 CLI_USER: Final = "cli-user"
 DATABASE_URL_ENV: Final = "AGENT_DATABASE_URL"
 HELP: Final = (
-    "Commands: /new (start a new session), /prompt (show what the model gets), /context (context size), "
-    "/compact (summarise older turns now), /memory (saved notes), /exit (quit), /help (this help)\n"
+    "Commands: /new (start a new session), /sessions (recent sessions), /prompt (show what the model gets), "
+    "/context (context size), /compact (summarise older turns now), /memory (saved notes), "
+    "/trace (timings of the last turn), /exit (quit), /help (this help)\n"
 )
+RECENT_SESSIONS: Final = 10
+
+
+class TraceLog(Protocol):
+    async def record(self, trace: TurnTrace) -> None: ...
+
+    async def last(self, tenant_id: str, session_id: str) -> TurnTrace | None: ...
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -61,8 +81,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--profile", type=Path, required=True, help="agent folder (with agent.toml) or a TOML profile"
     )
     chat.add_argument("--fake", action="store_true", help="use an echo model: no provider, no API key")
-    chat.add_argument("--session", default=None, help="session id (default: a new random one)")
+    chat.add_argument("--session", default=None, help="session id to resume (default: a new random one)")
+    db = commands.add_parser("db", help="Database administration (schema agent_rt)")
+    db_commands = db.add_subparsers(dest="db_command", required=True)
+    db_commands.add_parser(
+        "bootstrap-role",
+        help=f"create or update the runtime role {RUNTIME_ROLE} "
+        f"(needs {MIGRATION_URL_ENV} and {PASSWORD_ENV})",
+    )
     args = parser.parse_args(argv)
+    if args.command == "db":
+        return _bootstrap_role()
     # psycopg's async driver cannot run on the Windows proactor loop.
     loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
     try:
@@ -98,15 +127,31 @@ async def _chat_with(profile_path: Path, *, fake: bool, session: str | None, db:
         _write(f"error: {err}\n")
         return EXIT_CONFIG_ERROR
 
-    store = InMemorySessionStore()
+    name = profile.agent.name
+    store: SessionStore
+    tracer: TraceLog
+    sessions: PostgresSessionStore | None = None
+    if db is None:
+        store, tracer = InMemorySessionStore(), InMemoryTracer()
+    else:
+        model_name = "echo" if fake else resolve_model_settings(profile, os.environ).model
+        sessions = PostgresSessionStore(db, agent=name)
+        store, tracer = sessions, PostgresTracer(db, agent=name, model=model_name)
     session_id = session or _new_session_id()
     lines = _stdin_lines()
     model_label = describe_model(profile, fake=fake, env=os.environ)
-    storage = "postgres" if db else f"in process memory (set {DATABASE_URL_ENV} to keep notes and skills)"
-    _write(
-        f"agent '{profile.agent.name}' | model: {model_label} | session: {session_id}\n"
-        f"notes and skills: {storage}\n{HELP}"
+    storage = (
+        "postgres" if db else f"in process memory (set {DATABASE_URL_ENV} to keep sessions, notes and skills)"
     )
+    _write(
+        f"agent '{name}' | model: {model_label} | session: {session_id}\n"
+        f"sessions, notes and skills: {storage}\n{HELP}"
+    )
+    try:
+        _write(await _open(sessions, session_id))
+    except SessionOwnerError as err:
+        _write(f"error: {err}\n")
+        return EXIT_CONFIG_ERROR
 
     while True:
         _write("you> ")
@@ -125,6 +170,13 @@ async def _chat_with(profile_path: Path, *, fake: bool, session: str | None, db:
         if text == "/new":
             session_id = _new_session_id()
             _write(f"new session: {session_id}\n")
+            await _open(sessions, session_id)
+            continue
+        if text == "/sessions":
+            _write(await show_sessions(sessions, session_id))
+            continue
+        if text == "/trace":
+            _write(format_trace(await tracer.last(DEFAULT_TENANT, session_id)))
             continue
         if text.startswith("/"):
             await _command(text, agent, store, session_id)
@@ -144,11 +196,68 @@ async def _chat_with(profile_path: Path, *, fake: bool, session: str | None, db:
                 context=agent.context,
                 observer=observer,
                 hooks=agent.hooks,
+                tracer=tracer,
             )
         except ModelError as err:
             _write(f"\nerror ({err.kind}): {err}\n")
             continue
         _write(observer.finish(result))
+
+
+async def _open(sessions: PostgresSessionStore | None, session_id: str) -> str:
+    if sessions is None:
+        return ""
+    info = await sessions.open_session(DEFAULT_TENANT, session_id, channel=CHANNEL, user_id=CLI_USER)
+    return f"resumed session {session_id} ({info.message_count} messages)\n" if info.message_count else ""
+
+
+async def show_sessions(sessions: PostgresSessionStore | None, current: str) -> str:
+    if sessions is None:
+        return f"sessions live only in this process: set {DATABASE_URL_ENV} to keep and resume them\n"
+    found = await sessions.list_sessions(DEFAULT_TENANT, limit=RECENT_SESSIONS)
+    if not found:
+        return "no sessions yet\n"
+    lines = ["recent sessions (resume with --session <id>):"]
+    for info in found:
+        mark = "  <- current" if info.session_id == current else ""
+        updated = info.updated_at.astimezone().strftime("%Y-%m-%d %H:%M")
+        lines.append(f"  {info.session_id}  {info.message_count} messages  updated {updated}{mark}")
+    return "\n".join(lines) + "\n"
+
+
+def format_trace(trace: TurnTrace | None) -> str:
+    if trace is None:
+        return "no turn traced in this session yet\n"
+    outcome = f"{trace.stop} ({trace.error_kind})" if trace.error_kind else trace.stop
+    usage = trace.usage
+    lines = [
+        f"turn {trace.turn_id[:8]}: {outcome}, {trace.steps} steps, {trace.duration_s:.2f}s, "
+        f"in={usage.input_tokens} out={usage.output_tokens} cached={usage.cache_read_tokens}"
+    ]
+    for event in trace.events:
+        label = f"{event.kind} {event.name}" if event.name else event.kind
+        status = "error" if event.is_error else "ok"
+        detail = ", ".join(f"{key}={value}" for key, value in event.detail.items())
+        lines.append(
+            f"  step {event.step}  {label}  {event.duration_s:.2f}s  {status}"
+            + (f"  ({detail})" if detail else "")
+        )
+    return "\n".join(lines) + "\n"
+
+
+def _bootstrap_role() -> int:
+    url = os.environ.get(MIGRATION_URL_ENV)
+    password = os.environ.get(PASSWORD_ENV)
+    if not url or not password:
+        _write(f"error: set {MIGRATION_URL_ENV} (an owner role) and {PASSWORD_ENV}\n")
+        return EXIT_CONFIG_ERROR
+    try:
+        done = bootstrap_role(url, password)
+    except (ValueError, psycopg.Error) as err:
+        _write(f"error: {type(err).__name__}: {err}\n")
+        return EXIT_CONFIG_ERROR
+    _write("".join(f"{line}\n" for line in done))
+    return 0
 
 
 async def _command(text: str, agent: Agent, store: SessionStore, session_id: str) -> None:

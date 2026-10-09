@@ -10,12 +10,14 @@ compacts older turns.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final, Literal, Protocol
+from typing import Any, Final, Literal, Protocol
+from uuid import uuid4
 
 from agentcore.clock import utc_now
 from agentcore.context.compaction import ContextManager
@@ -30,13 +32,19 @@ from agentcore.harness.model.types import (
     ToolSchema,
 )
 from agentcore.harness.store.base import SessionStore
-from agentcore.harness.tools.executor import DEFAULT_MAX_CALLS_PER_STEP, DEFAULT_MAX_PARALLEL, ToolExecutor
+from agentcore.harness.tools.executor import (
+    DEFAULT_MAX_CALLS_PER_STEP,
+    DEFAULT_MAX_PARALLEL,
+    ToolExecutor,
+    ToolRun,
+)
 from agentcore.harness.tools.registry import ToolRegistry
 from agentcore.harness.tools.spec import ToolContext
 from agentcore.messages import Block, Message, TextBlock, ToolResultBlock, ToolUseBlock, Usage
 from agentcore.prompt.builder import CONTEXT_CLOSE, CONTEXT_OPEN, PromptBuilder, with_context
 from agentcore.prompt.sections import StepInfo, TurnInfo
 from agentcore.tenancy import DEFAULT_TENANT
+from agentcore.trace import TraceEvent, Tracer, TraceStop, TurnTrace, usage_detail
 
 MEMORY_TOOL: Final = "memory"
 FLUSH_STEPS: Final = 2
@@ -45,6 +53,7 @@ FLUSH_NOTE: Final = (
     "remembering in later sessions (the user's preferences or corrections, lasting facts), save it now with "
     "the memory tool. Otherwise reply: nothing to save."
 )
+TRACE_WRITE_TIMEOUT_S: Final = 10.0
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +109,7 @@ class TurnResult:
     new_messages: list[Message]
     compactions: int = 0
     duration_s: float = 0.0
+    turn_id: str = ""
 
 
 async def run_turn(
@@ -117,21 +127,27 @@ async def run_turn(
     context: ContextManager | None = None,
     observer: TurnObserver | None = None,
     hooks: HookSet | None = None,
+    tracer: Tracer | None = None,
     clock: Callable[[], datetime] = utc_now,
 ) -> TurnResult:
     """``clock`` must return an aware datetime; tests pass a fixed one. Without ``context`` nothing is
-    compacted. ``user_id`` names the person the session talks to; the caller sets it, never the model."""
+    compacted. ``user_id`` names the person the session talks to; the caller sets it, never the model. The
+    ``tracer`` gets one trace per turn, also when the turn fails; a tracer error never fails the turn."""
     started = time.perf_counter()
+    started_at = clock()
+    turn_id = str(uuid4())
     limits = policy or LoopPolicy()
     guards = hooks or HookSet()
     executor = limits.executor(tools, guards)
     ctx = ToolContext(session_id=session_id, tenant_id=tenant_id, user_id=user_id)
     schemas = tools.schemas()
     new_messages: list[Message] = []
+    events: list[TraceEvent] = []
     usage = Usage()
     compactions = 0
-    system = await prompt.system(store, tenant_id, session_id, user_id=user_id)
-    turn_prompt = prompt.start_turn(TurnInfo(now=clock(), channel=channel))
+    turn_start = 0
+    system = ""
+    turn_prompt = prompt.start_turn(TurnInfo(now=started_at, channel=channel))
 
     async def record(message: Message) -> None:
         await store.append(tenant_id, session_id, message)
@@ -156,7 +172,8 @@ async def run_turn(
             return request
 
         async def flush(messages: Sequence[Message]) -> Usage:
-            return await flush_memory(
+            flush_started = time.perf_counter()
+            used = await flush_memory(
                 model=model,
                 tools=tools,
                 ctx=ctx,
@@ -165,7 +182,12 @@ async def run_turn(
                 max_output_tokens=limits.max_output_tokens,
                 hooks=guards,
             )
+            elapsed = time.perf_counter() - flush_started
+            if tools.get(MEMORY_TOOL) is not None:
+                events.append(TraceEvent("memory_flush", step.step, elapsed, detail=usage_detail(used)))
+            return used
 
+        compact_started = time.perf_counter()
         outcome = await context.compact(
             store=store,
             tenant_id=tenant_id,
@@ -176,6 +198,14 @@ async def run_turn(
         )
         if outcome is None:
             return request
+        detail = {
+            "compacted_messages": outcome.compacted_messages,
+            "fallback": outcome.fallback,
+            **usage_detail(outcome.usage),
+        }
+        events.append(
+            TraceEvent("compaction", step.step, time.perf_counter() - compact_started, detail=detail)
+        )
         compactions += 1
         usage = usage + outcome.usage
         system = await prompt.system(store, tenant_id, session_id, user_id=user_id, refresh=True)
@@ -184,43 +214,82 @@ async def run_turn(
     async def call_model(step: StepInfo, offered: list[ToolSchema]) -> AssistantResult:
         hook_ctx = HookContext(tenant_id=tenant_id, session_id=session_id, user_id=user_id, step=step.step)
         request = await guards.before_model(await request_for(step, offered), hook_ctx)
-        return await guards.after_model(await _complete(model, request, observer), hook_ctx)
-
-    turn_start = len(await store.load(tenant_id, session_id))
-    await record(Message.user(user_text))
-
-    for step in range(1, limits.max_steps + 1):
-        result = await call_model(StepInfo(step=step, max_steps=limits.max_steps), schemas)
-        usage = usage + (result.message.usage or Usage())
-        await record(result.message)
-
-        uses = result.message.tool_uses()
-        if not uses:
-            return TurnResult(
-                text=result.message.text(),
-                stop="completed",
-                steps=step,
-                usage=usage,
-                new_messages=new_messages,
-                compactions=compactions,
-                duration_s=time.perf_counter() - started,
+        call_started = time.perf_counter()
+        try:
+            result = await _complete(model, request, observer)
+        except ModelError as err:
+            elapsed = time.perf_counter() - call_started
+            events.append(
+                TraceEvent("model_call", step.step, elapsed, is_error=True, detail={"error_kind": err.kind})
             )
-        for outcome in await executor.run(uses, ctx, step=step, observer=observer):
-            await record(Message(role="tool", blocks=[outcome]))
+            raise
+        detail = {"stop_reason": result.stop_reason, **usage_detail(result.message.usage or Usage())}
+        events.append(TraceEvent("model_call", step.step, time.perf_counter() - call_started, detail=detail))
+        return await guards.after_model(result, hook_ctx)
 
-    result = await call_model(StepInfo(step=limits.max_steps + 1, max_steps=limits.max_steps, final=True), [])
-    usage = usage + (result.message.usage or Usage())
-    final = _without_tool_calls(result.message)
-    await record(final)
-    return TurnResult(
-        text=final.text(),
-        stop="max_steps",
-        steps=limits.max_steps + 1,
-        usage=usage,
-        new_messages=new_messages,
-        compactions=compactions,
-        duration_s=time.perf_counter() - started,
-    )
+    def finished(text: str, stop: TurnStop, steps: int) -> TurnResult:
+        return TurnResult(
+            text=text,
+            stop=stop,
+            steps=steps,
+            usage=usage,
+            new_messages=new_messages,
+            compactions=compactions,
+            duration_s=time.perf_counter() - started,
+            turn_id=turn_id,
+        )
+
+    async def turn() -> TurnResult:
+        nonlocal system, turn_start, usage
+        system = await prompt.system(store, tenant_id, session_id, user_id=user_id)
+        turn_start = len(await store.load(tenant_id, session_id))
+        await record(Message.user(user_text))
+
+        for step in range(1, limits.max_steps + 1):
+            result = await call_model(StepInfo(step=step, max_steps=limits.max_steps), schemas)
+            usage = usage + (result.message.usage or Usage())
+            await record(result.message)
+
+            uses = result.message.tool_uses()
+            if not uses:
+                return finished(result.message.text(), "completed", step)
+            for run in await executor.execute(uses, ctx, step=step, observer=observer):
+                events.append(_tool_event(step, run))
+                await record(Message(role="tool", blocks=[run.result]))
+
+        final_step = StepInfo(step=limits.max_steps + 1, max_steps=limits.max_steps, final=True)
+        result = await call_model(final_step, [])
+        usage = usage + (result.message.usage or Usage())
+        final = _without_tool_calls(result.message)
+        await record(final)
+        return finished(final.text(), "max_steps", limits.max_steps + 1)
+
+    def trace_of(stop: TraceStop, steps: int, duration_s: float, error_kind: str | None) -> TurnTrace:
+        return TurnTrace(
+            turn_id=turn_id,
+            tenant_id=tenant_id,
+            session_id=session_id,
+            user_id=user_id,
+            channel=channel,
+            started_at=started_at,
+            duration_s=duration_s,
+            stop=stop,
+            steps=steps,
+            usage=usage,
+            compactions=compactions,
+            error_kind=error_kind,
+            events=tuple(events),
+        )
+
+    try:
+        outcome = await turn()
+    except Exception as err:
+        kind = err.kind if isinstance(err, ModelError) else type(err).__name__
+        steps = sum(1 for e in events if e.kind == "model_call")
+        await _write_trace(tracer, trace_of("error", steps, time.perf_counter() - started, kind))
+        raise
+    await _write_trace(tracer, trace_of(outcome.stop, outcome.steps, outcome.duration_s, None))
+    return outcome
 
 
 async def flush_memory(
@@ -274,6 +343,24 @@ async def _complete(model: ModelClient, request: LlmRequest, sink: StreamSink | 
         if err.kind != "empty_response":
             raise
     return await model.complete(request, sink=sink)
+
+
+def _tool_event(step: int, run: ToolRun) -> TraceEvent:
+    detail: dict[str, Any] = {"call_id": run.result.tool_use_id, "result_chars": len(run.result.content)}
+    if run.blocked_by:
+        detail["blocked_by"] = run.blocked_by
+    return TraceEvent(
+        "tool_call", step, run.duration_s, name=run.result.name, is_error=run.result.is_error, detail=detail
+    )
+
+
+async def _write_trace(tracer: Tracer | None, trace: TurnTrace) -> None:
+    if tracer is None:
+        return
+    try:
+        await asyncio.wait_for(tracer.record(trace), timeout=TRACE_WRITE_TIMEOUT_S)
+    except Exception as err:  # the reply is already stored; a lost trace must not fail the turn
+        logger.warning("trace of turn %s not saved (%s)", trace.turn_id, type(err).__name__)
 
 
 def _without_tool_calls(message: Message) -> Message:
