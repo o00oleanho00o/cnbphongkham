@@ -936,6 +936,51 @@ directly (our boundary: schema `agent_rt`, import-linter). Ideas for later: a wo
 panel on Patient 360 (`docs/agent-panel.md` lists the pitfalls: keep the stream mounted across tabs, 90 s
 quiet = over, unreachable = offline not working).
 
+#### Nhận định và so sánh với trycompai/crm (bản gửi người dùng, 2026-10-10, giữ nguyên)
+
+Hướng của repo này về cơ bản trùng với phương án C, và có một điểm tốt hơn kế hoạch lúc trước nên lấy luôn.
+Đã clone về `E:\Desktop\clone-git\crm-trycompai` (giấy phép MIT) và đọc phần liên quan.
+
+**Họ làm thế nào**
+
+- Chỉ có một chỗ đăng nhập là app Next.js. Agent chạy như một service riêng, không có trang quản trị của
+  riêng nó.
+- Next.js có một route proxy `/eve/v1/[...path]` (`apps/app/app/eve/v1/[...path]/route.ts`) đứng giữa trình
+  duyệt và agent. Route này:
+  - kiểm tra phiên đăng nhập;
+  - bỏ cookie trước khi chuyển tiếp, nên agent không bao giờ thấy cookie của người dùng;
+  - kiểm tra cuộc hội thoại có đúng của người đó không;
+  - tạo một token HS256 sống 2 phút, ghi tên nhân viên và bản ghi đang mở (contact, deal), gắn `Bearer` rồi
+    stream câu trả lời về.
+- Agent (`apps/agent/agent/channels/eve.ts`) kiểm tra token đó và coi người gọi là một người dùng thật. Tài
+  liệu của họ gọi proxy là "điểm chặn kiểm tra, không phải đường chuyển thẳng".
+- Bản ghi đang mở đi trong token, không chèn vào tin nhắn, nên không bị lời nhắn của người dùng lừa sang bản
+  ghi khác.
+- Các cài đặt mà quản trị viên tự đổi (key, SSO) nằm trong bảng DB và sửa trên giao diện, vì "người tự cài
+  không redeploy được để đặt biến env". Đúng triết lý của dự án này.
+
+**Nên lấy**
+
+1. **Proxy ở Next tự lo token, trình duyệt không cầm token.** Kế hoạch cũ cho trình duyệt tự lấy token; cách
+   của họ an toàn hơn.
+2. **Đưa bối cảnh vào token.** Sau này khi làm khung "Hỏi agent" trên hồ sơ bệnh nhân, `patient_id` đi trong
+   token.
+3. **Hàng việc** dùng `FOR UPDATE SKIP LOCKED` có thời hạn giữ chỗ (`apps/agent/agent/lib/tasks.ts`; nhiều bộ
+   phân việc chạy song song mà không giành nhau). Đây là lời giải cho chuyện scale agent sau này.
+4. **Bằng chứng yếu thành gợi ý cho người duyệt.** Khớp với quy tắc bác sĩ duyệt. Ghi lại để làm sau.
+
+**Không nên lấy**
+
+- **Khóa chung `AGENT_BRIDGE_SECRET`** đặt trong env của cả hai process: chính là kiểu biến env giữa hai
+  service mà người dùng đã gạt. Sai một bên là ra 401.
+  - Thay bằng: clinic API ký token Ed25519 bằng khóa riêng nó tự tạo và giữ; agent chỉ cần đọc khóa công
+    khai ở JWKS. Không có bí mật chung nào.
+- **Agent đọc thẳng DB của CRM.** Bên mình đã chặn bằng import-linter và theo quy tắc an toàn: agent dùng
+  schema riêng `agent_rt`.
+- **Bun, eve, Vercel.** Không liên quan tới stack của mình.
+- **Viết lại mọi trang agent trong app.** Họ làm được vì không có plugin. Mình giữ cách "plugin tự mang giao
+  diện" cho các trang quản trị plugin. Riêng khung chat với agent thì sau này làm sẵn trong Next.
+
 ## Suggested skills
 
 - `handoff` (`.claude/skills/handoff/SKILL.md`) — run again at the end of the next session to refresh this doc.
