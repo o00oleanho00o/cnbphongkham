@@ -572,6 +572,14 @@ S2a design refinements made while implementing:
 - Plugin manager limits (S3e-2): `AGENT_PLUGIN_DIR` must be shared by all processes; a bad setting on an enabled
   plugin switches it off (fix the setting, enable again); an in-flight turn keeps the old plugin objects.
 
+### Deferred by the user (2026-10-09)
+
+- **HMAC signing for the HTTP gateway** — not in S4; do it later as its own small step. Today the gateway
+  checks a bearer token only (`AGENT_GATEWAY_TOKEN`, admin routes `AGENT_ADMIN_TOKEN`, see
+  `apps/agent/agent_app/gateway.py`). Plan when picked up: the caller signs `timestamp + body` with a shared
+  secret (`X-Agent-Timestamp`, `X-Agent-Signature`, HMAC-SHA256), the gateway rejects a bad signature or a
+  timestamp older than ~5 min (replay), compares with `hmac.compare_digest`; keep the bearer token as well.
+
 ## Suggested skills
 
 - `handoff` (`.claude/skills/handoff/SKILL.md`) — run again at the end of the next session to refresh this doc.
