@@ -1,9 +1,14 @@
 [project]
 name = "agent-app"
 version = "0.1.0"
-description = "Runs the general-purpose agent from a TOML profile: chat CLI."
+description = "Runs the general-purpose agent from its folder: chat CLI, Postgres storage (schema agent_rt)."
 requires-python = ">=3.12"
-dependencies = ["agent-core"]
+dependencies = [
+    "agent-core",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "alembic>=1.14",
+    "psycopg[binary]>=3.2",
+]
 
 [tool.uv.sources]
 agent-core = { workspace = true }

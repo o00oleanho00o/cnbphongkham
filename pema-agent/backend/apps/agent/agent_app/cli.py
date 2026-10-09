@@ -16,6 +16,7 @@ from uuid import uuid4
 from agent_app.assembly import Agent, build_agent
 from agent_app.model_factory import describe_model
 from agent_app.profile import load_profile
+from agent_app.storage import AgentDatabase, PostgresMemoryBackend, PostgresSkillStore
 from agentcore import (
     DEFAULT_TENANT,
     ContextManager,
@@ -44,6 +45,7 @@ EXIT_CONFIG_ERROR: Final = 2
 PREVIEW_CHARS: Final = 120
 CHANNEL: Final = "cli"
 CLI_USER: Final = "cli-user"
+DATABASE_URL_ENV: Final = "AGENT_DATABASE_URL"
 HELP: Final = (
     "Commands: /new (start a new session), /prompt (show what the model gets), /context (context size), "
     "/compact (summarise older turns now), /memory (saved notes), /exit (quit), /help (this help)\n"
@@ -61,17 +63,37 @@ def main(argv: Sequence[str] | None = None) -> int:
     chat.add_argument("--fake", action="store_true", help="use an echo model: no provider, no API key")
     chat.add_argument("--session", default=None, help="session id (default: a new random one)")
     args = parser.parse_args(argv)
+    # psycopg's async driver cannot run on the Windows proactor loop.
+    loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
     try:
-        return asyncio.run(_chat(args.profile, fake=args.fake, session=args.session))
+        return asyncio.run(
+            _chat(args.profile, fake=args.fake, session=args.session), loop_factory=loop_factory
+        )
     except KeyboardInterrupt:
         _write("\n")
         return 0
 
 
 async def _chat(profile_path: Path, *, fake: bool, session: str | None) -> int:
+    db_url = os.environ.get(DATABASE_URL_ENV)
+    db = AgentDatabase(db_url) if db_url else None
+    try:
+        return await _chat_with(profile_path, fake=fake, session=session, db=db)
+    finally:
+        if db is not None:
+            await db.dispose()
+
+
+async def _chat_with(profile_path: Path, *, fake: bool, session: str | None, db: AgentDatabase | None) -> int:
     try:
         profile = load_profile(profile_path)
-        agent = build_agent(profile, fake=fake, env=os.environ)
+        agent = build_agent(
+            profile,
+            fake=fake,
+            env=os.environ,
+            memory_backend=PostgresMemoryBackend(db) if db else None,
+            skill_store=PostgresSkillStore(db) if db else None,
+        )
     except (OSError, ValueError, ModelError) as err:
         _write(f"error: {err}\n")
         return EXIT_CONFIG_ERROR
@@ -80,7 +102,11 @@ async def _chat(profile_path: Path, *, fake: bool, session: str | None) -> int:
     session_id = session or _new_session_id()
     lines = _stdin_lines()
     model_label = describe_model(profile, fake=fake, env=os.environ)
-    _write(f"agent '{profile.agent.name}' | model: {model_label} | session: {session_id}\n{HELP}")
+    storage = "postgres" if db else f"in process memory (set {DATABASE_URL_ENV} to keep notes and skills)"
+    _write(
+        f"agent '{profile.agent.name}' | model: {model_label} | session: {session_id}\n"
+        f"notes and skills: {storage}\n{HELP}"
+    )
 
     while True:
         _write("you> ")
