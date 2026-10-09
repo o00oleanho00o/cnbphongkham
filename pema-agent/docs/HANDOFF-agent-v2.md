@@ -1,10 +1,10 @@
 # Handoff — agent-v2 (general agent core)
 
 Lives in the repo (`pema-agent/docs/HANDOFF-agent-v2.md`) so it is pushed and shared; update it here after
-each stage. Last updated 2026-10-09, after S4d (`8f765862`).
+each stage. Last updated 2026-10-09, after Zalo plugin P0 on branch `feat/zalo-plugin`.
 
-Next session focus: S4 is complete — ask the user what comes next (S5 Graph, HMAC, Zalo channel plugin, plugin
-UI, verifier hook). Reply to the user in Vietnamese. Open items to handle later are under "Loose ends".
+Next session focus: the Zalo plugin, branch `feat/zalo-plugin` (from `feat/agent-v2`). P0 is done; next is P1
+(see "Zalo plugin" below). Reply to the user in Vietnamese. Open items to handle later are under "Loose ends".
 
 ## Where things are
 
@@ -586,6 +586,44 @@ S2a design refinements made while implementing:
   memory) against the recorded model replies. **S4 is complete.** The user pasted the key in chat again —
   told to rotate it.
 
+## Zalo plugin — branch `feat/zalo-plugin` (plan approved 2026-10-09)
+
+Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Codex/dsh ship a Gmail plugin
+(auth + tools + prompt + channel + settings UI in one package). Three transports: Zalo Bot API, Zalo personal
+(zca-js), Zalo OA (stub only, to grow later). Plus the admin UI (QR login, recipient list, friends, contacts).
+
+- Source: the Python port of zalo-agent already existed and was removed in `588f18fc` (apps/api `channels/
+  zalo_bot`, `channels/zalo_personal`, formatting files, routers admin_accounts/friends/channels, webhooks,
+  `config/account_store`) and `eadaac30` (`backend/bridges/zalo-personal`: Node + Hono + zca-js, tests). Restore
+  from `<commit>^` and reshape; do not re-translate from TypeScript. The frontend pages still exist
+  (`(admin)/admin/{accounts,friends,contacts}`, `components/admin/accounts/*`, `components/admin/channels/*`)
+  and call `/api/v1/admin/...` of the old API.
+- User decisions: (1) restore from the removed port; (2) the plugin starts the Node bridge itself, no config
+  (a separate container later); (3) recipient filter / group mention stay in the plugin for now.
+- Rules: nothing Zalo-specific in `agentcore` / `agent_app` (test `test_the_core_names_no_chat_platform`); the
+  plugin imports no `pema.*` / `pema_contracts` (copy the types it needs); do not restore the old agent layer
+  (`message_turn_processor`, `identity_send_queue`, `proactive_gate`, `policy/identity`, batcher) — the hub and
+  dispatcher replace it. MIT notice for zalo-agent and zca-js inside the plugin.
+- Stages: P0 core hooks (done) → P1 plugin skeleton (`apps/agent/plugins/zalo/`: plugin.toml, accounts via
+  `ctx.storage`, credentials with `secret-cipher`, restored `format/`, account admin routes keeping the old
+  request/response shapes) → P2 Bot API (client, parser, polling + webhook, `access.py`, adapter, bot-token
+  route, 7 tools, fake-server tests) → P3 personal (bridge restored into `plugins/zalo/bridge/`, started by a
+  plugin job on a free localhost port with a fresh HMAC secret, `pnpm install` if needed; events through
+  `/v1/hooks/zalo/bridge`; QR, friends/contacts, receipts/typing/reactions, 15 tools) → P4 OA stub → P5
+  frontend (Next.js proxy to the agent gateway, existing pages repointed to `/v1/plugins/zalo/...`, a Plugins
+  page; through `pema-ui-builder`, logged in `web-design-changes.md`).
+- **P0 done** (commit after this entry): `ctx.storage` (`agent_app/plugins/records.py`, JSON per (tenant, agent,
+  plugin, key), migration `0010_plugin_records`, in-memory without a DB); `ctx.register_routes(router,
+  kind="admin"|"hooks")` mounted by the gateway at `/v1/plugins/<plugin>` (admin token, failure limiter) and
+  `/v1/hooks/<plugin>` (open, 120 calls / 60 s per address, plugin checks the caller; 64 KiB body cap applies);
+  `ctx.register_job(name, run)` run by `agent_app/plugins/jobs.py` `JobRunner` (restart pauses 1/5/30/120 s,
+  reset after 60 s healthy, cancelled with the plugin; `GET /v1/admin/jobs`; `agent serve` runs it); channels
+  may be registered while running and may not take another plugin's channel name; `agentcore.channels.
+  ShowsTyping` (optional `typing(conversation_id, metadata)`), the hub calls it every 4 s while the
+  conversation's messages are unfinished (cap 300 s). Plugin descriptions list `jobs` and `routes`.
+  `FailureLimiter` became `WindowLimiter` (`count` instead of `failed`). Tests: `apps/agent/tests/
+  test_plugin_runtime.py` (16) + a Postgres records test; full suite 438 passed with the DB.
+
 ## S1 progress log (newest last)
 
 - Approved by the user ("làm tiếp s1"). Design refinements made while starting (within D1–D7):
@@ -654,9 +692,7 @@ S2a design refinements made while implementing:
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
-- First action next session: ask the user what comes next (S5 Graph, HMAC for the gateway, a Zalo channel
-  plugin, the plugin UI, the verifier hook). S3e and S4 run against DeepSeek only through the recorded
-  scenarios so far.
+- First action next session: continue the Zalo plugin with P1 (branch `feat/zalo-plugin`).
 
 ### Deferred: verifier hook (user, 2026-10-09)
 
@@ -674,7 +710,7 @@ S2a design refinements made while implementing:
   the next attempt repeat that part. Possible fix: pass an idempotency key (`ingress_id` + part) in
   `OutboundMessage` for channels whose API supports it; dedupe on the channel side.
 - **No streaming to channels.** Replies go out only when the turn is done (`ChannelCapabilities.streaming` is
-  unused). Later: typing indicator / partial sends for channels that support it.
+  unused). Typing is shown since Zalo P0 (`ShowsTyping`); partial sends still later.
 - **No per-channel rate limit.** The hub sends as fast as replies finish (max 4 at once per process). Add a
   per-channel token bucket in `ChannelHub` when a real channel (Zalo) has limits; honour `retry_after_s` already
   works per message only.

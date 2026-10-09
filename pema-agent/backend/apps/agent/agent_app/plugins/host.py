@@ -1,9 +1,11 @@
 """Loads plugins, gives them a context to register through, and unloads them again.
 
 A plugin is a folder with a manifest and a Python module whose ``register(ctx)`` adds tools, prompt sections,
-hooks and chat channels through ``ctx``. Every registration returns a function that undoes it; disabling a
-plugin undoes them in reverse order. The host's ``version`` grows with every change, so the agent knows when
-to rebuild its tools, prompt and hooks. Plugins are trusted local code: they run in this process, unsandboxed.
+hooks, chat channels, HTTP routes and background jobs through ``ctx``, and keeps its data in ``ctx.storage``.
+Every registration returns a function that undoes it; disabling a plugin undoes them in reverse order. A
+plugin may register more later (a channel per account it is given), from its routes or jobs. The host's
+``version`` grows with every change, so the agent knows when to rebuild its tools, prompt and hooks. Plugins
+are trusted local code: they run in this process, unsandboxed.
 """
 
 from __future__ import annotations
@@ -12,12 +14,15 @@ import importlib.util
 import itertools
 import logging
 import sys
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from types import ModuleType
-from typing import Any, Final
+from typing import Any, Final, Literal
+
+from fastapi import APIRouter, FastAPI
 
 from agent_app.plugins.manifest import PluginError, PluginSource
+from agent_app.plugins.records import InMemoryPluginRecords, PluginStorage, StorageFor
 from agentcore import ToolSpec
 from agentcore.channels import ChannelAdapter, valid_channel_name
 from agentcore.harness.hooks import Hook
@@ -30,6 +35,23 @@ RESERVED_CHANNELS: Final = frozenset({"http", "cli"})
 
 Disposer = Callable[[], None]
 Section = SessionSection | TurnSection | StepSection
+RouteKind = Literal["admin", "hooks"]
+"""``admin``: under ``/v1/plugins/<plugin>``, behind the admin token. ``hooks``: under ``/v1/hooks/<plugin>``,
+open to the internet; the plugin checks who calls (a signature, a shared secret)."""
+
+
+@dataclass(frozen=True, slots=True, eq=False)
+class PluginJob:
+    """Work a plugin keeps running in the background (polling a platform, watching a helper process). The
+    service starts it, starts it again after it ends or fails, and cancels it when the plugin goes away."""
+
+    plugin: str
+    name: str
+    run: Callable[[], Coroutine[Any, Any, None]]
+
+    @property
+    def key(self) -> str:
+        return f"{self.plugin}/{self.name}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,6 +62,7 @@ class Contributions:
     sections: tuple[Section, ...] = ()
     hooks: tuple[Hook, ...] = ()
     channels: tuple[ChannelAdapter, ...] = ()
+    jobs: tuple[PluginJob, ...] = ()
 
 
 @dataclass(slots=True)
@@ -51,16 +74,28 @@ class _Loaded:
     sections: list[Section] = field(default_factory=list[Section])
     hooks: list[Hook] = field(default_factory=list[Hook])
     channels: list[ChannelAdapter] = field(default_factory=list[ChannelAdapter])
+    jobs: list[PluginJob] = field(default_factory=list[PluginJob])
+    routes: dict[RouteKind, FastAPI] = field(default_factory=dict[RouteKind, FastAPI])
     disposers: list[Disposer] = field(default_factory=list[Disposer])
 
 
 class PluginContext:
     """What a plugin's ``register(ctx)`` receives."""
 
-    def __init__(self, loaded: _Loaded, env: Mapping[str, str], changed: Callable[[], None]) -> None:
+    def __init__(
+        self,
+        loaded: _Loaded,
+        env: Mapping[str, str],
+        changed: Callable[[], None],
+        *,
+        storage: PluginStorage,
+        channel_owner: Callable[[str], str | None],
+    ) -> None:
         self._loaded = loaded
         self._env = env
         self._changed = changed
+        self._storage = storage
+        self._channel_owner = channel_owner
         self.logger = logging.getLogger(f"agent_plugin.{loaded.source.name}")
 
     @property
@@ -78,6 +113,11 @@ class PluginContext:
             raise PluginError(self.name, f"{name} is not in requires_env")
         return self._env[name]
 
+    @property
+    def storage(self) -> PluginStorage:
+        """This plugin's own records, kept in the agent's database (process memory without one)."""
+        return self._storage
+
     def register_tool(self, spec: ToolSpec[Any]) -> Disposer:
         return self._add(self._loaded.tools, spec)
 
@@ -94,7 +134,36 @@ class PluginContext:
             raise PluginError(self.name, f"invalid channel name {name!r}")
         if any(c.name == name for c in self._loaded.channels):
             raise PluginError(self.name, f"channel {name} registered twice")
+        owner = self._channel_owner(name)
+        if owner is not None and owner != self.name:
+            raise PluginError(self.name, f"channel {name} already comes from {owner}")
         return self._add(self._loaded.channels, adapter)
+
+    def register_routes(self, router: APIRouter, *, kind: RouteKind = "admin") -> Disposer:
+        """HTTP routes under ``/v1/plugins/<plugin>`` (admin) or ``/v1/hooks/<plugin>`` (hooks); one router
+        per kind. Requests reach them only while the plugin is enabled."""
+        if kind in self._loaded.routes:
+            raise PluginError(self.name, f"{kind} routes registered twice")
+        app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+        app.include_router(router)
+        routes = self._loaded.routes
+        routes[kind] = app
+
+        def dispose() -> None:
+            if routes.get(kind) is app:
+                del routes[kind]
+
+        self._loaded.disposers.append(dispose)
+        return dispose
+
+    def register_job(self, name: str, run: Callable[[], Coroutine[Any, Any, None]]) -> Disposer:
+        """Background work, started once the service runs (``agent serve``), cancelled when the plugin is
+        disabled; ``run`` should loop until cancelled and clean up in ``finally``."""
+        if not valid_channel_name(name):
+            raise PluginError(self.name, f"invalid job name {name!r}")
+        if any(j.name == name for j in self._loaded.jobs):
+            raise PluginError(self.name, f"job {name} registered twice")
+        return self._add(self._loaded.jobs, PluginJob(self.name, name, run))
 
     def on_disable(self, callback: Callable[[], None]) -> Disposer:
         """Runs when the plugin is disabled, after its later registrations are undone."""
@@ -126,12 +195,21 @@ class PluginStatus:
     sections: tuple[str, ...]
     hooks: tuple[str, ...]
     channels: tuple[str, ...] = ()
+    jobs: tuple[str, ...] = ()
+    routes: tuple[str, ...] = ()
 
 
 class PluginHost:
-    def __init__(self, sources: Mapping[str, PluginSource], env: Mapping[str, str]) -> None:
+    def __init__(
+        self,
+        sources: Mapping[str, PluginSource],
+        env: Mapping[str, str],
+        *,
+        storage: StorageFor | None = None,
+    ) -> None:
         self._sources = dict(sources)
         self._env = env
+        self._storage: StorageFor = storage or InMemoryPluginRecords().storage
         self._loaded: dict[str, _Loaded] = {}
         self._generation = itertools.count(1)
         self.version = 0
@@ -174,7 +252,15 @@ class PluginHost:
             register = getattr(module, REGISTER, None)
             if not callable(register):
                 raise PluginError(name, f"{source.entry_path} has no {REGISTER}(ctx) function")
-            register(PluginContext(loaded, self._env, self._bump))
+            register(
+                PluginContext(
+                    loaded,
+                    self._env,
+                    self._bump,
+                    storage=self._storage(name),
+                    channel_owner=self._channel_owner,
+                )
+            )
             self._check_unique(loaded)
         except Exception as err:
             _dispose(loaded)
@@ -204,7 +290,13 @@ class PluginHost:
             sections=tuple(s for p in loaded for s in p.sections),
             hooks=tuple(h for p in loaded for h in p.hooks),
             channels=tuple(c for p in loaded for c in p.channels),
+            jobs=tuple(j for p in loaded for j in p.jobs),
         )
+
+    def routes(self, plugin: str, kind: RouteKind) -> FastAPI | None:
+        """The app serving the plugin's routes of this kind, while it is enabled."""
+        loaded = self._loaded.get(plugin)
+        return None if loaded is None else loaded.routes.get(kind)
 
     def status(self) -> list[PluginStatus]:
         statuses: list[PluginStatus] = []
@@ -222,9 +314,16 @@ class PluginHost:
                     sections=tuple(s.name for s in loaded.sections) if loaded else (),
                     hooks=tuple(h.name for h in loaded.hooks) if loaded else (),
                     channels=tuple(c.name for c in loaded.channels) if loaded else (),
+                    jobs=tuple(j.name for j in loaded.jobs) if loaded else (),
+                    routes=tuple(sorted(loaded.routes)) if loaded else (),
                 )
             )
         return statuses
+
+    def _channel_owner(self, name: str) -> str | None:
+        return next(
+            (p for p, loaded in self._loaded.items() if any(c.name == name for c in loaded.channels)), None
+        )
 
     def _check_unique(self, candidate: _Loaded) -> None:
         for other in self._loaded.values():

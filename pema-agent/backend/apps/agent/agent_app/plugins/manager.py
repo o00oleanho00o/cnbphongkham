@@ -25,6 +25,7 @@ from cryptography.exceptions import InvalidTag
 
 from agent_app.live import LiveAgent
 from agent_app.model_settings import SECRET_KEY_ENV, SecretKeyMissingError
+from agent_app.plugins.host import PluginHost
 from agent_app.plugins.install import PluginInstaller, Staged
 from agent_app.plugins.manifest import (
     ConfigField,
@@ -85,6 +86,10 @@ class PluginManager:
     @property
     def can_install(self) -> bool:
         return self._installer is not None
+
+    @property
+    def host(self) -> PluginHost:
+        return self._live.host
 
     async def start(self) -> None:
         await self.refresh(force=True)
@@ -356,6 +361,8 @@ class PluginManager:
             "sections": list(status.sections),
             "hooks": list(status.hooks),
             "channels": list(status.channels),
+            "jobs": list(status.jobs),
+            "routes": list(status.routes),
             "requires": list(manifest.requires),
             "requires_env": list(manifest.requires_env),
             "settings": settings,

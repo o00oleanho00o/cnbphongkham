@@ -24,6 +24,7 @@ from agent_app.dispatcher import DispatchSettings
 from agent_app.ingress import SessionBusyError, TurnReply
 from agent_app.ingress_store import PostgresConversationStore, PostgresIngressStore, PostgresSessionLocks
 from agent_app.model_settings import PostgresModelSettingsStore, StoredModelSettings
+from agent_app.plugins.records import PostgresPluginRecords
 from agent_app.plugins.state import PluginState, PostgresPluginStateStore
 from agent_app.profile import load_profile
 from agent_app.runtime import build_runtime
@@ -67,7 +68,7 @@ def db_url(migrated: tuple[str, Engine]) -> str:
             sql(
                 "TRUNCATE agent_rt.agent_ingress, agent_rt.agent_conversation, agent_rt.agent_session, "
                 "agent_rt.agent_message, agent_rt.agent_turn, agent_rt.agent_turn_event, agent_rt.agent_memory, "
-                "agent_rt.agent_model_settings, agent_rt.agent_plugin"
+                "agent_rt.agent_model_settings, agent_rt.agent_plugin, agent_rt.agent_plugin_record"
             )
         )
     return migrated[0]
@@ -251,6 +252,12 @@ def test_the_runtime_role_can_queue_messages(migrated: tuple[str, Engine]) -> No
                         "VALUES ('role-check', 'dev', 'p')"
                     )
                 )
+                conn.execute(
+                    sql(
+                        "INSERT INTO agent_rt.agent_plugin_record (tenant_id, agent, plugin, key, value) "
+                        "VALUES ('role-check', 'dev', 'p', 'k', '1')"
+                    )
+                )
         finally:
             as_role.dispose()
     finally:
@@ -286,6 +293,31 @@ def test_plugin_state_is_stored_per_agent_and_every_change_moves_the_fingerprint
         await store.delete("t", "calculate")
         assert await store.get("t", "calculate") is None
         assert await store.fingerprint("t") not in {first, second}
+
+    _run(db_url, check)
+
+
+def test_plugin_records_are_kept_per_tenant_agent_and_plugin(db_url: str) -> None:
+    async def check(db: AgentDatabase) -> None:
+        mine = PostgresPluginRecords(db, agent="dev", tenant_id="t").storage("chat")
+        await mine.put("account:b", {"label": "Bé"})
+        await mine.put("account:a", {"label": "A", "ids": [1, 2]})
+        await mine.put("account:a", {"label": "A2"})
+        await mine.put("contact%_", True)
+        others = [
+            PostgresPluginRecords(db, agent="dev", tenant_id="t").storage("other"),
+            PostgresPluginRecords(db, agent="other", tenant_id="t").storage("chat"),
+            PostgresPluginRecords(db, agent="dev", tenant_id="t2").storage("chat"),
+        ]
+
+        assert await mine.get("account:a") == {"label": "A2"}
+        assert await mine.list("account:") == [("account:a", {"label": "A2"}), ("account:b", {"label": "Bé"})]
+        assert await mine.list("contact%") == [("contact%_", True)]
+        assert await mine.list("%") == []
+        assert await mine.list(limit=1) == [("account:a", {"label": "A2"})]
+        assert [await other.list() for other in others] == [[], [], []]
+        assert (await mine.delete("account:a"), await mine.delete("account:a")) == (True, False)
+        assert await mine.get("account:a") is None
 
     _run(db_url, check)
 

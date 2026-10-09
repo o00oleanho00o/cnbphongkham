@@ -30,9 +30,19 @@ from agent_app.model_settings import (
     ModelSettingsStore,
     PostgresModelSettingsStore,
 )
-from agent_app.plugins import Contributions, Discovery, PluginError, PluginHost, PluginOrigin, discover
+from agent_app.plugins import (
+    Contributions,
+    Discovery,
+    PluginError,
+    PluginHost,
+    PluginOrigin,
+    StorageFor,
+    discover,
+)
 from agent_app.plugins.install import PluginInstaller
+from agent_app.plugins.jobs import JobRunner, JobSettings
 from agent_app.plugins.manager import PluginManager
+from agent_app.plugins.records import InMemoryPluginRecords, PostgresPluginRecords
 from agent_app.plugins.state import InMemoryPluginStateStore, PostgresPluginStateStore
 from agent_app.profile import Profile
 from agent_app.storage import (
@@ -100,6 +110,10 @@ class Runtime:
             failure_reply=self.agent.profile.agent.failure_reply,
         )
 
+    def job_runner(self, settings: JobSettings | None = None) -> JobRunner:
+        """Runs the background jobs of the enabled plugins."""
+        return JobRunner(lambda: self.plugins.contributions().jobs, settings=settings)
+
     def dispatcher(self, settings: DispatchSettings | None = None) -> Dispatcher:
         """Without ``settings`` the profile's ``[loop]`` decides how waiting messages are handled."""
         loop = self.agent.profile.loop
@@ -135,10 +149,16 @@ def plugin_roots(profile: Profile, env: Mapping[str, str]) -> list[tuple[PluginO
     return roots
 
 
-def start_plugins(profile: Profile, env: Mapping[str, str], discovery: Discovery | None = None) -> PluginHost:
+def start_plugins(
+    profile: Profile,
+    env: Mapping[str, str],
+    discovery: Discovery | None = None,
+    *,
+    storage: StorageFor | None = None,
+) -> PluginHost:
     """Enables the plugins the profile lists; any of them failing stops the start, naming the plugin."""
     found = discovery or discover(plugin_roots(profile, env))
-    host = PluginHost(found.plugins, env)
+    host = PluginHost(found.plugins, env, storage=storage)
     try:
         for name in profile.plugins.enabled:
             if name not in found.plugins and name in found.broken:
@@ -179,6 +199,9 @@ def build_runtime(
     )
     memory_backend: MemoryBackend = InMemoryMemoryBackend() if db is None else PostgresMemoryBackend(db)
     skill_store: SkillStore = InMemorySkillStore() if db is None else PostgresSkillStore(db)
+    records = (
+        InMemoryPluginRecords() if db is None else PostgresPluginRecords(db, agent=name, tenant_id=tenant_id)
+    )
     model: ModelClient | None = dynamic
     if model_wrapper is not None:
         model = model_wrapper(dynamic if dynamic is not None else build_model(profile, fake=True, env=env))
@@ -194,7 +217,7 @@ def build_runtime(
             plugins=added,
         )
 
-    live = LiveAgent(build, plugins or start_plugins(profile, env))
+    live = LiveAgent(build, plugins or start_plugins(profile, env, storage=records.storage))
     installed = env.get(PLUGIN_DIR_ENV)
     plugin_manager = PluginManager(
         live,

@@ -2,7 +2,15 @@
 
 from __future__ import annotations
 
-from agent_app.plugins.host import Contributions, Disposer, PluginContext, PluginHost, PluginStatus
+from agent_app.plugins.host import (
+    Contributions,
+    Disposer,
+    PluginContext,
+    PluginHost,
+    PluginJob,
+    PluginStatus,
+    RouteKind,
+)
 from agent_app.plugins.manifest import (
     PLUGIN_API,
     ConfigField,
@@ -14,6 +22,7 @@ from agent_app.plugins.manifest import (
     discover,
     read_manifest,
 )
+from agent_app.plugins.records import PluginStorage, StorageFor
 
 __all__ = [
     "PLUGIN_API",
@@ -24,10 +33,14 @@ __all__ = [
     "PluginContext",
     "PluginError",
     "PluginHost",
+    "PluginJob",
     "PluginManifest",
     "PluginOrigin",
     "PluginSource",
     "PluginStatus",
+    "PluginStorage",
+    "RouteKind",
+    "StorageFor",
     "discover",
     "read_manifest",
 ]

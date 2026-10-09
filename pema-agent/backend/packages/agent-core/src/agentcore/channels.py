@@ -1,7 +1,7 @@
-"""What every channel (CLI, HTTP, later Zalo and others) hands to the agent, and how a conversation maps to a
-session id.
+"""What every channel (CLI, HTTP, chat platforms from plugins) hands to the agent, and how a conversation maps
+to a session id.
 
-A session is one conversation (a Zalo thread, an HTTP ``conversation_id``) at one epoch; starting over bumps
+A session is one conversation (a chat thread, an HTTP ``conversation_id``) at one epoch; starting over bumps
 the epoch, so the old session stays readable. ``user_id`` is the person speaking: it keys the notes about that
 person and never picks the session, so in a group every speaker shares the conversation's session.
 """
@@ -12,7 +12,7 @@ import hashlib
 import re
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
-from typing import Final, Protocol
+from typing import Final, Protocol, runtime_checkable
 
 MAX_SESSION_ID_CHARS: Final = 200
 _NAME: Final = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
@@ -85,6 +85,14 @@ class ChannelAdapter(Protocol):
     async def stop(self) -> None: ...
 
     async def send(self, message: OutboundMessage) -> None: ...
+
+
+@runtime_checkable
+class ShowsTyping(Protocol):
+    """A channel that can show the person that a reply is being written; called every few seconds while the
+    conversation's messages are answered. ``metadata`` is what the inbound message carried."""
+
+    async def typing(self, conversation_id: str, metadata: Mapping[str, str]) -> None: ...
 
 
 def split_reply(text: str, max_chars: int | None) -> list[str]:

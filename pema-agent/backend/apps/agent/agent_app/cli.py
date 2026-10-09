@@ -353,6 +353,7 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int) -> int
                 admin=runtime.model_admin,
                 plugins=runtime.plugin_manager,
                 channels=runtime.channel_hub(dispatcher),
+                jobs=runtime.job_runner(),
             )
             server = uvicorn.Server(
                 uvicorn.Config(app, host=host, port=port, log_level="info", access_log=False)

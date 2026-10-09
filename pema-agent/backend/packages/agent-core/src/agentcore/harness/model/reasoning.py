@@ -1,7 +1,7 @@
 """One reasoning-effort scale for every provider, mapped to each provider's own parameters.
 
 DeepSeek (OpenAI format) thinks by default at effort ``high``; ``off`` sends ``thinking: disabled``, which is
-much faster for simple turns. Anthropic uses adaptive thinking with an effort level (as zalo-agent does).
+much faster for simple turns. Anthropic uses adaptive thinking with an effort level.
 """
 
 from __future__ import annotations

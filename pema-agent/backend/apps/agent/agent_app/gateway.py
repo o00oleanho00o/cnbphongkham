@@ -4,6 +4,9 @@ The caller authenticates with a bearer service token. It names the person speaki
 optionally the conversation; the session is derived from them on the server, so a reply always belongs to the
 conversation it came from. Every message is stored before it runs and a ``message_id`` sent twice runs once.
 A reply not ready within ``wait_s`` is answered with 202 and can be fetched from ``/v1/ingress/{id}``.
+
+Plugins add their own routes: ``/v1/plugins/<plugin>/...`` behind the admin token, ``/v1/hooks/<plugin>/...``
+open to the platforms that call back (the plugin checks their signature; calls are limited per address).
 """
 
 from __future__ import annotations
@@ -12,6 +15,7 @@ import asyncio
 import contextlib
 import hmac
 import json
+import logging
 import time
 from collections import deque
 from collections.abc import AsyncGenerator, Awaitable, Callable
@@ -23,6 +27,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text as sql
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from agent_app.channel_hub import ChannelHub
 from agent_app.dispatcher import Dispatcher, StreamObserver
@@ -30,11 +35,12 @@ from agent_app.ingress import IngressRecord
 from agent_app.model_factory import Provider
 from agent_app.model_settings import ModelAdmin, SecretKeyMissingError
 from agent_app.plugins.install import MAX_ZIP_BYTES
+from agent_app.plugins.jobs import JobRunner
 from agent_app.plugins.manager import PluginManager, PluginNotFoundError
 from agent_app.plugins.manifest import PluginError
 from agent_app.storage import AgentDatabase
 from agentcore import ReasoningEffort, ToolUseBlock
-from agentcore.channels import InboundMessage
+from agentcore.channels import InboundMessage, valid_channel_name
 from agentcore.harness.model.reasoning import OpenAIDialect
 
 CHANNEL: Final = "http"
@@ -42,6 +48,12 @@ TOKEN_ENV: Final = "AGENT_GATEWAY_TOKEN"  # noqa: S105 - the name of the variabl
 ADMIN_TOKEN_ENV: Final = "AGENT_ADMIN_TOKEN"  # noqa: S105 - the name of the variable, not a token
 ADMIN_FAILURES_PER_WINDOW: Final = 5
 ADMIN_FAILURE_WINDOW_S: Final = 60.0
+HOOK_CALLS_PER_WINDOW: Final = 120
+HOOK_WINDOW_S: Final = 60.0
+PLUGIN_ROUTES: Final = "/v1/plugins"
+PLUGIN_HOOKS: Final = "/v1/hooks"
+
+logger = logging.getLogger(__name__)
 MIN_TOKEN_CHARS: Final = 32
 MAX_BODY_BYTES: Final = 64 * 1024
 ZIP_INSTALL_PATH: Final = "/v1/admin/plugins/install/zip"
@@ -74,29 +86,30 @@ class GatewaySettings:
                 raise ValueError(f"{ADMIN_TOKEN_ENV} must differ from {TOKEN_ENV}")
 
 
-class FailureLimiter:
-    """Refuses a client after ``limit`` failed logins within ``window_s``, until the window moves on."""
+class WindowLimiter:
+    """Refuses a client after ``limit`` counted events (failed logins, calls) within ``window_s``, until the
+    window moves on."""
 
     def __init__(
         self, limit: int = ADMIN_FAILURES_PER_WINDOW, window_s: float = ADMIN_FAILURE_WINDOW_S
     ) -> None:
         self._limit = limit
         self._window_s = window_s
-        self._failures: dict[str, deque[float]] = {}
+        self._events: dict[str, deque[float]] = {}
 
     def blocked(self, client: str, now: float) -> bool:
-        failures = self._failures.get(client)
-        if failures is None:
+        events = self._events.get(client)
+        if events is None:
             return False
-        while failures and now - failures[0] >= self._window_s:
-            failures.popleft()
-        if not failures:
-            del self._failures[client]
+        while events and now - events[0] >= self._window_s:
+            events.popleft()
+        if not events:
+            del self._events[client]
             return False
-        return len(failures) >= self._limit
+        return len(events) >= self._limit
 
-    def failed(self, client: str, now: float) -> None:
-        self._failures.setdefault(client, deque()).append(now)
+    def count(self, client: str, now: float) -> None:
+        self._events.setdefault(client, deque()).append(now)
 
 
 class _Body(BaseModel):
@@ -154,12 +167,15 @@ def create_app(
     admin: ModelAdmin | None = None,
     plugins: PluginManager | None = None,
     channels: ChannelHub | None = None,
+    jobs: JobRunner | None = None,
 ) -> FastAPI:
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
         background = [asyncio.create_task(dispatcher.run_sweeper(), name="ingress sweeper")]
         if channels is not None:
             background.append(asyncio.create_task(channels.run(), name="channel hub"))
+        if jobs is not None:
+            background.append(asyncio.create_task(jobs.run(), name="plugin jobs"))
         try:
             yield
         finally:
@@ -169,6 +185,8 @@ def create_app(
             await dispatcher.close()
             if channels is not None:
                 await channels.close()
+            if jobs is not None:
+                await jobs.close()
 
     app = FastAPI(title="agent gateway", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
     authorized = Depends(_bearer(settings.token))
@@ -223,8 +241,20 @@ def create_app(
         session_id = await dispatcher.reset(CHANNEL, body.conversation_id or body.user_id)
         return {"session_id": session_id}
 
-    if settings.admin_token is not None and (admin, plugins, channels) != (None, None, None):
-        _add_admin_routes(app, settings.admin_token, admin, plugins, channels)
+    if settings.admin_token is not None and (admin, plugins, channels, jobs) != (None, None, None, None):
+        _add_admin_routes(app, settings.admin_token, admin, plugins, channels, jobs)
+    if plugins is not None:
+        hits = WindowLimiter(HOOK_CALLS_PER_WINDOW, HOOK_WINDOW_S)
+
+        def hook_guard(request: Request) -> Response | None:
+            client = request.client.host if request.client else "unknown"
+            now = time.monotonic()
+            if hits.blocked(client, now):
+                return _error(429, "rate_limited", "too many calls; slow down")
+            hits.count(client, now)
+            return None
+
+        app.mount(PLUGIN_HOOKS, PluginRoutes(plugins, "hooks", hook_guard))
 
     @app.get("/v1/sessions/{session_id}", dependencies=[authorized])
     async def session(session_id: str) -> Response:
@@ -265,32 +295,94 @@ def _token_matches(authorization: str | None, wanted: bytes) -> bool:
     return scheme.lower() == "bearer" and hmac.compare_digest(token.strip().encode("utf-8"), wanted)
 
 
+def _challenge(status: int) -> dict[str, str] | None:
+    return {"WWW-Authenticate": "Bearer"} if status == 401 else None
+
+
+class PluginRoutes:
+    """Hands a request under its mount point to the routes the plugin named next in the path registered;
+    ``guard`` may answer first (a refused token, too many calls)."""
+
+    def __init__(
+        self,
+        plugins: PluginManager,
+        kind: Literal["admin", "hooks"],
+        guard: Callable[[Request], Response | None],
+    ) -> None:
+        self._plugins = plugins
+        self._kind: Literal["admin", "hooks"] = kind
+        self._guard = guard
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            return
+        refusal = self._guard(Request(scope))
+        if refusal is not None:
+            await refusal(scope, receive, send)
+            return
+        root: str = scope.get("root_path", "")
+        path: str = scope["path"]
+        name = (path[len(root) :] if path.startswith(root) else path).lstrip("/").partition("/")[0]
+        target: ASGIApp | None = None
+        if valid_channel_name(name):
+            try:
+                await self._plugins.refresh()
+            except Exception:  # serve with the plugins as they are
+                logger.warning("plugin refresh failed before a plugin route")
+            target = self._plugins.host.routes(name, self._kind)
+        if target is None:
+            await _error(404, "not_found", "no such plugin route")(scope, receive, send)
+            return
+        await target({**scope, "root_path": f"{root}/{name}"}, receive, send)
+
+
 def _add_admin_routes(
     app: FastAPI,
     token: str,
     admin: ModelAdmin | None,
     plugins: PluginManager | None,
     channels: ChannelHub | None = None,
+    jobs: JobRunner | None = None,
 ) -> None:
-    """Model settings, as zalo-agent's dashboard has them: read (key masked), change, clear, test; and the
-    plugin manager."""
+    """Model settings (read with the key masked, change, clear, test), the plugin manager, the plugins' own
+    admin routes, and the state of channels and plugin jobs."""
     wanted = token.encode("utf-8")
-    limiter = FailureLimiter()
+    limiter = WindowLimiter()
 
-    async def check(request: Request, authorization: str | None = Header(default=None)) -> None:
+    def refusal(request: Request) -> tuple[int, str] | None:
         client = request.client.host if request.client else "unknown"
         now = time.monotonic()
         if limiter.blocked(client, now):
-            raise HTTPException(429, detail="too many failed attempts; try again later")
-        if not _token_matches(authorization, wanted):
-            limiter.failed(client, now)
-            raise HTTPException(
-                401, detail="a valid admin token is required", headers={"WWW-Authenticate": "Bearer"}
-            )
+            return 429, "too many failed attempts; try again later"
+        if not _token_matches(request.headers.get("authorization"), wanted):
+            limiter.count(client, now)
+            return 401, "a valid admin token is required"
+        return None
+
+    async def check(request: Request) -> None:
+        refused = refusal(request)
+        if refused is not None:
+            status, detail = refused
+            raise HTTPException(status, detail=detail, headers=_challenge(status))
+
+    def guard(request: Request) -> Response | None:
+        refused = refusal(request)
+        if refused is None:
+            return None
+        status, detail = refused
+        return JSONResponse({"detail": detail}, status_code=status, headers=_challenge(status))
 
     authorized = Depends(check)
     if plugins is not None:
         _add_plugin_routes(app, plugins, authorized)
+        app.mount(PLUGIN_ROUTES, PluginRoutes(plugins, "admin", guard))
+    if jobs is not None:
+        runner = jobs
+
+        @app.get("/v1/admin/jobs", dependencies=[authorized])
+        async def list_jobs() -> dict[str, Any]:
+            return {"jobs": runner.status()}
+
     if channels is not None:
         hub = channels
 

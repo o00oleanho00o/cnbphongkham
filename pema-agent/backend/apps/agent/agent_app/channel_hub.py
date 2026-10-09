@@ -5,7 +5,8 @@ is stored like any message (once per channel message id) and marked for delivery
 reply is sent in parts the channel accepts, in the order the messages came within a conversation. A send that
 fails is retried with growing pauses, from this or any other process; one the channel refuses for good, or
 that keeps failing, is marked failed. Delivery is at least once: a process that dies in the middle of a send
-may make the next one repeat a part.
+may make the next one repeat a part. A channel that can show typing (``ShowsTyping``) is told to every few
+seconds while a conversation's messages are being answered.
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ import asyncio
 import logging
 import math
 import time
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any, Final
 
@@ -26,6 +27,7 @@ from agentcore.channels import (
     InboundMessage,
     OutboundMessage,
     Receive,
+    ShowsTyping,
     split_reply,
 )
 
@@ -49,6 +51,9 @@ class DeliverySettings:
     start_retry_s: float = 30.0
     max_concurrent: int = 4
     batch: int = 50
+    typing_every_s: float = 4.0
+    """How often a channel that can show typing is told to, while a conversation's messages are answered."""
+    typing_max_s: float = 300.0
 
 
 class ChannelHub:
@@ -74,6 +79,8 @@ class ChannelHub:
         self._retry_at: dict[str, float] = {}
         self._inflight: set[int] = set()
         self._tasks: set[asyncio.Task[None]] = set()
+        self._typing: dict[tuple[str, str], set[int]] = {}
+        self._typing_tasks: dict[tuple[str, str], asyncio.Task[None]] = {}
         self._slots = asyncio.Semaphore(self.settings.max_concurrent)
         dispatcher.on_finished(self._finished)
 
@@ -124,7 +131,9 @@ class ChannelHub:
             if name in self._running or self._clock() < self._retry_at.get(name, -math.inf):
                 continue
             try:
-                await asyncio.wait_for(adapter.start(self._receiver(name)), self.settings.start_timeout_s)
+                await asyncio.wait_for(
+                    adapter.start(self._receiver(name, adapter)), self.settings.start_timeout_s
+                )
             except Exception as err:  # a channel that cannot start must not stop the others
                 self._errors[name] = _describe(err)
                 self._retry_at[name] = self._clock() + self.settings.start_retry_s
@@ -149,6 +158,8 @@ class ChannelHub:
 
     async def close(self, grace_s: float = CLOSE_GRACE_S) -> None:
         """Lets sends in flight finish for ``grace_s``, then stops every channel. Unsent replies stay due."""
+        for typing in list(self._typing_tasks.values()):
+            typing.cancel()
         if self._tasks:
             _, pending = await asyncio.wait(set(self._tasks), timeout=grace_s)
             for task in pending:
@@ -209,7 +220,7 @@ class ChannelHub:
         await self._ingress.finish_delivery(record.id, "sent")
         return True
 
-    def _receiver(self, name: str) -> Receive:
+    def _receiver(self, name: str, adapter: ChannelAdapter) -> Receive:
         async def receive(inbound: InboundMessage) -> None:
             if not inbound.message_id or not inbound.conversation_id or not inbound.user_id:
                 logger.warning("channel %s handed over a message without ids; dropped", name)
@@ -218,13 +229,45 @@ class ChannelHub:
                 return
             # A channel speaks only for itself, and long texts are cut like at the HTTP gateway.
             inbound = replace(inbound, channel=name, text=inbound.text[:MAX_INBOUND_CHARS])
-            await self._dispatcher.accept(inbound, deliver=True)
+            record, created = await self._dispatcher.accept(inbound, deliver=True)
+            if created and not record.finished and isinstance(adapter, ShowsTyping):
+                self._show_typing(adapter, record)
 
         return receive
 
     def _finished(self, record: IngressRecord) -> None:
+        self._typing.get((record.channel, record.conversation_id), set()).discard(record.id)
         if record.channel in self._running:
             self._schedule(record.id)
+
+    def _show_typing(self, adapter: ShowsTyping, record: IngressRecord) -> None:
+        key = (record.channel, record.conversation_id)
+        self._typing.setdefault(key, set()).add(record.id)
+        if key in self._typing_tasks:
+            return
+        task = asyncio.create_task(self._typing_loop(adapter, key, record.metadata), name=f"typing {key[0]}")
+        self._typing_tasks[key] = task
+        task.add_done_callback(lambda _: self._typing_tasks.pop(key, None))
+
+    async def _typing_loop(
+        self, adapter: ShowsTyping, key: tuple[str, str], metadata: Mapping[str, str]
+    ) -> None:
+        settings = self.settings
+        deadline = self._clock() + settings.typing_max_s
+        try:
+            while self._typing.get(key) and self._clock() < deadline:
+                try:
+                    await asyncio.wait_for(adapter.typing(key[1], metadata), settings.typing_every_s)
+                except Exception as err:  # typing is a courtesy; the reply goes out regardless
+                    logger.debug("channel %s could not show typing (%s)", key[0], type(err).__name__)
+                await asyncio.sleep(settings.typing_every_s)
+                waiting = self._typing.get(key, set())
+                for ingress_id in list(waiting):
+                    record = await self._ingress.get(self._dispatcher.tenant_id, ingress_id)
+                    if record is None or record.finished:
+                        waiting.discard(ingress_id)
+        finally:
+            self._typing.pop(key, None)
 
     def _schedule(self, ingress_id: int) -> None:
         if ingress_id in self._inflight:
