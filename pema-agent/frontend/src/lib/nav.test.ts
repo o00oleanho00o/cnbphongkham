@@ -31,6 +31,21 @@ const FINANCE_TABS = [
   "/finance/periods",
   "/finance/export",
 ];
+/** Tabs of the agent entry (`/admin/agent`): its own pages, next to the pages the plugins ship. */
+const AGENT_TABS = ["/admin/agent/overview", "/admin/agent/model", "/admin/agent/plugins"];
+/** Pages of the old agent layer, out of the menu while the routes they call are gone from the clinic API. */
+const HIDDEN_AGENT_PAGES = [
+  "/admin/overview",
+  "/admin/traces",
+  "/admin/threads",
+  "/admin/schedules",
+  "/admin/memory",
+  "/admin/agents",
+  "/admin/tools",
+  "/admin/mcp",
+  "/admin/policy",
+  "/admin/tuning",
+];
 const NOT_IN_MENU = [
   "/",
   "/login",
@@ -40,6 +55,8 @@ const NOT_IN_MENU = [
   "/me/notifications",
   "/dev/kit",
   ...FINANCE_TABS,
+  ...AGENT_TABS,
+  ...HIDDEN_AGENT_PAGES,
 ];
 
 describe("menu order of the old Pema Clinic Web", () => {
@@ -133,8 +150,15 @@ describe("the agent plugin pages", () => {
   it("has_one_entry_for_the_pages_the_agent_plugins_ship", () => {
     const entry = agentSection?.items.find((i) => i.to === "/admin/agent");
 
-    expect(entry?.label).toBe("Plugin agent");
+    expect(entry?.label).toBe("Điều khiển agent");
     expect(entry?.needs).toEqual(["admin.agents"]);
+  });
+
+  it("keeps_the_pages_of_the_removed_agent_layer_out_of_the_menu", () => {
+    const paths = items.map((i) => i.to);
+
+    expect(paths.filter((path) => HIDDEN_AGENT_PAGES.includes(path))).toEqual([]);
+    expect(paths).toEqual(expect.arrayContaining(["/admin/kb", "/admin/users", "/admin/logs"]));
   });
 
   it("drops_the_zalo_pages_the_plugin_pages_replace", () => {
@@ -146,8 +170,9 @@ describe("the agent plugin pages", () => {
   });
 
   it("belongs_every_plugin_page_to_the_plugin_entry_but_not_the_agents_list", () => {
-    expect(currentNavItem("/admin/agent/p/zalo/accounts")?.label).toBe("Plugin agent");
-    expect(currentNavItem("/admin/agents")?.label).toBe("Agents");
+    expect(currentNavItem("/admin/agent/p/zalo/accounts")?.label).toBe("Điều khiển agent");
+    expect(currentNavItem("/admin/agent/model")?.label).toBe("Điều khiển agent");
+    expect(currentNavItem("/admin/agents")).toBeUndefined();
   });
 });
 

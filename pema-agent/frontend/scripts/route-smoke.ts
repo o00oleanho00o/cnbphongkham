@@ -34,7 +34,7 @@ const patientCare = (action: Expectation["action"]): Expectation => ({
 const REDIRECTS: Readonly<Record<string, string>> = {
   "/": "/today",
   "/admin/care": "/admin/care/staff",
-  "/admin/agent": "/admin/agent/p/zalo/accounts",
+  "/admin/agent": "/admin/agent/overview",
   "/care/patients/[id]": "/care/patients/00000000-0000-4000-8002-000000000007/timeline",
 };
 
@@ -87,6 +87,9 @@ const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
   "/admin/schedules": { heading: "Lịch hẹn", action: { role: "button", name: "" } },
   "/admin/memory": { heading: "Trí nhớ", action: { role: "button", name: "" } },
   "/admin/kb": { heading: "Kho tri thức", action: { role: "button", name: "Thêm nguồn" } },
+  "/admin/agent/overview": { heading: "Tổng quan", action: { role: "button", name: "Tải lại" } },
+  "/admin/agent/model": { heading: "Model", action: { role: "button", name: "Lưu" } },
+  "/admin/agent/plugins": { heading: "Plugins", action: { role: "button", name: "Cài đặt" } },
   "/admin/agent/p/[plugin]/[page]": {
     heading: "Tài khoản Zalo",
     action: { role: "button", name: "Thêm tài khoản" },

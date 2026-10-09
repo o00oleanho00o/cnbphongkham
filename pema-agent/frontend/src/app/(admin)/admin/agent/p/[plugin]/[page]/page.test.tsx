@@ -110,10 +110,19 @@ describe("a registered page", () => {
     await renderPage("zalo", "contacts");
 
     expect(await screen.findByRole("heading", { name: "Danh bạ Zalo" })).toBeTruthy();
-    const tabs = screen.getByRole("navigation", { name: "Trang của plugin agent" });
+    const tabs = screen.getByRole("navigation", { name: "Trang quản trị agent" });
     const links = within(tabs).getAllByRole("link");
-    expect(links.map((a) => a.textContent)).toEqual(["Tài khoản Zalo", "Danh bạ Zalo"]);
+    expect(links.map((a) => a.textContent)).toEqual([
+      "Tổng quan",
+      "Model",
+      "Plugins",
+      "Tài khoản Zalo",
+      "Danh bạ Zalo",
+    ]);
     expect(links.map((a) => a.getAttribute("href"))).toEqual([
+      "/admin/agent/overview",
+      "/admin/agent/model",
+      "/admin/agent/plugins",
       "/admin/agent/p/zalo/accounts",
       "/admin/agent/p/zalo/contacts",
     ]);
@@ -158,7 +167,12 @@ describe("while loading and when nothing matches", () => {
     expect(
       await screen.findByText("Plugin zalo chưa bật hoặc không có trang quản trị."),
     ).toBeTruthy();
-    expect(screen.queryByRole("navigation", { name: "Trang của plugin agent" })).toBeNull();
+    const tabs = screen.getByRole("navigation", { name: "Trang quản trị agent" });
+    expect(
+      within(tabs)
+        .getAllByRole("link")
+        .map((a) => a.textContent),
+    ).toEqual(["Tổng quan", "Model", "Plugins"]);
   });
 });
 

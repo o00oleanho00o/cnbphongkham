@@ -1,7 +1,7 @@
 # Handoff — agent-v2 (general agent core)
 
 Lives in the repo (`pema-agent/docs/HANDOFF-agent-v2.md`) so it is pushed and shared; update it here after
-each stage. Last updated 2026-10-09, after Zalo plugin P0 on branch `feat/zalo-plugin`.
+each stage. Last updated 2026-10-10, after plan C step C3b-2 on branch `feat/zalo-plugin`.
 
 Next session focus: the Zalo plugin, branch `feat/zalo-plugin` (from `feat/agent-v2`). P0 is done; next is P1
 (see "Zalo plugin" below). Reply to the user in Vietnamese. Open items to handle later are under "Loose ends".
@@ -856,7 +856,7 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
 - First action next session: the Zalo plugin P0–P5d is done (branch `feat/zalo-plugin`); left: a phone QR scan
   and a message round trip in Docker (needs the user's secondary nick and a model key). Plan C (one sign-in,
-  below): C1, C2, C3a, C3b-1 done; next is C3b-2 when the user says go.
+  below): C1, C2, C3a, C3b-1, C3b-2 done; next is C4 when the user says go.
 
 ### Deferred: verifier hook (user, 2026-10-09)
 
@@ -982,8 +982,23 @@ Steps (each: commit, stop, report):
     plugin does not carry over the channel panel, policy select, identities and the internal notifier card
     (logged as an open question in `web-design-changes.md`). Checks: tsc, eslint, 62 vitest. Screenshots
     (`pnpm visual`) skipped at the user's request (2026-10-10) — do them before merging.
-  - **C3b-2 left**: overview/model/plugins pages from `plugins/web/ui`, hide the dead "Quản trị agent"
-    entries, Tailwind `@source` of the bundled plugins' `ui/src`, screenshots.
+  - **C3b-2 done** (2026-10-10, this commit; the user asked for no screenshots again): the dashboard's pages
+    Tổng quan, Model and Plugins (copied from `plugins/web/ui/src/pages`, only the imports changed to the app's
+    `plugin-kit` and `lib/agent/api`) are `src/components/agent/pages/{overview,model,plugins}-page.tsx` under
+    `/admin/agent/{overview,model,plugins}`; the layout tabs list them before the plugins' pages and
+    `/admin/agent` opens the overview. Sign-in, API keys and account pages were not ported (the clinic signs
+    in). The menu entry is "Điều khiển agent" (was "Plugin agent"). Hidden from the menu, pages kept: Tổng quan
+    AI, Trace agent, Phiên chat, Lịch tự động, Trí nhớ, Agents, Tools, MCP, Hồ sơ chính sách, Mô hình & cấu hình
+    (all call routes that are not in `openapi.json`); kept: Kho tri thức, Nhân viên, Logs (they still have
+    routes, KB and Logs partly). The Tailwind `@source` of the plugins' `ui/src` was already in `globals.css`
+    from C3b-1. `mock/agent.ts` answers the dashboard routes (channels, jobs, model with save and reset,
+    plugins with enable/disable) and now reads JSON bodies. Tests: 3 new page test files, mock, nav, page host
+    and index tests. Checks: tsc, eslint, `pnpm inventory`, `pending-web.cjs` clean; vitest 1295 passed, 2 failed
+    in `mock/contract.test.ts` (the mock serves 115 operations that left `openapi.json` with `588f18fc`, and
+    lacks `GET /api/v1/.well-known/jwks.json` from C1; not caused by this step, not fixed here). `pnpm smoke`
+    and `pnpm visual` were not run: do both before merging, and check the screens `/admin/agent/overview|model|
+    plugins` against the canvas. The Plugins page stops you switching `web` off because that would close the
+    agent's own dashboard on 8088.
   - `infra/docker/frontend.Dockerfile` now builds in `/app/frontend` with `backend/apps/agent/plugins` beside
     it (globals.css scans the plugins' `ui/src`); the image build is not run yet: check it in C4.
 - **C4 compose + real run**: `frontend` gets `PEMA_AGENT_INTERNAL_URL=http://agent:8088`; `agent` runs

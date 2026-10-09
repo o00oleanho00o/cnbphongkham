@@ -81,3 +81,39 @@ describe("the fake agent", () => {
     expect(accounts.length).toBeGreaterThan(0);
   });
 });
+
+describe("the fake agent's dashboard routes", () => {
+  async function signed() {
+    const { token } = (await (await askToken(await cookieOf("owner@pema.test"))).json()) as {
+      token: string;
+    };
+    return { authorization: `Bearer ${token}`, "content-type": "application/json" };
+  }
+
+  it("keeps_a_saved_model_change_until_it_is_reset_to_the_profile", async () => {
+    const headers = await signed();
+    const patch = await fetch(`${base}/v1/admin/model`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ model: "deepseek-reasoner", api_key: "sk-test" }),
+    });
+    const saved = (await patch.json()) as { model: string; sources: Record<string, string> };
+    const reset = await fetch(`${base}/v1/admin/model`, { method: "DELETE", headers });
+
+    expect(saved.model).toBe("deepseek-reasoner");
+    expect(saved.sources).toMatchObject({ model: "db", api_key: "db" });
+    expect(await reset.json()).toMatchObject({
+      model: "deepseek-chat",
+      sources: { api_key: "unset" },
+    });
+  });
+
+  it("switches_a_plugin_off_and_on_in_the_listing", async () => {
+    const headers = await signed();
+    const off = await fetch(`${base}/v1/admin/plugins/zalo/disable`, { method: "POST", headers });
+    const on = await fetch(`${base}/v1/admin/plugins/zalo/enable`, { method: "POST", headers });
+
+    expect(await off.json()).toMatchObject({ name: "zalo", enabled: false });
+    expect(await on.json()).toMatchObject({ name: "zalo", enabled: true });
+  });
+});

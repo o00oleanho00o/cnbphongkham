@@ -15,14 +15,10 @@ import type { ReactNode, SVGProps } from "react";
 import {
   IconBolt,
   IconBot,
-  IconBrain,
-  IconChat,
   IconClock,
-  IconCpu,
   IconDatabase,
   IconFileText,
   IconGear,
-  IconGlobe,
   IconGrid,
   IconHeart,
   IconSliders,
@@ -204,32 +200,15 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Quản trị agent",
     items: [
-      { to: "/admin/overview", label: "Tổng quan AI", icon: IconGrid, needs: ["admin.usage"] },
-      { to: "/admin/traces", label: "Trace agent", icon: IconCpu, needs: ["admin.usage"] },
-      { to: "/admin/threads", label: "Phiên chat", icon: IconChat, needs: ["admin.agents"] },
-      {
-        to: "/admin/schedules",
-        label: "Lịch tự động",
-        icon: IconClock,
-        needs: ["admin.schedules"],
-      },
-      { to: "/admin/memory", label: "Trí nhớ", icon: IconBrain, needs: ["admin.agents"] },
+      // The agent service's own pages (overview, model, plugins) and the pages its plugins ship (Zalo accounts,
+      // contacts, friends, groups, bridge), hosted under /admin/agent.
+      { to: "/admin/agent", label: "Điều khiển agent", icon: IconPuzzle, needs: ["admin.agents"] },
       { to: "/admin/kb", label: "Kho tri thức", icon: IconFileText, needs: ["kb.read"] },
-      // The pages the agent's plugins ship (Zalo accounts, contacts, friends, groups, bridge).
-      { to: "/admin/agent", label: "Plugin agent", icon: IconPuzzle, needs: ["admin.agents"] },
       { to: "/admin/users", label: "Nhân viên", icon: IconIdBadge, needs: ["admin.users.read"] },
-      { to: "/admin/agents", label: "Agents", icon: IconBot, needs: ["admin.agents"] },
-      { to: "/admin/tools", label: "Tools", icon: IconBolt, needs: ["admin.tools"] },
-      { to: "/admin/mcp", label: "MCP", icon: IconGlobe, needs: ["admin.mcp"] },
-      {
-        to: "/admin/policy",
-        label: "Hồ sơ chính sách",
-        icon: IconShieldCheck,
-        needs: ["admin.policy"],
-      },
       { to: "/admin/logs", label: "Logs", icon: IconDatabase, needs: ["admin.logs"] },
-      // Nhà cung cấp LLM là một nhóm trong trang Cấu hình (/admin/tuning/providers), như bản gốc.
-      { to: "/admin/tuning", label: "Mô hình & cấu hình", icon: IconGear, needs: ["admin.model"] },
+      // Not in the menu: these pages call clinic API routes removed with the old agent layer (`588f18fc`): overview
+      // `/admin/usage/overview`, traces, threads, schedules, memory, agents, tools, mcp, policy, tuning. The pages
+      // stay in the code until the agent service has the routes (then they go to the agent's own pages).
     ],
   },
 ];
