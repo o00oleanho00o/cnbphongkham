@@ -973,6 +973,8 @@ Steps (each: commit, stop, report):
     (`pnpm visual`) skipped at the user's request (2026-10-10) — do them before merging.
   - **C3b-2 left**: overview/model/plugins pages from `plugins/web/ui`, hide the dead "Quản trị agent"
     entries, Tailwind `@source` of the bundled plugins' `ui/src`, screenshots.
+  - `infra/docker/frontend.Dockerfile` now builds in `/app/frontend` with `backend/apps/agent/plugins` beside
+    it (globals.css scans the plugins' `ui/src`); the image build is not run yet: check it in C4.
 - **C4 compose + real run**: `frontend` gets `PEMA_AGENT_INTERNAL_URL=http://agent:8088`; `agent` runs
   `agents/clinic`, `expose` only; sign in once at `:3000` (`admin@gmail.com`), open the Zalo pages, scan a QR.
 

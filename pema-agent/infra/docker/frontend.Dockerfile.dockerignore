@@ -6,6 +6,7 @@
 **/.venv
 **/__pycache__
 backend
+!backend/apps/agent/plugins/*/ui/src
 infra
 kb-samples
 evals
