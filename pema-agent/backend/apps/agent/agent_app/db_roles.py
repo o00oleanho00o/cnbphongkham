@@ -24,6 +24,7 @@ DATA_TABLES: Final = (
     "agent_conversation",
     "agent_ingress",
     "agent_model_settings",
+    "agent_plugin",
 )
 TRACE_TABLES: Final = ("agent_turn", "agent_turn_event")
 GRANTS: Final[tuple[tuple[tuple[str, ...], LiteralString], ...]] = (

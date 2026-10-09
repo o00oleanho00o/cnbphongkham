@@ -364,18 +364,30 @@ def test_the_plugins_list_command_shows_what_the_dev_agent_loads(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     monkeypatch.setattr("sys.stdin", io.StringIO(""))
+    monkeypatch.delenv("AGENT_DATABASE_URL", raising=False)
 
     assert main(["plugins", "list", "--profile", str(DEV_PROFILE)]) == 0
     shown = json.loads(capsys.readouterr().out)
 
-    assert shown["enabled_in_profile"] == ["calculate"]
     (calculate,) = [p for p in shown["plugins"] if p["name"] == "calculate"]
-    assert (calculate["enabled"], calculate["tools"], calculate["sections"]) == (
+    assert (calculate["enabled"], calculate["managed_by"], calculate["tools"], calculate["sections"]) == (
         True,
+        "profile",
         ["calculate"],
         ["calculate"],
     )
-    assert shown["error"] is None
+    assert calculate["settings"][0] | {"description": ""} == {
+        "key": "precision",
+        "type": "integer",
+        "title": "Decimal places",
+        "description": "",
+        "required": False,
+        "sensitive": False,
+        "default": 10,
+        "value": 10,
+        "source": "profile",
+    }
+    assert shown["broken"] == {}
 
 
 # --- the calculate plugin ---

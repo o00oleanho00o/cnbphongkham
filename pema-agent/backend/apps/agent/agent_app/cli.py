@@ -11,7 +11,6 @@ import os
 import sys
 import threading
 from collections.abc import Sequence
-from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Final, get_args
 from uuid import uuid4
@@ -31,9 +30,10 @@ from agent_app.model_settings import (
     PostgresModelSettingsStore,
     SecretKeyMissingError,
 )
-from agent_app.plugins import PluginError, PluginHost, discover
+from agent_app.plugins import PluginError
+from agent_app.plugins.manager import PluginManager
 from agent_app.profile import Profile, load_profile
-from agent_app.runtime import Runtime, build_runtime, plugin_roots, start_plugins
+from agent_app.runtime import PLUGIN_DIR_ENV, Runtime, build_runtime
 from agent_app.storage import AgentDatabase, PostgresSessionStore, SessionOwnerError
 from agentcore import (
     DEFAULT_TENANT,
@@ -98,12 +98,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     _add_model_commands(
         commands.add_parser("model", help=f"Model settings stored in the database (needs {DATABASE_URL_ENV})")
     )
-    plugins = commands.add_parser("plugins", help="Plugins of an agent")
-    plugin_commands = plugins.add_subparsers(dest="plugins_command", required=True)
-    plugin_list = plugin_commands.add_parser(
-        "list", help="every plugin found, whether the profile enables it and what it registers"
+    plugins = commands.add_parser(
+        "plugins", help=f"Plugins of an agent (changes are stored: they need {DATABASE_URL_ENV})"
     )
-    plugin_list.add_argument("--profile", type=Path, required=True, help="agent folder or TOML profile")
+    _add_plugin_commands(plugins)
     db = commands.add_parser("db", help="Database administration (schema agent_rt)")
     db_commands = db.add_subparsers(dest="db_command", required=True)
     db_commands.add_parser(
@@ -114,14 +112,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "db":
         return _bootstrap_role()
-    if args.command == "plugins":
-        return _list_plugins(args.profile)
     # psycopg's async driver cannot run on the Windows proactor loop.
     loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
     if args.command == "serve":
         work = _serve(args.profile, fake=args.fake, host=args.host, port=args.port)
     elif args.command == "model":
         work = _model(args)
+    elif args.command == "plugins":
+        work = _plugins(args)
     else:
         work = _chat(args.profile, fake=args.fake, session=args.session)
     try:
@@ -160,36 +158,105 @@ def _add_model_commands(model: argparse.ArgumentParser) -> None:
         )
 
 
+def _add_plugin_commands(plugins: argparse.ArgumentParser) -> None:
+    actions = plugins.add_subparsers(dest="plugins_command", required=True)
+    for name, help_text in (
+        ("list", "every plugin found: on or off, who decided, its settings and what it registers"),
+        ("enable", "switch a plugin on (it is loaded here first, to check it works)"),
+        ("disable", "switch a plugin off"),
+        ("set", "change a plugin's settings"),
+        ("install", f"install a plugin into {PLUGIN_DIR_ENV} (from a folder, a zip file or a git URL)"),
+        ("uninstall", "remove an installed plugin"),
+    ):
+        action = actions.add_parser(name, help=help_text)
+        action.add_argument("--profile", type=Path, required=True, help="agent folder or TOML profile")
+        if name in {"enable", "disable", "set", "uninstall"}:
+            action.add_argument("name")
+        if name in {"enable", "set"}:
+            action.add_argument("--set", action="append", default=[], metavar="KEY=VALUE", dest="values")
+            action.add_argument("--unset", action="append", default=[], metavar="KEY")
+            action.add_argument(
+                "--secret", action="append", default=[], metavar="KEY", help="type its value (not echoed)"
+            )
+        if name == "install":
+            source = action.add_mutually_exclusive_group(required=True)
+            source.add_argument("--folder", type=Path)
+            source.add_argument("--zip", type=Path)
+            source.add_argument("--git", metavar="URL")
+            action.add_argument("--ref", help="branch or tag (with --git)")
+            action.add_argument("--enable", action="store_true", help="switch it on once installed")
+
+
 def _http_url(value: str) -> str:
     if not value.startswith(("http://", "https://")) or len(value) > MAX_BASE_URL_CHARS:
         raise argparse.ArgumentTypeError("use an http(s) URL of at most 500 characters")
     return value
 
 
-def _list_plugins(profile_path: Path) -> int:
-    """Loads the profile's plugins as a start would, reports them and unloads them again."""
-    try:
-        profile = load_profile(profile_path)
-        found = discover(plugin_roots(profile, os.environ))
-    except (OSError, ValueError) as err:
-        _write(f"error: {err}\n")
+async def _plugins(args: argparse.Namespace) -> int:
+    """Runs one plugin command against the stored choices (or, for ``list`` without a database, the
+    profile alone) and prints the outcome."""
+    db_url = os.environ.get(DATABASE_URL_ENV)
+    if args.plugins_command != "list" and not db_url:
+        _write(f"error: set {DATABASE_URL_ENV}: plugin choices are stored in the database\n")
         return EXIT_CONFIG_ERROR
-    error: str | None = None
+    db = AgentDatabase(db_url) if db_url else None
     try:
-        host = start_plugins(profile, os.environ, found)
-    except PluginError as err:
-        error = str(err)
-        host = PluginHost(found.plugins, os.environ)
-    statuses = host.status()
-    host.close()
-    shown = {
-        "enabled_in_profile": profile.plugins.enabled,
-        "plugins": [asdict(status) for status in statuses],
-        "broken": dict(found.broken),
-        "error": error,
-    }
+        try:
+            runtime = build_runtime(load_profile(args.profile), fake=True, env=os.environ, db=db)
+        except (OSError, ValueError) as err:
+            _write(f"error: {err}\n")
+            return EXIT_CONFIG_ERROR
+        try:
+            await runtime.plugin_manager.start()
+            shown = await _plugin_command(runtime.plugin_manager, args)
+        except (PluginError, SecretKeyMissingError) as err:
+            _write(f"error: {err}\n")
+            return 1
+        finally:
+            runtime.close()
+    finally:
+        if db is not None:
+            await db.dispose()
     _write(json.dumps(shown, ensure_ascii=False, indent=2) + "\n")
-    return 0 if error is None else 1
+    return 0 if not shown.get("error") else 1
+
+
+async def _plugin_command(manager: PluginManager, args: argparse.Namespace) -> dict[str, Any]:
+    command = args.plugins_command
+    if command == "list":
+        return await manager.list()
+    if command == "disable":
+        return await manager.disable(args.name)
+    if command == "uninstall":
+        await manager.uninstall(args.name)
+        return {"uninstalled": args.name}
+    if command == "install":
+        if args.folder is not None:
+            return await manager.install_folder(args.folder, enable=args.enable)
+        if args.zip is not None:
+            return await manager.install_zip(args.zip.read_bytes(), enable=args.enable)
+        return await manager.install_git(args.git, args.ref, enable=args.enable)
+    settings = _plugin_settings(args)
+    if command == "enable":
+        return await manager.enable(args.name, settings)
+    return await manager.configure(args.name, settings)
+
+
+def _plugin_settings(args: argparse.Namespace) -> dict[str, Any]:
+    """``KEY=VALUE`` values are read as JSON when they parse (numbers, true/false), as text otherwise."""
+    settings: dict[str, Any] = dict.fromkeys(args.unset)
+    for item in args.values:
+        key, sep, raw = str(item).partition("=")
+        if not sep:
+            raise PluginError(args.name, f"--set takes KEY=VALUE, not {item!r}")
+        try:
+            settings[key] = json.loads(raw)
+        except json.JSONDecodeError:
+            settings[key] = raw
+    for key in args.secret:
+        settings[key] = getpass.getpass(f"{key}: ")
+    return settings
 
 
 async def _model(args: argparse.Namespace) -> int:
@@ -259,9 +326,18 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int) -> int
             return EXIT_CONFIG_ERROR
         if db is None:
             _write(f"warning: no {DATABASE_URL_ENV}: messages and sessions live in process memory only\n")
-        app = create_app(runtime.dispatcher(), settings, db=db, admin=runtime.model_admin)
-        server = uvicorn.Server(uvicorn.Config(app, host=host, port=port, log_level="info", access_log=False))
         try:
+            await runtime.plugin_manager.start()
+            app = create_app(
+                runtime.dispatcher(),
+                settings,
+                db=db,
+                admin=runtime.model_admin,
+                plugins=runtime.plugin_manager,
+            )
+            server = uvicorn.Server(
+                uvicorn.Config(app, host=host, port=port, log_level="info", access_log=False)
+            )
             await server.serve()
         finally:
             runtime.close()
@@ -289,6 +365,7 @@ async def _chat_with(profile_path: Path, *, fake: bool, session: str | None, db:
         _write(f"error: {err}\n")
         return EXIT_CONFIG_ERROR
     try:
+        await runtime.plugin_manager.start()
         return await _chat_loop(profile, runtime, fake=fake, session=session, db=db)
     finally:
         runtime.close()
@@ -298,7 +375,7 @@ async def _chat_loop(
     profile: Profile, runtime: Runtime, *, fake: bool, session: str | None, db: AgentDatabase | None
 ) -> int:
     name = profile.agent.name
-    agent, store, tracer, sessions = runtime.agent, runtime.store, runtime.tracer, runtime.sessions
+    store, tracer, sessions = runtime.store, runtime.tracer, runtime.sessions
     session_id = session or _new_session_id()
     lines = _stdin_lines()
     model_label = describe_model(profile, fake=fake, env=os.environ)
@@ -324,6 +401,8 @@ async def _chat_loop(
         text = line.strip()
         if not text:
             continue
+        await runtime.plugin_manager.refresh()
+        agent = runtime.agent
         if text in {"/exit", "/quit"}:
             return 0
         if text == "/help":

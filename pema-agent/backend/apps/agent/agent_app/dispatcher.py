@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Final
 
@@ -90,8 +91,10 @@ class Dispatcher:
         locks: SessionLocks,
         sessions: PostgresSessionStore | None = None,
         settings: DispatchSettings | None = None,
+        before_turn: Callable[[], Awaitable[None]] | None = None,
     ) -> None:
         self._agent = agent
+        self._before_turn = before_turn
         self.store = store
         self.ingress = ingress
         self.settings = settings or DispatchSettings()
@@ -182,6 +185,11 @@ class Dispatcher:
 
     async def _process(self, record: IngressRecord) -> None:
         observer = self._observers.pop(record.id, None)
+        if self._before_turn is not None:
+            try:
+                await self._before_turn()
+            except Exception as err:  # the turn runs with the plugins as they were
+                logger.warning("plugin refresh failed (%s)", type(err).__name__)
         agent = self.agent
         try:
             if self._sessions is not None:

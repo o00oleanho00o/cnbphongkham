@@ -16,7 +16,8 @@ import time
 from collections import deque
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Final
+from pathlib import Path
+from typing import Any, Final, Literal
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -27,6 +28,9 @@ from agent_app.dispatcher import Dispatcher, StreamObserver
 from agent_app.ingress import IngressRecord
 from agent_app.model_factory import Provider
 from agent_app.model_settings import ModelAdmin, SecretKeyMissingError
+from agent_app.plugins.install import MAX_ZIP_BYTES
+from agent_app.plugins.manager import PluginManager, PluginNotFoundError
+from agent_app.plugins.manifest import PluginError
 from agent_app.storage import AgentDatabase
 from agentcore import ReasoningEffort, ToolUseBlock
 from agentcore.channels import InboundMessage
@@ -39,6 +43,7 @@ ADMIN_FAILURES_PER_WINDOW: Final = 5
 ADMIN_FAILURE_WINDOW_S: Final = 60.0
 MIN_TOKEN_CHARS: Final = 32
 MAX_BODY_BYTES: Final = 64 * 1024
+ZIP_INSTALL_PATH: Final = "/v1/admin/plugins/install/zip"
 DEFAULT_WAIT_S: Final = 60.0
 HEARTBEAT_S: Final = 15.0
 ERROR_STATUS: Final[dict[str, int]] = {
@@ -123,12 +128,30 @@ class ModelSettingsPatch(_Body):
     api_key: str | None = Field(default=None, max_length=500)
 
 
+class PluginSettingsBody(_Body):
+    """A value sets a setting, null gives it back to the profile or the default; for a sensitive one ""
+    keeps the stored value."""
+
+    settings: dict[str, Any] = Field(default_factory=dict[str, Any], max_length=100)
+
+
+class InstallBody(_Body):
+    source: Literal["folder", "git"]
+    path: str | None = Field(default=None, min_length=1, max_length=1000)
+    """A folder on the agent's server (``folder``)."""
+    url: str | None = Field(default=None, min_length=1, max_length=500)
+    ref: str | None = Field(default=None, min_length=1, max_length=100)
+    """Branch or tag (``git``); the default branch when left out."""
+    enable: bool = False
+
+
 def create_app(
     dispatcher: Dispatcher,
     settings: GatewaySettings,
     *,
     db: AgentDatabase | None = None,
     admin: ModelAdmin | None = None,
+    plugins: PluginManager | None = None,
 ) -> FastAPI:
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
@@ -145,9 +168,10 @@ def create_app(
 
     @app.middleware("http")
     async def limit_body(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        limit = MAX_ZIP_BYTES if request.url.path == ZIP_INSTALL_PATH else MAX_BODY_BYTES
         length = request.headers.get("content-length")
-        if length is not None and (not length.isdigit() or int(length) > MAX_BODY_BYTES):
-            return _error(413, "too_large", f"the body may have at most {MAX_BODY_BYTES} bytes")
+        if length is not None and (not length.isdigit() or int(length) > limit):
+            return _error(413, "too_large", f"the body may have at most {limit} bytes")
         return await call_next(request)
 
     @app.get("/health")
@@ -192,8 +216,8 @@ def create_app(
         session_id = await dispatcher.reset(CHANNEL, body.conversation_id or body.user_id)
         return {"session_id": session_id}
 
-    if settings.admin_token is not None and admin is not None:
-        _add_admin_routes(app, admin, settings.admin_token)
+    if settings.admin_token is not None and (admin is not None or plugins is not None):
+        _add_admin_routes(app, settings.admin_token, admin, plugins)
 
     @app.get("/v1/sessions/{session_id}", dependencies=[authorized])
     async def session(session_id: str) -> Response:
@@ -234,8 +258,11 @@ def _token_matches(authorization: str | None, wanted: bytes) -> bool:
     return scheme.lower() == "bearer" and hmac.compare_digest(token.strip().encode("utf-8"), wanted)
 
 
-def _add_admin_routes(app: FastAPI, admin: ModelAdmin, token: str) -> None:
-    """Model settings, as zalo-agent's dashboard has them: read (key masked), change, clear, test."""
+def _add_admin_routes(
+    app: FastAPI, token: str, admin: ModelAdmin | None, plugins: PluginManager | None
+) -> None:
+    """Model settings, as zalo-agent's dashboard has them: read (key masked), change, clear, test; and the
+    plugin manager."""
     wanted = token.encode("utf-8")
     limiter = FailureLimiter()
 
@@ -251,6 +278,10 @@ def _add_admin_routes(app: FastAPI, admin: ModelAdmin, token: str) -> None:
             )
 
     authorized = Depends(check)
+    if plugins is not None:
+        _add_plugin_routes(app, plugins, authorized)
+    if admin is None:
+        return
 
     @app.get("/v1/admin/model", dependencies=[authorized])
     async def show_model() -> dict[str, Any]:
@@ -272,6 +303,73 @@ def _add_admin_routes(app: FastAPI, admin: ModelAdmin, token: str) -> None:
     async def test_model() -> Response:
         outcome = await admin.test()
         return JSONResponse(outcome, status_code=200 if outcome["ok"] else 502)
+
+
+def _add_plugin_routes(app: FastAPI, plugins: PluginManager, authorized: Any) -> None:
+    """List, enable, disable, configure, install (folder, git, zip upload) and uninstall plugins."""
+
+    @app.get("/v1/admin/plugins", dependencies=[authorized])
+    async def list_plugins() -> Response:
+        return await _plugin_call(_refreshed(plugins, plugins.list))
+
+    @app.get("/v1/admin/plugins/{name}", dependencies=[authorized])
+    async def show_plugin(name: str) -> Response:
+        return await _plugin_call(_refreshed(plugins, lambda: plugins.show(name)))
+
+    @app.post("/v1/admin/plugins/install", dependencies=[authorized])
+    async def install_plugin(body: InstallBody) -> Response:
+        if body.source == "folder":
+            if body.path is None:
+                return _error(422, "invalid", "give the folder's path")
+            return await _plugin_call(plugins.install_folder(Path(body.path), enable=body.enable))
+        if body.url is None:
+            return _error(422, "invalid", "give the repository's url")
+        return await _plugin_call(plugins.install_git(body.url, body.ref, enable=body.enable))
+
+    @app.post(ZIP_INSTALL_PATH, dependencies=[authorized])
+    async def install_zip(request: Request, enable: bool = False) -> Response:
+        data = bytearray()
+        async for chunk in request.stream():
+            data.extend(chunk)
+            if len(data) > MAX_ZIP_BYTES:
+                return _error(413, "too_large", f"the zip may have at most {MAX_ZIP_BYTES} bytes")
+        return await _plugin_call(plugins.install_zip(bytes(data), enable=enable))
+
+    @app.post("/v1/admin/plugins/{name}/enable", dependencies=[authorized])
+    async def enable_plugin(name: str, body: PluginSettingsBody | None = None) -> Response:
+        return await _plugin_call(plugins.enable(name, body.settings if body else None))
+
+    @app.post("/v1/admin/plugins/{name}/disable", dependencies=[authorized])
+    async def disable_plugin(name: str) -> Response:
+        return await _plugin_call(plugins.disable(name))
+
+    @app.patch("/v1/admin/plugins/{name}/settings", dependencies=[authorized])
+    async def configure_plugin(name: str, body: PluginSettingsBody) -> Response:
+        return await _plugin_call(plugins.configure(name, body.settings))
+
+    @app.delete("/v1/admin/plugins/{name}", dependencies=[authorized])
+    async def uninstall_plugin(name: str) -> Response:
+        async def work() -> dict[str, Any]:
+            await plugins.uninstall(name)
+            return {"uninstalled": name}
+
+        return await _plugin_call(work())
+
+
+async def _refreshed(plugins: PluginManager, read: Callable[[], Awaitable[dict[str, Any]]]) -> dict[str, Any]:
+    await plugins.refresh()
+    return await read()
+
+
+async def _plugin_call(work: Awaitable[dict[str, Any]]) -> Response:
+    try:
+        return JSONResponse(await work)
+    except PluginNotFoundError as err:
+        return _error(404, "not_found", str(err))
+    except SecretKeyMissingError as err:
+        return _error(409, "no_encryption_key", str(err))
+    except PluginError as err:
+        return _error(422, "plugin_error", str(err))
 
 
 def _inbound(body: ChatRequest) -> InboundMessage:

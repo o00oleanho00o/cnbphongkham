@@ -29,6 +29,9 @@ from agent_app.model_settings import (
     PostgresModelSettingsStore,
 )
 from agent_app.plugins import Contributions, Discovery, PluginError, PluginHost, PluginOrigin, discover
+from agent_app.plugins.install import PluginInstaller
+from agent_app.plugins.manager import PluginManager
+from agent_app.plugins.state import InMemoryPluginStateStore, PostgresPluginStateStore
 from agent_app.profile import Profile
 from agent_app.storage import (
     AgentDatabase,
@@ -65,6 +68,7 @@ class Runtime:
     model_admin: ModelAdmin
     dynamic_model: DynamicModel | None
     """None with ``--fake``: the echo model ignores the settings."""
+    plugin_manager: PluginManager
 
     @property
     def agent(self) -> Agent:
@@ -87,6 +91,7 @@ class Runtime:
             locks=self.locks,
             sessions=self.sessions,
             settings=settings,
+            before_turn=self.plugin_manager.refresh,
         )
 
 
@@ -157,6 +162,16 @@ def build_runtime(
         )
 
     live = LiveAgent(build, plugins or start_plugins(profile, env))
+    installed = env.get(PLUGIN_DIR_ENV)
+    plugin_manager = PluginManager(
+        live,
+        InMemoryPluginStateStore() if db is None else PostgresPluginStateStore(db, agent=name),
+        profile=profile,
+        roots=lambda: plugin_roots(profile, env),
+        tenant_id=tenant_id,
+        secret_key=secret_key,
+        installer=PluginInstaller(Path(installed)) if installed else None,
+    )
     if db is None:
         return Runtime(
             live=live,
@@ -169,6 +184,7 @@ def build_runtime(
             db=None,
             model_admin=admin,
             dynamic_model=dynamic,
+            plugin_manager=plugin_manager,
         )
     sessions = PostgresSessionStore(db, agent=name)
     model_name: Callable[[], str] = (lambda: "echo") if dynamic is None else (lambda: dynamic.model_name)
@@ -183,4 +199,5 @@ def build_runtime(
         db=db,
         model_admin=admin,
         dynamic_model=dynamic,
+        plugin_manager=plugin_manager,
     )

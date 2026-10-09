@@ -24,6 +24,7 @@ from agent_app.dispatcher import DispatchSettings
 from agent_app.ingress import SessionBusyError, TurnReply
 from agent_app.ingress_store import PostgresConversationStore, PostgresIngressStore, PostgresSessionLocks
 from agent_app.model_settings import PostgresModelSettingsStore, StoredModelSettings
+from agent_app.plugins.state import PluginState, PostgresPluginStateStore
 from agent_app.profile import load_profile
 from agent_app.runtime import build_runtime
 from agent_app.storage import AgentDatabase
@@ -66,7 +67,7 @@ def db_url(migrated: tuple[str, Engine]) -> str:
             sql(
                 "TRUNCATE agent_rt.agent_ingress, agent_rt.agent_conversation, agent_rt.agent_session, "
                 "agent_rt.agent_message, agent_rt.agent_turn, agent_rt.agent_turn_event, agent_rt.agent_memory, "
-                "agent_rt.agent_model_settings"
+                "agent_rt.agent_model_settings, agent_rt.agent_plugin"
             )
         )
     return migrated[0]
@@ -244,6 +245,12 @@ def test_the_runtime_role_can_queue_messages(migrated: tuple[str, Engine]) -> No
                         "VALUES ('role-check', 'dev', 'm')"
                     )
                 )
+                conn.execute(
+                    sql(
+                        "INSERT INTO agent_rt.agent_plugin (tenant_id, agent, name) "
+                        "VALUES ('role-check', 'dev', 'p')"
+                    )
+                )
         finally:
             as_role.dispose()
     finally:
@@ -251,6 +258,56 @@ def test_the_runtime_role_can_queue_messages(migrated: tuple[str, Engine]) -> No
             if conn.execute(sql("SELECT 1 FROM pg_roles WHERE rolname = :r"), {"r": RUNTIME_ROLE}).first():
                 conn.execute(sql(f"DROP OWNED BY {RUNTIME_ROLE}"))
                 conn.execute(sql(f"DROP ROLE {RUNTIME_ROLE}"))
+
+
+def test_plugin_state_is_stored_per_agent_and_every_change_moves_the_fingerprint(db_url: str) -> None:
+    async def check(db: AgentDatabase) -> None:
+        store = PostgresPluginStateStore(db, agent="dev")
+        empty = await store.fingerprint("t")
+        state = PluginState(
+            "calculate",
+            enabled=False,
+            config={"precision": 2, "note": "ở đây"},
+            secrets_enc="sealed",
+            install={"kind": "zip"},
+            error="x",
+        )
+
+        await store.save("t", state)
+        first = await store.fingerprint("t")
+        await store.save("t", PluginState("calculate", enabled=True))
+        second = await store.fingerprint("t")
+
+        assert len({empty, first, second}) == 3
+        assert await store.list("t") == [PluginState("calculate", enabled=True)]
+        assert await PostgresPluginStateStore(db, agent="other").list("t") == []
+        await store.save("t", state)
+        assert await store.get("t", "calculate") == state
+        await store.delete("t", "calculate")
+        assert await store.get("t", "calculate") is None
+        assert await store.fingerprint("t") not in {first, second}
+
+    _run(db_url, check)
+
+
+def test_a_change_through_one_process_reaches_another_through_postgres(db_url: str) -> None:
+    async def check(db: AgentDatabase) -> None:
+        profile = load_profile(DEV_PROFILE)
+        one = build_runtime(profile, fake=True, env={}, db=db)
+        two = build_runtime(profile, fake=True, env={}, db=db)
+        await one.plugin_manager.start()
+        await two.plugin_manager.start()
+
+        await one.plugin_manager.disable("calculate")
+        await two.plugin_manager.refresh(force=True)
+        off = two.agent.tools.get("calculate")
+        await one.plugin_manager.enable("calculate")
+        await two.plugin_manager.refresh(force=True)
+
+        assert off is None
+        assert two.agent.tools.get("calculate") is not None
+
+    _run(db_url, check)
 
 
 def test_model_settings_are_stored_per_agent_and_a_clear_never_lowers_the_version(db_url: str) -> None:

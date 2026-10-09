@@ -23,6 +23,8 @@ from agentcore.harness.hooks import Hook
 from agentcore.prompt import SessionSection, StepSection, TurnSection
 
 REGISTER: Final = "register"
+DEPS_DIR: Final = ".deps"
+"""A plugin's own Python packages, installed with it; on ``sys.path`` while it is enabled."""
 
 Disposer = Callable[[], None]
 Section = SessionSection | TurnSection | StepSection
@@ -124,6 +126,10 @@ class PluginHost:
     def sources(self) -> Mapping[str, PluginSource]:
         return self._sources
 
+    def set_sources(self, sources: Mapping[str, PluginSource]) -> None:
+        """The plugins found by a new look at the folders; enabled ones keep running from their folder."""
+        self._sources = dict(sources)
+
     def enabled(self) -> list[str]:
         return list(self._loaded)
 
@@ -144,6 +150,11 @@ class PluginHost:
             raise PluginError(name, f"missing setting(s): {', '.join(missing)}")
         module_name = f"agent_plugin_{name.replace('-', '_')}_{next(self._generation)}"
         loaded = _Loaded(source, module_name, merged)
+        deps = source.folder / DEPS_DIR
+        if deps.is_dir() and str(deps) not in sys.path:
+            # Appended: the service's own packages win over a plugin's copy of the same one.
+            sys.path.append(str(deps))
+            loaded.disposers.append(lambda: _drop_path(str(deps)))
         try:
             module = _import(source, module_name)
             register = getattr(module, REGISTER, None)
@@ -241,3 +252,8 @@ def _dispose(loaded: _Loaded) -> None:
 def _forget(module_name: str) -> None:
     for key in [k for k in sys.modules if k == module_name or k.startswith(f"{module_name}.")]:
         del sys.modules[key]
+
+
+def _drop_path(entry: str) -> None:
+    if entry in sys.path:
+        sys.path.remove(entry)
