@@ -41,8 +41,6 @@ export const SAMPLE_PARAMS: Readonly<Record<string, string>> = {
   "/care/patients/[id]/timeline": "/care/patients/00000000-0000-4000-8002-000000000007/timeline",
   "/orders/[id]": "/orders/00000000-0000-4000-8041-000000000001",
   "/orders/[id]/print": "/orders/00000000-0000-4000-8041-000000000002/print",
-  "/admin/agents/[id]": "/admin/agents/cskh-da-lieu",
-  "/admin/tuning/[group]": "/admin/tuning/agent",
   "/admin/agent/p/[plugin]/[page]": "/admin/agent/p/zalo/accounts",
 };
 

@@ -20,8 +20,7 @@ const pageRoutes = listPageRoutes(APP_DIR);
 
 /**
  * Pages that are deliberately not menu entries: the redirect at `/`, sign-in, the index of the care tabs, the
- * create form reached from the agent list, the change-password page (the original dashboard had no menu entry
- * for it either; the same section sits in the tuning page), the dev-only kit examples and the tabs of the finance
+ * change-password page (the original dashboard had no menu entry for it either), the dev-only kit examples and the tabs of the finance
  * area (one menu entry, "Tài chính & tiền thủ thuật"; the tab bar of its layout links the pages).
  */
 const FINANCE_TABS = [
@@ -33,8 +32,8 @@ const FINANCE_TABS = [
 ];
 /** Tabs of the agent entry (`/admin/agent`): its own pages, next to the pages the plugins ship. */
 const AGENT_TABS = ["/admin/agent/overview", "/admin/agent/model", "/admin/agent/plugins"];
-/** Pages of the old agent layer, out of the menu while the routes they call are gone from the clinic API. */
-const HIDDEN_AGENT_PAGES = [
+/** Pages of the old agent layer, deleted in plan C (the agent's pages live under `/admin/agent`). */
+const REMOVED_AGENT_PAGES = [
   "/admin/overview",
   "/admin/traces",
   "/admin/threads",
@@ -50,13 +49,11 @@ const NOT_IN_MENU = [
   "/",
   "/login",
   "/admin/care",
-  "/admin/agents/new",
   "/admin/auth",
   "/me/notifications",
   "/dev/kit",
   ...FINANCE_TABS,
   ...AGENT_TABS,
-  ...HIDDEN_AGENT_PAGES,
 ];
 
 describe("menu order of the old Pema Clinic Web", () => {
@@ -154,10 +151,13 @@ describe("the agent plugin pages", () => {
     expect(entry?.needs).toEqual(["admin.agents"]);
   });
 
-  it("keeps_the_pages_of_the_removed_agent_layer_out_of_the_menu", () => {
+  it("has_no_page_and_no_menu_entry_left_of_the_removed_agent_layer", () => {
     const paths = items.map((i) => i.to);
+    const covered = (route: string) =>
+      REMOVED_AGENT_PAGES.some((gone) => route === gone || route.startsWith(`${gone}/`));
 
-    expect(paths.filter((path) => HIDDEN_AGENT_PAGES.includes(path))).toEqual([]);
+    expect(paths.filter(covered)).toEqual([]);
+    expect(pageRoutes.filter(covered)).toEqual([]);
     expect(paths).toEqual(expect.arrayContaining(["/admin/kb", "/admin/users", "/admin/logs"]));
   });
 

@@ -99,11 +99,10 @@ Reference clone (read only): `E:\Desktop\zalo-agent-ref\web\src`. Target paths o
   (email + password, session cookie; there is no clinic field, the one clinic comes back in `UserSummary.clinic_name` and is shown in the menu), `/admin/auth` is "Tài khoản của tôi" with the change-password form, which is disabled
   because the contract has no such operation.
 - **Typed OpenAPI client** replaces `dashboard-api-client.ts`. The DTOs are snake_case and English; where a component was written against
-  the original shape a small pure adapter rebuilds it (`tuning-types.ts`, `trace-types.ts`) so the ported component and its tests stay as written.
-- **Pema-only code** (no original): `components/ops/*`, `lib/ops/*`, the policy page, the channel switchboard and kill switch, the audit log tab,
-  the doctor sign-off column and the "Thử tìm" modal of the knowledge base, the policy profile fields of accounts and agents.
-- **Mirrors of two import-free files** the browser needs: `lib/admin/tuning/tuning-number-presets.ts` and `lib/admin/shared/ky-tu-moi-token.ts`
-  (their Python twins belong to packages D1 and A). Keep the constants identical.
+  the original shape a small pure adapter rebuilds it so the ported component and its tests stay as written.
+- **Pema-only code** (no original): `components/ops/*`, `lib/ops/*`, the audit log tab,
+  the doctor sign-off column and the "Thử tìm" modal of the knowledge base. (The old agent administration pages, the policy page and
+  the channel switchboard were removed in plan C: the agent's pages are `components/agent/*`.)
 - Removed because the contract has no data for them (open items for the backend packages): token usage per thread and the thread summary,
   contact/memory counts and total messages on the overview, vision `mode` and sidecar test, image-generation test, "also delete memory" when
   clearing a thread, change password, `channel`/`send_mode`/message body on a CRM task.

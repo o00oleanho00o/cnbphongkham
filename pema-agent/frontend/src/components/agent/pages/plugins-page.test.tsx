@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Plugins của agent: switch one on or off; the dashboard plugin stays on.
+// Plugins của agent: switch one on or off; the agent's own dashboard plugin is not offered.
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -50,16 +50,16 @@ describe("the plugins page", () => {
 
     fireEvent.click(await screen.findByRole("switch", { name: "Bật plugin zalo" }));
 
-    await waitFor(() => expect(screen.getAllByText("Đang bật")).toHaveLength(2));
+    await waitFor(() => expect(screen.getAllByText("Đang bật")).toHaveLength(1));
     expect(calls).toContainEqual({ method: "POST", url: "/agent/v1/admin/plugins/zalo/enable" });
   });
 
-  it("cannot_switch_off_the_dashboard_plugin", async () => {
+  it("does_not_list_the_agents_own_dashboard_plugin", async () => {
     fakeAgent();
     render(<PluginsPage />);
 
-    const toggle = await screen.findByRole("switch", { name: "Bật plugin web" });
+    await screen.findByRole("switch", { name: "Bật plugin zalo" });
 
-    expect((toggle as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByRole("switch", { name: "Bật plugin web" })).toBeNull();
   });
 });

@@ -34,21 +34,10 @@ if (dirIdx >= 0) {
  * the original dashboard (see README "Layout"), so the pages are placed here instead.
  */
 const ROUTE_PAGES = {
-  "pages/overview-page": "src/app/(admin)/admin/overview/page.tsx",
-  "pages/sessions-page": "src/app/(admin)/admin/threads/page.tsx",
   "pages/contacts-page": "src/app/(admin)/admin/contacts/page.tsx",
   "pages/friends-page": "src/app/(admin)/admin/friends/page.tsx",
-  "pages/schedule-page": "src/app/(admin)/admin/schedules/page.tsx",
-  "pages/memory-page": "src/app/(admin)/admin/memory/page.tsx",
   "pages/knowledge-page": "src/app/(admin)/admin/kb/page.tsx",
   "pages/accounts-page": "src/app/(admin)/admin/accounts/page.tsx",
-  "pages/agents-page": "src/app/(admin)/admin/agents/page.tsx",
-  "pages/agent-create-page": "src/app/(admin)/admin/agents/new/page.tsx",
-  "pages/agent-detail-page": "src/app/(admin)/admin/agents/[id]/page.tsx",
-  "pages/tools-page": "src/app/(admin)/admin/tools/page.tsx",
-  "pages/mcp-page": "src/app/(admin)/admin/mcp/page.tsx",
-  "pages/trace-page": "src/app/(admin)/admin/traces/page.tsx",
-  "pages/tuning-page": "src/app/(admin)/admin/tuning/page.tsx",
   "pages/logs-page": "src/app/(admin)/admin/logs/page.tsx",
 };
 

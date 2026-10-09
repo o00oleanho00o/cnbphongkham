@@ -7,12 +7,10 @@
 // belong to identity areas only, never behind tables). Auth redirects: no session -> /login.
 //
 // Package U0: the frame, sidebar and top bar are the Pema design kit (`src/ui/`, old Clinic Web look);
-// this component only loads the session, the menu and the accounts and fills the kit's slots.
+// this component only loads the session and the menu and fills the kit's slots.
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 
-import { AccountsProvider } from "@/lib/admin/shared/accounts-context";
-import type { AccountInfo } from "@/lib/admin/shared/account-info";
 import { coCanHoiTruocKhiRoi, xinPhepRoiTrang } from "@/lib/admin/shared/unsaved-changes-guard";
 import { ApiError, errorMessage, http, unwrap } from "@/lib/api/client";
 import { currentNavItem, homeFor, visibleSections, type NavItem, type NavSection } from "@/lib/nav";
@@ -40,7 +38,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [me, setMe] = useState<Me | null>(null);
   const [loadError, setLoadError] = useState("");
-  const [accounts, setAccounts] = useState<AccountInfo[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -58,30 +55,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, []);
-
-  const canAccounts = me?.permissions.includes("admin.accounts") ?? false;
-  const loadAccounts = useCallback(() => {
-    if (!canAccounts) return;
-    unwrap(http.GET("/api/v1/admin/accounts"))
-      .then((items) =>
-        setAccounts(
-          items.map((a) => ({
-            id: a.id,
-            label: a.label,
-            enabled: a.enabled ?? true,
-            online: !!a.running,
-            channel: a.channel,
-            policy_profile: a.policy_profile,
-          })),
-        ),
-      )
-      .catch(() => setAccounts([]));
-  }, [canAccounts]);
-
-  useEffect(() => {
-    // Subscribing to server data: the set-state happens in the async callback, not synchronously.
-    loadAccounts();
-  }, [loadAccounts]);
 
   // Đóng drawer khi đổi trang (điều hướng bằng tab bar hoặc link trong trang)
   useEffect(() => {
@@ -106,11 +79,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     () => sections.flatMap((s) => s.items).filter((i) => i.tab && !i.planned),
     [sections],
   );
-  const accountsValue = useMemo(
-    () => ({ accounts, reload: loadAccounts }),
-    [accounts, loadAccounts],
-  );
-
   const onLoggedOut = useCallback(() => router.replace("/login"), [router]);
 
   /** Đăng xuất cũng là RỜI TRANG - phải qua chốt "chưa lưu" như mọi đường rời trang khác. */
@@ -153,11 +121,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <SessionProvider user={me.user} permissions={me.permissions} onLoggedOut={onLoggedOut}>
-      <AccountsProvider value={accountsValue}>
         <ShellFrame
           sections={sections}
           tabs={tabs}
-          online={canAccounts ? accounts.some((a) => a.online) : null}
+          online={null}
           user={me.user}
           pathname={pathname}
           searchHref={allows(["patient.read"]) ? "/patients" : undefined}
@@ -170,7 +137,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           {children}
         </ShellFrame>
-      </AccountsProvider>
     </SessionProvider>
   );
 }

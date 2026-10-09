@@ -49,8 +49,8 @@ interface Listing {
   broken: Record<string, string>;
 }
 
-/** Switching it off would close the dashboard that switches it back on. */
-const KEEP_ON = "web";
+/** The agent's own dashboard plugin: the clinic web replaces it, so it is not listed or switched here. */
+const OWN_DASHBOARD = "web";
 
 export function PluginsPage() {
   const [listing, setListing] = useState<Listing | null>(null);
@@ -79,6 +79,8 @@ export function PluginsPage() {
     void loadPlugins().catch(() => undefined);
   }, []);
 
+  const shown = listing?.plugins.filter((plugin) => plugin.name !== OWN_DASHBOARD) ?? [];
+
   return (
     <div>
       <PageHeader
@@ -86,9 +88,9 @@ export function PluginsPage() {
         subtitle="Mọi tính năng của agent là một plugin: bật, tắt và cài đặt ở đây"
       />
       {error && <Notice tone="danger">{error}</Notice>}
-      {listing && listing.plugins.length === 0 && <Empty>Không tìm thấy plugin nào.</Empty>}
+      {listing && shown.length === 0 && <Empty>Không tìm thấy plugin nào.</Empty>}
       <div className="space-y-4">
-        {listing?.plugins.map((plugin) => (
+        {shown.map((plugin) => (
           <PluginCard key={plugin.name} plugin={plugin} onChanged={changed} />
         ))}
       </div>
@@ -147,7 +149,7 @@ function PluginCard({ plugin, onChanged }: { plugin: Plugin; onChanged: (next: P
       aside={
         <Toggle
           checked={plugin.enabled}
-          disabled={busy || plugin.name === KEEP_ON}
+          disabled={busy}
           label={`Bật plugin ${plugin.name}`}
           onChange={(on) => void toggle(on)}
         />
@@ -156,11 +158,6 @@ function PluginCard({ plugin, onChanged }: { plugin: Plugin; onChanged: (next: P
       {plugin.description && <p className="text-small text-ink-soft">{plugin.description}</p>}
       {parts.length > 0 && (
         <p className="mt-2 text-label text-ink-soft">Đóng góp: {parts.join(" · ")}</p>
-      )}
-      {plugin.name === KEEP_ON && (
-        <p className="mt-2 text-label text-ink-soft">
-          Không tắt được ở đây: tắt plugin này là mất bảng điều khiển.
-        </p>
       )}
       {(error || plugin.error) && (
         <div className="mt-3">
