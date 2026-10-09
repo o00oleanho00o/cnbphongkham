@@ -75,6 +75,11 @@ class StreamObserver:
     def tool_result(self, result: ToolResultBlock) -> None:
         self.events.put_nowait({"event": "tool_result", "name": result.name, "is_error": result.is_error})
 
+    def retry(self, error_kind: str) -> None:
+        """The text streamed since the last tool result is void: the model call is made again."""
+        self._thinking = False
+        self.events.put_nowait({"event": "retry", "error_kind": error_kind})
+
     def close(self) -> None:
         self.events.put_nowait(None)
 

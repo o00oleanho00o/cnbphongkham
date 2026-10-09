@@ -15,6 +15,7 @@ from agentcore import (
     LoopPolicy,
     ModelError,
     PromptBuilder,
+    RetryPolicy,
     TextBlock,
     ToolContext,
     ToolOutput,
@@ -66,6 +67,10 @@ async def _run(
 ) -> tuple[TurnResult, ScriptedModel, InMemorySessionStore]:
     model = ScriptedModel(steps)
     used_store = store or InMemorySessionStore()
+
+    async def no_wait(seconds: float) -> None:
+        return None
+
     result = await run_turn(
         session_id=SESSION,
         user_text="hi",
@@ -74,6 +79,7 @@ async def _run(
         tools=tools,
         store=used_store,
         policy=policy,
+        sleep=no_wait,
     )
     return result, model, used_store
 
@@ -236,9 +242,9 @@ async def test_one_empty_completion_is_retried() -> None:
     assert len(model.requests) == 2
 
 
-async def test_two_empty_completions_in_a_row_raise() -> None:
+async def test_empty_completions_past_the_retry_limit_raise() -> None:
     with pytest.raises(ModelError) as caught:
-        await _run([_empty, _empty], ToolRegistry())
+        await _run([_empty, _empty], ToolRegistry(), policy=LoopPolicy(retry=RetryPolicy(max_retries=1)))
 
     assert caught.value.kind == "empty_response"
 

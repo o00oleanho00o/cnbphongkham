@@ -39,6 +39,9 @@ class AgentSection(_Section):
     """How the agent works; ``load_profile`` fills it from AGENTS.md when the folder has one."""
     tools: list[str] = Field(default_factory=list[str])
     timezone: str = "UTC"
+    failure_reply: str = Field(default="", max_length=1000)
+    """Sent through a chat channel when a turn fails, so the person is not left without an answer; empty
+    sends nothing."""
 
 
 class ModelSection(_Section):
@@ -46,6 +49,7 @@ class ModelSection(_Section):
     model: str = ""
     base_url: str = ""
     timeout_s: float = Field(default=120.0, gt=0)
+    """Longest wait for the next piece of the model's stream."""
     reasoning: ReasoningEffort | None = None
     """off | low | medium | high; unset leaves the provider's default."""
     dialect: OpenAIDialect | None = None
@@ -55,6 +59,8 @@ class ModelSection(_Section):
 class LoopSection(_Section):
     max_steps: int = Field(default=6, ge=1, le=50)
     max_output_tokens: int = Field(default=2048, ge=64)
+    max_turn_s: float = Field(default=300.0, gt=0)
+    """After this long no new step starts and one last call answers."""
 
 
 class PromptSection(_Section):
@@ -134,6 +140,7 @@ class Profile(_Section):
         return LoopPolicy(
             max_steps=self.loop.max_steps,
             max_output_tokens=self.loop.max_output_tokens,
+            max_turn_s=self.loop.max_turn_s,
             reasoning=reasoning or self.model.reasoning,
             max_parallel_tools=self.guards.max_parallel_tools,
             max_tool_calls_per_step=self.guards.max_tool_calls_per_step,

@@ -13,8 +13,8 @@ from typing import Any, Literal, Protocol
 
 from agentcore.messages import Usage
 
-TraceStop = Literal["completed", "max_steps", "error"]
-EventKind = Literal["model_call", "tool_call", "compaction", "memory_flush", "repair"]
+TraceStop = Literal["completed", "max_steps", "deadline", "error"]
+EventKind = Literal["model_call", "model_retry", "tool_call", "compaction", "memory_flush", "repair"]
 
 
 @dataclass(frozen=True, slots=True)

@@ -59,6 +59,7 @@ class ChannelHub:
         channels: Callable[[], Sequence[ChannelAdapter]],
         refresh: Callable[[], Awaitable[None]] | None = None,
         settings: DeliverySettings | None = None,
+        failure_reply: str = "",
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._dispatcher = dispatcher
@@ -66,6 +67,7 @@ class ChannelHub:
         self._channels = channels
         self._refresh = refresh
         self.settings = settings or DeliverySettings()
+        self._failure_reply = failure_reply.strip()
         self._clock = clock
         self._running: dict[str, ChannelAdapter] = {}
         self._errors: dict[str, str] = {}
@@ -170,12 +172,16 @@ class ChannelHub:
                 record.id, "the channel is not running", after_s=settings.tick_s
             )
             return False
-        if record.status != "done" or record.reply is None:
+        if record.status == "done" and record.reply is not None:
+            text = record.reply.text
+        elif self._failure_reply:
+            text = self._failure_reply  # the turn failed; the person still hears back
+        else:
             await self._ingress.finish_delivery(
                 record.id, "skipped", f"no reply: {record.error_kind or record.status}"
             )
             return True
-        parts = split_reply(record.reply.text, adapter.capabilities.max_text_chars)
+        parts = split_reply(text, adapter.capabilities.max_text_chars)
         if not parts:
             await self._ingress.finish_delivery(record.id, "skipped", "empty reply")
             return True

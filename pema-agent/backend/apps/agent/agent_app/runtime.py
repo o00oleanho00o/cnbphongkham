@@ -89,6 +89,7 @@ class Runtime:
             channels=lambda: self.plugins.contributions().channels,
             refresh=self.plugin_manager.refresh,
             settings=settings,
+            failure_reply=self.agent.profile.agent.failure_reply,
         )
 
     def dispatcher(self, settings: DispatchSettings | None = None) -> Dispatcher:

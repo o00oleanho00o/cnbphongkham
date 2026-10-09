@@ -225,6 +225,24 @@ async def test_a_failed_turn_sends_nothing_and_is_marked_skipped(tmp_path: Path)
     await dispatcher.close()
 
 
+async def test_a_failed_turn_sends_the_agents_failure_reply_when_it_has_one(tmp_path: Path) -> None:
+    runtime = _runtime(tmp_path)
+    runtime.live.use_model(BrokenModel())
+    channel = FakeChannel()
+    dispatcher = runtime.dispatcher(DispatchSettings(poll_s=0.01))
+    hub = ChannelHub(
+        dispatcher, channels=lambda: [channel], settings=FAST, failure_reply=" Try again later. "
+    )
+    await hub.sync()
+
+    await channel.hear("m1", "hi")
+    record = await _until(hub, dispatcher, 1, "sent")
+
+    assert [m.text for m in channel.sent] == ["Try again later."]
+    assert (record.status, record.error_kind) == ("failed", "auth")
+    await dispatcher.close()
+
+
 async def test_a_channel_that_cannot_start_is_reported_and_tried_again(tmp_path: Path) -> None:
     stubborn, fine = StubbornChannel("stubborn"), FakeChannel("fine")
     dispatcher, hub = _hub(_runtime(tmp_path), stubborn, fine)

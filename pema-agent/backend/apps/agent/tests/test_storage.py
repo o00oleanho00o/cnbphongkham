@@ -35,9 +35,11 @@ from agentcore import (
     AssistantResult,
     CompactionRecord,
     LlmRequest,
+    LoopPolicy,
     Message,
     ModelError,
     PromptBuilder,
+    RetryPolicy,
     StoredPrompt,
     TextBlock,
     ThinkingBlock,
@@ -355,6 +357,9 @@ def test_a_failed_turn_is_traced_even_without_a_session_row(admin: tuple[str, En
     def down(request: LlmRequest) -> AssistantResult:
         raise ModelError("transient", "overloaded")
 
+    async def no_wait(seconds: float) -> None:
+        return None
+
     async def check(db: AgentDatabase) -> None:
         tracer = PostgresTracer(db, agent="dev", model="m1")
         with pytest.raises(ModelError):
@@ -362,15 +367,18 @@ def test_a_failed_turn_is_traced_even_without_a_session_row(admin: tuple[str, En
                 session_id="s1",
                 user_text="hi",
                 prompt=PromptBuilder.fixed("sys"),
-                model=ScriptedModel([down]),
+                model=ScriptedModel([down, down]),
                 tools=ToolRegistry(),
                 store=PostgresSessionStore(db, agent="dev"),
                 tenant_id="t",
                 tracer=tracer,
+                policy=LoopPolicy(retry=RetryPolicy(max_retries=1)),
+                sleep=no_wait,
             )
         trace = await tracer.last("t", "s1")
         assert trace is not None
         assert (trace.stop, trace.error_kind, trace.steps) == ("error", "transient", 1)
+        assert [e.kind for e in trace.events] == ["model_call", "model_retry", "model_call"]
         await tracer.record(trace)  # a retried write keeps one row
 
     _run(admin[0], check)

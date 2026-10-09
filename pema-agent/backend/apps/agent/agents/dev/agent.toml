@@ -7,6 +7,8 @@
 name = "dev"
 tools = ["get_datetime"]
 timezone = "Asia/Ho_Chi_Minh"
+# sent through a chat channel when a turn fails (model down, bad key); empty sends nothing
+failure_reply = "Sorry, I cannot answer right now. Please try again in a few minutes."
 
 [prompt]
 # session sections form the frozen system prompt; turn/step sections go in the per-request context block
@@ -45,6 +47,7 @@ provider = "openai-compatible"
 model = ""
 base_url = ""
 timeout_s = 120
+# timeout_s: longest wait for the next piece of the model's stream; a stalled stream is retried
 # reasoning: off | low | medium | high; unset keeps the provider default (DeepSeek thinks at "high", which is
 # slow); LLM_REASONING overrides it. dialect: "deepseek" or "openai"; unset guesses from base_url.
 # reasoning = "off"
@@ -52,6 +55,8 @@ timeout_s = 120
 [loop]
 max_steps = 6
 max_output_tokens = 2048
+# after this many seconds no new step starts and one last call answers
+max_turn_s = 300
 
 [plugins]
 # Plugins to load at start, found in apps/agent/plugins, this folder's plugins/ and $AGENT_PLUGIN_DIR.

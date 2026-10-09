@@ -59,7 +59,10 @@ class OpenAICompatConfig(BaseModel):
     api_key: str
     base_url: str | None = None
     timeout_s: float = 120.0
-    max_retries: int = 2
+    """Longest wait for the next piece of the stream; a stalled stream fails as ``transient``."""
+    connect_timeout_s: float = 10.0
+    max_retries: int = 0
+    """Retries are the turn loop's (``RetryPolicy``), so each one shows in the trace."""
     dialect: OpenAIDialect | None = None
     """None: ``deepseek`` for a DeepSeek host, ``openai`` otherwise."""
 
@@ -81,7 +84,7 @@ class OpenAICompatModel:
         self._client = client or AsyncOpenAI(
             api_key=config.api_key,
             base_url=config.base_url or None,
-            timeout=config.timeout_s,
+            timeout=openai.Timeout(config.timeout_s, connect=config.connect_timeout_s),
             max_retries=config.max_retries,
         )
 

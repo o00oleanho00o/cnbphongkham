@@ -661,6 +661,11 @@ class ConsoleObserver:
         status = "error" if result.is_error else "ok"
         _write(f"  [tool] {result.name} -> {status}: {_preview(result.content)}\n")
 
+    def retry(self, error_kind: str) -> None:
+        self._end_line()
+        _write(f"  (the model stopped: {error_kind}; trying again)\n")
+        self._replying = self._thinking = False
+
     def finish(self, result: TurnResult) -> str:
         """What is left to print once the turn is over: the reply if nothing streamed, and the stats."""
         head = "\n" if self._mid_line else ""

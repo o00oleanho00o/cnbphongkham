@@ -11,13 +11,23 @@ from pathlib import Path
 import httpx
 import pytest
 
-from agent_app.dispatcher import Dispatcher, DispatchSettings
+from agent_app.dispatcher import Dispatcher, DispatchSettings, StreamObserver
 from agent_app.gateway import GatewaySettings, create_app
 from agent_app.ingress import InMemorySessionLocks, SessionBusyError
 from agent_app.profile import load_profile
 from agent_app.runtime import build_runtime
-from agentcore import AssistantResult, LlmRequest, Message, ModelError, StreamSink, TextBlock, Usage
+from agentcore import (
+    AssistantResult,
+    LlmRequest,
+    Message,
+    ModelError,
+    RetryPolicy,
+    StreamSink,
+    TextBlock,
+    Usage,
+)
 from agentcore.channels import InboundMessage
+from agentcore.loop.run_turn import RetryObserver
 
 DEV_PROFILE = Path(__file__).resolve().parents[1] / "agents" / "dev"
 TOKEN = "t" * 40
@@ -182,7 +192,7 @@ async def test_one_conversation_runs_in_order_while_others_run_alongside() -> No
 
 
 async def test_a_model_error_is_stored_and_mapped_to_a_status(client_for: ClientFor) -> None:
-    model = GateModel(error=ModelError("rate_limit", "slow down"))
+    model = GateModel(error=ModelError("rate_limit", "slow down", retry_after_s=0.0))
     client = client_for(_dispatcher(model))
 
     first = await client.post("/v1/chat", json=_chat("m1", "hi"), headers=AUTH)
@@ -191,7 +201,18 @@ async def test_a_model_error_is_stored_and_mapped_to_a_status(client_for: Client
     assert first.status_code == 429
     assert first.json()["error"]["kind"] == "rate_limit"
     assert again.status_code == 429
-    assert model.calls == 1
+    assert model.calls == 1 + RetryPolicy().max_retries
+
+
+def test_a_retried_model_call_is_announced_on_the_stream() -> None:
+    observer = StreamObserver()
+
+    observer.text("half")
+    observer.retry("transient")
+
+    events = [observer.events.get_nowait(), observer.events.get_nowait()]
+    assert events == [{"event": "text", "delta": "half"}, {"event": "retry", "error_kind": "transient"}]
+    assert isinstance(observer, RetryObserver)
 
 
 async def test_the_stream_sends_accepted_text_and_done(client_for: ClientFor) -> None:

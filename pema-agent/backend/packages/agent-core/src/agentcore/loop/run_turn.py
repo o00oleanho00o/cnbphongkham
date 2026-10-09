@@ -1,11 +1,13 @@
 """One turn of the agent.
 
 The model is called in a loop and the tools it asks for are run, until it answers without a tool call. When
-the step budget runs out, one last call without tools forces an answer. Every assistant message is stored
-before its tools run, and every tool call gets exactly one result, so the stored history is always valid to
-send back to a provider. The system prompt is the session's frozen one; the per-turn and per-step context
-goes at the end of each request and is never stored. With a context manager, a request over the budget first
-compacts older turns.
+the step budget or the turn's time runs out, one last call without tools forces an answer. Every assistant
+message is stored before its tools run, and every tool call gets exactly one result, so the stored history is
+always valid to send back to a provider. The system prompt is the session's frozen one; the per-turn and
+per-step context goes at the end of each request and is never stored. With a context manager, a request over
+the budget first compacts older turns. A model call that fails for a passing reason (rate limit, dropped or
+stalled stream, empty completion) is tried again after a pause; one the provider finds too long is tried once
+more after a harder compaction.
 """
 
 from __future__ import annotations
@@ -13,10 +15,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from collections.abc import Awaitable, Callable, Sequence
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Final, Literal, Protocol
+from typing import Any, Final, Literal, Protocol, runtime_checkable
 from uuid import uuid4
 
 from agentcore.clock import utc_now
@@ -41,6 +43,7 @@ from agentcore.harness.tools.executor import (
 from agentcore.harness.tools.registry import ToolRegistry
 from agentcore.harness.tools.spec import ToolContext
 from agentcore.loop.repair import missing_tool_results
+from agentcore.loop.retry import RetryPolicy
 from agentcore.messages import Block, Message, TextBlock, ToolResultBlock, ToolUseBlock, Usage
 from agentcore.prompt.builder import CONTEXT_CLOSE, CONTEXT_OPEN, PromptBuilder, with_context
 from agentcore.prompt.sections import StepInfo, TurnInfo
@@ -67,6 +70,9 @@ class LoopPolicy:
     """None leaves the provider's default (DeepSeek thinks at ``high`` by default, which is slow)."""
     max_parallel_tools: int = DEFAULT_MAX_PARALLEL
     max_tool_calls_per_step: int = DEFAULT_MAX_CALLS_PER_STEP
+    max_turn_s: float | None = 300.0
+    """After this long no new step starts: one last call without tools answers. None for no limit."""
+    retry: RetryPolicy = field(default_factory=RetryPolicy)
 
     def __post_init__(self) -> None:
         if self.max_steps < 1:
@@ -75,6 +81,8 @@ class LoopPolicy:
             raise ValueError("max_output_tokens must be at least 1")
         if self.max_parallel_tools < 1 or self.max_tool_calls_per_step < 1:
             raise ValueError("max_parallel_tools and max_tool_calls_per_step must be at least 1")
+        if self.max_turn_s is not None and self.max_turn_s <= 0:
+            raise ValueError("max_turn_s must be positive")
 
     def executor(self, tools: ToolRegistry, hooks: HookSet | None) -> ToolExecutor:
         return ToolExecutor(
@@ -97,7 +105,15 @@ class TurnObserver(Protocol):
     def tool_result(self, result: ToolResultBlock) -> None: ...
 
 
-TurnStop = Literal["completed", "max_steps"]
+@runtime_checkable
+class RetryObserver(Protocol):
+    """An observer that also hears when a model call is tried again: text streamed by the failed attempt is
+    void and comes again."""
+
+    def retry(self, error_kind: str) -> None: ...
+
+
+TurnStop = Literal["completed", "max_steps", "deadline"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,11 +146,14 @@ async def run_turn(
     hooks: HookSet | None = None,
     tracer: Tracer | None = None,
     clock: Callable[[], datetime] = utc_now,
+    sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    timer: Callable[[], float] = time.perf_counter,
 ) -> TurnResult:
-    """``clock`` must return an aware datetime; tests pass a fixed one. Without ``context`` nothing is
-    compacted. ``user_id`` names the person the session talks to; the caller sets it, never the model. The
-    ``tracer`` gets one trace per turn, also when the turn fails; a tracer error never fails the turn."""
-    started = time.perf_counter()
+    """``clock`` must return an aware datetime; tests pass a fixed one, and a ``sleep`` and ``timer`` of their
+    own to skip retry pauses and move time. Without ``context`` nothing is compacted. ``user_id`` names the
+    person the session talks to; the caller sets it, never the model. The ``tracer`` gets one trace per turn,
+    also when the turn fails; a tracer error never fails the turn."""
+    started = timer()
     started_at = clock()
     turn_id = str(uuid4())
     limits = policy or LoopPolicy()
@@ -167,10 +186,18 @@ async def run_turn(
         )
 
     async def request_for(step: StepInfo, offered: list[ToolSchema]) -> LlmRequest:
-        nonlocal system, usage, compactions
         request = await build(step, offered)
         if context is None or not context.over_budget(request):
             return request
+        if not await compact(step):
+            return request
+        return await build(step, offered)
+
+    async def compact(step: StepInfo, *, force: bool = False) -> bool:
+        """Summarises older turns (``force``: all but the current one); False when nothing could go."""
+        nonlocal system, usage, compactions
+        if context is None:
+            return False
 
         async def flush(messages: Sequence[Message]) -> Usage:
             flush_started = time.perf_counter()
@@ -195,38 +222,64 @@ async def run_turn(
             session_id=session_id,
             keep_from=turn_start,
             max_output_tokens=limits.max_output_tokens,
+            force=force,
             before_summary=flush,
         )
         if outcome is None:
-            return request
-        detail = {
+            return False
+        detail: dict[str, Any] = {
             "compacted_messages": outcome.compacted_messages,
             "fallback": outcome.fallback,
             **usage_detail(outcome.usage),
         }
+        if force:
+            detail["forced"] = True
         events.append(
             TraceEvent("compaction", step.step, time.perf_counter() - compact_started, detail=detail)
         )
         compactions += 1
         usage = usage + outcome.usage
         system = await prompt.system(store, tenant_id, session_id, user_id=user_id, refresh=True)
-        return await build(step, offered)
+        return True
 
     async def call_model(step: StepInfo, offered: list[ToolSchema]) -> AssistantResult:
         hook_ctx = HookContext(tenant_id=tenant_id, session_id=session_id, user_id=user_id, step=step.step)
-        request = await guards.before_model(await request_for(step, offered), hook_ctx)
-        call_started = time.perf_counter()
-        try:
-            result = await _complete(model, request, observer)
-        except ModelError as err:
-            elapsed = time.perf_counter() - call_started
+        retries = 0
+        overflow_handled = False
+        while True:
+            request = await guards.before_model(await request_for(step, offered), hook_ctx)
+            sink = _WatchedSink(observer)
+            call_started = time.perf_counter()
+            try:
+                result = await model.complete(request, sink=sink)
+            except ModelError as err:
+                elapsed = time.perf_counter() - call_started
+                events.append(
+                    TraceEvent(
+                        "model_call", step.step, elapsed, is_error=True, detail={"error_kind": err.kind}
+                    )
+                )
+                if err.kind == "context_overflow" and not overflow_handled:
+                    overflow_handled = True
+                    if await compact(step, force=True):
+                        continue
+                    raise
+                if not limits.retry.retries(err) or retries >= limits.retry.max_retries:
+                    raise
+                retries += 1
+                pause = limits.retry.delay(retries, err)
+                detail = {"error_kind": err.kind, "retry": retries, "streamed": sink.streamed}
+                events.append(TraceEvent("model_retry", step.step, pause, detail=detail))
+                logger.info("session %s: model %s, retry %d in %.1fs", session_id, err.kind, retries, pause)
+                if sink.streamed and isinstance(observer, RetryObserver):
+                    observer.retry(err.kind)
+                await sleep(pause)
+                continue
+            detail = {"stop_reason": result.stop_reason, **usage_detail(result.message.usage or Usage())}
             events.append(
-                TraceEvent("model_call", step.step, elapsed, is_error=True, detail={"error_kind": err.kind})
+                TraceEvent("model_call", step.step, time.perf_counter() - call_started, detail=detail)
             )
-            raise
-        detail = {"stop_reason": result.stop_reason, **usage_detail(result.message.usage or Usage())}
-        events.append(TraceEvent("model_call", step.step, time.perf_counter() - call_started, detail=detail))
-        return await guards.after_model(result, hook_ctx)
+            return await guards.after_model(result, hook_ctx)
 
     def finished(text: str, stop: TurnStop, steps: int) -> TurnResult:
         return TurnResult(
@@ -236,9 +289,12 @@ async def run_turn(
             usage=usage,
             new_messages=new_messages,
             compactions=compactions,
-            duration_s=time.perf_counter() - started,
+            duration_s=timer() - started,
             turn_id=turn_id,
         )
+
+    def out_of_time() -> bool:
+        return limits.max_turn_s is not None and timer() - started >= limits.max_turn_s
 
     async def turn() -> TurnResult:
         nonlocal system, turn_start, usage
@@ -255,7 +311,13 @@ async def run_turn(
         turn_start = len(history) + len(repairs)
         await record(Message.user(user_text))
 
+        stop: TurnStop = "max_steps"
+        steps = 0
         for step in range(1, limits.max_steps + 1):
+            if step > 1 and out_of_time():
+                stop = "deadline"
+                break
+            steps = step
             result = await call_model(StepInfo(step=step, max_steps=limits.max_steps), schemas)
             usage = usage + (result.message.usage or Usage())
             await record(result.message)
@@ -267,12 +329,12 @@ async def run_turn(
                 events.append(_tool_event(step, run))
                 await record(Message(role="tool", blocks=[run.result]))
 
-        final_step = StepInfo(step=limits.max_steps + 1, max_steps=limits.max_steps, final=True)
+        final_step = StepInfo(step=steps + 1, max_steps=limits.max_steps, final=True)
         result = await call_model(final_step, [])
         usage = usage + (result.message.usage or Usage())
         final = _without_tool_calls(result.message)
         await record(final)
-        return finished(final.text(), "max_steps", limits.max_steps + 1)
+        return finished(final.text(), stop, steps + 1)
 
     def trace_of(stop: TraceStop, steps: int, duration_s: float, error_kind: str | None) -> TurnTrace:
         return TurnTrace(
@@ -295,8 +357,8 @@ async def run_turn(
         outcome = await turn()
     except Exception as err:
         kind = err.kind if isinstance(err, ModelError) else type(err).__name__
-        steps = sum(1 for e in events if e.kind == "model_call")
-        await _write_trace(tracer, trace_of("error", steps, time.perf_counter() - started, kind))
+        steps = max((e.step for e in events if e.kind == "model_call"), default=0)
+        await _write_trace(tracer, trace_of("error", steps, timer() - started, kind))
         raise
     await _write_trace(tracer, trace_of(outcome.stop, outcome.steps, outcome.duration_s, None))
     return outcome
@@ -345,14 +407,22 @@ async def flush_memory(
     return used
 
 
-async def _complete(model: ModelClient, request: LlmRequest, sink: StreamSink | None) -> AssistantResult:
-    """Some gateways sometimes return an empty completion with a success status; one retry is worth it."""
-    try:
-        return await model.complete(request, sink=sink)
-    except ModelError as err:
-        if err.kind != "empty_response":
-            raise
-    return await model.complete(request, sink=sink)
+class _WatchedSink:
+    """Passes the stream on to the observer and notes whether any of it reached the observer."""
+
+    def __init__(self, observer: StreamSink | None) -> None:
+        self._observer = observer
+        self.streamed = False
+
+    def text(self, delta: str) -> None:
+        if self._observer is not None:
+            self.streamed = True
+            self._observer.text(delta)
+
+    def thinking(self, delta: str) -> None:
+        if self._observer is not None:
+            self.streamed = True
+            self._observer.thinking(delta)
 
 
 def _tool_event(step: int, run: ToolRun) -> TraceEvent:
