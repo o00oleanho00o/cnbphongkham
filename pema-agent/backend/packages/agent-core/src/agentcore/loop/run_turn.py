@@ -10,18 +10,16 @@ compacts older turns.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Final, Literal, Protocol
-
-from pydantic import ValidationError
+from typing import Final, Literal, Protocol
 
 from agentcore.clock import utc_now
 from agentcore.context.compaction import ContextManager
+from agentcore.harness.hooks.base import HookContext, HookSet
 from agentcore.harness.model.errors import ModelError
 from agentcore.harness.model.types import (
     AssistantResult,
@@ -32,15 +30,14 @@ from agentcore.harness.model.types import (
     ToolSchema,
 )
 from agentcore.harness.store.base import SessionStore
+from agentcore.harness.tools.executor import DEFAULT_MAX_CALLS_PER_STEP, DEFAULT_MAX_PARALLEL, ToolExecutor
 from agentcore.harness.tools.registry import ToolRegistry
-from agentcore.harness.tools.spec import ToolContext, ToolSpec
+from agentcore.harness.tools.spec import ToolContext
 from agentcore.messages import Block, Message, TextBlock, ToolResultBlock, ToolUseBlock, Usage
 from agentcore.prompt.builder import CONTEXT_CLOSE, CONTEXT_OPEN, PromptBuilder, with_context
 from agentcore.prompt.sections import StepInfo, TurnInfo
 from agentcore.tenancy import DEFAULT_TENANT
 
-ERROR_TEXT_LIMIT: Final = 300
-VALIDATION_ERRORS_SHOWN: Final = 3
 MEMORY_TOOL: Final = "memory"
 FLUSH_STEPS: Final = 2
 FLUSH_NOTE: Final = (
@@ -58,12 +55,24 @@ class LoopPolicy:
     max_output_tokens: int = 2048
     reasoning: ReasoningEffort | None = None
     """None leaves the provider's default (DeepSeek thinks at ``high`` by default, which is slow)."""
+    max_parallel_tools: int = DEFAULT_MAX_PARALLEL
+    max_tool_calls_per_step: int = DEFAULT_MAX_CALLS_PER_STEP
 
     def __post_init__(self) -> None:
         if self.max_steps < 1:
             raise ValueError("max_steps must be at least 1")
         if self.max_output_tokens < 1:
             raise ValueError("max_output_tokens must be at least 1")
+        if self.max_parallel_tools < 1 or self.max_tool_calls_per_step < 1:
+            raise ValueError("max_parallel_tools and max_tool_calls_per_step must be at least 1")
+
+    def executor(self, tools: ToolRegistry, hooks: HookSet | None) -> ToolExecutor:
+        return ToolExecutor(
+            tools,
+            hooks,
+            max_parallel=self.max_parallel_tools,
+            max_calls_per_step=self.max_tool_calls_per_step,
+        )
 
 
 class TurnObserver(Protocol):
@@ -107,12 +116,15 @@ async def run_turn(
     channel: str | None = None,
     context: ContextManager | None = None,
     observer: TurnObserver | None = None,
+    hooks: HookSet | None = None,
     clock: Callable[[], datetime] = utc_now,
 ) -> TurnResult:
     """``clock`` must return an aware datetime; tests pass a fixed one. Without ``context`` nothing is
     compacted. ``user_id`` names the person the session talks to; the caller sets it, never the model."""
     started = time.perf_counter()
     limits = policy or LoopPolicy()
+    guards = hooks or HookSet()
+    executor = limits.executor(tools, guards)
     ctx = ToolContext(session_id=session_id, tenant_id=tenant_id, user_id=user_id)
     schemas = tools.schemas()
     new_messages: list[Message] = []
@@ -151,6 +163,7 @@ async def run_turn(
                 system=system,
                 messages=messages,
                 max_output_tokens=limits.max_output_tokens,
+                hooks=guards,
             )
 
         outcome = await context.compact(
@@ -168,12 +181,16 @@ async def run_turn(
         system = await prompt.system(store, tenant_id, session_id, user_id=user_id, refresh=True)
         return await build(step, offered)
 
+    async def call_model(step: StepInfo, offered: list[ToolSchema]) -> AssistantResult:
+        hook_ctx = HookContext(tenant_id=tenant_id, session_id=session_id, user_id=user_id, step=step.step)
+        request = await guards.before_model(await request_for(step, offered), hook_ctx)
+        return await guards.after_model(await _complete(model, request, observer), hook_ctx)
+
     turn_start = len(await store.load(tenant_id, session_id))
     await record(Message.user(user_text))
 
     for step in range(1, limits.max_steps + 1):
-        request = await request_for(StepInfo(step=step, max_steps=limits.max_steps), schemas)
-        result = await _complete(model, request, observer)
+        result = await call_model(StepInfo(step=step, max_steps=limits.max_steps), schemas)
         usage = usage + (result.message.usage or Usage())
         await record(result.message)
 
@@ -188,17 +205,10 @@ async def run_turn(
                 compactions=compactions,
                 duration_s=time.perf_counter() - started,
             )
-        for use in uses:
-            if observer is not None:
-                observer.tool_call(use)
-            outcome = await _run_tool(use, tools, ctx)
-            if observer is not None:
-                observer.tool_result(outcome)
+        for outcome in await executor.run(uses, ctx, step=step, observer=observer):
             await record(Message(role="tool", blocks=[outcome]))
 
-    final_step = StepInfo(step=limits.max_steps + 1, max_steps=limits.max_steps, final=True)
-    request = await request_for(final_step, [])
-    result = await _complete(model, request, observer)
+    result = await call_model(StepInfo(step=limits.max_steps + 1, max_steps=limits.max_steps, final=True), [])
     usage = usage + (result.message.usage or Usage())
     final = _without_tool_calls(result.message)
     await record(final)
@@ -221,13 +231,16 @@ async def flush_memory(
     system: str,
     messages: Sequence[Message],
     max_output_tokens: int,
+    hooks: HookSet | None = None,
 ) -> Usage:
     """Before older turns are summarised, the model gets one chance (at most two calls, only the memory tool)
-    to save what should outlive them. Nothing it says is stored; a model error skips the flush."""
+    to save what should outlive them. Nothing it says is stored; a model error skips the flush. The writes go
+    through the same guards as any other tool call."""
     memory = tools.get(MEMORY_TOOL)
     if memory is None or not messages:
         return Usage()
     only_memory = ToolRegistry([memory])
+    executor = ToolExecutor(only_memory, hooks)
     conversation = with_context(messages, f"{CONTEXT_OPEN}\n{FLUSH_NOTE}\n{CONTEXT_CLOSE}")
     used = Usage()
     for _ in range(FLUSH_STEPS):
@@ -247,7 +260,8 @@ async def flush_memory(
         uses = result.message.tool_uses()
         if not uses:
             return used
-        results = [Message(role="tool", blocks=[await _run_tool(use, only_memory, ctx)]) for use in uses]
+        outcomes = await executor.run(uses, ctx, step=0)
+        results = [Message(role="tool", blocks=[outcome]) for outcome in outcomes]
         conversation = [*conversation, result.message, *results]
     return used
 
@@ -260,52 +274,6 @@ async def _complete(model: ModelClient, request: LlmRequest, sink: StreamSink | 
         if err.kind != "empty_response":
             raise
     return await model.complete(request, sink=sink)
-
-
-async def _run_tool(use: ToolUseBlock, tools: ToolRegistry, ctx: ToolContext) -> ToolResultBlock:
-    spec = tools.get(use.name)
-    if spec is None:
-        return _error(use, f"Unknown tool: {use.name}")
-    if use.raw_args is not None:
-        return _error(use, "Arguments are not valid JSON: send a JSON object.")
-    try:
-        args = spec.args_model.model_validate(use.args)
-    except ValidationError as err:
-        return _error(use, f"Invalid arguments: {_describe(err)}")
-    return await _execute(spec, args, use, ctx)
-
-
-async def _execute(spec: ToolSpec[Any], args: Any, use: ToolUseBlock, ctx: ToolContext) -> ToolResultBlock:
-    try:
-        output = await asyncio.wait_for(spec.handler(args, ctx), timeout=spec.timeout_s)
-    except TimeoutError:
-        return _error(use, f"Tool timed out after {spec.timeout_s:g}s")
-    except Exception as err:  # a failing tool must not end the turn: the model sees the error and can recover
-        return _error(use, _truncate(f"{type(err).__name__}: {err}", ERROR_TEXT_LIMIT))
-    return ToolResultBlock(
-        tool_use_id=use.id,
-        name=use.name,
-        content=_truncate(output.text, spec.max_result_chars),
-        is_error=output.is_error,
-    )
-
-
-def _error(use: ToolUseBlock, text: str) -> ToolResultBlock:
-    return ToolResultBlock(tool_use_id=use.id, name=use.name, content=text, is_error=True)
-
-
-def _describe(err: ValidationError) -> str:
-    parts = [
-        f"{'.'.join(str(p) for p in e['loc']) or '(arguments)'}: {e['msg']}"
-        for e in err.errors(include_url=False)[:VALIDATION_ERRORS_SHOWN]
-    ]
-    return "; ".join(parts)
-
-
-def _truncate(text: str, limit: int) -> str:
-    if len(text) <= limit:
-        return text
-    return f"{text[:limit]}…[truncated {len(text) - limit} chars]"
 
 
 def _without_tool_calls(message: Message) -> Message:

@@ -15,6 +15,7 @@ from agentcore import (
     LoopPolicy,
     ModelError,
     PromptBuilder,
+    TextBlock,
     ToolContext,
     ToolOutput,
     ToolRegistry,
@@ -24,6 +25,7 @@ from agentcore import (
     TurnResult,
     run_turn,
 )
+from agentcore.harness.hooks import HookContext, HookSet, PostModelHook, PreModelHook
 from agentcore.harness.model.scripted import ScriptedModel, ScriptStep, calls, reply, tool_call
 from agentcore.prompt import FINAL_TURN_NOTE
 
@@ -304,3 +306,49 @@ async def _run_with_model(model: ScriptedModel, policy: LoopPolicy) -> TurnResul
         store=InMemorySessionStore(),
         policy=policy,
     )
+
+
+async def test_model_hooks_wrap_every_model_call_of_the_turn() -> None:
+    steps: list[int] = []
+
+    async def tag_request(request: LlmRequest, ctx: HookContext) -> LlmRequest:
+        steps.append(ctx.step)
+        return request.model_copy(update={"system": f"{request.system}\n[guarded]"})
+
+    async def shout(result: AssistantResult, ctx: HookContext) -> AssistantResult:
+        if result.message.tool_uses():
+            return result
+        message = result.message.model_copy(
+            update={"blocks": [TextBlock(text=result.message.text().upper())]}
+        )
+        return result.model_copy(update={"message": message})
+
+    model = ScriptedModel([calls(tool_call("add", {"a": 1, "b": 2})), reply("three")])
+    hooks = HookSet.of([PreModelHook("tag", tag_request), PostModelHook("shout", shout)])
+
+    result = await run_turn(
+        session_id=SESSION,
+        user_text="1+2?",
+        prompt=PromptBuilder.fixed("s"),
+        model=model,
+        tools=ToolRegistry([ADD]),
+        store=InMemorySessionStore(),
+        hooks=hooks,
+    )
+
+    assert steps == [1, 2]
+    assert all(r.system == "s\n[guarded]" for r in model.requests)
+    assert result.text == "THREE"
+
+
+async def test_the_policy_caps_tool_calls_per_step() -> None:
+    model = ScriptedModel(
+        [calls(tool_call("add", {"a": 1, "b": 1}), tool_call("add", {"a": 2, "b": 2})), reply("done")]
+    )
+
+    result = await _run_with_model(model, LoopPolicy(max_tool_calls_per_step=1))
+
+    first, second = _results(result)
+    assert (first.content, first.is_error) == ("2", False)
+    assert second.is_error
+    assert "at most 1" in second.content

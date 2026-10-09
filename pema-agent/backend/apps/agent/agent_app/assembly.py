@@ -16,6 +16,7 @@ from agentcore import (
     ToolRegistry,
     builtin_sections,
 )
+from agentcore.harness.hooks import HookSet, injection_guard, result_warning, secret_redactor
 from agentcore.harness.tools.builtin import builtin_tools
 from agentcore.memory import InMemoryMemoryBackend, MemoryBackend, MemoryService, make_memory_tool
 from agentcore.skills import InMemorySkillStore, SkillLibrary, SkillStore, load_bundled_skills, skill_tools
@@ -31,6 +32,7 @@ class Agent:
     memory: MemoryService | None
     skills: SkillLibrary | None
     policy: LoopPolicy
+    hooks: HookSet
 
 
 def build_agent(
@@ -62,8 +64,27 @@ def build_agent(
     context = ContextManager(context_policy, model) if context_policy else None
     reasoning = None if fake else resolve_model_settings(profile, env).reasoning
     return Agent(
-        profile, model, tools, prompt, context, memory, skills, profile.loop_policy(reasoning=reasoning)
+        profile,
+        model,
+        tools,
+        prompt,
+        context,
+        memory,
+        skills,
+        profile.loop_policy(reasoning=reasoning),
+        build_hooks(profile, env),
     )
+
+
+def build_hooks(profile: Profile, env: Mapping[str, str]) -> HookSet:
+    hooks = HookSet()
+    if profile.guards.injection_scan:
+        hooks.add(injection_guard())
+    if profile.guards.redact_secrets:
+        hooks.add(secret_redactor(env))
+    if profile.guards.warn_tool_results:
+        hooks.add(result_warning())
+    return hooks
 
 
 def build_prompt(

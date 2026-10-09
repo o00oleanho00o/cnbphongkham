@@ -29,6 +29,16 @@ user_chars = 1375
 enabled = true
 dir = "skills"
 
+[guards]
+# injection_scan blocks memory/skill writes that look like prompt injection; redact_secrets masks keys and
+# secret env values in tool results; warn_tool_results flags results that read like instructions.
+# Read-only tool calls in one step run in parallel (max_parallel_tools); calls past the cap are refused.
+injection_scan = true
+redact_secrets = true
+warn_tool_results = true
+max_parallel_tools = 4
+max_tool_calls_per_step = 8
+
 [model]
 # provider: openai-compatible (OpenAI, DeepSeek, OpenRouter, ...) or anthropic; LLM_PROVIDER overrides it
 provider = "openai-compatible"

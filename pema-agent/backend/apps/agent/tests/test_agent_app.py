@@ -204,6 +204,30 @@ def test_the_loop_policy_carries_the_reasoning_effort() -> None:
     assert agent.policy.reasoning == "low"
 
 
+def test_the_guards_section_picks_the_hooks_and_the_tool_limits() -> None:
+    dev = build_agent(load_profile(DEV_PROFILE), fake=True, env={})
+    profile = Profile.model_validate(
+        {
+            "agent": {"name": "t"},
+            "guards": {
+                "injection_scan": False,
+                "warn_tool_results": False,
+                "max_parallel_tools": 2,
+                "max_tool_calls_per_step": 3,
+            },
+        }
+    )
+
+    agent = build_agent(profile, fake=True, env={})
+
+    assert [h.name for h in dev.hooks.pre_tool] == ["injection_guard"]
+    assert [h.name for h in dev.hooks.post_tool] == ["secret_redactor", "result_warning"]
+    assert (agent.hooks.pre_tool, [h.name for h in agent.hooks.post_tool]) == ([], ["secret_redactor"])
+    assert (agent.policy.max_parallel_tools, agent.policy.max_tool_calls_per_step) == (2, 3)
+    with pytest.raises(ValidationError):
+        Profile.model_validate({"agent": {"name": "t"}, "guards": {"max_parallel_tools": 0}})
+
+
 def test_a_missing_key_is_a_config_error_and_fake_needs_no_key() -> None:
     with pytest.raises(ModelConfigError) as caught:
         build_model(_profile(), fake=False, env={})

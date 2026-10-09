@@ -37,4 +37,5 @@ def make_get_datetime_tool(
         args_model=GetDatetimeArgs,
         handler=handler,
         timeout_s=5.0,
+        read_only=True,
     )

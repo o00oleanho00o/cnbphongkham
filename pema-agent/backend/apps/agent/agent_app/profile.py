@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 from agentcore import ContextPolicy, LoopPolicy, ReasoningEffort
 from agentcore.context import DEFAULT_CHARS_PER_TOKEN
 from agentcore.harness.model.reasoning import OpenAIDialect
+from agentcore.harness.tools.executor import DEFAULT_MAX_CALLS_PER_STEP, DEFAULT_MAX_PARALLEL
 from agentcore.memory import MemoryLimits
 from agentcore.memory.service import AGENT_NOTES_CHARS, USER_NOTES_CHARS
 from agentcore.prompt import DEFAULT_SECTIONS
@@ -81,6 +82,17 @@ class SkillsSection(_Section):
     """Bundled skills, relative to the agent folder."""
 
 
+class GuardsSection(_Section):
+    injection_scan: bool = True
+    """Block memory/skill writes that look like prompt injection."""
+    redact_secrets: bool = True
+    """Mask API keys, tokens and secret env values in tool results."""
+    warn_tool_results: bool = True
+    """Prefix a warning to tool results that read like instructions."""
+    max_parallel_tools: int = Field(default=DEFAULT_MAX_PARALLEL, ge=1, le=32)
+    max_tool_calls_per_step: int = Field(default=DEFAULT_MAX_CALLS_PER_STEP, ge=1, le=64)
+
+
 class Profile(_Section):
     agent: AgentSection
     model: ModelSection = Field(default_factory=ModelSection)
@@ -88,6 +100,7 @@ class Profile(_Section):
     context: ContextSection = Field(default_factory=ContextSection)
     memory: MemorySection = Field(default_factory=MemorySection)
     skills: SkillsSection = Field(default_factory=SkillsSection)
+    guards: GuardsSection = Field(default_factory=GuardsSection)
     loop: LoopSection = Field(default_factory=LoopSection)
     _folder: Path | None = PrivateAttr(default=None)
 
@@ -106,6 +119,8 @@ class Profile(_Section):
             max_steps=self.loop.max_steps,
             max_output_tokens=self.loop.max_output_tokens,
             reasoning=reasoning or self.model.reasoning,
+            max_parallel_tools=self.guards.max_parallel_tools,
+            max_tool_calls_per_step=self.guards.max_tool_calls_per_step,
         )
 
     def memory_limits(self) -> MemoryLimits:

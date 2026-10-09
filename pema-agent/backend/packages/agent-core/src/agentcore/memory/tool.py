@@ -47,6 +47,7 @@ def make_memory_tool(service: MemoryService, *, agent: str) -> ToolSpec[MemoryAr
         args_model=MemoryArgs,
         handler=handler,
         timeout_s=STORAGE_TOOL_TIMEOUT_S,
+        prompt_args=("content",),
     )
 
 

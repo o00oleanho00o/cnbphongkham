@@ -143,6 +143,7 @@ async def _chat_with(profile_path: Path, *, fake: bool, session: str | None, db:
                 channel=CHANNEL,
                 context=agent.context,
                 observer=observer,
+                hooks=agent.hooks,
             )
         except ModelError as err:
             _write(f"\nerror ({err.kind}): {err}\n")
@@ -240,6 +241,7 @@ async def compact_now(agent: Agent, store: SessionStore, session_id: str) -> str
             system=system,
             messages=messages,
             max_output_tokens=max_output_tokens,
+            hooks=agent.hooks,
         )
 
     outcome = await agent.context.compact(

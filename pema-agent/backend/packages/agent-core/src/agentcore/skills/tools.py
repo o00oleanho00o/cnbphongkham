@@ -74,6 +74,7 @@ def skill_tools(library: SkillLibrary, *, agent: str) -> list[ToolSpec[Any]]:
             args_model=NoArgs,
             handler=list_skills,
             timeout_s=STORAGE_TOOL_TIMEOUT_S,
+            read_only=True,
         ),
         ToolSpec(
             name="skill_view",
@@ -82,6 +83,7 @@ def skill_tools(library: SkillLibrary, *, agent: str) -> list[ToolSpec[Any]]:
             handler=view,
             timeout_s=STORAGE_TOOL_TIMEOUT_S,
             max_result_chars=MAX_BODY_CHARS + 2_000,
+            read_only=True,
         ),
         ToolSpec(
             name="skill_write",
@@ -89,6 +91,7 @@ def skill_tools(library: SkillLibrary, *, agent: str) -> list[ToolSpec[Any]]:
             args_model=WriteArgs,
             handler=write,
             timeout_s=STORAGE_TOOL_TIMEOUT_S,
+            prompt_args=("description", "body"),
         ),
         ToolSpec(
             name="skill_patch",
@@ -96,6 +99,7 @@ def skill_tools(library: SkillLibrary, *, agent: str) -> list[ToolSpec[Any]]:
             args_model=PatchArgs,
             handler=patch,
             timeout_s=STORAGE_TOOL_TIMEOUT_S,
+            prompt_args=("new_text",),
         ),
     ]
     return specs
