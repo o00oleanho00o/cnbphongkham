@@ -3,9 +3,8 @@
 Lives in the repo (`pema-agent/docs/HANDOFF-agent-v2.md`) so it is pushed and shared; update it here after
 each stage. Last updated 2026-10-09, after S4d (`8f765862`).
 
-Next session focus: **record the 3 real DeepSeek scenarios for the replay tests** (the user chose to give the key
-to the assistant; see "S4d" below), then plan S5 or the next item the user picks. Reply to the user in
-Vietnamese. Open items to handle later are under "Loose ends".
+Next session focus: S4 is complete — ask the user what comes next (S5 Graph, HMAC, Zalo channel plugin, plugin
+UI, verifier hook). Reply to the user in Vietnamese. Open items to handle later are under "Loose ends".
 
 ## Where things are
 
@@ -580,6 +579,12 @@ S2a design refinements made while implementing:
     <cassette> --profile apps/agent/agents/dev --expect <dir>/expected.txt --update`; check the cassette has no
     secret before committing. Any change to the dev agent's tools makes the cassettes drift: re-record.
   - STOPPED after S4d. Pending: record the 3 real scenarios with the user's key.
+- **Real scenarios committed `f7ff799b`** (2026-10-09, deepseek-v4-pro, no database, key set only in the
+  recording terminal and removed after): `plain-question` (1 call), `time-tool` (get_datetime Asia/Tokyo, 2
+  calls), `calculate-and-remember` (calculate, then a memory note about the user, 4 calls). Each turn took
+  3–4 s with ~90 % prompt cache. Cassettes scanned: no key or token. The replays run the real tools (calculate,
+  memory) against the recorded model replies. **S4 is complete.** The user pasted the key in chat again —
+  told to rotate it.
 
 ## S1 progress log (newest last)
 
@@ -649,8 +654,9 @@ S2a design refinements made while implementing:
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
-- First action next session: record the 3 real replay scenarios (the user gives the key), then ask what comes
-  next (S5 Graph, HMAC, Zalo channel plugin, UI). S3e and S4 have not been run against a real model yet.
+- First action next session: ask the user what comes next (S5 Graph, HMAC for the gateway, a Zalo channel
+  plugin, the plugin UI, the verifier hook). S3e and S4 run against DeepSeek only through the recorded
+  scenarios so far.
 
 ### Deferred: verifier hook (user, 2026-10-09)
 
