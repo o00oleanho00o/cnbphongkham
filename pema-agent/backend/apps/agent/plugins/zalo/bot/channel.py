@@ -24,7 +24,7 @@ from agentcore.channels import ChannelCapabilities, ChannelSendError, OutboundMe
 
 from ..access import should_respond
 from ..format.prepare_outgoing_text import lam_sach_theo_cau_hinh
-from ..inbound import to_inbound
+from ..inbound import Heard, to_inbound
 from ..models import AccountConfig
 from .client import BotApiClient, LoiZaloBotApi
 from .parser import parse_update
@@ -50,6 +50,7 @@ class ZaloBotChannel:
         poll_timeout_s: int = 30,
         backoff_s: tuple[float, float] = (2.0, 60.0),
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        heard: Heard | None = None,
     ) -> None:
         self.name = channel_name(account.id)
         self.account = account
@@ -63,6 +64,7 @@ class ZaloBotChannel:
         self._poll_timeout_s = poll_timeout_s
         self._backoff_s = backoff_s
         self._sleep = sleep
+        self._heard = heard
         self._client: BotApiClient | None = None
         self._receive: Receive | None = None
         self._poller: asyncio.Task[None] | None = None
@@ -131,6 +133,8 @@ class ZaloBotChannel:
         if msg is None:
             logger.debug("bot %s: update %s ignored", self.account.id, update.event_name)
             return
+        if self._heard is not None and not msg.is_self:
+            await self._heard(msg)
         decision = should_respond(self.account, msg)
         if not decision.respond:
             logger.debug("bot %s: not answered (%s)", self.account.id, decision.reason)

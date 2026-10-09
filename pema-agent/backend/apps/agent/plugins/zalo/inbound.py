@@ -7,7 +7,7 @@ conversation. ``metadata`` carries what the reply needs back (the thread type) a
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -32,6 +32,10 @@ class ZaloInbound:
     is_self: bool = False
     raw: Mapping[str, Any] = field(default_factory=dict[str, Any])
     """The platform's own data of the message (zca-js ``data``), for receipts and quotes."""
+
+
+Heard = Callable[[ZaloInbound], Awaitable[None]]
+"""Told of every message from someone else, answered or not, before the filter (the address book)."""
 
 
 def to_inbound(msg: ZaloInbound, extra: Mapping[str, str] | None = None) -> InboundMessage:

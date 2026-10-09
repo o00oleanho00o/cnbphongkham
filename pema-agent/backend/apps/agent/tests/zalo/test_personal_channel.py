@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 import json
 import textwrap
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -18,9 +19,13 @@ from agent_app.channel_hub import ChannelHub, DeliverySettings
 from agent_app.dispatcher import Dispatcher, DispatchSettings
 from agent_app.gateway import GatewaySettings, create_app
 from agent_app.plugins import PluginHost, discover
+from agent_app.plugins.records import InMemoryPluginRecords
 from agent_app.profile import load_profile
 from agent_app.runtime import BUNDLED_PLUGINS, Runtime, build_runtime
 from agentcore.harness.model.scripted import ScriptedModel, reply
+from plugins.zalo.models import AccountConfig, ChannelKind
+from plugins.zalo.personal.client import ZaloBridgeError
+from plugins.zalo.personal.friends import FriendRequests, auto_accept_round
 from plugins.zalo.personal.receipts import quote_from, receipt_params
 from plugins.zalo.personal.signing import signed_headers, verify_signature
 
@@ -47,6 +52,9 @@ class FakeBridge:
         self.reactions: list[tuple[str, str, str]] = []
         self.refuse_styles = False
         self.refuse_quotes = False
+        self.refuse_friends = False
+        self.decided: list[tuple[str, str]] = []
+        self.group_info: list[str] = []
         self.transport = httpx.MockTransport(self._handle)
 
     def _handle(self, request: httpx.Request) -> httpx.Response:
@@ -87,6 +95,25 @@ class FakeBridge:
             return _ok()
         if action == "reaction":
             self.reactions.append((data["icon_key"], data["msg_id"], data["thread_id"]))
+            return _ok()
+        if action == "user-info":
+            uid = request.url.params["uid"]
+            return _ok(
+                data={"changed_profiles": {uid: {"displayName": "Bình", "avatar": "https://a.example/b"}}}
+            )
+        if action == "group-info":
+            thread_id = request.url.params["thread_id"]
+            self.group_info.append(thread_id)
+            return _ok(data={"gridInfoMap": {thread_id: {"name": "Nhóm khám"}}})
+        if action == "friends":
+            return _ok(
+                friends=[{"userId": "f1", "displayName": "Bạn Một"}, {"userId": "f2", "zaloName": "Hai"}]
+            )
+        if action in ("friends/accept", "friends/reject"):
+            if self.refuse_friends:
+                error = {"kind": "zalo_rejected", "message": "no", "code": 1}
+                return httpx.Response(502, json={"ok": False, "error": error})
+            self.decided.append((action.split("/")[1], data["uid"]))
             return _ok()
         return httpx.Response(404, json={"ok": False, "error": {"kind": "bad_request", "message": action}})
 
@@ -162,14 +189,19 @@ class Setup:
 
 
 def _message(
-    text: str, *, sender: str = "u1", group: str | None = None, mentions: list[str] | None = None
+    text: str,
+    *,
+    sender: str = "u1",
+    name: str = "An",
+    group: str | None = None,
+    mentions: list[str] | None = None,
 ) -> dict[str, Any]:
     data: dict[str, Any] = {
         "msgId": f"m-{text}",
         "cliMsgId": "c1",
         "uidFrom": sender,
         "idTo": group or "me-1",
-        "dName": "An",
+        "dName": name,
         "msgType": "webchat",
         "ts": "1760000000000",
         "content": text,
@@ -389,3 +421,118 @@ def test_receipt_and_quote_need_their_ids_and_a_quotable_kind() -> None:
     assert quote_from({**raw, "msgType": "group.poll"}, is_group=True) is None
     assert quote_from({**raw, "content": {"href": "x"}}, is_group=True) is None
     assert quote_from({**raw, "ts": 1760000000000.0}, is_group=True) == quote_from(raw, is_group=True)
+
+
+def _friend_event(kind: str, *, thread_id: str = "", is_self: bool = False, **data: Any) -> dict[str, Any]:
+    return {
+        "type": "friend_event",
+        "event": {"kind": kind, "thread_id": thread_id, "is_self": is_self, "data": data},
+    }
+
+
+async def test_a_friend_request_waits_with_the_sender_name_until_zalo_takes_a_decision(
+    tmp_path: Path, bridge: FakeBridge
+) -> None:
+    setup = Setup(_runtime(tmp_path, bridge))
+    await setup.personal()
+    await setup.event("nick", {"type": "credential_updated", "credential": CREDENTIAL})
+    await setup.hub.sync()
+    base = "/v1/plugins/zalo/friends/nick"
+
+    async def waiting() -> list[str]:
+        return [r["from_uid"] for r in (await setup.client.get(f"{base}/requests", headers=HEADERS)).json()]
+
+    await setup.event("nick", _friend_event("request", fromUid="u7", toUid="me-1", message="chào"))
+    await setup.event("nick", _friend_event("request", is_self=True, fromUid="me-1", toUid="u9"))
+    (request,) = (await setup.client.get(f"{base}/requests", headers=HEADERS)).json()
+    bridge.refuse_friends = True
+    refused = await setup.client.post(f"{base}/accept", json={"uid": "u7"}, headers=HEADERS)
+    after_refusal = await waiting()
+    bridge.refuse_friends = False
+    accepted = await setup.client.post(f"{base}/accept", json={"uid": "u7"}, headers=HEADERS)
+    await setup.event("nick", _friend_event("request", fromUid="u8", toUid="me-1", message=""))
+    await setup.event("nick", _friend_event("reject_request", fromUid="u8", toUid="me-1"))
+    await setup.event("nick", _friend_event("request", fromUid="u9", toUid="me-1", message=""))
+    await setup.event("nick", _friend_event("add", thread_id="u9"))
+    friends = (await setup.client.get(f"{base}/list", headers=HEADERS)).json()
+    bad_uid = await setup.client.post(f"{base}/reject", json={"uid": "u 1"}, headers=HEADERS)
+    not_running = await setup.client.get("/v1/plugins/zalo/friends/other/list", headers=HEADERS)
+
+    assert (request["from_uid"], request["message"], request["sender_name"], request["avatar_url"]) == (
+        "u7",
+        "chào",
+        "Bình",
+        "https://a.example/b",
+    )
+    assert (refused.status_code, after_refusal) == (503, ["u7"])
+    assert accepted.status_code == 204
+    assert bridge.decided == [("accept", "u7")]
+    assert await waiting() == []
+    assert friends == [
+        {"user_id": "f1", "display_name": "Bạn Một", "avatar_url": None},
+        {"user_id": "f2", "display_name": "Hai", "avatar_url": None},
+    ]
+    assert (bad_uid.status_code, not_running.status_code) == (422, 409)
+    await setup.close()
+
+
+async def test_the_address_book_keeps_every_sender_and_groups_get_their_name_once(
+    tmp_path: Path, bridge: FakeBridge
+) -> None:
+    setup = Setup(_runtime(tmp_path, bridge))
+    await setup.personal()
+    await setup.event("nick", {"type": "credential_updated", "credential": CREDENTIAL})
+    await setup.hub.sync()
+
+    await setup.event("nick", _message("một"))
+    await setup.event("nick", _message("hai"))
+    await setup.event("nick", _message("nhóm 1", sender="u2", name="Bình", group="g1"))
+    await setup.event("nick", _message("nhóm 2", sender="u2", name="Bình", group="g1"))
+    await setup.until(lambda: bridge.group_info)
+    await asyncio.sleep(0.05)
+    contacts = (await setup.client.get("/v1/plugins/zalo/contacts", headers=HEADERS)).json()
+    found = (await setup.client.get("/v1/plugins/zalo/contacts?q=BÌ", headers=HEADERS)).json()
+    deleted = await setup.client.delete("/v1/plugins/zalo/contacts/nick/u1", headers=HEADERS)
+    left = (await setup.client.get("/v1/plugins/zalo/contacts?account_id=nick", headers=HEADERS)).json()
+    groups = (await setup.client.get("/v1/plugins/zalo/groups", headers=HEADERS)).json()
+    bad = await setup.client.get("/v1/plugins/zalo/contacts?account_id=Nick:1", headers=HEADERS)
+
+    assert sorted((c["user_id"], c["display_name"], c["message_count"]) for c in contacts) == [
+        ("u1", "An", 2),
+        ("u2", "Bình", 2),
+    ]
+    assert [c["user_id"] for c in found] == ["u2"]
+    assert deleted.status_code == 204
+    assert [c["user_id"] for c in left] == ["u2"]
+    assert groups == [{"account_id": "nick", "thread_id": "g1", "name": "Nhóm khám"}]
+    assert bridge.group_info == ["g1"]
+    assert bad.status_code == 422
+    await setup.close()
+
+
+class FakeFriends:
+    def __init__(self) -> None:
+        self.accepted: list[str] = []
+
+    async def accept_friend_request(self, uid: str) -> None:
+        if uid == "bad":
+            raise ZaloBridgeError("zalo_rejected", "no", code=1)
+        self.accepted.append(uid)
+
+
+async def test_auto_accept_takes_the_requests_that_waited_and_keeps_a_failed_one() -> None:
+    requests = FriendRequests(InMemoryPluginRecords().storage("zalo"))
+    now = datetime(2026, 10, 9, 8, 0, tzinfo=UTC)
+    await requests.put("nick", "old", "", now - timedelta(minutes=10))
+    await requests.put("nick", "bad", "", now - timedelta(minutes=5))
+    await requests.put("nick", "new", "", now - timedelta(seconds=30))
+    await requests.put("off", "old", "", now - timedelta(minutes=10))
+    wants = AccountConfig(id="nick", label="N", channel=ChannelKind.ZALO_PERSONAL, auto_accept_friends=True)
+    off = AccountConfig(id="off", label="O", channel=ChannelKind.ZALO_PERSONAL)
+    api = FakeFriends()
+
+    await auto_accept_round(requests, [(wants, api), (off, api)], now)
+
+    assert api.accepted == ["old"]
+    assert [r.from_uid for r in await requests.list("nick")] == ["new", "bad"]
+    assert [r.from_uid for r in await requests.list("off")] == ["old"]

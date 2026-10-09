@@ -185,6 +185,7 @@ async def test_a_bot_answers_an_allowed_person_in_plain_text_and_ignores_strange
     await zalo.updates.put(_update("giá khám bao nhiêu?"))
     await setup.until(lambda: zalo.sent)
     await asyncio.sleep(0.05)
+    contacts = (await setup.client.get("/v1/plugins/zalo/contacts", headers=HEADERS)).json()
 
     assert token.status_code == 200
     assert BOT_TOKEN not in token.text
@@ -192,6 +193,11 @@ async def test_a_bot_answers_an_allowed_person_in_plain_text_and_ignores_strange
     assert zalo.calls[:3] == ["getMe", "getMe", "deleteWebhook"]  # checked at PUT, then on start
     assert zalo.sent == [("u1", "Giá khám: 200k", None)]
     assert "zalo-bot-1" in setup.hub.running
+    # the stranger is in the address book too: the admin sees who tried
+    assert sorted((c["user_id"], c["display_name"]) for c in contacts) == [
+        ("u1", "Người u1"),
+        ("u2", "Người u2"),
+    ]
     await setup.close()
 
 

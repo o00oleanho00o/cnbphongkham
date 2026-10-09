@@ -226,3 +226,27 @@ class BridgeAccountApi:
                 "thread_type": int(thread_type),
             },
         )
+
+    async def get_user_info(self, uid: str) -> JsonObject:
+        """zca-js ``getUserInfo``: ``{"changed_profiles": {<uid>: {...}}}``."""
+        payload = await self._client.request("GET", self._path("user-info"), params={"uid": uid})
+        data = payload.get("data")
+        return cast(JsonObject, data) if isinstance(data, dict) else {}
+
+    async def get_group_info(self, thread_id: str) -> JsonObject:
+        """zca-js ``getGroupInfo``: ``{"gridInfoMap": {<id>: {"name": ...}}}``."""
+        payload = await self._client.request("GET", self._path("group-info"), params={"thread_id": thread_id})
+        data = payload.get("data")
+        return cast(JsonObject, data) if isinstance(data, dict) else {}
+
+    async def get_all_friends(self) -> list[JsonObject]:
+        """``userId``, ``displayName`` and ``zaloName`` only: the bridge strips the rest (phone number...)."""
+        friends = (await self._client.request("GET", self._path("friends"))).get("friends")
+        items = cast(list[object], friends) if isinstance(friends, list) else []
+        return [cast(JsonObject, item) for item in items if isinstance(item, dict)]
+
+    async def accept_friend_request(self, uid: str) -> None:
+        await self._client.request("POST", self._path("friends/accept"), {"uid": uid})
+
+    async def reject_friend_request(self, uid: str) -> None:
+        await self._client.request("POST", self._path("friends/reject"), {"uid": uid})

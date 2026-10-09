@@ -9,6 +9,7 @@ earlier admin API (``AccountCreate``, ``AccountUpdate``, ``AccountOut``) so the 
 
 from __future__ import annotations
 
+from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Final
 
@@ -125,3 +126,40 @@ class BotTokenSet(_Model):
         pattern=r"^\d+:[A-Za-z0-9_-]+$",
         description="``<numeric id>:<secret>`` from Zalo Bot Creator, write-only.",
     )
+
+
+ZALO_ID_PATTERN: Final = r"^[A-Za-z0-9_.-]{1,100}$"
+"""A Zalo user or group id as it may appear in a path or a body (part of a storage key)."""
+
+
+class ContactOut(_Model):
+    account_id: str
+    user_id: str
+    display_name: str
+    first_seen: datetime
+    last_seen: datetime
+    message_count: int
+
+
+class GroupOut(_Model):
+    account_id: str
+    thread_id: str
+    name: str
+
+
+class FriendRequestOut(_Model):
+    from_uid: str
+    message: str = ""
+    sender_name: str | None = None
+    avatar_url: str | None = None
+    received_at: datetime
+
+
+class FriendOut(_Model):
+    user_id: str
+    display_name: str
+    avatar_url: str | None = None
+
+
+class FriendDecision(_Model):
+    uid: str = Field(pattern=ZALO_ID_PATTERN)

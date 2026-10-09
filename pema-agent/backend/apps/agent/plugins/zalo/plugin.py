@@ -22,8 +22,9 @@ import asyncio
 import hashlib
 import json
 import logging
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any, Final, cast
 
 from agent_app.plugins import Disposer, PluginContext
@@ -34,9 +35,12 @@ from agentcore.messages import ToolUseBlock
 from .accounts import AccountStore
 from .bot.channel import ZaloBotChannel, channel_name
 from .bot.client import BotApiClient, tao_zalo_bot_client
+from .contacts import ContactBook, GroupNames, group_name
+from .inbound import ZaloInbound
 from .models import AccountConfig, ChannelKind
 from .personal.channel import ZaloPersonalChannel
-from .personal.client import BridgeClient
+from .personal.client import BridgeAccountApi, BridgeClient
+from .personal.friends import SWEEP_EVERY_S, FriendRequests, auto_accept_round, handle_friend_event
 from .personal.supervisor import BridgeSupervisor
 
 SYNC_EVERY_S: Final = 15.0
@@ -75,6 +79,9 @@ class ZaloPlugin:
     ) -> None:
         self._ctx = ctx
         self.store = AccountStore(ctx.storage, encrypt=ctx.encrypt, decrypt=ctx.decrypt)
+        self.contacts = ContactBook(ctx.storage)
+        self.groups = GroupNames(ctx.storage)
+        self.friend_requests = FriendRequests(ctx.storage)
         self.bot_client = bot_client
         self.bridge = BridgeSupervisor(
             lambda: ctx.data_dir, self_url=lambda: ctx.self_url, on_restart=self._soon_sync, external=bridge
@@ -87,6 +94,8 @@ class ZaloPlugin:
         self._lock = asyncio.Lock()
         self._tasks: set[asyncio.Task[None]] = set()
         self._install: asyncio.Task[None] | None = None
+        self._groups_asked: set[tuple[str, str]] = set()
+        """Groups whose name was looked up (or is being) by this process."""
 
     def register(self) -> None:
         ctx = self._ctx
@@ -94,6 +103,7 @@ class ZaloPlugin:
         ctx.register_hook(PreToolHook("zalo_disabled_tools", self._tool_allowed))
         ctx.register_job("accounts", self._keep_in_sync)
         ctx.register_job("bridge", lambda: self.bridge.keep_running(self._bridge_wanted))
+        ctx.register_job("friend_auto_accept", self._keep_accepting)
         ctx.on_disable(self._forget)
 
     # --- channels ---
@@ -132,6 +142,11 @@ class ZaloPlugin:
         run = self._channels.get(account_id)
         return run.channel if run is not None and isinstance(run.channel, ZaloPersonalChannel) else None
 
+    def personal_api(self, account_id: str) -> BridgeAccountApi | None:
+        """The personal account on the bridge while its channel runs."""
+        channel = self.personal_channel(account_id)
+        return None if channel is None else channel.api
+
     async def _wanted(self, account: AccountConfig | None) -> tuple[str, str] | None:
         """The secret to start the account's channel with and what it depends on; None when it should not
         run."""
@@ -159,6 +174,7 @@ class ZaloPlugin:
                 client_factory=self.bot_client,
                 webhook_url=f"{public_url}{HOOK_PREFIX}/bot/{account.id}" if public_url else None,
                 poll_timeout_s=max(5, min(60, int(config.get("poll_timeout_s") or 30))),
+                heard=self._heard,
             )
         else:
             channel = ZaloPersonalChannel(
@@ -167,6 +183,7 @@ class ZaloPlugin:
                 store=self.store,
                 rich_text=bool(config.get("rich_text", True)),
                 generation=self.bridge.generation,
+                heard=self._heard,
             )
         try:
             dispose = self._ctx.register_channel(channel)
@@ -196,9 +213,63 @@ class ZaloPlugin:
             await asyncio.sleep(SYNC_EVERY_S)
 
     def _soon_sync(self) -> None:
-        task = asyncio.get_running_loop().create_task(self.sync(), name="zalo sync")
+        self._background(self.sync(), "zalo sync")
+
+    def _background(self, work: Coroutine[Any, Any, None], name: str) -> None:
+        task = asyncio.get_running_loop().create_task(work, name=name)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
+
+    # --- address book and friends ---
+
+    async def _heard(self, msg: ZaloInbound) -> None:
+        """Every message from someone else: the sender goes into the address book, and the name of a group
+        a personal account sees for the first time is looked up. A failure here never costs the message."""
+        try:
+            await self.contacts.record(msg.account_id, msg.sender_id, msg.sender_name, datetime.now(UTC))
+        except Exception as err:  # the storage's own errors included
+            logger.warning("Zalo account %s: contact not recorded (%s)", msg.account_id, type(err).__name__)
+        key = (msg.account_id, msg.thread_id)
+        if msg.is_group and key not in self._groups_asked and self.personal_api(msg.account_id) is not None:
+            self._groups_asked.add(key)
+            self._background(self._name_group(*key), "zalo group name")
+
+    async def _name_group(self, account_id: str, thread_id: str) -> None:
+        api = self.personal_api(account_id)
+        try:
+            if api is None or await self.groups.get(account_id, thread_id) is not None:
+                return
+            name = group_name(await api.get_group_info(thread_id), thread_id)
+            if name is not None:
+                await self.groups.set(account_id, thread_id, name)
+        except Exception as err:  # the bridge's and the storage's errors
+            self._groups_asked.discard((account_id, thread_id))  # asked again on its next message
+            logger.debug("personal account %s: group name not found (%s)", account_id, type(err).__name__)
+
+    async def _friend_event(self, account_id: str, event: Mapping[str, Any]) -> None:
+        if await self.store.get(account_id) is None:
+            return
+        api = self.personal_api(account_id)
+        await handle_friend_event(
+            self.friend_requests,
+            account_id,
+            event,
+            user_info=None if api is None else api.get_user_info,
+            now=datetime.now(UTC),
+        )
+
+    async def _keep_accepting(self) -> None:
+        while True:
+            await asyncio.sleep(SWEEP_EVERY_S)
+            running = [
+                (account, api)
+                for account in self._accounts.values()
+                if (api := self.personal_api(account.id)) is not None
+            ]
+            try:
+                await auto_accept_round(self.friend_requests, running, datetime.now(UTC))
+            except Exception as err:  # the next round tries again
+                logger.warning("Zalo friend auto-accept round failed (%s)", type(err).__name__)
 
     # --- the bridge ---
 
@@ -251,6 +322,10 @@ class ZaloPlugin:
             elif state in ("connected", "disconnected"):
                 self._states[account_id] = state
             await self.sync()
+        elif kind == "friend_event":
+            event = payload.get("event")
+            if isinstance(event, Mapping):
+                await self._friend_event(account_id, cast(Mapping[str, Any], event))
         else:
             logger.debug("bridge event %s for %s ignored", kind, account_id)
 

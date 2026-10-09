@@ -28,7 +28,7 @@ from agentcore.channels import ChannelCapabilities, ChannelSendError, OutboundMe
 from ..access import should_respond
 from ..accounts import AccountStore
 from ..format.prepare_outgoing_text import dinh_dang_neu_bat, lam_sach_theo_cau_hinh
-from ..inbound import THREAD_GROUP, ZaloInbound, to_inbound
+from ..inbound import THREAD_GROUP, Heard, ZaloInbound, to_inbound
 from ..models import AccountConfig
 from ..reaction_icons import to_zalo_reaction
 from .client import BridgeAccountApi, BridgeClient, ThreadKind, ZaloBridgeError
@@ -52,6 +52,7 @@ class ZaloPersonalChannel:
         store: AccountStore,
         rich_text: bool,
         generation: int,
+        heard: Heard | None = None,
     ) -> None:
         self.name = f"zalo-{account.id}"
         self.account = account
@@ -63,6 +64,7 @@ class ZaloPersonalChannel:
         self._bridge = bridge
         self._store = store
         self._rich_text = rich_text
+        self._heard = heard
         self._api: BridgeAccountApi | None = None
         self._receive: Receive | None = None
         self._courtesies: set[asyncio.Task[None]] = set()
@@ -70,6 +72,11 @@ class ZaloPersonalChannel:
     @property
     def own_id(self) -> str:
         return "" if self._api is None else self._api.own_id
+
+    @property
+    def api(self) -> BridgeAccountApi | None:
+        """The account on the bridge while the channel runs (friends, profiles, groups)."""
+        return self._api
 
     async def start(self, receive: Receive) -> None:
         client = self._bridge()
@@ -113,6 +120,8 @@ class ZaloPersonalChannel:
             return
         if not msg.is_self:
             self._courtesy(self._delivered(api, msg))
+            if self._heard is not None:
+                await self._heard(msg)
         decision = should_respond(self.account, msg)
         if not decision.respond:
             logger.debug("personal account %s: not answered (%s)", self.account.id, decision.reason)

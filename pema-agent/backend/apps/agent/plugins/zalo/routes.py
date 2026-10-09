@@ -1,8 +1,9 @@
 # ported from: src/server/routes/account-routes.ts
 """Admin routes of the Zalo plugin, under ``/v1/plugins/zalo`` (admin token): accounts (list, create, change,
-delete), a bot's token, the QR login of a personal account, the Node bridge (status, install, uninstall) and
-the reaction icons the dashboard offers. Under ``/v1/hooks/zalo`` (open): the webhook of bot accounts (secret
-header) and the events of the plugin's own bridge (HMAC signature).
+delete), a bot's token, the QR login of a personal account, the Node bridge (status, install, uninstall), the
+reaction icons the dashboard offers, the address book, group names and the friends of personal accounts.
+Under ``/v1/hooks/zalo`` (open): the webhook of bot accounts (secret header) and the events of the plugin's
+own bridge (HMAC signature).
 
 The kind of an account is fixed at creation (delete and create again to change it). Request and response
 shapes follow the earlier admin API so the dashboard pages carry over. Every change is followed by a ``sync``
@@ -13,31 +14,43 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, cast
+from typing import Annotated, Any, cast
 
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi import APIRouter, HTTPException, Path, Query, Request, Response, status
 from pydantic import ValidationError
 
 from .accounts import AccountExistsError
 from .bot.client import LoiZaloBotApi
 from .bot.types import ZaloBotUpdate, unwrap_webhook_payload
 from .models import (
+    MAX_ACCOUNT_ID_CHARS,
+    ZALO_ID_PATTERN,
     AccountConfig,
     AccountCreate,
     AccountOut,
     AccountUpdate,
     BotTokenSet,
     ChannelKind,
+    ContactOut,
+    FriendDecision,
+    FriendOut,
+    FriendRequestOut,
+    GroupOut,
     QrLoginState,
     QrLoginStatus,
     ReactionIconOut,
 )
-from .personal.client import BridgeClient, BridgeQrStatus, ZaloBridgeError
+from .personal.client import BridgeAccountApi, BridgeClient, BridgeQrStatus, ZaloBridgeError
 from .personal.signing import verify_signature
 from .plugin import LOCKED_OUT, ZaloPlugin
 from .reaction_icons import REACTION_ICONS
 
 logger = logging.getLogger(__name__)
+
+ACCOUNT_ID_PATTERN = r"^[a-z0-9][a-z0-9-]*$"
+AccountId = Annotated[str, Path(pattern=ACCOUNT_ID_PATTERN, max_length=MAX_ACCOUNT_ID_CHARS)]
+AccountFilter = Annotated[str | None, Query(pattern=ACCOUNT_ID_PATTERN, max_length=MAX_ACCOUNT_ID_CHARS)]
+ZaloId = Annotated[str, Path(pattern=ZALO_ID_PATTERN)]
 
 
 def account_routes(plugin: ZaloPlugin) -> APIRouter:
@@ -171,6 +184,81 @@ def account_routes(plugin: ZaloPlugin) -> APIRouter:
             raise HTTPException(status.HTTP_409_CONFLICT, str(err)) from None
         await plugin.sync()
         return status_after.to_json()
+
+    router.include_router(directory_routes(plugin))
+    return router
+
+
+def directory_routes(plugin: ZaloPlugin) -> APIRouter:
+    """The address book and the friends of personal accounts. A friend list never carries more than the id
+    and the name: Zalo gives phone numbers and birth dates too, which the dashboard has no use for."""
+    router = APIRouter()
+
+    def running_api(account_id: str) -> BridgeAccountApi:
+        api = plugin.personal_api(account_id)
+        if api is None:
+            raise HTTPException(status.HTTP_409_CONFLICT, "Tài khoản chưa chạy hoặc là kênh bot")
+        return api
+
+    @router.get("/friends/{account_id}/requests")
+    async def list_friend_requests(account_id: AccountId) -> list[FriendRequestOut]:
+        return await plugin.friend_requests.list(account_id)
+
+    @router.get("/friends/{account_id}/list")
+    async def list_friends(account_id: AccountId) -> list[FriendOut]:
+        api = running_api(account_id)
+        try:
+            friends = await api.get_all_friends()
+        except ZaloBridgeError as err:
+            logger.warning("friends of %s not listed (%s)", account_id, err.kind)
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Không lấy được danh sách bạn") from None
+        return [
+            FriendOut(user_id=user_id, display_name=str(f.get("displayName") or f.get("zaloName") or ""))
+            for f in friends
+            if isinstance(user_id := f.get("userId"), str) and user_id
+        ]
+
+    async def decide(account_id: str, uid: str, *, accept: bool) -> Response:
+        api = running_api(account_id)
+        try:
+            if accept:
+                await api.accept_friend_request(uid)
+            else:
+                await api.reject_friend_request(uid)
+        except ZaloBridgeError as err:
+            logger.warning("friend request of %s not decided (%s)", account_id, err.kind)
+            raise HTTPException(
+                status.HTTP_503_SERVICE_UNAVAILABLE, "Thao tác thất bại, thử lại sau"
+            ) from None
+        await plugin.friend_requests.delete(account_id, uid)  # only once Zalo took it: a failure is retried
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    @router.post("/friends/{account_id}/accept", status_code=status.HTTP_204_NO_CONTENT)
+    async def accept_friend(account_id: AccountId, body: FriendDecision) -> Response:
+        return await decide(account_id, body.uid, accept=True)
+
+    @router.post("/friends/{account_id}/reject", status_code=status.HTTP_204_NO_CONTENT)
+    async def reject_friend(account_id: AccountId, body: FriendDecision) -> Response:
+        return await decide(account_id, body.uid, accept=False)
+
+    @router.get("/contacts")
+    async def list_contacts(
+        account_id: AccountFilter = None,
+        q: str = Query(default="", max_length=120),
+        limit: int = Query(default=50, ge=1, le=200),
+        offset: int = Query(default=0, ge=0),
+    ) -> list[ContactOut]:
+        return await plugin.contacts.list(account_id=account_id, query=q, limit=limit, offset=offset)
+
+    @router.delete("/contacts/{account_id}/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+    async def delete_contact(account_id: AccountId, user_id: ZaloId) -> Response:
+        """Only the address-book row; deleting one that is not there is not an error."""
+        await plugin.contacts.delete(account_id, user_id)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    @router.get("/groups")
+    async def list_groups(account_id: AccountFilter = None) -> list[GroupOut]:
+        return await plugin.groups.list(account_id)
 
     return router
 

@@ -690,6 +690,21 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   rides in the inbound metadata `quote` and comes back on the outbound record); a `zalo_rejected` with styles
   or quote is resent plain. Group names moved to P3c (with contacts). Tests: 3 more in
   `test_personal_channel.py`; full suite 658.
+- **P3c done** (commit after this entry): `contacts.py` (`ContactBook` on `contact:<account>:<user>` with
+  name, first/last seen, count; `GroupNames` on `group:<account>:<thread>`; `group_name` reads zca-js
+  `gridInfoMap`). Both channels take a `heard` callback, called for every message from someone else BEFORE
+  the filter (strangers included, like the old address book); the plugin records the contact and, for a
+  personal account, looks a new group's name up once in the background (retried on the next message after a
+  failure). `personal/friends.py`: `FriendRequests` on `friend-request:<account>:<uid>` (stored first,
+  enriched by `getUserInfo` with an update-only write), `handle_friend_event` (request / add / reject /
+  undo), `auto_accept_round` run by the job `friend_auto_accept` every 30 s for running personal accounts
+  with `auto_accept_friends` (delay = `auto_accept_friend_delay_minutes`; a failed accept stays). Client:
+  `get_user_info`, `get_group_info`, `get_all_friends`, `accept_friend_request`, `reject_friend_request`.
+  Routes (old shapes): `GET /friends/{id}/requests`, `GET /friends/{id}/list` (id + name only),
+  `POST /friends/{id}/accept|reject` `{uid}` → 204 (row deleted only after Zalo took it; 409 not running,
+  503 refused), `GET /contacts?account_id&q&limit&offset`, `DELETE /contacts/{id}/{user}`, `GET /groups`.
+  Limit: a listing reads at most 1000 storage records (`MAX_LIST`). Tests: 3 more in
+  `test_personal_channel.py`, contacts in the bot test; apps/agent 414 pass (core untouched).
 
 ## S1 progress log (newest last)
 
