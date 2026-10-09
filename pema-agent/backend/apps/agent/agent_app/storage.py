@@ -6,16 +6,29 @@ On Windows the async psycopg driver needs a selector event loop (see ``agent_app
 
 from __future__ import annotations
 
+from typing import Final
+
 from sqlalchemy import text as sql
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from agentcore.memory import MemoryKey, StoredNotes
 from agentcore.skills import Skill
 
+# Fail fast on a dead connection; keepalives stop port proxies dropping idle ones (seen on Docker Desktop).
+CONNECT_ARGS: Final = {
+    "connect_timeout": 10,
+    "keepalives": 1,
+    "keepalives_idle": 20,
+    "keepalives_interval": 5,
+    "keepalives_count": 3,
+}
+
 
 class AgentDatabase:
     def __init__(self, url: str) -> None:
-        self.engine: AsyncEngine = create_async_engine(url, pool_pre_ping=True, pool_size=5)
+        self.engine: AsyncEngine = create_async_engine(
+            url, pool_pre_ping=True, pool_size=5, connect_args=dict(CONNECT_ARGS)
+        )
 
     async def dispose(self) -> None:
         await self.engine.dispose()

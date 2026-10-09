@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 
 from agentcore import PromptBuilder, PromptEnv, ToolContext, ToolRegistry, builtin_sections
+from agentcore.memory.tool import STORAGE_TOOL_TIMEOUT_S
 from agentcore.prompt import SessionData, SkillEntry
 from agentcore.prompt.builtin import SKILLS_SHOWN
 from agentcore.skills import (
@@ -138,6 +139,12 @@ async def test_the_skill_tools_list_view_write_and_patch() -> None:
         False,
     )
     assert viewed == ("# reply-style\nHow to reply.\n\nBe kind.", False)
+
+
+def test_the_skill_tools_wait_longer_than_the_default_for_their_storage() -> None:
+    tools = skill_tools(SkillLibrary(InMemorySkillStore()), agent="dev")
+
+    assert {spec.timeout_s for spec in tools} == {STORAGE_TOOL_TIMEOUT_S}
 
 
 async def test_the_skill_tools_turn_mistakes_into_error_results() -> None:

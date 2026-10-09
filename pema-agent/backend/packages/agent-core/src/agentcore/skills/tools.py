@@ -7,6 +7,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from agentcore.harness.tools.spec import ToolContext, ToolOutput, ToolSpec
+from agentcore.memory.tool import STORAGE_TOOL_TIMEOUT_S
 from agentcore.skills.library import MAX_BODY_CHARS, SkillError, SkillLibrary
 
 SKILL_TOOL_NAMES = ("skill_list", "skill_view", "skill_write", "skill_patch")
@@ -68,13 +69,18 @@ def skill_tools(library: SkillLibrary, *, agent: str) -> list[ToolSpec[Any]]:
 
     specs: list[ToolSpec[Any]] = [
         ToolSpec(
-            name="skill_list", description="List the skills you have.", args_model=NoArgs, handler=list_skills
+            name="skill_list",
+            description="List the skills you have.",
+            args_model=NoArgs,
+            handler=list_skills,
+            timeout_s=STORAGE_TOOL_TIMEOUT_S,
         ),
         ToolSpec(
             name="skill_view",
             description="Read a skill's full instructions before doing a task it covers.",
             args_model=ViewArgs,
             handler=view,
+            timeout_s=STORAGE_TOOL_TIMEOUT_S,
             max_result_chars=MAX_BODY_CHARS + 2_000,
         ),
         ToolSpec(
@@ -82,12 +88,14 @@ def skill_tools(library: SkillLibrary, *, agent: str) -> list[ToolSpec[Any]]:
             description="Create or overwrite one of your skills: reusable instructions for a recurring task.",
             args_model=WriteArgs,
             handler=write,
+            timeout_s=STORAGE_TOOL_TIMEOUT_S,
         ),
         ToolSpec(
             name="skill_patch",
             description="Change part of one of your skills by replacing text that appears exactly once.",
             args_model=PatchArgs,
             handler=patch,
+            timeout_s=STORAGE_TOOL_TIMEOUT_S,
         ),
     ]
     return specs

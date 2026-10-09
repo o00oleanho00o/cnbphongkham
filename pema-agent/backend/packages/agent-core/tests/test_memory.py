@@ -35,7 +35,7 @@ from agentcore.memory import (
     StoredNotes,
     make_memory_tool,
 )
-from agentcore.memory.tool import MemoryArgs
+from agentcore.memory.tool import STORAGE_TOOL_TIMEOUT_S, MemoryArgs
 from agentcore.prompt import SessionData
 from agentcore.prompt.builtin import MEMORY_GUIDANCE
 
@@ -160,6 +160,12 @@ async def test_the_tool_saves_to_the_right_key_and_reports_usage() -> None:
     assert text.startswith("Saved (user memory: 1 notes, 12/2200 chars)")
     assert await service.notes(USER) == ["prefers Zalo"]
     assert await service.notes(AGENT) == ["clinic opens at 8"]
+
+
+def test_the_memory_tool_waits_longer_than_the_default_for_its_storage() -> None:
+    service, _ = _service()
+
+    assert make_memory_tool(service, agent="dev").timeout_s == STORAGE_TOOL_TIMEOUT_S == 30.0
 
 
 async def test_the_tool_explains_what_is_missing() -> None:

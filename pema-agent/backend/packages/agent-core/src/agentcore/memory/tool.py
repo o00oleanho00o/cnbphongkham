@@ -9,6 +9,9 @@ from pydantic import BaseModel, Field
 from agentcore.harness.tools.spec import ToolContext, ToolOutput, ToolSpec
 from agentcore.memory.service import MemoryChange, MemoryEditError, MemoryKey, MemoryService
 
+STORAGE_TOOL_TIMEOUT_S = 30.0
+"""The notes may live in a remote database, which can be slow to reconnect after idling."""
+
 DESCRIPTION = (
     "Keep a note for later sessions. target 'agent': your notes about the work and its environment; "
     "target 'user': notes about the person you are talking to. action 'add' needs content; 'replace' needs "
@@ -38,7 +41,13 @@ def make_memory_tool(service: MemoryService, *, agent: str) -> ToolSpec[MemoryAr
             return ToolOutput(text=str(err), is_error=True)
         return ToolOutput(text=_describe(args.target, change))
 
-    return ToolSpec(name="memory", description=DESCRIPTION, args_model=MemoryArgs, handler=handler)
+    return ToolSpec(
+        name="memory",
+        description=DESCRIPTION,
+        args_model=MemoryArgs,
+        handler=handler,
+        timeout_s=STORAGE_TOOL_TIMEOUT_S,
+    )
 
 
 async def _apply(service: MemoryService, key: MemoryKey, args: MemoryArgs) -> MemoryChange:
