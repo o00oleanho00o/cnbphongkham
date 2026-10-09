@@ -5,9 +5,17 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-from agent_app.model_factory import build_model
+from agent_app.model_factory import build_model, resolve_model_settings
 from agent_app.profile import Profile
-from agentcore import ContextManager, ModelClient, PromptBuilder, PromptEnv, ToolRegistry, builtin_sections
+from agentcore import (
+    ContextManager,
+    LoopPolicy,
+    ModelClient,
+    PromptBuilder,
+    PromptEnv,
+    ToolRegistry,
+    builtin_sections,
+)
 from agentcore.harness.tools.builtin import builtin_tools
 from agentcore.memory import InMemoryMemoryBackend, MemoryBackend, MemoryService, make_memory_tool
 from agentcore.skills import InMemorySkillStore, SkillLibrary, SkillStore, load_bundled_skills, skill_tools
@@ -22,6 +30,7 @@ class Agent:
     context: ContextManager | None
     memory: MemoryService | None
     skills: SkillLibrary | None
+    policy: LoopPolicy
 
 
 def build_agent(
@@ -49,9 +58,12 @@ def build_agent(
         for spec in skill_tools(skills, agent=name):
             tools.register(spec)
     prompt = build_prompt(profile, tool_names=tools.names(), memory=memory, skills=skills)
-    policy = profile.context_policy()
-    context = ContextManager(policy, model) if policy else None
-    return Agent(profile, model, tools, prompt, context, memory, skills)
+    context_policy = profile.context_policy()
+    context = ContextManager(context_policy, model) if context_policy else None
+    reasoning = None if fake else resolve_model_settings(profile, env).reasoning
+    return Agent(
+        profile, model, tools, prompt, context, memory, skills, profile.loop_policy(reasoning=reasoning)
+    )
 
 
 def build_prompt(

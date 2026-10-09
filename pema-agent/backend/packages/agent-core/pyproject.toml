@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.9",
     "openai>=1.54",
+    "anthropic>=1.11",
     "tzdata>=2024.2",
 ]
 

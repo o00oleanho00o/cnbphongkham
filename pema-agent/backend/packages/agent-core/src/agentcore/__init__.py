@@ -4,12 +4,20 @@ from __future__ import annotations
 
 from agentcore.context import CompactionResult, ContextManager, ContextPolicy, TokenEstimator
 from agentcore.harness.model.errors import ModelConfigError, ModelError, ModelErrorKind
-from agentcore.harness.model.types import AssistantResult, LlmRequest, ModelClient, StopReason, ToolSchema
+from agentcore.harness.model.types import (
+    AssistantResult,
+    LlmRequest,
+    ModelClient,
+    ReasoningEffort,
+    StopReason,
+    StreamSink,
+    ToolSchema,
+)
 from agentcore.harness.store.base import CompactionRecord, SessionStore, StoredPrompt
 from agentcore.harness.store.memory import InMemorySessionStore
 from agentcore.harness.tools.registry import ToolRegistry
 from agentcore.harness.tools.spec import ToolContext, ToolOutput, ToolSpec
-from agentcore.loop.run_turn import LoopPolicy, TurnResult, TurnStop, run_turn
+from agentcore.loop.run_turn import LoopPolicy, TurnObserver, TurnResult, TurnStop, run_turn
 from agentcore.messages import (
     Block,
     Message,
@@ -50,6 +58,7 @@ __all__ = [
     "ModelErrorKind",
     "PromptBuilder",
     "PromptEnv",
+    "ReasoningEffort",
     "SectionRegistry",
     "SessionSection",
     "SessionStore",
@@ -57,6 +66,7 @@ __all__ = [
     "StepSection",
     "StopReason",
     "StoredPrompt",
+    "StreamSink",
     "TextBlock",
     "ThinkingBlock",
     "TokenEstimator",
@@ -68,6 +78,7 @@ __all__ = [
     "ToolSpec",
     "ToolUseBlock",
     "TurnInfo",
+    "TurnObserver",
     "TurnResult",
     "TurnSection",
     "TurnStop",

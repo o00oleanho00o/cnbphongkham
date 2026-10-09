@@ -4,15 +4,17 @@ from __future__ import annotations
 
 import io
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
 from agent_app.assembly import build_agent, build_prompt
-from agent_app.cli import main, render_turn
-from agent_app.model_factory import build_model, describe_model, resolve_model_config
+from agent_app.cli import ConsoleObserver, main, stats_line
+from agent_app.model_factory import build_model, describe_model, resolve_model_config, resolve_model_settings
 from agent_app.profile import Profile, load_profile
-from agentcore import Message, ModelConfigError, TextBlock, ToolResultBlock, ToolUseBlock, TurnResult, Usage
+from agentcore import ModelConfigError, ToolResultBlock, ToolUseBlock, TurnResult, Usage
+from agentcore.harness.model.anthropic import AnthropicModel
 from agentcore.harness.model.scripted import EchoModel
 from agentcore.harness.tools.builtin import builtin_tools
 from agentcore.prompt import CONTEXT_EXPLAINER
@@ -163,9 +165,43 @@ def test_without_overrides_the_profile_values_are_used() -> None:
     config = resolve_model_config(_profile(base_url="https://profile.test/v1"), {"LLM_API_KEY": "k"})
 
     assert (config.model, config.base_url) == ("from-profile", "https://profile.test/v1")
-    assert (
-        describe_model(_profile(), fake=False, env={"LLM_API_KEY": "k"}) == "from-profile via api.openai.com"
+    assert describe_model(_profile(), fake=False, env={"LLM_API_KEY": "k"}) == (
+        "from-profile via api.openai.com (openai-compatible)"
     )
+
+
+def test_provider_and_reasoning_come_from_the_profile_or_the_environment() -> None:
+    profile = Profile.model_validate(
+        {"agent": {"name": "t"}, "model": {"model": "m", "provider": "anthropic", "reasoning": "low"}}
+    )
+
+    from_profile = resolve_model_settings(profile, {})
+    from_env = resolve_model_settings(profile, {"LLM_PROVIDER": "openai-compatible", "LLM_REASONING": "off"})
+
+    assert (from_profile.provider, from_profile.reasoning) == ("anthropic", "low")
+    assert (from_env.provider, from_env.reasoning) == ("openai-compatible", "off")
+    assert describe_model(profile, fake=False, env={}) == "m via api.anthropic.com (anthropic, reasoning low)"
+    with pytest.raises(ValueError, match="LLM_REASONING='max'"):
+        resolve_model_settings(profile, {"LLM_REASONING": "max"})
+
+
+def test_the_anthropic_provider_builds_the_anthropic_adapter() -> None:
+    profile = Profile.model_validate(
+        {"agent": {"name": "t"}, "model": {"model": "m", "provider": "anthropic"}}
+    )
+
+    assert isinstance(build_model(profile, fake=False, env={"LLM_API_KEY": "k"}), AnthropicModel)
+    with pytest.raises(ModelConfigError):
+        build_model(profile, fake=False, env={})
+
+
+def test_the_loop_policy_carries_the_reasoning_effort() -> None:
+    profile = Profile.model_validate({"agent": {"name": "t"}, "model": {"model": "m", "reasoning": "high"}})
+
+    assert profile.loop_policy().reasoning == "high"
+    assert profile.loop_policy(reasoning="off").reasoning == "off"
+    agent = build_agent(profile, fake=False, env={"LLM_API_KEY": "k", "LLM_REASONING": "low"})
+    assert agent.policy.reasoning == "low"
 
 
 def test_a_missing_key_is_a_config_error_and_fake_needs_no_key() -> None:
@@ -176,27 +212,53 @@ def test_a_missing_key_is_a_config_error_and_fake_needs_no_key() -> None:
     assert isinstance(build_model(_profile(), fake=True, env={}), EchoModel)
 
 
-def test_a_turn_is_rendered_with_its_tool_calls() -> None:
-    result = TurnResult(
-        text="14:00",
-        stop="completed",
-        steps=2,
-        usage=Usage(input_tokens=30, output_tokens=5),
-        new_messages=[
-            Message.user("mấy giờ rồi?"),
-            Message(role="assistant", blocks=[ToolUseBlock(id="c1", name="get_datetime", args={})]),
-            Message(
-                role="tool", blocks=[ToolResultBlock(tool_use_id="c1", name="get_datetime", content="14:00")]
-            ),
-            Message(role="assistant", blocks=[TextBlock(text="14:00")]),
-        ],
-    )
+def _result(**kwargs: Any) -> TurnResult:
+    fields: dict[str, Any] = {
+        "text": "14:00",
+        "stop": "completed",
+        "steps": 2,
+        "usage": Usage(input_tokens=30, output_tokens=5),
+        "new_messages": [],
+        "duration_s": 1.25,
+        **kwargs,
+    }
+    return TurnResult(**fields)
 
-    assert render_turn(result) == (
+
+def test_the_console_prints_the_turn_as_it_happens(capsys: pytest.CaptureFixture[str]) -> None:
+    observer = ConsoleObserver()
+
+    observer.thinking("hmm")
+    observer.thinking(" more")
+    observer.text("Để tôi")
+    observer.text(" xem")
+    observer.tool_call(ToolUseBlock(id="c1", name="get_datetime", args={}))
+    observer.tool_result(ToolResultBlock(tool_use_id="c1", name="get_datetime", content="14:00"))
+    observer.text("14:00")
+    tail = observer.finish(_result())
+
+    assert capsys.readouterr().out + tail == (
+        "  (thinking...)\n"
+        "agent> Để tôi xem\n"
         "  [tool] get_datetime({})\n"
         "  [tool] get_datetime -> ok: 14:00\n"
         "agent> 14:00\n"
-        "  (steps=2, in=30, out=5, stop=completed)\n"
+        "  (steps=2, 1.2s, in=30, out=5, stop=completed)\n"
+    )
+
+
+def test_a_reply_that_did_not_stream_is_printed_at_the_end() -> None:
+    assert (
+        ConsoleObserver().finish(_result())
+        == "agent> 14:00\n  (steps=2, 1.2s, in=30, out=5, stop=completed)\n"
+    )
+
+
+def test_the_stats_show_cache_reasoning_and_compactions_only_when_present() -> None:
+    usage = Usage(input_tokens=30, output_tokens=5, cache_read_tokens=20, reasoning_tokens=3)
+
+    assert stats_line(_result(usage=usage, compactions=1)) == (
+        "  (steps=2, 1.2s, in=30, out=5, cached=20, reasoning=3, stop=completed, compactions=1)"
     )
 
 

@@ -26,8 +26,8 @@ from agentcore import (
     ToolSchema,
     ToolUseBlock,
 )
+from agentcore.harness.model.errors import MAX_RETRY_AFTER_S
 from agentcore.harness.model.openai_compat import (
-    MAX_RETRY_AFTER_S,
     OpenAICompatConfig,
     OpenAICompatModel,
     assemble_stream,
@@ -40,7 +40,7 @@ HTTP_REQUEST = httpx2.Request("POST", "https://llm.test/v1/chat/completions")
 
 
 def _chunk_dict(
-    delta: dict[str, Any] | None = None, *, finish: str | None = None, usage: dict[str, int] | None = None
+    delta: dict[str, Any] | None = None, *, finish: str | None = None, usage: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     choices: list[dict[str, Any]] = []
     if delta is not None or finish is not None:
@@ -56,7 +56,7 @@ def _chunk_dict(
 
 
 def _chunk(
-    delta: dict[str, Any] | None = None, *, finish: str | None = None, usage: dict[str, int] | None = None
+    delta: dict[str, Any] | None = None, *, finish: str | None = None, usage: dict[str, Any] | None = None
 ) -> ChatCompletionChunk:
     return ChatCompletionChunk.model_validate(_chunk_dict(delta, finish=finish, usage=usage))
 
@@ -336,3 +336,140 @@ async def test_a_rejected_key_becomes_an_auth_error_without_the_key_in_it() -> N
 
     assert caught.value.kind == "auth"
     assert "test-key" not in str(caught.value)
+
+
+class _Sink:
+    def __init__(self) -> None:
+        self.text_parts: list[str] = []
+        self.thinking_parts: list[str] = []
+
+    def text(self, delta: str) -> None:
+        self.text_parts.append(delta)
+
+    def thinking(self, delta: str) -> None:
+        self.thinking_parts.append(delta)
+
+
+async def test_reasoning_content_becomes_a_thinking_block_and_both_streams_reach_the_sink() -> None:
+    sink = _Sink()
+    usage = {
+        **USAGE,
+        "prompt_tokens_details": {"cached_tokens": 4},
+        "completion_tokens_details": {"reasoning_tokens": 3},
+    }
+
+    result = await assemble_stream(
+        _stream(
+            _chunk({"reasoning_content": "Hôm nay "}),
+            _chunk({"reasoning_content": "là thứ Sáu."}),
+            _chunk({"content": "Thứ "}),
+            _chunk({"content": "Sáu"}),
+            _chunk(finish="stop"),
+            _chunk(usage=usage),
+        ),
+        sink=sink,
+        reasoning_provider="deepseek",
+    )
+
+    thinking, text = result.message.blocks
+    assert thinking == ThinkingBlock(text="Hôm nay là thứ Sáu.", provider="deepseek")
+    assert text == TextBlock(text="Thứ Sáu")
+    assert (sink.thinking_parts, sink.text_parts) == (["Hôm nay ", "là thứ Sáu."], ["Thứ ", "Sáu"])
+    assert result.message.usage is not None
+    assert (result.message.usage.cache_read_tokens, result.message.usage.reasoning_tokens) == (4, 3)
+
+
+async def test_deepseek_cache_hits_are_read_from_its_own_usage_field() -> None:
+    result = await assemble_stream(
+        _stream(_chunk({"content": "ok"}), _chunk(usage={**USAGE, "prompt_cache_hit_tokens": 9}))
+    )
+
+    assert result.message.usage is not None
+    assert result.message.usage.cache_read_tokens == 9
+
+
+async def test_reasoning_alone_is_still_an_empty_response() -> None:
+    with pytest.raises(ModelError) as caught:
+        await assemble_stream(_stream(_chunk({"reasoning_content": "hmm"}), _chunk(finish="stop")))
+
+    assert caught.value.kind == "empty_response"
+
+
+def _thinking_turn() -> LlmRequest:
+    return LlmRequest(
+        system="",
+        messages=[
+            Message.user("hi"),
+            Message(
+                role="assistant",
+                blocks=[
+                    ThinkingBlock(text="DeepSeek thought", provider="deepseek"),
+                    ThinkingBlock(text="Claude thought", signature="s", provider="anthropic"),
+                    TextBlock(text="hello"),
+                ],
+            ),
+        ],
+    )
+
+
+def test_deepseek_gets_its_own_reasoning_back_and_nobody_else_does() -> None:
+    deepseek = to_openai_messages(_thinking_turn(), dialect="deepseek")
+    plain = to_openai_messages(_thinking_turn(), dialect="openai")
+
+    assert deepseek[1] == {"role": "assistant", "content": "hello", "reasoning_content": "DeepSeek thought"}
+    assert plain[1] == {"role": "assistant", "content": "hello"}
+
+
+@pytest.mark.parametrize(
+    ("base_url", "dialect", "expected"),
+    [
+        ("https://api.deepseek.com", None, "deepseek"),
+        ("https://api.deepseek.com/v1", None, "deepseek"),
+        ("https://notdeepseek.com/v1", None, "openai"),
+        (None, None, "openai"),
+        ("https://gateway.test/v1", "deepseek", "deepseek"),
+    ],
+)
+def test_the_dialect_is_guessed_from_the_host_unless_set(
+    base_url: str | None, dialect: Any, expected: str
+) -> None:
+    config = OpenAICompatConfig(model="m", api_key="k", base_url=base_url, dialect=dialect)
+
+    assert config.resolved_dialect() == expected
+
+
+async def _sent_body(base_url: str, reasoning: Any) -> dict[str, Any]:
+    sent: list[dict[str, Any]] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        sent.append(json.loads(request.content))
+        body = _sse(_chunk_dict({"content": "hi"}), _chunk_dict(finish="stop"))
+        return httpx2.Response(200, headers={"content-type": "text/event-stream"}, content=body)
+
+    async with httpx2.AsyncClient(transport=httpx2.MockTransport(handler)) as http:
+        client = AsyncOpenAI(api_key="k", base_url=base_url, max_retries=0, http_client=http)
+        model = OpenAICompatModel(
+            OpenAICompatConfig(model="m", api_key="k", base_url=base_url), client=client
+        )
+        await model.complete(LlmRequest(system="", messages=[Message.user("hi")], reasoning=reasoning))
+    return sent[0]
+
+
+@pytest.mark.parametrize(
+    ("base_url", "reasoning", "effort", "thinking"),
+    [
+        ("https://api.deepseek.com", "off", None, {"type": "disabled"}),
+        ("https://api.deepseek.com", "low", "low", {"type": "enabled"}),
+        ("https://api.deepseek.com", "high", "high", {"type": "enabled"}),
+        ("https://api.deepseek.com", None, None, None),
+        ("https://llm.test/v1", "medium", "medium", None),
+        ("https://llm.test/v1", "off", None, None),
+    ],
+)
+async def test_the_reasoning_effort_becomes_the_dialects_parameters(
+    base_url: str, reasoning: Any, effort: str | None, thinking: dict[str, str] | None
+) -> None:
+    body = await _sent_body(base_url, reasoning)
+
+    assert body.get("reasoning_effort") == effort
+    assert body.get("thinking") == thinking

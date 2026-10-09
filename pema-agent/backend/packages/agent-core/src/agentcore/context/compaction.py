@@ -110,6 +110,7 @@ class ContextManager:
             messages=[Message.user(summary_input(previous, messages))],
             tools=[],
             max_output_tokens=SUMMARY_OUTPUT_TOKENS,
+            reasoning="off",
         )
         try:
             result = await self._summariser.complete(request)

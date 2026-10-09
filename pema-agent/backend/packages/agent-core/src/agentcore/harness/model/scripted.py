@@ -7,7 +7,7 @@ import itertools
 from collections.abc import Callable, Sequence
 from typing import Any
 
-from agentcore.harness.model.types import AssistantResult, LlmRequest
+from agentcore.harness.model.types import AssistantResult, LlmRequest, StreamSink
 from agentcore.messages import Block, Message, TextBlock, ToolUseBlock, Usage
 
 ScriptStep = AssistantResult | Callable[[LlmRequest], AssistantResult]
@@ -44,19 +44,27 @@ class ScriptedModel:
         self._steps = list(steps)
         self.requests: list[LlmRequest] = []
 
-    async def complete(self, request: LlmRequest) -> AssistantResult:
+    async def complete(self, request: LlmRequest, *, sink: StreamSink | None = None) -> AssistantResult:
         self.requests.append(request.model_copy(deep=True))
         if not self._steps:
             raise RuntimeError("ScriptedModel has no step left for this request")
         step = self._steps.pop(0)
-        if isinstance(step, AssistantResult):
-            return step
-        return step(request)
+        result = step if isinstance(step, AssistantResult) else step(request)
+        _stream(result, sink)
+        return result
 
 
 class EchoModel:
-    async def complete(self, request: LlmRequest) -> AssistantResult:
+    async def complete(self, request: LlmRequest, *, sink: StreamSink | None = None) -> AssistantResult:
         last_user = next((m for m in reversed(request.messages) if m.role == "user"), None)
         # Only the first block: the context block, when present, is appended after the user's own words.
         first = last_user.blocks[0] if last_user and last_user.blocks else None
-        return reply(f"(echo) {first.text if isinstance(first, TextBlock) else ''}")
+        result = reply(f"(echo) {first.text if isinstance(first, TextBlock) else ''}")
+        _stream(result, sink)
+        return result
+
+
+def _stream(result: AssistantResult, sink: StreamSink | None) -> None:
+    text = result.message.text()
+    if sink is not None and text:
+        sink.text(text)

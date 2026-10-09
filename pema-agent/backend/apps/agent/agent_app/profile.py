@@ -13,8 +13,9 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
-from agentcore import ContextPolicy, LoopPolicy
+from agentcore import ContextPolicy, LoopPolicy, ReasoningEffort
 from agentcore.context import DEFAULT_CHARS_PER_TOKEN
+from agentcore.harness.model.reasoning import OpenAIDialect
 from agentcore.memory import MemoryLimits
 from agentcore.memory.service import AGENT_NOTES_CHARS, USER_NOTES_CHARS
 from agentcore.prompt import DEFAULT_SECTIONS
@@ -40,10 +41,14 @@ class AgentSection(_Section):
 
 
 class ModelSection(_Section):
-    provider: Literal["openai-compatible"] = "openai-compatible"
+    provider: Literal["openai-compatible", "anthropic"] = "openai-compatible"
     model: str = ""
     base_url: str = ""
     timeout_s: float = Field(default=120.0, gt=0)
+    reasoning: ReasoningEffort | None = None
+    """off | low | medium | high; unset leaves the provider's default."""
+    dialect: OpenAIDialect | None = None
+    """openai-compatible only: ``deepseek`` or ``openai``; unset guesses from the base URL."""
 
 
 class LoopSection(_Section):
@@ -96,8 +101,12 @@ class Profile(_Section):
         located._folder = folder
         return located
 
-    def loop_policy(self) -> LoopPolicy:
-        return LoopPolicy(max_steps=self.loop.max_steps, max_output_tokens=self.loop.max_output_tokens)
+    def loop_policy(self, *, reasoning: ReasoningEffort | None = None) -> LoopPolicy:
+        return LoopPolicy(
+            max_steps=self.loop.max_steps,
+            max_output_tokens=self.loop.max_output_tokens,
+            reasoning=reasoning or self.model.reasoning,
+        )
 
     def memory_limits(self) -> MemoryLimits:
         return MemoryLimits(agent_chars=self.memory.agent_chars, user_chars=self.memory.user_chars)

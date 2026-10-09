@@ -12,17 +12,25 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, Protocol
 
 from pydantic import ValidationError
 
 from agentcore.clock import utc_now
 from agentcore.context.compaction import ContextManager
 from agentcore.harness.model.errors import ModelError
-from agentcore.harness.model.types import AssistantResult, LlmRequest, ModelClient, ToolSchema
+from agentcore.harness.model.types import (
+    AssistantResult,
+    LlmRequest,
+    ModelClient,
+    ReasoningEffort,
+    StreamSink,
+    ToolSchema,
+)
 from agentcore.harness.store.base import SessionStore
 from agentcore.harness.tools.registry import ToolRegistry
 from agentcore.harness.tools.spec import ToolContext, ToolSpec
@@ -48,12 +56,26 @@ logger = logging.getLogger(__name__)
 class LoopPolicy:
     max_steps: int = 6
     max_output_tokens: int = 2048
+    reasoning: ReasoningEffort | None = None
+    """None leaves the provider's default (DeepSeek thinks at ``high`` by default, which is slow)."""
 
     def __post_init__(self) -> None:
         if self.max_steps < 1:
             raise ValueError("max_steps must be at least 1")
         if self.max_output_tokens < 1:
             raise ValueError("max_output_tokens must be at least 1")
+
+
+class TurnObserver(Protocol):
+    """Follows a turn while it runs: the reply as it streams, and each tool call and result."""
+
+    def text(self, delta: str) -> None: ...
+
+    def thinking(self, delta: str) -> None: ...
+
+    def tool_call(self, use: ToolUseBlock) -> None: ...
+
+    def tool_result(self, result: ToolResultBlock) -> None: ...
 
 
 TurnStop = Literal["completed", "max_steps"]
@@ -68,6 +90,7 @@ class TurnResult:
     usage: Usage
     new_messages: list[Message]
     compactions: int = 0
+    duration_s: float = 0.0
 
 
 async def run_turn(
@@ -83,10 +106,12 @@ async def run_turn(
     user_id: str | None = None,
     channel: str | None = None,
     context: ContextManager | None = None,
+    observer: TurnObserver | None = None,
     clock: Callable[[], datetime] = utc_now,
 ) -> TurnResult:
     """``clock`` must return an aware datetime; tests pass a fixed one. Without ``context`` nothing is
     compacted. ``user_id`` names the person the session talks to; the caller sets it, never the model."""
+    started = time.perf_counter()
     limits = policy or LoopPolicy()
     ctx = ToolContext(session_id=session_id, tenant_id=tenant_id, user_id=user_id)
     schemas = tools.schemas()
@@ -109,6 +134,7 @@ async def run_turn(
             messages=with_context(visible, turn_prompt.context(step)),
             tools=offered,
             max_output_tokens=limits.max_output_tokens,
+            reasoning=limits.reasoning,
         )
 
     async def request_for(step: StepInfo, offered: list[ToolSchema]) -> LlmRequest:
@@ -147,7 +173,7 @@ async def run_turn(
 
     for step in range(1, limits.max_steps + 1):
         request = await request_for(StepInfo(step=step, max_steps=limits.max_steps), schemas)
-        result = await _complete(model, request)
+        result = await _complete(model, request, observer)
         usage = usage + (result.message.usage or Usage())
         await record(result.message)
 
@@ -160,13 +186,19 @@ async def run_turn(
                 usage=usage,
                 new_messages=new_messages,
                 compactions=compactions,
+                duration_s=time.perf_counter() - started,
             )
         for use in uses:
-            await record(Message(role="tool", blocks=[await _run_tool(use, tools, ctx)]))
+            if observer is not None:
+                observer.tool_call(use)
+            outcome = await _run_tool(use, tools, ctx)
+            if observer is not None:
+                observer.tool_result(outcome)
+            await record(Message(role="tool", blocks=[outcome]))
 
     final_step = StepInfo(step=limits.max_steps + 1, max_steps=limits.max_steps, final=True)
     request = await request_for(final_step, [])
-    result = await _complete(model, request)
+    result = await _complete(model, request, observer)
     usage = usage + (result.message.usage or Usage())
     final = _without_tool_calls(result.message)
     await record(final)
@@ -177,6 +209,7 @@ async def run_turn(
         usage=usage,
         new_messages=new_messages,
         compactions=compactions,
+        duration_s=time.perf_counter() - started,
     )
 
 
@@ -203,6 +236,7 @@ async def flush_memory(
             messages=conversation,
             tools=only_memory.schemas(),
             max_output_tokens=max_output_tokens,
+            reasoning="off",
         )
         try:
             result = await model.complete(request)
@@ -218,14 +252,14 @@ async def flush_memory(
     return used
 
 
-async def _complete(model: ModelClient, request: LlmRequest) -> AssistantResult:
+async def _complete(model: ModelClient, request: LlmRequest, sink: StreamSink | None) -> AssistantResult:
     """Some gateways sometimes return an empty completion with a success status; one retry is worth it."""
     try:
-        return await model.complete(request)
+        return await model.complete(request, sink=sink)
     except ModelError as err:
         if err.kind != "empty_response":
             raise
-    return await model.complete(request)
+    return await model.complete(request, sink=sink)
 
 
 async def _run_tool(use: ToolUseBlock, tools: ToolRegistry, ctx: ToolContext) -> ToolResultBlock:

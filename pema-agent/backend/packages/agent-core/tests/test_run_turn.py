@@ -20,6 +20,7 @@ from agentcore import (
     ToolRegistry,
     ToolResultBlock,
     ToolSpec,
+    ToolUseBlock,
     TurnResult,
     run_turn,
 )
@@ -248,3 +249,58 @@ async def test_other_model_errors_are_not_retried() -> None:
         await _run([denied, reply("never")], ToolRegistry())
 
     assert caught.value.kind == "auth"
+
+
+class _Recorder:
+    def __init__(self) -> None:
+        self.events: list[str] = []
+
+    def text(self, delta: str) -> None:
+        self.events.append(f"text:{delta}")
+
+    def thinking(self, delta: str) -> None:
+        self.events.append(f"thinking:{delta}")
+
+    def tool_call(self, use: ToolUseBlock) -> None:
+        self.events.append(f"call:{use.name}")
+
+    def tool_result(self, result: ToolResultBlock) -> None:
+        self.events.append(f"result:{result.content}")
+
+
+async def test_the_observer_follows_the_turn_in_order_and_the_turn_is_timed() -> None:
+    recorder = _Recorder()
+    model = ScriptedModel([calls(tool_call("add", {"a": 2, "b": 3}), text="checking"), reply("5")])
+
+    result = await run_turn(
+        session_id=SESSION,
+        user_text="2+3?",
+        prompt=PromptBuilder.fixed("s"),
+        model=model,
+        tools=ToolRegistry([ADD]),
+        store=InMemorySessionStore(),
+        observer=recorder,
+    )
+
+    assert recorder.events == ["text:checking", "call:add", "result:5", "text:5"]
+    assert result.duration_s >= 0
+
+
+async def test_the_reasoning_effort_of_the_policy_reaches_every_request() -> None:
+    model = ScriptedModel([calls(tool_call("add", {"a": 1, "b": 1})), reply("2")])
+
+    await _run_with_model(model, LoopPolicy(reasoning="off"))
+
+    assert [r.reasoning for r in model.requests] == ["off", "off"]
+
+
+async def _run_with_model(model: ScriptedModel, policy: LoopPolicy) -> TurnResult:
+    return await run_turn(
+        session_id=SESSION,
+        user_text="hi",
+        prompt=PromptBuilder.fixed("s"),
+        model=model,
+        tools=ToolRegistry([ADD]),
+        store=InMemorySessionStore(),
+        policy=policy,
+    )

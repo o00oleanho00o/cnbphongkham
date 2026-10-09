@@ -30,10 +30,14 @@ enabled = true
 dir = "skills"
 
 [model]
+# provider: openai-compatible (OpenAI, DeepSeek, OpenRouter, ...) or anthropic; LLM_PROVIDER overrides it
 provider = "openai-compatible"
 model = ""
 base_url = ""
 timeout_s = 120
+# reasoning: off | low | medium | high; unset keeps the provider default (DeepSeek thinks at "high", which is
+# slow); LLM_REASONING overrides it. dialect: "deepseek" or "openai"; unset guesses from base_url.
+# reasoning = "off"
 
 [loop]
 max_steps = 6

@@ -130,6 +130,7 @@ async def _chat_with(profile_path: Path, *, fake: bool, session: str | None, db:
             await _command(text, agent, store, session_id)
             continue
         try:
+            observer = ConsoleObserver()
             result = await run_turn(
                 session_id=session_id,
                 user_text=text,
@@ -137,15 +138,16 @@ async def _chat_with(profile_path: Path, *, fake: bool, session: str | None, db:
                 model=agent.model,
                 tools=agent.tools,
                 store=store,
-                policy=profile.loop_policy(),
+                policy=agent.policy,
                 user_id=CLI_USER,
                 channel=CHANNEL,
                 context=agent.context,
+                observer=observer,
             )
         except ModelError as err:
-            _write(f"error ({err.kind}): {err}\n")
+            _write(f"\nerror ({err.kind}): {err}\n")
             continue
-        _write(render_turn(result))
+        _write(observer.finish(result))
 
 
 async def _command(text: str, agent: Agent, store: SessionStore, session_id: str) -> None:
@@ -267,28 +269,69 @@ async def show_memory(memory: MemoryService | None, *, agent: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def render_turn(result: TurnResult) -> str:
-    lines: list[str] = []
-    for message in result.new_messages:
-        for block in message.blocks:
-            if isinstance(block, ToolUseBlock):
-                shown = (
-                    block.raw_args
-                    if block.raw_args is not None
-                    else json.dumps(block.args, ensure_ascii=False)
-                )
-                lines.append(f"  [tool] {block.name}({_preview(shown)})")
-            elif isinstance(block, ToolResultBlock):
-                status = "error" if block.is_error else "ok"
-                lines.append(f"  [tool] {block.name} -> {status}: {_preview(block.content)}")
-    lines.append(f"agent> {result.text}")
+class ConsoleObserver:
+    """Prints a turn while it runs: the reply as it streams, a note while the model thinks, tool calls."""
+
+    def __init__(self) -> None:
+        self._mid_line = False
+        self._replying = False
+        self._thinking = False
+        self._streamed = False
+
+    def text(self, delta: str) -> None:
+        if not self._replying:
+            self._end_line()
+            _write("agent> ")
+            self._replying = True
+        _write(delta)
+        self._mid_line = not delta.endswith("\n")
+        self._streamed = True
+
+    def thinking(self, delta: str) -> None:
+        if not self._thinking and not self._replying:
+            self._end_line()
+            _write("  (thinking...)\n")
+            self._thinking = True
+
+    def tool_call(self, use: ToolUseBlock) -> None:
+        self._end_line()
+        shown = use.raw_args if use.raw_args is not None else json.dumps(use.args, ensure_ascii=False)
+        _write(f"  [tool] {use.name}({_preview(shown)})\n")
+        self._replying = self._thinking = False
+
+    def tool_result(self, result: ToolResultBlock) -> None:
+        status = "error" if result.is_error else "ok"
+        _write(f"  [tool] {result.name} -> {status}: {_preview(result.content)}\n")
+
+    def finish(self, result: TurnResult) -> str:
+        """What is left to print once the turn is over: the reply if nothing streamed, and the stats."""
+        head = "\n" if self._mid_line else ""
+        if not self._streamed:
+            head += f"agent> {result.text}\n"
+        return head + stats_line(result) + "\n"
+
+    def _end_line(self) -> None:
+        if self._mid_line:
+            _write("\n")
+            self._mid_line = False
+
+
+def stats_line(result: TurnResult) -> str:
     usage = result.usage
-    compacted = f", compactions={result.compactions}" if result.compactions else ""
-    lines.append(
-        f"  (steps={result.steps}, in={usage.input_tokens}, out={usage.output_tokens}, "
-        f"stop={result.stop}{compacted})"
-    )
-    return "\n".join(lines) + "\n"
+    parts = [
+        f"steps={result.steps}",
+        f"{result.duration_s:.1f}s",
+        f"in={usage.input_tokens}",
+        f"out={usage.output_tokens}",
+    ]
+    if usage.cache_read_tokens:
+        parts.append(f"cached={usage.cache_read_tokens}")
+    if usage.reasoning_tokens:
+        parts.append(f"reasoning={usage.reasoning_tokens}")
+    parts.append(f"stop={result.stop}")
+    if result.compactions:
+        parts.append(f"compactions={result.compactions}")
+    return f"  ({', '.join(parts)})"
 
 
 def _stdin_lines() -> asyncio.Queue[str | None]:
