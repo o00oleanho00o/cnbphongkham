@@ -753,6 +753,22 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   `register(name, {pages: [{id, title, component}]})`, shown at `#/p/<plugin>/<id>`; the shell's CSS scans
   `plugins/*/ui/src`, installed plugins ship their own CSS. Tests: `tests/test_plugin_ui.py` (9), vitest 3;
   full agent suite 680; checked in the browser (setup, overview, plugins toggle, model page).
+- **P5c done** (commit after this entry): the Zalo plugin's browser half, `plugins/zalo/ui` (own
+  `package.json`/`pnpm-lock.yaml`, Vite 8 library build → `ui/dist/client.js`, IIFE, `react` and
+  `react/jsx-runtime` read from `__PEMA_AGENT__`; types of the SDK imported from `../../../web/ui/src/sdk`
+  with `paths` pointing `react` at its own `@types/react`). `plugin.toml` `[ui] entry = "client.js"`. Pages:
+  Tài khoản Zalo (cards with kind/running/credential badges, enable toggle, QR, edit, delete; drawer: id and
+  kind at creation only, bot token, OA keys all-four-or-none, recipients all/list, group switches, typing,
+  reaction icon (not for bots), auto-accept friends + delay (personal), tools switched off per account from
+  the enabled plugins' tools; a new personal account opens the QR dialog), QR dialog (start, poll 1.5 s,
+  retry), Danh bạ Zalo (search, account filter, pages of 50, delete, and a switch per contact that adds or
+  removes them from the account's recipient list when it is in list mode), Bạn bè Zalo (requests polled 7 s,
+  accept/reject, friends on demand), Nhóm Zalo, Cầu nối Zalo (install with polling, reinstall, remove, log,
+  nick-lock warning). Pure rules in `src/logic.ts` (vitest 10). Fixed the shell's `@source` (a folder glob
+  matched nothing; now `../../../*/ui/src/**/*.{ts,tsx}`). Checked in the browser against `agent serve --fake`:
+  zalo enabled → its five pages appear; account created and edited (saved values verified); bridge installed
+  from the page and running; a real Zalo QR shown (not scanned). Zalo/plugins/plugin-ui tests 269 pass.
+  Build: `pnpm install && pnpm run build` in `plugins/zalo/ui`, then rebuild `plugins/web/ui` for the CSS.
 
 ## S1 progress log (newest last)
 

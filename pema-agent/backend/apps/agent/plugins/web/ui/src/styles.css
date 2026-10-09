@@ -2,7 +2,7 @@
 @import "./tokens.css";
 
 /* Plugin pages are separate bundles: scan them too so the classes they use exist. */
-@source "../../../*/ui/src";
+@source "../../../*/ui/src/**/*.{ts,tsx}";
 
 @theme inline {
   --font-sans: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
