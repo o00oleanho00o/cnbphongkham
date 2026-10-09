@@ -856,7 +856,7 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
 - First action next session: the Zalo plugin P0–P5d is done (branch `feat/zalo-plugin`); left: a phone QR scan
   and a message round trip in Docker (needs the user's secondary nick and a model key). Plan C (one sign-in,
-  below): C1 done; next is C2 when the user says go.
+  below): C1 and C2 done; next is C3 when the user says go.
 
 ### Deferred: verifier hook (user, 2026-10-09)
 
@@ -926,6 +926,20 @@ Steps (each: commit, stop, report):
   JWKS cached, refetched on an unknown `kid`; registers an `Authenticator` → `Principal(subject, scopes)`.
   New profile `agents/clinic` (`web`, `sso` with `issuer=http://api:8000`, `calculate`); the core still names
   no clinic. Tests.
+  - Done (2026-10-10, this commit): `apps/agent/plugins/sso/` (`plugin.toml` with required `issuer`,
+    `audience`, `jwks_url`; `keys.py` `KeySet`: JWKS kept in memory, refreshed after an hour, fetched again on
+    an unknown `kid` at most every 30 s, old keys keep working while the issuer is down, an unknown `kid` then
+    raises `KeysUnavailableError` so the gateway answers 503 instead of counting a wrong token). Only
+    EdDSA/ES256/RS256; a token of another `iss` (or HS256, an API key) is left to the other authenticators
+    before any fetch; leeway 30 s; principal `sso:<sub>`; `scope` admin → {admin, chat}, chat → {chat},
+    otherwise none (403). The issuer is `pema-clinic` (the constant of C1), not a URL. Profile
+    `agents/clinic` (`web`, `sso`, `calculate`; `jwks_url = http://api:8000/api/v1/.well-known/jwks.json`;
+    SOUL/AGENTS for clinic staff). Tests `apps/agent/tests/sso/test_sso_plugin.py` (9, includes the clinic
+    profile through the gateway: admin 200, chat-only 403, garbage 401, issuer down 503).
+  - For C3/C4: the gateway's failed-token limiter counts per client address, and every request from the Next
+    server comes from one address, so a few bad tokens would lock out all staff for a while; have the proxy
+    never send a token it has not just fetched, or let the gate trust the proxy's forwarded address. Check
+    that the clinic API answers `Host: api:8000` (trusted hosts) when the agent fetches the keys in compose.
 - **C3 Next.js**: route `/agent/[...path]` → `PEMA_AGENT_INTERNAL_URL` with the rules of `lib/server/api-proxy.ts`
   (only `/agent/v1/**`, `/agent/ui/**`); it gets a token from the clinic API with the cookie (also the session
   check; cached per session until shortly before expiry), strips the cookie, sets `Bearer`, streams. Host

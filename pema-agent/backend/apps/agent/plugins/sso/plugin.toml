@@ -1,0 +1,22 @@
+name = "sso"
+version = "0.1.0"
+description = "Trusts the short sign-in tokens (JWT) of one other service: it signs them with its private key, the agent checks them with the public keys it publishes (JWKS). The other service's users then reach the agent without an account here. Scope `admin` opens the admin routes, `chat` the chat routes."
+api = 1
+
+[user_config.issuer]
+type = "string"
+title = "Issuer"
+description = "The `iss` the tokens carry; tokens of any other issuer are left to the other sign-ins."
+required = true
+
+[user_config.audience]
+type = "string"
+title = "Audience"
+description = "The `aud` the tokens must carry: the name the issuer gives this agent."
+required = true
+
+[user_config.jwks_url]
+type = "string"
+title = "Public keys URL"
+description = "Where the issuer publishes its public keys (JWKS), e.g. http://api:8000/api/v1/.well-known/jwks.json."
+required = true

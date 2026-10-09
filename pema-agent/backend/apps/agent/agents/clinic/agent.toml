@@ -1,0 +1,65 @@
+# The clinic's agent: staff sign in once on the clinic web, whose server calls this agent with a short token
+# the clinic API signs (plugin sso). The web plugin's own sign-in stays for the first setup and emergencies.
+# Secrets never go here: the model's API key is set on the dashboard and stored encrypted in the database.
+
+[agent]
+name = "clinic"
+tools = ["get_datetime"]
+timezone = "Asia/Ho_Chi_Minh"
+failure_reply = "Xin lỗi, hiện tôi chưa trả lời được. Bạn vui lòng thử lại sau ít phút."
+
+[prompt]
+sections = ["identity", "rules", "tool_usage", "skills", "memory", "user_memory", "environment", "status"]
+
+[context]
+window_tokens = 128000
+compact_at = 0.75
+keep_recent_ratio = 0.20
+
+[memory]
+enabled = true
+agent_chars = 2200
+user_chars = 1375
+
+[skills]
+enabled = true
+dir = "skills"
+
+[guards]
+injection_scan = true
+redact_secrets = true
+warn_tool_results = true
+max_parallel_tools = 4
+max_tool_calls_per_step = 8
+
+[model]
+# set on the dashboard (model, base URL, key); these are only the defaults
+provider = "openai-compatible"
+model = ""
+base_url = ""
+timeout_s = 120
+
+[loop]
+max_steps = 6
+max_output_tokens = 2048
+max_turn_s = 300
+repeat_thresholds = [3, 5, 8]
+stop_after_repeats = 10
+error_streak_remind = 3
+error_streak_stop = 5
+queue_mode = "steer"
+queue_debounce_s = 0.8
+queue_max_wait_s = 3.0
+queue_max_batch = 20
+
+[plugins]
+# web: this service's own dashboard sign-in; sso: the clinic web's staff (owner and manager get admin)
+enabled = ["web", "sso", "calculate"]
+
+[plugins.sso]
+issuer = "pema-clinic"
+audience = "pema-agent"
+jwks_url = "http://api:8000/api/v1/.well-known/jwks.json"
+
+[plugins.calculate]
+precision = 10
