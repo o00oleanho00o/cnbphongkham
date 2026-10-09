@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from collections.abc import Awaitable, Callable, Mapping
+from dataclasses import dataclass, field
 from typing import Any, Final
 
 from agent_app.assembly import Agent
@@ -24,6 +24,7 @@ from agent_app.ingress import (
     TurnReply,
 )
 from agent_app.live import LiveAgent
+from agent_app.profile import QueueMode
 from agent_app.storage import PostgresSessionStore
 from agentcore import (
     DEFAULT_TENANT,
@@ -50,6 +51,19 @@ class DispatchSettings:
     sweep_interval_s: float = 30.0
     poll_s: float = 1.0
     """How often a waiter re-reads its message, for runs finished by another process."""
+    queue_mode: QueueMode = "followup"
+    """followup: one turn per message. collect: after a quiet moment, the waiting messages of one person
+    become one turn. steer: collect, and messages that come while the turn uses tools join it."""
+    queue_by_channel: Mapping[str, QueueMode] = field(default_factory=dict[str, QueueMode])
+    debounce_s: float = 0.8
+    """collect/steer: a turn starts once no new message came for this long ..."""
+    max_wait_s: float = 3.0
+    """... or after this long at most."""
+    max_batch: int = 20
+    """Messages one turn takes at most."""
+
+    def mode_for(self, channel: str) -> QueueMode:
+        return self.queue_by_channel.get(channel, self.queue_mode)
 
 
 class StreamObserver:
@@ -181,59 +195,129 @@ class Dispatcher:
                 while session_id in self._wanted:
                     self._wanted.discard(session_id)
                     while (queued := await self.ingress.next_queued(self.tenant_id, session_id)) is not None:
+                        mode = self.settings.mode_for(queued.channel)
+                        if mode != "followup":
+                            await self._quiet(session_id)
                         claimed = await self.ingress.claim(queued.id)
-                        if claimed is not None:
-                            await self._process(claimed)
+                        if claimed is None:
+                            continue
+                        limit = self.settings.max_batch - 1
+                        joined = await self._gather(claimed, limit) if mode != "followup" else []
+                        await self._process(claimed, joined, steer=mode == "steer")
         except Exception as err:  # the messages stay queued or processing; the sweeper picks them up
             logger.warning("drain of session %s stopped (%s)", session_id, type(err).__name__)
         finally:
             self._draining.discard(session_id)
             self._wanted.discard(session_id)
 
-    async def _process(self, record: IngressRecord) -> None:
-        observer = self._observers.pop(record.id, None)
+    async def _quiet(self, session_id: str) -> None:
+        """Waits until no new message came for ``debounce_s`` (at most ``max_wait_s``), so a burst of short
+        messages becomes one turn."""
+        settings = self.settings
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + settings.max_wait_s
+        count = len(await self.ingress.queued_in_session(self.tenant_id, session_id, settings.max_batch + 1))
+        while (pause := min(settings.debounce_s, deadline - loop.time())) > 0:
+            await asyncio.sleep(pause)
+            now = len(
+                await self.ingress.queued_in_session(self.tenant_id, session_id, settings.max_batch + 1)
+            )
+            if now == count:
+                return
+            count = now
+
+    async def _gather(self, lead: IngressRecord, limit: int) -> list[IngressRecord]:
+        """Claims the next queued messages of the same person, in order, up to the first one from someone
+        else: a reply never jumps ahead of another person's message."""
+        if limit <= 0:
+            return []
+        joined: list[IngressRecord] = []
+        for record in await self.ingress.queued_in_session(self.tenant_id, lead.session_id, limit):
+            if record.user_id != lead.user_id:
+                break
+            claimed = await self.ingress.claim(record.id)
+            if claimed is None:
+                break
+            joined.append(claimed)
+        return joined
+
+    async def _process(self, lead: IngressRecord, joined: list[IngressRecord], *, steer: bool) -> None:
+        """Runs one turn for ``lead`` and the messages ``joined`` to it (more may join while it uses tools);
+        they all end with its reply or its error. Only the lead's reply goes out through a channel."""
+        observer = self._observers.pop(lead.id, None)
         if self._before_turn is not None:
             try:
                 await self._before_turn()
             except Exception as err:  # the turn runs with the plugins as they were
                 logger.warning("plugin refresh failed (%s)", type(err).__name__)
         agent = self.agent
+        texts = [lead.text, *(record.text for record in joined)]
+
+        async def steer_in() -> list[str]:
+            more = await self._gather(lead, self.settings.max_batch - 1 - len(joined))
+            joined.extend(more)
+            return [record.text for record in more]
+
+        reply: TurnReply | None = None
+        error_kind = "unknown"
         try:
             if self._sessions is not None:
                 await self._sessions.open_session(
-                    self.tenant_id, record.session_id, channel=record.channel, user_id=record.user_id
+                    self.tenant_id, lead.session_id, channel=lead.channel, user_id=lead.user_id
                 )
             result = await run_turn(
-                session_id=record.session_id,
-                user_text=record.text,
+                session_id=lead.session_id,
+                user_text="\n\n".join(texts),
                 prompt=agent.prompt,
                 model=agent.model,
                 tools=agent.tools,
                 store=self.store,
                 policy=agent.policy,
                 tenant_id=self.tenant_id,
-                user_id=record.user_id,
-                channel=record.channel,
+                user_id=lead.user_id,
+                channel=lead.channel,
                 context=agent.context,
                 observer=observer,
                 hooks=agent.hooks,
                 tracer=self._tracer,
+                steer=steer_in if steer else None,
+                collected=len(texts),
             )
+            reply = TurnReply.of(result)
         except ModelError as err:
-            await self.ingress.fail(record.id, err.kind)
+            error_kind = err.kind
         except Exception as err:
-            logger.warning("message %d failed (%s)", record.id, type(err).__name__)
-            await self.ingress.fail(record.id, type(err).__name__)
-        else:
-            await self.ingress.finish(record.id, TurnReply.of(result))
+            logger.warning("message %d failed (%s)", lead.id, type(err).__name__)
+            error_kind = type(err).__name__
+        try:
+            for record in joined:
+                if record.delivery is not None:
+                    # Marked before it is finished, so the channel hub never sends this record a reply.
+                    note = f"answered together with message {lead.id}"
+                    await self.ingress.finish_delivery(record.id, "skipped", note)
+                await self._end(record, reply, error_kind)
+            await self._end(lead, reply, error_kind)
         finally:
+            for record in [*joined, lead]:
+                self._release(record.id)
             if observer is not None:
                 observer.close()
-            event = self._finished.pop(record.id, None)
-            if event is not None:
-                event.set()
             for listener in self._listeners:
-                listener(record)
+                listener(lead)
+
+    async def _end(self, record: IngressRecord, reply: TurnReply | None, error_kind: str) -> None:
+        if reply is not None:
+            await self.ingress.finish(record.id, reply)
+        else:
+            await self.ingress.fail(record.id, error_kind)
+
+    def _release(self, ingress_id: int) -> None:
+        watching = self._observers.pop(ingress_id, None)
+        if watching is not None:
+            watching.close()
+        event = self._finished.pop(ingress_id, None)
+        if event is not None:
+            event.set()
 
     def on_finished(self, listener: Callable[[IngressRecord], None]) -> None:
         """Called with the record (as claimed) after each run, done or failed; must not block."""

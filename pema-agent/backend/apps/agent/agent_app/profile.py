@@ -25,6 +25,8 @@ PROFILE_FILE: Final = "agent.toml"
 SOUL_FILE: Final = "SOUL.md"
 RULES_FILE: Final = "AGENTS.md"
 
+QueueMode = Literal["followup", "collect", "steer"]
+
 
 class _Section(BaseModel):
     # A misspelt key fails loudly instead of being ignored.
@@ -68,10 +70,19 @@ class LoopSection(_Section):
     stop_after_repeats: int | None = 10
     error_streak_remind: int | None = 3
     error_streak_stop: int | None = 5
+    queue_mode: QueueMode = "steer"
+    """A message that comes while the conversation's turn runs: followup (its own turn later), collect (the
+    waiting messages of one person become one turn) or steer (collect, and it joins a turn using tools)."""
+    queue_by_channel: dict[str, QueueMode] = Field(default_factory=dict[str, QueueMode])
+    queue_debounce_s: float = Field(default=0.8, ge=0, le=10)
+    queue_max_wait_s: float = Field(default=3.0, ge=0, le=30)
+    queue_max_batch: int = Field(default=20, ge=1, le=100)
 
     @model_validator(mode="after")
     def _guard_is_valid(self) -> LoopSection:
         self.guard_policy()
+        if self.queue_max_wait_s < self.queue_debounce_s:
+            raise ValueError("queue_max_wait_s must be at least queue_debounce_s")
         return self
 
     def guard_policy(self) -> LoopGuardPolicy:

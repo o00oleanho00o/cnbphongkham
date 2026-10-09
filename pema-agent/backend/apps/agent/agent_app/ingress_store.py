@@ -48,6 +48,11 @@ _NEXT_QUEUED = sql(
     "WHERE tenant_id = :tenant_id AND session_id = :session_id AND agent = :agent AND status = 'queued' "
     "ORDER BY id LIMIT 1"
 )
+_QUEUED_IN_SESSION = sql(
+    "SELECT * FROM agent_rt.agent_ingress "
+    "WHERE tenant_id = :tenant_id AND session_id = :session_id AND agent = :agent AND status = 'queued' "
+    "ORDER BY id LIMIT :limit"
+)
 _CLAIM = sql(
     "UPDATE agent_rt.agent_ingress SET status = 'processing', attempts = attempts + 1, started_at = now() "
     "WHERE id = :id AND status = 'queued' RETURNING *"
@@ -199,6 +204,15 @@ class PostgresIngressStore:
 
     async def claim(self, ingress_id: int) -> IngressRecord | None:
         return await self._one("claim message", _CLAIM, {"id": ingress_id})
+
+    async def queued_in_session(self, tenant_id: str, session_id: str, limit: int) -> list[IngressRecord]:
+        params = {"tenant_id": tenant_id, "session_id": session_id, "agent": self._agent, "limit": limit}
+
+        async def work() -> list[IngressRecord]:
+            async with self._engine.connect() as conn:
+                return [_record(row) for row in await conn.execute(_QUEUED_IN_SESSION, params)]
+
+        return await retrying("list queued messages", work)
 
     async def finish(self, ingress_id: int, reply: TurnReply) -> None:
         params = {"id": ingress_id, "reply": json.dumps(reply.to_json(), ensure_ascii=False)}

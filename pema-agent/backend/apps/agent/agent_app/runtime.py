@@ -93,6 +93,8 @@ class Runtime:
         )
 
     def dispatcher(self, settings: DispatchSettings | None = None) -> Dispatcher:
+        """Without ``settings`` the profile's ``[loop]`` decides how waiting messages are handled."""
+        loop = self.agent.profile.loop
         return Dispatcher(
             self.live,
             store=self.store,
@@ -101,7 +103,14 @@ class Runtime:
             conversations=self.conversations,
             locks=self.locks,
             sessions=self.sessions,
-            settings=settings,
+            settings=settings
+            or DispatchSettings(
+                queue_mode=loop.queue_mode,
+                queue_by_channel=dict(loop.queue_by_channel),
+                debounce_s=loop.queue_debounce_s,
+                max_wait_s=loop.queue_max_wait_s,
+                max_batch=loop.queue_max_batch,
+            ),
             before_turn=self.plugin_manager.refresh,
         )
 

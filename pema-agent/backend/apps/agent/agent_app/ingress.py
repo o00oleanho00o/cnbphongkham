@@ -103,6 +103,10 @@ class IngressStore(Protocol):
         """The oldest queued message of the session."""
         ...
 
+    async def queued_in_session(self, tenant_id: str, session_id: str, limit: int) -> list[IngressRecord]:
+        """The session's queued messages, oldest first."""
+        ...
+
     async def claim(self, ingress_id: int) -> IngressRecord | None:
         """Queued -> processing (one more attempt); None when someone else claimed it first."""
         ...
@@ -217,6 +221,14 @@ class InMemoryIngressStore:
         if record.status != "queued":
             return None
         return self._set(replace(record, status="processing", attempts=record.attempts + 1))
+
+    async def queued_in_session(self, tenant_id: str, session_id: str, limit: int) -> list[IngressRecord]:
+        queued = [
+            r
+            for r in self._records.values()
+            if (r.tenant_id, r.session_id, r.status) == (tenant_id, session_id, "queued")
+        ]
+        return queued[:limit]
 
     async def finish(self, ingress_id: int, reply: TurnReply) -> None:
         self._set(replace(self._records[ingress_id], status="done", reply=reply, error_kind=None))

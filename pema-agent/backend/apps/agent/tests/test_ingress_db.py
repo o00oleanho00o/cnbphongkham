@@ -349,6 +349,24 @@ def test_replies_are_claimed_in_order_retried_and_taken_over_on_postgres(db_url:
     _run(db_url, check)
 
 
+def test_collect_joins_waiting_messages_on_postgres(db_url: str) -> None:
+    async def check(db: AgentDatabase) -> None:
+        runtime = build_runtime(load_profile(DEV_PROFILE), fake=True, env={}, db=db)
+        settings = DispatchSettings(queue_mode="collect", debounce_s=0.05, max_wait_s=0.5, poll_s=0.02)
+        dispatcher = runtime.dispatcher(settings)
+        records = [(await dispatcher.accept(_inbound(f"q{i}", f"part {i}", "cq")))[0] for i in range(3)]
+        queued = await dispatcher.ingress.queued_in_session("default", records[0].session_id, 10)
+        finished = [await dispatcher.wait(r.id, 5.0) for r in records]
+        await dispatcher.close()
+        runtime.close()
+
+        assert [r.id for r in queued] == [r.id for r in records]
+        assert {r.status for r in finished} == {"done"}
+        assert {r.reply.text if r.reply else None for r in finished} == {"(echo) part 0\n\npart 1\n\npart 2"}
+
+    _run(db_url, check)
+
+
 def test_model_settings_are_stored_per_agent_and_a_clear_never_lowers_the_version(db_url: str) -> None:
     async def check(db: AgentDatabase) -> None:
         store = PostgresModelSettingsStore(db, agent="dev")

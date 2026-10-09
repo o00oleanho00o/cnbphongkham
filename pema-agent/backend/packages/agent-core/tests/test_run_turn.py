@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from agentcore import (
     AssistantResult,
     InMemorySessionStore,
+    InMemoryTracer,
     LlmRequest,
     LoopPolicy,
     ModelError,
@@ -358,3 +359,32 @@ async def test_the_policy_caps_tool_calls_per_step() -> None:
     assert (first.content, first.is_error) == ("2", False)
     assert second.is_error
     assert "at most 1" in second.content
+
+
+async def test_a_message_steered_in_after_the_tools_is_stored_and_seen_by_the_next_call() -> None:
+    model = ScriptedModel([calls(tool_call("add", {"a": 1, "b": 2})), reply("3, and noted")])
+    store, tracer = InMemorySessionStore(), InMemoryTracer()
+    waiting = [["also say hi"], []]
+
+    async def steer() -> list[str]:
+        return waiting.pop(0) if waiting else []
+
+    await run_turn(
+        session_id=SESSION,
+        user_text="1+2?",
+        prompt=PromptBuilder.fixed("s"),
+        model=model,
+        tools=ToolRegistry([ADD]),
+        store=store,
+        tracer=tracer,
+        steer=steer,
+        collected=2,
+    )
+
+    history = await store.load("default", SESSION)
+    assert [m.role for m in history] == ["user", "assistant", "tool", "user", "assistant"]
+    assert history[3].text() == "also say hi"
+    assert model.requests[1].messages[-1].text().startswith("also say hi")
+    (trace,) = tracer.traces
+    inbox = [dict(e.detail) for e in trace.events if e.kind == "inbox"]
+    assert inbox == [{"mode": "collect", "messages": 2}, {"mode": "steer", "messages": 1}]

@@ -155,11 +155,15 @@ async def run_turn(
     clock: Callable[[], datetime] = utc_now,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     timer: Callable[[], float] = time.perf_counter,
+    steer: Callable[[], Awaitable[Sequence[str]]] | None = None,
+    collected: int = 1,
 ) -> TurnResult:
     """``clock`` must return an aware datetime; tests pass a fixed one, and a ``sleep`` and ``timer`` of their
     own to skip retry pauses and move time. Without ``context`` nothing is compacted. ``user_id`` names the
     person the session talks to; the caller sets it, never the model. The ``tracer`` gets one trace per turn,
-    also when the turn fails; a tracer error never fails the turn."""
+    also when the turn fails; a tracer error never fails the turn. ``steer`` is asked after each batch of tool
+    calls for messages that came in meanwhile; they are stored as user messages before the next model call.
+    ``collected`` tells the trace how many waiting messages ``user_text`` joins."""
     started = timer()
     started_at = clock()
     turn_id = str(uuid4())
@@ -341,6 +345,8 @@ async def run_turn(
             events.append(TraceEvent("repair", 0, 0.0, detail={"tool_calls": len(repairs)}))
         turn_start = len(history) + len(repairs)
         await record(Message.user(user_text))
+        if collected > 1:
+            events.append(TraceEvent("inbox", 0, 0.0, detail={"mode": "collect", "messages": collected}))
 
         stop: TurnStop = "max_steps"
         steps = 0
@@ -364,7 +370,15 @@ async def run_turn(
             for run in runs:
                 events.append(_tool_event(step, run))
                 await record(Message(role="tool", blocks=[run.result]))
-            if watch(step, uses, runs):
+            stop_using_tools = watch(step, uses, runs)
+            if steer is not None:
+                steered = [text for text in await steer() if text.strip()]
+                for text in steered:
+                    await record(Message.user(text))
+                if steered:
+                    detail = {"mode": "steer", "messages": len(steered)}
+                    events.append(TraceEvent("inbox", step, 0.0, detail=detail))
+            if stop_using_tools:
                 stop = "loop"
                 break
 

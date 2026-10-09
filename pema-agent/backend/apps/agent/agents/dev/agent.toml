@@ -64,6 +64,14 @@ repeat_thresholds = [3, 5, 8]
 stop_after_repeats = 10
 error_streak_remind = 3
 error_streak_stop = 5
+# a message that comes while the conversation's turn runs: followup = its own turn later; collect = after a
+# quiet moment (queue_debounce_s, at most queue_max_wait_s) one person's waiting messages become one turn;
+# steer = collect, and messages that come while the turn uses tools join it before its next model call
+queue_mode = "steer"
+queue_debounce_s = 0.8
+queue_max_wait_s = 3.0
+queue_max_batch = 20
+# queue_by_channel = { http = "followup" }
 
 [plugins]
 # Plugins to load at start, found in apps/agent/plugins, this folder's plugins/ and $AGENT_PLUGIN_DIR.
