@@ -11,7 +11,8 @@ from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from agentcore import LoopPolicy
+from agentcore import ContextPolicy, LoopPolicy
+from agentcore.context import DEFAULT_CHARS_PER_TOKEN
 from agentcore.prompt import DEFAULT_SECTIONS
 
 
@@ -52,14 +53,33 @@ class PromptSection(_Section):
     """Prompt sections in order; session sections form the system prompt, the others the context block."""
 
 
+class ContextSection(_Section):
+    window_tokens: int | None = Field(default=None, gt=0)
+    """The model's context window; without it nothing is compacted."""
+    compact_at: float = Field(default=0.75, gt=0, le=1)
+    keep_recent_ratio: float = Field(default=0.20, ge=0, lt=1)
+    chars_per_token: float = Field(default=DEFAULT_CHARS_PER_TOKEN, gt=0)
+
+
 class Profile(_Section):
     agent: AgentSection
     model: ModelSection = Field(default_factory=ModelSection)
     prompt: PromptSection = Field(default_factory=PromptSection)
+    context: ContextSection = Field(default_factory=ContextSection)
     loop: LoopSection = Field(default_factory=LoopSection)
 
     def loop_policy(self) -> LoopPolicy:
         return LoopPolicy(max_steps=self.loop.max_steps, max_output_tokens=self.loop.max_output_tokens)
+
+    def context_policy(self) -> ContextPolicy | None:
+        if self.context.window_tokens is None:
+            return None
+        return ContextPolicy(
+            window_tokens=self.context.window_tokens,
+            compact_at=self.context.compact_at,
+            keep_recent_ratio=self.context.keep_recent_ratio,
+            chars_per_token=self.context.chars_per_token,
+        )
 
 
 def load_profile(path: Path) -> Profile:

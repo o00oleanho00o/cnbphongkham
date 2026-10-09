@@ -4,7 +4,8 @@ The model is called in a loop and the tools it asks for are run, until it answer
 the step budget runs out, one last call without tools forces an answer. Every assistant message is stored
 before its tools run, and every tool call gets exactly one result, so the stored history is always valid to
 send back to a provider. The system prompt is the session's frozen one; the per-turn and per-step context
-goes at the end of each request and is never stored.
+goes at the end of each request and is never stored. With a context manager, a request over the budget first
+compacts older turns.
 """
 
 from __future__ import annotations
@@ -18,8 +19,9 @@ from typing import Any, Final, Literal
 from pydantic import ValidationError
 
 from agentcore.clock import utc_now
+from agentcore.context.compaction import ContextManager
 from agentcore.harness.model.errors import ModelError
-from agentcore.harness.model.types import AssistantResult, LlmRequest, ModelClient
+from agentcore.harness.model.types import AssistantResult, LlmRequest, ModelClient, ToolSchema
 from agentcore.harness.store.base import SessionStore
 from agentcore.harness.tools.registry import ToolRegistry
 from agentcore.harness.tools.spec import ToolContext, ToolSpec
@@ -55,6 +57,7 @@ class TurnResult:
     """Model calls made in this turn, including the final call without tools; retries are not counted."""
     usage: Usage
     new_messages: list[Message]
+    compactions: int = 0
 
 
 async def run_turn(
@@ -68,14 +71,17 @@ async def run_turn(
     policy: LoopPolicy | None = None,
     tenant_id: str = DEFAULT_TENANT,
     channel: str | None = None,
+    context: ContextManager | None = None,
     clock: Callable[[], datetime] = utc_now,
 ) -> TurnResult:
-    """``clock`` must return an aware datetime; tests pass a fixed one."""
+    """``clock`` must return an aware datetime; tests pass a fixed one. Without ``context`` nothing is
+    compacted."""
     limits = policy or LoopPolicy()
     ctx = ToolContext(session_id=session_id, tenant_id=tenant_id)
     schemas = tools.schemas()
     new_messages: list[Message] = []
     usage = Usage()
+    compactions = 0
     system = await prompt.system(store, tenant_id, session_id)
     turn_prompt = prompt.start_turn(TurnInfo(now=clock(), channel=channel))
 
@@ -83,17 +89,41 @@ async def run_turn(
         await store.append(tenant_id, session_id, message)
         new_messages.append(message)
 
+    async def build(step: StepInfo, offered: list[ToolSchema]) -> LlmRequest:
+        history = await store.load(tenant_id, session_id)
+        compaction = await store.load_compaction(tenant_id, session_id)
+        visible = history[compaction.first_kept :] if compaction else history
+        return LlmRequest(
+            system=system,
+            messages=with_context(visible, turn_prompt.context(step)),
+            tools=offered,
+            max_output_tokens=limits.max_output_tokens,
+        )
+
+    async def request_for(step: StepInfo, offered: list[ToolSchema]) -> LlmRequest:
+        nonlocal system, usage, compactions
+        request = await build(step, offered)
+        if context is None or not context.over_budget(request):
+            return request
+        outcome = await context.compact(
+            store=store,
+            tenant_id=tenant_id,
+            session_id=session_id,
+            keep_from=turn_start,
+            max_output_tokens=limits.max_output_tokens,
+        )
+        if outcome is None:
+            return request
+        compactions += 1
+        usage = usage + outcome.usage
+        system = await prompt.system(store, tenant_id, session_id, refresh=True)
+        return await build(step, offered)
+
+    turn_start = len(await store.load(tenant_id, session_id))
     await record(Message.user(user_text))
 
     for step in range(1, limits.max_steps + 1):
-        history = await store.load(tenant_id, session_id)
-        context = turn_prompt.context(StepInfo(step=step, max_steps=limits.max_steps))
-        request = LlmRequest(
-            system=system,
-            messages=with_context(history, context),
-            tools=schemas,
-            max_output_tokens=limits.max_output_tokens,
-        )
+        request = await request_for(StepInfo(step=step, max_steps=limits.max_steps), schemas)
         result = await _complete(model, request)
         usage = usage + (result.message.usage or Usage())
         await record(result.message)
@@ -106,18 +136,13 @@ async def run_turn(
                 steps=step,
                 usage=usage,
                 new_messages=new_messages,
+                compactions=compactions,
             )
         for use in uses:
             await record(Message(role="tool", blocks=[await _run_tool(use, tools, ctx)]))
 
-    history = await store.load(tenant_id, session_id)
-    context = turn_prompt.context(StepInfo(step=limits.max_steps + 1, max_steps=limits.max_steps, final=True))
-    request = LlmRequest(
-        system=system,
-        messages=with_context(history, context),
-        tools=[],
-        max_output_tokens=limits.max_output_tokens,
-    )
+    final_step = StepInfo(step=limits.max_steps + 1, max_steps=limits.max_steps, final=True)
+    request = await request_for(final_step, [])
     result = await _complete(model, request)
     usage = usage + (result.message.usage or Usage())
     final = _without_tool_calls(result.message)
@@ -128,6 +153,7 @@ async def run_turn(
         steps=limits.max_steps + 1,
         usage=usage,
         new_messages=new_messages,
+        compactions=compactions,
     )
 
 

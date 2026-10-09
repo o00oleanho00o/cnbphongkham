@@ -1,10 +1,11 @@
-"""General-purpose agent core: message model, model port, tool registry, prompt builder and turn loop."""
+"""General-purpose agent core: messages, model port, tools, prompt builder, context budget and turn loop."""
 
 from __future__ import annotations
 
+from agentcore.context import CompactionResult, ContextManager, ContextPolicy, TokenEstimator
 from agentcore.harness.model.errors import ModelConfigError, ModelError, ModelErrorKind
 from agentcore.harness.model.types import AssistantResult, LlmRequest, ModelClient, StopReason, ToolSchema
-from agentcore.harness.store.base import SessionStore, StoredPrompt
+from agentcore.harness.store.base import CompactionRecord, SessionStore, StoredPrompt
 from agentcore.harness.store.memory import InMemorySessionStore
 from agentcore.harness.tools.registry import ToolRegistry
 from agentcore.harness.tools.spec import ToolContext, ToolOutput, ToolSpec
@@ -35,6 +36,10 @@ __all__ = [
     "DEFAULT_TENANT",
     "AssistantResult",
     "Block",
+    "CompactionRecord",
+    "CompactionResult",
+    "ContextManager",
+    "ContextPolicy",
     "InMemorySessionStore",
     "LlmRequest",
     "LoopPolicy",
@@ -54,6 +59,7 @@ __all__ = [
     "StoredPrompt",
     "TextBlock",
     "ThinkingBlock",
+    "TokenEstimator",
     "ToolContext",
     "ToolOutput",
     "ToolRegistry",

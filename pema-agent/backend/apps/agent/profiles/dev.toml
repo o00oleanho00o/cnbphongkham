@@ -11,6 +11,12 @@ timezone = "Asia/Ho_Chi_Minh"
 # session sections form the frozen system prompt; turn/step sections go in the per-request context block
 sections = ["identity", "tool_usage", "environment", "status"]
 
+[context]
+# older turns are summarised when a request would pass compact_at of the window left after the reply
+window_tokens = 128000
+compact_at = 0.75
+keep_recent_ratio = 0.20
+
 [model]
 provider = "openai-compatible"
 model = ""

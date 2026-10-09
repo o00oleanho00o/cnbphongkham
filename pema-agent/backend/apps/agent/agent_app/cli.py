@@ -17,12 +17,16 @@ from agent_app.model_factory import build_model, describe_model
 from agent_app.profile import Profile, load_profile
 from agentcore import (
     DEFAULT_TENANT,
+    ContextManager,
     InMemorySessionStore,
+    LlmRequest,
     ModelError,
     PromptBuilder,
     PromptEnv,
     SessionStore,
     StepInfo,
+    TokenEstimator,
+    ToolRegistry,
     ToolResultBlock,
     ToolUseBlock,
     TurnInfo,
@@ -38,7 +42,7 @@ PREVIEW_CHARS: Final = 120
 CHANNEL: Final = "cli"
 HELP: Final = (
     "Commands: /new (start a new session), /prompt (show what the model gets), "
-    "/exit (quit), /help (this help)\n"
+    "/context (context size), /compact (summarise older turns now), /exit (quit), /help (this help)\n"
 )
 
 
@@ -64,10 +68,12 @@ async def _chat(profile_path: Path, *, fake: bool, session: str | None) -> int:
         tools = builtin_tools(timezone=profile.agent.timezone).subset(profile.agent.tools)
         prompt = build_prompt(profile, tool_names=tools.names())
         model = build_model(profile, fake=fake, env=os.environ)
+        context_policy = profile.context_policy()
     except (OSError, ValueError, ModelError) as err:
         _write(f"error: {err}\n")
         return EXIT_CONFIG_ERROR
 
+    context = ContextManager(context_policy, model) if context_policy else None
     store = InMemorySessionStore()
     session_id = session or _new_session_id()
     lines = _stdin_lines()
@@ -95,6 +101,19 @@ async def _chat(profile_path: Path, *, fake: bool, session: str | None) -> int:
         if text == "/prompt":
             _write(await show_prompt(prompt, store, session_id, max_steps=profile.loop.max_steps))
             continue
+        if text == "/context":
+            output_tokens = profile.loop.max_output_tokens
+            _write(
+                await show_context(prompt, store, session_id, tools, context, max_output_tokens=output_tokens)
+            )
+            continue
+        if text == "/compact":
+            output_tokens = profile.loop.max_output_tokens
+            try:
+                _write(await compact_now(prompt, store, session_id, context, max_output_tokens=output_tokens))
+            except ModelError as err:
+                _write(f"error ({err.kind}): {err}\n")
+            continue
         try:
             result = await run_turn(
                 session_id=session_id,
@@ -105,6 +124,7 @@ async def _chat(profile_path: Path, *, fake: bool, session: str | None) -> int:
                 store=store,
                 policy=profile.loop_policy(),
                 channel=CHANNEL,
+                context=context,
             )
         except ModelError as err:
             _write(f"error ({err.kind}): {err}\n")
@@ -133,6 +153,68 @@ async def show_prompt(prompt: PromptBuilder, store: SessionStore, session_id: st
     )
 
 
+async def show_context(
+    prompt: PromptBuilder,
+    store: SessionStore,
+    session_id: str,
+    tools: ToolRegistry,
+    context: ContextManager | None,
+    *,
+    max_output_tokens: int,
+) -> str:
+    """Roughly how big the next request is (system prompt, visible history, tools) against the budget."""
+    history = await store.load(DEFAULT_TENANT, session_id)
+    compaction = await store.load_compaction(DEFAULT_TENANT, session_id)
+    first_kept = compaction.first_kept if compaction else 0
+    request = LlmRequest(
+        system=await prompt.system(store, DEFAULT_TENANT, session_id),
+        messages=history[first_kept:],
+        tools=tools.schemas(),
+        max_output_tokens=max_output_tokens,
+    )
+    estimator = context.estimator if context else TokenEstimator()
+    lines = [f"context: ~{estimator.request(request)} tokens, {len(history) - first_kept} messages sent"]
+    if context is None:
+        lines.append("compaction: off (no [context] window_tokens in the profile)")
+    else:
+        policy = context.policy
+        lines.append(
+            f"compaction at ~{policy.threshold(max_output_tokens)} tokens "
+            f"(window {policy.window_tokens}, keeps ~{policy.keep_budget(max_output_tokens)} recent)"
+        )
+    if compaction is not None:
+        lines.append(
+            f"summary: {len(compaction.summary)} chars for the first {first_kept} of {len(history)} messages"
+        )
+    return "\n".join(lines) + "\n"
+
+
+async def compact_now(
+    prompt: PromptBuilder,
+    store: SessionStore,
+    session_id: str,
+    context: ContextManager | None,
+    *,
+    max_output_tokens: int,
+) -> str:
+    if context is None:
+        return "compaction is off: set [context] window_tokens in the profile\n"
+    history = await store.load(DEFAULT_TENANT, session_id)
+    outcome = await context.compact(
+        store=store,
+        tenant_id=DEFAULT_TENANT,
+        session_id=session_id,
+        keep_from=len(history),
+        max_output_tokens=max_output_tokens,
+        force=True,
+    )
+    if outcome is None:
+        return "nothing to compact yet\n"
+    await prompt.system(store, DEFAULT_TENANT, session_id, refresh=True)
+    note = " (no summary: the summariser failed)" if outcome.fallback else ""
+    return f"compacted {outcome.compacted_messages} messages{note}\n"
+
+
 def render_turn(result: TurnResult) -> str:
     lines: list[str] = []
     for message in result.new_messages:
@@ -149,8 +231,10 @@ def render_turn(result: TurnResult) -> str:
                 lines.append(f"  [tool] {block.name} -> {status}: {_preview(block.content)}")
     lines.append(f"agent> {result.text}")
     usage = result.usage
+    compacted = f", compactions={result.compactions}" if result.compactions else ""
     lines.append(
-        f"  (steps={result.steps}, in={usage.input_tokens}, out={usage.output_tokens}, stop={result.stop})"
+        f"  (steps={result.steps}, in={usage.input_tokens}, out={usage.output_tokens}, "
+        f"stop={result.stop}{compacted})"
     )
     return "\n".join(lines) + "\n"
 

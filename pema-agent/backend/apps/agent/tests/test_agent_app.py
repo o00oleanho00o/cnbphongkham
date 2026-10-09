@@ -34,6 +34,41 @@ def test_the_dev_profile_loads_and_its_tools_exist() -> None:
     assert profile.loop_policy().max_steps == profile.loop.max_steps
 
 
+def test_compaction_is_on_only_with_a_context_window() -> None:
+    dev = load_profile(DEV_PROFILE).context_policy()
+
+    assert dev is not None
+    assert (dev.window_tokens, dev.compact_at, dev.keep_recent_ratio) == (128_000, 0.75, 0.20)
+    assert _profile().context_policy() is None
+
+
+def test_context_and_compact_commands(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr("sys.stdin", io.StringIO("/compact\nmột\nhai\n/compact\n/context\n/exit\n"))
+
+    assert main(["chat", "--profile", str(DEV_PROFILE), "--fake"]) == 0
+    out = capsys.readouterr().out
+    assert "nothing to compact yet\n" in out
+    assert "compacted 2 messages\n" in out
+    assert "context: ~" in out
+    assert "compaction at ~94464 tokens (window 128000, keeps ~18892 recent)" in out
+    assert "for the first 2 of 4 messages" in out
+
+
+def test_without_a_window_the_commands_say_compaction_is_off(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "plain.toml"
+    path.write_text('[agent]\nname = "x"\n', encoding="utf-8")
+    monkeypatch.setattr("sys.stdin", io.StringIO("/context\n/compact\n/exit\n"))
+
+    assert main(["chat", "--profile", str(path), "--fake"]) == 0
+    out = capsys.readouterr().out
+    assert "compaction: off" in out
+    assert "compaction is off: set [context] window_tokens" in out
+
+
 def test_the_dev_profile_reads_its_prompt_file_and_builds_its_prompt() -> None:
     profile = load_profile(DEV_PROFILE)
 
