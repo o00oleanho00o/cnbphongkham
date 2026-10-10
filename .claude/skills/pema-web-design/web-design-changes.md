@@ -21,6 +21,12 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-10 · add · Tổng quan agent: cảnh báo chưa cấu hình model AI
+- Where: `src/components/agent/pages/overview-page.tsx` · route `/admin/agent/overview`
+- Change: while the agent has no model name or no API key (or the stored key cannot be read), an amber notice above the cards says "Chưa cấu hình model AI - agent chưa trả lời được tin nhắn nào. Thiếu tên model, khóa API." (only the missing parts) and links "Nhập ở trang Model" to `/admin/agent/model`. Wording taken from the zalo-agent overview banner ("Chưa cấu hình LLM - bot chưa trả lời được tin nhắn nào"). No notice once a model and a key are set.
+- Web canvas target: none (no canvas frame for the agent pages)
+- Logged by: missing-model warning
+
 ### 2026-10-10 · change · Zalo: cầu nối có sẵn, xác nhận rủi ro khi thêm nick cá nhân
 - Where: `backend/apps/agent/plugins/zalo/ui/src/pages/bridge.tsx`, `backend/apps/agent/plugins/zalo/ui/src/pages/account-drawer.tsx`, `backend/apps/agent/plugins/zalo/ui/src/logic.ts` (pages the Zalo plugin ships, drawn at `/admin/agent/plugins/zalo/bridge` and in "Thêm tài khoản Zalo")
 - Change: the agent image carries the bridge, so "Cầu nối Zalo cá nhân" shows "Có sẵn 0.1.0" and "Có sẵn trong bản cài của agent: tự chạy khi có nick cá nhân đang bật, không cần cài." with no "Cài cầu nối" / "Cài lại" / "Gỡ" buttons (they stay only when the agent runs without a bundled bridge). The warning notice on that page is gone; instead, adding a "Nick cá nhân" shows a ticked-box confirmation "Tôi hiểu nick cá nhân chạy qua giao thức không chính thức (zca-js): Zalo có thể khóa nick. Tôi dùng nick phụ." and saving without it says "Đánh dấu ô xác nhận rủi ro để thêm nick cá nhân."

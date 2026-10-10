@@ -1,10 +1,13 @@
 "use client";
 
 // Tổng quan agent: ported from `plugins/web/ui/src/pages/overview.tsx`, on the clinic web kit (`plugin-kit`).
-/** What runs: the chat channels and the plugins' background jobs, with their last error. */
+/** What runs: the chat channels and the plugins' background jobs, with their last error; and a warning while the
+ * agent has no model it can call (it starts without one, but then answers nothing). */
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { agentApi as api } from "@/lib/agent/api";
+import { missingModelParts, type ModelShown } from "@/lib/agent/model-status";
 import { Badge, Button, Card, Empty, Notice, PageHeader } from "@/components/agent/plugin-kit";
 
 interface Channel {
@@ -22,17 +25,20 @@ interface Job {
 export function OverviewPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [missing, setMissing] = useState<string[]>([]);
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
     setError("");
     try {
-      const [c, j] = await Promise.all([
+      const [c, j, model] = await Promise.all([
         api.get<{ channels: Channel[] }>("/v1/admin/channels"),
         api.get<{ jobs: Job[] }>("/v1/admin/jobs"),
+        api.get<ModelShown>("/v1/admin/model"),
       ]);
       setChannels(c.channels);
       setJobs(j.jobs);
+      setMissing(missingModelParts(model));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không tải được");
     }
@@ -54,6 +60,17 @@ export function OverviewPage() {
         }
       />
       {error && <Notice tone="danger">{error}</Notice>}
+      {missing.length > 0 && (
+        <div className="mb-4">
+          <Notice tone="warning">
+            <b>Chưa cấu hình model AI - agent chưa trả lời được tin nhắn nào.</b> Thiếu{" "}
+            {missing.join(", ")}.{" "}
+            <Link href="/admin/agent/model" className="font-medium underline underline-offset-2">
+              Nhập ở trang Model
+            </Link>
+          </Notice>
+        </div>
+      )}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Kênh chat">
           <StatusList
