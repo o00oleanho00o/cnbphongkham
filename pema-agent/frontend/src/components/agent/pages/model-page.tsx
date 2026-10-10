@@ -1,33 +1,39 @@
 "use client";
 
-// Model của agent: ported from `plugins/web/ui/src/pages/model.tsx`, on the clinic web kit (`plugin-kit`).
-/** The model the agent talks to and its API key (stored encrypted; shown masked). Applies to the next call. Ready
- * presets fill the form for the usual providers; the model field offers the provider's own list (asked through the
- * agent with what is typed, nothing saved) and still takes any name typed by hand. */
-import { type FormEvent, useCallback, useEffect, useState } from "react";
+// Model của agent: the list of models the agent keeps ready (several keys of the same provider side by side, grouped
+// by provider), the one in use, and the form to add or change one. Using a model applies from the next reply; a key is
+// stored encrypted and never shown back. The agent's own profile still answers when nothing was chosen.
+import { useCallback, useEffect, useState } from "react";
 
-import { ApiError, agentApi as api } from "@/lib/agent/api";
-import { MODEL_PRESETS, type ModelPreset, withPreset } from "@/lib/agent/model-presets";
+import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
+import { ModelEntryForm } from "@/components/agent/pages/model-entry-form";
 import {
   Badge,
   Button,
   Card,
-  Field,
-  Input,
+  Empty,
+  type KitTone,
   Notice,
   PageHeader,
-  Select,
 } from "@/components/agent/plugin-kit";
+import { ApiError, agentApi as api } from "@/lib/agent/api";
+import {
+  brandCounts,
+  ENTRIES_PATH,
+  entryPath,
+  groupByBrand,
+  type ModelEntry,
+} from "@/lib/agent/model-entries";
 
 interface ModelShown {
   provider: string;
   model: string;
   base_url: string | null;
-  reasoning: string | null;
-  dialect: string | null;
   api_key: string;
   api_key_broken: boolean;
   sources: Record<string, "db" | "profile" | "unset">;
+  stored: boolean;
+  entry_id: string | null;
 }
 
 interface TestOutcome {
@@ -37,22 +43,10 @@ interface TestOutcome {
   error_kind?: string;
 }
 
-const PROVIDERS = [
-  { value: "openai-compatible", label: "OpenAI-compatible (OpenAI, DeepSeek, OpenRouter...)" },
-  { value: "anthropic", label: "Anthropic" },
-];
-const REASONING = [
-  { value: "", label: "Mặc định của nhà cung cấp" },
-  { value: "off", label: "Tắt" },
-  { value: "low", label: "Thấp" },
-  { value: "medium", label: "Vừa" },
-  { value: "high", label: "Cao" },
-];
-const DIALECTS = [
-  { value: "", label: "Tự đoán theo địa chỉ" },
-  { value: "openai", label: "OpenAI" },
-  { value: "deepseek", label: "DeepSeek" },
-];
+type Message = { tone: KitTone; text: string };
+/** `"new"` while adding, the model while changing it, null when no form is open. */
+type Editing = "new" | ModelEntry | null;
+
 const TEST_ERRORS: Record<string, string> = {
   auth: "Khóa API sai hoặc hết hạn",
   rate_limit: "Nhà cung cấp đang giới hạn số lần gọi",
@@ -61,316 +55,275 @@ const TEST_ERRORS: Record<string, string> = {
   timeout: "Quá thời gian chờ",
 };
 
-interface Form {
-  provider: string;
-  model: string;
-  base_url: string;
-  reasoning: string;
-  dialect: string;
-  api_key: string;
-}
-
-interface ModelListing {
-  ok: boolean;
-  models: string[];
-  error_kind?: string;
-}
-
-const KEY_FIELD = "model-api-key";
-const MODEL_OPTIONS = "model-options";
-
-function isListing(value: unknown): value is ModelListing {
-  return typeof value === "object" && value !== null && "models" in value && "ok" in value;
-}
-
 function isOutcome(value: unknown): value is TestOutcome {
   return typeof value === "object" && value !== null && "ok" in value && "model" in value;
 }
 
-function formOf(shown: ModelShown): Form {
+function inUseSource(shown: ModelShown, entries: readonly ModelEntry[]): string {
+  const entry = entries.find((item) => item.id === shown.entry_id);
+  if (entry) return `từ danh sách: ${entry.label}`;
+  return shown.stored ? "chỉnh tay, không thuộc danh sách" : "theo cấu hình của profile";
+}
+
+function outcomeMessage(outcome: TestOutcome): Message {
+  if (outcome.ok) {
+    return {
+      tone: "success",
+      text: `${outcome.model} trả lời sau ${outcome.latency_ms ?? "?"} ms.`,
+    };
+  }
   return {
-    provider: shown.provider,
-    model: shown.model,
-    base_url: shown.base_url ?? "",
-    reasoning: shown.reasoning ?? "",
-    dialect: shown.dialect ?? "",
-    api_key: "",
+    tone: "danger",
+    text: TEST_ERRORS[outcome.error_kind ?? ""] ?? `Lỗi: ${outcome.error_kind}`,
   };
+}
+
+/** A failed test call answers 502 with the outcome in the body. */
+function outcomeOf(err: unknown): TestOutcome {
+  if (err instanceof ApiError && isOutcome(err.payload)) return err.payload;
+  throw err;
 }
 
 export function ModelPage() {
   const [shown, setShown] = useState<ModelShown | null>(null);
-  const [form, setForm] = useState<Form | null>(null);
-  const [notice, setNotice] = useState<{
-    tone: "success" | "danger" | "info";
-    text: string;
-  } | null>(null);
+  const [entries, setEntries] = useState<ModelEntry[] | null>(null);
+  const [editing, setEditing] = useState<Editing>(null);
+  const [message, setMessage] = useState<Message | null>(null);
   const [busy, setBusy] = useState("");
-  const [preset, setPreset] = useState<ModelPreset | null>(null);
-  const [models, setModels] = useState<string[]>([]);
+  const { confirm, confirmDialog } = useConfirmDialog();
 
-  const show = useCallback((next: ModelShown) => {
-    setShown(next);
-    setForm(formOf(next));
+  const load = useCallback(async () => {
+    const [current, listing] = await Promise.all([
+      api.get<ModelShown>("/v1/admin/model"),
+      api.get<{ entries: ModelEntry[] }>(ENTRIES_PATH),
+    ]);
+    setShown(current);
+    setEntries(listing.entries);
   }, []);
 
   useEffect(() => {
-    api
-      .get<ModelShown>("/v1/admin/model")
-      .then(show)
-      .catch((err: unknown) =>
-        setNotice({ tone: "danger", text: err instanceof Error ? err.message : "Lỗi" }),
-      );
-  }, [show]);
+    load().catch((err: unknown) =>
+      setMessage({ tone: "danger", text: err instanceof Error ? err.message : "Lỗi" }),
+    );
+  }, [load]);
 
-  async function run(label: string, work: () => Promise<void>) {
+  async function run(label: string, work: () => Promise<Message | null>) {
     setBusy(label);
-    setNotice(null);
+    setMessage(null);
     try {
-      await work();
+      setMessage(await work());
     } catch (err) {
-      setNotice({ tone: "danger", text: err instanceof Error ? err.message : "Lỗi" });
+      setMessage({ tone: "danger", text: err instanceof Error ? err.message : "Lỗi" });
     } finally {
       setBusy("");
     }
   }
 
-  function save(event: FormEvent) {
-    event.preventDefault();
-    if (!form || !shown) return;
-    void run("save", async () => {
-      const changes: Record<string, string | null> = {};
-      for (const key of ["provider", "model", "base_url", "reasoning", "dialect"] as const) {
-        const before = key === "provider" || key === "model" ? shown[key] : (shown[key] ?? "");
-        if (form[key] !== before) changes[key] = form[key] === "" ? null : form[key];
-      }
-      if (form.api_key) changes.api_key = form.api_key;
-      show(await api.patch<ModelShown>("/v1/admin/model", changes));
-      setNotice({ tone: "success", text: "Đã lưu - áp dụng từ lượt trả lời tiếp theo." });
-    });
-  }
-
-  const test = () =>
-    run("test", async () => {
-      // A failed call answers 502 with the outcome in the body.
-      const outcome = await api.post<TestOutcome>("/v1/admin/model/test").catch((err: unknown) => {
-        if (err instanceof ApiError && isOutcome(err.payload)) return err.payload;
-        throw err;
-      });
-      setNotice(
-        outcome.ok
-          ? {
-              tone: "success",
-              text: `${outcome.model} trả lời sau ${outcome.latency_ms ?? "?"} ms.`,
-            }
-          : {
-              tone: "danger",
-              text: TEST_ERRORS[outcome.error_kind ?? ""] ?? `Lỗi: ${outcome.error_kind}`,
-            },
-      );
+  const use = (entry: ModelEntry) =>
+    run(`use-${entry.id}`, async () => {
+      await api.post(entryPath(entry.id, "use"));
+      await load();
+      return {
+        tone: "success",
+        text: `Đang dùng ${entry.label} - áp dụng từ lượt trả lời tiếp theo.`,
+      };
     });
 
-  const listModels = () =>
-    run("list", async () => {
-      if (!form) return;
-      const trying = { provider: form.provider, base_url: form.base_url, api_key: form.api_key };
-      // A refusal answers 502 with the error kind in the body.
-      const listing = await api
-        .post<ModelListing>("/v1/admin/model/list", trying)
-        .catch((err: unknown) => {
-          if (err instanceof ApiError && isListing(err.payload)) return err.payload;
-          throw err;
-        });
-      setModels(listing.models);
-      if (!listing.ok) {
-        const why = TEST_ERRORS[listing.error_kind ?? ""] ?? "Nhà cung cấp không cho xem danh sách";
-        setNotice({ tone: "danger", text: `${why}. Vẫn gõ tên model tay được.` });
-        return;
-      }
-      setNotice({
-        tone: "info",
-        text:
-          listing.models.length > 0
-            ? `Có ${listing.models.length} model: chọn trong ô Model hoặc gõ tay.`
-            : "Nhà cung cấp không trả model nào: gõ tên model tay.",
-      });
-    });
+  const testEntry = (entry: ModelEntry) =>
+    run(`test-${entry.id}`, async () =>
+      outcomeMessage(await api.post<TestOutcome>(entryPath(entry.id, "test")).catch(outcomeOf)),
+    );
 
-  function applyPreset(chosen: ModelPreset) {
-    if (!form) return;
-    setForm(withPreset(form, chosen));
-    setPreset(chosen);
-    setModels([]);
-    setNotice({
-      tone: "info",
-      text: chosen.keyUrl
-        ? `Đã điền mẫu ${chosen.label}. Dán khóa API rồi bấm Lưu.`
-        : `Đã điền mẫu ${chosen.label}. Chọn model rồi bấm Lưu.`,
-    });
-    document.getElementById(KEY_FIELD)?.focus();
-  }
+  const testInUse = () =>
+    run("test", async () =>
+      outcomeMessage(await api.post<TestOutcome>("/v1/admin/model/test").catch(outcomeOf)),
+    );
 
-  const removeKey = () =>
-    run("key", async () => {
-      show(await api.patch<ModelShown>("/v1/admin/model", { api_key: null }));
-    });
-
-  const reset = () =>
+  const backToProfile = () =>
     run("reset", async () => {
-      show(await api.del<ModelShown>("/v1/admin/model"));
-      setNotice({
-        tone: "info",
-        text: "Đã xóa mọi cài đặt đã lưu: dùng lại cấu hình của profile.",
-      });
+      await api.del("/v1/admin/model");
+      await load();
+      return { tone: "info", text: "Đã bỏ model đang dùng: agent dùng lại cấu hình của profile." };
     });
 
-  if (!form || !shown) {
+  async function remove(entry: ModelEntry) {
+    const ok = await confirm({
+      title: `Xóa ${entry.label}?`,
+      message: entry.active
+        ? "Model này đang được dùng: agent vẫn trả lời bằng nó cho tới khi bạn chọn model khác, nhưng nó không còn trong danh sách. Khóa API đã lưu cũng mất."
+        : "Khóa API đã lưu của model này cũng mất. Không hoàn tác được.",
+      confirmLabel: "Xóa model",
+    });
+    if (!ok) return;
+    await run(`remove-${entry.id}`, async () => {
+      await api.del(entryPath(entry.id));
+      await load();
+      return { tone: "info", text: `Đã xóa ${entry.label}.` };
+    });
+  }
+
+  function saved(text: string) {
+    setEditing(null);
+    setMessage({ tone: "success", text });
+    load().catch((err: unknown) =>
+      setMessage({ tone: "danger", text: err instanceof Error ? err.message : "Lỗi" }),
+    );
+  }
+
+  if (!shown || !entries) {
     return (
       <div>
         <PageHeader title="Model" />
-        {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
+        {message && <Notice tone={message.tone}>{message.text}</Notice>}
       </div>
     );
   }
-  const set = (key: keyof Form) => (value: string) => setForm({ ...form, [key]: value });
-  const source = (key: string) => (shown.sources[key] === "db" ? "đã lưu" : "theo profile");
+
+  const groups = groupByBrand(entries);
 
   return (
-    <div>
+    <div className="space-y-4">
       <PageHeader
         title="Model"
-        subtitle="Nhà cung cấp, model và khóa API mà agent dùng để trả lời"
+        subtitle="Các model và khóa API agent có thể dùng để trả lời; chọn một cái để dùng"
+        aside={editing ? null : <Button onClick={() => setEditing("new")}>+ Thêm model</Button>}
       />
-      <form onSubmit={save} className="space-y-4">
-        <Card title="Mẫu có sẵn">
-          <p className="mb-3 text-small text-ink-soft">
-            Bấm một mẫu để điền sẵn nhà cung cấp, địa chỉ và model; chỉ cần thêm khóa API.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {MODEL_PRESETS.map((item) => (
-              <Button
-                key={item.id}
-                variant="secondary"
-                aria-pressed={preset?.id === item.id}
-                onClick={() => applyPreset(item)}
-              >
-                {item.label}
-              </Button>
-            ))}
-          </div>
-        </Card>
-        <Card title="Cấu hình">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Nhà cung cấp" hint={source("provider")}>
-              <Select
-                options={PROVIDERS}
-                value={form.provider}
-                onChange={(e) => set("provider")(e.target.value)}
-              />
-            </Field>
-            <div>
-              <Field label="Model" hint={source("model")}>
-                <Input
-                  required
-                  list={MODEL_OPTIONS}
-                  value={form.model}
-                  placeholder="vd: deepseek-chat"
-                  onChange={(e) => set("model")(e.target.value)}
-                />
-              </Field>
-              <datalist id={MODEL_OPTIONS}>
-                {models.map((name) => (
-                  <option key={name} value={name} />
-                ))}
-              </datalist>
-              <Button variant="ghost" className="mt-1" busy={busy === "list"} onClick={listModels}>
-                Lấy danh sách model từ nhà cung cấp
-              </Button>
-            </div>
-            <Field
-              label="Địa chỉ API (base URL)"
-              hint={`${source("base_url")} - để trống dùng mặc định của nhà cung cấp`}
-            >
-              <Input
-                type="url"
-                value={form.base_url}
-                placeholder="https://api.deepseek.com/v1"
-                onChange={(e) => set("base_url")(e.target.value)}
-              />
-            </Field>
-            <Field label="Mức suy nghĩ" hint={source("reasoning")}>
-              <Select
-                options={REASONING}
-                value={form.reasoning}
-                onChange={(e) => set("reasoning")(e.target.value)}
-              />
-            </Field>
-            <Field label="Kiểu API (OpenAI-compatible)" hint={source("dialect")}>
-              <Select
-                options={DIALECTS}
-                value={form.dialect}
-                onChange={(e) => set("dialect")(e.target.value)}
-              />
-            </Field>
-          </div>
-        </Card>
+      <Card title="Đang dùng" aside={inUseKey(shown)}>
+        <p className="text-body text-ink">
+          <b>{shown.model || "Chưa chọn model"}</b>{" "}
+          <span className="text-ink-soft">({inUseSource(shown, entries)})</span>
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button variant="secondary" busy={busy === "test"} onClick={testInUse}>
+            Gọi thử
+          </Button>
+          {shown.stored && (
+            <Button variant="ghost" busy={busy === "reset"} onClick={backToProfile}>
+              Về cấu hình profile
+            </Button>
+          )}
+        </div>
+      </Card>
+      {message && <Notice tone={message.tone}>{message.text}</Notice>}
+      {editing ? (
+        <ModelEntryForm
+          key={editing === "new" ? "new" : editing.id}
+          editing={editing === "new" ? null : editing}
+          entries={entries}
+          onSaved={saved}
+          onCancel={() => setEditing(null)}
+        />
+      ) : (
         <Card
-          title="Khóa API"
+          title="Danh sách model"
           aside={
-            shown.api_key_broken ? (
-              <Badge tone="danger">Khóa đã lưu không đọc được</Badge>
-            ) : shown.sources.api_key === "db" ? (
-              <Badge tone="success">Đã có khóa: {shown.api_key}</Badge>
-            ) : (
-              <Badge tone="warning">Chưa có khóa</Badge>
+            entries.length > 0 && (
+              <span className="text-small text-ink-soft">{brandCounts(entries)}</span>
             )
           }
         >
-          <Field
-            label="Khóa mới"
-            hint="Để trống để giữ khóa đang có. Khóa được mã hóa và không bao giờ hiện lại."
-          >
-            <Input
-              id={KEY_FIELD}
-              type="password"
-              autoComplete="off"
-              value={form.api_key}
-              onChange={(e) => set("api_key")(e.target.value)}
-            />
-          </Field>
-          {preset?.keyUrl && (
-            <p className="mt-2 text-small text-ink-soft">
-              Lấy khóa {preset.label} ở{" "}
-              <a
-                href={preset.keyUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-link underline underline-offset-2"
-              >
-                {new URL(preset.keyUrl).host}
-              </a>
-              .
-            </p>
-          )}
-          {shown.sources.api_key === "db" && (
-            <Button variant="ghost" className="mt-2" busy={busy === "key"} onClick={removeKey}>
-              Xóa khóa đã lưu
-            </Button>
+          {entries.length === 0 ? (
+            <Empty>Chưa có model nào trong danh sách. Bấm "+ Thêm model" để thêm.</Empty>
+          ) : (
+            <div className="space-y-5">
+              {groups.map((group) => (
+                <section key={group.brand} aria-label={`Model ${group.brand}`}>
+                  <h3 className="mb-1 text-label font-semibold text-ink-soft">
+                    {group.brand} ({group.entries.length})
+                  </h3>
+                  <ul className="divide-y divide-line">
+                    {group.entries.map((entry) => (
+                      <li key={entry.id}>
+                        <EntryRow
+                          entry={entry}
+                          busy={busy}
+                          onUse={() => use(entry)}
+                          onTest={() => testEntry(entry)}
+                          onEdit={() => setEditing(entry)}
+                          onRemove={() => remove(entry)}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
           )}
         </Card>
-        {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
-        <div className="flex flex-wrap gap-2">
-          <Button type="submit" busy={busy === "save"}>
-            Lưu
+      )}
+      {confirmDialog}
+    </div>
+  );
+}
+
+function inUseKey(shown: ModelShown) {
+  if (shown.api_key_broken) return <Badge tone="danger">Khóa đã lưu không đọc được</Badge>;
+  if (!shown.api_key) return <Badge tone="warning">Chưa có khóa</Badge>;
+  return <Badge tone="success">Có khóa: {shown.api_key}</Badge>;
+}
+
+function keyBadge(entry: ModelEntry) {
+  if (entry.api_key_broken) return <Badge tone="danger">Khóa không đọc được</Badge>;
+  if (!entry.has_key) return <Badge tone="warning">Chưa có khóa</Badge>;
+  return <Badge>{entry.api_key}</Badge>;
+}
+
+function EntryRow({
+  entry,
+  busy,
+  onUse,
+  onTest,
+  onEdit,
+  onRemove,
+}: {
+  entry: ModelEntry;
+  busy: string;
+  onUse: () => void;
+  onTest: () => void;
+  onEdit: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-3 px-1 py-3">
+      <div className="min-w-0 flex-1 basis-56">
+        <p className="truncate font-semibold text-ink">{entry.label}</p>
+        <p className="truncate text-small text-ink-soft">{entry.model}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        {keyBadge(entry)}
+        {entry.active && <Badge tone="success">Đang dùng</Badge>}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {!entry.active && (
+          <Button
+            variant="secondary"
+            aria-label={`Dùng ${entry.label}`}
+            busy={busy === `use-${entry.id}`}
+            onClick={onUse}
+          >
+            Dùng
           </Button>
-          <Button variant="secondary" busy={busy === "test"} onClick={test}>
-            Gọi thử
-          </Button>
-          <Button variant="danger" busy={busy === "reset"} onClick={reset}>
-            Về cấu hình profile
-          </Button>
-        </div>
-      </form>
+        )}
+        <Button
+          variant="ghost"
+          aria-label={`Gọi thử ${entry.label}`}
+          busy={busy === `test-${entry.id}`}
+          onClick={onTest}
+        >
+          Gọi thử
+        </Button>
+        <Button variant="ghost" aria-label={`Sửa ${entry.label}`} onClick={onEdit}>
+          Sửa
+        </Button>
+        <Button
+          variant="ghost"
+          aria-label={`Xóa ${entry.label}`}
+          busy={busy === `remove-${entry.id}`}
+          onClick={onRemove}
+        >
+          Xóa
+        </Button>
+      </div>
     </div>
   );
 }

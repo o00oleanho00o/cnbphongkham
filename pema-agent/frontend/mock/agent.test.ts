@@ -108,6 +108,39 @@ describe("the fake agent's dashboard routes", () => {
     });
   });
 
+  it("adds_uses_tests_and_removes_a_model_of_the_list_without_returning_its_key", async () => {
+    const headers = await signed();
+    const call = (path: string, method: string, body?: unknown) =>
+      fetch(`${base}/v1/admin/model/entries${path}`, {
+        method,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+
+    const added = await call("", "POST", {
+      label: "DeepSeek thử",
+      provider: "openai-compatible",
+      model: "deepseek-v4-pro",
+      api_key: "sk-test-key",
+    });
+    const entry = (await added.json()) as { id: string; api_key: string; active: boolean };
+    const used = await call(`/${entry.id}/use`, "POST");
+    const listed = (await (await call("", "GET")).json()) as {
+      entries: { id: string; active: boolean }[];
+    };
+    const tested = await call(`/${entry.id}/test`, "POST");
+    const removed = await call(`/${entry.id}`, "DELETE");
+    const missing = await call(`/${entry.id}/use`, "POST");
+
+    expect(added.status).toBe(201);
+    expect(entry).toMatchObject({ api_key: "sk-…mẫu", active: false });
+    expect(await used.json()).toMatchObject({ model: "deepseek-v4-pro", entry_id: entry.id });
+    expect(listed.entries.filter((e) => e.active).map((e) => e.id)).toEqual([entry.id]);
+    expect(tested.status).toBe(200);
+    expect(removed.status).toBe(200);
+    expect(missing.status).toBe(404);
+  });
+
   it("switches_a_plugin_off_and_on_in_the_listing", async () => {
     const headers = await signed();
     const off = await fetch(`${base}/v1/admin/plugins/zalo/disable`, { method: "POST", headers });

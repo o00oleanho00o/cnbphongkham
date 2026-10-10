@@ -1072,6 +1072,18 @@ Steps (each: commit, stop, report):
     provider's list: `POST /v1/admin/model/list` (`agent_app/model_catalog.py`, the provider's own SDK
     `models.list()` with the effective settings overlaid by what is typed; nothing stored; 502 + error kind on a
     refusal). Also the overview warns while no model name or key is set.
+  - **List of models (2026-10-10):** the Model page keeps several models, each with its own encrypted key, one in
+    use. Table `agent_rt.agent_model_entry` + column `agent_model_settings.entry_id` (migration
+    `0011_model_entries`), `agent_app/model_entries.py` (stores), `ModelAdmin.entries/add_entry/update_entry/
+    delete_entry/use_entry/test_entry`, routes `/v1/admin/model/entries[/{id}[/use|/test]]`. Using a model COPIES its
+    fields and sealed key into the one settings row, so `DynamicModel` and `agent model` are unchanged; `entry_id`
+    says which entry is in use and goes NULL when the settings are changed by hand (`PATCH /v1/admin/model`).
+    Editing the model in use applies it again; removing it leaves the settings, detached. An existing hand-set
+    configuration stays as "chỉnh tay" (its key cannot be read back to make an entry: add the model to the list and
+    paste the key again). Frontend: `model-page.tsx`, `model-entry-form.tsx`, `lib/agent/model-entries.ts`
+    (providers by address, labels "DeepSeek 2", grouping). Also fixed: the model-list call sent `base_url: ""`,
+    which the route's URL pattern refuses; empty fields are now left out. Not done: no automatic fallback to
+    another model when the one in use fails (a possible next step), and no `agent model` CLI commands for the list.
   - **Sessions, trace, usage from zalo-agent (2026-10-10, step 1 of 2):** `agent_app/activity.py` + admin routes
     `GET/DELETE /v1/admin/sessions[/{id}]`, `GET /v1/admin/traces[/{turn_id}]`, `GET /v1/admin/usage?days=` (paged,
     one query each, admin scope; tested through the gateway and against Postgres in `tests/test_activity_db.py`, run

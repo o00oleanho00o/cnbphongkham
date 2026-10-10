@@ -33,6 +33,12 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 - Web canvas target: none (no canvas frame for the agent pages)
 - Logged by: sessions, trace and usage
 
+### 2026-10-10 · change · Model agent: danh sách nhiều model, mẫu đổi màu khi chọn
+- Where: `src/components/agent/pages/model-page.tsx`, `src/components/agent/pages/model-entry-form.tsx` · route `/admin/agent/model`
+- Change: the page no longer is one form. Top card "Đang dùng" (model in use, where it comes from: "từ danh sách: <tên>", "chỉnh tay" or "theo cấu hình của profile"; badge of the key; "Gọi thử", "Về cấu hình profile"). Card "Danh sách model" lists every model the agent keeps ready, grouped by provider with counts ("2 DeepSeek · 1 OpenAI", headings "DeepSeek (2)"): label, model name, masked key or "Chưa có khóa", badge "Đang dùng", row buttons "Dùng", "Gọi thử", "Sửa", "Xóa" (confirmation "Xóa <tên>?"). "+ Thêm model" opens the form: card "Mẫu có sẵn" (the chosen preset button turns primary and is `aria-pressed`; a second key of the same provider is named "DeepSeek 2", "DeepSeek 3"...) and card "Model mới"/"Sửa <tên>" with Tên trong danh sách, Nhà cung cấp, Model (still with "Lấy danh sách model từ nhà cung cấp"), Địa chỉ API, Mức suy nghĩ, Kiểu API, Khóa API; buttons "Thêm vào danh sách"/"Lưu thay đổi" and "Hủy". The old single form with "Lưu" is gone.
+- Web canvas target: none (no canvas frame for the agent pages)
+- Logged by: model list
+
 ### 2026-10-10 · add · Model agent: mẫu có sẵn và danh sách model từ nhà cung cấp
 - Where: `src/components/agent/pages/model-page.tsx` · route `/admin/agent/model`
 - Change: a new card "Mẫu có sẵn" above "Cấu hình" with buttons DeepSeek, OpenAI, Anthropic, OpenRouter, Gemini, Ollama (máy nội bộ); a click fills provider, base URL, model (DeepSeek `deepseek-v4-pro`, Anthropic `claude-sonnet-5-5`, the others empty) and API kind, resets "Mức suy nghĩ", saves nothing, focuses "Khóa mới" and says "Đã điền mẫu DeepSeek. Dán khóa API rồi bấm Lưu."; under the key field "Lấy khóa DeepSeek ở platform.deepseek.com." links out. Under the model field a quiet button "Lấy danh sách model từ nhà cung cấp" asks the provider (through the agent, with what is typed, nothing saved); the model field then suggests the names ("Có N model: chọn trong ô Model hoặc gõ tay.") and still takes a typed name; a refusal says e.g. "Khóa API sai hoặc hết hạn. Vẫn gõ tên model tay được."

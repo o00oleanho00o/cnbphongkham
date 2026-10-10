@@ -153,6 +153,8 @@ type ModelShown = {
   api_key: string;
   api_key_broken: boolean;
   sources: Record<string, "db" | "profile" | "unset">;
+  stored: boolean;
+  entry_id: string | null;
 };
 
 const MODEL_FROM_PROFILE: ModelShown = {
@@ -171,6 +173,8 @@ const MODEL_FROM_PROFILE: ModelShown = {
     dialect: "profile",
     api_key: "unset",
   },
+  stored: false,
+  entry_id: null,
 };
 
 let model: ModelShown = structuredClone(MODEL_FROM_PROFILE);
@@ -186,8 +190,99 @@ function patchModel(changes: Record<string, string | null>): ModelShown {
     Object.assign(next, { [key]: value });
     next.sources[key] = "db";
   });
+  next.stored = true;
+  next.entry_id = null;
   model = next;
   return model;
+}
+
+type EntryFields = {
+  label: string;
+  provider: string;
+  model: string;
+  base_url: string | null;
+  reasoning: string | null;
+  dialect: string | null;
+};
+type EntryRow = EntryFields & { id: string; has_key: boolean };
+
+const sampleEntry = (id: string, fields: EntryFields, hasKey = true): EntryRow => ({
+  id: id.repeat(32).slice(0, 32),
+  has_key: hasKey,
+  ...fields,
+});
+
+let entries: EntryRow[] = [
+  sampleEntry("a", {
+    label: "DeepSeek công ty",
+    provider: "openai-compatible",
+    model: "deepseek-v4-pro",
+    base_url: "https://api.deepseek.com",
+    reasoning: null,
+    dialect: "deepseek",
+  }),
+  sampleEntry("b", {
+    label: "DeepSeek dự phòng",
+    provider: "openai-compatible",
+    model: "deepseek-v4-flash",
+    base_url: "https://api.deepseek.com",
+    reasoning: null,
+    dialect: "deepseek",
+  }),
+  sampleEntry("c", {
+    label: "OpenAI chăm sóc khách",
+    provider: "openai-compatible",
+    model: "gpt-5-mini",
+    base_url: "https://api.openai.com/v1",
+    reasoning: null,
+    dialect: "openai",
+  }),
+  sampleEntry(
+    "d",
+    {
+      label: "Claude thử",
+      provider: "anthropic",
+      model: "claude-sonnet-5-5",
+      base_url: null,
+      reasoning: null,
+      dialect: null,
+    },
+    false,
+  ),
+];
+
+const entryShown = (entry: EntryRow) => ({
+  ...entry,
+  api_key: entry.has_key ? "sk-…mẫu" : "",
+  api_key_broken: false,
+  active: model.entry_id === entry.id,
+});
+
+function changeEntry(ctx: Ctx): Reply {
+  const found = entries.find((e) => e.id === ctx.params.entry_id);
+  if (!found) return gatewayError(404, "not_found", "no such model in the list");
+  const { api_key: key, ...fields } = bodyOf<Record<string, string | null>>(ctx);
+  // A key not sent or sent empty is kept, null removes it, a value replaces it.
+  const hasKey = key === undefined || key === "" ? found.has_key : key !== null;
+  const next: EntryRow = { ...found, ...fields, has_key: hasKey };
+  entries = entries.map((e) => (e.id === next.id ? next : e));
+  if (model.entry_id === next.id) applyEntry(next);
+  return { body: entryShown(next) };
+}
+
+function applyEntry(entry: EntryRow): void {
+  model = {
+    ...model,
+    provider: entry.provider,
+    model: entry.model,
+    base_url: entry.base_url,
+    reasoning: entry.reasoning,
+    dialect: entry.dialect,
+    api_key: entry.has_key ? "sk-…mẫu" : "",
+    sources: { ...model.sources, api_key: entry.has_key ? "db" : "unset" },
+    stored: true,
+    entry_id: entry.id,
+  };
 }
 
 type PluginShown = {
@@ -555,6 +650,45 @@ export function buildAgentRouter(): Router {
   r.delete("/v1/admin/model", null, (): Reply => {
     model = structuredClone(MODEL_FROM_PROFILE);
     return { body: model };
+  });
+  r.get("/v1/admin/model/entries", null, (): Reply => ({
+    body: { entries: entries.map(entryShown) },
+  }));
+  r.post("/v1/admin/model/entries", null, (ctx): Reply => {
+    const body = bodyOf<Partial<EntryFields> & { api_key?: string }>(ctx);
+    const row: EntryRow = {
+      id: randomUUID().replaceAll("-", ""),
+      label: body.label ?? "",
+      provider: body.provider ?? "openai-compatible",
+      model: body.model ?? "",
+      base_url: body.base_url ?? null,
+      reasoning: body.reasoning ?? null,
+      dialect: body.dialect ?? null,
+      has_key: Boolean(body.api_key),
+    };
+    entries = [...entries, row];
+    return { status: 201, body: entryShown(row) };
+  });
+  r.patch("/v1/admin/model/entries/{entry_id}", null, (ctx): Reply => changeEntry(ctx));
+  r.delete("/v1/admin/model/entries/{entry_id}", null, (ctx): Reply => {
+    const found = entries.find((e) => e.id === ctx.params.entry_id);
+    if (!found) return gatewayError(404, "not_found", "no such model in the list");
+    entries = entries.filter((e) => e !== found);
+    if (model.entry_id === found.id) model = { ...model, entry_id: null };
+    return { body: { deleted: found.id } };
+  });
+  r.post("/v1/admin/model/entries/{entry_id}/use", null, (ctx): Reply => {
+    const found = entries.find((e) => e.id === ctx.params.entry_id);
+    if (!found) return gatewayError(404, "not_found", "no such model in the list");
+    applyEntry(found);
+    return { body: model };
+  });
+  r.post("/v1/admin/model/entries/{entry_id}/test", null, (ctx): Reply => {
+    const found = entries.find((e) => e.id === ctx.params.entry_id);
+    if (!found) return gatewayError(404, "not_found", "no such model in the list");
+    return found.has_key
+      ? { body: { ok: true, model: found.model, latency_ms: 380 } }
+      : { status: 502, body: { ok: false, model: found.model, error_kind: "config" } };
   });
   r.post("/v1/admin/model/list", null, (): Reply => ({
     body: { ok: true, models: ["deepseek-v4-flash", "deepseek-v4-pro"] },
