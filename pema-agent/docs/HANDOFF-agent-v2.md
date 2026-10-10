@@ -854,7 +854,11 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
-- First action next session: the Zalo plugin P0–P5d is done (branch `feat/zalo-plugin`); left: a phone QR scan
+- **Next action (2026-10-10): RAG plugin `knowledge`, step 0 of [PLAN-knowledge-plugin.md](PLAN-knowledge-plugin.md)**
+  (core: `ctx.register_migrations`, `ctx.model`, `ToolOutput.detail` into the trace, profile `max_steps` 10), once
+  the user says go. The plan and its 4 questions are approved; nothing of it is coded yet. Then the rest of this
+  paragraph still holds:
+- Earlier first action: the Zalo plugin P0–P5d is done (branch `feat/zalo-plugin`); left: a phone QR scan
   and a message round trip in Docker (needs the user's secondary nick and a model key). Plan C (one sign-in,
   below): C1, C2, C3a, C3b-1, C3b-2, C4 done (C4 without the phone scan); next: the analysis "all is plugin" (see C4), the QR scan and a message
   round trip, screenshots and `pnpm smoke`, then merge.
@@ -1218,7 +1222,8 @@ Mỗi câu trả lời của agent được dựng từ 5 tầng; tầng 4 là R
 - **Hiệu lực khi sửa (đính chính):** `PromptBuilder` đưa persona/rules vào fingerprint, nên đổi ghi đè thì MỌI
   phiên đang mở dựng lại system prompt ở lượt kế tiếp (một lần mất prompt cache, có dòng log "prompt cache
   break"), không phải "chỉ phiên mới". Phiên Zalo sống nhiều ngày nên đây là hành vi hợp lý cho thay đổi do admin
-  chủ động; muốn "chỉ phiên mới" thì đọc ghi đè lúc tạo phiên và để ngoài fingerprint. Mặc định: lượt kế tiếp.
+  chủ động; muốn "chỉ phiên mới" thì đọc ghi đè lúc tạo phiên và để ngoài fingerprint. Mặc định: lượt kế tiếp
+  (user đồng ý 2026-10-10).
   Cần cơ chế làm mới `PromptEnv` theo phiên bản (kiểu `DynamicModel`: hỏi version tối đa 5 s/lần).
 
 Hình dạng: tab "Hiểu biết" trong Điều khiển agent (tên chưa chốt: "Hiểu biết" hay "Tri thức"), gom 4 mục; mục Tài liệu
