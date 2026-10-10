@@ -29,6 +29,7 @@ from collections.abc import AsyncGenerator, Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Literal
+from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
@@ -36,6 +37,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text as sql
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from agent_app.activity import Activity
 from agent_app.auth import ADMIN, CHAT, Authenticator, Principal
 from agent_app.channel_hub import ChannelHub
 from agent_app.dispatcher import Dispatcher, StreamObserver
@@ -258,6 +260,7 @@ def create_app(
     plugins: PluginManager | None = None,
     channels: ChannelHub | None = None,
     jobs: JobRunner | None = None,
+    activity: Activity | None = None,
 ) -> FastAPI:
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
@@ -335,6 +338,15 @@ def create_app(
 
     if (admin, plugins, channels, jobs) != (None, None, None, None):
         _add_admin_routes(app, gate, admin, plugins, channels, jobs)
+        profile = dispatcher.agent.profile
+        _add_activity_routes(
+            app,
+            Depends(gate.dependency(ADMIN)),
+            activity
+            or Activity(
+                db, agent=profile.agent.name, tenant_id=dispatcher.tenant_id, timezone=profile.agent.timezone
+            ),
+        )
     if plugins is not None:
         hits = WindowLimiter(HOOK_CALLS_PER_WINDOW, HOOK_WINDOW_S)
 
@@ -414,6 +426,51 @@ class PluginRoutes:
             await _error(404, "not_found", "no such plugin route")(scope, receive, send)
             return
         await target({**scope, "root_path": f"{root}/{name}"}, receive, send)
+
+
+def _add_activity_routes(app: FastAPI, authorized: Any, activity: Activity) -> None:
+    """What the agent did: chat sessions (read, delete), the trace of each turn, the usage per day."""
+
+    @app.get("/v1/admin/sessions", dependencies=[authorized])
+    async def list_sessions(channel: str = "", q: str = "", page: int = 0) -> dict[str, Any]:
+        return (await activity.sessions(channel=channel or None, search=q, page=page)).to_json()
+
+    @app.get("/v1/admin/sessions/{session_id}", dependencies=[authorized])
+    async def show_session(session_id: str) -> Response:
+        found = await activity.session(session_id)
+        if found is None:
+            return _error(404, "not_found", "no such session")
+        return JSONResponse(found)
+
+    @app.delete("/v1/admin/sessions/{session_id}", dependencies=[authorized])
+    async def delete_session(session_id: str) -> Response:
+        if not await activity.delete_session(session_id):
+            return _error(404, "not_found", "no such session")
+        return JSONResponse({"deleted": session_id})
+
+    @app.get("/v1/admin/traces", dependencies=[authorized])
+    async def list_turns(
+        channel: str = "", session_id: str = "", errors_only: bool = False, page: int = 0
+    ) -> dict[str, Any]:
+        turns = await activity.turns(
+            channel=channel or None, session_id=session_id or None, errors_only=errors_only, page=page
+        )
+        return turns.to_json()
+
+    @app.get("/v1/admin/traces/{turn_id}", dependencies=[authorized])
+    async def show_turn(turn_id: str) -> Response:
+        try:
+            UUID(turn_id)
+        except ValueError:
+            return _error(404, "not_found", "no such turn")
+        found = await activity.turn(turn_id)
+        if found is None:
+            return _error(404, "not_found", "no such turn")
+        return JSONResponse(found)
+
+    @app.get("/v1/admin/usage", dependencies=[authorized])
+    async def usage(days: int = 14) -> dict[str, Any]:
+        return await activity.usage(days)
 
 
 def _add_admin_routes(
