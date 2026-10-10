@@ -36,9 +36,7 @@ if (dirIdx >= 0) {
 const ROUTE_PAGES = {
   "pages/contacts-page": "src/app/(admin)/admin/contacts/page.tsx",
   "pages/friends-page": "src/app/(admin)/admin/friends/page.tsx",
-  "pages/knowledge-page": "src/app/(admin)/admin/kb/page.tsx",
   "pages/accounts-page": "src/app/(admin)/admin/accounts/page.tsx",
-  "pages/logs-page": "src/app/(admin)/admin/logs/page.tsx",
 };
 
 /** web/src-relative path without extension -> target file (relative to frontend/) */

@@ -32,7 +32,10 @@ const FINANCE_TABS = [
 ];
 /** Tabs of the agent entry (`/admin/agent`): its own pages, next to the pages the plugins ship. */
 const AGENT_TABS = ["/admin/agent/overview", "/admin/agent/model", "/admin/agent/plugins"];
-/** Pages of the old agent layer, deleted in plan C (the agent's pages live under `/admin/agent`). */
+/**
+ * Pages of the old agent layer and of the care/CSKH/clinic-administration screens, deleted (the agent's pages live
+ * under `/admin/agent`; the agent is one menu entry).
+ */
 const REMOVED_AGENT_PAGES = [
   "/admin/overview",
   "/admin/traces",
@@ -44,11 +47,18 @@ const REMOVED_AGENT_PAGES = [
   "/admin/mcp",
   "/admin/policy",
   "/admin/tuning",
+  "/admin/care",
+  "/care",
+  "/admin/roster",
+  "/admin/kb",
+  "/admin/users",
+  "/admin/logs",
+  "/review",
+  "/templates",
 ];
 const NOT_IN_MENU = [
   "/",
   "/login",
-  "/admin/care",
   "/admin/auth",
   "/me/notifications",
   "/dev/kit",
@@ -96,9 +106,7 @@ describe("menu order of the old Pema Clinic Web", () => {
       "Không gian làm việc",
       "Quản lý",
       "Phân tích",
-      "Zalo & CSKH",
-      "Care agent",
-      "Quản trị agent",
+      "Agent",
     ]);
   });
 });
@@ -142,7 +150,7 @@ describe("every screen stays reachable", () => {
 });
 
 describe("the agent plugin pages", () => {
-  const agentSection = NAV_SECTIONS.find((s) => s.title === "Quản trị agent");
+  const agentSection = NAV_SECTIONS.find((s) => s.title === "Agent");
 
   it("has_one_entry_for_the_pages_the_agent_plugins_ship", () => {
     const entry = agentSection?.items.find((i) => i.to === "/admin/agent");
@@ -158,7 +166,7 @@ describe("the agent plugin pages", () => {
 
     expect(paths.filter(covered)).toEqual([]);
     expect(pageRoutes.filter(covered)).toEqual([]);
-    expect(paths).toEqual(expect.arrayContaining(["/admin/kb", "/admin/users", "/admin/logs"]));
+    expect(paths).toContain("/admin/agent");
   });
 
   it("drops_the_zalo_pages_the_plugin_pages_replace", () => {
@@ -178,10 +186,10 @@ describe("the agent plugin pages", () => {
 
 describe("visibleSections", () => {
   it("hides_items_the_role_cannot_use_and_drops_empty_sections", () => {
-    const sections = visibleSections((needs) => needs.includes("review.read"));
+    const sections = visibleSections((needs) => needs.includes("admin.agents"));
 
-    expect(sections.map((s) => s.title)).toEqual(["Zalo & CSKH"]);
-    expect(sections[0]?.items.map((i) => i.to)).toEqual(["/review"]);
+    expect(sections.map((s) => s.title)).toEqual(["Agent"]);
+    expect(sections[0]?.items.map((i) => i.to)).toEqual(["/admin/agent"]);
   });
 
   it("shows_a_planned_item_in_its_place_when_the_role_has_the_permission", () => {
@@ -211,15 +219,7 @@ describe("the accountant menu", () => {
       .map((i) => i.to);
 
     expect(paths).toEqual(expect.arrayContaining(["/patients", "/cashier", "/finance", "/guide"]));
-    for (const hidden of [
-      "/today",
-      "/inbox",
-      "/crm",
-      "/dashboard",
-      "/schedule",
-      "/studio",
-      "/review",
-    ]) {
+    for (const hidden of ["/today", "/inbox", "/crm", "/dashboard", "/schedule", "/studio"]) {
       expect(paths).not.toContain(hidden);
     }
   });
@@ -264,7 +264,7 @@ describe("homeFor", () => {
 
 describe("currentNavItem", () => {
   it("picks_the_most_specific_entry_for_a_nested_path", () => {
-    expect(currentNavItem("/admin/care/matrix")?.label).toBe("Ma trận ngưỡng");
+    expect(currentNavItem("/admin/agent/p/zalo/accounts")?.label).toBe("Điều khiển agent");
   });
 
   it("belongs_a_detail_page_to_its_list_entry", () => {

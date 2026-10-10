@@ -6,7 +6,7 @@
 import type { ReactNode } from "react";
 
 import { AgentPluginsProvider, useAgentPlugins } from "@/components/agent/agent-plugins";
-import { SubNav } from "@/components/care/care-ui";
+import { SubNav } from "@/components/agent/sub-nav";
 
 const OWN_PAGES = [
   { href: "/admin/agent/overview", label: "Tổng quan" },

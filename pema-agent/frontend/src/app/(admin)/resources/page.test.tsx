@@ -139,13 +139,10 @@ describe("doctor cards", () => {
     ).toBe("/schedule?doctor=doc-tam");
   });
 
-  it("tells_a_doctor_without_a_shift_where_to_set_one", async () => {
+  it("says_a_doctor_has_no_shift_yet", async () => {
     renderPage(MANAGER);
 
     expect(await screen.findByText(/Chưa thiết lập ca làm việc/)).toBeTruthy();
-    expect(
-      screen.getByRole("link", { name: "Thiết lập ở Kỹ năng và ca trực" }).getAttribute("href"),
-    ).toBe("/admin/care/staff");
   });
 
   it("asks_for_the_chosen_day", async () => {

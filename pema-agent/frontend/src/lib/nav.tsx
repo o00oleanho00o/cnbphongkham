@@ -1,8 +1,7 @@
 // Navigation of the single Pema dashboard. Order and labels of the first three sections are the old Pema
 // Clinic Web sidebar (prototype/shared/clinic.js `nav`: dashboard, today, schedule, patients, followups,
-// studio; "Quản lý": resources, services, cashier, finance; "Phân tích": ask, guide). The next three
-// sections group what this app added: Zalo & CSKH, the care agent, and the AI administration ported from
-// zalo-agent (its SECTIONS array in layout/sidebar-nav.tsx).
+// studio; "Quản lý": resources, services, cashier, finance; "Phân tích": ask, guide). The last section is the
+// agent: one entry, its pages are tabs.
 //
 // `needs` is "any of": an entry is SHOWN when the BE's permission list for the role contains one of
 // them. This is a convenience only; every request is authorized by the BE.
@@ -12,25 +11,8 @@
 // Its `needs` is a placeholder until that step sets the real permission.
 import type { ReactNode, SVGProps } from "react";
 
-import {
-  IconBolt,
-  IconBot,
-  IconClock,
-  IconDatabase,
-  IconFileText,
-  IconGear,
-  IconGrid,
-  IconHeart,
-  IconSliders,
-  IconUsers,
-} from "@/components/admin/shared/dashboard-icons";
-import {
-  IconClipboardCheck,
-  IconIdBadge,
-  IconInbox,
-  IconShieldCheck,
-  IconUser,
-} from "@/components/admin/shared/ops-icons";
+import { IconGrid, IconHeart, IconUsers } from "@/components/admin/shared/dashboard-icons";
+import { IconClipboardCheck, IconInbox, IconUser } from "@/components/admin/shared/ops-icons";
 import type { Permission } from "@/lib/session/session-context";
 import {
   IconBanknote,
@@ -150,65 +132,11 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: "Zalo & CSKH",
+    title: "Agent",
     items: [
-      {
-        to: "/review",
-        label: "Hàng đợi duyệt",
-        tabLabel: "Duyệt",
-        icon: IconShieldCheck,
-        needs: ["review.read"],
-        tab: true,
-      },
-      { to: "/templates", label: "Mẫu tin", icon: IconFileText, needs: ["kb.read"] },
-      { to: "/admin/roster", label: "Lịch trực", icon: IconCalendar, needs: ["roster.read"] },
-    ],
-  },
-  {
-    title: "Care agent",
-    items: [
-      {
-        to: "/care/handoffs",
-        label: "Yêu cầu chuyển giao",
-        tabLabel: "Chờ tôi",
-        icon: IconBot,
-        needs: ["care.read"],
-        tab: true,
-      },
-      {
-        to: "/admin/care/staff",
-        label: "Kỹ năng và ca trực",
-        icon: IconUsers,
-        needs: ["care.admin"],
-      },
-      { to: "/admin/care/on-call", label: "Số trực 24/24", icon: IconClock, needs: ["care.admin"] },
-      {
-        to: "/admin/care/matrix",
-        label: "Ma trận ngưỡng",
-        icon: IconSliders,
-        needs: ["care.matrix"],
-      },
-      {
-        to: "/admin/care/timing",
-        label: "SLA và khung giờ",
-        icon: IconGear,
-        needs: ["care.admin"],
-      },
-      { to: "/admin/care/alerts", label: "Cảnh báo agent", icon: IconBolt, needs: ["care.admin"] },
-    ],
-  },
-  {
-    title: "Quản trị agent",
-    items: [
-      // The agent service's own pages (overview, model, plugins) and the pages its plugins ship (Zalo accounts,
-      // contacts, friends, groups, bridge), hosted under /admin/agent.
+      // One entry for the whole agent: its own pages (overview, model, plugins) and the pages each plugin ships
+      // (Zalo accounts, contacts, friends, groups, bridge) are tabs under /admin/agent.
       { to: "/admin/agent", label: "Điều khiển agent", icon: IconPuzzle, needs: ["admin.agents"] },
-      { to: "/admin/kb", label: "Kho tri thức", icon: IconFileText, needs: ["kb.read"] },
-      { to: "/admin/users", label: "Nhân viên", icon: IconIdBadge, needs: ["admin.users.read"] },
-      { to: "/admin/logs", label: "Logs", icon: IconDatabase, needs: ["admin.logs"] },
-      // Not in the menu: these pages call clinic API routes removed with the old agent layer (`588f18fc`): overview
-      // `/admin/usage/overview`, traces, threads, schedules, memory, agents, tools, mcp, policy, tuning. The pages
-      // stay in the code until the agent service has the routes (then they go to the agent's own pages).
     ],
   },
 ];

@@ -2,7 +2,7 @@
 // 1280x720, 1024x768, 390x844) against `pnpm dev:mock`. It also reports what an exit code cannot say:
 // page errors, console errors, failed requests, and any document-level horizontal overflow.
 //
-//   SHOTS_BASE_URL=http://localhost:3000 SHOTS_ROLE=owner SHOTS_ROUTES=/today,/review pnpm shots
+//   SHOTS_BASE_URL=http://localhost:3000 SHOTS_ROLE=owner SHOTS_ROUTES=/today,/inbox pnpm shots
 //   (SHOTS_VIEWPORTS=390x844,1440x900 limits the viewports)
 import { mkdirSync } from "node:fs";
 
@@ -24,25 +24,10 @@ const ROUTES = [
   "/today",
   "/inbox",
   "/inbox?c=00000000-0000-4000-8007-000000000001",
-  "/review",
-  "/review?i=00000000-0000-4000-8009-000000000001",
   "/patients",
   "/patients/00000000-0000-4000-8002-000000000001",
-  "/templates",
-  "/admin/kb",
   "/admin/agent/p/zalo/accounts",
-  "/admin/logs",
-  "/admin/users",
   "/admin/auth",
-  "/care/handoffs",
-  "/care/patients/00000000-0000-4000-8002-000000000007/timeline",
-  "/care/patients/00000000-0000-4000-8002-000000000007/release",
-  "/care/patients/00000000-0000-4000-8002-000000000007/tell-agent",
-  "/admin/care/staff",
-  "/admin/care/on-call",
-  "/admin/care/matrix",
-  "/admin/care/timing",
-  "/admin/care/alerts",
 ];
 
 const EMAIL: Record<string, string> = {

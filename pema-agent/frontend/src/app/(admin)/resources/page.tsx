@@ -3,7 +3,7 @@
 // Bác sĩ & phòng: the doctors (account, shift and the load of a chosen day), the treatment rooms and the room
 // blocks (`GET /api/v1/resources?day=`, `POST/PATCH /api/v1/rooms`, `POST/DELETE /api/v1/room-blocks`).
 // Old web: `operations-ui.js` `resources()`. Differences, on purpose: a doctor is a staff account and the shift is
-// the weekly shift of the care staff screen (`/admin/care/staff`), so nothing is typed twice here; rooms and blocks
+// the weekly shift of its account (set outside this screen), so nothing is typed twice here; rooms and blocks
 // are new tables. Everyone who sees the schedule reads; the owner and the manager (`admin.rules`) change rooms and
 // blocks. Layout: 1 column on a phone, 2 from `sm`, 3 from 1280, 4 from 1600.
 import Link from "next/link";
@@ -43,15 +43,7 @@ import { FIELD_CONTROL_CLASS } from "@/ui/field";
 import { IconStethoscope } from "@/ui/icons";
 import { Workspace } from "@/ui/workspace";
 
-function DoctorCard({
-  doctor,
-  day,
-  canEditShift,
-}: {
-  doctor: DoctorRow;
-  day: string;
-  canEditShift: boolean;
-}) {
+function DoctorCard({ doctor, day }: { doctor: DoctorRow; day: string }) {
   const percent = loadPercent(doctor.booked_minutes, doctor.shift_minutes);
   const pause = breakLabel(doctor.shift);
   return (
@@ -83,17 +75,7 @@ function DoctorCard({
       </div>
       <p className="mt-2 text-label text-ink-soft">{loadLine(doctor)}</p>
       {!doctor.has_shift && (
-        <p className="mt-2 text-label text-warning">
-          Chưa thiết lập ca làm việc.
-          {canEditShift && (
-            <>
-              {" "}
-              <Link href="/admin/care/staff" className="underline">
-                Thiết lập ở Kỹ năng và ca trực
-              </Link>
-            </>
-          )}
-        </p>
+        <p className="mt-2 text-label text-warning">Chưa thiết lập ca làm việc.</p>
       )}
       <div className="mt-5">
         <Link
@@ -227,12 +209,7 @@ export default function ResourcesPage() {
       {data && data.doctors.length > 0 && (
         <Workspace layout="cards" className="mb-6">
           {data.doctors.map((doctor) => (
-            <DoctorCard
-              key={doctor.user_id}
-              doctor={doctor}
-              day={data.day}
-              canEditShift={can("care.admin")}
-            />
+            <DoctorCard key={doctor.user_id} doctor={doctor} day={data.day} />
           ))}
         </Workspace>
       )}

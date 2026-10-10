@@ -13,7 +13,6 @@
 // The header carries "AI brief" (session.write: a template, a doctor approves it) and "Nhắn tin"
 // (conversation.reply); the cards of Tổng quan open "Thông tin cần nhớ", "Chăm sóc tại nhà" and
 // "Ngày dự kiến quay lại".
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -115,14 +114,6 @@ export function Patient360View({ data, onChanged }: { data: P360; onChanged: () 
             <Badge tone="red" dot={false}>
               Cần theo dõi
             </Badge>
-          )}
-          {can("care.read") && (
-            <Link
-              href={`/care/patients/${patient.id}/timeline`}
-              className="inline-flex min-h-11 items-center px-2 text-small font-semibold text-link hover:underline lg:min-h-9"
-            >
-              Agent chăm sóc
-            </Link>
           )}
           {can("session.write") && (
             <Button variant="secondary" onClick={() => setDialog("brief")}>

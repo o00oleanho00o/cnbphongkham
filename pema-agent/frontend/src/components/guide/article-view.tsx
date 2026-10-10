@@ -2,14 +2,12 @@
 
 // One guide article: the old `.guide-article` card (topic eyebrow, title, lead, body, "Đọc tiếp"). The body is the
 // Markdown of the knowledge-base source (`GET /api/v1/guide/articles/{id}`); it is shown as text, never as HTML.
-import Link from "next/link";
 import { useCallback } from "react";
 
 import { ArticleBody } from "@/components/guide/article-body";
 import { ListSkeleton, RetryNotice } from "@/components/ops/ops-ui";
 import { http, unwrap } from "@/lib/api/client";
 import { relatedArticles, topicLabel, type GuideArticleSummary } from "@/lib/guide/guide-view";
-import { useSession } from "@/lib/session/session-context";
 import { useLoad } from "@/lib/use-load";
 import { Badge } from "@/ui/badge";
 import { buttonClass } from "@/ui/button";
@@ -24,7 +22,6 @@ export function ArticleView({
   articles: readonly GuideArticleSummary[];
   onOpen: (id: string) => void;
 }) {
-  const { can } = useSession();
   const load = useCallback(
     (signal: AbortSignal) =>
       unwrap(
@@ -69,15 +66,6 @@ export function ArticleView({
               ))}
             </div>
           </footer>
-        )}
-        {can("kb.manage") && (
-          <p className="mt-5 text-label text-ink-soft">
-            Bài này là một nguồn trong{" "}
-            <Link href="/admin/kb" className="text-brand-600 underline">
-              Kho tri thức
-            </Link>
-            : sửa nội dung và nhãn ở đó.
-          </p>
         )}
       </article>
     </Card>

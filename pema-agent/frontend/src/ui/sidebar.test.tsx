@@ -39,13 +39,13 @@ const SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: "Care agent",
+    title: "Agent",
     items: [
       {
-        to: "/care/handoffs",
-        label: "Yêu cầu chuyển giao",
+        to: "/admin/agent",
+        label: "Điều khiển agent",
         icon: IconCalendar,
-        needs: ["care.read"],
+        needs: ["admin.agents"],
       },
     ],
   },
@@ -80,14 +80,14 @@ describe("Sidebar", () => {
     const nav = screen.getByRole("navigation", { name: "Chức năng" });
     expect(
       within(nav)
-        .getAllByText(/Không gian làm việc|Care agent/)
+        .getAllByText(/Không gian làm việc|Agent/)
         .map((n) => n.textContent),
-    ).toEqual(["Không gian làm việc", "Care agent"]);
+    ).toEqual(["Không gian làm việc", "Agent"]);
     expect(
       within(nav)
         .getAllByRole("link")
         .map((a) => a.getAttribute("href")),
-    ).toEqual(["/today", "/care/handoffs"]);
+    ).toEqual(["/today", "/admin/agent"]);
   });
 
   it("marks_the_current_screen", () => {
@@ -95,7 +95,7 @@ describe("Sidebar", () => {
 
     expect(screen.getByRole("link", { name: "Hôm nay" }).getAttribute("aria-current")).toBe("page");
     expect(
-      screen.getByRole("link", { name: "Yêu cầu chuyển giao" }).getAttribute("aria-current"),
+      screen.getByRole("link", { name: "Điều khiển agent" }).getAttribute("aria-current"),
     ).toBeNull();
   });
 
@@ -134,7 +134,7 @@ describe("Sidebar", () => {
 
     // jsdom cannot navigate: stop the default action once the link has handled the click
     document.addEventListener("click", (e) => e.preventDefault(), { once: true });
-    await userEvent.setup().click(screen.getByRole("link", { name: "Yêu cầu chuyển giao" }));
+    await userEvent.setup().click(screen.getByRole("link", { name: "Điều khiển agent" }));
 
     expect(closed).toEqual(["closed"]);
   });

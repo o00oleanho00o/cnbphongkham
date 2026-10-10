@@ -116,19 +116,6 @@ describe("guide page", () => {
     });
   });
 
-  it("someone_who_can_manage_the_kb_is_pointed_to_it_for_editing", async () => {
-    nav.search = "a=b";
-    renderGuide(["kb.read", "kb.manage"]);
-    expect(await screen.findByRole("link", { name: "Kho tri thức" })).toBeTruthy();
-  });
-
-  it("someone_without_kb_manage_gets_no_edit_pointer", async () => {
-    nav.search = "a=b";
-    renderGuide();
-    await screen.findByRole("heading", { name: "Cách thực hiện" });
-    expect(screen.queryByRole("link", { name: "Kho tri thức" })).toBeNull();
-  });
-
   it("an_empty_guide_explains_how_to_add_articles", async () => {
     api.get.mockReset().mockImplementation(() => reply([]));
     renderGuide();

@@ -1043,10 +1043,23 @@ Steps (each: commit, stop, report):
     `mock/contract.test.ts` as before; `apps/agent` sso and plugin-ui tests 18 passed. Real run: 8088 not
     reachable from the host, sign-in at `:3000` still reaches the agent (plugins, Zalo script 200), the four agent
     pages render with no console errors, the removed routes 404.
-  - **Next (not started): analysis "all is plugin"** against `E:\Desktop\clone-git` (Hermes, OpenClaw, claw-code,
-    zalo-agent, the DeepSeek harness if present): where the admin UI lives, what a plugin contributes (tools,
-    channels, pages, settings, jobs), one sign-in, what stays in the core. Output a comparison with `agentcore`,
-    `agent_app` and the plugins `web`, `sso`, `zalo`, `calculate`, then decide whether `web` goes for good.
+  - **Menu cleaned (2026-10-10, "all is plugin"):** the :3000 menu ends with one group "Agent" (Điều khiển agent;
+    overview, model, plugins and each plugin's pages are tabs). Deleted from `frontend`: `/review`, `/templates`,
+    `/admin/roster`, `/admin/kb`, `/admin/users`, `/admin/logs`, `/care/**`, `/admin/care/**` and the components and
+    helpers only they used (the clinic API routes are untouched; `mock/` still serves them). `SubNav` now lives in
+    `components/agent/sub-nav.tsx`. Checked: `tsc`, eslint, `pnpm inventory`, vitest of the frontend (only the two
+    known `mock/contract.test.ts` failures remain); `pnpm smoke` not run.
+    - **Open questions (not decided, safety rules untouched):** the doctor review of AI drafts (was `/review`) has no
+      screen now and the new agent writes nothing to that queue: it should come back as an approval gate plugin of
+      the agent. Staff accounts (was `/admin/users`, the accounts `sso` signs in) can only be created by seed or API
+      until another screen exists. `scripts/live-real-check.ts` still opens `/review` and needs a rewrite.
+  - **Target architecture (user's diagram, Copilot REQ 25):** `agentcore` (prompt, context, harness, loop, graph) +
+    `agent_app` (profile TOML, CLI, HTTP) + plugins through `agentcore.sdk` (`zalo_bot`, `knowledge_pg`,
+    `memory_consolidation`, `clinic_*`). Gaps found: no `agentcore.sdk` (plugins import `agent_app`, 14 places), no
+    graph, no plugin migrations (`register_migrations`), RAG still inside the clinic API (`pema/knowledge`), no
+    `kb_search` tool. Planned order: `agentcore.sdk` + import-linter rule, plugin migrations, plugin `knowledge`
+    (own tables, tsvector + pgvector, RRF, doctor approval of sources, tools `kb_search`/`kb_read`, pages under
+    Điều khiển agent), then Graph, `memory_consolidation`, `clinic_*`.
   - My first attempt ran in the project `cnbphongkham` and left four empty volumes (`cnbphongkham_agent-home`,
     `_pema-data`, `_pg-data`, `_redis-data`); `docker volume rm` of them was not allowed, remove them by hand.
 

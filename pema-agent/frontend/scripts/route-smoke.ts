@@ -25,17 +25,10 @@ type Expectation = {
   action: { role: Role; name: string };
 };
 
-const patientCare = (action: Expectation["action"]): Expectation => ({
-  heading: "",
-  action,
-});
-
 /** Redirect-only pages: where they must land. */
 const REDIRECTS: Readonly<Record<string, string>> = {
   "/": "/today",
-  "/admin/care": "/admin/care/staff",
   "/admin/agent": "/admin/agent/overview",
-  "/care/patients/[id]": "/care/patients/00000000-0000-4000-8002-000000000007/timeline",
 };
 
 const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
@@ -43,46 +36,15 @@ const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
   "/dashboard": { heading: "Tổng quan", action: { role: "button", name: "Tuần này" } },
   "/schedule": { heading: "Điều phối lịch", action: { role: "button", name: "7 ngày" } },
   "/inbox": { heading: "Inbox", action: { role: "textbox", name: "Tìm hội thoại" } },
-  "/review": { heading: "Hàng đợi duyệt AI", action: { role: "button", name: "Cần bác sĩ" } },
   "/patients": { heading: "Hồ sơ bệnh nhân", action: { role: "textbox", name: "Tìm bệnh nhân" } },
   "/patients/[id]": { heading: "", action: { role: "link", name: "Danh sách hồ sơ" } },
-  "/templates": {
-    heading: "Tin nhắn mẫu đã duyệt",
-    action: { role: "button", name: "Soạn mẫu mới" },
-  },
   "/ask": { heading: "Hỏi Pema", action: { role: "textbox", name: "Câu hỏi" } },
   "/guide": { heading: "Hướng dẫn sử dụng", action: { role: "searchbox", name: "Tìm chủ đề" } },
   "/crm": { heading: "Vòng đời khách hàng", action: { role: "button", name: "Đang điều trị" } },
-  "/care/handoffs": {
-    heading: "Yêu cầu đang chờ tôi",
-    action: { role: "button", name: "Tất cả" },
-  },
-  "/care/patients/[id]/timeline": patientCare({ role: "link", name: "Dòng thời gian" }),
-  "/care/patients/[id]/release": patientCare({ role: "link", name: "Trả lại cho agent" }),
-  "/care/patients/[id]/tell-agent": patientCare({ role: "link", name: "Nói với agent" }),
-  "/admin/care/staff": {
-    heading: "Agent chăm sóc",
-    action: { role: "link", name: "Kỹ năng và ca trực" },
-  },
-  "/admin/care/on-call": {
-    heading: "Agent chăm sóc",
-    action: { role: "button", name: "Thêm số trực" },
-  },
-  "/admin/care/matrix": {
-    heading: "Agent chăm sóc",
-    action: { role: "link", name: "Ma trận ngưỡng" },
-  },
-  "/admin/care/timing": {
-    heading: "Agent chăm sóc",
-    action: { role: "link", name: "SLA và khung giờ" },
-  },
-  "/admin/care/alerts": { heading: "Agent chăm sóc", action: { role: "link", name: "Cảnh báo" } },
-  "/admin/users": { heading: "Nhân viên", action: { role: "button", name: "Thêm nhân viên" } },
   "/admin/auth": {
     heading: "Tài khoản của tôi",
     action: { role: "button", name: "Đổi mật khẩu" },
   },
-  "/admin/kb": { heading: "Kho tri thức", action: { role: "button", name: "Thêm nguồn" } },
   "/admin/agent/overview": { heading: "Tổng quan", action: { role: "button", name: "Tải lại" } },
   "/admin/agent/model": { heading: "Model", action: { role: "button", name: "Lưu" } },
   "/admin/agent/plugins": { heading: "Plugins", action: { role: "button", name: "Cài đặt" } },
@@ -90,12 +52,10 @@ const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
     heading: "Tài khoản Zalo",
     action: { role: "button", name: "Thêm tài khoản" },
   },
-  "/admin/roster": { heading: "Lịch trực", action: { role: "button", name: "Thêm ca trực" } },
   "/me/notifications": {
     heading: "Thông báo của tôi",
     action: { role: "button", name: "Liên kết Zalo" },
   },
-  "/admin/logs": { heading: "Logs", action: { role: "button", name: "" } },
   "/cashier": { heading: "Thu ngân", action: { role: "button", name: "Lên đơn nhanh" } },
   "/orders/[id]": { heading: "Tách đơn", action: { role: "link", name: "Về thu ngân" } },
   "/orders/[id]/print": { heading: "", action: { role: "button", name: "In tất cả" } },

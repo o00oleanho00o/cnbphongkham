@@ -44,7 +44,7 @@ with them are gone; the `.dark` block of tokens.css carries the dark values). Fo
 `text-section` 16, `text-subtitle` 20, `text-title` 25, `text-metric` 27, `text-page` 30).
 
 `gc-card`, `gc-tile` and `gc-input` (globals.css) are compatibility aliases kept only for the pages ported from the
-zalo-agent dashboard (`/admin/kb|logs` and
-`components/admin/**`). They are marked for removal: a page rebuilt with the kit drops them, and the
-last one to go deletes the block. Screens of this app (`components/ops`, `components/care`, the clinic routes) do not
+zalo-agent dashboard
+(`components/admin/**`). They are marked for removal: a page rebuilt with the kit drops them, and the
+last one to go deletes the block. Screens of this app (`components/ops`, the clinic routes) do not
 use them.
