@@ -26,6 +26,8 @@ const ROUTES = [
   "/inbox?c=00000000-0000-4000-8007-000000000001",
   "/patients",
   "/patients/00000000-0000-4000-8002-000000000001",
+  "/admin/agent/sessions",
+  "/admin/agent/traces",
   "/admin/agent/plugins",
   "/admin/agent/plugins/zalo",
   "/admin/agent/plugins/zalo/accounts",

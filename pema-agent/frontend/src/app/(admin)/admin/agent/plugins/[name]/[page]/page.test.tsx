@@ -154,8 +154,14 @@ describe("a registered page", () => {
 
     await screen.findByRole("heading", { name: "Tài khoản Zalo" });
     const links = linksOf("Trang quản trị agent");
-    expect(links.map((a) => a.textContent)).toEqual(["Tổng quan", "Model", "Plugins"]);
-    expect(links[2]?.getAttribute("aria-current")).toBe("page");
+    expect(links.map((a) => a.textContent)).toEqual([
+      "Tổng quan",
+      "Phiên chat",
+      "Trace",
+      "Model",
+      "Plugins",
+    ]);
+    expect(links[4]?.getAttribute("aria-current")).toBe("page");
   });
 
   it("gives_the_plugin_the_sdk_before_its_script_runs", async () => {

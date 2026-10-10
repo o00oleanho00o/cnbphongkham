@@ -31,7 +31,13 @@ const FINANCE_TABS = [
   "/finance/export",
 ];
 /** Tabs of the agent entry (`/admin/agent`): its own pages, next to the pages the plugins ship. */
-const AGENT_TABS = ["/admin/agent/overview", "/admin/agent/model", "/admin/agent/plugins"];
+const AGENT_TABS = [
+  "/admin/agent/overview",
+  "/admin/agent/sessions",
+  "/admin/agent/traces",
+  "/admin/agent/model",
+  "/admin/agent/plugins",
+];
 /**
  * Pages of the old agent layer and of the care/CSKH/clinic-administration screens, deleted (the agent's pages live
  * under `/admin/agent`; the agent is one menu entry).

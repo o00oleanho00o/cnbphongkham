@@ -6,6 +6,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+import { formatCount, type Usage, usageTotals, USAGE_PATH } from "@/lib/agent/activity";
 import { agentApi as api } from "@/lib/agent/api";
 import { missingModelParts, type ModelShown } from "@/lib/agent/model-status";
 import { Badge, Button, Card, Empty, Notice, PageHeader } from "@/components/agent/plugin-kit";
@@ -26,19 +27,22 @@ export function OverviewPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [missing, setMissing] = useState<string[]>([]);
+  const [usage, setUsage] = useState<Usage | null>(null);
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
     setError("");
     try {
-      const [c, j, model] = await Promise.all([
+      const [c, j, model, used] = await Promise.all([
         api.get<{ channels: Channel[] }>("/v1/admin/channels"),
         api.get<{ jobs: Job[] }>("/v1/admin/jobs"),
         api.get<ModelShown>("/v1/admin/model"),
+        api.get<Usage>(`${USAGE_PATH}?days=${USAGE_DAYS}`),
       ]);
       setChannels(c.channels);
       setJobs(j.jobs);
       setMissing(missingModelParts(model));
+      setUsage(used);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không tải được");
     }
@@ -71,6 +75,7 @@ export function OverviewPage() {
           </Notice>
         </div>
       )}
+      {usage && usage.days.length > 0 && <UsageCards usage={usage} />}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Kênh chat">
           <StatusList
@@ -82,6 +87,50 @@ export function OverviewPage() {
           <StatusList items={jobs} empty="Không có việc chạy nền." />
         </Card>
       </div>
+    </div>
+  );
+}
+
+const USAGE_DAYS = 14;
+
+/** Today's turns and tokens, the totals of the fortnight and a bar per day (failed turns in red). */
+function UsageCards({ usage }: { usage: Usage }) {
+  const today = usage.days[usage.days.length - 1];
+  const totals = usageTotals(usage.days);
+  const tallest = Math.max(1, ...usage.days.map((day) => day.turns));
+  return (
+    <div className="mb-4 grid gap-4 sm:grid-cols-3">
+      <Card title="Lượt trả lời hôm nay">
+        <p className="text-title font-bold text-heading">{formatCount(today?.turns ?? 0)}</p>
+        <p className="text-label text-ink-soft">
+          {formatCount(totals.turns)} lượt trong {USAGE_DAYS} ngày
+          {totals.failed > 0 && `, ${formatCount(totals.failed)} không thành công`}
+        </p>
+      </Card>
+      <Card title="Token hôm nay">
+        <p className="text-title font-bold text-heading">
+          {formatCount((today?.input_tokens ?? 0) + (today?.output_tokens ?? 0))}
+        </p>
+        <p className="text-label text-ink-soft">
+          {formatCount(totals.tokens)} token trong {USAGE_DAYS} ngày
+        </p>
+      </Card>
+      <Card title={`${USAGE_DAYS} ngày qua`}>
+        <div
+          role="img"
+          aria-label={`Số lượt trả lời mỗi ngày trong ${USAGE_DAYS} ngày qua`}
+          className="flex h-16 items-end gap-1"
+        >
+          {usage.days.map((day) => (
+            <div
+              key={day.day}
+              title={`${day.day}: ${day.turns} lượt${day.failed > 0 ? `, ${day.failed} lỗi` : ""}`}
+              className={`min-h-0.5 flex-1 rounded-sm ${day.failed > 0 ? "bg-danger" : "bg-brand-500"}`}
+              style={{ height: `${Math.max(3, (day.turns / tallest) * 100)}%` }}
+            />
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }

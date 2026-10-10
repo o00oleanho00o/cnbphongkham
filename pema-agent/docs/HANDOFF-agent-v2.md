@@ -1072,6 +1072,15 @@ Steps (each: commit, stop, report):
     provider's list: `POST /v1/admin/model/list` (`agent_app/model_catalog.py`, the provider's own SDK
     `models.list()` with the effective settings overlaid by what is typed; nothing stored; 502 + error kind on a
     refusal). Also the overview warns while no model name or key is set.
+  - **Sessions, trace, usage from zalo-agent (2026-10-10, step 1 of 2):** `agent_app/activity.py` + admin routes
+    `GET/DELETE /v1/admin/sessions[/{id}]`, `GET /v1/admin/traces[/{turn_id}]`, `GET /v1/admin/usage?days=` (paged,
+    one query each, admin scope; tested through the gateway and against Postgres in `tests/test_activity_db.py`, run
+    it with a THROWAWAY `PEMA_TEST_DATABASE_URL`: it drops schema `agent_rt`). Frontend tabs Phiên chat and Trace
+    (`/admin/agent/sessions|traces`, shared across all channels, not inside the Zalo plugin on purpose) and usage
+    cards on Tổng quan. Not done yet: show the Zalo person's name instead of the uid (join with the Zalo contacts) and
+    a "Xem phiên chat" link in the Zalo contacts page; then the zalo-agent Memory page (round 2), schedules and MCP
+    as plugins of their own. A throwaway database `agent_activity_test` was created in the compose Postgres for the
+    tests; drop it when done.
   - **Target architecture (user's diagram, Copilot REQ 25):** `agentcore` (prompt, context, harness, loop, graph) +
     `agent_app` (profile TOML, CLI, HTTP) + plugins through `agentcore.sdk` (`zalo_bot`, `knowledge_pg`,
     `memory_consolidation`, `clinic_*`). Gaps found: no `agentcore.sdk` (plugins import `agent_app`, 14 places), no

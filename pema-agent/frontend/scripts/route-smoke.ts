@@ -17,7 +17,7 @@ import { concreteRoute, listPageRoutes } from "./app-routes";
 const BASE = process.env.SMOKE_BASE_URL ?? "http://localhost:3000";
 const APP_DIR = fileURLToPath(new URL("../src/app", import.meta.url));
 
-type Role = "button" | "link" | "textbox" | "searchbox";
+type Role = "button" | "link" | "textbox" | "searchbox" | "checkbox";
 type Expectation = {
   /** Text of the main heading (substring); empty string: any non-empty heading (a name from the data). */
   heading: string;
@@ -46,6 +46,14 @@ const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
     action: { role: "button", name: "Đổi mật khẩu" },
   },
   "/admin/agent/overview": { heading: "Tổng quan", action: { role: "button", name: "Tải lại" } },
+  "/admin/agent/sessions": {
+    heading: "Phiên chat",
+    action: { role: "textbox", name: "Tìm theo người" },
+  },
+  "/admin/agent/traces": {
+    heading: "Trace",
+    action: { role: "checkbox", name: "Chỉ lượt không thành công" },
+  },
   "/admin/agent/model": { heading: "Model", action: { role: "button", name: "Lưu" } },
   "/admin/agent/plugins": { heading: "Plugins", action: { role: "searchbox", name: "Tìm plugin" } },
   "/admin/agent/plugins/[name]": { heading: "zalo", action: { role: "link", name: "Plugins" } },

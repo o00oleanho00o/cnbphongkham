@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-// Tổng quan agent: what runs, with the last error of what stopped, and a warning while no model is set.
+// Tổng quan agent: what runs, with the last error of what stopped, the usage of the last days, and a warning while no
+// model is set.
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -13,9 +14,21 @@ const MODEL_SET = {
   api_key_broken: false,
 };
 
+const USAGE = {
+  today: "2026-10-10",
+  days: [
+    { day: "2026-10-09", turns: 4, failed: 1, input_tokens: 4000, output_tokens: 200 },
+    { day: "2026-10-10", turns: 3, failed: 0, input_tokens: 3000, output_tokens: 100 },
+  ],
+};
+
 /** A fake agent over the browser's fetch (an outside system): path -> JSON answer; the model is set by default. */
 function fakeAgent(answers: Record<string, unknown>) {
-  const all: Record<string, unknown> = { "/agent/v1/admin/model": MODEL_SET, ...answers };
+  const all: Record<string, unknown> = {
+    "/agent/v1/admin/model": MODEL_SET,
+    "/agent/v1/admin/usage?days=14": USAGE,
+    ...answers,
+  };
   vi.stubGlobal("fetch", (url: string) =>
     Promise.resolve(new Response(JSON.stringify(all[url] ?? {}))),
   );
@@ -81,5 +94,17 @@ describe("the agent overview", () => {
 
     await screen.findByText(/Chưa có kênh nào chạy/);
     expect(screen.queryByText(/Chưa cấu hình model AI/)).toBeNull();
+  });
+
+  it("shows_the_turns_and_tokens_of_today_and_of_the_fortnight", async () => {
+    fakeAgent(NOTHING_RUNS);
+
+    render(<OverviewPage />);
+
+    expect(await screen.findByText("Lượt trả lời hôm nay")).toBeTruthy();
+    expect(screen.getByText("7 lượt trong 14 ngày, 1 không thành công")).toBeTruthy();
+    expect(screen.getByText("3.100")).toBeTruthy();
+    expect(screen.getByText("7.300 token trong 14 ngày")).toBeTruthy();
+    expect(screen.getByRole("img", { name: /Số lượt trả lời mỗi ngày/ })).toBeTruthy();
   });
 });

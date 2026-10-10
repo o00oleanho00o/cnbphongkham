@@ -319,8 +319,223 @@ function switchPlugin(ctx: Ctx, enabled: boolean): Reply {
   return { body: plugin };
 }
 
+// Fictional activity of the agent: two chats on the Zalo channel and one over HTTP, their turns and a fortnight of usage.
+type MockMessage = { role: string; text: string; tools: string[]; at: string };
+type MockSession = {
+  session_id: string;
+  channel: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  summary: string | null;
+  messages: MockMessage[];
+};
+
+let sessions: MockSession[] = [
+  {
+    session_id: "clinic:zalo-cskh-mau:u-mau-01:0",
+    channel: "zalo-cskh-mau",
+    user_id: "u-mau-01",
+    created_at: isoFromNow(-3 * HOUR),
+    updated_at: isoFromNow(-20 * MIN),
+    summary: null,
+    messages: [
+      {
+        role: "user",
+        text: "Cho mình hỏi giá laser trị nám?",
+        tools: [],
+        at: isoFromNow(-3 * HOUR),
+      },
+      {
+        role: "assistant",
+        text: "Dạ, bên em có gói laser trị nám từ 1.500.000đ/lần. Chị muốn em đặt lịch tư vấn không ạ?",
+        tools: ["kb_search"],
+        at: isoFromNow(-3 * HOUR + MIN),
+      },
+    ],
+  },
+  {
+    session_id: "clinic:zalo-cskh-mau:u-mau-02:0",
+    channel: "zalo-cskh-mau",
+    user_id: "u-mau-02",
+    created_at: isoFromNow(-2 * DAY),
+    updated_at: isoFromNow(-26 * HOUR),
+    summary: "Khách hỏi về lịch tái khám sau tiêm filler; đã hẹn thứ Sáu.",
+    messages: [
+      {
+        role: "user",
+        text: "Mai mình tái khám được không?",
+        tools: [],
+        at: isoFromNow(-26 * HOUR),
+      },
+    ],
+  },
+  {
+    session_id: "clinic:http:u-mau-03:0",
+    channel: "http",
+    user_id: "u-mau-03",
+    created_at: isoFromNow(-5 * HOUR),
+    updated_at: isoFromNow(-5 * HOUR),
+    summary: null,
+    messages: [],
+  },
+];
+
+const TURN_IDS = [
+  "00000000-0000-4000-8a00-000000000001",
+  "00000000-0000-4000-8a00-000000000002",
+  "00000000-0000-4000-8a00-000000000003",
+];
+
+const turns = [
+  {
+    turn_id: TURN_IDS[0],
+    session_id: "clinic:zalo-cskh-mau:u-mau-01:0",
+    channel: "zalo-cskh-mau",
+    user_id: "u-mau-01",
+    model: "deepseek-v4-pro",
+    started_at: isoFromNow(-3 * HOUR),
+    duration_ms: 4200,
+    stop: "completed",
+    steps: 2,
+    error_kind: null as string | null,
+    input_tokens: 1820,
+    output_tokens: 96,
+  },
+  {
+    turn_id: TURN_IDS[1],
+    session_id: "clinic:zalo-cskh-mau:u-mau-02:0",
+    channel: "zalo-cskh-mau",
+    user_id: "u-mau-02",
+    model: "deepseek-v4-pro",
+    started_at: isoFromNow(-26 * HOUR),
+    duration_ms: 1500,
+    stop: "completed",
+    steps: 1,
+    error_kind: null as string | null,
+    input_tokens: 940,
+    output_tokens: 40,
+  },
+  {
+    turn_id: TURN_IDS[2],
+    session_id: "clinic:http:u-mau-03:0",
+    channel: "http",
+    user_id: "u-mau-03",
+    model: "deepseek-v4-pro",
+    started_at: isoFromNow(-5 * HOUR),
+    duration_ms: 800,
+    stop: "error",
+    steps: 1,
+    error_kind: "auth" as string | null,
+    input_tokens: 0,
+    output_tokens: 0,
+  },
+];
+
+const turnEvents = [
+  {
+    kind: "model_call",
+    step: 1,
+    name: "",
+    duration_ms: 2100,
+    is_error: false,
+    detail: { stop: "tool_use" },
+  },
+  {
+    kind: "tool_call",
+    step: 1,
+    name: "kb_search",
+    duration_ms: 350,
+    is_error: false,
+    detail: { size: 812 },
+  },
+  {
+    kind: "model_call",
+    step: 2,
+    name: "",
+    duration_ms: 1700,
+    is_error: false,
+    detail: { stop: "end" },
+  },
+];
+
+const PAGE = 30;
+
+function pageOf<T>(items: T[], ctx: Ctx): { items: T[]; has_more: boolean } {
+  const start = numberOr(ctx.query.get("page"), 0) * PAGE;
+  return { items: items.slice(start, start + PAGE), has_more: items.length > start + PAGE };
+}
+
+function sessionRow(session: MockSession) {
+  const { messages, summary, ...row } = session;
+  return { ...row, message_count: messages.length, compacted: summary !== null };
+}
+
+function usageDays(days: number) {
+  return Array.from({ length: days }, (_, index) => {
+    const back = days - 1 - index;
+    const turnsThatDay = back === 0 ? 2 : (index * 5) % 9;
+    return {
+      day: new Date(Date.now() - back * DAY).toISOString().slice(0, 10),
+      turns: turnsThatDay,
+      failed: back === 0 ? 1 : 0,
+      input_tokens: turnsThatDay * 900,
+      output_tokens: turnsThatDay * 60,
+    };
+  });
+}
+
 export function buildAgentRouter(): Router {
   const r = new Router();
+  r.get("/v1/admin/sessions", null, (ctx): Reply => {
+    const channel = ctx.query.get("channel") ?? "";
+    const q = (ctx.query.get("q") ?? "").toLowerCase();
+    const found = sessions
+      .filter((s) => channel === "" || s.channel === channel)
+      .filter((s) => q === "" || `${s.user_id} ${s.session_id}`.toLowerCase().includes(q))
+      .map(sessionRow);
+    return { body: pageOf(found, ctx) };
+  });
+  r.get("/v1/admin/sessions/{session_id}", null, (ctx): Reply => {
+    const found = sessions.find((s) => s.session_id === ctx.params.session_id);
+    if (!found) return gatewayError(404, "not_found", "no such session");
+    return { body: { ...sessionRow(found), summary: found.summary, messages: found.messages } };
+  });
+  r.delete("/v1/admin/sessions/{session_id}", null, (ctx): Reply => {
+    if (!sessions.some((s) => s.session_id === ctx.params.session_id)) {
+      return gatewayError(404, "not_found", "no such session");
+    }
+    sessions = sessions.filter((s) => s.session_id !== ctx.params.session_id);
+    return { body: { deleted: ctx.params.session_id } };
+  });
+  r.get("/v1/admin/traces", null, (ctx): Reply => {
+    const channel = ctx.query.get("channel") ?? "";
+    const session = ctx.query.get("session_id") ?? "";
+    const errorsOnly = ctx.query.get("errors_only") === "true";
+    const found = turns
+      .filter((t) => channel === "" || t.channel === channel)
+      .filter((t) => session === "" || t.session_id === session)
+      .filter((t) => !errorsOnly || t.stop !== "completed");
+    return { body: pageOf(found, ctx) };
+  });
+  r.get("/v1/admin/traces/{turn_id}", null, (ctx): Reply => {
+    const found = turns.find((t) => t.turn_id === ctx.params.turn_id);
+    if (!found) return gatewayError(404, "not_found", "no such turn");
+    return {
+      body: {
+        ...found,
+        compactions: 0,
+        cache_read_tokens: 640,
+        cache_write_tokens: 0,
+        reasoning_tokens: 0,
+        events: found.stop === "completed" ? turnEvents : [],
+      },
+    };
+  });
+  r.get("/v1/admin/usage", null, (ctx): Reply => {
+    const days = Math.max(1, Math.min(numberOr(ctx.query.get("days"), 14), 90));
+    return { body: { today: new Date().toISOString().slice(0, 10), days: usageDays(days) } };
+  });
   r.get("/v1/admin/channels", null, (): Reply => ({
     body: { channels: [{ name: "zalo-cskh-mau", running: true, error: null }] },
   }));

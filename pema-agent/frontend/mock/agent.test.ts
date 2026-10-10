@@ -129,4 +129,25 @@ describe("the fake agent's dashboard routes", () => {
       settings: [{ key: "rich_text", value: false, source: "admin" }],
     });
   });
+
+  it("lists_the_sessions_and_traces_filtered_and_deletes_a_session", async () => {
+    const headers = await signed();
+    const get = async (path: string) => (await fetch(`${base}${path}`, { headers })).json();
+
+    const zalo = (await get("/v1/admin/sessions?channel=zalo-cskh-mau")) as {
+      items: { user_id: string }[];
+    };
+    const failed = (await get("/v1/admin/traces?errors_only=true")) as {
+      items: { stop: string }[];
+    };
+    const usage = (await get("/v1/admin/usage?days=7")) as { days: unknown[] };
+    const id = encodeURIComponent("clinic:http:u-mau-03:0");
+    const deleted = await fetch(`${base}/v1/admin/sessions/${id}`, { method: "DELETE", headers });
+    const again = await fetch(`${base}/v1/admin/sessions/${id}`, { method: "DELETE", headers });
+
+    expect(zalo.items.map((s) => s.user_id)).toEqual(["u-mau-01", "u-mau-02"]);
+    expect(failed.items.map((t) => t.stop)).toEqual(["error"]);
+    expect(usage.days).toHaveLength(7);
+    expect([deleted.status, again.status]).toEqual([200, 404]);
+  });
 });

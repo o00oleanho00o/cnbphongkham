@@ -21,6 +21,12 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-10 · add · Điều khiển agent: Phiên chat, Trace và mức dùng trên Tổng quan
+- Where: `src/components/agent/pages/sessions-page.tsx`, `src/components/agent/pages/traces-page.tsx`, `src/components/agent/pages/overview-page.tsx`, `src/app/(admin)/admin/agent/sessions/page.tsx`, `src/app/(admin)/admin/agent/traces/page.tsx`, `src/app/(admin)/admin/agent/layout.tsx` · routes `/admin/agent/sessions`, `/admin/agent/traces`
+- Change: the tabs of "Điều khiển agent" are now Tổng quan · Phiên chat · Trace · Model · Plugins. "Phiên chat" (ported from the zalo-agent Sessions page): table Người / Kênh / Tin nhắn / Cập nhật with a search "Tìm theo người hoặc mã phiên...", a channel filter "Mọi kênh", paging, "Xem" opening a sheet with the messages (role Người dùng / Agent, time, tool badges), the summary of a compacted chat, "Xem trace của phiên" and "Xóa phiên" (confirmation "Xóa phiên chat này?"). "Trace" (ported from the Trace page, timings and outcomes only): table Lúc / Kênh / Model / Bước / Thời gian / Token / Kết cục, filters (channel, "Chỉ lượt không thành công", one chat with "Bỏ lọc"), "Xem" opening the steps ("Bước N", "Gọi model", "Gọi tool" + name, time, "Lỗi", metadata). Tổng quan gets three cards: "Lượt trả lời hôm nay" (with the 14-day total and failures), "Token hôm nay" (with the 14-day total) and "14 ngày qua" (a bar per day, red when a turn failed).
+- Web canvas target: none (no canvas frame for the agent pages)
+- Logged by: sessions, trace and usage
+
 ### 2026-10-10 · add · Model agent: mẫu có sẵn và danh sách model từ nhà cung cấp
 - Where: `src/components/agent/pages/model-page.tsx` · route `/admin/agent/model`
 - Change: a new card "Mẫu có sẵn" above "Cấu hình" with buttons DeepSeek, OpenAI, Anthropic, OpenRouter, Gemini, Ollama (máy nội bộ); a click fills provider, base URL, model (DeepSeek `deepseek-v4-pro`, Anthropic `claude-sonnet-5-5`, the others empty) and API kind, resets "Mức suy nghĩ", saves nothing, focuses "Khóa mới" and says "Đã điền mẫu DeepSeek. Dán khóa API rồi bấm Lưu."; under the key field "Lấy khóa DeepSeek ở platform.deepseek.com." links out. Under the model field a quiet button "Lấy danh sách model từ nhà cung cấp" asks the provider (through the agent, with what is typed, nothing saved); the model field then suggests the names ("Có N model: chọn trong ô Model hoặc gõ tay.") and still takes a typed name; a refusal says e.g. "Khóa API sai hoặc hết hạn. Vẫn gõ tên model tay được."
