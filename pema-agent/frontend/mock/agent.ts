@@ -333,9 +333,9 @@ type MockSession = {
 
 let sessions: MockSession[] = [
   {
-    session_id: "clinic:zalo-cskh-mau:u-mau-01:0",
+    session_id: "clinic:zalo-cskh-mau:u-mau-1001:0",
     channel: "zalo-cskh-mau",
-    user_id: "u-mau-01",
+    user_id: "u-mau-1001",
     created_at: isoFromNow(-3 * HOUR),
     updated_at: isoFromNow(-20 * MIN),
     summary: null,
@@ -355,9 +355,9 @@ let sessions: MockSession[] = [
     ],
   },
   {
-    session_id: "clinic:zalo-cskh-mau:u-mau-02:0",
+    session_id: "clinic:zalo-cskh-mau:u-mau-1002:0",
     channel: "zalo-cskh-mau",
-    user_id: "u-mau-02",
+    user_id: "u-mau-1002",
     created_at: isoFromNow(-2 * DAY),
     updated_at: isoFromNow(-26 * HOUR),
     summary: "Khách hỏi về lịch tái khám sau tiêm filler; đã hẹn thứ Sáu.",
@@ -390,9 +390,9 @@ const TURN_IDS = [
 const turns = [
   {
     turn_id: TURN_IDS[0],
-    session_id: "clinic:zalo-cskh-mau:u-mau-01:0",
+    session_id: "clinic:zalo-cskh-mau:u-mau-1001:0",
     channel: "zalo-cskh-mau",
-    user_id: "u-mau-01",
+    user_id: "u-mau-1001",
     model: "deepseek-v4-pro",
     started_at: isoFromNow(-3 * HOUR),
     duration_ms: 4200,
@@ -404,9 +404,9 @@ const turns = [
   },
   {
     turn_id: TURN_IDS[1],
-    session_id: "clinic:zalo-cskh-mau:u-mau-02:0",
+    session_id: "clinic:zalo-cskh-mau:u-mau-1002:0",
     channel: "zalo-cskh-mau",
-    user_id: "u-mau-02",
+    user_id: "u-mau-1002",
     model: "deepseek-v4-pro",
     started_at: isoFromNow(-26 * HOUR),
     duration_ms: 1500,
@@ -600,6 +600,14 @@ export function buildAgentRouter(): Router {
       .filter((c) => !account || c.account_id === account)
       .filter((c) => !q || `${c.display_name} ${c.user_id}`.toLowerCase().includes(q));
     return { body: found.slice(offset, offset + limit) };
+  });
+  // The mock ignores the account: the chat channel `zalo-cskh-mau` and the account `zalo-cskh-mau` differ by a prefix.
+  r.get("/v1/plugins/zalo/contacts/names", null, (ctx): Reply => {
+    const wanted = new Set((ctx.query.get("ids") ?? "").split(","));
+    const names = contacts
+      .filter((c) => wanted.has(c.user_id))
+      .map((c) => [c.user_id, c.display_name]);
+    return { body: Object.fromEntries(names) };
   });
   r.get("/v1/plugins/zalo/friends/{account_id}/requests", null, (ctx): Reply => {
     return personal(ctx) ?? { body: friendRequests };

@@ -170,6 +170,12 @@ function ContactRow({
             </div>
           )
         )}
+        <a
+          href={`/admin/agent/sessions?q=${encodeURIComponent(contact.user_id)}`}
+          className="text-small font-medium text-link hover:underline"
+        >
+          Xem phiên chat
+        </a>
         <ui.Button variant="ghost" onClick={() => void onRemove(contact)}>
           Xóa
         </ui.Button>

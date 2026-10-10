@@ -24,6 +24,9 @@ export interface PluginPage {
 
 export interface Contribution {
   pages?: PluginPage[];
+  /** Display names of the people of a channel (chat lists), `{ <user id>: <name> }` for the ones it knows; a plugin
+   * answers `{}` for a channel that is not its own. */
+  personNames?: (channel: string, userIds: readonly string[]) => Promise<Record<string, string>>;
 }
 
 export interface Sdk {

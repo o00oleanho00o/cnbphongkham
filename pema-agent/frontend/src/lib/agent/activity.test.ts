@@ -7,6 +7,8 @@ import {
   eventLabel,
   formatDuration,
   listPath,
+  peopleByChannel,
+  personKey,
   sessionHref,
   sessionTitle,
   stopLabel,
@@ -74,5 +76,27 @@ describe("sessionTitle and detailText", () => {
     expect(sessionTitle({ user_id: "u-1", session_id: "s" })).toBe("u-1");
     expect(sessionTitle({ user_id: null, session_id: "s" })).toBe("s");
     expect(detailText({ size: 12, args: { q: "x" } })).toBe('size: 12 · args: {"q":"x"}');
+  });
+});
+
+describe("peopleByChannel", () => {
+  it("lists_each_person_once_under_their_channel_and_skips_rows_without_either", () => {
+    const found = peopleByChannel([
+      { channel: "zalo-a", user_id: "u1" },
+      { channel: "zalo-a", user_id: "u1" },
+      { channel: "zalo-a", user_id: "u2" },
+      { channel: "http", user_id: "u1" },
+      { channel: null, user_id: "u3" },
+      { channel: "zalo-a", user_id: null },
+    ]);
+
+    expect([...found]).toEqual([
+      ["zalo-a", ["u1", "u2"]],
+      ["http", ["u1"]],
+    ]);
+  });
+
+  it("keeps_the_same_user_id_on_two_channels_apart", () => {
+    expect(personKey("zalo-a", "u1")).not.toBe(personKey("http", "u1"));
   });
 });

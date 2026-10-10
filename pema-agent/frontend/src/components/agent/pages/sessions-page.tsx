@@ -10,10 +10,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { EmptyRow, formatTime, ListToolbar, TableShell } from "@/components/admin/shared/ui-bits";
 import { Badge, Empty, Notice, PageHeader, Select } from "@/components/agent/plugin-kit";
+import { usePersonNames } from "@/components/agent/use-person-names";
 import {
   formatCount,
   listPath,
   type Paged,
+  personKey,
   type SessionDetail,
   type SessionRow,
   SESSIONS_PATH,
@@ -30,12 +32,13 @@ export function SessionsPage() {
   const params = useSearchParams();
   const [rows, setRows] = useState<SessionRow[]>([]);
   const [hasMore, setHasMore] = useState(false);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(params.get("q") ?? "");
   const [channel, setChannel] = useState(ALL_CHANNELS);
   const [channels, setChannels] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const [openId, setOpenId] = useState<string | null>(params.get("session"));
   const [error, setError] = useState("");
+  const names = usePersonNames(rows);
 
   const reload = useCallback(async () => {
     try {
@@ -60,6 +63,9 @@ export function SessionsPage() {
       .then((answer) => setChannels(answer.channels.map((c) => c.name)))
       .catch(() => setChannels([]));
   }, []);
+
+  const openRow = rows.find((row) => row.session_id === openId);
+  const openName = openRow ? names.get(personKey(openRow.channel, openRow.user_id)) : undefined;
 
   return (
     <div>
@@ -101,8 +107,13 @@ export function SessionsPage() {
             className="border-b border-line/60 last:border-0 hover:bg-row-hover"
           >
             <td className="px-4 py-3">
-              <div className="truncate font-medium text-ink">{sessionTitle(row)}</div>
-              <div className="truncate text-label text-ink-soft">{row.session_id}</div>
+              <div className="truncate font-medium text-ink">
+                {names.get(personKey(row.channel, row.user_id)) ?? sessionTitle(row)}
+              </div>
+              <div className="truncate text-label text-ink-soft">
+                {names.has(personKey(row.channel, row.user_id)) && `${row.user_id} · `}
+                {row.session_id}
+              </div>
             </td>
             <td className="px-4 py-3">
               {row.channel ? (
@@ -131,6 +142,7 @@ export function SessionsPage() {
       {openId && (
         <SessionSheet
           sessionId={openId}
+          name={openName}
           onClose={() => setOpenId(null)}
           onDeleted={() => {
             setOpenId(null);
@@ -146,10 +158,12 @@ const ROLE_LABEL: Record<string, string> = { user: "Người dùng", assistant: 
 
 function SessionSheet({
   sessionId,
+  name,
   onClose,
   onDeleted,
 }: {
   sessionId: string;
+  name?: string;
   onClose: () => void;
   onDeleted: () => void;
 }) {
@@ -193,7 +207,7 @@ function SessionSheet({
 
   return (
     <Sheet
-      title={session ? sessionTitle(session) : "Phiên chat"}
+      title={name ?? (session ? sessionTitle(session) : "Phiên chat")}
       subtitle={sessionId}
       onClose={onClose}
       wide

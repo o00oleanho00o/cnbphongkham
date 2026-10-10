@@ -145,7 +145,7 @@ describe("the fake agent's dashboard routes", () => {
     const deleted = await fetch(`${base}/v1/admin/sessions/${id}`, { method: "DELETE", headers });
     const again = await fetch(`${base}/v1/admin/sessions/${id}`, { method: "DELETE", headers });
 
-    expect(zalo.items.map((s) => s.user_id)).toEqual(["u-mau-01", "u-mau-02"]);
+    expect(zalo.items.map((s) => s.user_id)).toEqual(["u-mau-1001", "u-mau-1002"]);
     expect(failed.items.map((t) => t.stop)).toEqual(["error"]);
     expect(usage.days).toHaveLength(7);
     expect([deleted.status, again.status]).toEqual([200, 404]);

@@ -21,6 +21,12 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-10 · change · Phiên chat hiện tên người Zalo; Danh bạ Zalo có "Xem phiên chat"
+- Where: `src/components/agent/pages/sessions-page.tsx`, `src/components/agent/use-person-names.ts`, `backend/apps/agent/plugins/zalo/ui/src/pages/contacts.tsx` (the Zalo page "Danh bạ Zalo")
+- Change: in "Phiên chat" a person is shown by the name the channel's plugin knows (Zalo: the address-book name) in bold with `<user id> · <session id>` under it, and in the title of the chat sheet; people no plugin knows keep the user id. In "Danh bạ Zalo" each person gets a link "Xem phiên chat" that opens "Phiên chat" already searched for that person.
+- Web canvas target: none (plugin pages have no canvas frame)
+- Logged by: person names in chat sessions
+
 ### 2026-10-10 · add · Điều khiển agent: Phiên chat, Trace và mức dùng trên Tổng quan
 - Where: `src/components/agent/pages/sessions-page.tsx`, `src/components/agent/pages/traces-page.tsx`, `src/components/agent/pages/overview-page.tsx`, `src/app/(admin)/admin/agent/sessions/page.tsx`, `src/app/(admin)/admin/agent/traces/page.tsx`, `src/app/(admin)/admin/agent/layout.tsx` · routes `/admin/agent/sessions`, `/admin/agent/traces`
 - Change: the tabs of "Điều khiển agent" are now Tổng quan · Phiên chat · Trace · Model · Plugins. "Phiên chat" (ported from the zalo-agent Sessions page): table Người / Kênh / Tin nhắn / Cập nhật with a search "Tìm theo người hoặc mã phiên...", a channel filter "Mọi kênh", paging, "Xem" opening a sheet with the messages (role Người dùng / Agent, time, tool badges), the summary of a compacted chat, "Xem trace của phiên" and "Xóa phiên" (confirmation "Xóa phiên chat này?"). "Trace" (ported from the Trace page, timings and outcomes only): table Lúc / Kênh / Model / Bước / Thời gian / Token / Kết cục, filters (channel, "Chỉ lượt không thành công", one chat with "Bỏ lọc"), "Xem" opening the steps ("Bước N", "Gọi model", "Gọi tool" + name, time, "Lỗi", metadata). Tổng quan gets three cards: "Lượt trả lời hôm nay" (with the 14-day total and failures), "Token hôm nay" (with the 14-day total) and "14 ngày qua" (a bar per day, red when a turn failed).

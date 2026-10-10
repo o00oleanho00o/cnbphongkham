@@ -4,6 +4,8 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { register, forget } from "@/lib/agent/sdk";
+
 import { SessionsPage } from "./sessions-page";
 
 const nav = vi.hoisted(() => ({ search: "" }));
@@ -68,6 +70,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  forget("zalo");
 });
 
 describe("the sessions page", () => {
@@ -135,5 +138,34 @@ describe("the sessions page", () => {
         url: `/agent/v1/admin/sessions/${encodeURIComponent(ZALO)}`,
       }),
     );
+  });
+
+  it("names_the_people_a_plugin_knows_with_one_call_per_channel_and_keeps_the_id_for_the_rest", async () => {
+    fakeAgent();
+    const asked: { channel: string; ids: readonly string[] }[] = [];
+    register("zalo", {
+      personNames: (channel, ids) => {
+        asked.push({ channel, ids });
+        const known: Record<string, string> = channel === "zalo-a" ? { "u-1": "Nguyễn Mai" } : {};
+        return Promise.resolve(known);
+      },
+    });
+    render(<SessionsPage />);
+
+    expect(await screen.findByText("Nguyễn Mai")).toBeTruthy();
+    expect(screen.getByText("u-2")).toBeTruthy();
+    expect(asked).toEqual([
+      { channel: "zalo-a", ids: ["u-1"] },
+      { channel: "http", ids: ["u-2"] },
+    ]);
+  });
+
+  it("starts_from_the_search_in_the_address", async () => {
+    const calls = fakeAgent();
+    nav.search = "q=u-1";
+    render(<SessionsPage />);
+
+    await screen.findByText("u-1");
+    expect(calls.map((c) => c.url)).toContain("/agent/v1/admin/sessions?q=u-1");
   });
 });

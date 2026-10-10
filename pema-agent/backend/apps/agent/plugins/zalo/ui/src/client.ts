@@ -47,6 +47,9 @@ export const zalo = {
     api.post<void>(`${BASE}/friends/${id(account)}/${accept ? "accept" : "reject"}`, { uid }),
   contacts: (params: { account_id?: string; q?: string; limit: number; offset: number }) =>
     api.get<Contact[]>(`${BASE}/contacts${query(params)}`),
+  /** Display names of these people on one account: `{ <zalo id>: <name> }`, only the known ones. */
+  names: (account: string, ids: readonly string[]) =>
+    api.get<Record<string, string>>(`${BASE}/contacts/names${query({ account_id: account, ids: ids.join(",") })}`),
   deleteContact: (account: string, user: string) => api.del<void>(`${BASE}/contacts/${id(account)}/${id(user)}`),
   groups: (account?: string) => api.get<Group[]>(`${BASE}/groups${query({ account_id: account })}`),
 };

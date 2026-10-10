@@ -1077,9 +1077,10 @@ Steps (each: commit, stop, report):
     one query each, admin scope; tested through the gateway and against Postgres in `tests/test_activity_db.py`, run
     it with a THROWAWAY `PEMA_TEST_DATABASE_URL`: it drops schema `agent_rt`). Frontend tabs Phiên chat and Trace
     (`/admin/agent/sessions|traces`, shared across all channels, not inside the Zalo plugin on purpose) and usage
-    cards on Tổng quan. Not done yet: show the Zalo person's name instead of the uid (join with the Zalo contacts) and
-    a "Xem phiên chat" link in the Zalo contacts page; then the zalo-agent Memory page (round 2), schedules and MCP
-    as plugins of their own. A throwaway database `agent_activity_test` was created in the compose Postgres for the
+    cards on Tổng quan. Names: the SDK `Contribution.personNames(channel, ids)` (the Zalo plugin answers from
+    `GET /v1/plugins/zalo/contacts/names`, one read per account) feeds the chat list; the Zalo contacts page links to
+    the sessions page (`?q=<uid>`). Search still matches user ids only, not names. Next: the zalo-agent Memory page
+    (round 2), schedules and MCP as plugins of their own. A throwaway database `agent_activity_test` was created in the compose Postgres for the
     tests; drop it when done.
   - **Target architecture (user's diagram, Copilot REQ 25):** `agentcore` (prompt, context, harness, loop, graph) +
     `agent_app` (profile TOML, CLI, HTTP) + plugins through `agentcore.sdk` (`zalo_bot`, `knowledge_pg`,
