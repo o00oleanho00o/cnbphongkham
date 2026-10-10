@@ -136,7 +136,8 @@ class BridgeClient:
         payload = await self.request(
             "POST",
             f"/v1/accounts/{account_id}/start",
-            {"credential": credential, "kill_switch": {"on": False, "scope": "proactive", "reason": None}},
+            # The bridge's schema takes ``reason`` as a string or not at all, never null.
+            {"credential": credential, "kill_switch": {"on": False, "scope": "proactive"}},
         )
         return str(payload.get("own_id", ""))
 
