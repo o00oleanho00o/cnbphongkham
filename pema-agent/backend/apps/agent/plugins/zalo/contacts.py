@@ -11,7 +11,7 @@ its first ``MAX_LIST`` entries in key order (sorting and search happen after).
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from datetime import datetime
 from typing import Any, Final, cast
 
@@ -62,6 +62,20 @@ class ContactBook:
 
     async def delete(self, account_id: str, user_id: str) -> bool:
         return await self._storage.delete(f"{CONTACT}{account_id}:{user_id}")
+
+    async def names(self, account_id: str, user_ids: Collection[str]) -> dict[str, str]:
+        """The known display names of these people (one read of the account's book); people without a name or
+        not in the book are left out."""
+        wanted = set(user_ids)
+        found: dict[str, str] = {}
+        for key, value in await self._storage.list(_prefix(CONTACT, account_id)):
+            _, user_id = _split(key, CONTACT)
+            if user_id not in wanted:
+                continue
+            name = _Contact.model_validate(value).display_name
+            if name:
+                found[user_id] = name
+        return found
 
     async def list(
         self, *, account_id: str | None = None, query: str = "", limit: int = 50, offset: int = 0

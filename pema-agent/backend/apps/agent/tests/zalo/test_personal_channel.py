@@ -138,7 +138,9 @@ def _runtime(tmp_path: Path, bridge: FakeBridge | None) -> Runtime:
     )
     env = {"AGENT_SECRET_ENCRYPTION_KEY": KEY, "AGENT_DATA_DIR": str(tmp_path / "data")}
     host = PluginHost(discover([("bundled", BUNDLED_PLUGINS)]).plugins, env)
-    config: dict[str, Any] = {}
+    # A checkout may have the bridge's packages installed (the agent image does): the tests point the plugin at a
+    # folder without them, so none of them depends on it.
+    config: dict[str, Any] = {"bridge_folder": str(tmp_path / "no-bridge")}
     if bridge is not None:
         config = {"bridge_transport": bridge.transport, "bridge_secret": SECRET}
     host.enable("zalo", config)

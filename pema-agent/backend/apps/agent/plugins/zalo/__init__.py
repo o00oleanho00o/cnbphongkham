@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import functools
 from collections.abc import Callable
+from pathlib import Path
 
 import httpx
 
@@ -21,8 +22,8 @@ from .routes import account_routes, hook_routes
 
 
 def register(ctx: PluginContext) -> None:
-    # ``bot_transport``, ``bridge_transport`` and ``bridge_secret`` are not manifest settings: only code that
-    # enables the plugin itself (tests, with a fake Zalo and a fake bridge) passes them.
+    # ``bot_transport``, ``bridge_transport``, ``bridge_secret`` and ``bridge_folder`` are not manifest
+    # settings: only code that enables the plugin itself (tests: a fake Zalo, a fake bridge) passes them.
     bot_client: Callable[[str], BotApiClient] = tao_zalo_bot_client
     transport = ctx.config.get("bot_transport")
     if isinstance(transport, httpx.AsyncBaseTransport):
@@ -31,7 +32,13 @@ def register(ctx: PluginContext) -> None:
     bridge_transport, bridge_secret = ctx.config.get("bridge_transport"), ctx.config.get("bridge_secret")
     if isinstance(bridge_transport, httpx.AsyncBaseTransport) and isinstance(bridge_secret, str):
         bridge = BridgeClient("http://bridge", bridge_secret, transport=bridge_transport)
-    plugin = ZaloPlugin(ctx, bot_client=bot_client, bridge=bridge)
+    folder = ctx.config.get("bridge_folder")
+    plugin = ZaloPlugin(
+        ctx,
+        bot_client=bot_client,
+        bridge=bridge,
+        **({"bundled_bridge": Path(folder)} if isinstance(folder, str) else {}),
+    )
     plugin.register()
     ctx.register_routes(account_routes(plugin))
     ctx.register_routes(hook_routes(plugin), kind="hooks")

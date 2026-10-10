@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, HTTPException, Path, Query, Request, Response, status
@@ -54,6 +55,8 @@ ACCOUNT_ID_PATTERN = r"^[a-z0-9][a-z0-9-]*$"
 AccountId = Annotated[str, Path(pattern=ACCOUNT_ID_PATTERN, max_length=MAX_ACCOUNT_ID_CHARS)]
 AccountFilter = Annotated[str | None, Query(pattern=ACCOUNT_ID_PATTERN, max_length=MAX_ACCOUNT_ID_CHARS)]
 ZaloId = Annotated[str, Path(pattern=ZALO_ID_PATTERN)]
+ZALO_ID_RULE = re.compile(ZALO_ID_PATTERN)
+MAX_NAMES = 60
 
 
 def account_routes(plugin: ZaloPlugin) -> APIRouter:
@@ -270,6 +273,16 @@ def directory_routes(plugin: ZaloPlugin) -> APIRouter:
         offset: int = Query(default=0, ge=0),
     ) -> list[ContactOut]:
         return await plugin.contacts.list(account_id=account_id, query=q, limit=limit, offset=offset)
+
+    @router.get("/contacts/names")
+    async def contact_names(
+        account_id: Annotated[str, Query(pattern=ACCOUNT_ID_PATTERN, max_length=MAX_ACCOUNT_ID_CHARS)],
+        ids: str = Query(default="", max_length=3000),
+    ) -> dict[str, str]:
+        """Display names of the given people (``ids``: Zalo ids separated by commas, at most 60), for the
+        dashboard's chat list."""
+        wanted = [uid for uid in ids.split(",") if ZALO_ID_RULE.fullmatch(uid)][:MAX_NAMES]
+        return await plugin.contacts.names(account_id, wanted)
 
     @router.delete("/contacts/{account_id}/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
     async def delete_contact(account_id: AccountId, user_id: ZaloId) -> Response:

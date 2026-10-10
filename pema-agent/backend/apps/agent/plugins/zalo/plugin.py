@@ -25,6 +25,7 @@ import logging
 from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any, Final, cast
 
 from agent_app.plugins import Disposer, PluginContext
@@ -77,6 +78,7 @@ class ZaloPlugin:
         *,
         bot_client: Callable[[str], BotApiClient] = tao_zalo_bot_client,
         bridge: BridgeClient | None = None,
+        bundled_bridge: Path = BRIDGE_SOURCE,
     ) -> None:
         self._ctx = ctx
         self.store = AccountStore(ctx.storage, encrypt=ctx.encrypt, decrypt=ctx.decrypt)
@@ -89,7 +91,7 @@ class ZaloPlugin:
             self_url=lambda: ctx.self_url,
             on_restart=self._soon_sync,
             external=bridge,
-            bundled=BRIDGE_SOURCE,
+            bundled=bundled_bridge,
         )
         self._channels: dict[str, _Running] = {}
         self._accounts: dict[str, AccountConfig] = {}
