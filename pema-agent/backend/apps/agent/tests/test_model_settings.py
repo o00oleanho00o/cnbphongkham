@@ -11,11 +11,13 @@ import pytest
 
 from agent_app.cli import main
 from agent_app.gateway import GatewaySettings, create_app
+from agent_app.model_entries import MAX_ENTRIES
 from agent_app.model_factory import ModelSettings
 from agent_app.model_settings import (
     DynamicModel,
     InMemoryModelSettingsStore,
     ModelAdmin,
+    ModelEntryError,
     SecretKeyMissingError,
     StoredModelSettings,
     resolve_effective,
@@ -322,3 +324,153 @@ def test_the_model_command_needs_the_database(
 
     assert main(["model", "show", "--profile", str(DEV_PROFILE)]) == 2
     assert "set AGENT_DATABASE_URL" in capsys.readouterr().out
+
+
+DEEPSEEK = {
+    "label": "DeepSeek công ty",
+    "provider": "openai-compatible",
+    "model": "deepseek-v4-pro",
+    "base_url": "https://api.deepseek.com",
+    "api_key": "sk-deepseek-abcdefgh",
+}
+
+
+async def test_the_list_keeps_several_models_each_with_its_own_masked_key() -> None:
+    admin = ModelAdmin(PROFILE, InMemoryModelSettingsStore(), tenant_id="t", secret_key=KEY)
+
+    first = await admin.add_entry(DEEPSEEK)
+    second = await admin.add_entry({**DEEPSEEK, "label": "DeepSeek dự phòng", "api_key": "sk-other-12345678"})
+    third = await admin.add_entry({"label": "Ollama", "provider": "openai-compatible", "model": "llama3"})
+    listed = (await admin.entries())["entries"]
+
+    assert [e["label"] for e in listed] == ["DeepSeek công ty", "DeepSeek dự phòng", "Ollama"]
+    assert (first["api_key"], second["api_key"], third["has_key"]) == ("sk-de...efgh", "sk-ot...5678", False)
+    assert "sk-deepseek-abcdefgh" not in str(listed)
+    assert [e["active"] for e in listed] == [False, False, False]
+
+
+async def test_using_a_model_gives_the_agent_its_fields_and_key_and_marks_it_in_use() -> None:
+    store = InMemoryModelSettingsStore()
+    admin = ModelAdmin(PROFILE, store, tenant_id="t", secret_key=KEY)
+    entry = await admin.add_entry(DEEPSEEK)
+
+    shown = await admin.use_entry(entry["id"])
+    listed = (await admin.entries())["entries"]
+
+    assert (shown["model"], shown["base_url"], shown["api_key"]) == (
+        "deepseek-v4-pro",
+        "https://api.deepseek.com",
+        "sk-de...efgh",
+    )
+    assert (shown["entry_id"], listed[0]["active"]) == (entry["id"], True)
+    assert (await admin.resolved()).settings.api_key == "sk-deepseek-abcdefgh"
+
+
+async def test_editing_the_model_in_use_applies_to_the_agent_and_other_edits_do_not() -> None:
+    admin = ModelAdmin(PROFILE, InMemoryModelSettingsStore(), tenant_id="t", secret_key=KEY)
+    used = await admin.add_entry(DEEPSEEK)
+    other = await admin.add_entry({**DEEPSEEK, "label": "Khác"})
+    await admin.use_entry(used["id"])
+
+    await admin.update_entry(used["id"], {"model": "deepseek-chat", "api_key": ""})
+    await admin.update_entry(other["id"], {"model": "unused"})
+
+    settings = (await admin.resolved()).settings
+    assert (settings.model, settings.api_key) == ("deepseek-chat", "sk-deepseek-abcdefgh")
+
+
+async def test_changing_the_settings_by_hand_detaches_them_from_the_list() -> None:
+    admin = ModelAdmin(PROFILE, InMemoryModelSettingsStore(), tenant_id="t", secret_key=KEY)
+    entry = await admin.add_entry(DEEPSEEK)
+    await admin.use_entry(entry["id"])
+
+    await admin.update({"reasoning": "low"})
+
+    assert (await admin.show())["entry_id"] is None
+    assert (await admin.entries())["entries"][0]["active"] is False
+
+
+async def test_removing_the_model_in_use_leaves_the_agent_its_settings_without_a_list_mark() -> None:
+    admin = ModelAdmin(PROFILE, InMemoryModelSettingsStore(), tenant_id="t", secret_key=KEY)
+    entry = await admin.add_entry(DEEPSEEK)
+    await admin.use_entry(entry["id"])
+
+    await admin.delete_entry(entry["id"])
+
+    shown = await admin.show()
+    assert (shown["model"], shown["entry_id"]) == ("deepseek-v4-pro", None)
+    assert (await admin.entries())["entries"] == []
+    with pytest.raises(ModelEntryError) as gone:
+        await admin.delete_entry(entry["id"])
+    assert gone.value.code == "not_found"
+
+
+async def test_a_model_of_the_list_is_tested_and_listed_with_its_own_key() -> None:
+    catalog = Catalog()
+    factory = Factory()
+    admin = ModelAdmin(
+        PROFILE, InMemoryModelSettingsStore(), tenant_id="t", secret_key=KEY, factory=factory, lister=catalog
+    )
+    entry = await admin.add_entry(DEEPSEEK)
+
+    tested = await admin.test_entry(entry["id"])
+    listed = await admin.list_models({"api_key": ""}, entry_id=entry["id"])
+
+    assert (tested["ok"], tested["model"]) == (True, "deepseek-v4-pro")
+    assert factory.built[0].settings.api_key == "sk-deepseek-abcdefgh"
+    assert listed["ok"] is True
+    assert catalog.asked[0].api_key == "sk-deepseek-abcdefgh"
+    assert (await admin.show())["model"] == "from-profile"
+
+
+async def test_the_list_holds_a_limited_number_of_models() -> None:
+    admin = ModelAdmin(PROFILE, InMemoryModelSettingsStore(), tenant_id="t", secret_key=KEY)
+    for number in range(MAX_ENTRIES):
+        await admin.add_entry({**DEEPSEEK, "label": f"m{number}", "api_key": None})
+
+    with pytest.raises(ModelEntryError) as full:
+        await admin.add_entry(DEEPSEEK)
+
+    assert full.value.code == "list_full"
+
+
+async def test_the_entry_routes_add_change_use_test_and_remove_a_model() -> None:
+    async with _service() as client:
+        added = await client.post("/v1/admin/model/entries", json=DEEPSEEK, headers=ADMIN)
+        entry_id = added.json()["id"]
+        patched = await client.patch(
+            f"/v1/admin/model/entries/{entry_id}", json={"label": "Chính"}, headers=ADMIN
+        )
+        used = await client.post(f"/v1/admin/model/entries/{entry_id}/use", headers=ADMIN)
+        tested = await client.post(f"/v1/admin/model/entries/{entry_id}/test", headers=ADMIN)
+        listed = await client.get("/v1/admin/model/entries", headers=ADMIN)
+        removed = await client.delete(f"/v1/admin/model/entries/{entry_id}", headers=ADMIN)
+        missing = await client.post(f"/v1/admin/model/entries/{entry_id}/use", headers=ADMIN)
+        malformed = await client.post("/v1/admin/model/entries/not-an-id/use", headers=ADMIN)
+
+    assert added.status_code == 201
+    assert "sk-deepseek-abcdefgh" not in added.text
+    assert patched.json()["label"] == "Chính"
+    assert (used.status_code, used.json()["model"], used.json()["entry_id"]) == (
+        200,
+        "deepseek-v4-pro",
+        entry_id,
+    )
+    assert (tested.status_code, tested.json()["ok"]) == (200, True)
+    assert [e["active"] for e in listed.json()["entries"]] == [True]
+    assert removed.json() == {"deleted": entry_id}
+    assert (missing.status_code, missing.json()["error"]["kind"]) == (404, "not_found")
+    assert malformed.status_code == 422
+
+
+async def test_the_entry_routes_refuse_a_bad_body_a_chat_token_and_a_key_without_the_encryption_key() -> None:
+    async with _service() as client, _service(secret_key=None) as keyless:
+        no_model = await client.post("/v1/admin/model/entries", json={"label": "x"}, headers=ADMIN)
+        bad_url = await client.post(
+            "/v1/admin/model/entries", json={**DEEPSEEK, "base_url": "ftp://x"}, headers=ADMIN
+        )
+        chat_token = await client.get("/v1/admin/model/entries", headers=CHAT)
+        without_key = await keyless.post("/v1/admin/model/entries", json=DEEPSEEK, headers=ADMIN)
+
+    assert (no_model.status_code, bad_url.status_code, chat_token.status_code) == (422, 422, 403)
+    assert (without_key.status_code, without_key.json()["error"]["kind"]) == (409, "no_encryption_key")

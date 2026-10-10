@@ -27,6 +27,7 @@ from agent_app.db_roles import MIGRATION_URL_ENV, PASSWORD_ENV, RUNTIME_ROLE, bo
 from agent_app.gateway import GatewaySettings, create_app
 from agent_app.home import DEFAULT_HOME, ServiceHome
 from agent_app.ingress import SessionBusyError
+from agent_app.model_entries import PostgresModelEntryStore
 from agent_app.model_factory import Provider, describe_model
 from agent_app.model_settings import (
     SETTING_FIELDS,
@@ -322,6 +323,7 @@ async def _model(args: argparse.Namespace) -> int:
             PostgresModelSettingsStore(db, agent=profile.agent.name),
             tenant_id=DEFAULT_TENANT,
             secret_key=ServiceHome(args.home).secret_key(),
+            entries=PostgresModelEntryStore(db, agent=profile.agent.name),
         )
         if args.model_command == "show":
             shown = await admin.show()

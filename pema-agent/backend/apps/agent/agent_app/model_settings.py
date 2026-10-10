@@ -13,6 +13,7 @@ import asyncio
 import logging
 import math
 import time
+import uuid
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, replace
 from typing import Any, Final, Literal, cast
@@ -21,6 +22,7 @@ from cryptography.exceptions import InvalidTag
 from sqlalchemy import text as sql
 
 from agent_app.model_catalog import list_models
+from agent_app.model_entries import MAX_ENTRIES, InMemoryModelEntryStore, ModelEntry, ModelEntryStore
 from agent_app.model_factory import ModelSettings, Provider, client_for, resolve_model_settings
 from agent_app.profile import Profile
 from agent_app.storage import AgentDatabase, retrying
@@ -56,6 +58,14 @@ class SecretKeyMissingError(RuntimeError):
     """A secret cannot be stored or read without the service's secret key."""
 
 
+class ModelEntryError(ValueError):
+    """The change to the list of models cannot be made; ``code`` says why (``not_found``, ``list_full``)."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
+
+
 @dataclass(frozen=True, slots=True)
 class StoredModelSettings:
     """What an admin stored; None leaves the field to the profile."""
@@ -66,6 +76,8 @@ class StoredModelSettings:
     reasoning: ReasoningEffort | None = None
     dialect: OpenAIDialect | None = None
     api_key_enc: str | None = None
+    entry_id: str | None = None
+    """The model of the list these fields were copied from; None once they were changed by hand."""
     version: int = 0
 
     @property
@@ -132,7 +144,7 @@ class InMemoryModelSettingsStore:
 
 
 _GET = sql(
-    "SELECT provider, model, base_url, reasoning, dialect, api_key_enc, version "
+    "SELECT provider, model, base_url, reasoning, dialect, api_key_enc, entry_id, version "
     "FROM agent_rt.agent_model_settings WHERE tenant_id = :tenant_id AND agent = :agent"
 )
 _VERSION = sql(
@@ -140,11 +152,13 @@ _VERSION = sql(
 )
 _SAVE = sql(
     "INSERT INTO agent_rt.agent_model_settings (tenant_id, agent, provider, model, base_url, reasoning, "
-    "dialect, api_key_enc) VALUES (:tenant_id, :agent, :provider, :model, :base_url, :reasoning, :dialect, "
-    ":api_key_enc) ON CONFLICT (tenant_id, agent) DO UPDATE SET provider = EXCLUDED.provider, "
+    "dialect, api_key_enc, entry_id) VALUES (:tenant_id, :agent, :provider, :model, :base_url, :reasoning, "
+    ":dialect, :api_key_enc, :entry_id) ON CONFLICT (tenant_id, agent) DO UPDATE SET "
+    "provider = EXCLUDED.provider, "
     "model = EXCLUDED.model, base_url = EXCLUDED.base_url, reasoning = EXCLUDED.reasoning, "
     "dialect = EXCLUDED.dialect, "
-    "api_key_enc = EXCLUDED.api_key_enc, version = agent_rt.agent_model_settings.version + 1, "
+    "api_key_enc = EXCLUDED.api_key_enc, entry_id = EXCLUDED.entry_id, "
+    "version = agent_rt.agent_model_settings.version + 1, "
     "updated_at = now() RETURNING version"
 )
 
@@ -170,6 +184,7 @@ class PostgresModelSettingsStore:
                 reasoning=row.reasoning,
                 dialect=row.dialect,
                 api_key_enc=row.api_key_enc,
+                entry_id=row.entry_id,
                 version=row.version,
             )
 
@@ -187,7 +202,7 @@ class PostgresModelSettingsStore:
         params = {
             "tenant_id": tenant_id,
             "agent": self._agent,
-            **{name: getattr(settings, name) for name in (*SETTING_FIELDS, "api_key_enc")},
+            **{name: getattr(settings, name) for name in (*SETTING_FIELDS, "api_key_enc", "entry_id")},
         }
 
         async def work() -> StoredModelSettings:
@@ -274,7 +289,9 @@ class ModelAdmin:
         dynamic: DynamicModel | None = None,
         factory: ClientFactory = client_for,
         lister: ModelLister = list_models,
+        entries: ModelEntryStore | None = None,
     ) -> None:
+        self._entries = entries if entries is not None else InMemoryModelEntryStore()
         self._profile = profile
         self._store = store
         self._tenant_id = tenant_id
@@ -301,6 +318,7 @@ class ModelAdmin:
             "api_key_broken": resolved.api_key_broken,
             "sources": dict(resolved.sources),
             "stored": stored is not None and not stored.empty,
+            "entry_id": None if stored is None else stored.entry_id,
             "version": resolved.version,
         }
 
@@ -309,6 +327,7 @@ class ModelAdmin:
         ``api_key``: a non-empty value is stored encrypted, "" keeps the stored one, None removes it."""
         current = await self._store.get(self._tenant_id) or StoredModelSettings()
         updates: dict[str, Any] = {name: changes[name] for name in SETTING_FIELDS if name in changes}
+        updates["entry_id"] = None
         if "api_key" in changes:
             key = cast(str | None, changes["api_key"])
             if key is None:
@@ -317,7 +336,7 @@ class ModelAdmin:
                 if self._secret_key is None:
                     raise SecretKeyMissingError(NO_SECRET_KEY)
                 updates["api_key_enc"] = encrypt_with(self._secret_key, key)
-        await self._save(replace(current, **updates), [*updates])
+        await self._save(replace(current, **updates), [name for name in updates if name != "entry_id"])
         return await self.show()
 
     async def clear(self) -> dict[str, Any]:
@@ -327,7 +346,9 @@ class ModelAdmin:
 
     async def test(self) -> dict[str, Any]:
         """One tiny call with the effective settings and reasoning off; never stores anything."""
-        resolved = await self.resolved()
+        return await self._ping((await self.resolved()).settings)
+
+    async def _ping(self, settings: ModelSettings) -> dict[str, Any]:
         request = LlmRequest(
             system="Reply with the single word OK.",
             messages=[Message.user("ping")],
@@ -336,19 +357,22 @@ class ModelAdmin:
         )
         started = time.perf_counter()
         try:
-            client = self._factory(resolved.settings)
+            client = self._factory(settings)
             await asyncio.wait_for(client.complete(request), timeout=TEST_TIMEOUT_S)
         except ModelError as err:
-            return {"ok": False, "model": resolved.settings.model, "error_kind": err.kind}
+            return {"ok": False, "model": settings.model, "error_kind": err.kind}
         except TimeoutError:
-            return {"ok": False, "model": resolved.settings.model, "error_kind": "timeout"}
+            return {"ok": False, "model": settings.model, "error_kind": "timeout"}
         latency_ms = round((time.perf_counter() - started) * 1000)
-        return {"ok": True, "model": resolved.settings.model, "latency_ms": latency_ms}
+        return {"ok": True, "model": settings.model, "latency_ms": latency_ms}
 
-    async def list_models(self, trying: Mapping[str, Any]) -> dict[str, Any]:
-        """The provider's models, asked with the effective settings where ``trying`` holds the provider,
-        base URL or key the person typed but has not saved (an empty key: the stored one). Stores nothing."""
+    async def list_models(self, trying: Mapping[str, Any], *, entry_id: str | None = None) -> dict[str, Any]:
+        """The provider's models, asked with the effective settings (or the model of the list ``entry_id``)
+        where ``trying`` holds the provider, base URL or key the person typed but has not saved (an empty key:
+        the stored one). Stores nothing."""
         settings = (await self.resolved()).settings
+        if entry_id is not None:
+            settings = self._settings_of(await self._entry(entry_id))
         given = {name: trying[name] for name in LISTING_FIELDS if trying.get(name)}
         if given.get("provider") not in (None, settings.provider) and "base_url" not in given:
             given["base_url"] = None
@@ -357,6 +381,125 @@ class ModelAdmin:
         except ModelError as err:
             return {"ok": False, "models": [], "error_kind": err.kind}
         return {"ok": True, "models": models}
+
+    async def entries(self) -> dict[str, Any]:
+        """The list of models, each with its key masked, and which one is in use."""
+        active = await self._active()
+        return {"entries": [self._shown(e, active) for e in await self._entries.list(self._tenant_id)]}
+
+    async def add_entry(self, fields: Mapping[str, Any]) -> dict[str, Any]:
+        """``fields``: label, provider, model and optionally base_url, reasoning, dialect, api_key."""
+        if len(await self._entries.list(self._tenant_id)) >= MAX_ENTRIES:
+            raise ModelEntryError("list_full", f"the list holds at most {MAX_ENTRIES} models")
+        entry = ModelEntry(
+            id=uuid.uuid4().hex,
+            label=fields["label"],
+            provider=fields["provider"],
+            model=fields["model"],
+            base_url=fields.get("base_url"),
+            reasoning=fields.get("reasoning"),
+            dialect=fields.get("dialect"),
+            api_key_enc=self._sealed(fields.get("api_key")),
+        )
+        await self._entries.save(self._tenant_id, entry)
+        logger.info("model %s added to the list", entry.id)
+        return self._shown(entry, None)
+
+    async def update_entry(self, entry_id: str, changes: Mapping[str, Any]) -> dict[str, Any]:
+        """Only the fields in ``changes`` change; ``api_key``: a value replaces the key, "" keeps it, None
+        removes it. A model in use is applied again, so the agent follows the edit."""
+        entry = await self._entry(entry_id)
+        updates: dict[str, Any] = {
+            name: changes[name]
+            for name in ("label", "provider", "model", "base_url", "reasoning", "dialect")
+            if name in changes
+        }
+        if "api_key" in changes and changes["api_key"] != "":
+            updates["api_key_enc"] = self._sealed(changes["api_key"])
+        entry = replace(entry, **updates)
+        await self._entries.save(self._tenant_id, entry)
+        active = await self._active()
+        if active == entry.id:
+            await self._apply(entry)
+        logger.info("model %s changed: %s", entry.id, ", ".join(updates) or "nothing")
+        return self._shown(entry, active)
+
+    async def delete_entry(self, entry_id: str) -> None:
+        """Removes the model from the list; if it was in use the agent keeps its settings, now detached."""
+        await self._entry(entry_id)
+        await self._entries.delete(self._tenant_id, entry_id)
+        stored = await self._store.get(self._tenant_id)
+        if stored is not None and stored.entry_id == entry_id:
+            await self._save(replace(stored, entry_id=None), ["entry"])
+        logger.info("model %s removed from the list", entry_id)
+
+    async def use_entry(self, entry_id: str) -> dict[str, Any]:
+        """Makes the agent answer with this model from the next call on."""
+        await self._apply(await self._entry(entry_id))
+        return await self.show()
+
+    async def test_entry(self, entry_id: str) -> dict[str, Any]:
+        """The tiny test call of ``test`` with this model of the list; stores nothing."""
+        return await self._ping(self._settings_of(await self._entry(entry_id)))
+
+    async def _active(self) -> str | None:
+        stored = await self._store.get(self._tenant_id)
+        return None if stored is None else stored.entry_id
+
+    async def _entry(self, entry_id: str) -> ModelEntry:
+        entry = await self._entries.get(self._tenant_id, entry_id)
+        if entry is None:
+            raise ModelEntryError("not_found", "no such model in the list")
+        return entry
+
+    def _sealed(self, api_key: str | None) -> str | None:
+        if not api_key:
+            return None
+        if self._secret_key is None:
+            raise SecretKeyMissingError(NO_SECRET_KEY)
+        return encrypt_with(self._secret_key, api_key)
+
+    def _settings_of(self, entry: ModelEntry) -> ModelSettings:
+        api_key, _ = _api_key(StoredModelSettings(api_key_enc=entry.api_key_enc), self._secret_key)
+        return replace(
+            resolve_model_settings(self._profile),
+            provider=entry.provider,
+            model=entry.model,
+            base_url=entry.base_url,
+            reasoning=entry.reasoning,
+            dialect=entry.dialect,
+            api_key=api_key,
+        )
+
+    def _shown(self, entry: ModelEntry, active: str | None) -> dict[str, Any]:
+        api_key, broken = _api_key(StoredModelSettings(api_key_enc=entry.api_key_enc), self._secret_key)
+        return {
+            "id": entry.id,
+            "label": entry.label,
+            "provider": entry.provider,
+            "model": entry.model,
+            "base_url": entry.base_url,
+            "reasoning": entry.reasoning,
+            "dialect": entry.dialect,
+            "api_key": mask_secret(api_key),
+            "has_key": entry.api_key_enc is not None,
+            "api_key_broken": broken,
+            "active": entry.id == active,
+        }
+
+    async def _apply(self, entry: ModelEntry) -> None:
+        current = await self._store.get(self._tenant_id) or StoredModelSettings()
+        applied = replace(
+            current,
+            provider=entry.provider,
+            model=entry.model,
+            base_url=entry.base_url,
+            reasoning=entry.reasoning,
+            dialect=entry.dialect,
+            api_key_enc=entry.api_key_enc,
+            entry_id=entry.id,
+        )
+        await self._save(applied, ["entry"])
 
     async def _save(self, settings: StoredModelSettings, changed: list[str]) -> None:
         saved = await self._store.save(self._tenant_id, settings)

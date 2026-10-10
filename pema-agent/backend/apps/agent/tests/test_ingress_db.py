@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import os
 from collections.abc import Awaitable, Callable, Iterator
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -23,6 +24,7 @@ from agent_app.db_roles import RUNTIME_ROLE, bootstrap_role
 from agent_app.dispatcher import DispatchSettings
 from agent_app.ingress import SessionBusyError, TurnReply
 from agent_app.ingress_store import PostgresConversationStore, PostgresIngressStore, PostgresSessionLocks
+from agent_app.model_entries import ModelEntry, PostgresModelEntryStore
 from agent_app.model_settings import PostgresModelSettingsStore, StoredModelSettings
 from agent_app.plugins.records import PostgresPluginRecords
 from agent_app.plugins.state import PluginState, PostgresPluginStateStore
@@ -68,7 +70,8 @@ def db_url(migrated: tuple[str, Engine]) -> str:
             sql(
                 "TRUNCATE agent_rt.agent_ingress, agent_rt.agent_conversation, agent_rt.agent_session, "
                 "agent_rt.agent_message, agent_rt.agent_turn, agent_rt.agent_turn_event, agent_rt.agent_memory, "
-                "agent_rt.agent_model_settings, agent_rt.agent_plugin, agent_rt.agent_plugin_record"
+                "agent_rt.agent_model_settings, agent_rt.agent_model_entry, agent_rt.agent_plugin, "
+                "agent_rt.agent_plugin_record"
             )
         )
     return migrated[0]
@@ -395,6 +398,34 @@ def test_collect_joins_waiting_messages_on_postgres(db_url: str) -> None:
         assert [r.id for r in queued] == [r.id for r in records]
         assert {r.status for r in finished} == {"done"}
         assert {r.reply.text if r.reply else None for r in finished} == {"(echo) part 0\n\npart 1\n\npart 2"}
+
+    _run(db_url, check)
+
+
+def test_the_list_of_models_is_stored_per_agent_and_the_settings_remember_which_is_in_use(
+    db_url: str,
+) -> None:
+    async def check(db: AgentDatabase) -> None:
+        entries = PostgresModelEntryStore(db, agent="dev")
+        first = ModelEntry(
+            id="a" * 32, label="DeepSeek", provider="openai-compatible", model="m1", api_key_enc="s1"
+        )
+        second = ModelEntry(id="b" * 32, label="Claude", provider="anthropic", model="m2", reasoning="low")
+
+        await entries.save("t", first)
+        await entries.save("t", second)
+        await entries.save("t", replace(first, model="m1b"))
+
+        assert [e.label for e in await entries.list("t")] == ["DeepSeek", "Claude"]
+        assert (await entries.get("t", first.id)) == replace(first, model="m1b")
+        assert await PostgresModelEntryStore(db, agent="other").list("t") == []
+        assert (await entries.delete("t", second.id), await entries.delete("t", second.id)) == (True, False)
+
+        settings = PostgresModelSettingsStore(db, agent="dev")
+        await settings.save("t", StoredModelSettings(model="m1b", entry_id=first.id))
+        loaded = await settings.get("t")
+        assert loaded is not None
+        assert loaded.entry_id == first.id
 
     _run(db_url, check)
 

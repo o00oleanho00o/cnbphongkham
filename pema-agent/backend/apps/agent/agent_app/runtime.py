@@ -21,6 +21,7 @@ from agent_app.ingress import (
 )
 from agent_app.ingress_store import PostgresConversationStore, PostgresIngressStore, PostgresSessionLocks
 from agent_app.live import LiveAgent
+from agent_app.model_entries import InMemoryModelEntryStore, ModelEntryStore, PostgresModelEntryStore
 from agent_app.model_factory import build_model
 from agent_app.model_settings import (
     SECRET_KEY_ENV,
@@ -195,7 +196,17 @@ def build_runtime(
     dynamic = (
         None if fake else DynamicModel(profile, settings_store, tenant_id=tenant_id, secret_key=secret_key)
     )
-    admin = ModelAdmin(profile, settings_store, tenant_id=tenant_id, secret_key=secret_key, dynamic=dynamic)
+    entry_store: ModelEntryStore = (
+        InMemoryModelEntryStore() if db is None else PostgresModelEntryStore(db, agent=name)
+    )
+    admin = ModelAdmin(
+        profile,
+        settings_store,
+        tenant_id=tenant_id,
+        secret_key=secret_key,
+        dynamic=dynamic,
+        entries=entry_store,
+    )
     memory_backend: MemoryBackend = InMemoryMemoryBackend() if db is None else PostgresMemoryBackend(db)
     skill_store: SkillStore = InMemorySkillStore() if db is None else PostgresSkillStore(db)
     records = (

@@ -28,10 +28,11 @@ from collections import deque
 from collections.abc import AsyncGenerator, Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final, Literal
+from typing import Annotated, Any, Final, Literal
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from fastapi import Path as UrlPath
 from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text as sql
@@ -43,7 +44,7 @@ from agent_app.channel_hub import ChannelHub
 from agent_app.dispatcher import Dispatcher, StreamObserver
 from agent_app.ingress import IngressRecord
 from agent_app.model_factory import Provider
-from agent_app.model_settings import ModelAdmin, SecretKeyMissingError
+from agent_app.model_settings import ModelAdmin, ModelEntryError, SecretKeyMissingError
 from agent_app.plugin_ui import UI_PREFIX, PluginUi, inside
 from agent_app.plugins.install import MAX_ZIP_BYTES
 from agent_app.plugins.jobs import JobRunner
@@ -196,6 +197,11 @@ class Gate:
         return check
 
 
+ENTRY_ID = r"^[0-9a-f]{32}$"
+ENTRY_STATUS = {"not_found": 404, "list_full": 409}
+EntryIdParam = Annotated[str, UrlPath(pattern=ENTRY_ID)]
+
+
 class _Body(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -231,6 +237,30 @@ class ModelListBody(_Body):
 
     provider: Provider | None = None
     base_url: str | None = Field(default=None, max_length=500, pattern=r"^https?://")
+    api_key: str | None = Field(default=None, max_length=500)
+    entry_id: str | None = Field(default=None, pattern=ENTRY_ID)
+    """A model of the list: its own stored key and address are the base of the request."""
+
+
+class ModelEntryBody(_Body):
+    label: str = Field(min_length=1, max_length=100)
+    provider: Provider
+    model: str = Field(min_length=1, max_length=200)
+    base_url: str | None = Field(default=None, max_length=500, pattern=r"^https?://")
+    reasoning: ReasoningEffort | None = None
+    dialect: OpenAIDialect | None = None
+    api_key: str | None = Field(default=None, max_length=500)
+
+
+class ModelEntryPatch(_Body):
+    """Only the fields sent change; ``api_key``: "" keeps the stored key, null removes it."""
+
+    label: str | None = Field(default=None, min_length=1, max_length=100)
+    provider: Provider | None = None
+    model: str | None = Field(default=None, min_length=1, max_length=200)
+    base_url: str | None = Field(default=None, max_length=500, pattern=r"^https?://")
+    reasoning: ReasoningEffort | None = None
+    dialect: OpenAIDialect | None = None
     api_key: str | None = Field(default=None, max_length=500)
 
 
@@ -544,12 +574,63 @@ def _add_admin_routes(
     async def list_provider_models(body: ModelListBody) -> Response:
         """The models the provider offers, for the list next to the model field; 502 with the error kind
         when the provider refuses (a wrong key, no listing endpoint)."""
-        outcome = await admin.list_models(body.model_dump(exclude_none=True))
+        trying = body.model_dump(exclude_none=True, exclude={"entry_id"})
+        try:
+            outcome = await admin.list_models(trying, entry_id=body.entry_id)
+        except ModelEntryError as err:
+            return _error(ENTRY_STATUS[err.code], err.code, str(err))
         return JSONResponse(outcome, status_code=200 if outcome["ok"] else 502)
+
+    _add_model_entry_routes(app, admin, authorized)
 
     @app.post("/v1/admin/model/test", dependencies=[authorized])
     async def test_model() -> Response:
         outcome = await admin.test()
+        return JSONResponse(outcome, status_code=200 if outcome["ok"] else 502)
+
+
+def _add_model_entry_routes(app: FastAPI, admin: ModelAdmin, authorized: Any) -> None:
+    """The list of models an admin keeps ready: show, add, change, remove, use one, test one."""
+
+    async def answer(work: Awaitable[Any], status: int = 200) -> Response:
+        try:
+            return JSONResponse(await work, status_code=status)
+        except SecretKeyMissingError as err:
+            return _error(409, "no_encryption_key", str(err))
+        except ModelEntryError as err:
+            return _error(ENTRY_STATUS[err.code], err.code, str(err))
+
+    @app.get("/v1/admin/model/entries", dependencies=[authorized])
+    async def list_entries() -> dict[str, Any]:
+        return await admin.entries()
+
+    @app.post("/v1/admin/model/entries", dependencies=[authorized])
+    async def add_entry(body: ModelEntryBody) -> Response:
+        return await answer(admin.add_entry(body.model_dump()), 201)
+
+    @app.patch("/v1/admin/model/entries/{entry_id}", dependencies=[authorized])
+    async def change_entry(body: ModelEntryPatch, entry_id: EntryIdParam) -> Response:
+        changes = {name: getattr(body, name) for name in body.model_fields_set}
+        return await answer(admin.update_entry(entry_id, changes))
+
+    @app.delete("/v1/admin/model/entries/{entry_id}", dependencies=[authorized])
+    async def delete_entry(entry_id: EntryIdParam) -> Response:
+        async def work() -> dict[str, Any]:
+            await admin.delete_entry(entry_id)
+            return {"deleted": entry_id}
+
+        return await answer(work())
+
+    @app.post("/v1/admin/model/entries/{entry_id}/use", dependencies=[authorized])
+    async def use_entry(entry_id: EntryIdParam) -> Response:
+        return await answer(admin.use_entry(entry_id))
+
+    @app.post("/v1/admin/model/entries/{entry_id}/test", dependencies=[authorized])
+    async def test_entry(entry_id: EntryIdParam) -> Response:
+        try:
+            outcome = await admin.test_entry(entry_id)
+        except ModelEntryError as err:
+            return _error(ENTRY_STATUS[err.code], err.code, str(err))
         return JSONResponse(outcome, status_code=200 if outcome["ok"] else 502)
 
 

@@ -24,6 +24,7 @@ DATA_TABLES: Final = (
     "agent_conversation",
     "agent_ingress",
     "agent_model_settings",
+    "agent_model_entry",
     "agent_plugin",
     "agent_plugin_record",
 )
