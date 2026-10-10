@@ -1,0 +1,53 @@
+# Development only: the api and the agent run the backend sources of this checkout instead of the copy baked into
+# their images, so a code change needs no image build. Never use it on a server.
+#
+# From the repo root (paths below are relative to it):
+#   docker compose -f docker-compose.yml -f pema-agent/infra/docker-compose.dev.yml up -d
+#
+#   - api: reloads by itself when a Python file under backend/ changes (uvicorn --reload, polling).
+#   - agent: `docker compose restart agent` after a change (a few seconds). The image's built parts stay: the
+#     Zalo bridge's packages and the plugins' browser halves are kept in volumes over the mounted folder (a
+#     checkout's node_modules may be built for another OS). A change to a plugin's browser half still needs an
+#     agent image build, or `pnpm dev:mock` on the host.
+#   - the agent listens on 127.0.0.1:8088 too, so `pnpm dev` on the host can use it:
+#       PEMA_API_URL=http://127.0.0.1:8000 PEMA_AGENT_INTERNAL_URL=http://127.0.0.1:8088 pnpm dev
+#
+# Changes to dependencies (pyproject.toml, uv.lock, package.json) still need an image build.
+services:
+  api:
+    environment:
+      # The mounted sources come before the installed (non-editable) copies in /opt/venv.
+      PYTHONPATH: /src/apps/api:/src/packages/contracts/src:/src/packages/secret-cipher/src
+    volumes:
+      - ./pema-agent/backend:/src:ro
+    command:
+      - uvicorn
+      - --factory
+      - pema.bootstrap:create_app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
+      - --reload-dir
+      - /src/apps/api/pema
+      - --reload-dir
+      - /src/packages
+
+  agent:
+    volumes:
+      # Not read-only: Docker creates the mount points of the volumes below inside it when the checkout lacks them.
+      - ./pema-agent/backend/apps/agent:/app/backend/apps/agent
+      - ./pema-agent/backend/packages/agent-core:/app/backend/packages/agent-core:ro
+      - ./pema-agent/backend/packages/secret-cipher:/app/backend/packages/secret-cipher:ro
+      - zalo-bridge-modules:/app/backend/apps/agent/plugins/zalo/bridge/node_modules
+      - zalo-ui-dist:/app/backend/apps/agent/plugins/zalo/ui/dist
+      - web-ui-dist:/app/backend/apps/agent/plugins/web/ui/dist
+    ports:
+      - "127.0.0.1:8088:8088"
+
+volumes:
+  # Filled from the image the first time; remove them (docker volume rm) after an agent image build to refresh.
+  zalo-bridge-modules:
+  zalo-ui-dist:
+  web-ui-dist:

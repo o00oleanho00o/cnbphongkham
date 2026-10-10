@@ -14,6 +14,8 @@
 # Login (owner): admin@gmail.com / Admin@123, set in infra/.env.local-demo (PEMA_SEED_OWNER_EMAIL, PEMA_SEED_PASSWORD;
 # the shell wins; with the password empty a random one is printed once by `docker compose logs seed`).
 # Stop: `docker compose down` (add -v to also drop data; the seed only runs on an empty database).
+# Development: add `-f pema-agent/infra/docker-compose.dev.yml` to run the backend sources of this checkout (the api
+# reloads by itself, the agent with `docker compose restart agent`; no image build for a code change).
 #
 #   http://localhost:4190   design canvas of the app (Pema App)
 #   http://localhost:4191   design canvas of the web (dropdown: Web cũ / Màn mới / Cả hai)
