@@ -1161,6 +1161,90 @@ Hướng của repo này về cơ bản trùng với phương án C, và có m�
 - **Viết lại mọi trang agent trong app.** Họ làm được vì không có plugin. Mình giữ cách "plugin tự mang giao
   diện" cho các trang quản trị plugin. Riêng khung chat với agent thì sau này làm sẵn trong Next.
 
+## Việc còn lại (ghi 2026-10-10, sau tab Model; bàn tiếp với user)
+
+Đã xong trong vòng này: menu gọn, Plugins kiểu connector, cầu nối Zalo đóng gói sẵn, cảnh báo thiếu model,
+Model (mẫu có sẵn + danh sách nhiều model, commit `40619ff8` + `5a020393`), Phiên chat / Trace / Usage, tên người Zalo.
+
+Còn lại, theo thứ tự user đã đồng ý trong hướng nói chuyện:
+
+1. **Tab Bộ nhớ** (`/admin/agent/memory`, cạnh Phiên chat). Chưa làm. Dữ liệu sẵn ở `agent_rt.agent_memory`
+   (`agentcore/memory/service.py`: ghi chú của agent ≤ 2.200 ký tự, ghi chú về từng người ≤ 1.375, ngăn bằng `§`,
+   có kiểm tra phiên bản). Không cần migration. Cần chốt: admin có được sửa/xóa ghi chú về người không (dữ liệu
+   liên quan bệnh nhân; chưa có nơi ghi lịch sử đổi); cần thêm hàm liệt kê người có ghi chú (đọc trực tiếp bảng).
+2. **Lịch tự động (schedules)**: agent chưa có bộ hẹn giờ. Làm thành plugin riêng, để sau.
+3. **MCP**: chưa có. Làm thành plugin `mcp`, để sau.
+4. **Tools**: không làm; đã hiện trong trang chi tiết từng plugin.
+5. **RAG (plugin `knowledge`)**: user chốt làm TRƯỚC, kế hoạch ở mục "Plan: RAG as the plugin `knowledge`" bên dưới
+   (chưa code, chờ user duyệt).
+6. **"Hiểu biết" = 5 tầng context engineering**: làm SAU RAG, xem mục "Deferred: tab Hiểu biết (5 tầng)".
+
+Mở, chưa quyết: bác sĩ duyệt bản nháp AI (trang `/review` cũ) chưa có màn hình; nên thành plugin approval-gate.
+Tạo tài khoản nhân viên chỉ qua seed hoặc API. `scripts/live-real-check.ts` còn mở `/review`, cần viết lại.
+
+Dọn sau: drop DB tạm `agent_activity_test`; xóa 4 volume `cnbphongkham_*` rỗng; xóa `pema-agent/.local-run/`;
+dừng tiến trình `dev:mock` còn sót (cổng 3000/4010). Trước khi merge: `pnpm smoke`, `pnpm visual`, quét QR Zalo
+và vòng tin nhắn thật, dọn `mock/contract.test.ts` (2 test cũ đang hỏng), tái tạo `schema.d.ts`.
+Đã build lại image agent và frontend để thấy trên :3000: chưa, cần user cho phép lệnh Docker.
+
+## Deferred: tab Hiểu biết (5 tầng context engineering) (user, 2026-10-10; làm sau RAG)
+
+Mỗi câu trả lời của agent được dựng từ 5 tầng; tầng 4 là RAG. Admin hiện chưa xem/sửa được tầng nào:
+
+| Tầng | Ở đâu | Việc làm sau |
+|---|---|---|
+| 1 Nhân cách, luật | `agents/<agent>/SOUL.md`, `AGENTS.md` (file trong image; `PromptEnv.persona/rules`) | xem; sửa trên web = lưu vào DB đè lên file, nút "Về bản gốc", mỗi lần lưu một dòng lý do. Cẩn thận: đổi một dòng luật là đổi tính agent ngay |
+| 2 Kỹ năng | `agentcore/skills` (bundled = file, chỉ đọc; của agent = `agent_skill` DB) | danh sách, xem, sửa/xóa kỹ năng của agent, thêm mới |
+| 3 Bộ nhớ | `agentcore/memory`, bảng `agent_memory` (ghi chú agent ≤ 2.200 ký tự, về từng người ≤ 1.375, ngăn bằng `§`, ghi có kiểm tra phiên bản) | route admin + trang; tên người lấy từ plugin như Phiên chat; chốt: admin sửa/xóa ghi chú về người? (dữ liệu bệnh nhân, chưa có nhật ký thay đổi); cần hàm liệt kê người có ghi chú |
+| 4 Tài liệu tra cứu | RAG, plugin `knowledge` | xem plan RAG bên dưới |
+| 5 Ngữ cảnh lúc chạy | giờ, kênh, bước, tóm tắt hội thoại (section `environment`, `status`, compaction) | chỉ xem; nút "Xem prompt agent đang thấy" của một phiên |
+
+Hình dạng: tab "Hiểu biết" trong Điều khiển agent (tên chưa chốt: "Hiểu biết" hay "Tri thức"), gom 4 mục; mục Tài liệu
+dẫn sang trang của plugin `knowledge`. Tầng 1, 2, 3 là LÕI (`agentcore`), chỉ thêm route admin + trang như Phiên chat,
+không cần plugin. Lùi `agentcore.sdk` (refactor, user không thấy) và Graph, `memory_consolidation`, `clinic_*` về sau nữa.
+
+## Plan: RAG as the plugin `knowledge` (viết 2026-10-10, CHỜ USER DUYỆT, chưa code)
+
+Nguyên tắc: agent độc lập, không gọi clinic API; chép code đã có ở `apps/api/pema/knowledge/*` (4.020 dòng, port của
+zalo-agent `src/knowledge` + vector) sang plugin và bỏ phụ thuộc `pema`/`pema_contracts` (import-linter cấm agent
+import `pema`). Khi plugin chạy: xóa `apps/api/pema/knowledge`, `admin_kb.py`, bảng `agent.kb_*` của clinic API sau khi
+chuyển dữ liệu (hỏi user trước; clinic API còn dùng `/guide` = nguồn gắn nhãn `guide`, phải quyết số phận của nó).
+
+Cái cần giữ nguyên từ bản đã có (quy tắc, không bàn lại):
+- Mặc định ĐÓNG: agent chưa gán nguồn nào thì không đọc được gì.
+- Trích an toàn: DOCX/XLSX bằng SAX, trần chống zip bomb, worker có timeout, bộ đếm số lần thử (`so_lan_thu`) để file
+  độc không làm kẹt worker, kiểm chữ ký file (magic bytes).
+- KB chỉ chứa văn bản do phòng khám viết (quy trình, FAQ), không chứa dữ liệu bệnh nhân; không nhúng dữ liệu bệnh nhân.
+- Kênh bệnh nhân chỉ trích dẫn nguồn đã được bác sĩ duyệt (`approved_by_clinical_owner`).
+- Tìm: Postgres FTS cột `tsv` (đã bỏ dấu tiếng Việt, đặc biệt `đ`) + pgvector (bge-m3, 1024) gộp RRF; không có
+  embedding thì chỉ còn FTS (đúng như zalo-agent đang chạy thật). Compose đang `PEMA_EMBEDDING_ENABLED=false`.
+- Tool `kb_search` (không nhét vào prompt, giữ cache): kết quả bọc "nội dung không tin cậy", chống giả nhãn
+  `[Nguồn: …]`, lọc ký tự ẩn, đóng gói theo ngân sách ký tự; có mặt chỉ khi có nguồn đã gán.
+
+Các bước (mỗi bước một commit, test theo `.claude/rules/testing.md`):
+1. LÕI: `ctx.register_migrations(...)` cho plugin (bảng riêng, schema của plugin, quyền cho role `agent_rt_app`,
+   chạy khi bật plugin hoặc khi `agent db migrate`; chốt ở câu hỏi 1). Hiện plugin chỉ có `ctx.storage` JSON, không
+   tìm vector được.
+2. Plugin `knowledge`, phần dữ liệu: bảng nguồn, đoạn (`tsv`, `embedding vector(1024)`), gán nguồn cho agent, cờ duyệt;
+   cần extension `vector` (image Postgres của compose đã là `pgvector/pgvector`, chỉ cần `CREATE EXTENSION`).
+3. Nạp: tải file/gõ văn bản → lưu → worker nền (`register_job`) trích + chia đoạn + nhúng + index; trạng thái
+   `cho_xu_ly/dang_xu_ly/san_sang/hong`; tải lại (reindex).
+4. Tìm + tool `kb_search` (+ `kb_read` đọc cả đoạn quanh kết quả nếu cần) và đoạn ngắn trong system prompt liệt kê
+   tên các nguồn đang có, để model biết có gì mà tra.
+5. Route admin của plugin + nửa trình duyệt (`ui/dist/client.js`): Nguồn (danh sách, tìm, phân trang), Thêm (file/văn
+   bản), Duyệt, Xem đoạn, Thử tìm ("kết quả sẽ như agent thấy"), Gán agent, Cài đặt (nhà cung cấp embedding, top-k,
+   ngân sách ký tự). Hiện thành tab trong trang của plugin như Zalo; nếu thấy quá nặng, chuyển sang tab riêng.
+6. Dữ liệu cũ: công cụ chuyển nguồn đã nạp ở clinic API sang plugin (một lần), rồi gỡ code cũ.
+
+Câu hỏi chờ user (xem câu trả lời trong phiên):
+1. Cách plugin có bảng: migration của plugin chạy cùng `agent db migrate` (đơn giản, đồng bộ phiên bản), hay plugin tự
+   chạy migration khi bật (độc lập hơn nhưng quyền DDL rộng hơn cho service)?
+2. Ai bấm duyệt nguồn: agent chỉ có quyền `admin` (owner, manager qua SSO), chưa có vai bác sĩ. Tạm: owner/manager
+   duyệt và ghi tên người duyệt + giờ; hay thêm quyền riêng `kb.approve` vào token SSO (cần đổi clinic API)?
+3. Embedding vector: bản đầu chỉ FTS (như zalo-agent), vector làm khi có Ollama bge-m3? Hay làm cả vector ngay?
+4. Số phận `/guide` của clinic (bài hướng dẫn = nguồn KB gắn nhãn `guide`): giữ dữ liệu bên clinic, hay chuyển sang
+   plugin?
+
 ## Suggested skills
 
 - `handoff` (`.claude/skills/handoff/SKILL.md`) — run again at the end of the next session to refresh this doc.
