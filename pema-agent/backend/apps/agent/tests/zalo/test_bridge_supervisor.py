@@ -193,3 +193,52 @@ async def test_an_external_bridge_is_always_there_and_cannot_be_installed(tmp_pa
     job = asyncio.create_task(supervisor.keep_running(lambda: True))
     await asyncio.sleep(0.01)
     job.cancel()
+
+
+def _bundled_folder(tmp_path: Path) -> Path:
+    """A bridge folder as the agent's image leaves it: sources plus their installed packages."""
+    folder = tmp_path / "image-bridge"
+    for package in ("tsx", "zca-js"):
+        (folder / "node_modules" / package).mkdir(parents=True)
+    (folder / "package.json").write_text(json.dumps({"version": "0.1.0"}), encoding="utf-8")
+    return folder
+
+
+async def test_a_bundled_bridge_is_there_without_installing(tmp_path: Path) -> None:
+    supervisor = _supervisor(tmp_path / "data", FakeRunner(), bundled=_bundled_folder(tmp_path))
+
+    status = supervisor.status()
+
+    assert (status.installed, status.bundled, status.version) == (True, True, "0.1.0")
+
+
+async def test_a_bundled_bridge_runs_from_its_own_folder_when_wanted(tmp_path: Path) -> None:
+    runner = FakeRunner()
+    folder = _bundled_folder(tmp_path)
+    supervisor = _supervisor(tmp_path / "data", runner, bundled=folder)
+
+    await supervisor.step(wanted=True)
+
+    assert supervisor.status().running is True
+    assert runner.spawned[0][1] == folder
+    assert runner.commands == []
+    await supervisor.stop()
+
+
+async def test_a_bundled_bridge_cannot_be_installed_or_removed(tmp_path: Path) -> None:
+    supervisor = _supervisor(tmp_path / "data", FakeRunner(), bundled=_bundled_folder(tmp_path))
+
+    with pytest.raises(ValueError, match="có sẵn"):
+        await supervisor.install()
+    with pytest.raises(ValueError, match="có sẵn"):
+        await supervisor.uninstall()
+
+
+async def test_a_bundled_folder_without_its_packages_falls_back_to_installing(tmp_path: Path) -> None:
+    folder = tmp_path / "checkout-bridge"
+    folder.mkdir()
+    supervisor = _supervisor(tmp_path / "data", FakeRunner(), bundled=folder)
+
+    status = await supervisor.install()
+
+    assert (status.installed, status.bundled) == (True, False)

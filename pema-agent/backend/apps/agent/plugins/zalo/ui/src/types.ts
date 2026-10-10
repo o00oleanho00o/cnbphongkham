@@ -48,6 +48,8 @@ export interface QrStatus {
 
 export interface Bridge {
   installed: boolean;
+  /** Ready in the agent's image: nothing to install or remove. */
+  bundled: boolean;
   installing: boolean;
   version: string | null;
   running: boolean;

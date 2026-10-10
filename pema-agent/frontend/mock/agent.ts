@@ -396,6 +396,7 @@ export function buildAgentRouter(): Router {
   r.get("/v1/plugins/zalo/bridge", null, (): Reply => ({
     body: {
       installed: true,
+      bundled: true,
       installing: false,
       version: "0.1.0",
       running: true,

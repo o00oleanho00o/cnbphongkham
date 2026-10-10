@@ -7,6 +7,7 @@ import {
   CHANNEL_HINT,
   CHANNEL_LABEL,
   EMPTY_OA_KEYS,
+  PERSONAL_RISK,
   clampDelay,
   formOf,
   formProblem,
@@ -116,6 +117,17 @@ export function AccountDrawer({
               options={CHANNELS.map((c) => ({ value: c, label: CHANNEL_LABEL[c] }))}
             />
           </ui.Field>
+          {form.channel === "zalo_personal" && created === null && (
+            <label className="flex items-start gap-2 rounded-tile border border-warning-line bg-warning-soft p-3 text-small text-ink">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 shrink-0"
+                checked={form.riskAccepted}
+                onChange={(e) => set("riskAccepted", e.target.checked)}
+              />
+              <span>{PERSONAL_RISK}</span>
+            </label>
+          )}
         </>
       )}
 

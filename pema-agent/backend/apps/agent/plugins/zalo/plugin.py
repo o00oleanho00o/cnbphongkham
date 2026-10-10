@@ -41,6 +41,7 @@ from .models import AccountConfig, ChannelKind
 from .personal.channel import ZaloPersonalChannel
 from .personal.client import BridgeAccountApi, BridgeClient
 from .personal.friends import SWEEP_EVERY_S, FriendRequests, auto_accept_round, handle_friend_event
+from .personal.supervisor import SOURCE as BRIDGE_SOURCE
 from .personal.supervisor import BridgeSupervisor
 
 SYNC_EVERY_S: Final = 15.0
@@ -84,7 +85,11 @@ class ZaloPlugin:
         self.friend_requests = FriendRequests(ctx.storage)
         self.bot_client = bot_client
         self.bridge = BridgeSupervisor(
-            lambda: ctx.data_dir, self_url=lambda: ctx.self_url, on_restart=self._soon_sync, external=bridge
+            lambda: ctx.data_dir,
+            self_url=lambda: ctx.self_url,
+            on_restart=self._soon_sync,
+            external=bridge,
+            bundled=BRIDGE_SOURCE,
         )
         self._channels: dict[str, _Running] = {}
         self._accounts: dict[str, AccountConfig] = {}

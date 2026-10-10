@@ -63,12 +63,19 @@ describe("account form", () => {
   });
 
   it("checks the id only when creating, and the label always", () => {
-    const form = { ...formOf(null), label: "Nick" };
+    const form = { ...formOf(null), label: "Nick", riskAccepted: true };
     expect(formProblem({ ...form, id: "Nick 1" }, true)).toMatch(/ID/);
     expect(formProblem({ ...form, id: "x".repeat(59) }, true)).toMatch(/58/);
     expect(formProblem({ ...form, id: "nick-1" }, true)).toBeNull();
     expect(formProblem({ ...form, id: "" }, false)).toBeNull();
     expect(formProblem({ ...form, label: "  " }, false)).toMatch(/tên/);
+  });
+
+  it("asks a new personal nick to accept the risk, but not a bot or a saved nick", () => {
+    const form = { ...formOf(null), id: "nick-1", label: "Nick" };
+    expect(formProblem(form, true)).toMatch(/rủi ro/);
+    expect(formProblem({ ...form, channel: "zalo_bot" }, true)).toBeNull();
+    expect(formProblem(form, false)).toBeNull();
   });
 
   it("refuses an id the server would not take, but not an empty list", () => {

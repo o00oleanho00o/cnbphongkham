@@ -1,9 +1,11 @@
 # syntax=docker/dockerfile:1
 # The general agent (apps/agent): gateway, dashboard (plugin web), bundled plugins, and Node + pnpm for the plugins'
-# helper processes (the Zalo bridge is installed from the dashboard into the home volume, never baked in).
+# helper processes. The Zalo bridge's packages are installed here, in the plugin's own `bridge` folder, so the bridge
+# is ready from the start (nobody installs it from the dashboard); it runs only while a personal account needs it.
 # Build context: pema-agent/ (see docker-compose.yml). Ignore rules: agent.Dockerfile.dockerignore.
 #
-# Stages: node (Node 22 + pnpm) -> ui (builds the plugins' browser halves) ; builder (uv) -> runtime (non-root).
+# Stages: node (Node 22 + pnpm) -> ui (builds the plugins' browser halves), bridge (the Zalo bridge's production
+# packages) ; builder (uv) -> runtime (non-root).
 # The agent app is installed editable on purpose: it finds its bundled plugins next to its package folder.
 
 FROM node:22-bookworm-slim AS node
@@ -21,6 +23,12 @@ COPY backend/apps/agent/plugins/web/ui web/ui
 COPY backend/apps/agent/plugins/zalo/ui zalo/ui
 # zalo first: the dashboard's stylesheet scans the other plugins' sources, the zalo build reads the SDK types.
 RUN cd zalo/ui && pnpm run build && cd ../../web/ui && pnpm run build
+
+
+FROM node AS bridge
+WORKDIR /build/bridge
+COPY backend/apps/agent/plugins/zalo/bridge/package.json backend/apps/agent/plugins/zalo/bridge/pnpm-lock.yaml backend/apps/agent/plugins/zalo/bridge/pnpm-workspace.yaml ./
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store     pnpm install --frozen-lockfile --prod
 
 
 FROM python:3.12-slim-bookworm AS builder
@@ -75,6 +83,7 @@ COPY --from=builder /app/backend/packages/secret-cipher /app/backend/packages/se
 COPY --from=builder /app/backend/apps/agent /app/backend/apps/agent
 COPY --from=ui /build/plugins/web/ui/dist /app/backend/apps/agent/plugins/web/ui/dist
 COPY --from=ui /build/plugins/zalo/ui/dist /app/backend/apps/agent/plugins/zalo/ui/dist
+COPY --from=bridge /build/bridge/node_modules /app/backend/apps/agent/plugins/zalo/bridge/node_modules
 
 USER agent
 WORKDIR /app/backend/apps/agent

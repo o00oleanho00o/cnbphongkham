@@ -42,7 +42,12 @@ export interface AccountForm {
   autoAcceptFriends: boolean;
   autoAcceptDelay: number;
   disabledTools: string[];
+  /** A new personal nick: the person ticked that zca-js is unofficial and the nick can be locked. */
+  riskAccepted: boolean;
 }
+
+export const PERSONAL_RISK =
+  "Tôi hiểu nick cá nhân chạy qua giao thức không chính thức (zca-js): Zalo có thể khóa nick. Tôi dùng nick phụ.";
 
 export function formOf(account: Account | null): AccountForm {
   const channel = account?.channel ?? "zalo_personal";
@@ -61,6 +66,7 @@ export function formOf(account: Account | null): AccountForm {
     autoAcceptFriends: account?.auto_accept_friends ?? false,
     autoAcceptDelay: account?.auto_accept_friend_delay_minutes ?? 1,
     disabledTools: account?.disabled_tools ?? [],
+    riskAccepted: false,
   };
 }
 
@@ -97,6 +103,9 @@ export function clampDelay(minutes: number): number {
 export function formProblem(form: AccountForm, creating: boolean): string | null {
   if (creating && !ACCOUNT_ID.test(form.id)) return "ID chỉ gồm chữ thường, số và dấu gạch ngang (vd: nick-cham-soc).";
   if (creating && form.id.length > MAX_ACCOUNT_ID) return `ID tối đa ${MAX_ACCOUNT_ID} ký tự.`;
+  if (creating && form.channel === "zalo_personal" && !form.riskAccepted) {
+    return "Đánh dấu ô xác nhận rủi ro để thêm nick cá nhân.";
+  }
   if (!form.label.trim()) return "Nhập tên hiển thị.";
   if (form.label.trim().length > 100) return "Tên hiển thị tối đa 100 ký tự.";
   const bad = parseIds(form.allowlistIds).find((uid) => !ZALO_ID.test(uid));

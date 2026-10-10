@@ -1059,6 +1059,14 @@ Steps (each: commit, stop, report):
     section tabs are only Tổng quan, Model, Plugins. "+ Thêm" is a placeholder: the agent has
     `POST /v1/admin/plugins/install/zip`, the web does not use it yet. The mock agent gained
     `PATCH /v1/admin/plugins/{name}/settings`.
+  - **Zalo bridge bundled (2026-10-10):** `agent.Dockerfile` installs the bridge's production packages into
+    `plugins/zalo/bridge/node_modules` (stage `bridge`); `BridgeSupervisor(bundled=SOURCE)` treats a folder with
+    `node_modules/{tsx,zca-js}` as ready (status `bundled`, install/uninstall refused, 409 on the route) and runs
+    the bridge from it while a personal account is on. Without it (a checkout without `pnpm install` in the bridge)
+    the old install button still works. The zca-js warning moved from the install button to adding a personal
+    account (a required tick box), agreed by the user. Channels that fail to start were already retried every
+    30 s by the channel hub; `logged_out`/`session_dead`/`blocked` are not retried (they wait for a QR scan).
+    Also fixed: the agent sent `kill_switch.reason: null`, which the bridge refused (`6c285da7`).
   - **Target architecture (user's diagram, Copilot REQ 25):** `agentcore` (prompt, context, harness, loop, graph) +
     `agent_app` (profile TOML, CLI, HTTP) + plugins through `agentcore.sdk` (`zalo_bot`, `knowledge_pg`,
     `memory_consolidation`, `clinic_*`). Gaps found: no `agentcore.sdk` (plugins import `agent_app`, 14 places), no

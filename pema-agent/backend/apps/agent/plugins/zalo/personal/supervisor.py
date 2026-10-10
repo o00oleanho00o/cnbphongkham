@@ -1,9 +1,14 @@
-"""The Node bridge on this machine: installing it (on an admin's request), running it while a personal account
-needs it, and stopping it.
+"""The Node bridge on this machine: finding it ready (bundled) or installing it, running it while a personal
+account needs it, and stopping it.
 
-Installing copies the bridge's sources from the plugin folder into the plugin's data folder and runs
-``pnpm install --frozen-lockfile --prod`` there (the plugin folder is never written). Nothing is installed
-on its own: an admin presses Install, reads the warning (zca-js is unofficial; the account can be locked).
+Bundled: the agent's image installs the bridge's packages in the plugin's own ``bridge`` folder at build time,
+so the bridge is there from the start and nobody installs anything; install and uninstall are refused. The
+warning that zca-js is unofficial (the account can be locked) is shown, and must be accepted, when a personal
+account is added.
+
+Installed (no bundled copy, e.g. the agent run from a checkout): an admin presses Install; it copies the
+bridge's sources from the plugin folder into the plugin's data folder and runs
+``pnpm install --frozen-lockfile --prod`` there (the plugin folder is never written).
 
 Running: while the bridge is installed and at least one personal account is enabled, the plugin's job keeps
 one ``node`` process on a free loopback port with a fresh HMAC secret; the process gets a minimal environment
@@ -33,6 +38,8 @@ from .client import BridgeClient
 
 SOURCE: Final = Path(__file__).resolve().parents[1] / "bridge"
 COPIED: Final = ("package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "tsconfig.json", "src")
+BUNDLED_PACKAGES: Final = ("tsx", "zca-js")
+"""Packages whose presence in ``<folder>/node_modules`` marks a ready bundled bridge."""
 MIN_NODE: Final = (22, 13)
 INSTALL_TIMEOUT_S: Final = 15 * 60.0
 HEALTH_TIMEOUT_S: Final = 30.0
@@ -55,6 +62,8 @@ PASSED_ENV: Final = (
 )
 """The only variables of the service the bridge inherits: what Node needs to run, none of the service's
 keys."""
+
+BUNDLED_REFUSAL: Final = "cầu nối có sẵn trong bản cài của agent, không cần cài hay gỡ"
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +128,8 @@ class _Run:
 @dataclass(slots=True)
 class BridgeStatus:
     installed: bool = False
+    bundled: bool = False
+    """Ready in the agent's image: nothing to install or remove."""
     installing: bool = False
     version: str | None = None
     running: bool = False
@@ -128,6 +139,7 @@ class BridgeStatus:
     def to_json(self) -> dict[str, Any]:
         return {
             "installed": self.installed,
+            "bundled": self.bundled,
             "installing": self.installing,
             "version": self.version,
             "running": self.running,
@@ -145,6 +157,7 @@ class BridgeSupervisor:
         runner: Runner | None = None,
         on_restart: Callable[[], None] = lambda: None,
         external: BridgeClient | None = None,
+        bundled: Path | None = None,
         client_factory: Callable[[str, str], BridgeClient] = BridgeClient,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
@@ -155,6 +168,8 @@ class BridgeSupervisor:
         self._on_restart = on_restart
         self._external = external
         """A bridge run outside this plugin (tests, a separate container): always there, never installed."""
+        self._bundled = bundled
+        """A folder that may hold the bridge with its packages already installed (the image does it)."""
         self._client_factory = client_factory
         self._run: _Run | None = None
         self._installing = False
@@ -180,6 +195,15 @@ class BridgeSupervisor:
     def status(self) -> BridgeStatus:
         if self._external is not None:
             return BridgeStatus(installed=True, version="external", running=True)
+        if self._bundled_ready():
+            return BridgeStatus(
+                installed=True,
+                bundled=True,
+                version=_package_version(self._bundled_folder()),
+                running=self._run is not None,
+                error=self._error,
+                log=self._log[-MAX_LOG_LINES:],
+            )
         marker = self._marker()
         return BridgeStatus(
             installed=marker is not None,
@@ -191,13 +215,15 @@ class BridgeSupervisor:
         )
 
     def installed(self) -> bool:
-        return self._external is not None or self._marker() is not None
+        return self._external is not None or self._bundled_ready() or self._marker() is not None
 
     async def install(self) -> BridgeStatus:
         """Copies the sources and installs their packages; refuses a second install while one runs. Errors are
         kept in the status (and raised as ``ValueError`` for the route)."""
         if self._external is not None:
             raise ValueError("the bridge is run outside the plugin")
+        if self._bundled_ready():
+            raise ValueError(BUNDLED_REFUSAL)
         if self._installing:
             raise ValueError("an install is already running")
         self._installing = True
@@ -214,6 +240,8 @@ class BridgeSupervisor:
     async def uninstall(self) -> BridgeStatus:
         if self._external is not None:
             raise ValueError("the bridge is run outside the plugin")
+        if self._bundled_ready():
+            raise ValueError(BUNDLED_REFUSAL)
         await self.stop()
         await asyncio.to_thread(shutil.rmtree, self._root(), True)
         self._error = None
@@ -266,7 +294,7 @@ class BridgeSupervisor:
         if node is None:
             self._failed("node is not installed on this machine")
             return
-        folder = self._installed_folder()
+        folder = self._bundled_folder() if self._bundled_ready() else self._installed_folder()
         port = _free_port()
         secret = secrets.token_hex(32)
         env = {key: value for key, value in os.environ.items() if key.upper() in PASSED_ENV}
@@ -339,6 +367,15 @@ class BridgeSupervisor:
         }
         (self._root() / "installed.json").write_text(json.dumps(marker), encoding="utf-8")
 
+    def _bundled_folder(self) -> Path:
+        return self._bundled or Path()
+
+    def _bundled_ready(self) -> bool:
+        if self._bundled is None:
+            return False
+        modules = self._bundled / "node_modules"
+        return all((modules / name).is_dir() for name in BUNDLED_PACKAGES)
+
     def _root(self) -> Path:
         return self._data_dir() / "bridge"
 
@@ -353,6 +390,17 @@ class BridgeSupervisor:
     def _installed_folder(self) -> Path:
         marker = self._marker() or {}
         return self._root() / str(marker.get("folder", ""))
+
+
+def _package_version(folder: Path) -> str | None:
+    try:
+        package: object = json.loads((folder / "package.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(package, dict):
+        return None
+    version: object = cast(dict[str, object], package).get("version")
+    return str(version) if version else None
 
 
 def _node_version(text: str) -> tuple[int, int] | None:

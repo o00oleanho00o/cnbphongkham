@@ -188,8 +188,11 @@ def account_routes(plugin: ZaloPlugin) -> APIRouter:
     @router.post("/bridge/install", status_code=status.HTTP_202_ACCEPTED)
     async def install_bridge() -> dict[str, Any]:
         """Installs the bridge in the background (several minutes); the dashboard polls ``GET /bridge``."""
-        if plugin.bridge.status().version == "external":
+        now = plugin.bridge.status()
+        if now.version == "external":
             raise HTTPException(status.HTTP_409_CONFLICT, "Cầu nối chạy ngoài plugin, không cài ở đây")
+        if now.bundled:
+            raise HTTPException(status.HTTP_409_CONFLICT, "Cầu nối có sẵn trong bản cài agent, không cần cài")
         if not plugin.start_install():
             raise HTTPException(status.HTTP_409_CONFLICT, "Đang cài cầu nối")
         return plugin.bridge.status().to_json() | {"installing": True}

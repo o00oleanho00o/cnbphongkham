@@ -1,4 +1,5 @@
-/** The Node bridge personal accounts log in through: install it here (it takes minutes), see it run, remove it. */
+/** The Node bridge personal accounts log in through: see it run. Bundled in the agent's image it needs nothing more;
+ * otherwise (the agent run from a checkout) it is installed here (it takes minutes) and can be removed. */
 import { useCallback, useEffect, useState } from "react";
 
 import { messageOf, zalo } from "../client";
@@ -49,6 +50,7 @@ export function BridgePage() {
   }
 
   const external = bridge?.version === "external";
+  const managed = !external && !(bridge?.bundled ?? false);
   return (
     <div>
       <ui.PageHeader
@@ -60,11 +62,6 @@ export function BridgePage() {
           </ui.Button>
         }
       />
-      <div className="mb-4">
-        <ui.Notice tone="warning">
-          Nick cá nhân dùng giao thức không chính thức của Zalo: nick có thể bị khóa. Chỉ dùng nick phụ.
-        </ui.Notice>
-      </div>
       {error && (
         <div className="mb-4">
           <ui.Notice tone="danger">{error}</ui.Notice>
@@ -77,6 +74,8 @@ export function BridgePage() {
               Trạng thái
               {installing ? (
                 <ui.Badge tone="info">Đang cài</ui.Badge>
+              ) : bridge.bundled ? (
+                <ui.Badge tone="success">Có sẵn{bridge.version ? ` ${bridge.version}` : ""}</ui.Badge>
               ) : bridge.installed ? (
                 <ui.Badge tone="success">Đã cài{bridge.version && !external ? ` ${bridge.version}` : ""}</ui.Badge>
               ) : (
@@ -87,6 +86,11 @@ export function BridgePage() {
           }
         >
           {external && <p className="text-small text-ink-soft">Cầu nối chạy ngoài plugin, không cài hay gỡ ở đây.</p>}
+          {bridge.bundled && (
+            <p className="text-small text-ink-soft">
+              Có sẵn trong bản cài của agent: tự chạy khi có nick cá nhân đang bật, không cần cài.
+            </p>
+          )}
           {!bridge.installed && !installing && (
             <p className="text-small text-ink-soft">Cần Node 22 và pnpm trên máy chạy agent. Cài mất vài phút.</p>
           )}
@@ -95,7 +99,7 @@ export function BridgePage() {
               <ui.Notice tone="danger">{bridge.error}</ui.Notice>
             </div>
           )}
-          {!external && (
+          {managed && (
             <div className="mt-4 flex flex-wrap gap-2">
               <ui.Button busy={busy || installing} onClick={() => void run(zalo.installBridge)}>
                 {bridge.installed ? "Cài lại" : "Cài cầu nối"}
