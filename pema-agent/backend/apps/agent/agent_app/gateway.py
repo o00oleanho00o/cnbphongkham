@@ -224,6 +224,14 @@ class ModelSettingsPatch(_Body):
     api_key: str | None = Field(default=None, max_length=500)
 
 
+class ModelListBody(_Body):
+    """What the person typed but has not saved yet; a missing or empty field uses the stored value."""
+
+    provider: Provider | None = None
+    base_url: str | None = Field(default=None, max_length=500, pattern=r"^https?://")
+    api_key: str | None = Field(default=None, max_length=500)
+
+
 class PluginSettingsBody(_Body):
     """A value sets a setting, null gives it back to the profile or the default; for a sensitive one ""
     keeps the stored value."""
@@ -474,6 +482,13 @@ def _add_admin_routes(
     @app.delete("/v1/admin/model", dependencies=[authorized])
     async def clear_model() -> dict[str, Any]:
         return await admin.clear()
+
+    @app.post("/v1/admin/model/list", dependencies=[authorized])
+    async def list_provider_models(body: ModelListBody) -> Response:
+        """The models the provider offers, for the list next to the model field; 502 with the error kind
+        when the provider refuses (a wrong key, no listing endpoint)."""
+        outcome = await admin.list_models(body.model_dump(exclude_none=True))
+        return JSONResponse(outcome, status_code=200 if outcome["ok"] else 502)
 
     @app.post("/v1/admin/model/test", dependencies=[authorized])
     async def test_model() -> Response:

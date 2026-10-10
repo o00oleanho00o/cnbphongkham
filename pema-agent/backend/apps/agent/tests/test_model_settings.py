@@ -175,12 +175,69 @@ async def test_the_test_call_reports_success_or_the_error_kind() -> None:
     assert failing.built[0].requests[0].reasoning == "off"
 
 
-def _service(*, admin_token: str | None = ADMIN_TOKEN, secret_key: str | None = KEY) -> httpx.AsyncClient:
+class Catalog:
+    """The provider's model listing (an outside API): records what it was asked with."""
+
+    def __init__(self, error: ModelError | None = None) -> None:
+        self.asked: list[ModelSettings] = []
+        self.error = error
+
+    async def __call__(self, settings: ModelSettings) -> list[str]:
+        self.asked.append(settings)
+        if self.error is not None:
+            raise self.error
+        return ["model-a", "model-b"]
+
+
+async def test_the_model_list_uses_what_was_typed_and_the_stored_key_otherwise() -> None:
+    store = InMemoryModelSettingsStore()
+    catalog = Catalog()
+    admin = ModelAdmin(PROFILE, store, tenant_id="t", secret_key=KEY, lister=catalog)
+    await admin.update({"api_key": "sk-stored-abcdefgh"})
+
+    listed = await admin.list_models({"base_url": "https://api.deepseek.com", "api_key": ""})
+
+    assert listed == {"ok": True, "models": ["model-a", "model-b"]}
+    asked = catalog.asked[0]
+    assert (asked.base_url, asked.api_key) == ("https://api.deepseek.com", "sk-stored-abcdefgh")
+    assert (await admin.show())["base_url"] is None
+
+
+async def test_the_model_list_of_another_provider_drops_the_stored_base_url() -> None:
+    store = InMemoryModelSettingsStore()
+    catalog = Catalog()
+    admin = ModelAdmin(PROFILE, store, tenant_id="t", secret_key=KEY, lister=catalog)
+    await admin.update({"base_url": "https://api.deepseek.com"})
+
+    await admin.list_models({"provider": "anthropic", "api_key": "sk-ant-typed"})
+
+    asked = catalog.asked[0]
+    assert (asked.provider, asked.base_url, asked.api_key) == ("anthropic", None, "sk-ant-typed")
+
+
+async def test_the_model_list_reports_the_providers_refusal_by_kind() -> None:
+    catalog = Catalog(error=ModelError("auth", "bad key"))
+    admin = ModelAdmin(PROFILE, InMemoryModelSettingsStore(), tenant_id="t", secret_key=None, lister=catalog)
+
+    listed = await admin.list_models({})
+
+    assert listed == {"ok": False, "models": [], "error_kind": "auth"}
+
+
+def _service(
+    *, admin_token: str | None = ADMIN_TOKEN, secret_key: str | None = KEY, catalog: Catalog | None = None
+) -> httpx.AsyncClient:
     store = InMemoryModelSettingsStore()
     factory = Factory()
     dynamic = DynamicModel(PROFILE, store, tenant_id="default", secret_key=secret_key, factory=factory)
     admin = ModelAdmin(
-        PROFILE, store, tenant_id="default", secret_key=secret_key, dynamic=dynamic, factory=factory
+        PROFILE,
+        store,
+        tenant_id="default",
+        secret_key=secret_key,
+        dynamic=dynamic,
+        factory=factory,
+        lister=catalog or Catalog(),
     )
     runtime = build_runtime(load_profile(DEV_PROFILE), fake=True, env={}, db=None)
     runtime.live.use_model(dynamic)
@@ -234,6 +291,18 @@ async def test_the_admin_changes_the_model_of_the_next_turn() -> None:
     assert (bad_provider.status_code, bad_url.status_code) == (422, 422)
     assert (tested.status_code, tested.json()["model"]) == (200, "m2")
     assert (cleared.json()["model"], cleared.json()["stored"]) == ("from-profile", False)
+
+
+async def test_the_model_list_route_answers_the_models_or_502_with_the_kind() -> None:
+    async with _service() as ok_client, _service(catalog=Catalog(ModelError("auth", "x"))) as bad_client:
+        listed = await ok_client.post("/v1/admin/model/list", json={"api_key": "sk-typed"}, headers=ADMIN)
+        refused = await bad_client.post("/v1/admin/model/list", json={}, headers=ADMIN)
+        bad_url = await ok_client.post("/v1/admin/model/list", json={"base_url": "ftp://x"}, headers=ADMIN)
+        chat_token = await ok_client.post("/v1/admin/model/list", json={}, headers=CHAT)
+
+    assert (listed.status_code, listed.json()["models"]) == (200, ["model-a", "model-b"])
+    assert (refused.status_code, refused.json()["error_kind"]) == (502, "auth")
+    assert (bad_url.status_code, chat_token.status_code) == (422, 403)
 
 
 async def test_storing_a_key_without_the_encryption_key_is_a_conflict() -> None:

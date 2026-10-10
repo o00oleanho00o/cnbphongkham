@@ -13,13 +13,14 @@ import asyncio
 import logging
 import math
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, replace
 from typing import Any, Final, Literal, cast
 
 from cryptography.exceptions import InvalidTag
 from sqlalchemy import text as sql
 
+from agent_app.model_catalog import list_models
 from agent_app.model_factory import ModelSettings, Provider, client_for, resolve_model_settings
 from agent_app.profile import Profile
 from agent_app.storage import AgentDatabase, retrying
@@ -44,6 +45,9 @@ NO_SECRET_KEY: Final = "the service has no secret key (agent serve creates one i
 
 FieldSource = Literal["db", "profile", "unset"]
 ClientFactory = Callable[[ModelSettings], ModelClient]
+ModelLister = Callable[[ModelSettings], Awaitable[list[str]]]
+LISTING_FIELDS: Final = ("provider", "base_url", "api_key")
+"""What the dashboard may try before saving when it asks for the model list; the rest stays as stored."""
 
 logger = logging.getLogger(__name__)
 
@@ -269,6 +273,7 @@ class ModelAdmin:
         secret_key: str | None,
         dynamic: DynamicModel | None = None,
         factory: ClientFactory = client_for,
+        lister: ModelLister = list_models,
     ) -> None:
         self._profile = profile
         self._store = store
@@ -276,6 +281,7 @@ class ModelAdmin:
         self._secret_key = secret_key
         self._dynamic = dynamic
         self._factory = factory
+        self._lister = lister
 
     async def resolved(self) -> ResolvedModel:
         stored = await self._store.get(self._tenant_id)
@@ -338,6 +344,19 @@ class ModelAdmin:
             return {"ok": False, "model": resolved.settings.model, "error_kind": "timeout"}
         latency_ms = round((time.perf_counter() - started) * 1000)
         return {"ok": True, "model": resolved.settings.model, "latency_ms": latency_ms}
+
+    async def list_models(self, trying: Mapping[str, Any]) -> dict[str, Any]:
+        """The provider's models, asked with the effective settings where ``trying`` holds the provider,
+        base URL or key the person typed but has not saved (an empty key: the stored one). Stores nothing."""
+        settings = (await self.resolved()).settings
+        given = {name: trying[name] for name in LISTING_FIELDS if trying.get(name)}
+        if given.get("provider") not in (None, settings.provider) and "base_url" not in given:
+            given["base_url"] = None
+        try:
+            models = await self._lister(replace(settings, **given))
+        except ModelError as err:
+            return {"ok": False, "models": [], "error_kind": err.kind}
+        return {"ok": True, "models": models}
 
     async def _save(self, settings: StoredModelSettings, changed: list[str]) -> None:
         saved = await self._store.save(self._tenant_id, settings)

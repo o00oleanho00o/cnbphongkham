@@ -21,6 +21,12 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-10 · add · Model agent: mẫu có sẵn và danh sách model từ nhà cung cấp
+- Where: `src/components/agent/pages/model-page.tsx` · route `/admin/agent/model`
+- Change: a new card "Mẫu có sẵn" above "Cấu hình" with buttons DeepSeek, OpenAI, Anthropic, OpenRouter, Gemini, Ollama (máy nội bộ); a click fills provider, base URL, model (DeepSeek `deepseek-v4-pro`, Anthropic `claude-sonnet-5-5`, the others empty) and API kind, resets "Mức suy nghĩ", saves nothing, focuses "Khóa mới" and says "Đã điền mẫu DeepSeek. Dán khóa API rồi bấm Lưu."; under the key field "Lấy khóa DeepSeek ở platform.deepseek.com." links out. Under the model field a quiet button "Lấy danh sách model từ nhà cung cấp" asks the provider (through the agent, with what is typed, nothing saved); the model field then suggests the names ("Có N model: chọn trong ô Model hoặc gõ tay.") and still takes a typed name; a refusal says e.g. "Khóa API sai hoặc hết hạn. Vẫn gõ tên model tay được."
+- Web canvas target: none (no canvas frame for the agent pages)
+- Logged by: model presets and provider model list
+
 ### 2026-10-10 · add · Tổng quan agent: cảnh báo chưa cấu hình model AI
 - Where: `src/components/agent/pages/overview-page.tsx` · route `/admin/agent/overview`
 - Change: while the agent has no model name or no API key (or the stored key cannot be read), an amber notice above the cards says "Chưa cấu hình model AI - agent chưa trả lời được tin nhắn nào. Thiếu tên model, khóa API." (only the missing parts) and links "Nhập ở trang Model" to `/admin/agent/model`. Wording taken from the zalo-agent overview banner ("Chưa cấu hình LLM - bot chưa trả lời được tin nhắn nào"). No notice once a model and a key are set.

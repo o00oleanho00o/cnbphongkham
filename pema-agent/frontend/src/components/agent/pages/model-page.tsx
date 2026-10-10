@@ -1,10 +1,13 @@
 "use client";
 
 // Model của agent: ported from `plugins/web/ui/src/pages/model.tsx`, on the clinic web kit (`plugin-kit`).
-/** The model the agent talks to and its API key (stored encrypted; shown masked). Applies to the next call. */
+/** The model the agent talks to and its API key (stored encrypted; shown masked). Applies to the next call. Ready
+ * presets fill the form for the usual providers; the model field offers the provider's own list (asked through the
+ * agent with what is typed, nothing saved) and still takes any name typed by hand. */
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 
 import { ApiError, agentApi as api } from "@/lib/agent/api";
+import { MODEL_PRESETS, type ModelPreset, withPreset } from "@/lib/agent/model-presets";
 import {
   Badge,
   Button,
@@ -67,6 +70,19 @@ interface Form {
   api_key: string;
 }
 
+interface ModelListing {
+  ok: boolean;
+  models: string[];
+  error_kind?: string;
+}
+
+const KEY_FIELD = "model-api-key";
+const MODEL_OPTIONS = "model-options";
+
+function isListing(value: unknown): value is ModelListing {
+  return typeof value === "object" && value !== null && "models" in value && "ok" in value;
+}
+
 function isOutcome(value: unknown): value is TestOutcome {
   return typeof value === "object" && value !== null && "ok" in value && "model" in value;
 }
@@ -90,6 +106,8 @@ export function ModelPage() {
     text: string;
   } | null>(null);
   const [busy, setBusy] = useState("");
+  const [preset, setPreset] = useState<ModelPreset | null>(null);
+  const [models, setModels] = useState<string[]>([]);
 
   const show = useCallback((next: ModelShown) => {
     setShown(next);
@@ -152,6 +170,46 @@ export function ModelPage() {
       );
     });
 
+  const listModels = () =>
+    run("list", async () => {
+      if (!form) return;
+      const trying = { provider: form.provider, base_url: form.base_url, api_key: form.api_key };
+      // A refusal answers 502 with the error kind in the body.
+      const listing = await api
+        .post<ModelListing>("/v1/admin/model/list", trying)
+        .catch((err: unknown) => {
+          if (err instanceof ApiError && isListing(err.payload)) return err.payload;
+          throw err;
+        });
+      setModels(listing.models);
+      if (!listing.ok) {
+        const why = TEST_ERRORS[listing.error_kind ?? ""] ?? "Nhà cung cấp không cho xem danh sách";
+        setNotice({ tone: "danger", text: `${why}. Vẫn gõ tên model tay được.` });
+        return;
+      }
+      setNotice({
+        tone: "info",
+        text:
+          listing.models.length > 0
+            ? `Có ${listing.models.length} model: chọn trong ô Model hoặc gõ tay.`
+            : "Nhà cung cấp không trả model nào: gõ tên model tay.",
+      });
+    });
+
+  function applyPreset(chosen: ModelPreset) {
+    if (!form) return;
+    setForm(withPreset(form, chosen));
+    setPreset(chosen);
+    setModels([]);
+    setNotice({
+      tone: "info",
+      text: chosen.keyUrl
+        ? `Đã điền mẫu ${chosen.label}. Dán khóa API rồi bấm Lưu.`
+        : `Đã điền mẫu ${chosen.label}. Chọn model rồi bấm Lưu.`,
+    });
+    document.getElementById(KEY_FIELD)?.focus();
+  }
+
   const removeKey = () =>
     run("key", async () => {
       show(await api.patch<ModelShown>("/v1/admin/model", { api_key: null }));
@@ -184,6 +242,23 @@ export function ModelPage() {
         subtitle="Nhà cung cấp, model và khóa API mà agent dùng để trả lời"
       />
       <form onSubmit={save} className="space-y-4">
+        <Card title="Mẫu có sẵn">
+          <p className="mb-3 text-small text-ink-soft">
+            Bấm một mẫu để điền sẵn nhà cung cấp, địa chỉ và model; chỉ cần thêm khóa API.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {MODEL_PRESETS.map((item) => (
+              <Button
+                key={item.id}
+                variant="secondary"
+                aria-pressed={preset?.id === item.id}
+                onClick={() => applyPreset(item)}
+              >
+                {item.label}
+              </Button>
+            ))}
+          </div>
+        </Card>
         <Card title="Cấu hình">
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Nhà cung cấp" hint={source("provider")}>
@@ -193,14 +268,25 @@ export function ModelPage() {
                 onChange={(e) => set("provider")(e.target.value)}
               />
             </Field>
-            <Field label="Model" hint={source("model")}>
-              <Input
-                required
-                value={form.model}
-                placeholder="vd: deepseek-chat"
-                onChange={(e) => set("model")(e.target.value)}
-              />
-            </Field>
+            <div>
+              <Field label="Model" hint={source("model")}>
+                <Input
+                  required
+                  list={MODEL_OPTIONS}
+                  value={form.model}
+                  placeholder="vd: deepseek-chat"
+                  onChange={(e) => set("model")(e.target.value)}
+                />
+              </Field>
+              <datalist id={MODEL_OPTIONS}>
+                {models.map((name) => (
+                  <option key={name} value={name} />
+                ))}
+              </datalist>
+              <Button variant="ghost" className="mt-1" busy={busy === "list"} onClick={listModels}>
+                Lấy danh sách model từ nhà cung cấp
+              </Button>
+            </div>
             <Field
               label="Địa chỉ API (base URL)"
               hint={`${source("base_url")} - để trống dùng mặc định của nhà cung cấp`}
@@ -245,12 +331,27 @@ export function ModelPage() {
             hint="Để trống để giữ khóa đang có. Khóa được mã hóa và không bao giờ hiện lại."
           >
             <Input
+              id={KEY_FIELD}
               type="password"
               autoComplete="off"
               value={form.api_key}
               onChange={(e) => set("api_key")(e.target.value)}
             />
           </Field>
+          {preset?.keyUrl && (
+            <p className="mt-2 text-small text-ink-soft">
+              Lấy khóa {preset.label} ở{" "}
+              <a
+                href={preset.keyUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-link underline underline-offset-2"
+              >
+                {new URL(preset.keyUrl).host}
+              </a>
+              .
+            </p>
+          )}
           {shown.sources.api_key === "db" && (
             <Button variant="ghost" className="mt-2" busy={busy === "key"} onClick={removeKey}>
               Xóa khóa đã lưu

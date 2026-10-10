@@ -1067,6 +1067,11 @@ Steps (each: commit, stop, report):
     account (a required tick box), agreed by the user. Channels that fail to start were already retried every
     30 s by the channel hub; `logged_out`/`session_dead`/`blocked` are not retried (they wait for a QR scan).
     Also fixed: the agent sent `kill_switch.reason: null`, which the bridge refused (`6c285da7`).
+  - **Model presets and provider list (2026-10-10):** the Model page has presets (`frontend/src/lib/agent/
+    model-presets.ts`; model names only where known, the rest come from the provider) and a model field with the
+    provider's list: `POST /v1/admin/model/list` (`agent_app/model_catalog.py`, the provider's own SDK
+    `models.list()` with the effective settings overlaid by what is typed; nothing stored; 502 + error kind on a
+    refusal). Also the overview warns while no model name or key is set.
   - **Target architecture (user's diagram, Copilot REQ 25):** `agentcore` (prompt, context, harness, loop, graph) +
     `agent_app` (profile TOML, CLI, HTTP) + plugins through `agentcore.sdk` (`zalo_bot`, `knowledge_pg`,
     `memory_consolidation`, `clinic_*`). Gaps found: no `agentcore.sdk` (plugins import `agent_app`, 14 places), no

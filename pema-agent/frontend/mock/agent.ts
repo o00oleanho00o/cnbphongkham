@@ -341,6 +341,9 @@ export function buildAgentRouter(): Router {
     model = structuredClone(MODEL_FROM_PROFILE);
     return { body: model };
   });
+  r.post("/v1/admin/model/list", null, (): Reply => ({
+    body: { ok: true, models: ["deepseek-v4-flash", "deepseek-v4-pro"] },
+  }));
   r.post("/v1/admin/model/test", null, (): Reply => ({
     body: { ok: true, model: model.model, latency_ms: 420 },
   }));
