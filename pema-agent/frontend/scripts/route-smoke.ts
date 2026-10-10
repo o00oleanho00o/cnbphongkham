@@ -47,9 +47,11 @@ const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
   },
   "/admin/agent/overview": { heading: "Tổng quan", action: { role: "button", name: "Tải lại" } },
   "/admin/agent/model": { heading: "Model", action: { role: "button", name: "Lưu" } },
-  "/admin/agent/plugins": { heading: "Plugins", action: { role: "button", name: "Cài đặt" } },
-  "/admin/agent/p/[plugin]/[page]": {
-    heading: "Tài khoản Zalo",
+  "/admin/agent/plugins": { heading: "Plugins", action: { role: "searchbox", name: "Tìm plugin" } },
+  "/admin/agent/plugins/[name]": { heading: "zalo", action: { role: "link", name: "Plugins" } },
+  // The first heading of a plugin's page is the plugin's name; the page it ships sits under the plugin's tabs.
+  "/admin/agent/plugins/[name]/[page]": {
+    heading: "zalo",
     action: { role: "button", name: "Thêm tài khoản" },
   },
   "/me/notifications": {

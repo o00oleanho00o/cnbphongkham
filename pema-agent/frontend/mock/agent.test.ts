@@ -116,4 +116,17 @@ describe("the fake agent's dashboard routes", () => {
     expect(await off.json()).toMatchObject({ name: "zalo", enabled: false });
     expect(await on.json()).toMatchObject({ name: "zalo", enabled: true });
   });
+
+  it("saves_a_plugins_setting_as_the_admins_value", async () => {
+    const headers = await signed();
+    const saved = await fetch(`${base}/v1/admin/plugins/zalo/settings`, {
+      method: "PATCH",
+      headers: { ...headers, "content-type": "application/json" },
+      body: JSON.stringify({ settings: { rich_text: false } }),
+    });
+
+    expect(await saved.json()).toMatchObject({
+      settings: [{ key: "rich_text", value: false, source: "admin" }],
+    });
+  });
 });

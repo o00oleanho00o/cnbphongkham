@@ -1053,6 +1053,12 @@ Steps (each: commit, stop, report):
       screen now and the new agent writes nothing to that queue: it should come back as an approval gate plugin of
       the agent. Staff accounts (was `/admin/users`, the accounts `sso` signs in) can only be created by seed or API
       until another screen exists. `scripts/live-real-check.ts` still opens `/review` and needs a rewrite.
+  - **Plugins like connectors (2026-10-10):** `/admin/agent/plugins` is a searchable list (one row per plugin, no
+    switch); a row opens `/admin/agent/plugins/<name>` (switch, "Tổng quan" with what it adds and its settings, and
+    the plugin's own pages as tabs at `/admin/agent/plugins/<name>/<page>`, replacing `/admin/agent/p/...`). The
+    section tabs are only Tổng quan, Model, Plugins. "+ Thêm" is a placeholder: the agent has
+    `POST /v1/admin/plugins/install/zip`, the web does not use it yet. The mock agent gained
+    `PATCH /v1/admin/plugins/{name}/settings`.
   - **Target architecture (user's diagram, Copilot REQ 25):** `agentcore` (prompt, context, harness, loop, graph) +
     `agent_app` (profile TOML, CLI, HTTP) + plugins through `agentcore.sdk` (`zalo_bot`, `knowledge_pg`,
     `memory_consolidation`, `clinic_*`). Gaps found: no `agentcore.sdk` (plugins import `agent_app`, 14 places), no

@@ -178,7 +178,7 @@ describe("the agent plugin pages", () => {
   });
 
   it("belongs_every_plugin_page_to_the_plugin_entry_but_not_the_agents_list", () => {
-    expect(currentNavItem("/admin/agent/p/zalo/accounts")?.label).toBe("Điều khiển agent");
+    expect(currentNavItem("/admin/agent/plugins/zalo/accounts")?.label).toBe("Điều khiển agent");
     expect(currentNavItem("/admin/agent/model")?.label).toBe("Điều khiển agent");
     expect(currentNavItem("/admin/agents")).toBeUndefined();
   });
@@ -264,7 +264,7 @@ describe("homeFor", () => {
 
 describe("currentNavItem", () => {
   it("picks_the_most_specific_entry_for_a_nested_path", () => {
-    expect(currentNavItem("/admin/agent/p/zalo/accounts")?.label).toBe("Điều khiển agent");
+    expect(currentNavItem("/admin/agent/plugins/zalo/accounts")?.label).toBe("Điều khiển agent");
   });
 
   it("belongs_a_detail_page_to_its_list_entry", () => {

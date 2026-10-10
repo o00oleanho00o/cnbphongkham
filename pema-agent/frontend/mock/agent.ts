@@ -295,6 +295,23 @@ function pluginNamed(ctx: Ctx): PluginShown | undefined {
   return pluginList.find((p) => p.name === ctx.params.name);
 }
 
+/** `PATCH .../settings`: the values given replace the stored ones (`null` goes back to the default). */
+function saveSettings(ctx: Ctx): Reply {
+  const plugin = pluginNamed(ctx);
+  if (!plugin) return { status: 404, body: { detail: "Không có plugin này." } };
+  const given = bodyOf<{ settings?: Record<string, unknown> }>(ctx).settings ?? {};
+  plugin.settings = plugin.settings.map((setting) =>
+    setting.key in given
+      ? {
+          ...setting,
+          value: given[setting.key] ?? setting.default,
+          source: given[setting.key] === null ? "default" : "admin",
+        }
+      : setting,
+  );
+  return { body: plugin };
+}
+
 function switchPlugin(ctx: Ctx, enabled: boolean): Reply {
   const plugin = pluginNamed(ctx);
   if (!plugin) return { status: 404, body: { detail: "Không có plugin này." } };
@@ -330,6 +347,7 @@ export function buildAgentRouter(): Router {
   r.get("/v1/admin/plugins", null, (): Reply => ({ body: { plugins: pluginList, broken: {} } }));
   r.post("/v1/admin/plugins/{name}/enable", null, (ctx): Reply => switchPlugin(ctx, true));
   r.post("/v1/admin/plugins/{name}/disable", null, (ctx): Reply => switchPlugin(ctx, false));
+  r.patch("/v1/admin/plugins/{name}/settings", null, (ctx): Reply => saveSettings(ctx));
   r.get("/v1/admin/ui", null, (): Reply => ({
     body: {
       home: "/ui/web/index.html",

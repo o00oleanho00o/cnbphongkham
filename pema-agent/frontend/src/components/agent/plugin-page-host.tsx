@@ -1,16 +1,16 @@
 "use client";
 
-// One page of an agent plugin (`/admin/agent/p/<plugin>/<page>`): the component the plugin's script registered.
+// One page an agent plugin ships (`/admin/agent/plugins/<plugin>/<page>`): the component its script registered, or
+// why it cannot be shown (still loading, script failed, plugin off, no such page).
 import Link from "next/link";
-import { useParams } from "next/navigation";
 
 import { PluginsProblem, useAgentPlugins } from "@/components/agent/agent-plugins";
 import { RetryNotice } from "@/components/ops/ops-ui";
+import { pluginHref } from "@/lib/agent/plugins";
 import { buttonClass } from "@/ui/button";
 import { EmptyState } from "@/ui/empty-state";
 
-export default function PluginPageHost() {
-  const { plugin, page: pageId } = useParams<{ plugin: string; page: string }>();
+export function PluginPageHost({ plugin, pageId }: { plugin: string; pageId: string }) {
   const { state, retry, registered } = useAgentPlugins();
   const contribution = registered.get(plugin);
   const page = contribution?.pages?.find((p) => p.id === pageId);
@@ -32,8 +32,8 @@ export default function PluginPageHost() {
           : `Plugin ${plugin} chưa bật hoặc không có trang quản trị.`
       }
       action={
-        <Link href="/admin/agent" className={buttonClass("secondary")}>
-          Về trang plugin agent
+        <Link href={pluginHref(plugin)} className={buttonClass("secondary")}>
+          Về trang plugin {plugin}
         </Link>
       }
     />

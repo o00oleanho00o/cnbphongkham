@@ -7,7 +7,8 @@ import { usePathname } from "next/navigation";
 
 import { cx } from "@/ui/classnames";
 
-export type SubNavItem = { href: string; label: string };
+/** `exact`: active only on its own address, not on the pages below it (an overview tab next to its sub-pages). */
+export type SubNavItem = { href: string; label: string; exact?: boolean };
 
 export function SubNav({ label, items }: { label: string; items: readonly SubNavItem[] }) {
   const pathname = usePathname();
@@ -17,7 +18,8 @@ export function SubNav({ label, items }: { label: string; items: readonly SubNav
       className="-mx-4 mb-4 flex gap-1 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0"
     >
       {items.map((item) => {
-        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const active =
+          pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`));
         return (
           <Link
             key={item.href}

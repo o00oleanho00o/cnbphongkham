@@ -1,7 +1,7 @@
 "use client";
 
 // The agent plugins of the section `/admin/agent`: the layout installs the SDK and loads the enabled plugins' scripts
-// once; the index and the page host read the outcome here and the registered pages from the SDK's store.
+// once; the plugin pages read the outcome here and the registered pages from the SDK's store.
 import {
   createContext,
   useCallback,
@@ -9,12 +9,12 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ComponentType,
   type ReactNode,
 } from "react";
 
 import { Notice, RetryNotice, Spinner } from "@/components/ops/ops-ui";
 import { ApiError, type Api, agentApi } from "@/lib/agent/api";
+import { pluginHref } from "@/lib/agent/plugins";
 import { installAgentSdk, loadPlugins, useContributions, type Registered } from "@/lib/agent/sdk";
 
 export type PluginsState =
@@ -22,41 +22,21 @@ export type PluginsState =
   | { kind: "ready"; failed: readonly string[] }
   | { kind: "error"; status: number; message: string };
 
-export type PluginPageEntry = {
-  plugin: string;
-  id: string;
-  title: string;
-  href: string;
-  component: ComponentType;
-};
-
 type PluginsValue = {
   state: PluginsState;
   retry: () => void;
   registered: Registered;
-  pages: readonly PluginPageEntry[];
 };
 
 const PluginsContext = createContext<PluginsValue | null>(null);
 
+/** Where a page a plugin ships is drawn: below the plugin's own page. */
 export function pluginPageHref(plugin: string, page: string): string {
-  return `/admin/agent/p/${encodeURIComponent(plugin)}/${encodeURIComponent(page)}`;
+  return `${pluginHref(plugin)}/${encodeURIComponent(page)}`;
 }
 
-/** Every page the plugins registered, plugin by plugin in the order they registered. */
-export function pluginPages(registered: Registered): PluginPageEntry[] {
-  return [...registered].flatMap(([plugin, contribution]) =>
-    (contribution.pages ?? []).map((page) => ({
-      plugin,
-      id: page.id,
-      title: page.title,
-      href: pluginPageHref(plugin, page.id),
-      component: page.component,
-    })),
-  );
-}
-
-function failure(err: unknown): PluginsState {
+/** A failed call to the agent as the state `PluginsProblem` draws (401, 403 with the API's sentence, the rest). */
+export function failure(err: unknown): Extract<PluginsState, { kind: "error" }> {
   if (err instanceof ApiError) return { kind: "error", status: err.status, message: err.message };
   return {
     kind: "error",
@@ -98,7 +78,7 @@ export function AgentPluginsProvider({
   }, []);
 
   const value = useMemo<PluginsValue>(
-    () => ({ state, retry, registered, pages: pluginPages(registered) }),
+    () => ({ state, retry, registered }),
     [state, retry, registered],
   );
   return <PluginsContext.Provider value={value}>{children}</PluginsContext.Provider>;

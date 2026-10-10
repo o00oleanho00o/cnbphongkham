@@ -14,7 +14,7 @@ import { type Kit, pluginKit } from "@/components/agent/plugin-kit";
 import { AGENT_PREFIX, type Api, agentApi } from "./api";
 
 export interface PluginPage {
-  /** Part of the address: `/admin/agent/p/<plugin>/<id>`. */
+  /** Part of the address: `/admin/agent/plugins/<plugin>/<id>`. */
   id: string;
   title: string;
   component: ComponentType;

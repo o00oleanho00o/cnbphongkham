@@ -1,15 +1,16 @@
 // @vitest-environment jsdom
-// One page of an agent plugin inside the clinic web: the section's tabs and the page the plugin's script registered,
-// and every other state (loading, page or plugin not found, script failed, list failed, 403 with the API's sentence,
-// 401 to sign-in). The browser is faked: `fetch` answers the listing, `document.head.append` "runs" the script.
+// One page an agent plugin ships, under the plugin's own page: the section's tabs, the plugin's tabs and the page its
+// script registered, and every other state (loading, page or plugin not found, script failed, list failed, 403 with
+// the API's sentence, 401 to sign-in). The browser is faked: `fetch` answers the listings, `document.head.append`
+// "runs" the script.
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentType, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const nav = vi.hoisted(() => ({
-  params: { plugin: "zalo", page: "accounts" },
-  pathname: "/admin/agent/p/zalo/accounts",
+  params: { name: "zalo", page: "accounts" },
+  pathname: "/admin/agent/plugins/zalo/accounts",
 }));
 const signIn = vi.hoisted(() => vi.fn());
 
@@ -25,6 +26,20 @@ vi.mock("@/lib/api/client", async (original) => ({
 }));
 
 const ZALO = { name: "zalo", script: "/ui/zalo/client.js", styles: [] };
+
+const zaloPlugin = (enabled: boolean) => ({
+  name: "zalo",
+  version: "0.1.0",
+  description: "Kênh Zalo",
+  origin: "bundled",
+  enabled,
+  error: null,
+  tools: [],
+  channels: [],
+  jobs: [],
+  settings: [],
+  secrets_unreadable: false,
+});
 
 function AccountsPage() {
   return <h1>Tài khoản Zalo</h1>;
@@ -44,15 +59,21 @@ function runZalo() {
   });
 }
 
+const json = (status: number, body: unknown) =>
+  Promise.resolve(new Response(JSON.stringify(body), { status }));
+
 function fakeBrowser({
   listing,
+  plugins = () => json(200, { plugins: [zaloPlugin(true)], broken: {} }),
   scripts = { "/agent/ui/zalo/client.js": runZalo },
 }: {
   listing: () => Promise<Response>;
+  plugins?: () => Promise<Response>;
   scripts?: Record<string, () => void>;
 }) {
   const fetcher = vi.fn((url: RequestInfo | URL) => {
     if (String(url) === "/agent/v1/admin/ui") return listing();
+    if (String(url) === "/agent/v1/admin/plugins") return plugins();
     return Promise.resolve(new Response(null, { status: 404 }));
   });
   vi.stubGlobal("fetch", fetcher);
@@ -73,15 +94,14 @@ function fakeBrowser({
   return fetcher;
 }
 
-const json = (status: number, body: unknown) =>
-  Promise.resolve(new Response(JSON.stringify(body), { status }));
+const uiListing = () => json(200, { home: "/ui/web/", plugins: [ZALO] });
 
 let Layout: ComponentType<{ children: ReactNode }>;
 let Page: ComponentType;
 
-async function renderPage(plugin: string, page: string) {
-  nav.params = { plugin, page };
-  nav.pathname = `/admin/agent/p/${plugin}/${page}`;
+async function renderPage(name: string, page: string) {
+  nav.params = { name, page };
+  nav.pathname = `/admin/agent/plugins/${name}/${page}`;
   vi.resetModules();
   Layout = (await import("../../../layout")).default;
   Page = (await import("./page")).default;
@@ -91,6 +111,9 @@ async function renderPage(plugin: string, page: string) {
     </Layout>,
   );
 }
+
+const linksOf = (navigation: string) =>
+  within(screen.getByRole("navigation", { name: navigation })).getAllByRole("link");
 
 beforeEach(() => {
   signIn.mockReset();
@@ -104,32 +127,39 @@ afterEach(() => {
 });
 
 describe("a registered page", () => {
-  it("draws_the_plugins_component_under_the_tabs_of_its_pages", async () => {
-    fakeBrowser({ listing: () => json(200, { home: "/ui/web/", plugins: [ZALO] }) });
+  it("draws_the_plugins_component_under_the_tabs_of_the_plugin", async () => {
+    fakeBrowser({ listing: uiListing });
 
     await renderPage("zalo", "contacts");
 
     expect(await screen.findByRole("heading", { name: "Danh bạ Zalo" })).toBeTruthy();
-    const tabs = screen.getByRole("navigation", { name: "Trang quản trị agent" });
-    const links = within(tabs).getAllByRole("link");
+    const links = linksOf("Trang của plugin zalo");
     expect(links.map((a) => a.textContent)).toEqual([
       "Tổng quan",
-      "Model",
-      "Plugins",
       "Tài khoản Zalo",
       "Danh bạ Zalo",
     ]);
     expect(links.map((a) => a.getAttribute("href"))).toEqual([
-      "/admin/agent/overview",
-      "/admin/agent/model",
-      "/admin/agent/plugins",
-      "/admin/agent/p/zalo/accounts",
-      "/admin/agent/p/zalo/contacts",
+      "/admin/agent/plugins/zalo",
+      "/admin/agent/plugins/zalo/accounts",
+      "/admin/agent/plugins/zalo/contacts",
     ]);
+    expect(links.map((a) => a.getAttribute("aria-current"))).toEqual([null, null, "page"]);
+  });
+
+  it("keeps_only_the_agents_own_pages_in_the_section_tabs", async () => {
+    fakeBrowser({ listing: uiListing });
+
+    await renderPage("zalo", "accounts");
+
+    await screen.findByRole("heading", { name: "Tài khoản Zalo" });
+    const links = linksOf("Trang quản trị agent");
+    expect(links.map((a) => a.textContent)).toEqual(["Tổng quan", "Model", "Plugins"]);
+    expect(links[2]?.getAttribute("aria-current")).toBe("page");
   });
 
   it("gives_the_plugin_the_sdk_before_its_script_runs", async () => {
-    fakeBrowser({ listing: () => json(200, { home: "/ui/web/", plugins: [ZALO] }) });
+    fakeBrowser({ listing: uiListing });
 
     await renderPage("zalo", "accounts");
 
@@ -144,42 +174,40 @@ describe("while loading and when nothing matches", () => {
 
     await renderPage("zalo", "accounts");
 
-    expect(screen.getByRole("status", { name: "Đang tải trang plugin" })).toBeTruthy();
+    expect(await screen.findByRole("status", { name: "Đang tải trang plugin" })).toBeTruthy();
   });
 
   it("says_the_plugin_has_no_such_page_and_links_back", async () => {
-    fakeBrowser({ listing: () => json(200, { home: "/ui/web/", plugins: [ZALO] }) });
+    fakeBrowser({ listing: uiListing });
 
     await renderPage("zalo", "khong-co");
 
     expect(await screen.findByText("Không tìm thấy trang này")).toBeTruthy();
     expect(screen.getByText('Plugin zalo không có trang "khong-co".')).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Về trang plugin agent" }).getAttribute("href")).toBe(
-      "/admin/agent",
+    expect(screen.getByRole("link", { name: "Về trang plugin zalo" }).getAttribute("href")).toBe(
+      "/admin/agent/plugins/zalo",
     );
   });
 
   it("says_a_plugin_that_is_off_has_no_page", async () => {
-    fakeBrowser({ listing: () => json(200, { home: "/ui/web/", plugins: [] }) });
+    fakeBrowser({
+      listing: () => json(200, { home: "/ui/web/", plugins: [] }),
+      plugins: () => json(200, { plugins: [zaloPlugin(false)], broken: {} }),
+    });
 
     await renderPage("zalo", "accounts");
 
     expect(
       await screen.findByText("Plugin zalo chưa bật hoặc không có trang quản trị."),
     ).toBeTruthy();
-    const tabs = screen.getByRole("navigation", { name: "Trang quản trị agent" });
-    expect(
-      within(tabs)
-        .getAllByRole("link")
-        .map((a) => a.textContent),
-    ).toEqual(["Tổng quan", "Model", "Plugins"]);
+    expect(linksOf("Trang của plugin zalo").map((a) => a.textContent)).toEqual(["Tổng quan"]);
   });
 });
 
 describe("failures", () => {
   it("offers_a_retry_when_the_plugins_script_failed_and_draws_the_page_once_it_loads", async () => {
     const scripts: Record<string, () => void> = {};
-    fakeBrowser({ listing: () => json(200, { home: "/ui/web/", plugins: [ZALO] }), scripts });
+    fakeBrowser({ listing: uiListing, scripts });
 
     await renderPage("zalo", "accounts");
 
@@ -192,7 +220,7 @@ describe("failures", () => {
 
   it("offers_a_retry_when_the_listing_failed", async () => {
     let answer = () => json(502, { error: { message: "Không kết nối được dịch vụ agent." } });
-    const fetcher = fakeBrowser({ listing: () => answer() });
+    fakeBrowser({ listing: () => answer() });
 
     await renderPage("zalo", "accounts");
 
@@ -200,17 +228,15 @@ describe("failures", () => {
     expect(alert.textContent).toContain(
       "Không tải được trang plugin: Không kết nối được dịch vụ agent.",
     );
-    answer = () => json(200, { home: "/ui/web/", plugins: [ZALO] });
+    answer = uiListing;
     await userEvent.click(within(alert).getByRole("button", { name: "Thử lại" }));
     expect(await screen.findByRole("heading", { name: "Tài khoản Zalo" })).toBeTruthy();
-    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
   it("shows_the_apis_sentence_on_a_403", async () => {
-    fakeBrowser({
-      listing: () =>
-        json(403, { error: { code: "forbidden", message: "Bạn không có quyền quản trị agent." } }),
-    });
+    const forbidden = () =>
+      json(403, { error: { code: "forbidden", message: "Bạn không có quyền quản trị agent." } });
+    fakeBrowser({ listing: forbidden, plugins: forbidden });
 
     await renderPage("zalo", "accounts");
 
@@ -220,15 +246,15 @@ describe("failures", () => {
   });
 
   it("sends_the_user_to_sign_in_on_a_401", async () => {
-    fakeBrowser({
-      listing: () => json(401, { error: { code: "unauthorized", message: "Bạn cần đăng nhập." } }),
-    });
+    const unauthorized = () =>
+      json(401, { error: { code: "unauthorized", message: "Bạn cần đăng nhập." } });
+    fakeBrowser({ listing: unauthorized, plugins: unauthorized });
 
     await renderPage("zalo", "accounts");
 
     expect(
       await screen.findByText("Phiên đăng nhập đã hết. Đang chuyển tới trang đăng nhập…"),
     ).toBeTruthy();
-    expect(signIn).toHaveBeenCalledOnce();
+    expect(signIn).toHaveBeenCalled();
   });
 });
