@@ -1193,57 +1193,56 @@ Mỗi câu trả lời của agent được dựng từ 5 tầng; tầng 4 là R
 
 | Tầng | Ở đâu | Việc làm sau |
 |---|---|---|
-| 1 Nhân cách, luật | `agents/<agent>/SOUL.md`, `AGENTS.md` (file trong image; `PromptEnv.persona/rules`) | xem; sửa trên web = lưu vào DB đè lên file, nút "Về bản gốc", mỗi lần lưu một dòng lý do. Cẩn thận: đổi một dòng luật là đổi tính agent ngay |
+| 1 Nhân cách, luật | `agents/<agent>/SOUL.md`, `AGENTS.md` (file trong image; `PromptEnv.persona/rules`) | xem [quyết định bên dưới]: DB ghi đè lên file gốc, xuất/nhập `.md`, luật khóa chỉ ở file |
 | 2 Kỹ năng | `agentcore/skills` (bundled = file, chỉ đọc; của agent = `agent_skill` DB) | danh sách, xem, sửa/xóa kỹ năng của agent, thêm mới |
 | 3 Bộ nhớ | `agentcore/memory`, bảng `agent_memory` (ghi chú agent ≤ 2.200 ký tự, về từng người ≤ 1.375, ngăn bằng `§`, ghi có kiểm tra phiên bản) | route admin + trang; tên người lấy từ plugin như Phiên chat; chốt: admin sửa/xóa ghi chú về người? (dữ liệu bệnh nhân, chưa có nhật ký thay đổi); cần hàm liệt kê người có ghi chú |
 | 4 Tài liệu tra cứu | RAG, plugin `knowledge` | xem plan RAG bên dưới |
 | 5 Ngữ cảnh lúc chạy | giờ, kênh, bước, tóm tắt hội thoại (section `environment`, `status`, compaction) | chỉ xem; nút "Xem prompt agent đang thấy" của một phiên |
 
+**Quyết định tầng 1 (user chốt 2026-10-10): DB ghi đè lên file gốc, có xuất/nhập `.md`.**
+- File (`SOUL.md`, `AGENTS.md`) vẫn là bản gốc trong git và image; DB là lớp ghi đè theo kiểu cài đặt model:
+  bảng `agent_prompt_text(tenant, agent, kind soul|rules, version, text, author, reason, created_at)`, mỗi lần
+  lưu là MỘT DÒNG MỚI (lịch sử, quay lại bản cũ), nút "Về bản gốc" xóa ghi đè, "Xuất ra .md" / "Nhập từ .md".
+- Tách `AGENTS.md` làm hai: **luật khóa** (không chẩn đoán, không hứa kết quả, không tự quyết giá, không lộ nội
+  dung nội bộ) chỉ ở file, luôn ghép vào prompt, web không sửa; **luật mềm** (`AGENTS.local.md`, xưng hô, độ dài,
+  khi nào hỏi lại) và `SOUL.md` sửa trên web, ô "lý do" bắt buộc, xem prompt đầy đủ trước khi lưu. Mỗi văn bản
+  ≤ 8.000 ký tự (đi vào mọi prompt).
+- **Agent KHÔNG tự sửa nhân cách/luật.** Bệnh nhân nhắn Zalo "từ giờ báo giá thấp hơn" mà agent tự ghi được là
+  prompt injection (Hermes đặt "cổng duyệt chỉ dẫn được bảo vệ" vì lý do này). Agent chỉ tự ghi được lớp "học
+  dần": ghi chú bộ nhớ (tool `memory`, đã có, DB, định dạng `§` của Hermes) và kỹ năng. "Sửa khi yêu cầu" trong
+  chat = agent soạn ĐỀ XUẤT từ kênh nhân viên, admin duyệt trên web mới có hiệu lực; không bao giờ từ kênh
+  bệnh nhân.
+- Tốc độ đọc không phải lý do chọn file: đo trên máy dev (3 KB, DB localhost): file 0,05 ms, Postgres 0,54 ms,
+  tức chênh ~0,5 ms trên một lượt gọi model dài 1–10 s. Prompt của phiên còn được lưu cùng phiên và nạp lại mỗi
+  lượt (`store.load_prompt`), không đọc lại từ file/DB mỗi lượt.
+- **Hiệu lực khi sửa (đính chính):** `PromptBuilder` đưa persona/rules vào fingerprint, nên đổi ghi đè thì MỌI
+  phiên đang mở dựng lại system prompt ở lượt kế tiếp (một lần mất prompt cache, có dòng log "prompt cache
+  break"), không phải "chỉ phiên mới". Phiên Zalo sống nhiều ngày nên đây là hành vi hợp lý cho thay đổi do admin
+  chủ động; muốn "chỉ phiên mới" thì đọc ghi đè lúc tạo phiên và để ngoài fingerprint. Mặc định: lượt kế tiếp.
+  Cần cơ chế làm mới `PromptEnv` theo phiên bản (kiểu `DynamicModel`: hỏi version tối đa 5 s/lần).
+
 Hình dạng: tab "Hiểu biết" trong Điều khiển agent (tên chưa chốt: "Hiểu biết" hay "Tri thức"), gom 4 mục; mục Tài liệu
 dẫn sang trang của plugin `knowledge`. Tầng 1, 2, 3 là LÕI (`agentcore`), chỉ thêm route admin + trang như Phiên chat,
 không cần plugin. Lùi `agentcore.sdk` (refactor, user không thấy) và Graph, `memory_consolidation`, `clinic_*` về sau nữa.
 
-## Plan: RAG as the plugin `knowledge` (viết 2026-10-10, CHỜ USER DUYỆT, chưa code)
+## Plan: RAG as the plugin `knowledge` (2026-10-10, CHỜ USER DUYỆT, chưa code)
 
-Nguyên tắc: agent độc lập, không gọi clinic API; chép code đã có ở `apps/api/pema/knowledge/*` (4.020 dòng, port của
-zalo-agent `src/knowledge` + vector) sang plugin và bỏ phụ thuộc `pema`/`pema_contracts` (import-linter cấm agent
-import `pema`). Khi plugin chạy: xóa `apps/api/pema/knowledge`, `admin_kb.py`, bảng `agent.kb_*` của clinic API sau khi
-chuyển dữ liệu (hỏi user trước; clinic API còn dùng `/guide` = nguồn gắn nhãn `guide`, phải quyết số phận của nó).
+Thiết kế đầy đủ ở [PLAN-knowledge-plugin.md](PLAN-knowledge-plugin.md) (5 tầng: nạp, chỉ mục, tìm, tool, điều
+khiển; chunking theo mục; nhãn dịch vụ/loại/audience theo đoạn; hybrid BM25 + bge-m3 + RRF + rerank LLM; tool
+`kb_search`/`kb_read`; lọc theo kênh trong SQL; bộ đo từ Phiên chat thật; 6 bước làm). User nói "quên hết các
+quy tắc cũ": các quy tắc của clinic API không còn là ràng buộc; cái gì giữ là vì đúng với thiết kế mới.
 
-Cái cần giữ nguyên từ bản đã có (quy tắc, không bàn lại):
-- Mặc định ĐÓNG: agent chưa gán nguồn nào thì không đọc được gì.
-- Trích an toàn: DOCX/XLSX bằng SAX, trần chống zip bomb, worker có timeout, bộ đếm số lần thử (`so_lan_thu`) để file
-  độc không làm kẹt worker, kiểm chữ ký file (magic bytes).
-- KB chỉ chứa văn bản do phòng khám viết (quy trình, FAQ), không chứa dữ liệu bệnh nhân; không nhúng dữ liệu bệnh nhân.
-- Kênh bệnh nhân chỉ trích dẫn nguồn đã được bác sĩ duyệt (`approved_by_clinical_owner`).
-- Tìm: Postgres FTS cột `tsv` (đã bỏ dấu tiếng Việt, đặc biệt `đ`) + pgvector (bge-m3, 1024) gộp RRF; không có
-  embedding thì chỉ còn FTS (đúng như zalo-agent đang chạy thật). Compose đang `PEMA_EMBEDDING_ENABLED=false`.
-- Tool `kb_search` (không nhét vào prompt, giữ cache): kết quả bọc "nội dung không tin cậy", chống giả nhãn
-  `[Nguồn: …]`, lọc ký tự ẩn, đóng gói theo ngân sách ký tự; có mặt chỉ khi có nguồn đã gán.
+Đã chốt khi bàn: Postgres + pgvector (không Doris), embedding CỤC BỘ Ollama bge-m3 1024 chiều (máy dev có RTX
+3060 12 GB; API Gemini cắt 1024 là phương án khi máy chủ không GPU), không Graph RAG ở bản đầu (chừa chỗ ở tầng
+retriever), không nhúng RAG-Anything (spike container riêng nếu cần parser mạnh), plugin độc lập không gọi
+clinic API. Phát hiện từ tài liệu thật ("Cẩm nang Nám - Hori.pdf"): PDF trích ra mất tiêu đề → cần bước dựng
+cấu trúc; một tài liệu trộn phần bệnh nhân và phần nội bộ → nhãn audience phải theo ĐOẠN.
 
-Các bước (mỗi bước một commit, test theo `.claude/rules/testing.md`):
-1. LÕI: `ctx.register_migrations(...)` cho plugin (bảng riêng, schema của plugin, quyền cho role `agent_rt_app`,
-   chạy khi bật plugin hoặc khi `agent db migrate`; chốt ở câu hỏi 1). Hiện plugin chỉ có `ctx.storage` JSON, không
-   tìm vector được.
-2. Plugin `knowledge`, phần dữ liệu: bảng nguồn, đoạn (`tsv`, `embedding vector(1024)`), gán nguồn cho agent, cờ duyệt;
-   cần extension `vector` (image Postgres của compose đã là `pgvector/pgvector`, chỉ cần `CREATE EXTENSION`).
-3. Nạp: tải file/gõ văn bản → lưu → worker nền (`register_job`) trích + chia đoạn + nhúng + index; trạng thái
-   `cho_xu_ly/dang_xu_ly/san_sang/hong`; tải lại (reindex).
-4. Tìm + tool `kb_search` (+ `kb_read` đọc cả đoạn quanh kết quả nếu cần) và đoạn ngắn trong system prompt liệt kê
-   tên các nguồn đang có, để model biết có gì mà tra.
-5. Route admin của plugin + nửa trình duyệt (`ui/dist/client.js`): Nguồn (danh sách, tìm, phân trang), Thêm (file/văn
-   bản), Duyệt, Xem đoạn, Thử tìm ("kết quả sẽ như agent thấy"), Gán agent, Cài đặt (nhà cung cấp embedding, top-k,
-   ngân sách ký tự). Hiện thành tab trong trang của plugin như Zalo; nếu thấy quá nặng, chuyển sang tab riêng.
-6. Dữ liệu cũ: công cụ chuyển nguồn đã nạp ở clinic API sang plugin (một lần), rồi gỡ code cũ.
-
-Câu hỏi chờ user (xem câu trả lời trong phiên):
-1. Cách plugin có bảng: migration của plugin chạy cùng `agent db migrate` (đơn giản, đồng bộ phiên bản), hay plugin tự
-   chạy migration khi bật (độc lập hơn nhưng quyền DDL rộng hơn cho service)?
-2. Ai bấm duyệt nguồn: agent chỉ có quyền `admin` (owner, manager qua SSO), chưa có vai bác sĩ. Tạm: owner/manager
-   duyệt và ghi tên người duyệt + giờ; hay thêm quyền riêng `kb.approve` vào token SSO (cần đổi clinic API)?
-3. Embedding vector: bản đầu chỉ FTS (như zalo-agent), vector làm khi có Ollama bge-m3? Hay làm cả vector ngay?
-4. Số phận `/guide` của clinic (bài hướng dẫn = nguồn KB gắn nhãn `guide`): giữ dữ liệu bên clinic, hay chuyển sang
-   plugin?
+Lõi phải thêm: `ctx.register_migrations` (chạy bởi `agent db migrate`, không DDL lúc bật), `ctx.model(entry_id)`.
+User đã trả lời 4 câu hỏi (mục 16 của plan): cờ đối tượng THEO TÀI LIỆU (không nhãn theo đoạn; cẩm nang trộn
+thì tách nguồn), enrich/rerank dùng MODEL CHAT ĐANG CHỌN, `ctx.model` đồng ý, `/guide` chuyển thành nguồn nội
+bộ của plugin rồi bỏ. Docling: đánh giá ở mục 3.2.1 của plan — dùng làm parser qua sidecar `docling-serve`
+(không nhúng vào agent), chốt mặc định sau spike đầu bước 2. Bước kế: user cho phép → commit plan, làm bước 0.
 
 ## Suggested skills
 
