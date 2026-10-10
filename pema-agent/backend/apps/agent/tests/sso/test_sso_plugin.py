@@ -206,9 +206,7 @@ def service(tmp_path: Path, issuer: Issuer, monkeypatch: pytest.MonkeyPatch) -> 
     runtime.close()
 
 
-async def test_the_clinic_profile_lets_the_issuers_admins_in(
-    service: httpx.AsyncClient, issuer: Issuer
-) -> None:
+async def test_the_clinic_profile_lets_the_issuers_admins_in(service: httpx.AsyncClient, issuer: Issuer) -> None:
     async with service as client:
         admin = await client.get("/v1/admin/plugins", headers=_bearer(issuer.token("admin")))
         chat_only = await client.get("/v1/admin/plugins", headers=_bearer(issuer.token("chat")))
@@ -219,9 +217,7 @@ async def test_the_clinic_profile_lets_the_issuers_admins_in(
     assert (chat_only.status_code, garbage.status_code) == (403, 401)
 
 
-async def test_an_unreachable_issuer_is_503_not_a_wrong_token(
-    service: httpx.AsyncClient, issuer: Issuer
-) -> None:
+async def test_an_unreachable_issuer_is_503_not_a_wrong_token(service: httpx.AsyncClient, issuer: Issuer) -> None:
     issuer.down = True
     async with service as client:
         unreachable = await client.get("/v1/admin/plugins", headers=_bearer(issuer.token("admin")))
