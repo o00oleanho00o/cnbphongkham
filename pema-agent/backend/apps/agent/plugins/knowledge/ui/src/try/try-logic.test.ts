@@ -69,10 +69,10 @@ describe("formatting", () => {
     expect(formatMs(1250)).toBe("1,3 s");
   });
 
-  it("keeps_more_decimals_for_distances_and_rrf", () => {
+  it("keeps_more_decimals_for_similarities_and_the_ranking_after_them", () => {
     expect(formatScore("keyword", 4.5)).toBe("4,50");
     expect(formatScore("vector", 0.31)).toBe("0,310");
-    expect(formatScore("fused", 0.0164)).toBe("0,0164");
+    expect(formatScore("fused", 0.0164)).toBe("0,016");
   });
 
   it("names_the_number_each_stage_carries", () => {

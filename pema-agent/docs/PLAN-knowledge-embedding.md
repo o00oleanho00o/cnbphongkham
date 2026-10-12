@@ -1,4 +1,4 @@
-# Plan: embedding + hybrid search (BM25 + vector + RRF) for the `knowledge` plugin (2026-10-12)
+# Plan: embedding + hybrid search (vector first, keyword after) for the `knowledge` plugin (2026-10-12)
 
 Author: tech lead. Builder: a coding agent (Claude in Copilot) or a developer. Read sections 0–3 before changing
 any line. Follow the steps of section 6 in order, one commit per step, and run the checks listed at the end of
@@ -101,9 +101,9 @@ Real Beeknoee check (2026-10-12, user's key, `qwen/qwen3-embedding-8b`):
 | D4 | Column `vector public.vector` **without a dimension**, **no HNSW index** now: exact scan over a few hundred/thousand chunks takes milliseconds | dimension changes need no migration; HNSW needs fixed dims. > 20,000 chunks: see section 11 |
 | D5 | Text embedded for a chunk: `embed_text = f"{source_title}\n{path}\n\n{body}"`. At send time `document_prefix` (default empty) goes in front | the chunk carries "bảng giá", "chăm sóc sau laser" context; `path` alone lacks the title |
 | D6 | Questions are sent with `query_prefix`, default Qwen3-style: `"Instruct: Given a question from a skin clinic's customer, retrieve the passages of the clinic's documents that answer it\nQuery: "` | measured: wider margin with the instruction |
-| D7 | Merge with **RRF** (k = 60): `score = Σ 1/(60 + rank)` over the keyword list (≤ 40) and the vector list (≤ 40, cosine similarity ≥ threshold). Then the existing steps unchanged: service boost, ≤ 3 chunks per document, char budget | standard; no score calibration between branches |
-| D8 | **When vectors are off, failing or too slow, results must be exactly today's** (keyword only, BM25 scores, no RRF) | never degrade what runs now; regression test required |
-| D9 | The question is embedded **in parallel** with the keyword search; wait at most `vector_timeout_s` (default 6 s); on timeout drop the vector branch for that search and record why in the trace | Beeknoee latency 1.5–4.4 s |
+| D7 | **Amended 2026-10-12 (after measuring, see section 12): vector first.** The search ranks the vector list (cosine similarity >= threshold, <= 40) first, in its own order, and appends the keyword chunks it does not contain (<= 40). Then the existing steps: service boost, <= 3 chunks per document, char budget. A keyword-only chunk gets a score below the weakest vector chunk so sorting by score keeps the order. *Was: RRF k = 60 over both lists, which measured worse (27/30 against 30/30 at top 3).* | measured on 30 questions: vector alone 30/30, RRF 1:1 27/30, Postgres keyword 20/30 |
+| D8 | **When vectors are off, failing or too slow, results must be exactly today's** (keyword only, BM25 scores, no reordering) | never degrade what runs now; regression test required |
+| D9 | The question is embedded **in parallel** with the keyword search; wait at most `vector_timeout_s` (default **10 s** (amended 2026-10-12; was 6 s: 4 of 30 first calls went over 6 s)); on timeout drop the vector branch for that search and record why in the trace | Beeknoee latency 1.5–4.4 s |
 | D10 | Query-vector cache **in process memory only** (LRU 512, key `(space, query_prefix, stripped question)`). Customer questions are never stored in the DB | privacy; repeated questions skip 2–4 s |
 | D11 | Chunks are embedded by the plugin's **background job** `embed` (batches of 16), never blocking ingest: a new source is searchable by keyword at once, by vector seconds–minutes later | ingest does not depend on an outside service |
 | D12 | API key stored **sealed** (`ctx.encrypt`) in `ctx.storage` under its own record `embedding_api_key`, **not** inside the `settings` JSON. The API only returns `has_key: bool` | same as Zalo's secrets |
@@ -120,9 +120,9 @@ Real Beeknoee check (2026-10-12, user's key, `qwen/qwen3-embedding-8b`):
                  ┌──────────────── kb_search(query) ────────────────┐
                  │                                                   │
    query_terms ──┤  (in parallel)                                    │
-                 │  store.search(terms)          embedder.query(q)   │  ← LRU cache, 6 s timeout
+                 │  store.search(terms)          embedder.query(q)   │  ← LRU cache, 10 s timeout
                  │      ≤40 BM25 hits           store.vector_search  │  ← cosine ≥ min_score, ≤40
-                 │            └────────── fuse (RRF k=60) ──────────┘│  ← vectors off/failing: skip this
+                 │            └────────── vector first, keyword after ──────────┘│  ← vectors off/failing: skip this
                  │              → service boost → ≤3 per document → char budget
                  └──────────────── tool_text + tool_detail(trace) ──┘
 
@@ -263,7 +263,7 @@ Required behaviour:
   loop and closes them in `finally`, see `plugins/zalo/bot/channel.py`.)
 - Logging: only `logger.info("embedded %d texts in %.0f ms", n, ms)` and error kinds; never texts, never the key.
 
-### 5.2 `fusion.py` (new): pure RRF
+### 5.2 `fusion.py` (new): pure RRF  -- SUPERSEDED: it holds `vector_first(vector, keyword)` (see D7)
 
 ```python
 RRF_K: Final = 60
@@ -521,7 +521,7 @@ fusion) between `vector` and `final`. Replace the constant `NO_VECTOR` with the 
 - `register()`: add `ctx.register_job("embed", self.embedder.run)`. No `on_disable` needed (no long-lived client;
   the core cancels the job).
 - `_search_tool`: build `VectorPlan(min_similarity=settings["search"]["min_score"],
-  timeout_s=float(ctx.config.get("vector_timeout_s", 6.0)), embed=self.embedder.query_vector)` **only when**
+  timeout_s=float(ctx.config.get("vector_timeout_s", 10.0)), embed=self.embedder.query_vector)` **only when**
   `(await self.embedding_config()).ready`, else `None`.
 - `kb_read` unchanged.
 
@@ -556,7 +556,7 @@ Bump `version = "0.3.0"`. Add `user_config` keys (same style as the existing one
 | `embedding_query_prefix` | string | the D6 instruction (TOML string with `\n`) | Put before a question when it is embedded |
 | `embedding_document_prefix` | string | `""` | Put before a chunk when it is embedded |
 | `vector_min_similarity` | number | `0.35` | Least cosine similarity a vector candidate needs |
-| `vector_timeout_s` | number | `6.0` | Seconds a search waits for the question's vector |
+| `vector_timeout_s` | number | `10.0` | Seconds a search waits for the question's vector |
 
 Read with `float(ctx.config.get(...))` / `int(...)` as `default_settings` does now. Test-only config keys
 (`embedding_transport`, `embedding_idle_s`) are **not** declared in the manifest (same as Zalo's
@@ -941,3 +941,9 @@ date, step, problem, what you did.)
      `vector_timeout_s` (plugin setting) to about 10, or start embedding the question before the model asks.
   4. The Postgres keyword ranking is weaker than the in-memory BM25 (A top 3 13/15 against 15/15): keep it in mind
      when reading the old 14/15.
+
+- 2026-10-12, amendment (owner's OK in the session): D7 changed to vector first (the proposal of finding 2) and D9
+  to a 10 s wait (finding 3, not re-measured by request). `fusion.py` now holds `vector_first`; the RRF `fuse`
+  and its tests were removed. The page "Thu tim" shows the stage `fused` as "Xep hang: vector truoc, tu khoa sau"
+  (the exact Vietnamese is in `search.py`). Expected numbers: the "vector" rows of section 10, since keyword chunks
+  only follow the vector ones.

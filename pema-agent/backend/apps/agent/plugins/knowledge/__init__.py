@@ -3,8 +3,9 @@ in.
 
 Documents (Markdown or text, with an optional YAML head) are added from the pages "Kho tri thức", cut into
 chunks at their headings and searched by keyword and by meaning (``kb_search``, ``kb_read``): a background job
-embeds the chunks through an OpenAI-compatible service, and a search merges both lists (RRF), falling back to
-keywords alone while that service is off, slow or failing. Every channel uses the same store. Its tables come
+embeds the chunks through an OpenAI-compatible service, and a search ranks the vector hits first and the
+keyword hits after them, falling back to keywords alone while that service is off, slow or failing. Every
+channel uses the same store. Its tables come
 from ``migrations/`` (``agent db migrate-plugins``); without a database it keeps them in process memory. See
 ``docs/PLAN-knowledge-plugin.md``, ``docs/PLAN-knowledge-ui.md`` and ``docs/PLAN-knowledge-embedding.md``.
 """

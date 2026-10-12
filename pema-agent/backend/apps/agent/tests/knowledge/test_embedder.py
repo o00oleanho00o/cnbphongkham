@@ -303,7 +303,7 @@ async def test_a_slow_service_falls_back_to_keywords_after_the_wait() -> None:
     assert result.total_ms < 1500
 
 
-async def test_a_paraphrase_is_found_by_meaning_and_the_lists_are_merged() -> None:
+async def test_a_paraphrase_is_found_by_meaning_and_its_chunks_come_first() -> None:
     store = InMemoryKnowledgeStore()
     searcher = await _searcher(store)
     embedder = _embedder(store, embeddings_transport([]))
@@ -322,3 +322,6 @@ async def test_a_paraphrase_is_found_by_meaning_and_the_lists_are_merged() -> No
     assert hybrid.final
     assert "nám" in hybrid.final[0].chunk.body
     assert hybrid.vector[0].score > 0.5
+    assert [hit.chunk.id for hit in hybrid.final[: len(hybrid.vector)]] == [
+        hit.chunk.id for hit in hybrid.vector
+    ][: len(hybrid.final)]

@@ -38,7 +38,7 @@ export function formatMs(ms: number): string {
 const SCORE_LABEL: Record<string, string> = {
   keyword: "điểm",
   vector: "độ giống",
-  fused: "RRF",
+  fused: "điểm",
   reranked: "điểm xếp lại",
   final: "điểm",
 };
@@ -47,9 +47,9 @@ export function scoreLabel(stageId: string): string {
   return SCORE_LABEL[stageId] ?? "điểm";
 }
 
-const SCORE_DIGITS: Record<string, number> = { vector: 3, fused: 4 };
+const SCORE_DIGITS: Record<string, number> = { vector: 3, fused: 3 };
 
-/** Similarities keep three decimals, the other scores two, RRF four; the comma is the decimal mark. */
+/** Similarities (and the ranking that follows them) keep three decimals, the other scores two; the comma is the decimal mark. */
 export function formatScore(stageId: string, score: number): string {
   return score.toFixed(SCORE_DIGITS[stageId] ?? 2).replace(".", ",");
 }

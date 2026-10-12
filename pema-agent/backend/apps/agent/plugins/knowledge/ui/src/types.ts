@@ -257,7 +257,7 @@ export interface Candidate {
   source_title: string;
   path: string;
   excerpt: string;
-  /** A rank-specific number: BM25 score, cosine distance, RRF score or the reranker's. */
+  /** A rank-specific number: BM25 score, cosine similarity, the ranking score after both lists are put together, or the reranker's. */
   score: number;
 }
 

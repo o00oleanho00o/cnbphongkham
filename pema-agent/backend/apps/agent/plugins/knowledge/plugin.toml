@@ -77,4 +77,4 @@ default = 0.35
 type = "number"
 title = "Vector wait"
 description = "Seconds a search waits for the vector of the question before it goes on with keywords only."
-default = 6.0
+default = 10.0

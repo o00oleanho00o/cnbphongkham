@@ -1,4 +1,4 @@
-"""Retrieval bench of the knowledge store: what keyword search, vector search and both together (RRF) find.
+"""Retrieval bench of the knowledge store: what keyword search, vector search and both (vector first) find.
 
 Loads the Markdown documents of a folder into an in-memory store the way the pages do (YAML heads read),
 embeds the chunks with the real embedding service, asks every question of a JSON-lines file and says in how

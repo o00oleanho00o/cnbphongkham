@@ -1,8 +1,9 @@
 """Looking something up in the store, the way the agent's ``kb_search`` and the page "Thử tìm" do.
 
 Stages: understand the question (folded words, the services it names), keyword candidates and, when the
-embedding service is connected, vector candidates found at the same time, both merged by rank (RRF), a small
-boost for chunks labelled with a named service, at most a few chunks per document, then a character budget.
+embedding service is connected, vector candidates found at the same time (the vector list leads, the keyword
+list follows), a small boost for chunks labelled with a named service, at most a few chunks per document, then
+a character budget.
 The vector branch never makes a search fail or wait long: when it is off, failing or slow the result is
 exactly the keyword result. Every channel sees the same store (no patient/staff split for now).
 """
@@ -18,7 +19,7 @@ from datetime import date
 from typing import Any, Final
 
 from .embedding import EmbeddingError
-from .fusion import RRF_K, fuse
+from .fusion import vector_first
 from .ingest import recognise
 from .models import Hit, Service
 from .store import KnowledgeStore
@@ -104,7 +105,7 @@ class Searcher:
         candidates, keyword_ms = keyword_task.result()
         outcome = vector_task.result()
         fusion = outcome.note is None and bool(outcome.hits)
-        ranked = fuse([candidates, outcome.hits]) if fusion else list(candidates)
+        ranked = vector_first(outcome.hits, candidates) if fusion else list(candidates)
         boosted = sorted((_boosted(hit, named) for hit in ranked), key=lambda hit: hit.score, reverse=True)
         final = _packed(_spread(boosted), results, char_budget)
         return SearchResult(
@@ -253,11 +254,11 @@ def debug_view(result: SearchResult, min_similarity: float) -> dict[str, Any]:
             ),
             _stage(
                 "fused",
-                f"Gộp RRF (k = {RRF_K})",
+                "Xếp hạng: vector trước, từ khóa sau",
                 0.0,
-                "Gộp hai danh sách theo thứ hạng."
+                "Các đoạn gần nghĩa đứng trước, các đoạn chỉ khớp từ khóa nối sau."
                 if result.fusion
-                else "Không gộp: lượt này chỉ có kết quả từ khóa.",
+                else "Không xếp lại: lượt này chỉ có kết quả từ khóa.",
                 result.fused[:20] if result.fusion else [],
                 skipped=not result.fusion,
             ),

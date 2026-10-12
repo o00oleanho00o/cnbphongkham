@@ -111,7 +111,7 @@ class KnowledgePlugin:
             else PostgresKnowledgeStore(database.engine, tenant_id=database.tenant_id, agent=database.agent)
         )
         self._zone = _zone(str(ctx.config.get("timezone", "Asia/Ho_Chi_Minh")))
-        self._vector_timeout = float(ctx.config.get("vector_timeout_s", 6.0))
+        self._vector_timeout = float(ctx.config.get("vector_timeout_s", 10.0))
         self.client = client or EmbeddingClient()
         self.embedder = Embedder(
             self.store,

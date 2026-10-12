@@ -1,4 +1,9 @@
-"""Merging the keyword list and the vector list of a search: reciprocal rank fusion. Pure, no I/O."""
+"""Merging the vector list and the keyword list of a search: the vector list leads. Pure, no I/O.
+
+Measured on the Pema demo corpus (docs/PLAN-knowledge-embedding.md §10, §12): the right document is in the top
+three for 30/30 questions by vector alone and 27/30 when both lists are merged by rank, because the keyword
+list on Postgres puts unrelated documents first for short questions. So the keyword list only follows.
+"""
 
 from __future__ import annotations
 
@@ -8,22 +13,21 @@ from typing import Final
 
 from .models import Hit
 
-RRF_K: Final = 60
-"""The usual constant: it keeps one list's first place from outweighing a chunk both lists rank well."""
+KEYWORD_SHARE: Final = 0.5
+"""A keyword-only chunk scores at most this share of the weakest vector chunk: it always ranks after them."""
 
 
-def fuse(ranked: Sequence[Sequence[Hit]], k: int = RRF_K) -> list[Hit]:
-    """Each chunk scores the sum of ``1 / (k + rank)`` over the lists it is in (rank from 1).
+def vector_first(vector: Sequence[Hit], keyword: Sequence[Hit]) -> list[Hit]:
+    """The vector chunks in their order, then the keyword chunks they do not already contain, in theirs.
 
-    The Hit kept for a chunk is its first appearance (keyword list first) with its score replaced by the RRF
-    score. Ties keep the order of first appearance.
+    Vector chunks keep their similarity as score. A keyword-only chunk gets a score below the weakest vector
+    chunk (``KEYWORD_SHARE`` of it, falling with its place in the keyword list), so that sorting the result by
+    score, as the search does after boosting chunks of a named service, keeps this order.
     """
-    scores: dict[str, float] = {}
-    first: dict[str, Hit] = {}
-    for hits in ranked:
-        for rank, hit in enumerate(hits, start=1):
-            scores[hit.chunk.id] = scores.get(hit.chunk.id, 0.0) + 1.0 / (k + rank)
-            first.setdefault(hit.chunk.id, hit)
-    # sorted() is stable: equal scores keep the order the chunks were first seen in
-    order = sorted(first, key=lambda chunk_id: scores[chunk_id], reverse=True)
-    return [replace(first[chunk_id], score=scores[chunk_id]) for chunk_id in order]
+    seen = {hit.chunk.id for hit in vector}
+    ceiling = min((hit.score for hit in vector), default=1.0) * KEYWORD_SHARE
+    after = [
+        replace(hit, score=ceiling / (rank + 1))
+        for rank, hit in enumerate(h for h in keyword if h.chunk.id not in seen)
+    ]
+    return [*vector, *after]
