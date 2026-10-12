@@ -132,6 +132,56 @@ async def test_a_blocked_call_names_the_guard() -> None:
     assert (tool.name, tool.is_error, tool.detail["blocked_by"]) == ("note", True, "injection_guard")
 
 
+class FindArgs(BaseModel):
+    size: int = 1
+    fail: bool = False
+
+
+async def _find(args: FindArgs, ctx: ToolContext) -> ToolOutput:
+    if args.fail:
+        raise RuntimeError("store down")
+    return ToolOutput(
+        text="found", detail={"candidates": 3, "doc_ids": ["D07"] * args.size, "call_id": "mine"}
+    )
+
+
+FIND = ToolRegistry([ToolSpec(name="find", description="Find.", args_model=FindArgs, handler=_find)])
+
+
+async def _trace_of_find(args: dict[str, object]) -> dict[str, object]:
+    tracer = InMemoryTracer()
+    await run_turn(
+        session_id="s1",
+        user_text="find",
+        prompt=PromptBuilder.fixed("sys"),
+        model=ScriptedModel([calls(tool_call("find", args, call_id="c1")), reply("ok")]),
+        tools=FIND,
+        store=InMemorySessionStore(),
+        tracer=tracer,
+        clock=lambda: NOW,
+    )
+    return dict(_only(tracer).events[1].detail)
+
+
+async def test_a_tools_own_numbers_go_into_the_trace_under_tool() -> None:
+    detail = await _trace_of_find({})
+
+    assert detail["call_id"] == "c1"
+    assert detail["tool"] == {"candidates": 3, "doc_ids": ["D07"], "call_id": "mine"}
+
+
+async def test_a_failed_tool_leaves_no_numbers_of_its_own() -> None:
+    detail = await _trace_of_find({"fail": True})
+
+    assert "tool" not in detail
+
+
+async def test_numbers_too_long_for_the_trace_are_replaced_by_their_size() -> None:
+    detail = await _trace_of_find({"size": 500})
+
+    assert detail["tool"] == {"truncated": True, "chars": pytest.approx(3_550, abs=200)}
+
+
 async def test_a_turn_out_of_steps_is_traced_as_max_steps() -> None:
     tracer = InMemoryTracer()
 

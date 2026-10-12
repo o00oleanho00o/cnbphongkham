@@ -484,6 +484,8 @@ def _tool_event(step: int, run: ToolRun) -> TraceEvent:
     detail: dict[str, Any] = {"call_id": run.result.tool_use_id, "result_chars": len(run.result.content)}
     if run.blocked_by:
         detail["blocked_by"] = run.blocked_by
+    if run.detail:
+        detail["tool"] = dict(run.detail)
     return TraceEvent(
         "tool_call", step, run.duration_s, name=run.result.name, is_error=run.result.is_error, detail=detail
     )

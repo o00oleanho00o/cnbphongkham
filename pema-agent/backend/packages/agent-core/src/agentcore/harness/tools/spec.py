@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from typing import Final
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, JsonValue
 
 from agentcore.harness.model.types import ToolSchema
 from agentcore.tenancy import DEFAULT_TENANT
@@ -29,6 +29,10 @@ class ToolContext:
 class ToolOutput(BaseModel):
     text: str
     is_error: bool = False
+    detail: Mapping[str, JsonValue] = Field(default_factory=dict[str, JsonValue])
+    """Numbers for the operator (candidates found, best score, ids returned): they go into the turn trace
+    under ``tool``, never into the history, so the model does not see them. Kept small (``MAX_DETAIL_CHARS``
+    of the executor)."""
 
 
 @dataclass(frozen=True, slots=True)

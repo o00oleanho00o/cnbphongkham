@@ -9,9 +9,10 @@ history stays valid for every provider. Calls beyond ``max_calls_per_step`` get 
 from __future__ import annotations
 
 import asyncio
+import json
 import time
-from collections.abc import Sequence
-from dataclasses import dataclass
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, field
 from typing import Any, Final, Protocol
 
 from pydantic import ValidationError
@@ -25,6 +26,8 @@ ERROR_TEXT_LIMIT: Final = 300
 VALIDATION_ERRORS_SHOWN: Final = 3
 DEFAULT_MAX_PARALLEL: Final = 4
 DEFAULT_MAX_CALLS_PER_STEP: Final = 8
+MAX_DETAIL_CHARS: Final = 2_000
+"""Longest JSON of a tool's ``detail`` kept in the trace; a longer one is replaced by its size."""
 
 
 class ToolObserver(Protocol):
@@ -38,6 +41,9 @@ class ToolRun:
     result: ToolResultBlock
     duration_s: float
     blocked_by: str | None = None
+    detail: Mapping[str, Any] = field(default_factory=dict[str, Any])
+    """The tool's own numbers for the trace (``ToolOutput.detail``); empty when the call failed or was
+    refused."""
 
 
 class ToolExecutor:
@@ -127,40 +133,52 @@ class ToolExecutor:
     async def _run_one(self, use: ToolUseBlock, ctx: ToolContext, hook_ctx: HookContext) -> ToolRun:
         started = time.perf_counter()
         spec = self._tools.get(use.name)
-        result, blocked_by = await self._checked(use, spec, ctx, hook_ctx)
+        result, blocked_by, detail = await self._checked(use, spec, ctx, hook_ctx)
         result = await self._hooks.after_tool(use, spec, result, hook_ctx)
-        return ToolRun(result, time.perf_counter() - started, blocked_by)
+        return ToolRun(result, time.perf_counter() - started, blocked_by, detail)
 
     async def _checked(
         self, use: ToolUseBlock, spec: ToolSpec[Any] | None, ctx: ToolContext, hook_ctx: HookContext
-    ) -> tuple[ToolResultBlock, str | None]:
+    ) -> tuple[ToolResultBlock, str | None, Mapping[str, Any]]:
         if spec is None:
-            return _error(use, f"Unknown tool: {use.name}"), None
+            return _error(use, f"Unknown tool: {use.name}"), None, {}
         if use.raw_args is not None:
-            return _error(use, "Arguments are not valid JSON: send a JSON object."), None
+            return _error(use, "Arguments are not valid JSON: send a JSON object."), None, {}
         checked = await self._hooks.before_tool(use, spec, hook_ctx)
         if isinstance(checked, Deny):
-            return _error(use, f"blocked by {checked.reason}"), checked.hook
+            return _error(use, f"blocked by {checked.reason}"), checked.hook, {}
         try:
             args = spec.args_model.model_validate(checked.args)
         except ValidationError as err:
-            return _error(use, f"Invalid arguments: {_describe(err)}"), None
-        return await _execute(spec, args, use, ctx), None
+            return _error(use, f"Invalid arguments: {_describe(err)}"), None, {}
+        result, detail = await _execute(spec, args, use, ctx)
+        return result, None, detail
 
 
-async def _execute(spec: ToolSpec[Any], args: Any, use: ToolUseBlock, ctx: ToolContext) -> ToolResultBlock:
+async def _execute(
+    spec: ToolSpec[Any], args: Any, use: ToolUseBlock, ctx: ToolContext
+) -> tuple[ToolResultBlock, Mapping[str, Any]]:
     try:
         output = await asyncio.wait_for(spec.handler(args, ctx), timeout=spec.timeout_s)
     except TimeoutError:
-        return _error(use, f"Tool timed out after {spec.timeout_s:g}s")
+        return _error(use, f"Tool timed out after {spec.timeout_s:g}s"), {}
     except Exception as err:  # a failing tool must not end the turn: the model sees the error and can recover
-        return _error(use, _truncate(f"{type(err).__name__}: {err}", ERROR_TEXT_LIMIT))
-    return ToolResultBlock(
+        return _error(use, _truncate(f"{type(err).__name__}: {err}", ERROR_TEXT_LIMIT)), {}
+    result = ToolResultBlock(
         tool_use_id=use.id,
         name=use.name,
         content=_truncate(output.text, spec.max_result_chars),
         is_error=output.is_error,
     )
+    return result, _bounded(output.detail)
+
+
+def _bounded(detail: Mapping[str, Any]) -> Mapping[str, Any]:
+    """The detail as it goes into the trace: as given, or only its size when it is too long to keep."""
+    if not detail:
+        return {}
+    size = len(json.dumps(detail, ensure_ascii=False))
+    return dict(detail) if size <= MAX_DETAIL_CHARS else {"truncated": True, "chars": size}
 
 
 def _error(use: ToolUseBlock, text: str) -> ToolResultBlock:
