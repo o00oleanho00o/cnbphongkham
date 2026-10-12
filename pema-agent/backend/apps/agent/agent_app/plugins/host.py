@@ -22,10 +22,12 @@ from typing import Any, Final, Literal
 
 from cryptography.exceptions import InvalidTag
 from fastapi import APIRouter, FastAPI
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from agent_app.auth import Authenticator
 from agent_app.model_settings import NO_SECRET_KEY, SECRET_KEY_ENV
 from agent_app.plugins.manifest import PluginError, PluginSource, UiSpec
+from agent_app.plugins.migrations import NOT_MIGRATED, latest_applied, migration_files
 from agent_app.plugins.records import InMemoryPluginRecords, PluginStorage, StorageFor
 from agentcore import ToolSpec
 from agentcore.channels import ChannelAdapter, valid_channel_name
@@ -91,6 +93,33 @@ class _Loaded:
     disposers: list[Disposer] = field(default_factory=list[Disposer])
 
 
+@dataclass(frozen=True, slots=True)
+class PluginDatabase:
+    """The agent's database as a plugin sees it: the runtime role (read and write, no DDL) and the scope its
+    rows carry. Its tables come from its ``[migrations]`` (``agent db migrate-plugins``)."""
+
+    engine: AsyncEngine
+    plugin: str
+    tenant_id: str
+    agent: str
+    latest_migration: int
+    """The highest version of the plugin's migration files."""
+
+    async def require_migrations(self) -> None:
+        """Raises ``PluginError`` with what to run when the plugin's tables are older than its files."""
+        if await latest_applied(self.engine, self.plugin) < self.latest_migration:
+            raise PluginError(self.plugin, NOT_MIGRATED)
+
+
+@dataclass(frozen=True, slots=True)
+class DatabaseAccess:
+    """What the host hands its plugins of the agent's database."""
+
+    engine: AsyncEngine
+    tenant_id: str
+    agent: str
+
+
 class PluginContext:
     """What a plugin's ``register(ctx)`` receives."""
 
@@ -105,9 +134,11 @@ class PluginContext:
         data_dir: Path,
         self_url: Callable[[], str | None],
         allow_internet: bool = False,
+        database: PluginDatabase | None = None,
     ) -> None:
         self._loaded = loaded
         self._allow_internet = allow_internet
+        self._database = database
         self._env = env
         self._changed = changed
         self._storage = storage
@@ -135,6 +166,12 @@ class PluginContext:
     def storage(self) -> PluginStorage:
         """This plugin's own records, kept in the agent's database (process memory without one)."""
         return self._storage
+
+    @property
+    def database(self) -> PluginDatabase | None:
+        """The agent's database for the plugin's own tables (``[migrations]``); None when the agent runs
+        without one (process memory)."""
+        return self._database
 
     @property
     def data_dir(self) -> Path:
@@ -267,9 +304,11 @@ class PluginHost:
         storage: StorageFor | None = None,
         data_root: Path | None = None,
         allow_internet: bool = False,
+        database: DatabaseAccess | None = None,
     ) -> None:
         self._sources = dict(sources)
         self._allow_internet = allow_internet
+        self._database = database
         self._env = env
         self._storage: StorageFor = storage or InMemoryPluginRecords().storage
         self._data_root = data_root or Path(env.get(DATA_DIR_ENV) or Path.home() / DEFAULT_DATA_DIR)
@@ -282,6 +321,17 @@ class PluginHost:
     @property
     def sources(self) -> Mapping[str, PluginSource]:
         return self._sources
+
+    def _plugin_database(self, source: PluginSource) -> PluginDatabase | None:
+        if self._database is None:
+            return None
+        return PluginDatabase(
+            self._database.engine,
+            plugin=source.name,
+            tenant_id=self._database.tenant_id,
+            agent=self._database.agent,
+            latest_migration=len(migration_files(source)),
+        )
 
     def set_sources(self, sources: Mapping[str, PluginSource]) -> None:
         """The plugins found by a new look at the folders; enabled ones keep running from their folder."""
@@ -327,6 +377,7 @@ class PluginHost:
                     data_dir=self._data_root / "plugins" / name,
                     self_url=lambda: self.self_url,
                     allow_internet=self._allow_internet,
+                    database=self._plugin_database(source),
                 )
             )
             self._check_unique(loaded)

@@ -75,6 +75,22 @@ class UiSpec(BaseModel):
         return value
 
 
+class MigrationsSpec(BaseModel):
+    """Tables the plugin keeps of its own: SQL files ``NNNN_words.sql`` in ``dir``, run by ``agent db
+    migrate-plugins``; every table they create starts with ``prefix``."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    dir: str = "migrations"
+    prefix: str = Field(pattern=r"^[a-z][a-z0-9]*_$")
+
+    @field_validator("dir")
+    @classmethod
+    def _relative(cls, value: str) -> str:
+        _check_relative(value)
+        return value
+
+
 def _check_relative(path: str) -> None:
     parts = path.replace("\\", "/").split("/")
     if not path or path.startswith(("/", "\\")) or ":" in path or any(p in ("", ".", "..") for p in parts):
@@ -95,6 +111,7 @@ class PluginManifest(BaseModel):
     """Python packages (pip requirement strings) the plugin needs."""
     user_config: dict[str, ConfigField] = Field(default_factory=dict[str, ConfigField])
     ui: UiSpec | None = None
+    migrations: MigrationsSpec | None = None
 
     @field_validator("name")
     @classmethod

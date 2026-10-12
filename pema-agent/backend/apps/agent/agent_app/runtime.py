@@ -33,6 +33,7 @@ from agent_app.model_settings import (
 )
 from agent_app.plugins import (
     Contributions,
+    DatabaseAccess,
     Discovery,
     PluginError,
     PluginHost,
@@ -158,10 +159,17 @@ def start_plugins(
     discovery: Discovery | None = None,
     *,
     storage: StorageFor | None = None,
+    database: DatabaseAccess | None = None,
 ) -> PluginHost:
     """Enables the plugins the profile lists; any of them failing stops the start, naming the plugin."""
     found = discovery or discover(plugin_roots(profile, env))
-    host = PluginHost(found.plugins, env, storage=storage, allow_internet=profile.agent.allow_internet)
+    host = PluginHost(
+        found.plugins,
+        env,
+        storage=storage,
+        allow_internet=profile.agent.allow_internet,
+        database=database,
+    )
     try:
         for name in profile.plugins.enabled:
             if name not in found.plugins and name in found.broken:
@@ -227,7 +235,8 @@ def build_runtime(
             plugins=added,
         )
 
-    live = LiveAgent(build, plugins or start_plugins(profile, env, storage=records.storage))
+    access = None if db is None else DatabaseAccess(db.engine, tenant_id=tenant_id, agent=name)
+    live = LiveAgent(build, plugins or start_plugins(profile, env, storage=records.storage, database=access))
     installed = env.get(PLUGIN_DIR_ENV)
     plugin_manager = PluginManager(
         live,

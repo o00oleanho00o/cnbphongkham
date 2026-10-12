@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from agent_app.plugins.host import (
     Contributions,
+    DatabaseAccess,
     Disposer,
     PluginContext,
+    PluginDatabase,
     PluginHost,
     PluginJob,
     PluginStatus,
@@ -28,9 +30,11 @@ __all__ = [
     "PLUGIN_API",
     "ConfigField",
     "Contributions",
+    "DatabaseAccess",
     "Discovery",
     "Disposer",
     "PluginContext",
+    "PluginDatabase",
     "PluginError",
     "PluginHost",
     "PluginJob",

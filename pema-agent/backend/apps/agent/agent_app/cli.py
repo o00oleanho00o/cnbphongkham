@@ -35,11 +35,12 @@ from agent_app.model_settings import (
     PostgresModelSettingsStore,
     SecretKeyMissingError,
 )
-from agent_app.plugins import PluginError
+from agent_app.plugins import PluginError, PluginOrigin, discover
 from agent_app.plugins.manager import PluginManager
+from agent_app.plugins.migrations import migrate_plugins, plugins_with_migrations
 from agent_app.profile import Profile, load_profile
 from agent_app.replay import replay
-from agent_app.runtime import Runtime, build_runtime
+from agent_app.runtime import BUNDLED_PLUGINS, PLUGIN_DIR_ENV, Runtime, build_runtime
 from agent_app.storage import AgentDatabase, PostgresSessionStore, SessionOwnerError
 from agentcore import (
     DEFAULT_TENANT,
@@ -140,9 +141,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         help=f"create or update the runtime role {RUNTIME_ROLE} "
         f"(needs {MIGRATION_URL_ENV} and {PASSWORD_ENV})",
     )
+    db_commands.add_parser(
+        "migrate-plugins",
+        help=f"create the tables of the bundled and installed plugins (needs {MIGRATION_URL_ENV})",
+    )
     args = parser.parse_args(argv)
     if args.command == "db":
-        return _bootstrap_role()
+        return _migrate_plugins() if args.db_command == "migrate-plugins" else _bootstrap_role()
     # psycopg's async driver cannot run on the Windows proactor loop.
     loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
     if args.command == "serve":
@@ -632,6 +637,25 @@ def _bootstrap_role() -> int:
         _write(f"error: {type(err).__name__}: {err}\n")
         return EXIT_CONFIG_ERROR
     _write("".join(f"{line}\n" for line in done))
+    return 0
+
+
+def _migrate_plugins() -> int:
+    """Runs the SQL files of every plugin found (bundled, then ``AGENT_PLUGIN_DIR``) that have not run yet."""
+    url = os.environ.get(MIGRATION_URL_ENV)
+    if not url:
+        _write(f"error: set {MIGRATION_URL_ENV} (an owner role)\n")
+        return EXIT_CONFIG_ERROR
+    roots: list[tuple[PluginOrigin, Path]] = [("bundled", BUNDLED_PLUGINS)]
+    installed = os.environ.get(PLUGIN_DIR_ENV)
+    if installed:
+        roots.append(("installed", Path(installed)))
+    try:
+        done = migrate_plugins(url, plugins_with_migrations(discover(roots).plugins))
+    except (PluginError, psycopg.Error) as err:
+        _write(f"error: {type(err).__name__}: {err}\n")
+        return EXIT_CONFIG_ERROR
+    _write("".join(f"{line}\n" for line in done) or "nothing to do\n")
     return 0
 
 

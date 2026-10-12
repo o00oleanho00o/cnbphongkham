@@ -29,10 +29,13 @@ DATA_TABLES: Final = (
     "agent_plugin_record",
 )
 TRACE_TABLES: Final = ("agent_turn", "agent_turn_event")
+READ_TABLES: Final = ("agent_plugin_migration",)
 GRANTS: Final[tuple[tuple[tuple[str, ...], LiteralString], ...]] = (
     (DATA_TABLES, "SELECT, INSERT, UPDATE, DELETE"),
     (TRACE_TABLES, "SELECT, INSERT"),
+    (READ_TABLES, "SELECT"),
 )
+PLUGIN_TABLE_RIGHTS: Final = "SELECT, INSERT, UPDATE, DELETE"
 MIN_PASSWORD_CHARS: Final = 16
 
 
@@ -42,7 +45,7 @@ def bootstrap_role(migration_url: str, password: str) -> list[str]:
         raise ValueError(f"{PASSWORD_ENV} must have at least {MIN_PASSWORD_CHARS} characters")
     role = sql.Identifier(RUNTIME_ROLE)
     done: list[str] = []
-    with psycopg.connect(_libpq_url(migration_url), autocommit=True) as conn:
+    with psycopg.connect(libpq_url(migration_url), autocommit=True) as conn:
         exists = conn.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (RUNTIME_ROLE,)).fetchone()
         if exists is None:
             conn.execute(
@@ -82,9 +85,33 @@ def bootstrap_role(migration_url: str, password: str) -> list[str]:
             )
         )
         done.append(f"granted USAGE, SELECT on the sequences of {SCHEMA}")
+        done.extend(_grant_plugin_tables(conn))
     return done
 
 
-def _libpq_url(url: str) -> str:
+def _grant_plugin_tables(conn: psycopg.Connection) -> list[str]:
+    """The tables plugins created (``agent db migrate-plugins``), by the prefixes recorded there."""
+    found = conn.execute("SELECT to_regclass('agent_rt.agent_plugin_migration') IS NOT NULL").fetchone()
+    if found is None or not found[0]:
+        return []
+    prefixes = conn.execute("SELECT DISTINCT table_prefix FROM agent_rt.agent_plugin_migration").fetchall()
+    tables = [
+        table
+        for (prefix,) in prefixes
+        for (table,) in conn.execute(
+            "SELECT tablename FROM pg_tables WHERE schemaname = %s AND starts_with(tablename, %s)",
+            (SCHEMA, prefix),
+        ).fetchall()
+    ]
+    for table in tables:
+        conn.execute(
+            sql.SQL("GRANT {} ON {} TO {}").format(
+                sql.SQL(PLUGIN_TABLE_RIGHTS), sql.Identifier(SCHEMA, table), sql.Identifier(RUNTIME_ROLE)
+            )
+        )
+    return [f"granted {PLUGIN_TABLE_RIGHTS} on {SCHEMA}.{table}" for table in tables]
+
+
+def libpq_url(url: str) -> str:
     """SQLAlchemy URLs name the driver (``postgresql+psycopg://``); psycopg wants a plain libpq URL."""
     return make_url(url).set(drivername="postgresql").render_as_string(hide_password=False)

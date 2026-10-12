@@ -213,7 +213,8 @@ services:
     environment:
       AGENT_MIGRATION_DATABASE_URL: postgresql+psycopg://postgres:${PEMA_PG_SUPERUSER_PASSWORD:?set it in infra/.env}@postgres:5432/pema
       AGENT_RT_APP_PASSWORD: ${PEMA_AGENT_RT_APP_PASSWORD:-}
-    command: ["sh", "-c", "agent db bootstrap-role && alembic -c alembic.ini upgrade head"]
+    # then the tables of plugins that keep their own ([migrations] in plugin.toml)
+    command: ["sh", "-c", "agent db bootstrap-role && alembic -c alembic.ini upgrade head && agent db migrate-plugins"]
 
   # The clinic's agent (profile agents/clinic: plugin sso trusts the tokens of the clinic API, which it reads the public
   # keys of at http://api:8000). Its only setting from here is the database; the bridge of personal Zalo accounts runs

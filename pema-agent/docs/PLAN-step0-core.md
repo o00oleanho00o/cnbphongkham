@@ -143,6 +143,19 @@ mà không phải gọi `register()` của plugin (có khi plugin còn tắt).
 - `agents/dev/agent.toml`: giữ 6 (xem câu hỏi 2).
 - Chưa thêm `knowledge` vào `plugins.enabled`: plugin còn chưa đăng ký gì, làm ở bước 1.
 
+### Đã làm (2026-10-12), khác plan ở mấy chỗ
+
+- Cắt gọn theo user: làm 0.1, `ToolContext.now` của 0.2, 0.2b (cấm Internet), 0.4, 0.5. Hoãn `TrustedContext` qua
+  HTTP/kênh và `ctx.model`.
+- Cờ cấm Internet nằm ở `[agent] allow_internet` (không phải `[tools]`): profile chưa có mục `[tools]`.
+- 0.4 thêm `ctx.database` (`PluginDatabase`: engine của role runtime, `tenant_id`, `agent`, `latest_migration`):
+  plugin cần nó để đọc/ghi bảng của mình. Manifest có thêm `prefix` bắt buộc trong `[migrations]`.
+- Kiểm "chưa chạy migration" không làm lúc bật plugin (bật plugin là đồng bộ, truy vấn DB là bất đồng bộ) mà bằng
+  `await ctx.database.require_migrations()` khi plugin dùng bảng lần đầu; route của plugin trả câu "run agent db
+  migrate-plugins".
+- Alembic `0012_plugin_migrations` (không còn `0012_ingress_trusted` vì hoãn ngữ cảnh tin cậy).
+- Test DB của migration chưa chạy được (Docker tắt, không có `PEMA_TEST_DATABASE_URL`); test thuần đều qua.
+
 ## 3. Thứ tự và commit
 
 Mỗi việc một commit, không ghi tên AI vào commit.
