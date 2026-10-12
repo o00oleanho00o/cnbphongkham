@@ -77,6 +77,7 @@ describe("the fake agent", () => {
 
     expect(listing.plugins).toEqual([
       expect.objectContaining({ name: "zalo", script: "/ui/zalo/client.js" }),
+      expect.objectContaining({ name: "knowledge", script: "/ui/knowledge/client.js" }),
     ]);
     expect(accounts.length).toBeGreaterThan(0);
   });

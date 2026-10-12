@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { fileURLToPath } from "node:url";
 
+import { registerKnowledge } from "./knowledge";
 import {
   DAY,
   HOUR,
@@ -23,7 +24,7 @@ import {
 
 const PLUGINS_DIR = fileURLToPath(new URL("../../backend/apps/agent/plugins/", import.meta.url));
 /** Plugins with a browser script, as `GET /v1/admin/ui` lists them. */
-const UI_PLUGINS = ["zalo"] as const;
+const UI_PLUGINS = ["zalo", "knowledge"] as const;
 const TOKEN_TTL_MS = 2 * MIN;
 const AGENT_PATHS = ["/v1/", "/ui/"];
 
@@ -382,6 +383,19 @@ const pluginList: PluginShown[] = [
         source: "default",
       },
     ],
+    secrets_unreadable: false,
+  },
+  {
+    name: "knowledge",
+    version: "0.1.0",
+    description: "Kho tri thức: các tài liệu agent tra cứu. Thêm, duyệt nguồn, dạy tên dịch vụ, thử tìm.",
+    origin: "bundled",
+    enabled: true,
+    error: null,
+    tools: [],
+    channels: [],
+    jobs: [],
+    settings: [],
     secrets_unreadable: false,
   },
 ];
@@ -764,6 +778,7 @@ export function buildAgentRouter(): Router {
       log: [],
     },
   }));
+  registerKnowledge(r);
   return r;
 }
 

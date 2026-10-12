@@ -24,6 +24,9 @@ export interface PluginPage {
 
 export interface Contribution {
   pages?: PluginPage[];
+  /** A top-level tab of its own for this plugin's area (the knowledge store), opening the page `page`. The clinic
+   * web adds it to "Điều khiển agent" while the plugin is enabled; the agent dashboard lists the pages as usual. */
+  section?: { title: string; page: string };
   /** Display names of the people of a channel (chat lists), `{ <user id>: <name> }` for the ones it knows; a plugin
    * answers `{}` for a channel that is not its own. */
   personNames?: (channel: string, userIds: readonly string[]) => Promise<Record<string, string>>;

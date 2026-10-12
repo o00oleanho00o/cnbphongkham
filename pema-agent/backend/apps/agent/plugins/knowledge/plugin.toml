@@ -1,0 +1,8 @@
+name = "knowledge"
+version = "0.1.0"
+description = "The knowledge store (Kho tri thức): the documents the agent looks things up in. Add, check and approve sources, teach it service names, try a search. Server half not built yet."
+api = 1
+
+[ui]
+dir = "ui/dist"
+entry = "client.js"
