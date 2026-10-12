@@ -558,3 +558,28 @@ Những thứ cố ý **không** có: bộ viết lại truy vấn riêng, HyDE,
 bằng số, Graph RAG, đa phương thức. Lý do chung: trong agentic RAG, model đã làm việc định tuyến, viết lại và
 tự chấm; thêm một tầng LLM nữa là tốn token cho việc model đang làm. Mỗi thứ trên có đường quay lại khi bộ đo
 chỉ ra lỗ hổng cụ thể.
+
+## 18. Danh sách việc làm cho độ chính xác cao, xếp theo mức đóng góp (2026-10-12)
+
+Thứ tự là phán đoán của người viết plan, bộ đo (mục 10) sẽ kiểm chứng. Cột "Bước" trỏ về bảng mục 14.
+
+| # | Việc | Vì sao đứng ở đây | Bước |
+|---|---|---|---|
+| 0 | **Bộ đo trước tiên**: 50–100 câu hỏi thật từ Phiên chat + đáp án mong muốn; chấm hit@5, số liệu đúng, từ chối đúng | không tự tăng độ chính xác, nhưng thiếu nó thì mọi việc dưới đây là đoán | 1 |
+| 1 | **Parse đúng cấu trúc**: tiêu đề, danh sách, bảng (Docling cho PDF) | sai từ đầu thì mọi tầng sau sai theo; cẩm nang thật mất hết tiêu đề khi trích thô | 1–2 |
+| 2 | **Chia đoạn theo mục**, mỗi đoạn mang đường dẫn tiêu đề, **bảng giá mỗi hàng một đoạn** | câu hỏi giá phải trúng đúng một hàng; đoạn mất ngữ cảnh thì tìm được cũng vô dụng | 1 |
+| 3 | **Dữ liệu sạch**: một sự thật ở một chỗ, bỏ trùng, ngày hiệu lực, nguồn mới thay nguồn cũ, tách nguồn bệnh nhân/nội bộ | bảng giá cũ còn trong kho là câu trả lời sai dù tìm "đúng" | 1, 6 |
+| 4 | **Hybrid BM25 + vector (Qwen3-8B) + RRF** | BM25 bắt tên dịch vụ, mã, con số; vector bắt nghĩa ("sạm da" → "nám") | 1, 4 |
+| 5 | **Tên gọi khác của dịch vụ + nhãn dịch vụ/loại** để mở rộng truy vấn và lọc | bệnh nhân gọi tên lung tung; multi-hop nhẹ giải bằng lọc thay vì đồ thị | 3 |
+| 6 | **Câu ngữ cảnh cho mỗi đoạn** (contextual retrieval) | "bôi kem chống nắng 2-3 giờ" tự nó không có chữ "nám", "laser" | 3 |
+| 7 | **Rerank** | sửa thứ tự sau RRF; thường là bước tăng lớn nhất sau hybrid | 5 |
+| 8 | **Tool và thủ tục agentic**: truy vấn tự đứng được, tìm lại tối đa 3 lượt, `kb_read` đọc trọn mục, độ khớp trả về cho model, nói "chưa có" | biến tìm kiếm một phát thành tìm có kiểm tra | 1, 5 |
+| 9 | **Hook kiểm số liệu**: mọi con số trong câu trả lời phải có trong đoạn đã tìm | chặn lỗi nặng nhất: bịa giá | 5 |
+| 10 | **Vòng phản hồi**: nhật ký câu hỏi hụt → viết nguồn mới; đánh dấu câu trả lời sai → thêm vào bộ đo | kho tốt lên theo câu hỏi thật, không theo đoán | 5–6 |
+| 11 | **Tinh chỉnh bằng số đo**: k, cỡ đoạn, ngưỡng vector, so 3 model embedding, số chiều | mỗi thứ tăng ít, chỉ làm khi bộ đo chỉ ra | 4–5 |
+
+Ít đáng kỳ vọng: tăng số chiều 1024 → 3072, Graph RAG, HyDE, bộ viết lại truy vấn riêng (mục 15, 17).
+
+Mục tiêu đề xuất cho bản demo, đo trên bộ câu hỏi: tìm đúng nguồn trong 5 kết quả ≥ 90%; số liệu trong câu
+trả lời đúng ≥ 95%; **0 con số bịa**; từ chối đúng các câu ngoài tài liệu ≥ 90%; không lộ nội dung nội bộ ra kênh
+bệnh nhân: 0 lần.
