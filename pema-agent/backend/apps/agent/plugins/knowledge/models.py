@@ -9,7 +9,7 @@ from typing import Any, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .text import Audience, Lifecycle
+from .text import Audience, Lifecycle, text_hash
 
 Processing = Literal["queued", "processing", "ready", "error"]
 SourceFormat = Literal["md", "txt", "docx", "xlsx", "pdf", "text"]
@@ -66,6 +66,13 @@ class Chunk:
     services: tuple[str, ...] = ()
     kind: str = "info"
     embedded: bool = False
+    """Whether it has a vector in the space in use; the store fills it when it reads."""
+    embed_text: str = ""
+    """What it is embedded as (``text.embed_text_of``); empty for a chunk made without it."""
+
+    @property
+    def embed_hash(self) -> str:
+        return text_hash(self.embed_text) if self.embed_text else ""
 
     def shown(self) -> dict[str, Any]:
         return {

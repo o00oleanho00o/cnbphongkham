@@ -231,7 +231,7 @@ def knowledge_routes(plugin: KnowledgePlugin) -> APIRouter:
         page: Annotated[int, Query(ge=1, le=10_000)] = 1,
     ) -> dict[str, Any]:
         await found(source_id)
-        items, total = await store.chunks(source_id, q, page, CHUNK_PAGE)
+        items, total = await store.chunks(source_id, q, page, CHUNK_PAGE, None)
         return {"items": [c.shown() for c in items], "total": total, "page": page, "page_size": CHUNK_PAGE}
 
     @router.patch("/chunks/{chunk_id}", status_code=status.HTTP_204_NO_CONTENT)

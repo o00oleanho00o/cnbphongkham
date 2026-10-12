@@ -26,6 +26,7 @@ from .text import (
     content_hash,
     content_warnings,
     count_tables,
+    embed_text_of,
     fold,
     outline,
     split_head,
@@ -77,8 +78,10 @@ class Ingest:
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
         today: Callable[[], date] | None = None,
         monotonic: Callable[[], float] = time.monotonic,
+        on_change: Callable[[], None] = lambda: None,
     ) -> None:
         self._store = store
+        self._on_change = on_change
         self._clock = clock
         self._today = today or (lambda: clock().date())
         self._monotonic = monotonic
@@ -121,7 +124,7 @@ class Ingest:
         """Cuts the source again (after its Markdown or the services changed) and stores the new chunks."""
         text = source.markdown if markdown is None else markdown
         _, body = split_head(text)
-        chunks = make_chunks(source.id, chunk(body, source.title), services)
+        chunks = make_chunks(source.id, source.title, chunk(body, source.title), services)
         changed = replace(
             source,
             markdown=text,
@@ -136,6 +139,7 @@ class Ingest:
         )
         await self._store.save(changed)
         await self._store.replace_chunks(source.id, chunks)
+        self._on_change()
         return changed
 
     async def event(self, source_id: str, kind: str, note: str = "") -> None:
@@ -241,7 +245,7 @@ class Ingest:
     async def _add(self, parsed: Parsed, item: ConfirmItem, services: Sequence[Service]) -> Source:
         now = self._clock()
         source_id = new_id("src")
-        chunks = make_chunks(source_id, list(parsed.pieces), services)
+        chunks = make_chunks(source_id, item.title, list(parsed.pieces), services)
         source = Source(
             id=source_id,
             title=item.title,
@@ -275,6 +279,7 @@ class Ingest:
         await self.event(source_id, "uploaded", parsed.name)
         if replaced is not None and item.lifecycle == "active":
             await self._retire(replaced, item, now)
+        self._on_change()
         return source
 
     async def _retire(self, old: Source, item: ConfirmItem, now: datetime) -> None:
@@ -305,7 +310,9 @@ class Ingest:
             del self._previews[next(iter(self._previews))]
 
 
-def make_chunks(source_id: str, pieces: Sequence[Piece], services: Sequence[Service]) -> list[Chunk]:
+def make_chunks(
+    source_id: str, title: str, pieces: Sequence[Piece], services: Sequence[Service]
+) -> list[Chunk]:
     return [
         Chunk(
             id=f"{source_id}-c{index}",
@@ -314,6 +321,7 @@ def make_chunks(source_id: str, pieces: Sequence[Piece], services: Sequence[Serv
             path=piece.path,
             body=piece.text,
             services=tuple(recognise(f"{piece.path}\n{piece.text}", services)),
+            embed_text=embed_text_of(title, piece.path, piece.text),
         )
         for index, piece in enumerate(pieces, start=1)
     ]

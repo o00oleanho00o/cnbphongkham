@@ -47,9 +47,42 @@ class KnowledgeStore(Protocol):
     async def by_code(self, doc_code: str) -> Source | None: ...
     async def in_force(self, key: str, as_of: date) -> Source | None: ...
     async def by_hash(self, content_hash: str) -> Source | None: ...
-    async def chunks(self, source_id: str, q: str, page: int, page_size: int) -> tuple[list[Chunk], int]: ...
+    async def chunks(
+        self, source_id: str, q: str, page: int, page_size: int, space: str | None
+    ) -> tuple[list[Chunk], int]:
+        """A source's chunks; each says whether it has a vector in ``space`` (never when that is None)."""
+        ...
+
     async def update_chunk(self, chunk_id: str, services: list[str] | None, kind: str | None) -> bool: ...
     async def search(self, query: Sequence[str], as_of: date, limit: int) -> list[Hit]: ...
+    async def vector_search(
+        self, space: str, vector: Sequence[float], as_of: date, limit: int, min_similarity: float
+    ) -> list[Hit]:
+        """Chunks closest to ``vector`` in force on ``as_of`` (same sources as ``search``), best first; the
+        score is the cosine similarity and none below ``min_similarity`` is returned."""
+        ...
+
+    async def missing_vectors(self, space: str, limit: int) -> list[tuple[str, str]]:
+        """(hash, text) of distinct chunk texts of ready, active sources with no vector in ``space``."""
+        ...
+
+    async def missing_count(self, space: str) -> int:
+        """Chunks (not distinct texts) of ready, active sources with no vector in ``space``."""
+        ...
+
+    async def save_vectors(self, space: str, items: Sequence[tuple[str, Sequence[float]]]) -> None: ...
+    async def vector_counts(self, space: str) -> dict[str, int]:
+        """Source id -> how many of its chunks have a vector in ``space``."""
+        ...
+
+    async def clear_vectors(self, space: str) -> int:
+        """Deletes every vector in ``space``; returns how many."""
+        ...
+
+    async def drop_stale_vectors(self, space: str) -> int:
+        """Deletes the vectors of other spaces and those no chunk refers to any more; returns how many."""
+        ...
+
     async def add_event(self, event: Event) -> None: ...
     async def events(self, source_id: str) -> list[Event]: ...
     async def services(self) -> list[Service]: ...
@@ -71,6 +104,11 @@ def in_use(source: Source, as_of: date) -> bool:
     )
 
 
+def embeddable(source: Source) -> bool:
+    """Worth a vector: ready and the version in use (one that starts later is; a draft or old one is not)."""
+    return source.processing == "ready" and source.lifecycle == "active"
+
+
 def matches(source: Source, query: SourceFilter) -> bool:
     needle = fold(query.q.strip())
     return (
@@ -90,6 +128,8 @@ class InMemoryKnowledgeStore:
         self._events: list[Event] = []
         self._services: dict[str, Service] = {}
         self._gaps: dict[str, Gap] = {}
+        self._vectors: dict[tuple[str, str], tuple[float, ...]] = {}
+        """(space, text hash) -> the normalised vector."""
 
     async def add_source(self, source: Source, chunks: Sequence[Chunk]) -> None:
         self._sources[source.id] = replace(source)
@@ -136,10 +176,14 @@ class InMemoryKnowledgeStore:
         found = [s for s in self._sources.values() if s.content_hash == content_hash]
         return replace(found[0]) if found else None
 
-    async def chunks(self, source_id: str, q: str, page: int, page_size: int) -> tuple[list[Chunk], int]:
+    async def chunks(
+        self, source_id: str, q: str, page: int, page_size: int, space: str | None
+    ) -> tuple[list[Chunk], int]:
         needle = fold(q.strip())
         found = [
-            c for c in self._chunks.get(source_id, []) if not needle or needle in fold(f"{c.path} {c.body}")
+            replace(c, embedded=space is not None and (space, c.embed_hash) in self._vectors)
+            for c in self._chunks.get(source_id, [])
+            if not needle or needle in fold(f"{c.path} {c.body}")
         ]
         start = (page - 1) * page_size
         return found[start : start + page_size], len(found)
@@ -188,6 +232,62 @@ class InMemoryKnowledgeStore:
             reverse=True,
         )
         return [hit for hit in ranked if hit.score > 0][:limit]
+
+    async def vector_search(
+        self, space: str, vector: Sequence[float], as_of: date, limit: int, min_similarity: float
+    ) -> list[Hit]:
+        scored = [
+            Hit(replace(item, embedded=True), source.title, source.doc_code, _cosine(vector, have))
+            for source in self._sources.values()
+            if in_use(source, as_of)
+            for item in self._chunks.get(source.id, [])
+            if (have := self._vectors.get((space, item.embed_hash))) is not None
+        ]
+        close = [hit for hit in scored if hit.score >= min_similarity]
+        return sorted(close, key=lambda hit: (-hit.score, hit.chunk.id))[:limit]
+
+    async def missing_vectors(self, space: str, limit: int) -> list[tuple[str, str]]:
+        wanting = {
+            item.embed_hash: item.embed_text
+            for source in self._sources.values()
+            if embeddable(source)
+            for item in self._chunks.get(source.id, [])
+            if item.embed_hash and (space, item.embed_hash) not in self._vectors
+        }
+        return sorted(wanting.items())[:limit]
+
+    async def missing_count(self, space: str) -> int:
+        return sum(
+            1
+            for source in self._sources.values()
+            if embeddable(source)
+            for item in self._chunks.get(source.id, [])
+            if item.embed_hash and (space, item.embed_hash) not in self._vectors
+        )
+
+    async def save_vectors(self, space: str, items: Sequence[tuple[str, Sequence[float]]]) -> None:
+        for text_hash, vector in items:
+            self._vectors.setdefault((space, text_hash), tuple(vector))
+
+    async def vector_counts(self, space: str) -> dict[str, int]:
+        counts = {
+            source_id: sum(1 for item in items if (space, item.embed_hash) in self._vectors)
+            for source_id, items in self._chunks.items()
+        }
+        return {source_id: count for source_id, count in counts.items() if count}
+
+    async def clear_vectors(self, space: str) -> int:
+        gone = [key for key in self._vectors if key[0] == space]
+        for key in gone:
+            del self._vectors[key]
+        return len(gone)
+
+    async def drop_stale_vectors(self, space: str) -> int:
+        used = {item.embed_hash for items in self._chunks.values() for item in items}
+        gone = [key for key in self._vectors if key[0] != space or key[1] not in used]
+        for key in gone:
+            del self._vectors[key]
+        return len(gone)
 
     async def add_event(self, event: Event) -> None:
         self._events.append(event)
@@ -239,6 +339,11 @@ def _idf(total: int, containing: int) -> float:
     return math.log(1 + (total - containing + 0.5) / (containing + 0.5))
 
 
+def _cosine(a: Sequence[float], b: Sequence[float]) -> float:
+    """Cosine similarity of two normalised vectors of the same space: their dot product."""
+    return math.fsum(x * y for x, y in zip(a, b, strict=True))
+
+
 # -- Postgres ------------------------------------------------------------------------------------------------
 
 _SOURCE_COLUMNS: Final = (
@@ -267,8 +372,8 @@ _UPSERT_SOURCE = text(
 ).bindparams(bindparam("services", type_=ARRAY(Text)))
 _INSERT_CHUNK = text(
     "INSERT INTO agent_rt.kb_chunk (tenant_id, agent, id, source_id, ordinal, path, body, chars, services, "
-    "kind, embedded, terms) VALUES (:tenant_id, :agent, :id, :source_id, :ordinal, :path, :body, :chars, "
-    ":services, :kind, :embedded, to_tsvector('simple', :terms))"
+    "kind, embed_text, embed_hash, terms) VALUES (:tenant_id, :agent, :id, :source_id, :ordinal, :path, "
+    ":body, :chars, :services, :kind, :embed_text, :embed_hash, to_tsvector('simple', :terms))"
 ).bindparams(bindparam("services", type_=ARRAY(Text)))
 _DELETE_CHUNKS = text(
     "DELETE FROM agent_rt.kb_chunk WHERE tenant_id = :tenant_id AND agent = :agent AND source_id = :source_id"
@@ -312,16 +417,19 @@ _BY_HASH = text(
     "WHERE tenant_id = :tenant_id AND agent = :agent AND content_hash = :hash LIMIT 1"
 )
 _CHUNKS = text(
-    "SELECT id, source_id, ordinal, path, body, services, kind, embedded FROM agent_rt.kb_chunk "
-    "WHERE tenant_id = :tenant_id AND agent = :agent AND source_id = :source_id ORDER BY ordinal"
+    "SELECT c.id, c.source_id, c.ordinal, c.path, c.body, c.services, c.kind, c.embed_text, "
+    "(e.text_hash IS NOT NULL) AS embedded FROM agent_rt.kb_chunk c "
+    "LEFT JOIN agent_rt.kb_embedding e ON e.tenant_id = c.tenant_id AND e.agent = c.agent "
+    "AND e.space = :space AND e.text_hash = c.embed_hash "
+    "WHERE c.tenant_id = :tenant_id AND c.agent = :agent AND c.source_id = :source_id ORDER BY c.ordinal"
 )
 _UPDATE_CHUNK = text(
     "UPDATE agent_rt.kb_chunk SET services = COALESCE(:services, services), kind = COALESCE(:kind, kind) "
     "WHERE tenant_id = :tenant_id AND agent = :agent AND id = :id"
 ).bindparams(bindparam("services", type_=ARRAY(Text)))
 _SEARCH = text(
-    "SELECT c.id, c.source_id, c.ordinal, c.path, c.body, c.services, c.kind, c.embedded, s.title, "
-    "s.doc_code, "
+    "SELECT c.id, c.source_id, c.ordinal, c.path, c.body, c.services, c.kind, c.embed_text, "
+    "false AS embedded, s.title, s.doc_code, "
     "ts_rank_cd(c.terms, q.query) AS score "
     "FROM agent_rt.kb_chunk c "
     "JOIN agent_rt.kb_source s ON s.tenant_id = c.tenant_id AND s.agent = c.agent AND s.id = c.source_id "
@@ -331,6 +439,52 @@ _SEARCH = text(
     "AND (s.effective_from IS NULL OR s.effective_from <= :as_of) "
     "AND (s.effective_to IS NULL OR s.effective_to >= :as_of) "
     "ORDER BY score DESC, c.id LIMIT :limit"
+)
+_VECTOR_SEARCH = text(
+    "SELECT c.id, c.source_id, c.ordinal, c.path, c.body, c.services, c.kind, c.embed_text, "
+    "true AS embedded, s.title, s.doc_code, "
+    "1 - (e.vector OPERATOR(public.<=>) CAST(:vector AS public.vector)) AS score "
+    "FROM agent_rt.kb_chunk c "
+    "JOIN agent_rt.kb_source s ON s.tenant_id = c.tenant_id AND s.agent = c.agent AND s.id = c.source_id "
+    "JOIN agent_rt.kb_embedding e ON e.tenant_id = c.tenant_id AND e.agent = c.agent "
+    "AND e.space = :space AND e.text_hash = c.embed_hash "
+    "WHERE c.tenant_id = :tenant_id AND c.agent = :agent "
+    "AND s.processing = 'ready' AND s.lifecycle = 'active' "
+    "AND (s.effective_from IS NULL OR s.effective_from <= :as_of) "
+    "AND (s.effective_to IS NULL OR s.effective_to >= :as_of) "
+    "AND 1 - (e.vector OPERATOR(public.<=>) CAST(:vector AS public.vector)) >= :min_similarity "
+    "ORDER BY e.vector OPERATOR(public.<=>) CAST(:vector AS public.vector), c.id LIMIT :limit"
+)
+_MISSING_FROM: Final = (
+    "FROM agent_rt.kb_chunk c "
+    "JOIN agent_rt.kb_source s ON s.tenant_id = c.tenant_id AND s.agent = c.agent AND s.id = c.source_id "
+    "WHERE c.tenant_id = :tenant_id AND c.agent = :agent AND c.embed_hash <> '' "
+    "AND s.processing = 'ready' AND s.lifecycle = 'active' "
+    "AND NOT EXISTS (SELECT 1 FROM agent_rt.kb_embedding e WHERE e.tenant_id = c.tenant_id "
+    "AND e.agent = c.agent AND e.space = :space AND e.text_hash = c.embed_hash)"
+)
+_MISSING_VECTORS = text(
+    f"SELECT DISTINCT ON (c.embed_hash) c.embed_hash, c.embed_text {_MISSING_FROM} "
+    "ORDER BY c.embed_hash LIMIT :limit"
+)
+_MISSING_COUNT = text(f"SELECT count(*) {_MISSING_FROM}")
+_SAVE_VECTOR = text(
+    "INSERT INTO agent_rt.kb_embedding (tenant_id, agent, space, text_hash, vector) "
+    "VALUES (:tenant_id, :agent, :space, :text_hash, CAST(:vector AS public.vector)) ON CONFLICT DO NOTHING"
+)
+_VECTOR_COUNTS = text(
+    "SELECT c.source_id, count(*) FROM agent_rt.kb_chunk c "
+    "JOIN agent_rt.kb_embedding e ON e.tenant_id = c.tenant_id AND e.agent = c.agent "
+    "AND e.space = :space AND e.text_hash = c.embed_hash "
+    "WHERE c.tenant_id = :tenant_id AND c.agent = :agent GROUP BY c.source_id"
+)
+_CLEAR_VECTORS = text(
+    "DELETE FROM agent_rt.kb_embedding WHERE tenant_id = :tenant_id AND agent = :agent AND space = :space"
+)
+_DROP_STALE = text(
+    "DELETE FROM agent_rt.kb_embedding e WHERE e.tenant_id = :tenant_id AND e.agent = :agent "
+    "AND (e.space <> :space OR NOT EXISTS (SELECT 1 FROM agent_rt.kb_chunk c WHERE c.tenant_id = e.tenant_id "
+    "AND c.agent = e.agent AND c.embed_hash = e.text_hash))"
 )
 _INSERT_EVENT = text(
     "INSERT INTO agent_rt.kb_event (tenant_id, agent, id, source_id, at, kind, by_whom, note) "
@@ -440,9 +594,12 @@ class PostgresKnowledgeStore:
             )
         return None if row is None else _source(row)
 
-    async def chunks(self, source_id: str, q: str, page: int, page_size: int) -> tuple[list[Chunk], int]:
+    async def chunks(
+        self, source_id: str, q: str, page: int, page_size: int, space: str | None
+    ) -> tuple[list[Chunk], int]:
+        params = {**self._scope, "source_id": source_id, "space": space or ""}
         async with self._engine.connect() as conn:
-            rows = (await conn.execute(_CHUNKS, {**self._scope, "source_id": source_id})).mappings().all()
+            rows = (await conn.execute(_CHUNKS, params)).mappings().all()
         needle = fold(q.strip())
         found = [_chunk(row) for row in rows]
         kept = [c for c in found if not needle or needle in fold(f"{c.path} {c.body}")]
@@ -463,6 +620,57 @@ class PostgresKnowledgeStore:
         async with self._engine.connect() as conn:
             rows = (await conn.execute(_SEARCH, params)).mappings().all()
         return [Hit(_chunk(row), row["title"], row["doc_code"], float(row["score"])) for row in rows]
+
+    async def vector_search(
+        self, space: str, vector: Sequence[float], as_of: date, limit: int, min_similarity: float
+    ) -> list[Hit]:
+        params = {
+            **self._scope,
+            "space": space,
+            "vector": _vector_literal(vector),
+            "as_of": as_of,
+            "limit": limit,
+            "min_similarity": min_similarity,
+        }
+        async with self._engine.connect() as conn:
+            rows = (await conn.execute(_VECTOR_SEARCH, params)).mappings().all()
+        return [Hit(_chunk(row), row["title"], row["doc_code"], float(row["score"])) for row in rows]
+
+    async def missing_vectors(self, space: str, limit: int) -> list[tuple[str, str]]:
+        async with self._engine.connect() as conn:
+            rows = (
+                await conn.execute(_MISSING_VECTORS, {**self._scope, "space": space, "limit": limit})
+            ).all()
+        return [(str(text_hash), str(embed_text)) for text_hash, embed_text in rows]
+
+    async def missing_count(self, space: str) -> int:
+        async with self._engine.connect() as conn:
+            return int((await conn.execute(_MISSING_COUNT, {**self._scope, "space": space})).scalar_one())
+
+    async def save_vectors(self, space: str, items: Sequence[tuple[str, Sequence[float]]]) -> None:
+        if not items:
+            return
+        rows = [
+            {**self._scope, "space": space, "text_hash": text_hash, "vector": _vector_literal(vector)}
+            for text_hash, vector in items
+        ]
+        async with self._engine.begin() as conn:
+            await conn.execute(_SAVE_VECTOR, rows)
+
+    async def vector_counts(self, space: str) -> dict[str, int]:
+        async with self._engine.connect() as conn:
+            rows = (await conn.execute(_VECTOR_COUNTS, {**self._scope, "space": space})).all()
+        return {str(source_id): int(count) for source_id, count in rows}
+
+    async def clear_vectors(self, space: str) -> int:
+        async with self._engine.begin() as conn:
+            result = await conn.execute(_CLEAR_VECTORS, {**self._scope, "space": space})
+        return int(getattr(result, "rowcount", 0))
+
+    async def drop_stale_vectors(self, space: str) -> int:
+        async with self._engine.begin() as conn:
+            result = await conn.execute(_DROP_STALE, {**self._scope, "space": space})
+        return int(getattr(result, "rowcount", 0))
 
     async def add_event(self, event: Event) -> None:
         async with self._engine.begin() as conn:
@@ -599,7 +807,8 @@ class PostgresKnowledgeStore:
             "chars": len(item.body),
             "services": list(item.services),
             "kind": item.kind,
-            "embedded": item.embedded,
+            "embed_text": item.embed_text,
+            "embed_hash": item.embed_hash,
             "terms": " ".join(chunk_terms(item)),
         }
 
@@ -647,8 +856,14 @@ def _chunk(row: Any) -> Chunk:
         body=row["body"],
         services=tuple(row["services"]),
         kind=row["kind"],
-        embedded=row["embedded"],
+        embedded=bool(row["embedded"]),
+        embed_text=row["embed_text"],
     )
+
+
+def _vector_literal(vector: Sequence[float]) -> str:
+    """pgvector's text form, cast to its type in the SQL (no Python package for it is needed)."""
+    return "[" + ",".join(repr(float(x)) for x in vector) + "]"
 
 
 def _gap(row: Any) -> Gap:
