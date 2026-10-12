@@ -67,6 +67,10 @@ def build_agent(
             tools.register(spec)
     for spec in added.tools:
         tools.register(spec)
+    specs = [spec for name in tools.names() if (spec := tools.get(name)) is not None]
+    refused = [spec.name for spec in specs if spec.network == "internet"]
+    if refused and not profile.agent.allow_internet:
+        raise ValueError(f"tools that reach the internet are not allowed here: {', '.join(refused)}")
     prompt = build_prompt(
         profile, tool_names=tools.names(), memory=memory, skills=skills, extra_sections=added.sections
     )

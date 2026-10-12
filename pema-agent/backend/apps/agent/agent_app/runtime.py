@@ -161,7 +161,7 @@ def start_plugins(
 ) -> PluginHost:
     """Enables the plugins the profile lists; any of them failing stops the start, naming the plugin."""
     found = discovery or discover(plugin_roots(profile, env))
-    host = PluginHost(found.plugins, env, storage=storage)
+    host = PluginHost(found.plugins, env, storage=storage, allow_internet=profile.agent.allow_internet)
     try:
         for name in profile.plugins.enabled:
             if name not in found.plugins and name in found.broken:

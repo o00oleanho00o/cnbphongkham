@@ -104,8 +104,10 @@ class PluginContext:
         channel_owner: Callable[[str], str | None],
         data_dir: Path,
         self_url: Callable[[], str | None],
+        allow_internet: bool = False,
     ) -> None:
         self._loaded = loaded
+        self._allow_internet = allow_internet
         self._env = env
         self._changed = changed
         self._storage = storage
@@ -166,6 +168,11 @@ class PluginContext:
         return key
 
     def register_tool(self, spec: ToolSpec[Any]) -> Disposer:
+        """A tool the agent may call. One that reaches the internet is refused unless the agent allows it."""
+        if spec.network == "internet" and not self._allow_internet:
+            raise PluginError(
+                self.name, f"tool {spec.name} reaches the internet, and this agent allows no internet tools"
+            )
         return self._add(self._loaded.tools, spec)
 
     def register_prompt_section(self, section: Section) -> Disposer:
@@ -259,8 +266,10 @@ class PluginHost:
         *,
         storage: StorageFor | None = None,
         data_root: Path | None = None,
+        allow_internet: bool = False,
     ) -> None:
         self._sources = dict(sources)
+        self._allow_internet = allow_internet
         self._env = env
         self._storage: StorageFor = storage or InMemoryPluginRecords().storage
         self._data_root = data_root or Path(env.get(DATA_DIR_ENV) or Path.home() / DEFAULT_DATA_DIR)
@@ -317,6 +326,7 @@ class PluginHost:
                     channel_owner=self._channel_owner,
                     data_dir=self._data_root / "plugins" / name,
                     self_url=lambda: self.self_url,
+                    allow_internet=self._allow_internet,
                 )
             )
             self._check_unique(loaded)

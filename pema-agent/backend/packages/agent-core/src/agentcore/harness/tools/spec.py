@@ -6,7 +6,7 @@ import re
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final
+from typing import Final, Literal
 
 from pydantic import BaseModel, Field, JsonValue
 
@@ -51,6 +51,9 @@ class ToolSpec[ArgsT: BaseModel]:
     """Changes nothing, so it may run at the same time as other read-only calls."""
     prompt_args: tuple[str, ...] = ()
     """Arguments whose text is stored and later enters the system prompt; guards scan them before the call."""
+    network: Literal["internal", "internet"] = "internal"
+    """``internet``: the call reaches the public internet (web search, reading a URL). An agent whose profile
+    does not allow internet tools refuses to take such a tool."""
 
     def __post_init__(self) -> None:
         if not TOOL_NAME_PATTERN.fullmatch(self.name):
