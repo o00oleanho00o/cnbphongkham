@@ -14,6 +14,7 @@ import {
   numberProblem,
   parserChange,
   parserProblems,
+  reembedWarning,
   searchChange,
   searchFormOf,
   searchProblems,
@@ -45,7 +46,7 @@ describe("numbers", () => {
     expect(numberProblem("0,35", RANGES.min_score)).toBeNull();
   });
 
-  it.each(["", "abc", "0", "5000", "10.5"])("refuses_%s_as_a_number_of_dimensions", (text) => {
+  it.each(["", "abc", "0", "16", "5000", "10.5"])("refuses_%s_as_a_number_of_dimensions", (text) => {
     expect(numberProblem(text, RANGES.dimensions)).not.toBeNull();
   });
 
@@ -113,6 +114,15 @@ describe("embedding", () => {
     const text = embeddingTestText({ ok: false, dimensions: null, normalised: null, ms: null, message: "Chưa có khóa API" }, 1024);
 
     expect(text).toBe("Chưa có khóa API");
+  });
+});
+
+describe("re-embedding", () => {
+  it("says_new_chunks_are_searched_by_keyword_until_their_vectors_exist", () => {
+    const warning = reembedWarning(EMBEDDING);
+    expect(warning).toContain("demo-embedding");
+    expect(warning).toContain("chỉ được tìm bằng từ khóa");
+    expect(warning).not.toContain("vector cũ");
   });
 });
 

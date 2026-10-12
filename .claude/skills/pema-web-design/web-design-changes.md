@@ -21,6 +21,12 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-12 · change · Kho tri thức: embedding thật (Cài đặt, Thử tìm, cảnh báo)
+- Where: plugin `knowledge` pages (`backend/apps/agent/plugins/knowledge/ui/src/settings/settings-logic.ts`, `settings/search-section.tsx`, `try/try-logic.ts`), drawn at `/admin/agent/plugins/knowledge/store`
+- Change: the embedding is real now, so some wording and one range changed. "Nhúng lại toàn bộ" dialog: "Mọi đoạn của kho sẽ được nhúng lại bằng {model}. Việc chạy nền và tốn phí gọi embedding; trong lúc đó các đoạn chưa có vector mới chỉ được tìm bằng từ khóa." (old vectors are no longer used meanwhile). Cài đặt → Tìm kiếm: the hint of "Điểm tối thiểu" is "Độ giống tối thiểu (0 đến 1) của kết quả tìm theo nghĩa; mặc định 0,35". "Thử tìm": the vector stage's score label is "độ giống" (was "khoảng cách"; higher is better) and there is a stage "Gộp RRF (k = 60)" between the vector stage and the final package (shown skipped when the question had no vector result). The strip above the sources now says what the service is doing: "Embedding chưa kết nối: đang tìm bằng từ khóa.", "Đang nhúng: còn N đoạn chưa có vector.", or "Embedding đang lỗi: … Các đoạn chưa có vector chỉ được tìm bằng từ khóa.". "Số chiều" accepts 32 to 4096 (was 1 to 4096).
+- Web canvas target: none (no canvas frame for the agent pages)
+- Logged by: knowledge embedding
+
 ### 2026-10-12 · remove · Kho tri thức: một kho chung, ẩn "Đối tượng"
 - Where: plugin `knowledge` pages (`backend/apps/agent/plugins/knowledge/ui/src/sources/source-table.tsx`, `source-filters.tsx`, `bulk-bar.tsx`, `detail/header.tsx`, `add/info-step.tsx`, `add/preview-step.tsx`, `pages/try.tsx`, `settings/search-section.tsx`), drawn at `/admin/agent/plugins/knowledge/store`
 - Change: hidden behind `AUDIENCE_SPLIT = false`: the "Đối tượng" column and filter, the bulk "Đặt: Bệnh nhân" / "Đặt: Nội bộ" buttons, the detail badge and "Đối tượng" select, the "Đối tượng" fields of "Thêm nguồn" and its preview badge and internal-section warning, "Như kênh" and its hint in "Thử tìm", the setting "Tiền tố kênh bệnh nhân". Every channel sees every source. Wording: "Tệp có phần đầu YAML được điền sẵn theo đó. Nạp xong là agent dùng ngay, trên mọi kênh."; the split dialog says "Nguồn mới dùng được ngay."

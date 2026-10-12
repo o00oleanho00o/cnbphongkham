@@ -76,7 +76,7 @@ describe("formatting", () => {
   });
 
   it("names_the_number_each_stage_carries", () => {
-    expect(scoreLabel("vector")).toBe("khoảng cách");
+    expect(scoreLabel("vector")).toBe("độ giống");
     expect(scoreLabel("unknown")).toBe("điểm");
   });
 

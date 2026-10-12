@@ -37,7 +37,7 @@ export interface Range {
 }
 
 export const RANGES = {
-  dimensions: { label: "Số chiều", min: 1, max: 4096, integer: true },
+  dimensions: { label: "Số chiều", min: 32, max: 4096, integer: true },
   results: { label: "Số kết quả", min: 1, max: 50, integer: true },
   min_score: { label: "Ngưỡng điểm", min: 0, max: 1, integer: false },
   char_budget: { label: "Ngân sách ký tự", min: 500, max: 8_000, integer: true },
@@ -145,7 +145,7 @@ export function embeddingState(saved: EmbeddingSettings): string {
 }
 
 export function reembedWarning(saved: EmbeddingSettings): string {
-  return `Mọi đoạn của kho sẽ được nhúng lại bằng ${saved.model || "model đã lưu"}. Việc chạy nền, tốn phí gọi embedding, và tìm kiếm vẫn dùng vector cũ cho tới khi xong.`;
+  return `Mọi đoạn của kho sẽ được nhúng lại bằng ${saved.model || "model đã lưu"}. Việc chạy nền và tốn phí gọi embedding; trong lúc đó các đoạn chưa có vector mới chỉ được tìm bằng từ khóa.`;
 }
 
 export function reembedDone(queued: number): string {

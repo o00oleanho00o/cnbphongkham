@@ -37,7 +37,7 @@ export function formatMs(ms: number): string {
 
 const SCORE_LABEL: Record<string, string> = {
   keyword: "điểm",
-  vector: "khoảng cách",
+  vector: "độ giống",
   fused: "RRF",
   reranked: "điểm xếp lại",
   final: "điểm",
@@ -49,7 +49,7 @@ export function scoreLabel(stageId: string): string {
 
 const SCORE_DIGITS: Record<string, number> = { vector: 3, fused: 4 };
 
-/** Distances keep three decimals, the other scores two, RRF four; the comma is the decimal mark. */
+/** Similarities keep three decimals, the other scores two, RRF four; the comma is the decimal mark. */
 export function formatScore(stageId: string, score: number): string {
   return score.toFixed(SCORE_DIGITS[stageId] ?? 2).replace(".", ",");
 }

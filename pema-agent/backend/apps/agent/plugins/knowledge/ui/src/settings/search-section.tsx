@@ -43,7 +43,7 @@ export function SearchSection({ settings, onSaved }: SectionProps) {
         <ui.Field label="Số kết quả" hint={rangeHint(RANGES.results)} error={shown("results")}>
           <ui.Input inputMode="numeric" value={form.results} onChange={(event) => set("results", event.target.value)} />
         </ui.Field>
-        <ui.Field label="Điểm tối thiểu" hint="Từ 0 đến 1; kết quả thấp hơn bị bỏ" error={shown("min_score")}>
+        <ui.Field label="Điểm tối thiểu" hint="Độ giống tối thiểu (0 đến 1) của kết quả tìm theo nghĩa; mặc định 0,35" error={shown("min_score")}>
           <ui.Input inputMode="decimal" value={form.min_score} onChange={(event) => set("min_score", event.target.value)} />
         </ui.Field>
         <ui.Field label="Ngân sách ký tự" hint="Tổng độ dài chữ đưa cho agent" error={shown("char_budget")}>
