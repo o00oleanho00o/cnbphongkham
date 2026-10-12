@@ -854,6 +854,10 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
+- **Việc kế tiếp của RAG: embedding + tìm lai (2026-10-12).** Plan làm từng bước, đủ để agent khác làm:
+  `docs/PLAN-knowledge-embedding.md` (Beeknoee `qwen/qwen3-embedding-8b` 1024 chiều, bảng `kb_embedding` theo
+  chữ + không gian vector, job nền `embed`, RRF, rơi về từ khóa khi lỗi/chậm, script đo `scripts/kb_bench.py`).
+  Chưa code.
 - **RAG bước 0 + bước 1 đã code (2026-10-12, nhánh `feat/knowledge-ui`).**
   - Lõi: `ToolOutput.detail` vào trace (`detail.tool`), `ToolContext.now`, `ToolSpec.network` + `[agent]
     allow_internet` (clinic: false), `[migrations]` + `max_body_kb` trong `plugin.toml`, `agent db migrate-plugins`
