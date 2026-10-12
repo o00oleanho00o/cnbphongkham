@@ -863,10 +863,9 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
     "Kiểm tra kết nối", "Nhúng lại toàn bộ", dải cảnh báo theo trạng thái job. Mặc định điền sẵn Beeknoee
     `qwen/qwen3-embedding-8b` 1024 chiều.
   - Đo (`scripts/kb_bench.py` + route "Thử tìm" của agent thật, 30 câu: A dùng từ của tài liệu, B nói khác chữ):
-    top3 từ khóa Postgres 13/15 và 7/15, chỉ vector 15/15 và 15/15, gộp RRF 15/15 và 12/15. Vector đã cứu được
-    câu nói khác chữ; **RRF 1:1 kém chỉ-vector** (từ khóa Postgres kéo tài liệu nội bộ lên đầu), xem mục 12 của
-    plan: đề xuất vector-first (cần chủ hệ thống duyệt vì đổi D7). Nhúng câu hỏi trễ 2 s (tối đa 5,8 s), 4/30 câu
-    quá 6 s phải rơi về từ khóa; cân nhắc `vector_timeout_s` ~10.
+    top3 từ khóa Postgres 13/15 và 7/15, chỉ vector 15/15 và 15/15, gộp RRF 15/15 và 12/15. RRF 1:1 kém chỉ-vector
+    (từ khóa Postgres kéo tài liệu nội bộ lên đầu) nên **đã đổi sang vector trước, từ khóa nối sau** và nâng thời
+    gian chờ vector lên 10 s (4/30 câu quá 6 s lúc đo; nhúng một câu trễ 2 s, tối đa 5,8 s). Xem mục 12 của plan.
   - Chạy thật: `docker compose up -d --build` ở thư mục gốc đã chạy migration 0002 (209 đoạn có `embed_hash`).
     Khóa Beeknoee đã nhập ở Kho tri thức → Cài đặt → Embedding, 209 đoạn đã có vector. Che SĐT/CCCD trước khi
     gửi câu hỏi đi nhúng vẫn tắt (demo).

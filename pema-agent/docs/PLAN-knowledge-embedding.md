@@ -785,6 +785,8 @@ wrong code (record why in section 12), but must **not** drop hard questions.
 | vector (live route) | B | 15/15 | 15/15 | 15/15 | 1.000 | ~2.4 s | 0.35 |
 | hybrid RRF 1:1 (live route) | A | 11/15 | 15/15 | 15/15 | 0.856 | ~2.1 s | 0.35 |
 | hybrid RRF 1:1 (live route) | B | 11/15 | 12/15 | 13/15 | 0.800 | ~2.4 s | 0.35 |
+| **hybrid, vector first (live route, after the amendment)** | A | 13/15 | 15/15 | 15/15 | 0.933 | ~2.3 s | 0.35 |
+| **hybrid, vector first (live route, after the amendment)** | B | 15/15 | 15/15 | 15/15 | 1.000 | ~2.3 s | 0.35 |
 
 How these were measured (2026-10-12, 22 Pema documents, 209 chunks, all 209 vectors in space `0bbca84e7f4e2b3e`,
 embedded in 76 s): the first two rows with `scripts/kb_bench.py --modes keyword` (in-memory BM25); the others
@@ -947,3 +949,5 @@ date, step, problem, what you did.)
   and its tests were removed. The page "Thu tim" shows the stage `fused` as "Xep hang: vector truoc, tu khoa sau"
   (the exact Vietnamese is in `search.py`). Expected numbers: the "vector" rows of section 10, since keyword chunks
   only follow the vector ones.
+  Re-measured after the rebuild: vector-first hybrid equals vector alone (30/30 at top 3, MRR 0.967). In that run
+  one question took 7.6 s to embed and was still used, which the old 6 s wait would have dropped.
