@@ -1,5 +1,5 @@
 name = "knowledge"
-version = "0.2.0"
+version = "0.3.0"
 description = "The knowledge store (Kho tri thức): documents the agent looks things up in with kb_search and kb_read. Add and check sources, teach it service names, try a search."
 api = 1
 # documents are uploaded to the admin routes
@@ -36,3 +36,45 @@ type = "boolean"
 title = "Benchmark mode"
 description = "Accept challenge documents (old prices, drafts, attack tests) when measuring the agent. Off in normal use."
 default = false
+
+[user_config.embedding_base_url]
+type = "string"
+title = "Embedding address"
+description = "OpenAI-compatible base URL of the embedding service (the key is entered on the Kho tri thức settings page)."
+default = "https://platform.beeknoee.com/api/v1"
+
+[user_config.embedding_model]
+type = "string"
+title = "Embedding model"
+description = "The embedding model."
+default = "qwen/qwen3-embedding-8b"
+
+[user_config.embedding_dimensions]
+type = "integer"
+title = "Embedding dimensions"
+description = "Dimensions asked for; vectors are cut and normalised to this many."
+default = 1024
+
+[user_config.embedding_query_prefix]
+type = "string"
+title = "Question prefix"
+description = "Put before a question when it is embedded (Qwen3 wants an instruction)."
+default = "Instruct: Given a question from a skin clinic's customer, retrieve the passages of the clinic's documents that answer it\nQuery: "
+
+[user_config.embedding_document_prefix]
+type = "string"
+title = "Chunk prefix"
+description = "Put before a chunk when it is embedded."
+default = ""
+
+[user_config.vector_min_similarity]
+type = "number"
+title = "Least similarity"
+description = "Least cosine similarity (0-1) a vector candidate needs."
+default = 0.35
+
+[user_config.vector_timeout_s]
+type = "number"
+title = "Vector wait"
+description = "Seconds a search waits for the vector of the question before it goes on with keywords only."
+default = 6.0

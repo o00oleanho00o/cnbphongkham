@@ -1,28 +1,47 @@
 """Looking something up in the store, the way the agent's ``kb_search`` and the page "Thử tìm" do.
 
-Stages: understand the question (folded words, the services it names), keyword candidates, a small boost for
-chunks labelled with a named service, at most a few chunks per document, then a character budget. The vector
-branch is not there yet and says so. Every channel sees the same store (no patient/staff split for now).
+Stages: understand the question (folded words, the services it names), keyword candidates and, when the
+embedding service is connected, vector candidates found at the same time, both merged by rank (RRF), a small
+boost for chunks labelled with a named service, at most a few chunks per document, then a character budget.
+The vector branch never makes a search fail or wait long: when it is off, failing or slow the result is
+exactly the keyword result. Every channel sees the same store (no patient/staff split for now).
 """
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, replace
 from datetime import date
 from typing import Any, Final
 
+from .embedding import EmbeddingError
+from .fusion import RRF_K, fuse
 from .ingest import recognise
 from .models import Hit, Service
 from .store import KnowledgeStore
 from .text import fold, query_terms
 
+logger = logging.getLogger(__name__)
+
 CANDIDATES: Final = 40
 SERVICE_BOOST: Final = 1.25
 PER_DOCUMENT: Final = 3
 EXCERPT_CHARS: Final = 280
-NO_VECTOR: Final = "Embedding chưa bật: bỏ qua nhánh vector, chỉ tìm bằng từ khóa."
+NO_VECTOR: Final = "Embedding chưa bật: chỉ tìm bằng từ khóa."
+VECTOR_FAILED: Final = "Lỗi khi tìm theo nghĩa: lượt này chỉ tìm bằng từ khóa."
+
+
+@dataclass(frozen=True, slots=True)
+class VectorPlan:
+    """What the vector branch needs: the least similarity, how long to wait, and how to embed a question
+    (``Embedder.query_vector``: the vector and the space it belongs to)."""
+
+    min_similarity: float
+    timeout_s: float
+    embed: Callable[[str, float], Awaitable[tuple[list[float], str]]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,9 +52,32 @@ class SearchResult:
     services: tuple[str, ...]
     as_of: date
     candidates: tuple[Hit, ...]
+    """The keyword list."""
+    vector: tuple[Hit, ...]
+    """The vector list; empty when that branch was not used or found nothing."""
+    fused: tuple[Hit, ...]
+    """After merging; the keyword list as it is when nothing was merged."""
     final: tuple[Hit, ...]
     keyword_ms: float
+    vector_ms: float
+    vector_note: str | None
+    """Why the vector branch was skipped or failed (a sentence for a person); None when it ran."""
+    vector_skip: str | None
+    """The same as a short code for the trace: ``off``, ``timeout`` or ``error``; None when it ran."""
+    fusion: bool
     total_ms: float
+
+    @property
+    def vector_used(self) -> bool:
+        return self.vector_note is None
+
+
+@dataclass(frozen=True, slots=True)
+class _VectorOutcome:
+    hits: tuple[Hit, ...] = ()
+    ms: float = 0.0
+    note: str | None = None
+    skip: str | None = None
 
 
 class Searcher:
@@ -44,17 +86,26 @@ class Searcher:
         self._timer = timer
 
     async def search(
-        self, question: str, as_of: date, *, results: int, char_budget: int, services: Sequence[Service]
+        self,
+        question: str,
+        as_of: date,
+        *,
+        results: int,
+        char_budget: int,
+        services: Sequence[Service],
+        vector: VectorPlan | None = None,
     ) -> SearchResult:
         started = self._timer()
         named = tuple(recognise(question, services))
         wanted = tuple(query_terms(question))
-        keyword_started = self._timer()
-        candidates = await self._store.search(wanted, as_of, CANDIDATES)
-        keyword_ms = (self._timer() - keyword_started) * 1000
-        boosted = sorted(
-            (_boosted(hit, named) for hit in candidates), key=lambda hit: hit.score, reverse=True
-        )
+        async with asyncio.TaskGroup() as group:
+            keyword_task = group.create_task(self._keyword(wanted, as_of))
+            vector_task = group.create_task(self._vector(question, as_of, vector))
+        candidates, keyword_ms = keyword_task.result()
+        outcome = vector_task.result()
+        fusion = outcome.note is None and bool(outcome.hits)
+        ranked = fuse([candidates, outcome.hits]) if fusion else list(candidates)
+        boosted = sorted((_boosted(hit, named) for hit in ranked), key=lambda hit: hit.score, reverse=True)
         final = _packed(_spread(boosted), results, char_budget)
         return SearchResult(
             question=question,
@@ -63,10 +114,45 @@ class Searcher:
             services=named,
             as_of=as_of,
             candidates=tuple(candidates),
+            vector=outcome.hits,
+            fused=tuple(ranked),
             final=tuple(final),
             keyword_ms=keyword_ms,
+            vector_ms=outcome.ms,
+            vector_note=outcome.note,
+            vector_skip=outcome.skip,
+            fusion=fusion,
             total_ms=(self._timer() - started) * 1000,
         )
+
+    async def _keyword(self, wanted: Sequence[str], as_of: date) -> tuple[list[Hit], float]:
+        started = self._timer()
+        found = await self._store.search(wanted, as_of, CANDIDATES)
+        return found, (self._timer() - started) * 1000
+
+    async def _vector(self, question: str, as_of: date, plan: VectorPlan | None) -> _VectorOutcome:
+        """The vector candidates, or why there are none. Never raises: the keyword search must go on."""
+        if plan is None:
+            return _VectorOutcome(note=NO_VECTOR, skip="off")
+        started = self._timer()
+
+        def spent() -> float:
+            return (self._timer() - started) * 1000
+
+        try:
+            vector, space = await asyncio.wait_for(plan.embed(question, plan.timeout_s), plan.timeout_s)
+            hits = await self._store.vector_search(space, vector, as_of, CANDIDATES, plan.min_similarity)
+        except EmbeddingError as err:
+            return _VectorOutcome(
+                ms=spent(), note=err.message, skip="timeout" if err.kind == "timeout" else "error"
+            )
+        except TimeoutError:
+            note = f"Nhúng câu hỏi quá {plan.timeout_s:g} giây: lượt này chỉ tìm bằng từ khóa."
+            return _VectorOutcome(ms=spent(), note=note, skip="timeout")
+        except Exception:
+            logger.warning("vector search failed", exc_info=True)
+            return _VectorOutcome(ms=spent(), note=VECTOR_FAILED, skip="error")
+        return _VectorOutcome(hits=tuple(hits), ms=spent())
 
 
 def _boosted(hit: Hit, named: Sequence[str]) -> Hit:
@@ -118,11 +204,18 @@ def tool_text(result: SearchResult) -> str:
 
 
 def tool_detail(result: SearchResult) -> dict[str, Any]:
-    """For the trace: how many candidates, the best score and which documents the answer may use."""
+    """For the trace: how many candidates each branch gave, the best score and which documents the answer
+    may use. Short codes only: no sentences, no text of the question."""
     return {
         "terms": len(result.terms),
         "services": list(result.services),
         "candidates": len(result.candidates),
+        "keyword_candidates": len(result.candidates),
+        "vector_candidates": len(result.vector),
+        "vector_used": result.vector_used,
+        "vector_ms": round(result.vector_ms),
+        "vector_skip": result.vector_skip,
+        "top_similarity": round(result.vector[0].score, 4) if result.vector else 0,
         "returned": len(result.final),
         "top_score": round(result.final[0].score, 4) if result.final else 0,
         "doc_ids": list(dict.fromkeys(hit.doc_code or hit.chunk.source_id for hit in result.final)),
@@ -130,7 +223,7 @@ def tool_detail(result: SearchResult) -> dict[str, Any]:
     }
 
 
-def debug_view(result: SearchResult) -> dict[str, Any]:
+def debug_view(result: SearchResult, min_similarity: float) -> dict[str, Any]:
     """The stages for the page "Thử tìm" (``SearchDebug`` of types.ts)."""
     understand = f"Từ khóa: {', '.join(result.terms[:15]) or '(không có)'}" + (
         f". Dịch vụ: {', '.join(result.services)}" if result.services else ""
@@ -150,7 +243,24 @@ def debug_view(result: SearchResult) -> dict[str, Any]:
                 f"{result.as_of.isoformat()}",
                 result.candidates[:20],
             ),
-            _stage("vector", "Ứng viên vector", 0.0, NO_VECTOR, [], skipped=True),
+            _stage(
+                "vector",
+                "Ứng viên vector",
+                result.vector_ms,
+                result.vector_note or f"{len(result.vector)} đoạn gần nghĩa, độ giống ≥ {min_similarity:g}",
+                result.vector[:20],
+                skipped=not result.vector_used,
+            ),
+            _stage(
+                "fused",
+                f"Gộp RRF (k = {RRF_K})",
+                0.0,
+                "Gộp hai danh sách theo thứ hạng."
+                if result.fusion
+                else "Không gộp: lượt này chỉ có kết quả từ khóa.",
+                result.fused[:20] if result.fusion else [],
+                skipped=not result.fusion,
+            ),
             _stage(
                 "final",
                 "Gói cuối đúng như agent thấy",

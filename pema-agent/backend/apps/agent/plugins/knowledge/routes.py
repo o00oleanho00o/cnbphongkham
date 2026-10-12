@@ -13,6 +13,8 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, st
 
 from agent_app.plugins import PluginError
 
+from .embedder import EmbedStatus
+from .embedding import EmbeddingError
 from .ingest import ADMIN, new_id
 from .models import (
     BulkBody,
@@ -49,7 +51,10 @@ PAGE_SIZE: Final = 30
 CHUNK_PAGE: Final = 20
 # a patch may clear these dates; the other fields are left as they are when sent as null
 NULLABLE: Final = frozenset({"effective_from", "effective_to"})
-KEYWORD_ONLY: Final = "Embedding chưa kết nối: đang tìm bằng từ khóa."
+NO_SEALING_KEY: Final = "Agent chưa có khóa bí mật để mã hóa (chạy bằng agent serve)."
+NORMALISED_WITHIN: Final = 0.01
+URL_PATTERN: Final = re.compile(r"^https?://\S+$")
+CONNECTED: Final = frozenset({"ok", "working"})
 
 
 def knowledge_routes(plugin: KnowledgePlugin) -> APIRouter:
@@ -71,9 +76,26 @@ def knowledge_routes(plugin: KnowledgePlugin) -> APIRouter:
     def now() -> datetime:
         return datetime.now(UTC)
 
+    async def current_space() -> str | None:
+        """The vector space in use, or None while the embedding service is not connected."""
+        config = await plugin.embedding_config()
+        return config.space if config.ready else None
+
+    async def with_vectors(sources: list[Source]) -> list[Source]:
+        """The sources with ``embedded`` as the store counts it (how many of their chunks have a vector)."""
+        space = await current_space()
+        counts = {} if space is None else await store.vector_counts(space)
+        return [replace(s, embedded=counts.get(s.id, 0)) for s in sources]
+
     @router.get("/status")
     async def get_status() -> dict[str, Any]:
-        return {"embedding_connected": False, "embedding_model": None, "queue": 0, "warnings": [KEYWORD_ONLY]}
+        state = await plugin.embedder.status()
+        return {
+            "embedding_connected": state.state in CONNECTED,
+            "embedding_model": state.model,
+            "queue": state.missing,
+            "warnings": _warnings(state),
+        }
 
     @router.get("/sources")
     async def list_sources(
@@ -89,18 +111,21 @@ def knowledge_routes(plugin: KnowledgePlugin) -> APIRouter:
         items, total = await store.find(query)
         everything = await store.all_sources()
         chunks = sum(s.chunk_count for s in everything)
-        embedded = sum(s.embedded for s in everything)
+        state = await plugin.embedder.status()
+        space = await current_space()
+        embedded = 0 if space is None else sum((await store.vector_counts(space)).values())
+        wanted = embedded + state.missing
         summary = {
             "ready": sum(1 for s in everything if s.processing == "ready"),
             "chunks": chunks,
-            "embedded_percent": round(embedded * 100 / chunks) if chunks else 0,
+            "embedded_percent": round(embedded * 100 / wanted) if wanted else 0,
             "errors": sum(1 for s in everything if s.processing == "error"),
             "unapproved": 0,
             "processing": sum(1 for s in everything if s.processing in ("queued", "processing")),
         }
-        warnings = [KEYWORD_ONLY] if everything else []
+        warnings = _warnings(state) if everything else []
         return {
-            "items": [s.shown() for s in items],
+            "items": [s.shown() for s in await with_vectors(items)],
             "total": total,
             "page": page,
             "page_size": PAGE_SIZE,
@@ -141,7 +166,8 @@ def knowledge_routes(plugin: KnowledgePlugin) -> APIRouter:
 
     @router.get("/sources/{source_id}")
     async def get_source(source_id: SourceId) -> dict[str, Any]:
-        return (await found(source_id)).shown()
+        (source,) = await with_vectors([await found(source_id)])
+        return source.shown()
 
     @router.patch("/sources/{source_id}")
     async def patch_source(source_id: SourceId, body: SourcePatch) -> dict[str, Any]:
@@ -231,7 +257,7 @@ def knowledge_routes(plugin: KnowledgePlugin) -> APIRouter:
         page: Annotated[int, Query(ge=1, le=10_000)] = 1,
     ) -> dict[str, Any]:
         await found(source_id)
-        items, total = await store.chunks(source_id, q, page, CHUNK_PAGE, None)
+        items, total = await store.chunks(source_id, q, page, CHUNK_PAGE, await current_space())
         return {"items": [c.shown() for c in items], "total": total, "page": page, "page_size": CHUNK_PAGE}
 
     @router.patch("/chunks/{chunk_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -295,8 +321,9 @@ def knowledge_routes(plugin: KnowledgePlugin) -> APIRouter:
             results=int(settings["results"]),
             char_budget=int(settings["char_budget"]),
             services=await store.services(),
+            vector=await plugin.vector_plan(settings),
         )
-        return debug_view(result)
+        return debug_view(result, float(settings["min_score"]))
 
     @router.get("/gaps")
     async def list_gaps(state: GapState = "open") -> list[dict[str, Any]]:
@@ -315,22 +342,36 @@ def knowledge_routes(plugin: KnowledgePlugin) -> APIRouter:
 
     @router.patch("/settings")
     async def patch_settings(body: dict[str, Any]) -> dict[str, Any]:
-        await plugin.save_settings(_checked_settings(body))
+        try:
+            await plugin.save_settings(_checked_settings(body))
+        except PluginError as err:
+            raise HTTPException(status.HTTP_409_CONFLICT, NO_SEALING_KEY) from err
         return await _with_counts(plugin)
 
     @router.post("/settings/test-embedding")
     async def test_embedding() -> dict[str, Any]:
+        config = await plugin.embedding_config()
+        try:
+            probe = await plugin.client.probe(config)
+        except EmbeddingError as err:
+            return {"ok": False, "dimensions": None, "normalised": None, "ms": None, "message": err.message}
         return {
-            "ok": False,
-            "dimensions": None,
-            "normalised": None,
-            "ms": None,
-            "message": "Bản này chưa dùng embedding: agent đang tìm bằng từ khóa.",
+            "ok": True,
+            "dimensions": probe.dimensions,
+            "normalised": abs(probe.norm - 1) < NORMALISED_WITHIN,
+            "ms": round(probe.ms),
+            "message": "Kết nối tốt",
         }
 
     @router.post("/settings/reembed")
     async def reembed() -> dict[str, Any]:
-        return {"queued": 0}
+        space = await current_space()
+        if space is None:
+            raise HTTPException(status.HTTP_409_CONFLICT, "Chưa kết nối embedding.")
+        await store.clear_vectors(space)
+        queued = await store.missing_count(space)
+        plugin.embedder.wake()
+        return {"queued": queued}
 
     @router.post("/settings/test-parser")
     async def test_parser() -> dict[str, Any]:
@@ -399,12 +440,23 @@ def _cells(line: str) -> list[str]:
 
 async def _with_counts(plugin: KnowledgePlugin) -> dict[str, Any]:
     settings = await plugin.settings()
-    chunks = sum(s.chunk_count - s.embedded for s in await plugin.store.all_sources())
-    settings["embedding"]["chunks_without_vector"] = chunks
+    settings["embedding"]["chunks_without_vector"] = (await plugin.embedder.status()).missing
     return settings
 
 
+def _warnings(state: EmbedStatus) -> list[str]:
+    """The strip above the sources: what is wrong with embedding, or how far it has got."""
+    if state.state == "off" and state.message:
+        return [state.message]
+    if state.state == "error":
+        return [f"Embedding đang lỗi: {state.message} Các đoạn chưa có vector chỉ được tìm bằng từ khóa."]
+    if state.state == "working" and state.missing:
+        return [f"Đang nhúng: còn {state.missing} đoạn chưa có vector."]
+    return []
+
+
 def _checked_settings(body: dict[str, Any]) -> dict[str, Any]:
+    _check_embedding(as_mapping(body.get("embedding")))
     search = as_mapping(body.get("search"))
     if search:
         if "results" in search and not (isinstance(search["results"], int) and 1 <= search["results"] <= 20):
@@ -415,3 +467,30 @@ def _checked_settings(body: dict[str, Any]) -> dict[str, Any]:
                 status.HTTP_422_UNPROCESSABLE_ENTITY, f"Ngân sách ký tự phải từ 500 đến {MAX_CHAR_BUDGET}."
             )
     return body
+
+
+def _check_embedding(values: dict[str, Any]) -> None:
+    """Server-side limits of the embedding settings (the page checks them too); a wrong one is a 422."""
+
+    def refuse(sentence: str) -> HTTPException:
+        return HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, sentence)
+
+    base_url = values.get("base_url")
+    if base_url is not None and not (
+        isinstance(base_url, str)
+        and (base_url == "" or (len(base_url) <= 500 and URL_PATTERN.match(base_url)))
+    ):
+        raise refuse("Địa chỉ phải bắt đầu bằng http:// hoặc https://.")
+    model = values.get("model")
+    if model is not None and not (isinstance(model, str) and 1 <= len(model.strip()) <= 200):
+        raise refuse("Tên model dài từ 1 đến 200 ký tự.")
+    dimensions = values.get("dimensions")
+    if dimensions is not None and not (isinstance(dimensions, int) and 32 <= dimensions <= 4096):
+        raise refuse("Số chiều phải từ 32 đến 4096.")
+    for prefix in ("query_prefix", "document_prefix"):
+        given = values.get(prefix)
+        if given is not None and not (isinstance(given, str) and len(given) <= 500):
+            raise refuse("Câu dẫn dài tối đa 500 ký tự.")
+    key = values.get("api_key")
+    if key is not None and not (isinstance(key, str) and (key == "" or 8 <= len(key.strip()) <= 500)):
+        raise refuse("Khóa API dài từ 8 đến 500 ký tự.")

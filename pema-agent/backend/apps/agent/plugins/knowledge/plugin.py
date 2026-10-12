@@ -16,15 +16,21 @@ from agent_app.plugins import PluginContext, PluginDatabase, PluginError
 from agentcore import PromptEnv, SessionSection, ToolContext, ToolOutput, ToolSpec
 from agentcore.prompt.data import SessionData
 
+from .embedder import IDLE_S, Embedder
+from .embedding import EmbeddingClient, EmbeddingConfig
 from .ingest import Ingest, new_id
 from .models import Gap, as_mapping
-from .search import Searcher, tool_detail, tool_text
+from .search import Searcher, VectorPlan, tool_detail, tool_text
 from .store import InMemoryKnowledgeStore, KnowledgeStore, PostgresKnowledgeStore
 from .text import fold
 
 logger = logging.getLogger(__name__)
 
 SETTINGS_KEY: Final = "settings"
+KEY_RECORD: Final = "embedding_api_key"
+"""The embedding service's key, sealed with the service's key; never inside the settings JSON."""
+DERIVED: Final = frozenset({"api_key", "has_key", "chunks_without_vector", "origin"})
+"""Embedding fields a patch cannot store as settings (the key has its own record; the rest are worked out)."""
 READ_CHARS: Final = 8000
 # the chunks handed to the agent; kept under the tool's result limit so none is cut mid-text
 MAX_CHAR_BUDGET: Final = 8000
@@ -45,11 +51,11 @@ chăm sóc sau điều trị, câu hỏi thường gặp). Cách làm:
 def default_settings(config: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "embedding": {
-            "base_url": "",
-            "model": "qwen/qwen3-embedding-8b",
-            "dimensions": 1024,
-            "query_prefix": "",
-            "document_prefix": "",
+            "base_url": str(config.get("embedding_base_url", "")),
+            "model": str(config.get("embedding_model", "qwen/qwen3-embedding-8b")),
+            "dimensions": int(config.get("embedding_dimensions", 1024)),
+            "query_prefix": str(config.get("embedding_query_prefix", "")),
+            "document_prefix": str(config.get("embedding_document_prefix", "")),
             "has_key": False,
             "origin": "profile",
             "chunks_without_vector": 0,
@@ -58,7 +64,7 @@ def default_settings(config: Mapping[str, Any]) -> dict[str, Any]:
         "labelling": {"enabled": False, "model_entry": None, "rerank": False},
         "search": {
             "results": int(config.get("results", 6)),
-            "min_score": 0.0,
+            "min_score": float(config.get("vector_min_similarity", 0.35)),
             "char_budget": min(int(config.get("char_budget", 6000)), MAX_CHAR_BUDGET),
             "patient_channel_prefix": "",
             "patient_only_approved": False,
@@ -93,6 +99,7 @@ class KnowledgePlugin:
         *,
         store: KnowledgeStore | None = None,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+        client: EmbeddingClient | None = None,
     ) -> None:
         self._ctx = ctx
         self._clock = clock
@@ -104,7 +111,22 @@ class KnowledgePlugin:
             else PostgresKnowledgeStore(database.engine, tenant_id=database.tenant_id, agent=database.agent)
         )
         self._zone = _zone(str(ctx.config.get("timezone", "Asia/Ho_Chi_Minh")))
-        self.ingest = Ingest(self.store, clock=clock, today=lambda: clock().astimezone(self._zone).date())
+        self._vector_timeout = float(ctx.config.get("vector_timeout_s", 6.0))
+        self.client = client or EmbeddingClient()
+        self.embedder = Embedder(
+            self.store,
+            self.client,
+            self.embedding_config,
+            logger=ctx.logger,
+            clock=clock,
+            idle_s=float(ctx.config.get("embedding_idle_s", IDLE_S)),
+        )
+        self.ingest = Ingest(
+            self.store,
+            clock=clock,
+            today=lambda: clock().astimezone(self._zone).date(),
+            on_change=self.embedder.wake,
+        )
         self.searcher = Searcher(self.store)
         self._ready = database is None
 
@@ -139,6 +161,7 @@ class KnowledgePlugin:
             )
         )
         ctx.register_prompt_section(SessionSection("knowledge", _guidance))
+        ctx.register_job("embed", self.embedder.run)
 
     async def ready(self) -> None:
         """Raises ``PluginError`` (what to run) while the plugin's tables are missing; checked once."""
@@ -151,7 +174,36 @@ class KnowledgePlugin:
         saved = await self._ctx.storage.get(SETTINGS_KEY)
         base = default_settings(self._ctx.config)
         stored = as_mapping(saved)
-        return {key: _merged(base[key], stored.get(key)) for key in base}
+        merged = {key: _merged(base[key], stored.get(key)) for key in base}
+        merged["embedding"]["has_key"] = await self._ctx.storage.get(KEY_RECORD) is not None
+        return merged
+
+    async def embedding_config(self) -> EmbeddingConfig:
+        """The embedding settings and the key, ready for the client; ``key_broken`` when a stored key no
+        longer decrypts (the service's secret key changed)."""
+        values = (await self.settings())["embedding"]
+        sealed = await self._ctx.storage.get(KEY_RECORD)
+        key, broken = "", False
+        if isinstance(sealed, str):
+            try:
+                key = self._ctx.decrypt(sealed)
+            except PluginError:
+                broken = True
+        return EmbeddingConfig(
+            base_url=str(values["base_url"]),
+            model=str(values["model"]),
+            dimensions=int(values["dimensions"]),
+            query_prefix=str(values["query_prefix"]),
+            document_prefix=str(values["document_prefix"]),
+            api_key=key,
+            key_broken=broken,
+        )
+
+    async def vector_plan(self, search: Mapping[str, Any]) -> VectorPlan | None:
+        """How a search uses vectors; None while the embedding service is not connected (keyword only)."""
+        if not (await self.embedding_config()).ready:
+            return None
+        return VectorPlan(float(search["min_score"]), self._vector_timeout, self.embedder.query_vector)
 
     async def save_settings(self, patch: Mapping[str, Any]) -> dict[str, Any]:
         current = await self.settings()
@@ -162,15 +214,30 @@ class KnowledgePlugin:
             values = as_mapping(given)
             if group not in changed or group in ("reset", "benchmark_mode") or not values:
                 continue
-            changed[group] = {**changed[group], **{k: v for k, v in values.items() if k != "api_key"}}
+            changed[group] = {**changed[group], **{k: v for k, v in values.items() if k not in DERIVED}}
             if group in ("embedding", "parser"):
                 changed[group]["origin"] = "saved"
+            if group == "embedding" and "api_key" in values:
+                await self._store_key(str(values["api_key"]).strip())
         if "benchmark_mode" in patch:
             changed["benchmark_mode"] = bool(patch["benchmark_mode"])
         for group in resets:
             changed[group] = base[group]
-        await self._ctx.storage.put(SETTINGS_KEY, changed)
-        return changed
+        stored = {**changed, "embedding": {k: v for k, v in changed["embedding"].items() if k != "has_key"}}
+        await self._ctx.storage.put(SETTINGS_KEY, stored)
+        self.embedder.wake()
+        return {**changed, "embedding": {**changed["embedding"], "has_key": await self._has_key()}}
+
+    async def _has_key(self) -> bool:
+        return await self._ctx.storage.get(KEY_RECORD) is not None
+
+    async def _store_key(self, key: str) -> None:
+        """Seals the key into its own record; an empty one removes it. Raises ``PluginError`` when the service
+        has no secret key to seal with."""
+        if key:
+            await self._ctx.storage.put(KEY_RECORD, self._ctx.encrypt(key))
+        else:
+            await self._ctx.storage.delete(KEY_RECORD)
 
     def asked_on(self, ctx: ToolContext) -> date:
         """The day the question is asked, in the clinic's time zone (the turn's time when there is one)."""
@@ -197,6 +264,7 @@ class KnowledgePlugin:
             results=args.results or int(settings["results"]),
             char_budget=min(int(settings["char_budget"]), MAX_CHAR_BUDGET),
             services=await self.store.services(),
+            vector=await self.vector_plan(settings),
         )
         if not result.final:
             await self.record_gap(args.query, ctx.channel or "")
