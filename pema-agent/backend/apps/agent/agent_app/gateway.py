@@ -316,9 +316,17 @@ def create_app(
     gate = Gate(settings, lambda: host.contributions().authenticators if host is not None else ())
     authorized = Depends(gate.dependency(CHAT))
 
+    def body_limit(path: str) -> int:
+        if path == ZIP_INSTALL_PATH:
+            return MAX_ZIP_BYTES
+        if host is None or not path.startswith(f"{PLUGIN_ROUTES}/"):
+            return MAX_BODY_BYTES
+        source = host.sources.get(path[len(PLUGIN_ROUTES) + 1 :].split("/", 1)[0])
+        return MAX_BODY_BYTES if source is None else source.manifest.max_body_kb * 1024
+
     @app.middleware("http")
     async def limit_body(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-        limit = MAX_ZIP_BYTES if request.url.path == ZIP_INSTALL_PATH else MAX_BODY_BYTES
+        limit = body_limit(request.url.path)
         length = request.headers.get("content-length")
         if length is not None and (not length.isdigit() or int(length) > limit):
             return _error(413, "too_large", f"the body may have at most {limit} bytes")

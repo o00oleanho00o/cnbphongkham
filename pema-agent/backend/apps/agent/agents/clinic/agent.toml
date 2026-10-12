@@ -57,8 +57,8 @@ queue_max_wait_s = 3.0
 queue_max_batch = 20
 
 [plugins]
-# sso: the clinic web's staff (owner and manager get admin)
-enabled = ["sso", "calculate"]
+# sso: the clinic web's staff (owner and manager get admin); knowledge: the documents the agent answers from
+enabled = ["sso", "calculate", "knowledge"]
 
 [plugins.sso]
 issuer = "pema-clinic"

@@ -854,6 +854,23 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
+- **RAG bước 0 + bước 1 đã code (2026-10-12, nhánh `feat/knowledge-ui`).**
+  - Lõi: `ToolOutput.detail` vào trace (`detail.tool`), `ToolContext.now`, `ToolSpec.network` + `[agent]
+    allow_internet` (clinic: false), `[migrations]` + `max_body_kb` trong `plugin.toml`, `agent db migrate-plugins`
+    (compose `agent-migrate` chạy nó), `ctx.database` (`PluginDatabase.require_migrations`), alembic
+    `0012_plugin_migrations`; clinic `max_steps` 10, AGENTS.md cho phép nói giá theo tài liệu.
+  - Plugin `knowledge` (bật trong profile clinic): bảng `kb_*` (migration 0001), nạp `.md/.txt` có YAML (PDF/Word/Excel
+    trả câu "bước sau"), chia đoạn theo `##/###` (gộp mục < 60 ký tự, cắt mục > 1500 ở đoạn văn), tìm từ khóa
+    (Postgres `ts_rank_cd` / bộ nhớ BM25) trên từ đã bỏ dấu + cặp từ liền nhau, chữ ở tiêu đề nặng gấp đôi, vài từ
+    đồng nghĩa cách khách nói (`QUERY_SYNONYMS`), lọc `ready` + `active` + hiệu lực theo ngày hỏi, tối đa 3 đoạn mỗi
+    tài liệu; tool `kb_search`, `kb_read`, prompt section "Kho tri thức", ghi câu hỏi hụt (`kb_gap`); mọi route của
+    trang Kho tri thức (embedding/Docling trả lời "chưa có").
+  - Đo nhanh trên 22 tài liệu Pema, 15 câu hỏi: đúng tài liệu ở top 1 6/15, top 3 14/15, top 6 14/15.
+  - Chưa chạy được: test Postgres (Docker tắt lúc làm) `tests/knowledge/test_knowledge_db.py`,
+    `tests/test_plugin_migrations.py` (2 test db). Thử thật: Docker, `docker compose -p pema-agent up -d --build
+    redis migrate api seed agent-migrate agent frontend` ở thư mục gốc, nạp thư mục 22 tài liệu ở tab Kho tri thức,
+    bật/quét QR Zalo cá nhân, nhắn hỏi.
+  - Hoãn: ngữ cảnh tin cậy qua HTTP/kênh, `ctx.model`, embedding/vector, rerank, Docling, giữ phiên bản cũ để khôi phục.
 - **Một kho tri thức chung cho mọi kênh (user, 2026-10-12):** không chia Bệnh nhân / Nội bộ; UI ẩn "Đối tượng" (cờ
   `AUDIENCE_SPLIT = false`), `kb_search` không lọc theo kênh. Mục tiêu: quét QR Zalo cá nhân, agent trả lời người nhắn
   bằng agentic RAG, đo độ chính xác theo tài liệu; phân quyền và nguồn gốc để sau.

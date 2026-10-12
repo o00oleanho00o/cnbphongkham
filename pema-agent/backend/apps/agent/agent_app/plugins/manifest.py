@@ -112,6 +112,8 @@ class PluginManifest(BaseModel):
     user_config: dict[str, ConfigField] = Field(default_factory=dict[str, ConfigField])
     ui: UiSpec | None = None
     migrations: MigrationsSpec | None = None
+    max_body_kb: int = Field(default=64, ge=1, le=16 * 1024)
+    """Largest request body its admin routes take (documents uploaded to them); other routes keep 64 KB."""
 
     @field_validator("name")
     @classmethod

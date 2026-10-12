@@ -1,8 +1,38 @@
 name = "knowledge"
-version = "0.1.0"
-description = "The knowledge store (Kho tri thức): the documents the agent looks things up in. Add, check and approve sources, teach it service names, try a search. Server half not built yet."
+version = "0.2.0"
+description = "The knowledge store (Kho tri thức): documents the agent looks things up in with kb_search and kb_read. Add and check sources, teach it service names, try a search."
 api = 1
+# documents are uploaded to the admin routes
+max_body_kb = 12288
 
 [ui]
 dir = "ui/dist"
 entry = "client.js"
+
+[migrations]
+dir = "migrations"
+prefix = "kb_"
+
+[user_config.results]
+type = "integer"
+title = "Results"
+description = "Chunks one search hands the agent (1-10)."
+default = 6
+
+[user_config.char_budget]
+type = "integer"
+title = "Character budget"
+description = "Most characters of document text one search hands the agent."
+default = 6000
+
+[user_config.timezone]
+type = "string"
+title = "Time zone"
+description = "The clinic's time zone: the day a question is asked on, for prices and rules in force that day."
+default = "Asia/Ho_Chi_Minh"
+
+[user_config.benchmark_mode]
+type = "boolean"
+title = "Benchmark mode"
+description = "Accept challenge documents (old prices, drafts, attack tests) when measuring the agent. Off in normal use."
+default = false
