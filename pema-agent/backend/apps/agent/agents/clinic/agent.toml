@@ -43,7 +43,8 @@ base_url = ""
 timeout_s = 120
 
 [loop]
-max_steps = 6
+# room for a few searches of the knowledge store, a read and the answer
+max_steps = 10
 max_output_tokens = 2048
 max_turn_s = 300
 repeat_thresholds = [3, 5, 8]
