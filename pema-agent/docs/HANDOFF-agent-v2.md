@@ -854,10 +854,19 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
-- **Việc kế tiếp của RAG: embedding + tìm lai (2026-10-12).** Plan làm từng bước, đủ để agent khác làm:
-  `docs/PLAN-knowledge-embedding.md` (Beeknoee `qwen/qwen3-embedding-8b` 1024 chiều, bảng `kb_embedding` theo
-  chữ + không gian vector, job nền `embed`, RRF, rơi về từ khóa khi lỗi/chậm, script đo `scripts/kb_bench.py`).
-  Chưa code.
+- **RAG embedding + tìm lai đã code (2026-10-12, nhánh `feat/knowledge-embedding`, plan `docs/PLAN-knowledge-embedding.md`).**
+  - Bảng `kb_embedding(space, text_hash, vector)` (migration 0002; vector gắn với chữ, nạp lại cùng chữ không nhúng
+    lại; đổi model/số chiều/`document_prefix` = không gian mới), job nền `embed` của plugin (lô 16, thử lại có
+    backoff), `kb_search` chạy từ khóa + vector song song rồi gộp RRF (k=60), vector tắt/lỗi/quá 6 s thì kết quả
+    y hệt chỉ-từ-khóa; trace `kb_search` có `vector_used`, `vector_candidates`, `vector_skip`, `top_similarity`.
+  - Cài đặt Embedding ở Kho tri thức đã thật: khóa API lưu mã hóa (record riêng, không nằm trong JSON cài đặt),
+    "Kiểm tra kết nối", "Nhúng lại toàn bộ", dải cảnh báo theo trạng thái job. Mặc định điền sẵn Beeknoee
+    `qwen/qwen3-embedding-8b` 1024 chiều.
+  - Đo: `backend/apps/agent/scripts/kb_bench.py` (30 câu, bộ A dùng từ của tài liệu, bộ B nói khác chữ). Từ khóa:
+    A top3 15/15, B top3 9/15. Số vector/hybrid cần `BEEKNOEE_API_KEY` trong môi trường chạy script.
+  - Chạy thật: `docker compose up -d --build` ở thư mục gốc đã chạy migration 0002 (209 đoạn có `embed_hash`).
+    Việc còn lại: nhập khóa Beeknoee ở Kho tri thức → Cài đặt → Embedding, chờ dải "Đang nhúng" hết, rồi chạy
+    bench vector/hybrid và điền mục 10 của plan. Che SĐT/CCCD trước khi gửi câu hỏi đi nhúng vẫn tắt (demo).
 - **RAG bước 0 + bước 1 đã code (2026-10-12, nhánh `feat/knowledge-ui`).**
   - Lõi: `ToolOutput.detail` vào trace (`detail.tool`), `ToolContext.now`, `ToolSpec.network` + `[agent]
     allow_internet` (clinic: false), `[migrations]` + `max_body_kb` trong `plugin.toml`, `agent db migrate-plugins`

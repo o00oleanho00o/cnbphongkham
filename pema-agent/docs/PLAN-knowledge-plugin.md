@@ -659,7 +659,7 @@ ngày hỏi, coi tài liệu là dữ liệu chứ không phải lệnh. Đúng 
 
 ### 19.4 Thứ tự làm mới (thay bảng mục 14 cho bản demo)
 
-Trạng thái 2026-10-12: bước 0 (cắt gọn) và bước 1 đã code, xem HANDOFF. Khác mục 3.3: gộp mục ngắn dưới **60** ký tự (150 làm mất các mục giá ngắn); chữ ở tiêu đề tính gấp đôi; tìm theo từ đã bỏ dấu + cặp từ liền nhau, cấu hình `simple` của Postgres.
+Trạng thái 2026-10-12: bước 0 (cắt gọn) và bước 1 đã code; embedding + tìm lai (bước 4) đã code theo `PLAN-knowledge-embedding.md`, xem HANDOFF. Khác mục 3.3: gộp mục ngắn dưới **60** ký tự (150 làm mất các mục giá ngắn); chữ ở tiêu đề tính gấp đôi; tìm theo từ đã bỏ dấu + cặp từ liền nhau, cấu hình `simple` của Postgres.
 
 | Bước | Nội dung | Ra gì |
 |---|---|---|
