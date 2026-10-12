@@ -854,6 +854,13 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
+- **Bước 0 (lõi) của RAG: plan [PLAN-step0-core.md](PLAN-step0-core.md), đã duyệt 2026-10-12, chưa code.** Quyết định
+  của user mà mọi agent phải theo: **agent gọi mọi tool trong hệ thống tùy ý, chỉ cấm tool ra Internet** (`ToolSpec.network`,
+  profile `[tools] allow_internet = false`); `identity_verified`/`confirmed` chỉ là thông tin, không viết cổng chặn tool;
+  ngữ cảnh tin cậy đặt được từ HTTP (`ChatRequest.context`), kênh (`InboundMessage.trusted`) và mã trong tiến trình.
+  Migration plugin khai trong `plugin.toml` `[migrations]`, chạy bằng `agent db migrate-plugins`. `max_steps` 10 chỉ
+  cho profile clinic. Rủi ro chấp nhận cho demo: ai nhắn Zalo cũng khiến agent gọi được mọi tool; xem lại trước khi
+  có bệnh nhân thật.
 - **Kho tri thức UI (2026-10-12, branch `feat/knowledge-ui`, from `feat/zalo-plugin`):** the browser half of the
   plugin `knowledge` is built and runs on the mock agent (`pnpm dev:mock`): tab "Kho tri thức" (a plugin's
   `Contribution.section`), tabs Nguồn · Dịch vụ · Thử tìm · Câu hỏi chưa có tài liệu · Cài đặt, the 3-step "Thêm nguồn"

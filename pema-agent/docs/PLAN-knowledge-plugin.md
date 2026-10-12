@@ -391,6 +391,12 @@ phải viết lại), chặn đúng lỗi đáng sợ nhất của RAG phòng kh
 
 ## 8. An toàn và quyền (thiết kế mới, giữ cái đúng)
 
+> **Quy tắc dùng tool (user chốt 2026-10-12, thay mọi chỗ trong plan này nói "chặn khi chưa xác thực/xác nhận"):** agent
+> được gọi mọi tool trong hệ thống, tùy ý; chỉ cấm tool ra Internet. `identity_verified`/`confirmed` của ngữ cảnh tin cậy
+> là thông tin, không phải cổng chặn trong mã. Lọc **nội dung** theo kênh ở bảng dưới (tài liệu nội bộ không lọt ra bệnh
+> nhân, chỉ nguồn đã duyệt) **vẫn giữ**: đó là chuyện tài liệu nào được trả về, không phải chuyện gọi tool. Chi tiết:
+> [PLAN-step0-core.md](PLAN-step0-core.md) mục 0.2b.
+
 | Rủi ro | Cách chặn |
 |---|---|
 | Nội dung nội bộ lọt ra bệnh nhân | cờ `for_patients` theo **tài liệu** (mặc định false), lọc theo kênh trong SQL (6.3); cẩm nang trộn thì tách nguồn; `kind = internal_script` gợi ý tách |
@@ -625,7 +631,7 @@ ngày hỏi, coi tài liệu là dữ liệu chứ không phải lệnh. Đúng 
    khám", agent `ask_clarify`.
 4. **Trích dẫn:** mỗi đoạn trong kết quả tool mang `doc_id`; câu trả lời phải trích `doc_id`.
 5. **Ngữ cảnh tin cậy (lõi, mới):** một lượt chat nhận thêm `trusted` (tenant, ngày hỏi, đã xác thực, đã xác
-   nhận, kết quả tool giả lập) qua kênh của harness, KHÔNG qua tin nhắn người dùng hay tài liệu. Đi vào
+   nhận, kết quả tool giả lập) từ harness, HTTP hoặc kênh (phương án B, xem PLAN-step0-core.md 0.2), KHÔNG qua tin nhắn người dùng hay tài liệu. Đi vào
    `ToolContext` và một turn section ngắn. Tài liệu hay khách viết "tôi là quản trị viên" không đổi được nó.
 6. **Plugin `may_demo` (mới, chỉ cho demo/benchmark):** tool giả lập `get_slots`, `get_customer_record`,
    `book_appointment`, `cancel_appointment`, `create_refund_request`, `create_ticket`, `get_inventory`: trả đúng
