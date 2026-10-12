@@ -6,7 +6,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, JsonValue
 
 from agentcore import (
     AssistantResult,
@@ -140,9 +140,8 @@ class FindArgs(BaseModel):
 async def _find(args: FindArgs, ctx: ToolContext) -> ToolOutput:
     if args.fail:
         raise RuntimeError("store down")
-    return ToolOutput(
-        text="found", detail={"candidates": 3, "doc_ids": ["D07"] * args.size, "call_id": "mine"}
-    )
+    ids: list[JsonValue] = ["D07"] * args.size
+    return ToolOutput(text="found", detail={"candidates": 3, "doc_ids": ids, "call_id": "mine"})
 
 
 FIND = ToolRegistry([ToolSpec(name="find", description="Find.", args_model=FindArgs, handler=_find)])
