@@ -185,9 +185,16 @@ def test_files_run_once_and_are_recorded(migrated: tuple[str, Engine], tmp_path:
 @pytest.mark.db
 def test_a_file_edited_after_it_ran_stops_the_command(migrated: tuple[str, Engine], tmp_path: Path) -> None:
     url, _ = migrated
-    first = _plugin(tmp_path / "a", {"0001_create.sql": CREATE.replace("kbt_source", "kbt_edit")})
+    # a plugin of its own: the module's database already recorded the files of `kbt`
+    files = {"0001_create.sql": CREATE.replace("kbt_source", "kbe_edit")}
+    first = _plugin(tmp_path / "a", files, prefix="kbe_", name="kbe")
     migrate_plugins(url, [first])
-    edited = _plugin(tmp_path / "b", {"0001_create.sql": CREATE.replace("kbt_source", "kbt_edit2")})
+    edited = _plugin(
+        tmp_path / "b",
+        {"0001_create.sql": CREATE.replace("kbt_source", "kbe_edit2")},
+        prefix="kbe_",
+        name="kbe",
+    )
 
     with pytest.raises(PluginError, match="changed after it ran"):
         migrate_plugins(url, [edited])
