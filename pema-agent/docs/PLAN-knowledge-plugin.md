@@ -10,7 +10,10 @@ thiết kế mới, không phải vì nó có sẵn.
 | Việc | Chốt | Lý do ngắn |
 |---|---|---|
 | Lưu trữ | Postgres sẵn có + pgvector (image compose đã là `pgvector/pgvector`) | kho nhỏ (nghìn đoạn), một engine cho cả agent và tri thức; Doris để dành cho phân tích quy mô lớn |
-| Embedding | **cục bộ**, Ollama `bge-m3`, **1024 chiều**, cosine | máy dev có RTX 3060 12 GB; câu hỏi bệnh nhân không rời máy; API (Gemini cắt 1024) là phương án khi máy chủ không có GPU, chỉ cần nhúng lại |
+| Embedding | **API qua cổng Beeknoee (OpenAI-compatible), mặc định `qwen/qwen3-embedding-8b`, 1024 chiều**, cosine (user chốt 2026-10-12; thay cho quyết định "Ollama cục bộ" trước đó) | tiếng Việt tốt nhất trong danh sách cổng có; giá không đáng kể (~3 triệu token cả kho). Client embedding tổng quát: địa chỉ, khóa (cài đặt nhạy cảm, mã hóa), model, số chiều, `query_prefix`/`passage_prefix` theo model (Qwen3 cần câu lệnh trước câu hỏi, E5 cần `query:`/`passage:`); cổng không nhận `dimensions` thì cắt + chuẩn hóa phía mình. Ollama bge-m3 cục bộ vẫn là một cấu hình của cùng client |
+| Cổng | `https://platform.beeknoee.com/api/v1` (khóa `sk-bee-…`), endpoint `/embeddings` có thật (401 không khóa, lỗi kiểu OpenAI, kiểm 2026-10-12); tham số `dimensions` CHƯA kiểm (cần khóa) | |
+| So model | bước 4: Qwen3-Embedding-8B vs Gemini Embedding 2 (hoặc 001) vs BGE-M3 trên cùng bộ đo; giữ model hit@5 cao nhất | vài nghìn đồng, không cần đoán |
+| Riêng tư khi nhúng | **TẠM BỎ cho bản demo** (user, 2026-10-12): không che số điện thoại/CCCD/email trước khi gửi câu hỏi đi nhúng. Bật lại trước khi chạy với bệnh nhân thật | demo gọi vốn; ghi ở đây để không quên |
 | Graph RAG | không làm ở bản đầu, chừa chỗ ở tầng retriever | câu hỏi của phòng khám chủ yếu một bước quanh "dịch vụ"; multi-hop nhẹ giải bằng nhãn + agent tìm nhiều lượt |
 | RAG-Anything | không nhúng vào agent | phụ thuộc nặng (MinerU, LibreOffice, Python 3.10); nếu cần parser mạnh thì chạy container riêng, spike sau |
 | Vị trí | plugin `knowledge` của `apps/agent`, độc lập, không gọi clinic API | "mọi thứ là plugin" |
