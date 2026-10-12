@@ -13,7 +13,7 @@ import {
   UpdatedCell,
 } from "./source-cells";
 import { allSelected } from "./sources-logic";
-import { APPROVAL_STEP } from "../logic";
+import { APPROVAL_STEP, AUDIENCE_SPLIT } from "../logic";
 
 interface Props {
   items: readonly Source[];
@@ -24,7 +24,7 @@ interface Props {
   onOpen: (id: string) => void;
 }
 
-const HEADERS = ["Tên", "Loại", "Dịch vụ", "Đối tượng", "Trạng thái xử lý", "Hiệu lực", ...(APPROVAL_STEP ? ["Duyệt"] : []), "Đoạn", "Cập nhật"];
+const HEADERS = ["Tên", "Loại", "Dịch vụ", ...(AUDIENCE_SPLIT ? ["Đối tượng"] : []), "Trạng thái xử lý", "Hiệu lực", ...(APPROVAL_STEP ? ["Duyệt"] : []), "Đoạn", "Cập nhật"];
 
 function PickBox({ checked, label, onChange }: { checked: boolean; label: string; onChange: () => void }) {
   return (
@@ -87,9 +87,11 @@ export function SourceTable({ items, selected, serviceNames, onToggle, onToggleA
                 <td className="max-w-44 px-3 py-3">
                   <ServicesCell source={source} names={serviceNames} />
                 </td>
-                <td className="px-3 py-3">
-                  <AudienceCell source={source} />
-                </td>
+                {AUDIENCE_SPLIT && (
+                  <td className="px-3 py-3">
+                    <AudienceCell source={source} />
+                  </td>
+                )}
                 <td className="max-w-56 px-3 py-3">
                   <ProcessingCell source={source} />
                 </td>
@@ -130,9 +132,11 @@ export function SourceTable({ items, selected, serviceNames, onToggle, onToggleA
               <Labelled label="Loại">
                 <KindCell source={source} />
               </Labelled>
-              <Labelled label="Đối tượng">
-                <AudienceCell source={source} />
-              </Labelled>
+              {AUDIENCE_SPLIT && (
+                <Labelled label="Đối tượng">
+                  <AudienceCell source={source} />
+                </Labelled>
+              )}
               <Labelled label="Hiệu lực">
                 <LifecycleCell source={source} />
               </Labelled>

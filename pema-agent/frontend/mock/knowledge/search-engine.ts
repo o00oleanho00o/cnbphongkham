@@ -149,9 +149,10 @@ const REASON_TEXT: Record<Reason, string> = {
   outdated: "đoạn hết hiệu lực hoặc ngoài ngày hỏi",
 };
 
-/** Why the patient channel may not see a source, or null when it may. */
-export function hiddenReason(source: Source, asOf: string, onlyApproved: boolean): Reason | null {
-  if (source.audience === "staff") return "staff";
+/** Why a question may not see a source, or null when it may. Every channel shares one store for now (user,
+ * 2026-10-12), so internal sources are not hidden; pass `split` to bring the patient/staff split back. */
+export function hiddenReason(source: Source, asOf: string, onlyApproved: boolean, split = false): Reason | null {
+  if (split && source.audience === "staff") return "staff";
   if (onlyApproved && !source.approved) return "unapproved";
   const outside =
     source.lifecycle !== "active" ||
@@ -199,7 +200,7 @@ export function runSearch(store: Store, query: SearchDebugQuery): SearchDebug {
     (source) => source.processing === "ready" && source.chunk_count > 0 && relevance(source) > 0,
   );
   const reasonOf = (source: Source): Reason | null =>
-    patient ? hiddenReason(source, query.as_of, settings.search.patient_only_approved) : null;
+    hiddenReason(source, query.as_of, settings.search.patient_only_approved);
   const filterText = REASONS.map((reason) => ({
     reason,
     count: relevant.filter((source) => reasonOf(source) === reason).reduce((sum, source) => sum + source.chunk_count, 0),

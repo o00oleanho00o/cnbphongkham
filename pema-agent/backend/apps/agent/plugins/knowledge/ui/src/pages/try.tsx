@@ -2,7 +2,7 @@
 import { type FormEvent, type KeyboardEvent, useState } from "react";
 
 import { knowledge, messageOf } from "../client";
-import { todayIso } from "../logic";
+import { AUDIENCE_SPLIT, todayIso } from "../logic";
 import { ui } from "../sdk";
 import type { SearchDebug, SearchDebugQuery } from "../types";
 import { ResultView } from "../try/result-view";
@@ -65,18 +65,20 @@ export function TryPage() {
               />
             </ui.Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              <ui.Field label="Như kênh">
-                <ui.Select
-                  value={channel}
-                  onChange={(event) => setChannel(event.target.value === "staff" ? "staff" : "patient")}
-                  options={CHANNEL_OPTIONS}
-                />
-              </ui.Field>
+              {AUDIENCE_SPLIT && (
+                <ui.Field label="Như kênh">
+                  <ui.Select
+                    value={channel}
+                    onChange={(event) => setChannel(event.target.value === "staff" ? "staff" : "patient")}
+                    options={CHANNEL_OPTIONS}
+                  />
+                </ui.Field>
+              )}
               <ui.Field label="Ngày hỏi" hint="Giá và quy định có hiệu lực vào ngày này.">
                 <ui.Input type="date" value={asOf} onChange={(event) => setAsOf(event.target.value)} />
               </ui.Field>
             </div>
-            {channel === "patient" && <ui.Notice tone="info">{PATIENT_CHANNEL_HINT}</ui.Notice>}
+            {AUDIENCE_SPLIT && channel === "patient" && <ui.Notice tone="info">{PATIENT_CHANNEL_HINT}</ui.Notice>}
             {error && (
               <ui.Notice tone="danger">
                 {error}

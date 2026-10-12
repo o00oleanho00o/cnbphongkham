@@ -5,7 +5,7 @@ import { ConfirmDialog } from "../parts";
 import { ui } from "../sdk";
 import type { Source } from "../types";
 import { type BulkKind, deleteText } from "./sources-logic";
-import { APPROVAL_STEP } from "../logic";
+import { APPROVAL_STEP, AUDIENCE_SPLIT } from "../logic";
 
 export function BulkBar({
   picked,
@@ -38,12 +38,16 @@ export function BulkBar({
           </ui.Button>
         </>
       )}
-      <ui.Button variant="secondary" disabled={busy} onClick={run("audience-patient")}>
-        Đặt: Bệnh nhân
-      </ui.Button>
-      <ui.Button variant="secondary" disabled={busy} onClick={run("audience-staff")}>
-        Đặt: Nội bộ
-      </ui.Button>
+      {AUDIENCE_SPLIT && (
+        <>
+          <ui.Button variant="secondary" disabled={busy} onClick={run("audience-patient")}>
+            Đặt: Bệnh nhân
+          </ui.Button>
+          <ui.Button variant="secondary" disabled={busy} onClick={run("audience-staff")}>
+            Đặt: Nội bộ
+          </ui.Button>
+        </>
+      )}
       <ui.Button variant="secondary" disabled={busy} onClick={run("reindex")}>
         Nạp lại
       </ui.Button>

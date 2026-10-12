@@ -1,7 +1,7 @@
 /** Step 2 "Thông tin": one editable block per file, and a bar that sets one thing for all of them. */
 import { useState } from "react";
 
-import { APPROVAL_STEP, AUDIENCE_HINT, AUDIENCE_LABEL } from "../logic";
+import { APPROVAL_STEP, AUDIENCE_HINT, AUDIENCE_LABEL, AUDIENCE_SPLIT } from "../logic";
 import { ConfirmDialog, Section } from "../parts";
 import { ui } from "../sdk";
 import type { Audience, PreviewItem, Service, Source } from "../types";
@@ -99,15 +99,17 @@ function DraftRow({ entry, flow }: { entry: Entry; flow: AddFlow }) {
           <ui.Field label="Mã tài liệu" hint="Mã dùng để trích dẫn, ví dụ DEMO-PEMA-D07">
             <ui.Input value={draft.docCode} onChange={(event) => set({ docCode: event.target.value })} />
           </ui.Field>
-          <ui.Field label="Đối tượng" hint={AUDIENCE_HINT[draft.audience]}>
-            <ui.Select
-              value={draft.audience}
-              options={AUDIENCE_OPTIONS}
-              onChange={(event) => {
-                flow.setAudience([item.key], event.target.value === "patient" ? "patient" : "staff");
-              }}
-            />
-          </ui.Field>
+          {AUDIENCE_SPLIT && (
+            <ui.Field label="Đối tượng" hint={AUDIENCE_HINT[draft.audience]}>
+              <ui.Select
+                value={draft.audience}
+                options={AUDIENCE_OPTIONS}
+                onChange={(event) => {
+                  flow.setAudience([item.key], event.target.value === "patient" ? "patient" : "staff");
+                }}
+              />
+            </ui.Field>
+          )}
           <ui.Field label="Thay thế nguồn cũ" hint="Nguồn cũ chuyển sang Đã thay thế khi nguồn mới nạp xong">
             <ui.Select value={draft.supersedes} options={replaceOptions} onChange={(event) => set({ supersedes: event.target.value })} />
           </ui.Field>
@@ -162,13 +164,15 @@ function ApplyAll({ flow, keys }: { flow: AddFlow; keys: string[] }) {
   return (
     <Section title="Áp dụng cho tất cả">
       <div className="grid gap-3 sm:grid-cols-2">
-        <ui.Field label="Đối tượng">
-          <ui.Select
-            value={bulk.audience}
-            options={[{ value: "", label: "Giữ nguyên" }, ...AUDIENCE_OPTIONS]}
-            onChange={(event) => setBulk({ ...bulk, audience: audienceFromValue(event.target.value) })}
-          />
-        </ui.Field>
+        {AUDIENCE_SPLIT && (
+          <ui.Field label="Đối tượng">
+            <ui.Select
+              value={bulk.audience}
+              options={[{ value: "", label: "Giữ nguyên" }, ...AUDIENCE_OPTIONS]}
+              onChange={(event) => setBulk({ ...bulk, audience: audienceFromValue(event.target.value) })}
+            />
+          </ui.Field>
+        )}
         {APPROVAL_STEP && (
         <ui.Field label="Đã duyệt">
           <ui.Select
@@ -256,7 +260,7 @@ export function InfoStep({ flow }: { flow: AddFlow }) {
     <div className="space-y-4">
       {flow.lookups.failed && <ui.Notice tone="warning">Không tải được danh sách dịch vụ hoặc nguồn đang dùng; các ô này tạm trống.</ui.Notice>}
       <ui.Notice tone="info">
-        Tệp có phần đầu YAML được điền sẵn theo đó. Tệp không có YAML bắt đầu ở Nội bộ (chỉ nhân viên thấy); đổi sang Bệnh nhân nếu cần. Nạp xong là agent dùng ngay.
+        Tệp có phần đầu YAML được điền sẵn theo đó. Nạp xong là agent dùng ngay, trên mọi kênh.
       </ui.Notice>
       {usable.length > 1 && <ApplyAll flow={flow} keys={usable.map((entry) => entry.item.key)} />}
       {usable.map((entry) => (

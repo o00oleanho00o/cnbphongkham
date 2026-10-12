@@ -854,6 +854,9 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
+- **Một kho tri thức chung cho mọi kênh (user, 2026-10-12):** không chia Bệnh nhân / Nội bộ; UI ẩn "Đối tượng" (cờ
+  `AUDIENCE_SPLIT = false`), `kb_search` không lọc theo kênh. Mục tiêu: quét QR Zalo cá nhân, agent trả lời người nhắn
+  bằng agentic RAG, đo độ chính xác theo tài liệu; phân quyền và nguồn gốc để sau.
 - **Bước duyệt nguồn tạm bỏ (user, 2026-10-12):** Kho tri thức ẩn mọi chỗ "Duyệt" (cờ `APPROVAL_STEP = false` trong
   `plugins/knowledge/ui/src/logic.ts`), nguồn mới luôn `approved = true`, backend không lọc theo `approved`.
 - **Bước 0 (lõi) của RAG: plan [PLAN-step0-core.md](PLAN-step0-core.md), đã duyệt 2026-10-12, chưa code.** Quyết định

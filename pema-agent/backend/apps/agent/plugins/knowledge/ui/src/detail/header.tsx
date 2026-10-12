@@ -4,6 +4,7 @@ import { useState } from "react";
 import { knowledge } from "../client";
 import {
   APPROVAL_STEP,
+  AUDIENCE_SPLIT,
   AUDIENCE_HINT,
   AUDIENCE_LABEL,
   LIFECYCLE_LABEL,
@@ -96,7 +97,9 @@ export function SourceHeader({
       <div className="flex flex-wrap items-center gap-2">
         <ui.Badge tone={PROCESSING_TONE[source.processing]}>{PROCESSING_LABEL[source.processing]}</ui.Badge>
         <ui.Badge tone={LIFECYCLE_TONE[source.lifecycle]}>{LIFECYCLE_LABEL[source.lifecycle]}</ui.Badge>
-        <ui.Badge tone={source.audience === "patient" ? "info" : "neutral"}>{AUDIENCE_LABEL[source.audience]}</ui.Badge>
+        {AUDIENCE_SPLIT && (
+          <ui.Badge tone={source.audience === "patient" ? "info" : "neutral"}>{AUDIENCE_LABEL[source.audience]}</ui.Badge>
+        )}
         {APPROVAL_STEP && (
           <ui.Badge tone={source.approved ? "success" : "warning"}>{source.approved ? "Đã duyệt" : "Chưa duyệt"}</ui.Badge>
         )}
@@ -135,6 +138,7 @@ export function SourceHeader({
         <ui.Button variant="danger" onClick={() => setAsking("delete")}>
           Xóa
         </ui.Button>
+        {AUDIENCE_SPLIT && (
         <div className="w-full sm:ml-auto sm:w-56">
           <ui.Field label="Đối tượng" hint={AUDIENCE_HINT[source.audience]}>
             <ui.Select
@@ -145,6 +149,7 @@ export function SourceHeader({
             />
           </ui.Field>
         </div>
+        )}
       </div>
       {editing && (
         <MetaForm

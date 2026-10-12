@@ -5,6 +5,10 @@ import type { Audience, Lifecycle, Processing, Progress, WarningLevel } from "./
  * Set it back to true to show the column, filter, buttons and settings again; the data model keeps `approved`. */
 export const APPROVAL_STEP = false;
 
+/** One shared store for every channel (user, 2026-10-12): no patient/staff split while the agent's answers from the
+ * documents are being tested. Hides "Đối tượng" everywhere; set it back to true to bring the split back. */
+export const AUDIENCE_SPLIT = false;
+
 export type Tone = "neutral" | "info" | "success" | "warning" | "danger";
 
 export const AUDIENCE_LABEL: Record<Audience, string> = {

@@ -67,13 +67,10 @@ describe("POST /search/debug", () => {
     expect(stageOf(body, "vector")).toMatchObject({ skipped: true, note: "Embedding chưa kết nối: bỏ qua nhánh vector" });
   });
 
-  it("hides_staff_sources_from_the_patient_channel_and_says_how_many", async () => {
-    const staff = await search("quy trình tư vấn nội bộ", "staff");
-    const patient = await search("quy trình tư vấn nội bộ", "patient");
+  it("shows_internal_sources_on_every_channel_while_the_store_is_shared", async () => {
+    const { body } = await search("quy trình tư vấn nội bộ", "patient");
 
-    expect(staff.body.stages.at(-1)?.candidates.some((c) => c.doc_code === "DEMO-PEMA-D19")).toBe(true);
-    expect(patient.body.stages.at(-1)?.candidates.some((c) => c.doc_code === "DEMO-PEMA-D19")).toBe(false);
-    expect(stageOf(patient.body, "keyword")?.note).toContain("đoạn nội bộ bị lọc");
+    expect(body.stages.at(-1)?.candidates.some((c) => c.doc_code === "DEMO-PEMA-D19")).toBe(true);
   });
 
   it("leaves_out_a_source_outside_its_dates_on_the_patient_channel", async () => {

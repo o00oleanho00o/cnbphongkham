@@ -216,6 +216,13 @@ Cho buổi demo gọi vốn tối thiểu cần U0 + U1 + phần Kiểm tra kế
 
 ## 10. Quyết định của user (2026-10-12)
 
+> **Cập nhật 2026-10-12 (user): một kho chung cho mọi kênh, không chia Bệnh nhân / Nội bộ.** Mục tiêu lúc này là thử
+> agent RAG và độ chính xác trả lời theo tài liệu (qua Zalo cá nhân quét QR), chưa lo phân quyền hay nguồn gốc. UI ẩn
+> "Đối tượng" ở mọi chỗ (bảng, lọc, thao tác hàng loạt, chi tiết, Thêm nguồn, "Như kênh" ở Thử tìm, "Tiền tố kênh bệnh
+> nhân" ở Cài đặt) bằng cờ `AUDIENCE_SPLIT = false` (`ui/src/logic.ts`). Backend: `kb_search` **không lọc theo kênh hay
+> `audience`**; vẫn lọc theo tenant, `lifecycle = active` và hiệu lực theo ngày hỏi (đó là độ chính xác, không phải phân
+> quyền). `doc_id` vẫn đi kèm mỗi đoạn để đo và trích dẫn. Muốn chia lại: đổi cờ thành `true` và bật lại lọc kênh.
+
 > **Cập nhật 2026-10-12 (user): tạm ẩn và bỏ qua bước duyệt.** Có dữ liệu là agent lấy ra dùng ngay khi nguồn sẵn sàng.
 > UI ẩn cột/lọc/nút "Duyệt" và cài đặt "Kênh bệnh nhân chỉ thấy nguồn đã duyệt" bằng cờ `APPROVAL_STEP = false`
 > (`ui/src/logic.ts`); mô hình dữ liệu vẫn giữ `approved` và nguồn mới luôn `approved = true`. Backend (bước 1 trở đi)

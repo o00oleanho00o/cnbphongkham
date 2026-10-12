@@ -21,6 +21,12 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-12 · remove · Kho tri thức: một kho chung, ẩn "Đối tượng"
+- Where: plugin `knowledge` pages (`backend/apps/agent/plugins/knowledge/ui/src/sources/source-table.tsx`, `source-filters.tsx`, `bulk-bar.tsx`, `detail/header.tsx`, `add/info-step.tsx`, `add/preview-step.tsx`, `pages/try.tsx`, `settings/search-section.tsx`), drawn at `/admin/agent/plugins/knowledge/store`
+- Change: hidden behind `AUDIENCE_SPLIT = false`: the "Đối tượng" column and filter, the bulk "Đặt: Bệnh nhân" / "Đặt: Nội bộ" buttons, the detail badge and "Đối tượng" select, the "Đối tượng" fields of "Thêm nguồn" and its preview badge and internal-section warning, "Như kênh" and its hint in "Thử tìm", the setting "Tiền tố kênh bệnh nhân". Every channel sees every source. Wording: "Tệp có phần đầu YAML được điền sẵn theo đó. Nạp xong là agent dùng ngay, trên mọi kênh."; the split dialog says "Nguồn mới dùng được ngay."
+- Web canvas target: none (no canvas frame for the agent pages)
+- Logged by: knowledge store, one shared store
+
 ### 2026-10-12 · remove · Kho tri thức: tạm ẩn bước "Duyệt"
 - Where: plugin `knowledge` pages (`backend/apps/agent/plugins/knowledge/ui/src/sources/source-table.tsx`, `source-filters.tsx`, `bulk-bar.tsx`, `pages/sources.tsx`, `detail/header.tsx`, `add/info-step.tsx`, `settings/search-section.tsx`), drawn at `/admin/agent/plugins/knowledge/store`
 - Change: hidden behind `APPROVAL_STEP = false`: the "Duyệt" column, the "Chưa duyệt" filter and "N nguồn chưa duyệt" button, the bulk "Duyệt"/"Bỏ duyệt" buttons, the detail badge "Đã duyệt/Chưa duyệt", its "Duyệt"/"Bỏ duyệt" button and "Duyệt" fact, the "Đã duyệt" box and bulk select in "Thêm nguồn", the setting "Kênh bệnh nhân chỉ thấy nguồn đã duyệt". New sources are used as soon as they are ready. Wording changed: the add flow note ("Tệp không có YAML bắt đầu ở Nội bộ (chỉ nhân viên thấy); đổi sang Bệnh nhân nếu cần. Nạp xong là agent dùng ngay."), the "Thử tìm" hint, the split dialog and notice no longer mention approval.

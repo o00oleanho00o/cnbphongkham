@@ -1,5 +1,5 @@
 /** Step 3 "Xem trước": what the reader made of each file, before anything is added. */
-import { AUDIENCE_LABEL, WARNING_TONE, formatSize, periodText } from "../logic";
+import { AUDIENCE_LABEL, AUDIENCE_SPLIT, WARNING_TONE, formatSize, periodText } from "../logic";
 import { Section } from "../parts";
 import { ui } from "../sdk";
 import type { OutlineNode, PreviewWarning } from "../types";
@@ -67,7 +67,7 @@ function Card({ entry, benchmark }: { entry: Entry; benchmark: boolean }) {
         </div>
         {refusal && <ui.Badge tone="danger">Không nạp</ui.Badge>}
         {!refusal && skipped && <ui.Badge tone="warning">Bỏ qua</ui.Badge>}
-        {!refusal && !skipped && <ui.Badge tone={draft.audience === "patient" ? "info" : "neutral"}>{AUDIENCE_LABEL[draft.audience]}</ui.Badge>}
+        {AUDIENCE_SPLIT && !refusal && !skipped && <ui.Badge tone={draft.audience === "patient" ? "info" : "neutral"}>{AUDIENCE_LABEL[draft.audience]}</ui.Badge>}
       </div>
       {refusal && <ui.Notice tone="danger">{refusal}</ui.Notice>}
       {!refusal && skipped && item.same_content_as && (
@@ -84,7 +84,7 @@ function Card({ entry, benchmark }: { entry: Entry; benchmark: boolean }) {
           <p className="text-label text-ink-soft">Hiệu lực: {periodText(draft.from || null, draft.to || null)}</p>
           <Facts entry={entry} />
           <Outline nodes={item.outline} />
-          {item.warnings.map((warning) => (
+          {item.warnings.filter((warning) => AUDIENCE_SPLIT || warning.code !== "internal_script").map((warning) => (
             <Warning key={`${warning.code}-${warning.text}`} warning={warning} />
           ))}
         </>

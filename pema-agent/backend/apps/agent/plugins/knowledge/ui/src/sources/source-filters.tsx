@@ -1,7 +1,7 @@
 /** The filter row above the table: search, processing, audience, service, lifecycle and "not approved". */
 import { useEffect, useState } from "react";
 
-import { APPROVAL_STEP, AUDIENCE_LABEL, LIFECYCLE_LABEL, PROCESSING_LABEL } from "../logic";
+import { APPROVAL_STEP, AUDIENCE_LABEL, AUDIENCE_SPLIT, LIFECYCLE_LABEL, PROCESSING_LABEL } from "../logic";
 import { ui } from "../sdk";
 import type { Service } from "../types";
 import { type Filters, NO_FILTERS, hasFilters } from "./sources-logic";
@@ -54,12 +54,14 @@ export function SourceFilters({
         options={optionsOf("Mọi trạng thái", PROCESSING_LABEL)}
         onChange={(event) => set({ processing: event.target.value })}
       />
-      <ui.Select
-        aria-label="Đối tượng"
-        value={filters.audience}
-        options={optionsOf("Mọi đối tượng", AUDIENCE_LABEL)}
-        onChange={(event) => set({ audience: event.target.value })}
-      />
+      {AUDIENCE_SPLIT && (
+        <ui.Select
+          aria-label="Đối tượng"
+          value={filters.audience}
+          options={optionsOf("Mọi đối tượng", AUDIENCE_LABEL)}
+          onChange={(event) => set({ audience: event.target.value })}
+        />
+      )}
       <ui.Select
         aria-label="Dịch vụ"
         value={filters.service}

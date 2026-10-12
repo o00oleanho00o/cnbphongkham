@@ -65,6 +65,9 @@ dung tin nhắn hay tài liệu.
     `run_turn`. Gộp nhiều tin một lượt (collect/steer) thì dùng của tin đầu.
 - `tenant_id` đã là tham số của `run_turn` và đã vào `ToolContext`: giữ nguyên, bộ lọc tenant của `kb_search` dùng nó.
 
+Ghi chú 2026-10-12: kho tri thức dùng chung cho mọi kênh (không chia Bệnh nhân / Nội bộ), xem PLAN-knowledge-ui.md
+mục 10. `ToolContext.channel` vẫn có nhưng `kb_search` không dùng nó để lọc.
+
 ### 0.2b Quy tắc dùng tool (user chốt 2026-10-12, **agent khác đọc kỹ mục này**)
 
 **Agent được gọi mọi tool trong hệ thống, tùy ý. Chỉ cấm ra Internet.**
