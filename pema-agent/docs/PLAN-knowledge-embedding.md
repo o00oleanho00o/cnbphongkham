@@ -777,14 +777,20 @@ wrong code (record why in section 12), but must **not** drop hard questions.
 
 | Mode | Set | top1 | top3 | top6 | MRR | median latency | threshold |
 |---|---|---|---|---|---|---|---|
-| keyword | A | | | | | | – |
-| keyword | B | | | | | | – |
+| keyword | A | 9/15 | 15/15 | 15/15 | 0.789 | 16 ms | – |
+| keyword | B | 7/15 | 9/15 | 10/15 | 0.544 | 16 ms | – |
 | vector | A | | | | | | |
 | vector | B | | | | | | |
 | hybrid | A | | | | | | |
 | hybrid | B | | | | | | |
 
 ---
+
+Keyword baseline measured 2026-10-12 on the 22 Pema documents (209 chunks) with `scripts/kb_bench.py --modes
+keyword`. Set B misses (top3): "bắn laser có rát không", "quẹt thẻ được không", "đi công tác 2 tháng muốn tạm dừng
+liệu trình", "bên mình có mấy cơ sở", "cho xin số tổng đài", "không muốn bị đăng ảnh mặt lên mạng". The vector and
+hybrid rows need `BEEKNOEE_API_KEY` in the environment of the machine that runs the script (not set on the build
+machine yet).
 
 ## 11. Risks and later work
 

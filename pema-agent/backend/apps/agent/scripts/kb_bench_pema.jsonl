@@ -1,0 +1,30 @@
+{"set": "A", "q": "trị nám 1 buổi bao nhiêu tiền", "expect": ["DEMO-PEMA-D07"]}
+{"set": "A", "q": "gói 10 buổi nám giá bao nhiêu, có giảm giá không", "expect": ["DEMO-PEMA-D08", "DEMO-PEMA-D07", "DEMO-PEMA-D09"]}
+{"set": "A", "q": "khuyến mại tháng này", "expect": ["DEMO-PEMA-D09"]}
+{"set": "A", "q": "hủy lịch có mất tiền không", "expect": ["DEMO-PEMA-D13"]}
+{"set": "A", "q": "đặt lịch có phải cọc không", "expect": ["DEMO-PEMA-D12"]}
+{"set": "A", "q": "bảo lưu gói được bao lâu", "expect": ["DEMO-PEMA-D08"]}
+{"set": "A", "q": "hoàn tiền gói thế nào", "expect": ["DEMO-PEMA-D14"]}
+{"set": "A", "q": "sau laser cần kiêng gì", "expect": ["DEMO-PEMA-D05"]}
+{"set": "A", "q": "bớt hori có làm ở HCM không", "expect": ["DEMO-PEMA-D02", "DEMO-PEMA-D12", "DEMO-PEMA-D03"]}
+{"set": "A", "q": "phòng khám ở đâu, mấy giờ mở cửa", "expect": ["DEMO-PEMA-D01"]}
+{"set": "A", "q": "kem chống nắng giá bao nhiêu", "expect": ["DEMO-PEMA-D11"]}
+{"set": "A", "q": "mụn trị thế nào", "expect": ["DEMO-PEMA-D10"]}
+{"set": "A", "q": "khiếu nại bao lâu thì được trả lời", "expect": ["DEMO-PEMA-D15"]}
+{"set": "A", "q": "có được chụp ảnh trước sau không", "expect": ["DEMO-PEMA-D16"]}
+{"set": "A", "q": "bị sưng đỏ sau điều trị thì làm sao", "expect": ["DEMO-PEMA-D17", "DEMO-PEMA-D05"]}
+{"set": "B", "q": "da mặt bị sạm nâu từng mảng là bệnh gì", "expect": ["DEMO-PEMA-D03"]}
+{"set": "B", "q": "bắn laser có rát không", "expect": ["DEMO-PEMA-D06", "DEMO-PEMA-D04"]}
+{"set": "B", "q": "làm xong bao lâu thì đánh phấn được", "expect": ["DEMO-PEMA-D06"]}
+{"set": "B", "q": "đốm xanh xám ở gò má có chữa được không", "expect": ["DEMO-PEMA-D03", "DEMO-PEMA-D02"]}
+{"set": "B", "q": "quẹt thẻ được không", "expect": ["DEMO-PEMA-D14", "DEMO-PEMA-D18"]}
+{"set": "B", "q": "lỡ hẹn không tới thì có bị phạt không", "expect": ["DEMO-PEMA-D13"]}
+{"set": "B", "q": "đi công tác 2 tháng muốn tạm dừng liệu trình", "expect": ["DEMO-PEMA-D08"]}
+{"set": "B", "q": "lấy hóa đơn công ty được không", "expect": ["DEMO-PEMA-D14", "DEMO-PEMA-D18"]}
+{"set": "B", "q": "có viên uống nào giúp da đẹp không", "expect": ["DEMO-PEMA-D11"]}
+{"set": "B", "q": "bên mình có mấy cơ sở", "expect": ["DEMO-PEMA-D01", "DEMO-PEMA-D18"]}
+{"set": "B", "q": "rủ bạn đi cùng có được ưu đãi gì không", "expect": ["DEMO-PEMA-D09"]}
+{"set": "B", "q": "da bị phồng rộp chảy dịch sau khi bắn laser", "expect": ["DEMO-PEMA-D17", "DEMO-PEMA-D05"]}
+{"set": "B", "q": "cho xin số tổng đài", "expect": ["DEMO-PEMA-D01", "DEMO-PEMA-D18"]}
+{"set": "B", "q": "không muốn bị đăng ảnh mặt lên mạng", "expect": ["DEMO-PEMA-D16"]}
+{"set": "B", "q": "nhân viên thái độ không tốt thì góp ý ở đâu", "expect": ["DEMO-PEMA-D15"]}
