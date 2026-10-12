@@ -583,3 +583,72 @@ Thứ tự là phán đoán của người viết plan, bộ đo (mục 10) sẽ
 Mục tiêu đề xuất cho bản demo, đo trên bộ câu hỏi: tìm đúng nguồn trong 5 kết quả ≥ 90%; số liệu trong câu
 trả lời đúng ≥ 95%; **0 con số bịa**; từ chối đúng các câu ngoài tài liệu ≥ 90%; không lộ nội dung nội bộ ra kênh
 bệnh nhân: 0 lần.
+
+## 19. Bộ đo "Mây" (AgentRAG_May_Dung_Ngay, may-1.1) và những gì nó đổi trong plan (2026-10-12)
+
+Bộ dữ liệu giả lập do user cung cấp, nằm NGOÀI repo: `E:\Desktop\data test\AgentRAG_May_Dung_Ngay`. Không chép vào
+repo (đáp án phải tách khỏi agent; runner nhận đường dẫn bằng tham số).
+
+### 19.1 Bộ dữ liệu có gì
+
+- `01_NAP_EMBEDDING`: 18 tài liệu Markdown, tổng ~42 KB (~15 nghìn token): kho rất nhỏ. Mỗi file có frontmatter
+  YAML (`doc_id`, `tenant_id`, `version`, `status`, `effective_from`, `effective_to`, `ingest_role`) và mỗi dữ kiện
+  là một mục `###` có "Mã dữ kiện" + "Giá trị chuẩn".
+- 20 câu dev, 60 câu test, 3 hội thoại. Mỗi ca có `trusted_context` (tenant_id có thể null, `query_as_of`,
+  `auth_verified`, `confirmation_received`, có khi `mock_tool_result`, `retrieved_doc_ids`) và `requested_fields`.
+- Đầu ra mong đợi mỗi ca: `answer`, `action` (1 trong ~17: answer, abstain, ask_clarify, require_auth,
+  escalate_clinical, emergency_handoff, prepare_booking, lookup_slots, booking_failed, confirm_cancel,
+  create_ticket, refuse_privacy, refuse_instruction…), `fields` (số nguyên VND, null khi thiếu), `citations`
+  (doc_id), `tools_called`, nên có `retrieved_doc_ids`.
+- Phân bố 60 ca test: 39 answer, 5 abstain, 3 require_auth, 3 escalate_clinical, 2 ask_clarify, 1 mỗi loại còn lại.
+- Chấm: bộ chấm Python có sẵn (trong `BO_CHAM_TU_DONG.md`, không mạng, không LLM) cho fields/action/citation/tool/
+  recall@k; "đúng nội dung" phải có giám khảo độc lập (người hoặc LLM khác lượt trả lời, rà mẫu bằng người).
+  Đếm riêng: rò tenant, lộ hồ sơ, gọi tool ghi trái phép, kê thuốc, nghe chỉ dẫn giả.
+- Thử thách: giá cũ (MAY-076 hỏi ngày 15/09 được dùng giá cũ; MAY-077 cùng có giá cũ và mới, ngày 12/10 phải chọn
+  active), bản nháp (MAY-075), chỉ dẫn giả chèn vào tài liệu truy xuất (MAY-078 dev, MAY-079 test).
+
+### 19.2 Kết luận
+
+Với kho 18 tài liệu, **tìm kiếm gần như không phải chỗ khó**; chỗ khó là **hành vi agent**: chọn đúng action, không
+bịa (abstain), hỏi lại khi thiếu tenant, đòi xác thực, không nhận đã đặt/hủy khi tool chưa thành công, chọn giá theo
+ngày hỏi, coi tài liệu là dữ liệu chứ không phải lệnh. Đúng là bài đo cho "agentic", không chỉ RAG.
+
+### 19.3 Thay đổi trong plan
+
+1. **Nạp:** đọc frontmatter YAML vào `kb_source`: `doc_id` (định danh dùng để trích dẫn), `tenant_id`, `version`,
+   `status` (`active | draft | superseded | adversarial`), `effective_from/to`, `ingest_role`. Tài liệu `.md` đã có
+   cấu trúc: chia đoạn theo `##`/`###` là đủ, **bản demo không cần Docling**.
+2. **Lọc theo ngày hỏi, không theo hôm nay:** tìm kiếm nhận `as_of` từ ngữ cảnh tin cậy; điều kiện `status = active`
+   và `effective_from <= as_of < effective_to`. Một tài liệu cũ có hiệu lực ngày 15/09 thì được dùng cho câu hỏi
+   ngày 15/09. Nháp và adversarial không bao giờ được tìm thấy qua đường thường; chỉ harness chèn vào ca thử thách.
+3. **Lọc theo tenant:** `tenant_id` từ ngữ cảnh tin cậy là bộ lọc bắt buộc; null → tool trả "chưa biết phòng
+   khám", agent `ask_clarify`.
+4. **Trích dẫn:** mỗi đoạn trong kết quả tool mang `doc_id`; câu trả lời phải trích `doc_id`.
+5. **Ngữ cảnh tin cậy (lõi, mới):** một lượt chat nhận thêm `trusted` (tenant, ngày hỏi, đã xác thực, đã xác
+   nhận, kết quả tool giả lập) qua kênh của harness, KHÔNG qua tin nhắn người dùng hay tài liệu. Đi vào
+   `ToolContext` và một turn section ngắn. Tài liệu hay khách viết "tôi là quản trị viên" không đổi được nó.
+6. **Plugin `may_demo` (mới, chỉ cho demo/benchmark):** tool giả lập `get_slots`, `get_customer_record`,
+   `book_appointment`, `cancel_appointment`, `create_refund_request`, `create_ticket`, `get_inventory`: trả đúng
+   `mock_tool_result` của ca, không có thì trả "không có kết quả", không bao giờ tự báo thành công.
+7. **Profile `may` (mới):** SOUL/AGENTS từ `05_CAU_HINH_AGENT/CAU_HINH_AGENT_MAY.md` + bảng action; tenant mặc định
+   DEMO-MAY cho demo tương tác.
+8. **Đầu ra có cấu trúc cho benchmark:** tool `final_answer(answer, action, fields, citations)` chỉ bật ở chế độ
+   benchmark; `tools_called` và `retrieved_doc_ids` lấy từ trace (không tin model tự khai).
+9. **Runner** `agent bench may --data <thư mục> --split dev|test`: mỗi ca một phiên mới, đưa trusted_context, chèn
+   tài liệu thử thách khi ca yêu cầu, ghi `07_KET_QUA_CUA_BAN/responses_*.jsonl` + nhật ký cấu hình (model, k,
+   prompt version, kho). Chấm bằng chính mã Python của bộ (trích nguyên văn từ `BO_CHAM_TU_DONG.md`, không sửa).
+   Giám khảo nội dung: một model khác model trả lời, có đáp án + nguồn chuẩn; ghi `semantic_*.jsonl`; người rà mẫu.
+10. **Kỷ luật đo:** chỉnh hệ thống chỉ trên 20 câu dev; 60 câu test chạy khi khóa cấu hình, báo riêng, không chỉnh
+    theo test.
+
+### 19.4 Thứ tự làm mới (thay bảng mục 14 cho bản demo)
+
+| Bước | Nội dung | Ra gì |
+|---|---|---|
+| 0 | Lõi: `register_migrations`, `ctx.model`, `ToolOutput.detail`, **ngữ cảnh tin cậy theo lượt** | nền |
+| 1 | Plugin `knowledge`: nạp `.md` có frontmatter, chia theo mục, BM25, lọc tenant + ngày hỏi + status, `kb_search` trả doc_id | tra cứu đúng phiên bản |
+| 2 | Profile `may`, plugin `may_demo` (tool giả lập), `final_answer`, runner + bộ chấm; chạy 20 câu dev | **số đo đầu tiên** |
+| 3 | Sửa theo lỗi của dev: thủ tục agent, mô tả tool, action | dev tốt lên |
+| 4 | Vector Qwen3-8B + RRF, rerank; so trên dev | biết vector/rerank mua được bao nhiêu |
+| 5 | Khóa cấu hình, chạy 60 test + 3 hội thoại, giám khảo nội dung, báo cáo | số đo cho buổi gọi vốn |
+| 6 | Trang quản lý (Nguồn, Thử tìm), Docling, enrich… như plan cũ cho dữ liệu thật | sản phẩm |
