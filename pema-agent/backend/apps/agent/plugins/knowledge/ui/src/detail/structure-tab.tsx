@@ -219,7 +219,7 @@ function SplitDialog({
       <div className="space-y-3">
         <p>
           {sections.length} mục đã chọn (cùng các mục con) được chuyển khỏi &quot;{source.title}&quot; sang một nguồn
-          mới. Nguồn mới mặc định là Nội bộ và chưa duyệt; bạn đổi sau khi xem lại.
+          mới. Nguồn mới mặc định là Nội bộ; bạn đổi sau khi xem lại.
         </p>
         <ui.Field label="Tên nguồn mới">
           <ui.Input autoFocus value={title} onChange={(event) => setTitle(event.target.value)} />

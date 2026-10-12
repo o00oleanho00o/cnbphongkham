@@ -1,5 +1,6 @@
 /** The rules of the add-a-source flow with no screen in them: what may be sent, what a file starts as, what is added. */
 import {
+  APPROVAL_STEP,
   FILE_EXTENSIONS,
   MAX_FILE_BYTES,
   MAX_TEXT_CHARS,
@@ -148,11 +149,12 @@ export interface Draft {
   action: "add" | "skip";
 }
 
-/** The YAML head decides; without one the file starts internal and not approved (the safe default). */
+/** The YAML head decides the audience; without one the file starts internal. Every source is used once it is ready
+ * while the approval step is hidden (`APPROVAL_STEP`); with it, a file without YAML would wait for approval. */
 export function audienceDefaults(audience: Audience | null): { audience: Audience; approved: boolean } {
   if (audience === "patient") return { audience: "patient", approved: true };
   if (audience === "staff") return { audience: "staff", approved: true };
-  return { audience: "staff", approved: false };
+  return { audience: "staff", approved: !APPROVAL_STEP };
 }
 
 /** What the server read first, then what this browser read from the same head. */

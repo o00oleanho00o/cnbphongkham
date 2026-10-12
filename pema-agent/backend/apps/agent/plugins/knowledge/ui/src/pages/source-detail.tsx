@@ -83,7 +83,7 @@ export function SourceDetail({ id, onBack }: { id: string; onBack: () => void })
           onEdit={setEdited}
           onSourceChanged={changed}
           onSplit={(created) => {
-            setNotice(`Đã tách sang nguồn mới "${created.title}" (Nội bộ, chưa duyệt). Mở danh sách để xem lại và duyệt.`);
+            setNotice(`Đã tách sang nguồn mới "${created.title}" (Nội bộ). Mở danh sách để xem lại.`);
             reload();
           }}
         />

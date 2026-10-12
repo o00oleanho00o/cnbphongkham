@@ -81,7 +81,6 @@ function summaryOf(sources: readonly Source[]): SourceSummary {
 function warningsOf(summary: SourceSummary): string[] {
   return [
     ...(store.settings.embedding.has_key ? [] : ["Embedding chưa kết nối: đang tìm bằng từ khóa"]),
-    ...(summary.unapproved > 0 ? [`${summary.unapproved} nguồn chưa duyệt`] : []),
     ...(summary.errors > 0 ? [`${summary.errors} nguồn lỗi`] : []),
   ];
 }

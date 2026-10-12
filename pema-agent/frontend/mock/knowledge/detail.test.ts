@@ -56,13 +56,13 @@ describe("detail routes", () => {
     expect(events[0]?.kind).toBe("edited");
   });
 
-  it("splits_chosen_sections_into_a_staff_source_that_is_not_approved", async () => {
+  it("splits_chosen_sections_into_a_staff_source_used_at_once", async () => {
     await call("PUT", `${BASE}/sources/src-seed-1/structure`, { markdown: TEXT });
     const position = outlineOf(TEXT).findIndex((node) => node.title === "Kịch bản");
     const reply = await call("POST", `${BASE}/sources/src-seed-1/split`, { sections: [position], title: "Kịch bản tách" });
     const created = reply.body as { audience: string; approved: boolean; id: string };
     expect(created.audience).toBe("staff");
-    expect(created.approved).toBe(false);
+    expect(created.approved).toBe(true);
     const original = (await call("GET", `${BASE}/sources/src-seed-1/structure`)).body as { markdown: string };
     expect(original.markdown).not.toContain("Chốt khách");
   });

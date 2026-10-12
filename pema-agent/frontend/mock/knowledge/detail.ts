@@ -139,7 +139,7 @@ function split(source: Source, sections: readonly number[], title: string): Repl
     doc_code: null,
     version: "1.0",
     audience: "staff",
-    approved: false,
+    approved: true,
     approved_by: null,
     approved_at: null,
     lifecycle: "active",

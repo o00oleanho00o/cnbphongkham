@@ -122,8 +122,8 @@ describe("defaults", () => {
   it("staff_head_means_internal_and_approved", () => {
     expect(audienceDefaults("staff")).toEqual({ audience: "staff", approved: true });
   });
-  it("no_head_means_internal_and_not_approved", () => {
-    expect(audienceDefaults(null)).toEqual({ audience: "staff", approved: false });
+  it("no_head_means_internal_and_used_at_once_while_the_approval_step_is_hidden", () => {
+    expect(audienceDefaults(null)).toEqual({ audience: "staff", approved: true });
   });
   it("takes_title_dates_and_code_from_the_head", () => {
     const draft = defaultDraft(
@@ -137,7 +137,7 @@ describe("defaults", () => {
     expect(draft).toMatchObject({ title: "Giá", docCode: "D07", from: "2026-10-01", to: "", audience: "patient", approved: true, version: "2.0" });
   });
   it("falls_back_to_the_file_name_and_today", () => {
-    expect(defaultDraft(item({ key: "k", name: "faq.txt" }), "2026-10-12")).toMatchObject({ title: "faq", from: "2026-10-12", approved: false });
+    expect(defaultDraft(item({ key: "k", name: "faq.txt" }), "2026-10-12")).toMatchObject({ title: "faq", from: "2026-10-12", approved: true });
   });
   it("skips_a_file_with_the_same_content_by_default", () => {
     expect(defaultDraft(item({ key: "k", same_content_as: { id: "s", title: "T" } })).action).toBe("skip");

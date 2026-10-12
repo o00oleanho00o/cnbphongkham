@@ -6,6 +6,7 @@ import { Switch } from "../parts";
 import { ui } from "../sdk";
 import { SectionCard, type SectionProps, useSectionRun } from "./section-card";
 import { RANGES, type SearchForm, hasProblems, searchChange, searchFormOf, searchProblems } from "./settings-logic";
+import { APPROVAL_STEP } from "../logic";
 
 const rangeHint = (range: { min: number; max: number }) => `Từ ${range.min} đến ${range.max}`;
 
@@ -55,12 +56,14 @@ export function SearchSection({ settings, onSaved }: SectionProps) {
           onChange={(event) => set("patient_channel_prefix", event.target.value)}
         />
       </ui.Field>
+      {APPROVAL_STEP && (
       <Switch
         label="Kênh bệnh nhân chỉ thấy nguồn đã duyệt"
         hint="Nguồn chưa duyệt chỉ nhân viên thấy"
         checked={form.patient_only_approved}
         onChange={(next) => set("patient_only_approved", next)}
       />
+      )}
     </SectionCard>
   );
 }

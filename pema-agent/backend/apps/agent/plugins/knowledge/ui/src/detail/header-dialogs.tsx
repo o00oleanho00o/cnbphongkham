@@ -2,6 +2,7 @@
 import { ConfirmDialog } from "../parts";
 import { ui } from "../sdk";
 import type { Source } from "../types";
+import { APPROVAL_STEP } from "../logic";
 
 interface DialogProps {
   busy: boolean;
@@ -73,7 +74,7 @@ export function AudienceDialog({
         </>
       }
     >
-      <p>Agent sẽ được trả lời bệnh nhân từ nguồn này{approved ? "" : " sau khi bạn duyệt"}.</p>
+      <p>Agent sẽ được trả lời bệnh nhân từ nguồn này{approved || !APPROVAL_STEP ? "" : " sau khi bạn duyệt"}.</p>
       {sections.length > 0 && (
         <div className="mt-3 space-y-1">
           <ui.Notice tone="warning">Có mục trông như nội dung nội bộ. Nên tách chúng ra trước khi đổi:</ui.Notice>

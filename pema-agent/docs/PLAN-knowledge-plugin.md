@@ -396,6 +396,9 @@ phải viết lại), chặn đúng lỗi đáng sợ nhất của RAG phòng kh
 > là thông tin, không phải cổng chặn trong mã. Lọc **nội dung** theo kênh ở bảng dưới (tài liệu nội bộ không lọt ra bệnh
 > nhân, chỉ nguồn đã duyệt) **vẫn giữ**: đó là chuyện tài liệu nào được trả về, không phải chuyện gọi tool. Chi tiết:
 > [PLAN-step0-core.md](PLAN-step0-core.md) mục 0.2b.
+>
+> **Bước duyệt tạm bỏ (user, 2026-10-12):** nguồn sẵn sàng là được dùng; tìm kiếm **không** lọc theo `approved` (dòng
+> "Tài liệu chưa ai xem đã được trích" ở bảng dưới tạm không áp dụng). Xem PLAN-knowledge-ui.md mục 10.
 
 | Rủi ro | Cách chặn |
 |---|---|

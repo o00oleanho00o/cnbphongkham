@@ -1,6 +1,10 @@
 /** Words and small functions the pages share (no screen code here). */
 import type { Audience, Lifecycle, Processing, Progress, WarningLevel } from "./types";
 
+/** The approval step ("Duyệt") is hidden for now (user, 2026-10-12): every source is used as soon as it is ready.
+ * Set it back to true to show the column, filter, buttons and settings again; the data model keeps `approved`. */
+export const APPROVAL_STEP = false;
+
 export type Tone = "neutral" | "info" | "success" | "warning" | "danger";
 
 export const AUDIENCE_LABEL: Record<Audience, string> = {

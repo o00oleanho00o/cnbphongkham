@@ -1,7 +1,7 @@
 /** The filter row above the table: search, processing, audience, service, lifecycle and "not approved". */
 import { useEffect, useState } from "react";
 
-import { AUDIENCE_LABEL, LIFECYCLE_LABEL, PROCESSING_LABEL } from "../logic";
+import { APPROVAL_STEP, AUDIENCE_LABEL, LIFECYCLE_LABEL, PROCESSING_LABEL } from "../logic";
 import { ui } from "../sdk";
 import type { Service } from "../types";
 import { type Filters, NO_FILTERS, hasFilters } from "./sources-logic";
@@ -72,15 +72,17 @@ export function SourceFilters({
         options={optionsOf("Mọi hiệu lực", LIFECYCLE_LABEL)}
         onChange={(event) => set({ lifecycle: event.target.value })}
       />
-      <label className="flex min-h-11 items-center gap-2 text-small text-ink sm:min-h-0">
-        <input
-          type="checkbox"
-          checked={filters.unapproved}
-          onChange={(event) => set({ unapproved: event.target.checked })}
-          className="size-5 accent-brand-500 sm:size-4"
-        />
-        Chưa duyệt
-      </label>
+      {APPROVAL_STEP && (
+        <label className="flex min-h-11 items-center gap-2 text-small text-ink sm:min-h-0">
+          <input
+            type="checkbox"
+            checked={filters.unapproved}
+            onChange={(event) => set({ unapproved: event.target.checked })}
+            className="size-5 accent-brand-500 sm:size-4"
+          />
+          Chưa duyệt
+        </label>
+      )}
       {hasFilters(filters) && (
         <div className="sm:col-span-2 lg:col-span-1">
           <ui.Button variant="ghost" onClick={() => onChange(NO_FILTERS)}>

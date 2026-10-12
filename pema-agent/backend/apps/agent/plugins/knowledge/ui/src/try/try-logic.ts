@@ -7,7 +7,7 @@ export const CHANNEL_OPTIONS: readonly { value: SearchDebugQuery["channel"]; lab
 ];
 
 export const PATIENT_CHANNEL_HINT =
-  "Như kênh bệnh nhân: nguồn nội bộ và nguồn chưa duyệt (hoặc hết hiệu lực vào ngày hỏi) bị ẩn, đúng như agent thật.";
+  "Như kênh bệnh nhân: nguồn nội bộ và nguồn hết hiệu lực vào ngày hỏi bị ẩn, đúng như agent thật.";
 
 /** The id of the source a chunk belongs to: chunk ids look like `<sourceId>-c<n>`; null when it does not. */
 export function sourceIdOf(chunkId: string): string | null {

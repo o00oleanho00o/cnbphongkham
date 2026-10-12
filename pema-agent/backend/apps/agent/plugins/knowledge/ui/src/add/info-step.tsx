@@ -1,7 +1,7 @@
 /** Step 2 "Thông tin": one editable block per file, and a bar that sets one thing for all of them. */
 import { useState } from "react";
 
-import { AUDIENCE_HINT, AUDIENCE_LABEL } from "../logic";
+import { APPROVAL_STEP, AUDIENCE_HINT, AUDIENCE_LABEL } from "../logic";
 import { ConfirmDialog, Section } from "../parts";
 import { ui } from "../sdk";
 import type { Audience, PreviewItem, Service, Source } from "../types";
@@ -118,7 +118,7 @@ function DraftRow({ entry, flow }: { entry: Entry; flow: AddFlow }) {
             <ui.Input type="date" value={draft.to} onChange={(event) => set({ to: event.target.value })} />
           </ui.Field>
         </div>
-        <ApprovedBox checked={draft.approved} onChange={(approved) => set({ approved })} />
+        {APPROVAL_STEP && <ApprovedBox checked={draft.approved} onChange={(approved) => set({ approved })} />}
         <div className="space-y-1.5">
           <p className="text-label font-semibold text-ink-soft">Dịch vụ liên quan</p>
           <ServicePicker services={flow.lookups.services} value={draft.services} onChange={(services) => set({ services })} />
@@ -169,6 +169,7 @@ function ApplyAll({ flow, keys }: { flow: AddFlow; keys: string[] }) {
             onChange={(event) => setBulk({ ...bulk, audience: audienceFromValue(event.target.value) })}
           />
         </ui.Field>
+        {APPROVAL_STEP && (
         <ui.Field label="Đã duyệt">
           <ui.Select
             value={bulk.approved}
@@ -180,6 +181,7 @@ function ApplyAll({ flow, keys }: { flow: AddFlow; keys: string[] }) {
             onChange={(event) => setBulk({ ...bulk, approved: approvedFromValue(event.target.value) })}
           />
         </ui.Field>
+        )}
         <ui.Field label="Hiệu lực từ">
           <ui.Input type="date" value={bulk.from} onChange={(event) => setBulk({ ...bulk, from: event.target.value })} />
         </ui.Field>
@@ -254,7 +256,7 @@ export function InfoStep({ flow }: { flow: AddFlow }) {
     <div className="space-y-4">
       {flow.lookups.failed && <ui.Notice tone="warning">Không tải được danh sách dịch vụ hoặc nguồn đang dùng; các ô này tạm trống.</ui.Notice>}
       <ui.Notice tone="info">
-        Tệp có phần đầu YAML được điền sẵn theo đó. Tệp không có YAML bắt đầu ở Nội bộ và chưa duyệt, để không bệnh nhân nào thấy khi chưa ai xem lại.
+        Tệp có phần đầu YAML được điền sẵn theo đó. Tệp không có YAML bắt đầu ở Nội bộ (chỉ nhân viên thấy); đổi sang Bệnh nhân nếu cần. Nạp xong là agent dùng ngay.
       </ui.Notice>
       {usable.length > 1 && <ApplyAll flow={flow} keys={usable.map((entry) => entry.item.key)} />}
       {usable.map((entry) => (

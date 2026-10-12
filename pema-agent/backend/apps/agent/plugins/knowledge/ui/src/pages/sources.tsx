@@ -28,6 +28,7 @@ import { useSourceList } from "../sources/use-source-list";
 import type { Service } from "../types";
 import { SourceDetail } from "./source-detail";
 import { useStoreNav } from "./store";
+import { APPROVAL_STEP } from "../logic";
 
 const NOTICE_MS = 5000;
 
@@ -173,7 +174,7 @@ export function SourcesPage() {
                 {text}
               </ui.Notice>
             ))}
-            {list.summary.unapproved > 0 && (
+            {APPROVAL_STEP && list.summary.unapproved > 0 && (
               <ui.Button
                 variant="secondary"
                 aria-pressed={filters.unapproved}

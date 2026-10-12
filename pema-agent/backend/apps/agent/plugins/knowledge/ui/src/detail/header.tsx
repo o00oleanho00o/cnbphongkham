@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { knowledge } from "../client";
 import {
+  APPROVAL_STEP,
   AUDIENCE_HINT,
   AUDIENCE_LABEL,
   LIFECYCLE_LABEL,
@@ -96,7 +97,9 @@ export function SourceHeader({
         <ui.Badge tone={PROCESSING_TONE[source.processing]}>{PROCESSING_LABEL[source.processing]}</ui.Badge>
         <ui.Badge tone={LIFECYCLE_TONE[source.lifecycle]}>{LIFECYCLE_LABEL[source.lifecycle]}</ui.Badge>
         <ui.Badge tone={source.audience === "patient" ? "info" : "neutral"}>{AUDIENCE_LABEL[source.audience]}</ui.Badge>
-        <ui.Badge tone={source.approved ? "success" : "warning"}>{source.approved ? "Đã duyệt" : "Chưa duyệt"}</ui.Badge>
+        {APPROVAL_STEP && (
+          <ui.Badge tone={source.approved ? "success" : "warning"}>{source.approved ? "Đã duyệt" : "Chưa duyệt"}</ui.Badge>
+        )}
       </div>
       {isWorking(source) && (
         <div className="max-w-md space-y-1">
@@ -111,11 +114,12 @@ export function SourceHeader({
         <ui.Button variant="secondary" busy={busy === "reindex"} onClick={() => change("reindex", () => knowledge.reindex(source.id))}>
           Nạp lại
         </ui.Button>
-        {source.approved ? (
+        {APPROVAL_STEP && source.approved && (
           <ui.Button variant="secondary" busy={busy === "approve"} onClick={() => change("approve", () => knowledge.unapprove(source.id))}>
             Bỏ duyệt
           </ui.Button>
-        ) : (
+        )}
+        {APPROVAL_STEP && !source.approved && (
           <ui.Button busy={busy === "approve"} onClick={() => change("approve", () => knowledge.approve(source.id))}>
             Duyệt
           </ui.Button>
@@ -238,7 +242,7 @@ function Facts({ source }: { source: Source }) {
     ["Mã tài liệu", source.doc_code ?? "Chưa có"],
     ["Phiên bản", source.version ?? "Chưa đặt"],
     ["Hiệu lực", periodText(source.effective_from, source.effective_to)],
-    ["Duyệt", approvedBy],
+    ...(APPROVAL_STEP ? [["Duyệt", approvedBy] satisfies [string, string]] : []),
     ["Số đoạn", String(source.chunk_count)],
   ];
   return (

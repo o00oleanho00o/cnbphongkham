@@ -13,6 +13,7 @@ import {
   UpdatedCell,
 } from "./source-cells";
 import { allSelected } from "./sources-logic";
+import { APPROVAL_STEP } from "../logic";
 
 interface Props {
   items: readonly Source[];
@@ -23,7 +24,7 @@ interface Props {
   onOpen: (id: string) => void;
 }
 
-const HEADERS = ["Tên", "Loại", "Dịch vụ", "Đối tượng", "Trạng thái xử lý", "Hiệu lực", "Duyệt", "Đoạn", "Cập nhật"];
+const HEADERS = ["Tên", "Loại", "Dịch vụ", "Đối tượng", "Trạng thái xử lý", "Hiệu lực", ...(APPROVAL_STEP ? ["Duyệt"] : []), "Đoạn", "Cập nhật"];
 
 function PickBox({ checked, label, onChange }: { checked: boolean; label: string; onChange: () => void }) {
   return (
@@ -95,9 +96,11 @@ export function SourceTable({ items, selected, serviceNames, onToggle, onToggleA
                 <td className="px-3 py-3">
                   <LifecycleCell source={source} />
                 </td>
-                <td className="px-3 py-3">
-                  <ApprovalCell source={source} />
-                </td>
+                {APPROVAL_STEP && (
+                  <td className="px-3 py-3">
+                    <ApprovalCell source={source} />
+                  </td>
+                )}
                 <td className="px-3 py-3 text-ink">{source.chunk_count}</td>
                 <td className="px-3 py-3">
                   <UpdatedCell source={source} />
@@ -133,9 +136,11 @@ export function SourceTable({ items, selected, serviceNames, onToggle, onToggleA
               <Labelled label="Hiệu lực">
                 <LifecycleCell source={source} />
               </Labelled>
-              <Labelled label="Duyệt">
-                <ApprovalCell source={source} />
-              </Labelled>
+              {APPROVAL_STEP && (
+                <Labelled label="Duyệt">
+                  <ApprovalCell source={source} />
+                </Labelled>
+              )}
             </div>
             <Labelled label="Dịch vụ">
               <ServicesCell source={source} names={serviceNames} />

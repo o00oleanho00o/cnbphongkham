@@ -216,6 +216,12 @@ Cho buổi demo gọi vốn tối thiểu cần U0 + U1 + phần Kiểm tra kế
 
 ## 10. Quyết định của user (2026-10-12)
 
+> **Cập nhật 2026-10-12 (user): tạm ẩn và bỏ qua bước duyệt.** Có dữ liệu là agent lấy ra dùng ngay khi nguồn sẵn sàng.
+> UI ẩn cột/lọc/nút "Duyệt" và cài đặt "Kênh bệnh nhân chỉ thấy nguồn đã duyệt" bằng cờ `APPROVAL_STEP = false`
+> (`ui/src/logic.ts`); mô hình dữ liệu vẫn giữ `approved` và nguồn mới luôn `approved = true`. Backend (bước 1 trở đi)
+> **không lọc theo `approved`**. Lọc theo đối tượng (Nội bộ / Bệnh nhân), hiệu lực và tenant vẫn giữ. Muốn bật lại: đổi cờ
+> thành `true` và bật lại bộ lọc ở backend. Các chỗ nói "duyệt" ở mục 3, 6, 7 dưới đây là thiết kế khi bật lại.
+
 1. Tên tab: **"Kho tri thức"** (không phải "Tri thức"/"Hiểu biết").
 2. **Tab riêng cấp 1** trong "Điều khiển agent", qua `Contribution.section`. Lý do user: RAG là một plugin, Zalo là một plugin
    khác; plugin chỉ là giao diện cho người dùng, kho tri thức không nằm lẫn trong trang Plugins.
