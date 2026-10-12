@@ -170,7 +170,9 @@ async def run_turn(
     limits = policy or LoopPolicy()
     guards = hooks or HookSet()
     executor = limits.executor(tools, guards)
-    ctx = ToolContext(session_id=session_id, tenant_id=tenant_id, user_id=user_id, channel=channel)
+    ctx = ToolContext(
+        session_id=session_id, tenant_id=tenant_id, user_id=user_id, channel=channel, now=started_at
+    )
     schemas = tools.schemas()
     new_messages: list[Message] = []
     events: list[TraceEvent] = []

@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Final
 
 from pydantic import BaseModel, Field, JsonValue
@@ -24,6 +25,9 @@ class ToolContext:
     """The person the session talks to, set by the caller; a tool never takes it from the model."""
     channel: str | None = None
     """The channel the turn came in on (``http``, ``cli``, a plugin's channel), set by the caller."""
+    now: datetime | None = None
+    """When the turn started (timezone-aware), from the turn's clock: the date a question is asked on, so a
+    tool picks the prices and rules in force that day. A replay or a test fixes it with its own clock."""
 
 
 class ToolOutput(BaseModel):

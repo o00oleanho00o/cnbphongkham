@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import pytest
 from pydantic import BaseModel
 
@@ -22,6 +24,8 @@ from agentcore import (
     run_turn,
 )
 from agentcore.harness.model.scripted import ScriptedModel, calls, reply, tool_call
+
+ASKED_ON = datetime(2026, 9, 15, 9, 30, tzinfo=UTC)
 
 
 def test_message_text_joins_text_blocks_only() -> None:
@@ -126,7 +130,7 @@ async def test_a_turn_is_stored_under_its_tenant() -> None:
     assert await store.load("default", "s1") == []
 
 
-async def test_the_tool_context_carries_the_session_and_tenant() -> None:
+async def test_the_tool_context_carries_the_session_tenant_and_turn_time() -> None:
     seen: list[ToolContext] = []
 
     async def capture(args: NoArgs, ctx: ToolContext) -> ToolOutput:
@@ -142,9 +146,10 @@ async def test_the_tool_context_carries_the_session_and_tenant() -> None:
         tools=ToolRegistry([tool]),
         store=InMemorySessionStore(),
         tenant_id="clinic-b",
+        clock=lambda: ASKED_ON,
     )
 
-    assert seen == [ToolContext(session_id="s9", tenant_id="clinic-b")]
+    assert seen == [ToolContext(session_id="s9", tenant_id="clinic-b", now=ASKED_ON)]
 
 
 async def test_an_error_reported_by_the_tool_itself_is_kept() -> None:
