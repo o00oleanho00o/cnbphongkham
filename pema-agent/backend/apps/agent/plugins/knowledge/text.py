@@ -93,6 +93,17 @@ def content_hash(text: str) -> str:
     return hashlib.sha256(text.strip().encode("utf-8")).hexdigest()
 
 
+def embed_text_of(title: str, path: str, body: str) -> str:
+    """What a chunk is embedded as: its document's title, its headings and its text (the SQL of
+    migrations/0002_vectors.sql builds the same string for chunks stored before it)."""
+    return f"{title}\n{path}\n\n{body}"
+
+
+def text_hash(text: str) -> str:
+    """The key of a vector. Unlike ``content_hash`` it does not strip: the migration's SQL does not either."""
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
 # -- the YAML head -----------------------------------------------------------------------------------------
 
 
