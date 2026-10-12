@@ -862,11 +862,14 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   - Cài đặt Embedding ở Kho tri thức đã thật: khóa API lưu mã hóa (record riêng, không nằm trong JSON cài đặt),
     "Kiểm tra kết nối", "Nhúng lại toàn bộ", dải cảnh báo theo trạng thái job. Mặc định điền sẵn Beeknoee
     `qwen/qwen3-embedding-8b` 1024 chiều.
-  - Đo: `backend/apps/agent/scripts/kb_bench.py` (30 câu, bộ A dùng từ của tài liệu, bộ B nói khác chữ). Từ khóa:
-    A top3 15/15, B top3 9/15. Số vector/hybrid cần `BEEKNOEE_API_KEY` trong môi trường chạy script.
+  - Đo (`scripts/kb_bench.py` + route "Thử tìm" của agent thật, 30 câu: A dùng từ của tài liệu, B nói khác chữ):
+    top3 từ khóa Postgres 13/15 và 7/15, chỉ vector 15/15 và 15/15, gộp RRF 15/15 và 12/15. Vector đã cứu được
+    câu nói khác chữ; **RRF 1:1 kém chỉ-vector** (từ khóa Postgres kéo tài liệu nội bộ lên đầu), xem mục 12 của
+    plan: đề xuất vector-first (cần chủ hệ thống duyệt vì đổi D7). Nhúng câu hỏi trễ 2 s (tối đa 5,8 s), 4/30 câu
+    quá 6 s phải rơi về từ khóa; cân nhắc `vector_timeout_s` ~10.
   - Chạy thật: `docker compose up -d --build` ở thư mục gốc đã chạy migration 0002 (209 đoạn có `embed_hash`).
-    Việc còn lại: nhập khóa Beeknoee ở Kho tri thức → Cài đặt → Embedding, chờ dải "Đang nhúng" hết, rồi chạy
-    bench vector/hybrid và điền mục 10 của plan. Che SĐT/CCCD trước khi gửi câu hỏi đi nhúng vẫn tắt (demo).
+    Khóa Beeknoee đã nhập ở Kho tri thức → Cài đặt → Embedding, 209 đoạn đã có vector. Che SĐT/CCCD trước khi
+    gửi câu hỏi đi nhúng vẫn tắt (demo).
 - **RAG bước 0 + bước 1 đã code (2026-10-12, nhánh `feat/knowledge-ui`).**
   - Lõi: `ToolOutput.detail` vào trace (`detail.tool`), `ToolContext.now`, `ToolSpec.network` + `[agent]
     allow_internet` (clinic: false), `[migrations]` + `max_body_kb` trong `plugin.toml`, `agent db migrate-plugins`

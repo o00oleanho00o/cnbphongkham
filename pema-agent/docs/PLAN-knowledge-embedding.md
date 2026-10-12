@@ -777,20 +777,20 @@ wrong code (record why in section 12), but must **not** drop hard questions.
 
 | Mode | Set | top1 | top3 | top6 | MRR | median latency | threshold |
 |---|---|---|---|---|---|---|---|
-| keyword | A | 9/15 | 15/15 | 15/15 | 0.789 | 16 ms | – |
-| keyword | B | 7/15 | 9/15 | 10/15 | 0.544 | 16 ms | – |
-| vector | A | | | | | | |
-| vector | B | | | | | | |
-| hybrid | A | | | | | | |
-| hybrid | B | | | | | | |
+| keyword (in-memory BM25, bench script) | A | 9/15 | 15/15 | 15/15 | 0.789 | 16 ms | – |
+| keyword (in-memory BM25, bench script) | B | 7/15 | 9/15 | 10/15 | 0.544 | 16 ms | – |
+| keyword (Postgres `ts_rank_cd`, live route) | A | 10/15 | 13/15 | 14/15 | 0.789 | 4 ms | – |
+| keyword (Postgres `ts_rank_cd`, live route) | B | 5/15 | 7/15 | 9/15 | 0.444 | 4 ms | – |
+| vector (live route) | A | 13/15 | 15/15 | 15/15 | 0.933 | ~2.1 s | 0.35 |
+| vector (live route) | B | 15/15 | 15/15 | 15/15 | 1.000 | ~2.4 s | 0.35 |
+| hybrid RRF 1:1 (live route) | A | 11/15 | 15/15 | 15/15 | 0.856 | ~2.1 s | 0.35 |
+| hybrid RRF 1:1 (live route) | B | 11/15 | 12/15 | 13/15 | 0.800 | ~2.4 s | 0.35 |
 
----
-
-Keyword baseline measured 2026-10-12 on the 22 Pema documents (209 chunks) with `scripts/kb_bench.py --modes
-keyword`. Set B misses (top3): "bắn laser có rát không", "quẹt thẻ được không", "đi công tác 2 tháng muốn tạm dừng
-liệu trình", "bên mình có mấy cơ sở", "cho xin số tổng đài", "không muốn bị đăng ảnh mặt lên mạng". The vector and
-hybrid rows need `BEEKNOEE_API_KEY` in the environment of the machine that runs the script (not set on the build
-machine yet).
+How these were measured (2026-10-12, 22 Pema documents, 209 chunks, all 209 vectors in space `0bbca84e7f4e2b3e`,
+embedded in 76 s): the first two rows with `scripts/kb_bench.py --modes keyword` (in-memory BM25); the others
+through the live `POST /search/debug` of the running agent (the key stays server side; the script never saw it:
+`BEEKNOEE_API_KEY` is not set on the build machine), whose keyword stage is Postgres `ts_rank_cd`. Latency of
+vector/hybrid is the first pass, i.e. the embedding call of the question (cached afterwards).
 
 ## 11. Risks and later work
 
@@ -923,3 +923,21 @@ feat/knowledge-ui. Follow pema-agent/docs/PLAN-knowledge-embedding.md exactly.
 
 (Write here when the plan is wrong or missing something, or when you had to choose differently. Each entry:
 date, step, problem, what you did.)
+
+- 2026-10-12, step 5/6 (builder: tech lead). Findings, none of them changes a decision of section 2 yet:
+  1. Vectors work: vector alone finds the right document in the top 3 for 30/30 questions (MRR 0.967), against
+     20/30 for Postgres keyword search. Set B (paraphrases) goes from 7/15 to 15/15 at top 3.
+  2. **RRF 1:1 is worse than vector alone** (27/30 top 3, MRR 0.828; set B 12/15). The keyword list on Postgres
+     (`ts_rank_cd`, any word may match) puts internal documents (D20, D21) first for short questions, and RRF
+     lets them outrank the right vector hits. Weighted RRF tried offline on the 20-candidate lists the route
+     returns: vector weight 2 to 5 gives 28/30 top 3 and 30/30 top 6 (MRR 0.85–0.87), still below vector alone.
+     The Definition of Done (hybrid ≥ keyword on A, hybrid > keyword on B) is met, but the best retrieval for this
+     corpus today is vector-first. Exact names and codes (NAM10, PROMO-THU2026, Cicaderm, Heliocare…) are found
+     by the vector branch too (7 of 8 first), so there is no sign yet that keyword search is needed for them.
+     Proposal (needs the owner's OK, it changes D7): rank by vector and use the keyword list only to add chunks
+     when the vector branch is empty or only below a margin, or weight the vector list ×5. Re-measure after.
+  3. **Latency**: embedding a question takes 2.0 s median and up to 5.8 s; 4 of 30 first calls went over the 6 s
+     wait and fell back to keywords (as designed). Their answers are then much weaker. Options: raise
+     `vector_timeout_s` (plugin setting) to about 10, or start embedding the question before the model asks.
+  4. The Postgres keyword ranking is weaker than the in-memory BM25 (A top 3 13/15 against 15/15): keep it in mind
+     when reading the old 14/15.
