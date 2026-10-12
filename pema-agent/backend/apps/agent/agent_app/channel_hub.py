@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
+import random
 import time
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
@@ -55,6 +56,20 @@ class DeliverySettings:
     typing_every_s: float = 4.0
     """How often a channel that can show typing is told to, while a conversation's messages are answered."""
     typing_max_s: float = 300.0
+    reply_delay_min_s: float = 0.0
+    reply_delay_max_s: float = 0.0
+    """A random pause between these two bounds before each part of a reply is sent, so the account does not
+    answer the moment a message arrives (a personal account that always answers at once can be banned).
+    0 and 0 send at once; ``PACED_DELIVERY`` is what the service runs with."""
+
+    def __post_init__(self) -> None:
+        if self.reply_delay_min_s < 0 or self.reply_delay_max_s < self.reply_delay_min_s:
+            raise ValueError("invalid reply delay: need 0 <= min <= max")
+
+
+PACED_DELIVERY: Final = DeliverySettings(reply_delay_min_s=10.0, reply_delay_max_s=20.0, max_concurrent=16)
+"""Settings of the running service: a reply waits 10 to 20 s, and more replies may wait at the same time
+(each one holds a slot while it waits)."""
 
 
 class ChannelHub:
@@ -67,6 +82,8 @@ class ChannelHub:
         settings: DeliverySettings | None = None,
         failure_reply: str = "",
         clock: Callable[[], float] = time.monotonic,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        rand: Callable[[float, float], float] = random.uniform,
     ) -> None:
         self._dispatcher = dispatcher
         self._ingress = dispatcher.ingress
@@ -75,6 +92,8 @@ class ChannelHub:
         self.settings = settings or DeliverySettings()
         self._failure_reply = failure_reply.strip()
         self._clock = clock
+        self._sleep = sleep
+        self._rand = rand
         self._running: dict[str, ChannelAdapter] = {}
         self._errors: dict[str, str] = {}
         self._retry_at: dict[str, float] = {}
@@ -204,6 +223,10 @@ class ChannelHub:
             await self._ingress.finish_delivery(record.id, "skipped", "empty reply")
             return True
         for index in range(record.delivered_parts, len(parts)):
+            pause = self._rand(settings.reply_delay_min_s, settings.reply_delay_max_s)
+            if pause > 0:
+                # Each part that goes out renews the claim, so the waits never add up to ``stale_s``.
+                await self._sleep(pause)
             message = OutboundMessage(
                 conversation_id=record.conversation_id,
                 text=parts[index],

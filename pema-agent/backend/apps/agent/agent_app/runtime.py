@@ -9,7 +9,7 @@ from typing import Final, Protocol
 
 import agent_app
 from agent_app.assembly import Agent, build_agent
-from agent_app.channel_hub import ChannelHub, DeliverySettings
+from agent_app.channel_hub import PACED_DELIVERY, ChannelHub, DeliverySettings
 from agent_app.dispatcher import Dispatcher, DispatchSettings
 from agent_app.ingress import (
     ConversationStore,
@@ -110,7 +110,7 @@ class Runtime:
             dispatcher,
             channels=lambda: self.plugins.contributions().channels,
             refresh=self.plugin_manager.refresh,
-            settings=settings,
+            settings=settings or PACED_DELIVERY,
             failure_reply=self.agent.profile.agent.failure_reply,
         )
 

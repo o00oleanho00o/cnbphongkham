@@ -50,7 +50,7 @@ class AccountConfig(_Model):
     group_require_mention: bool = True
     respond_to_groups: bool = True
     group_passive_listen: bool = True
-    auto_react_enabled: bool = True
+    auto_react_enabled: bool = False
     auto_react_icon: str = "heart"
     typing_indicator_enabled: bool = True
     disabled_tools: list[ToolName] = Field(

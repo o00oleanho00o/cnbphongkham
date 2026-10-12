@@ -61,7 +61,7 @@ export function formOf(account: Account | null): AccountForm {
     groupRequireMention: account?.group_require_mention ?? true,
     groupPassiveListen: account?.group_passive_listen ?? true,
     typingIndicator: account?.typing_indicator_enabled ?? true,
-    autoReact: account?.auto_react_enabled ?? true,
+    autoReact: account?.auto_react_enabled ?? false,
     autoReactIcon: account?.auto_react_icon ?? "heart",
     autoAcceptFriends: account?.auto_accept_friends ?? false,
     autoAcceptDelay: account?.auto_accept_friend_delay_minutes ?? 1,

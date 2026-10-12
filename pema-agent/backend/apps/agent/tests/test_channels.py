@@ -6,12 +6,13 @@ from __future__ import annotations
 import asyncio
 import textwrap
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 
 import httpx
 import pytest
 
-from agent_app.channel_hub import ChannelHub, DeliverySettings
+from agent_app.channel_hub import PACED_DELIVERY, ChannelHub, DeliverySettings
 from agent_app.dispatcher import Dispatcher, DispatchSettings
 from agent_app.gateway import GatewaySettings, create_app
 from agent_app.ingress import DeliveryStatus, IngressRecord
@@ -264,6 +265,61 @@ async def test_a_failed_turn_sends_the_agents_failure_reply_when_it_has_one(tmp_
     assert [m.text for m in channel.sent] == ["Try again later."]
     assert (record.status, record.error_kind) == ("failed", "auth")
     await dispatcher.close()
+
+
+async def test_a_reply_waits_a_random_pause_before_each_part_it_sends(tmp_path: Path) -> None:
+    channel = FakeChannel(max_chars=5)
+    dispatcher = _runtime(tmp_path).dispatcher(DispatchSettings(poll_s=0.01))
+    waits: list[float] = []
+    bounds: list[tuple[float, float]] = []
+
+    async def sleep(seconds: float) -> None:
+        waits.append(seconds)
+
+    def rand(low: float, high: float) -> float:
+        bounds.append((low, high))
+        return 12.5
+
+    hub = ChannelHub(
+        dispatcher,
+        channels=lambda: [channel],
+        settings=replace(FAST, reply_delay_min_s=10.0, reply_delay_max_s=20.0),
+        sleep=sleep,
+        rand=rand,
+    )
+    await hub.sync()
+
+    await channel.hear("m1", "alpha beta")
+    record = await _until(hub, dispatcher, 1, "sent")
+
+    assert record.delivered_parts == len(channel.sent) >= 2
+    assert waits == [12.5] * len(channel.sent)
+    assert set(bounds) == {(10.0, 20.0)}
+    await dispatcher.close()
+
+
+async def test_a_reply_goes_out_at_once_when_no_delay_is_set(tmp_path: Path) -> None:
+    channel = FakeChannel()
+    dispatcher = _runtime(tmp_path).dispatcher(DispatchSettings(poll_s=0.01))
+
+    async def never(seconds: float) -> None:
+        raise AssertionError(f"waited {seconds} s")
+
+    hub = ChannelHub(dispatcher, channels=lambda: [channel], settings=FAST, sleep=never)
+    await hub.sync()
+
+    await channel.hear("m1", "hi")
+    await _until(hub, dispatcher, 1, "sent")
+    await dispatcher.close()
+
+
+def test_the_service_paces_replies_between_10_and_20_seconds() -> None:
+    assert (PACED_DELIVERY.reply_delay_min_s, PACED_DELIVERY.reply_delay_max_s) == (10.0, 20.0)
+    assert PACED_DELIVERY.reply_delay_max_s < PACED_DELIVERY.stale_s
+    with pytest.raises(ValueError, match="invalid reply delay"):
+        DeliverySettings(reply_delay_min_s=5.0, reply_delay_max_s=1.0)
+    with pytest.raises(ValueError, match="invalid reply delay"):
+        DeliverySettings(reply_delay_min_s=-1.0)
 
 
 async def test_a_channel_that_cannot_start_is_reported_and_tried_again(tmp_path: Path) -> None:

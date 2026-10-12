@@ -358,7 +358,7 @@ async def test_every_message_is_marked_delivered_and_the_answered_one_seen_react
     tmp_path: Path, bridge: FakeBridge
 ) -> None:
     setup = Setup(_runtime(tmp_path, bridge))
-    await setup.personal(auto_react_icon="like")
+    await setup.personal(auto_react_enabled=True, auto_react_icon="like")
     await setup.event("nick", {"type": "credential_updated", "credential": CREDENTIAL})
     await setup.hub.sync()
 
