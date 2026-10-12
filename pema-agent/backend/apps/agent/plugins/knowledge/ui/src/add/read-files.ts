@@ -34,17 +34,22 @@ function dataUrlOf(file: File): Promise<string> {
   });
 }
 
+/** PDF, Word and Excel are sent as base64 only once the server reads them; until then it answers by name. */
+const SERVER_READS_BINARY = false;
+
 export function readerOfFile({ key, file }: Picked): Reader {
   const isText = TEXT_EXTENSIONS.includes(extensionOf(file.name));
+  const sendsBytes = isText || SERVER_READS_BINARY;
   const base = { key, name: file.name, kind: "file" as const, size: file.size };
   return {
     key,
-    weight: file.size,
+    weight: sendsBytes ? file.size : 0,
     read: async () => {
       if (isText) {
         const text = await file.text();
         return { input: { ...base, text }, meta: readFrontmatter(text).meta };
       }
+      if (!sendsBytes) return { input: base, meta: null };
       return { input: { ...base, base64: base64FromDataUrl(await dataUrlOf(file)) }, meta: null };
     },
   };

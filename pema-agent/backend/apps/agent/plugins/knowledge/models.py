@@ -172,11 +172,14 @@ class _Body(BaseModel):
 
 
 class PreviewInput(_Body):
-    key: str = Field(min_length=1, max_length=200)
-    name: str = Field(min_length=1, max_length=300)
+    """One file or pasted text. Its length is checked per item (an error on that item, not on the batch);
+    the gateway's body limit bounds the call."""
+
+    key: str = Field(min_length=1, max_length=2000)
+    name: str = Field(min_length=1, max_length=1000)
     kind: Literal["file", "text"]
     size: int = Field(ge=0)
-    text: str | None = Field(default=None, max_length=2_000_000)
+    text: str | None = None
     base64: str | None = Field(default=None, max_length=40_000_000)
 
 
@@ -185,7 +188,7 @@ class PreviewBody(_Body):
 
 
 class ConfirmItem(_Body):
-    key: str = Field(min_length=1, max_length=200)
+    key: str = Field(min_length=1, max_length=2000)
     title: str = Field(min_length=1, max_length=300)
     doc_code: str | None = Field(default=None, max_length=120)
     audience: Audience = "patient"

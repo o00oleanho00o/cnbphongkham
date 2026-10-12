@@ -45,6 +45,7 @@ class KnowledgeStore(Protocol):
     async def find(self, query: SourceFilter) -> tuple[list[Source], int]: ...
     async def all_sources(self) -> list[Source]: ...
     async def by_code(self, doc_code: str) -> Source | None: ...
+    async def in_force(self, key: str, as_of: date) -> Source | None: ...
     async def by_hash(self, content_hash: str) -> Source | None: ...
     async def chunks(self, source_id: str, q: str, page: int, page_size: int) -> tuple[list[Chunk], int]: ...
     async def update_chunk(self, chunk_id: str, services: list[str] | None, kind: str | None) -> bool: ...
@@ -123,6 +124,13 @@ class InMemoryKnowledgeStore:
     async def by_code(self, doc_code: str) -> Source | None:
         found = [s for s in self._sources.values() if s.doc_code == doc_code and s.lifecycle == "active"]
         return replace(found[-1]) if found else None
+
+    async def in_force(self, key: str, as_of: date) -> Source | None:
+        found = [s for s in self._sources.values() if key in (s.doc_code, s.id) and in_use(s, as_of)]
+        latest = max(
+            found, key=lambda s: (s.effective_from or date.min, s.created_at or datetime.min), default=None
+        )
+        return None if latest is None else replace(latest)
 
     async def by_hash(self, content_hash: str) -> Source | None:
         found = [s for s in self._sources.values() if s.content_hash == content_hash]
@@ -287,6 +295,16 @@ _BY_CODE = text(
     "WHERE tenant_id = :tenant_id AND agent = :agent AND doc_code = :code "
     "AND lifecycle = 'active' ORDER BY created_at DESC LIMIT 1"
 )
+_IN_FORCE = text(
+    "SELECT id, title, doc_code, kind, format, size, services, audience, processing, progress, error, "
+    "lifecycle, version, effective_from, effective_to, approved, approved_by, approved_at, chunk_count, "
+    "note, markdown, content_hash, supersedes, created_by, created_at, updated_at FROM agent_rt.kb_source "
+    "WHERE tenant_id = :tenant_id AND agent = :agent AND (doc_code = :key OR id = :key) "
+    "AND processing = 'ready' AND lifecycle = 'active' "
+    "AND (effective_from IS NULL OR effective_from <= :as_of) "
+    "AND (effective_to IS NULL OR effective_to >= :as_of) "
+    "ORDER BY effective_from DESC NULLS LAST, created_at DESC LIMIT 1"
+)
 _BY_HASH = text(
     "SELECT id, title, doc_code, kind, format, size, services, audience, processing, progress, error, "
     "lifecycle, version, effective_from, effective_to, approved, approved_by, approved_at, chunk_count, "
@@ -407,6 +425,12 @@ class PostgresKnowledgeStore:
     async def by_code(self, doc_code: str) -> Source | None:
         async with self._engine.connect() as conn:
             row = (await conn.execute(_BY_CODE, {**self._scope, "code": doc_code})).mappings().one_or_none()
+        return None if row is None else _source(row)
+
+    async def in_force(self, key: str, as_of: date) -> Source | None:
+        params = {**self._scope, "key": key, "as_of": as_of}
+        async with self._engine.connect() as conn:
+            row = (await conn.execute(_IN_FORCE, params)).mappings().one_or_none()
         return None if row is None else _source(row)
 
     async def by_hash(self, content_hash: str) -> Source | None:

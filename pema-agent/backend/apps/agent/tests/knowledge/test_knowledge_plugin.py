@@ -226,6 +226,84 @@ async def test_the_agent_is_told_how_to_use_the_store(tmp_path: Path) -> None:
     runtime.close()
 
 
+NEXT_PRICES = _doc(
+    "D07",
+    "Bảng giá năm sau",
+    """
+    # Bảng giá
+    ## Điều trị nám
+    Một buổi laser điều trị nám có giá 4.800.000 đồng theo bảng giá mới của phòng khám.
+    """,
+    effective_from="2099-01-01",
+)
+
+
+async def test_a_version_that_starts_later_leaves_the_current_one_in_force_until_then(tmp_path: Path) -> None:
+    runtime = _runtime(tmp_path)
+    async with _client(runtime) as client:
+        await _add(client, {"d07.md": PRICES})
+        await _add(client, {"d07-next.md": NEXT_PRICES})
+        found = (
+            await client.post(
+                f"{BASE}/search/debug", json={"question": "trị nám một buổi giá", "as_of": "2026-10-12"}
+            )
+        ).json()
+        agent = runtime.live.current()
+        tracer = InMemoryTracer()
+        await run_turn(
+            session_id="s1",
+            user_text="Bảng giá trị nám?",
+            prompt=PromptBuilder.fixed("sys"),
+            model=ScriptedModel([calls(tool_call("kb_read", {"doc_code": "D07"})), reply("ok")]),
+            tools=agent.tools,
+            store=InMemorySessionStore(),
+            tracer=tracer,
+            clock=lambda: ASKED,
+        )
+        listing = (await client.get(f"{BASE}/sources")).json()
+
+    final = next(stage for stage in found["stages"] if stage["id"] == "final")
+    assert final["candidates"][0]["source_title"] == "Bảng giá hiện hành"
+    old = next(s for s in listing["items"] if s["title"] == "Bảng giá hiện hành")
+    (trace,) = tracer.traces
+    assert trace.events[1].detail["tool"]["source_id"] == old["id"]
+    assert old["lifecycle"] == "active"
+    assert old["effective_to"] == "2098-12-31"
+    runtime.close()
+
+
+async def test_confirming_the_same_preview_twice_adds_the_source_once(tmp_path: Path) -> None:
+    runtime = _runtime(tmp_path)
+    inputs = [{"key": "b", "name": "d12.md", "kind": "file", "size": len(BOOKING), "text": BOOKING}]
+    async with _client(runtime) as client:
+        preview = (await client.post(f"{BASE}/sources/preview", json={"inputs": inputs})).json()
+        body = {"preview_id": preview["preview_id"], "items": [{"key": "b", "title": "Đặt lịch"}]}
+        first = (await client.post(f"{BASE}/sources/confirm", json=body)).json()
+        again = (await client.post(f"{BASE}/sources/confirm", json=body)).json()
+        listing = (await client.get(f"{BASE}/sources")).json()
+
+    assert again["created"] == first["created"]
+    assert len(listing["items"]) == 1
+    runtime.close()
+
+
+async def test_a_file_too_long_is_refused_alone(tmp_path: Path) -> None:
+    runtime = _runtime(tmp_path)
+    long_text = "x" * 2_000_001
+    inputs = [
+        {"key": "a", "name": "long.txt", "kind": "file", "size": len(long_text), "text": long_text},
+        {"key": "b", "name": "d12.md", "kind": "file", "size": len(BOOKING), "text": BOOKING},
+    ]
+    async with _client(runtime) as client:
+        preview = await client.post(f"{BASE}/sources/preview", json={"inputs": inputs})
+
+    errors = [item["error"] for item in preview.json()["items"]]
+    assert preview.status_code == 200
+    assert errors[0] is not None
+    assert errors[1] is None
+    runtime.close()
+
+
 async def test_its_admin_routes_take_documents_larger_than_the_usual_body_limit(tmp_path: Path) -> None:
     runtime = _runtime(tmp_path)
     big = _doc("BIG", "Tài liệu dài", "# Dài\n\n" + "Nội dung chăm sóc da sau điều trị. " * 4000)

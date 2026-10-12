@@ -35,7 +35,7 @@ from .models import (
     StructureBody,
     as_mapping,
 )
-from .plugin import KnowledgePlugin
+from .plugin import MAX_CHAR_BUDGET, KnowledgePlugin
 from .search import debug_view
 from .text import Audience, Lifecycle, fold, outline, sections, split_head
 
@@ -47,6 +47,8 @@ GapId = Annotated[str, Path(pattern=ID_PATTERN)]
 ChunkId = Annotated[str, Path(pattern=CHUNK_PATTERN)]
 PAGE_SIZE: Final = 30
 CHUNK_PAGE: Final = 20
+# a patch may clear these dates; the other fields are left as they are when sent as null
+NULLABLE: Final = frozenset({"effective_from", "effective_to"})
 KEYWORD_ONLY: Final = "Embedding chưa kết nối: đang tìm bằng từ khóa."
 
 
@@ -144,7 +146,11 @@ def knowledge_routes(plugin: KnowledgePlugin) -> APIRouter:
     @router.patch("/sources/{source_id}")
     async def patch_source(source_id: SourceId, body: SourcePatch) -> dict[str, Any]:
         source = await found(source_id)
-        given = body.model_dump(exclude_unset=True)
+        given = {
+            key: value
+            for key, value in body.model_dump(exclude_unset=True).items()
+            if value is not None or key in NULLABLE
+        }
         changed = replace(source, **given, updated_at=now())
         await store.save(changed)
         await plugin.ingest.event(source_id, "edited", ", ".join(given))
@@ -355,8 +361,10 @@ def _outline(markdown: str) -> list[dict[str, Any]]:
 
 
 def _split(markdown: str, chosen: set[int]) -> tuple[str, str]:
-    """The Markdown without the chosen outline positions (and their text), and those sections on their own."""
-    cut = [section for section in sections(markdown) if section.level > 0 or section.text]
+    """The Markdown without the chosen outline positions (and their text), and those sections on their own.
+    Positions count as ``_outline`` counts them, after the YAML head; the head stays with the kept part."""
+    head = markdown[: len(markdown) - len(split_head(markdown)[1])]
+    cut = [section for section in sections(markdown[len(head) :]) if section.level > 0 or section.text]
     headed = [section for section in cut if section.level > 0]
     picked = {id(section) for index, section in enumerate(headed) if index in chosen}
 
@@ -364,7 +372,7 @@ def _split(markdown: str, chosen: set[int]) -> tuple[str, str]:
         heading = f"{'#' * section.level} {section.title}\n" if section.level > 0 else ""
         return f"{heading}{section.text}".strip()
 
-    kept = "\n\n".join(render(s) for s in cut if id(s) not in picked)
+    kept = head + "\n\n".join(render(s) for s in cut if id(s) not in picked)
     moved = "\n\n".join(render(s) for s in cut if id(s) in picked)
     return kept, moved
 
@@ -402,8 +410,8 @@ def _checked_settings(body: dict[str, Any]) -> dict[str, Any]:
         if "results" in search and not (isinstance(search["results"], int) and 1 <= search["results"] <= 20):
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Số kết quả phải từ 1 đến 20.")
         budget = search.get("char_budget")
-        if budget is not None and not (isinstance(budget, int) and 500 <= budget <= 30_000):
+        if budget is not None and not (isinstance(budget, int) and 500 <= budget <= MAX_CHAR_BUDGET):
             raise HTTPException(
-                status.HTTP_422_UNPROCESSABLE_ENTITY, "Ngân sách ký tự phải từ 500 đến 30000."
+                status.HTTP_422_UNPROCESSABLE_ENTITY, f"Ngân sách ký tự phải từ 500 đến {MAX_CHAR_BUDGET}."
             )
     return body

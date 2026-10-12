@@ -40,7 +40,7 @@ export const RANGES = {
   dimensions: { label: "Số chiều", min: 1, max: 4096, integer: true },
   results: { label: "Số kết quả", min: 1, max: 50, integer: true },
   min_score: { label: "Ngưỡng điểm", min: 0, max: 1, integer: false },
-  char_budget: { label: "Ngân sách ký tự", min: 500, max: 50_000, integer: true },
+  char_budget: { label: "Ngân sách ký tự", min: 500, max: 8_000, integer: true },
 } satisfies Record<string, Range>;
 
 /** The number in a box, or null when it is empty or not a number. */

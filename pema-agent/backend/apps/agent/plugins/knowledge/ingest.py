@@ -13,7 +13,7 @@ import secrets
 import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field, replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, Final
 
 from .models import Chunk, ConfirmItem, Event, PreviewInput, Service, Source, SourceFormat
@@ -39,6 +39,7 @@ NOT_YET: Final = (
     "Bản này đọc được .md và .txt. PDF, Word và Excel sẽ đọc được ở bước sau; tạm thời hãy dán nội dung."
 )
 ADMIN: Final = "Quản trị"
+MAX_TEXT_CHARS: Final = 2_000_000
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,6 +61,8 @@ class Parsed:
 class _Preview:
     expires: float
     items: dict[str, Parsed] = field(default_factory=dict[str, Parsed])
+    # what each confirmed key became: confirming it again (a retry, a double click) adds nothing
+    added: dict[str, dict[str, Any]] = field(default_factory=dict[str, dict[str, Any]])
 
 
 def new_id(prefix: str) -> str:
@@ -72,10 +75,12 @@ class Ingest:
         store: KnowledgeStore,
         *,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+        today: Callable[[], date] | None = None,
         monotonic: Callable[[], float] = time.monotonic,
     ) -> None:
         self._store = store
         self._clock = clock
+        self._today = today or (lambda: clock().date())
         self._monotonic = monotonic
         self._previews: dict[str, _Preview] = {}
 
@@ -97,12 +102,17 @@ class Ingest:
         created: list[dict[str, Any]] = []
         skipped: list[dict[str, str]] = []
         for item in items:
+            if item.key in preview.added:
+                created.append(preview.added[item.key])
+                continue
             parsed = preview.items.get(item.key)
             reason = await self._refusal(parsed, item, benchmark=benchmark)
             if reason is not None or parsed is None:
                 skipped.append({"key": item.key, "reason": reason or "Không có trong bản xem trước."})
                 continue
-            created.append((await self._add(parsed, item, services)).shown())
+            shown = (await self._add(parsed, item, services)).shown()
+            preview.added[item.key] = shown
+            created.append(shown)
         return {"batch_id": new_id("batch"), "created": created, "skipped": skipped}
 
     async def rechunk(
@@ -140,6 +150,10 @@ class Ingest:
             return self._failed(item, source_format, NOT_YET)
         if item.text is None:
             return self._failed(item, source_format, "Không đọc được nội dung tệp.")
+        if len(item.text) > MAX_TEXT_CHARS:
+            return self._failed(
+                item, source_format, f"Tệp dài hơn {MAX_TEXT_CHARS:,} ký tự; hãy tách thành nhiều tệp."
+            )
         head, body = split_head(item.text)
         nodes = outline(body)
         title = head.title or _stem(item.name)
@@ -220,12 +234,8 @@ class Ingest:
             return parsed.error
         if parsed.head.ingest_role == "challenge" and not benchmark:
             return "Tài liệu thử thách chỉ nạp được khi bật chế độ benchmark."
-        if (
-            item.doc_code
-            and item.on_same_code == "skip"
-            and await self._store.by_code(item.doc_code) is not None
-        ):
-            return f"Đã có nguồn mã {item.doc_code}; bỏ qua theo lựa chọn."
+        if item.on_same_code == "skip":
+            return "Bỏ qua theo lựa chọn."
         return None
 
     async def _add(self, parsed: Parsed, item: ConfirmItem, services: Sequence[Service]) -> Source:
@@ -264,9 +274,21 @@ class Ingest:
         await self._store.add_source(source, chunks)
         await self.event(source_id, "uploaded", parsed.name)
         if replaced is not None and item.lifecycle == "active":
-            await self._store.save(replace(replaced, lifecycle="superseded", updated_at=now))
-            await self.event(replaced.id, "replaced", f'Thay bằng "{item.title}"')
+            await self._retire(replaced, item, now)
         return source
+
+    async def _retire(self, old: Source, item: ConfirmItem, now: datetime) -> None:
+        """The old version stops where the new one starts: at once, or (a version that starts later) on the
+        day before it, staying in use until then."""
+        starts = item.effective_from
+        if starts is None or starts <= self._today():
+            await self._store.save(replace(old, lifecycle="superseded", updated_at=now))
+            await self.event(old.id, "replaced", f'Thay bằng "{item.title}"')
+            return
+        last_day = starts - timedelta(days=1)
+        ends = last_day if old.effective_to is None else min(old.effective_to, last_day)
+        await self._store.save(replace(old, effective_to=ends, updated_at=now))
+        await self.event(old.id, "replaced", f'Dùng đến {ends.isoformat()}, sau đó thay bằng "{item.title}"')
 
     async def _replaced(self, item: ConfirmItem) -> Source | None:
         if item.supersedes:

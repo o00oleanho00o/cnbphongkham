@@ -73,6 +73,16 @@ def test_a_document_without_a_head_keeps_all_its_text() -> None:
     assert body == "# Giờ mở cửa\n\nTừ 8h đến 20h."
 
 
+def test_a_trailing_comment_in_the_head_is_not_part_of_the_value() -> None:
+    head, _ = split_head(
+        '---\ndoc_id: BG-01 # bảng giá\ntitle: "Giá # gói"\ningest_role: challenge # thử\n---\n# A'
+    )
+
+    assert head.doc_code == "BG-01"
+    assert head.title == "Giá # gói"
+    assert head.ingest_role == "challenge"
+
+
 def test_chunks_follow_the_headings_and_carry_their_path() -> None:
     _, body = split_head(DOC)
 

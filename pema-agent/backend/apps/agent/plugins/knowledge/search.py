@@ -110,7 +110,8 @@ def tool_text(result: SearchResult) -> str:
         )
     asked = result.as_of.strftime("%d/%m/%Y")
     blocks = [
-        f"[{index}] {hit.doc_code or hit.source_title} · {hit.chunk.path}\n{hit.chunk.body}"
+        f"[{index}] {hit.doc_code or hit.chunk.source_id} · {hit.source_title} · {hit.chunk.path}\n"
+        f"{hit.chunk.body}"
         for index, hit in enumerate(result.final, start=1)
     ]
     return f"Tìm thấy {len(result.final)} đoạn (áp dụng ngày {asked}):\n\n" + "\n\n---\n\n".join(blocks)

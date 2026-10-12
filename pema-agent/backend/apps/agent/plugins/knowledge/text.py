@@ -125,9 +125,10 @@ def _pairs(block: str) -> list[tuple[str, str]]:
 
 
 def _unquote(value: str) -> str:
+    """Quoted text as is; a bare value without its trailing `` # comment`` (as the browser half reads it)."""
     if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
         return value[1:-1]
-    return value
+    return re.sub(r"\s+#.*$", "", value).strip()
 
 
 def _head(values: dict[str, str]) -> Head:

@@ -113,5 +113,9 @@ def test_a_document_is_found_in_its_tenants_store_on_the_day_asked(db_url: str) 
         assert [hit.doc_code for hit in today] == ["D07"]
         assert [hit.doc_code for hit in before] == ["D07-V1"]
         assert elsewhere == []
+        read = await mine.in_force("D07-V1", date(2026, 9, 15))
+        assert read is not None
+        assert read.id == "src-00000000000b"
+        assert await mine.in_force("D07-V1", date(2026, 10, 12)) is None
 
     _run(db_url, work)

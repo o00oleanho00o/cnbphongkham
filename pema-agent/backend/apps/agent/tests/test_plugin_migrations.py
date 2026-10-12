@@ -92,6 +92,20 @@ def test_a_prefix_must_be_lowercase_words_ending_in_an_underscore(tmp_path: Path
     assert "prefix" in found.broken["bad"]
 
 
+def test_the_core_tables_prefix_cannot_be_claimed(tmp_path: Path) -> None:
+    folder = tmp_path / "greedy"
+    folder.mkdir()
+    (folder / "plugin.toml").write_text(
+        'name = "greedy"\n\n[migrations]\nprefix = "agent_"\n', encoding="utf-8"
+    )
+    (folder / "__init__.py").write_text("def register(ctx):\n    pass\n", encoding="utf-8")
+
+    found = discover([("agent", tmp_path)])
+
+    assert "greedy" not in found.plugins
+    assert "reserved" in found.broken["greedy"]
+
+
 def test_a_plugin_has_no_database_when_the_agent_runs_without_one(tmp_path: Path) -> None:
     source = _plugin(tmp_path, {"0001_create.sql": CREATE})
     seen: list[object] = []

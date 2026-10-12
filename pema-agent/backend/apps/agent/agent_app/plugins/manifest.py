@@ -90,6 +90,17 @@ class MigrationsSpec(BaseModel):
         _check_relative(value)
         return value
 
+    @field_validator("prefix")
+    @classmethod
+    def _not_reserved(cls, value: str) -> str:
+        # the runtime role gets full rights on the prefix: `agent_` would open the insert-only trace tables
+        if value in RESERVED_PREFIXES:
+            raise ValueError(f"prefix {value!r} is reserved")
+        return value
+
+
+RESERVED_PREFIXES: Final = frozenset({"agent_", "pg_", "alembic_"})
+
 
 def _check_relative(path: str) -> None:
     parts = path.replace("\\", "/").split("/")

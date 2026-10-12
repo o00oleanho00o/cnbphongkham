@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
 
 SETTINGS_KEY: Final = "settings"
 READ_CHARS: Final = 8000
+# the chunks handed to the agent; kept under the tool's result limit so none is cut mid-text
+MAX_CHAR_BUDGET: Final = 8000
 GAP_MIN_CHARS: Final = 6
 
 GUIDANCE: Final = """## Kho tri thức
@@ -35,7 +37,7 @@ chăm sóc sau điều trị, câu hỏi thường gặp). Cách làm:
   nhiều ý thì tìm từng ý; không thấy thì tìm lại với từ khác (tên dịch vụ, tên chính sách).
 - Chỉ trả lời bằng những gì các đoạn tìm được nói. Con số (giá, số buổi, số ngày, phần trăm) phải lấy đúng như
   trong đoạn; tự tính (ví dụ giảm 10%) thì nói rõ là tính từ giá nào.
-- Cần đọc trọn một tài liệu (bảng, điều kiện dài) thì gọi `kb_read` với mã tài liệu ở đầu đoạn.
+- Cần đọc trọn một tài liệu (bảng, điều kiện dài) thì gọi `kb_read` với mã ở đầu đoạn.
 - Không tìm thấy: nói thật là chưa có thông tin đó và đề nghị nhân viên liên hệ lại, không đoán.
 - Không nhắc tên công cụ hay mã tài liệu với khách; trả lời ngắn, tự nhiên, bằng tiếng Việt."""
 
@@ -57,7 +59,7 @@ def default_settings(config: Mapping[str, Any]) -> dict[str, Any]:
         "search": {
             "results": int(config.get("results", 6)),
             "min_score": 0.0,
-            "char_budget": int(config.get("char_budget", 6000)),
+            "char_budget": min(int(config.get("char_budget", 6000)), MAX_CHAR_BUDGET),
             "patient_channel_prefix": "",
             "patient_only_approved": False,
         },
@@ -78,7 +80,9 @@ class SearchArgs(BaseModel):
 
 class ReadArgs(BaseModel):
     doc_code: str = Field(
-        min_length=1, max_length=120, description="Mã tài liệu ở đầu một đoạn kb_search trả về."
+        min_length=1,
+        max_length=120,
+        description="Mã ở đầu một đoạn kb_search trả về (mã tài liệu hoặc mã nguồn).",
     )
 
 
@@ -99,10 +103,10 @@ class KnowledgePlugin:
             if database is None
             else PostgresKnowledgeStore(database.engine, tenant_id=database.tenant_id, agent=database.agent)
         )
-        self.ingest = Ingest(self.store, clock=clock)
+        self._zone = _zone(str(ctx.config.get("timezone", "Asia/Ho_Chi_Minh")))
+        self.ingest = Ingest(self.store, clock=clock, today=lambda: clock().astimezone(self._zone).date())
         self.searcher = Searcher(self.store)
         self._ready = database is None
-        self._zone = _zone(str(ctx.config.get("timezone", "Asia/Ho_Chi_Minh")))
 
     def register(self) -> None:
         ctx = self._ctx
@@ -161,8 +165,6 @@ class KnowledgePlugin:
             changed[group] = {**changed[group], **{k: v for k, v in values.items() if k != "api_key"}}
             if group in ("embedding", "parser"):
                 changed[group]["origin"] = "saved"
-            if group == "embedding" and "api_key" in values:
-                changed[group]["has_key"] = bool(values["api_key"])
         if "benchmark_mode" in patch:
             changed["benchmark_mode"] = bool(patch["benchmark_mode"])
         for group in resets:
@@ -193,7 +195,7 @@ class KnowledgePlugin:
             args.query,
             self.asked_on(ctx),
             results=args.results or int(settings["results"]),
-            char_budget=int(settings["char_budget"]),
+            char_budget=min(int(settings["char_budget"]), MAX_CHAR_BUDGET),
             services=await self.store.services(),
         )
         if not result.final:
@@ -205,18 +207,18 @@ class KnowledgePlugin:
             await self.ready()
         except PluginError as err:
             return ToolOutput(text=f"Kho tri thức chưa sẵn sàng: {err}", is_error=True)
-        source = await self.store.by_code(args.doc_code.strip())
+        source = await self.store.in_force(args.doc_code.strip(), self.asked_on(ctx))
         if source is None:
             return ToolOutput(
-                text=f"Không có tài liệu mã {args.doc_code} đang dùng trong kho.", is_error=True
+                text=f"Không có tài liệu mã {args.doc_code} đang có hiệu lực trong kho.", is_error=True
             )
         body = source.markdown[:READ_CHARS]
         more = (
             "\n\n…(còn tiếp; tìm bằng kb_search để lấy phần cần)" if len(source.markdown) > READ_CHARS else ""
         )
         return ToolOutput(
-            text=f"{source.doc_code} · {source.title}\n\n{body}{more}",
-            detail={"doc_ids": [source.doc_code or source.id], "chars": len(body)},
+            text=f"{source.doc_code or source.id} · {source.title}\n\n{body}{more}",
+            detail={"doc_ids": [source.doc_code or source.id], "source_id": source.id, "chars": len(body)},
         )
 
 
