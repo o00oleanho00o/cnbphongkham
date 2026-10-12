@@ -45,6 +45,10 @@ function AccountsPage() {
   return <h1>Tài khoản Zalo</h1>;
 }
 
+function StorePage() {
+  return <h1>Kho tri thức nội dung</h1>;
+}
+
 function ContactsPage() {
   return <h1>Danh bạ Zalo</h1>;
 }
@@ -145,6 +149,27 @@ describe("a registered page", () => {
       "/admin/agent/plugins/zalo/contacts",
     ]);
     expect(links.map((a) => a.getAttribute("aria-current"))).toEqual([null, null, "page"]);
+  });
+
+  it("draws_a_section_page_without_the_plugins_own_header_and_tabs", async () => {
+    fakeBrowser({
+      listing: () => json(200, { home: "/ui/web/", plugins: [{ ...ZALO, name: "kb", script: "/ui/kb/client.js" }] }),
+      scripts: {
+        "/agent/ui/kb/client.js": () =>
+          window.__PEMA_AGENT__?.register("kb", {
+            section: { title: "Kho tri thức", page: "store" },
+            pages: [{ id: "store", title: "Kho tri thức", component: StorePage }],
+          }),
+      },
+    });
+
+    await renderPage("kb", "store");
+
+    expect(await screen.findByRole("heading", { name: "Kho tri thức nội dung" })).toBeTruthy();
+    expect(screen.queryByRole("navigation", { name: "Trang của plugin kb" })).toBeNull();
+    const tabs = linksOf("Trang quản trị agent");
+    expect(tabs.map((a) => a.textContent)).toContain("Kho tri thức");
+    expect(tabs.find((a) => a.textContent === "Kho tri thức")?.getAttribute("aria-current")).toBe("page");
   });
 
   it("keeps_only_the_agents_own_pages_in_the_section_tabs", async () => {

@@ -334,6 +334,8 @@ export type SettingsPatch = {
   labelling?: Partial<KnowledgeSettings["labelling"]>;
   search?: Partial<KnowledgeSettings["search"]>;
   benchmark_mode?: boolean;
+  /** Groups to put back to the profile's values ("Về mặc định"); the server clears their `origin`. */
+  reset?: ("embedding" | "parser")[];
 };
 
 export interface EmbeddingTest {

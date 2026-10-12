@@ -155,7 +155,7 @@ export function Tabs<Id extends string>({
 /** A small word with a rounded outline: a service, an alias. `onRemove` adds an x. */
 export function Chip({ children, onRemove }: { children: ReactNode; onRemove?: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-line bg-surface-soft px-2.5 py-0.5 text-label text-ink">
+    <span className="inline-flex items-center gap-1 rounded-full border border-line bg-tile px-2.5 py-0.5 text-label text-ink">
       {children}
       {onRemove && (
         <button type="button" aria-label="Bỏ" onClick={onRemove} className="text-ink-soft hover:text-ink">

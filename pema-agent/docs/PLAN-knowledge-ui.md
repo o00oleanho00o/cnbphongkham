@@ -15,9 +15,11 @@ plan RAG (bảng ở mục 9 dưới đây).
   của agent (:8088).
 - **Thêm vào SDK một khai báo nhỏ:** `Contribution.section?: { title: string; page: string }`. Khi plugin bật và đã đăng
   ký, layout "Điều khiển agent" thêm một tab "Kho tri thức" trỏ tới `/admin/agent/plugins/knowledge/sources` (sáng khi đường
-  dẫn bắt đầu bằng `/admin/agent/plugins/knowledge`). Plugin tắt thì tab biến mất. Các trang vẫn là trang của plugin
-  (`/admin/agent/plugins/knowledge/<trang>`), nên không đổi cách route. Chi tiết một nguồn mở bằng `?source=<id>`
-  (như Phiên chat dùng `?session=`).
+  dẫn bắt đầu bằng `/admin/agent/plugins/knowledge`). Plugin tắt thì tab biến mất.
+- **Một trang, nhiều tab bên trong** (đã làm vậy khi dựng UI): plugin đăng ký MỘT trang `store` ("Kho tri thức") tự giữ
+  các tab Nguồn · Dịch vụ · Thử tìm · Câu hỏi chưa có tài liệu · Cài đặt và chi tiết một nguồn bằng trạng thái trong trang,
+  không dùng `?source=`. Lý do: cùng một mã chạy ở clinic web (đường dẫn thật) và bảng riêng của agent (`#/p/...`), hai bên
+  khác cách điều hướng; trạng thái trong trang thì giống nhau cả hai. Bù lại chưa có liên kết sâu tới một nguồn.
 
 ## 2. Người dùng làm gì → màn hình nào
 
@@ -59,7 +61,7 @@ thái rỗng/tải/lỗi, dùng được trên điện thoại (bảng thu gọn
 1. **Tải tệp**: kéo thả hoặc chọn nhiều tệp (`.md .txt .docx .xlsx .pdf`; ≤ 25 MB mỗi tệp). Hiện ngay cảnh báo sai định
    dạng hoặc quá nặng trước khi gửi.
 2. **Gõ hoặc dán văn bản**: tiêu đề + nội dung (Markdown cũng được); dùng cho FAQ ngắn, chính sách; ≤ 100.000 ký tự.
-3. **Nhập hàng loạt**: chọn thư mục hoặc tệp `.zip` chứa nhiều `.md` có phần đầu YAML (mục 4). Dành cho việc nạp cả bộ tài
+3. **Nhập hàng loạt**: chọn thư mục chứa nhiều `.md` có phần đầu YAML (mục 4); nhập `.zip` để dành cho bước backend. Dành cho việc nạp cả bộ tài
    liệu một lần (bộ demo Pema 22 tệp, hay xuất từ nơi khác).
 
 **Bước 2 – Thông tin** (mỗi tệp một dòng, sửa hàng loạt được):

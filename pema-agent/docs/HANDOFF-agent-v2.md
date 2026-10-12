@@ -854,6 +854,15 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
+- **Kho tri thức UI (2026-10-12, branch `feat/knowledge-ui`, from `feat/zalo-plugin`):** the browser half of the
+  plugin `knowledge` is built and runs on the mock agent (`pnpm dev:mock`): tab "Kho tri thức" (a plugin's
+  `Contribution.section`), tabs Nguồn · Dịch vụ · Thử tìm · Câu hỏi chưa có tài liệu · Cài đặt, the 3-step "Thêm nguồn"
+  with YAML defaults (user's choice: `audience: patient` → Bệnh nhân + đã duyệt). Plan: [PLAN-knowledge-ui.md](PLAN-knowledge-ui.md)
+  (§10 holds the user's decisions). The plugin has no server half yet: `__init__.py` registers nothing and the
+  routes of `types.ts`/`client.ts` exist only in `frontend/mock/knowledge/`; the real ones follow the steps of the RAG
+  plan. Known gaps: no `.zip` import, no deep link to one source, bulk "Đặt đối tượng: Bệnh nhân" has no warning
+  dialog, `SettingsPatch.reset` ("Về mặc định") must be honoured by the server, `mock/contract.test.ts` still has 2
+  failures that were there before. Not checked: real touch devices, dark mode, Docker (images need a rebuild).
 - **Next action (2026-10-10): RAG plugin `knowledge`, step 0 of [PLAN-knowledge-plugin.md](PLAN-knowledge-plugin.md)**
   (core: `ctx.register_migrations`, `ctx.model`, `ToolOutput.detail` into the trace, profile `max_steps` 10), once
   the user says go. The plan and its 4 questions are approved; nothing of it is coded yet. Then the rest of this
