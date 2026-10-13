@@ -1,10 +1,10 @@
 """What the model sees around the conversation: the frozen system prompt and the transient context block.
 
 The system prompt is rendered from the session sections once per session and stored with a fingerprint of the
-configuration it came from (environment and section names). Later turns reuse the stored text, so content that
-changes during a session never breaks the provider's prompt cache; a different configuration rebuilds it and
-logs a cache break. Turn and step sections go into an ``<agent-context>`` block at the end of the request; it
-is never stored.
+configuration it came from (environment, section names and the sections' text without session data). Later
+turns reuse the stored text, so notes and skills saved during a session never break the provider's prompt
+cache; a different configuration (a new persona, rules or guidance text) rebuilds it and logs a cache break.
+Turn and step sections go into an ``<agent-context>`` block at the end of the request; it is never stored.
 """
 
 from __future__ import annotations
@@ -70,7 +70,11 @@ class PromptBuilder:
         self._dynamic = [s for s in sections if not isinstance(s, SessionSection)]
         self._memory = memory
         self._skills = skills
-        payload = json.dumps({"env": dataclasses.asdict(env), "sections": names}, sort_keys=True)
+        # the sections' own text (rendered without session data) counts too: a plugin's guidance edited in a
+        # new release reaches sessions already running, while a note or skill saved meanwhile does not
+        payload = json.dumps(
+            {"env": dataclasses.asdict(env), "sections": names, "text": self.render_system()}, sort_keys=True
+        )
         self._fingerprint = hashlib.sha256(payload.encode()).hexdigest()
 
     @classmethod

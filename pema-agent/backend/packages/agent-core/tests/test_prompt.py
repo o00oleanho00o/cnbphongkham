@@ -91,9 +91,10 @@ async def test_the_system_prompt_is_frozen_for_the_session() -> None:
     again = await builder.system(store, "t", "s1")
     other_session = await builder.system(store, "t", "s2")
 
-    assert (first, again, other_session) == ("version 0", "version 0", "version 1")
+    # "version 0" went into the fingerprint when the builder was made
+    assert (first, again, other_session) == ("version 1", "version 1", "version 2")
     assert await store.load_prompt("t", "s1") == StoredPrompt(
-        text="version 0", fingerprint=builder.fingerprint
+        text="version 1", fingerprint=builder.fingerprint
     )
     assert await store.load_prompt("other-tenant", "s1") is None
 
@@ -116,6 +117,18 @@ def test_the_fingerprint_follows_the_configuration_only() -> None:
     assert _builder().fingerprint == _builder().fingerprint
     assert _builder().fingerprint != _builder("identity").fingerprint
     assert _builder().fingerprint != _builder(env=PromptEnv(agent_name="x", persona="Be kind.")).fingerprint
+
+
+async def test_a_section_with_new_text_rebuilds_the_prompt_of_a_running_session() -> None:
+    def guidance(text: str) -> SessionSection:
+        return SessionSection("guidance", lambda env, data: text)
+
+    store = InMemorySessionStore()
+    await PromptBuilder(ENV, [guidance("Search first.")]).system(store, "t", "s1")
+
+    rebuilt = await PromptBuilder(ENV, [guidance("Search twice.")]).system(store, "t", "s1")
+
+    assert rebuilt == "Search twice."
 
 
 def test_the_context_block_has_the_time_in_the_agent_zone_and_the_step() -> None:
