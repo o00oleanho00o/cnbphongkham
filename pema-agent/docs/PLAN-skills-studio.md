@@ -1,6 +1,6 @@
 # Kế hoạch: plugin kỹ năng, plugin lưu hội thoại, và kho kịch bản (RAG từ hội thoại)
 
-Trạng thái: **bản 4, user đã duyệt (2026-10-13), GĐ1 đã xong (plugin `skills` phía máy chủ), tiếp theo GĐ2.** Thay đổi so với bản 3: dữ liệu hội thoại đi vào **RAG**,
+Trạng thái: **bản 4, user đã duyệt (2026-10-13), GĐ1 và GĐ2 đã xong (plugin `skills`, phía máy chủ và trang web; GĐ2 bỏ test UI, ảnh và so khớp theo user), tiếp theo GĐ3.** Thay đổi so với bản 3: dữ liệu hội thoại đi vào **RAG**,
 không đi vào skill; tự học skill **tạm dừng** (chiến lược để sau). User bổ sung: `conversations` thu hội thoại từ **mọi
 nền tảng** gom được, không chỉ Zalo.
 

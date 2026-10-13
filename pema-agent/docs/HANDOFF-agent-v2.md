@@ -861,8 +861,10 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   (turn section `skills_context`, bản chụp trong bộ nhớ làm mới khi đổi và mỗi 60 s); tool `skill_list/view/search`;
   route `/v1/plugins/skills/items|versions|restore|effective`; kiểm tra mọi lần ghi (`injection_scan`, kích thước,
   cảnh báo SĐT/CCCD). Lõi: `ctx.channel_plugin(kênh)`. Profile `clinic`: `[skills] enabled = false` (lõi hết tool ghi
-  skill) và bật plugin `skills`. Test: 55 test (4 Postgres, đã chạy trên `agent_activity_test`). **Chưa làm:** trang web
-  (GĐ2), `conversations` và đường quan sát ở lõi (GĐ3), kho kịch bản RAG (GĐ4). Docker: Postgres dừng đột ngột cần
+  skill) và bật plugin `skills`. Test: 55 test (4 Postgres, đã chạy trên `agent_activity_test`). **Trang web (GĐ2, 2026-10-13):** `plugins/skills/ui` (bundle IIFE như `knowledge`, `pnpm run build`; Docker `agent.Dockerfile` đã thêm
+  bước build), tab "Kỹ năng": Danh sách (lọc, thêm, sửa, chọn nơi áp dụng, lịch sử và khôi phục) và "Kênh nhận gì". Theo lời user
+  bỏ test UI, ảnh chụp và so khớp canvas (chỉ chạy `pnpm run build` = tsc + vite); chưa mở thử trong trình duyệt. **Chưa làm:** tab "Kỹ năng và quy tắc"
+  trên trang từng tài khoản Zalo, so sánh hai phiên bản, `conversations` và đường quan sát ở lõi (GĐ3), kho kịch bản RAG (GĐ4). Docker: Postgres dừng đột ngột cần
   vài phút khởi động lại (fsync); `docker compose start postgres` đủ để chạy test DB.
 - **Hoãn (2026-10-13, user bảo cất lại): hook chặn ghi memory/skill trên kênh khách, hook cờ đỏ trước khi gọi model,
   hai skill quy trình `tiep-nhan-dat-lich` và `xu-ly-phan-nan`.** Việc đang bàn thay thế: kỹ năng trong DB, trang
