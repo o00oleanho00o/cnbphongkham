@@ -138,6 +138,97 @@ tin nhắn hoặc viết chữ.
 - Cần kiểm tra: `ctx.register_job` hiện là vòng chạy nền liên tục. Lõi đã có lập lịch theo giờ và bảng job có trạng
   thái chưa; nếu chưa thì đó là phần thêm vào core.
 
+## 6c. RAG: tìm kiếm chủ động bọc quanh vector
+
+### Claude Code tìm thông tin thế nào
+
+Claude Code không dùng kho vector cho code. Nó dùng tìm kiếm chủ động (agentic search): model tự quyết tìm gì, gọi
+`Grep`/`Glob`, đọc nguyên file bằng `Read`, thiếu thì đổi từ khóa và tìm lại. Chỉ dẫn nhỏ (CLAUDE.md, rules, memory)
+nạp thẳng vào prompt. Theo chia sẻ công khai, nhóm Claude Code từng thử RAG vector cho code và thấy tìm kiếm chủ động
+tốt hơn (chưa kiểm chứng chi tiết nội bộ).
+
+### Vì sao Pema vẫn cần vector
+
+Code có tên chính xác nên grep trúng ngay. Bệnh nhân hỏi bằng lời của họ, khác chữ trong tài liệu: trên 30 câu hỏi
+Pema, từ khóa trúng 20/30 còn vector trúng 30/30 trong top 3. Giữ vector, và bọc nó bằng cách tìm chủ động.
+
+### Nên học gì
+
+1. **Cho agent tìm nhiều lần.** Kết quả chưa đủ thì đổi cách hỏi và gọi tool tìm lại. Mô tả tool phải nói rõ điều
+   này.
+2. **Tìm rồi đọc tiếp.** Sau khi thấy một đoạn, agent đọc được cả mục hoặc cả tài liệu theo id, như grep xong thì
+   `Read`. Đoạn cắt sẵn hay thiếu ngữ cảnh (bảng giá tách khỏi điều kiện áp dụng). Nếu plugin chưa có tool đọc tài
+   liệu theo id, đây là thứ đáng thêm nhất.
+3. **Kho nhỏ thì đưa mục lục vào prompt.** 22 tài liệu: tiêu đề và mô tả một dòng tốn vài trăm token. Agent biết kho
+   có gì, chọn đúng tài liệu, biết khi nào nói "không có thông tin". Bỏ cách này khi kho lớn.
+4. **Lọc chắc chắn bằng code.** Ngày hiệu lực, tài liệu đã thay thế: code lọc, không để model chọn giữa hai bảng giá.
+
+### Đây cũng là harness: harness và model cùng làm
+
+| Phần của harness | Phần của model |
+| --- | --- |
+| Cung cấp tool tìm và đọc, kèm mô tả | Tìm từ khóa gì, đọc gì |
+| Prompt dặn cách dùng tool | Khi nào là đủ, khi nào đổi hướng |
+| Vòng lặp cho gọi lại và gọi song song | |
+| Ràng buộc cứng (chưa đọc thì không được sửa) | |
+
+Ở Pema: harness là `agentcore` cộng tool của plugin knowledge cộng prompt; model là DeepSeek.
+
+**Model càng yếu thì harness càng phải làm nhiều.** Với model mạnh, chỉ cần đưa tool. Với model rẻ hơn, để code làm
+sẵn:
+
+- luôn tìm một lần trước khi model trả lời câu hỏi về dịch vụ hay giá;
+- tự lấy kèm đoạn liền trước và liền sau của đoạn tìm thấy;
+- tự lọc theo ngày hiệu lực;
+- chặn trả lời về giá khi chưa có kết quả tìm.
+
+Ranh giới giữa harness và model không cố định: dời nó theo độ mạnh của model, và dùng bộ đánh giá để biết dời tới
+đâu.
+
+## 6d. Chọn kỹ thuật RAG nào
+
+Đối chiếu với danh sách trong [RAG_Techniques](https://github.com/NirDiamant/RAG_Techniques) (tên giữ nguyên).
+Nguyên tắc: chọn theo lỗi đo được, không theo danh sách. Kho Pema nhỏ (22 tài liệu, 209 đoạn), Markdown có cấu trúc,
+vector đã trúng 30/30. Phần lớn kỹ thuật giải bài toán Pema chưa có.
+
+### Đã có
+
+- **Contextual Chunk Headers**: đoạn được nhúng kèm tiêu đề và đường dẫn mục (`title\npath\n\nbody`).
+- **Fusion Retrieval**: từ khóa cộng vector, xếp vector trước.
+- **Multi-faceted Filtering**: ngày hiệu lực, ngưỡng độ giống, giới hạn đoạn mỗi tài liệu, giới hạn ký tự.
+- **Đánh giá retrieval**: `kb_bench`.
+- **Agentic RAG**: agent tự gọi tool tìm.
+
+### Nên làm tiếp, theo thứ tự
+
+1. **Context Window Enhancement / Relevant Segment Extraction**: lấy kèm đoạn lân cận hoặc đọc cả mục theo id (bước
+   4b ở mục 10). Chỗ dễ sai nhất hiện nay: bảng giá tách khỏi điều kiện áp dụng.
+2. **End-to-End Evaluation**: chấm câu trả lời cuối: đúng nội dung, không bịa ngoài tài liệu, biết từ chối, chuyển
+   người khi có red flag. Bộ chấm nhỏ tự viết, dùng model làm giám khảo; chưa cần thư viện.
+3. **Reliable RAG / CRAG bản gọn**: độ giống cao nhất dưới ngưỡng thì nói "chưa có thông tin, để nhân viên liên hệ",
+   không cố trả lời. Ngưỡng đã có; cần quy định hành vi khi không đạt.
+4. **Query Transformation, chỉ một việc**: câu hỏi nối tiếp ("còn giá cái đó bao nhiêu?") được viết lại thành câu đủ
+   ý trước khi tìm. Mô tả tool yêu cầu "viết câu tìm độc lập, đủ ý"; thêm câu nối tiếp vào bộ đánh giá.
+5. **Reranking**: chỉ khi kho lớn lên và bộ đánh giá bắt đầu trượt.
+
+### Chưa cần hoặc không hợp
+
+| Kỹ thuật | Lý do |
+| --- | --- |
+| GraphRAG, Microsoft GraphRAG, LightRAG, RAPTOR, Hierarchical Indices | Cho kho lớn, nhiều quan hệ chéo. Với 22 tài liệu, mục lục trong prompt là bản rẻ của chỉ mục phân tầng |
+| Semantic / Proposition Chunking | Tài liệu có tiêu đề rõ; chia theo tiêu đề tốt hơn và dễ giải thích |
+| HyDE, HyPE, Document Augmentation | Cho khi câu hỏi và tài liệu lệch xa; vector đã 30/30 |
+| Contextual Compression | Thêm một lần gọi model mỗi câu, tăng độ trễ; ngân sách 8000 ký tự vẫn đủ |
+| Self-RAG | Cần model huấn luyện riêng |
+| MemoRAG, Dartboard, Multi-modal | Chưa có nhu cầu; multi-modal chỉ khi có ảnh hoặc PDF scan |
+| Retrieval with Feedback Loop | Để sau; chỉ lấy phản hồi của nhân viên, không của bệnh nhân (dễ bị lạm dụng) |
+
+### Lưu ý
+
+- Phần lớn notebook của repo dùng LangChain, nhưng ý tưởng chỉ vài chục dòng: viết lại trong plugin knowledge.
+- 30 câu tổng hợp quá ít để chọn kỹ thuật chắc chắn. Việc đáng làm nhất: thu câu hỏi thật (đã ẩn danh) vào bộ đánh
+  giá. Kỹ thuật nào không làm số đo tăng thì bỏ.
+
 ## 7. Harness gồm những gì: đối chiếu với `agentcore`
 
 | Thành phần (quan sát ở Claude Code) | Ở pema-agent |
@@ -190,4 +281,6 @@ toàn và bộ đánh giá.
 3. Nói rõ trong prompt và hook rằng tin nhắn và tài liệu là dữ liệu (bài học 3); thêm câu thử tấn công vào bộ đánh
    giá.
 4. Mở rộng bộ đánh giá từ truy xuất sang cả câu trả lời của agent.
+4b. Kho tri thức: thêm tool đọc tài liệu theo id (nếu chưa có) và mục lục tài liệu trong prompt (mục 6c); đo lại
+   bằng bộ đánh giá.
 5. Chỉ khi có nhu cầu ở mục 3: đọc lõi theo mục 4 "cần kiểm tra", viết kế hoạch sub-agent, rồi mới code.
