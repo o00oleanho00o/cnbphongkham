@@ -3,6 +3,10 @@ version = "0.1.0"
 description = "Skills, rules and persona kept in the database: written on the pages, bound to the whole agent, to a chat plugin (zalo) or to one account (a channel), with a history to go back to."
 api = 1
 
+[ui]
+dir = "ui/dist"
+entry = "client.js"
+
 [migrations]
 dir = "migrations"
 prefix = "sk_"
