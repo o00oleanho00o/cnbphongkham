@@ -854,6 +854,17 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
+- **Tìm kiếm chủ động quanh vector (2026-10-13, nhánh `feat/knowledge-embedding`, plugin `knowledge` 0.4.0;
+  lý do ở `docs/GUIDE-agent-harness.md` mục 6c).**
+  - Mục lục kho: mỗi lượt mang danh sách tài liệu đang hiệu lực (mã: tiêu đề) trong context block (turn section
+    `knowledge_catalog`, không đóng băng theo phiên vì phiên Zalo sống lâu). Đọc bằng `store.catalog(as_of,
+    limit)` (mỗi mã một bản, bản hiệu lực mới nhất), giữ trong bộ nhớ, job `catalog` đọc lại khi tài liệu đổi
+    (`Ingest` on_change, sự kiện sửa/hết hiệu lực, xóa) và mỗi 60 s. Kho quá `catalog_max_docs` (mặc định 40;
+    0 = tắt) thì không có mục lục nào, không cho nửa mục lục.
+  - Hướng dẫn và mô tả tool: câu tìm phải đủ ý (câu hỏi nối tiếp ghép chủ đề đang nói), chưa đủ thì tìm lại
+    hoặc `kb_read` theo mã ở đầu đoạn hay trong mục lục, chỉ nói "chưa có thông tin" sau hai cách tìm khác nhau.
+  - `kb_read` đọc trọn tài liệu (≤ 8000 ký tự): đủ cho bộ 22 tài liệu demo (dài nhất ~7,6 KB), nên chưa làm đọc
+    theo mục. Chưa đo trên agent thật (cần khóa model); `kb_bench` chỉ đo truy xuất nên không đo được phần này.
 - **RAG embedding + tìm lai đã code (2026-10-12, nhánh `feat/knowledge-embedding`, plan `docs/PLAN-knowledge-embedding.md`).**
   - Bảng `kb_embedding(space, text_hash, vector)` (migration 0002; vector gắn với chữ, nạp lại cùng chữ không nhúng
     lại; đổi model/số chiều/`document_prefix` = không gian mới), job nền `embed` của plugin (lô 16, thử lại có

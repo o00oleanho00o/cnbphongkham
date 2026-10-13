@@ -281,6 +281,7 @@ toàn và bộ đánh giá.
 3. Nói rõ trong prompt và hook rằng tin nhắn và tài liệu là dữ liệu (bài học 3); thêm câu thử tấn công vào bộ đánh
    giá.
 4. Mở rộng bộ đánh giá từ truy xuất sang cả câu trả lời của agent.
-4b. Kho tri thức: thêm tool đọc tài liệu theo id (nếu chưa có) và mục lục tài liệu trong prompt (mục 6c); đo lại
-   bằng bộ đánh giá.
+4b. Kho tri thức (mục 6c): đã làm ngày 2026-10-13 (plugin `knowledge` 0.4.0). `kb_read` đọc trọn tài liệu đã có
+   sẵn; thêm mục lục tài liệu đang hiệu lực vào mỗi lượt và hướng dẫn tìm lại, viết lại câu hỏi nối tiếp. Còn
+   lại: đo trên agent thật bằng bộ đánh giá câu trả lời (bước 4).
 5. Chỉ khi có nhu cầu ở mục 3: đọc lõi theo mục 4 "cần kiểm tra", viết kế hoạch sub-agent, rồi mới code.
