@@ -11,6 +11,11 @@ failure_reply = "Xin lỗi, hiện tôi chưa trả lời được. Bạn vui l�
 # every tool of the system may be called; tools that reach the internet are refused
 allow_internet = false
 
+[agent.variables]
+# filled into {{...}} of SOUL.md and AGENTS.md when the profile loads (demo values, not a real clinic)
+clinic_name = "Pema Clinic & Spa"
+hotline = "1800 0000"
+
 [prompt]
 sections = ["identity", "rules", "tool_usage", "skills", "memory", "user_memory", "environment", "status"]
 

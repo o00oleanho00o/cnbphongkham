@@ -1,12 +1,15 @@
 """Agent profile: the folder that defines an agent, written by people and only read by the agent.
 
 ``agents/<name>/`` holds ``agent.toml`` (model, tools, limits), ``SOUL.md`` (who the agent is), ``AGENTS.md``
-(how it works) and ``skills/<skill>/SKILL.md`` (bundled skills). A profile never holds a secret: the API key
-comes from the environment only.
+(how it works) and ``skills/<skill>/SKILL.md`` (bundled skills). The persona and the rules may name
+``{{variables}}`` of ``[agent.variables]`` (the clinic's name, its hotline), filled in when the profile
+loads; one not given stops the load. A profile never holds a secret: the API key comes from the environment
+only.
 """
 
 from __future__ import annotations
 
+import re
 import tomllib
 from pathlib import Path
 from typing import Any, Final, Literal, cast
@@ -24,6 +27,7 @@ from agentcore.prompt import DEFAULT_SECTIONS
 PROFILE_FILE: Final = "agent.toml"
 SOUL_FILE: Final = "SOUL.md"
 RULES_FILE: Final = "AGENTS.md"
+VARIABLE: Final = re.compile(r"\{\{\s*([a-z][a-z0-9_]*)\s*\}\}")
 
 QueueMode = Literal["followup", "collect", "steer"]
 
@@ -47,6 +51,8 @@ class AgentSection(_Section):
     allow_internet: bool = False
     """Tools that reach the internet (``ToolSpec.network``) are refused unless this is on. Every other tool of
     the agent and its plugins may be called freely."""
+    variables: dict[str, str] = Field(default_factory=dict[str, str])
+    """Values for the ``{{name}}`` placeholders of the persona and the rules."""
 
 
 class ModelSection(_Section):
@@ -216,11 +222,21 @@ def load_profile(path: Path) -> Profile:
         raise ValueError(f"{folder}: give the persona in {SOUL_FILE} or in system_prompt, not both")
     if rules is not None and agent.rules:
         raise ValueError(f"{folder}: give the rules in {RULES_FILE} or in rules, not both")
-    filled = agent.model_copy(
-        update={"system_prompt": soul or agent.system_prompt, "rules": rules or agent.rules}
-    )
+    persona = _fill(soul or agent.system_prompt, agent.variables, SOUL_FILE if soul else "system_prompt")
+    working = _fill(rules or agent.rules, agent.variables, RULES_FILE if rules else "rules")
+    filled = agent.model_copy(update={"system_prompt": persona, "rules": working})
     return profile.model_copy(update={"agent": filled}).in_folder(folder)
 
 
 def _read_markdown(path: Path) -> str | None:
     return path.read_text(encoding="utf-8").lstrip("\ufeff") if path.is_file() else None
+
+
+def _fill(text: str, variables: dict[str, str], where: str) -> str:
+    """``text`` with every ``{{name}}`` replaced; a name without a value is an error, never left for the model
+    to read."""
+    missing = sorted({m.group(1) for m in VARIABLE.finditer(text) if m.group(1) not in variables})
+    if missing:
+        names = ", ".join(missing)
+        raise ValueError(f"{where}: no value for {names}; set it under [agent.variables] in {PROFILE_FILE}")
+    return VARIABLE.sub(lambda m: variables[m.group(1)], text)

@@ -145,6 +145,34 @@ def test_a_persona_in_soul_md_and_in_the_profile_is_refused(tmp_path: Path) -> N
         load_profile(tmp_path)
 
 
+def test_the_persona_and_rules_get_the_profiles_variables(tmp_path: Path) -> None:
+    (tmp_path / "agent.toml").write_text(
+        '[agent]\nname = "x"\n\n[agent.variables]\nclinic_name = "Pema"\nhotline = "1800 0000"\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "SOUL.md").write_text("Trợ lý của {{clinic_name}}.", encoding="utf-8")
+    (tmp_path / "AGENTS.md").write_text("Gọi {{ hotline }} khi khẩn cấp.", encoding="utf-8")
+
+    agent = load_profile(tmp_path).agent
+
+    assert (agent.system_prompt, agent.rules) == ("Trợ lý của Pema.", "Gọi 1800 0000 khi khẩn cấp.")
+
+
+def test_a_variable_without_a_value_stops_the_load_naming_it(tmp_path: Path) -> None:
+    (tmp_path / "agent.toml").write_text('[agent]\nname = "x"\n', encoding="utf-8")
+    (tmp_path / "AGENTS.md").write_text("Gọi {{hotline}} hoặc {{zalo_oa}}.", encoding="utf-8")
+
+    with pytest.raises(ValueError, match=r"AGENTS\.md: no value for hotline, zalo_oa"):
+        load_profile(tmp_path)
+
+
+def test_the_clinic_profile_has_a_value_for_every_variable() -> None:
+    agent = load_profile(DEV_PROFILE.parent / "clinic").agent
+
+    assert "{{" not in agent.system_prompt + agent.rules
+    assert agent.variables["clinic_name"] in agent.system_prompt
+
+
 def test_a_plain_toml_profile_needs_no_folder_files(tmp_path: Path) -> None:
     path = tmp_path / "plain.toml"
     path.write_text('[agent]\nname = "x"\nsystem_prompt = "p"\n', encoding="utf-8")
