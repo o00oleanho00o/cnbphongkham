@@ -854,6 +854,9 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
+- **Hoãn (2026-10-13, user bảo cất lại): hook chặn ghi memory/skill trên kênh khách, hook cờ đỏ trước khi gọi model,
+  hai skill quy trình `tiep-nhan-dat-lich` và `xu-ly-phan-nan`.** Việc đang bàn thay thế: kỹ năng trong DB, trang
+  quản lý và agent tự học, kế hoạch ở `docs/PLAN-skills-studio.md` (CHỜ USER DUYỆT, chưa code).
 - **Persona và quy tắc của agent `clinic` (2026-10-13, nhánh `feat/knowledge-embedding`; so sánh với
   `E:\Desktop\clone-git\deepseek-harness`, plugin `agent-instructions` và `dsh-persona`).**
   - Fingerprint system prompt tính cả chữ của các session section (dựng không có dữ liệu phiên): sửa hướng dẫn
