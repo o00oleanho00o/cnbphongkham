@@ -186,6 +186,7 @@ def knowledge_routes(plugin: KnowledgePlugin) -> APIRouter:
     async def delete_source(source_id: SourceId) -> Response:
         if not await store.delete(source_id):
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Không có nguồn này.")
+        plugin.changed()
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     @router.post("/sources/{source_id}/reindex")
@@ -385,6 +386,7 @@ async def _bulk_one(plugin: KnowledgePlugin, source: Source, body: BulkBody) -> 
     stamp = datetime.now(UTC)
     if body.action == "delete":
         await store.delete(source.id)
+        plugin.changed()
     elif body.action == "reindex":
         await plugin.ingest.rechunk(source, await store.services())
         await plugin.ingest.event(source.id, "reindexed")

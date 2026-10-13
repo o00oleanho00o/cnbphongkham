@@ -1,8 +1,11 @@
 """The knowledge store as the agent and the admin pages use it: its settings, the tools ``kb_search`` and
-``kb_read``, the prompt section that tells the agent how to look things up, and the gaps it records."""
+``kb_read``, the prompt sections that tell the agent how to look things up and which documents there are, and
+the gaps it records."""
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import copy
 import logging
 from collections.abc import Callable, Mapping
@@ -13,13 +16,13 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from pydantic import BaseModel, Field
 
 from agent_app.plugins import PluginContext, PluginDatabase, PluginError
-from agentcore import PromptEnv, SessionSection, ToolContext, ToolOutput, ToolSpec
+from agentcore import PromptEnv, SessionSection, ToolContext, ToolOutput, ToolSpec, TurnInfo, TurnSection
 from agentcore.prompt.data import SessionData
 
 from .embedder import IDLE_S, Embedder
 from .embedding import EmbeddingClient, EmbeddingConfig
 from .ingest import Ingest, new_id
-from .models import Gap, as_mapping
+from .models import CatalogEntry, Gap, as_mapping
 from .search import Searcher, VectorPlan, tool_detail, tool_text
 from .store import InMemoryKnowledgeStore, KnowledgeStore, PostgresKnowledgeStore
 from .text import fold
@@ -35,17 +38,26 @@ READ_CHARS: Final = 8000
 # the chunks handed to the agent; kept under the tool's result limit so none is cut mid-text
 MAX_CHAR_BUDGET: Final = 8000
 GAP_MIN_CHARS: Final = 6
+CATALOG_MAX_DOCS: Final = 40
+CATALOG_REFRESH_S: Final = 60.0
+"""How often the table of contents is read again; a document added here refreshes it at once."""
 
 GUIDANCE: Final = """## Kho tri thức
 Phòng khám có một kho tài liệu (dịch vụ, bảng giá, gói, khuyến mại, chính sách đặt/đổi/hủy lịch, thanh toán,
 chăm sóc sau điều trị, câu hỏi thường gặp). Cách làm:
-- Câu hỏi về phòng khám, dịch vụ, giá, chính sách hay quy trình: gọi `kb_search` trước khi trả lời. Câu hỏi có
-  nhiều ý thì tìm từng ý; không thấy thì tìm lại với từ khác (tên dịch vụ, tên chính sách).
+- Câu hỏi về phòng khám, dịch vụ, giá, chính sách hay quy trình: gọi `kb_search` trước khi trả lời. Câu tìm
+  phải đủ ý: câu hỏi nối tiếp ("còn giá cái đó?", "gói thì sao?") thì ghép tên dịch vụ hay chủ đề đang nói vào
+  câu tìm. Câu hỏi có nhiều ý thì tìm từng ý.
+- Kết quả chưa đủ để trả lời thì tìm lại với từ khác (tên dịch vụ, tên chính sách), hoặc đọc trọn tài liệu
+  bằng `kb_read` với mã ở đầu đoạn hay mã trong mục lục kho (khi cần cả bảng, điều kiện, ngoại lệ).
 - Chỉ trả lời bằng những gì các đoạn tìm được nói. Con số (giá, số buổi, số ngày, phần trăm) phải lấy đúng như
   trong đoạn; tự tính (ví dụ giảm 10%) thì nói rõ là tính từ giá nào.
-- Cần đọc trọn một tài liệu (bảng, điều kiện dài) thì gọi `kb_read` với mã ở đầu đoạn.
-- Không tìm thấy: nói thật là chưa có thông tin đó và đề nghị nhân viên liên hệ lại, không đoán.
+- Chỉ nói chưa có thông tin sau khi đã tìm ít nhất hai cách khác nhau mà không thấy; khi đó nói thật và đề
+  nghị nhân viên liên hệ lại, không đoán.
 - Không nhắc tên công cụ hay mã tài liệu với khách; trả lời ngắn, tự nhiên, bằng tiếng Việt."""
+CATALOG_HEAD: Final = """## Mục lục kho tri thức
+Các tài liệu đang có hiệu lực (mã: tiêu đề). Biết tài liệu cần là tài liệu nào thì có thể gọi `kb_read` với mã
+đó. Tài liệu vừa thêm có thể chưa có ở đây: vẫn tìm bằng `kb_search` trước khi nói không có."""
 
 
 def default_settings(config: Mapping[str, Any]) -> dict[str, Any]:
@@ -77,7 +89,10 @@ class SearchArgs(BaseModel):
     query: str = Field(
         min_length=2,
         max_length=300,
-        description="Điều cần tìm, bằng lời của khách hoặc từ khóa: tên dịch vụ, giá, chính sách...",
+        description=(
+            "Điều cần tìm, đủ ý (câu hỏi nối tiếp thì ghép chủ đề đang nói), bằng lời của khách hoặc từ "
+            "khóa: tên dịch vụ, giá, chính sách..."
+        ),
     )
     results: int | None = Field(
         default=None, ge=1, le=10, description="Số đoạn muốn lấy (mặc định theo cài đặt)."
@@ -88,7 +103,9 @@ class ReadArgs(BaseModel):
     doc_code: str = Field(
         min_length=1,
         max_length=120,
-        description="Mã ở đầu một đoạn kb_search trả về (mã tài liệu hoặc mã nguồn).",
+        description=(
+            "Mã ở đầu một đoạn kb_search trả về hoặc mã trong mục lục kho (mã tài liệu hoặc mã nguồn)."
+        ),
     )
 
 
@@ -121,14 +138,13 @@ class KnowledgePlugin:
             clock=clock,
             idle_s=float(ctx.config.get("embedding_idle_s", IDLE_S)),
         )
-        self.ingest = Ingest(
-            self.store,
-            clock=clock,
-            today=lambda: clock().astimezone(self._zone).date(),
-            on_change=self.embedder.wake,
-        )
+        self.ingest = Ingest(self.store, clock=clock, today=self.today, on_change=self.changed)
         self.searcher = Searcher(self.store)
         self._ready = database is None
+        self._catalog_max = int(ctx.config.get("catalog_max_docs", CATALOG_MAX_DOCS))
+        self.catalog: tuple[CatalogEntry, ...] = ()
+        """The table of contents the prompt shows; empty while unread, off or too long."""
+        self._catalog_changed = asyncio.Event()
 
     def register(self) -> None:
         ctx = self._ctx
@@ -137,8 +153,8 @@ class KnowledgePlugin:
                 name="kb_search",
                 description=(
                     "Tìm trong kho tài liệu của phòng khám (dịch vụ, giá, gói, khuyến mại, chính sách, chăm "
-                    "sóc, "
-                    "câu hỏi thường gặp). Trả về các đoạn liên quan kèm mã tài liệu."
+                    "sóc, câu hỏi thường gặp). Trả về các đoạn liên quan kèm mã tài liệu. Câu tìm phải đủ ý; "
+                    "chưa thấy thì tìm lại bằng từ khác."
                 ),
                 args_model=SearchArgs,
                 handler=self._search_tool,
@@ -151,7 +167,8 @@ class KnowledgePlugin:
             ToolSpec(
                 name="kb_read",
                 description=(
-                    "Đọc trọn một tài liệu của kho theo mã tài liệu (khi cần cả bảng hay điều kiện dài)."
+                    "Đọc trọn một tài liệu của kho theo mã tài liệu (mã ở đầu đoạn kb_search trả về hoặc mã "
+                    "trong mục lục kho), khi cần cả bảng, điều kiện hay ngoại lệ."
                 ),
                 args_model=ReadArgs,
                 handler=self._read_tool,
@@ -161,7 +178,44 @@ class KnowledgePlugin:
             )
         )
         ctx.register_prompt_section(SessionSection("knowledge", _guidance))
+        # each turn, not frozen with the session: a chat on Zalo lives for months and the store changes
+        ctx.register_prompt_section(TurnSection("knowledge_catalog", self.catalog_text))
         ctx.register_job("embed", self.embedder.run)
+        ctx.register_job("catalog", self.keep_catalog)
+
+    def today(self) -> date:
+        return self._clock().astimezone(self._zone).date()
+
+    def changed(self) -> None:
+        """The documents changed: vectors to make, a table of contents to read again."""
+        self.embedder.wake()
+        self._catalog_changed.set()
+
+    async def refresh_catalog(self) -> None:
+        """Reads the documents in force today; a store with more than the limit gets no table at all (half a
+        table would tell the agent a document is missing)."""
+        if self._catalog_max <= 0:
+            self.catalog = ()
+            return
+        await self.ready()
+        found = await self.store.catalog(self.today(), self._catalog_max + 1)
+        self.catalog = tuple(found) if len(found) <= self._catalog_max else ()
+
+    async def keep_catalog(self) -> None:
+        while True:
+            try:
+                await self.refresh_catalog()
+            except Exception as err:  # the next round tries again; the prompt keeps the last table
+                self._ctx.logger.warning("knowledge catalog not read (%s)", type(err).__name__)
+            with contextlib.suppress(TimeoutError):
+                await asyncio.wait_for(self._catalog_changed.wait(), CATALOG_REFRESH_S)
+            self._catalog_changed.clear()
+
+    def catalog_text(self, env: PromptEnv, _turn: TurnInfo) -> str | None:
+        if "kb_read" not in env.tool_names or not self.catalog:
+            return None
+        lines = "\n".join(f"- {entry.code}: {entry.title}" for entry in self.catalog)
+        return f"{CATALOG_HEAD}\n{lines}"
 
     async def ready(self) -> None:
         """Raises ``PluginError`` (what to run) while the plugin's tables are missing; checked once."""

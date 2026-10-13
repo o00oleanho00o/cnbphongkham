@@ -144,6 +144,7 @@ class Ingest:
 
     async def event(self, source_id: str, kind: str, note: str = "") -> None:
         await self._store.add_event(Event(new_id("ev"), source_id, self._clock(), kind, ADMIN, note))
+        self._on_change()  # an edit, an expiry: the table of contents may differ
 
     async def _parse(self, item: PreviewInput, *, benchmark: bool) -> Parsed:
         extension = _extension(item.name)

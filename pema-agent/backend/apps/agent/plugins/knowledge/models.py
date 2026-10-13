@@ -146,6 +146,14 @@ class Gap:
 
 
 @dataclass(frozen=True, slots=True)
+class CatalogEntry:
+    """One document of the store's table of contents: the key ``kb_read`` takes and its title."""
+
+    code: str
+    title: str
+
+
+@dataclass(frozen=True, slots=True)
 class SourceFilter:
     q: str = ""
     processing: Processing | None = None

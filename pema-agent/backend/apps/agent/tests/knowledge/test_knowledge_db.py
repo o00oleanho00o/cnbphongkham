@@ -121,6 +121,28 @@ def test_a_document_is_found_in_its_tenants_store_on_the_day_asked(db_url: str) 
     _run(db_url, work)
 
 
+def test_the_table_of_contents_holds_each_code_once_in_force_on_the_day(db_url: str) -> None:
+    async def work(_mine: PostgresKnowledgeStore, store: PostgresKnowledgeStore) -> None:
+        # the second tenant's store: no other test adds documents to it
+        for source_id, code, title, start, end in (
+            ("src-0000000000c1", "D05", "Chăm sóc cũ", date(2026, 1, 1), date(2026, 9, 30)),
+            ("src-0000000000c2", "D05", "Chăm sóc sau điều trị", date(2026, 10, 1), None),
+            ("src-0000000000c3", "D12", "Đặt lịch", date(2026, 1, 1), None),
+            ("src-0000000000c4", "D30", "Khuyến mại năm sau", date(2099, 1, 1), None),
+        ):
+            source = _source(source_id, code, NEW, start, end)
+            source.title = title
+            await store.add_source(source, [])
+
+        today = await store.catalog(date(2026, 10, 12), 10)
+        first = await store.catalog(date(2026, 10, 12), 1)
+
+        assert [(e.code, e.title) for e in today] == [("D05", "Chăm sóc sau điều trị"), ("D12", "Đặt lịch")]
+        assert [e.code for e in first] == ["D05"]
+
+    _run(db_url, work)
+
+
 SPACE = "0123456789abcdef"
 OTHER = "fedcba9876543210"
 

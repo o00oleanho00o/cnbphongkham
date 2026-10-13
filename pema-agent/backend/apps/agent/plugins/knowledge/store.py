@@ -21,7 +21,18 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.types import Text
 
-from .models import Chunk, Event, Gap, GapState, Hit, Service, Source, SourceFilter, as_mapping
+from .models import (
+    CatalogEntry,
+    Chunk,
+    Event,
+    Gap,
+    GapState,
+    Hit,
+    Service,
+    Source,
+    SourceFilter,
+    as_mapping,
+)
 from .text import fold, terms
 
 HEADING_WEIGHT: Final = 2
@@ -46,6 +57,10 @@ class KnowledgeStore(Protocol):
     async def all_sources(self) -> list[Source]: ...
     async def by_code(self, doc_code: str) -> Source | None: ...
     async def in_force(self, key: str, as_of: date) -> Source | None: ...
+    async def catalog(self, as_of: date, limit: int) -> list[CatalogEntry]:
+        """The documents in force on that day, one per document code, ordered by code; at most ``limit``."""
+        ...
+
     async def by_hash(self, content_hash: str) -> Source | None: ...
     async def chunks(
         self, source_id: str, q: str, page: int, page_size: int, space: str | None
@@ -171,6 +186,15 @@ class InMemoryKnowledgeStore:
             found, key=lambda s: (s.effective_from or date.min, s.created_at or datetime.min), default=None
         )
         return None if latest is None else replace(latest)
+
+    async def catalog(self, as_of: date, limit: int) -> list[CatalogEntry]:
+        newest: dict[str, Source] = {}
+        for s in sorted(
+            (s for s in self._sources.values() if in_use(s, as_of)),
+            key=lambda s: (s.effective_from or date.min, s.created_at or datetime.min),
+        ):
+            newest[s.doc_code or s.id] = s
+        return [CatalogEntry(code, newest[code].title) for code in sorted(newest)][:limit]
 
     async def by_hash(self, content_hash: str) -> Source | None:
         found = [s for s in self._sources.values() if s.content_hash == content_hash]
@@ -410,6 +434,14 @@ _IN_FORCE = text(
     "AND (effective_to IS NULL OR effective_to >= :as_of) "
     "ORDER BY effective_from DESC NULLS LAST, created_at DESC LIMIT 1"
 )
+_CATALOG = text(
+    "SELECT DISTINCT ON (COALESCE(doc_code, id)) COALESCE(doc_code, id) AS code, title "
+    "FROM agent_rt.kb_source WHERE tenant_id = :tenant_id AND agent = :agent "
+    "AND processing = 'ready' AND lifecycle = 'active' "
+    "AND (effective_from IS NULL OR effective_from <= :as_of) "
+    "AND (effective_to IS NULL OR effective_to >= :as_of) "
+    "ORDER BY COALESCE(doc_code, id), effective_from DESC NULLS LAST, created_at DESC LIMIT :limit"
+)
 _BY_HASH = text(
     "SELECT id, title, doc_code, kind, format, size, services, audience, processing, progress, error, "
     "lifecycle, version, effective_from, effective_to, approved, approved_by, approved_at, chunk_count, "
@@ -586,6 +618,12 @@ class PostgresKnowledgeStore:
         async with self._engine.connect() as conn:
             row = (await conn.execute(_IN_FORCE, params)).mappings().one_or_none()
         return None if row is None else _source(row)
+
+    async def catalog(self, as_of: date, limit: int) -> list[CatalogEntry]:
+        params = {**self._scope, "as_of": as_of, "limit": limit}
+        async with self._engine.connect() as conn:
+            rows = (await conn.execute(_CATALOG, params)).mappings().all()
+        return [CatalogEntry(row["code"], row["title"]) for row in rows]
 
     async def by_hash(self, content_hash: str) -> Source | None:
         async with self._engine.connect() as conn:

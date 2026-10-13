@@ -1,5 +1,5 @@
 name = "knowledge"
-version = "0.3.0"
+version = "0.4.0"
 description = "The knowledge store (Kho tri thức): documents the agent looks things up in with kb_search and kb_read. Add and check sources, teach it service names, try a search."
 api = 1
 # documents are uploaded to the admin routes
@@ -78,3 +78,9 @@ type = "number"
 title = "Vector wait"
 description = "Seconds a search waits for the vector of the question before it goes on with keywords only."
 default = 10.0
+
+[user_config.catalog_max_docs]
+type = "integer"
+title = "Table of contents"
+description = "Documents in force the agent sees listed (code and title) with every question; a larger store gets no list. 0 turns it off."
+default = 40

@@ -1,10 +1,14 @@
 """The knowledge plugin end to end, without a database: documents added through its admin routes (preview,
 confirm), found by the page "Thử tìm" and by the agent's ``kb_search`` (whose numbers reach the turn trace),
-the version in force on the day asked, and the questions it had nothing for."""
+the version in force on the day asked, the questions it had nothing for, and the table of contents every
+question carries."""
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import textwrap
+from collections.abc import AsyncGenerator, Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -14,8 +18,9 @@ import httpx
 from agent_app.gateway import GatewaySettings, create_app
 from agent_app.profile import load_profile
 from agent_app.runtime import Runtime, build_runtime
-from agentcore import InMemorySessionStore, InMemoryTracer, PromptBuilder, run_turn
+from agentcore import InMemorySessionStore, InMemoryTracer, PromptBuilder, TurnInfo, run_turn
 from agentcore.harness.model.scripted import ScriptedModel, calls, reply, tool_call
+from agentcore.prompt.sections import StepInfo
 
 TOKEN = "t" * 40
 ADMIN = "a" * 40
@@ -64,12 +69,12 @@ BOOKING = _doc(
 )
 
 
-def _runtime(tmp_path: Path) -> Runtime:
+def _runtime(tmp_path: Path, settings: str = "") -> Runtime:
     folder = tmp_path / "agent"
     folder.mkdir()
     (folder / "agent.toml").write_text(
         '[agent]\nname = "t"\nsystem_prompt = "p"\ntimezone = "Asia/Ho_Chi_Minh"\n\n'
-        '[plugins]\nenabled = ["knowledge"]\n',
+        f'[plugins]\nenabled = ["knowledge"]\n\n[plugins.knowledge]\n{settings}',
         encoding="utf-8",
     )
     return build_runtime(load_profile(folder), fake=True, env={}, db=None)
@@ -223,6 +228,67 @@ async def test_the_agent_is_told_how_to_use_the_store(tmp_path: Path) -> None:
 
     assert "kb_search" in agent.tools.names()
     assert "## Kho tri thức" in system
+    runtime.close()
+
+
+CARE = _doc(
+    "D05", "Chăm sóc sau điều trị", "# Chăm sóc\nTránh nắng và dùng kem chống nắng 7 ngày sau buổi laser."
+)
+
+
+@contextlib.asynccontextmanager
+async def _catalog_job(runtime: Runtime) -> AsyncGenerator[None]:
+    """Runs the plugin's job "catalog" for the length of the block."""
+    (job,) = [j for j in runtime.plugins.contributions().jobs if j.key == "knowledge/catalog"]
+    task = asyncio.create_task(job.run())
+    try:
+        yield
+    finally:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+
+
+def _turn_context(runtime: Runtime) -> str:
+    turn = runtime.live.current().prompt.start_turn(TurnInfo(now=ASKED))
+    return turn.context(StepInfo(step=1, max_steps=6)) or ""
+
+
+async def _until_context(runtime: Runtime, check: Callable[[str], bool]) -> str:
+    async with asyncio.timeout(5):
+        while not check(context := _turn_context(runtime)):  # noqa: ASYNC110 - the job moves this on its own
+            await asyncio.sleep(0.01)
+    return context
+
+
+async def test_every_question_carries_a_table_of_the_documents_in_force(tmp_path: Path) -> None:
+    runtime = _runtime(tmp_path)
+    async with _client(runtime) as client, _catalog_job(runtime):
+        await _add(client, {"d05.md": CARE, "d12.md": BOOKING, "old.md": OLD_PRICES})
+        context = await _until_context(runtime, lambda text: "D12" in text)
+        care = next(
+            s for s in (await client.get(f"{BASE}/sources")).json()["items"] if s["doc_code"] == "D05"
+        )
+        await client.delete(f"{BASE}/sources/{care['id']}")
+        after = await _until_context(runtime, lambda text: "D05" not in text)
+
+    assert "## Mục lục kho tri thức" in context
+    assert "- D05: Chăm sóc sau điều trị\n- D12: Đặt lịch" in context
+    assert "D07-V1" not in context  # its prices ended before the day asked
+    assert "- D12: Đặt lịch" in after
+    runtime.close()
+
+
+async def test_a_store_larger_than_the_limit_gets_no_table_rather_than_half_of_one(tmp_path: Path) -> None:
+    runtime = _runtime(tmp_path, "catalog_max_docs = 1\n")
+    async with _client(runtime) as client, _catalog_job(runtime):
+        await _add(client, {"d05.md": CARE})
+        one = await _until_context(runtime, lambda text: "D05" in text)
+        await _add(client, {"d12.md": BOOKING})
+        two = await _until_context(runtime, lambda text: "Mục lục" not in text)
+
+    assert "- D05: Chăm sóc sau điều trị" in one
+    assert "D05" not in two
     runtime.close()
 
 
