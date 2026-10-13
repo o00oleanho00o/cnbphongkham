@@ -162,6 +162,11 @@ class PluginContext:
             raise PluginError(self.name, f"{name} is not in requires_env")
         return self._env[name]
 
+    def channel_plugin(self, channel: str) -> str | None:
+        """The plugin a channel comes from (a chat plugin that runs one channel per account names it); None
+        for a channel no enabled plugin registered (``http``, ``cli``)."""
+        return self._channel_owner(channel)
+
     @property
     def storage(self) -> PluginStorage:
         """This plugin's own records, kept in the agent's database (process memory without one)."""

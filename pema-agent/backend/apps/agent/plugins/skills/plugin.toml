@@ -1,0 +1,26 @@
+name = "skills"
+version = "0.1.0"
+description = "Skills, rules and persona kept in the database: written on the pages, bound to the whole agent, to a chat plugin (zalo) or to one account (a channel), with a history to go back to."
+api = 1
+
+[migrations]
+dir = "migrations"
+prefix = "sk_"
+
+[user_config.index_chars]
+type = "integer"
+title = "Skills index size"
+description = "Most characters of the skills index a question carries; a longer list is cut and the agent is told to use skill_search."
+default = 6000
+
+[user_config.context_chars]
+type = "integer"
+title = "Rules and persona size"
+description = "Most characters of rules and persona text a question carries."
+default = 8000
+
+[user_config.refresh_s]
+type = "number"
+title = "Refresh"
+description = "Seconds between two readings of the items from the database (a change made here shows at once)."
+default = 60.0

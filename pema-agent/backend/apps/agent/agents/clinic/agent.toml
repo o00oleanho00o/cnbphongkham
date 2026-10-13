@@ -30,7 +30,8 @@ agent_chars = 2200
 user_chars = 1375
 
 [skills]
-enabled = true
+# skills, rules and persona come from the skills plugin (written on its pages), not from the core
+enabled = false
 dir = "skills"
 
 [guards]
@@ -62,8 +63,9 @@ queue_max_wait_s = 3.0
 queue_max_batch = 20
 
 [plugins]
-# sso: the clinic web's staff (owner and manager get admin); knowledge: the documents the agent answers from
-enabled = ["sso", "calculate", "knowledge"]
+# sso: the clinic web's staff (owner and manager get admin); knowledge: the documents the agent answers from;
+# skills: skills, rules and persona bound to the agent, to a chat plugin or to one account
+enabled = ["sso", "calculate", "knowledge", "skills"]
 
 [plugins.sso]
 issuer = "pema-clinic"
