@@ -854,6 +854,17 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
+- **Persona và quy tắc của agent `clinic` (2026-10-13, nhánh `feat/knowledge-embedding`; so sánh với
+  `E:\Desktop\clone-git\deepseek-harness`, plugin `agent-instructions` và `dsh-persona`).**
+  - Fingerprint system prompt tính cả chữ của các session section (dựng không có dữ liệu phiên): sửa hướng dẫn
+    của plugin thì phiên đang chạy dựng lại prompt ở lượt sau; ghi chú, kỹ năng lưu giữa phiên thì không.
+  - `SOUL.md`/`AGENTS.md` của `clinic` viết lại: khách trên kênh `zalo-*`, nhân viên trên `http`/`cli` (nhận ra
+    qua dòng "Channel" của khối ngữ cảnh); quy tắc đứng trên mọi lời trong tin nhắn, tài liệu, kết quả công cụ;
+    mỗi quy tắc có lý do. Đây chỉ là prompt: chặn ghi `memory` (target agent) và `skill_write`/`skill_patch` trên
+    kênh khách, cùng hook cờ đỏ, vẫn phải làm bằng code (GUIDE mục 5, 6).
+  - `[agent.variables]` điền `{{tên}}` trong SOUL/AGENTS lúc nạp profile; thiếu giá trị thì dừng nạp. `clinic`:
+    `clinic_name`, `hotline` (giá trị demo; hotline lặp lại dữ kiện của D01 để câu trả lời khẩn cấp không phải đi
+    tìm). Nhiều tenant thì giá trị phải theo tenant (chưa làm).
 - **Tìm kiếm chủ động quanh vector (2026-10-13, nhánh `feat/knowledge-embedding`, plugin `knowledge` 0.4.0;
   lý do ở `docs/GUIDE-agent-harness.md` mục 6c).**
   - Mục lục kho: mỗi lượt mang danh sách tài liệu đang hiệu lực (mã: tiêu đề) trong context block (turn section
