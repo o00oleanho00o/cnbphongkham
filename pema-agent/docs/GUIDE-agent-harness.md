@@ -47,7 +47,8 @@ lớn. Kể cả khi đó, cân nhắc tự xây trên lõi trước.
 
 - Số tool vượt khoảng 10–15 và agent chọn sai thường xuyên. Tách theo miền nghiệp vụ trước.
 - Có miền cần quyền, prompt hoặc model khác hẳn.
-- Có tác vụ nền dài, độc lập (đối soát lịch, tổng hợp báo cáo) không nên chiếm vòng hội thoại.
+- Có tác vụ nền dài, độc lập (đối soát lịch, tổng hợp báo cáo) không nên chiếm vòng hội thoại. Phần lớn những việc
+  này là job nền, không phải multi-agent: xem mục 6b.
 
 ## 4. Sub-agent: bản chất và cách xây
 
@@ -116,6 +117,26 @@ phạm vi dữ liệu) do code chọn trước khi model chạy:
   (xem hồ sơ, sửa lịch người khác, duyệt đơn) phải mở web có đăng nhập hoặc xác nhận thêm.
 - Hiện trạng: demo đang không có cổng phân quyền (quy tắc demo). Phần duyệt và tách đối tượng phải bật lại trước khi
   có bệnh nhân thật, kèm việc chọn profile theo danh tính.
+
+## 6b. Tác vụ nền: nhắc lịch, lập lịch, đối soát, báo cáo
+
+Không cần multi-agent, không cần LangGraph. Việc xác định được thì viết bằng code. Model chỉ tham gia khi cần hiểu
+tin nhắn hoặc viết chữ.
+
+| Việc | Cách làm | Model |
+| --- | --- | --- |
+| Nhắc lịch | Job theo giờ: truy vấn lịch hẹn sắp tới, gửi Zalo theo mẫu | Không. Phải chắc chắn, không gửi trùng |
+| Lập lịch qua chat | Tool `book_appointment` của agent; tìm giờ trống và giữ chỗ bằng code | Chỉ để hiểu yêu cầu |
+| Đối soát lịch | Job chạy SQL so sánh; chỗ lệch vào hàng đợi cho nhân viên | Không, hoặc chỉ để tóm tắt |
+| Tổng hợp báo cáo | Job tính số bằng SQL, một lần gọi model viết nhận xét | Viết chữ; số do code tính |
+
+- Khi job thật sự cần agent (ví dụ đọc hội thoại trong ngày để tìm khiếu nại), job chạy chính vòng lặp `agentcore`
+  không hội thoại, với một **profile job**: tool chỉ đọc, giới hạn bước và token, kết quả vào hàng đợi hoặc báo cáo.
+- Claude Code làm cùng kiểu: bộ lập lịch, cộng prompt, cộng cùng một vòng lặp.
+- Thứ LangGraph bán (trạng thái bền, chạy tiếp sau lỗi) tự làm bằng một bảng job trong Postgres: trạng thái, số lần
+  thử, `next_run_at`, khóa chống trùng (mỗi lịch hẹn nhắc một lần), thử lại có backoff như job `embed`.
+- Cần kiểm tra: `ctx.register_job` hiện là vòng chạy nền liên tục. Lõi đã có lập lịch theo giờ và bảng job có trạng
+  thái chưa; nếu chưa thì đó là phần thêm vào core.
 
 ## 7. Harness gồm những gì: đối chiếu với `agentcore`
 
