@@ -854,6 +854,16 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
 ## Loose ends
 
 - `AGENTS.md` and `.claude/skills/handoff/` were committed by the user (`78d84919`).
+- **Plugin `skills` GĐ1 đã code (2026-10-13, nhánh `feat/knowledge-embedding`, kế hoạch `docs/PLAN-skills-studio.md` bản 4,
+  user đã duyệt).** Skill, quy tắc, persona nằm trong Postgres (bảng `sk_item`, `sk_item_version`, `sk_` do migration của
+  plugin; migration 0002 nhập một lần các skill cũ từ `agent_skill`), gán theo phạm vi `agent`, `plugin:<tên>`,
+  `channel:<tên>` (rộng đến hẹp, hẹp thắng; rules/persona hẹp chỉ bổ sung). Mỗi lượt mang khối chỉ dẫn của kênh
+  (turn section `skills_context`, bản chụp trong bộ nhớ làm mới khi đổi và mỗi 60 s); tool `skill_list/view/search`;
+  route `/v1/plugins/skills/items|versions|restore|effective`; kiểm tra mọi lần ghi (`injection_scan`, kích thước,
+  cảnh báo SĐT/CCCD). Lõi: `ctx.channel_plugin(kênh)`. Profile `clinic`: `[skills] enabled = false` (lõi hết tool ghi
+  skill) và bật plugin `skills`. Test: 55 test (4 Postgres, đã chạy trên `agent_activity_test`). **Chưa làm:** trang web
+  (GĐ2), `conversations` và đường quan sát ở lõi (GĐ3), kho kịch bản RAG (GĐ4). Docker: Postgres dừng đột ngột cần
+  vài phút khởi động lại (fsync); `docker compose start postgres` đủ để chạy test DB.
 - **Hoãn (2026-10-13, user bảo cất lại): hook chặn ghi memory/skill trên kênh khách, hook cờ đỏ trước khi gọi model,
   hai skill quy trình `tiep-nhan-dat-lich` và `xu-ly-phan-nan`.** Việc đang bàn thay thế: kỹ năng trong DB, trang
   quản lý và agent tự học, kế hoạch ở `docs/PLAN-skills-studio.md` (CHỜ USER DUYỆT, chưa code).

@@ -1,18 +1,18 @@
-# Kế hoạch: plugin kỹ năng (skill, quy tắc, persona), trang quản lý, tự học, và plugin lưu hội thoại
+# Kế hoạch: plugin kỹ năng, plugin lưu hội thoại, và kho kịch bản (RAG từ hội thoại)
 
-Trạng thái: **bản 3, user đã xác nhận mục 9 (2026-10-13), đang làm GĐ1.** Bản 1 và 2 đã được user trả lời; bản này
-ghi lại các câu trả lời, trong đó việc **tự học đổi thành kho dữ liệu kịch bản, không duyệt**.
+Trạng thái: **bản 4, user đã duyệt (2026-10-13), GĐ1 đã xong (plugin `skills` phía máy chủ), tiếp theo GĐ2.** Thay đổi so với bản 3: dữ liệu hội thoại đi vào **RAG**,
+không đi vào skill; tự học skill **tạm dừng** (chiến lược để sau). User bổ sung: `conversations` thu hội thoại từ **mọi
+nền tảng** gom được, không chỉ Zalo.
 
 ## 1. Mục tiêu
 
-1. Kỹ năng, quy tắc (`AGENTS.md`) và persona (`SOUL.md`) là nội dung của **một plugin**, nằm trong Postgres, có
-   lịch sử và khôi phục, sửa được trên web.
-2. **Gán theo phạm vi:** cả agent, một plugin giao diện (ví dụ Zalo), hay một tài khoản cụ thể (ví dụ tài khoản Zalo
-   của lễ tân), như cách plugin được bật và cấu hình.
-3. Agent học **kịch bản** từ cách nhân viên trả lời khách (nghe thụ động), lưu thành **dữ liệu** (vector và JSON) để
-   lấy ra khi khách hỏi câu tương tự. **Không duyệt** (tạm thời) và **không học chỉ dẫn từ lời khách**.
-4. Sau đó: plugin **lưu toàn bộ hội thoại** (cả tin không được trả lời, nghe thụ động ở nhóm lẫn cá nhân), tách
-   khỏi plugin Zalo để mọi kênh dùng chung.
+1. **Plugin `skills`:** kỹ năng, quy tắc (kiểu `AGENTS.md`) và persona (kiểu `SOUL.md`) trong Postgres, có lịch sử và
+   khôi phục, sửa trên web, **gán theo phạm vi**: cả agent, một plugin giao diện (Zalo), hay một tài khoản (kênh).
+2. **Plugin `conversations`:** cất **toàn bộ hội thoại hai vai** (khách và nhân viên), kể cả tin nghe thụ động ở nhóm lẫn
+   cá nhân, từ **bất kỳ nền tảng nào gom được**; tách khỏi plugin Zalo để kênh nào cũng dùng.
+3. **Kho kịch bản (RAG):** từ hội thoại đã cất, tạo các **tình huống** (khách hỏi gì, nhân viên phản ứng ra sao) để tìm
+   lại khi khách hỏi câu tương tự, đưa vào ngữ cảnh của agent làm **kịch bản mẫu** cho câu trả lời chuẩn.
+4. **Tạm dừng:** agent tự viết hay sửa skill. Skill chỉ do người viết trên web.
 
 ## 2. Thuật ngữ
 
@@ -20,141 +20,128 @@ ghi lại các câu trả lời, trong đó việc **tự học đổi thành kh
 | --- | --- |
 | Plugin | Gói cài đặt, bật/tắt được, có thể mang tool, trang, job, route, nội dung |
 | Tool | Một hàm model gọi được (`skill_view`, `kb_search`) |
-| Skill | Tài liệu hướng dẫn cho một việc, model đọc khi cần |
+| Skill | Tài liệu hướng dẫn một việc, do người viết; model đọc khi cần |
 | Rules, Persona | Chỉ dẫn luôn nạp (kiểu `AGENTS.md`, `SOUL.md`) |
-| Gán (binding) | Một mục (skill, rules, persona) áp cho một phạm vi |
 | Phạm vi | `agent` (mọi kênh) → `plugin` (ví dụ `zalo`) → `kênh` (một tài khoản, ví dụ `zalo-<id>`) |
+| Tình huống (episode) | Một câu hỏi hay yêu cầu của khách cùng phần nhân viên phản ứng, cắt từ hội thoại |
+| Kịch bản | Tình huống đã được đánh chỉ mục để tìm lại (RAG) |
 
 ## 3. Hiện trạng (đã đọc code)
 
-- Skill nằm ở lõi: `agentcore/skills`, bảng `agent_rt.agent_skill` (có `version`, không có lịch sử), tool
-  `skill_list/view/write/patch`. Mục lục skill nằm trong system prompt **đóng băng theo phiên**. Chưa có route hay UI.
-- Agent ghi được skill từ lời của khách trên Zalo (chỉ có `injection_scan` chặn).
-- Plugin đang có: `contributions` gồm tool, prompt section, hook, kênh, job, authenticator, route, trang UI, migration
-  riêng (`[migrations] prefix`). Host biết kênh nào của plugin nào (`channel_owner`), nên phạm vi "plugin" và "kênh"
-  suy ra được từ tên kênh của lượt (`TurnInfo.channel`, ví dụ `zalo-<id>`).
-- **Prompt section theo lượt** đọc được `TurnInfo.channel` nhưng chỉ chạy đồng bộ: plugin phải giữ bản chụp trong bộ
-  nhớ và làm mới bằng job (như mục lục kho tri thức, `plugin.py` của `knowledge`).
-- Zalo: `access.should_respond` đã quyết định `record` (nghe thụ động ở nhóm không @mention) nhưng **lõi chưa có
-  đường cho tin "giữ mà không trả lời", nên plugin hiện bỏ tin đó** (ghi chú trong `access.py`).
-- Tài khoản Zalo là kênh riêng (`zalo-<account_id>`), mỗi cái có cấu hình riêng (allowlist, trả lời nhóm, nghe thụ
-  động).
+- Skill nằm ở lõi (`agentcore/skills`, bảng `agent_skill` không có lịch sử; mục lục nằm trong system prompt đóng băng
+  theo phiên). Chưa có route hay UI. Agent ghi được skill từ lời khách (chỉ `injection_scan` chặn).
+- Plugin host có: tool, prompt section, hook, kênh, job, route, trang UI, migration riêng (`[migrations] prefix`). Host
+  biết kênh nào của plugin nào (`_channel_owner`, chưa mở cho plugin). Prompt section theo lượt đọc được kênh của lượt
+  nhưng chạy đồng bộ, nên plugin giữ bản chụp trong bộ nhớ và làm mới bằng job (như mục lục kho tri thức).
+- **Hook `pre_model` chạy bất đồng bộ và sửa được yêu cầu gửi lên model**: chỗ hợp để tìm kịch bản và đưa vào ngữ cảnh.
+- Kho tri thức đã có hạ tầng RAG: dịch vụ nhúng (`embedding.py`, khóa API lưu mã hóa), bảng vector (pgvector), tìm
+  lai từ khóa và vector, job nhúng nền. Hạ tầng đó nằm **bên trong plugin `knowledge`**.
+- Zalo: `access.should_respond` đã quyết định `record` (nghe thụ động) nhưng lõi chưa có đường cho tin "giữ mà không
+  trả lời", nên tin đó đang bị bỏ. Tin của chính tài khoản (`is_self`, tức nhân viên đang dùng Zalo cá nhân) cũng bị
+  bỏ.
+- Tài khoản Zalo là kênh riêng (`zalo-<account_id>`) với cấu hình riêng (allowlist, trả lời nhóm, nghe thụ động).
 
-## 4. Hermes (đã đọc `hermes-agent`) và lấy gì
+## 4. Plugin `skills` (GĐ1 và GĐ2; thiết kế đã được user chấp nhận ở bản 3)
 
-| Hermes | Pema |
-| --- | --- |
-| Bộ đếm (10 lượt/10 vòng tool) rồi chạy review ở nền sau khi đã trả lời; counter về 0 khi model tự ghi | Có |
-| Review = một lần chạy agent riêng, tối đa 16 bước, chỉ có tool skill, đọc trước khi ghi | Có (tối đa 12 bước) |
-| Ưu tiên: sửa skill đã nạp > sửa skill chung > thêm file tham chiếu > tạo mới; lời chỉnh giọng điệu là tín hiệu hạng nhất; không tạo theo vụ việc đơn lẻ; không xóa | Có |
-| Sổ cái thay đổi, khôi phục từng mục | Có (bảng phiên bản) |
-| Hàng chờ duyệt, quét bảo mật skill do agent viết: **tắt mặc định** | **Bật mặc định** |
-| Giọng điệu vào skill của việc đó, hoặc vào bộ nhớ người dùng nếu áp mọi việc, "không bao giờ cả hai" | Có |
-| Curator: 14 ngày không dùng thì "cũ", 30 ngày thì lưu trữ, không xóa cứng | GĐ sau |
-| Đánh giá chất lượng skill tự viết | Hermes không có; Pema dùng người duyệt và bộ câu hỏi đánh giá |
+- **Mục** có `kind` (`skill`, `rules`, `persona`), tên, mô tả một dòng, nội dung Markdown, trạng thái
+  (`draft|active|archived`), nguồn (`admin|plugin`), `scopes`, `meta` JSONB, `usage` JSONB. Bảng phiên bản chỉ thêm,
+  không sửa; khôi phục = lưu lại bản cũ thành phiên bản mới.
+- **Phạm vi và thứ tự:** mỗi lượt chọn các mục khớp với kênh của lượt, xếp từ rộng đến hẹp, mục hẹp đứng sau và thắng
+  khi trái nhau. Rules và persona ở phạm vi hẹp là **bổ sung**, không thay `AGENTS.md`/`SOUL.md` của agent; khối chỉ
+  dẫn ghi rõ không ghi đè quy tắc của agent. Plugin khác (Zalo) gửi kèm skill và rules mặc định trong thư mục của nó,
+  tự gán vào phạm vi plugin đó.
+- **Nạp theo lượt**, không đóng băng: skill thêm trên web đến được phiên Zalo đang chạy ở lượt sau. Mục lục skill ≤
+  `index_chars` (mặc định 6.000), rules và persona ≤ `context_chars` (mặc định 8.000); thừa thì bỏ mục chung nhất.
+  Tool `skill_list`, `skill_view`, `skill_search`. Plugin giữ bản chụp trong bộ nhớ, làm mới khi đổi và mỗi 60 giây.
+- **Kiểm tra mọi lần ghi:** `injection_scan`, kích thước, tên, trùng tên, phạm vi hợp lệ, cảnh báo số điện thoại/CCCD.
+- **Lõi cần thêm:** mở `channel_owner` thành `ctx.channel_plugin(kênh)`. Plugin tự có migration và route; profile
+  `clinic` tắt skill tự ghi của lõi (`[skills] enabled = false`) và nhập skill cũ trong `agent_skill` một lần.
+- **Trang web** (`/admin/agent/skills`): danh sách, soạn (chọn phạm vi, xem trước đúng như model nhận), lịch sử và
+  khôi phục, tab "Kỹ năng và quy tắc" trên trang từng tài khoản Zalo, trang "hiệu lực cho kênh này".
 
-## 5. Thiết kế (theo câu trả lời của user)
+## 5. Plugin `conversations` (GĐ3)
 
-**K1. Plugin `skills` (câu trả lời 1 và 4).** Một plugin mang: bảng riêng (prefix `sk_`, migration của plugin), tool
-`skill_list`, `skill_view`, `skill_search`, route admin, trang UI, job làm mới bản chụp.
-Profile đặt `[skills] enabled = false` ở lõi và bật plugin này; skill tự viết cũ trong `agent_skill` được nhập một lần.
-Skill gói sẵn của profile (thư mục `skills/`) vẫn chỉ đọc.
+**Việc:** nhận **mọi tin**, cất vào bảng riêng (prefix `cv_`), kênh nào cũng dùng.
 
-**K2. Ba loại mục, một cách gán.** Mỗi mục có `kind` (`skill`, `rules`, `persona`), nội dung, trạng thái
-(`draft|active|archived`), nguồn (`admin|plugin|agent`), `scopes` (danh sách phạm vi; rỗng = cả agent), `meta`
-JSONB (thẻ, ví dụ câu mẫu), `usage` JSONB (đếm xem/dùng/sửa). Bảng phiên bản chỉ thêm, không sửa.
+- **Nguồn tin (cần thêm ở lõi):** (a) tin đã vào agent và câu trả lời của agent; (b) tin **nghe thụ động** mà kênh
+  chuyển tiếp (nhóm không @mention, cá nhân agent không trả lời); (c) tin **nhân viên gửi** từ tài khoản Zalo cá nhân
+  (`is_self`). Lõi thêm một đường "quan sát": kênh gọi `observe(tin)` cho tin giữ mà không trả lời, và plugin đăng ký
+  `ctx.on_message(...)` để nhận cả tin vào lẫn tin ra. Plugin Zalo ngừng bỏ tin `record` và `is_self`, chuyển chúng qua
+  đường này.
+- **Vai:** mỗi tin gắn `role`: `staff` (tin của chính tài khoản, hoặc người gửi nằm trong **danh sách nhân viên** cấu
+  hình theo kênh), `agent` (trả lời của AI), `customer` (còn lại).
+- **Lưu:** cuộc trò chuyện (kênh, trực tiếp hay nhóm, mã cuộc trò chuyện), tin nhắn (người gửi, vai, thời điểm, văn
+  bản, đã được agent trả lời hay chưa, siêu dữ liệu JSONB). Bật theo kênh hoặc cuộc trò chuyện, **mặc định tắt**.
+  Thời hạn giữ cấu hình (mặc định không tự xóa), xóa theo cuộc trò chuyện.
+- **Trang** "Hội thoại": danh sách, xem hai vai theo dòng thời gian, tìm, danh sách nhân viên, cài đặt giữ và xóa.
+- Pháp lý (Nghị định 13/2023): user đã nói tạm bỏ qua.
 
-**K3. Phạm vi và thứ tự (câu trả lời 1).** Lúc mỗi lượt, bản chụp cho kênh của lượt chọn các mục có phạm vi khớp:
-`agent` luôn khớp, `plugin:zalo` khớp mọi kênh của Zalo, `channel:zalo-<id>` chỉ khớp tài khoản đó. Xếp **từ rộng đến
-hẹp, mục hẹp đứng sau và thắng khi trái nhau**. `rules` và `persona` ở phạm vi hẹp là phần **bổ sung** cho
-`AGENTS.md`/`SOUL.md` của agent, không thay thế: quy tắc an toàn của agent đứng trên, và khối chỉ dẫn nói rõ điều đó
-("không ghi đè quy tắc của agent"). Plugin khác (Zalo) có thể gửi kèm skill và rules mặc định trong thư mục của nó,
-tự gán vào phạm vi plugin đó; mục trong DB do admin tạo thì ghi đè theo tên.
+## 6. Kho kịch bản: RAG trên hội thoại (GĐ4)
 
-**K4. Nạp theo lượt, nhiều tùy ý (câu trả lời 2).** Mục lục skill và nội dung `rules`/`persona` đi trong khối ngữ cảnh
-của từng lượt (không đóng băng, không phá prompt cache), như mục lục kho tri thức. Số lượng không giới hạn cứng trong
-DB; ngân sách mục lục là cấu hình (mặc định 6.000 ký tự), thừa thì mục lục cắt và dặn dùng `skill_search`. Skill thêm
-trên web đến được phiên Zalo đang chạy ở lượt kế tiếp (bản chụp làm mới khi đổi và mỗi 60 giây).
+**Nguyên tắc (theo user):** hội thoại là **dữ liệu để tìm lại**, không biến thành skill. Chuẩn học là **cách nhân viên
+phản ứng**; lời khách chỉ là bối cảnh của tình huống. Skill vẫn do người viết, không phình theo dữ liệu.
 
-**K5. Kho kịch bản: dữ liệu, không phải chỉ dẫn (câu trả lời 3).** Khác với skill, kịch bản **không** thành chỉ dẫn của
-agent. Đó là dữ liệu: "khi khách hỏi như thế này, nhân viên đã trả lời như thế này".
-1. **Nguồn duy nhất là cách nhân viên trả lời.** Plugin lưu hội thoại (K7) ghi cả tin nhân viên gửi từ tài khoản Zalo cá
-   nhân (tin của chính tài khoản, `is_self`). Job ghép "tin khách + tin nhân viên trả lời" thành một cặp. Tin khách
-   đứng một mình không bao giờ tạo mục: **không học linh tinh từ khách**.
-2. **Xử lý trước khi cất:** bỏ cặp quá ngắn hay chỉ xã giao ("dạ", "ok"), che tên, số điện thoại, CCCD, địa chỉ
-   (một câu trả lời nhắc tên khách A không được hiện ra cho khách B), quét `injection_scan`, đo vector của câu hỏi
-   (cùng dịch vụ nhúng của kho tri thức), gộp các câu hỏi giống nhau và đếm số lần lặp.
-3. **Cất:** bảng riêng (câu hỏi, các bản trả lời của nhân viên, thẻ giọng điệu, số lần lặp, nguồn, ngày), kèm vector;
-   JSONB cho phần mở rộng. **Không duyệt**: tự động, tạm thời theo ý user; có công tắc bật/tắt theo phạm vi và nút xóa.
-4. **Dùng:** khi khách hỏi, tìm các câu hỏi đã cất gần nghĩa nhất (ưu tiên câu lặp nhiều) và đưa 2-3 cặp vào khối ngữ
-   cảnh của lượt như **ví dụ cách nhân viên đã trả lời**, kèm lời dặn: dùng để học giọng điệu và các bước; **số liệu
-   (giá, chính sách) chỉ lấy từ kho tri thức**, vì câu trả lời cũ có thể đã lỗi thời. Hook trước khi gọi model làm việc
-   này (model yếu cần harness làm sẵn), cộng một tool `scenario_search` để agent tìm thêm.
-5. **Theo phạm vi** như K3: kịch bản học từ tài khoản nào dùng cho tài khoản đó hoặc cho cả plugin, cấu hình được.
-Phần chỉ dẫn (skill, rules, persona) vẫn do người viết trên web; nếu sau này muốn agent đề xuất sửa chỉ dẫn thì dùng
-hàng chờ duyệt (đang hoãn).
+1. **Cắt tình huống (job nền):** từ hội thoại đã cất, một tình huống bắt đầu ở một tin của khách, gồm các tin kế tiếp
+   đến khi khách nêu chủ đề mới hoặc im quá 30 phút. **Chỉ giữ tình huống có phản ứng của nhân viên**; tin khách đứng một
+   mình không bao giờ thành kịch bản.
+2. **Xử lý trước khi cất:** bỏ tình huống quá ngắn hay chỉ xã giao, **che tên, số điện thoại, CCCD, địa chỉ** (câu của
+   khách A không được hiện ra cho khách B), quét `injection_scan`, gộp tình huống giống nhau và đếm số lần lặp.
+3. **Đánh chỉ mục (RAG):** văn bản của tình huống gồm câu hỏi của khách và phản ứng của nhân viên, có chỉ mục từ khóa
+   (Postgres) và vector (pgvector), cộng JSONB cho phần mở rộng (thẻ dịch vụ, giọng điệu, kênh nguồn).
+4. **Dùng lại khi khách hỏi:** một **hook `pre_model`** lấy câu hỏi mới nhất của khách, tìm các tình huống gần nghĩa nhất
+   (tìm lai như kho tri thức; ưu tiên tình huống lặp nhiều và mới), và nếu đủ giống thì thêm 2-3 tình huống vào khối ngữ
+   cảnh của lượt dưới dạng **"kịch bản mẫu: cách nhân viên đã phản ứng"**, kèm lời dặn: học bước đi, giọng điệu,
+   điều nên hỏi lại, lúc nào chuyển người; **số liệu (giá, chính sách) chỉ lấy từ kho tri thức** vì câu trả lời cũ có thể
+   đã lỗi thời. Hook làm sẵn (model yếu cần harness làm hộ); thêm tool `scenario_search` để agent tự tìm thêm.
+5. **Theo phạm vi** như plugin `skills`: kịch bản cất từ tài khoản nào dùng cho tài khoản đó hay cho cả plugin, cấu hình
+   được. Công tắc bật/tắt theo phạm vi, nút xóa từng tình huống.
+6. **Không duyệt** (tạm thời, theo user): tự động từ lúc có dữ liệu.
+7. **Trang** "Kịch bản": tình huống đã cất, số lần lặp, thử tìm một câu hỏi, xóa, công tắc theo phạm vi.
 
-**K6. Kiểm tra mọi lần ghi.** Tái dùng `injection_scan` và mẫu đe dọa của lõi trên mọi nội dung (kể cả admin dán vào),
-kích thước, tên, trùng tên, mẫu số điện thoại/CCCD, câu dặn bỏ qua quy tắc, gọi tool bị cấm. Số liệu (giá, chính sách)
-không vào skill mà ở kho tri thức.
-
-**K7. Plugin lưu hội thoại `conversations` (câu trả lời 6; là nguồn của K5 nên làm trước K5).** Plugin riêng, không phụ thuộc kênh: nhận
-**mọi tin** qua hai nguồn: tin đã đưa vào agent, và tin **nghe thụ động** (nhóm không @mention, cá nhân chưa trả lời)
-mà kênh chuyển tiếp. Lưu vào bảng riêng (kênh, cuộc trò chuyện, người gửi, thời điểm, văn bản, loại, đã trả lời hay
-không, siêu dữ liệu). Cần ở lõi: một đường **"quan sát"** cho kênh (kênh gọi `observe(InboundMessage)` cho tin giữ mà
-không trả lời; một hook cho plugin nhận tin vào và tin trả ra). Plugin Zalo bỏ việc tự bỏ tin `record`, và chỉ
-chuyển nó qua đường quan sát. Cấu hình: bật theo kênh, theo cuộc trò chuyện (nhóm/cá nhân), thời hạn giữ, che thông tin
-cá nhân khi lưu hay khi đọc, quyền đọc, nhật ký truy cập, xóa theo yêu cầu. Mặc định tắt.
-
-## 6. Màn hình (Next.js, `/admin/agent/...`, theo plugin)
-
-1. **Kỹ năng:** danh sách (tên, loại, trạng thái, nguồn, phạm vi, số lần dùng); lọc theo phạm vi/kênh; "Thêm".
-2. **Soạn:** tên, mô tả, **phạm vi (chọn: cả agent / plugin / tài khoản)**, thân Markdown với bản xem trước đúng như
-   model nhận, trạng thái, cảnh báo kiểm tra.
-3. **Lịch sử:** phiên bản, so sánh, khôi phục.
-4. ~~Hàng chờ duyệt~~ **hoãn** (không có đề xuất cần duyệt khi chưa cho agent sửa chỉ dẫn).
-5. **Theo tài khoản:** trên trang tài khoản Zalo, tab "Kỹ năng và quy tắc" xem và gán mục cho tài khoản đó (cùng dữ
-   liệu với trang 1).
-6. **Hội thoại (GĐ3):** cuộc trò chuyện đã lưu, tìm, xem, cài đặt giữ/xóa.
-7. **Kịch bản (GĐ4):** các cặp đã cất, số lần lặp, tìm thử, xóa, công tắc theo phạm vi.
-
-UI theo quy tắc dự án: mã màn hình trong `design-specs/web/INDEX.md`, spec và ảnh canvas, subagent `pema-ui-builder`,
-chụp so sánh, ghi `web-design-changes.md`. Chưa có màn hình tương ứng thì nói rõ trong báo cáo.
+**Dùng chung dịch vụ nhúng:** hạ tầng nhúng hiện nằm trong plugin `knowledge`. Đề xuất: thêm một **cơ chế dịch vụ giữa các
+plugin** nhỏ ở lõi (`ctx.provide("embeddings", ...)` và `ctx.use("embeddings")`): `knowledge` cung cấp, `conversations` dùng.
+Không bật `knowledge` hay chưa nối dịch vụ nhúng thì kho kịch bản tìm bằng từ khóa (như kho tri thức đã làm).
 
 ## 7. Các giai đoạn
 
 | GĐ | Nội dung | Kết quả kiểm tra |
 | --- | --- | --- |
-| 1 | Plugin `skills`: migration, store (Postgres và bộ nhớ), phạm vi, bản chụp và prompt section theo lượt, tool, kiểm tra K6, route admin, nhập skill cũ; profile `clinic` tắt skill tự ghi của lõi | Test thư viện, route, phạm vi (agent/plugin/kênh), Postgres trên `agent_activity_test`; skill gán `zalo-A` không hiện ở `zalo-B` |
-| 2 | Trang web: danh sách, soạn, lịch sử, tab theo tài khoản, "hiệu lực cho kênh này" | Test UI, ảnh so sánh canvas; thêm skill trên web thì phiên đang chạy thấy ở lượt sau |
-| 3 | Plugin `conversations` và đường quan sát ở lõi; Zalo chuyển tin thụ động và tin của nhân viên; trang hội thoại | Test; tin nhóm không @mention và tin `is_self` được lưu mà không có lượt agent |
-| 4 | Kho kịch bản (K5): job ghép cặp, che thông tin, vector, tìm; hook đưa ví dụ vào lượt; tool `scenario_search`; trang Kịch bản | Test với model và dịch vụ nhúng giả; đo trên bộ câu hỏi lặp: câu có kịch bản thì được lấy ra; không bao giờ có số liệu từ kịch bản thay cho kho |
-| 5 | Đếm sử dụng, đánh dấu cũ, lưu trữ (curator); bộ câu hỏi đánh giá agent trước/sau | Số đo trước/sau |
+| 1 | Plugin `skills` phần sau máy chủ: migration, store (Postgres và bộ nhớ), phạm vi, prompt section theo lượt, tool, kiểm tra, route admin, nhập skill cũ; `ctx.channel_plugin`; profile `clinic` tắt skill tự ghi | Test phạm vi (agent/plugin/kênh), route, lịch sử; Postgres trên `agent_activity_test`; skill gán `zalo-A` không hiện ở `zalo-B` |
+| 2 | Trang web skills (danh sách, soạn, lịch sử, tab theo tài khoản, "hiệu lực cho kênh này") | Test UI, ảnh so sánh canvas; thêm skill trên web thì phiên đang chạy thấy ở lượt sau |
+| 3 | Lõi: đường "quan sát" và `ctx.on_message`; Zalo chuyển tin thụ động và `is_self`; plugin `conversations` (lưu, vai, danh sách nhân viên, trang) | Tin nhóm không @mention và tin nhân viên được lưu mà không có lượt agent; agent không trả lời tin thụ động |
+| 4 | Cơ chế dịch vụ giữa plugin; cắt tình huống, che thông tin, chỉ mục từ khóa và vector; hook `pre_model` và tool `scenario_search`; trang "Kịch bản" | Test với dữ liệu giả; câu hỏi lặp thì lấy đúng tình huống; kịch bản không bao giờ thay số liệu của kho |
+| 5 | Bộ câu hỏi đánh giá agent trước/sau khi có kịch bản; số đo | Số đo trước/sau |
+| (tạm dừng) | Agent tự viết hay sửa skill; hàng chờ duyệt; dọn skill cũ | Chiến lược để sau |
+
+Dữ liệu thử là **dữ liệu giả** (quy tắc dự án); trước khi có dữ liệu thật, bộ hội thoại giả hai vai được sinh để thử.
 
 ## 8. Rủi ro
 
-- **Đầu độc qua lời khách:** chỉ cặp có câu trả lời của nhân viên mới được cất; kịch bản là dữ liệu đặt trong khung
-  "ví dụ, không phải chỉ dẫn", quét `injection_scan` khi cất; không thành skill.
-- **Kịch bản lỗi thời hoặc sai số liệu:** số liệu chỉ lấy từ kho tri thức; ví dụ ghi ngày; có thể xóa và tắt theo phạm vi.
-- **Skill trái nhau giữa các phạm vi:** thứ tự rộng→hẹp rõ ràng; người duyệt thấy bản so sánh; trang "hiệu lực cho kênh
-  này" hiện danh sách mục sẽ được nạp theo đúng thứ tự.
-- **Skill hẹp làm yếu quy tắc an toàn:** quy tắc của agent đứng trên và chỉ bổ sung ở mức hẹp; không có "thay thế".
-- **Chi phí model của job học:** ngân sách token, model rẻ chọn trong cấu hình, mặc định tắt cho kênh khách.
-- **Lưu toàn bộ hội thoại (K7)** là dữ liệu cá nhân: user đã nói tạm bỏ qua phần pháp lý (Nghị định 13/2023). Vẫn giữ
-  các điều khiển kỹ thuật (bật theo kênh, thời hạn giữ, quyền đọc, xóa) và che thông tin cá nhân trước khi dùng làm kịch bản.
-- **Plugin phụ thuộc lẫn nhau:** `skills` đọc nguồn học từ `conversations` qua một cổng hẹp, không import trực tiếp.
+- **Kịch bản chứa thông tin cá nhân hay số liệu cũ:** che thông tin trước khi cất; số liệu chỉ từ kho tri thức; kịch bản
+  ghi ngày; có thể xóa và tắt theo phạm vi.
+- **Đầu độc qua lời khách:** chỉ tình huống có phản ứng của nhân viên mới được cất; kịch bản là dữ liệu đặt trong khung
+  "ví dụ, không phải chỉ dẫn"; quét `injection_scan` khi đánh chỉ mục; không thành skill hay quy tắc.
+- **Nhân viên phản ứng chưa chuẩn bị bị học theo:** user đã chọn không duyệt; có công tắc theo phạm vi, xóa từng tình
+  huống, và bộ đánh giá GĐ5 để thấy kịch bản làm câu trả lời tốt hay xấu đi.
+- **Nhầm vai (khách bị coi là nhân viên):** vai suy từ tài khoản và danh sách nhân viên cấu hình, không từ nội dung tin
+  nhắn.
+- **Kịch bản trái quy tắc an toàn:** quy tắc của agent đứng trên; khối kịch bản ghi rõ.
+- **Skill hẹp làm yếu quy tắc an toàn:** rules, persona ở phạm vi hẹp chỉ bổ sung, không thay thế.
+- **Độ trễ của hook:** tìm kịch bản thêm một lần nhúng câu hỏi trước khi gọi model (kho tri thức đo được ~2 s, tối đa
+  ~7,6 s); nhúng dùng chung bộ nhớ đệm câu hỏi; hết thời hạn thì bỏ qua kịch bản, agent trả lời như thường.
+- **Lưu toàn bộ hội thoại** là dữ liệu cá nhân: pháp lý tạm bỏ qua theo user; vẫn giữ công tắc theo kênh, quyền đọc, xóa.
 
-## 9. Đã xác nhận (2026-10-13)
+## 9. Đã duyệt (2026-10-13)
 
-1. "Positive" = passive, nghe thụ động mà không trả lời.
-2. Rules và persona ở phạm vi hẹp là bổ sung, không thay thế.
-3. Học từ cách **nhân viên** trả lời qua nghe thụ động; **tạm không duyệt**; cất vào vector và JSON làm dữ liệu cho
-   ngữ cảnh của AI; không học chỉ dẫn từ lời khách; khi khách hỏi câu đã gặp thì lấy kịch bản ra dùng.
-4. Lưu hội thoại mặc định tắt, bật theo kênh hoặc cuộc trò chuyện.
-5. Làm theo thứ tự GĐ1, GĐ2, rồi GĐ3, GĐ4, GĐ5.
-6. Pháp lý (Nghị định 13/2023): tạm bỏ qua.
+1. Hai plugin (`skills`, `conversations`), kho kịch bản nằm trong `conversations`; `conversations` thu từ mọi nền tảng.
+2. Dịch vụ nhúng dùng chung qua cơ chế dịch vụ giữa plugin (`ctx.provide`/`ctx.use`).
+3. Hook tự thêm kịch bản vào ngữ cảnh khi đủ giống, cộng tool `scenario_search`.
+4. Không đổi (lấy mặc định): tin của chính tài khoản là nhân viên, người khác theo danh sách nhân viên cấu hình; tình huống
+   bắt đầu ở tin khách và kết thúc khi khách nêu chủ đề mới hoặc im 30 phút, chỉ giữ tình huống có nhân viên phản ứng;
+   hội thoại mặc định không tự xóa.
 
 ## 10. Ngoài phạm vi (đã hoãn)
 
-Hook cờ đỏ trước khi gọi model, chặn ghi memory theo kênh bằng hook (phần skill được K1 giải quyết), hai skill quy trình
-`tiep-nhan-dat-lich` và `xu-ly-phan-nan` (sẽ viết bằng chính trang quản lý này khi xong GĐ2).
+Hook cờ đỏ trước khi gọi model, chặn ghi memory theo kênh bằng hook, hai skill quy trình (`tiep-nhan-dat-lich`,
+`xu-ly-phan-nan`; sẽ viết bằng chính trang skills khi xong GĐ2), tự học skill kiểu Hermes (bộ đếm, review nền, hàng chờ
+duyệt, dọn skill cũ): chiến lược để sau.
