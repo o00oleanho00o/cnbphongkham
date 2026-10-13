@@ -89,8 +89,12 @@ của sub-agent và trả kết quả cuối (văn bản hoặc JSON) cho agent 
 
 Điều khác nhau thật giữa các phòng ban là quyền dữ liệu, tool, quy trình và người chịu trách nhiệm. Vì vậy:
 
-- **Tách agent theo ranh giới tin cậy, không theo phòng ban.** Bệnh nhân và nhân viên là hai mức tin cậy khác nhau,
-  nên là hai profile tách hẳn. Profile bệnh nhân không bao giờ chạm dữ liệu nội bộ.
+- **Tách profile theo ranh giới tin cậy, không theo phòng ban.** Một lõi, hai profile: bệnh nhân và nhân viên, vì
+  đó là hai mức tin cậy khác nhau. Không tạo thêm agent. Profile bệnh nhân không bao giờ chạm dữ liệu nội bộ.
+- **Red flag và tin nhạy cảm là quy tắc trong profile bệnh nhân, không phải agent mới.** Code phát hiện red flag
+  (danh sách dấu hiệu) và model có tool `escalate_to_staff`. Khi có red flag, bệnh nhân nhận câu mẫu cố định do code
+  đặt, còn việc vào hàng đợi cho nhân viên. Tin nhạy cảm (kết quả, hồ sơ, giá ngoại lệ) được agent soạn nháp, nhân
+  viên duyệt rồi Zalo mới gửi. Tổng cộng: một lõi, hai profile, một hàng đợi duyệt.
 - **Trong profile nhân viên, phòng ban là cấu hình:** mỗi phòng một gói chỉ dẫn (quy trình, giọng văn) nạp khi việc
   thuộc phòng đó; tool lọc theo vai người dùng, do code lọc.
 - **Chuyển việc giữa phòng ban bằng hệ thống:** tạo việc chờ trong hàng đợi của người phụ trách (ví dụ bác sĩ duyệt).
