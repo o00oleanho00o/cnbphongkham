@@ -40,6 +40,8 @@ const SCORE_LABEL: Record<string, string> = {
   vector: "độ giống",
   fused: "điểm",
   reranked: "điểm xếp lại",
+  judge: "khả năng nêu đúng điều hỏi",
+  judge_dropped: "khả năng nêu đúng điều hỏi",
   final: "điểm",
 };
 

@@ -9,8 +9,9 @@ import {
   embeddingTestText,
   keyEditOf,
   keyToSend,
-  labellingChange,
-  modelOptions,
+  asLevel,
+  jevNotice,
+  judgingChange,
   numberProblem,
   parserChange,
   parserProblems,
@@ -142,17 +143,28 @@ describe("parser", () => {
   });
 });
 
-describe("labelling", () => {
-  it("sends_a_model_choice_and_null_for_the_model_in_use", () => {
-    const saved = { enabled: true, model_entry: "m1", rerank: true };
+describe("judging", () => {
+  const saved = { enabled: false, level: "medium" } as const;
 
-    expect(labellingChange({ ...saved, model_entry: null }, saved)).toEqual({ labelling: { model_entry: null } });
+  it("sends_only_what_changed", () => {
+    expect(judgingChange({ ...saved, enabled: true }, saved)).toEqual({ judging: { enabled: true } });
+    expect(judgingChange({ enabled: true, level: "strict" }, saved)).toEqual({
+      judging: { enabled: true, level: "strict" },
+    });
+    expect(judgingChange(saved, saved)).toBeNull();
   });
 
-  it("keeps_a_saved_model_that_left_the_list_visible", () => {
-    const options = modelOptions([{ id: "m1", label: "DeepSeek" }], "gone");
+  it("reads_a_level_from_a_select_value_and_falls_back_to_medium", () => {
+    expect(asLevel("strict")).toBe("strict");
+    expect(asLevel("loose")).toBe("loose");
+    expect(asLevel("nonsense")).toBe("medium");
+  });
 
-    expect(options.map((option) => option.value)).toEqual(["", "m1", "gone"]);
+  it("says_what_is_missing_before_the_judge_can_work", () => {
+    expect(jevNotice(null)).toBeNull();
+    expect(jevNotice({ on: false, hasKey: false })).toContain("Plugin Jev đang tắt");
+    expect(jevNotice({ on: true, hasKey: false })).toContain("Chưa có khóa TypeSafe");
+    expect(jevNotice({ on: true, hasKey: true })).toBeNull();
   });
 });
 

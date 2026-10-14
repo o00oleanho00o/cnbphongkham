@@ -1,0 +1,19 @@
+{
+  "name": "@pema-agent/jev-ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The Jev page: the TypeSafe key, the model, the token allowance of the day and what each day used.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3"
+  }
+}

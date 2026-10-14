@@ -262,7 +262,7 @@ export interface Candidate {
 }
 
 export interface SearchStage {
-  /** `understand`, `keyword`, `vector`, `fused`, `reranked`, `final`. */
+  /** `understand`, `keyword`, `vector`, `fused`, `reranked`, `judge`, `judge_dropped`, `final`. */
   id: string;
   title: string;
   ms: number;
@@ -311,10 +311,20 @@ export interface EmbeddingSettings {
   chunks_without_vector: number;
 }
 
+/** How likely a chunk must be to state the fact asked, for the Jev judge to keep it. */
+export type JudgeLevel = "strict" | "medium" | "loose";
+
+/** Whether plugin jev is on and has a key: what the judging section needs to say. */
+export interface JevState {
+  on: boolean;
+  hasKey: boolean;
+}
+
 export interface KnowledgeSettings {
   embedding: EmbeddingSettings;
   parser: { kind: "simple" | "docling"; docling_url: string; origin: SettingOrigin };
-  labelling: { enabled: boolean; model_entry: string | null; rerank: boolean };
+  labelling: { enabled: boolean; model_entry: string | null };
+  judging: { enabled: boolean; level: JudgeLevel };
   search: {
     results: number;
     min_score: number;
@@ -332,6 +342,7 @@ export type SettingsPatch = {
   };
   parser?: Partial<KnowledgeSettings["parser"]>;
   labelling?: Partial<KnowledgeSettings["labelling"]>;
+  judging?: Partial<KnowledgeSettings["judging"]>;
   search?: Partial<KnowledgeSettings["search"]>;
   benchmark_mode?: boolean;
   /** Groups to put back to the profile's values ("Về mặc định"); the server clears their `origin`. */

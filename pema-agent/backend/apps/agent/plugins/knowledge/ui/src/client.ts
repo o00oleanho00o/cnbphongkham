@@ -9,6 +9,7 @@ import type {
   EmbeddingTest,
   Gap,
   GapState,
+  JevState,
   KnowledgeSettings,
   KnowledgeStatus,
   ParserTest,
@@ -95,10 +96,13 @@ export const knowledge = {
   testParser: () => api.post<ParserTest>(`${BASE}/settings/test-parser`),
 };
 
-/** The chat models the agent has, for the labelling model choice (the model page's list). */
-export async function modelChoices(): Promise<{ id: string; label: string }[]> {
-  const listing = await api.get<{ entries: { id: string; label: string }[] }>("/v1/admin/model/entries");
-  return listing.entries.map(({ id: entry, label }) => ({ id: entry, label }));
+/** Whether plugin jev is on and has a TypeSafe key, for the judging section (its own routes, not this plugin's). */
+export async function jevState(): Promise<JevState> {
+  const listing = await api.get<{ plugins: { name: string; enabled: boolean }[] }>("/v1/admin/plugins");
+  const on = listing.plugins.some((plugin) => plugin.name === "jev" && plugin.enabled);
+  if (!on) return { on, hasKey: false };
+  const settings = await api.get<{ has_key: boolean }>("/v1/plugins/jev/settings");
+  return { on, hasKey: settings.has_key };
 }
 
 export function messageOf(err: unknown): string {

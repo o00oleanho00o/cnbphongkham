@@ -2,6 +2,8 @@
 import type {
   EmbeddingSettings,
   EmbeddingTest,
+  JevState,
+  JudgeLevel,
   KnowledgeSettings,
   ParserTest,
   SettingOrigin,
@@ -202,32 +204,35 @@ export function parserChange(form: ParserForm, saved: KnowledgeSettings["parser"
   return isEmpty(parser) ? null : { parser };
 }
 
-// -- labelling and rerank --------------------------------------------------------------------------------
+// -- judging (Jev) ---------------------------------------------------------------------------------------
 
-export type LabellingForm = KnowledgeSettings["labelling"];
+export type JudgingForm = KnowledgeSettings["judging"];
 
-export const CURRENT_MODEL = "";
+export const LEVEL_OPTIONS: readonly { value: JudgeLevel; label: string }[] = [
+  { value: "strict", label: "Chặt: chỉ giữ đoạn rất chắc nêu đúng điều khách hỏi" },
+  { value: "medium", label: "Vừa" },
+  { value: "loose", label: "Rộng: giữ cả đoạn hơi chắc" },
+];
 
-/** The select's value for a model entry (null, "Model đang chọn", is the empty string). */
-export const modelValue = (entry: string | null): string => entry ?? CURRENT_MODEL;
-export const modelEntry = (value: string): string | null => (value === CURRENT_MODEL ? null : value);
+const LEVEL_BY_VALUE: Record<string, JudgeLevel> = { strict: "strict", medium: "medium", loose: "loose" };
 
-export function labellingChange(form: LabellingForm, saved: LabellingForm): SettingsPatch | null {
-  const labelling = changed(saved, form);
-  return isEmpty(labelling) ? null : { labelling };
+/** The level a select value names; "medium" for anything else. */
+export const asLevel = (value: string): JudgeLevel => LEVEL_BY_VALUE[value] ?? "medium";
+
+export function judgingChange(form: JudgingForm, saved: JudgingForm): SettingsPatch | null {
+  const judging = changed(saved, form);
+  return isEmpty(judging) ? null : { judging };
 }
 
-/** The choices of the model select; a saved entry that is no longer in the list stays visible. */
-export function modelOptions(
-  choices: readonly { id: string; label: string }[],
-  current: string | null,
-): { value: string; label: string }[] {
-  const missing = current !== null && !choices.some((choice) => choice.id === current);
-  return [
-    { value: CURRENT_MODEL, label: "Model đang chọn (như agent trả lời)" },
-    ...choices.map((choice) => ({ value: choice.id, label: choice.label })),
-    ...(missing ? [{ value: current, label: `${current} (không còn trong danh sách model)` }] : []),
-  ];
+const JEV_OFF = "Plugin Jev đang tắt: bật plugin Jev trước, rồi nhập khóa TypeSafe ở trang Jev.";
+const JEV_NO_KEY =
+  "Chưa có khóa TypeSafe: nhập khóa ở trang Jev. Cho tới lúc đó tìm kiếm vẫn chạy, chỉ là chưa được lọc.";
+
+/** What is missing before the judge can work; null when nothing is (or while the state is not known yet). */
+export function jevNotice(state: JevState | null): string | null {
+  if (state === null) return null;
+  if (!state.on) return JEV_OFF;
+  return state.hasKey ? null : JEV_NO_KEY;
 }
 
 // -- search ----------------------------------------------------------------------------------------------
