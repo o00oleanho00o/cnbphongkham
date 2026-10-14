@@ -15,13 +15,14 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, Field
 
-from agent_app.plugins import PluginContext, PluginDatabase, PluginError
+from agent_app.plugins import JUDGE, JudgeService, PluginContext, PluginDatabase, PluginError
 from agentcore import PromptEnv, SessionSection, ToolContext, ToolOutput, ToolSpec, TurnInfo, TurnSection
 from agentcore.prompt.data import SessionData
 
 from .embedder import IDLE_S, Embedder
 from .embedding import EmbeddingClient, EmbeddingConfig
 from .ingest import Ingest, new_id
+from .judging import DEFAULT_LEVEL, JudgePlan
 from .models import CatalogEntry, Gap, as_mapping
 from .search import Searcher, VectorPlan, tool_detail, tool_text
 from .store import InMemoryKnowledgeStore, KnowledgeStore, PostgresKnowledgeStore
@@ -76,7 +77,8 @@ def default_settings(config: Mapping[str, Any]) -> dict[str, Any]:
             "chunks_without_vector": 0,
         },
         "parser": {"kind": "simple", "docling_url": "", "origin": "profile"},
-        "labelling": {"enabled": False, "model_entry": None, "rerank": False},
+        "labelling": {"enabled": False, "model_entry": None},
+        "judging": {"enabled": False, "level": DEFAULT_LEVEL},
         "search": {
             "results": int(config.get("results", 6)),
             "min_score": float(config.get("vector_min_similarity", 0.35)),
@@ -140,6 +142,7 @@ class KnowledgePlugin:
         )
         self._zone = _zone(str(ctx.config.get("timezone", "Asia/Ho_Chi_Minh")))
         self._vector_timeout = float(ctx.config.get("vector_timeout_s", 10.0))
+        self._judge_timeout = float(ctx.config.get("judge_timeout_s", 4.0))
         self.client = client or EmbeddingClient()
         self.embedder = Embedder(
             self.store,
@@ -169,7 +172,7 @@ class KnowledgePlugin:
                 ),
                 args_model=SearchArgs,
                 handler=self._search_tool,
-                timeout_s=15.0,
+                timeout_s=20.0,
                 max_result_chars=9000,
                 read_only=True,
             )
@@ -270,6 +273,14 @@ class KnowledgePlugin:
             return None
         return VectorPlan(float(search["min_score"]), self._vector_timeout, self.embedder.query_vector)
 
+    async def judge_plan(self) -> JudgePlan | None:
+        """How a search is judged; None while the judge is switched off on the settings page. The service is
+        looked up now, not at registration: plugin ``jev`` may be enabled or disabled while the agent runs."""
+        values = (await self.settings())["judging"]
+        if not values["enabled"]:
+            return None
+        return JudgePlan(self._ctx.use(JUDGE, JudgeService), str(values["level"]), self._judge_timeout)
+
     async def save_settings(self, patch: Mapping[str, Any]) -> dict[str, Any]:
         current = await self.settings()
         resets = [group for group in patch.get("reset", []) if group in ("embedding", "parser")]
@@ -331,6 +342,7 @@ class KnowledgePlugin:
             services=await self.store.services(),
             vector=await self.vector_plan(settings),
             variants=[text[:300] for text in args.alternatives if len(text.strip()) >= 2],
+            judge=await self.judge_plan(),
         )
         if not result.final:
             await self.record_gap(args.query, ctx.channel or "")

@@ -16,6 +16,7 @@ from agent_app.plugins import PluginError
 from .embedder import EmbedStatus
 from .embedding import EmbeddingError
 from .ingest import ADMIN, new_id
+from .judging import LEVELS
 from .models import (
     BulkBody,
     ChunkPatch,
@@ -323,6 +324,7 @@ def knowledge_routes(plugin: KnowledgePlugin) -> APIRouter:
             char_budget=int(settings["char_budget"]),
             services=await store.services(),
             vector=await plugin.vector_plan(settings),
+            judge=await plugin.judge_plan(),
         )
         return debug_view(result, float(settings["min_score"]))
 
@@ -459,6 +461,7 @@ def _warnings(state: EmbedStatus) -> list[str]:
 
 def _checked_settings(body: dict[str, Any]) -> dict[str, Any]:
     _check_embedding(as_mapping(body.get("embedding")))
+    _check_judging(as_mapping(body.get("judging")))
     search = as_mapping(body.get("search"))
     if search:
         if "results" in search and not (isinstance(search["results"], int) and 1 <= search["results"] <= 20):
@@ -469,6 +472,16 @@ def _checked_settings(body: dict[str, Any]) -> dict[str, Any]:
                 status.HTTP_422_UNPROCESSABLE_ENTITY, f"Ngân sách ký tự phải từ 500 đến {MAX_CHAR_BUDGET}."
             )
     return body
+
+
+def _check_judging(values: dict[str, Any]) -> None:
+    """Server-side limits of the judge settings; a wrong one is a 422."""
+    if "enabled" in values and not isinstance(values["enabled"], bool):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Bật/tắt bộ chấm phải là true hoặc false.")
+    if "level" in values and values["level"] not in LEVELS:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, "Mức chặt phải là strict, medium hoặc loose."
+        )
 
 
 def _check_embedding(values: dict[str, Any]) -> None:

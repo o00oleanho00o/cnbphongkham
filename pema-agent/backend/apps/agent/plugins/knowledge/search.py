@@ -4,7 +4,8 @@ Stages: understand the question (folded words, the services it names), keyword c
 embedding service is connected, vector candidates found at the same time (the vector list leads, the keyword
 list follows), a small boost for chunks labelled with a named service, at most a few chunks per document, then
 a character budget. A question may come with up to two variants (the agent writes them in the same call):
-each is searched the same way and the lists are merged by rank (``fusion.rank_fusion``).
+each is searched the same way and the lists are merged by rank (``fusion.rank_fusion``). When the
+judge is on (``judging.py``), the best chunks are judged before the budget and only those with evidence go on.
 The vector branch never makes a search fail or wait long: when it is off, failing or slow the result is
 exactly the keyword result. Every channel sees the same store (no patient/staff split for now).
 """
@@ -22,6 +23,7 @@ from typing import Any, Final
 from .embedding import EmbeddingError
 from .fusion import rank_fusion, vector_first
 from .ingest import recognise
+from .judging import JUDGED, JudgeOutcome, JudgePlan, judge_hits
 from .models import Hit, Service
 from .store import KnowledgeStore
 from .text import fold, query_terms
@@ -72,6 +74,8 @@ class SearchResult:
     total_ms: float
     variants: tuple[str, ...] = ()
     """The other ways of asking that were searched with the question."""
+    judge: JudgeOutcome | None = None
+    """What the judge did; None when it is off."""
 
     @property
     def vector_used(self) -> bool:
@@ -117,6 +121,7 @@ class Searcher:
         services: Sequence[Service],
         vector: VectorPlan | None = None,
         variants: Sequence[str] = (),
+        judge: JudgePlan | None = None,
     ) -> SearchResult:
         started = self._timer()
         asked = _distinct(question, variants)
@@ -131,7 +136,9 @@ class Searcher:
         fusion = any(branch.fused for branch in branches)
         ranked = branches[0].ranked() if len(branches) == 1 else rank_fusion([b.ranked() for b in branches])
         boosted = sorted((_boosted(hit, named) for hit in ranked), key=lambda hit: hit.score, reverse=True)
-        final = _packed(_spread(boosted), results, char_budget)
+        spread = _spread(boosted)
+        judged = None if judge is None else await judge_hits(judge, question, asked[1:], spread[:JUDGED])
+        final = _packed(judged.kept if judged is not None and judged.judged else spread, results, char_budget)
         return SearchResult(
             question=question,
             folded=fold(question).strip(),
@@ -149,6 +156,7 @@ class Searcher:
             fusion=fusion,
             total_ms=(self._timer() - started) * 1000,
             variants=tuple(asked[1:]),
+            judge=judged,
         )
 
     async def _branch(self, text: str, as_of: date, plan: VectorPlan | None) -> _Branch:
@@ -233,6 +241,12 @@ def _packed(hits: Sequence[Hit], results: int, char_budget: int) -> list[Hit]:
 
 def tool_text(result: SearchResult) -> str:
     """What the agent reads: each chunk with the document's code, its headings and its text."""
+    if not result.final and result.judge is not None and result.judge.verdicts:
+        return (
+            "Có đoạn tài liệu gần chủ đề nhưng không đoạn nào đủ căn cứ để trả lời câu hỏi này. Đừng đoán: "
+            "thử tìm lại với từ khóa khác, hoặc nói với khách là chưa có thông tin và đề nghị chuyển "
+            "nhân viên."
+        )
     if not result.final:
         return (
             "Không có đoạn tài liệu nào khớp câu hỏi này trong kho tri thức. Đừng đoán: thử tìm lại với từ "
@@ -267,6 +281,17 @@ def tool_detail(result: SearchResult) -> dict[str, Any]:
         "top_score": round(result.final[0].score, 4) if result.final else 0,
         "doc_ids": list(dict.fromkeys(hit.doc_code or hit.chunk.source_id for hit in result.final)),
         "as_of": result.as_of.isoformat(),
+        **_judge_detail(result.judge),
+    }
+
+
+def _judge_detail(outcome: JudgeOutcome | None) -> dict[str, Any]:
+    if outcome is None:
+        return {}
+    return {
+        "judged": outcome.judged,
+        "judge_dropped": sum(not v.kept for v in outcome.verdicts),
+        "judge_ms": round(outcome.ms),
     }
 
 
@@ -310,6 +335,7 @@ def debug_view(result: SearchResult, min_similarity: float) -> dict[str, Any]:
                 result.fused[:20] if result.fusion else [],
                 skipped=not result.fusion,
             ),
+            *_judge_stages(result.judge),
             _stage(
                 "final",
                 "Gói cuối đúng như agent thấy",
@@ -321,6 +347,43 @@ def debug_view(result: SearchResult, min_similarity: float) -> dict[str, Any]:
             ),
         ],
     }
+
+
+JUDGE_REASON: Final = {
+    "injection": "có dấu hiệu điều khiển trợ lý",
+    "off_subject": "lạc chủ đề",
+    "no_evidence": "không đủ căn cứ",
+}
+
+
+def _judge_stages(outcome: JudgeOutcome | None) -> list[dict[str, Any]]:
+    """Two stages for "Thử tìm": the chunks the judge kept (scored by how likely they state the fact asked)
+    and the ones it dropped, with why."""
+    if outcome is None:
+        return []
+    if not outcome.judged:
+        return [_stage("judge", "Bộ chấm Jev", outcome.ms, outcome.note or "", [], skipped=True)]
+    dropped = [v for v in outcome.verdicts if not v.kept]
+    why = ", ".join(
+        f"{sum(v.reason == reason for v in dropped)} {label}"
+        for reason, label in JUDGE_REASON.items()
+        if any(v.reason == reason for v in dropped)
+    )
+    note = (
+        f"Giữ {len(outcome.kept)}/{len(outcome.verdicts)} đoạn, xếp theo khả năng nêu đúng điều khách hỏi"
+        + (f"; bỏ {why}" if why else "")
+    )
+    return [
+        _stage("judge", "Bộ chấm Jev: giữ", outcome.ms, note, outcome.kept),
+        _stage(
+            "judge_dropped",
+            "Bộ chấm Jev: bỏ",
+            0.0,
+            f"{len(dropped)} đoạn không đưa cho agent" if dropped else "Không bỏ đoạn nào.",
+            [replace(v.hit, score=v.ranks) for v in dropped],
+            skipped=not dropped,
+        ),
+    ]
 
 
 def _stage(

@@ -79,6 +79,12 @@ title = "Vector wait"
 description = "Seconds a search waits for the vector of the question before it goes on with keywords only."
 default = 10.0
 
+[user_config.judge_timeout_s]
+type = "number"
+title = "Judge wait"
+description = "Seconds a search waits for the judge (plugin jev) to rate the chunks it found, before it goes on with them unjudged."
+default = 4.0
+
 [user_config.catalog_max_docs]
 type = "integer"
 title = "Table of contents"
