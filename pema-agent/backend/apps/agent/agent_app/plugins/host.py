@@ -29,7 +29,7 @@ from agent_app.model_settings import NO_SECRET_KEY, SECRET_KEY_ENV
 from agent_app.plugins.manifest import PluginError, PluginSource, UiSpec
 from agent_app.plugins.migrations import NOT_MIGRATED, latest_applied, migration_files
 from agent_app.plugins.records import InMemoryPluginRecords, PluginStorage, StorageFor
-from agentcore import ToolSpec
+from agentcore import ModelClient, ToolSpec
 from agentcore.channels import ChannelAdapter, valid_channel_name
 from agentcore.harness.hooks import Hook
 from agentcore.prompt import SessionSection, StepSection, TurnSection
@@ -135,8 +135,10 @@ class PluginContext:
         self_url: Callable[[], str | None],
         allow_internet: bool = False,
         database: PluginDatabase | None = None,
+        model: Callable[[], ModelClient | None] = lambda: None,
     ) -> None:
         self._loaded = loaded
+        self._model = model
         self._allow_internet = allow_internet
         self._database = database
         self._env = env
@@ -166,6 +168,15 @@ class PluginContext:
         """The plugin a channel comes from (a chat plugin that runs one channel per account names it); None
         for a channel no enabled plugin registered (``http``, ``cli``)."""
         return self._channel_owner(channel)
+
+    @property
+    def model(self) -> ModelClient:
+        """The agent's chat model (the one the model page chooses), for a plugin that makes calls of its own.
+        Raises ``PluginError`` while the service has not given plugins one."""
+        found = self._model()
+        if found is None:
+            raise PluginError(self.name, "the agent has no model to give plugins yet")
+        return found
 
     @property
     def storage(self) -> PluginStorage:
@@ -319,6 +330,7 @@ class PluginHost:
         self._data_root = data_root or Path(env.get(DATA_DIR_ENV) or Path.home() / DEFAULT_DATA_DIR)
         self.self_url: str | None = None
         """Set by the service once it listens; plugins read it through ``ctx.self_url``."""
+        self._model: ModelClient | None = None
         self._loaded: dict[str, _Loaded] = {}
         self._generation = itertools.count(1)
         self.version = 0
@@ -337,6 +349,10 @@ class PluginHost:
             agent=self._database.agent,
             latest_migration=len(migration_files(source)),
         )
+
+    def use_model(self, model: ModelClient) -> None:
+        """The model plugins get through ``ctx.model``; a call made after this one uses the new one."""
+        self._model = model
 
     def set_sources(self, sources: Mapping[str, PluginSource]) -> None:
         """The plugins found by a new look at the folders; enabled ones keep running from their folder."""
@@ -383,6 +399,7 @@ class PluginHost:
                     self_url=lambda: self.self_url,
                     allow_internet=self._allow_internet,
                     database=self._plugin_database(source),
+                    model=lambda: self._model,
                 )
             )
             self._check_unique(loaded)

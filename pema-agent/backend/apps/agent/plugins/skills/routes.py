@@ -10,11 +10,13 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Request, status
 from pydantic import BaseModel, ConfigDict, Field
 
 from agent_app.plugins import PluginError
+from agentcore import ModelError
 
 from .check import ItemError
 from .models import Item, Kind, Status, new_id
 from .plugin import SkillsPlugin, render
 from .store import NameTakenError
+from .studio import Known, Studio
 
 ItemId = Annotated[str, Path(pattern=r"^itm-[a-z0-9]{1,40}$")]
 
@@ -47,7 +49,14 @@ class RestoreBody(_Body):
     version: int = Field(ge=1)
 
 
-def skills_routes(plugin: SkillsPlugin) -> APIRouter:
+class ChatBody(_Body):
+    conversation_id: str = Field(pattern=r"^[a-z0-9-]{8,64}$")
+    text: str = Field(min_length=1, max_length=8000)
+    channels: list[str] = Field(default_factory=list[str], max_length=50)
+    plugins: list[str] = Field(default_factory=list[str], max_length=50)
+
+
+def skills_routes(plugin: SkillsPlugin, studio: Studio) -> APIRouter:
     async def ready() -> None:
         try:
             await plugin.ready()
@@ -130,6 +139,24 @@ def skills_routes(plugin: SkillsPlugin) -> APIRouter:
             meta=dict(snap.get("meta", {})),
         )
         return await save(restored, request, f"restored version {body.version}")
+
+    @router.post("/author/chat")
+    async def author_chat(body: ChatBody, request: Request) -> dict[str, Any]:
+        """One turn of the chat that helps staff write items; the items it saved come back with it."""
+        known = Known(channels=body.channels, plugins=body.plugins)
+        try:
+            reply = await studio.chat(body.conversation_id, body.text, known, by=actor(request))
+        except ModelError as err:
+            raise HTTPException(
+                status.HTTP_502_BAD_GATEWAY, f"Chưa gọi được model ({err.kind}): {err}"
+            ) from err
+        except PluginError as err:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(err)) from err
+        return {
+            "reply": reply.text,
+            "stop": reply.stop,
+            "items": [{"item": t.item.shown(), "before_version": t.before_version} for t in reply.touched],
+        }
 
     @router.get("/effective")
     async def effective(channel: str | None = None) -> dict[str, Any]:

@@ -237,6 +237,7 @@ def build_runtime(
 
     access = None if db is None else DatabaseAccess(db.engine, tenant_id=tenant_id, agent=name)
     live = LiveAgent(build, plugins or start_plugins(profile, env, storage=records.storage, database=access))
+    live.host.use_model(model or build_model(profile, fake=True))
     installed = env.get(PLUGIN_DIR_ENV)
     plugin_manager = PluginManager(
         live,

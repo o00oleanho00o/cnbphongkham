@@ -41,6 +41,11 @@ def clean(scopes: Iterable[str]) -> list[str]:
     return found
 
 
+def scopes_text(scopes: Sequence[str]) -> str:
+    """The scopes as one phrase for a person or a model; none means the whole agent."""
+    return ", ".join(scopes) if scopes else "cả agent"
+
+
 def reach(scopes: Sequence[str], channel: str | None, plugin_of: PluginOf) -> int | None:
     """How specifically the scopes match a turn on ``channel``: 0 the whole agent, 1 its plugin, 2 the
     channel itself; None when none does. No scopes means the whole agent."""
