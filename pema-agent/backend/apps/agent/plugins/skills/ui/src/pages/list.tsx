@@ -1,8 +1,7 @@
-/** "Danh sách": every skill, rules and persona item, who wrote it, where it applies; add one or open one. */
+/** "Danh sách": every skill, rules and persona item, who wrote it, where it applies; open one or ask the chat to edit it. */
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { messageOf, skills } from "../client";
-import { ItemSheet } from "../form/item-sheet";
 import {
   KINDS,
   KIND_LABEL,
@@ -16,7 +15,8 @@ import {
 } from "../logic";
 import { Chip } from "../parts";
 import { ui } from "../sdk";
-import type { Choices, Item, Kind, Status } from "../types";
+import type { Item, Kind, Status } from "../types";
+import { ViewSheet } from "../view/view-sheet";
 
 const KIND_FILTER = [{ value: "", label: "Mọi loại" }, ...KINDS.map((kind) => ({ value: kind.id, label: kind.label }))];
 const STATUS_FILTER = [{ value: "", label: "Mọi trạng thái" }, ...STATUSES.map((s) => ({ value: s.id, label: s.label }))];
@@ -29,7 +29,7 @@ function asStatus(value: string): Status | "" {
   return STATUSES.find((status) => status.id === value)?.id ?? "";
 }
 
-function Row({ item, onOpen }: { item: Item; onOpen: () => void }) {
+function Row({ item, onOpen, onEdit }: { item: Item; onOpen: () => void; onEdit: () => void }) {
   const scopes = item.scopes.length === 0 ? ["agent"] : item.scopes;
   return (
     <li className="space-y-2 rounded-tile border border-line bg-surface p-4">
@@ -42,9 +42,14 @@ function Row({ item, onOpen }: { item: Item; onOpen: () => void }) {
           </p>
           <p className="text-body text-ink">{item.description}</p>
         </div>
-        <ui.Button variant="secondary" onClick={onOpen}>
-          Mở
-        </ui.Button>
+        <div className="flex gap-2">
+          <ui.Button variant="secondary" onClick={onOpen}>
+            Xem
+          </ui.Button>
+          <ui.Button variant="secondary" onClick={onEdit}>
+            Sửa bằng chat
+          </ui.Button>
+        </div>
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
         {scopes.map((scope) => (
@@ -58,13 +63,13 @@ function Row({ item, onOpen }: { item: Item; onOpen: () => void }) {
   );
 }
 
-export function ListPage({ choices }: { choices: Choices }) {
+export function ListPage({ onEdit, onWrite }: { onEdit: (item: Item) => void; onWrite: () => void }) {
   const [items, setItems] = useState<Item[] | null>(null);
   const [error, setError] = useState("");
   const [q, setQ] = useState("");
   const [kind, setKind] = useState<Kind | "">("");
   const [status, setStatus] = useState<Status | "">("");
-  const [open, setOpen] = useState<Item | "new" | null>(null);
+  const [open, setOpen] = useState<Item | null>(null);
 
   const load = useCallback(async () => {
     setError("");
@@ -86,8 +91,8 @@ export function ListPage({ choices }: { choices: Choices }) {
     <div className="space-y-4">
       <ui.PageHeader
         title="Kỹ năng, quy tắc và giọng điệu"
-        subtitle="Nội dung agent đọc ở mỗi cuộc trò chuyện. Chọn nơi áp dụng: cả agent, một plugin (Zalo) hay một tài khoản."
-        aside={<ui.Button onClick={() => setOpen("new")}>Thêm mới</ui.Button>}
+        subtitle="Nội dung agent đọc ở mỗi cuộc trò chuyện. Soạn hoặc sửa bằng chat với trợ lý, hoặc thêm thẳng file."
+        aside={<ui.Button onClick={onWrite}>Soạn bằng chat</ui.Button>}
       />
       <div className="flex flex-wrap gap-2">
         <div className="min-w-48 flex-1">
@@ -125,22 +130,25 @@ export function ListPage({ choices }: { choices: Choices }) {
       {items !== null && items.length === 0 && !error && (
         <ui.Card>
           <p className="text-center text-body font-bold text-heading">Chưa có mục nào</p>
-          <ui.Empty>Thêm một kỹ năng, một quy tắc hoặc một giọng điệu để agent dùng.</ui.Empty>
+          <ui.Empty>Nói với trợ lý điều bạn muốn agent làm, hoặc thả một file .md vào khung chat.</ui.Empty>
         </ui.Card>
       )}
       {items !== null && items.length > 0 && shown.length === 0 && <ui.Empty>Không có mục nào khớp bộ lọc.</ui.Empty>}
       <ul className="space-y-2">
         {shown.map((item) => (
-          <Row key={item.id} item={item} onOpen={() => setOpen(item)} />
+          <Row key={item.id} item={item} onOpen={() => setOpen(item)} onEdit={() => onEdit(item)} />
         ))}
       </ul>
       {open !== null && (
-        <ItemSheet
-          key={open === "new" ? "new" : open.id}
-          item={open === "new" ? null : open}
-          choices={choices}
+        <ViewSheet
+          key={open.id}
+          item={open}
           onClose={() => setOpen(null)}
-          onSaved={() => void load()}
+          onChanged={() => void load()}
+          onEdit={(target) => {
+            setOpen(null);
+            onEdit(target);
+          }}
         />
       )}
     </div>

@@ -1,6 +1,18 @@
 /** The plugin's admin routes, signed by the dashboard's session. */
 import { api } from "./sdk";
-import type { Choices, Effective, Item, ItemBody, ItemList, ItemPatch, Kind, Saved, Status, Version } from "./types";
+import type {
+  ChatReply,
+  Choices,
+  Effective,
+  Item,
+  ItemBody,
+  ItemList,
+  ItemPatch,
+  Kind,
+  Saved,
+  Status,
+  Version,
+} from "./types";
 
 const BASE = "/v1/plugins/skills";
 const id = encodeURIComponent;
@@ -23,6 +35,14 @@ export const skills = {
   versions: (item: string) => api.get<{ versions: Version[] }>(`${BASE}/items/${id(item)}/versions`),
   restore: (item: string, version: number) =>
     api.post<Saved>(`${BASE}/items/${id(item)}/restore`, { version }),
+  /** One turn of the chat with the agent's model that writes drafts for staff. */
+  chat: (conversationId: string, text: string, known: Choices) =>
+    api.post<ChatReply>(`${BASE}/author/chat`, {
+      conversation_id: conversationId,
+      text,
+      channels: known.channels,
+      plugins: known.plugins,
+    }),
   effective: (channel: string) => api.get<Effective>(`${BASE}/effective${query({ channel })}`),
 };
 

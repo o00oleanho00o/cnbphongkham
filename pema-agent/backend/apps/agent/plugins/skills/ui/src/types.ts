@@ -64,6 +64,13 @@ export interface Effective {
   text: string | null;
 }
 
+/** One turn of the chat that helps write items: the answer, and the items it saved or changed. */
+export interface ChatReply {
+  reply: string;
+  stop: string;
+  items: { item: Item; before_version: number | null }[];
+}
+
 /** What the dashboard knows of the agent: the chat channels it runs and the plugins that are on. */
 export interface Choices {
   channels: string[];

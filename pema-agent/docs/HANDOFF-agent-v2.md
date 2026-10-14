@@ -862,7 +862,7 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   route `/v1/plugins/skills/items|versions|restore|effective`; kiểm tra mọi lần ghi (`injection_scan`, kích thước,
   cảnh báo SĐT/CCCD). Lõi: `ctx.channel_plugin(kênh)`. Profile `clinic`: `[skills] enabled = false` (lõi hết tool ghi
   skill) và bật plugin `skills`. Test: 55 test (4 Postgres, đã chạy trên `agent_activity_test`). **Trang web (GĐ2, 2026-10-13):** `plugins/skills/ui` (bundle IIFE như `knowledge`, `pnpm run build`; Docker `agent.Dockerfile` đã thêm
-  bước build), tab "Kỹ năng": Danh sách (lọc, thêm, sửa, chọn nơi áp dụng, lịch sử và khôi phục) và "Kênh nhận gì". Theo lời user
+  bước build), tab "Kỹ năng" (user bác UI dạng form, 2026-10-14, nên làm lại): "Soạn bằng chat" (khung chat với model của agent, trợ lý lưu bản nháp thành thẻ có Dùng/Bỏ/Hoàn tác; nút "Thêm file kỹ năng" hoặc thả file .md/.txt vào khung để thêm thẳng, phần đầu `---` đọc name, description, kind, scopes, status), "Danh sách" (lọc, Xem, Tải về, Dùng/Tắt/Cất, lịch sử và khôi phục, Sửa bằng chat) và "Kênh nhận gì". Không còn form sửa tay. Theo lời user
   bỏ test UI, ảnh chụp và so khớp canvas (chỉ chạy `pnpm run build` = tsc + vite); chưa mở thử trong trình duyệt. **Chưa làm:** tab "Kỹ năng và quy tắc"
   trên trang từng tài khoản Zalo, so sánh hai phiên bản, `conversations` và đường quan sát ở lõi (GĐ3), kho kịch bản RAG (GĐ4). Docker: Postgres dừng đột ngột cần
   vài phút khởi động lại (fsync); `docker compose start postgres` đủ để chạy test DB.
