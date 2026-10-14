@@ -27,44 +27,46 @@ include:
       - pema-agent/infra/docker-compose.local.yml
     env_file: pema-agent/infra/.env.local-demo
 
-services:
-  pema-design-viewer:
-    build:
-      context: .
-      dockerfile: design-viewer/Dockerfile
-    container_name: pema-design-viewer
-    ports:
-      - "4190:80"
-    restart: unless-stopped
+services: {}
+  # Design/reference services, commented out so `up --build` builds only the clinic stack.
+  # To use them: change `services: {}` above to `services:` and uncomment the ones you want.
+  # pema-design-viewer:
+  #   build:
+  #     context: .
+  #     dockerfile: design-viewer/Dockerfile
+  #   container_name: pema-design-viewer
+  #   ports:
+  #     - "4190:80"
+  #   restart: unless-stopped
 
-  pema-web-design-viewer:
-    build:
-      context: .
-      dockerfile: design-viewer/Dockerfile
-      args:
-        CANVAS_DIR: "Pema Web redesign canvas"
-    container_name: pema-web-design-viewer
-    ports:
-      - "4191:80"
-    restart: unless-stopped
+  # pema-web-design-viewer:
+  #   build:
+  #     context: .
+  #     dockerfile: design-viewer/Dockerfile
+  #     args:
+  #       CANVAS_DIR: "Pema Web redesign canvas"
+  #   container_name: pema-web-design-viewer
+  #   ports:
+  #     - "4191:80"
+  #   restart: unless-stopped
 
   # Static folder listing of design-system/ (preview/*.html cards render, the .md pages open as text).
-  pema-design-system:
-    image: python:3.12-alpine
-    container_name: pema-design-system
-    command: ["python", "-m", "http.server", "80", "--bind", "0.0.0.0", "--directory", "/site"]
-    volumes:
-      - ./design-system:/site:ro
-    ports:
-      - "4192:80"
-    restart: unless-stopped
+  # pema-design-system:
+  #   image: python:3.12-alpine
+  #   container_name: pema-design-system
+  #   command: ["python", "-m", "http.server", "80", "--bind", "0.0.0.0", "--directory", "/site"]
+  #   volumes:
+  #     - ./design-system:/site:ro
+  #   ports:
+  #     - "4192:80"
+  #   restart: unless-stopped
 
   # Old prototype of the web (reference for the design packages; the app itself does not use it).
-  pema-prototype:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: pema-prototype
-    ports:
-      - "4173:4173"
-    restart: unless-stopped
+  # pema-prototype:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: pema-prototype
+  #   ports:
+  #     - "4173:4173"
+  #   restart: unless-stopped

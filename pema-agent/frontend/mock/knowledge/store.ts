@@ -159,6 +159,7 @@ function seedSettings(): KnowledgeSettings {
     },
     parser: { kind: "simple", docling_url: "", origin: "profile" },
     labelling: { enabled: true, model_entry: null },
+    judging: { enabled: false, level: "medium" },
     search: {
       results: 8,
       min_score: 0.2,

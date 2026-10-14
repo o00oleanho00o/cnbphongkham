@@ -87,6 +87,7 @@ function applyPatch(change: SettingsChange): Reply {
     embedding: patch.embedding ? patchEmbedding(patch.embedding) : store.settings.embedding,
     parser: patch.parser ? { ...store.settings.parser, ...patch.parser, origin: "saved" } : store.settings.parser,
     labelling: { ...settings.labelling, ...patch.labelling },
+    judging: { ...settings.judging, ...patch.judging },
     search: { ...settings.search, ...patch.search },
     benchmark_mode: patch.benchmark_mode ?? settings.benchmark_mode,
   };
