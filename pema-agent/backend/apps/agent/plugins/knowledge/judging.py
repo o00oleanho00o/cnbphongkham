@@ -14,8 +14,8 @@ chunks go to the agent as the search ranked them and the reason is noted.
 from __future__ import annotations
 
 import time
-from collections.abc import Callable, Sequence
-from dataclasses import dataclass, replace
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, field, replace
 from typing import Any, Final, Literal
 
 from agent_app.plugins import JudgeService, JudgeUnavailableError
@@ -66,6 +66,8 @@ class JudgePlan:
     service: JudgeService | None
     level: str
     timeout_s: float
+    questions: Mapping[str, Mapping[str, Any]] = field(default_factory=lambda: QUESTIONS)
+    """What the judge is asked; the bench tries other wordings."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,7 +143,7 @@ async def judge_hits(
         return passed(NOT_ON)
     try:
         answers = await plan.service.ask(
-            [state_of(question, variants, hit) for hit in hits], QUESTIONS, timeout_s=plan.timeout_s
+            [state_of(question, variants, hit) for hit in hits], plan.questions, timeout_s=plan.timeout_s
         )
         scores = [_scores(answer) for answer in answers]
     except JudgeUnavailableError as err:

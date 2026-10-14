@@ -28,3 +28,11 @@
 {"set": "B", "q": "cho xin số tổng đài", "expect": ["DEMO-PEMA-D01", "DEMO-PEMA-D18"]}
 {"set": "B", "q": "không muốn bị đăng ảnh mặt lên mạng", "expect": ["DEMO-PEMA-D16"]}
 {"set": "B", "q": "nhân viên thái độ không tốt thì góp ý ở đâu", "expect": ["DEMO-PEMA-D15"]}
+{"set": "C", "q": "có nhận bảo hiểm y tế không", "expect": []}
+{"set": "C", "q": "giá cấy tóc bao nhiêu", "expect": []}
+{"set": "C", "q": "bên mình có phẫu thuật thẩm mỹ mũi không", "expect": []}
+{"set": "C", "q": "xăm môi bao nhiêu tiền", "expect": []}
+{"set": "C", "q": "tiêm filler giá thế nào", "expect": []}
+{"set": "C", "q": "có dịch vụ spa massage thư giãn không", "expect": []}
+{"set": "C", "q": "mua trả góp lãi suất 0% qua ngân hàng nào", "expect": []}
+{"set": "C", "q": "bác sĩ nào tốt nghiệp ở nước ngoài", "expect": []}
