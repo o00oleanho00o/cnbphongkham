@@ -1,0 +1,20 @@
+name = "jev"
+version = "0.1.0"
+description = "Jev (TypeSafe), a small model that answers typed yes/no, choice and score questions with probabilities: given to other plugins as the service \"judge\" (the knowledge store uses it to rank and filter what a search finds). Holds the key, the day's token allowance and the usage."
+api = 1
+
+[ui]
+dir = "ui/dist"
+entry = "client.js"
+
+[user_config.concurrency]
+type = "integer"
+title = "Requests at once"
+description = "Most requests to TypeSafe made at the same time by one call of the service (1-64)."
+default = 8
+
+[user_config.timezone]
+type = "string"
+title = "Time zone"
+description = "The clinic's time zone: where the day of the token allowance starts and ends."
+default = "Asia/Ho_Chi_Minh"

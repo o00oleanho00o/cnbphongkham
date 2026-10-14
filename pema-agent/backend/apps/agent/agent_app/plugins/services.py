@@ -8,11 +8,13 @@ no fixed order and the provider can be enabled or disabled while the agent runs.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Final, Protocol, runtime_checkable
+from collections.abc import Mapping, Sequence
+from typing import Any, Final, Protocol, runtime_checkable
 
 EMBEDDINGS: Final = "embeddings"
 """The name of the embedding service (``EmbeddingService``), provided by ``knowledge``."""
+JUDGE: Final = "judge"
+"""The name of the judging service (``JudgeService``), provided by ``jev``."""
 
 
 class EmbeddingUnavailableError(Exception):
@@ -44,4 +46,41 @@ class EmbeddingService(Protocol):
     async def embed_query(self, text: str, *, timeout_s: float) -> tuple[list[float], str]:
         """The vector of a question and its space (the same question twice may come from a cache). Raises
         ``EmbeddingUnavailableError``; never retries, a search cannot wait."""
+        ...
+
+
+class JudgeUnavailableError(Exception):
+    """The judging service cannot be used right now (no key, a wrong key, out of credit, a limit, an
+    outage, the day's allowance used, an answer it could not read); ``message`` is a sentence a person can
+    read. Callers go on without the judgement."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+        self.message = message
+
+
+@runtime_checkable
+class JudgeService(Protocol):
+    """Puts typed questions to a small classifying model and gets probabilities back. The service knows
+    nothing of what the caller judges: the caller writes the questions and the criteria, and decides with
+    the answers.
+
+    A question is a mapping as TypeSafe's ``/v1/systemone`` takes it (``type`` ``noul``, ``choice`` or
+    ``score``, ``instructions`` and ``criteria``); an answer is the mapping it gives back for that question
+    (``noul``: a probability; ``choice``: the option, ``probabilities``, ``confidence``; ``score``: the
+    score, ``legend``, ``probabilities``, ``confidence``)."""
+
+    async def ready(self) -> bool:
+        """Whether a call can be made now: a key is stored and the day's allowance is not used up."""
+        ...
+
+    async def ask(
+        self,
+        states: Sequence[Any],
+        questions: Mapping[str, Mapping[str, Any]],
+        *,
+        timeout_s: float,
+    ) -> list[dict[str, Any]]:
+        """For each state, in order, the answers to all the questions (each state is one request; they run
+        together). Raises ``JudgeUnavailableError`` when any of them cannot be answered in ``timeout_s``."""
         ...
