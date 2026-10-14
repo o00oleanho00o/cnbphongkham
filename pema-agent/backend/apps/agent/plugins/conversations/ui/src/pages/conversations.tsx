@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { channelNames } from "../client";
 import { Tabs } from "../parts";
 import { ListPage } from "./list";
+import { ScenariosPage } from "./scenarios";
 import { SettingsPage } from "./settings";
 
 const TABS = [
   { id: "list", label: "Cuộc trò chuyện" },
+  { id: "scenarios", label: "Kịch bản" },
   { id: "settings", label: "Cài đặt" },
 ] as const;
 
@@ -25,6 +27,7 @@ export function ConversationsPage() {
     <>
       <Tabs label="Hội thoại" items={TABS} value={tab} onChange={setTab} />
       {tab === "list" && <ListPage channels={channels} />}
+      {tab === "scenarios" && <ScenariosPage channels={channels} />}
       {tab === "settings" && <SettingsPage channels={channels} />}
     </>
   );

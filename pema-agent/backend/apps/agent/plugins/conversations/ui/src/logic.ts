@@ -1,5 +1,5 @@
 /** Pure helpers of the conversations pages: labels, the retention choices, the staff list. */
-import type { ChannelSetting, Conversation, Role, Settings } from "./types";
+import type { ChannelSetting, Conversation, Role, ScenarioScope, ScenarioSettings, Settings } from "./types";
 
 export type Tone = "neutral" | "info" | "success" | "warning" | "danger";
 
@@ -14,8 +14,35 @@ export const RETENTION_OPTIONS = [
   { value: "365", label: "1 năm" },
 ] as const;
 
-export const NO_SETTINGS: Settings = { channels: {}, retention_days: 0 };
-export const OFF: ChannelSetting = { enabled: false, staff: [] };
+export const DEFAULT_SCENARIOS: ScenarioSettings = { enabled: true, scope: "plugin", results: 3, min_similarity: 0.55 };
+export const NO_SETTINGS: Settings = { channels: {}, retention_days: 0, scenarios: DEFAULT_SCENARIOS };
+export const OFF: ChannelSetting = { enabled: false, staff: [], use_scenarios: true };
+
+export const SCOPE_OPTIONS: readonly { value: ScenarioScope; label: string }[] = [
+  { value: "plugin", label: "Mọi kênh cùng nền tảng (ví dụ mọi tài khoản Zalo)" },
+  { value: "channel", label: "Chỉ kênh đang trả lời" },
+  { value: "agent", label: "Cả agent" },
+];
+
+export const SIMILARITY_OPTIONS = [
+  { value: "0.7", label: "Chặt: chỉ khi rất giống" },
+  { value: "0.55", label: "Vừa" },
+  { value: "0.4", label: "Rộng: cả khi hơi giống" },
+] as const;
+
+export const RESULT_OPTIONS = ["1", "2", "3", "4", "5"].map((value) => ({ value, label: `${value} kịch bản` }));
+
+export function asScope(value: string): ScenarioScope {
+  return SCOPE_OPTIONS.find((option) => option.value === value)?.value ?? "plugin";
+}
+
+/** The option nearest the stored similarity, so an unusual stored value still shows something. */
+export function similarityValue(similarity: number): string {
+  const nearest = SIMILARITY_OPTIONS.toSorted(
+    (a, b) => Math.abs(Number(a.value) - similarity) - Math.abs(Number(b.value) - similarity),
+  )[0];
+  return nearest ? nearest.value : "0.55";
+}
 
 export function channelSetting(settings: Settings, channel: string): ChannelSetting {
   return settings.channels[channel] ?? OFF;
@@ -42,10 +69,10 @@ export function retentionValue(days: number): string {
 
 function normalised(settings: Settings) {
   const channels = Object.entries(settings.channels)
-    .filter(([, setting]) => setting.enabled || setting.staff.length > 0)
-    .map(([name, setting]) => [name, setting.enabled, setting.staff.toSorted()] as const)
+    .filter(([, setting]) => setting.enabled || setting.staff.length > 0 || !setting.use_scenarios)
+    .map(([name, setting]) => [name, setting.enabled, setting.staff.toSorted(), setting.use_scenarios] as const)
     .toSorted(([a], [b]) => a.localeCompare(b));
-  return { channels, retention_days: settings.retention_days };
+  return { channels, retention_days: settings.retention_days, scenarios: settings.scenarios };
 }
 
 export function sameSettings(a: Settings, b: Settings): boolean {

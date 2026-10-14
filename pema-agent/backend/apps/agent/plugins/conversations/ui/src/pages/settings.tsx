@@ -5,12 +5,17 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { conversations, messageOf } from "../client";
 import {
   NO_SETTINGS,
+  RESULT_OPTIONS,
   RETENTION_OPTIONS,
   ROLE_LABEL,
+  SCOPE_OPTIONS,
+  SIMILARITY_OPTIONS,
+  asScope,
   channelSetting,
   channelsToShow,
   retentionValue,
   sameSettings,
+  similarityValue,
   toggled,
   withChannel,
 } from "../logic";
@@ -134,6 +139,14 @@ function ChannelCard({
             {choosing ? "Ẩn danh sách người nhắn" : "Chọn từ những người đã nhắn"}
           </ui.Button>
         </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-tile border border-line px-3 py-2">
+          <span className="text-small text-ink">Cho trợ lý xem kịch bản mẫu khi trả lời trên kênh này</span>
+          <ui.Toggle
+            checked={setting.use_scenarios}
+            label={`Dùng kịch bản mẫu trên kênh ${channel}`}
+            onChange={(use_scenarios) => onChange({ ...setting, use_scenarios })}
+          />
+        </div>
         {choosing && (
           <People
             channel={channel}
@@ -212,6 +225,60 @@ export function SettingsPage({ channels }: { channels: readonly string[] }) {
                 onChange={(event) => setDraft({ ...draft, retention_days: Number(event.target.value) })}
               />
             </ui.Field>
+          </div>
+        </ui.Card>
+      )}
+      {saved !== null && (
+        <ui.Card
+          title="Kịch bản mẫu"
+          aside={
+            <ui.Toggle
+              checked={draft.scenarios.enabled}
+              label="Cho trợ lý dùng kịch bản mẫu"
+              onChange={(enabled) => setDraft({ ...draft, scenarios: { ...draft.scenarios, enabled } })}
+            />
+          }
+        >
+          <div className="space-y-3">
+            <p className="text-small text-ink-soft">
+              Khi khách hỏi, trợ lý được xem vài cuộc trò chuyện trước đây mà nhân viên đã xử lý tình huống giống, đã che
+              thông tin cá nhân. Số liệu (giá, chính sách) vẫn chỉ lấy từ Kho tri thức.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <ui.Field label="Dùng kịch bản của">
+                <ui.Select
+                  aria-label="Phạm vi kịch bản"
+                  value={draft.scenarios.scope}
+                  options={SCOPE_OPTIONS}
+                  onChange={(event) =>
+                    setDraft({ ...draft, scenarios: { ...draft.scenarios, scope: asScope(event.target.value) } })
+                  }
+                />
+              </ui.Field>
+              <ui.Field label="Số kịch bản cho xem">
+                <ui.Select
+                  aria-label="Số kịch bản"
+                  value={String(draft.scenarios.results)}
+                  options={RESULT_OPTIONS}
+                  onChange={(event) =>
+                    setDraft({ ...draft, scenarios: { ...draft.scenarios, results: Number(event.target.value) } })
+                  }
+                />
+              </ui.Field>
+              <ui.Field label="Độ giống cần có">
+                <ui.Select
+                  aria-label="Độ giống"
+                  value={similarityValue(draft.scenarios.min_similarity)}
+                  options={SIMILARITY_OPTIONS}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      scenarios: { ...draft.scenarios, min_similarity: Number(event.target.value) },
+                    })
+                  }
+                />
+              </ui.Field>
+            </div>
           </div>
         </ui.Card>
       )}

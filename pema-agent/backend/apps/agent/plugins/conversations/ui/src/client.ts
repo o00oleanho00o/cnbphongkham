@@ -1,6 +1,16 @@
 /** The plugin's admin routes, signed by the dashboard's session. */
 import { api } from "./sdk";
-import type { Conversation, ConversationList, Opened, Person, Settings } from "./types";
+import type {
+  Conversation,
+  ConversationList,
+  Opened,
+  Person,
+  Scenario,
+  ScenarioHit,
+  ScenarioList,
+  ScenarioStatus,
+  Settings,
+} from "./types";
 
 const BASE = "/v1/plugins/conversations";
 const id = encodeURIComponent;
@@ -24,6 +34,21 @@ export const conversations = {
     api.patch<Conversation>(`${BASE}/conversations/${id(conversation)}`, { excluded }),
   remove: (conversation: string) => api.del<{ deleted: boolean }>(`${BASE}/conversations/${id(conversation)}`),
   people: (channel: string) => api.get<{ people: Person[] }>(`${BASE}/people${query({ channel })}`),
+};
+
+export const scenarios = {
+  list: (params: { channel?: string; q?: string; limit?: number; offset?: number }) =>
+    api.get<ScenarioList>(`${BASE}/scenarios${query(params)}`),
+  status: () => api.get<ScenarioStatus>(`${BASE}/scenarios/status`),
+  refresh: () => api.post<{ conversations: number; new: number; joined: number }>(`${BASE}/scenarios/refresh`, {}),
+  search: (question: string, channel: string) =>
+    api.post<{ hits: ScenarioHit[]; scope: string }>(`${BASE}/scenarios/search`, {
+      query: question,
+      channel: channel === "" ? null : channel,
+    }),
+  enable: (scenario: string, enabled: boolean) =>
+    api.patch<Scenario>(`${BASE}/scenarios/${id(scenario)}`, { enabled }),
+  remove: (scenario: string) => api.del<{ deleted: boolean }>(`${BASE}/scenarios/${id(scenario)}`),
 };
 
 /** The chat channels the agent runs, for choosing which ones keep their conversations. */

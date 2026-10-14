@@ -45,10 +45,58 @@ export interface ChannelSetting {
   enabled: boolean;
   /** Ids of the people of the channel who are staff. */
   staff: string[];
+  /** Show the agent scenarios when it answers on this channel. */
+  use_scenarios: boolean;
+}
+
+export type ScenarioScope = "channel" | "plugin" | "agent";
+
+export interface ScenarioSettings {
+  enabled: boolean;
+  scope: ScenarioScope;
+  results: number;
+  min_similarity: number;
 }
 
 export interface Settings {
   channels: Record<string, ChannelSetting>;
   /** Messages older than this many days are deleted; 0 keeps them for ever. */
   retention_days: number;
+  scenarios: ScenarioSettings;
+}
+
+export interface TranscriptLine {
+  role: "customer" | "staff";
+  text: string;
+}
+
+/** What a customer asked and how the staff reacted, with personal details hidden. */
+export interface Scenario {
+  id: string;
+  channel: string;
+  ask: string;
+  transcript: TranscriptLine[];
+  repeats: number;
+  enabled: boolean;
+  started_at: string;
+  ended_at: string;
+  updated_at: string;
+}
+
+export interface ScenarioList {
+  scenarios: Scenario[];
+  total: number;
+}
+
+export interface ScenarioHit extends Scenario {
+  score: number;
+  /** Found by meaning (vectors) or by shared words. */
+  how: "meaning" | "words";
+}
+
+export interface ScenarioStatus {
+  scenarios: number;
+  without_vector: number;
+  embedding_connected: boolean;
+  embedding_error: string | null;
 }

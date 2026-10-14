@@ -881,6 +881,25 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   `clinic` bật plugin. Test: 18 test (5 Postgres chạy trên `agent_activity_test`) + 5 test Zalo từ đầu đến cuối + 3 test
   hub/host; bridge 296 test qua. **Chưa làm:** tìm kiếm ngữ nghĩa và cắt tình huống (GĐ4); test với tài khoản Zalo thật
   (chưa kiểm tra isSelf thật qua bridge).
+- **Kho kịch bản (GĐ4, 2026-10-14, nhánh `feat/knowledge-embedding`).** Lõi: `ctx.provide(tên, dịch vụ)` và
+  `ctx.use(tên, kiểu)` (`agent_app/plugins/services.py`; `PluginHost.use`), hợp đồng `EmbeddingService`
+  (`space`, `embed_documents`, `embed_query`; lỗi `EmbeddingUnavailableError`). `knowledge` cung cấp dịch vụ `embeddings`
+  (`SharedEmbeddings`, dùng khóa, địa chỉ, cache câu hỏi của nó; người dùng không thấy khóa). Plugin `conversations`
+  (migration `0002`, bảng `cv_episode`, `cv_episode_vector`, cột `cv_conversation.cut_upto`): job `cut` mỗi 2 phút
+  cắt cuộc trò chuyện đã im 30 phút thành **tình huống** (khách hỏi, nhân viên phản ứng; bỏ tin của agent, tình huống
+  không có nhân viên trả lời, quá ngắn, chỉ chào hỏi, trúng `scan_for_threats` "strict"); **che** tên, SĐT, CCCD, dãy số
+  dài, email, link, địa chỉ trước khi lưu (`redact.py`); cùng câu hỏi cùng kênh thì gộp và đếm `repeats`, giữ phản ứng
+  mới nhất; job `embed` tạo vector qua dịch vụ chung và gộp tình huống hỏi cùng ý (độ giống ≥ 0,93). Tìm: theo nghĩa khi
+  dịch vụ nhúng chạy (rồi mới theo từ khóa nếu nhúng lỗi, ghi lý do), có thưởng nhỏ cho tình huống lặp nhiều. Phạm vi
+  dùng: `channel` | `plugin` (mặc định, mọi tài khoản cùng nền tảng) | `agent`, công tắc bật/tắt chung và theo kênh. **Hook
+  `pre_model`** `scenario_examples` gắn khối "Kịch bản mẫu: cách nhân viên đã phản ứng" vào tin của khách (kèm lời dặn:
+  học bước đi, giọng điệu, không chép số liệu, số liệu chỉ lấy từ `kb_search`), có cache theo phiên và câu hỏi; tool
+  `scenario_search`. Route `/v1/plugins/conversations/scenarios|status|refresh|search`. Trang "Kịch bản" và thẻ cài đặt
+  trong `plugins/conversations/ui`. Test: 28 test kịch bản, 7 test dịch vụ giữa plugin, 1 test từ đầu đến cuối qua Zalo
+  (agent thấy cách nhân viên đã đáp), 6 test Postgres (đã chạy trên `agent_activity_test`). **Chưa làm / lưu ý:** đo độ
+  tốt trước và sau (GĐ5); cắt theo chủ đề mới chưa có (chỉ theo quãng nghỉ 30 phút và độ dài); che tên là lưới an toàn,
+  không phải cam kết (tên không nằm trong tên hiển thị hay sau "anh/chị/em" có thể lọt), nên kịch bản chỉ đưa cho agent,
+  không bao giờ cho khách xem; chưa có giới hạn số tình huống theo thời gian.
 - **Hoãn (2026-10-13, user bảo cất lại): hook chặn ghi memory/skill trên kênh khách, hook cờ đỏ trước khi gọi model,
   hai skill quy trình `tiep-nhan-dat-lich` và `xu-ly-phan-nan`.** Việc đang bàn thay thế: kỹ năng trong DB, trang
   quản lý và agent tự học, kế hoạch ở `docs/PLAN-skills-studio.md` (CHỜ USER DUYỆT, chưa code).
