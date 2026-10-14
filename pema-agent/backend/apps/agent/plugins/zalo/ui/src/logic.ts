@@ -1,5 +1,15 @@
 /** The pages' rules, free of the dashboard so tests run them alone. */
-import type { Account, AccountUpdate, AllowlistMode, ChannelKind, OaKeys, QrState, QrStatus } from "./types";
+import type {
+  Account,
+  AccountUpdate,
+  AllowlistMode,
+  ChannelKind,
+  OaKeys,
+  QrState,
+  QrStatus,
+  SkillEffective,
+  SkillItem,
+} from "./types";
 
 export const ACCOUNT_ID = /^[a-z0-9][a-z0-9-]*$/;
 export const MAX_ACCOUNT_ID = 58;
@@ -162,4 +172,45 @@ export function qrView(status: QrStatus): QrView {
 export function when(iso: string): string {
   const date = new Date(iso);
   return Number.isNaN(date.getTime()) ? "" : date.toLocaleString("vi-VN");
+}
+
+export const SKILL_KIND_LABEL = { skill: "Kỹ năng", rules: "Quy tắc", persona: "Giọng điệu" } as const;
+export const SKILL_STATUS_LABEL = { active: "Đang dùng", draft: "Nháp", archived: "Đã cất" } as const;
+
+/** The scope that binds a skills item to one account alone: the channel is named `zalo-<account id>`. */
+export function accountScope(accountId: string): string {
+  return `channel:zalo-${accountId}`;
+}
+
+/** The items bound to this account (the ones a person can add or take away here), not yet archived. */
+export function ownItems(items: readonly SkillItem[], accountId: string): SkillItem[] {
+  const scope = accountScope(accountId);
+  return items.filter((item) => item.status !== "archived" && item.scopes.includes(scope));
+}
+
+/** The items that reach this account from a wider place (the whole agent, the Zalo plugin): not changed here. */
+export function sharedItems(effective: SkillEffective): SkillEffective["items"] {
+  return effective.items.filter((item) => item.rank < 2);
+}
+
+/** The items this account could be given: not archived, and not already reaching it from a wider place or bound to it. */
+export function addableItems(
+  items: readonly SkillItem[],
+  effective: SkillEffective,
+  accountId: string,
+): SkillItem[] {
+  const reaching = new Set(effective.items.map((item) => item.id));
+  const own = new Set(ownItems(items, accountId).map((item) => item.id));
+  return items.filter((item) => item.status !== "archived" && !reaching.has(item.id) && !own.has(item.id));
+}
+
+/** The scopes after binding the item to this account too. */
+export function withAccount(item: SkillItem, accountId: string): string[] {
+  return [...item.scopes, accountScope(accountId)];
+}
+
+/** The scopes after taking this account away; null when that would leave none, which means the whole agent. */
+export function withoutAccount(item: SkillItem, accountId: string): string[] | null {
+  const left = item.scopes.filter((scope) => scope !== accountScope(accountId));
+  return left.length === 0 ? null : left;
 }

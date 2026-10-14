@@ -57,7 +57,7 @@ nền tảng** gom được, không chỉ Zalo.
 - **Lõi cần thêm:** mở `channel_owner` thành `ctx.channel_plugin(kênh)`. Plugin tự có migration và route; profile
   `clinic` tắt skill tự ghi của lõi (`[skills] enabled = false`) và nhập skill cũ trong `agent_skill` một lần.
 - **Trang web** (`/admin/agent/skills`): danh sách, soạn (chọn phạm vi, xem trước đúng như model nhận), lịch sử và
-  khôi phục, tab "Kỹ năng và quy tắc" trên trang từng tài khoản Zalo, trang "hiệu lực cho kênh này".
+  khôi phục, nút "Kỹ năng và quy tắc" trên thẻ từng tài khoản Zalo (đã làm 2026-10-14), trang "hiệu lực cho kênh này".
 
 ## 5. Plugin `conversations` (GĐ3)
 

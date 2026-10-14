@@ -2,17 +2,23 @@ import { describe, expect, it } from "vitest";
 
 import {
   DEFAULT_ALLOWLIST,
+  accountScope,
+  addableItems,
   clampDelay,
   formOf,
   formProblem,
   oaKeysState,
+  ownItems,
   parseIds,
   patchOf,
   qrView,
+  sharedItems,
   toggledIds,
+  withAccount,
   withChannel,
+  withoutAccount,
 } from "./logic";
-import type { Account } from "./types";
+import type { Account, SkillEffective, SkillItem } from "./types";
 
 const ACCOUNT: Account = {
   id: "nick-1",
@@ -128,5 +134,61 @@ describe("qr login", () => {
       error: "Đã từ chối",
     });
     expect(qrView({ state: "idle", qr_png_base64: null, detail: null }).done).toBe(false);
+  });
+});
+
+describe("skills of one account", () => {
+  const item = (id: string, scopes: string[], status: SkillItem["status"] = "active"): SkillItem => ({
+    id,
+    kind: "skill",
+    name: id,
+    description: "d",
+    status,
+    scopes,
+  });
+  const mine = accountScope("nick-1");
+  const items = [
+    item("a", [mine]),
+    item("b", [mine, "plugin:zalo"]),
+    item("c", ["channel:zalo-other"]),
+    item("d", ["plugin:zalo"]),
+    item("e", []),
+    item("f", [mine], "archived"),
+    item("g", ["channel:zalo-other"], "draft"),
+    item("h", ["channel:zalo-other"], "archived"),
+  ];
+  const effective: SkillEffective = {
+    text: null,
+    items: [
+      { id: "e", kind: "skill", name: "e", rank: 0, scopes: [] },
+      { id: "d", kind: "skill", name: "d", rank: 1, scopes: ["plugin:zalo"] },
+      { id: "b", kind: "skill", name: "b", rank: 1, scopes: [mine, "plugin:zalo"] },
+      { id: "a", kind: "skill", name: "a", rank: 2, scopes: [mine] },
+    ],
+  };
+
+  it("names the channel of an account the way the Zalo plugin does", () => {
+    expect(mine).toBe("channel:zalo-nick-1");
+  });
+
+  it("lists the items bound to the account, not the archived ones", () => {
+    expect(ownItems(items, "nick-1").map((i) => i.id)).toEqual(["a", "b"]);
+  });
+
+  it("lists the items that reach it from a wider place", () => {
+    expect(sharedItems(effective).map((i) => i.id)).toEqual(["e", "d", "b"]);
+  });
+
+  it("offers only what does not reach the account yet, never an archived item", () => {
+    expect(addableItems(items, effective, "nick-1").map((i) => i.id)).toEqual(["c", "g"]);
+  });
+
+  it("binds an item to the account next to its other places, and takes it away again", () => {
+    expect(withAccount(items[2]!, "nick-1")).toEqual(["channel:zalo-other", mine]);
+    expect(withoutAccount(items[1]!, "nick-1")).toEqual(["plugin:zalo"]);
+  });
+
+  it("refuses to take away the last place, which would widen the item to the whole agent", () => {
+    expect(withoutAccount(items[0]!, "nick-1")).toBeNull();
   });
 });

@@ -85,3 +85,20 @@ export interface Friend {
   display_name: string;
   avatar_url: string | null;
 }
+
+/** An item of the skills plugin (a skill, a set of rules or a persona), as far as one account's page needs it. */
+export interface SkillItem {
+  id: string;
+  kind: "skill" | "rules" | "persona";
+  name: string;
+  description: string;
+  status: "draft" | "active" | "archived";
+  /** `agent`, `plugin:<name>` or `channel:<name>`; none means the whole agent. */
+  scopes: string[];
+}
+
+/** What a question on one channel carries: the items that apply (rank 0 agent, 1 plugin, 2 channel) and their text. */
+export interface SkillEffective {
+  items: { id: string; kind: SkillItem["kind"]; name: string; rank: number; scopes: string[] }[];
+  text: string | null;
+}

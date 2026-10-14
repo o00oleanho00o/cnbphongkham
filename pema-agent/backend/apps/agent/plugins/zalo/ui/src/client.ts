@@ -12,6 +12,8 @@ import type {
   OaKeys,
   QrStatus,
   ReactionIcon,
+  SkillEffective,
+  SkillItem,
 } from "./types";
 
 const BASE = "/v1/plugins/zalo";
@@ -53,6 +55,22 @@ export const zalo = {
   deleteContact: (account: string, user: string) => api.del<void>(`${BASE}/contacts/${id(account)}/${id(user)}`),
   groups: (account?: string) => api.get<Group[]>(`${BASE}/groups${query({ account_id: account })}`),
 };
+
+const SKILLS = "/v1/plugins/skills";
+
+/** The skills plugin's routes, as far as one account needs them: its items, what a question on it carries, the scopes. */
+export const skills = {
+  items: () => api.get<{ items: SkillItem[] }>(`${SKILLS}/items`),
+  effective: (channel: string) => api.get<SkillEffective>(`${SKILLS}/effective${query({ channel })}`),
+  setScopes: (item: string, scopes: string[], reason: string) =>
+    api.patch<{ item: SkillItem }>(`${SKILLS}/items/${id(item)}`, { scopes, reason }),
+};
+
+/** Whether the skills plugin is on; without it an account has no skills tab. */
+export async function skillsPluginOn(): Promise<boolean> {
+  const listing = await api.get<{ plugins: { name: string; enabled: boolean }[] }>("/v1/admin/plugins");
+  return listing.plugins.some((plugin) => plugin.name === "skills" && plugin.enabled);
+}
 
 /** The tools of the enabled plugins, which an account may switch off. */
 export async function agentTools(): Promise<string[]> {

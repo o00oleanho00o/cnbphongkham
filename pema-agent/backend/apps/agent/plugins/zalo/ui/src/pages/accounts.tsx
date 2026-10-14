@@ -1,12 +1,13 @@
 /** The plugin's Zalo accounts: add, switch on or off, log in by QR, change, delete. */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { messageOf, zalo } from "../client";
+import { messageOf, skillsPluginOn, zalo } from "../client";
 import { CHANNEL_LABEL } from "../logic";
 import { useAccounts } from "../parts";
 import { ui } from "../sdk";
 import type { Account } from "../types";
 import { AccountDrawer } from "./account-drawer";
+import { AccountSkills } from "./account-skills";
 import { QrLogin } from "./qr-login";
 
 const CREDENTIAL: Record<Account["channel"], [string, string]> = {
@@ -19,6 +20,12 @@ export function AccountsPage() {
   const { accounts, error, reload } = useAccounts();
   const [editing, setEditing] = useState<Account | "new" | null>(null);
   const [qrFor, setQrFor] = useState<Account | null>(null);
+  const [skillsFor, setSkillsFor] = useState<Account | null>(null);
+  const [skillsOn, setSkillsOn] = useState(false);
+
+  useEffect(() => {
+    skillsPluginOn().then(setSkillsOn, () => setSkillsOn(false));
+  }, []);
 
   function saved(account: Account, created: boolean) {
     setEditing(null);
@@ -49,6 +56,7 @@ export function AccountsPage() {
             account={account}
             onEdit={() => setEditing(account)}
             onQr={() => setQrFor(account)}
+            onSkills={skillsOn ? () => setSkillsFor(account) : undefined}
             onChanged={() => void reload()}
           />
         ))}
@@ -56,6 +64,7 @@ export function AccountsPage() {
       {editing && (
         <AccountDrawer account={editing === "new" ? null : editing} onClose={() => setEditing(null)} onSaved={saved} />
       )}
+      {skillsFor && <AccountSkills account={skillsFor} onClose={() => setSkillsFor(null)} />}
       {qrFor && (
         <QrLogin
           account={qrFor}
@@ -73,11 +82,14 @@ function AccountCard({
   account,
   onEdit,
   onQr,
+  onSkills,
   onChanged,
 }: {
   account: Account;
   onEdit: () => void;
   onQr: () => void;
+  /** Absent when the skills plugin is off. */
+  onSkills?: () => void;
   onChanged: () => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -146,6 +158,11 @@ function AccountCard({
         <ui.Button variant="secondary" disabled={busy} onClick={onEdit}>
           Sửa
         </ui.Button>
+        {onSkills && (
+          <ui.Button variant="secondary" disabled={busy} onClick={onSkills}>
+            Kỹ năng và quy tắc
+          </ui.Button>
+        )}
         <ui.Button variant="danger" disabled={busy} onClick={remove}>
           Xóa
         </ui.Button>
