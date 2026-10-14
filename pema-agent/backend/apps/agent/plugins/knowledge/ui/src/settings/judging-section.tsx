@@ -33,7 +33,7 @@ export function JudgingSection({ settings, onSaved }: SectionProps) {
   return (
     <SectionCard
       title="Xếp lại và lọc bằng Jev"
-      intro="Trước khi agent đọc, Jev chấm lại các đoạn tìm được: bỏ đoạn lạc đề hoặc cố điều khiển trợ lý, bỏ đoạn không nêu đúng điều khách hỏi, xếp đoạn đúng nhất lên đầu. Không đoạn nào đủ căn cứ thì agent nói chưa có thông tin."
+      intro="Trước khi agent đọc, Jev chấm lại các đoạn tìm được: xếp đoạn nêu đúng điều khách hỏi lên đầu, bỏ đoạn kém hơn hẳn. Không đoạn nào đủ căn cứ thì agent nói chưa có thông tin."
       saveDisabled={change === null}
       saveBusy={busy === "save"}
       onSave={() => void save()}
@@ -46,7 +46,7 @@ export function JudgingSection({ settings, onSaved }: SectionProps) {
         checked={form.enabled}
         onChange={(enabled) => setForm((before) => ({ ...before, enabled }))}
       />
-      <ui.Field label="Mức chặt" hint="Chặt thì ít đoạn lọt qua hơn, agent hay nói chưa có thông tin hơn">
+      <ui.Field label="Mức chặt" hint="Chặt thì agent hay nói chưa có thông tin hơn, kể cả khi tài liệu có câu trả lời">
         <ui.Select
           aria-label="Mức chặt của bộ lọc"
           options={LEVEL_OPTIONS.map(({ value, label }) => ({ value, label }))}

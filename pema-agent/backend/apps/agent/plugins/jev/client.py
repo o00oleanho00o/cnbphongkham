@@ -18,8 +18,9 @@ from agent_app.plugins import JudgeUnavailableError
 
 ENDPOINT: Final = "https://api.typesafe.ai/v1/systemone"
 RETRY_AFTER_S: Final = 0.3
-RETRIED: Final = frozenset({429, 529})
-"""Rate limit and overload: asked once more after a short wait, when there is time."""
+RETRIED: Final = frozenset({429, 499, 529})
+"""Rate limit, a request cut off half way (499) and overload: asked once more after a short wait, when
+there is time."""
 
 
 @dataclass(slots=True)
@@ -95,6 +96,8 @@ def _http_error(code: int) -> JudgeUnavailableError:
         return JudgeUnavailableError("Khóa TypeSafe sai, hết hạn hoặc hết tiền.")
     if code == 429:
         return JudgeUnavailableError("TypeSafe đang giới hạn lượt gọi.")
+    if code == 499:
+        return JudgeUnavailableError("TypeSafe ngắt kết nối giữa chừng (HTTP 499).")
     if code >= 500:
         return JudgeUnavailableError(f"TypeSafe lỗi hoặc quá tải (HTTP {code}).")
     return JudgeUnavailableError(f"TypeSafe từ chối yêu cầu (HTTP {code}); kiểm tra tên model.")

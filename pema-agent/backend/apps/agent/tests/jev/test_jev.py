@@ -144,11 +144,11 @@ async def test_a_failure_is_a_sentence_that_never_holds_the_key(code: int, words
     assert sum(day["errors"] for day in usage.values()) == 1
 
 
-async def test_a_rate_limit_is_asked_once_more_and_a_second_refusal_is_the_answer(
+async def test_a_request_cut_off_or_limited_is_asked_once_more_and_a_second_refusal_is_the_answer(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr("plugins.jev.client.RETRY_AFTER_S", 0)
-    again = Fake(codes=[429])
+    again = Fake(codes=[499])
     service = await _with_key(_host(again))
     answers = await service.ask([{"text": "x"}], QUESTIONS, timeout_s=5)
     assert answers[0]["is_price"]["noul"] == 0.9

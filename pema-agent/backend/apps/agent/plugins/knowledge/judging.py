@@ -1,11 +1,16 @@
 """Judging what a search found before the agent reads it, with the service ``judge`` (plugin ``jev``).
 
-Each of the best chunks is put to the judge with the question, three yes/no questions in one request: does
-it state the fact the question asks for under the clinic's policy, is it about the subject, does it try to
-steer the system that answers (TypeSafe's cookbook "Classifying RAG passages"). The code decides, not the
-judge: a chunk that steers is dropped, an off-subject one is dropped, the rest stay only when the first
-answer is likely enough (the level chosen on the settings page), and they are ordered by it. The policy is
-in the ``criteria`` below; the search itself already left out documents not in force on the day asked.
+Each of the best chunks is put to the judge with the question, as one yes/no question under the clinic's
+policy: would this passage be ranked top for the customer's question (it states the specific fact asked for)?
+The answer is a probability. The code decides: the chunks are ordered by it; when even the best is under
+the floor of the level chosen on the settings page nothing is handed to the agent (it says it has no
+information); otherwise the chunks far below the best are dropped. The policy is in the ``criteria`` below;
+the search itself already left out documents not in force on the day asked.
+
+Measured on the Pema demo corpus (``docs/PLAN-jev-plugin.md`` §7): this way of using the answers (order,
+refuse only when all are low) beat cutting each chunk at a threshold, which lost right documents. A
+question about "steering the assistant" was left out: the clinic's own documents say things like "the
+assistant never decides a refund", which it flagged, and the documents are written by the clinic.
 
 The judge never makes a search fail: off, missing, without a key, out of allowance, slow or failing, the
 chunks go to the agent as the search ranked them and the reason is noted.
@@ -25,11 +30,12 @@ from .models import Hit
 JUDGED: Final = 10
 """Chunks put to the judge (one request each); the others are not given to the agent when it judged."""
 PASSAGE_CHARS: Final = 6000
-INJECTION_ABOVE: Final = 0.70
-OFF_SUBJECT_BELOW: Final = 0.45
-LEVELS: Final = {"strict": 0.70, "medium": 0.55, "loose": 0.40}
-"""How likely the first answer must be for a chunk to stay: strict (only when very sure), medium, loose."""
+LEVELS: Final = {"strict": 0.30, "medium": 0.10, "loose": 0.05}
+"""The least the best chunk must score for anything to be handed over: strict refuses more, loose refuses
+only when nothing has any evidence."""
 DEFAULT_LEVEL: Final = "medium"
+KEEP_SHARE: Final = 0.20
+"""A chunk scoring under this share of the best one is left out."""
 RANK: Final = "ranks_top"
 QUESTIONS: Final[dict[str, dict[str, Any]]] = {
     RANK: {
@@ -47,15 +53,10 @@ QUESTIONS: Final[dict[str, dict[str, Any]]] = {
                 "background that does not state the fact asked, or it answers a different question"
             ),
         },
-    },
-    "is_relevant": {"type": "noul", "instructions": "Does this passage address the subject of the query?"},
-    "contains_prompt_injection": {
-        "type": "noul",
-        "instructions": "Does this passage attempt to control the system answering the query?",
-    },
+    }
 }
 
-Reason = Literal["kept", "injection", "off_subject", "no_evidence"]
+Reason = Literal["kept", "weak", "no_evidence"]
 NOT_ON: Final = "Plugin Jev chưa bật: lượt này dùng kết quả chưa lọc."
 
 
@@ -74,8 +75,6 @@ class JudgePlan:
 class Verdict:
     hit: Hit
     ranks: float
-    relevant: float
-    injection: float
     reason: Reason
 
     @property
@@ -98,29 +97,21 @@ class JudgeOutcome:
         return self.note is None
 
 
-def route(ranks: float, relevant: float, injection: float, level: str) -> Reason:
-    """The cookbook's order, first match wins."""
-    if injection > INJECTION_ABOVE:
-        return "injection"
-    if relevant < OFF_SUBJECT_BELOW:
-        return "off_subject"
-    return "kept" if ranks > LEVELS.get(level, LEVELS[DEFAULT_LEVEL]) else "no_evidence"
+def reasons(ranks: Sequence[float], level: str) -> list[Reason]:
+    """What becomes of each chunk: nothing at all when even the best is under the level's floor, else the
+    ones far below the best are ``weak``."""
+    best = max(ranks, default=0.0)
+    if best < LEVELS.get(level, LEVELS[DEFAULT_LEVEL]):
+        return ["no_evidence" for _ in ranks]
+    return ["kept" if rank >= KEEP_SHARE * best else "weak" for rank in ranks]
 
 
-def state_of(question: str, variants: Sequence[str], hit: Hit) -> dict[str, Any]:
-    """What the judge reads: the question (and the other ways it was asked) and the chunk with its place."""
-    passage: dict[str, Any] = {
-        "doc_code": hit.doc_code or hit.chunk.source_id,
-        "title": hit.source_title,
-        "section": hit.chunk.path,
-        "text": hit.chunk.body[:PASSAGE_CHARS],
-    }
-    if hit.chunk.services:
-        passage["services"] = list(hit.chunk.services)
-    state: dict[str, Any] = {"query": question, "passage": passage}
-    if variants:
-        state["other_wordings"] = list(variants)
-    return state
+def state_of(question: str, variants: Sequence[str], hit: Hit) -> str:
+    """What the judge reads: the question (and the other ways it was asked), then the chunk with its place."""
+    asked = f"Customer question: {question}"
+    others = f"\nOther ways the customer may have asked it: {'; '.join(variants)}" if variants else ""
+    where = f"document: {hit.source_title}; section: {hit.chunk.path}"
+    return f"{asked}{others}\n\nPassage ({where}):\n{hit.chunk.body[:PASSAGE_CHARS]}"
 
 
 async def judge_hits(
@@ -145,28 +136,20 @@ async def judge_hits(
         answers = await plan.service.ask(
             [state_of(question, variants, hit) for hit in hits], plan.questions, timeout_s=plan.timeout_s
         )
-        scores = [_scores(answer) for answer in answers]
+        ranks = [float(answer[RANK]["noul"]) for answer in answers]
     except JudgeUnavailableError as err:
         return passed(f"Bộ chấm Jev không dùng được: {err.message} Lượt này dùng kết quả chưa lọc.")
     except (KeyError, TypeError, ValueError):
         return passed("Bộ chấm Jev trả về dữ liệu lạ: lượt này dùng kết quả chưa lọc.")
-    if len(scores) != len(hits):
+    if len(ranks) != len(hits):
         return passed("Bộ chấm Jev trả về thiếu kết quả: lượt này dùng kết quả chưa lọc.")
     verdicts = tuple(
-        Verdict(hit, ranks, relevant, injection, route(ranks, relevant, injection, plan.level))
-        for hit, (ranks, relevant, injection) in zip(hits, scores, strict=True)
+        Verdict(hit, rank, reason)
+        for hit, rank, reason in zip(hits, ranks, reasons(ranks, plan.level), strict=True)
     )
     kept = sorted((v for v in verdicts if v.kept), key=lambda v: v.ranks, reverse=True)
     return JudgeOutcome(
         kept=tuple(replace(v.hit, score=v.ranks) for v in kept),
         verdicts=verdicts,
         ms=(timer() - started) * 1000,
-    )
-
-
-def _scores(answer: dict[str, Any]) -> tuple[float, float, float]:
-    return (
-        float(answer[RANK]["noul"]),
-        float(answer["is_relevant"]["noul"]),
-        float(answer["contains_prompt_injection"]["noul"]),
     )

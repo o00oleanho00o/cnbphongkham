@@ -350,9 +350,8 @@ def debug_view(result: SearchResult, min_similarity: float) -> dict[str, Any]:
 
 
 JUDGE_REASON: Final = {
-    "injection": "có dấu hiệu điều khiển trợ lý",
-    "off_subject": "lạc chủ đề",
-    "no_evidence": "không đủ căn cứ",
+    "weak": "kém hơn hẳn đoạn tốt nhất",
+    "no_evidence": "không đoạn nào đủ căn cứ",
 }
 
 

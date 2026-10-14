@@ -209,9 +209,9 @@ export function parserChange(form: ParserForm, saved: KnowledgeSettings["parser"
 export type JudgingForm = KnowledgeSettings["judging"];
 
 export const LEVEL_OPTIONS: readonly { value: JudgeLevel; label: string }[] = [
-  { value: "strict", label: "Chặt: chỉ giữ đoạn rất chắc nêu đúng điều khách hỏi" },
-  { value: "medium", label: "Vừa" },
-  { value: "loose", label: "Rộng: giữ cả đoạn hơi chắc" },
+  { value: "strict", label: "Chặt: từ chối khi đoạn tốt nhất cũng chưa thật chắc" },
+  { value: "medium", label: "Vừa (đề xuất)" },
+  { value: "loose", label: "Rộng: chỉ từ chối khi gần như không đoạn nào có căn cứ" },
 ];
 
 const LEVEL_BY_VALUE: Record<string, JudgeLevel> = { strict: "strict", medium: "medium", loose: "loose" };

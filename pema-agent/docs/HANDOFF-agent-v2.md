@@ -904,13 +904,14 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   Plugin `jev`: giữ khóa TypeSafe (mã hóa trong storage của plugin), model, hạn mức token mỗi ngày (mặc định 2 triệu, giờ
   Việt Nam, 0 là không giới hạn) và sổ dùng; route `/v1/plugins/jev/settings|test|usage`; trang "Jev". Kho tri thức:
   `kb_search` nhận thêm `alternatives` (tối đa 2 cách hỏi khác, gộp theo hạng); khi bật cài đặt `judging` (Kho tri thức,
-  Cài đặt, thẻ "Xếp lại và lọc bằng Jev"; mặc định tắt) 10 đoạn đầu được Jev chấm (ba câu có/không một request, luật ở
-  `knowledge/judging.py`): bỏ đoạn lạc đề hoặc cố điều khiển trợ lý, bỏ đoạn không đủ căn cứ theo mức chặt, xếp phần còn
-  lại theo khả năng nêu đúng điều khách hỏi; không còn đoạn nào thì agent nói chưa có thông tin và câu hỏi vào "câu hỏi
-  chưa có tài liệu". Jev tắt, thiếu khóa, hết hạn mức, chậm quá 4 giây hoặc lỗi thì kết quả đi như cũ (ghi lý do ở
+  Cài đặt, thẻ "Xếp lại và lọc bằng Jev"; mặc định tắt) 10 đoạn đầu được Jev chấm (một câu có/không mỗi đoạn, luật ở
+  `knowledge/judging.py`): xếp theo khả năng nêu đúng điều khách hỏi, bỏ đoạn kém hơn hẳn đoạn tốt nhất; nếu cả đoạn tốt
+  nhất dưới sàn của mức chặt thì agent nói chưa có thông tin và câu hỏi vào "câu hỏi chưa có tài liệu". Jev tắt, thiếu khóa, hết hạn mức, chậm quá 4 giây hoặc lỗi thì kết quả đi như cũ (ghi lý do ở
   "Thử tìm"). Dữ liệu gửi sang TypeSafe (Mỹ): user tạm chấp nhận, sau này có thể thay bằng plugin chạy model local cùng hợp
-  đồng. **Chưa làm / chưa kiểm:** chạy thật với khóa (`scripts/kb_bench.py --judge`, tiếng Anh và tiếng Việt, ba mức chặt)
-  nên Jev chưa được bật ở đâu; trang "Jev" chưa mở thử trong trình duyệt; Docker cần build lại (`docker compose up -d
+  đồng. **Đo thật (2026-10-14, 30 + 8 câu, nền từ khóa, mức vừa, tiếng Anh):** top1 16 → 19 trên 30, top3 24 → 26, không mất tài
+  liệu đúng, 5 trong 8 câu không có đáp án bị từ chối, 0,0085 USD, 0,7 giây; xem `docs/PLAN-jev-plugin.md` mục 7 (cắt từng
+  đoạn theo ngưỡng thì tệ hơn không có Jev). **Chưa làm / chưa kiểm:** chưa đo với tìm theo nghĩa, chưa đo cả agent từ
+  đầu đến cuối, chưa thử trên câu hỏi thật của phòng khám; Jev chưa được bật ở đâu; trang "Jev" chưa mở thử trong trình duyệt; Docker cần build lại (`docker compose up -d
   --build agent`), không có migration mới; câu hỏi mẫu cho mỗi đoạn lúc nạp (thay HyDE) và các việc ở mục 5 của kế hoạch để
   sau.
 - **Hoãn (2026-10-13, user bảo cất lại): hook chặn ghi memory/skill trên kênh khách, hook cờ đỏ trước khi gọi model,

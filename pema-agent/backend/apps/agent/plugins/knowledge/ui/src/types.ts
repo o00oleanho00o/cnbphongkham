@@ -311,7 +311,7 @@ export interface EmbeddingSettings {
   chunks_without_vector: number;
 }
 
-/** How likely a chunk must be to state the fact asked, for the Jev judge to keep it. */
+/** How likely the best chunk must be to state the fact asked, for the Jev judge to hand anything over. */
 export type JudgeLevel = "strict" | "medium" | "loose";
 
 /** Whether plugin jev is on and has a key: what the judging section needs to say. */
