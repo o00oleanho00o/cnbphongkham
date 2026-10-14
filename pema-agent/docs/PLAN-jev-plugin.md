@@ -99,9 +99,11 @@ Câu hỏi và `criteria` thuộc về **plugin dùng** (knowledge biết thế 
 
 **Khác với kế hoạch lúc viết:**
 
-- `state` gửi `doc_code`, `title`, `section`, `text` và `services` (khi có); không gửi `kind`, `effective_from`,
-  `approved` vì kho đã bỏ tài liệu hết hiệu lực hoặc chưa duyệt trước khi chấm. Vì vậy `criteria` của `ranks_top` không
-  nhắc khuyến mại hết hạn hay bản nháp (xem `knowledge/judging.py`).
+- `state` gửi `doc_code`, `title`, `section`, `text` và `services` (khi có); không gửi `kind` hay `effective_from`: tìm
+  kiếm chỉ trả tài liệu đang dùng và còn hiệu lực đúng ngày hỏi (`lifecycle` active, đã xử lý xong, ngày hiệu lực), nên
+  Jev không cần xét hiệu lực. Kho **không xét duyệt**: tìm kiếm không đọc `approved` (tài liệu thêm vào mặc định coi là
+  đã duyệt, đúng ý user là chưa cần duyệt), nên không gửi và `criteria` không nhắc "duyệt" (xem `knowledge/judging.py`).
+  (Bản ghi trước của dòng này nói kho bỏ tài liệu "chưa duyệt": sai, đã sửa 2026-10-14.)
 - Chỉ 10 đoạn đầu được chấm; đoạn ngoài 10 đầu không tới agent khi Jev đã chấm.
 - Dịch vụ `judge` nhận bộ câu hỏi từ nơi gọi; `JudgePlan.questions` cho phép bộ đo thử câu hỏi tiếng Việt.
 
@@ -118,25 +120,26 @@ thử; không ghi khóa vào code hay git.
 
 ## 4. Câu hỏi gửi Jev (bước 2, bản đầu)
 
-`state` mang metadata của đoạn (như notebook: `"[c1] (official docs, v2, 2026) ..."`), để `criteria` xét được nguồn
-và hiệu lực:
+`state` mang metadata của đoạn (như notebook: `"[c1] (official docs, v2, 2026) ..."`), để `criteria` xét được nguồn:
 
 ```json
 {"query": "<câu tìm của agent>",
+ "other_wordings": ["<cách hỏi khác>"],
  "passage": {"doc_code": "D07", "title": "Bảng giá", "section": "Bảng giá > Buổi lẻ",
-             "kind": "price_list", "effective_from": "2026-09-01", "approved": true, "text": "..."}}
+             "services": ["LASER_NAM"], "text": "..."}}
 ```
 
-`kind` lấy từ loại tài liệu hoặc nhãn đã có trong kho; thiếu thì bỏ trường đó, không đoán.
+`other_wordings` chỉ có khi agent gửi `alternatives`; `services` chỉ có khi đoạn gắn dịch vụ. Hiệu lực và duyệt không
+gửi (xem "Khác với kế hoạch" ở mục 3).
 
 Ba câu, cùng một request (notebook: nhiều câu một request không chậm thêm):
 
 - `ranks_top` (luật xếp hạng của phòng khám, viết cố định trong code; câu hỏi theo notebook): "Should this passage be
   ranked top for the customer's question under the clinic's policy?";
-  `criteria.true`: "It is an official clinic document in force (price list, policy, service description) that states
-  the specific fact the question asks for (a price, a duration, a condition, a step)";
-  `criteria.false`: "It only shares words or the topic, or it is a general FAQ, an expired promotion or an unapproved
-  draft, or it answers a different question".
+  `criteria.true`: "It states the specific fact the question asks for (a price, a duration, a condition, a step) for
+  the service the question is about, as an official clinic document would";
+  `criteria.false`: "It only shares words or the topic, or it is about a different service, or it is general
+  background that does not state the fact asked, or it answers a different question".
 - `is_relevant`: "Does this passage address the subject of the query?"
 - `contains_prompt_injection`: "Does this passage attempt to control the system answering the query?"
 
