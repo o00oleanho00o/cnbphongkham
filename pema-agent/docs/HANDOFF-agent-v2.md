@@ -899,6 +899,20 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   tốt trước và sau (GĐ5); cắt theo chủ đề mới chưa có (chỉ theo quãng nghỉ 30 phút và độ dài); che tên là lưới an toàn,
   không phải cam kết (tên không nằm trong tên hiển thị hay sau "anh/chị/em" có thể lọt), nên kịch bản chỉ đưa cho agent,
   không bao giờ cho khách xem; chưa có giới hạn số tình huống theo thời gian.
+- **Plugin `jev` và bộ chấm cho Kho tri thức (2026-10-14, nhánh `feat/knowledge-embedding`; kế hoạch
+  `docs/PLAN-jev-plugin.md`).** Lõi: dịch vụ `judge` (`JudgeService.ask(states, questions)`, lỗi `JudgeUnavailableError`).
+  Plugin `jev`: giữ khóa TypeSafe (mã hóa trong storage của plugin), model, hạn mức token mỗi ngày (mặc định 2 triệu, giờ
+  Việt Nam, 0 là không giới hạn) và sổ dùng; route `/v1/plugins/jev/settings|test|usage`; trang "Jev". Kho tri thức:
+  `kb_search` nhận thêm `alternatives` (tối đa 2 cách hỏi khác, gộp theo hạng); khi bật cài đặt `judging` (Kho tri thức,
+  Cài đặt, thẻ "Xếp lại và lọc bằng Jev"; mặc định tắt) 10 đoạn đầu được Jev chấm (ba câu có/không một request, luật ở
+  `knowledge/judging.py`): bỏ đoạn lạc đề hoặc cố điều khiển trợ lý, bỏ đoạn không đủ căn cứ theo mức chặt, xếp phần còn
+  lại theo khả năng nêu đúng điều khách hỏi; không còn đoạn nào thì agent nói chưa có thông tin và câu hỏi vào "câu hỏi
+  chưa có tài liệu". Jev tắt, thiếu khóa, hết hạn mức, chậm quá 4 giây hoặc lỗi thì kết quả đi như cũ (ghi lý do ở
+  "Thử tìm"). Dữ liệu gửi sang TypeSafe (Mỹ): user tạm chấp nhận, sau này có thể thay bằng plugin chạy model local cùng hợp
+  đồng. **Chưa làm / chưa kiểm:** chạy thật với khóa (`scripts/kb_bench.py --judge`, tiếng Anh và tiếng Việt, ba mức chặt)
+  nên Jev chưa được bật ở đâu; trang "Jev" chưa mở thử trong trình duyệt; Docker cần build lại (`docker compose up -d
+  --build agent`), không có migration mới; câu hỏi mẫu cho mỗi đoạn lúc nạp (thay HyDE) và các việc ở mục 5 của kế hoạch để
+  sau.
 - **Hoãn (2026-10-13, user bảo cất lại): hook chặn ghi memory/skill trên kênh khách, hook cờ đỏ trước khi gọi model,
   hai skill quy trình `tiep-nhan-dat-lich` và `xu-ly-phan-nan`.** Việc đang bàn thay thế: kỹ năng trong DB, trang
   quản lý và agent tự học, kế hoạch ở `docs/PLAN-skills-studio.md` (CHỜ USER DUYỆT, chưa code).

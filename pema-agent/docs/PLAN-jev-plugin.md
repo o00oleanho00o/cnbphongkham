@@ -1,10 +1,7 @@
 # Kế hoạch: plugin `jev` (bộ chấm TypeSafe Jev) và Kho tri thức dùng nó để xếp lại, lọc kết quả tìm
 
-**Trạng thái: đã duyệt các điểm ở mục 8 (2026-10-14), chờ user cho lệnh bắt đầu. Chưa làm gì theo kế hoạch này.**
-Trước khi user bảo dừng đã có một bản
-nháp code (bộ lọc nằm trong `knowledge`: `gate.py`, sửa `search.py`, `plugin.py`, `routes.py`, `__init__.py`,
-`plugin.toml`, test `tests/knowledge/test_gate.py`, 11 test qua), chưa commit. Khi kế hoạch được duyệt, phần gọi API
-chuyển sang plugin `jev`, phần quyết định giữ hay bỏ đoạn ở lại `knowledge` (xem mục 3).
+**Trạng thái (2026-10-14): bước 0 đến 3 đã làm và commit; bước 4 (thử thật) chờ khóa TypeSafe.** Bản nháp bộ lọc
+đặt trong `knowledge` (có trước khi duyệt) đã bị gỡ, code làm lại đúng kế hoạch. Xem "Đã làm" ở mục 3.
 
 Nguồn: tài liệu TypeSafe (`docs.typesafe.ai`: API `/v1/systemone`, câu hỏi `noul`/`choice`/`score`, cookbook
 "Classifying RAG passages" và "Re-ranking"), video "Build RAG with JEV" (Prompt Engineering) và notebook của video
@@ -81,6 +78,33 @@ Câu hỏi và `criteria` thuộc về **plugin dùng** (knowledge biết thế 
 
 ## 3. Các bước
 
+**Đã làm (2026-10-14, nhánh `feat/knowledge-embedding`, chưa đẩy):**
+
+- Bước 0: `kb_search` nhận `query` và tối đa 2 `alternatives` (thay cho `queries` của kế hoạch, để `query` cũ vẫn chạy);
+  mỗi cách hỏi tìm từ khóa và vector song song, gộp theo hạng (`fusion.rank_fusion`, RRF); hướng dẫn agent viết thêm cách
+  hỏi khi câu ngắn, mơ hồ. Trace có `queries`. Tool `kb_search` được chờ tối đa 20 giây (trước 15) vì thêm bước chấm.
+- Bước 1: lõi `JUDGE`, `JudgeService`, `JudgeUnavailableError` (`agent_app/plugins/services.py`); plugin `jev`
+  (`plugins/jev/`: `client.py` gọi `POST /v1/systemone` bằng `httpx`, mỗi state một request, song song, thử lại 429/529
+  một lần; `plugin.py` khóa mã hóa, hạn mức token mỗi ngày (mặc định 2.000.000, 0 là không giới hạn), sổ dùng 14 ngày;
+  `routes.py` `/settings`, `/test`, `/usage`). Không migration. 17 test.
+- Bước 2: `knowledge/judging.py` (ba câu `noul` một request, luật `route`, mức chặt strict 0,70 / medium 0,55 / loose 0,40);
+  `Searcher.search(judge=...)`; cài đặt `judging {enabled, level}` thay `labelling.rerank` (hai công tắc cũ không có tác
+  dụng đã bỏ); "Thử tìm" có hai bước "Bộ chấm Jev: giữ / bỏ"; không đoạn nào đủ căn cứ thì `kb_search` bảo agent nói chưa
+  có thông tin và ghi vào "câu hỏi chưa có tài liệu". 18 test (đơn vị + hai plugin chạy cùng nhau với TypeSafe giả).
+- Bước 3: trang "Jev" (`plugins/jev/ui`), thẻ "Xếp lại và lọc bằng Jev" trong cài đặt Kho tri thức (bỏ thẻ "Gán nhãn
+  và xếp lại"), profile `clinic` bật plugin `jev`, `agent.Dockerfile` build `jev/ui`. 11 test UI cho `jev`, 127 cho
+  `knowledge`; `pnpm run build` qua, chưa mở thử trong trình duyệt.
+- Bộ đo: `scripts/kb_bench.py --judge [--lang vi] [--level ...]` lặp mỗi lượt chạy với Jev bật rồi so (tài liệu đúng bị
+  mất, câu hỏi không có đáp án bị từ chối, token, tiền); thêm tập C gồm 8 câu tài liệu không trả lời được.
+
+**Khác với kế hoạch lúc viết:**
+
+- `state` gửi `doc_code`, `title`, `section`, `text` và `services` (khi có); không gửi `kind`, `effective_from`,
+  `approved` vì kho đã bỏ tài liệu hết hiệu lực hoặc chưa duyệt trước khi chấm. Vì vậy `criteria` của `ranks_top` không
+  nhắc khuyến mại hết hạn hay bản nháp (xem `knowledge/judging.py`).
+- Chỉ 10 đoạn đầu được chấm; đoạn ngoài 10 đầu không tới agent khi Jev đã chấm.
+- Dịch vụ `judge` nhận bộ câu hỏi từ nơi gọi; `JudgePlan.questions` cho phép bộ đo thử câu hỏi tiếng Việt.
+
 | Bước | Việc | Xong khi |
 |---|---|---|
 | 0 | `kb_search` nhận `queries` (1-3 câu: câu chính + biến thể do agent viết trong cùng lời gọi); mỗi câu tìm từ khóa và vector song song, gộp, bỏ trùng; hướng dẫn agent: câu ngắn, mơ hồ thì viết thêm biến thể. Giữ `query` cũ cho tương thích. | Test: một câu mơ hồ tìm được đoạn mà câu gốc không tìm được; trace ghi số câu. |
@@ -154,7 +178,17 @@ topic without answering") để biết luật xếp hạng có giúp thật khô
 
 ## 7. Kết quả thử thật
 
-(Điền sau bước 4.)
+(Điền sau bước 4.) Cách chạy, cần khóa TypeSafe trong biến môi trường (không in ra, không ghi file):
+
+```
+cd pema-agent/backend/apps/agent
+TYPESAFE_API_KEY=... uv run python scripts/kb_bench.py --docs "E:/Desktop/data test/AgentRAG_Pema_Demo/01_NAP_EMBEDDING" \
+    --questions scripts/kb_bench_pema.jsonl --modes keyword --judge --lang en
+# lặp với --lang vi và --level strict / loose; thêm BEEKNOEE_API_KEY=... và --modes keyword,hybrid để thử cả tìm theo nghĩa
+```
+
+Đo: tài liệu đúng ở đầu (top1/top3 tập A, B) trước và sau Jev, các câu "LOST right document" (tài liệu đúng bị bỏ nhầm),
+tập C (8 câu không có đáp án) bị từ chối bao nhiêu, token và tiền, độ trễ của Jev.
 
 ## 8. Đã chốt (user, 2026-10-14)
 
