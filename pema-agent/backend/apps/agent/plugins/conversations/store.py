@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from collections import Counter
-from collections.abc import Collection
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import replace
 from datetime import datetime
 from typing import Any, Protocol, cast
@@ -55,6 +55,22 @@ class ConversationStore(Protocol):
         """Gives these people's earlier messages in the channel the role they now have; how many changed."""
         ...
 
+    async def to_cut(self, *, idle_before: datetime, limit: int) -> list[Conversation]:
+        """Conversations with messages not yet looked at for episodes whose last message is not newer than
+        ``idle_before`` (the chat has gone quiet), oldest first."""
+        ...
+
+    async def uncut_messages(
+        self, conversation_ids: Sequence[str], *, limit: int
+    ) -> dict[str, list[Message]]:
+        """For each conversation, its messages not yet looked at for episodes, in the order they were kept (at
+        most ``limit`` in all)."""
+        ...
+
+    async def mark_cut(self, marks: Mapping[str, int]) -> None:
+        """Conversation id -> the last message looked at for episodes."""
+        ...
+
 
 def _like(query: str) -> str:
     escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
@@ -65,6 +81,7 @@ class InMemoryConversationStore:
     def __init__(self) -> None:
         self._conversations: dict[str, Conversation] = {}
         self._messages: dict[str, list[Message]] = {}
+        self._cut: dict[str, int] = {}
         self._seq = 0
 
     async def add(self, message: NewMessage) -> bool:
@@ -180,6 +197,35 @@ class InMemoryConversationStore:
         people = [Person(i, m.sender_name, counts[i], m.role) for i, m in latest.items()]
         return sorted(people, key=lambda p: (-p.messages, p.sender_id))
 
+    async def to_cut(self, *, idle_before: datetime, limit: int) -> list[Conversation]:
+        waiting = [
+            c
+            for c in self._conversations.values()
+            if c.last_at <= idle_before
+            and any(m.seq > self._cut.get(c.id, 0) for m in self._messages.get(c.id, []))
+        ]
+        return sorted(waiting, key=lambda c: c.last_at)[:limit]
+
+    async def uncut_messages(
+        self, conversation_ids: Sequence[str], *, limit: int
+    ) -> dict[str, list[Message]]:
+        found = {
+            cid: sorted(
+                (m for m in self._messages.get(cid, []) if m.seq > self._cut.get(cid, 0)), key=lambda m: m.seq
+            )
+            for cid in conversation_ids
+        }
+        kept: dict[str, list[Message]] = {}
+        room = limit
+        for cid, rows in found.items():
+            kept[cid] = rows[:room]
+            room -= len(kept[cid])
+        return kept
+
+    async def mark_cut(self, marks: Mapping[str, int]) -> None:
+        for cid, seq in marks.items():
+            self._cut[cid] = max(self._cut.get(cid, 0), seq)
+
     async def relabel(self, channel: str, sender_ids: Collection[str], role: Role) -> int:
         changed = 0
         for conversation in self._conversations.values():
@@ -273,6 +319,25 @@ _RELABEL = text(
 ).bindparams(bindparam("sender_ids", type_=ARRAY(Text)))
 
 
+_TO_CUT = text(
+    f"SELECT {_COLUMNS} FROM agent_rt.cv_conversation c "  # noqa: S608
+    "WHERE c.tenant_id = :tenant_id AND c.agent = :agent AND c.last_at <= :before "
+    "AND EXISTS (SELECT 1 FROM agent_rt.cv_message m WHERE m.tenant_id = c.tenant_id AND m.agent = c.agent "
+    "AND m.conversation_id = c.id AND m.seq > c.cut_upto) ORDER BY c.last_at, c.id LIMIT :limit"
+)
+_UNCUT = text(
+    "SELECT m.seq, m.conversation_id, m.external_id, m.sender_id, m.sender_name, m.role, m.origin, m.at, "
+    "m.text, m.answered FROM agent_rt.cv_message m JOIN agent_rt.cv_conversation c "
+    "ON c.tenant_id = m.tenant_id AND c.agent = m.agent AND c.id = m.conversation_id "
+    "WHERE m.tenant_id = :tenant_id AND m.agent = :agent AND m.conversation_id = ANY(:ids) "
+    "AND m.seq > c.cut_upto ORDER BY m.conversation_id, m.seq LIMIT :limit"
+).bindparams(bindparam("ids", type_=ARRAY(Text)))
+_MARK_CUT = text(
+    "UPDATE agent_rt.cv_conversation SET cut_upto = GREATEST(cut_upto, :seq) "
+    "WHERE tenant_id = :tenant_id AND agent = :agent AND id = :id"
+)
+
+
 class PostgresConversationStore:
     def __init__(self, engine: AsyncEngine, *, tenant_id: str, agent: str) -> None:
         self._engine = engine
@@ -356,6 +421,35 @@ class PostgresConversationStore:
         return [
             Person(r["sender_id"], r["name"] or "", int(r["messages"]), cast(Role, r["role"])) for r in rows
         ]
+
+    async def to_cut(self, *, idle_before: datetime, limit: int) -> list[Conversation]:
+        async with self._engine.connect() as conn:
+            rows = (
+                (await conn.execute(_TO_CUT, {**self._scope, "before": idle_before, "limit": limit}))
+                .mappings()
+                .all()
+            )
+        return [_conversation(row) for row in rows]
+
+    async def uncut_messages(
+        self, conversation_ids: Sequence[str], *, limit: int
+    ) -> dict[str, list[Message]]:
+        found: dict[str, list[Message]] = {cid: [] for cid in conversation_ids}
+        if not conversation_ids:
+            return found
+        params = {**self._scope, "ids": list(conversation_ids), "limit": limit}
+        async with self._engine.connect() as conn:
+            rows = (await conn.execute(_UNCUT, params)).mappings().all()
+        for row in rows:
+            found[row["conversation_id"]].append(_message(row))
+        return found
+
+    async def mark_cut(self, marks: Mapping[str, int]) -> None:
+        if not marks:
+            return
+        rows = [{**self._scope, "id": cid, "seq": seq} for cid, seq in marks.items()]
+        async with self._engine.begin() as conn:
+            await conn.execute(_MARK_CUT, rows)
 
     async def relabel(self, channel: str, sender_ids: Collection[str], role: Role) -> int:
         if not sender_ids:

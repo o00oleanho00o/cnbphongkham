@@ -14,6 +14,7 @@ import pytest
 from agent_app.plugins import PluginHost, discover
 from agent_app.profile import load_profile
 from agent_app.runtime import BUNDLED_PLUGINS, Runtime, build_runtime
+from agentcore.harness.model.scripted import ScriptedModel, reply
 from plugins.conversations.models import conversation_id
 from tests.zalo.test_personal_channel import (
     CREDENTIAL,
@@ -207,4 +208,34 @@ async def test_nothing_is_kept_from_a_channel_that_is_not_switched_on(
     await asyncio.sleep(0.1)
 
     assert await _chat(setup, "g1") == []
+    await setup.close()
+
+
+async def test_how_the_staff_answered_a_customer_reaches_the_agent_when_another_customer_asks_the_same(
+    tmp_path: Path, bridge: FakeBridge
+) -> None:
+    model = ScriptedModel([reply("Dạ em xin thông tin ạ"), reply("Dạ em hỏi lại chị một chút nhé")])
+    setup = await _started(tmp_path, bridge)
+    setup.runtime.live.use_model(model)
+    staff_answer = "Dạ chị cho em hỏi da mình bị nám lâu chưa ạ, em tư vấn gói rồi báo giá chị nhé"
+
+    await setup.event(
+        "nick", _message("Cho mình hỏi giá điều trị nám bao nhiêu vậy ạ", sender="u1", name="Lan")
+    )
+    await setup.until(lambda: len(bridge.sent) == 1)
+    await setup.event("nick", _from_the_owner(staff_answer, message_id="owner-7", thread="u1"))
+    await _until_kept(setup, "u1", 3)
+    refreshed = await setup.client.post(f"{CONVERSATIONS}/scenarios/refresh", headers=HEADERS)
+    first_request = len(model.requests)
+
+    await setup.event("nick", _message("Giá điều trị nám là bao nhiêu thế em", sender="u2", name="Minh"))
+    await setup.until(lambda: len(bridge.sent) == 2)
+
+    assert refreshed.json()["new"] == 1
+    asked_first = " ".join(m.text() for m in model.requests[0].messages)
+    asked_second = " ".join(m.text() for m in model.requests[first_request].messages)
+    assert "Kịch bản mẫu" not in asked_first
+    assert "Kịch bản mẫu" in asked_second
+    assert staff_answer in asked_second
+    assert "Lan" not in asked_second.split("Kịch bản mẫu", 1)[1]
     await setup.close()

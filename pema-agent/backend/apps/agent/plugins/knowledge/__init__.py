@@ -14,11 +14,12 @@ from __future__ import annotations
 
 import httpx
 
-from agent_app.plugins import PluginContext
+from agent_app.plugins import EMBEDDINGS, PluginContext
 
 from .embedding import EmbeddingClient
 from .plugin import KnowledgePlugin
 from .routes import knowledge_routes
+from .service import SharedEmbeddings
 
 
 def register(ctx: PluginContext) -> None:
@@ -28,3 +29,4 @@ def register(ctx: PluginContext) -> None:
     plugin = KnowledgePlugin(ctx, client=client)
     plugin.register()
     ctx.register_routes(knowledge_routes(plugin))
+    ctx.provide(EMBEDDINGS, SharedEmbeddings(plugin))

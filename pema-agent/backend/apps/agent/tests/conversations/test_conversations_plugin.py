@@ -3,40 +3,21 @@ messages, and the admin routes."""
 
 from __future__ import annotations
 
-import logging
 from datetime import UTC, datetime, timedelta
-from typing import Any, cast
+from typing import cast
 
 import httpx
 from fastapi import FastAPI
 
 from agent_app.plugins import PluginContext
-from agent_app.plugins.records import InMemoryPluginRecords
 from agentcore.channels import ObservedMessage, Origin
 from plugins.conversations.models import conversation_id
 from plugins.conversations.plugin import ChannelSetting, ConversationsPlugin, Settings, role_of
 from plugins.conversations.routes import conversations_routes
+from tests.conversations.fakes import FakeCtx
 
 NOW = datetime(2026, 10, 14, 3, 0, tzinfo=UTC)
 CHANNEL = "zalo-a"
-
-
-class FakeCtx:
-    """Just enough of ``PluginContext`` for the plugin to register itself and keep its settings."""
-
-    database = None
-    logger = logging.getLogger("conversations-test")
-
-    def __init__(self) -> None:
-        self.storage = InMemoryPluginRecords().storage("conversations")
-        self.handlers: list[Any] = []
-        self.jobs: dict[str, Any] = {}
-
-    def on_message(self, handler: Any) -> None:
-        self.handlers.append(handler)
-
-    def register_job(self, name: str, run: Any) -> None:
-        self.jobs[name] = run
 
 
 def _plugin(now: datetime = NOW) -> ConversationsPlugin:

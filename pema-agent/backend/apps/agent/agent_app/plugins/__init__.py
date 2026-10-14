@@ -25,14 +25,18 @@ from agent_app.plugins.manifest import (
     read_manifest,
 )
 from agent_app.plugins.records import PluginStorage, StorageFor
+from agent_app.plugins.services import EMBEDDINGS, EmbeddingService, EmbeddingUnavailableError
 
 __all__ = [
+    "EMBEDDINGS",
     "PLUGIN_API",
     "ConfigField",
     "Contributions",
     "DatabaseAccess",
     "Discovery",
     "Disposer",
+    "EmbeddingService",
+    "EmbeddingUnavailableError",
     "PluginContext",
     "PluginDatabase",
     "PluginError",

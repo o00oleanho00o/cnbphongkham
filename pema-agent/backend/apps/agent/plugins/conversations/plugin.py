@@ -18,54 +18,21 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from agent_app.plugins import EMBEDDINGS, EmbeddingService, PluginContext, PluginDatabase
+from agentcore.channels import ObservedMessage
 
-from agent_app.plugins import PluginContext, PluginDatabase
-from agentcore.channels import ObservedMessage, valid_channel_name
-
+from .episode_store import EpisodeStore, InMemoryEpisodeStore, PostgresEpisodeStore
 from .models import NewMessage, Role, conversation_id
+from .scenarios import Scenarios
+from .settings import ChannelSetting, Settings
 from .store import ConversationStore, InMemoryConversationStore, PostgresConversationStore
 
 SETTINGS_KEY: Final = "settings"
 SETTINGS_TTL_S: Final = 5.0
 MAX_TEXT_CHARS: Final = 8000
 CLEAN_EVERY_S: Final = 3600.0
-MAX_STAFF: Final = 200
-MAX_RETENTION_DAYS: Final = 3650
 
 logger = logging.getLogger(__name__)
-
-
-class ChannelSetting(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    enabled: bool = False
-    staff: list[str] = Field(default_factory=list[str], max_length=MAX_STAFF)
-    """Ids of the people on this channel who are staff (their messages are the staff's, not a customer's)."""
-
-    @field_validator("staff")
-    @classmethod
-    def _ids(cls, ids: list[str]) -> list[str]:
-        cleaned = [i.strip() for i in ids if i.strip()]
-        if any(len(i) > 100 for i in cleaned):
-            raise ValueError("a staff id has at most 100 characters")
-        return sorted(set(cleaned))
-
-
-class Settings(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    channels: dict[str, ChannelSetting] = Field(default_factory=dict[str, ChannelSetting], max_length=500)
-    retention_days: int = Field(default=0, ge=0, le=MAX_RETENTION_DAYS)
-    """Messages older than this many days are deleted; 0 keeps them for ever."""
-
-    @field_validator("channels")
-    @classmethod
-    def _names(cls, channels: dict[str, ChannelSetting]) -> dict[str, ChannelSetting]:
-        bad = [name for name in channels if not valid_channel_name(name)]
-        if bad:
-            raise ValueError(f"invalid channel name {bad[0]!r}")
-        return channels
 
 
 class ConversationsPlugin:
@@ -74,6 +41,7 @@ class ConversationsPlugin:
         ctx: PluginContext,
         *,
         store: ConversationStore | None = None,
+        episodes: EpisodeStore | None = None,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
         monotonic: Callable[[], float] = time.monotonic,
     ) -> None:
@@ -87,14 +55,33 @@ class ConversationsPlugin:
                 database.engine, tenant_id=database.tenant_id, agent=database.agent
             )
         )
+        self.episodes: EpisodeStore = episodes or (
+            InMemoryEpisodeStore(clock)
+            if database is None
+            else PostgresEpisodeStore(database.engine, tenant_id=database.tenant_id, agent=database.agent)
+        )
         self._clock = clock
         self._monotonic = monotonic
         self._settings: Settings | None = None
         self._read_at = float("-inf")
+        self.scenarios = Scenarios(
+            conversations=self.store,
+            episodes=self.episodes,
+            settings=self.settings,
+            embeddings=lambda: ctx.use(EMBEDDINGS, EmbeddingService),
+            plugin_of=ctx.channel_plugin,
+            clock=clock,
+            logger=ctx.logger,
+        )
 
     def register(self) -> None:
-        self._ctx.on_message(self.hear)
-        self._ctx.register_job("retention", self._keep_clean)
+        ctx = self._ctx
+        ctx.on_message(self.hear)
+        ctx.register_job("retention", self._keep_clean)
+        ctx.register_tool(self.scenarios.tool())
+        ctx.register_hook(self.scenarios.hook())
+        ctx.register_job("cut", self.scenarios.keep_cutting)
+        ctx.register_job("embed", self.scenarios.keep_embedding)
 
     async def ready(self) -> None:
         if self._database is not None:

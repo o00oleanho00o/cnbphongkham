@@ -94,6 +94,7 @@ class _Loaded:
     jobs: list[PluginJob] = field(default_factory=list[PluginJob])
     authenticators: list[Authenticator] = field(default_factory=list[Authenticator])
     observers: list[Observe] = field(default_factory=list[Observe])
+    services: dict[str, object] = field(default_factory=dict[str, object])
     routes: dict[RouteKind, FastAPI] = field(default_factory=dict[RouteKind, FastAPI])
     disposers: list[Disposer] = field(default_factory=list[Disposer])
 
@@ -142,8 +143,10 @@ class PluginContext:
         database: PluginDatabase | None = None,
         model: Callable[[], ModelClient | None] = lambda: None,
         observe: Observe | None = None,
+        service: Callable[[str], object | None] = lambda name: None,
     ) -> None:
         self._observe = observe
+        self._service = service
         self._loaded = loaded
         self._model = model
         self._allow_internet = allow_internet
@@ -296,6 +299,28 @@ class PluginContext:
         if self._observe is not None:
             await self._observe(message)
 
+    def provide(self, name: str, service: object) -> Disposer:
+        """Gives other plugins a service under ``name`` (see ``agent_app.plugins.services``) while this plugin
+        is enabled. A name is provided by one plugin only."""
+        if not valid_channel_name(name):
+            raise PluginError(self.name, f"invalid service name {name!r}")
+        if name in self._loaded.services:
+            raise PluginError(self.name, f"service {name} provided twice")
+        self._loaded.services[name] = service
+
+        def dispose() -> None:
+            if self._loaded.services.get(name) is service:
+                del self._loaded.services[name]
+
+        self._loaded.disposers.append(dispose)
+        return dispose
+
+    def use[T](self, name: str, kind: type[T]) -> T | None:
+        """The service another enabled plugin provides under ``name`` when it is a ``kind`` (a protocol marked
+        ``runtime_checkable``); None otherwise. Ask when the service is needed, not when registering."""
+        found = self._service(name)
+        return found if isinstance(found, kind) else None
+
     def on_disable(self, callback: Callable[[], None]) -> Disposer:
         """Runs when the plugin is disabled, after its later registrations are undone."""
         self._loaded.disposers.append(callback)
@@ -420,6 +445,7 @@ class PluginHost:
                     database=self._plugin_database(source),
                     model=lambda: self._model,
                     observe=self.observe,
+                    service=self._service,
                 )
             )
             self._check_unique(loaded)
@@ -513,6 +539,14 @@ class PluginHost:
             )
         return statuses
 
+    def use[T](self, name: str, kind: type[T]) -> T | None:
+        """The service an enabled plugin provides under ``name`` when it is a ``kind``; None otherwise."""
+        found = self._service(name)
+        return found if isinstance(found, kind) else None
+
+    def _service(self, name: str) -> object | None:
+        return next((p.services[name] for p in self._loaded.values() if name in p.services), None)
+
     def _channel_owner(self, name: str) -> str | None:
         return next(
             (p for p, loaded in self._loaded.items() if any(c.name == name for c in loaded.channels)), None
@@ -524,6 +558,7 @@ class PluginHost:
                 ("tool", {t.name for t in candidate.tools}, {t.name for t in other.tools}),
                 ("prompt section", {s.name for s in candidate.sections}, {s.name for s in other.sections}),
                 ("channel", {c.name for c in candidate.channels}, {c.name for c in other.channels}),
+                ("service", set(candidate.services), set(other.services)),
             ):
                 clash = sorted(mine & theirs)
                 if clash:
