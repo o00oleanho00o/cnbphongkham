@@ -6,8 +6,9 @@ import { messageOf, skills } from "../client";
 import { KIND_LABEL, problems, scopesSummary, validScope } from "../logic";
 import { Chip } from "../parts";
 import { ui } from "../sdk";
+import { ScopePicker } from "../scope/scope-picker";
 import { type SkillFile, parseSkillFile } from "../skill-file";
-import type { Item } from "../types";
+import type { Choices, Item } from "../types";
 
 const MAX_FILES = 20;
 const MAX_BYTES = 200_000;
@@ -39,8 +40,14 @@ function existing(items: readonly Item[], file: SkillFile): Item | undefined {
   return items.find((item) => item.kind === file.kind && item.name === file.name);
 }
 
-async function addOne(file: SkillFile, found: Item | undefined): Promise<Outcome> {
-  const { kind, name, description, body, scopes, status } = file;
+/** A file that names its places keeps them; the others go where the person chose above the list. */
+function scopesOf(file: SkillFile, chosen: readonly string[]): string[] {
+  return file.scopes.length > 0 ? file.scopes : [...chosen];
+}
+
+async function addOne(file: SkillFile, found: Item | undefined, chosen: readonly string[]): Promise<Outcome> {
+  const { kind, name, description, body, status } = file;
+  const scopes = scopesOf(file, chosen);
   try {
     if (found) {
       await skills.update(found.id, { description, body, scopes, status, reason: `thêm từ file ${file.fileName}` });
@@ -55,10 +62,12 @@ async function addOne(file: SkillFile, found: Item | undefined): Promise<Outcome
 
 export function AddFiles({
   entries,
+  choices,
   onClose,
   onAdded,
 }: {
   entries: readonly Entry[];
+  choices: Choices;
   onClose: () => void;
   onAdded: () => void;
 }) {
@@ -66,6 +75,7 @@ export function AddFiles({
   const [busy, setBusy] = useState(false);
   const [results, setResults] = useState<Map<string, Outcome>>(new Map());
   const [error, setError] = useState("");
+  const [chosen, setChosen] = useState<string[]>([]);
 
   useEffect(() => {
     skills
@@ -82,7 +92,7 @@ export function AddFiles({
     setBusy(true);
     const outcomes = await addable.reduce<Promise<[string, Outcome][]>>(async (previous, entry) => {
       const before = await previous;
-      return [...before, [entry.file.fileName, await addOne(entry.file, existing(items, entry.file))]];
+      return [...before, [entry.file.fileName, await addOne(entry.file, existing(items, entry.file), chosen)]];
     }, Promise.resolve([]));
     setResults(new Map(outcomes));
     setBusy(false);
@@ -100,6 +110,12 @@ export function AddFiles({
     >
       <div className="space-y-3">
         {error && <ui.Notice tone="danger">{error}</ui.Notice>}
+        {!done && (
+          <div className="space-y-1">
+            <p className="text-small font-bold text-heading">Áp dụng cho (các file không ghi sẵn nơi áp dụng)</p>
+            <ScopePicker scopes={chosen} choices={choices} onChange={setChosen} />
+          </div>
+        )}
         <ul className="space-y-2">
           {entries.map((entry) => {
             const { file } = entry;
@@ -116,7 +132,7 @@ export function AddFiles({
                 <p className="text-small text-ink">{file.description}</p>
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-label text-ink-soft">Áp dụng:</span>
-                  {(file.scopes.length === 0 ? ["agent"] : file.scopes).map((scope) => (
+                  {(scopesOf(file, chosen).length === 0 ? ["agent"] : scopesOf(file, chosen)).map((scope) => (
                     <Chip key={scope}>{scopesSummary([scope])}</Chip>
                   ))}
                 </div>

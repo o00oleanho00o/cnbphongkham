@@ -56,6 +56,10 @@ export function problems(item: Writing): string[] {
 export const AGENT_SCOPE = "agent";
 const SCOPE_WORD: Record<string, string> = { plugin: "Plugin", channel: "Kênh" };
 
+export function scopeOf(kind: "plugin" | "channel", key: string): string {
+  return `${kind}:${key.trim()}`;
+}
+
 export function scopeLabel(scope: string): string {
   if (scope === AGENT_SCOPE) return "Cả agent";
   const [kind = "", ...rest] = scope.split(":");

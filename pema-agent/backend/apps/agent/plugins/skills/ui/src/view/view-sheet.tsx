@@ -4,13 +4,15 @@ import { useState } from "react";
 import { messageOf, skills } from "../client";
 import { KIND_LABEL, ORIGIN_LABEL, STATUS_LABEL, STATUS_TONE, formatTime, scopeLabel } from "../logic";
 import { Chip, Sheet, Tabs } from "../parts";
+import { ScopeEditor } from "../scope/scope-editor";
 import { ui } from "../sdk";
 import { downloadText, toSkillFile } from "../skill-file";
-import type { Item, Saved, Status } from "../types";
+import type { Choices, Item, Saved, Status } from "../types";
 import { History } from "./history";
 
 const TABS = [
   { id: "text", label: "Nội dung" },
+  { id: "scope", label: "Nơi áp dụng" },
   { id: "history", label: "Lịch sử" },
 ] as const;
 
@@ -27,11 +29,13 @@ const STATUS_ACTIONS: Record<Status, readonly { to: Status; label: string; prima
 
 export function ViewSheet({
   item,
+  choices,
   onClose,
   onChanged,
   onEdit,
 }: {
   item: Item;
+  choices: Choices;
   onClose: () => void;
   onChanged: () => void;
   onEdit: (item: Item) => void;
@@ -103,6 +107,14 @@ export function ViewSheet({
         <pre className="overflow-auto rounded-tile border border-line bg-tile p-3 text-small whitespace-pre-wrap text-ink">
           {toSkillFile(current)}
         </pre>
+      )}
+      {tab === "scope" && (
+        <ScopeEditor
+          key={current.version}
+          item={current}
+          choices={choices}
+          onSaved={(saved) => take({ item: saved, warnings: [] })}
+        />
       )}
       {tab === "history" && <History itemId={current.id} onRestored={take} />}
     </Sheet>

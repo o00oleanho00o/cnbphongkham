@@ -15,7 +15,7 @@ import {
 } from "../logic";
 import { Chip } from "../parts";
 import { ui } from "../sdk";
-import type { Item, Kind, Status } from "../types";
+import type { Choices, Item, Kind, Status } from "../types";
 import { ViewSheet } from "../view/view-sheet";
 
 const KIND_FILTER = [{ value: "", label: "Mọi loại" }, ...KINDS.map((kind) => ({ value: kind.id, label: kind.label }))];
@@ -63,7 +63,15 @@ function Row({ item, onOpen, onEdit }: { item: Item; onOpen: () => void; onEdit:
   );
 }
 
-export function ListPage({ onEdit, onWrite }: { onEdit: (item: Item) => void; onWrite: () => void }) {
+export function ListPage({
+  choices,
+  onEdit,
+  onWrite,
+}: {
+  choices: Choices;
+  onEdit: (item: Item) => void;
+  onWrite: () => void;
+}) {
   const [items, setItems] = useState<Item[] | null>(null);
   const [error, setError] = useState("");
   const [q, setQ] = useState("");
@@ -143,6 +151,7 @@ export function ListPage({ onEdit, onWrite }: { onEdit: (item: Item) => void; on
         <ViewSheet
           key={open.id}
           item={open}
+          choices={choices}
           onClose={() => setOpen(null)}
           onChanged={() => void load()}
           onEdit={(target) => {

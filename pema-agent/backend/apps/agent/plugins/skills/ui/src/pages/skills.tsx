@@ -38,7 +38,7 @@ export function SkillsPage() {
       <div hidden={tab !== "chat"}>
         <ChatPage choices={choices} prefill={prefill} />
       </div>
-      {tab === "list" && <ListPage onEdit={editWithChat} onWrite={() => setTab("chat")} />}
+      {tab === "list" && <ListPage choices={choices} onEdit={editWithChat} onWrite={() => setTab("chat")} />}
       {tab === "effective" && <EffectivePage choices={choices} />}
     </>
   );

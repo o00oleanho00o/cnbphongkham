@@ -7,7 +7,8 @@ import { KIND_LABEL, STATUS_LABEL, STATUS_TONE, scopesSummary } from "../logic";
 import { Chip } from "../parts";
 import { ui } from "../sdk";
 import { toSkillFile } from "../skill-file";
-import type { Item, Status } from "../types";
+import { ScopeEditor } from "../scope/scope-editor";
+import type { Choices, Item, Status } from "../types";
 
 export interface ChatItem {
   item: Item;
@@ -15,10 +16,19 @@ export interface ChatItem {
   beforeVersion: number | null;
 }
 
-export function DraftCard({ entry, onChange }: { entry: ChatItem; onChange: (next: ChatItem) => void }) {
+export function DraftCard({
+  entry,
+  choices,
+  onChange,
+}: {
+  entry: ChatItem;
+  choices: Choices;
+  onChange: (next: ChatItem) => void;
+}) {
   const { item, beforeVersion } = entry;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [placing, setPlacing] = useState(false);
   const scopes = item.scopes.length === 0 ? ["agent"] : item.scopes;
 
   async function run(work: () => Promise<Item>) {
@@ -62,6 +72,13 @@ export function DraftCard({ entry, onChange }: { entry: ChatItem; onChange: (nex
           {toSkillFile(item)}
         </pre>
       </details>
+      {placing && (
+        <ScopeEditor
+          item={item}
+          choices={choices}
+          onSaved={(saved) => onChange({ item: saved, beforeVersion: entry.beforeVersion })}
+        />
+      )}
       {error && <ui.Notice tone="danger">{error}</ui.Notice>}
       <div className="flex flex-wrap items-center gap-2">
         {item.status === "draft" && (
@@ -74,6 +91,9 @@ export function DraftCard({ entry, onChange }: { entry: ChatItem; onChange: (nex
             Bỏ
           </ui.Button>
         )}
+        <ui.Button variant="secondary" disabled={busy} onClick={() => setPlacing((open) => !open)}>
+          {placing ? "Đóng nơi áp dụng" : "Chọn nơi áp dụng"}
+        </ui.Button>
         {beforeVersion !== null && (
           <ui.Button variant="secondary" busy={busy} onClick={() => void undo()}>
             Hoàn tác

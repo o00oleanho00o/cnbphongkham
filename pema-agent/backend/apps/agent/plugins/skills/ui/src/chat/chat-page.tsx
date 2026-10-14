@@ -19,7 +19,15 @@ export interface Prefill {
   nonce: number;
 }
 
-function Bubble({ message, onItem }: { message: ChatMessage; onItem: (next: ChatItem) => void }) {
+function Bubble({
+  message,
+  choices,
+  onItem,
+}: {
+  message: ChatMessage;
+  choices: Choices;
+  onItem: (next: ChatItem) => void;
+}) {
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
@@ -34,7 +42,7 @@ function Bubble({ message, onItem }: { message: ChatMessage; onItem: (next: Chat
     <div className="max-w-[92%] space-y-3">
       <p className="text-body whitespace-pre-wrap text-ink">{message.text}</p>
       {message.items.map((entry) => (
-        <DraftCard key={entry.item.id} entry={entry} onChange={onItem} />
+        <DraftCard key={entry.item.id} entry={entry} choices={choices} onChange={onItem} />
       ))}
     </div>
   );
@@ -113,7 +121,7 @@ export function ChatPage({ choices, prefill }: { choices: Choices; prefill: Pref
 
       <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
         {entries !== null && (
-          <AddFiles entries={entries} onClose={() => setEntries(null)} onAdded={() => undefined} />
+          <AddFiles entries={entries} choices={choices} onClose={() => setEntries(null)} onAdded={() => undefined} />
         )}
         {empty && entries === null && (
           <div className="space-y-3 py-6 text-center">
@@ -128,7 +136,12 @@ export function ChatPage({ choices, prefill }: { choices: Choices; prefill: Pref
           </div>
         )}
         {chat.messages.map((message) => (
-          <Bubble key={message.id} message={message} onItem={(next) => chat.updateItem(message.id, next)} />
+          <Bubble
+            key={message.id}
+            message={message}
+            choices={choices}
+            onItem={(next) => chat.updateItem(message.id, next)}
+          />
         ))}
         {chat.busy && <p className="text-small text-ink-soft">Trợ lý đang soạn…</p>}
         <div ref={bottom} />
