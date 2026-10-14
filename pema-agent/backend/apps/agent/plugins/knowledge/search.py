@@ -3,7 +3,8 @@
 Stages: understand the question (folded words, the services it names), keyword candidates and, when the
 embedding service is connected, vector candidates found at the same time (the vector list leads, the keyword
 list follows), a small boost for chunks labelled with a named service, at most a few chunks per document, then
-a character budget.
+a character budget. A question may come with up to two variants (the agent writes them in the same call):
+each is searched the same way and the lists are merged by rank (``fusion.rank_fusion``).
 The vector branch never makes a search fail or wait long: when it is off, failing or slow the result is
 exactly the keyword result. Every channel sees the same store (no patient/staff split for now).
 """
@@ -13,13 +14,13 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Iterable, Sequence
 from dataclasses import dataclass, replace
 from datetime import date
 from typing import Any, Final
 
 from .embedding import EmbeddingError
-from .fusion import vector_first
+from .fusion import rank_fusion, vector_first
 from .ingest import recognise
 from .models import Hit, Service
 from .store import KnowledgeStore
@@ -30,6 +31,8 @@ logger = logging.getLogger(__name__)
 CANDIDATES: Final = 40
 SERVICE_BOOST: Final = 1.25
 PER_DOCUMENT: Final = 3
+MAX_QUERIES: Final = 3
+"""The question and at most two variants."""
 EXCERPT_CHARS: Final = 280
 NO_VECTOR: Final = "Embedding chưa bật: chỉ tìm bằng từ khóa."
 VECTOR_FAILED: Final = "Lỗi khi tìm theo nghĩa: lượt này chỉ tìm bằng từ khóa."
@@ -67,6 +70,8 @@ class SearchResult:
     """The same as a short code for the trace: ``off``, ``timeout`` or ``error``; None when it ran."""
     fusion: bool
     total_ms: float
+    variants: tuple[str, ...] = ()
+    """The other ways of asking that were searched with the question."""
 
     @property
     def vector_used(self) -> bool:
@@ -79,6 +84,22 @@ class _VectorOutcome:
     ms: float = 0.0
     note: str | None = None
     skip: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class _Branch:
+    """What one way of asking found."""
+
+    keyword: tuple[Hit, ...]
+    keyword_ms: float
+    vector: _VectorOutcome
+
+    @property
+    def fused(self) -> bool:
+        return self.vector.note is None and bool(self.vector.hits)
+
+    def ranked(self) -> list[Hit]:
+        return vector_first(self.vector.hits, self.keyword) if self.fused else list(self.keyword)
 
 
 class Searcher:
@@ -95,17 +116,20 @@ class Searcher:
         char_budget: int,
         services: Sequence[Service],
         vector: VectorPlan | None = None,
+        variants: Sequence[str] = (),
     ) -> SearchResult:
         started = self._timer()
-        named = tuple(recognise(question, services))
+        asked = _distinct(question, variants)
+        named = tuple(dict.fromkeys(code for text in asked for code in recognise(text, services)))
         wanted = tuple(query_terms(question))
         async with asyncio.TaskGroup() as group:
-            keyword_task = group.create_task(self._keyword(wanted, as_of))
-            vector_task = group.create_task(self._vector(question, as_of, vector))
-        candidates, keyword_ms = keyword_task.result()
-        outcome = vector_task.result()
-        fusion = outcome.note is None and bool(outcome.hits)
-        ranked = vector_first(outcome.hits, candidates) if fusion else list(candidates)
+            tasks = [group.create_task(self._branch(text, as_of, vector)) for text in asked]
+        branches = [task.result() for task in tasks]
+        candidates = _union(hit for branch in branches for hit in branch.keyword)
+        found = _union(hit for branch in branches for hit in branch.vector.hits)
+        outcome = next((b.vector for b in branches if b.vector.note is None), branches[0].vector)
+        fusion = any(branch.fused for branch in branches)
+        ranked = branches[0].ranked() if len(branches) == 1 else rank_fusion([b.ranked() for b in branches])
         boosted = sorted((_boosted(hit, named) for hit in ranked), key=lambda hit: hit.score, reverse=True)
         final = _packed(_spread(boosted), results, char_budget)
         return SearchResult(
@@ -114,17 +138,25 @@ class Searcher:
             terms=wanted,
             services=named,
             as_of=as_of,
-            candidates=tuple(candidates),
-            vector=outcome.hits,
+            candidates=candidates,
+            vector=found,
             fused=tuple(ranked),
             final=tuple(final),
-            keyword_ms=keyword_ms,
-            vector_ms=outcome.ms,
+            keyword_ms=max(branch.keyword_ms for branch in branches),
+            vector_ms=max(branch.vector.ms for branch in branches),
             vector_note=outcome.note,
             vector_skip=outcome.skip,
             fusion=fusion,
             total_ms=(self._timer() - started) * 1000,
+            variants=tuple(asked[1:]),
         )
+
+    async def _branch(self, text: str, as_of: date, plan: VectorPlan | None) -> _Branch:
+        async with asyncio.TaskGroup() as group:
+            keyword_task = group.create_task(self._keyword(tuple(query_terms(text)), as_of))
+            vector_task = group.create_task(self._vector(text, as_of, plan))
+        keyword, keyword_ms = keyword_task.result()
+        return _Branch(tuple(keyword), keyword_ms, vector_task.result())
 
     async def _keyword(self, wanted: Sequence[str], as_of: date) -> tuple[list[Hit], float]:
         started = self._timer()
@@ -154,6 +186,19 @@ class Searcher:
             logger.warning("vector search failed", exc_info=True)
             return _VectorOutcome(ms=spent(), note=VECTOR_FAILED, skip="error")
         return _VectorOutcome(hits=tuple(hits), ms=spent())
+
+
+def _distinct(question: str, variants: Sequence[str]) -> list[str]:
+    """The question first, then its variants, each once (same words, whatever the case or accents)."""
+    seen: dict[str, str] = {}
+    for text in (question, *variants):
+        seen.setdefault(" ".join(fold(text).split()), text.strip())
+    return [text for key, text in seen.items() if key][:MAX_QUERIES]
+
+
+def _union(hits: Iterable[Hit]) -> tuple[Hit, ...]:
+    """The hits without a chunk twice, in the order first seen."""
+    return tuple({hit.chunk.id: hit for hit in reversed(tuple(hits))}.values())[::-1]
 
 
 def _boosted(hit: Hit, named: Sequence[str]) -> Hit:
@@ -211,6 +256,7 @@ def tool_detail(result: SearchResult) -> dict[str, Any]:
         "terms": len(result.terms),
         "services": list(result.services),
         "candidates": len(result.candidates),
+        "queries": 1 + len(result.variants),
         "keyword_candidates": len(result.candidates),
         "vector_candidates": len(result.vector),
         "vector_used": result.vector_used,
@@ -226,8 +272,10 @@ def tool_detail(result: SearchResult) -> dict[str, Any]:
 
 def debug_view(result: SearchResult, min_similarity: float) -> dict[str, Any]:
     """The stages for the page "Thử tìm" (``SearchDebug`` of types.ts)."""
-    understand = f"Từ khóa: {', '.join(result.terms[:15]) or '(không có)'}" + (
-        f". Dịch vụ: {', '.join(result.services)}" if result.services else ""
+    understand = (
+        f"Từ khóa: {', '.join(result.terms[:15]) or '(không có)'}"
+        + (f". Dịch vụ: {', '.join(result.services)}" if result.services else "")
+        + (f". Cách hỏi khác: {' | '.join(result.variants)}" if result.variants else "")
     )
     return {
         "question": result.question,

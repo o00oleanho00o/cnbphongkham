@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from plugins.knowledge.fusion import vector_first
+from plugins.knowledge.fusion import rank_fusion, vector_first
 from plugins.knowledge.models import Chunk, Hit
 
 
@@ -48,3 +48,21 @@ def test_without_vector_chunks_the_keyword_chunks_are_kept_in_order_below_one() 
 
 def test_nothing_in_nothing_out() -> None:
     assert vector_first([], []) == []
+
+
+def test_a_chunk_that_several_lists_find_leads_the_rank_fusion() -> None:
+    merged = rank_fusion([[_hit("a", 0.9), _hit("b", 0.8)], [_hit("c", 0.9), _hit("b", 0.7)]])
+
+    assert _ids(merged) == ["b", "a", "c"]
+
+
+def test_rank_fusion_keeps_the_first_seen_order_of_equal_scores_and_drops_duplicates() -> None:
+    merged = rank_fusion([[_hit("a", 0.9), _hit("b", 0.8)], [_hit("a", 0.5), _hit("c", 0.4)]])
+
+    assert _ids(merged) == ["a", "b", "c"]
+    assert merged[0].score > merged[1].score == merged[2].score
+
+
+def test_rank_fusion_of_nothing_is_empty() -> None:
+    assert rank_fusion([]) == []
+    assert rank_fusion([[], []]) == []

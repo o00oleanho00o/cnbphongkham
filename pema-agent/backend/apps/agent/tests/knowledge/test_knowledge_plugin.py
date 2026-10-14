@@ -198,6 +198,40 @@ async def test_kb_search_hands_the_agent_the_chunks_and_traces_which_documents(t
     runtime.close()
 
 
+async def test_another_way_of_asking_finds_what_a_vague_question_does_not(tmp_path: Path) -> None:
+    runtime = _runtime(tmp_path)
+    async with _client(runtime) as client:
+        await _add(client, {"d07.md": PRICES, "d12.md": BOOKING})
+        agent = runtime.live.current()
+
+        async def ask(args: dict[str, Any]) -> dict[str, Any]:
+            tracer = InMemoryTracer()
+            await run_turn(
+                session_id="s1",
+                user_text="Bao nhiêu vậy?",
+                prompt=PromptBuilder.fixed("sys"),
+                model=ScriptedModel([calls(tool_call("kb_search", args)), reply("ok")]),
+                tools=agent.tools,
+                store=InMemorySessionStore(),
+                tracer=tracer,
+                clock=lambda: ASKED,
+            )
+            return tracer.traces[0].events[1].detail["tool"]
+
+        alone = await ask({"query": "bãi gửi xe ô tô"})
+        together = await ask(
+            {"query": "bãi gửi xe ô tô", "alternatives": ["giá điều trị nám buổi lẻ", "bãi gửi xe ô tô"]}
+        )
+        gaps = (await client.get(f"{BASE}/gaps")).json()
+
+    assert alone["returned"] == 0
+    assert alone["queries"] == 1
+    assert together["doc_ids"][0] == "D07"
+    assert together["queries"] == 2
+    assert [g["question"] for g in gaps] == ["bãi gửi xe ô tô"]
+    runtime.close()
+
+
 async def test_a_question_with_no_document_is_recorded_as_a_gap(tmp_path: Path) -> None:
     runtime = _runtime(tmp_path)
     async with _client(runtime) as client:

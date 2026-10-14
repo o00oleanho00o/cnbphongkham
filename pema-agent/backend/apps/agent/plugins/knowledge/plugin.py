@@ -48,6 +48,9 @@ chăm sóc sau điều trị, câu hỏi thường gặp). Cách làm:
 - Câu hỏi về phòng khám, dịch vụ, giá, chính sách hay quy trình: gọi `kb_search` trước khi trả lời. Câu tìm
   phải đủ ý: câu hỏi nối tiếp ("còn giá cái đó?", "gói thì sao?") thì ghép tên dịch vụ hay chủ đề đang nói vào
   câu tìm. Câu hỏi có nhiều ý thì tìm từng ý.
+- Câu hỏi ngắn, mơ hồ hoặc khách nói theo lời thường (không có tên dịch vụ hay chính sách): viết thêm một
+  hay hai cách hỏi khác vào `alternatives` (dùng từ tài liệu hay dùng: tên dịch vụ, tên chính sách), tìm một
+  lần thay vì tìm đi tìm lại.
 - Kết quả chưa đủ để trả lời thì tìm lại với từ khác (tên dịch vụ, tên chính sách), hoặc đọc trọn tài liệu
   bằng `kb_read` với mã ở đầu đoạn hay mã trong mục lục kho (khi cần cả bảng, điều kiện, ngoại lệ).
 - Chỉ trả lời bằng những gì các đoạn tìm được nói. Con số (giá, số buổi, số ngày, phần trăm) phải lấy đúng như
@@ -92,6 +95,14 @@ class SearchArgs(BaseModel):
         description=(
             "Điều cần tìm, đủ ý (câu hỏi nối tiếp thì ghép chủ đề đang nói), bằng lời của khách hoặc từ "
             "khóa: tên dịch vụ, giá, chính sách..."
+        ),
+    )
+    alternatives: list[str] = Field(
+        default_factory=list[str],
+        max_length=2,
+        description=(
+            "Tối đa hai cách hỏi khác của cùng ý (tên dịch vụ, tên chính sách, từ tài liệu hay dùng), "
+            "tìm cùng lúc với câu tìm. Dùng khi câu hỏi ngắn hay mơ hồ."
         ),
     )
     results: int | None = Field(
@@ -319,6 +330,7 @@ class KnowledgePlugin:
             char_budget=min(int(settings["char_budget"]), MAX_CHAR_BUDGET),
             services=await self.store.services(),
             vector=await self.vector_plan(settings),
+            variants=[text[:300] for text in args.alternatives if len(text.strip()) >= 2],
         )
         if not result.final:
             await self.record_gap(args.query, ctx.channel or "")

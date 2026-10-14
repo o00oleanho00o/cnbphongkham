@@ -14,6 +14,8 @@ from typing import Final
 from .models import Hit
 
 KEYWORD_SHARE: Final = 0.5
+RRF_K: Final = 60
+"""The constant of reciprocal rank fusion: the larger, the flatter the difference between places."""
 """A keyword-only chunk scores at most this share of the weakest vector chunk: it always ranks after them."""
 
 
@@ -31,3 +33,17 @@ def vector_first(vector: Sequence[Hit], keyword: Sequence[Hit]) -> list[Hit]:
         for rank, hit in enumerate(h for h in keyword if h.chunk.id not in seen)
     ]
     return [*vector, *after]
+
+
+def rank_fusion(lists: Sequence[Sequence[Hit]]) -> list[Hit]:
+    """Several ranked lists of one search (the question and its variants) as one. A chunk scores the sum of
+    ``1 / (RRF_K + place)`` over the lists that hold it, so a chunk that several of them find leads; it keeps
+    the data of the first hit that held it, and equal scores keep the order they were first seen in."""
+    scores: dict[str, float] = {}
+    first: dict[str, Hit] = {}
+    for hits in lists:
+        for place, hit in enumerate(hits, start=1):
+            scores[hit.chunk.id] = scores.get(hit.chunk.id, 0.0) + 1.0 / (RRF_K + place)
+            first.setdefault(hit.chunk.id, hit)
+    ordered = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+    return [replace(first[chunk_id], score=score) for chunk_id, score in ordered]
