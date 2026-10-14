@@ -11,7 +11,7 @@ from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-from agentcore.channels import InboundMessage
+from agentcore.channels import InboundMessage, ObservedMessage, Origin
 
 THREAD_USER = "user"
 THREAD_GROUP = "group"
@@ -34,6 +34,8 @@ class ZaloInbound:
     """The platform's own data of the message (zca-js ``data``), for receipts and quotes."""
 
 
+IMAGE_ONLY = "[gửi một ảnh]"
+
 Heard = Callable[[ZaloInbound], Awaitable[None]]
 """Told of every message from someone else, answered or not, before the filter (the address book)."""
 
@@ -41,7 +43,7 @@ Heard = Callable[[ZaloInbound], Awaitable[None]]
 def to_inbound(msg: ZaloInbound, extra: Mapping[str, str] | None = None) -> InboundMessage:
     text = msg.text.strip()
     if not text and msg.image_urls:
-        text = "[gửi một ảnh]"
+        text = IMAGE_ONLY
     if msg.is_group and msg.sender_name:
         text = f"{msg.sender_name}: {text}"
     metadata = {"thread_type": THREAD_GROUP if msg.is_group else THREAD_USER}
@@ -57,4 +59,25 @@ def to_inbound(msg: ZaloInbound, extra: Mapping[str, str] | None = None) -> Inbo
         message_id=msg.message_id,
         text=text,
         metadata=metadata,
+    )
+
+
+def to_observed(channel: str, msg: ZaloInbound, *, answered: bool) -> ObservedMessage | None:
+    """The message as the plugins that keep conversations see it: the words as written (a group message
+    without the speaker's name in front), who wrote it, and whether the agent takes it up. None for one with
+    nothing to keep (a sticker, a voice note)."""
+    text = msg.text.strip() or (IMAGE_ONLY if msg.image_urls else "")
+    if not text:
+        return None
+    origin: Origin = "own" if msg.is_self else "inbound"
+    return ObservedMessage(
+        channel=channel,
+        conversation_id=msg.thread_id,
+        sender_id=msg.sender_id,
+        message_id=msg.message_id,
+        text=text,
+        origin=origin,
+        is_group=msg.is_group,
+        sender_name=msg.sender_name,
+        answered=answered and not msg.is_self,
     )

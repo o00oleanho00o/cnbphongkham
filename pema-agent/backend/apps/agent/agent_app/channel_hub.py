@@ -26,6 +26,8 @@ from agentcore.channels import (
     ChannelAdapter,
     ChannelSendError,
     InboundMessage,
+    Observe,
+    ObservedMessage,
     OutboundMessage,
     PreparesText,
     Receive,
@@ -81,6 +83,7 @@ class ChannelHub:
         refresh: Callable[[], Awaitable[None]] | None = None,
         settings: DeliverySettings | None = None,
         failure_reply: str = "",
+        observe: Observe | None = None,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         rand: Callable[[float, float], float] = random.uniform,
@@ -91,6 +94,7 @@ class ChannelHub:
         self._refresh = refresh
         self.settings = settings or DeliverySettings()
         self._failure_reply = failure_reply.strip()
+        self._observe = observe
         self._clock = clock
         self._sleep = sleep
         self._rand = rand
@@ -248,7 +252,27 @@ class ChannelHub:
                 return await self._failed(record, _describe(err), retryable=True)
             await self._ingress.delivery_progress(record.id, index + 1)
         await self._ingress.finish_delivery(record.id, "sent")
+        await self._tell_of_reply(record, text)
         return True
+
+    async def _tell_of_reply(self, record: IngressRecord, text: str) -> None:
+        """The plugins that listen hear what the agent said (a failure here never undoes the send)."""
+        if self._observe is None:
+            return
+        try:
+            await self._observe(
+                ObservedMessage(
+                    channel=record.channel,
+                    conversation_id=record.conversation_id,
+                    sender_id="",
+                    message_id=f"{record.external_id}#reply",
+                    text=text,
+                    origin="agent",
+                    metadata=record.metadata,
+                )
+            )
+        except Exception as err:  # the reply is out; the listener's trouble is its own
+            logger.warning("a listener failed on a reply of %s (%s)", record.channel, type(err).__name__)
 
     def _receiver(self, name: str, adapter: ChannelAdapter) -> Receive:
         async def receive(inbound: InboundMessage) -> None:

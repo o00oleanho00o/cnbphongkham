@@ -42,7 +42,7 @@ function createZaloInstance(): Zalo {
   return new Zalo({
     checkUpdate: false,
     logging: false,
-    selfListen: false,
+    selfListen: true, // the owner's own messages reach the agent as conversation data; it never answers them
     imageMetadataGetter,
   });
 }

@@ -20,11 +20,11 @@ import secrets
 from collections.abc import Awaitable, Callable, Mapping
 from typing import Final
 
-from agentcore.channels import ChannelCapabilities, ChannelSendError, OutboundMessage, Receive
+from agentcore.channels import ChannelCapabilities, ChannelSendError, Observe, OutboundMessage, Receive
 
 from ..access import should_respond
 from ..format.prepare_outgoing_text import lam_sach_theo_cau_hinh
-from ..inbound import Heard, to_inbound
+from ..inbound import Heard, to_inbound, to_observed
 from ..models import AccountConfig
 from .client import BotApiClient, LoiZaloBotApi
 from .parser import parse_update
@@ -51,6 +51,7 @@ class ZaloBotChannel:
         backoff_s: tuple[float, float] = (2.0, 60.0),
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         heard: Heard | None = None,
+        observe: Observe | None = None,
     ) -> None:
         self.name = channel_name(account.id)
         self.account = account
@@ -65,6 +66,7 @@ class ZaloBotChannel:
         self._backoff_s = backoff_s
         self._sleep = sleep
         self._heard = heard
+        self._observe = observe
         self._client: BotApiClient | None = None
         self._receive: Receive | None = None
         self._poller: asyncio.Task[None] | None = None
@@ -136,6 +138,10 @@ class ZaloBotChannel:
         if self._heard is not None and not msg.is_self:
             await self._heard(msg)
         decision = should_respond(self.account, msg)
+        if self._observe is not None and not msg.is_self:
+            observed = to_observed(self.name, msg, answered=decision.respond)
+            if observed is not None:
+                await self._observe(observed)
         if not decision.respond:
             logger.debug("bot %s: not answered (%s)", self.account.id, decision.reason)
             return

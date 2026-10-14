@@ -12,7 +12,8 @@ import hashlib
 import re
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
-from typing import Final, Protocol, runtime_checkable
+from datetime import UTC, datetime
+from typing import Final, Literal, Protocol, runtime_checkable
 
 MAX_SESSION_ID_CHARS: Final = 200
 _NAME: Final = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
@@ -67,6 +68,33 @@ class ChannelSendError(Exception):
 
 
 Receive = Callable[[InboundMessage], Awaitable[None]]
+
+Origin = Literal["inbound", "own", "agent"]
+"""Who wrote a message the agent only watches: ``inbound`` someone else in the chat, ``own`` the person who
+runs the account (from another device), ``agent`` the agent's own reply."""
+
+
+@dataclass(frozen=True, slots=True)
+class ObservedMessage:
+    """A message of a chat, told to the plugins that listen (``ctx.on_message``) whether or not the agent runs
+    a turn for it: a group message nobody asked the agent about, what the account's owner typed, a reply.
+    Channels tell of what they hear (``ctx.observe``); the channel hub tells of the agent's replies."""
+
+    channel: str
+    conversation_id: str
+    sender_id: str
+    message_id: str
+    text: str
+    origin: Origin
+    is_group: bool = False
+    sender_name: str = ""
+    answered: bool = False
+    """``inbound`` only: the agent takes the message up and will answer it."""
+    at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    metadata: Mapping[str, str] = field(default_factory=dict[str, str])
+
+
+Observe = Callable[[ObservedMessage], Awaitable[None]]
 
 
 class ChannelAdapter(Protocol):

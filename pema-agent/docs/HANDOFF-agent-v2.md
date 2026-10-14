@@ -864,8 +864,23 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   skill) và bật plugin `skills`. Test: 55 test (4 Postgres, đã chạy trên `agent_activity_test`). **Trang web (GĐ2, 2026-10-13):** `plugins/skills/ui` (bundle IIFE như `knowledge`, `pnpm run build`; Docker `agent.Dockerfile` đã thêm
   bước build), tab "Kỹ năng" (user bác UI dạng form, 2026-10-14, nên làm lại): "Soạn bằng chat" (khung chat với model của agent, trợ lý lưu bản nháp thành thẻ có Dùng/Bỏ/Hoàn tác; nút "Thêm file kỹ năng" hoặc thả file .md/.txt vào khung để thêm thẳng, phần đầu `---` đọc name, description, kind, scopes, status), "Danh sách" (lọc, Xem, Tải về, Dùng/Tắt/Cất, lịch sử và khôi phục, Sửa bằng chat) và "Kênh nhận gì". Không còn form sửa tay. Theo lời user
   bỏ test UI, ảnh chụp và so khớp canvas (chỉ chạy `pnpm run build` = tsc + vite); chưa mở thử trong trình duyệt. **Chưa làm:** tab "Kỹ năng và quy tắc"
-  trên trang từng tài khoản Zalo, so sánh hai phiên bản, `conversations` và đường quan sát ở lõi (GĐ3), kho kịch bản RAG (GĐ4). Docker: Postgres dừng đột ngột cần
+  trên trang từng tài khoản Zalo, so sánh hai phiên bản, kho kịch bản RAG (GĐ4). Docker: Postgres dừng đột ngột cần
   vài phút khởi động lại (fsync); `docker compose start postgres` đủ để chạy test DB.
+- **Plugin `conversations` và đường quan sát (GĐ3, 2026-10-14, nhánh `feat/knowledge-embedding`).** Lõi:
+  `agentcore.channels.ObservedMessage` (`origin` = `inbound` | `own` | `agent`, `answered`), `ctx.on_message(handler)`
+  (plugin nghe), `ctx.observe(msg)` (plugin chat báo tin kênh nó nghe) và `PluginHost.observe` (gọi lần lượt từng
+  handler, timeout 10 s, lỗi chỉ ghi log). `ChannelHub(observe=...)` báo **câu trả lời của agent** sau khi gửi xong
+  (`origin="agent"`, mã `<mã tin>#reply`). Zalo: kênh bot và kênh cá nhân báo **mọi** tin nghe được (đã trả lời hay chưa,
+  `answered`), gồm tin nhóm không @mention; bridge bật `selfListen: true` nên tin **chủ tài khoản gõ từ máy khác**
+  (`isSelf`) về tới agent, không chạy lượt nào, và được báo sau 3 s (`ECHO_WAIT_S`) trừ khi là dội lại của chính agent
+  (so mã `msg_id` trả về từ `send` hoặc cùng chuỗi cuộc + chữ). Plugin `conversations`: bảng `cv_conversation`,
+  `cv_message` (migration `0001`, prefix `cv_`), vai `customer`/`staff`/`agent` (staff = tin `own` hoặc người trong danh
+  sách nhân viên của kênh), **mặc định tắt từng kênh**, loại riêng một cuộc, xóa cuộc, thời hạn giữ (job mỗi giờ), đổi danh
+  sách nhân viên thì gán lại vai cho tin cũ. Route `/v1/plugins/conversations/settings|conversations|people`. Trang web:
+  `plugins/conversations/ui` (tab "Hội thoại": danh sách + xem hai vai, cài đặt); Docker đã thêm bước build. Profile
+  `clinic` bật plugin. Test: 18 test (5 Postgres chạy trên `agent_activity_test`) + 5 test Zalo từ đầu đến cuối + 3 test
+  hub/host; bridge 296 test qua. **Chưa làm:** tìm kiếm ngữ nghĩa và cắt tình huống (GĐ4); test với tài khoản Zalo thật
+  (chưa kiểm tra isSelf thật qua bridge).
 - **Hoãn (2026-10-13, user bảo cất lại): hook chặn ghi memory/skill trên kênh khách, hook cờ đỏ trước khi gọi model,
   hai skill quy trình `tiep-nhan-dat-lich` và `xu-ly-phan-nan`.** Việc đang bàn thay thế: kỹ năng trong DB, trang
   quản lý và agent tự học, kế hoạch ở `docs/PLAN-skills-studio.md` (CHỜ USER DUYỆT, chưa code).

@@ -112,6 +112,7 @@ class Runtime:
             refresh=self.plugin_manager.refresh,
             settings=settings or PACED_DELIVERY,
             failure_reply=self.agent.profile.agent.failure_reply,
+            observe=self.plugins.observe,
         )
 
     def job_runner(self, settings: JobSettings | None = None) -> JobRunner:

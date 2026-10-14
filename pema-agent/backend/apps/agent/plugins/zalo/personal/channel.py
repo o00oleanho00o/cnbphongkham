@@ -20,15 +20,16 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from collections import deque
 from collections.abc import Callable, Coroutine, Mapping
 from typing import Any, Final, cast
 
-from agentcore.channels import ChannelCapabilities, ChannelSendError, OutboundMessage, Receive
+from agentcore.channels import ChannelCapabilities, ChannelSendError, Observe, OutboundMessage, Receive
 
 from ..access import should_respond
 from ..accounts import AccountStore
 from ..format.prepare_outgoing_text import dinh_dang_neu_bat, lam_sach_theo_cau_hinh
-from ..inbound import THREAD_GROUP, Heard, ZaloInbound, to_inbound
+from ..inbound import THREAD_GROUP, Heard, ZaloInbound, to_inbound, to_observed
 from ..models import AccountConfig
 from ..reaction_icons import to_zalo_reaction
 from .client import BridgeAccountApi, BridgeClient, ThreadKind, ZaloBridgeError
@@ -37,6 +38,11 @@ from .receipts import quote_from, receipt_params
 
 MAX_TEXT_CHARS: Final = 2000
 RETRYABLE_KINDS: Final = frozenset({"transport", "rate_limited", "not_running"})
+ECHO_WAIT_S: Final = 3.0
+"""How long a message the account itself sent waits before it is kept as the owner's: the agent's own
+replies come back as the account's messages, and the answer to a send may arrive after its echo."""
+SENT_REMEMBERED: Final = 400
+
 QUOTE: Final = "quote"
 """Metadata key of the zca-js quote of a group message, as JSON; it comes back on the reply."""
 
@@ -53,6 +59,8 @@ class ZaloPersonalChannel:
         rich_text: bool,
         generation: int,
         heard: Heard | None = None,
+        observe: Observe | None = None,
+        echo_wait_s: float = ECHO_WAIT_S,
     ) -> None:
         self.name = f"zalo-{account.id}"
         self.account = account
@@ -65,6 +73,11 @@ class ZaloPersonalChannel:
         self._store = store
         self._rich_text = rich_text
         self._heard = heard
+        self._observe = observe
+        self._echo_wait_s = echo_wait_s
+        self._sent: deque[tuple[str, str]] = deque(maxlen=SENT_REMEMBERED)
+        """What this channel sent lately, as (message id, thread and text): the echoes to tell from the
+        owner's own."""
         self._api: BridgeAccountApi | None = None
         self._receive: Receive | None = None
         self._courtesies: set[asyncio.Task[None]] = set()
@@ -118,11 +131,15 @@ class ZaloPersonalChannel:
         if not msg.thread_id or not msg.sender_id or not msg.message_id:
             logger.warning("personal account %s: a message without ids was dropped", self.account.id)
             return
-        if not msg.is_self:
+        if msg.is_self:
+            self._courtesy(self._owner_wrote(msg))
+        else:
             self._courtesy(self._delivered(api, msg))
             if self._heard is not None:
                 await self._heard(msg)
         decision = should_respond(self.account, msg)
+        if not msg.is_self:
+            await self._tell(msg, answered=decision.respond)
         if not decision.respond:
             logger.debug("personal account %s: not answered (%s)", self.account.id, decision.reason)
             return
@@ -131,6 +148,31 @@ class ZaloPersonalChannel:
         self._courtesy(self._seen(api, msg))
         if self.account.auto_react_enabled:
             self._courtesy(self._react(api, msg))
+
+    async def _tell(self, msg: ZaloInbound, *, answered: bool) -> None:
+        if self._observe is None:
+            return
+        observed = to_observed(self.name, msg, answered=answered)
+        if observed is not None:
+            await self._observe(observed)
+
+    async def _owner_wrote(self, msg: ZaloInbound) -> None:
+        """A message of the account itself: the owner typed it on another device, or it is the echo of
+        what the agent sent. Told to the plugins that listen only in the first case."""
+        if self._observe is None:
+            return
+        await asyncio.sleep(self._echo_wait_s)
+        if self._is_echo(msg):
+            return
+        await self._tell(msg, answered=False)
+
+    def _is_echo(self, msg: ZaloInbound) -> bool:
+        text = msg.text.strip()
+        key = _sent_key(msg.thread_id, text)
+        return any(sent_id == msg.message_id or sent_key == key for sent_id, sent_key in self._sent)
+
+    def _remember_sent(self, answer: Mapping[str, Any], thread_id: str, text: str) -> None:
+        self._sent.append((str(answer.get("msg_id") or ""), _sent_key(thread_id, text)))
 
     def prepare(self, text: str) -> str | None:
         cleaned = lam_sach_theo_cau_hinh(text, rich_text=self._rich_text)
@@ -150,13 +192,14 @@ class ZaloPersonalChannel:
         # Only the first part quotes: the quote says which message the whole reply answers.
         quote = _quote(message.metadata) if message.part == 1 and kind is ThreadKind.GROUP else None
         try:
-            await api.send_message(
+            answer = await api.send_message(
                 text=formatted.text,
                 thread_id=message.conversation_id,
                 thread_type=kind,
                 styles=formatted.styles,
                 quote=quote,
             )
+            self._remember_sent(answer, message.conversation_id, formatted.text)
         except ZaloBridgeError as err:
             if err.kind == "zalo_rejected" and (formatted.styles or quote is not None):
                 # The server answered and delivered nothing: the same words, plain, are safe to send.
@@ -177,7 +220,8 @@ class ZaloPersonalChannel:
 
     async def _send_plain(self, api: BridgeAccountApi, text: str, thread_id: str, kind: ThreadKind) -> None:
         try:
-            await api.send_message(text=text, thread_id=thread_id, thread_type=kind)
+            answer = await api.send_message(text=text, thread_id=thread_id, thread_type=kind)
+            self._remember_sent(answer, thread_id, text)
         except ZaloBridgeError as err:
             raise ChannelSendError(str(err), retryable=err.kind in RETRYABLE_KINDS) from None
 
@@ -218,6 +262,10 @@ class ZaloPersonalChannel:
             )
         except ZaloBridgeError as err:
             logger.debug("personal account %s: auto-react failed (%s)", self.account.id, err.kind)
+
+
+def _sent_key(thread_id: str, text: str) -> str:
+    return f"{thread_id}|{text.strip()}"
 
 
 def _kind(msg: ZaloInbound) -> ThreadKind:

@@ -39,7 +39,7 @@ from .bot.client import BotApiClient, tao_zalo_bot_client
 from .contacts import ContactBook, GroupNames, group_name
 from .inbound import ZaloInbound
 from .models import AccountConfig, ChannelKind
-from .personal.channel import ZaloPersonalChannel
+from .personal.channel import ECHO_WAIT_S, ZaloPersonalChannel
 from .personal.client import BridgeAccountApi, BridgeClient
 from .personal.friends import SWEEP_EVERY_S, FriendRequests, auto_accept_round, handle_friend_event
 from .personal.supervisor import SOURCE as BRIDGE_SOURCE
@@ -182,6 +182,7 @@ class ZaloPlugin:
                 webhook_url=f"{public_url}{HOOK_PREFIX}/bot/{account.id}" if public_url else None,
                 poll_timeout_s=max(5, min(60, int(config.get("poll_timeout_s") or 30))),
                 heard=self._heard,
+                observe=self._ctx.observe,
             )
         else:
             channel = ZaloPersonalChannel(
@@ -191,6 +192,8 @@ class ZaloPlugin:
                 rich_text=bool(config.get("rich_text", True)),
                 generation=self.bridge.generation,
                 heard=self._heard,
+                observe=self._ctx.observe,
+                echo_wait_s=float(config.get("echo_wait_s", ECHO_WAIT_S)),
             )
         try:
             dispose = self._ctx.register_channel(channel)

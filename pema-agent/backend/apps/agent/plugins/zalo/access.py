@@ -2,8 +2,9 @@
 """Decide whether the bot answers a message. Runs BEFORE any LLM call, so a filtered message costs no token.
 
 Pure: the account settings and the message in, the decision out. ``record`` (passive listening: keep a group
-message as context without answering) is decided as in the original, but the agent core has no path yet for a
-message that is kept and not answered, so the plugin drops those for now.
+message as context without answering) is decided as in the original. The channel tells the plugins that listen
+(``ctx.observe``, for instance ``conversations``) of every message, answered or not; the agent runs a turn only
+for the ones this decision answers.
 """
 
 from __future__ import annotations

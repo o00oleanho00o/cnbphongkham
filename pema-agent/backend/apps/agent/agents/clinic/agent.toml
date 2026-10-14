@@ -64,8 +64,9 @@ queue_max_batch = 20
 
 [plugins]
 # sso: the clinic web's staff (owner and manager get admin); knowledge: the documents the agent answers from;
-# skills: skills, rules and persona bound to the agent, to a chat plugin or to one account
-enabled = ["sso", "calculate", "knowledge", "skills"]
+# skills: skills, rules and persona bound to the agent, to a chat plugin or to one account;
+# conversations: keeps the conversations of the channels switched on in its page (all off until then)
+enabled = ["sso", "calculate", "knowledge", "skills", "conversations"]
 
 [plugins.sso]
 issuer = "pema-clinic"

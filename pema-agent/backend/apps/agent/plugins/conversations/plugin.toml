@@ -1,0 +1,12 @@
+name = "conversations"
+version = "0.1.0"
+description = "Keeps the conversations the agent's chat channels hear, both sides (customer and staff) and the agent's replies, from any platform; off until a channel is switched on. The data later scenario search draws on."
+api = 1
+
+[ui]
+dir = "ui/dist"
+entry = "client.js"
+
+[migrations]
+dir = "migrations"
+prefix = "cv_"

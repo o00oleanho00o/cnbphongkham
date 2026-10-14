@@ -24,6 +24,8 @@ from agentcore.channels import (
     ChannelCapabilities,
     ChannelSendError,
     InboundMessage,
+    Observe,
+    ObservedMessage,
     OutboundMessage,
     Receive,
     split_reply,
@@ -137,9 +139,11 @@ def _runtime(tmp_path: Path) -> Runtime:
     return build_runtime(load_profile(folder), fake=True, env={}, db=None)
 
 
-def _hub(runtime: Runtime, *channels: FakeChannel) -> tuple[Dispatcher, ChannelHub]:
+def _hub(
+    runtime: Runtime, *channels: FakeChannel, observe: Observe | None = None
+) -> tuple[Dispatcher, ChannelHub]:
     dispatcher = runtime.dispatcher(DispatchSettings(poll_s=0.01))
-    return dispatcher, ChannelHub(dispatcher, channels=lambda: list(channels), settings=FAST)
+    return dispatcher, ChannelHub(dispatcher, channels=lambda: list(channels), settings=FAST, observe=observe)
 
 
 async def _until(
@@ -385,3 +389,76 @@ async def test_the_gateway_reports_delivery_and_channels(tmp_path: Path) -> None
         ]
     }
     await dispatcher.close()
+
+
+OBSERVER_PLUGIN = """
+def register(ctx):
+    log = ctx.config["log"]
+
+    async def broken(message):
+        raise RuntimeError("a listener that fails")
+
+    async def heard(message):
+        log.append((message.channel, message.origin, message.text))
+
+    ctx.on_message(broken)
+    ctx.on_message(heard)
+"""
+
+
+async def test_the_hub_tells_the_listeners_what_the_agent_said_once_it_is_sent(tmp_path: Path) -> None:
+    told: list[ObservedMessage] = []
+
+    async def listen(message: ObservedMessage) -> None:
+        told.append(message)
+
+    channel = FakeChannel()
+    dispatcher, hub = _hub(_runtime(tmp_path), channel, observe=listen)
+    await hub.sync()
+
+    await channel.hear("m1", "hello")
+    await _until(hub, dispatcher, 1, "sent")
+
+    (reply,) = told
+    assert (reply.channel, reply.conversation_id, reply.origin, reply.text) == (
+        "fake",
+        "c1",
+        "agent",
+        "(echo) hello",
+    )
+    assert reply.message_id == "m1#reply"
+    await dispatcher.close()
+
+
+async def test_a_listener_that_fails_never_costs_the_reply_its_delivery(tmp_path: Path) -> None:
+    async def broken(message: ObservedMessage) -> None:
+        raise RuntimeError("down")
+
+    channel = FakeChannel()
+    dispatcher, hub = _hub(_runtime(tmp_path), channel, observe=broken)
+    await hub.sync()
+
+    await channel.hear("m1", "hello")
+    record = await _until(hub, dispatcher, 1, "sent")
+
+    assert record.delivery == "sent"
+    await dispatcher.close()
+
+
+async def test_the_host_tells_every_listening_plugin_of_a_message_and_skips_the_one_that_fails(
+    tmp_path: Path,
+) -> None:
+    runtime = _runtime(tmp_path)
+    plugin = tmp_path / "agent" / "plugins" / "listener"
+    plugin.mkdir()
+    (plugin / "plugin.toml").write_text('name = "listener"\n', encoding="utf-8")
+    (plugin / "__init__.py").write_text(textwrap.dedent(OBSERVER_PLUGIN), encoding="utf-8")
+    log: list[tuple[str, str, str]] = []
+    await runtime.plugin_manager.start()
+    runtime.live.enable("listener", {"log": log})
+
+    await runtime.plugins.observe(ObservedMessage("zalo-a", "t1", "u1", "m1", "chào", "inbound"))
+    runtime.live.disable("listener")
+    await runtime.plugins.observe(ObservedMessage("zalo-a", "t1", "u1", "m2", "sau khi tắt", "inbound"))
+
+    assert log == [("zalo-a", "inbound", "chào")]

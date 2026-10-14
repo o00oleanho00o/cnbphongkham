@@ -10,6 +10,7 @@ are trusted local code: they run in this process, unsandboxed.
 
 from __future__ import annotations
 
+import asyncio
 import importlib.util
 import itertools
 import logging
@@ -30,7 +31,7 @@ from agent_app.plugins.manifest import PluginError, PluginSource, UiSpec
 from agent_app.plugins.migrations import NOT_MIGRATED, latest_applied, migration_files
 from agent_app.plugins.records import InMemoryPluginRecords, PluginStorage, StorageFor
 from agentcore import ModelClient, ToolSpec
-from agentcore.channels import ChannelAdapter, valid_channel_name
+from agentcore.channels import ChannelAdapter, Observe, ObservedMessage, valid_channel_name
 from agentcore.harness.hooks import Hook
 from agentcore.prompt import SessionSection, StepSection, TurnSection
 from secretcipher import decrypt_with, encrypt_with
@@ -46,6 +47,8 @@ DEFAULT_DATA_DIR: Final = ".pema-agent"
 
 Disposer = Callable[[], None]
 Section = SessionSection | TurnSection | StepSection
+OBSERVER_TIMEOUT_S: Final = 10.0
+"""How long one plugin may take over one observed message before the host goes on without it."""
 RouteKind = Literal["admin", "hooks"]
 """``admin``: under ``/v1/plugins/<plugin>``, for callers with the ``admin`` scope; the route finds who in
 ``request.state.principal``. ``hooks``: under ``/v1/hooks/<plugin>``, open to the internet; the plugin checks
@@ -76,6 +79,7 @@ class Contributions:
     channels: tuple[ChannelAdapter, ...] = ()
     jobs: tuple[PluginJob, ...] = ()
     authenticators: tuple[Authenticator, ...] = ()
+    observers: tuple[Observe, ...] = ()
 
 
 @dataclass(slots=True)
@@ -89,6 +93,7 @@ class _Loaded:
     channels: list[ChannelAdapter] = field(default_factory=list[ChannelAdapter])
     jobs: list[PluginJob] = field(default_factory=list[PluginJob])
     authenticators: list[Authenticator] = field(default_factory=list[Authenticator])
+    observers: list[Observe] = field(default_factory=list[Observe])
     routes: dict[RouteKind, FastAPI] = field(default_factory=dict[RouteKind, FastAPI])
     disposers: list[Disposer] = field(default_factory=list[Disposer])
 
@@ -136,7 +141,9 @@ class PluginContext:
         allow_internet: bool = False,
         database: PluginDatabase | None = None,
         model: Callable[[], ModelClient | None] = lambda: None,
+        observe: Observe | None = None,
     ) -> None:
+        self._observe = observe
         self._loaded = loaded
         self._model = model
         self._allow_internet = allow_internet
@@ -277,6 +284,18 @@ class PluginContext:
         service's own tokens, in plugin order, until one knows the token."""
         return self._add(self._loaded.authenticators, authenticator)
 
+    def on_message(self, handler: Observe) -> Disposer:
+        """Told of every message of every chat a channel watches (``observe``) and of the agent's replies,
+        whether or not the agent runs a turn for it. Must not block: it runs while the message is handled,
+        and one that fails or takes too long is skipped."""
+        return self._add(self._loaded.observers, handler)
+
+    async def observe(self, message: ObservedMessage) -> None:
+        """A chat plugin tells of a message its channel heard (a group message nobody asked the agent
+        about, what the account's owner typed); every plugin with ``on_message`` hears it. Never raises."""
+        if self._observe is not None:
+            await self._observe(message)
+
     def on_disable(self, callback: Callable[[], None]) -> Disposer:
         """Runs when the plugin is disabled, after its later registrations are undone."""
         self._loaded.disposers.append(callback)
@@ -400,6 +419,7 @@ class PluginHost:
                     allow_internet=self._allow_internet,
                     database=self._plugin_database(source),
                     model=lambda: self._model,
+                    observe=self.observe,
                 )
             )
             self._check_unique(loaded)
@@ -433,7 +453,19 @@ class PluginHost:
             channels=tuple(c for p in loaded for c in p.channels),
             jobs=tuple(j for p in loaded for j in p.jobs),
             authenticators=tuple(a for p in loaded for a in p.authenticators),
+            observers=tuple(o for p in loaded for o in p.observers),
         )
+
+    async def observe(self, message: ObservedMessage) -> None:
+        """Tells every enabled plugin's ``on_message`` handler of the message, one after the other. A handler
+        that raises or is slow costs only its own copy; nothing here raises."""
+        for handler in [o for p in self._loaded.values() for o in p.observers]:
+            try:
+                await asyncio.wait_for(handler(message), OBSERVER_TIMEOUT_S)
+            except Exception as err:  # a listener must never cost the chat its message
+                logging.getLogger(__name__).warning(
+                    "a message listener failed on %s (%s)", message.channel, type(err).__name__
+                )
 
     def storage(self, plugin: str) -> PluginStorage:
         """A plugin's records, enabled or not (``agent plugins forget``)."""

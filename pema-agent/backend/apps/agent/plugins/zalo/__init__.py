@@ -22,8 +22,9 @@ from .routes import account_routes, hook_routes
 
 
 def register(ctx: PluginContext) -> None:
-    # ``bot_transport``, ``bridge_transport``, ``bridge_secret`` and ``bridge_folder`` are not manifest
-    # settings: only code that enables the plugin itself (tests: a fake Zalo, a fake bridge) passes them.
+    # ``bot_transport``, ``bridge_transport``, ``bridge_secret``, ``bridge_folder`` and ``echo_wait_s``
+    # are not manifest settings: only code that enables the plugin itself (tests: a fake Zalo, a fake
+    # bridge) passes them.
     bot_client: Callable[[str], BotApiClient] = tao_zalo_bot_client
     transport = ctx.config.get("bot_transport")
     if isinstance(transport, httpx.AsyncBaseTransport):

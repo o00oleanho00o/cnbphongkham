@@ -18,17 +18,21 @@ COPY backend/apps/agent/plugins/web/ui/package.json backend/apps/agent/plugins/w
 COPY backend/apps/agent/plugins/zalo/ui/package.json backend/apps/agent/plugins/zalo/ui/pnpm-lock.yaml zalo/ui/
 COPY backend/apps/agent/plugins/knowledge/ui/package.json backend/apps/agent/plugins/knowledge/ui/pnpm-lock.yaml knowledge/ui/
 COPY backend/apps/agent/plugins/skills/ui/package.json backend/apps/agent/plugins/skills/ui/pnpm-lock.yaml skills/ui/
+COPY backend/apps/agent/plugins/conversations/ui/package.json backend/apps/agent/plugins/conversations/ui/pnpm-lock.yaml conversations/ui/
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     cd web/ui && pnpm install --frozen-lockfile \
     && cd ../../zalo/ui && pnpm install --frozen-lockfile \
     && cd ../../knowledge/ui && pnpm install --frozen-lockfile \
-    && cd ../../skills/ui && pnpm install --frozen-lockfile
+    && cd ../../skills/ui && pnpm install --frozen-lockfile \
+    && cd ../../conversations/ui && pnpm install --frozen-lockfile
 COPY backend/apps/agent/plugins/web/ui web/ui
 COPY backend/apps/agent/plugins/zalo/ui zalo/ui
 COPY backend/apps/agent/plugins/knowledge/ui knowledge/ui
 COPY backend/apps/agent/plugins/skills/ui skills/ui
+COPY backend/apps/agent/plugins/conversations/ui conversations/ui
 # plugins first: the dashboard's stylesheet scans the other plugins' sources, their builds read the SDK types.
 RUN cd zalo/ui && pnpm run build && cd ../../knowledge/ui && pnpm run build && cd ../../skills/ui && pnpm run build \
+    && cd ../../conversations/ui && pnpm run build \
     && cd ../../web/ui && pnpm run build
 
 
@@ -92,6 +96,7 @@ COPY --from=ui /build/plugins/web/ui/dist /app/backend/apps/agent/plugins/web/ui
 COPY --from=ui /build/plugins/zalo/ui/dist /app/backend/apps/agent/plugins/zalo/ui/dist
 COPY --from=ui /build/plugins/knowledge/ui/dist /app/backend/apps/agent/plugins/knowledge/ui/dist
 COPY --from=ui /build/plugins/skills/ui/dist /app/backend/apps/agent/plugins/skills/ui/dist
+COPY --from=ui /build/plugins/conversations/ui/dist /app/backend/apps/agent/plugins/conversations/ui/dist
 COPY --from=bridge /build/bridge/node_modules /app/backend/apps/agent/plugins/zalo/bridge/node_modules
 
 USER agent
