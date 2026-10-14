@@ -158,7 +158,7 @@ function seedSettings(): KnowledgeSettings {
       chunks_without_vector: 76,
     },
     parser: { kind: "simple", docling_url: "", origin: "profile" },
-    labelling: { enabled: true, model_entry: null, rerank: true },
+    labelling: { enabled: true, model_entry: null },
     search: {
       results: 8,
       min_score: 0.2,

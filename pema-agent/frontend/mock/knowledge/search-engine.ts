@@ -246,17 +246,9 @@ export function runSearch(store: Store, query: SearchDebugQuery): SearchDebug {
     .toSorted(byScoreDesc)
     .slice(0, 10);
 
-  const rerankOn = settings.labelling.rerank && fused.length > 0;
-  const reranked = rerankOn
-    ? fused
-        .map(({ chunk }, index) => ({
-          chunk,
-          score: round(Math.min(0.99, 0.35 + (chunk.kind === kind ? 0.3 : 0) + hits(chunk) * 0.08 + jitter(chunk) * 0.2 - index * 0.01)),
-        }))
-        .toSorted(byScoreDesc)
-    : [];
-
-  const pool = rerankOn ? reranked.filter(({ score }) => score >= settings.search.min_score) : fused;
+  // The mock has no Jev judge: the judged stage is skipped, as it is on the server while plugin jev is off.
+  const reranked: Ranked[] = [];
+  const pool = fused;
   const final = pool.slice(0, settings.search.results).reduce<{ items: Ranked[]; used: number }>(
     (state, item) =>
       state.used + item.chunk.excerpt.length > settings.search.char_budget
@@ -303,10 +295,10 @@ export function runSearch(store: Store, query: SearchDebugQuery): SearchDebug {
     stage(
       "reranked",
       "Sau xếp lại",
-      rerankOn ? 210 + base * 11 : 0,
-      rerankOn ? "Mô hình xếp lại theo mức hợp với câu hỏi (điểm 0-1)" : "Xếp lại đang tắt hoặc không có ứng viên: giữ thứ tự RRF",
+      0,
+      "Bộ chấm Jev không có trong bản mô phỏng: bước này bỏ qua",
       reranked,
-      !rerankOn,
+      true,
     ),
     stage(
       "final",
