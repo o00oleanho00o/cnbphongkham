@@ -1,4 +1,4 @@
-"""Postgres storage of schema ``agent_rt``: notes, agent-written skills, sessions, the turn trace and the
+"""Postgres storage of schema ``agent_rt``: notes, sessions, the turn trace and the
 runtime role. Needs ``PEMA_TEST_DATABASE_URL`` (a throwaway database where the user may create roles; the
 schema is dropped and migrated again); skipped otherwise.
 
@@ -27,7 +27,6 @@ from agent_app.storage import (
     AgentDatabase,
     PostgresMemoryBackend,
     PostgresSessionStore,
-    PostgresSkillStore,
     PostgresTracer,
     SessionOwnerError,
 )
@@ -53,7 +52,6 @@ from agentcore import (
 from agentcore.harness.model.scripted import ScriptedModel, calls, reply, tool_call
 from agentcore.harness.tools.builtin import builtin_tools
 from agentcore.memory import MemoryKey, MemoryService, StoredNotes
-from agentcore.skills import SkillLibrary
 
 pytestmark = pytest.mark.db
 
@@ -98,7 +96,7 @@ def admin(migrated: tuple[str, Engine]) -> tuple[str, Engine]:
     with migrated[1].begin() as conn:
         conn.execute(
             sql(
-                "TRUNCATE agent_rt.agent_memory, agent_rt.agent_skill, agent_rt.agent_session, "
+                "TRUNCATE agent_rt.agent_memory, agent_rt.agent_session, "
                 "agent_rt.agent_message, agent_rt.agent_turn, agent_rt.agent_turn_event"
             )
         )
@@ -149,36 +147,6 @@ def test_the_database_refuses_a_user_id_on_agent_notes(admin: tuple[str, Engine]
             await PostgresMemoryBackend(db).save(MemoryKey("t", "dev", "agent", "u1"), "x", 0)
 
     _run(admin[0], check)
-
-
-def test_agent_skills_are_stored_listed_and_overwritten(admin: tuple[str, Engine]) -> None:
-    async def check(db: AgentDatabase) -> None:
-        store = PostgresSkillStore(db)
-        library = SkillLibrary(store)
-        await library.write("t", "dev", name="reply-style", description="How to reply.", body="Be brief.")
-        await library.write("t", "dev", name="a-first", description="First.", body="One.")
-        patched = await library.patch("t", "dev", name="reply-style", old_text="brief", new_text="kind")
-
-        assert [s.name for s in await store.list("t", "dev")] == ["a-first", "reply-style"]
-        assert await store.get("t", "dev", "reply-style") == patched
-        assert await store.list("other", "dev") == []
-
-    _run(admin[0], check)
-    with admin[1].connect() as conn:
-        version = conn.execute(
-            sql("SELECT version FROM agent_rt.agent_skill WHERE name = 'reply-style'")
-        ).scalar()
-    assert version == 2
-
-
-def test_the_database_refuses_a_skill_the_core_would_refuse(admin: tuple[str, Engine]) -> None:
-    with pytest.raises(IntegrityError), admin[1].begin() as conn:
-        conn.execute(
-            sql(
-                "INSERT INTO agent_rt.agent_skill (tenant_id, agent, name, description, body) "
-                "VALUES ('t', 'dev', 'Bad Name', 'd', 'b')"
-            )
-        )
 
 
 def test_the_migration_goes_down_and_up_again(admin: tuple[str, Engine]) -> None:

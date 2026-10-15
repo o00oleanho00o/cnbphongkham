@@ -507,11 +507,11 @@ async def _chat_loop(
     lines = _stdin_lines()
     model_label = describe_model(profile, fake=fake)
     storage = (
-        "postgres" if db else f"in process memory (set {DATABASE_URL_ENV} to keep sessions, notes and skills)"
+        "postgres" if db else f"in process memory (set {DATABASE_URL_ENV} to keep sessions and notes)"
     )
     _write(
         f"agent '{name}' | model: {model_label} | session: {session_id}\n"
-        f"sessions, notes and skills: {storage}\n{HELP}"
+        f"sessions and notes: {storage}\n{HELP}"
     )
     try:
         _write(await _open(sessions, session_id))

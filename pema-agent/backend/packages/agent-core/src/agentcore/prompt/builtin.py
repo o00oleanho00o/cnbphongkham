@@ -1,7 +1,7 @@
 """The built-in prompt sections.
 
 Session (system prompt, in this order by default): ``identity`` (SOUL.md), ``rules`` (AGENTS.md),
-``tool_usage``, ``skills``, ``memory``, ``user_memory``. Context block: ``environment`` (turn), ``status``
+``tool_usage``, ``memory``, ``user_memory``. Context block: ``environment`` (turn), ``status``
 (step). The most stable text comes first so the provider's prefix cache reaches furthest.
 """
 
@@ -32,18 +32,11 @@ MEMORY_GUIDANCE: Final = (
     "corrections, lasting facts about the work. Do not save task progress or anything temporary. Keep notes "
     "short; merge or remove old ones when space runs low."
 )
-SKILLS_GUIDANCE: Final = "Before a task a skill covers, read it with skill_view and follow it."
-SKILLS_WRITE_GUIDANCE: Final = (
-    "When you work out a procedure worth reusing, save it with skill_write; improve one with skill_patch."
-)
-SKILLS_SHOWN: Final = 50
-SKILLS_INDEX_CHARS: Final = 4_000
 
 DEFAULT_SECTIONS: Final = (
     "identity",
     "rules",
     "tool_usage",
-    "skills",
     "memory",
     "user_memory",
     "environment",
@@ -61,31 +54,6 @@ def _rules(env: PromptEnv, data: SessionData) -> str | None:
 
 def _tool_usage(env: PromptEnv, data: SessionData) -> str | None:
     return TOOL_USAGE if env.tool_names else None
-
-
-def _skills(env: PromptEnv, data: SessionData) -> str | None:
-    can_write = "skill_write" in env.tool_names
-    if not data.skills and not can_write:
-        return None
-    lines = ["## Skills"]
-    if data.skills:
-        lines.append(SKILLS_GUIDANCE)
-    if can_write:
-        lines.append(SKILLS_WRITE_GUIDANCE)
-    used = 0
-    shown = 0
-    for entry in data.skills[:SKILLS_SHOWN]:
-        line = f"- {entry.name}: {entry.description}"
-        if used + len(line) > SKILLS_INDEX_CHARS:
-            break
-        lines.append(line)
-        used += len(line) + 1
-        shown += 1
-    if shown < len(data.skills):
-        lines.append(f"- … and {len(data.skills) - shown} more (see skill_list)")
-    if not data.skills:
-        lines.append("No skills yet.")
-    return "\n".join(lines)
 
 
 def _memory(env: PromptEnv, data: SessionData) -> str | None:
@@ -138,7 +106,6 @@ def builtin_sections() -> SectionRegistry:
             SessionSection("identity", _identity),
             SessionSection("rules", _rules),
             SessionSection("tool_usage", _tool_usage),
-            SessionSection("skills", _skills),
             SessionSection("memory", _memory),
             SessionSection("user_memory", _user_memory),
             TurnSection("environment", _environment),

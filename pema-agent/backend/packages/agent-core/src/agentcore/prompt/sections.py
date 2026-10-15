@@ -8,7 +8,7 @@ A section's scope decides where its text goes and how long it lives:
 - ``step``: rendered before every model call, sent in the same block.
 
 Each scope has its own section type, so a session section cannot read the clock or the step by mistake.
-Session sections also read ``SessionData`` (notes, skills index), loaded once with the system prompt.
+Session sections also read ``SessionData`` (notes), loaded once with the system prompt.
 """
 
 from __future__ import annotations

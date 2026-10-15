@@ -51,7 +51,6 @@ from agent_app.storage import (
     AgentDatabase,
     PostgresMemoryBackend,
     PostgresSessionStore,
-    PostgresSkillStore,
     PostgresTracer,
 )
 from agentcore import (
@@ -63,7 +62,6 @@ from agentcore import (
     TurnTrace,
 )
 from agentcore.memory import InMemoryMemoryBackend, MemoryBackend
-from agentcore.skills import InMemorySkillStore, SkillStore
 
 PLUGIN_DIR_ENV: Final = "AGENT_PLUGIN_DIR"
 """The service setting naming the folder of installed plugins (``agent_app.home``); not read from the
@@ -217,7 +215,6 @@ def build_runtime(
         entries=entry_store,
     )
     memory_backend: MemoryBackend = InMemoryMemoryBackend() if db is None else PostgresMemoryBackend(db)
-    skill_store: SkillStore = InMemorySkillStore() if db is None else PostgresSkillStore(db)
     records = (
         InMemoryPluginRecords() if db is None else PostgresPluginRecords(db, agent=name, tenant_id=tenant_id)
     )
@@ -231,7 +228,6 @@ def build_runtime(
             fake=fake,
             env=env,
             memory_backend=memory_backend,
-            skill_store=skill_store,
             model=model,
             plugins=added,
         )

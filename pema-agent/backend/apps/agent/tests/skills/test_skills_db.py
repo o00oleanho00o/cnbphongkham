@@ -101,6 +101,31 @@ def test_the_skills_the_agent_wrote_before_are_imported_once_with_a_first_versio
     _run(db_url, work)
 
 
+def test_the_dev_agents_one_file_skill_is_in_the_database_and_the_core_table_is_gone(db_url: str) -> None:
+    engine = create_engine(db_url)
+    with engine.connect() as conn:
+        seeded = conn.execute(
+            sql(
+                "SELECT name, status, origin, scopes, body FROM agent_rt.sk_item "
+                "WHERE tenant_id = 'default' AND agent = 'dev'"
+            )
+        ).all()
+        versions = conn.execute(
+            sql(
+                "SELECT version, changed_by FROM agent_rt.sk_item_version WHERE item_id = 'itm-seed-write-a-plan'"
+            )
+        ).all()
+        gone = conn.execute(sql("SELECT to_regclass('agent_rt.agent_skill') IS NULL")).scalar()
+    engine.dispose()
+
+    assert [(r.name, r.status, r.origin, r.scopes) for r in seeded] == [
+        ("write-a-plan", "active", "admin", [])
+    ]
+    assert seeded[0].body.splitlines()[0] == "1. Restate the goal in one sentence."
+    assert [tuple(v) for v in versions] == [(1, "seed")]
+    assert gone is True
+
+
 def test_every_save_is_a_new_version_with_the_whole_item_and_who_made_it(db_url: str) -> None:
     async def work(mine: PostgresItemStore, theirs: PostgresItemStore) -> None:
         first = await mine.save(_item("itm-v1", "chung", "Một.", scopes=["plugin:zalo"]), by="an")

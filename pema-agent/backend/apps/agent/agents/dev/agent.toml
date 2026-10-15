@@ -1,7 +1,7 @@
 # Development agent. Secrets never go here: the model's API key is set on the dashboard (or `agent model set
 # --ask-key`) and stored encrypted in the database; the model and base URL set there override [model].
-# Who the agent is lives in SOUL.md, how it works in AGENTS.md, bundled skills in skills/<name>/SKILL.md.
-# The agent can read those files but never change them.
+# Who the agent is lives in SOUL.md, how it works in AGENTS.md; the agent can read those files but never change
+# them. Its skills live in the database (plugin skills).
 
 [agent]
 name = "dev"
@@ -12,7 +12,7 @@ failure_reply = "Sorry, I cannot answer right now. Please try again in a few min
 
 [prompt]
 # session sections form the frozen system prompt; turn/step sections go in the per-request context block
-sections = ["identity", "rules", "tool_usage", "skills", "memory", "user_memory", "environment", "status"]
+sections = ["identity", "rules", "tool_usage", "memory", "user_memory", "environment", "status"]
 
 [context]
 # older turns are summarised when a request would pass compact_at of the window left after the reply
@@ -25,11 +25,6 @@ keep_recent_ratio = 0.20
 enabled = true
 agent_chars = 2200
 user_chars = 1375
-
-[skills]
-# bundled skills come from this folder; the agent may add its own with the skill tools
-enabled = true
-dir = "skills"
 
 [guards]
 # injection_scan blocks memory/skill writes that look like prompt injection; redact_secrets masks keys and
@@ -77,4 +72,8 @@ queue_max_batch = 20
 # Plugins to load at start, found in apps/agent/plugins, this folder's plugins/ and the home's installed/.
 # A listed plugin that fails to load stops the start. `agent plugins list --profile ...` shows them all.
 # web: the dashboard's sign-in; without it nobody can call the gateway.
-enabled = ["web"]
+# skills: the agent's skills in the database; agent_writes gives it skill_write and skill_patch.
+enabled = ["web", "skills"]
+
+[plugins.skills]
+agent_writes = true

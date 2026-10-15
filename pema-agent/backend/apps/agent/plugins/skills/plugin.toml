@@ -28,3 +28,9 @@ type = "number"
 title = "Refresh"
 description = "Seconds between two readings of the items from the database (a change made here shows at once)."
 default = 60.0
+
+[user_config.agent_writes]
+type = "boolean"
+title = "Agent writes skills"
+description = "Give the agent skill_write and skill_patch: what it writes is active at once, and staff can archive it on the page. Off for an agent that talks to customers."
+default = false

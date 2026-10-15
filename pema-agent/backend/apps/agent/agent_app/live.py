@@ -1,6 +1,6 @@
 """The agent as it stands now: rebuilt (tools, prompt, hooks) whenever the enabled plugins change.
 
-Memory, skills and the model are created once and reused by every rebuild, so in-process notes survive a
+Memory and the model are created once and reused by every rebuild, so in-process notes survive a
 plugin being switched on or off. A session whose system prompt was frozen with another set of tools gets it
 rebuilt on its next turn (the prompt fingerprint changes).
 """

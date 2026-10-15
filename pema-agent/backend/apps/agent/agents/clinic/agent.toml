@@ -17,7 +17,7 @@ clinic_name = "Pema Clinic & Spa"
 hotline = "1800 0000"
 
 [prompt]
-sections = ["identity", "rules", "tool_usage", "skills", "memory", "user_memory", "environment", "status"]
+sections = ["identity", "rules", "tool_usage", "memory", "user_memory", "environment", "status"]
 
 [context]
 window_tokens = 128000
@@ -28,11 +28,6 @@ keep_recent_ratio = 0.20
 enabled = true
 agent_chars = 2200
 user_chars = 1375
-
-[skills]
-# skills, rules and persona come from the skills plugin (written on its pages), not from the core
-enabled = false
-dir = "skills"
 
 [guards]
 injection_scan = true

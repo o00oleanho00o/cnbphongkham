@@ -1,10 +1,9 @@
 """Agent profile: the folder that defines an agent, written by people and only read by the agent.
 
-``agents/<name>/`` holds ``agent.toml`` (model, tools, limits), ``SOUL.md`` (who the agent is), ``AGENTS.md``
-(how it works) and ``skills/<skill>/SKILL.md`` (bundled skills). The persona and the rules may name
-``{{variables}}`` of ``[agent.variables]`` (the clinic's name, its hotline), filled in when the profile
-loads; one not given stops the load. A profile never holds a secret: the API key comes from the environment
-only.
+``agents/<name>/`` holds ``agent.toml`` (model, tools, limits), ``SOUL.md`` (who the agent is) and
+``AGENTS.md`` (how it works). The persona and the rules may name ``{{variables}}`` of ``[agent.variables]``
+(the clinic's name, its hotline), filled in when the profile loads; one not given stops the load. A profile
+never holds a secret: the API key comes from the environment only.
 """
 
 from __future__ import annotations
@@ -122,15 +121,9 @@ class MemorySection(_Section):
     user_chars: int = Field(default=USER_NOTES_CHARS, ge=100, le=20_000)
 
 
-class SkillsSection(_Section):
-    enabled: bool = False
-    dir: str = "skills"
-    """Bundled skills, relative to the agent folder."""
-
-
 class GuardsSection(_Section):
     injection_scan: bool = True
-    """Block memory/skill writes that look like prompt injection."""
+    """Block memory writes (and skill writes of the skills plugin) that look like prompt injection."""
     redact_secrets: bool = True
     """Mask API keys, tokens and secret env values in tool results."""
     warn_tool_results: bool = True
@@ -160,7 +153,6 @@ class Profile(_Section):
     prompt: PromptSection = Field(default_factory=PromptSection)
     context: ContextSection = Field(default_factory=ContextSection)
     memory: MemorySection = Field(default_factory=MemorySection)
-    skills: SkillsSection = Field(default_factory=SkillsSection)
     guards: GuardsSection = Field(default_factory=GuardsSection)
     plugins: PluginsSection = Field(default_factory=PluginsSection)
     loop: LoopSection = Field(default_factory=LoopSection)
@@ -191,11 +183,8 @@ class Profile(_Section):
     def memory_limits(self) -> MemoryLimits:
         return MemoryLimits(agent_chars=self.memory.agent_chars, user_chars=self.memory.user_chars)
 
-    def bundled_skills_dir(self) -> Path | None:
-        return self._folder / self.skills.dir if self._folder is not None else None
-
     def plugins_dir(self) -> Path | None:
-        """The agent's own plugins, next to its skills."""
+        """The agent's own plugins."""
         return self._folder / "plugins" if self._folder is not None else None
 
     def context_policy(self) -> ContextPolicy | None:

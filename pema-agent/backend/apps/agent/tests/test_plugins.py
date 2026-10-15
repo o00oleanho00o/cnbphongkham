@@ -24,6 +24,7 @@ from agent_app.profile import Profile, load_profile
 from agent_app.runtime import build_runtime, start_plugins
 from agentcore import InMemorySessionStore, SessionSection, ToolResultBlock, run_turn
 from agentcore.harness.model.scripted import ScriptedModel, calls, reply, tool_call
+from agentcore.memory import MemoryKey
 
 DEV_PROFILE = Path(__file__).resolve().parents[1] / "agents" / "dev"
 
@@ -295,23 +296,22 @@ async def test_a_plugin_tool_section_and_hook_work_in_a_real_turn(tmp_path: Path
     assert log == ["hook:ping", "cleaned"]
 
 
-async def test_enabling_and_disabling_while_running_changes_the_next_turn_and_keeps_skills(
+async def test_enabling_and_disabling_while_running_changes_the_next_turn_and_keeps_memory(
     tmp_path: Path,
 ) -> None:
-    folder = _agent_folder(tmp_path, "\n[skills]\nenabled = true\n")
+    folder = _agent_folder(tmp_path, "\n[memory]\nenabled = true\n")
     _plugin(folder / "plugins", "ping")
-    _plugin(
-        folder / "plugins", "clash", manifest='name = "clash"\n[user_config.tool]\ndefault = "skill_list"\n'
-    )
+    _plugin(folder / "plugins", "clash", manifest='name = "clash"\n[user_config.tool]\ndefault = "memory"\n')
     runtime = build_runtime(load_profile(folder), fake=True, env={}, db=None)
     dispatcher = runtime.dispatcher()
-    skills = runtime.agent.skills
-    assert skills is not None
-    await skills.write("default", "t", name="kept", description="d", body="b")
+    key = MemoryKey("default", "t", "agent")
+    memory = runtime.agent.memory
+    assert memory is not None
+    await memory.add(key, "kept")
 
     runtime.live.enable("ping")
     with_ping = dispatcher.agent.tools.names()
-    with pytest.raises(PluginError, match="plugin clash: Tool already registered: skill_list"):
+    with pytest.raises(PluginError, match="plugin clash: Tool already registered: memory"):
         runtime.live.enable("clash")
     runtime.live.disable("ping")
     without = dispatcher.agent
@@ -319,8 +319,8 @@ async def test_enabling_and_disabling_while_running_changes_the_next_turn_and_ke
     assert "ping" in with_ping
     assert "ping" not in without.tools.names()
     assert runtime.plugins.enabled() == []
-    assert without.skills is not None
-    assert [s.name for s in await without.skills.list("default", "t")] == ["kept"]
+    assert without.memory is not None
+    assert await without.memory.notes(key) == ["kept"]
     await dispatcher.close()
 
 
@@ -332,9 +332,7 @@ def test_a_listed_plugin_that_cannot_load_stops_the_start(tmp_path: Path) -> Non
         '[agent]\nname = "t"\n\n[plugins]\nenabled = ["future"]\n', encoding="utf-8"
     )
     _plugin(broken_folder / "plugins", "future", manifest='name = "future"\napi = 2\n')
-    bad_config = load_profile(
-        _agent_folder(tmp_path / "c", '\n[plugins]\nenabled = ["web"]\nweb = 3\n')
-    )
+    bad_config = load_profile(_agent_folder(tmp_path / "c", '\n[plugins]\nenabled = ["web"]\nweb = 3\n'))
 
     with pytest.raises(PluginError, match="plugin nope: not found"):
         build_runtime(missing, fake=True, env={}, db=None)

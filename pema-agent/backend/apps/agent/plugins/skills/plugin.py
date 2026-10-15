@@ -1,6 +1,10 @@
 """The skills plugin as the agent and the admin pages use it: items read into memory (a change made here shows
 at once, one made elsewhere within ``refresh_s``), the prompt section that gives each question the rules,
 persona and skills index of its channel, and the tools ``skill_list``, ``skill_view`` and ``skill_search``.
+When the agent's profile sets ``agent_writes`` it also gets ``skill_write`` and ``skill_patch``: the skills it
+writes are active at once (staff archive one on the page if it is wrong) and, written on a channel, bind to
+that channel only (a channel of a chat plugin; elsewhere, the whole agent). It never changes an item staff
+wrote.
 
 The prompt section is a turn section, not a frozen session one: a Zalo chat lives for months, and a skill
 added on the page must reach it on the next question. It only reads memory (a section cannot wait on the
@@ -20,10 +24,10 @@ from pydantic import BaseModel, Field
 from agent_app.plugins import PluginContext, PluginDatabase
 from agentcore import PromptEnv, ToolContext, ToolOutput, ToolSpec, TurnInfo, TurnSection
 
-from .check import Checked, check
-from .models import Item
+from .check import Checked, ItemError, check
+from .models import Item, new_id
 from .scope import PluginOf, reach
-from .store import InMemoryItemStore, ItemStore, PostgresItemStore
+from .store import InMemoryItemStore, ItemStore, NameTakenError, PostgresItemStore
 from .text import relevance
 
 INDEX_CHARS: Final = 6000
@@ -44,6 +48,10 @@ SKILLS_HEAD: Final = (
     "Trước một việc mà kỹ năng dưới đây nói tới, đọc nó bằng `skill_view` rồi làm theo. Không thấy kỹ năng "
     "hợp thì dùng `skill_search`."
 )
+WRITE_GUIDANCE: Final = (
+    "Khi bạn tìm ra cách làm đáng dùng lại, lưu bằng `skill_write`; cải thiện một kỹ năng đã viết bằng "
+    "`skill_patch`."
+)
 
 
 class NoArgs(BaseModel):
@@ -56,6 +64,18 @@ class ViewArgs(BaseModel):
 
 class SearchArgs(BaseModel):
     query: str = Field(min_length=2, max_length=200, description="Việc cần làm, bằng vài từ.")
+
+
+class WriteArgs(BaseModel):
+    name: str = Field(min_length=1, max_length=64, description="Tên kỹ năng: a-z, 0-9, '.', '_', '-'.")
+    description: str = Field(min_length=1, max_length=300, description="Một dòng: khi nào dùng kỹ năng này.")
+    body: str = Field(min_length=1, max_length=20_000, description="Các bước và lưu ý, đầy đủ.")
+
+
+class PatchArgs(BaseModel):
+    name: str = Field(min_length=1, max_length=64, description="Tên kỹ năng đã có.")
+    old_text: str = Field(min_length=1, description="Đoạn cần thay, đúng từng chữ và chỉ xuất hiện một lần.")
+    new_text: str = Field(description="Đoạn thay vào.")
 
 
 class SkillsPlugin:
@@ -79,6 +99,7 @@ class SkillsPlugin:
         self.index_chars = int(ctx.config.get("index_chars", INDEX_CHARS))
         self.context_chars = int(ctx.config.get("context_chars", CONTEXT_CHARS))
         self._refresh_s = float(ctx.config.get("refresh_s", REFRESH_S))
+        self._writes = ctx.config.get("agent_writes") is True
         self._ready = database is None
         self.items: tuple[Item, ...] = ()
         """The active items, as of the last reading."""
@@ -117,8 +138,38 @@ class SkillsPlugin:
                 read_only=True,
             )
         )
+        if self._writes:
+            self._register_writes()
         ctx.register_prompt_section(TurnSection(SECTION, self.context_text))
         ctx.register_job("refresh", self.keep_fresh)
+
+    def _register_writes(self) -> None:
+        ctx = self._ctx
+        ctx.register_tool(
+            ToolSpec(
+                name="skill_write",
+                description=(
+                    "Lưu một kỹ năng mới hoặc ghi bản mới đầy đủ của kỹ năng bạn đã viết, khi bạn vừa tìm ra "
+                    "cách làm đáng dùng lại. Có hiệu lực ngay. Không sửa được kỹ năng do nhân viên viết."
+                ),
+                args_model=WriteArgs,
+                handler=self._write_tool,
+                timeout_s=15.0,
+                prompt_args=("description", "body"),
+            )
+        )
+        ctx.register_tool(
+            ToolSpec(
+                name="skill_patch",
+                description=(
+                    "Sửa một đoạn của kỹ năng bạn đã viết: thay `old_text` (đúng một chỗ) bằng `new_text`."
+                ),
+                args_model=PatchArgs,
+                handler=self._patch_tool,
+                timeout_s=15.0,
+                prompt_args=("new_text",),
+            )
+        )
 
     async def ready(self) -> None:
         """Raises ``PluginError`` (what to run) while the plugin's tables are missing; checked once."""
@@ -162,12 +213,70 @@ class SkillsPlugin:
 
     def context_text(self, env: PromptEnv, turn: TurnInfo) -> str | None:
         """What the question carries: the rules and persona of its channel in full, then the skills index."""
-        return render(
+        block = render(
             self.applicable(turn.channel), index_chars=self.index_chars, context_chars=self.context_chars
         )
+        if not self._writes:
+            return block
+        return WRITE_GUIDANCE if block is None else "\n\n".join((block, WRITE_GUIDANCE))
 
     def _skills(self, channel: str | None) -> list[Item]:
         return [item for _, item in self.applicable(channel) if item.kind == "skill"]
+
+    async def _mine(self, name: str) -> tuple[Item | None, ToolOutput | None]:
+        """The skill of that name if the agent wrote it; otherwise why it may not be changed."""
+        found = next((i for i in await self.store.list(kind="skill") if i.name == name), None)
+        if found is not None and found.origin != "agent":
+            return None, ToolOutput(
+                text=f"Kỹ năng {name!r} do nhân viên viết; bạn không sửa được, hãy nhờ nhân viên sửa.",
+                is_error=True,
+            )
+        return found, None
+
+    async def _store(self, item: Item, *, reason: str) -> ToolOutput:
+        try:
+            saved, checked = await self.save_item(item, by="agent", reason=reason)
+        except (ItemError, NameTakenError) as err:
+            return ToolOutput(text=str(err), is_error=True)
+        return ToolOutput(
+            text=f"Đã lưu kỹ năng {saved.name!r} (phiên bản {saved.version}). " + " ".join(checked.warnings),
+            detail={"skill": saved.name, "version": saved.version},
+        )
+
+    async def _write_tool(self, args: WriteArgs, ctx: ToolContext) -> ToolOutput:
+        name = args.name.strip()
+        existing, refused = await self._mine(name)
+        if refused is not None:
+            return refused
+        if existing is None:
+            on_chat = ctx.channel is not None and self.plugin_of(ctx.channel) is not None
+            scopes = [f"channel:{ctx.channel}"] if on_chat else []
+            item = Item(
+                id=new_id(),
+                kind="skill",
+                name=name,
+                description=args.description.strip(),
+                body=args.body,
+                origin="agent",
+                scopes=scopes,
+            )
+        else:
+            item = replace(existing, description=args.description.strip(), body=args.body, status="active")
+        return await self._store(item, reason="agent ghi")
+
+    async def _patch_tool(self, args: PatchArgs, ctx: ToolContext) -> ToolOutput:
+        existing, refused = await self._mine(args.name.strip())
+        if refused is not None:
+            return refused
+        if existing is None:
+            return ToolOutput(text=f"Không có kỹ năng tên {args.name!r}; xem `skill_list`.", is_error=True)
+        count = existing.body.count(args.old_text)
+        if count != 1:
+            return ToolOutput(
+                text=f"`old_text` xuất hiện {count} lần trong kỹ năng; cần đúng một lần.", is_error=True
+            )
+        body = existing.body.replace(args.old_text, args.new_text)
+        return await self._store(replace(existing, body=body), reason="agent sửa")
 
     async def _list_tool(self, args: NoArgs, ctx: ToolContext) -> ToolOutput:
         skills = self._skills(ctx.channel)

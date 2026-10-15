@@ -18,7 +18,6 @@ MIGRATION_URL_ENV: Final = "AGENT_MIGRATION_DATABASE_URL"
 SCHEMA: Final = "agent_rt"
 DATA_TABLES: Final = (
     "agent_memory",
-    "agent_skill",
     "agent_session",
     "agent_message",
     "agent_conversation",

@@ -923,6 +923,14 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   Mới có "small to big" (`section.py`, `Searcher(expand_chars=N)`): đoạn tìm được đọc cùng các đoạn cùng mục quanh nó. Đo
   trên bộ demo: thêm được dữ kiện (10 → 14/20) nhưng gói dài thêm 148 %, nên **tắt mặc định**; chưa đo với Jev (cần khóa
   TypeSafe). Bản Docker cần build lại để chạy migration.
+- **Skill chỉ cất ở một nơi: DB, plugin `skills` (2026-10-15, kế hoạch ở `docs/PLAN-skills-single-store.md`).** Đã gỡ luồng
+  skill của lõi: `agentcore/skills/`, mục prompt "skills", `[skills]` trong profile, `PostgresSkillStore`, bảng `agent_skill`
+  (xóa bằng migration plugin `0004_drop_agent_skill.sql`, chạy sau `0002` đã nhập skill cũ; DB demo lúc xóa không có dòng nào).
+  Skill đóng gói bằng file không còn: `write-a-plan` đã vào DB (migration `0003_seed_dev_skill.sql`, tenant `default`, agent
+  `dev`). Agent tự ghi skill bằng `skill_write` / `skill_patch` của plugin, bật bằng `[plugins.skills] agent_writes = true`
+  (chỉ profile `dev` bật; `clinic` và kênh khách không có tool ghi). Skill agent ghi có hiệu lực ngay (`status = active`,
+  `origin = agent`), gắn vào kênh của chat plugin đang nói (nơi khác: cả agent); nhân viên cất bằng `archived` trên Studio; agent
+  không sửa được mục do nhân viên viết. Cassette `tests/replays/*` đổi danh sách tool (thêm `skill_search`).
 - **Hoãn (2026-10-13, user bảo cất lại): hook chặn ghi memory/skill trên kênh khách, hook cờ đỏ trước khi gọi model,
   hai skill quy trình `tiep-nhan-dat-lich` và `xu-ly-phan-nan`.** Việc đang bàn thay thế: kỹ năng trong DB, trang
   quản lý và agent tự học, kế hoạch ở `docs/PLAN-skills-studio.md` (CHỜ USER DUYỆT, chưa code).

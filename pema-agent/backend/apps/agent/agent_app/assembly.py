@@ -1,4 +1,4 @@
-"""Builds a runnable agent from its profile: model, tools, prompt, context manager, memory and skills."""
+"""Builds a runnable agent from its profile: model, tools, prompt, context manager and memory."""
 
 from __future__ import annotations
 
@@ -20,7 +20,6 @@ from agentcore import (
 from agentcore.harness.hooks import HookSet, injection_guard, result_warning, secret_redactor
 from agentcore.harness.tools.builtin import builtin_tools
 from agentcore.memory import InMemoryMemoryBackend, MemoryBackend, MemoryService, make_memory_tool
-from agentcore.skills import InMemorySkillStore, SkillLibrary, SkillStore, load_bundled_skills, skill_tools
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,7 +30,6 @@ class Agent:
     prompt: PromptBuilder
     context: ContextManager | None
     memory: MemoryService | None
-    skills: SkillLibrary | None
     policy: LoopPolicy
     hooks: HookSet
 
@@ -42,7 +40,6 @@ def build_agent(
     fake: bool,
     env: Mapping[str, str],
     memory_backend: MemoryBackend | None = None,
-    skill_store: SkillStore | None = None,
     model: ModelClient | None = None,
     plugins: Contributions | None = None,
 ) -> Agent:
@@ -57,23 +54,13 @@ def build_agent(
     if profile.memory.enabled:
         memory = MemoryService(memory_backend or InMemoryMemoryBackend(), profile.memory_limits())
         tools.register(make_memory_tool(memory, agent=name))
-    skills: SkillLibrary | None = None
-    if profile.skills.enabled:
-        folder = profile.bundled_skills_dir()
-        skills = SkillLibrary(
-            skill_store or InMemorySkillStore(), load_bundled_skills(folder) if folder else []
-        )
-        for spec in skill_tools(skills, agent=name):
-            tools.register(spec)
     for spec in added.tools:
         tools.register(spec)
     specs = [spec for name in tools.names() if (spec := tools.get(name)) is not None]
     refused = [spec.name for spec in specs if spec.network == "internet"]
     if refused and not profile.agent.allow_internet:
         raise ValueError(f"tools that reach the internet are not allowed here: {', '.join(refused)}")
-    prompt = build_prompt(
-        profile, tool_names=tools.names(), memory=memory, skills=skills, extra_sections=added.sections
-    )
+    prompt = build_prompt(profile, tool_names=tools.names(), memory=memory, extra_sections=added.sections)
     context_policy = profile.context_policy()
     context = ContextManager(context_policy, client) if context_policy else None
     if model is not None:
@@ -90,7 +77,6 @@ def build_agent(
         prompt,
         context,
         memory,
-        skills,
         policy,
         hooks,
     )
@@ -112,7 +98,6 @@ def build_prompt(
     *,
     tool_names: Sequence[str],
     memory: MemoryService | None = None,
-    skills: SkillLibrary | None = None,
     extra_sections: Sequence[Section] = (),
 ) -> PromptBuilder:
     env = PromptEnv(
@@ -127,4 +112,4 @@ def build_prompt(
         registry.register(section)
     listed = list(profile.prompt.sections)
     names = listed + [s.name for s in extra_sections if s.name not in listed]
-    return PromptBuilder(env, registry.select(names), memory=memory, skills=skills)
+    return PromptBuilder(env, registry.select(names), memory=memory)

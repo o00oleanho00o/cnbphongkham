@@ -2,7 +2,7 @@
 
 The system prompt is rendered from the session sections once per session and stored with a fingerprint of the
 configuration it came from (environment, section names and the sections' text without session data). Later
-turns reuse the stored text, so notes and skills saved during a session never break the provider's prompt
+turns reuse the stored text, so notes saved during a session never break the provider's prompt
 cache; a different configuration (a new persona, rules or guidance text) rebuilds it and logs a cache break.
 Turn and step sections go into an ``<agent-context>`` block at the end of the request; it is never stored.
 """
@@ -30,7 +30,6 @@ from agentcore.prompt.sections import (
     TurnInfo,
     TurnSection,
 )
-from agentcore.skills.library import SkillLibrary
 
 CONTEXT_OPEN: Final = "<agent-context>"
 CONTEXT_CLOSE: Final = "</agent-context>"
@@ -59,7 +58,6 @@ class PromptBuilder:
         sections: Sequence[Section],
         *,
         memory: MemoryService | None = None,
-        skills: SkillLibrary | None = None,
     ) -> None:
         names = [section.name for section in sections]
         repeated = sorted(name for name, count in Counter(names).items() if count > 1)
@@ -69,9 +67,8 @@ class PromptBuilder:
         self._session = [s for s in sections if isinstance(s, SessionSection)]
         self._dynamic = [s for s in sections if not isinstance(s, SessionSection)]
         self._memory = memory
-        self._skills = skills
         # the sections' own text (rendered without session data) counts too: a plugin's guidance edited in a
-        # new release reaches sessions already running, while a note or skill saved meanwhile does not
+        # new release reaches sessions already running, while a note saved meanwhile does not
         payload = json.dumps(
             {"env": dataclasses.asdict(env), "sections": names, "text": self.render_system()}, sort_keys=True
         )
@@ -120,7 +117,6 @@ class PromptBuilder:
             )
         data = await load_session_data(
             memory=self._memory,
-            skills=self._skills,
             tenant_id=tenant_id,
             agent=self._env.agent_name,
             user_id=user_id,

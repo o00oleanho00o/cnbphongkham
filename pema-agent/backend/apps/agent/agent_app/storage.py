@@ -1,5 +1,5 @@
-"""Postgres storage of schema ``agent_rt``: the agent's notes and its own skills, sessions with their
-messages, and the turn trace. Every statement is parameterised; the schema comes from ``apps/agent/alembic``.
+"""Postgres storage of schema ``agent_rt``: the agent's notes, sessions with their messages
+and the turn trace. Every statement is parameterised; the schema comes from ``apps/agent/alembic``.
 
 A dropped connection is retried once, and only where a retry is harmless: reads, upserts, appends carrying a
 unique id, and the notes' version-checked write, whose unknown outcome is settled by reading it back.
@@ -24,7 +24,6 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_en
 
 from agentcore import CompactionRecord, Message, StoredPrompt, TraceEvent, TurnTrace, Usage
 from agentcore.memory import MemoryKey, StoredNotes
-from agentcore.skills import Skill
 
 RETRY_DELAY_S: Final = 0.2
 
@@ -115,59 +114,6 @@ class PostgresMemoryBackend:
         await asyncio.sleep(RETRY_DELAY_S)
         stored = await self.load(key)
         return stored == StoredNotes(text=text, version=expected_version + 1)
-
-
-_LIST_SKILLS = sql(
-    "SELECT name, description, body FROM agent_rt.agent_skill "
-    "WHERE tenant_id = :tenant_id AND agent = :agent ORDER BY name"
-)
-_GET_SKILL = sql(
-    "SELECT name, description, body FROM agent_rt.agent_skill "
-    "WHERE tenant_id = :tenant_id AND agent = :agent AND name = :name"
-)
-_PUT_SKILL = sql(
-    "INSERT INTO agent_rt.agent_skill (tenant_id, agent, name, description, body) "
-    "VALUES (:tenant_id, :agent, :name, :description, :body) "
-    "ON CONFLICT (tenant_id, agent, name) DO UPDATE SET description = EXCLUDED.description, "
-    "body = EXCLUDED.body, version = agent_rt.agent_skill.version + 1, updated_at = now()"
-)
-
-
-class PostgresSkillStore:
-    def __init__(self, db: AgentDatabase) -> None:
-        self._engine = db.engine
-
-    async def list(self, tenant_id: str, agent: str) -> list[Skill]:
-        async def work() -> list[Skill]:
-            async with self._engine.connect() as conn:
-                rows = await conn.execute(_LIST_SKILLS, {"tenant_id": tenant_id, "agent": agent})
-                return [Skill(name=r.name, description=r.description, body=r.body) for r in rows]
-
-        return await retrying("list skills", work)
-
-    async def get(self, tenant_id: str, agent: str, name: str) -> Skill | None:
-        async def work() -> Skill | None:
-            params = {"tenant_id": tenant_id, "agent": agent, "name": name}
-            async with self._engine.connect() as conn:
-                row = (await conn.execute(_GET_SKILL, params)).one_or_none()
-            return None if row is None else Skill(name=row.name, description=row.description, body=row.body)
-
-        return await retrying("get skill", work)
-
-    async def put(self, tenant_id: str, agent: str, skill: Skill) -> None:
-        params = {
-            "tenant_id": tenant_id,
-            "agent": agent,
-            "name": skill.name,
-            "description": skill.description,
-            "body": skill.body,
-        }
-
-        async def work() -> None:
-            async with self._engine.begin() as conn:
-                await conn.execute(_PUT_SKILL, params)
-
-        await retrying("put skill", work)
 
 
 class SessionOwnerError(ValueError):

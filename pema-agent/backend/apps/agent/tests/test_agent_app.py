@@ -105,36 +105,18 @@ def test_without_a_window_the_commands_say_compaction_is_off(
     assert "compaction is off: set [context] window_tokens" in out
 
 
-def test_the_dev_agent_folder_gives_persona_rules_tools_and_a_bundled_skill() -> None:
+def test_the_dev_agent_folder_gives_persona_rules_and_tools() -> None:
     profile = load_profile(DEV_PROFILE)
 
     agent = build_agent(profile, fake=True, env={})
 
     assert profile.agent.system_prompt.startswith("You are a helpful general-purpose assistant.")
     assert profile.agent.rules.startswith("## How you work")
-    assert agent.tools.names() == [
-        "get_datetime",
-        "memory",
-        "skill_list",
-        "skill_view",
-        "skill_write",
-        "skill_patch",
-    ]
+    assert agent.tools.names() == ["get_datetime", "memory"]
     system = agent.prompt.render_system()
     assert system.startswith(profile.agent.system_prompt.strip())
     assert "## How you work" in system
     assert "## Memory" in system
-
-
-async def test_the_bundled_skill_is_listed_and_read_only() -> None:
-    agent = build_agent(load_profile(DEV_PROFILE), fake=True, env={})
-    assert agent.skills is not None
-
-    (skill,) = await agent.skills.list("default", "dev")
-
-    assert (skill.name, skill.origin) == ("write-a-plan", "bundled")
-    with pytest.raises(ValueError, match="bundled skill"):
-        await agent.skills.write("default", "dev", name="write-a-plan", description="x", body="y")
 
 
 def test_a_persona_in_soul_md_and_in_the_profile_is_refused(tmp_path: Path) -> None:
@@ -202,7 +184,10 @@ def test_the_prompt_command_shows_the_system_prompt_and_the_context_block(
         "--- system prompt (frozen for this session) ---\nYou are a helpful general-purpose assistant." in out
     )
     assert "<agent-context>\nCurrent time: " in out
-    assert "Channel: cli\nStep 1 of 6.\n</agent-context>" in out
+    assert "Channel: cli" in out
+    assert "Step 1 of 6." in out
+    assert "skill_write" in out  # the skills plugin's guidance rides in the context block
+    assert "</agent-context>" in out
 
 
 def test_a_misspelt_key_is_refused(tmp_path: Path) -> None:
