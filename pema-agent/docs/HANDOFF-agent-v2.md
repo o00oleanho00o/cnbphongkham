@@ -914,6 +914,15 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   đầu đến cuối, chưa thử trên câu hỏi thật của phòng khám; Jev chưa được bật ở đâu; trang "Jev" chưa mở thử trong trình duyệt; Docker cần build lại (`docker compose up -d
   --build agent`), không có migration mới; câu hỏi mẫu cho mỗi đoạn lúc nạp (thay HyDE) và các việc ở mục 5 của kế hoạch để
   sau.
+- **Tìm từ khóa của Kho tri thức đo lại và sửa (2026-10-15, nhánh `feat/knowledge-embedding`; kế hoạch và số đo ở
+  `docs/PLAN-kb-measure-and-small-to-big.md`).** Bộ đo `scripts/kb_bench.py` chạy được trên Postgres thật
+  (`--store postgres --db-url`, chỉ nhận database tên bắt đầu `scratch_` hoặc `bench_` vì nó xóa schema `agent_rt`). Phát
+  hiện: bản Postgres xếp từ khóa bằng `ts_rank_cd` (không có độ hiếm của từ), kém bản bộ nhớ (BM25): top3 20 so với 24,
+  nên các số của Jev ở trên là số của bản bộ nhớ. Đã đưa BM25 vào Postgres (migration `0003_bm25.sql`: cột `terms_len`,
+  `term_counts`; câu SQL ở `store.py` `_SEARCH`, ba bảng thống kê phải `MATERIALIZED`); hai bản cho cùng điểm, có test.
+  Mới có "small to big" (`section.py`, `Searcher(expand_chars=N)`): đoạn tìm được đọc cùng các đoạn cùng mục quanh nó. Đo
+  trên bộ demo: thêm được dữ kiện (10 → 14/20) nhưng gói dài thêm 148 %, nên **tắt mặc định**; chưa đo với Jev (cần khóa
+  TypeSafe). Bản Docker cần build lại để chạy migration.
 - **Hoãn (2026-10-13, user bảo cất lại): hook chặn ghi memory/skill trên kênh khách, hook cờ đỏ trước khi gọi model,
   hai skill quy trình `tiep-nhan-dat-lich` và `xu-ly-phan-nan`.** Việc đang bàn thay thế: kỹ năng trong DB, trang
   quản lý và agent tự học, kế hoạch ở `docs/PLAN-skills-studio.md` (CHỜ USER DUYỆT, chưa code).

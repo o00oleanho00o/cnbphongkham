@@ -182,6 +182,10 @@ tin cậy); nếu sau này nhận tài liệu từ bên ngoài thì cần một 
 
 ## 7. Kết quả thử thật (2026-10-14, khóa TypeSafe của user, jev-1.13.0)
 
+**Lưu ý (2026-10-15): các số dưới đây đo trên kho bộ nhớ (tìm từ khóa bằng BM25). Bản Postgres chạy trong Docker lúc đó dùng
+`ts_rank_cd` và chỉ đạt top1 14, top3 20, MRR 0,606 khi không có Jev; đã sửa để hai bản cho cùng điểm, xem
+`PLAN-kb-measure-and-small-to-big.md` mục 7. Số của Jev chưa đo lại trên Postgres.**
+
 Bộ thử: 22 tài liệu demo Pema (209 đoạn), 30 câu hỏi trả lời được (tập A, B của `scripts/kb_bench_pema.jsonl`) và 8 câu
 tài liệu không trả lời được (tập C), nền là tìm từ khóa (chưa thử tìm theo nghĩa vì máy này chưa có khóa embedding).
 Lệnh: `scripts/kb_bench.py --modes keyword --judge --lang en --level medium`. Cả loạt khoảng 370 request, 200.000 token,

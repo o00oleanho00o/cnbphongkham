@@ -25,6 +25,7 @@ from .fusion import rank_fusion, vector_first
 from .ingest import recognise
 from .judging import JUDGED, JudgeOutcome, JudgePlan, judge_hits
 from .models import Hit, Service
+from .section import in_section, parent_of, widen
 from .store import KnowledgeStore
 from .text import fold, query_terms
 
@@ -107,8 +108,13 @@ class _Branch:
 
 
 class Searcher:
-    def __init__(self, store: KnowledgeStore, *, timer: Callable[[], float] = time.perf_counter) -> None:
+    def __init__(
+        self, store: KnowledgeStore, *, expand_chars: int = 0, timer: Callable[[], float] = time.perf_counter
+    ) -> None:
         self._store = store
+        self._expand_chars = expand_chars
+        """Small to big (``section.py``): when above 0, each of the first chunks found is read with the
+        chunks of its section around it, up to this many characters; 0 reads the chunk alone."""
         self._timer = timer
 
     async def search(
@@ -137,6 +143,8 @@ class Searcher:
         ranked = branches[0].ranked() if len(branches) == 1 else rank_fusion([b.ranked() for b in branches])
         boosted = sorted((_boosted(hit, named) for hit in ranked), key=lambda hit: hit.score, reverse=True)
         spread = _spread(boosted)
+        if self._expand_chars:
+            spread = [*await self._widened(spread[:JUDGED]), *spread[JUDGED:]]
         judged = None if judge is None else await judge_hits(judge, question, asked[1:], spread[:JUDGED])
         final = _packed(judged.kept if judged is not None and judged.judged else spread, results, char_budget)
         return SearchResult(
@@ -158,6 +166,32 @@ class Searcher:
             variants=tuple(asked[1:]),
             judge=judged,
         )
+
+    async def _widened(self, hits: Sequence[Hit]) -> list[Hit]:
+        """Each hit as the chunks of its section around it. A hit already inside the text of a better
+        one is left out, and no chunk is read twice."""
+        sections = sorted({(h.chunk.source_id, p) for h in hits if (p := parent_of(h.chunk.path))})
+        if not sections:
+            return list(hits)
+        found = await self._store.section_chunks(sections)
+        covered: set[str] = set()
+        out: list[Hit] = []
+        for hit in hits:
+            if hit.chunk.id in covered:
+                continue
+            parent = parent_of(hit.chunk.path)
+            members = [
+                c
+                for c in found
+                if parent
+                and c.source_id == hit.chunk.source_id
+                and in_section(c.path, parent)
+                and c.id not in covered
+            ]
+            wide, taken = widen(hit, members, self._expand_chars)
+            covered |= taken
+            out.append(wide)
+        return out
 
     async def _branch(self, text: str, as_of: date, plan: VectorPlan | None) -> _Branch:
         async with asyncio.TaskGroup() as group:

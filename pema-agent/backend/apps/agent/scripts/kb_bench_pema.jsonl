@@ -1,32 +1,32 @@
-{"set": "A", "q": "trị nám 1 buổi bao nhiêu tiền", "expect": ["DEMO-PEMA-D07"]}
-{"set": "A", "q": "gói 10 buổi nám giá bao nhiêu, có giảm giá không", "expect": ["DEMO-PEMA-D08", "DEMO-PEMA-D07", "DEMO-PEMA-D09"]}
-{"set": "A", "q": "khuyến mại tháng này", "expect": ["DEMO-PEMA-D09"]}
-{"set": "A", "q": "hủy lịch có mất tiền không", "expect": ["DEMO-PEMA-D13"]}
-{"set": "A", "q": "đặt lịch có phải cọc không", "expect": ["DEMO-PEMA-D12"]}
-{"set": "A", "q": "bảo lưu gói được bao lâu", "expect": ["DEMO-PEMA-D08"]}
-{"set": "A", "q": "hoàn tiền gói thế nào", "expect": ["DEMO-PEMA-D14"]}
+{"set": "A", "q": "trị nám 1 buổi bao nhiêu tiền", "expect": ["DEMO-PEMA-D07"], "facts": ["DEMO-PEMA.price.nam_single_vnd"]}
+{"set": "A", "q": "gói 10 buổi nám giá bao nhiêu, có giảm giá không", "expect": ["DEMO-PEMA-D08", "DEMO-PEMA-D07", "DEMO-PEMA-D09"], "facts": ["DEMO-PEMA.price.nam_package10_vnd", "DEMO-PEMA.promo.nam_package10_after_vnd"]}
+{"set": "A", "q": "khuyến mại tháng này", "expect": ["DEMO-PEMA-D09"], "facts": ["DEMO-PEMA.promo.nam_package10_after_vnd", "DEMO-PEMA.promo.hori_package8_after_vnd"]}
+{"set": "A", "q": "hủy lịch có mất tiền không", "expect": ["DEMO-PEMA-D13"], "facts": ["DEMO-PEMA.cancel.free_hours", "DEMO-PEMA.cancel.late_fee_vnd"]}
+{"set": "A", "q": "đặt lịch có phải cọc không", "expect": ["DEMO-PEMA-D12"], "facts": ["DEMO-PEMA.booking.deposit_vnd"]}
+{"set": "A", "q": "bảo lưu gói được bao lâu", "expect": ["DEMO-PEMA-D08"], "facts": ["DEMO-PEMA.package.hold_max_months", "DEMO-PEMA.package.hold_max_times"]}
+{"set": "A", "q": "hoàn tiền gói thế nào", "expect": ["DEMO-PEMA-D14"], "facts": ["DEMO-PEMA.refund.window_days", "DEMO-PEMA.refund.fee_percent", "DEMO-PEMA.refund.processing_days"]}
 {"set": "A", "q": "sau laser cần kiêng gì", "expect": ["DEMO-PEMA-D05"]}
-{"set": "A", "q": "bớt hori có làm ở HCM không", "expect": ["DEMO-PEMA-D02", "DEMO-PEMA-D12", "DEMO-PEMA-D03"]}
-{"set": "A", "q": "phòng khám ở đâu, mấy giờ mở cửa", "expect": ["DEMO-PEMA-D01"]}
-{"set": "A", "q": "kem chống nắng giá bao nhiêu", "expect": ["DEMO-PEMA-D11"]}
+{"set": "A", "q": "bớt hori có làm ở HCM không", "expect": ["DEMO-PEMA-D02", "DEMO-PEMA-D12", "DEMO-PEMA-D03"], "facts": ["DEMO-PEMA.service.hori.branches"]}
+{"set": "A", "q": "phòng khám ở đâu, mấy giờ mở cửa", "expect": ["DEMO-PEMA-D01"], "facts": ["DEMO-PEMA.hours.open", "DEMO-PEMA.hours.close"]}
+{"set": "A", "q": "kem chống nắng giá bao nhiêu", "expect": ["DEMO-PEMA-D11"], "facts": ["DEMO-PEMA.product.sumdfine_sunscreen.price_vnd"]}
 {"set": "A", "q": "mụn trị thế nào", "expect": ["DEMO-PEMA-D10"]}
-{"set": "A", "q": "khiếu nại bao lâu thì được trả lời", "expect": ["DEMO-PEMA-D15"]}
-{"set": "A", "q": "có được chụp ảnh trước sau không", "expect": ["DEMO-PEMA-D16"]}
+{"set": "A", "q": "khiếu nại bao lâu thì được trả lời", "expect": ["DEMO-PEMA-D15"], "facts": ["DEMO-PEMA.sla.first_reply_hours"]}
+{"set": "A", "q": "có được chụp ảnh trước sau không", "expect": ["DEMO-PEMA-D16"], "facts": ["DEMO-PEMA.privacy.photo_consent"]}
 {"set": "A", "q": "bị sưng đỏ sau điều trị thì làm sao", "expect": ["DEMO-PEMA-D17", "DEMO-PEMA-D05"]}
 {"set": "B", "q": "da mặt bị sạm nâu từng mảng là bệnh gì", "expect": ["DEMO-PEMA-D03"]}
 {"set": "B", "q": "bắn laser có rát không", "expect": ["DEMO-PEMA-D06", "DEMO-PEMA-D04"]}
-{"set": "B", "q": "làm xong bao lâu thì đánh phấn được", "expect": ["DEMO-PEMA-D06"]}
+{"set": "B", "q": "làm xong bao lâu thì đánh phấn được", "expect": ["DEMO-PEMA-D06"], "facts": ["DEMO-PEMA.aftercare.makeup_when"]}
 {"set": "B", "q": "đốm xanh xám ở gò má có chữa được không", "expect": ["DEMO-PEMA-D03", "DEMO-PEMA-D02"]}
-{"set": "B", "q": "quẹt thẻ được không", "expect": ["DEMO-PEMA-D14", "DEMO-PEMA-D18"]}
-{"set": "B", "q": "lỡ hẹn không tới thì có bị phạt không", "expect": ["DEMO-PEMA-D13"]}
-{"set": "B", "q": "đi công tác 2 tháng muốn tạm dừng liệu trình", "expect": ["DEMO-PEMA-D08"]}
+{"set": "B", "q": "quẹt thẻ được không", "expect": ["DEMO-PEMA-D14", "DEMO-PEMA-D18"], "facts": ["DEMO-PEMA.payment.methods"]}
+{"set": "B", "q": "lỡ hẹn không tới thì có bị phạt không", "expect": ["DEMO-PEMA-D13"], "facts": ["DEMO-PEMA.cancel.late_fee_vnd"]}
+{"set": "B", "q": "đi công tác 2 tháng muốn tạm dừng liệu trình", "expect": ["DEMO-PEMA-D08"], "facts": ["DEMO-PEMA.package.hold_max_months"]}
 {"set": "B", "q": "lấy hóa đơn công ty được không", "expect": ["DEMO-PEMA-D14", "DEMO-PEMA-D18"]}
-{"set": "B", "q": "có viên uống nào giúp da đẹp không", "expect": ["DEMO-PEMA-D11"]}
+{"set": "B", "q": "có viên uống nào giúp da đẹp không", "expect": ["DEMO-PEMA-D11"], "facts": ["DEMO-PEMA.product.heliocare_luminance_oral.price_vnd"]}
 {"set": "B", "q": "bên mình có mấy cơ sở", "expect": ["DEMO-PEMA-D01", "DEMO-PEMA-D18"]}
 {"set": "B", "q": "rủ bạn đi cùng có được ưu đãi gì không", "expect": ["DEMO-PEMA-D09"]}
-{"set": "B", "q": "da bị phồng rộp chảy dịch sau khi bắn laser", "expect": ["DEMO-PEMA-D17", "DEMO-PEMA-D05"]}
-{"set": "B", "q": "cho xin số tổng đài", "expect": ["DEMO-PEMA-D01", "DEMO-PEMA-D18"]}
-{"set": "B", "q": "không muốn bị đăng ảnh mặt lên mạng", "expect": ["DEMO-PEMA-D16"]}
+{"set": "B", "q": "da bị phồng rộp chảy dịch sau khi bắn laser", "expect": ["DEMO-PEMA-D17", "DEMO-PEMA-D05"], "facts": ["DEMO-PEMA.safety.escalate_clinical"]}
+{"set": "B", "q": "cho xin số tổng đài", "expect": ["DEMO-PEMA-D01", "DEMO-PEMA-D18"], "facts": ["DEMO-PEMA.contact.hotline"]}
+{"set": "B", "q": "không muốn bị đăng ảnh mặt lên mạng", "expect": ["DEMO-PEMA-D16"], "facts": ["DEMO-PEMA.privacy.photo_consent"]}
 {"set": "B", "q": "nhân viên thái độ không tốt thì góp ý ở đâu", "expect": ["DEMO-PEMA-D15"]}
 {"set": "C", "q": "có nhận bảo hiểm y tế không", "expect": []}
 {"set": "C", "q": "giá cấy tóc bao nhiêu", "expect": []}

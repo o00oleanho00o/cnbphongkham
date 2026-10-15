@@ -1,12 +1,19 @@
 """Retrieval bench of the knowledge store: what keyword search, vector search and both (vector first) find.
 
-Loads the Markdown documents of a folder into an in-memory store the way the pages do (YAML heads read),
-embeds the chunks with the real embedding service, asks every question of a JSON-lines file and says in how
-many the right document is in the first 1, 3 and 6 results. Runs outside Docker, never touches a database.
+Loads the Markdown documents of a folder into a store the way the pages do (YAML heads read), embeds the
+chunks with the real embedding service, asks every question of a JSON-lines file and says in how many the
+right document is in the first 1, 3 and 6 results. Runs outside Docker. The store is process memory (BM25
+keyword search) unless ``--store postgres`` is given: then it is the ``kb_`` tables of a throwaway database
+(``ts_rank_cd`` keyword search, the one a running agent uses); see below.
 
     cd pema-agent/backend/apps/agent
     uv run python scripts/kb_bench.py --docs "E:/Desktop/data test/AgentRAG_Pema_Demo/01_NAP_EMBEDDING" \
         --questions scripts/kb_bench_pema.jsonl --modes keyword,vector,hybrid --sweep 0.25,0.30,0.35,0.40,0.45
+
+--store postgres --db-url postgresql+psycopg://USER:PASSWORD@HOST:PORT/scratch_NAME drops the schema
+agent_rt of that database and migrates it again, so the database name must start with "scratch_" or
+"bench_"; anything else is refused before a connection is made. Never point it at a database that holds
+data.
 
 The key is read from the environment variable BEEKNOEE_API_KEY and is never printed or written; without it
 only the keyword mode runs. A questions file holds one object per line:
@@ -34,8 +41,17 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Final
 
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import create_engine, make_url
+from sqlalchemy import text as sql
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from agent_app.plugins import discover
+from agent_app.plugins.migrations import migrate_plugins
+from agent_app.runtime import BUNDLED_PLUGINS
 from plugins.jev.client import JevClient, Meter
 from plugins.knowledge.embedder import Embedder
 from plugins.knowledge.embedding import EmbeddingClient, EmbeddingConfig, EmbeddingError
@@ -43,7 +59,7 @@ from plugins.knowledge.ingest import Ingest
 from plugins.knowledge.judging import QUESTIONS, JudgePlan
 from plugins.knowledge.models import ConfirmItem, Hit, PreviewInput
 from plugins.knowledge.search import PER_DOCUMENT, Searcher, VectorPlan
-from plugins.knowledge.store import InMemoryKnowledgeStore
+from plugins.knowledge.store import InMemoryKnowledgeStore, KnowledgeStore, PostgresKnowledgeStore
 
 BASE_URL: Final = "https://platform.beeknoee.com/api/v1"
 MODEL: Final = "qwen/qwen3-embedding-8b"
@@ -55,6 +71,9 @@ RESULTS: Final = 6
 CHAR_BUDGET: Final = 6000
 CANDIDATES: Final = 40
 WAIT_S: Final = 30.0
+APP_DIR: Final = Path(__file__).resolve().parents[1]
+MIGRATION_ENV: Final = "AGENT_MIGRATION_DATABASE_URL"
+THROWAWAY_PREFIXES: Final = ("scratch_", "bench_")
 MODES: Final = ("keyword", "vector", "hybrid")
 USD_PER_TOKEN: Final = 42 / 1_000_000_000
 QUESTIONS_VI: Final = {
@@ -80,6 +99,8 @@ class Question:
     group: str
     text: str
     expect: tuple[str, ...]
+    facts: tuple[str, ...] = ()
+    """Codes of the facts that answer it ("Mã dữ kiện" of the documents); empty when the answer has none."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,6 +112,12 @@ class Outcome:
     dropped: tuple[str, ...] = ()
     """Document codes of the chunks the judge dropped (empty without the judge)."""
     judge_ms: float = 0.0
+    package: str = ""
+    """The words the agent would read: headings and text of every final chunk."""
+
+    def has_facts(self) -> bool:
+        """Every fact that answers the question is in what the agent would read."""
+        return all(fact in self.package for fact in self.question.facts)
 
     def rank(self) -> int | None:
         """1-based position of the first right document among the distinct documents, or None."""
@@ -104,7 +131,7 @@ class Outcome:
 
 def read_questions(path: Path) -> list[Question]:
     rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
-    return [Question(row["set"], row["q"], tuple(row["expect"])) for row in rows]
+    return [Question(row["set"], row["q"], tuple(row["expect"]), tuple(row.get("facts", []))) for row in rows]
 
 
 def read_documents(folder: Path) -> list[PreviewInput]:
@@ -125,7 +152,45 @@ def say(text: str) -> None:
     sys.stdout.flush()
 
 
-async def load_documents(store: InMemoryKnowledgeStore, inputs: Sequence[PreviewInput]) -> int:
+def throwaway_url(url: str) -> str:
+    """The URL when its database is one that may be wiped; otherwise the run stops before it connects."""
+    name = make_url(url).database or ""
+    if not name.startswith(THROWAWAY_PREFIXES):
+        raise SystemExit(f"refusing database {name!r}: its name must start with one of {THROWAWAY_PREFIXES}")
+    return url
+
+
+def migrated(url: str) -> None:
+    """Drops the schema of the agent and builds it again with the migrations of the agent and the plugin."""
+    engine = create_engine(url)
+    with engine.begin() as conn:
+        conn.execute(sql("DROP SCHEMA IF EXISTS agent_rt CASCADE"))
+        conn.execute(sql("DROP TABLE IF EXISTS public.alembic_version_agent_rt"))
+    engine.dispose()
+    previous = os.environ.get(MIGRATION_ENV)
+    os.environ[MIGRATION_ENV] = url
+    try:
+        command.upgrade(Config(str(APP_DIR / "alembic.ini")), "head")
+    finally:
+        if previous is None:
+            os.environ.pop(MIGRATION_ENV, None)
+        else:
+            os.environ[MIGRATION_ENV] = previous
+    migrate_plugins(url, [discover([("bundled", BUNDLED_PLUGINS)]).plugins["knowledge"]])
+
+
+def open_store(args: argparse.Namespace) -> tuple[KnowledgeStore, AsyncEngine | None]:
+    if args.store == "memory":
+        return InMemoryKnowledgeStore(), None
+    if not args.db_url:
+        raise SystemExit("--store postgres needs --db-url")
+    url = throwaway_url(args.db_url)
+    migrated(url)
+    engine = create_async_engine(url)
+    return PostgresKnowledgeStore(engine, tenant_id="bench", agent="bench"), engine
+
+
+async def load_documents(store: KnowledgeStore, inputs: Sequence[PreviewInput]) -> int:
     """Adds every document as a source (their YAML heads give code, title and dates)."""
     ingest = Ingest(store)
     preview = await ingest.preview(inputs, benchmark=False)
@@ -142,6 +207,10 @@ async def load_documents(store: InMemoryKnowledgeStore, inputs: Sequence[Preview
     ]
     result = await ingest.confirm(preview["preview_id"], items, [], benchmark=False)
     return len(result["created"])
+
+
+def package_of(hits: Sequence[Hit]) -> str:
+    return "\n\n".join(f"{hit.chunk.path}\n{hit.chunk.body}" for hit in hits)
 
 
 def final_chunks(hits: Sequence[Hit]) -> list[Hit]:
@@ -188,12 +257,14 @@ class DirectJudge:
 
 
 class Bench:
-    def __init__(self, store: InMemoryKnowledgeStore, config: EmbeddingConfig, as_of: date) -> None:
+    def __init__(
+        self, store: KnowledgeStore, config: EmbeddingConfig, as_of: date, *, expand_chars: int
+    ) -> None:
         self.store = store
         self.config = config
         self.as_of = as_of
         self.client = EmbeddingClient()
-        self.searcher = Searcher(store)
+        self.searcher = Searcher(store, expand_chars=expand_chars)
 
     def embedder(self) -> Embedder:
         """A new embedder per mode, so one mode's cached question vectors do not speed up the next."""
@@ -249,10 +320,15 @@ class Bench:
                 if not v.kept
             )
             return Outcome(
-                question, codes, (loop.time() - started) * 1000, dropped, judged.ms if judged else 0.0
+                question,
+                codes,
+                (loop.time() - started) * 1000,
+                dropped,
+                judged.ms if judged else 0.0,
+                package_of(hits),
             )
         codes = tuple(hit.doc_code or hit.chunk.source_id for hit in hits)
-        return Outcome(question, codes, (loop.time() - started) * 1000)
+        return Outcome(question, codes, (loop.time() - started) * 1000, package=package_of(hits))
 
     async def run(
         self,
@@ -268,6 +344,7 @@ class Bench:
 def summary(outcomes: Sequence[Outcome]) -> dict[str, float]:
     count = len(outcomes) or 1
     ranks = [o.rank() for o in outcomes]
+    asked = [o for o in outcomes if o.question.facts]
     return {
         "n": len(outcomes),
         "top1": sum(1 for o in outcomes if o.within(1)),
@@ -275,6 +352,9 @@ def summary(outcomes: Sequence[Outcome]) -> dict[str, float]:
         "top6": sum(1 for o in outcomes if o.within(RESULTS)),
         "mrr": sum(1 / r for r in ranks if r) / count,
         "median_ms": statistics.median(o.ms for o in outcomes) if outcomes else 0.0,
+        "facts_n": len(asked),
+        "facts": sum(1 for o in asked if o.has_facts()),
+        "chars": statistics.median(len(o.package) for o in outcomes) if outcomes else 0.0,
     }
 
 
@@ -288,9 +368,11 @@ def show(label: str, group: str, outcomes: Sequence[Outcome]) -> dict[str, float
         refused = sum(1 for o in chosen if not o.codes)
         say(f"{label:<22} {group:<4} nothing handed to the agent {refused:>2}/{n}")
         return {**data, "refused": refused}
+    facts = f"  facts {int(data['facts']):>2}/{int(data['facts_n'])}" if data["facts_n"] else ""
     say(
         f"{label:<22} {group:<4} top1 {int(data['top1']):>2}/{n}  top3 {int(data['top3']):>2}/{n}  "
-        f"top6 {int(data['top6']):>2}/{n}  MRR {data['mrr']:.3f}  median {data['median_ms']:>6.0f} ms"
+        f"top6 {int(data['top6']):>2}/{n}  MRR {data['mrr']:.3f}{facts}  "
+        f"package {data['chars']:>5.0f} chars  median {data['median_ms']:>6.0f} ms"
     )
     return data
 
@@ -301,6 +383,14 @@ def misses(outcomes: Sequence[Outcome]) -> None:
             got = list(dict.fromkeys(o.codes))[:4]
             want = list(o.question.expect)
             say(f"    miss top3 [{o.question.group}] {o.question.text!r} want {want} got {got}")
+
+
+def fact_misses(outcomes: Sequence[Outcome]) -> None:
+    for o in outcomes:
+        absent = [fact for fact in o.question.facts if fact not in o.package]
+        if absent:
+            found = sorted(set(o.codes))
+            say(f"    missing facts [{o.question.group}] {o.question.text!r}: {absent} (found {found})")
 
 
 def lost(plain: Sequence[Outcome], judged: Sequence[Outcome]) -> None:
@@ -337,10 +427,19 @@ def config_from(args: argparse.Namespace) -> EmbeddingConfig:
 
 
 async def main(args: argparse.Namespace) -> int:
-    store = InMemoryKnowledgeStore()
+    store, engine = open_store(args)
+    try:
+        return await measure(args, store)
+    finally:
+        if engine is not None:
+            await engine.dispose()
+
+
+async def measure(args: argparse.Namespace, store: KnowledgeStore) -> int:
+    say(f"store: {args.store}, small-to-big: {args.expand_chars or 'off'}")
     added = await load_documents(store, read_documents(Path(args.docs)))
     questions = read_questions(Path(args.questions))
-    bench = Bench(store, config_from(args), date.fromisoformat(args.as_of))
+    bench = Bench(store, config_from(args), date.fromisoformat(args.as_of), expand_chars=args.expand_chars)
     modes = [m for m in args.modes.split(",") if m in MODES]
     chunks = await store.missing_count(bench.config.space)
     say(f"{added} documents, {chunks} chunks, {len(questions)} questions, as of {args.as_of}")
@@ -368,6 +467,8 @@ async def main(args: argparse.Namespace) -> int:
         label = mode if mode == "keyword" else f"{mode} (>= {args.min_similarity:g})"
         report[mode] = {group: show(label, group, outcomes) for group in ("A", "B", "ALL", "C")}
         misses(outcomes)
+        if args.facts:
+            fact_misses(outcomes)
         if judge and plan and mode != "vector":
             with_jev = await bench.run(mode, questions, args.min_similarity, plan)
             report[f"{mode}+jev"] = {
@@ -391,6 +492,19 @@ def parse(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--docs", required=True, help="folder of .md documents")
     parser.add_argument("--questions", required=True, help="JSON-lines file of questions")
+    parser.add_argument(
+        "--store", choices=("memory", "postgres"), default="memory", help="where the chunks are kept"
+    )
+    parser.add_argument("--db-url", default="", help="throwaway database for --store postgres")
+    parser.add_argument(
+        "--facts", action="store_true", help="list the questions whose facts are not in the package"
+    )
+    parser.add_argument(
+        "--expand-chars",
+        type=int,
+        default=0,
+        help="small to big: read each chunk found with its section around it, up to this many characters",
+    )
     parser.add_argument("--as-of", default="2026-10-12", help="the day the questions are asked on")
     parser.add_argument("--modes", default="keyword,vector,hybrid")
     parser.add_argument("--min-similarity", type=float, default=0.35)
@@ -412,4 +526,5 @@ def parse(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 
 if __name__ == "__main__":
-    sys.exit(asyncio.run(main(parse())))
+    # psycopg's async driver cannot use the Windows proactor loop
+    sys.exit(asyncio.run(main(parse()), loop_factory=asyncio.SelectorEventLoop))

@@ -24,8 +24,8 @@ from agent_app.plugins import discover
 from agent_app.plugins.migrations import migrate_plugins
 from agent_app.runtime import BUNDLED_PLUGINS
 from plugins.knowledge.ingest import make_chunks
-from plugins.knowledge.models import Chunk, Source
-from plugins.knowledge.store import PostgresKnowledgeStore
+from plugins.knowledge.models import Chunk, Hit, Source
+from plugins.knowledge.store import InMemoryKnowledgeStore, PostgresKnowledgeStore
 from plugins.knowledge.text import chunk, content_hash, embed_text_of, query_terms, text_hash
 
 pytestmark = pytest.mark.db
@@ -119,6 +119,116 @@ def test_a_document_is_found_in_its_tenants_store_on_the_day_asked(db_url: str) 
         assert await mine.in_force("D07-V1", date(2026, 10, 12)) is None
 
     _run(db_url, work)
+
+
+def test_postgres_and_memory_score_keyword_search_the_same(db_url: str) -> None:
+    long_body = "## Nám\nNám nám nám nám. " + "Phòng khám làm việc mỗi ngày trong tuần. " * 30
+    corpus = (
+        (
+            "src-00000000bm01",
+            "D01",
+            "## Giá\nLaser nám giá 4.000.000 đồng một buổi, laser nám hiệu quả.",
+            None,
+        ),
+        ("src-00000000bm02", "D02", long_body, None),
+        (
+            "src-00000000bm03",
+            "D03",
+            "## Hori\nLaser hori chỉ làm ở Hà Nội, không làm ở chi nhánh khác.",
+            None,
+        ),
+        ("src-00000000bm04", "D04", "## Giá cũ\nLaser nám giá 3.500.000 đồng.", date(2026, 9, 30)),
+    )
+
+    def ordered(hits: list[Hit]) -> list[tuple[str, float]]:
+        return sorted(((h.chunk.id, round(h.score, 6)) for h in hits), key=lambda x: (-x[1], x[0]))
+
+    async def main() -> None:
+        engine = create_async_engine(db_url)
+        try:
+            # a tenant of its own: the other tests of this module leave their sources in "clinic-a"
+            mine = PostgresKnowledgeStore(engine, tenant_id="bm25-parity", agent="clinic")
+            memory = InMemoryKnowledgeStore()
+            for source_id, code, body, end in corpus:
+                source = _source(source_id, code, body, date(2026, 1, 1), end)
+                made = make_chunks(source_id, code, chunk(body, code), [])
+                await mine.add_source(source, made)
+                await memory.add_source(source, made)
+            for question in (
+                "laser nám giá bao nhiêu",
+                "nám",
+                "hori hà nội",
+                "phòng khám làm việc",
+                "xe máy",
+            ):
+                wanted = query_terms(question)
+                on_postgres = await mine.search(wanted, date(2026, 10, 12), 20)
+                in_memory = await memory.search(wanted, date(2026, 10, 12), 20)
+
+                assert ordered(on_postgres) == ordered(in_memory), question
+                assert all(h.doc_code != "D04" for h in on_postgres), question
+        finally:
+            await engine.dispose()
+
+    asyncio.run(main(), loop_factory=asyncio.SelectorEventLoop)
+
+
+def test_section_chunks_come_back_in_document_order_for_the_exact_section_only(db_url: str) -> None:
+    title = "Giảm 100% _đặc biệt"
+    odd = (
+        f"# {title}\n\n### A\n\n{'a' * 70}\n\n### B\n\n{'b' * 70}\n\n# {title} hôm nay\n\n### C\n\n{'c' * 70}"
+    )
+    plain = f"# Khác\n\n### A\n\n{'d' * 70}"
+
+    async def main() -> None:
+        engine = create_async_engine(db_url)
+        try:
+            mine = PostgresKnowledgeStore(engine, tenant_id="section", agent="clinic")
+            memory = InMemoryKnowledgeStore()
+            for source_id, body in (("src-00000000se01", odd), ("src-00000000se02", plain)):
+                source = _source(source_id, source_id[-4:], body, date(2026, 1, 1))
+                made = make_chunks(source_id, source.title, chunk(body, source.title), [])
+                await mine.add_source(source, made)
+                await memory.add_source(source, made)
+            wanted = [("src-00000000se01", title), ("src-00000000se02", "Khác")]
+
+            on_postgres = await mine.section_chunks(wanted)
+            in_memory = await memory.section_chunks(wanted)
+
+            assert [c.id for c in on_postgres] == [c.id for c in in_memory]
+            assert [c.body[0] for c in on_postgres] == ["a", "b", "d"]
+            assert await mine.section_chunks([]) == []
+        finally:
+            await engine.dispose()
+
+    asyncio.run(main(), loop_factory=asyncio.SelectorEventLoop)
+
+
+def test_the_bm25_migration_counts_chunks_as_python_does(db_url: str) -> None:
+    backfill = (APP_DIR / "plugins/knowledge/migrations/0003_bm25.sql").read_text(encoding="utf-8")
+    backfill = backfill[backfill.index("UPDATE kb_chunk") :]
+    body = "## Giá\nLaser nám giá 4.000.000 đồng một buổi, laser nám hiệu quả, nám nám."
+    read = sql("SELECT id, terms_len, term_counts FROM agent_rt.kb_chunk WHERE tenant_id = 'bm25-backfill'")
+
+    async def main() -> None:
+        engine = create_async_engine(db_url)
+        try:
+            store = PostgresKnowledgeStore(engine, tenant_id="bm25-backfill", agent="clinic")
+            source = _source("src-00000000bm10", "D10", body, date(2026, 1, 1))
+            await store.add_source(source, make_chunks(source.id, "D10", chunk(body, "D10"), []))
+            async with engine.begin() as conn:
+                written = (await conn.execute(read)).all()
+                await conn.execute(sql("SET LOCAL search_path TO agent_rt"))
+                await conn.execute(sql(backfill))
+                recounted = (await conn.execute(read)).all()
+
+            assert written
+            assert written == recounted
+            assert written[0].term_counts["nam"] == 4
+        finally:
+            await engine.dispose()
+
+    asyncio.run(main(), loop_factory=asyncio.SelectorEventLoop)
 
 
 def test_the_table_of_contents_holds_each_code_once_in_force_on_the_day(db_url: str) -> None:

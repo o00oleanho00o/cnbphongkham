@@ -1,9 +1,13 @@
 """Where the knowledge store keeps its sources, chunks, services, events and gaps: Postgres (the plugin's
 own ``kb_`` tables, scoped by tenant and agent) or process memory (tests, an agent run without a database).
 
-The keyword search is the same idea in both: the folded words of a question and of a chunk (``text.terms``),
-any of them may match, a rarer and repeated word counts more. Postgres ranks with ``ts_rank_cd`` on a GIN
-index, memory with BM25. Only sources in use count: ready, ``active``, and in force on the day asked.
+The keyword search is the same in both: the folded words of a question and of a chunk (``text.terms``),
+any of them may match, and a chunk is scored with BM25 (a rarer word counts more, a repeated one less and
+less, a long chunk less than a short one), the statistics taken over the chunks in use. Postgres does the
+sum in one statement from the length and the word counts it keeps beside the ``tsvector`` of each chunk
+(``migrations/0003_bm25.sql``); memory in Python. Both give the same scores
+(``tests/knowledge/test_knowledge_db.py``). Only sources in use count: ready, ``active``, and in force on
+the day asked.
 """
 
 from __future__ import annotations
@@ -33,6 +37,7 @@ from .models import (
     SourceFilter,
     as_mapping,
 )
+from .section import SEPARATOR, in_section
 from .text import fold, terms
 
 HEADING_WEIGHT: Final = 2
@@ -66,6 +71,11 @@ class KnowledgeStore(Protocol):
         self, source_id: str, q: str, page: int, page_size: int, space: str | None
     ) -> tuple[list[Chunk], int]:
         """A source's chunks; each says whether it has a vector in ``space`` (never when that is None)."""
+        ...
+
+    async def section_chunks(self, sections: Sequence[tuple[str, str]]) -> list[Chunk]:
+        """The chunks of these (source id, parent path) sections, in document order: those of the source whose
+        path is the parent or lies under it (``section.in_section``)."""
         ...
 
     async def update_chunk(self, chunk_id: str, services: list[str] | None, kind: str | None) -> bool: ...
@@ -212,6 +222,14 @@ class InMemoryKnowledgeStore:
         start = (page - 1) * page_size
         return found[start : start + page_size], len(found)
 
+    async def section_chunks(self, sections: Sequence[tuple[str, str]]) -> list[Chunk]:
+        return [
+            c
+            for source_id, parent in sections
+            for c in self._chunks.get(source_id, [])
+            if in_section(c.path, parent)
+        ]
+
     async def update_chunk(self, chunk_id: str, services: list[str] | None, kind: str | None) -> bool:
         for source_id, chunks in self._chunks.items():
             for index, item in enumerate(chunks):
@@ -235,6 +253,7 @@ class InMemoryKnowledgeStore:
         ]
         if not docs or not query:
             return []
+        query = list(dict.fromkeys(query))
         average = sum(sum(counts.values()) for _, _, counts in docs) / len(docs)
         frequency = {term: sum(1 for _, _, counts in docs if term in counts) for term in query}
         total = len(docs)
@@ -396,8 +415,9 @@ _UPSERT_SOURCE = text(
 ).bindparams(bindparam("services", type_=ARRAY(Text)))
 _INSERT_CHUNK = text(
     "INSERT INTO agent_rt.kb_chunk (tenant_id, agent, id, source_id, ordinal, path, body, chars, services, "
-    "kind, embed_text, embed_hash, terms) VALUES (:tenant_id, :agent, :id, :source_id, :ordinal, :path, "
-    ":body, :chars, :services, :kind, :embed_text, :embed_hash, to_tsvector('simple', :terms))"
+    "kind, embed_text, embed_hash, terms, terms_len, term_counts) VALUES (:tenant_id, :agent, :id, "
+    ":source_id, :ordinal, :path, :body, :chars, :services, :kind, :embed_text, :embed_hash, "
+    "to_tsvector('simple', :terms), :terms_len, CAST(:term_counts AS jsonb))"
 ).bindparams(bindparam("services", type_=ARRAY(Text)))
 _DELETE_CHUNKS = text(
     "DELETE FROM agent_rt.kb_chunk WHERE tenant_id = :tenant_id AND agent = :agent AND source_id = :source_id"
@@ -459,19 +479,46 @@ _UPDATE_CHUNK = text(
     "UPDATE agent_rt.kb_chunk SET services = COALESCE(:services, services), kind = COALESCE(:kind, kind) "
     "WHERE tenant_id = :tenant_id AND agent = :agent AND id = :id"
 ).bindparams(bindparam("services", type_=ARRAY(Text)))
-_SEARCH = text(
-    "SELECT c.id, c.source_id, c.ordinal, c.path, c.body, c.services, c.kind, c.embed_text, "
-    "false AS embedded, s.title, s.doc_code, "
-    "ts_rank_cd(c.terms, q.query) AS score "
-    "FROM agent_rt.kb_chunk c "
+_IN_USE: Final = (
     "JOIN agent_rt.kb_source s ON s.tenant_id = c.tenant_id AND s.agent = c.agent AND s.id = c.source_id "
-    "CROSS JOIN (SELECT to_tsquery('simple', :query) AS query) q "
-    "WHERE c.tenant_id = :tenant_id AND c.agent = :agent AND c.terms @@ q.query "
-    "AND s.processing = 'ready' AND s.lifecycle = 'active' "
+    "WHERE c.tenant_id = :tenant_id AND c.agent = :agent AND s.processing = 'ready' "
+    "AND s.lifecycle = 'active' "
     "AND (s.effective_from IS NULL OR s.effective_from <= :as_of) "
-    "AND (s.effective_to IS NULL OR s.effective_to >= :as_of) "
-    "ORDER BY score DESC, c.id LIMIT :limit"
+    "AND (s.effective_to IS NULL OR s.effective_to >= :as_of)"
 )
+_SECTION_CHUNKS = text(
+    "SELECT c.id, c.source_id, c.ordinal, c.path, c.body, c.services, c.kind, c.embed_text, "
+    "false AS embedded FROM agent_rt.kb_chunk c "
+    "WHERE c.tenant_id = :tenant_id AND c.agent = :agent AND c.source_id = ANY(:source_ids) "
+    "AND (c.path = ANY(:parents) OR c.path LIKE ANY(:likes)) ORDER BY c.source_id, c.ordinal"
+).bindparams(
+    bindparam("source_ids", type_=ARRAY(Text)),
+    bindparam("parents", type_=ARRAY(Text)),
+    bindparam("likes", type_=ARRAY(Text)),
+)
+# Only constants are joined below; every value reaches the statement as a bound parameter. The three
+# statistics tables are MATERIALIZED on purpose: left to itself the planner runs them again for every chunk.
+_SEARCH = text(
+    "WITH corpus AS MATERIALIZED (SELECT count(*) AS total, avg(c.terms_len) AS average "  # noqa: S608
+    "FROM agent_rt.kb_chunk c "
+    + _IN_USE
+    + "), rarity AS MATERIALIZED (SELECT w.term, (SELECT count(*) FROM agent_rt.kb_chunk c "
+    + _IN_USE
+    + " AND c.terms @@ to_tsquery('simple', w.term)) AS containing FROM unnest(:terms) AS w(term)), "
+    "scored AS MATERIALIZED (SELECT c.id, "
+    "sum(ln(1 + (corpus.total - rarity.containing + 0.5) / (rarity.containing + 0.5)) "
+    "* counts.n * (:k1 + 1) / (counts.n + :k1 * (1 - :b + :b * c.terms_len / corpus.average))) AS score "
+    "FROM agent_rt.kb_chunk c CROSS JOIN corpus CROSS JOIN rarity "
+    "CROSS JOIN LATERAL (SELECT COALESCE((c.term_counts ->> rarity.term)::integer, 0) AS n) counts "
+    + _IN_USE
+    + " AND c.terms @@ to_tsquery('simple', :query) AND counts.n > 0 GROUP BY c.id) "
+    "SELECT c.id, c.source_id, c.ordinal, c.path, c.body, c.services, c.kind, c.embed_text, "
+    "false AS embedded, s.title, s.doc_code, scored.score "
+    "FROM scored "
+    "JOIN agent_rt.kb_chunk c ON c.tenant_id = :tenant_id AND c.agent = :agent AND c.id = scored.id "
+    "JOIN agent_rt.kb_source s ON s.tenant_id = c.tenant_id AND s.agent = c.agent AND s.id = c.source_id "
+    "ORDER BY scored.score DESC, c.id LIMIT :limit"
+).bindparams(bindparam("terms", type_=ARRAY(Text)))
 _VECTOR_SEARCH = text(
     "SELECT c.id, c.source_id, c.ordinal, c.path, c.body, c.services, c.kind, c.embed_text, "
     "true AS embedded, s.title, s.doc_code, "
@@ -644,6 +691,25 @@ class PostgresKnowledgeStore:
         start = (page - 1) * page_size
         return kept[start : start + page_size], len(kept)
 
+    async def section_chunks(self, sections: Sequence[tuple[str, str]]) -> list[Chunk]:
+        if not sections:
+            return []
+        params = {
+            **self._scope,
+            "source_ids": sorted({source_id for source_id, _ in sections}),
+            "parents": sorted({parent for _, parent in sections}),
+            "likes": sorted({_like(parent + SEPARATOR) for _, parent in sections}),
+        }
+        async with self._engine.connect() as conn:
+            rows = (await conn.execute(_SECTION_CHUNKS, params)).mappings().all()
+        wanted = set(sections)
+        # the statement may bring a chunk of a source under another source's parent; keep the exact pairs
+        return [
+            c
+            for c in (_chunk(row) for row in rows)
+            if any(in_section(c.path, parent) for source_id, parent in wanted if source_id == c.source_id)
+        ]
+
     async def update_chunk(self, chunk_id: str, services: list[str] | None, kind: str | None) -> bool:
         async with self._engine.begin() as conn:
             result = await conn.execute(
@@ -654,7 +720,15 @@ class PostgresKnowledgeStore:
     async def search(self, query: Sequence[str], as_of: date, limit: int) -> list[Hit]:
         if not query:
             return []
-        params = {**self._scope, "query": " | ".join(query), "as_of": as_of, "limit": limit}
+        params = {
+            **self._scope,
+            "terms": list(dict.fromkeys(query)),
+            "query": " | ".join(dict.fromkeys(query)),
+            "as_of": as_of,
+            "limit": limit,
+            "k1": BM25_K1,
+            "b": BM25_B,
+        }
         async with self._engine.connect() as conn:
             rows = (await conn.execute(_SEARCH, params)).mappings().all()
         return [Hit(_chunk(row), row["title"], row["doc_code"], float(row["score"])) for row in rows]
@@ -835,6 +909,7 @@ class PostgresKnowledgeStore:
         }
 
     def _chunk_params(self, item: Chunk) -> dict[str, Any]:
+        words = chunk_terms(item)
         return {
             **self._scope,
             "id": item.id,
@@ -847,7 +922,9 @@ class PostgresKnowledgeStore:
             "kind": item.kind,
             "embed_text": item.embed_text,
             "embed_hash": item.embed_hash,
-            "terms": " ".join(chunk_terms(item)),
+            "terms": " ".join(words),
+            "terms_len": len(words),
+            "term_counts": json.dumps(Counter(words)),
         }
 
 
@@ -883,6 +960,12 @@ def _source(row: Any) -> Source:
         created_at=row["created_at"],
         updated_at=row["updated_at"],
     )
+
+
+def _like(prefix: str) -> str:
+    """A LIKE pattern for text that starts with ``prefix`` (its % _ and backslashes are plain characters)."""
+    escaped = prefix.replace(chr(92), chr(92) * 2).replace("%", chr(92) + "%").replace("_", chr(92) + "_")
+    return escaped + "%"
 
 
 def _chunk(row: Any) -> Chunk:
