@@ -26,7 +26,7 @@ async def test_a_recorded_scenario_replays_to_its_expected_transcript(scenario: 
 
 
 def test_there_are_scenarios() -> None:
-    assert {p.name for p in SCENARIOS} >= {"echo-two-turns", "calculate-after-rate-limit"}
+    assert {p.name for p in SCENARIOS} >= {"echo-two-turns", "time-tool"}
 
 
 def test_times_dates_ids_and_weekdays_are_masked() -> None:

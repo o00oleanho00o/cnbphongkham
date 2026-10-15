@@ -22,15 +22,15 @@ describe("shownPlugins", () => {
   const all = [
     plugin("web"),
     plugin("zalo", { description: "Kênh Zalo" }),
-    plugin("calculate", { description: "Máy tính" }),
+    plugin("knowledge", { description: "Kho tri thức" }),
   ];
 
   it("leaves_out_the_agents_own_dashboard", () => {
-    expect(shownPlugins(all, "").map((p) => p.name)).toEqual(["zalo", "calculate"]);
+    expect(shownPlugins(all, "").map((p) => p.name)).toEqual(["zalo", "knowledge"]);
   });
 
   it("matches_the_name_or_the_description_without_accents_or_case", () => {
-    expect(shownPlugins(all, "  MAY TINH ").map((p) => p.name)).toEqual(["calculate"]);
+    expect(shownPlugins(all, "  KHO TRI THUC ").map((p) => p.name)).toEqual(["knowledge"]);
     expect(shownPlugins(all, "kenh").map((p) => p.name)).toEqual(["zalo"]);
   });
 });

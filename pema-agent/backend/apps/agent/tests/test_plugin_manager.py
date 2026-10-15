@@ -270,22 +270,20 @@ async def test_a_managed_plugin_that_fails_is_switched_off_with_its_error_and_th
 
 async def test_a_stored_choice_overrides_the_profile_and_another_process_follows_it(tmp_path: Path) -> None:
     store = InMemoryPluginStateStore()
-    one = _setup(tmp_path, enabled='"calculate"', store=store, name="one")
-    two = _setup(tmp_path, enabled='"calculate"', store=store, name="two")
+    _write_plugin(tmp_path / "installed", "ping", PING)
+    one = _setup(tmp_path, enabled='"ping"', store=store, name="one")
+    two = _setup(tmp_path, enabled='"ping"', store=store, name="two")
     await one.manager.start()
     await two.manager.start()
 
-    await one.manager.disable("calculate")
+    await one.manager.disable("ping")
     await two.manager.refresh()
-    off = two.runtime.agent.tools.get("calculate")
-    await one.manager.enable("calculate", {"precision": 2})
+    off = two.runtime.agent.tools.get("ping")
+    await one.manager.enable("ping")
     await two.manager.refresh()
 
     assert off is None
-    spec = two.runtime.agent.tools.get("calculate")
-    assert spec is not None
-    output = await spec.handler(spec.args_model.model_validate({"expression": "1/3"}), ToolContext("s"))
-    assert output.text == "0.33"
+    assert await _call(two.runtime, "ping") == "pong"
 
 
 async def test_refresh_reads_the_store_at_most_every_refresh_interval(tmp_path: Path) -> None:
@@ -431,13 +429,13 @@ async def test_requirements_must_be_plain_package_specs(tmp_path: Path, requirem
 
 async def test_install_refuses_a_bundled_name_and_uninstall_refuses_a_bundled_plugin(tmp_path: Path) -> None:
     setup = _setup(tmp_path)
-    source = _write_plugin(tmp_path / "src", "calculate", PING, 'name = "calculate"\n')
+    source = _write_plugin(tmp_path / "src", "web", PING, 'name = "web"\n')
     await setup.manager.start()
 
     with pytest.raises(PluginError, match="a bundled plugin has this name"):
         await setup.manager.install_folder(source)
     with pytest.raises(PluginError, match="cannot be uninstalled"):
-        await setup.manager.uninstall("calculate")
+        await setup.manager.uninstall("web")
     assert _leftovers(setup.installed) == []
 
 
@@ -512,7 +510,7 @@ def test_install_from_a_git_repository_records_the_commit_and_drops_git_data(tmp
 
 
 async def test_admin_plugin_routes(tmp_path: Path) -> None:
-    setup = _setup(tmp_path, enabled='"calculate"')
+    setup = _setup(tmp_path)
     _write_plugin(setup.folder / "plugins", "cfg", CFG, CFG_MANIFEST)
     await setup.manager.start()
     app = create_app(
@@ -534,7 +532,7 @@ async def test_admin_plugin_routes(tmp_path: Path) -> None:
         patched = await client.patch(
             "/v1/admin/plugins/cfg/settings", headers=ADMIN_AUTH, json={"settings": {"greeting": "yo"}}
         )
-        disabled = await client.post("/v1/admin/plugins/calculate/disable", headers=ADMIN_AUTH)
+        disabled = await client.post("/v1/admin/plugins/cfg/disable", headers=ADMIN_AUTH)
         uploaded = await client.post(
             "/v1/admin/plugins/install/zip?enable=true",
             headers={**ADMIN_AUTH, "Content-Type": "application/zip"},
@@ -544,7 +542,7 @@ async def test_admin_plugin_routes(tmp_path: Path) -> None:
 
     assert chat_token.status_code == 403
     assert listed.status_code == 200
-    assert {p["name"] for p in listed.json()["plugins"]} >= {"calculate", "cfg"}
+    assert {p["name"] for p in listed.json()["plugins"]} >= {"web", "cfg"}
     assert missing.status_code == 404
     assert (bad.status_code, bad.json()["error"]["kind"]) == (422, "plugin_error")
     assert (enabled.status_code, enabled.json()["enabled"]) == (200, True)
@@ -558,7 +556,7 @@ async def test_admin_plugin_routes(tmp_path: Path) -> None:
     assert len(data) > 64 * 1024
     assert (uploaded.status_code, uploaded.json()["enabled"]) == (200, True)
     assert removed.json() == {"uninstalled": "ping"}
-    assert setup.runtime.agent.tools.get("calculate") is None
+    assert setup.runtime.agent.tools.get("show_cfg") is None
 
 
 def test_plugin_changes_need_the_database(
@@ -566,5 +564,5 @@ def test_plugin_changes_need_the_database(
 ) -> None:
     monkeypatch.delenv("AGENT_DATABASE_URL", raising=False)
 
-    assert main(["plugins", "enable", "calculate", "--profile", str(tmp_path)]) == 2
+    assert main(["plugins", "enable", "web", "--profile", str(tmp_path)]) == 2
     assert "plugin choices are stored in the database" in capsys.readouterr().out
