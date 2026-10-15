@@ -275,7 +275,7 @@ def test_plugin_state_is_stored_per_agent_and_every_change_moves_the_fingerprint
         store = PostgresPluginStateStore(db, agent="dev")
         empty = await store.fingerprint("t")
         state = PluginState(
-            "calculate",
+            "ping",
             enabled=False,
             config={"precision": 2, "note": "ở đây"},
             secrets_enc="sealed",
@@ -285,16 +285,16 @@ def test_plugin_state_is_stored_per_agent_and_every_change_moves_the_fingerprint
 
         await store.save("t", state)
         first = await store.fingerprint("t")
-        await store.save("t", PluginState("calculate", enabled=True))
+        await store.save("t", PluginState("ping", enabled=True))
         second = await store.fingerprint("t")
 
         assert len({empty, first, second}) == 3
-        assert await store.list("t") == [PluginState("calculate", enabled=True)]
+        assert await store.list("t") == [PluginState("ping", enabled=True)]
         assert await PostgresPluginStateStore(db, agent="other").list("t") == []
         await store.save("t", state)
-        assert await store.get("t", "calculate") == state
-        await store.delete("t", "calculate")
-        assert await store.get("t", "calculate") is None
+        assert await store.get("t", "ping") == state
+        await store.delete("t", "ping")
+        assert await store.get("t", "ping") is None
         assert await store.fingerprint("t") not in {first, second}
 
     _run(db_url, check)
@@ -333,14 +333,14 @@ def test_a_change_through_one_process_reaches_another_through_postgres(db_url: s
         await one.plugin_manager.start()
         await two.plugin_manager.start()
 
-        await one.plugin_manager.disable("calculate")
+        await one.plugin_manager.disable("web")
         await two.plugin_manager.refresh(force=True)
-        off = two.agent.tools.get("calculate")
-        await one.plugin_manager.enable("calculate")
+        off = two.plugins.enabled()
+        await one.plugin_manager.enable("web")
         await two.plugin_manager.refresh(force=True)
 
-        assert off is None
-        assert two.agent.tools.get("calculate") is not None
+        assert "web" not in off
+        assert "web" in two.plugins.enabled()
 
     _run(db_url, check)
 

@@ -8,28 +8,28 @@ import { AgentPluginsProvider } from "@/components/agent/agent-plugins";
 
 import { PluginDetailPage } from "./plugin-detail-page";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/admin/agent/plugins/calculate" }));
+vi.mock("next/navigation", () => ({ usePathname: () => "/admin/agent/plugins/knowledge" }));
 
-const calculate = (enabled: boolean, precision = 10) => ({
-  name: "calculate",
+const knowledge = (enabled: boolean, topK = 10) => ({
+  name: "knowledge",
   version: "0.1.0",
-  description: "Máy tính cho agent",
+  description: "Kho tri thức cho agent",
   origin: "bundled",
   enabled,
   error: null,
-  tools: enabled ? ["calculate"] : [],
+  tools: enabled ? ["kb_search"] : [],
   channels: [],
   jobs: [],
   settings: [
     {
-      key: "precision",
+      key: "top_k",
       type: "integer",
-      title: "Số chữ số",
+      title: "Số kết quả",
       description: "",
       required: false,
       sensitive: false,
       default: 10,
-      value: precision,
+      value: topK,
       source: "profile",
     },
   ],
@@ -46,9 +46,9 @@ function fakeAgent(enabled: boolean): Call[] {
     const body = typeof init?.body === "string" ? (JSON.parse(init.body) as unknown) : undefined;
     calls.push({ method, url, body });
     const answers: Record<string, unknown> = {
-      "GET /agent/v1/admin/plugins": { plugins: [calculate(enabled)], broken: {} },
-      "POST /agent/v1/admin/plugins/calculate/enable": calculate(true),
-      "PATCH /agent/v1/admin/plugins/calculate/settings": calculate(enabled, 4),
+      "GET /agent/v1/admin/plugins": { plugins: [knowledge(enabled)], broken: {} },
+      "POST /agent/v1/admin/plugins/knowledge/enable": knowledge(true),
+      "PATCH /agent/v1/admin/plugins/knowledge/settings": knowledge(enabled, 4),
       "GET /agent/v1/admin/ui": { plugins: [] },
     };
     return Promise.resolve(new Response(JSON.stringify(answers[`${method} ${url}`] ?? {})));
@@ -56,7 +56,7 @@ function fakeAgent(enabled: boolean): Call[] {
   return calls;
 }
 
-function renderDetail(name = "calculate") {
+function renderDetail(name = "knowledge") {
   return render(
     <AgentPluginsProvider>
       <PluginDetailPage name={name} />
@@ -75,39 +75,39 @@ describe("the page of one plugin", () => {
     const calls = fakeAgent(false);
     renderDetail();
 
-    fireEvent.click(await screen.findByRole("switch", { name: "Bật plugin calculate" }));
+    fireEvent.click(await screen.findByRole("switch", { name: "Bật plugin knowledge" }));
 
     await waitFor(() => expect(screen.getAllByText("Đang bật")).toHaveLength(1));
     expect(calls).toContainEqual({
       method: "POST",
-      url: "/agent/v1/admin/plugins/calculate/enable",
+      url: "/agent/v1/admin/plugins/knowledge/enable",
       body: undefined,
     });
-    expect(screen.getByText("calculate", { selector: "dd" })).toBeTruthy();
+    expect(screen.getByText("kb_search", { selector: "dd" })).toBeTruthy();
   });
 
   it("saves_only_the_settings_that_changed", async () => {
     const calls = fakeAgent(true);
     renderDetail();
 
-    fireEvent.change(await screen.findByLabelText(/^Số chữ số/), { target: { value: "4" } });
+    fireEvent.change(await screen.findByLabelText(/^Số kết quả/), { target: { value: "4" } });
     fireEvent.click(screen.getByRole("button", { name: "Lưu cài đặt" }));
 
     expect(await screen.findByText(/Đã lưu/)).toBeTruthy();
-    expect(calls.find((c) => c.method === "PATCH")?.body).toEqual({ settings: { precision: 4 } });
+    expect(calls.find((c) => c.method === "PATCH")?.body).toEqual({ settings: { top_k: 4 } });
   });
 
   it("has_an_overview_tab_and_a_way_back_to_the_list", async () => {
     fakeAgent(true);
     renderDetail();
 
-    const tabs = await screen.findByRole("navigation", { name: "Trang của plugin calculate" });
+    const tabs = await screen.findByRole("navigation", { name: "Trang của plugin knowledge" });
 
     expect(
       within(tabs)
         .getAllByRole("link")
         .map((a) => a.getAttribute("href")),
-    ).toEqual(["/admin/agent/plugins/calculate"]);
+    ).toEqual(["/admin/agent/plugins/knowledge"]);
     expect(screen.getByRole("link", { name: "‹ Plugins" }).getAttribute("href")).toBe(
       "/admin/agent/plugins",
     );

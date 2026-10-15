@@ -66,12 +66,9 @@ queue_max_batch = 20
 # sso: the clinic web's staff (owner and manager get admin); knowledge: the documents the agent answers from;
 # skills: skills, rules and persona bound to the agent, to a chat plugin or to one account;
 # conversations: keeps the conversations of the channels switched on in its page (all off until then)
-enabled = ["sso", "calculate", "knowledge", "skills", "conversations", "jev"]
+enabled = ["sso", "knowledge", "skills", "conversations", "jev"]
 
 [plugins.sso]
 issuer = "pema-clinic"
 audience = "pema-agent"
 jwks_url = "http://api:8000/api/v1/.well-known/jwks.json"
-
-[plugins.calculate]
-precision = 10

@@ -27,7 +27,7 @@ function fakeAgent() {
       plugins: [
         plugin("web", true, "Trang quản trị riêng"),
         plugin("zalo", true, "Kênh Zalo bot, cá nhân, OA", ["zalo_bot", "zalo_personal"]),
-        plugin("calculate", false, "Máy tính cho agent"),
+        plugin("knowledge", false, "Kho tri thức cho agent"),
       ],
       broken: {},
     };
@@ -56,7 +56,7 @@ describe("the plugins list", () => {
     expect(zalo.textContent).toContain("Đang bật");
     expect(rows().map((row) => row.getAttribute("href"))).toEqual([
       "/admin/agent/plugins/zalo",
-      "/admin/agent/plugins/calculate",
+      "/admin/agent/plugins/knowledge",
     ]);
   });
 
@@ -75,11 +75,11 @@ describe("the plugins list", () => {
     await screen.findByRole("link", { name: /zalo/ });
 
     fireEvent.change(screen.getByRole("searchbox", { name: "Tìm plugin" }), {
-      target: { value: "may tinh" },
+      target: { value: "kho tri thuc" },
     });
 
     expect(rows().map((row) => row.getAttribute("href"))).toEqual([
-      "/admin/agent/plugins/calculate",
+      "/admin/agent/plugins/knowledge",
     ]);
   });
 

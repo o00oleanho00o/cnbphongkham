@@ -1,5 +1,5 @@
 """Plugins: manifests and discovery, the host (enable, disable, cleanup), the agent rebuilt around them, the
-start-up rules, ``agent plugins list`` and the bundled ``calculate`` plugin."""
+start-up rules and ``agent plugins list``."""
 
 from __future__ import annotations
 
@@ -8,7 +8,6 @@ import json
 import sys
 import textwrap
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -18,13 +17,12 @@ from agent_app.plugins import (
     Contributions,
     PluginError,
     PluginHost,
-    PluginSource,
     discover,
     read_manifest,
 )
 from agent_app.profile import Profile, load_profile
-from agent_app.runtime import BUNDLED_PLUGINS, build_runtime, start_plugins
-from agentcore import InMemorySessionStore, SessionSection, ToolContext, ToolResultBlock, run_turn
+from agent_app.runtime import build_runtime, start_plugins
+from agentcore import InMemorySessionStore, SessionSection, ToolResultBlock, run_turn
 from agentcore.harness.model.scripted import ScriptedModel, calls, reply, tool_call
 
 DEV_PROFILE = Path(__file__).resolve().parents[1] / "agents" / "dev"
@@ -113,18 +111,6 @@ def _agent_folder(tmp_path: Path, plugins: str = "") -> Path:
         f'[agent]\nname = "t"\nsystem_prompt = "p"\n{plugins}', encoding="utf-8"
     )
     return folder
-
-
-def _calculate(config: dict[str, Any] | None = None) -> PluginHost:
-    host = PluginHost(discover([("bundled", BUNDLED_PLUGINS)]).plugins, {})
-    host.enable("calculate", config)
-    return host
-
-
-async def _calc(host: PluginHost, expression: str) -> tuple[str, bool]:
-    (spec,) = host.contributions().tools
-    output = await spec.handler(spec.args_model.model_validate({"expression": expression}), ToolContext("s"))
-    return output.text, output.is_error
 
 
 # --- manifests and discovery ---
@@ -278,20 +264,20 @@ def test_plugin_sections_follow_the_profiles_unless_the_profile_places_them() ->
 
 
 async def test_a_plugin_tool_section_and_hook_work_in_a_real_turn(tmp_path: Path) -> None:
-    folder = _agent_folder(tmp_path, '\n[plugins]\nenabled = ["calculate"]\n')
+    folder = _agent_folder(tmp_path)
     _plugin(folder / "plugins", "full", FULL)
     log: list[str] = []
     profile = load_profile(folder)
     host = start_plugins(profile, {})
     host.enable("full", {"log": log})
     runtime = build_runtime(profile, fake=True, env={}, db=None, plugins=host)
-    model = ScriptedModel([calls(tool_call("calculate", {"expression": "2+3*4"})), reply("14")])
+    model = ScriptedModel([calls(tool_call("ping", {})), reply("pong")])
     runtime.live.use_model(model)
     agent = runtime.agent
 
     result = await run_turn(
         session_id="s",
-        user_text="2+3*4?",
+        user_text="ping?",
         prompt=agent.prompt,
         model=agent.model,
         tools=agent.tools,
@@ -301,13 +287,12 @@ async def test_a_plugin_tool_section_and_hook_work_in_a_real_turn(tmp_path: Path
     )
 
     results = [b for m in result.new_messages for b in m.blocks if isinstance(b, ToolResultBlock)]
-    assert [(r.name, r.content) for r in results] == [("calculate", "14")]
-    assert log == ["hook:calculate"]
-    assert "## Arithmetic" in model.requests[0].system
+    assert [(r.name, r.content) for r in results] == [("ping", "pong")]
+    assert log == ["hook:ping"]
     assert "FULL SECTION" in model.requests[0].system
-    assert {t.name for t in model.requests[0].tools} >= {"calculate", "ping"}
+    assert {t.name for t in model.requests[0].tools} >= {"ping"}
     runtime.close()
-    assert log == ["hook:calculate", "cleaned"]
+    assert log == ["hook:ping", "cleaned"]
 
 
 async def test_enabling_and_disabling_while_running_changes_the_next_turn_and_keeps_skills(
@@ -348,14 +333,14 @@ def test_a_listed_plugin_that_cannot_load_stops_the_start(tmp_path: Path) -> Non
     )
     _plugin(broken_folder / "plugins", "future", manifest='name = "future"\napi = 2\n')
     bad_config = load_profile(
-        _agent_folder(tmp_path / "c", '\n[plugins]\nenabled = ["calculate"]\ncalculate = 3\n')
+        _agent_folder(tmp_path / "c", '\n[plugins]\nenabled = ["web"]\nweb = 3\n')
     )
 
     with pytest.raises(PluginError, match="plugin nope: not found"):
         build_runtime(missing, fake=True, env={}, db=None)
     with pytest.raises(PluginError, match=r"plugin future: .*plugin API 2"):
         build_runtime(load_profile(broken_folder), fake=True, env={}, db=None)
-    with pytest.raises(ValueError, match=r"\[plugins.calculate\] must be a table"):
+    with pytest.raises(ValueError, match=r"\[plugins.web\] must be a table"):
         build_runtime(bad_config, fake=True, env={}, db=None)
     assert main(["chat", "--profile", str(missing.folder), "--fake"]) == 2
 
@@ -369,82 +354,7 @@ def test_the_plugins_list_command_shows_what_the_dev_agent_loads(
     assert main(["plugins", "list", "--profile", str(DEV_PROFILE)]) == 0
     shown = json.loads(capsys.readouterr().out)
 
-    (calculate,) = [p for p in shown["plugins"] if p["name"] == "calculate"]
-    assert (calculate["enabled"], calculate["managed_by"], calculate["tools"], calculate["sections"]) == (
-        True,
-        "profile",
-        ["calculate"],
-        ["calculate"],
-    )
-    assert calculate["settings"][0] | {"description": ""} == {
-        "key": "precision",
-        "type": "integer",
-        "title": "Decimal places",
-        "description": "",
-        "required": False,
-        "sensitive": False,
-        "default": 10,
-        "value": 10,
-        "source": "profile",
-    }
+    (web,) = [p for p in shown["plugins"] if p["name"] == "web"]
+    assert (web["enabled"], web["managed_by"]) == (True, "profile")
+    assert [(s["key"], s["default"]) for s in web["settings"]] == [("token_hours", 12)]
     assert shown["broken"] == {}
-
-
-# --- the calculate plugin ---
-
-
-@pytest.mark.parametrize(
-    ("expression", "expected"),
-    [
-        ("2+3*4", "14"),
-        ("(120000 * 3 - 15000) / 2", "172500"),
-        ("7/2", "3.5"),
-        ("0.1 + 0.2", "0.3"),
-        ("1/3", "0.3333333333"),
-        ("2**10", "1024"),
-        ("-3**2", "-9"),
-        ("10 // 3", "3"),
-        ("10 % 3", "1"),
-        ("2**-2", "0.25"),
-    ],
-)
-async def test_calculate_gives_exact_results(expression: str, expected: str) -> None:
-    assert await _calc(_calculate(), expression) == (expected, False)
-
-
-@pytest.mark.parametrize(
-    ("expression", "error"),
-    [
-        ("1/0", "division by zero"),
-        ("0**-1", "division by zero"),
-        ("__import__('os')", "only numbers, + - * / // % ** and parentheses"),
-        ("a + 1", "only numbers, + - * / // % ** and parentheses"),
-        ("True + 1", "only numbers are allowed"),
-        ("1j", "only numbers are allowed"),
-        ("'a' * 3", "only numbers are allowed"),
-        ("9**9**9", "more than 100 digits"),
-        ("10**99 * 10**99", "more than 100 digits"),
-        ("1e308 * 10", "too large"),
-        ("(-8) ** 0.5", "not a real number"),
-        ("~1", "only + and -"),
-        ("1 << 2", "allowed operators"),
-        ("1 +", "not an arithmetic expression"),
-    ],
-)
-async def test_calculate_refuses_anything_but_bounded_arithmetic(expression: str, error: str) -> None:
-    text, is_error = await _calc(_calculate(), expression)
-
-    assert is_error
-    assert error in text
-
-
-async def test_calculate_rounds_to_its_setting_and_checks_it() -> None:
-    assert await _calc(_calculate({"precision": 2}), "1/3") == ("0.33", False)
-    with pytest.raises(PluginError, match="precision must be a whole number"):
-        _calculate({"precision": 99})
-
-
-def test_the_bundled_calculate_plugin_is_found_with_its_manifest() -> None:
-    source: PluginSource = discover([("bundled", BUNDLED_PLUGINS)]).plugins["calculate"]
-
-    assert (source.origin, source.manifest.defaults()) == ("bundled", {"precision": 10})

@@ -77,7 +77,4 @@ queue_max_batch = 20
 # Plugins to load at start, found in apps/agent/plugins, this folder's plugins/ and the home's installed/.
 # A listed plugin that fails to load stops the start. `agent plugins list --profile ...` shows them all.
 # web: the dashboard's sign-in; without it nobody can call the gateway.
-enabled = ["web", "calculate"]
-
-[plugins.calculate]
-precision = 10
+enabled = ["web"]
