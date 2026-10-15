@@ -11,6 +11,7 @@ Status: built and merged into `dev`, but **no full test gate has been run on the
 gate at the owner's request (see "Round 2 progress" and "Result of package O"). Known red tests: the 3 clock tests in
 `tests/care/test_care_routing_store.py` and `test_roles_are_the_six_fixed_ones`. Open defect SEC-64. Package M is not wired (M7).
 Wait for the user's next instruction before starting anything.
+**2026-10-15: the live line of work is branch `feat/knowledge-embedding` (agent v2 plugins in `pema-agent/backend/apps/agent`), not `dev`; see "Session update 2026-10-15" below the hard rules. The status text above is from 2026-10-06.**
 
 ## HARD RULES (read first)
 
@@ -38,6 +39,72 @@ Wait for the user's next instruction before starting anything.
   `git stash`/`pop`; prefer temporary WIP commits.
 - The user sometimes rewrites history or runs git while a session works. Before git writes, check
   `git branch --show-current`, `ls .git/rebase-merge`, and `git log -1`; if something moves, stop and tell the user.
+
+
+## Session update 2026-10-15 — agent v2 on `feat/knowledge-embedding`
+
+Details live elsewhere; this section only says where things stand. Agent v2 handoff with every plugin, in order:
+`pema-agent/docs/HANDOFF-agent-v2.md` ("Loose ends"). Jev: `pema-agent/docs/PLAN-jev-plugin.md` (§7 has the
+measurements). Skills: `pema-agent/docs/PLAN-skills-studio.md`.
+
+### Goal
+Agent v2 (harness `agentcore` + plugins `skills`, `conversations`, `knowledge`, `zalo`, `jev`) as the clinic's
+agent, managed from the staff web. This session: the Zalo "Kỹ năng và quy tắc" drawer, Jev as a judge of the knowledge
+search, and deleting many chat sessions or saved conversations at once so the agent forgets them.
+
+### Current progress
+All committed and pushed: `HEAD` `34031323` equals `origin/feat/knowledge-embedding`, tree clean, no AI trailer on
+`master..HEAD`.
+- Zalo account card: button "Kỹ năng và quy tắc" opens a drawer (only when plugin `skills` is on).
+- Plugin `jev` (TypeSafe key, daily token allowance 2,000,000, usage) provides the service `judge`; the knowledge search
+  can order and filter its first 10 chunks with it (setting `judging`, **off by default**). Measured on 30 + 8 demo
+  questions, keyword search, level medium: top1 16 → 19 of 30, no right document lost, 5 of 8 unanswerable refused,
+  about $0.0085 per run.
+- Bulk delete: `POST /v1/admin/sessions/delete` (the agent's own sessions, up to 100) and
+  `POST /v1/plugins/conversations/delete` (saved conversations, up to 100). Deleting a conversation, one or many, now also
+  deletes the scenarios (`cv_episode` + vectors) cut from it. Pages: "Phiên chat" and "Cuộc trò chuyện đã lưu" have
+  checkboxes and "Xóa các ... đã chọn". Deletes are permanent (hard `DELETE`); traces stay.
+- Root `docker-compose.yml`: the four design/prototype services are commented out (`services: {}`), so
+  `docker compose up --build` builds only the clinic stack.
+- Checked: agent suite 701 passed before the bulk delete; 89 passed in the touched areas after it, with Postgres;
+  `ruff`, `pyright`, frontend `tsc`, plugin UI builds clean. Not checked: any new page in a browser, the Docker images.
+
+### What worked
+- Measure before wiring. Ordering chunks by relative score and refusing only when even the best is low beat everything
+  else; one `ranks_top` question per chunk and the `state` sent as one string.
+- DB tests drop and rebuild schema `agent_rt`: run them on a throwaway database (`CREATE DATABASE scratch_...` in the demo
+  Postgres container, drop it after), never on the demo database.
+- Fake TypeSafe through `httpx.MockTransport`; batch SQL with `= ANY(:ids)`.
+- Git Bash on Windows breaks long heredocs with quotes: use the Edit and Write tools.
+- Frontend `tsc --noEmit` takes over 2 minutes here: run it in the background and read its exit code, not that of `| head`.
+
+### What did not work
+- Cutting each chunk at an absolute threshold (0.55) lost 6 right documents; the "prompt injection" question flagged
+  legitimate policy text; Vietnamese criteria did slightly worse than English; TypeSafe sometimes answers HTTP 499 (retried once).
+- A claim that the knowledge store drops unapproved documents was wrong: search never reads approval.
+- The frontend Docker build failed twice because `pema-agent/frontend/mock/knowledge/` still used the removed setting
+  `labelling.rerank` and lacked `judging`: `next build` type-checks the mock against the plugin UI types.
+- An empty `services:` in the root compose makes `docker compose` panic on `include`; use `services: {}`.
+- Deleting a conversation used to leave its episodes (no foreign key), so the agent still found them.
+
+### Next steps
+1. Rebuild (`docker compose up -d --build agent frontend`; the running containers are old) and open the new pages once:
+   tab Jev, the judging card in Kho tri thức, the Zalo drawer, both bulk deletes.
+2. Rotate the TypeSafe key (it was pasted into a chat). Never write a key into a file.
+3. Tab "Bộ nhớ" (`/admin/agent/memory`) is not built: it is where the long-term notes about a person are deleted. The user
+   must decide whether an admin may edit or delete patient-related notes. Not checked: whether those notes keep
+   something about a deleted session.
+4. Jev: measure with semantic (hybrid) search (needs `BEEKNOEE_API_KEY`), end to end, and on real clinic questions
+   before turning `judging` on; sample questions per chunk at ingest (PLAN-jev-plugin §5.1) is later.
+5. Postponed by the user: stage 5 (evaluation, curator); code that blocks memory and skill writes on customer channels;
+   the red-flag hook before the model call.
+6. Open: real Zalo test of `isSelf`; HMAC for the gateway; schedules; MCP plugin; a screen for doctors to approve AI drafts;
+   comparing two versions of a skill.
+7. Known limit of bulk delete: a scenario that merged a later conversation with the same question stays until the first
+   conversation is deleted. Deleting a session does not delete the saved conversation or its scenarios, and the reverse.
+
+Suggested skills: `pema-web-design` (every visible change in `pema-agent/frontend` or a plugin UI needs an entry in
+`.claude/skills/pema-web-design/web-design-changes.md`; `pending-web.cjs` must show no `✗ NOT LOGGED`).
 
 ## Goal
 
