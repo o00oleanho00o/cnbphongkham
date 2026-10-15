@@ -44,6 +44,10 @@ class EpisodeStore(Protocol):
 
     async def delete(self, episode_id: str) -> bool: ...
 
+    async def delete_of_conversations(self, conversation_ids: Sequence[str]) -> int:
+        """Deletes the episodes cut from these conversations (vectors with them); how many."""
+        ...
+
     async def search_words(self, query_terms: Sequence[str], reach: Reach, limit: int) -> list[Hit]: ...
 
     async def search_vector(
@@ -155,6 +159,15 @@ class InMemoryEpisodeStore:
             del self._vectors[key]
         return self._episodes.pop(episode_id, None) is not None
 
+    async def delete_of_conversations(self, conversation_ids: Sequence[str]) -> int:
+        wanted = set(conversation_ids)
+        gone = {i for i, e in self._episodes.items() if e.conversation_id in wanted}
+        for key in [k for k in self._vectors if k[1] in gone]:
+            del self._vectors[key]
+        for stale in gone:
+            del self._episodes[stale]
+        return len(gone)
+
     async def search_words(self, query_terms: Sequence[str], reach: Reach, limit: int) -> list[Hit]:
         wanted = set(query_terms)
         hits: list[Hit] = []
@@ -263,6 +276,10 @@ _ENABLE = text(
     "WHERE tenant_id = :tenant_id AND agent = :agent AND id = :id"
 )
 _DELETE = text("DELETE FROM agent_rt.cv_episode WHERE tenant_id = :tenant_id AND agent = :agent AND id = :id")
+_DELETE_OF_CONVERSATIONS = text(
+    "DELETE FROM agent_rt.cv_episode "
+    "WHERE tenant_id = :tenant_id AND agent = :agent AND conversation_id = ANY(:conversation_ids)"
+)
 _REACH: Final = (
     "e.tenant_id = :tenant_id AND e.agent = :agent AND e.enabled "
     "AND (CAST(:channel AS text) IS NULL OR e.channel = :channel) "
@@ -379,6 +396,13 @@ class PostgresEpisodeStore:
         async with self._engine.begin() as conn:
             done = await conn.execute(_DELETE, {**self._scope, "id": episode_id})
         return done.rowcount > 0
+
+    async def delete_of_conversations(self, conversation_ids: Sequence[str]) -> int:
+        async with self._engine.begin() as conn:
+            done = await conn.execute(
+                _DELETE_OF_CONVERSATIONS, {**self._scope, "conversation_ids": list(conversation_ids)}
+            )
+        return done.rowcount
 
     async def search_words(self, query_terms: Sequence[str], reach: Reach, limit: int) -> list[Hit]:
         if not query_terms:

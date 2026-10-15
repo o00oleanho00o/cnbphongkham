@@ -2,7 +2,7 @@
 
 // Phiên chat của agent: every conversation the agent had, whatever channel it came from (Zalo, HTTP...), newest first,
 // with a search, a channel filter and paging; a row opens the messages of the chat, where the chat can be deleted (the
-// agent then starts that conversation from nothing) or its trace opened.
+// agent then starts that conversation from nothing) or its trace opened. Ticked rows are deleted together.
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -38,6 +38,9 @@ export function SessionsPage() {
   const [page, setPage] = useState(0);
   const [openId, setOpenId] = useState<string | null>(params.get("session"));
   const [error, setError] = useState("");
+  const [selected, setSelected] = useState<string[]>([]);
+  const [removing, setRemoving] = useState(false);
+  const { confirm, confirmDialog } = useConfirmDialog();
   const names = usePersonNames(rows);
 
   const reload = useCallback(async () => {
@@ -47,6 +50,7 @@ export function SessionsPage() {
       );
       setRows(listing.items);
       setHasMore(listing.has_more);
+      setSelected([]);
       setError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không tải được");
@@ -63,6 +67,34 @@ export function SessionsPage() {
       .then((answer) => setChannels(answer.channels.map((c) => c.name)))
       .catch(() => setChannels([]));
   }, []);
+
+  const allSelected = rows.length > 0 && selected.length === rows.length;
+
+  function toggle(sessionId: string) {
+    setSelected((now) =>
+      now.includes(sessionId) ? now.filter((id) => id !== sessionId) : [...now, sessionId],
+    );
+  }
+
+  async function removeSelected() {
+    const ok = await confirm({
+      title: `Xóa ${selected.length} phiên chat đã chọn?`,
+      message:
+        "Xóa hẳn tin nhắn của các phiên này để agent quên chúng: tin kế tiếp của mỗi người được trả lời như một cuộc trò chuyện mới. Trace vẫn được giữ. Không hoàn tác được.",
+      confirmLabel: `Xóa ${selected.length} phiên`,
+    });
+    if (!ok) return;
+    setRemoving(true);
+    try {
+      await api.post(`${SESSIONS_PATH}/delete`, { session_ids: selected });
+      setOpenId((now) => (now !== null && selected.includes(now) ? null : now));
+      await reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không xóa được");
+    } finally {
+      setRemoving(false);
+    }
+  }
 
   const openRow = rows.find((row) => row.session_id === openId);
   const openName = openRow ? names.get(personKey(openRow.channel, openRow.user_id)) : undefined;
@@ -99,13 +131,41 @@ export function SessionsPage() {
         hasMore={hasMore}
         onPage={setPage}
       />
-      <TableShell headers={["Người", "Kênh", "Tin nhắn", "Cập nhật", ""]} minWidth={720}>
-        {rows.length === 0 && <EmptyRow colSpan={5} text="Chưa có phiên chat nào" />}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <label className="flex min-h-11 items-center gap-2 text-small text-ink">
+          <input
+            type="checkbox"
+            className="size-4"
+            checked={allSelected}
+            disabled={rows.length === 0}
+            onChange={() => setSelected(allSelected ? [] : rows.map((row) => row.session_id))}
+          />
+          Chọn cả trang
+        </label>
+        <Button
+          variant="danger"
+          disabled={removing || selected.length === 0}
+          onClick={() => void removeSelected()}
+        >
+          {selected.length === 0 ? "Xóa các phiên đã chọn" : `Xóa ${selected.length} phiên đã chọn`}
+        </Button>
+      </div>
+      <TableShell headers={["", "Người", "Kênh", "Tin nhắn", "Cập nhật", ""]} minWidth={760}>
+        {rows.length === 0 && <EmptyRow colSpan={6} text="Chưa có phiên chat nào" />}
         {rows.map((row) => (
           <tr
             key={row.session_id}
             className="border-b border-line/60 last:border-0 hover:bg-row-hover"
           >
+            <td className="w-10 px-4 py-3">
+              <input
+                type="checkbox"
+                className="size-4"
+                aria-label={`Chọn phiên của ${sessionTitle(row)}`}
+                checked={selected.includes(row.session_id)}
+                onChange={() => toggle(row.session_id)}
+              />
+            </td>
             <td className="px-4 py-3">
               <div className="truncate font-medium text-ink">
                 {names.get(personKey(row.channel, row.user_id)) ?? sessionTitle(row)}
@@ -150,6 +210,7 @@ export function SessionsPage() {
           }}
         />
       )}
+      {confirmDialog}
     </div>
   );
 }

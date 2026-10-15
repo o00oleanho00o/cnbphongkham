@@ -617,6 +617,15 @@ export function buildAgentRouter(): Router {
     sessions = sessions.filter((s) => s.session_id !== ctx.params.session_id);
     return { body: { deleted: ctx.params.session_id } };
   });
+  r.post("/v1/admin/sessions/delete", null, (ctx): Reply => {
+    const ids = bodyOf<{ session_ids?: string[] }>(ctx).session_ids ?? [];
+    if (ids.length === 0 || ids.length > 100) {
+      return gatewayError(422, "invalid_request", "session_ids must hold 1 to 100 ids");
+    }
+    const before = sessions.length;
+    sessions = sessions.filter((s) => !ids.includes(s.session_id));
+    return { body: { deleted: before - sessions.length } };
+  });
   r.get("/v1/admin/traces", null, (ctx): Reply => {
     const channel = ctx.query.get("channel") ?? "";
     const session = ctx.query.get("session_id") ?? "";

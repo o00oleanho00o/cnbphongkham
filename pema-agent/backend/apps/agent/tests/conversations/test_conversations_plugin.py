@@ -11,6 +11,7 @@ from fastapi import FastAPI
 
 from agent_app.plugins import PluginContext
 from agentcore.channels import ObservedMessage, Origin
+from plugins.conversations.episodes import Draft, fingerprint_of
 from plugins.conversations.models import conversation_id
 from plugins.conversations.plugin import ChannelSetting, ConversationsPlugin, Settings, role_of
 from plugins.conversations.routes import conversations_routes
@@ -243,6 +244,67 @@ async def test_the_routes_read_and_change_settings_conversations_and_people() ->
         assert left_out.json()["excluded"] is True
         assert (await http.delete(f"/conversations/{cid}")).json() == {"deleted": True}
         assert (await http.get(f"/conversations/{cid}")).status_code == 404
+
+
+async def _scenario_of(plugin: ConversationsPlugin, thread: str, ask: str) -> None:
+    draft = Draft(
+        started_at=NOW,
+        ended_at=NOW,
+        first_seq=1,
+        last_seq=2,
+        transcript=(("customer", ask), ("staff", "Dạ em báo giá chị nhé")),
+        ask=ask,
+        fingerprint=fingerprint_of(ask),
+    )
+    await plugin.episodes.add(
+        draft, channel=CHANNEL, plugin="zalo", conversation_id=conversation_id(CHANNEL, thread)
+    )
+
+
+async def test_deleting_many_conversations_also_forgets_the_scenarios_cut_from_them() -> None:
+    plugin = _plugin()
+    await _switch_on(plugin)
+    for number in (1, 2, 3):
+        await plugin.hear(_said(f"câu {number}", thread=f"t{number}", message_id=f"m{number}"))
+        await _scenario_of(plugin, f"t{number}", f"giá laser lần {number}")
+    ids = [conversation_id(CHANNEL, f"t{number}") for number in (1, 2, 3)]
+    unknown = "cv-" + "0" * 20
+
+    async with _client(plugin) as http:
+        gone = await http.post("/conversations/delete", json={"ids": [ids[0], ids[1], ids[1], unknown]})
+        single = await http.delete(f"/conversations/{ids[2]}")
+
+        assert (gone.status_code, gone.json()) == (200, {"deleted": 2, "scenarios": 2})
+        assert single.json() == {"deleted": True}
+        assert (await http.get("/conversations")).json()["total"] == 0
+        assert (await http.get("/scenarios")).json()["total"] == 0
+
+
+async def test_deleting_many_conversations_leaves_the_others_and_checks_the_ids() -> None:
+    plugin = _plugin()
+    await _switch_on(plugin)
+    await plugin.hear(_said("một", thread="keep", message_id="k1"))
+    await _scenario_of(plugin, "keep", "giá triệt lông")
+    await plugin.hear(_said("hai", thread="drop", message_id="d1"))
+    keep, drop = conversation_id(CHANNEL, "keep"), conversation_id(CHANNEL, "drop")
+
+    async with _client(plugin) as http:
+        url = "/conversations/delete"
+        refused = [
+            (await http.post(url, json=body)).status_code
+            for body in (
+                {"ids": []},
+                {"ids": ["not-an-id"]},
+                {"ids": [f"cv-{n:020x}" for n in range(101)]},
+                {"ids": [drop], "all": True},
+            )
+        ]
+        gone = await http.post(url, json={"ids": [drop]})
+
+        assert refused == [422, 422, 422, 422]
+        assert gone.json() == {"deleted": 1, "scenarios": 0}
+        assert [c["id"] for c in (await http.get("/conversations")).json()["conversations"]] == [keep]
+        assert (await http.get("/scenarios")).json()["total"] == 1
 
 
 async def test_the_routes_refuse_bad_settings_and_ids() -> None:

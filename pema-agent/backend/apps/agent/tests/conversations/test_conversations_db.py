@@ -199,6 +199,21 @@ def test_leaving_a_chat_out_stops_new_messages_and_deleting_it_removes_its_messa
     _run(db_url, work)
 
 
+def test_deleting_many_chats_removes_their_messages_and_only_those_of_this_clinic(db_url: str) -> None:
+    async def work(mine: PostgresConversationStore, theirs: PostgresConversationStore) -> None:
+        for thread in ("m1", "m2", "m3"):
+            await mine.add(_said("xin chào", thread=thread, message_id=f"{thread}-a"))
+        ids = [conversation_id(CHANNEL, thread) for thread in ("m1", "m2", "m3")]
+
+        assert await theirs.delete_many(ids[:2]) == 0
+        assert await mine.delete_many([ids[0], ids[1], "cv-" + "0" * 20]) == 2
+        assert await mine.delete_many([]) == 0
+        assert [await mine.get(i) is None for i in ids] == [True, True, False]
+        assert await mine.messages(ids[0], limit=10) == []
+
+    _run(db_url, work)
+
+
 def test_old_messages_are_purged_and_the_counts_and_empty_chats_follow(db_url: str) -> None:
     async def work(mine: PostgresConversationStore, theirs: PostgresConversationStore) -> None:
         old = NOW - timedelta(days=400)

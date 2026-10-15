@@ -5,10 +5,10 @@ channel."""
 from __future__ import annotations
 
 import contextlib
-from typing import Annotated, Any
+from typing import Annotated, Any, Final
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 from agent_app.plugins import EmbeddingUnavailableError, PluginError
 from agentcore.channels import valid_channel_name
@@ -20,12 +20,21 @@ from .settings import Settings
 
 ConversationId = Annotated[str, Path(pattern=r"^cv-[a-f0-9]{20}$")]
 EpisodeId = Annotated[str, Path(pattern=r"^ep-[a-f0-9]{20}$")]
+MAX_DELETE: Final = 100
 
 
 class ExcludeBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     excluded: bool
+
+
+class DeleteBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    ids: list[Annotated[str, StringConstraints(pattern=r"^cv-[a-f0-9]{20}$")]] = Field(
+        min_length=1, max_length=MAX_DELETE
+    )
 
 
 class EnableBody(BaseModel):
@@ -91,11 +100,22 @@ def conversations_routes(plugin: ConversationsPlugin) -> APIRouter:
         await store.set_excluded(conversation_id, body.excluded)
         return (await found(conversation_id)).shown()
 
+    async def forget(conversation_ids: list[str]) -> dict[str, int]:
+        """The scenarios cut from these conversations go too: the agent searches them, so leaving them would
+        leave it remembering what was deleted."""
+        scenarios = await plugin.episodes.delete_of_conversations(conversation_ids)
+        return {"deleted": await store.delete_many(conversation_ids), "scenarios": scenarios}
+
     @router.delete("/conversations/{conversation_id}")
     async def delete_conversation(conversation_id: ConversationId) -> dict[str, Any]:
         await found(conversation_id)
-        await store.delete(conversation_id)
+        await forget([conversation_id])
         return {"deleted": True}
+
+    @router.post("/conversations/delete")
+    async def delete_conversations(body: DeleteBody) -> dict[str, int]:
+        """Many at once; ids that do not exist are not an error."""
+        return await forget(list(dict.fromkeys(body.ids)))
 
     @router.get("/people")
     async def people(channel: str = Query(max_length=64)) -> dict[str, Any]:

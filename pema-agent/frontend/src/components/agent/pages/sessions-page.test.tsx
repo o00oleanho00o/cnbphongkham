@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // Phiên chat của agent: the list with its search and channel filter, a chat opened with its messages, deleting it
-// after a confirmation, and `?session=` opening one straight away.
+// (or all the ticked ones at once) after a confirmation, and `?session=` opening one straight away.
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -39,16 +39,18 @@ const DETAIL = {
   ],
 };
 
-type Call = { method: string; url: string };
+type Call = { method: string; url: string; body?: string };
 
 /** A fake agent over the browser's fetch (an outside system); every call is written down. */
 function fakeAgent(): Call[] {
   const calls: Call[] = [];
   vi.stubGlobal("fetch", (url: string, init?: RequestInit) => {
     const method = init?.method ?? "GET";
-    calls.push({ method, url });
+    calls.push({ method, url, body: typeof init?.body === "string" ? init.body : undefined });
     let body: unknown = {};
-    if (url.startsWith("/agent/v1/admin/sessions?") || url === "/agent/v1/admin/sessions") {
+    if (url === "/agent/v1/admin/sessions/delete") {
+      body = { deleted: 2 };
+    } else if (url.startsWith("/agent/v1/admin/sessions?") || url === "/agent/v1/admin/sessions") {
       body = {
         items: [row(ZALO, "u-1", "zalo-a", 2), row(HTTP, "u-2", "http", 5, true)],
         has_more: false,
@@ -137,6 +139,34 @@ describe("the sessions page", () => {
         method: "DELETE",
         url: `/agent/v1/admin/sessions/${encodeURIComponent(ZALO)}`,
       }),
+    );
+  });
+
+  it("deletes_every_ticked_chat_in_one_call_after_a_confirmation", async () => {
+    const calls = fakeAgent();
+    render(<SessionsPage />);
+    await screen.findByText("u-1");
+    const removeButton = screen.getByRole("button", { name: "Xóa các phiên đã chọn" });
+    expect((removeButton as HTMLButtonElement).disabled).toBe(true);
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Chọn cả trang" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Chọn phiên của u-2" }));
+    fireEvent.click(screen.getByRole("button", { name: "Xóa 1 phiên đã chọn" }));
+
+    const question = await screen.findByText("Xóa 1 phiên chat đã chọn?");
+    expect(calls.some((c) => c.url.endsWith("/sessions/delete"))).toBe(false);
+    const dialog = question.closest<HTMLElement>('[role="dialog"]');
+    fireEvent.click(within(dialog as HTMLElement).getByRole("button", { name: "Xóa 1 phiên" }));
+
+    await waitFor(() =>
+      expect(calls).toContainEqual({
+        method: "POST",
+        url: "/agent/v1/admin/sessions/delete",
+        body: JSON.stringify({ session_ids: [ZALO] }),
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Xóa các phiên đã chọn" })).toBeTruthy(),
     );
   });
 

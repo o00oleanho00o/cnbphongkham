@@ -110,6 +110,34 @@ def _message(thread: str, role: Role, text: str, number: int, at: datetime) -> N
     )
 
 
+def test_episodes_of_deleted_conversations_go_with_their_vectors_and_only_those(db_url: str) -> None:
+    async def work(stores: Stores) -> None:
+        mine, theirs, _ = stores
+        kept, gone = None, []
+        for number, conversation in enumerate(("cv-del-1", "cv-del-2", "cv-keep"), start=1):
+            episode, _created = await mine.add(
+                _draft(f"Hỏi riêng số {number} về triệt lông", seq=number * 10),
+                channel="zalo-a",
+                plugin="zalo",
+                conversation_id=conversation,
+            )
+            await mine.save_vectors(SPACE, [(episode.id, concept_vector("giá"))])
+            if conversation == "cv-keep":
+                kept = episode
+            else:
+                gone.append(episode)
+
+        assert kept is not None
+        assert await theirs.delete_of_conversations(["cv-del-1", "cv-del-2"]) == 0
+        assert await mine.delete_of_conversations(["cv-del-1", "cv-del-2", "cv-none"]) == 2
+        assert await mine.delete_of_conversations([]) == 0
+        assert [await mine.get(e.id) for e in gone] == [None, None]
+        assert (await mine.get(kept.id)) is not None
+        assert await mine.missing_vectors(SPACE, 10) == []
+
+    _run(db_url, work)
+
+
 def test_an_episode_is_stored_once_and_the_same_question_counts_one_more_repeat(db_url: str) -> None:
     async def work(stores: Stores) -> None:
         mine, theirs, _ = stores

@@ -43,6 +43,10 @@ class ConversationStore(Protocol):
 
     async def delete(self, conversation_id: str) -> bool: ...
 
+    async def delete_many(self, conversation_ids: Sequence[str]) -> int:
+        """Deletes these conversations with their messages; how many existed."""
+        ...
+
     async def purge_before(self, cutoff: datetime) -> int:
         """Deletes the messages older than ``cutoff`` and the conversations left empty; how many messages."""
         ...
@@ -162,6 +166,11 @@ class InMemoryConversationStore:
     async def delete(self, conversation_id: str) -> bool:
         self._messages.pop(conversation_id, None)
         return self._conversations.pop(conversation_id, None) is not None
+
+    async def delete_many(self, conversation_ids: Sequence[str]) -> int:
+        for conversation_id in conversation_ids:
+            self._messages.pop(conversation_id, None)
+        return sum(self._conversations.pop(i, None) is not None for i in set(conversation_ids))
 
     async def purge_before(self, cutoff: datetime) -> int:
         gone = 0
@@ -285,6 +294,9 @@ _EXCLUDE = text(
 _DELETE = text(
     "DELETE FROM agent_rt.cv_conversation WHERE tenant_id = :tenant_id AND agent = :agent AND id = :id"
 )
+_DELETE_MANY = text(
+    "DELETE FROM agent_rt.cv_conversation WHERE tenant_id = :tenant_id AND agent = :agent AND id = ANY(:ids)"
+)
 _PURGE = text(
     "DELETE FROM agent_rt.cv_message WHERE tenant_id = :tenant_id AND agent = :agent AND at < :cutoff"
 )
@@ -406,6 +418,11 @@ class PostgresConversationStore:
         async with self._engine.begin() as conn:
             done = await conn.execute(_DELETE, {**self._scope, "id": conversation_id})
         return done.rowcount > 0
+
+    async def delete_many(self, conversation_ids: Sequence[str]) -> int:
+        async with self._engine.begin() as conn:
+            done = await conn.execute(_DELETE_MANY, {**self._scope, "ids": list(conversation_ids)})
+        return done.rowcount
 
     async def purge_before(self, cutoff: datetime) -> int:
         async with self._engine.begin() as conn:

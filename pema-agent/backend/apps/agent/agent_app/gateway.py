@@ -34,7 +34,7 @@ from uuid import UUID
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi import Path as UrlPath
 from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import text as sql
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -218,6 +218,20 @@ class ChatRequest(_Body):
 class ResetRequest(_Body):
     user_id: str = Field(min_length=1, max_length=200)
     conversation_id: str | None = Field(default=None, min_length=1, max_length=300)
+
+
+MAX_DELETE_SESSIONS: Final = 100
+
+
+class DeleteSessionsRequest(_Body):
+    session_ids: list[str] = Field(min_length=1, max_length=MAX_DELETE_SESSIONS)
+
+    @field_validator("session_ids")
+    @classmethod
+    def _each_id(cls, ids: list[str]) -> list[str]:
+        if any(not 0 < len(one) <= 300 for one in ids):
+            raise ValueError("session id must be 1 to 300 characters")
+        return list(dict.fromkeys(ids))
 
 
 class ModelSettingsPatch(_Body):
@@ -485,6 +499,11 @@ def _add_activity_routes(app: FastAPI, authorized: Any, activity: Activity) -> N
         if not await activity.delete_session(session_id):
             return _error(404, "not_found", "no such session")
         return JSONResponse({"deleted": session_id})
+
+    @app.post("/v1/admin/sessions/delete", dependencies=[authorized])
+    async def delete_sessions(body: DeleteSessionsRequest) -> dict[str, Any]:
+        """Many chats at once, so the agent forgets them; ids that do not exist are not an error."""
+        return {"deleted": await activity.delete_sessions(body.session_ids)}
 
     @app.get("/v1/admin/traces", dependencies=[authorized])
     async def list_turns(

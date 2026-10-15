@@ -58,6 +58,24 @@ async def test_without_a_database_the_lists_are_empty_and_a_detail_is_not_found(
     assert [r.status_code for r in (no_session, no_delete, no_turn, bad_turn)] == [404, 404, 404, 404]
 
 
+async def test_deleting_many_sessions_needs_admin_checks_the_body_and_counts_what_went() -> None:
+    async with _service() as client:
+        url = "/v1/admin/sessions/delete"
+        chat_token = (await client.post(url, json={"session_ids": ["a"]}, headers=CHAT)).status_code
+        empty = (await client.post(url, json={"session_ids": []}, headers=ADMIN)).status_code
+        too_many = (
+            await client.post(url, json={"session_ids": [str(n) for n in range(101)]}, headers=ADMIN)
+        ).status_code
+        blank = (await client.post(url, json={"session_ids": [""]}, headers=ADMIN)).status_code
+        extra = (await client.post(url, json={"session_ids": ["a"], "all": True}, headers=ADMIN)).status_code
+        none_there = await client.post(
+            url, json={"session_ids": ["dev:http:u:0", "dev:http:u:0"]}, headers=ADMIN
+        )
+
+    assert [chat_token, empty, too_many, blank, extra] == [403, 422, 422, 422, 422]
+    assert (none_there.status_code, none_there.json()) == (200, {"deleted": 0})
+
+
 def test_a_search_is_escaped_for_like_and_an_empty_one_is_no_filter() -> None:
     assert like_pattern("  ") is None
     assert like_pattern("a_b") == "%a\\_b%"

@@ -184,4 +184,30 @@ describe("the fake agent's dashboard routes", () => {
     expect(usage.days).toHaveLength(7);
     expect([deleted.status, again.status]).toEqual([200, 404]);
   });
+
+  it("deletes_many_sessions_in_one_call_and_counts_only_those_that_existed", async () => {
+    const headers = { ...(await signed()), "content-type": "application/json" };
+    const post = (session_ids: string[]) =>
+      fetch(`${base}/v1/admin/sessions/delete`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ session_ids }),
+      });
+    const before = (await (await fetch(`${base}/v1/admin/sessions`, { headers })).json()) as {
+      items: { session_id: string }[];
+    };
+    const ids = before.items.slice(0, 2).map((s) => s.session_id);
+
+    const gone = await post([...ids, "clinic:none:nobody:0"]);
+    const again = await post(ids);
+    const empty = await post([]);
+    const after = (await (await fetch(`${base}/v1/admin/sessions`, { headers })).json()) as {
+      items: { session_id: string }[];
+    };
+
+    expect(await gone.json()).toEqual({ deleted: 2 });
+    expect(await again.json()).toEqual({ deleted: 0 });
+    expect(empty.status).toBe(422);
+    expect(after.items.some((s) => ids.includes(s.session_id))).toBe(false);
+  });
 });

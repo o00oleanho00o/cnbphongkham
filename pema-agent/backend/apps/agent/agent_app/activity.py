@@ -9,6 +9,7 @@ The trace holds timings, tokens and outcomes only; the words of a conversation a
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any, Final
@@ -43,6 +44,10 @@ _MESSAGES = sql(
 _DELETE_SESSION = sql(
     "DELETE FROM agent_rt.agent_session "
     "WHERE tenant_id = :tenant_id AND agent = :agent AND session_id = :session_id"
+)
+_DELETE_SESSIONS = sql(
+    "DELETE FROM agent_rt.agent_session "
+    "WHERE tenant_id = :tenant_id AND agent = :agent AND session_id = ANY(:session_ids)"
 )
 _TURNS = sql(
     "SELECT turn_id, session_id, channel, user_id, model, started_at, duration_ms, stop, steps, error_kind, "
@@ -149,6 +154,19 @@ class Activity:
                 return (await conn.execute(_DELETE_SESSION, params)).rowcount > 0
 
         return await retrying("delete session", work)
+
+    async def delete_sessions(self, session_ids: Sequence[str]) -> int:
+        """How many of these sessions existed and are gone, in one statement: all of them or none."""
+        if self._engine is None or not session_ids:
+            return 0
+        engine = self._engine
+        params = {**self._key(), "session_ids": list(session_ids)}
+
+        async def work() -> int:
+            async with engine.begin() as conn:
+                return (await conn.execute(_DELETE_SESSIONS, params)).rowcount
+
+        return await retrying("delete sessions", work)
 
     async def turns(
         self, *, channel: str | None, session_id: str | None, errors_only: bool, page: int

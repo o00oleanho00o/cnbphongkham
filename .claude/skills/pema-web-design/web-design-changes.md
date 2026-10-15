@@ -21,6 +21,18 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-15 · change · Điều khiển agent: "Phiên chat" xóa nhiều phiên cùng lúc
+- Where: `pema-agent/frontend/src/components/agent/pages/sessions-page.tsx` · route `/admin/agent/sessions`
+- Change: the table gets a first column of checkboxes (aria-label "Chọn phiên của <người>", no header text) and a bar above it with the checkbox "Chọn cả trang" and the danger button "Xóa các phiên đã chọn" (disabled until a row is ticked; then "Xóa <n> phiên đã chọn"). The button asks first in the confirm dialog "Xóa <n> phiên chat đã chọn?" with the text "Xóa hẳn tin nhắn của các phiên này để agent quên chúng: tin kế tiếp của mỗi người được trả lời như một cuộc trò chuyện mới. Trace vẫn được giữ. Không hoàn tác được." and the button "Xóa <n> phiên"; the ticks are cleared whenever the list reloads (search, channel, page, after a delete). The empty-row text and the "Xem" button are unchanged.
+- Web canvas target: none (no canvas frame for the agent pages)
+- Logged by: agent sessions
+
+### 2026-10-15 · change · Điều khiển agent: Hội thoại, "Cuộc trò chuyện đã lưu" xóa nhiều cuộc cùng lúc
+- Where: plugin `conversations` pages (`backend/apps/agent/plugins/conversations/ui/src/pages/list.tsx`, `pages/chat-sheet.tsx`)
+- Change: each row of "Cuộc trò chuyện đã lưu" gets a checkbox in front (aria-label "Chọn <tên>"; at most 100 can be ticked, the others are disabled then). Above the list, when it has rows: the checkbox "Chọn tất cả đang hiện" (or "Chọn 100 cuộc đầu" when more than 100 are shown) and the danger button "Xóa các cuộc đã chọn" (then "Xóa <n> cuộc đã chọn"). The button turns into the inline question "Xóa <n> cuộc trò chuyện và các kịch bản rút ra từ chúng? Không hoàn tác được." with "Xóa" and "Hủy". In the drawer of one conversation the question is now "Xóa cả cuộc trò chuyện này và các kịch bản rút ra từ nó?" (the scenarios cut from a conversation are deleted with it, so the agent no longer finds them).
+- Web canvas target: none (no canvas frame for the agent pages)
+- Logged by: conversations plugin
+
 ### 2026-10-14 · add · Điều khiển agent: tab "Jev" (khóa TypeSafe, hạn mức token, đã dùng)
 - Where: plugin `jev` pages (`backend/apps/agent/plugins/jev/ui/src/page.tsx`, `main.tsx`)
 - Change: a new tab "Jev" with a header "Jev" (subtitle: the TypeSafe judge answers yes/no questions with probabilities, the knowledge store uses it to rank and filter search results before the agent reads them) and three cards. "Khóa TypeSafe": a badge "Đã lưu khóa" / "Chưa có khóa", a password field "Khóa API" (or "Khóa mới (để thay khóa đang lưu)") with the hint that the key is encrypted and never shown again, the buttons "Lưu khóa", "Kiểm tra kết nối" and "Xóa khóa" (only with a key), the result of the test ("Kết nối tốt (câu thử: khả năng có giá 0.90). 480 ms." or the failure sentence), and a note that the question and the chunks go to TypeSafe (USA) and the calls are charged by input tokens. "Model và hạn mức": a button "Lưu cài đặt" in the card header, the fields "Model" (hint "Mặc định jev-latest") and "Hạn mức token mỗi ngày" (hint "Dùng hết hạn mức thì khoảng $0,0840 mỗi ngày.", or "Không giới hạn: chi phí chỉ tùy số lần tìm." for 0), and a note that at the allowance Jev rests until the end of the day (Vietnam time) and searches use unjudged results. "Đã dùng": the header shows "Hôm nay 120.000 / 2.000.000 token (6%)", a table of the last days with "Ngày", "Lượt gọi", "Token", "Lỗi", "Ước tính" (for example "$0,000084").

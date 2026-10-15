@@ -33,6 +33,8 @@ export const conversations = {
   leaveOut: (conversation: string, excluded: boolean) =>
     api.patch<Conversation>(`${BASE}/conversations/${id(conversation)}`, { excluded }),
   remove: (conversation: string) => api.del<{ deleted: boolean }>(`${BASE}/conversations/${id(conversation)}`),
+  removeMany: (ids: readonly string[]) =>
+    api.post<{ deleted: number; scenarios: number }>(`${BASE}/conversations/delete`, { ids }),
   people: (channel: string) => api.get<{ people: Person[] }>(`${BASE}/people${query({ channel })}`),
 };
 

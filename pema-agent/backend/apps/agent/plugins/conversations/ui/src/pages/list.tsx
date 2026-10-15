@@ -1,18 +1,34 @@
-/** "Cuộc trò chuyện": what the channels kept, newest first; search, filter by channel, open one. */
+/** "Cuộc trò chuyện": what the channels kept, newest first; search, filter by channel, open one, delete the ticked. */
 import { useCallback, useEffect, useState } from "react";
 
 import { conversations, messageOf } from "../client";
-import { formatTime, titleOf } from "../logic";
+import { formatTime, MAX_DELETE, tickedAll, tickedOne, titleOf } from "../logic";
 import { ui } from "../sdk";
 import type { Conversation } from "../types";
 import { ChatSheet } from "./chat-sheet";
 
 const PAGE = 30;
 
-function Row({ conversation, onOpen }: { conversation: Conversation; onOpen: () => void }) {
+interface RowProps {
+  conversation: Conversation;
+  checked: boolean;
+  full: boolean;
+  onToggle: () => void;
+  onOpen: () => void;
+}
+
+function Row({ conversation, checked, full, onToggle, onOpen }: RowProps) {
   return (
-    <li className="flex flex-wrap items-start justify-between gap-2 rounded-tile border border-line bg-surface p-4">
-      <div className="min-w-0 space-y-1">
+    <li className="flex flex-wrap items-start gap-3 rounded-tile border border-line bg-surface p-4">
+      <input
+        type="checkbox"
+        className="mt-1 size-4"
+        aria-label={`Chọn ${titleOf(conversation)}`}
+        checked={checked}
+        disabled={full && !checked}
+        onChange={onToggle}
+      />
+      <div className="min-w-0 flex-1 space-y-1">
         <p className="flex flex-wrap items-center gap-2">
           <span className="text-body font-bold break-all text-heading">{titleOf(conversation)}</span>
           <ui.Badge>{conversation.is_group ? "Nhóm" : "Trực tiếp"}</ui.Badge>
@@ -39,6 +55,9 @@ export function ListPage({ channels }: { channels: readonly string[] }) {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState<Conversation | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [asking, setAsking] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   const load = useCallback(async () => {
     setError("");
@@ -46,6 +65,8 @@ export function ListPage({ channels }: { channels: readonly string[] }) {
       const found = await conversations.list({ channel, q: search, limit: PAGE, offset: 0 });
       setRows(found.conversations);
       setTotal(found.total);
+      setSelected([]);
+      setAsking(false);
     } catch (err) {
       setError(messageOf(err));
       setRows([]);
@@ -69,6 +90,21 @@ export function ListPage({ channels }: { channels: readonly string[] }) {
     }
   }
 
+  async function removeSelected() {
+    setRemoving(true);
+    setError("");
+    try {
+      await conversations.removeMany(selected);
+      await load();
+    } catch (err) {
+      setError(messageOf(err));
+    } finally {
+      setRemoving(false);
+      setAsking(false);
+    }
+  }
+
+  const shownIds = (rows ?? []).map((conversation) => conversation.id);
   const options = [{ value: "", label: "Mọi kênh" }, ...channels.map((name) => ({ value: name, label: name }))];
 
   return (
@@ -119,9 +155,46 @@ export function ListPage({ channels }: { channels: readonly string[] }) {
           <ui.Empty>Bật một kênh ở tab Cài đặt để bắt đầu lưu. Mặc định mọi kênh đều tắt.</ui.Empty>
         </ui.Card>
       )}
+      {shownIds.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <label className="flex min-h-11 items-center gap-2 text-small text-ink">
+            <input
+              type="checkbox"
+              className="size-4"
+              checked={selected.length > 0 && selected.length === Math.min(shownIds.length, MAX_DELETE)}
+              onChange={() => setSelected(tickedAll(selected, shownIds))}
+            />
+            {shownIds.length > MAX_DELETE ? `Chọn ${MAX_DELETE} cuộc đầu` : "Chọn tất cả đang hiện"}
+          </label>
+          {asking ? (
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <span className="text-small text-ink-soft">
+                {`Xóa ${selected.length} cuộc trò chuyện và các kịch bản rút ra từ chúng? Không hoàn tác được.`}
+              </span>
+              <ui.Button variant="danger" busy={removing} onClick={() => void removeSelected()}>
+                Xóa
+              </ui.Button>
+              <ui.Button variant="ghost" onClick={() => setAsking(false)}>
+                Hủy
+              </ui.Button>
+            </div>
+          ) : (
+            <ui.Button variant="danger" disabled={selected.length === 0} onClick={() => setAsking(true)}>
+              {selected.length === 0 ? "Xóa các cuộc đã chọn" : `Xóa ${selected.length} cuộc đã chọn`}
+            </ui.Button>
+          )}
+        </div>
+      )}
       <ul className="space-y-2">
         {(rows ?? []).map((conversation) => (
-          <Row key={conversation.id} conversation={conversation} onOpen={() => setOpen(conversation)} />
+          <Row
+            key={conversation.id}
+            conversation={conversation}
+            checked={selected.includes(conversation.id)}
+            full={selected.length >= MAX_DELETE}
+            onToggle={() => setSelected((now) => tickedOne(now, conversation.id))}
+            onOpen={() => setOpen(conversation)}
+          />
         ))}
       </ul>
       {rows !== null && rows.length < total && (

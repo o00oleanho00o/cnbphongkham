@@ -94,7 +94,9 @@ export function ChatSheet({
       footer={
         asking ? (
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <span className="text-small text-ink-soft">Xóa cả cuộc trò chuyện này?</span>
+            <span className="text-small text-ink-soft">
+              Xóa cả cuộc trò chuyện này và các kịch bản rút ra từ nó?
+            </span>
             <ui.Button variant="danger" busy={busy} onClick={() => void remove()}>
               Xóa
             </ui.Button>

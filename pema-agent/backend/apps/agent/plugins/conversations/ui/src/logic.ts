@@ -14,6 +14,26 @@ export const RETENTION_OPTIONS = [
   { value: "365", label: "1 năm" },
 ] as const;
 
+/** The most conversations one delete takes (the server refuses more). */
+export const MAX_DELETE = 100;
+
+/** Ticks or unticks one id; a tick past the limit is ignored. */
+export function tickedOne(selected: readonly string[], id: string, max: number = MAX_DELETE): string[] {
+  if (selected.includes(id)) return selected.filter((one) => one !== id);
+  return selected.length < max ? [...selected, id] : [...selected];
+}
+
+/** Ticks the first `max` ids shown, or none when they are all ticked already. */
+export function tickedAll(
+  selected: readonly string[],
+  shown: readonly string[],
+  max: number = MAX_DELETE,
+): string[] {
+  const wanted = shown.slice(0, max);
+  const all = wanted.length > 0 && wanted.every((id) => selected.includes(id));
+  return all ? [] : wanted;
+}
+
 export const DEFAULT_SCENARIOS: ScenarioSettings = { enabled: true, scope: "plugin", results: 3, min_similarity: 0.55 };
 export const NO_SETTINGS: Settings = { channels: {}, retention_days: 0, scenarios: DEFAULT_SCENARIOS };
 export const OFF: ChannelSetting = { enabled: false, staff: [], use_scenarios: true };

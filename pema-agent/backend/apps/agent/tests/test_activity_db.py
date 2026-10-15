@@ -180,6 +180,24 @@ def test_a_session_shows_its_messages_and_tools_and_belongs_to_its_agent(db_url:
     _run(db_url, check)
 
 
+def test_deleting_many_sessions_removes_only_those_of_this_agent_and_counts_them(db_url: str) -> None:
+    async def check(db: AgentDatabase) -> None:
+        for number in (1, 2, 3):
+            await _chat(db, f"dev:zalo-a:u{number}:0", "zalo-a", f"u{number}")
+        activity = _activity(db)
+
+        wrong_agent = await _activity(db, "other").delete_sessions(["dev:zalo-a:u1:0", "dev:zalo-a:u2:0"])
+        gone = await activity.delete_sessions(["dev:zalo-a:u1:0", "dev:zalo-a:u2:0", "missing"])
+        nothing = await activity.delete_sessions([])
+
+        assert (wrong_agent, gone, nothing) == (0, 2, 0)
+        assert await activity.session("dev:zalo-a:u1:0") is None
+        assert await activity.session("dev:zalo-a:u2:0") is None
+        assert await activity.session("dev:zalo-a:u3:0") is not None
+
+    _run(db_url, check)
+
+
 def test_deleting_a_session_removes_its_messages_but_not_its_trace(db_url: str) -> None:
     async def check(db: AgentDatabase) -> None:
         await _chat(db, "dev:zalo-a:u1:0", "zalo-a", "u1")
