@@ -4,6 +4,7 @@ import type {
   AccountUpdate,
   AllowlistMode,
   ChannelKind,
+  Group,
   OaKeys,
   QrState,
   QrStatus,
@@ -46,6 +47,8 @@ export interface AccountForm {
   respondToGroups: boolean;
   groupRequireMention: boolean;
   groupPassiveListen: boolean;
+  /** The groups this account listens to (their messages are kept). */
+  listenGroupIds: string[];
   typingIndicator: boolean;
   autoReact: boolean;
   autoReactIcon: string;
@@ -70,6 +73,7 @@ export function formOf(account: Account | null): AccountForm {
     respondToGroups: account?.respond_to_groups ?? true,
     groupRequireMention: account?.group_require_mention ?? true,
     groupPassiveListen: account?.group_passive_listen ?? true,
+    listenGroupIds: account?.listen_group_ids ?? [],
     typingIndicator: account?.typing_indicator_enabled ?? true,
     autoReact: account?.auto_react_enabled ?? false,
     autoReactIcon: account?.auto_react_icon ?? "heart",
@@ -96,6 +100,7 @@ export function patchOf(form: AccountForm): AccountUpdate {
     respond_to_groups: form.respondToGroups,
     group_require_mention: form.groupRequireMention,
     group_passive_listen: form.groupPassiveListen,
+    listen_group_ids: [...form.listenGroupIds].sort(),
     typing_indicator_enabled: form.typingIndicator,
     auto_react_enabled: form.autoReact,
     auto_react_icon: form.autoReactIcon,
@@ -129,6 +134,22 @@ export const ZALO_ID = /^[A-Za-z0-9_.-]{1,100}$/;
 export function toggledIds(ids: readonly string[], uid: string, allowed: boolean): string[] {
   const rest = ids.filter((id) => id !== uid);
   return allowed ? [...rest, uid] : rest;
+}
+
+export interface GroupChoice {
+  id: string;
+  name: string;
+  listening: boolean;
+}
+
+/** The groups to offer on an account's form: the ones seen (by name), then any chosen one not seen under that id. */
+export function groupChoices(seen: readonly Group[], listening: readonly string[]): GroupChoice[] {
+  const seenIds = new Set(seen.map((group) => group.thread_id));
+  const unseen = listening.filter((id) => !seenIds.has(id));
+  return [
+    ...seen.map((group) => ({ id: group.thread_id, name: group.name || "(không tên)", listening: listening.includes(group.thread_id) })),
+    ...unseen.map((id) => ({ id, name: id, listening: true })),
+  ];
 }
 
 export const EMPTY_OA_KEYS: OaKeys = { app_id: "", app_secret: "", oa_secret_key: "", refresh_token: "" };

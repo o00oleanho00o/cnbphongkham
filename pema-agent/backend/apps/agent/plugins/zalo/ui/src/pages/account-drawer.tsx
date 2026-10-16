@@ -10,15 +10,18 @@ import {
   PERSONAL_RISK,
   clampDelay,
   formOf,
+  type GroupChoice,
   formProblem,
+  groupChoices,
   oaKeysState,
   parseIds,
   patchOf,
+  toggledIds,
   withChannel,
 } from "../logic";
 import { Drawer, Section, Switch } from "../parts";
 import { ui } from "../sdk";
-import type { Account, ChannelKind, OaKeys, ReactionIcon } from "../types";
+import type { Account, ChannelKind, Group, OaKeys, ReactionIcon } from "../types";
 
 const CHANNELS: readonly ChannelKind[] = ["zalo_personal", "zalo_bot", "zalo_oa"];
 
@@ -45,6 +48,7 @@ export function AccountDrawer({
   const [created, setCreated] = useState<string | null>(null);
   const [icons, setIcons] = useState<ReactionIcon[]>([]);
   const [tools, setTools] = useState<string[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -52,6 +56,12 @@ export function AccountDrawer({
     zalo.reactionIcons().then(setIcons, () => setIcons([]));
     agentTools().then(setTools, () => setTools([]));
   }, []);
+
+  const accountId = account?.id;
+  useEffect(() => {
+    if (accountId === undefined) return;
+    zalo.groups(accountId).then(setGroups, () => setGroups([]));
+  }, [accountId]);
 
   function set<K extends keyof AccountForm>(key: K, value: AccountForm[K]) {
     setForm((before) => ({ ...before, [key]: value }));
@@ -208,6 +218,11 @@ export function AccountDrawer({
           checked={form.groupPassiveListen}
           onChange={(v) => set("groupPassiveListen", v)}
         />
+        <ListenedGroups
+          saved={account !== null}
+          choices={groupChoices(groups, form.listenGroupIds)}
+          onChoose={(groupId, on) => set("listenGroupIds", toggledIds(form.listenGroupIds, groupId, on))}
+        />
       </Section>
 
       <Section title="Phản hồi tức thì">
@@ -292,5 +307,55 @@ export function AccountDrawer({
 
       {error && <ui.Notice tone="danger">{error}</ui.Notice>}
     </Drawer>
+  );
+}
+
+/** The groups this account keeps the messages of; a group that is not switched on is not kept. */
+function ListenedGroups({
+  saved,
+  choices,
+  onChoose,
+}: {
+  saved: boolean;
+  choices: readonly GroupChoice[];
+  onChoose: (groupId: string, on: boolean) => void;
+}) {
+  const title = <p className="text-micro font-semibold tracking-wider text-ink-soft uppercase">Nhóm lắng nghe</p>;
+  if (!saved) {
+    return (
+      <>
+        {title}
+        <p className="text-label text-ink-soft">
+          Tạo tài khoản và đăng nhập trước. Nhóm nào nhắn tới sẽ hiện ở đây để bạn bật; nhóm mới mặc định tắt.
+        </p>
+      </>
+    );
+  }
+  if (choices.length === 0) {
+    return (
+      <>
+        {title}
+        <p className="text-label text-ink-soft">
+          Chưa thấy nhóm nào. Một nhóm hiện ở đây sau tin nhắn đầu tiên của nhóm đó; nhóm mới mặc định tắt.
+        </p>
+      </>
+    );
+  }
+  return (
+    <>
+      {title}
+      <p className="text-label text-ink-soft">
+        Chỉ nhóm được bật mới được ghi nhớ (mọi nội dung). Nhóm tắt: tin không được lưu, agent vẫn trả lời khi được gọi tên.
+      </p>
+      {choices.map((choice) => (
+        <Switch
+          key={choice.id}
+          label={choice.name}
+          hint={choice.id}
+          checked={choice.listening}
+          onChange={(on) => onChoose(choice.id, on)}
+        />
+      ))}
+    </>
   );
 }

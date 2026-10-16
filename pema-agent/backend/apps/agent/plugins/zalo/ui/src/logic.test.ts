@@ -7,6 +7,7 @@ import {
   clampDelay,
   formOf,
   formProblem,
+  groupChoices,
   oaKeysState,
   ownItems,
   parseIds,
@@ -49,6 +50,7 @@ describe("account form", () => {
       respond_to_groups: true,
       group_require_mention: false,
       group_passive_listen: false,
+      listen_group_ids: ["g1"],
       typing_indicator_enabled: false,
       auto_react_enabled: true,
       auto_react_icon: "like",
@@ -104,6 +106,29 @@ describe("recipients", () => {
     expect(toggledIds(["1", "2"], "3", true)).toEqual(["1", "2", "3"]);
     expect(toggledIds(["1", "2"], "2", true)).toEqual(["1", "2"]);
     expect(toggledIds(["1", "2"], "1", false)).toEqual(["2"]);
+  });
+});
+
+describe("groups to listen to", () => {
+  const seen = [
+    { account_id: "nick-1", thread_id: "g1", name: "Nhóm khám" },
+    { account_id: "nick-1", thread_id: "g2", name: "" },
+  ];
+
+  it("offers_every_seen_group_with_its_choice_and_a_name_for_the_unnamed", () => {
+    expect(groupChoices(seen, ["g2"])).toEqual([
+      { id: "g1", name: "Nhóm khám", listening: false },
+      { id: "g2", name: "(không tên)", listening: true },
+    ]);
+  });
+
+  it("keeps_a_chosen_group_that_was_not_seen_so_it_can_be_switched_off", () => {
+    expect(groupChoices(seen, ["g9"]).at(-1)).toEqual({ id: "g9", name: "g9", listening: true });
+  });
+
+  it("the_form_sends_the_chosen_groups_in_order", () => {
+    const form = { ...formOf(ACCOUNT), listenGroupIds: ["g3", "g1"] };
+    expect(patchOf(form).listen_group_ids).toEqual(["g1", "g3"]);
   });
 });
 
