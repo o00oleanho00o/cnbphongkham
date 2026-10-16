@@ -212,12 +212,6 @@ export function AccountDrawer({
           checked={form.groupRequireMention}
           onChange={(v) => set("groupRequireMention", v)}
         />
-        <Switch
-          label="Nghe tin nhóm không nhắc tên"
-          hint="Ghi vào ngữ cảnh, không gọi model"
-          checked={form.groupPassiveListen}
-          onChange={(v) => set("groupPassiveListen", v)}
-        />
         <ListenedGroups
           saved={account !== null}
           choices={groupChoices(groups, form.listenGroupIds)}

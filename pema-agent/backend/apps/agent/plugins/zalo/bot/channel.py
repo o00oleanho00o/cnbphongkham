@@ -138,8 +138,10 @@ class ZaloBotChannel:
         if self._heard is not None and not msg.is_self:
             await self._heard(msg)
         decision = should_respond(self.account, msg)
-        if self._observe is not None and not msg.is_self and keeps_chat(
-            self.account, thread_id=msg.thread_id, is_group=msg.is_group
+        if (
+            self._observe is not None
+            and not msg.is_self
+            and keeps_chat(self.account, thread_id=msg.thread_id, is_group=msg.is_group)
         ):
             observed = to_observed(self.name, msg, answered=decision.respond)
             if observed is not None:

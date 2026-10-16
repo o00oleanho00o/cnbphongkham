@@ -11,7 +11,6 @@ export interface Account {
   allowlist: { mode: AllowlistMode; user_ids: string[] };
   group_require_mention: boolean;
   respond_to_groups: boolean;
-  group_passive_listen: boolean;
   /** The groups whose messages are kept; a group not here is not. */
   listen_group_ids: string[];
   auto_react_enabled: boolean;

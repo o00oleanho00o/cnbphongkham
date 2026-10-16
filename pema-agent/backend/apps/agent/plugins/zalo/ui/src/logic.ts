@@ -46,7 +46,6 @@ export interface AccountForm {
   allowlistIds: string;
   respondToGroups: boolean;
   groupRequireMention: boolean;
-  groupPassiveListen: boolean;
   /** The groups this account listens to (their messages are kept). */
   listenGroupIds: string[];
   typingIndicator: boolean;
@@ -72,7 +71,6 @@ export function formOf(account: Account | null): AccountForm {
     allowlistIds: (account?.allowlist.user_ids ?? []).join("\n"),
     respondToGroups: account?.respond_to_groups ?? true,
     groupRequireMention: account?.group_require_mention ?? true,
-    groupPassiveListen: account?.group_passive_listen ?? true,
     listenGroupIds: account?.listen_group_ids ?? [],
     typingIndicator: account?.typing_indicator_enabled ?? true,
     autoReact: account?.auto_react_enabled ?? false,
@@ -99,7 +97,6 @@ export function patchOf(form: AccountForm): AccountUpdate {
     allowlist: { mode: form.allowlistMode, user_ids: parseIds(form.allowlistIds) },
     respond_to_groups: form.respondToGroups,
     group_require_mention: form.groupRequireMention,
-    group_passive_listen: form.groupPassiveListen,
     listen_group_ids: [...form.listenGroupIds].sort(),
     typing_indicator_enabled: form.typingIndicator,
     auto_react_enabled: form.autoReact,

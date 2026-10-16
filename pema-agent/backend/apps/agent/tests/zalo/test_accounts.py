@@ -14,7 +14,7 @@ from agent_app.plugins.records import InMemoryPluginRecords
 from agent_app.profile import load_profile
 from agent_app.runtime import Runtime, build_runtime
 from plugins.zalo.accounts import SECRET, AccountStore
-from plugins.zalo.models import AccountCreate, ChannelKind
+from plugins.zalo.models import AccountConfig, AccountCreate, ChannelKind
 from secretcipher import decrypt_with, encrypt_with
 
 TOKEN = "t" * 40
@@ -84,6 +84,15 @@ async def test_accounts_are_created_listed_changed_and_deleted(tmp_path: Path) -
     assert (deleted.status_code, gone.status_code) == (204, 404)
     assert [a["id"] for a in after.json()] == ["le-tan"]
     runtime.close()
+
+
+def test_an_account_saved_with_a_retired_setting_still_loads_and_drops_it() -> None:
+    saved = {"id": "nick", "label": "Nick", "channel": "zalo_personal", "group_passive_listen": True}
+
+    account = AccountConfig.model_validate(saved)
+
+    assert "group_passive_listen" not in account.model_dump()
+    assert account.listen_group_ids == []
 
 
 @pytest.mark.parametrize(

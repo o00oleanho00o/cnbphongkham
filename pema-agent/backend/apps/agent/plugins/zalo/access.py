@@ -1,11 +1,10 @@
 # ported from: src/middleware/allowlist-filter.ts
 """Decide whether the bot answers a message. Runs BEFORE any LLM call, so a filtered message costs no token.
 
-Pure: the account settings and the message in, the decision out. ``record`` (passive listening: keep a group
-message as context without answering) is decided as in the original. The channel tells the plugins that
-listen (``ctx.observe``, for instance ``conversations``) of every message, answered or not, but only of the
-groups the account is set to listen to (``keeps_chat``); the agent runs a turn only for the ones this
-decision answers.
+Pure: the account settings and the message in, the decision out. The channel tells the plugins that listen
+(``ctx.observe``, for instance ``conversations``) of every message, answered or not, but only of the groups
+the account is set to listen to (``keeps_chat``); the agent runs a turn only for the ones this decision
+answers.
 """
 
 from __future__ import annotations
@@ -20,17 +19,11 @@ from .models import AccountConfig, AllowlistMode
 class FilterDecision:
     respond: bool
     """Does the bot run the agent and answer."""
-    record: bool
-    """Do not answer, but keep it as context (passive listening)."""
     reason: str
 
 
 def _skip(reason: str) -> FilterDecision:
-    return FilterDecision(respond=False, record=False, reason=reason)
-
-
-def _record_only(reason: str) -> FilterDecision:
-    return FilterDecision(respond=False, record=True, reason=reason)
+    return FilterDecision(respond=False, reason=reason)
 
 
 def keeps_chat(account: AccountConfig, *, thread_id: str, is_group: bool) -> bool:
@@ -50,11 +43,9 @@ def should_respond(account: AccountConfig, msg: ZaloInbound) -> FilterDecision:
         if not account.respond_to_groups:
             return _skip("account tắt trả lời group")
         if account.group_require_mention and not msg.mentions_me:
-            if account.group_passive_listen:
-                return _record_only("group không @mention - chỉ ghi history")
             return _skip("group yêu cầu @mention bot")
 
     if account.allowlist.mode is AllowlistMode.LIST and msg.sender_id not in account.allowlist.user_ids:
         return _skip("sender ngoài allowlist")
 
-    return FilterDecision(respond=True, record=True, reason="ok")
+    return FilterDecision(respond=True, reason="ok")

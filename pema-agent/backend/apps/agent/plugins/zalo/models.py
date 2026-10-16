@@ -11,9 +11,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Final
+from typing import Annotated, Any, Final
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 MAX_ACCOUNT_ID_CHARS: Final = 58
 """The channel of an account is ``zalo-<id>``, and a channel name has at most 64 characters."""
@@ -24,6 +24,7 @@ ZALO_ID_PATTERN: Final = r"^[A-Za-z0-9_.-]{1,100}$"
 ToolName = Annotated[str, Field(pattern=r"^[A-Za-z0-9_.-]{1,100}$")]
 GroupId = Annotated[str, Field(pattern=ZALO_ID_PATTERN)]
 MAX_LISTEN_GROUPS: Final = 1000
+RETIRED_SETTINGS: Final = frozenset({"group_passive_listen"})
 
 
 class ChannelKind(StrEnum):
@@ -54,7 +55,6 @@ class AccountConfig(_Model):
     allowlist: Allowlist = Field(default_factory=Allowlist)
     group_require_mention: bool = True
     respond_to_groups: bool = True
-    group_passive_listen: bool = True
     listen_group_ids: list[GroupId] = Field(
         default_factory=list[GroupId],
         max_length=MAX_LISTEN_GROUPS,
@@ -70,6 +70,14 @@ class AccountConfig(_Model):
     )
     auto_accept_friends: bool = False
     auto_accept_friend_delay_minutes: int = Field(default=1, ge=0, le=1440)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _drop_retired_settings(cls, data: Any) -> Any:
+        """Accounts saved before a setting was retired still carry it; it is dropped, not refused."""
+        if not isinstance(data, dict):
+            return data
+        return {key: value for key, value in data.items() if key not in RETIRED_SETTINGS}  # pyright: ignore[reportUnknownVariableType]
 
     @field_validator("listen_group_ids")
     @classmethod
@@ -94,7 +102,6 @@ class AccountUpdate(_Model):
     allowlist: Allowlist | None = None
     group_require_mention: bool | None = None
     respond_to_groups: bool | None = None
-    group_passive_listen: bool | None = None
     listen_group_ids: list[GroupId] | None = Field(default=None, max_length=MAX_LISTEN_GROUPS)
     auto_react_enabled: bool | None = None
     auto_react_icon: str | None = None
