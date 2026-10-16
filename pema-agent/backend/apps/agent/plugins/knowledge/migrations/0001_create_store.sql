@@ -1,6 +1,9 @@
 -- The knowledge store: sources (one document each), their chunks with a keyword index, the services and
--- their other names, what happened to a source, and the questions the store had no answer for.
--- Runs in schema agent_rt (agent db migrate-plugins); every row is scoped by tenant and agent.
+-- their other names, what happened to a source, the questions the store had no answer for, and the vectors.
+-- Runs in schema agent_rt (agent db migrate-plugins); every row is scoped by tenant and agent. The vector type
+-- lives in schema public (pgvector); this file runs with search_path agent_rt.
+
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
 
 CREATE TABLE kb_source (
     tenant_id text NOT NULL,
@@ -48,14 +51,21 @@ CREATE TABLE kb_chunk (
     chars integer NOT NULL,
     services text[] NOT NULL DEFAULT '{}',
     kind text NOT NULL DEFAULT 'info',
-    embedded boolean NOT NULL DEFAULT false,
     terms tsvector NOT NULL,
+    -- the text a vector is made of (plugins/knowledge/text.py embed_text_of) and its sha256
+    embed_text text NOT NULL DEFAULT '',
+    embed_hash text NOT NULL DEFAULT '',
+    -- BM25 for the keyword search: the length of the chunk and how many times each word is in it, counted the
+    -- same way as plugins/knowledge/text.py chunk_terms does, so a search does not unnest every tsvector
+    terms_len integer NOT NULL DEFAULT 0,
+    term_counts jsonb NOT NULL DEFAULT '{}'::jsonb,
     PRIMARY KEY (tenant_id, agent, id),
     FOREIGN KEY (tenant_id, agent, source_id) REFERENCES kb_source (tenant_id, agent, id) ON DELETE CASCADE
 );
 
 CREATE INDEX kb_chunk_terms ON kb_chunk USING gin (terms);
 CREATE INDEX kb_chunk_source ON kb_chunk (tenant_id, agent, source_id, ordinal);
+CREATE INDEX kb_chunk_embed ON kb_chunk (tenant_id, agent, embed_hash);
 
 CREATE TABLE kb_service (
     tenant_id text NOT NULL,
@@ -97,4 +107,17 @@ CREATE TABLE kb_gap (
     state text NOT NULL DEFAULT 'open' CHECK (state IN ('open', 'ignored', 'answered')),
     PRIMARY KEY (tenant_id, agent, id),
     UNIQUE (tenant_id, agent, folded)
+);
+
+-- A vector belongs to a text, not to a chunk row: chunks are deleted and inserted again whenever a source is
+-- re-cut, and their text (so their vector) usually stays the same. `space` names the model, dimensions and document
+-- prefix a vector was made with (sha256, 16 hex).
+CREATE TABLE kb_embedding (
+    tenant_id text NOT NULL,
+    agent text NOT NULL,
+    space text NOT NULL CHECK (space ~ '^[0-9a-f]{16}$'),
+    text_hash text NOT NULL CHECK (text_hash ~ '^[0-9a-f]{64}$'),
+    vector public.vector NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (tenant_id, agent, space, text_hash)
 );

@@ -51,15 +51,6 @@ def db_url() -> str:
             os.environ.pop(MIGRATION_ENV, None)
         else:
             os.environ[MIGRATION_ENV] = previous
-    engine = create_engine(url)
-    with engine.begin() as conn:  # a skill the agent wrote before the plugin existed
-        conn.execute(
-            sql(
-                "INSERT INTO agent_rt.agent_skill (tenant_id, agent, name, description, body) "
-                "VALUES ('clinic-a', 'clinic', 'cu', 'Kỹ năng cũ', 'Các bước cũ.')"
-            )
-        )
-    engine.dispose()
     migrate_plugins(url, [discover([("bundled", BUNDLED_PLUGINS)]).plugins["skills"]])
     return url
 
@@ -83,25 +74,7 @@ def _item(item_id: str, name: str, body: str = "Nội dung.", **given: object) -
     return Item(id=item_id, name=name, body=body, **fields)  # type: ignore[arg-type]
 
 
-def test_the_skills_the_agent_wrote_before_are_imported_once_with_a_first_version(db_url: str) -> None:
-    async def work(mine: PostgresItemStore, theirs: PostgresItemStore) -> None:
-        (imported,) = await mine.list(kind="skill")
-        versions = await mine.versions(imported.id)
-
-        assert (imported.name, imported.origin, imported.status, imported.scopes) == (
-            "cu",
-            "agent",
-            "active",
-            [],
-        )
-        assert imported.body == "Các bước cũ."
-        assert [(v.version, v.changed_by) for v in versions] == [(1, "import")]
-        assert await theirs.list(kind="skill") == []
-
-    _run(db_url, work)
-
-
-def test_the_dev_agents_one_file_skill_is_in_the_database_and_the_core_table_is_gone(db_url: str) -> None:
+def test_the_dev_agents_skill_is_seeded_with_a_first_version(db_url: str) -> None:
     engine = create_engine(db_url)
     with engine.connect() as conn:
         seeded = conn.execute(
@@ -115,7 +88,6 @@ def test_the_dev_agents_one_file_skill_is_in_the_database_and_the_core_table_is_
                 "SELECT version, changed_by FROM agent_rt.sk_item_version WHERE item_id = 'itm-seed-write-a-plan'"
             )
         ).all()
-        gone = conn.execute(sql("SELECT to_regclass('agent_rt.agent_skill') IS NULL")).scalar()
     engine.dispose()
 
     assert [(r.name, r.status, r.origin, r.scopes) for r in seeded] == [
@@ -123,7 +95,6 @@ def test_the_dev_agents_one_file_skill_is_in_the_database_and_the_core_table_is_
     ]
     assert seeded[0].body.splitlines()[0] == "1. Restate the goal in one sentence."
     assert [tuple(v) for v in versions] == [(1, "seed")]
-    assert gone is True
 
 
 def test_every_save_is_a_new_version_with_the_whole_item_and_who_made_it(db_url: str) -> None:

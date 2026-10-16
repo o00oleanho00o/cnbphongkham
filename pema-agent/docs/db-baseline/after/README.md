@@ -19,3 +19,19 @@ So với mốc `../before/` chỉ khác ở các chỗ kế hoạch đã chốt:
 
 Giữ nguyên: mọi bảng, cột, ràng buộc, trigger và quyền `be_app` khác của `clinic`/`ctx`; dòng `clinic` duy nhất tạo từ
 `PEMA_CLINIC_NAME` / `PEMA_CLINIC_ID`; PUBLIC không có quyền TEMP trên database.
+
+## `agent_rt.sql` (bước 10)
+
+`pg_dump -s -n agent_rt --no-owner` sau `alembic upgrade head` (`0001_baseline`) rồi `agent db migrate-plugins`.
+**Trùng từng dòng** với chuỗi cũ (12 revision + 9 file plugin) chạy trên một database trắng, kể cả quyền của
+`agent_rt_app`. Khác ở cách đi tới:
+
+| Trước | Sau |
+|---|---|
+| 12 revision `0001_agent_rt` … `0012_plugin_migrations` | `0001_baseline` (đọc `0001_baseline.sql`) |
+| `conversations`: `0001_conversations`, `0002_scenarios` | `0001_conversations.sql` |
+| `knowledge`: `0001_create_store`, `0002_vectors`, `0003_bm25` | `0001_create_store.sql` |
+| `skills`: `0001_items`, `0002_import_agent_skills`, `0003_seed_dev_skill`, `0004_drop_agent_skill` | `0001_items.sql`, `0002_seed_dev_skill.sql` |
+| bảng `agent_skill` tạo ra rồi xóa | không còn bước nào nhắc tới |
+
+Bước 11 chuyển schema này sang database riêng `pema_agent`.

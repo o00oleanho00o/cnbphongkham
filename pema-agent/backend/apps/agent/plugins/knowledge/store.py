@@ -5,7 +5,7 @@ The keyword search is the same in both: the folded words of a question and of a 
 any of them may match, and a chunk is scored with BM25 (a rarer word counts more, a repeated one less and
 less, a long chunk less than a short one), the statistics taken over the chunks in use. Postgres does the
 sum in one statement from the length and the word counts it keeps beside the ``tsvector`` of each chunk
-(``migrations/0003_bm25.sql``); memory in Python. Both give the same scores
+(``migrations/0001_create_store.sql``); memory in Python. Both give the same scores
 (``tests/knowledge/test_knowledge_db.py``). Only sources in use count: ready, ``active``, and in force on
 the day asked.
 """

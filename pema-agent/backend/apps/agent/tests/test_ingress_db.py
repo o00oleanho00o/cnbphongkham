@@ -223,6 +223,9 @@ def test_the_dispatcher_runs_one_conversation_in_order_and_stores_everything(db_
 
 def test_the_runtime_role_can_queue_messages(migrated: tuple[str, Engine]) -> None:
     url, engine = migrated
+    with engine.connect() as conn:  # roles belong to the whole cluster: never reset or drop a real one
+        if conn.execute(sql("SELECT 1 FROM pg_roles WHERE rolname = :r"), {"r": RUNTIME_ROLE}).first():
+            pytest.skip(f"{RUNTIME_ROLE} exists on this server already; run this test on a server of its own")
     password = "test-only-password-4567"
     try:
         done = bootstrap_role(url, password)

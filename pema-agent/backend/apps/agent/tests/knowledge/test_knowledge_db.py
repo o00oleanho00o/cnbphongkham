@@ -204,33 +204,6 @@ def test_section_chunks_come_back_in_document_order_for_the_exact_section_only(d
     asyncio.run(main(), loop_factory=asyncio.SelectorEventLoop)
 
 
-def test_the_bm25_migration_counts_chunks_as_python_does(db_url: str) -> None:
-    backfill = (APP_DIR / "plugins/knowledge/migrations/0003_bm25.sql").read_text(encoding="utf-8")
-    backfill = backfill[backfill.index("UPDATE kb_chunk") :]
-    body = "## Giá\nLaser nám giá 4.000.000 đồng một buổi, laser nám hiệu quả, nám nám."
-    read = sql("SELECT id, terms_len, term_counts FROM agent_rt.kb_chunk WHERE tenant_id = 'bm25-backfill'")
-
-    async def main() -> None:
-        engine = create_async_engine(db_url)
-        try:
-            store = PostgresKnowledgeStore(engine, tenant_id="bm25-backfill", agent="clinic")
-            source = _source("src-00000000bm10", "D10", body, date(2026, 1, 1))
-            await store.add_source(source, make_chunks(source.id, "D10", chunk(body, "D10"), []))
-            async with engine.begin() as conn:
-                written = (await conn.execute(read)).all()
-                await conn.execute(sql("SET LOCAL search_path TO agent_rt"))
-                await conn.execute(sql(backfill))
-                recounted = (await conn.execute(read)).all()
-
-            assert written
-            assert written == recounted
-            assert written[0].term_counts["nam"] == 4
-        finally:
-            await engine.dispose()
-
-    asyncio.run(main(), loop_factory=asyncio.SelectorEventLoop)
-
-
 def test_the_table_of_contents_holds_each_code_once_in_force_on_the_day(db_url: str) -> None:
     async def work(_mine: PostgresKnowledgeStore, store: PostgresKnowledgeStore) -> None:
         # the second tenant's store: no other test adds documents to it

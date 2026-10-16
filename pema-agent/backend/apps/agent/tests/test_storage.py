@@ -427,13 +427,16 @@ def test_the_runtime_role_can_use_the_data_but_not_change_the_schema_or_the_trac
     admin: tuple[str, Engine],
 ) -> None:
     url, engine = admin
+    with engine.connect() as conn:  # roles belong to the whole cluster: never reset or drop a real one
+        if conn.execute(sql("SELECT 1 FROM pg_roles WHERE rolname = :r"), {"r": RUNTIME_ROLE}).first():
+            pytest.skip(f"{RUNTIME_ROLE} exists on this server already; run this test on a server of its own")
     password = "test-only-password-0123"
     try:
         done = bootstrap_role(url, password)
         assert "granted SELECT, INSERT on agent_rt.agent_turn" in done
         _check_runtime_rights(url, password)
 
-        _migrate(url, "0001_agent_rt", down=True)
+        _migrate(url, "base", down=True)
         _migrate(url, "head")  # the migration grants on its own when the role exists
         _check_runtime_rights(url, password)
     finally:

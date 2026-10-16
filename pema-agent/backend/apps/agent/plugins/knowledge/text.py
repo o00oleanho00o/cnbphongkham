@@ -94,8 +94,7 @@ def content_hash(text: str) -> str:
 
 
 def embed_text_of(title: str, path: str, body: str) -> str:
-    """What a chunk is embedded as: its document's title, its headings and its text (the SQL of
-    migrations/0002_vectors.sql builds the same string for chunks stored before it)."""
+    """What a chunk is embedded as: its document's title, its headings and its text."""
     return f"{title}\n{path}\n\n{body}"
 
 
