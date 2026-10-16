@@ -3,8 +3,8 @@
 Lives in the repo (`pema-agent/docs/HANDOFF-agent-v2.md`) so it is pushed and shared; update it here after
 each stage. Last updated 2026-10-16, after step 12 of `docs/PLAN-db-baseline.md` on branch `chore/db-baseline`.
 
-Next session focus: step 13 of PLAN-db-baseline (the user deletes the database and the volume and rebuilds Docker;
-then smoke tests and break attempts on the boundary), then the front-end clean-up of D8 on its own branch and plan.
+Next session focus: the front-end clean-up of D8 on its own branch and plan (PLAN-db-baseline is done, the demo
+stack was rebuilt on 2026-10-16).
 Reply to the user in Vietnamese. Open items to handle later are under "Loose ends". The sections below the
 database one are the log of earlier stages: where they name the schema `agent`, `clinic_agent`, `agent_worker`,
 revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, those are gone (see next section).
@@ -28,7 +28,11 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
 - **Testing on the shared dev cluster:** roles are cluster-wide. The two agent tests that reset and drop
   `agent_rt_app` skip when the role exists; run them on a throwaway server (`docker run --rm -p 127.0.0.1:15499:5432
   -e POSTGRES_PASSWORD=... pgvector/pgvector:pg17`). Point `PEMA_TEST_DATABASE_URL` only at `scratch_*` databases.
-- **Until step 13 runs,** the demo database is the old layout: the agent still sits in `pema` and T1 is red there.
+- **Checked on the rebuilt demo (2026-10-16):** from the agent container `pema` refuses `agent_rt_app` (no CONNECT),
+  `CREATE EXTENSION dblink` is refused; the API answers 401 to the SSO token (`aud = pema-agent`) on every route
+  tried, also sent as the session cookie; the web reaches the agent with it; a document upload lands in
+  `pema_agent`. T1 passes against the live cluster. Open: the agent role may still connect to the empty maintenance
+  database `postgres` (PUBLIC's default CONNECT).
 - **Front end:** still calls the removed inbox, review, template routes (D8); `schema.d.ts` is stale. Clean-up is a
   separate branch with `pema-ui-builder` and entries in `web-design-changes.md`; design (canvas, specs) untouched (D9).
 
