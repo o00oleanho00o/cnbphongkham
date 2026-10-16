@@ -136,6 +136,16 @@ async def test_clearing_gives_every_field_back_to_the_profile() -> None:
     assert shown["version"] == 2
 
 
+async def test_an_empty_change_keeps_what_is_stored() -> None:
+    settings = AgentSettings(_profile(), InMemoryAgentSettingsStore(), tenant_id="t")
+    await settings.update({"failure_reply": "Later."})
+
+    shown = await settings.update({})
+
+    assert shown["failure_reply"] == "Later."
+    assert shown["stored"] is True
+
+
 async def test_refused_values_store_nothing() -> None:
     settings = AgentSettings(_profile(), InMemoryAgentSettingsStore(), tenant_id="t")
     for changes in (

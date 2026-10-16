@@ -327,11 +327,11 @@ class AgentSettings:
         if "variables" in changes:
             updates["variables"] = _merged_variables(current.variables, changes["variables"])
         changed = list(updates)
-        await self._save(current, updates, changed, by)
+        await self._save(replace(current, **updates, updated_by=by), changed)
         return await self.show()
 
     async def clear(self, *, by: str | None = None) -> dict[str, Any]:
-        await self._save(StoredAgentSettings(), {}, ["all"], by)
+        await self._save(StoredAgentSettings(updated_by=by), ["all"])
         return await self.show()
 
     # --- tools ---
@@ -382,7 +382,7 @@ class AgentSettings:
         """Switches a tool on or off; None gives it back to the profile (core) or to on (plugin)."""
         current = await self._store.get(self._tenant_id) or StoredAgentSettings()
         if name == MEMORY_TOOL:
-            await self._save(current, {"memory_enabled": enabled}, [f"tool {name}"], by)
+            await self._save(replace(current, memory_enabled=enabled, updated_by=by), [f"tool {name}"])
             return await self.tools()
         known = {*core_tool_names(), *current.tools, *(spec.name for spec in self._plugin_tools())}
         if name not in known:
@@ -390,7 +390,7 @@ class AgentSettings:
         flags = {n: on for n, on in current.tools.items() if n != name}
         if enabled is not None:
             flags[name] = enabled
-        await self._save(current, {"tools": flags}, [f"tool {name}"], by)
+        await self._save(replace(current, tools=flags, updated_by=by), [f"tool {name}"])
         return await self.tools()
 
     def _plugin_tools(self) -> list[ToolSpec[Any]]:
@@ -399,10 +399,7 @@ class AgentSettings:
         core = set(core_tool_names())
         return [spec for spec in self._live.host.contributions().tools if spec.name not in core]
 
-    async def _save(
-        self, current: StoredAgentSettings, updates: Mapping[str, Any], changed: list[str], by: str | None
-    ) -> None:
-        new = replace(current, **updates, updated_by=by) if updates else StoredAgentSettings(updated_by=by)
+    async def _save(self, new: StoredAgentSettings, changed: list[str]) -> None:
         try:
             resolve_agent(self._profile, new)
         except ValueError as err:
