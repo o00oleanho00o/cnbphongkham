@@ -46,7 +46,7 @@ class FakeSource implements EventSourceLike {
   }
 }
 
-const TYPES: readonly LiveEventType[] = ["inbox.changed"];
+const TYPES: readonly LiveEventType[] = ["tasks.changed"];
 const createSource = (url: string) => new FakeSource(url);
 
 function mount(onEvent: (e: LiveEvent) => void, onRefresh: () => void) {
@@ -77,12 +77,12 @@ describe("useLiveEvents", () => {
     act(() => latest().open());
     expect(result.current).toBe("live");
     act(() => {
-      latest().send({ type: "inbox.changed", id: "c-1" });
       latest().send({ type: "tasks.changed", id: "t-1" });
+      latest().send({ type: "appointments.changed", id: "a-1" });
       vi.advanceTimersByTime(COALESCE_MS);
     });
     expect(onEvent).toHaveBeenCalledTimes(1);
-    expect(onEvent).toHaveBeenCalledWith({ type: "inbox.changed", id: "c-1" });
+    expect(onEvent).toHaveBeenCalledWith({ type: "tasks.changed", id: "t-1" });
   });
 
   it("goes to polling after 10 seconds without the stream and refreshes every 30 seconds", () => {
@@ -119,7 +119,7 @@ describe("useLiveEvents", () => {
     rerender({ onEvent: second, onRefresh: vi.fn() });
     expect(FakeSource.all).toHaveLength(1);
     act(() => {
-      latest().send({ type: "inbox.changed", id: "c-1" });
+      latest().send({ type: "tasks.changed", id: "c-1" });
       vi.advanceTimersByTime(COALESCE_MS);
     });
     expect(first).not.toHaveBeenCalled();
@@ -129,7 +129,7 @@ describe("useLiveEvents", () => {
   it("on unmount closes the source and leaves no timer, in the live state", () => {
     const { unmount } = mount(vi.fn(), vi.fn());
     act(() => latest().open());
-    act(() => latest().send({ type: "inbox.changed", id: "c-1" }));
+    act(() => latest().send({ type: "tasks.changed", id: "c-1" }));
     unmount();
     expect(latest().closed).toBe(true);
     expect(vi.getTimerCount()).toBe(0);

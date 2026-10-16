@@ -1,25 +1,27 @@
-// Mock of the staff guide and "Hỏi Pema": articles are the knowledge-base sources (mock/handlers/kb.ts) that carry
-// the tag `guide`. The real backend ranks passages with BM25; here a passage scores by how many question words it
-// contains (diacritics ignored), which is enough to look at the screens. Not a second implementation of the rules.
+// Mock of the staff guide and "Hỏi Pema": the articles are the rows of `clinic.guide_article`, kept here in memory
+// from the seeds. The real backend ranks passages with full-text search; here a passage scores by how many question
+// words it contains (diacritics ignored), which is enough to look at the screens. Not a second implementation.
 import { GUIDE_SEEDS } from "../data/guide";
-import { bodyOf, fail, type Reply, type Router, type Schemas } from "../core";
-import { kbSourceById, kbSources } from "./kb";
+import { DAY, bodyOf, fail, isoFromNow, type Reply, type Router, type Schemas } from "../core";
 
 type S = Schemas;
 
 const GUIDE = "guide";
 const ASK_HITS = 5;
 
-const tagsBySource = new Map<string, string[]>(GUIDE_SEEDS.map((g) => [g.id, [GUIDE, g.topic]]));
+type Article = { id: string; title: string; body: string; tags: string[]; updated_at: string };
+
+const articles = new Map<string, Article>(
+  GUIDE_SEEDS.map((g) => [
+    g.id,
+    { id: g.id, title: g.name, body: g.body, tags: [GUIDE, g.topic], updated_at: isoFromNow(-3 * DAY) },
+  ]),
+);
 
 const fold = (text: string): string =>
   text.replace(/đ/g, "d").replace(/Đ/g, "D").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 const FILLER = new Set("la va cua the nao gi khi nhu co khong de cho toi minh lam sao".split(" "));
-
-function articleText(id: string): string {
-  return (kbSourceById(id)?.chunks ?? []).map((c) => c.content).join("\n\n");
-}
 
 function summaryOf(body: string): string {
   const paragraph = body
@@ -31,34 +33,28 @@ function summaryOf(body: string): string {
 }
 
 function isArticle(id: string): boolean {
-  const entry = kbSourceById(id);
-  return (
-    entry !== undefined &&
-    entry.source.status !== "hong" &&
-    (tagsBySource.get(id) ?? []).includes(GUIDE)
-  );
+  return (articles.get(id)?.tags ?? []).includes(GUIDE);
 }
 
 function summaryRow(id: string): S["GuideArticleSummary"] {
-  const entry = kbSourceById(id);
-  if (!entry) fail(404, "not_found", "Không tìm thấy bài hướng dẫn.");
-  const tags = tagsBySource.get(id) ?? [];
+  const article = articles.get(id);
+  if (!article) fail(404, "not_found", "Không tìm thấy bài hướng dẫn.");
   return {
     id,
-    title: entry.source.name,
-    topic: tags.find((t) => t !== GUIDE) ?? "",
-    tags,
-    summary: summaryOf(articleText(id)),
-    status: entry.source.status,
-    updated_at: entry.source.updated_at,
+    title: article.title,
+    topic: article.tags.find((t) => t !== GUIDE) ?? "",
+    tags: article.tags,
+    summary: summaryOf(article.body),
+    status: "san_sang",
+    updated_at: article.updated_at,
   };
 }
 
 type Passage = { articleId: string; title: string; heading: string; text: string };
 
 function passagesOf(id: string): Passage[] {
-  const title = kbSourceById(id)?.source.name ?? "";
-  const sections = articleText(id)
+  const title = articles.get(id)?.title ?? "";
+  const sections = (articles.get(id)?.body ?? "")
     .split(/\n(?=#{1,6}\s)/)
     .map((block) => {
       const [first = "", ...rest] = block.split("\n");
@@ -75,8 +71,7 @@ function passagesOf(id: string): Passage[] {
 
 export function register(r: Router): void {
   r.get("/api/v1/guide/articles", "kb.read", (): Reply => ({
-    body: kbSources()
-      .map((s) => s.source.id)
+    body: [...articles.keys()]
       .filter(isArticle)
       .map(summaryRow)
       .toSorted((a, b) => a.title.localeCompare(b.title, "vi")),
@@ -85,20 +80,21 @@ export function register(r: Router): void {
   r.get("/api/v1/guide/articles/{article_id}", "kb.read", (ctx): Reply => {
     const id = ctx.params.article_id ?? "";
     if (!isArticle(id)) fail(404, "not_found", "Không tìm thấy bài hướng dẫn.");
-    return { body: { ...summaryRow(id), body: articleText(id) } };
+    return { body: { ...summaryRow(id), body: articles.get(id)?.body ?? "" } };
   });
 
   r.put("/api/v1/guide/articles/{article_id}/tags", "kb.manage", (ctx): Reply => {
     const id = ctx.params.article_id ?? "";
-    if (!kbSourceById(id)) fail(404, "not_found", "Không tìm thấy nguồn tri thức.");
+    const article = articles.get(id);
+    if (!article) fail(404, "not_found", "Không tìm thấy bài hướng dẫn.");
     const { tags } = bodyOf<S["GuideTagsUpdate"]>(ctx);
     if (tags.some((t) => t.trim() === ""))
       fail(422, "validation_failed", "Nhãn không được để trống.");
     const cleaned = [...new Set(tags.map((t) => t.trim()))].map((t) =>
       t.toLowerCase() === GUIDE ? GUIDE : t,
     );
-    if (cleaned.length > 10) fail(422, "validation_failed", "Tối đa 10 nhãn cho một nguồn.");
-    tagsBySource.set(id, cleaned);
+    if (cleaned.length > 10) fail(422, "validation_failed", "Tối đa 10 nhãn cho một bài.");
+    article.tags = cleaned;
     return { body: summaryRow(id) };
   });
 
@@ -108,8 +104,7 @@ export function register(r: Router): void {
     const words = fold(question)
       .split(/[^a-z0-9]+/)
       .filter((w) => w.length > 1 && !FILLER.has(w));
-    const hits: S["GuideAskHit"][] = kbSources()
-      .map((s) => s.source.id)
+    const hits: S["GuideAskHit"][] = [...articles.keys()]
       .filter(isArticle)
       .flatMap(passagesOf)
       .map((p) => {

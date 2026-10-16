@@ -21,6 +21,42 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-16 · change · Hướng dẫn: bài mẫu không còn nhắc "Hàng đợi duyệt" và mẫu tin
+- Where: `pema-agent/frontend/mock/data/guide.ts` and the seed `backend/apps/api/pema/clinic/actions/seed_guide.py` (the text of the sample articles; no frontend component changed)
+- Change: in "Bắt đầu theo vai trò" step 4 for the manager is now "xem Vòng đời khách hàng và các màn quản trị agent" (the "Hàng đợi duyệt" is gone) and the last note is "Hệ thống không tự gửi tin cho người bệnh: nhân viên liên hệ và ghi lại kết quả."; in "CSKH chủ động: xử lý việc hôm nay" the sentence about messages to customers is now "Tin nhắn cho khách do nhân viên gửi, rồi ghi lại kết quả."
+- Web canvas target: the Hướng dẫn frames (article text), unknown ids
+- Logged by: db baseline D8
+
+### 2026-10-16 · change · CRM, "Quy tắc tự động": thẻ quy tắc không còn nhãn kiểu gửi
+- Where: `pema-agent/frontend/src/components/ops/crm/rules-panel.tsx` · route `/crm`
+- Change: a rule card no longer shows the grey badge after the priority badge ("Chỉ tạo việc cho nhân viên" / "Nhắc lịch tự động" / "Soạn nháp, người duyệt rồi mới gửi"); a rule only creates a task for staff now, so there is nothing to choose. The notice above the cards ("... tạo việc cho nhân viên, không tự gửi tin hoặc tự duyệt y khoa.") stays.
+- Web canvas target: unknown (CRM rules panel)
+- Logged by: db baseline D8
+
+### 2026-10-16 · change · Patient 360: bỏ nút "Nhắn tin" (hộp thoại "Gửi cập nhật") và thẻ "Hội thoại"
+- Where: `pema-agent/frontend/src/components/ops/patient/patient-360-view.tsx`, `patient-dialogs.tsx`, `overview-tab.tsx` · route `/patients/[id]`
+- Change: the header no longer has the button "Nhắn tin"; the dialog "Gửi cập nhật" (field "Nội dung", button "Gửi tin nhắn", note that the text shows on the patient app timeline) is gone. The tab "Tổng quan" no longer has the card "Hội thoại" (the patient's conversations, each linking to the inbox). "AI brief" and the dialog "Chăm sóc tại nhà" stay; the patient app timeline keeps only the aftercare text.
+- Web canvas target: WC14 (removed), the card "Hội thoại" of WC4 and its role states (WC23), header of the Patient 360 frames
+- Logged by: db baseline D8
+
+### 2026-10-16 · remove · Menu và thanh trên: "Theo dõi" (tab "Inbox"), chuông và liên kết thông báo
+- Where: `pema-agent/frontend/src/lib/nav.tsx`, `src/components/admin/layout/app-shell.tsx`
+- Change: the sidebar entry "Theo dõi" (mobile tab "Inbox") under "Không gian làm việc" is gone, so the section is Tổng quan, Hôm nay, Điều phối lịch, Tìm bệnh nhân, Ảnh trước / sau; the top bar no longer shows the bell that opened the inbox ("Mở thông báo") or the link to "Thông báo của tôi".
+- Web canvas target: the sidebar and the top bar of every frame (block "sidebar", "top-bar")
+- Logged by: db baseline D8
+
+### 2026-10-16 · remove · Thông báo của tôi (`/me/notifications`)
+- Where: `pema-agent/frontend/src/app/(admin)/me/notifications/page.tsx`, `src/components/ops/notifications/zalo-link-dialog.tsx`
+- Change: the page "Thông báo của tôi" (Zalo link with a one-time code, notification preferences, quiet hours, the dialog "Liên kết Zalo") is removed together with the notification backend.
+- Web canvas target: WM42 … WM51 (group "Inbox chia sẻ", all the "Thông báo của tôi" frames)
+- Logged by: db baseline D8
+
+### 2026-10-16 · remove · Inbox / Theo dõi (`/inbox`)
+- Where: `pema-agent/frontend/src/app/(admin)/inbox/page.tsx`, `src/components/ops/inbox/conversation-list.tsx`, `thread-view.tsx`, `assignment-dialogs.tsx`, `holder-banner.tsx`, `presence-line.tsx`
+- Change: the whole page is removed: the list of conversations (tabs "Chờ nhận", "Của tôi", "Tất cả", filter by identity, search "Tìm hội thoại"), the thread with the composer, the holder banner, the line "<tên> đang xem / đang trả lời" and the dialogs "Nhận hội thoại", "Tiếp quản hội thoại", "Trả lại hội thoại", "Giao hội thoại cho đồng nghiệp" and "Lịch sử phụ trách". No channel pours messages into the CRM any more, and the follow-up queue (review items) and the message templates went with it. The unused `RiskBadge` helper of `src/components/ops/ops-ui.tsx` (its risk levels came from the removed review queue; no screen rendered it) is deleted too.
+- Web canvas target: WD6, WD15, WD16 (Theo dõi) and WM1 … WM41 (group "Inbox chia sẻ": list, states, dialogs)
+- Logged by: db baseline D8
+
 ### 2026-10-16 · remove · Điều khiển agent: form tài khoản Zalo, mục "Nhóm", công tắc "Nghe tin nhóm không nhắc tên"
 - Where: plugin `zalo` pages (`backend/apps/agent/plugins/zalo/ui/src/pages/account-drawer.tsx`)
 - Change: the switch "Nghe tin nhóm không nhắc tên" (hint "Ghi vào ngữ cảnh, không gọi model") is gone from the section "Nhóm" of the account form; no channel read the setting. The switches "Trả lời trong nhóm" and "Nhóm phải @nhắc tên mới trả lời" stay.

@@ -164,16 +164,9 @@ const ALL: Permission[] = [
   "crm.task.read",
   "crm.task.resolve",
   "crm.activity.write",
-  "conversation.read",
-  "conversation.reply",
-  "review.read",
-  "review.decide",
-  "review.decide_clinical",
   "kb.read",
   "kb.manage",
   "admin.rules",
-  "admin.channels",
-  "admin.kill_switch",
   "admin.logs",
   "admin.accounts",
   "admin.agents",
@@ -185,20 +178,7 @@ const ALL: Permission[] = [
   "admin.policy",
   // The manager LISTS staff (`GET /admin/users`); changing them is `admin.users`, the owner's alone.
   "admin.users.read",
-  "care.read",
-  "care.act",
-  "care.admin",
-  "care.matrix",
-  "care.approve",
   // Package O: the shared inbox (claim, takeover, assign), identities, roster and notifications.
-  "identity.manage",
-  "roster.manage",
-  "roster.read",
-  "thread.claim",
-  "thread.assign",
-  "thread.end_shift",
-  "notify.self",
-  "notify.manage",
 ];
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
@@ -234,19 +214,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "order.approve",
     "finance.read_own",
     "crm.task.read",
-    "conversation.read",
-    "conversation.reply",
-    "review.read",
-    "review.decide",
-    "review.decide_clinical",
     "kb.read",
-    "care.read",
-    "care.act",
-    "care.matrix",
-    "care.approve",
-    "roster.read",
-    "thread.claim",
-    "notify.self",
   ],
   cs_staff: [
     "patient.read",
@@ -260,16 +228,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "crm.task.read",
     "crm.task.resolve",
     "crm.activity.write",
-    "conversation.read",
-    "conversation.reply",
-    "review.read",
-    "review.decide",
     "kb.read",
-    "care.read",
-    "care.act",
-    "roster.read",
-    "thread.claim",
-    "notify.self",
   ],
   reception: [
     "patient.read",
@@ -280,7 +239,6 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "appointment.write",
     "appointment.check_in",
     "crm.task.read",
-    "conversation.read",
     "kb.read",
   ],
   // U11: the old web's "Đối soát & thu ngân" account: finance, the cashier desk, patient identity, the guide.
@@ -412,6 +370,23 @@ export function register(r: Router): void {
     }
     return { body: issueAgentToken(), headers: { "cache-control": "no-store" } };
   });
+
+  // Open, like the real one: the public key that checks the agent tokens (a made-up key, nothing is signed here).
+  r.get("/api/v1/.well-known/jwks.json", null, (): Reply => ({
+    body: {
+      keys: [
+        {
+          kty: "OKP",
+          crv: "Ed25519",
+          x: "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+          kid: "mock-agent-key",
+          use: "sig",
+          alg: "EdDSA",
+        },
+      ],
+    },
+    headers: { "cache-control": "no-store" },
+  }));
 
   // Mirrors the real route: needs the current password, 8-character floor, must differ, every OTHER session
   // of the user ends, the session that made the change keeps working (204, same cookie).

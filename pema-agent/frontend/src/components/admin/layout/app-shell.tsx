@@ -128,8 +128,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           user={me.user}
           pathname={pathname}
           searchHref={allows(["patient.read"]) ? "/patients" : undefined}
-          bellHref={allows(["conversation.read"]) ? "/inbox" : undefined}
-          notifyHref={allows(["notify.self"]) ? "/me/notifications" : undefined}
           menuOpen={menuOpen}
           onMenu={setMenuOpen}
           onLogoutRequest={guardedLogout}

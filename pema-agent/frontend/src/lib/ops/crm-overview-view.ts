@@ -37,12 +37,6 @@ export const SEGMENT_ORDER: readonly SegmentKey[] = [
   "at_risk",
 ];
 
-export const SEND_MODE_LABEL: Record<S["RuleSendMode"], string> = {
-  staff_task: "Chỉ tạo việc cho nhân viên",
-  auto_reminder: "Nhắc lịch tự động",
-  draft_for_review: "Soạn nháp, người duyệt rồi mới gửi",
-};
-
 export const ACTIVITY_KIND_LABEL: Record<string, string> = {
   cskh: "CSKH",
   complaint: "Khiếu nại",

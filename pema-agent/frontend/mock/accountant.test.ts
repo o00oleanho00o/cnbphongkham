@@ -55,7 +55,6 @@ describe("the accountant account", () => {
       "media.write",
       "admin.users",
       "crm.task.read",
-      "conversation.read",
     ]) {
       expect(me.permissions).not.toContain(denied);
     }
@@ -63,8 +62,8 @@ describe("the accountant account", () => {
     expect(ROLE_PERMISSIONS.accountant).toContain("finance.collect");
   });
 
-  it("is_refused_the_inbox_the_crm_queue_and_the_staff_list", async () => {
-    for (const path of ["/api/v1/conversations", "/api/v1/crm/tasks", "/api/v1/admin/users"]) {
+  it("is_refused_the_crm_queue_and_the_staff_list", async () => {
+    for (const path of ["/api/v1/crm/tasks", "/api/v1/admin/users"]) {
       expect((await call("GET", path)).status, path).toBe(403);
     }
   });

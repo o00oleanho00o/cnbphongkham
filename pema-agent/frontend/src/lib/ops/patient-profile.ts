@@ -10,7 +10,6 @@ export const MAX_SERVICE_SESSIONS = 20;
 
 export const BRIEF_BLANK = "Brief không được để trống.";
 export const AFTERCARE_BLANK = "Hãy nhập hướng dẫn.";
-export const MESSAGE_BLANK = "Hãy nhập nội dung tin nhắn.";
 export const CLINICAL_NOTE_BLANK = "Nhập tiền sử và nhận định/chẩn đoán do bác sĩ xác nhận.";
 export const EXPECTED_RETURN_INVALID = "Nhập ngày hợp lệ, lý do và nguồn khuyến nghị.";
 export const NAME_REQUIRED = "Nhập tên người bệnh";

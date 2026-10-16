@@ -10,9 +10,8 @@
 //   session   session.read     (the form needs session.write)
 //   photos    media.read       (upload needs media.write)
 //   finance   patient.read_360 (amounts and buttons follow finance.* and order.*; U9)
-// The header carries "AI brief" (session.write: a template, a doctor approves it) and "Nhắn tin"
-// (conversation.reply); the cards of Tổng quan open "Thông tin cần nhớ", "Chăm sóc tại nhà" and
-// "Ngày dự kiến quay lại".
+// The header carries "AI brief" (session.write: a template, a doctor approves it); the cards of Tổng quan open
+// "Thông tin cần nhớ", "Chăm sóc tại nhà" and "Ngày dự kiến quay lại".
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -24,7 +23,6 @@ import {
   BriefDialog,
   ExpectedReturnDialog,
   FactsDialog,
-  MessageDialog,
 } from "@/components/ops/patient/patient-dialogs";
 import { OverviewTab } from "@/components/ops/patient/overview-tab";
 import { PhotosTab } from "@/components/ops/patient/photos-tab";
@@ -39,7 +37,7 @@ import { Button } from "@/ui/button";
 import { Tabs } from "@/ui/tabs";
 
 type P360 = Schemas["Patient360"];
-type DialogKey = "brief" | "message" | "facts" | "aftercare" | "expected";
+type DialogKey = "brief" | "facts" | "aftercare" | "expected";
 
 const ID_PREFIX = "p360";
 
@@ -118,11 +116,6 @@ export function Patient360View({ data, onChanged }: { data: P360; onChanged: () 
           {can("session.write") && (
             <Button variant="secondary" onClick={() => setDialog("brief")}>
               ✦ AI brief
-            </Button>
-          )}
-          {can("conversation.reply") && (
-            <Button variant="secondary" onClick={() => setDialog("message")}>
-              Nhắn tin
             </Button>
           )}
           {can("session.write") && (
@@ -205,9 +198,6 @@ export function Patient360View({ data, onChanged }: { data: P360; onChanged: () 
       })}
 
       {dialog === "brief" && <BriefDialog data={data} onClose={() => setDialog(null)} />}
-      {dialog === "message" && (
-        <MessageDialog data={data} onClose={() => setDialog(null)} onSent={onChanged} />
-      )}
       {dialog === "aftercare" && (
         <AftercareDialog
           patientId={patient.id}

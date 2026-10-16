@@ -205,7 +205,6 @@ describe("crm page: log and rules", () => {
     expect(await screen.findByText("Sau thủ thuật · D+1")).toBeTruthy();
     expect(screen.getByText("Gọi hỏi tình trạng")).toBeTruthy();
     expect(screen.getByText(/sau 1 ngày → tạo việc/)).toBeTruthy();
-    expect(screen.getByText("Chỉ tạo việc cho nhân viên")).toBeTruthy();
     expect(screen.queryByRole("button", { name: /Lưu|Sửa/ })).toBeNull();
   });
 });

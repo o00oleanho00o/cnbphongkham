@@ -1,6 +1,6 @@
-// Fictional staff-guide articles of the mock backend. In the real backend an article is a text source of the
-// knowledge base tagged `guide` (the seed `pema.clinic.actions.seed_guide` adds three); here they are seeded as
-// knowledge-base sources (mock/handlers/kb.ts) and the guide handler reads them back through their tags.
+// Fictional staff-guide articles of the mock backend. In the real backend an article is a row of
+// `clinic.guide_article` tagged `guide` (the seed `pema.clinic.actions.seed_guide` adds three); the guide handler
+// (mock/handlers/guide.ts) keeps these in memory.
 // Wording is invented for the demo: no real protocol, no patient data.
 
 export type GuideSeed = { id: string; name: string; topic: string; body: string };
@@ -17,7 +17,7 @@ export const GUIDE_SEEDS: GuideSeed[] = [
 1. **Lễ tân:** tìm đúng hồ sơ ở **Tìm bệnh nhân**, xếp lịch phù hợp, xác nhận hoặc check-in khi người bệnh đến.
 2. **Bác sĩ:** mở Patient 360, xem lịch sử, cảnh báo và phản hồi, rồi ghi nhận và duyệt hướng dẫn.
 3. **Chăm sóc khách hàng:** mở **Hôm nay** để xử lý việc đến hạn, ghi kết quả liên hệ, chuyển bác sĩ khi cần.
-4. **Quản lý và chủ phòng khám:** xem **Hàng đợi duyệt**, [Vòng đời khách hàng](/crm) và các màn quản trị agent.
+4. **Quản lý và chủ phòng khám:** xem [Vòng đời khách hàng](/crm) và các màn quản trị agent.
 
 ## Thông tin đi tiếp như thế nào?
 
@@ -25,7 +25,7 @@ Mỗi lần bàn giao cần rõ ba điều: ai phụ trách, việc nào đã xo
 
 ## Điểm cần nhớ
 
-- Người bệnh chỉ nhận được phản hồi đã được người có quyền duyệt. Nháp của trợ lý nằm ở **Hàng đợi duyệt**.
+- Hệ thống không tự gửi tin cho người bệnh: nhân viên liên hệ và ghi lại kết quả.
 - Nội dung này là dữ liệu mẫu; không nhập hồ sơ người bệnh thật khi thử.
 `,
   },
@@ -46,7 +46,7 @@ Mỗi lần bàn giao cần rõ ba điều: ai phụ trách, việc nào đã xo
 
 ## Thông tin đi tiếp như thế nào?
 
-Kết quả liên hệ là ghi nhận nội bộ. Hệ thống không tự gửi lời khuyên y khoa. Tin nhắn gửi cho khách phải qua **Hàng đợi duyệt** hoặc là mẫu tin đã được bác sĩ duyệt.
+Kết quả liên hệ là ghi nhận nội bộ. Hệ thống không tự gửi lời khuyên y khoa. Tin nhắn cho khách do nhân viên gửi, rồi ghi lại kết quả.
 
 ## Điểm cần nhớ
 

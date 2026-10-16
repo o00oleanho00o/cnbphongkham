@@ -258,10 +258,8 @@ export function register(r: Router): void {
     const patient = patientOr404(ctx);
     const user = session(ctx);
     const input = bodyOf<S["AppUpdateCreate"]>(ctx);
-    const needs: Permission = input.kind === "aftercare" ? "session.write" : "conversation.reply";
-    if (!holds(user, needs)) fail(403, "forbidden", "Bạn không có quyền thực hiện thao tác này.");
-    if (input.body.trim() === "")
-      invalid(input.kind === "aftercare" ? "Hãy nhập hướng dẫn." : "Hãy nhập nội dung tin nhắn.");
+    if (!holds(user, "session.write")) fail(403, "forbidden", "Bạn không có quyền thực hiện thao tác này.");
+    if (input.body.trim() === "") invalid("Hãy nhập hướng dẫn.");
     const row: StoredAppUpdate = {
       id: uid("appupd"),
       patient_id: patient.id,

@@ -62,42 +62,6 @@ export const APPOINTMENT_STATUS_LABEL: Record<S["AppointmentStatus"], string> = 
   missed: "Vắng hẹn",
 };
 
-export const CONVERSATION_STATUS_LABEL: Record<S["ConversationStatus"], string> = {
-  open: "Đang mở",
-  pending_review: "Chờ duyệt",
-  handoff: "Chuyển nhân viên",
-  closed: "Đã đóng",
-};
-
-export const REVIEW_KIND_LABEL: Record<S["ReviewKind"], string> = {
-  reply_draft: "Nháp trả lời",
-  followup_draft: "Nháp chăm sóc sau điều trị",
-  triage_alert: "Cảnh báo cần bác sĩ",
-  media_flag: "Khách gửi ảnh hoặc tệp",
-  identity_check: "Xác minh danh tính",
-};
-
-export const REVIEW_STATUS_LABEL: Record<S["ReviewStatus"], string> = {
-  pending: "Chờ duyệt",
-  approved: "Đã duyệt",
-  rejected: "Đã từ chối",
-  escalated: "Đã chuyển bác sĩ",
-  expired: "Hết hạn",
-};
-
-export const REVIEW_ORIGIN_LABEL: Record<S["ReviewOrigin"], string> = {
-  agent_turn: "Trợ lý AI trả lời khách",
-  scheduled_agent: "Trợ lý AI theo lịch",
-  crm_rule: "Quy tắc chăm sóc",
-  policy: "Hồ sơ chính sách",
-};
-
-export const RISK_LABEL: Record<S["RiskLevel"], string> = {
-  normal: "Bình thường",
-  attention: "Cần chú ý",
-  red_flag: "Dấu hiệu cần bác sĩ",
-};
-
 export const LIFECYCLE_LABEL: Record<string, string> = {
   new: "Khách mới",
   returning: "Khách quay lại",
@@ -126,33 +90,6 @@ export const GENDER_LABEL: Record<S["Gender"], string> = {
   male: "Nam",
   other: "Khác",
   unknown: "Chưa rõ",
-};
-
-export const SENDER_LABEL: Record<S["SenderType"], string> = {
-  patient: "Khách",
-  staff: "Nhân viên",
-  ai_draft: "Trợ lý AI (nháp)",
-  system: "Hệ thống",
-};
-
-export const MESSAGE_STATUS_LABEL: Record<S["MessageStatus"], string> = {
-  received: "Đã nhận",
-  draft: "Nháp chờ duyệt",
-  queued: "Đang gửi",
-  sent: "Đã gửi",
-  failed: "Gửi lỗi",
-  rejected: "Đã từ chối",
-};
-
-export const CHANNEL_KIND_LABEL: Record<S["ChannelKind"], string> = {
-  zalo_bot: "Zalo Bot",
-  zalo_personal: "Zalo cá nhân",
-  zalo_oa: "Zalo OA",
-};
-
-export const POLICY_PROFILE_LABEL: Record<S["PolicyProfileKey"], string> = {
-  staff_assistant: "Trợ lý nội bộ",
-  patient_channel: "Kênh bệnh nhân",
 };
 
 // ---------------------------------------------------------------- Patient 360 tabs (package U, step U3)

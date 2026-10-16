@@ -15,7 +15,6 @@ import {
   APPOINTMENT_STATUS_LABEL,
   CHANNEL_LABEL,
   CONSENT_KIND_LABEL,
-  CONVERSATION_STATUS_LABEL,
   EXPECTED_SOURCE_LABEL,
   OUTCOME_LABEL,
   RULE_LABEL,
@@ -274,31 +273,6 @@ export function OverviewTab({
           </ul>
         </Card>
 
-        <Card title="Hội thoại">
-          {(data.conversations ?? []).length === 0 && <Muted>Chưa có hội thoại.</Muted>}
-          <ul className="space-y-2">
-            {(data.conversations ?? []).map((c) => (
-              <li key={c.id}>
-                <Link
-                  href={`/inbox?c=${c.id}`}
-                  className="block rounded-control border border-line px-3 py-2.5 hover:bg-tile/50"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-label text-ink-soft">
-                      {formatDateTime(c.last_message_at)}
-                    </span>
-                    <Badge tone="gray" dot={false}>
-                      {CONVERSATION_STATUS_LABEL[c.status]}
-                    </Badge>
-                  </div>
-                  <p className="mt-0.5 line-clamp-2 text-small text-ink">
-                    {c.last_message_preview}
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Card>
 
         <Card title="Đồng ý của khách">
           {(data.consents ?? []).length === 0 && <Muted>Chưa ghi nhận đồng ý nào.</Muted>}

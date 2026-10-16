@@ -84,7 +84,7 @@ describe("LiveConnection events", () => {
     const { events, current } = setup(["tasks.changed"]);
     current().open();
     current().send({ type: "tasks.changed", id: "t-1" });
-    current().send({ type: "inbox.changed", id: "c-1" });
+    current().send({ type: "appointments.changed", id: "a-1" });
     current().send({ type: "unknown.thing", id: "x" });
     current().onmessage?.(new MessageEvent("message", { data: "not json" }));
     vi.advanceTimersByTime(COALESCE_MS);
@@ -94,23 +94,23 @@ describe("LiveConnection events", () => {
   it("coalesces a burst of the same event into one call", () => {
     const { events, current } = setup();
     current().open();
-    current().send({ type: "inbox.changed", id: "c-1" });
-    current().send({ type: "inbox.changed", id: "c-1" });
-    current().send({ type: "inbox.changed", id: "c-2" });
+    current().send({ type: "tasks.changed", id: "c-1" });
+    current().send({ type: "tasks.changed", id: "c-1" });
+    current().send({ type: "tasks.changed", id: "c-2" });
     expect(events).toEqual([]);
     vi.advanceTimersByTime(COALESCE_MS);
     expect(events).toEqual([
-      { type: "inbox.changed", id: "c-1" },
-      { type: "inbox.changed", id: "c-2" },
+      { type: "tasks.changed", id: "c-1" },
+      { type: "tasks.changed", id: "c-2" },
     ]);
   });
 
   it("keeps the id of an event as null when the server sends none", () => {
     const { events, current } = setup();
     current().open();
-    current().send({ type: "review.changed" });
+    current().send({ type: "appointments.changed" });
     vi.advanceTimersByTime(COALESCE_MS);
-    expect(events).toEqual([{ type: "review.changed", id: null }]);
+    expect(events).toEqual([{ type: "appointments.changed", id: null }]);
   });
 });
 
@@ -190,7 +190,7 @@ describe("LiveConnection drop and fallback", () => {
     first.open();
     first.fail(true);
     vi.advanceTimersByTime(RECONNECT_DELAYS_MS[0] ?? 0);
-    first.send({ type: "inbox.changed", id: "stale" });
+    first.send({ type: "tasks.changed", id: "stale" });
     vi.advanceTimersByTime(COALESCE_MS);
     expect(events).toEqual([]);
   });
@@ -200,7 +200,7 @@ describe("LiveConnection close", () => {
   it("closes the source and leaves no timer behind in any state", () => {
     const { connection, onRefresh, current } = setup();
     current().open();
-    current().send({ type: "inbox.changed", id: "c-1" });
+    current().send({ type: "tasks.changed", id: "c-1" });
     current().fail(true);
     vi.advanceTimersByTime(FALLBACK_AFTER_MS + POLL_EVERY_MS);
     const refreshesBefore = onRefresh.mock.calls.length;
@@ -216,7 +216,7 @@ describe("LiveConnection close", () => {
   it("drops events that were still waiting to be handed over", () => {
     const { connection, events, current } = setup();
     current().open();
-    current().send({ type: "inbox.changed", id: "c-1" });
+    current().send({ type: "tasks.changed", id: "c-1" });
     connection.close();
     vi.advanceTimersByTime(COALESCE_MS * 4);
     expect(events).toEqual([]);

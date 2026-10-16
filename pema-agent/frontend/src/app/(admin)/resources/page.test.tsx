@@ -72,7 +72,7 @@ const BLOCK: Schemas["RoomBlockOut"] = {
   created_by: null,
 };
 
-const MANAGER: Permission[] = ["appointment.read", "admin.rules", "care.admin"];
+const MANAGER: Permission[] = ["appointment.read", "admin.rules"];
 const RECEPTION: Permission[] = ["appointment.read"];
 
 function ok<T>(data: T) {

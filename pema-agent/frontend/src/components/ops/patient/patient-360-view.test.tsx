@@ -56,7 +56,6 @@ const DOCTOR: Permission[] = [
   "session.write",
   "media.read",
   "media.write",
-  "care.read",
 ];
 const MANAGER: Permission[] = ["patient.read_360"];
 
@@ -169,18 +168,17 @@ describe("Patient360View", () => {
     });
   });
 
-  it("ai_brief_is_for_whoever_writes_sessions_and_the_message_button_for_whoever_may_reply", () => {
-    renderView([...DOCTOR, "conversation.reply"]);
+  it("ai_brief_is_for_whoever_writes_sessions_and_nobody_gets_a_message_button", () => {
+    renderView(DOCTOR);
 
     expect(screen.getByRole("button", { name: /AI brief/ })).not.toBeNull();
-    expect(screen.getByRole("button", { name: "Nhắn tin" })).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "Nhắn tin" })).toBeNull();
   });
 
-  it("a_manager_gets_neither_the_brief_nor_the_message_button", () => {
+  it("a_manager_does_not_get_the_brief", () => {
     renderView(MANAGER);
 
     expect(screen.queryByRole("button", { name: /AI brief/ })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Nhắn tin" })).toBeNull();
   });
 
   it("the_warning_lines_are_chips_in_the_header", () => {

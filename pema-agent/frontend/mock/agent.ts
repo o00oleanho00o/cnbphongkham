@@ -55,7 +55,7 @@ function gatewayError(status: number, kind: string, message: string): Reply {
 const ACCOUNT_DEFAULTS = {
   group_require_mention: true,
   respond_to_groups: false,
-  group_passive_listen: false,
+  listen_group_ids: [] as string[],
   auto_react_icon: "heart",
   typing_indicator_enabled: true,
   disabled_tools: [] as string[],

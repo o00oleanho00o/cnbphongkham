@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 
 import { Badge } from "@/components/admin/shared/ui-bits";
 import type { Schemas } from "@/lib/api";
-import { PRIORITY_LABEL, RISK_LABEL } from "@/lib/ops/labels";
+import { PRIORITY_LABEL } from "@/lib/ops/labels";
 import { Button } from "@/ui/button";
 import { cx } from "@/ui/classnames";
 
@@ -72,16 +72,6 @@ const PRIORITY_TONE: Record<Schemas["TaskPriority"], Tone> = {
 
 export function PriorityBadge({ priority }: { priority: Schemas["TaskPriority"] }) {
   return <Badge tone={PRIORITY_TONE[priority]}>{PRIORITY_LABEL[priority]}</Badge>;
-}
-
-const RISK_TONE: Record<Schemas["RiskLevel"], Tone> = {
-  normal: "gray",
-  attention: "amber",
-  red_flag: "red",
-};
-
-export function RiskBadge({ risk }: { risk: Schemas["RiskLevel"] }) {
-  return <Badge tone={RISK_TONE[risk]}>{RISK_LABEL[risk]}</Badge>;
 }
 
 export function Spinner({ label = "Đang tải" }: { label?: string }) {

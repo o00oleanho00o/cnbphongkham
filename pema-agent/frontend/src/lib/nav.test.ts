@@ -66,7 +66,6 @@ const NOT_IN_MENU = [
   "/",
   "/login",
   "/admin/auth",
-  "/me/notifications",
   "/dev/kit",
   ...FINANCE_TABS,
   ...AGENT_TABS,
@@ -82,20 +81,18 @@ describe("menu order of the old Pema Clinic Web", () => {
       "/today",
       "/schedule",
       "/patients",
-      "/inbox",
       "/studio",
     ]);
   });
 
   it("keeps_the_old_labels", () => {
-    const labels = items.slice(0, 12).map((i) => i.label);
+    const labels = items.slice(0, 11).map((i) => i.label);
 
     expect(labels).toEqual([
       "Tổng quan",
       "Hôm nay",
       "Điều phối lịch",
       "Tìm bệnh nhân",
-      "Theo dõi",
       "Ảnh trước / sau",
       "Bác sĩ & phòng",
       "Dịch vụ",
@@ -225,7 +222,7 @@ describe("the accountant menu", () => {
       .map((i) => i.to);
 
     expect(paths).toEqual(expect.arrayContaining(["/patients", "/cashier", "/finance", "/guide"]));
-    for (const hidden of ["/today", "/inbox", "/crm", "/dashboard", "/schedule", "/studio"]) {
+    for (const hidden of ["/today", "/crm", "/dashboard", "/schedule", "/studio"]) {
       expect(paths).not.toContain(hidden);
     }
   });

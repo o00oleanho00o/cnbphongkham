@@ -9,11 +9,8 @@ import {
   appointments,
   clinicToday,
   consents,
-  conversations,
-  messages,
   patientById,
   patients,
-  reviewItems,
   tasks,
 } from "../data/clinic";
 import {
@@ -32,8 +29,6 @@ import {
 } from "../core";
 import { lightSession, notes, plansOf, sessionsOf } from "../data/patient-care";
 import { assertAssignable } from "../assignable";
-import { lockedError, setHolder } from "../data/ops";
-import { viewersFor } from "../live-bus";
 import { decorate360, matchesView } from "./patient-profile";
 
 type S = Schemas;
@@ -104,9 +99,6 @@ function patient360(p: S["PatientOut"]): S["Patient360"] {
     appointments: patientAppointments,
     open_tasks: openTasks,
     consents: consents[p.id] ?? [],
-    conversations: conversations
-      .filter((c) => c.patient_id === p.id)
-      .map(({ created_at: _created, ...summary }) => summary),
     episodes: isTreating
       ? [
           {
@@ -565,70 +557,6 @@ function resolveTask(ctx: Ctx): Reply {
   });
 }
 
-// ------------------------------------------------------------ conversations
-
-function conversationSummary(c: S["ConversationOut"]): S["ConversationSummary"] {
-  const { created_at: _created, ...summary } = c;
-  return summary;
-}
-
-function sendStaffMessage(ctx: Ctx): Reply {
-  const user = session(ctx);
-  const conv = findOr404(conversations, ctx.params.conversation_id ?? "", "hội thoại");
-  const { text, proactive } = bodyOf<S["MessageCreate"]>(ctx);
-  return once(ctx, `msg:${conv.id}`, (): Reply => {
-    if (!text.trim()) fail(422, "validation_failed", "Nhập nội dung tin nhắn.");
-    if (conv.status === "closed") {
-      fail(409, "invalid_state", "Hội thoại đã đóng. Mở lại trước khi nhắn.");
-    }
-    // Package O: only the holder replies; the first reply on an unassigned thread claims it.
-    if (conv.assigned_user_id && conv.assigned_user_id !== user.userId) lockedError(conv);
-    if (!conv.assigned_user_id) setHolder(conv, "claim", user.userId, user.userId);
-    const created: S["MessageOut"] = {
-      id: uid("msg"),
-      conversation_id: conv.id,
-      direction: "outbound",
-      sender_type: "staff",
-      sender_user_id: user.userId,
-      body: text.trim(),
-      status: "sent",
-      created_at: isoFromNow(0),
-      sent_at: isoFromNow(0),
-      proactive: proactive ?? false,
-      review_item_id: null,
-      error_code: null,
-    };
-    messages.push(created);
-    conv.last_message_at = created.created_at;
-    conv.last_message_preview = created.body;
-    conv.unread_count = 0;
-    conv.version += 1;
-    return { status: 201, body: created };
-  });
-}
-
-// ------------------------------------------------------------------- review
-
-function decideGuard(ctx: Ctx, item: S["ReviewItemOut"]): void {
-  const user = session(ctx);
-  if (item.status !== "pending" && item.status !== "escalated") {
-    fail(409, "invalid_state", "Mục này đã được xử lý.");
-  }
-  if (item.requires_doctor && !user.permissions.includes("review.decide_clinical")) {
-    fail(403, "forbidden", "Nội dung liên quan lâm sàng: cần bác sĩ duyệt.");
-  }
-}
-
-function closeLinkedConversation(item: S["ReviewItemOut"]): void {
-  const conv = conversations.find((c) => c.id === item.conversation_id);
-  if (!conv) return;
-  const stillPending = reviewItems.some(
-    (r) => r.conversation_id === conv.id && r.id !== item.id && r.status === "pending",
-  );
-  conv.has_pending_review = stillPending;
-  if (!stillPending && conv.status === "pending_review") conv.status = "open";
-}
-
 export function register(r: Router): void {
   // patients
   r.get("/api/v1/patients", "patient.read", (ctx): Reply => {
@@ -831,146 +759,5 @@ export function register(r: Router): void {
     };
     activities.unshift(created);
     return { status: 201, body: created };
-  });
-
-  // inbox
-  r.get("/api/v1/conversations", "conversation.read", (ctx): Reply => {
-    const status = ctx.query.get("conversation_status");
-    const assigned = ctx.query.get("assigned_user_id");
-    const patient = ctx.query.get("patient_id");
-    const pending = ctx.query.get("has_pending_review");
-    const q = ctx.query.get("q");
-    const found = conversations
-      .filter((c) => !status || c.status === status)
-      .filter((c) => !assigned || c.assigned_user_id === assigned)
-      .filter((c) => !patient || c.patient_id === patient)
-      .filter((c) => pending === null || String(c.has_pending_review) === pending)
-      .filter(
-        (c) =>
-          !q ||
-          foldForSearch(
-            `${c.patient_display_name ?? ""} ${c.patient_code ?? ""} ${c.last_message_preview ?? ""}`,
-          ).includes(foldForSearch(q)),
-      )
-      .toSorted((a, b) => (b.last_message_at ?? "").localeCompare(a.last_message_at ?? ""))
-      .map((c) => ({ ...conversationSummary(c), viewers: viewersFor(c.id, session(ctx).userId) }));
-    return { body: paginate(found, ctx.query) };
-  });
-  r.get("/api/v1/conversations/{conversation_id}", "conversation.read", (ctx): Reply => {
-    const conv = findOr404(conversations, ctx.params.conversation_id ?? "", "hội thoại");
-    return { body: { ...conv, viewers: viewersFor(conv.id, session(ctx).userId) } };
-  });
-  r.patch("/api/v1/conversations/{conversation_id}", "conversation.reply", (ctx): Reply => {
-    const conv = findOr404(conversations, ctx.params.conversation_id ?? "", "hội thoại");
-    const { version, assigned_user_id, status } = bodyOf<S["ConversationUpdate"]>(ctx);
-    checkVersion(conv.version, version);
-    if (assigned_user_id) assertAssignable(assigned_user_id);
-    if (assigned_user_id !== undefined) {
-      setHolder(conv, "assign", session(ctx).userId, assigned_user_id);
-    }
-    if (status) conv.status = status;
-    conv.version += 1;
-    return { body: conv };
-  });
-  r.get("/api/v1/conversations/{conversation_id}/messages", "conversation.read", (ctx): Reply => {
-    const conv = findOr404(conversations, ctx.params.conversation_id ?? "", "hội thoại");
-    const found = messages
-      .filter((m) => m.conversation_id === conv.id)
-      .toSorted((a, b) => a.created_at.localeCompare(b.created_at));
-    return { body: paginate(found, ctx.query) };
-  });
-  r.post(
-    "/api/v1/conversations/{conversation_id}/messages",
-    "conversation.reply",
-    sendStaffMessage,
-  );
-  r.post("/api/v1/conversations/{conversation_id}/read", "conversation.read", (ctx): Reply => {
-    const conv = findOr404(conversations, ctx.params.conversation_id ?? "", "hội thoại");
-    conv.unread_count = 0;
-    return { status: 204 };
-  });
-
-  // review queue
-  r.get("/api/v1/review-items", "review.read", (ctx): Reply => {
-    const status = ctx.query.get("review_status");
-    const kind = ctx.query.get("kind");
-    const doctor = ctx.query.get("requires_doctor");
-    const patient = ctx.query.get("patient_id");
-    const conv = ctx.query.get("conversation_id");
-    const found = reviewItems
-      .filter((i) => !status || i.status === status)
-      .filter((i) => !kind || i.kind === kind)
-      .filter((i) => doctor === null || String(i.requires_doctor) === doctor)
-      .filter((i) => !patient || i.patient_id === patient)
-      .filter((i) => !conv || i.conversation_id === conv)
-      .toSorted((a, b) => b.created_at.localeCompare(a.created_at));
-    return { body: paginate(found, ctx.query) };
-  });
-  r.get("/api/v1/review-items/{item_id}", "review.read", (ctx): Reply => ({
-    body: findOr404(reviewItems, ctx.params.item_id ?? "", "mục duyệt"),
-  }));
-  r.post("/api/v1/review-items/{item_id}/approve", "review.decide", (ctx): Reply => {
-    const item = findOr404(reviewItems, ctx.params.item_id ?? "", "mục duyệt");
-    const input = bodyOf<S["ReviewApprove"]>(ctx);
-    return once(ctx, `approve:${item.id}`, (): Reply => {
-      checkVersion(item.version, input.version);
-      decideGuard(ctx, item);
-      const finalText = (input.final_text ?? item.draft_text ?? "").trim();
-      const needsText = item.kind === "reply_draft" || item.kind === "followup_draft";
-      if (needsText && !finalText)
-        fail(422, "validation_failed", "Nội dung gửi không được để trống.");
-      item.status = "approved";
-      item.final_text = finalText || null;
-      item.decision_note = input.note ?? null;
-      item.decided_at = isoFromNow(0);
-      item.decided_by = session(ctx).userId;
-      item.version += 1;
-      const conv = conversations.find((c) => c.id === item.conversation_id);
-      if (conv && needsText && (input.send ?? true)) {
-        messages.push({
-          id: uid("msg"),
-          conversation_id: conv.id,
-          direction: "outbound",
-          sender_type: "ai_draft",
-          sender_user_id: session(ctx).userId,
-          body: finalText,
-          status: "sent",
-          created_at: isoFromNow(0),
-          sent_at: isoFromNow(0),
-          proactive: false,
-          review_item_id: item.id,
-          error_code: null,
-        });
-        conv.last_message_at = isoFromNow(0);
-        conv.last_message_preview = finalText;
-      }
-      closeLinkedConversation(item);
-      return { body: item };
-    });
-  });
-  r.post("/api/v1/review-items/{item_id}/reject", "review.decide", (ctx): Reply => {
-    const item = findOr404(reviewItems, ctx.params.item_id ?? "", "mục duyệt");
-    const input = bodyOf<S["ReviewReject"]>(ctx);
-    checkVersion(item.version, input.version);
-    decideGuard(ctx, item);
-    if (!input.reason.trim()) fail(422, "validation_failed", "Nhập lý do từ chối.");
-    item.status = "rejected";
-    item.decision_note = input.reason;
-    item.decided_at = isoFromNow(0);
-    item.decided_by = session(ctx).userId;
-    item.version += 1;
-    closeLinkedConversation(item);
-    return { body: item };
-  });
-  r.post("/api/v1/review-items/{item_id}/escalate", "review.decide", (ctx): Reply => {
-    const item = findOr404(reviewItems, ctx.params.item_id ?? "", "mục duyệt");
-    const input = bodyOf<S["ReviewEscalate"]>(ctx);
-    checkVersion(item.version, input.version);
-    if (item.status !== "pending") fail(409, "invalid_state", "Mục này đã được xử lý.");
-    item.status = "escalated";
-    item.requires_doctor = true;
-    item.decision_note = input.note ?? null;
-    item.version += 1;
-    return { body: item };
   });
 }

@@ -70,8 +70,8 @@ describe("TopBar", () => {
   });
 
   it("links_the_bell_to_the_inbox", () => {
-    render(<TopBar title="" clinicName="x" onOpenMenu={noop} bellHref="/inbox" />);
+    render(<TopBar title="" clinicName="x" onOpenMenu={noop} bellHref="/today" />);
 
-    expect(screen.getByRole("link", { name: "Mở thông báo" }).getAttribute("href")).toBe("/inbox");
+    expect(screen.getByRole("link", { name: "Mở thông báo" }).getAttribute("href")).toBe("/today");
   });
 });

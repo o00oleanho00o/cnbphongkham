@@ -3,7 +3,6 @@
 // The dialogs of the Patient 360 header and cards (package U, step U9). Copy and fields are the ones of the old
 // Clinic Web (`modalHtml` of prototype/shared/clinic.js, `crm-ui.js` "Ngày dự kiến quay lại"):
 //   AI brief        "Brief trước buổi hẹn" (WC13, WC32)   a TEMPLATE over the records, no model; a doctor edits it
-//   Nhắn tin        "Gửi cập nhật" (WC14)                 a note on the patient app timeline, no Zalo, no SMS
 //   Chăm sóc tại nhà                    (WC16)            aftercare text on the patient app timeline
 //   Thông tin cần nhớ                    (WC15)           one warning per line + the photo consent (U3 action)
 //   Ngày dự kiến quay lại                (WC18, WC34)
@@ -23,7 +22,6 @@ import {
   EXPECTED_RETURN_INVALID,
   EXPECTED_SOURCE_OPTIONS,
   MAX_ALERTS,
-  MESSAGE_BLANK,
   NO_CLIPBOARD,
   alertsProblem,
   expectedReturnProblem,
@@ -37,10 +35,6 @@ import { Field, FIELD_CONTROL_CLASS } from "@/ui/field";
 type P360 = Schemas["Patient360"];
 
 const SOURCE_LINE = "Nguồn: Patient 360, events đã ghi nhận, follow-up đang mở.";
-
-function lastWord(name: string): string {
-  return name.trim().split(/\s+/).at(-1) ?? name;
-}
 
 // ----------------------------------------------------------------------------------------------- brief
 export function BriefDialog({ data, onClose }: { data: P360; onClose: () => void }) {
@@ -144,80 +138,7 @@ export function BriefDialog({ data, onClose }: { data: P360; onClose: () => void
   );
 }
 
-// ---------------------------------------------------------------------------- Nhắn tin / Chăm sóc tại nhà
-export function MessageDialog({
-  data,
-  onClose,
-  onSent,
-}: {
-  data: P360;
-  onClose: () => void;
-  onSent: () => void;
-}) {
-  const toast = useToast();
-  const [body, setBody] = useState(
-    `Chào bạn ${lastWord(data.patient.full_name)}, Pema đã xem cập nhật của bạn. Da đang được theo dõi theo kế hoạch.`,
-  );
-  const [problem, setProblem] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  async function submit(e: FormEvent) {
-    e.preventDefault();
-    if (body.trim() === "") {
-      setProblem(MESSAGE_BLANK);
-      return;
-    }
-    setBusy(true);
-    setProblem("");
-    try {
-      await unwrap(
-        http.POST("/api/v1/patients/{patient_id}/app-updates", {
-          params: { path: { patient_id: data.patient.id } },
-          body: { kind: "message", body: body.trim() },
-        }),
-      );
-      toast.push("success", "Đã gửi tin nhắn");
-      onSent();
-      onClose();
-    } catch (err) {
-      setProblem(errorMessage(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <Sheet
-      title="Gửi cập nhật"
-      subtitle={`Tin nhắn · ${data.patient.full_name}`}
-      onClose={onClose}
-      footer={
-        <Button type="submit" form="message-form" disabled={busy}>
-          Gửi tin nhắn
-        </Button>
-      }
-    >
-      <form id="message-form" onSubmit={(e) => void submit(e)} noValidate>
-        <Field label="Nội dung">
-          {(control) => (
-            <textarea
-              {...control}
-              value={body}
-              maxLength={2000}
-              onChange={(e) => setBody(e.target.value)}
-              className={TEXTAREA_CLASS}
-            />
-          )}
-        </Field>
-        <p className="text-label text-ink-soft">
-          Tin hiện trên dòng thời gian của app người bệnh. Không gửi qua Zalo hoặc SMS.
-        </p>
-        <FormError message={problem} />
-      </form>
-    </Sheet>
-  );
-}
-
+// ---------------------------------------------------------------------------- Chăm sóc tại nhà
 export function AftercareDialog({
   patientId,
   onClose,

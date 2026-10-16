@@ -10,7 +10,6 @@ import {
   BriefDialog,
   ExpectedReturnDialog,
   FactsDialog,
-  MessageDialog,
 } from "@/components/ops/patient/patient-dialogs";
 import { PATIENT_ID, asRole, ok } from "@/components/ops/patient/test-support";
 import type { Schemas } from "@/lib/api";
@@ -101,31 +100,6 @@ describe("BriefDialog", () => {
     await user.click(screen.getByRole("button", { name: /Duyệt & lưu brief/ }));
 
     expect(screen.getByRole("alert").textContent).toBe("Brief không được để trống.");
-    expect(api.post).not.toHaveBeenCalled();
-  });
-});
-
-describe("MessageDialog", () => {
-  it("starts_with_the_greeting_of_the_old_web_and_sends_a_message_note", async () => {
-    view(<MessageDialog data={DATA} onClose={() => undefined} onSent={() => undefined} />);
-
-    const box = screen.getByLabelText("Nội dung") as HTMLTextAreaElement;
-    expect(box.value).toBe(
-      "Chào bạn Hà, Pema đã xem cập nhật của bạn. Da đang được theo dõi theo kế hoạch.",
-    );
-    await userEvent.setup().click(screen.getByRole("button", { name: "Gửi tin nhắn" }));
-
-    await waitFor(() => expect(sent(api.post).body).toEqual({ kind: "message", body: box.value }));
-  });
-
-  it("an_empty_message_is_not_sent", async () => {
-    view(<MessageDialog data={DATA} onClose={() => undefined} onSent={() => undefined} />);
-    const user = userEvent.setup();
-
-    await user.clear(screen.getByLabelText("Nội dung"));
-    await user.click(screen.getByRole("button", { name: "Gửi tin nhắn" }));
-
-    expect(screen.getByRole("alert").textContent).toBe("Hãy nhập nội dung tin nhắn.");
     expect(api.post).not.toHaveBeenCalled();
   });
 });

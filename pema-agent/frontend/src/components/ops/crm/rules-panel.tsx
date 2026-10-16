@@ -7,7 +7,6 @@ import { useCallback } from "react";
 
 import { ListSkeleton, Notice, PriorityBadge, RetryNotice } from "@/components/ops/ops-ui";
 import { http, unwrap } from "@/lib/api/client";
-import { SEND_MODE_LABEL } from "@/lib/ops/crm-overview-view";
 import { useLoad } from "@/lib/use-load";
 import { Badge } from "@/ui/badge";
 import { Card } from "@/ui/card";
@@ -45,9 +44,6 @@ export function RulesPanel() {
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <PriorityBadge priority={rule.priority} />
-                <Badge tone="neutral" dot={false}>
-                  {SEND_MODE_LABEL[rule.send_mode ?? "staff_task"]}
-                </Badge>
               </div>
             </Card>
           </li>

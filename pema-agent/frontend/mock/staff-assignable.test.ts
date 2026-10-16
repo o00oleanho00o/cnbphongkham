@@ -1,7 +1,7 @@
 // GET /api/v1/staff/assignable in the mock behaves like the real route (backend test
 // tests/api/test_staff_assignable_route.py): 401 without a session, 200 for every signed-in role, only
 // `{id, name, role}`, active staff of an assignable role (no reception, no locked account), A to Z by name. The
-// routes that accept an assignee refuse the same targets with the one 422 answer (tests/clinic/test_assignee_validation.py).
+// route that resolves a task refuses the same targets with the one 422 answer (tests/clinic/test_assignee_validation.py).
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 
@@ -9,7 +9,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { USERS, resetAttempts } from "./auth";
 import { ASSIGNABLE_ROLES } from "./assignable";
-import { conversations, tasks } from "./data/clinic";
+import { tasks } from "./data/clinic";
 import { startMockServer } from "./server";
 
 let server: Server;
@@ -89,52 +89,7 @@ describe("GET /api/v1/staff/assignable (mock)", () => {
   });
 });
 
-describe("assignee checks of the mock routes", () => {
-  it("a conversation refuses an unknown, locked or non-assignable assignee with one answer", async () => {
-    const cookie = await signIn("cs@pema.test");
-    const conversation = conversations[0];
-    expect(conversation).toBeDefined();
-    const locked = USERS.find((u) => !u.active);
-    const reception = USERS.find((u) => u.role === "reception");
-    const messages = new Set<string>();
-    for (const target of [
-      "00000000-0000-4000-8000-0000000000ff",
-      locked?.id,
-      reception?.id,
-    ] as string[]) {
-      const res = await call(cookie, "PATCH", `/api/v1/conversations/${conversation?.id}`, {
-        version: conversation?.version,
-        assigned_user_id: target,
-      });
-      expect(res.status).toBe(422);
-      const body = (await res.json()) as { error: { code: string; message: string } };
-      expect(body.error.code).toBe("validation_failed");
-      messages.add(body.error.message);
-    }
-    expect(messages).toEqual(new Set(["Người được giao không hợp lệ."]));
-  });
-
-  it("a conversation accepts a colleague and takes the assignee back with null", async () => {
-    const cookie = await signIn("cs@pema.test");
-    const colleague = (await assignable(cookie)).find((r) => r.role === "doctor");
-    const conversation = conversations[0];
-    const assign = await call(cookie, "PATCH", `/api/v1/conversations/${conversation?.id}`, {
-      version: conversation?.version,
-      assigned_user_id: colleague?.id,
-    });
-    expect(assign.status).toBe(200);
-    const assigned = (await assign.json()) as { assigned_user_id: string | null; version: number };
-    expect(assigned.assigned_user_id).toBe(colleague?.id);
-    const clear = await call(cookie, "PATCH", `/api/v1/conversations/${conversation?.id}`, {
-      version: assigned.version,
-      assigned_user_id: null,
-    });
-    expect(clear.status).toBe(200);
-    expect(
-      ((await clear.json()) as { assigned_user_id: string | null }).assigned_user_id,
-    ).toBeNull();
-  });
-
+describe("assignee check of the mock task route", () => {
   it("resolving a task refuses a non-assignable owner and leaves the task open", async () => {
     const cookie = await signIn("cs@pema.test");
     const task = tasks.find((t) => t.status === "open");

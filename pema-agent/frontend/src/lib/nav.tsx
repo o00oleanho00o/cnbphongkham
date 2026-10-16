@@ -12,7 +12,7 @@
 import type { ReactNode, SVGProps } from "react";
 
 import { IconGrid, IconHeart, IconUsers } from "@/components/admin/shared/dashboard-icons";
-import { IconClipboardCheck, IconInbox, IconUser } from "@/components/admin/shared/ops-icons";
+import { IconClipboardCheck, IconUser } from "@/components/admin/shared/ops-icons";
 import type { Permission } from "@/lib/session/session-context";
 import {
   IconBanknote,
@@ -74,14 +74,6 @@ export const NAV_SECTIONS: NavSection[] = [
         tabLabel: "Hồ sơ",
         icon: IconUser,
         needs: ["patient.read"],
-        tab: true,
-      },
-      {
-        to: "/inbox",
-        label: "Theo dõi",
-        tabLabel: "Inbox",
-        icon: IconInbox,
-        needs: ["conversation.read"],
         tab: true,
       },
       {

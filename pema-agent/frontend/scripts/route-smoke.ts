@@ -4,7 +4,7 @@
 //
 // Needs the app running against the mock backend:  pnpm dev:mock   (then, in another shell)  pnpm smoke
 //   SMOKE_BASE_URL=http://localhost:3000   where the app listens (default)
-//   SMOKE_ROUTES=/today,/inbox             limit to some routes (comma separated)
+//   SMOKE_ROUTES=/today,/patients          limit to some routes (comma separated)
 //
 // Signs in as the owner (sees every screen). A route that is in the inventory but not in the table below fails,
 // so a new screen has to say what its heading and primary control are.
@@ -35,7 +35,6 @@ const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
   "/today": { heading: "Việc hôm nay", action: { role: "button", name: "Việc của tôi" } },
   "/dashboard": { heading: "Tổng quan", action: { role: "button", name: "Tuần này" } },
   "/schedule": { heading: "Điều phối lịch", action: { role: "button", name: "7 ngày" } },
-  "/inbox": { heading: "Inbox", action: { role: "textbox", name: "Tìm hội thoại" } },
   "/patients": { heading: "Hồ sơ bệnh nhân", action: { role: "textbox", name: "Tìm bệnh nhân" } },
   "/patients/[id]": { heading: "", action: { role: "link", name: "Danh sách hồ sơ" } },
   "/ask": { heading: "Hỏi Pema", action: { role: "textbox", name: "Câu hỏi" } },
@@ -61,10 +60,6 @@ const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
   "/admin/agent/plugins/[name]/[page]": {
     heading: "zalo",
     action: { role: "button", name: "Thêm tài khoản" },
-  },
-  "/me/notifications": {
-    heading: "Thông báo của tôi",
-    action: { role: "button", name: "Liên kết Zalo" },
   },
   "/cashier": { heading: "Thu ngân", action: { role: "button", name: "Lên đơn nhanh" } },
   "/orders/[id]": { heading: "Tách đơn", action: { role: "link", name: "Về thu ngân" } },
