@@ -21,6 +21,24 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-16 · remove · Điều khiển agent: form tài khoản Zalo, mục "Nhóm", công tắc "Nghe tin nhóm không nhắc tên"
+- Where: plugin `zalo` pages (`backend/apps/agent/plugins/zalo/ui/src/pages/account-drawer.tsx`)
+- Change: the switch "Nghe tin nhóm không nhắc tên" (hint "Ghi vào ngữ cảnh, không gọi model") is gone from the section "Nhóm" of the account form; no channel read the setting. The switches "Trả lời trong nhóm" and "Nhóm phải @nhắc tên mới trả lời" stay.
+- Web canvas target: none (no canvas frame for the agent pages)
+- Logged by: zalo plugin
+
+### 2026-10-16 · change · Nhóm Zalo: công tắc "Lắng nghe" cho từng nhóm
+- Where: plugin `zalo` pages (`backend/apps/agent/plugins/zalo/ui/src/pages/groups.tsx`)
+- Change: the subtitle is now "Bật nhóm nào thì agent mới ghi nhớ tin của nhóm đó (mọi nội dung). Nhóm mới luôn tắt cho tới khi bạn bật."; each group row gets a switch on the right (aria-label "Lắng nghe nhóm <tên>") that saves at once. Under the list: "Đang nghe <n>/<m> nhóm. Nhóm tắt: tin không được lưu, nhưng agent vẫn trả lời khi được gọi tên trong nhóm." The empty text is "Chưa có nhóm nào. Một nhóm hiện ở đây sau tin nhắn đầu tiên của nhóm đó."
+- Web canvas target: none (no canvas frame for the agent pages)
+- Logged by: zalo plugin
+
+### 2026-10-16 · add · Tài khoản Zalo: form sửa tài khoản, "Nhóm lắng nghe"
+- Where: plugin `zalo` pages (`backend/apps/agent/plugins/zalo/ui/src/pages/account-drawer.tsx`, `logic.ts`)
+- Change: at the end of the section "Nhóm" of the account form a block "Nhóm lắng nghe" lists the groups that account has seen (name, the group id as hint), each with a switch, saved with "Lưu thay đổi". The line above says "Chỉ nhóm được bật mới được ghi nhớ (mọi nội dung). Nhóm tắt: tin không được lưu, agent vẫn trả lời khi được gọi tên." A group chosen but not seen under that id stays in the list so it can be switched off. For a new account the block says "Tạo tài khoản và đăng nhập trước. Nhóm nào nhắn tới sẽ hiện ở đây để bạn bật; nhóm mới mặc định tắt."; with no group seen yet: "Chưa thấy nhóm nào. Một nhóm hiện ở đây sau tin nhắn đầu tiên của nhóm đó; nhóm mới mặc định tắt."
+- Web canvas target: none (no canvas frame for the agent pages)
+- Logged by: zalo plugin
+
 ### 2026-10-15 · change · Điều khiển agent: "Phiên chat" xóa nhiều phiên cùng lúc
 - Where: `pema-agent/frontend/src/components/agent/pages/sessions-page.tsx` · route `/admin/agent/sessions`
 - Change: the table gets a first column of checkboxes (aria-label "Chọn phiên của <người>", no header text) and a bar above it with the checkbox "Chọn cả trang" and the danger button "Xóa các phiên đã chọn" (disabled until a row is ticked; then "Xóa <n> phiên đã chọn"). The button asks first in the confirm dialog "Xóa <n> phiên chat đã chọn?" with the text "Xóa hẳn tin nhắn của các phiên này để agent quên chúng: tin kế tiếp của mỗi người được trả lời như một cuộc trò chuyện mới. Trace vẫn được giữ. Không hoàn tác được." and the button "Xóa <n> phiên"; the ticks are cleared whenever the list reloads (search, channel, page, after a delete). The empty-row text and the "Xem" button are unchanged.
