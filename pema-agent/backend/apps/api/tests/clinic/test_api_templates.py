@@ -6,11 +6,9 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import text
 
 from pema.api.clinic_testing import ClientFactory
 from pema.clinic.actions.seed_demo import SeedResult
-from pema.core.db import ClinicDatabase
 
 pytestmark = pytest.mark.db
 
@@ -102,22 +100,3 @@ async def test_duplicate_keys_and_bad_keys_are_refused_and_care_staff_cannot_wri
     assert (await manager.post("/api/v1/admin/templates", json=_body(key="Bad Key!"))).status_code == 422
     assert (await cs.post("/api/v1/admin/templates", json=_body())).status_code == 403
     assert (await cs.get("/api/v1/admin/templates")).status_code == 403
-
-
-async def test_the_worker_sees_only_active_and_approved_templates_through_its_view(
-    client_factory: ClientFactory, world: SeedResult, worker_db: ClinicDatabase
-) -> None:
-    """chỉ job kind: message đã được bác sĩ duyệt mới có thể gửi trong patient_channel"""
-    manager = await client_factory("manager")
-    mai = await client_factory("doctor.mai")
-    draft = (await manager.post("/api/v1/admin/templates", json=_body())).json()
-    live = (await manager.post("/api/v1/admin/templates", json=_body())).json()
-    await mai.post(f"/api/v1/admin/templates/{live['id']}/approve", json={"version": 1})
-    async with worker_db.session() as session:
-        keys = set(
-            (
-                await session.execute(text("SELECT template_key FROM clinic_agent.message_template_approved"))
-            ).scalars()
-        )
-    assert live["template_key"] in keys
-    assert draft["template_key"] not in keys

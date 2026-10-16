@@ -15,7 +15,7 @@ from pema.bootstrap import create_app
 HTTP_METHODS = {"get", "post", "put", "patch", "delete"}
 OPEN_PATHS = {"/healthz", "/api/v1/auth/login", "/api/v1/.well-known/jwks.json"}
 EXPECTED_PATHS = [
-    # clinic CRM (B1, B2) and the knowledge base (D3)
+    # clinic CRM (B1, B2)
     "/api/v1/auth/login",
     "/api/v1/me",
     "/api/v1/patients/{patient_id}/360",

@@ -20,7 +20,7 @@ Properties the tests pin down:
   batches could never delete the same row twice.)
 * **Dry run.** Counts what a real run would delete (``SELECT count(*)``), deletes nothing, writes no audit
   row, removes no file.
-* **One audit row per real run and scope**, through ``clinic_agent.record_retention_run``: counters only, no
+* **One audit row per real run and scope**, through ``clinic.record_retention_run``: counters only, no
   PII. ``clinic.audit_log`` itself is never purged.
 * **A failing group does not stop the others**; it is logged (no PII: the group name) and
   listed in ``ScopeReport.failed``.

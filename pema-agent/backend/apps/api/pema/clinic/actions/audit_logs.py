@@ -1,5 +1,5 @@
 """Audit log reader (action behind ``routers/admin_audit.py``). Append-only: there is no write path here;
-rows are written only by ``pema.clinic.audit.record`` and the SECURITY DEFINER functions of ``clinic_agent``.
+rows are written only by ``pema.clinic.audit.record`` and the SECURITY DEFINER functions of ``clinic``.
 """
 
 from __future__ import annotations

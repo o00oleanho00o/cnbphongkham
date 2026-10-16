@@ -1,7 +1,6 @@
 """One installation is ONE clinic (single tenant): replaces the RLS isolation tests of the multi-clinic version.
 
-The database holds exactly one clinic row, the worker role reaches clinic data only through the
-``clinic_agent`` views, and an id that does not exist answers 404 through the API.
+The database holds exactly one clinic row, and an id that does not exist answers 404 through the API.
 """
 
 from __future__ import annotations
@@ -36,18 +35,6 @@ async def test_the_installation_id_is_the_id_of_the_seeded_clinic(
     db: ClinicDatabase, world: SeedResult
 ) -> None:
     assert await get_installation_clinic_id(db) == world.clinic_id
-
-
-async def test_the_worker_role_reads_clinic_data_only_through_the_views(
-    worker_db: ClinicDatabase, world: SeedResult, admin: Engine
-) -> None:
-    with admin.connect() as conn:
-        patients = conn.execute(text("SELECT count(*) FROM clinic.patient")).scalar_one()
-    async with worker_db.session() as session:
-        assert await session.scalar(text("SELECT count(*) FROM clinic_agent.patient_ref")) == patients
-    with pytest.raises(DBAPIError):
-        async with worker_db.session() as session:
-            await session.execute(text("SELECT count(*) FROM clinic.patient"))
 
 
 async def test_ids_that_do_not_exist_answer_404_through_the_api(

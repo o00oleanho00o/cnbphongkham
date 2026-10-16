@@ -1,8 +1,7 @@
 """Doctor-approved message templates (actions behind ``routers/admin_templates.py``).
 
 New module. In ``patient_channel`` a scheduled ``kind: message`` job may only send a template that a doctor
-approved (PLAN-AI01 sections 5 and 8; ``clinic_agent.message_template_approved`` exposes exactly the active
-and approved ones to the worker). Rules:
+approved (PLAN-AI01 sections 5 and 8). Rules:
 
 * a new template is a DRAFT: ``active = false``, no approval;
 * ``review.decide_clinical`` (doctor, owner) approves it: it becomes active and records who and when;

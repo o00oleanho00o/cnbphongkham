@@ -9,7 +9,7 @@ cannot be skipped: SQLAlchemy session events.
   transaction rolls back.
 
 Scope: it sees ORM mutations only. Raw SQL ``INSERT``/``UPDATE`` through ``text()`` is invisible to it, so
-the actions use the ORM for writes; the SECURITY DEFINER functions of ``clinic_agent`` write their own audit
+the actions use the ORM for writes; the SECURITY DEFINER functions of ``clinic`` write their own audit
 row inside SQL.
 """
 

@@ -1,7 +1,7 @@
 """Inbox: conversations and messages (actions behind ``routers/conversations.py``).
 
 New module. The Inbox of record is ``clinic.conversation`` / ``clinic.message``; the channel layer writes
-inbound messages through ``clinic_agent.record_inbound_message`` (``agent_facing``), staff read and answer
+inbound messages through ``clinic.record_inbound_message`` (``agent_facing``), staff read and answer
 here. Rules:
 
 * ``conversation.read`` to list and read, ``conversation.reply`` to send, assign or close;

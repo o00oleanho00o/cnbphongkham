@@ -2,7 +2,7 @@
 open an item in the doctor follow-up queue (Theo dõi).
 
 Kept from the removed agent-facing actions (branch feat/agent-v2) because the Inbox needs it whatever channel
-or agent comes next. Both calls go through the SECURITY DEFINER functions of schema ``clinic_agent``
+or agent comes next. Both calls go through the SECURITY DEFINER functions of schema ``clinic``
 (``record_inbound_message`` / ``record_outbound_message``), which write the conversation, the message and the
 audit row in one statement. The caller is a system or agent actor holding ``agent.submit``; staff messages
 use ``conversations.send_message`` instead.
@@ -64,7 +64,7 @@ async def record_inbound_message(db: ClinicDatabase, ctx: ActionContext, message
         row = (
             await session.execute(
                 sql(
-                    "SELECT * FROM clinic_agent.record_inbound_message(:channel, :update_id, :thread, "
+                    "SELECT * FROM clinic.record_inbound_message(:channel, :update_id, :thread, "
                     ":uid, :name, :text, :sent_at, :actor, :account)"
                 ),
                 {
@@ -109,7 +109,7 @@ async def record_outbound_message(
             row = (
                 await session.execute(
                     sql(
-                        "SELECT * FROM clinic_agent.record_outbound_message(CAST(:conv AS uuid), :text, "
+                        "SELECT * FROM clinic.record_outbound_message(CAST(:conv AS uuid), :text, "
                         ":status, :proactive, CAST(:review AS uuid), :error, :actor)"
                     ),
                     {
@@ -142,7 +142,7 @@ async def create_review_item(
         item_id = (
             await session.execute(
                 sql(
-                    "SELECT clinic_agent.create_review_item(:job_id, :kind, :origin, :patient, "
+                    "SELECT clinic.create_review_item(:job_id, :kind, :origin, :patient, "
                     "CAST(:conv AS uuid), :draft, CAST(:payload AS jsonb), CAST(:sources AS jsonb), "
                     ":risk, CAST(:flags AS text[]), :model, :prompt)"
                 ),
@@ -164,7 +164,7 @@ async def create_review_item(
         ).scalar_one()
         row = (
             await session.execute(
-                sql("SELECT * FROM clinic_agent.review_item_summary WHERE id = :id"), {"id": item_id}
+                sql("SELECT * FROM clinic.review_item_summary WHERE id = :id"), {"id": item_id}
             )
         ).one()
     emit_live(LiveEventType.REVIEW_CHANGED, row.id)

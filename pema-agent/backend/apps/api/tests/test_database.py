@@ -66,11 +66,6 @@ AGENT_TABLES = {
     "proactive_send_counters", "kb_document", "kb_chunk", "agent_kb_document", "mcp_servers",
     "agent_mcp_servers", "channel_update_seen",
 }  # fmt: skip
-VIEWS = {
-    "patient_ref", "patient_appointment", "patient_open_task", "patient_care_plan",
-    "patient_last_session", "consent_current", "identity_verified", "channel_policy",
-    "message_template_approved",
-}  # fmt: skip
 
 
 def _reset(engine: Engine) -> None:
@@ -181,7 +176,6 @@ def _count(conn: Connection, sql: str) -> int:
 def test_schemas_contain_expected_tables_and_views(admin_engine: Engine) -> None:
     assert _tables(admin_engine, "clinic") >= CLINIC_TABLES
     assert _tables(admin_engine, "agent") >= AGENT_TABLES
-    assert _tables(admin_engine, "clinic_agent") >= VIEWS
 
 
 def test_no_table_has_row_level_security_or_a_policy(admin_engine: Engine) -> None:
@@ -254,19 +248,6 @@ def test_every_table_carries_clinic_id(admin_engine: Engine) -> None:
             )
         ).all()
     assert rows == []
-
-
-def test_views_keep_security_barrier(admin_engine: Engine) -> None:
-    """các view clinic_agent được dựng lại vẫn security_barrier"""
-    with admin_engine.connect() as conn:
-        rows = conn.execute(
-            text(
-                "SELECT c.relname, c.reloptions FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace "
-                "WHERE n.nspname = 'clinic_agent' AND c.relkind = 'v'"
-            )
-        ).all()
-    assert {r[0] for r in rows} >= VIEWS
-    assert [r[0] for r in rows if not r[1] or "security_barrier=true" not in r[1]] == []
 
 
 # ------------------------------------------------------------------ exactly one clinic
@@ -363,28 +344,6 @@ def test_agent_worker_has_no_privilege_on_clinic_schema(admin_engine: Engine) ->
                 assert allowed is False, (table, priv)
 
 
-def test_agent_worker_reads_clinic_data_only_through_views(worker_engine: Engine, clinic: uuid.UUID) -> None:
-    """agent_worker vẫn bị chặn trên clinic.* thô, đọc được view clinic_agent (không cần ngữ cảnh)"""
-    with worker_engine.begin() as conn:
-        codes = conn.execute(text("SELECT code FROM clinic_agent.patient_ref")).scalars().all()
-        assert codes == ["P001"]
-        assert conn.execute(text("SELECT clinic_id FROM clinic_agent.patient_ref")).scalar_one() == clinic
-    for table in ("clinic.patient", "clinic.clinic", "clinic.audit_log"):
-        with worker_engine.connect() as conn, pytest.raises(ProgrammingError):
-            conn.execute(text(f"SELECT * FROM {table}"))  # noqa: S608 - fixed names
-
-
-def test_views_expose_no_contact_or_birth_data(admin_engine: Engine) -> None:
-    with admin_engine.connect() as conn:
-        cols = {
-            r[0]
-            for r in conn.execute(
-                text("SELECT column_name FROM information_schema.columns WHERE table_schema = 'clinic_agent'")
-            )
-        }
-    assert not cols & {"phone", "birth_date", "address", "note", "reason", "photo", "credential_ciphertext"}
-
-
 def test_agent_worker_cannot_write_clinic_tables_directly(worker_engine: Engine, clinic: uuid.UUID) -> None:
     with worker_engine.connect() as conn, pytest.raises(ProgrammingError):
         conn.execute(text("UPDATE clinic.patient SET marketing_opt_out = true"))
@@ -418,7 +377,7 @@ def test_the_clinic_id_function_is_open_to_both_runtime_roles(
 def test_the_clinic_id_function_fails_closed_when_no_clinic_is_installed(
     admin_engine: Engine, clinic: uuid.UUID
 ) -> None:
-    """DB chưa có phòng khám thì hàm báo lỗi (không trả NULL), kể cả các hàm clinic_agent (giao dịch rồi rollback)"""
+    """DB chưa có phòng khám thì hàm báo lỗi (không trả NULL), kể cả các hàm SECURITY DEFINER (giao dịch rồi rollback)"""
     with admin_engine.connect() as conn:
         try:
             conn.execute(text("ALTER TABLE clinic.clinic DISABLE TRIGGER ALL"))
@@ -429,33 +388,18 @@ def test_the_clinic_id_function_fails_closed_when_no_clinic_is_installed(
             conn.execute(text("ALTER TABLE clinic.clinic DISABLE TRIGGER ALL"))
             conn.execute(text("DELETE FROM clinic.clinic"))
             with pytest.raises(DBAPIError, match="no clinic installed"):
-                conn.execute(text("SELECT clinic_agent.touch_identity('zalo_bot', 'x', '')"))
+                conn.execute(text("SELECT clinic.record_retention_run('clinic', '{}')"))
         finally:
             conn.rollback()
     with admin_engine.connect() as conn:
         assert _count(conn, "SELECT count(*) FROM clinic.clinic") == 1
 
 
-# ------------------------------------------------------------------ clinic_agent functions still work
-def test_resolve_identity_function(worker_engine: Engine, clinic: uuid.UUID) -> None:
-    with worker_engine.begin() as conn:
-        row = conn.execute(text("SELECT * FROM clinic_agent.resolve_identity('zalo_bot', 'uid-1')")).one()
-        assert (row.status, row.patient_code) == ("verified", "P001")
-        unknown = conn.execute(
-            text("SELECT * FROM clinic_agent.resolve_identity('zalo_bot', 'stranger')")
-        ).one()
-        assert (unknown.status, unknown.patient_id) == ("unlinked", None)
-        conn.execute(text("SELECT clinic_agent.touch_identity('zalo_bot', 'stranger', 'Someone')"))
-        again = conn.execute(
-            text("SELECT * FROM clinic_agent.resolve_identity('zalo_bot', 'stranger')")
-        ).one()
-        assert again.status == "unlinked"
-
-
+# ------------------------------------------------------------------ inbox and review functions
 def _create_review(conn: Connection, job_id: str, kind: str, risk: str) -> uuid.UUID:
     return conn.execute(
         text(
-            "SELECT clinic_agent.create_review_item(:job, :kind, 'agent_turn', 'P001', NULL, 'draft text', "
+            "SELECT clinic.create_review_item(:job, :kind, 'agent_turn', 'P001', NULL, 'draft text', "
             "NULL, '[]'::jsonb, :risk, ARRAY[]::text[], 'qwen3-8b', 'v1')"
         ),
         {"job": job_id, "kind": kind, "risk": risk},
@@ -463,9 +407,9 @@ def _create_review(conn: Connection, job_id: str, kind: str, risk: str) -> uuid.
 
 
 def test_create_review_item_is_idempotent_audited_and_flags_doctor(
-    worker_engine: Engine, admin_engine: Engine, clinic: uuid.UUID
+    be_engine: Engine, admin_engine: Engine, clinic: uuid.UUID
 ) -> None:
-    with worker_engine.begin() as conn:
+    with be_engine.begin() as conn:
         first = _create_review(conn, "turn-1", "reply_draft", "normal")
         assert _create_review(conn, "turn-1", "reply_draft", "normal") == first
         alert = _create_review(conn, "turn-2", "triage_alert", "red_flag")
@@ -488,14 +432,14 @@ def test_create_review_item_is_idempotent_audited_and_flags_doctor(
 
 
 def test_the_inbox_functions_write_for_the_installation_clinic(
-    worker_engine: Engine, admin_engine: Engine, clinic: uuid.UUID
+    be_engine: Engine, admin_engine: Engine, clinic: uuid.UUID
 ) -> None:
     """record_inbound_message / record_outbound_message lấy phòng khám từ dòng duy nhất, không từ ngữ cảnh"""
-    with worker_engine.begin() as conn:
+    with be_engine.begin() as conn:
         conn.execute(
             text(
-                "SELECT * FROM clinic_agent.record_inbound_message("
-                "'zalo_bot', 'upd-1', 'thread-1', 'uid-1', 'Synthetic', 'xin chao', now(), 'agent')"
+                "SELECT * FROM clinic.record_inbound_message("
+                "'zalo_bot', 'upd-1', 'thread-1', 'uid-1', 'Synthetic', 'xin chao', now(), 'agent', '')"
             )
         )
     with admin_engine.connect() as conn:
@@ -608,9 +552,6 @@ async def test_clinic_database_session_needs_no_clinic_for_both_roles(clinic: uu
             assert rows == ["P001"]
         async with worker_db.session() as session:
             assert (await session.execute(text("SELECT count(*) FROM agent.accounts"))).scalar() == 1
-            assert (
-                await session.execute(text("SELECT count(*) FROM clinic_agent.patient_ref"))
-            ).scalar() == 1
     finally:
         await be_db.dispose()
         await worker_db.dispose()
@@ -800,7 +741,7 @@ def test_every_security_definer_function_pins_a_search_path_ending_in_pg_temp(ad
                 "WHERE p.prosecdef AND n.nspname IN ('ctx', 'clinic_agent', 'clinic', 'agent')"
             )
         ).all()
-    assert len(rows) >= 10, "the definer functions of the migrations must be found"
+    assert len(rows) >= 6, "the definer functions of the migrations must be found"
     assert "ctx.the_clinic_id()" in {sig for sig, _ in rows}
     for sig, search_path in rows:
         assert search_path is not None, f"{sig} has no fixed search_path"
@@ -809,13 +750,13 @@ def test_every_security_definer_function_pins_a_search_path_ending_in_pg_temp(ad
 
 
 def test_no_function_of_the_agent_door_is_executable_by_public(admin_engine: Engine) -> None:
-    """không hàm nào của ctx/clinic_agent mở cho PUBLIC; agent_worker chỉ chạy được các hàm được cấp"""
+    """không hàm nào của ctx, không hàm SECURITY DEFINER nào mở cho PUBLIC"""
     with admin_engine.connect() as conn:
         public = (
             conn.execute(
                 text(
                     "SELECT p.oid::regprocedure::text FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace "
-                    "WHERE (n.nspname IN ('ctx', 'clinic_agent') OR p.proname = 'ensure_clinic') "
+                    "WHERE (n.nspname = 'ctx' OR p.prosecdef OR p.proname = 'ensure_clinic') "
                     "AND EXISTS (SELECT 1 FROM aclexplode(COALESCE(p.proacl, acldefault('f', p.proowner))) a "
                     "WHERE a.grantee = 0 AND a.privilege_type = 'EXECUTE')"
                 )

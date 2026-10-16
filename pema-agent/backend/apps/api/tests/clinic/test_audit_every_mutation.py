@@ -78,7 +78,10 @@ MUTATIONS: dict[str, str] = {
 
 # Presence heartbeats (ST-R) change nothing in the database: they live in Redis for 30 seconds, and one audit row
 # every 15 seconds per open conversation would only bury the log. Not mutations of clinic data.
-EPHEMERAL: frozenset[str] = frozenset({"conversations_touch_presence", "conversations_leave_presence"})
+# The agent token (SSO for the agent service) is minted and signed, never stored.
+EPHEMERAL: frozenset[str] = frozenset(
+    {"conversations_touch_presence", "conversations_leave_presence", "auth_agent_token_for_user"}
+)
 
 
 def test_the_table_covers_every_mutating_route_of_the_clinic_api(app: FastAPI) -> None:

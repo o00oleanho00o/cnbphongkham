@@ -183,7 +183,7 @@ async def test_the_link_attempt_door_refuses_a_cutoff_inside_the_rate_limit_wind
 ) -> None:
     async with env.db.session() as session:
         with pytest.raises(DBAPIError, match="older than one hour"):
-            await session.execute(text("SELECT clinic_agent.retention_purge_link_attempts(now(), 10, false)"))
+            await session.execute(text("SELECT clinic.retention_purge_link_attempts(now(), 10, false)"))
 
 
 async def test_dry_run_counts_what_would_go_and_changes_nothing(env: RetentionEnv, seed: Seed) -> None:

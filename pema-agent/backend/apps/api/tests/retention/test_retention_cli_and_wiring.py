@@ -19,7 +19,7 @@ from pydantic import ValidationError
 
 from pema.config.env import Settings
 from pema.core.db import ClinicDatabase
-from pema.core.pg_testing import BE_PASSWORD, WORKER_PASSWORD
+from pema.core.pg_testing import BE_PASSWORD
 from pema.retention.cli import format_report, run_cli
 from pema.retention.pg_testing import RetentionEnv, Seed
 from pema.retention.policy import RetentionPolicy, Scope, policy_from_settings

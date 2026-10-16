@@ -84,7 +84,7 @@ def _schema_is_current(admin: str) -> bool:
             return bool(
                 conn.execute(text("SELECT to_regclass('clinic.auth_session') IS NOT NULL")).scalar()
                 and conn.execute(
-                    text("SELECT to_regclass('clinic_agent.review_item_summary') IS NOT NULL")
+                    text("SELECT to_regclass('clinic.review_item_summary') IS NOT NULL")
                 ).scalar()
                 and conn.execute(
                     text(

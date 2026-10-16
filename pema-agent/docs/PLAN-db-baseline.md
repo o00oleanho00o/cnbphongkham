@@ -55,6 +55,8 @@ Agent nói chuyện với người ngoài (Zalo, web) nên **phải coi như có
 | D5 | `clinic_agent`, `agent_worker` | Bỏ (L3) |
 | D6 | Test kiểm lịch sử migration | Xóa; kiểm schema cuối thì chuyển thành test schema |
 | D7 | Hai database riêng `pema` / `pema_agent` | **Có** (L1). Rẻ nhất là làm ngay lúc dựng lại DB |
+| D8 | Hộp thư (Inbox) và hàng Theo dõi bên CRM còn nguồn tin không? | **Không, bỏ hẳn** (chủ hệ thống chốt 2026-10-16): xóa `inbox_ingest`, `sla_checks` và phần API, bảng phục vụ chúng; FE dọn ở đợt sau |
+| D9 | Design (canvas, `design-specs/web`) | **Không động tới** trong kế hoạch này và đợt dọn FE |
 
 ## 5. Các bước (mỗi bước nhỏ, một commit, test xanh, app vẫn chạy; ⏸ = tôi dừng chờ bạn)
 
@@ -72,6 +74,11 @@ Agent nói chuyện với người ngoài (Zalo, web) nên **phải coi như có
 6. C5, C6: xóa KB cũ và code chết.
 7. C7: hàm `clinic_agent` còn dùng chuyển về `clinic` (sửa chuỗi SQL ở chỗ gọi); kiểm `grep` không còn `agent.`, `clinic_agent.`
    trong code API; cả bộ test API xanh.
+
+7b. ⏸ D8: bỏ Hộp thư và Theo dõi khỏi API — route `conversations`, `assignment`, `review_items`, roster, gửi tin
+   (`outbound`), `inbox_ingest`, `sla_checks`, presence của luồng chat, mô hình `clinic/models/inbox.py`, `ops.py`, quyền
+   RBAC tương ứng, seed demo và test của chúng. Tôi liệt kê đủ file và bảng rồi chờ bạn duyệt trước khi xóa; bảng thì
+   khỏi revision tạm, baseline bước 8 không tạo chúng nữa.
 
 **C. Baseline API**
 

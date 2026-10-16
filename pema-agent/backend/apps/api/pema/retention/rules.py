@@ -210,5 +210,5 @@ THREADS_RESET_BATCH = text(
 )
 
 # ------------------------------------------------------------------------------------ audit and the door
-AUDIT_RUN = text("SELECT clinic_agent.record_retention_run(:scope, CAST(:counts AS jsonb))")
-PURGE_LINK_ATTEMPTS = text("SELECT clinic_agent.retention_purge_link_attempts(:cutoff, :batch, :dry_run)")
+AUDIT_RUN = text("SELECT clinic.record_retention_run(:scope, CAST(:counts AS jsonb))")
+PURGE_LINK_ATTEMPTS = text("SELECT clinic.retention_purge_link_attempts(:cutoff, :batch, :dry_run)")
