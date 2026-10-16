@@ -1,5 +1,7 @@
 # CONTRACTS-AI01: contracts, ownership and conventions of the parallel packages
 
+> **Lịch sử (2026-10-16).** Tài liệu này tả thời zalo-agent. Schema `agent`, `clinic_agent`, role `agent_worker`, chuỗi migration cũ, Hộp thư và hàng chờ duyệt đã bị gỡ; DB hiện nay: [PLAN-db-baseline](PLAN-db-baseline.md), [HANDOFF](HANDOFF-agent-v2.md) mục "Database".
+
 Written by package A. Read it after `PLAN-AI01.md` and before `PORT-MAP.md`. It is the document the 12
 parallel packages (B1, B2, C1, C2, D1, D2, D3, D4, D5, S, P, E) depend on, so it states the interfaces they
 may rely on, which directory each package owns, and the conventions they all follow. Anything not written

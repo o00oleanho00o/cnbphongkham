@@ -1,6 +1,6 @@
 # Kế hoạch: bỏ app zalo-agent cũ, cắt chỗ chéo, khóa ranh giới agent ↔ CRM, làm lại DB
 
-Ngày: 2026-10-16. Trạng thái: **chờ bạn nói "go", chưa sửa code.** Sơ đồ: [diagrams/db-baseline-plan.html](diagrams/db-baseline-plan.html).
+Ngày: 2026-10-16. Trạng thái: **xong bước 1–12 (nhánh `chore/db-baseline`); chờ bước 13: bạn xóa DB và dựng lại.** Sơ đồ: [diagrams/db-baseline-plan.html](diagrams/db-baseline-plan.html).
 
 Bạn xóa DB, nên không cần đường nâng cấp từ DB cũ. Hai app vẫn tách riêng (không dồn chung một chuỗi migration).
 

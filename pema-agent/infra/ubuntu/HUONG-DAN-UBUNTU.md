@@ -140,7 +140,7 @@ make ps
 curl -fsS http://127.0.0.1:8000/healthz
 ```
 
-`make up` chạy theo thứ tự: Postgres khỏe, rồi dịch vụ một lần `migrate` (tạo role `be_app`/`agent_worker` và đặt
+`make up` chạy theo thứ tự: Postgres khỏe, rồi dịch vụ một lần `migrate` (tạo role `be_app` và đặt
 mật khẩu từ biến môi trường, `alembic upgrade heads` tạo MỘT phòng khám từ `PEMA_CLINIC_NAME`, rồi kiểm tra
 `clinic.clinic` đúng một dòng và in tên), rồi `api`. Xem tên đã tạo: `docker compose -f infra/docker-compose.yml
 --env-file infra/.env logs migrate | grep clinic` (dòng `migrate: clinic '...' (id ...), exactly one row`). Chạy lại
@@ -166,12 +166,12 @@ Funnel cho đúng đường dẫn đó. Việc chọn là quyết định của 
 nếu trước đây đã đăng ký đường cũ có đoạn phòng khám thì đăng ký lại sau khi nâng cấp).
 
 **Phòng khám thứ hai = một bộ mới hoàn toàn.** Ưu tiên máy chủ khác. Cùng một máy Docker thì mọi thứ dưới đây phải khác bộ
-đầu: một bản sao `infra/.env` mới (`make infra-secrets`, mật khẩu và `PEMA_JWT_SECRET`, `PEMA_SECRET_ENCRYPTION_KEY` mới,
+đầu: một bản sao `infra/.env` mới (`make infra-secrets`, mật khẩu và `PEMA_JWT_SECRET` mới,
 không dùng lại), `COMPOSE_PROJECT_NAME` khác (container, mạng, volume riêng, nên Postgres và Redis cũng riêng), cổng host
 (`PEMA_PG_PORT`, `PEMA_REDIS_PORT`, `PEMA_API_PORT`, `PEMA_FRONTEND_PORT`, `PEMA_PROXY_*_PORT`) và `PEMA_PROXY_SUBNET`/`_IP_RANGE`/`_IP`
 khác, tên miền riêng, tài khoản Zalo riêng, `PEMA_CLINIC_NAME` riêng, thư mục sao lưu và khóa age riêng. Chi tiết:
 [`infra/README.md`](../README.md) mục "One system, one clinic". Không bao giờ trỏ hai bộ vào cùng một Postgres: role
-`be_app`/`agent_worker` là của cả cụm.
+`be_app`/`agent_rt_app` là của cả cụm.
 
 Cập nhật phiên bản: `git pull && make up && make db-migrate` (migrate chạy lại an toàn, chỉ áp bản mới).
 
@@ -337,10 +337,11 @@ sudo ufw enable && sudo ufw status verbose
 3. **Router phòng khám:** không port-forward cổng nào tới các máy này; tắt UPnP trên router.
 4. **Cloud VN:** security group/firewall của nhà cung cấp chỉ cho phép 22 (từ IP quản trị), UDP 41641 nếu dùng
    Tailscale trực tiếp, và 443 nếu có reverse proxy cho webhook; không có luật cho 5432, 6379, 11434, 8000, 3000.
-5. **Redis có mật khẩu** (`PEMA_REDIS_PASSWORD`), **Postgres dùng scram-sha-256** và `be_app`/`agent_worker` không
-   phải superuser; `agent_worker` không có quyền gì trên `clinic.*` (thiết kế ở CONTRACTS-AI01 mục 5). Từ nhánh
-   `feat/single-tenant` không còn RLS (CSDL chỉ có một phòng khám): `be_app` đọc mọi dòng của bảng nó có quyền, nên
-   cách ly nằm ở hạ tầng (CSDL, Redis, khóa riêng cho từng phòng khám) và ở quyền của hai role.
+5. **Redis có mật khẩu** (`PEMA_REDIS_PASSWORD`), **Postgres dùng scram-sha-256** và `be_app`/`agent_rt_app` không
+   phải superuser. Hai database riêng: `pema` (CRM, role `be_app`) và `pema_agent` (agent, role `agent_rt_app`); mỗi
+   role chỉ CONNECT được database của mình, agent không bao giờ đọc được CRM (`.claude/rules/agent-crm-boundary.md`).
+   Không còn RLS (CSDL chỉ có một phòng khám): `be_app` đọc mọi dòng của bảng nó có quyền, nên cách ly nằm ở hạ tầng
+   (CSDL, Redis, khóa riêng cho từng phòng khám) và ở quyền của hai role.
 
 Kiểm tra (làm một lần sau khi dựng, và sau mỗi lần đổi mạng):
 
@@ -421,8 +422,8 @@ Các unit này **chưa được chạy thử** trong gói F.
 
 ## 10. Sao lưu Postgres
 
-Dữ liệu cần giữ: database `pema` (CRM + agent + KB), tệp `infra/.env` (đặc biệt `PEMA_SECRET_ENCRYPTION_KEY`; mất
-khóa này thì token bot, thông tin Zalo, API key trong DB không đọc lại được), và volume `pema-data` nếu nơi lưu
+Dữ liệu cần giữ: database `pema` (CRM) và `pema_agent` (agent, kho tri thức), tệp `infra/.env`, volume `agent-home`
+(khóa bí mật của agent; mất nó thì API key model và thông tin Zalo trong DB không đọc lại được), và volume `pema-data` nếu nơi lưu
 tệp/ảnh/KB tải lên được chốt là ổ đĩa cục bộ (đang là việc mở). Mô hình Ollama tải lại được, không cần sao lưu.
 
 ```bash
@@ -439,7 +440,7 @@ sudo systemctl start pema-backup.service && journalctl -u pema-backup.service -n
 ```
 
 `backup-postgres.sh` làm: `pg_dump -Fc` + `pg_dumpall --globals-only` (role và hash mật khẩu), kiểm tra bằng
-`pg_restore --list` và sự có mặt của các schema `clinic`, `agent`, `clinic_agent`, gói vào một tệp, **mã hóa bằng
+`pg_restore --list` và sự có mặt của các schema `clinic`, `ctx` (và `agent_rt` trong `pema_agent`), gói vào một tệp, **mã hóa bằng
 age (hoặc gpg)**, xóa tệp quá `PEMA_BACKUP_KEEP_DAYS`, rồi gọi `PEMA_BACKUP_HOOK` để chép ra nơi khác. Script từ
 chối ghi bản không mã hóa, trừ khi `PEMA_BACKUP_ALLOW_PLAINTEXT=true` (chỉ để thử). Vì một CSDL là một phòng khám, một tệp
 sao lưu là TOÀN BỘ dữ liệu phòng khám đó (bệnh nhân, tin nhắn, thông tin đăng nhập Zalo đã mã hóa): thư mục sao lưu và khóa

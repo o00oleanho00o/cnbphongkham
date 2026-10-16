@@ -28,7 +28,7 @@ database, a Redis, a key or a process, so there is nothing for a bug to leak acr
 clinic: no clinic slug at login, no clinic segment in the webhook paths, no `--clinic` option, no row level security.
 
 * `PEMA_CLINIC_NAME` (default `Pema Clinic`) and the optional `PEMA_CLINIC_ID` (UUID) in `infra/.env` are read by the
-  migration (`st_0009_single_tenant`), which creates the one row of `clinic.clinic` on an empty database. Afterwards
+  migration (`0001_baseline`), which creates the one row of `clinic.clinic` on an empty database. Afterwards
   the installed clinic is never renamed and never gets another id; the variables only matter on the first run (and
   `PEMA_CLINIC_ID`, when set, must match the database or `migrate.sh` stops).
 * The database enforces it: `clinic.clinic` cannot hold a second row and the row cannot be deleted. `migrate.sh` checks
@@ -43,9 +43,9 @@ another machine; on the same Docker host only with everything below different:
 | What | Why it must differ |
 |---|---|
 | a new copy of `infra/.env` (`make infra-secrets` writes fresh random values) | no secret is shared |
-| `PEMA_JWT_SECRET`, `PEMA_SECRET_ENCRYPTION_KEY`, the DB/Redis/bridge passwords | tokens, stored Zalo credentials and API keys of clinic A must not open with clinic B's key |
+| `PEMA_JWT_SECRET`, the DB/Redis/bridge passwords, the agent-home volume (the agent's secret key) | tokens, stored Zalo credentials and API keys of clinic A must not open with clinic B's key |
 | `COMPOSE_PROJECT_NAME=pema-clinic-b` in that `.env` (or `docker compose -p`) | own containers, networks and volumes (`pg-data`, `redis-data`, `pema-data`, `caddy-data`) |
-| its own Postgres and Redis (the same project name gives them) | Postgres roles `be_app`/`agent_worker` are cluster-wide: never point two stacks at one cluster |
+| its own Postgres and Redis (the same project name gives them) | Postgres roles `be_app`/`agent_rt_app` are cluster-wide: never point two stacks at one cluster |
 | host ports `PEMA_PG_PORT`, `PEMA_REDIS_PORT`, `PEMA_API_PORT`, `PEMA_FRONTEND_PORT`, `PEMA_PROXY_*_PORT` (or other bind IPs) | two stacks cannot publish the same port on one host |
 | `PEMA_PROXY_SUBNET`, `PEMA_PROXY_IP_RANGE`, `PEMA_PROXY_IP` | the `edge` network has a fixed subnet |
 | its own domain (`PEMA_PUBLIC_DOMAIN`) and certificate | one clinic, one address |
@@ -152,32 +152,37 @@ at Zalo with the old path (`.../zalo-bot/<clinic>/<account_id>`), re-register it
 
 ## Database roles and migrations
 
-* Schemas, tables and grants are Alembic revisions (package A, then each package; `st_0009_single_tenant` is the head).
-  Infra never creates tables. There is **no row level security** any more: the database holds one clinic, so the
-  isolation surface is the infrastructure (this stack, its own database and Redis) plus the role grants below. `be_app`
-  reads and writes every row of the tables it holds a grant on; `agent_worker` has no privilege on `clinic.*` and
-  reaches the clinic only through the `clinic_agent` views and functions.
-* `scripts/bootstrap-roles.sh` creates `be_app` and `agent_worker` (NOLOGIN, no superuser, no BYPASSRLS),
-  sets their passwords from `PEMA_BE_APP_PASSWORD` / `PEMA_AGENT_WORKER_PASSWORD` (empty means the role stays
-  NOLOGIN), creates the `vector` extension and, by default, revokes `CONNECT` from PUBLIC. Passwords are read by
-  psql from the environment (`\getenv`), never from argv, and `log_statement` is switched off for the session so
-  the `ALTER ROLE ... PASSWORD` text cannot reach the server log. Rerun it to rotate a password.
-* `scripts/migrate.sh` waits for Postgres, runs the bootstrap, then `alembic upgrade heads` (one head since
-  `h_0008_merge_heads`; `st_0009_single_tenant` on top), prints the head count and `alembic current`, and finally checks
-  that `clinic.clinic` holds exactly one row (fails otherwise, also when `PEMA_CLINIC_ID` differs from the database) and
-  prints the clinic name and id. `PEMA_SKIP_ROLE_BOOTSTRAP=true` skips the first step when a DBA manages roles.
-* Upgrading a database that came from `feat/ai-agent-backend` (multi-tenant): `st_0009` refuses to run when it holds two
-  or more clinics (split or merge it first); with exactly one clinic it keeps that row, its id and its name.
-* The owner role is the Postgres superuser in compose. For a managed database give `PEMA_MIGRATION_DATABASE_URL`
-  an owner role that may `CREATE EXTENSION vector` (or let a superuser run `bootstrap-roles.sh` once).
+* Two databases on the one Postgres, never reaching each other (.claude/rules/agent-crm-boundary.md):
+  `pema` (the clinic API: schemas `ctx`, `clinic`; role `be_app`) and `pema_agent` (the agent: schema `agent_rt`;
+  role `agent_rt_app`). Each role has CONNECT on its own database only; PUBLIC has CONNECT on neither; neither
+  database has `dblink` or `postgres_fdw`. Tests T1 (`apps/agent/tests/test_crm_boundary.py`) and T2
+  (`apps/api/tests/test_database.py`) keep it so.
+* Schemas, tables and grants are migrations; infra never creates tables. The API has one Alembic revision,
+  `0001_baseline` (`0001_baseline.sql` beside it); the agent has one too (`apps/agent/alembic`), and each agent
+  plugin that keeps tables ships its own SQL files (`agent db migrate-plugins`). There is **no row level security**:
+  the database holds one clinic, so the isolation surface is the infrastructure (this stack, its own databases and
+  Redis) plus the role grants. `be_app` reads and writes every row of the tables it holds a grant on.
+* `scripts/bootstrap-roles.sh` creates `be_app` (NOLOGIN, no superuser, no BYPASSRLS), sets its password from
+  `PEMA_BE_APP_PASSWORD` (empty means the role stays NOLOGIN) and revokes `CONNECT` on `pema` from PUBLIC (always).
+  Passwords are read by psql from the environment (`\getenv`), never from argv, and `log_statement` is switched off
+  for the session so the `ALTER ROLE ... PASSWORD` text cannot reach the server log. Rerun it to rotate a password.
+* `scripts/migrate.sh` waits for Postgres, runs the bootstrap, then `alembic upgrade heads` (one head), prints the
+  head count and `alembic current`, and finally checks that `clinic.clinic` holds exactly one row (fails otherwise,
+  also when `PEMA_CLINIC_ID` differs from the database) and prints the clinic name and id.
+  `PEMA_SKIP_ROLE_BOOTSTRAP=true` skips the first step when a DBA manages roles.
+* `agent-migrate` (profile `agent`) runs `agent db bootstrap-role` (creates `pema_agent` when missing, the role
+  `agent_rt_app` with `PEMA_AGENT_RT_APP_PASSWORD`, CONNECT for it alone), the agent's Alembic, then
+  `agent db migrate-plugins`.
+* The owner role is the Postgres superuser in compose. For a managed database give the owner URLs a role that may
+  create the database `pema_agent` and `CREATE EXTENSION vector` in it (or let a superuser run the bootstrap once).
 
 ## Network and secrets
 
 * Every published port binds to a loopback address by default (Caddy included: a public site sets `PEMA_PROXY_BIND`). To reach a service from another machine set the
   matching `PEMA_*_BIND` to that machine's Tailscale IP. Docker publishes ports around ufw, so the bind address,
   not the firewall, is the control that counts.
-* `.env` is git-ignored; `gen-secrets.sh` creates it with mode 600. `PEMA_SECRET_ENCRYPTION_KEY` has no recovery:
-  keep an offline copy.
+* `.env` is git-ignored; `gen-secrets.sh` creates it with mode 600: keep an offline copy. The agent's secret key
+  (model keys, Zalo credentials) is in the agent-home volume and has no recovery: back it up with the databases.
 * Inside the compose network the services get their URLs composed from the passwords (host names `postgres`,
   `redis`); the `localhost` URLs in `.env` are for tools run on the host.
 

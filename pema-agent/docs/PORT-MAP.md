@@ -1,5 +1,7 @@
 # PORT-MAP: zalo-agent (TypeScript) to Pema Agent (Python)
 
+> **Lịch sử (2026-10-16).** Tài liệu này tả thời zalo-agent. Schema `agent`, `clinic_agent`, role `agent_worker`, chuỗi migration cũ, Hộp thư và hàng chờ duyệt đã bị gỡ; DB hiện nay: [PLAN-db-baseline](PLAN-db-baseline.md), [HANDOFF](HANDOFF-agent-v2.md) mục "Database".
+
 Produced by package A. Coverage is machine-checked by `backend/apps/api/tests/test_port_map.py` against the clone below.
 
 | | |

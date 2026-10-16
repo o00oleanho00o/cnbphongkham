@@ -56,7 +56,6 @@ x-backend-env: &backend-env
   PEMA_BOT_TIMEZONE: ${PEMA_BOT_TIMEZONE:-Asia/Ho_Chi_Minh}
   PEMA_REDIS_URL: redis://:${PEMA_REDIS_PASSWORD:?set it in infra/.env}@redis:6379/0
   PEMA_JWT_SECRET: ${PEMA_JWT_SECRET:?set it in infra/.env}
-  PEMA_SECRET_ENCRYPTION_KEY: ${PEMA_SECRET_ENCRYPTION_KEY:?set it in infra/.env}
   # Knowledge-base embeddings (bge-m3 through an OpenAI-compatible endpoint). Off = keyword search only.
   # TẠM TẮT LLM LOCAL (2026-10-02): bge-m3 runs on the local Ollama, so embeddings default to off (keyword
   # search, as in zalo-agent). Re-enable: default `true` and uncomment the two lines below.

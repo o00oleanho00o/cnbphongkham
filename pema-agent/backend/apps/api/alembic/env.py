@@ -1,10 +1,8 @@
 """Alembic environment for schemas ``ctx`` and ``clinic`` (one revision chain from ``0001_baseline``).
 
-Runs as a migration/owner role (``PEMA_MIGRATION_DATABASE_URL``), never as ``be_app`` or
-``agent_worker``. The version table lives in ``public`` and neither runtime role is granted access to it.
-
-Parallel packages add their own revision files (``NNNN_<package>_<what>.py``) and never edit an existing
-one; package G merges heads with ``alembic merge`` (``make db-upgrade`` runs ``upgrade heads``).
+Runs as a migration/owner role (``PEMA_MIGRATION_DATABASE_URL``), never as ``be_app``. The version table
+lives in ``public`` and the runtime role is granted no access to it. A change is a new revision on top of the
+baseline; never edit one that has run.
 """
 
 from __future__ import annotations

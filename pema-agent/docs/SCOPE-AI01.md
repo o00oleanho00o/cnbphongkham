@@ -1,5 +1,7 @@
 # Pema Agent — Scope AI01
 
+> **Lịch sử (2026-10-16).** Tài liệu này tả thời zalo-agent. Schema `agent`, `clinic_agent`, role `agent_worker`, chuỗi migration cũ, Hộp thư và hàng chờ duyệt đã bị gỡ; DB hiện nay: [PLAN-db-baseline](PLAN-db-baseline.md), [HANDOFF](HANDOFF-agent-v2.md) mục "Database".
+
 Trạng thái: mô tả hiện trạng mã trên nhánh `feat/ai-agent-backend` (commit tích hợp `1ce6cca`), viết ngày 2026-10-02 bởi gói F; **cập nhật cho nhánh `feat/single-tenant`: phạm vi là MỘT phòng khám mỗi bản cài** (mục 2, mục 7 quyết định 16, ARCH-AI01 mục 14 về hai nhánh song song); **cập nhật cho gói U (2026-10-05): một ứng dụng nhân viên Next.js có đủ màn của web Clinic cũ** (mục 2, mục 6, mục 7 quyết định 17, bằng chứng ở [PARITY-AI01-U](PARITY-AI01-U.md)). Luồng tài liệu: **SCOPE-AI01 → [SPEC-AI01](SPEC-AI01.md) → [MODULEMAP-AI01](MODULEMAP-AI01.md) → [ARCH-AI01](ARCH-AI01.md)**. Kế hoạch gốc là [PLAN-AI01](PLAN-AI01.md); hợp đồng giữa các gói là [CONTRACTS-AI01](CONTRACTS-AI01.md); bảng dịch file là [PORT-MAP](PORT-MAP.md).
 
 Bộ tài liệu này cùng cấp với bộ PB01/PB02 trong `docs/` và theo cùng quy tắc của `AGENT.md`: chỉ ghi điều mã làm được, tách rõ "đã có test với đồ giả" khỏi "đã chạy thật", và mọi dữ liệu trong repo là hư cấu. Nơi nào chưa kiểm chứng, tài liệu nói thẳng là chưa kiểm chứng; danh sách đầy đủ ở mục 8.

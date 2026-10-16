@@ -1,5 +1,12 @@
 # pema-agent
 
+> **Hiện trạng (2026-10-16).** Lớp agent kiểu zalo-agent mô tả trong phần lớn file này đã bị gỡ (nhánh `feat/agent-v2`).
+> Nay có hai app riêng: `backend/apps/api` (CRM phòng khám, database `pema`, schema `ctx` + `clinic`, role `be_app`) và
+> `backend/apps/agent` (agent tổng quát, plugin Zalo/web/kho tri thức, database riêng `pema_agent`, schema `agent_rt`,
+> role `agent_rt_app`). Agent không đọc được DB và không gọi được API của CRM, trừ khóa công khai JWKS để kiểm token
+> SSO: [luật ranh giới](../.claude/rules/agent-crm-boundary.md), [kế hoạch DB](docs/PLAN-db-baseline.md),
+> [handoff](docs/HANDOFF-agent-v2.md). Mỗi app có một migration gốc `0001_baseline`.
+
 Agent chăm sóc khách hàng (CSKH) bằng chữ qua Zalo cho Pema Digital Clinic, và CRM phòng khám phía server, trong một codebase:
 
 1. **Bản dịch Python của [zalo-agent](https://github.com/vuhai2002/zalo-agent)** (MIT, TypeScript): kênh Zalo, vòng lặp agent, persona, công cụ, bộ nhớ, kho tri thức, bộ lập lịch, MCP client, kế toán token.
@@ -35,7 +42,7 @@ Zalo ─► webhook (api, FastAPI, role be_app) ─► gộp tin ─► Redis Tu
 Zalo cá nhân ─► cầu nối Node (zca-js, tuỳ chọn) ─► webhook                      │ vòng lặp agent, tool, hook chính sách
 Nhân viên ─► Next.js ─► api (OpenAPI là hợp đồng)                                └─► ChannelPort.send_text
                                                                      (patient_channel: người duyệt trước khi gửi)
-Postgres (MỘT phòng khám): clinic.* (CRM) | clinic_agent.* (cửa duy nhất của agent) | agent.* (engine, pgvector)
+Postgres (MỘT phòng khám): database pema (ctx.*, clinic.*: CRM) | database pema_agent (agent_rt.*: agent, pgvector)
 Redis: hàng đợi lượt, khoá thread, gộp tin, khoá lịch      LLM: Ollama / llama-server trên PC GPU (Qwen3-8B, bge-m3)
 ```
 
@@ -43,7 +50,8 @@ Redis: hàng đợi lượt, khoá thread, gộp tin, khoá lịch      LLM: Oll
 |---|---|
 | `backend/packages/contracts` | `pema_contracts`: DTO, `ChannelPort`, các port giữa gói, đồ giả |
 | `backend/apps/api/pema` | ứng dụng: `channels`, `middleware`, `agent`, `conversation`, `knowledge`, `scheduler`, `mcp`, `documents`, `images`, `video`, `config`, `clinic`, `policy`, `api`, `composition`, `workers`, `shared`, `core` |
-| `backend/apps/api/alembic` | DDL (`0001` clinic, `0002` agent, `0003` clinic_agent, các migration của từng gói, `g_0005` và `h_0008` gộp đầu nhánh, `st_0009_single_tenant`: một phòng khám, bỏ RLS) |
+| `backend/apps/api/alembic` | DDL của CRM: một revision `0001_baseline` (`ctx`, `clinic`, role `be_app`, dòng phòng khám duy nhất) |
+| `backend/apps/agent/alembic`, `backend/apps/agent/plugins/*/migrations` | DDL của agent: `0001_baseline` (`agent_rt`) và file SQL của từng plugin |
 | `backend/apps/api/openapi.json` | hợp đồng API (sinh bằng `make openapi`) |
 | `backend/bridges/zalo-personal` | cầu nối Node cho tài khoản Zalo cá nhân (tuỳ chọn, cờ tắt) |
 | `frontend` | Next.js App Router, backend giả để chạy không cần dịch vụ nào |
@@ -97,7 +105,7 @@ Mở `http://127.0.0.1:3000`, đăng nhập bằng email và mật khẩu `demo1
 ### Stack bằng Docker Compose
 
 ```
-make infra-secrets   # tạo infra/.env với bí mật ngẫu nhiên (từ chối ghi đè); sao lưu ngoại tuyến PEMA_SECRET_ENCRYPTION_KEY; đặt PEMA_CLINIC_NAME
+make infra-secrets   # tạo infra/.env với bí mật ngẫu nhiên (từ chối ghi đè); sao lưu ngoại tuyến infra/.env; đặt PEMA_CLINIC_NAME
 make infra-config    # kiểm file compose với mọi profile
 make up              # postgres + pgvector, redis, migrate (một lần: role + alembic upgrade heads, tạo MỘT phòng khám từ PEMA_CLINIC_NAME, kiểm đúng một dòng), api  → /healthz
 make ps
@@ -174,8 +182,8 @@ PEMA_TEST_DATABASE_URL=postgresql+psycopg://... uv run pytest -c pyproject.toml 
 
 ## Quy tắc áp dụng khắp nơi
 
-- Phía agent chạm phòng khám **chỉ** qua `pema.clinic.actions` (import-linter); trong DB role `agent_worker` không có quyền gì trên `clinic.*` (chỉ view/hàm của `clinic_agent`).
-- Mọi bảng có `clinic_id` làm mã cài đặt cố định của MỘT phòng khám; không RLS, không ngữ cảnh phòng khám: mở công việc bằng `ClinicDatabase.session()`, lấy mã bằng `get_installation_clinic_id(db)`, SQL dùng `ctx.the_clinic_id()` (CONTRACTS-AI01 mục 10). Ranh giới DB là grant của `be_app`/`agent_worker`; cách ly giữa các phòng khám là hạ tầng riêng cho từng phòng khám.
+- Agent không bao giờ chạm CRM: database riêng `pema_agent`, role `agent_rt_app` chỉ CONNECT được database đó, agent không giữ khóa API nào của CRM ([luật L1–L5](../.claude/rules/agent-crm-boundary.md), test T1–T4).
+- Mọi bảng có `clinic_id` làm mã cài đặt cố định của MỘT phòng khám; không RLS, không ngữ cảnh phòng khám: mở công việc bằng `ClinicDatabase.session()`, lấy mã bằng `get_installation_clinic_id(db)`, SQL dùng `ctx.the_clinic_id()` (CONTRACTS-AI01 mục 10). Ranh giới DB là grant của `be_app` và hai database riêng; cách ly giữa các phòng khám là hạ tầng riêng cho từng phòng khám.
 - Thời gian trên đường truyền là ISO 8601 có `+07:00`. Giao diện tiếng Việt.
 - Không commit `.env`, token, số điện thoại hay tên thật. Không PII trong log.
 - Không bao giờ tự gửi tin cho bệnh nhân trong `patient_channel` mà không có người duyệt; agent chỉ đề xuất lịch; sinh nhật không tự gửi; `marketingOptOut` chặn tiếp thị.

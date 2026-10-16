@@ -1,5 +1,7 @@
 # Pema Agent — Architecture AI01
 
+> **Lịch sử (2026-10-16).** Tài liệu này tả thời zalo-agent. Schema `agent`, `clinic_agent`, role `agent_worker`, chuỗi migration cũ, Hộp thư và hàng chờ duyệt đã bị gỡ; DB hiện nay: [PLAN-db-baseline](PLAN-db-baseline.md), [HANDOFF](HANDOFF-agent-v2.md) mục "Database".
+
 Đọc sau [MODULEMAP-AI01](MODULEMAP-AI01.md). Mô tả kiến trúc **đang có trong mã** (gốc: nhánh `feat/ai-agent-backend`, commit `1ce6cca`, 2026-10-02; **bản này theo nhánh `feat/single-tenant`: một hệ thống một phòng khám**, xem mục 14) và đích triển khai đã chọn. Phần chưa kiểm chứng được gắn nhãn thẳng; tổng hợp ở SCOPE-AI01 mục 8. Kiến trúc pilot của phòng khám nói chung (đa dịch vụ, tài chính) vẫn là [ARCH-PB01](../../docs/ARCH-PB01.md); tài liệu này chỉ là phần CSKH-agent và CRM phía server của nó, và **không thay thế** prototype web/KMP.
 
 ## 1. Cái nhìn container

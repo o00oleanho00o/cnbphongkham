@@ -1,5 +1,7 @@
 # SECURITY-REVIEW-AI01: rà bảo mật và đối chiếu PORT-MAP (gói G, phần 2)
 
+> **Lịch sử (2026-10-16).** Tài liệu này tả thời zalo-agent. Schema `agent`, `clinic_agent`, role `agent_worker`, chuỗi migration cũ, Hộp thư và hàng chờ duyệt đã bị gỡ; DB hiện nay: [PLAN-db-baseline](PLAN-db-baseline.md), [HANDOFF](HANDOFF-agent-v2.md) mục "Database".
+
 > **Cập nhật single-tenant (nhánh `feat/single-tenant`, gói ST-F).** Bản rà dưới đây viết cho mô hình đa phòng khám có RLS. Từ migration `st_0009_single_tenant` RLS, slug phòng khám và mọi hàm chọn phòng khám đã bị gỡ vì mỗi bản cài chỉ có MỘT phòng khám. Các mục SEC-06, SEC-10, SEC-12 có ghi chú trạng thái mới; mô hình đe dọa đã đổi và có mục mới SEC-45 đến SEC-48 ở **mục 7**. Phần còn lại của bản rà (PII, bí mật, SSRF, bridge, chính sách) không phụ thuộc RLS và giữ nguyên.
 
 Ngày: 2026-10-02. Nhánh tích hợp `feat/ai-agent-backend` (commit gốc `1ce6cca`). Người rà: gói G (subagent). Phạm vi: toàn bộ `pema-agent/` (backend Python, bridge Node, FE, infra), đọc code thật. Mọi dữ liệu dùng trong thử nghiệm là hư cấu.

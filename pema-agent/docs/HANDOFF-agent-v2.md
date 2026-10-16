@@ -1,10 +1,36 @@
 # Handoff — agent-v2 (general agent core)
 
 Lives in the repo (`pema-agent/docs/HANDOFF-agent-v2.md`) so it is pushed and shared; update it here after
-each stage. Last updated 2026-10-10, after plan C step C4 on branch `feat/zalo-plugin`.
+each stage. Last updated 2026-10-16, after step 12 of `docs/PLAN-db-baseline.md` on branch `chore/db-baseline`.
 
-Next session focus: the Zalo plugin, branch `feat/zalo-plugin` (from `feat/agent-v2`). P0 is done; next is P1
-(see "Zalo plugin" below). Reply to the user in Vietnamese. Open items to handle later are under "Loose ends".
+Next session focus: step 13 of PLAN-db-baseline (the user deletes the database and the volume and rebuilds Docker;
+then smoke tests and break attempts on the boundary), then the front-end clean-up of D8 on its own branch and plan.
+Reply to the user in Vietnamese. Open items to handle later are under "Loose ends". The sections below the
+database one are the log of earlier stages: where they name the schema `agent`, `clinic_agent`, `agent_worker`,
+revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, those are gone (see next section).
+
+## Database (since PLAN-db-baseline, 2026-10-16)
+
+- **Two databases on one Postgres**, never reaching each other (rules L1–L5 in
+  `.claude/rules/agent-crm-boundary.md`): `pema` = the clinic API (schemas `ctx`, `clinic`; role `be_app`) and
+  `pema_agent` = the agent (schema `agent_rt`; role `agent_rt_app`). Each role has CONNECT on its own database only;
+  PUBLIC on neither; no `dblink`/`postgres_fdw`. The agent holds no key of the API; it only fetches the JWKS.
+- **Migrations:** the API has one Alembic revision `apps/api/alembic/versions/0001_baseline` (+ `.sql`), the agent
+  one `apps/agent/alembic/versions/0001_baseline` (+ `.sql`); plugins: `conversations/0001`, `knowledge/0001`,
+  `skills/0001` + `0002_seed_dev_skill`. A change is a NEW revision or plugin file; never edit one that ran.
+  Schema dumps and what changed: `docs/db-baseline/before|after/`; ER diagram: `docs/diagrams/db-baseline-plan.html`.
+- **Gone from the CRM (D8):** inbox, follow-up queue (review items), message templates and CRM auto-send, patient
+  app "Nhắn tin", channel identities, notifications O3; schema `agent` (old zalo-agent port), `clinic_agent`, role
+  `agent_worker`, `vector` in `pema`, runtime tuning settings, `PEMA_SECRET_ENCRYPTION_KEY`,
+  `PEMA_AGENT_WORKER_PASSWORD`, `PEMA_BOOTSTRAP_HARDEN_CONNECT` (CONNECT is always revoked from PUBLIC).
+- **Boundary tests (red = no merge):** T1 `apps/agent/tests/test_crm_boundary.py` (agent role has no CONNECT on
+  `pema`), T4 same file, T3 `apps/api/tests/api/test_agent_token.py`, T2 `apps/api/tests/test_database.py`.
+- **Testing on the shared dev cluster:** roles are cluster-wide. The two agent tests that reset and drop
+  `agent_rt_app` skip when the role exists; run them on a throwaway server (`docker run --rm -p 127.0.0.1:15499:5432
+  -e POSTGRES_PASSWORD=... pgvector/pgvector:pg17`). Point `PEMA_TEST_DATABASE_URL` only at `scratch_*` databases.
+- **Until step 13 runs,** the demo database is the old layout: the agent still sits in `pema` and T1 is red there.
+- **Front end:** still calls the removed inbox, review, template routes (D8); `schema.d.ts` is stale. Clean-up is a
+  separate branch with `pema-ui-builder` and entries in `web-design-changes.md`; design (canvas, specs) untouched (D9).
 
 ## Where things are
 

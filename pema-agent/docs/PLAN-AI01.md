@@ -1,5 +1,7 @@
 # PLAN-AI01 — Pema Agent: bản phái sinh zalo-agent bằng Python + CRM phòng khám
 
+> **Lịch sử (2026-10-16).** Tài liệu này tả thời zalo-agent. Schema `agent`, `clinic_agent`, role `agent_worker`, chuỗi migration cũ, Hộp thư và hàng chờ duyệt đã bị gỡ; DB hiện nay: [PLAN-db-baseline](PLAN-db-baseline.md), [HANDOFF](HANDOFF-agent-v2.md) mục "Database".
+
 Trạng thái: kế hoạch, chưa có code. Nhánh: `feat/ai-agent-backend`. Phiên bản 2 (2026-10-01), thay thế bản 1 "chỉ lấy phần kênh".
 
 > Nhánh `feat/single-tenant`: kế hoạch này viết cho mô hình đa phòng khám có RLS. Từ migration `st_0009` mỗi bản cài là MỘT phòng khám, không còn RLS; đọc các chỗ nhắc RLS hoặc "theo phòng khám" theo CONTRACTS-AI01 mục 10 và ARCH-AI01 mục 14.

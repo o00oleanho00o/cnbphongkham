@@ -1,5 +1,7 @@
 # PLAN-AI01-O — Package O: one identity, many operators (shared inbox over Zalo; Facebook later)
 
+> **Lịch sử (2026-10-16).** Tài liệu này tả thời zalo-agent. Schema `agent`, `clinic_agent`, role `agent_worker`, chuỗi migration cũ, Hộp thư và hàng chờ duyệt đã bị gỡ; DB hiện nay: [PLAN-db-baseline](PLAN-db-baseline.md), [HANDOFF](HANDOFF-agent-v2.md) mục "Database".
+
 Status: v2, rewritten 2026-10-06 against the code on `feat/ui-parity` `0d7bfda7` (packages M, U0–U12, W, W2 merged).
 v1 (2026-10-05, branch `plan/package-o` `b2fecd6`) was parked before U9–U12 and assumed tables and wiring that do not
 exist. Nothing of O is built. Branch: **`feat/shared-inbox`** (from `feat/ui-parity` `0d7bfda7`); merge back only when

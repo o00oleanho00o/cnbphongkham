@@ -1,5 +1,7 @@
 # Pema Agent — Module Map AI01
 
+> **Lịch sử (2026-10-16).** Tài liệu này tả thời zalo-agent. Schema `agent`, `clinic_agent`, role `agent_worker`, chuỗi migration cũ, Hộp thư và hàng chờ duyệt đã bị gỡ; DB hiện nay: [PLAN-db-baseline](PLAN-db-baseline.md), [HANDOFF](HANDOFF-agent-v2.md) mục "Database".
+
 Đọc sau [SPEC-AI01](SPEC-AI01.md). Bản đồ này đi từ nền ẩn đến lớp nhìn thấy, như MODULEMAP-PB01, và ghi **gói sở hữu** từng module (tên gói theo [PLAN-AI01](PLAN-AI01.md) mục 6; một gói chỉ sửa thư mục của mình). Đối chiếu với cây file thật ngày 2026-10-02, commit `1ce6cca`. Ánh xạ từng file TypeScript của zalo-agent ở [PORT-MAP](PORT-MAP.md); mục "Khác biệt so với PORT-MAP ban đầu" ở cuối file đó liệt kê chỗ thực tế lệch với kế hoạch.
 
 Đường dẫn Python viết tắt `pema/...` là `backend/apps/api/pema/...`; test ở `backend/apps/api/tests/...`.

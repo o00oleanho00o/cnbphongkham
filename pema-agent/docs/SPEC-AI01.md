@@ -1,5 +1,7 @@
 # Pema Agent — Software Specification AI01
 
+> **Lịch sử (2026-10-16).** Tài liệu này tả thời zalo-agent. Schema `agent`, `clinic_agent`, role `agent_worker`, chuỗi migration cũ, Hộp thư và hàng chờ duyệt đã bị gỡ; DB hiện nay: [PLAN-db-baseline](PLAN-db-baseline.md), [HANDOFF](HANDOFF-agent-v2.md) mục "Database".
+
 Đọc sau [SCOPE-AI01](SCOPE-AI01.md). Trạng thái: mô tả hành vi của mã trên nhánh `feat/ai-agent-backend` (commit `1ce6cca`), ngày 2026-10-02. Cột "Bằng chứng" chỉ tên file test hoặc mã có thật; cột "Mức kiểm chứng" nói thẳng test chạy với đồ giả hay đã chạy với hệ thống thật (xem SCOPE-AI01 mục 8). Không có tiêu chí nào dưới đây đã được kiểm với Zalo thật, mô hình thật hay thiết bị thật.
 
 Quy ước mức kiểm chứng: **Giả** = pytest/vitest với đồ giả (mô hình giả có kịch bản, client Bot API giả, cầu nối giả). **Giả + DB** = thêm Postgres + pgvector và Redis tạm (đánh dấu `db`, `redis`; bị bỏ qua khi thiếu `PEMA_TEST_DATABASE_URL` / `PEMA_TEST_REDIS_URL`). **Tay** = làm bằng tay một lần, ghi trong tài liệu hạ tầng. **Chưa** = chưa có.
